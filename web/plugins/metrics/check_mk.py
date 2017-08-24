@@ -352,6 +352,12 @@ for idx in range(0, MAX_NUMBER_HOPS):
         "color" : "23/a"
     }
 
+metric_info["rtt"] = {
+    "title" : _("Round trip time"),
+    "unit"  : "s",
+    "color" : "33/a",
+}
+
 metric_info["hops"] = {
     "title" : _("Number of hops"),
     "unit"  : "count",
@@ -5204,6 +5210,13 @@ perfometer_info.append(("stacked", [
 perfometer_info.append({
     "type"          : "logarithmic",
     "metric"        : "rta",
+    "half_value"    : 0.1,
+    "exponent"      : 4
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "rtt",
     "half_value"    : 0.1,
     "exponent"      : 4
 })

@@ -1,0 +1,10 @@
+Title: cisco_ip_sla: New check which monitors Cisco IP SLAs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1503572119
+Class: feature
+
+

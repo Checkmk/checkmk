@@ -1,0 +1,208 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+factory_settings['cisco_ip_sla_default_levels'] = {
+    'state': 'active',
+    'connection_lost_occured': 'no',
+    'timeout_occured': 'no',
+    'completion_time_over_treshold_occured': 'no',
+    'latest_rtt_completion_time': (250, 500),
+    'latest_rtt_state': 'ok',
+}
+
+
+def parse_cisco_ip_sla(info):
+    # since the RTT Index, Owner and Tag don't have to be set we use
+    # indices for the different items
+    precisions, info = info[0], info[1:]
+    precisions = {str(i): 'ms' if p[0] == '1' else 'us'
+                  for i, p in enumerate(precisions)}
+
+    rtt_types = {
+        '1': 'echo',
+        '2': 'path echo',
+        '3': 'file IO',
+        '4': 'script',
+        '5': 'UDP echo',
+        '6': 'TCP connect',
+        '7': 'HTTP',
+        '8': 'DNS',
+        '9': 'jitter',
+        '10': 'DLSw',
+        '11': 'DHCP',
+        '12': 'FTP',
+        '13': 'VoIP',
+        '14': 'RTP',
+        '15': 'LSP group',
+        '16': 'ICMP jitter',
+        '17': 'LSP ping',
+        '18': 'LSP trace',
+        '19': 'ethernet ping',
+        '20': 'ethernet jitter',
+        '21': 'LSP ping pseudowire',
+    }
+
+    states = {
+        '1': 'reset',
+        '2': 'orderly stop',
+        '3': 'immediate stop',
+        '4': 'pending',
+        '5': 'inactive',
+        '6': 'active',
+        '7': 'restart',
+    }
+
+    rtt_states = {
+        '0': 'other',
+        '1': 'ok',
+        '2': 'disconnected',
+        '3': 'over threshold',
+        '4': 'timeout',
+        '5': 'busy',
+        '6': 'not connected',
+        '7': 'dropped',
+        '8': 'sequence error',
+        '9': 'verify error',
+        '10': 'application specific error',
+    }
+
+    #contains description, parse function, unit and type
+    contents = [
+        ( # rttMonCtrlAdminEntry
+            ('Owner', None, '', None),
+            ('Tag', None, '', None),
+            ('RTT type', lambda x: rtt_types.get(x, 'unknown'), '', 'option'),
+            ('Threshold', int, 'ms', 'option'),
+        ),
+        ( # rttMonCtrlOperEntry
+            ('State', lambda x: states.get(x, 'unknown'), '', 'option'),
+            ('Text', None, '', None),
+            ('Connection lost occured', lambda x: 'yes' if x == '1' else 'no', '', 'option'),
+            ('Timeout occured', lambda x: 'yes' if x == '1' else 'no', '', 'option'),
+            ('Completion time over treshold occured', lambda x: 'yes' if x == '1' else 'no', '', 'option'),
+        ),
+        ( # rttMonLatestRttOperEntry
+            ('Latest RTT completion time', int, 'ms/us', 'level'),
+            ('Latest RTT state', lambda x: rtt_states.get(x, 'unknown'), '', 'option'),
+        ),
+    ]
+
+    parsed = {}
+    for content, entries in zip(contents, info):
+        if not entries:
+            continue
+
+        for index, entry in enumerate(entries):
+            index = str(index)
+            parsed.setdefault(index, [])
+            for (description, parser, unit, type_), value in zip(content, entry):
+                if parser:
+                    value = parser(value)
+                if unit == 'ms/us':
+                    unit = precisions[index]
+                parsed[index].append(
+                    (description, value, unit, type_)
+                )
+
+    return parsed
+
+
+def inventory_cisco_ip_sla(parsed):
+    for index in parsed:
+        yield index, {}
+
+
+def check_cisco_ip_sla(item, params, parsed):
+    for description, value, unit, type_ in parsed[item]:
+        if not value:
+            continue
+
+        state = 0
+        if unit:
+            infotext = '%s: %s %s' % (description, value, unit)
+        else:
+            infotext = '%s: %s' % (description, value)
+        perfdata = []
+
+        param = params.get(
+            description.lower().replace(' ', '_')
+        )
+
+        if type_ == 'option':
+            if param and param != value:
+                state = 1
+                infotext += ' (expected %s)' % param
+        elif type_ == 'level':
+            warn, crit = param  # a default level hat to exist
+            if value >= crit:
+                state = 2
+            elif value >= warn:
+                state = 1
+
+            if state:
+                infotext += ' (warn/crit at %s/%s)' % (warn, crit)
+            factor = 1e3 if unit == 'ms' else 1e6
+            perfdata = [('rtt', value/factor, warn/factor, crit/factor)]
+
+        yield state, infotext, perfdata
+
+
+check_info['cisco_ip_sla'] = {
+    'parse_function':           parse_cisco_ip_sla,
+    'inventory_function':       inventory_cisco_ip_sla,
+    'check_function':           check_cisco_ip_sla,
+    'service_description':      'Cisco IP SLA %s',
+    'group':                    'cisco_ip_sla',
+    'default_levels_variable':  'cisco_ip_sla_default_levels',
+    'has_perfdata':             True,
+    'snmp_scan_function':       lambda oid: oid('1.3.6.1.2.1.1.2.0') in [
+                                    '.1.3.6.1.4.1.9.1.2068',
+                                ],
+    'snmp_info': [('.1.3.6.1.4.1.9.9.42.1.2.2.1', [
+                        # only needed to determine the unit (ms/us)
+                        37, # rttMonEchoAdminPrecision
+                  ]),
+                  ('.1.3.6.1.4.1.9.9.42.1.2.1.1', [
+                        2,  # rttMonCtrlAdminOwner
+                        3,  # rttMonCtrlAdminTag
+                        4,  # rttMonCtrlAdminRttType
+                        5,  # rttMonCtrlAdminThreshold
+                  ]),
+                  ('.1.3.6.1.4.1.9.9.42.1.2.9.1', [
+                        10, # rttMonCtrlOperState
+                        2,  # rttMonCtrlOperDiagText
+                        5,  # rttMonCtrlOperConnectionLostOccurred
+                        6,  # rttMonCtrlOperTimeoutOccurred
+                        7,  # rttMonCtrlOperOverThresholdOccurred
+                  ]),
+                  ('.1.3.6.1.4.1.9.9.42.1.2.10.1', [
+                        1,  # rttMonLatestRttOperCompletionTime
+                        2,  # rttMonLatestRttOperSense
+                  ]),
+                 ],
+}
+

@@ -1,0 +1,10 @@
+Title: netapp_api_vs_traffic: Extend check by nfs values
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1503576293
+Class: feature
+
+

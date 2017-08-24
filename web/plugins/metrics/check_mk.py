@@ -3142,10 +3142,11 @@ metric_info["time_transfer"] = {
     "color" : "41/a",
 }
 
-for volume_info in [ "NFS", "NFSv4", "CIFS", "SAN", "FCP", "ISCSI" ]:
-    for what, unit in [ ("data", "bytes"), ("latency", "s"), ("ios", "1/s") ]:
+for volume_info in [ "NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI" ]:
+    for what, unit in [ ("data", "bytes"), ("latency", "s"), ("ios", "1/s"),
+                        ("throughput", "bytes/s")]:
 
-        volume = volume_info.lower()
+        volume = volume_info.lower().replace(".", "_")
 
         metric_info["%s_read_%s" % (volume, what)] = {
             "title" : _( "%s read %s") % (volume_info, what),
@@ -3158,6 +3159,18 @@ for volume_info in [ "NFS", "NFSv4", "CIFS", "SAN", "FCP", "ISCSI" ]:
             "unit"  : unit,
             "color" : "44/a",
         }
+
+metric_info["nfs_ios"] = {
+    "title" : _( "NFS operations"),
+    "unit"  : "1/s",
+    "color" : "31/a",
+}
+
+metric_info["nfsv4_ios"] = {
+    "title" : _( "NFSv4 operations"),
+    "unit"  : "1/s",
+    "color" : "31/a",
+}
 
 metric_info["nfsv4_1_ios"] = {
     "title" : _( "NFSv4.1 operations"),

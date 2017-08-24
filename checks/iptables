@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Example output from agent:
+#<<<iptables>>>
+#-A INPUT -j RH-Firewall-1-INPUT
+#-A FORWARD -j RH-Firewall-1-INPUT
+#-A OUTPUT -d 10.139.7.11/32 -j REJECT --reject-with icmp-port-unreachable
+#-A RH-Firewall-1-INPUT -i lo -j ACCEPT
+#-A RH-Firewall-1-INPUT -p icmp -m icmp --icmp-type any -j ACCEPT
+#-A RH-Firewall-1-INPUT -p esp -j ACCEPT
+#-A RH-Firewall-1-INPUT -p ah -j ACCEPT
+#-A RH-Firewall-1-INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 4000 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 29543 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 29043 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 30001 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 30000 -j ACCEPT
+#-A RH-Firewall-1-INPUT -d 224.0.0.251/32 -p udp -m udp --dport 5353 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 58002 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p udp -m udp --dport 58001 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p udp -m udp --dport 631 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 631 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p tcp -m state --state NEW -m tcp --dport 6556 -j ACCEPT
+#-A RH-Firewall-1-INPUT -p udp -m udp --dport 6556 -j ACCEPT
+#-A RH-Firewall-1-INPUT -s 89.254.0.0/16 -p tcp -m state --state NEW -m tcp --dport 252 -j ACCEPT
+#-A RH-Firewall-1-INPUT -s 89.254.0.0/16 -p tcp -m state --state NEW -m tcp --dport 7070 -j ACCEPT
+#-A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
+#COMMIT
+
+
+def parse_iptables(info):
+    config_lines = [" ".join(sublist) for sublist in info]
+    config = "\n".join(config_lines)
+    return config
+
+
+def inventory_iptables(parsed):
+    return [(None, {"config_hash": hash(parsed)})]
+
+
+def check_iptables(_no_item, params, parsed):
+    item_state = get_item_state("iptables.config")
+
+    if not item_state:
+        set_item_state("iptables.config",
+                       {"config": parsed, "hash": hash(parsed)})
+        return 0, "saved initial configuration"
+
+    initial_config_hash = params["config_hash"]
+    new_config_hash = hash(parsed)
+
+    if initial_config_hash == new_config_hash:
+        if initial_config_hash != item_state.get("hash"):
+            set_item_state("iptables.config",
+                           {"config": parsed, "hash": new_config_hash})
+            return 0, "accepted new filters after service rediscovery / reboot"
+        else:
+            return 0, "no changes in filters table detected"
+    else:
+        import difflib
+
+        reference_config = item_state["config"].splitlines()
+        actual_config = parsed.splitlines()
+        diff = difflib.context_diff(reference_config, actual_config,
+                                    fromfile="before", tofile="after",
+                                    lineterm="")
+        diff_output = "\n".join(diff)
+
+        return 2, "\r\n".join(["changes in filters table detected",
+                               diff_output])
+
+
+check_info["iptables"] = {
+    'parse_function'      : parse_iptables,
+    'check_function'      : check_iptables,
+    'inventory_function'  : inventory_iptables,
+    'service_description' : 'Iptables',
+}

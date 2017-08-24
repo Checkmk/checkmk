@@ -1,0 +1,18 @@
+title: Iptables modifications
+agents: linux
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+ This check computes the differences between the current output of the
+ command iptables-save and a cached initial state persisted on the
+ monitoring server.
+ The check is OK if no changes can be detected and CRIT otherwise.
+ If the state is CRIT a diff of the cached and initial configurations
+ is shown in the long output. If a user wants to accept the diff a
+ service rediscovery can be performed.
+
+inventory:
+ One check per system is created if the agent plugin mk_iptables was
+ deployed.
+

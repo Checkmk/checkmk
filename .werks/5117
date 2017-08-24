@@ -1,0 +1,11 @@
+Title: esx_vsphere_vm.devices: Check mounted devices in order to monitor HA functionality
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1503569745
+Class: feature
+
+If devices of the type VirtualCdrom, VirtualFloppy are mounted,
+the HA functionality of the ESX system is not guaranteed any more.

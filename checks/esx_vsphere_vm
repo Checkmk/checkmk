@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # TODO: name the next new subcheck "esx_vsphere_vm" and introduce a parse function
 def esx_vsphere_vm_convert(info):
     data = {}
@@ -32,8 +33,8 @@ def esx_vsphere_vm_convert(info):
         if line[0] == "config.template" and line[1] == "true":
             return {}
         data[line[0]] = line[1:]
-
     return data
+
 
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
@@ -452,4 +453,56 @@ check_info['esx_vsphere_vm.snapshots'] = {
   "service_description" : "ESX Snapshots",
   "group"               : "vm_snapshots",
   "has_perfdata"        : True,
+}
+
+
+#.
+#   .--VM devices----------------------------------------------------------.
+#   |         __     ____  __       _            _                         |
+#   |         \ \   / /  \/  |   __| | _____   _(_) ___ ___  ___           |
+#   |          \ \ / /| |\/| |  / _` |/ _ \ \ / / |/ __/ _ \/ __|          |
+#   |           \ V / | |  | | | (_| |  __/\ V /| | (_|  __/\__ \          |
+#   |            \_/  |_|  |_|  \__,_|\___| \_/ |_|\___\___||___/          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def parse_esx_vsphere_vm_mounted_devices(info):
+    data = esx_vsphere_vm_convert(info).get("config.hardware.device", [])
+    parsed = {}
+    for device_data in " ".join(data).split("@@"):
+        device_attrs = {}
+        for entry in device_data.split("|"):
+            k, v = entry.split(" ", 1)
+            device_attrs.setdefault(k, v)
+        device_name = device_attrs["label"]
+        del device_attrs["label"]
+        parsed.setdefault(device_name, device_attrs)
+    return parsed
+
+
+def inventory_esx_vsphere_vm_mounted_devices(info):
+    if parse_esx_vsphere_vm_mounted_devices(info):
+        return [(None, None)]
+
+
+def check_esx_vsphere_vm_mounted_devices(item, params, info):
+    device_types = ['VirtualCdrom', 'VirtualFloppy']
+    mounted_devices = []
+    for device_name, attrs in parse_esx_vsphere_vm_mounted_devices(info).iteritems():
+        if attrs['virtualDeviceType'] in device_types and \
+           attrs['connected'] == 'true':
+            mounted_devices.append(device_name)
+
+    if mounted_devices:
+        return 1, "HA functionality not guaranteed, Mounted devices: %s" % \
+                  ", ".join(mounted_devices)
+    else:
+        return 0, "HA functionality guaranteed"
+
+
+check_info['esx_vsphere_vm.mounted_devices'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_mounted_devices,
+  "check_function"      : check_esx_vsphere_vm_mounted_devices,
+  "service_description" : "ESX Mounted Devices",
 }

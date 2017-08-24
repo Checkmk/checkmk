@@ -1013,6 +1013,15 @@ if opt_tracefile:
         sys.stderr.write("Path for tracefile %s does not exist" % opt_tracefile)
         sys.stderr.flush()
 
+
+# Create a search pattern for the get_pattern function
+# create_search_pattern(["label", "summary", "startConnected", "allowGuestControl", "connected", "status"])
+def create_search_pattern(tokens):
+    pattern_elements = []
+    for token in tokens:
+        pattern_elements.append("<%(token)s>(.*?)</%(token)s>" % {"token": token})
+    return ".*?".join(pattern_elements)
+
 def get_pattern(pattern, line):
     if not line:
         return []
@@ -1533,14 +1542,29 @@ if not error:
                     vm_data = dict(get_pattern("<name>(.*?)</name><val.*?>(.*?)</val>", entry))
                     if opt_skip_placeholder_vm and is_placeholder_vm(vm_data.get("config.hardware.device")):
                         continue
-                    else:
-                        # we don't need this in the agent output
-                        if vm_data.get("config.hardware.device"):
-                            del vm_data["config.hardware.device"]
+
                     if "runtime.host" in vm_data:
                         vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"], vm_data["runtime.host"])
 
                     vm_esx_host.setdefault(vm_data["runtime.host"], []).append(vm_data["name"])
+
+
+                    def eval_virtual_device(info):
+                        response = []
+                        virtual_devices = get_pattern("<VirtualDevice (.*?)</VirtualDevice>", info)
+                        show_fields = ["label", "summary", "startConnected", "allowGuestControl", "connected", "status"]
+                        search_pattern = create_search_pattern(show_fields)
+                        for virtual_device in virtual_devices:
+                            type_info   = get_pattern("type=\"(.*?)\"", virtual_device)
+                            device_info = get_pattern(search_pattern, virtual_device)
+                            if device_info:
+                                response.append("virtualDeviceType %s|%s" %
+                                                (type_info[0],
+                                                 "|".join(map(lambda x: "%s %s" % x, zip(show_fields, device_info[0]))))
+                                               )
+
+                        return "@@".join(response)
+
 
                     def eval_snapshot_list(info):
                         response = []
@@ -1576,6 +1600,7 @@ if not error:
                     transform_functions = {
                         "snapshot.rootSnapshotList" : eval_snapshot_list,
                         "config.datastoreUrl"       : eval_datastores,
+                        "config.hardware.device"    : eval_virtual_device,
                     }
                     for key, transform in transform_functions.items():
                         if key in vm_data:
@@ -1592,9 +1617,7 @@ if not error:
                     if data.get("name"):
                         output("<<<<%s>>>>" % convert_hostname(key))
                         output("<<<esx_vsphere_vm>>>")
-                        entries = list(data.items())
-                        entries.sort()
-                        for entry in entries:
+                        for entry in sorted(data.items()):
                             output("%s %s" % entry)
 
 

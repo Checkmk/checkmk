@@ -1,0 +1,14 @@
+title: Virtual Machine under ESX: Mounted devices
+agents: vsphere
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ For a virtual machine running on ESX this check reviews the
+ mounted devices in order to monitor HA functionality.
+
+ Considered devices are of the type VirtualCdrom or VirtualFloppy.
+ If such device is connected, the check goes WARN, otherwise OK.
+
+inventory:
+ On each VM one check is generated.

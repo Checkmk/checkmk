@@ -31,21 +31,24 @@ class MonitoringCore;
 
 #ifdef CMC
 #include "FileSystem.h"
+class Object;
 #endif
+
+inline std::string dummy_service_description() { return "_HOST_"; }
 
 std::string pnp_cleanup(const std::string& name);
 
 #ifndef CMC
 int pnpgraph_present(MonitoringCore* mc, const std::string& host,
-                     const std::string& service = "_HOST_");
+                     const std::string& service);
 #endif
 
 #ifdef CMC
 // Determines if a RRD database exists and returns its path name. Returns an
 // empty string otherwise. This assumes paths created in the PNP4Nagios style
 // with storage type MULTIPLE.
-fs::path rrd_path(MonitoringCore* mc, const std::string& host,
-                  const std::string& service, const std::string& varname);
+fs::path rrd_path(MonitoringCore* mc, const Object* object,
+                  const std::string& varname);
 #endif
 
 #endif  // pnp4nagios_h

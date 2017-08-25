@@ -45,7 +45,8 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                 }
 
             case Type::pnp_graph_present:
-                return pnpgraph_present(_mc, hst->name);
+                return pnpgraph_present(_mc, hst->name,
+                                        dummy_service_description());
 
             case Type::mk_inventory_last: {
                 return mk_inventory_last(_mc->mkInventoryPath() + "/" +

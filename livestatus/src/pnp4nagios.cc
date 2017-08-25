@@ -27,7 +27,10 @@
 #include <system_error>
 #include "MonitoringCore.h"
 
-#ifndef CMC
+#ifdef CMC
+#include "Object.h"
+#include "Host.h"
+#else
 #include "FileSystem.h"
 #endif
 
@@ -68,15 +71,15 @@ int pnpgraph_present(MonitoringCore* mc, const string& host,
 
 #ifdef CMC
 // TODO(sp) Merge this with Perfdatabase::getPNPRRDPath
-fs::path rrd_path(MonitoringCore* mc, const string& host, const string& service,
+fs::path rrd_path(MonitoringCore* mc, const Object* object,
                   const string& varname) {
     fs::path pnp_path = mc->pnpPath();
     if (pnp_path.empty()) {
         return "";
     }
-    fs::path path =
-        pnp_path / pnp_cleanup(host) /
-        (pnp_cleanup(service) + "_" + pnp_cleanup(varname) + ".rrd");
+    fs::path path = pnp_path / pnp_cleanup(object->host()->name()) /
+                    (pnp_cleanup(object->serviceDescription()) + "_" +
+                     pnp_cleanup(varname) + ".rrd");
     std::error_code ec;
     fs::status(path, ec);
     return ec ? "" : path;

@@ -24,14 +24,11 @@
 
 #include "pnp4nagios.h"
 #include <cstddef>
-#include <system_error>
-#include "MonitoringCore.h"
 
-#ifdef CMC
-#include "Object.h"
-#include "Host.h"
-#else
+#ifndef CMC
+#include <system_error>
 #include "FileSystem.h"
+#include "MonitoringCore.h"
 #endif
 
 using std::string;
@@ -66,22 +63,5 @@ int pnpgraph_present(MonitoringCore* mc, const string& host,
     std::error_code ec;
     fs::status(path, ec);
     return ec ? 0 : 1;
-}
-#endif
-
-#ifdef CMC
-// TODO(sp) Merge this with Perfdatabase::getPNPRRDPath
-fs::path rrd_path(MonitoringCore* mc, const Object* object,
-                  const string& varname) {
-    fs::path pnp_path = mc->pnpPath();
-    if (pnp_path.empty()) {
-        return "";
-    }
-    fs::path path = pnp_path / pnp_cleanup(object->host()->name()) /
-                    (pnp_cleanup(object->serviceDescription()) + "_" +
-                     pnp_cleanup(varname) + ".rrd");
-    std::error_code ec;
-    fs::status(path, ec);
-    return ec ? "" : path;
 }
 #endif

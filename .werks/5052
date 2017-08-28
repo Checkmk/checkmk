@@ -1,0 +1,12 @@
+Title: Views: Fixed possible encoding exception when cells contain special chars
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1503912139
+Class: fix
+
+When doing a CSV export of a view that contains special characters it could happen
+that the CSV export is incomplete and the last cell contained HTML code reporting
+an exception (UnicodeEncodeError...).

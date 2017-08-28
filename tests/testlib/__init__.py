@@ -980,6 +980,9 @@ class CMKWebSession(WebSession):
 
 
     def add_host(self, hostname, folder="", attributes=None, create_folders=True, expect_error=False):
+        if attributes == None:
+            attributes = {}
+
         result = self._api_request("webapi.py?action=add_host", {
             "request": json.dumps({
                 "hostname"       : hostname,

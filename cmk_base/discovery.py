@@ -1121,6 +1121,12 @@ def _get_cluster_services(hostname, use_caches, with_snmp_scan, on_error):
     return cluster_items
 
 
+# Translates a parameter string (read from autochecks) to it's final value
+# (according to the current configuration)
+def resolve_paramstring(paramstring):
+    return eval(paramstring, checks.__dict__, checks.__dict__)
+
+
 # Get the list of service of a host or cluster and guess the current state of
 # all services if possible
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
@@ -1141,7 +1147,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # apply check_parameters
             try:
                 if type(paramstring) == str:
-                    params = eval(paramstring, checks.__dict__, checks.__dict__)
+                    params = resolve_paramstring(paramstring)
                 else:
                     params = paramstring
             except Exception:
@@ -1230,7 +1236,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             perfdata = []
 
         if check_source == "active":
-            params = eval(paramstring, checks.__dict__, checks.__dict__)
+            params = resolve_paramstring(paramstring)
 
         if check_source in [ "legacy", "active", "custom" ]:
             checkgroup = None

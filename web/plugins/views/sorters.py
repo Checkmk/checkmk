@@ -382,11 +382,11 @@ def cmp_date(column, r1, r2):
 declare_1to1_sorter("log_date",                cmp_date)
 
 # Alert statistics
-declare_simple_sorter("alerts_ok",       _("Number of recoveries"),      "alerts_ok",      cmp_simple_number)
-declare_simple_sorter("alerts_warn",     _("Number of warnings"),        "alerts_warn",    cmp_simple_number)
-declare_simple_sorter("alerts_crit",     _("Number of critical alerts"), "alerts_crit",    cmp_simple_number)
-declare_simple_sorter("alerts_unknown",  _("Number of unknown alerts"),  "alerts_unknown", cmp_simple_number)
-declare_simple_sorter("alerts_problem",  _("Number of problem alerts"),  "alerts_problem", cmp_simple_number)
+declare_simple_sorter("alerts_ok",       _("Number of recoveries"),      "log_alerts_ok",      cmp_simple_number)
+declare_simple_sorter("alerts_warn",     _("Number of warnings"),        "log_alerts_warn",    cmp_simple_number)
+declare_simple_sorter("alerts_crit",     _("Number of critical alerts"), "log_alerts_crit",    cmp_simple_number)
+declare_simple_sorter("alerts_unknown",  _("Number of unknown alerts"),  "log_alerts_unknown", cmp_simple_number)
+declare_simple_sorter("alerts_problem",  _("Number of problem alerts"),  "log_alerts_problem", cmp_simple_number)
 
 # Aggregations
 declare_simple_sorter("aggr_name",   _("Aggregation name"),  "aggr_name",       cmp_simple_string)

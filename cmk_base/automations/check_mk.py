@@ -854,6 +854,7 @@ class AutomationGetRealTimeChecks(Automation):
         rt_checks = []
         for check_type, check in checks.check_info.items():
             if check["handle_real_time_checks"]:
+                # TODO: Use cmk.man_pages module standard functions to read the title
                 title = check_type
                 try:
                     manfile = manuals.get(check_type)
@@ -863,7 +864,7 @@ class AutomationGetRealTimeChecks(Automation):
                     if cmk.debug.enabled():
                         raise
 
-                rt_checks.append((check_type, "%s - %s" % (check_type, title)))
+                rt_checks.append((check_type, "%s - %s" % (check_type, title.decode("utf-8"))))
 
         return rt_checks
 

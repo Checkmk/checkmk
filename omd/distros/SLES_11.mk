@@ -44,6 +44,7 @@ BUILD_PACKAGES += libpcap-devel # needed buy CMC
 BUILD_PACKAGES += rrdtool-devel # needed for CMC
 BUILD_PACKAGES += libffi-devel # needed for pyOpenSSL (and dependant) compilations
 BUILD_PACKAGES += krb5-devel # needed for pykerberos / requests-kerberos python modules
+BUILD_PACKAGES   += openssh # needed for check_by_ssh
 OS_PACKAGES     =
 OS_PACKAGES      += net-tools # traceroute is needed for Check_MK parent scan
 OS_PACKAGES    += apache2

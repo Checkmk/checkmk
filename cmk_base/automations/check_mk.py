@@ -172,6 +172,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 automations.register(AutomationSetAutochecks())
 
 
+# TODO: Is this automation still needed?
 class AutomationGetAutochecks(Automation):
     cmd          = "get-autochecks"
     needs_config = True
@@ -181,7 +182,7 @@ class AutomationGetAutochecks(Automation):
         hostname = args[0]
         result = []
         for ct, item, paramstring in discovery.parse_autochecks_file(hostname):
-            result.append((ct, item, eval(paramstring), paramstring))
+            result.append((ct, item, discovery.resolve_paramstring(paramstring), paramstring))
         return result
 
 

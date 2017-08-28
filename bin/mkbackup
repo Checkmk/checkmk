@@ -1832,7 +1832,7 @@ def mode_jobs(opts):
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(g_config["jobs"].items(), key=lambda (x, y): x):
-        sys.stdout.write(fmt % (job_id, job_cfg["title"]))
+        sys.stdout.write(fmt % (job_id, job_cfg["title"].encode("utf-8")))
 
 
 def mode_targets(opts):
@@ -1840,7 +1840,7 @@ def mode_targets(opts):
     sys.stdout.write(fmt % ("Target-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(g_config["targets"].items(), key=lambda (x, y): x):
-        sys.stdout.write(fmt % (job_id, job_cfg["title"]))
+        sys.stdout.write(fmt % (job_id, job_cfg["title"].encode("utf-8")))
 
 
 def usage(error=None):
@@ -1967,18 +1967,19 @@ def main():
     globals()["mode_%s" % mode_name](*mode_args, opts=opt_dict)
 
 
-try:
-    main()
-except MKTerminate, e:
-    sys.stderr.write("%s\n" % e)
-    sys.exit(1)
+if __name__ == "__main__":
+    try:
+        main()
+    except MKTerminate, e:
+        sys.stderr.write("%s\n" % e)
+        sys.exit(1)
 
-except KeyboardInterrupt:
-    sys.stderr.write("Terminated.\n")
-    sys.exit(0)
+    except KeyboardInterrupt:
+        sys.stderr.write("Terminated.\n")
+        sys.exit(0)
 
-except MKGeneralException, e:
-    sys.stderr.write("%s\n" % e)
-    if opt_debug:
-        raise
-    sys.exit(3)
+    except MKGeneralException, e:
+        sys.stderr.write("%s\n" % e)
+        if opt_debug:
+            raise
+        sys.exit(3)

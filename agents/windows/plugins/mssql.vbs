@@ -81,18 +81,6 @@ Set sources = CreateObject("Scripting.Dictionary")
 Dim service, i, version, edition, value_types, value_names, value_raw, cluster_name
 Set WMI = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
 
-'
-' Gather instances on this host, store instance in instances and output version section for it
-'
-registry.EnumValues HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL", _
-                          value_names, value_types
-
-If Not IsArray(value_names) Then
-    addOutput("<<<mssql_instance:sep(124)>>>")
-    addOutput("ERROR: Failed to gather SQL server instances")
-    wscript.quit(1)
-End If
-
 ' Make sure that always all sections are present, even in case of an error. 
 ' Note: the section <<<mssql_instance>>> section shows the general state 
 ' of a database instance. If that section fails for an instance then all 
@@ -118,55 +106,82 @@ For Each section_id In sections.Keys
     addOutput(sections(section_id))
 Next
 
-For i = LBound(value_names) To UBound(value_names)
-    instance_id = value_names(i)
+addOutput(sections("instance"))
 
-    registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
-                                  "Instance Names\SQL", _
-                                  instance_id, instance_name
+'
+' Gather instances on this host, store instance in instances and output version section for it
+'
 
-    ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\CurrentVersion
-    registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
-                                  instance_name & "\MSSQLServer\CurrentVersion", _
-                                  "CurrentVersion", version
+Dim regkeys, rk
+regkeys = Array( "", "Wow6432Node") ' gather all instances, also 32bit ones on 64bit Windows
 
-    ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\Setup
-    registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
-                                  instance_name & "\Setup", _
-                                  "Edition", edition
+For Each rk In regkeys
+    Do
+        registry.EnumValues HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\Instance Names\SQL", _
+                                  value_names, value_types
 
-    ' Check whether or not this instance is clustered
-    registry.GetStringValue HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\" & _
-                                  instance_name & "\Cluster", "ClusterName", cluster_name
-
-    If IsNull(cluster_name) Then
-        cluster_name = ""
-
-        ' In case of instance name "MSSQLSERVER" always use (local) as connect string
-        If instance_id = "MSSQLSERVER" Then
-            sources.add instance_id, "(local)"
-        Else
-            sources.add instance_id, hostname & "\" & instance_id
+        If Not IsArray(value_names) Then
+            'addOutput("ERROR: Failed to gather SQL server instances: " & rk)
+            'wscript.quit(1)
+            Exit Do
         End If
-    Else
-        ' In case the instance name is "MSSQLSERVER" always use the virtual server name
-        If instance_id = "MSSQLSERVER" Then
-            sources.add instance_id, cluster_name
-        Else
-            sources.add instance_id, cluster_name & "\" & instance_id
-        End If
-    End If
 
-    addOutput(sections("instance"))
-    addOutput("MSSQL_" & instance_id & "|config|" & version & "|" & edition & "|" & cluster_name)
+        For i = LBound(value_names) To UBound(value_names)
+            instance_id = value_names(i)
 
-    ' Only collect results for instances which services are currently running
-    Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
-                          "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running'")
-    If Not IsNull(service) Then
-        instances.add instance_id, cluster_name
-    End If
+            registry.GetStringValue HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\" & _
+                                          "Instance Names\SQL", _
+                                          instance_id, instance_name
+
+            ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\CurrentVersion
+            registry.GetStringValue HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\" & _
+                                          instance_name & "\MSSQLServer\CurrentVersion", _
+                                          "CurrentVersion", version
+
+            ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\Setup
+            registry.GetStringValue HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\" & _
+                                          instance_name & "\Setup", _
+                                          "Edition", edition
+
+            ' Check whether or not this instance is clustered
+            registry.GetStringValue HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\" & _
+                                          instance_name & "\Cluster", "ClusterName", cluster_name
+
+            If IsNull(cluster_name) Then
+                cluster_name = ""
+
+                ' In case of instance name "MSSQLSERVER" always use (local) as connect string
+                If instance_id = "MSSQLSERVER" Then
+                    sources.add instance_id, "(local)"
+                Else
+                    sources.add instance_id, hostname & "\" & instance_id
+                End If
+            Else
+                ' In case the instance name is "MSSQLSERVER" always use the virtual server name
+                If instance_id = "MSSQLSERVER" Then
+                    sources.add instance_id, cluster_name
+                Else
+                    sources.add instance_id, cluster_name & "\" & instance_id
+                End If
+            End If
+
+            addOutput(sections("instance"))
+            addOutput("MSSQL_" & instance_id & "|config|" & version & "|" & edition & "|" & cluster_name)
+
+            ' Only collect results for instances which services are currently running
+            Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
+                                  "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running'")
+            If Not IsNull(service) Then
+                instances.add instance_id, cluster_name
+            End If
+        Next
+    Loop While False
 Next
+
+If instances.Count = 0 Then
+    addOutput("ERROR: Failed to gather SQL server instances")
+    wscript.quit(1)
+End IF
 
 Set service  = Nothing
 Set WMI      = Nothing

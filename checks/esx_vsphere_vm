@@ -183,7 +183,7 @@ def check_esx_vsphere_vm_datastores(no_item, no_params, info):
         return 3, "Datastore information is missing"
 
     output = []
-    for datastore_url in " ".join(datastore_urls).split("\t"):
+    for datastore_url in " ".join(datastore_urls).split("@@"):
         datastore_url = datastore_url.split("|")
         output_store = []
 

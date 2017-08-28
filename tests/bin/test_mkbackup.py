@@ -94,7 +94,7 @@ def _execute_backup(site, job_id="testjob"):
         assert "C0:4E:D4:4B:B4:AB:8B:3F:B4:09:32:CE:7D:A6:CF:76" in stdout
 
     # Extract and return backup id
-    matches = re.search("Backup-ID:\s+(Check_MK-[a-zA-Z_-]+-%s-complete)" % job_id.replace("-", "\+"), stdout)
+    matches = re.search("Backup-ID:\s+(Check_MK-[a-zA-Z_+\.-]+-%s-complete)" % job_id.replace("-", "\+"), stdout)
     assert matches is not None
     backup_id = matches.groups()[0]
 

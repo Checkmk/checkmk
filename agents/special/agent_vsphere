@@ -1571,7 +1571,7 @@ if not error:
                             else:
                                 # No matching datastore was found. At least add the name
                                 response.append("name %s" % name)
-                        return "\t".join(response)
+                        return "@@".join(response)
 
                     transform_functions = {
                         "snapshot.rootSnapshotList" : eval_snapshot_list,

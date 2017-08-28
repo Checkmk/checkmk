@@ -282,10 +282,10 @@ def test_automation_set_autochecks(test_cfg, site):
     data = _execute_automation(site, "get-autochecks",
             args=["blablahost"])
 
-    assert data == [
+    assert sorted(data) == sorted([
         ('df', u'xxx', 'bla', "'bla'"),
         ('uptime', None, None, 'None')
-    ]
+    ])
 
 
 def test_automation_update_dns_cache(test_cfg, site, web):

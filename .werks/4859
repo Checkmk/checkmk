@@ -1,0 +1,19 @@
+Title: MSSQL: plugin detects 32bit and 64bit instances now
+Level: 2
+Component: checks
+<<<<<<< HEAD
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1503906598
+=======
+Compatible: compat
+Edition: cre
+Version: 1.4.0p10
+Date: 1503906598
+Class: fix
+>>>>>>> bf0efbc... 4859 FIX MSSQL: plugin detects 32bit and 64bit instances now
+
+Previously the plugin did not detect 32bit instances on 64bit OS. This has been fixed now.

@@ -565,10 +565,8 @@ def read_cache_file(relpath, max_cache_age):
         (opt_use_cachefile and ( not _no_cache ) )
         or (config.simulation_mode and not _no_cache) ):
         if cmk_base.utils.cachefile_age(cachefile) <= max_cache_age or config.simulation_mode:
-            f = open(cachefile, "r")
-            result = f.read(100000000)
-            f.close()
-            if len(result) > 0:
+            result = open(cachefile).read()
+            if result:
                 console.verbose("Using data from cachefile %s.\n" % cachefile)
                 return result
         else:

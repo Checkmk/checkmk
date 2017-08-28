@@ -44,6 +44,7 @@ BUILD_PACKAGES   += libffi-dev # needed for pyOpenSSL (and dependant) compilatio
 BUILD_PACKAGES   += libkrb5-dev # Needed for pykerberos
 BUILD_PACKAGES   += libssl1.0-dev # Needed for net-snmp (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=828449)
 BUILD_PACKAGES   += flex # needed for heirloom-pkgtools
+BUILD_PACKAGES   += openssh-client # needed for check_by_ssh
 OS_PACKAGES       =
 OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan

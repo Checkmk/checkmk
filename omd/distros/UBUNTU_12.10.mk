@@ -39,6 +39,7 @@ BUILD_PACKAGES += libgsf-1-dev # needed for msitools
 BUILD_PACKAGES += librrd-dev # needed for CMC
 BUILD_PACKAGES += libffi-dev # needed for pyOpenSSL (and dependant) compilations
 BUILD_PACKAGES += flex # needed for heirloom-pkgtools
+BUILD_PACKAGES += openssh-client # needed for check_by_ssh
 OS_PACKAGES     =
 OS_PACKAGES    += time # needed for mk-job
 OS_PACKAGES    += traceroute # needed for Check_MK parent scan

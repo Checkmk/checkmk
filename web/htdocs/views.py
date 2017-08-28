@@ -1215,7 +1215,7 @@ def view_editor_specs(ds_name, general_properties=True):
                         elements = [
                             DropdownChoice(
                                 title = _('Column'),
-                                choices = [ (name, p["title"]) for name, p
+                                choices = [ (name, get_painter_title_for_choices(p)) for name, p
                                             in sorters_of_datasource(ds_name).items() ],
                                 sorted = True,
                                 no_preselect = True,
@@ -2428,11 +2428,18 @@ def allowed_for_datasource(collection, datasourcename):
 
     allowed = {}
     for name, item in collection.items():
-        columns = get_painter_columns(item)
-        infos_needed = set([ c.split("_", 1)[0] for c in columns if c != "site" and c not in add_columns])
+        infos_needed = infos_needed_by_painter(item, add_columns)
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = item
     return allowed
+
+
+def infos_needed_by_painter(painter, add_columns=None):
+    if add_columns is None:
+        add_columns = []
+
+    columns = get_painter_columns(painter)
+    return set([ c.split("_", 1)[0] for c in columns if c != "site" and c not in add_columns])
 
 
 # Returns either the valuespec of the painter parameters or None
@@ -2450,14 +2457,27 @@ def painter_choices(painters, add_params=False):
     choices = []
 
     for name, painter in painters.items():
+        title = get_painter_title_for_choices(painter)
+
         # Add the optional valuespec for painter parameters
         if add_params and "params" in painter:
             vs_params = get_painter_params_valuespec(painter)
-            choices.append((name, painter["title"], vs_params))
+            choices.append((name, title, vs_params))
         else:
-            choices.append((name, painter["title"]))
+            choices.append((name, title))
 
     return sorted(choices, key=lambda x: x[1])
+
+
+def get_painter_title_for_choices(painter):
+    info_title = "/".join([ visuals.infos[info_name]["title_plural"] for info_name
+                            in sorted(infos_needed_by_painter(painter)) ])
+
+    # TODO: Cleanup the special case for sites. How? Add an info for it?
+    if painter["columns"] == ["site"]:
+        info_title = _("Site")
+
+    return "%s: %s" % (info_title, painter["title"])
 
 
 def painter_choices_with_params(painters):

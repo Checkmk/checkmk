@@ -1,0 +1,12 @@
+Title: esx_vsphere_vm.datastores: this check always reported only one datastore information
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1503919723
+
+This check now reports all datastores information for this VM.
+

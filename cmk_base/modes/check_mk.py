@@ -1598,4 +1598,5 @@ modes.register(Mode(
     handler_function=mode_help,
     short_help="Print this help",
     needs_config=False,
+    needs_checks=False,
 ))

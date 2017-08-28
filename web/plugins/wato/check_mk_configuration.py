@@ -2321,7 +2321,7 @@ register_rule(group,
     Integer(
         title = _("Bulk walk: Number of OIDs per bulk"),
         label = _("Number of OIDs to request per bulk: "),
-        minvalue = 10,
+        minvalue = 1,
         maxvalue = 100,
         default_value = 10,
     ),

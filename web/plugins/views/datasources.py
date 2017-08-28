@@ -233,7 +233,7 @@ multisite_datasources["alert_stats"] = {
     "title"        : _("Alert Statistics"),
     "table"        : "log",
     "add_headers"  : "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n",
-    "add_columns"  : [ "alerts_ok", "alerts_warn", "alerts_crit", "alerts_unknown", "alerts_problem" ],
+    "add_columns"  : [ "log_alerts_ok", "log_alerts_warn", "log_alerts_crit", "log_alerts_unknown", "log_alerts_problem" ],
     "infos"        : [ "log", "host", "service", "contact", "command" ],
     "keys"         : [],
     "idkeys"       : [ 'host_name', 'service_description' ],

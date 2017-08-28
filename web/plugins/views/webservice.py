@@ -128,6 +128,12 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
     if export:
         output_csv_headers(view)
 
+    def format_for_csv(raw_data):
+        # raw_data can also be int, float
+        content = "%s" % raw_data
+        stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
+        return stripped.encode("utf-8")
+
     csv_separator = html.var("csv_separator", ";")
     first = True
     for cell in group_cells + cells:
@@ -136,9 +142,7 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
         else:
             html.write(csv_separator)
         content = cell.export_title()
-        # content can be int, float
-        stripped = html.strip_tags(str(content)).replace('\n', '').replace('"', '""')
-        html.write('"%s"' % stripped.encode("utf-8"))
+        html.write('"%s"' % format_for_csv(content))
 
     for row in rows:
         html.write_text("\n")
@@ -150,9 +154,7 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
                 html.write(csv_separator)
             joined_row = join_row(row, cell)
             tdclass, content = cell.render_content(joined_row)
-            # content can be int, float
-            stripped = html.strip_tags(str(content)).replace('\n', '').replace('"', '""')
-            html.write('"%s"' % stripped.encode("utf-8"))
+            html.write('"%s"' % format_for_csv(content))
 
 multisite_layouts["csv_export"] = {
     "title"  : _("CSV data export"),

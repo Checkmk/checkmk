@@ -1,0 +1,11 @@
+Title: CME: fixed site snapshot creation when there are users with umlauts
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cme
+State: unknown
+Version: 1.5.0i1
+Date: 1503993085
+
+

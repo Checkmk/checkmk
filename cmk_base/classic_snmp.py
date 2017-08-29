@@ -48,12 +48,10 @@ from cmk_base.exceptions import MKSNMPError
 #   | Implements the neccessary function for Check_MK                      |
 #   '----------------------------------------------------------------------'
 
-def walk(hostname, ip, oid, hex_plain = False, context_name = None):
+def walk(hostname, ip, oid, hex_plain=False, context_name=None):
     protospec = _snmp_proto_spec(hostname)
     portspec = _snmp_port_spec(hostname)
-    command = _snmp_walk_command(hostname)
-    if context_name != None:
-        command += [ "-n", context_name ]
+    command = _snmp_walk_command(hostname, context_name)
     command += [ "-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ip, portspec), oid ]
 
     debug_cmd = [ "''" if a == "" else a for a in command ]
@@ -102,7 +100,7 @@ def walk(hostname, ip, oid, hex_plain = False, context_name = None):
     return rowinfo
 
 
-def get(hostname, ipaddress, oid):
+def get(hostname, ipaddress, oid, context_name=None):
     if oid.endswith(".*"):
         oid_prefix = oid[:-2]
         commandtype = "getnext"
@@ -112,7 +110,7 @@ def get(hostname, ipaddress, oid):
 
     protospec = _snmp_proto_spec(hostname)
     portspec = _snmp_port_spec(hostname)
-    command = _snmp_base_command(commandtype, hostname) + \
+    command = _snmp_base_command(commandtype, hostname, context_name) + \
                [ "-On", "-OQ", "-Oe", "-Ot",
                  "%s%s%s" % (protospec, ipaddress, portspec),
                  oid_prefix ]
@@ -168,8 +166,8 @@ def _snmp_proto_spec(hostname):
 # Returns command lines for snmpwalk and snmpget including
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
-def _snmp_walk_command(hostname):
-    return _snmp_base_command('walk', hostname) + [ "-Cc" ]
+def _snmp_walk_command(hostname, context_name):
+    return _snmp_base_command('walk', hostname, context_name) + [ "-Cc" ]
 
 
 # if the credentials are a string, we use that as community,
@@ -181,7 +179,7 @@ def _snmp_walk_command(hostname):
 # And if it is a six-tuple, it has the following additional arguments:
 # (5) privacy protocol (DES|AES) (-x)
 # (6) privacy protocol pass phrase (-X)
-def _snmp_base_command(what, hostname):
+def _snmp_base_command(what, hostname, context_name):
     options = []
 
     if what == 'get':
@@ -241,6 +239,9 @@ def _snmp_base_command(what, hostname):
         options += [ "-t", "%0.2f" % settings["timeout"] ]
     if "retries" in settings:
         options += [ "-r", "%d" % settings["retries"] ]
+
+    if context_name != None:
+        options += [ "-n", context_name ]
 
     return command + options
 

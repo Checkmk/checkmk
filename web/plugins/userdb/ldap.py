@@ -566,7 +566,8 @@ class LDAPUserConnector(UserConnector):
 
         # In some environments, the connection to the LDAP server does not seem to
         # be as stable as it is needed. So we try to repeat the query for three times.
-        tries_left = 2
+        # -> Don't retry when implicit connect is disabled
+        tries_left = 2 if implicit_connect else 0
         success = False
         last_exc = None
         while not success:

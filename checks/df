@@ -136,7 +136,7 @@ def parse_df(info):
 
 
 def inventory_df(parsed):
-    df_blocks, df_inodes = parsed
+    df_blocks, _ = parsed
     mplist = []
     for line in df_blocks:
         if line[1] in inventory_df_exclude_fs:

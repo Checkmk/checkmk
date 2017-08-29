@@ -31,6 +31,7 @@
 # python module paths
 import sys
 sys.path.append("/usr/local/mailman")
+sys.path.append("/usr/lib/mailman")
 
 # Set to True to filter out all "hidden" mailinglists
 only_advertised = True

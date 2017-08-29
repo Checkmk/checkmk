@@ -838,7 +838,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
         if scan_function:
             try:
                 def oid_function(oid, default_value=None):
-                    value = snmp.get_single_oid(hostname, ipaddress, oid)
+                    value = snmp.get_single_oid(hostname, ipaddress, oid, check_type)
                     if value == None:
                         return default_value
                     else:

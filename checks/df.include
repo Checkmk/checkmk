@@ -100,9 +100,6 @@ def df_inventory(mplist):
 # compute warning and critical levels. Takes into account the size of
 # the filesystem and the magic number. Since the size is only known at
 # check time this function's result cannot be precompiled.
-# Note: this function is in our days only needed in order to support
-# old style params a'la (80, 90). As soon as we drop support for that
-# (can happen any decade now), we can get rid of this function.
 def get_filesystem_levels(host, mountpoint, size_gb, params):
     mega = 1024 * 1024
     giga = mega * 1024
@@ -158,9 +155,12 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
         if not found:
             warn, crit = 100.0, 100.0 # entry not found in list
 
+    # Take into account magic scaling factor (third optional argument
+    # in check params). A factor of 1.0 changes nothing. Factor should
+    # be > 0 and <= 1. A smaller factor raises levels for big file systems
+    # bigger than 100 GB and lowers it for file systems smaller than 100 GB.
+    # Please run df_magic_factor.py to understand how it works.
 
-    # If the magic factor is used, take disk size and magic factor
-    # into account in order to move levels
     magic = levels.get("magic")
     # We need a way to disable the magic factor so check
     # if magic not 1.0
@@ -297,12 +297,6 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
     levels = get_filesystem_levels(host_name(), mountpoint, size_gb, params)
     warn_mb, crit_mb       = levels["levels_mb"]
     warn_inode, crit_inode = levels["inodes_levels"]
-
-    # Take into account magic scaling factor (third optional argument
-    # in check params). A factor of 1.0 changes nothing. Factor should
-    # be > 0 and <= 1. A smaller factor raises levels for big file systems
-    # bigger than 100 GB and lowers it for file systems smaller than 100 GB.
-    # Please run df_magic_factor.py to understand how it works.
 
     used_hr = get_bytes_human_readable(used_mb * 1024 * 1024)
     size_hr = get_bytes_human_readable(size_mb * 1024 * 1024)

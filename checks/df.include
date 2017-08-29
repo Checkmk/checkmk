@@ -100,7 +100,7 @@ def df_inventory(mplist):
 # compute warning and critical levels. Takes into account the size of
 # the filesystem and the magic number. Since the size is only known at
 # check time this function's result cannot be precompiled.
-def get_filesystem_levels(host, mountpoint, size_gb, params):
+def get_filesystem_levels(mountpoint, size_gb, params):
     mega = 1024 * 1024
     giga = mega * 1024
     # Start with factory settings
@@ -294,7 +294,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
     size_gb   = size_mb / 1024.0
 
     # Get warning and critical levels already with 'magic factor' applied
-    levels = get_filesystem_levels(host_name(), mountpoint, size_gb, params)
+    levels = get_filesystem_levels(mountpoint, size_gb, params)
     warn_mb, crit_mb       = levels["levels_mb"]
     warn_inode, crit_inode = levels["inodes_levels"]
 

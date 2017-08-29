@@ -298,9 +298,10 @@ class LDAPUserConnector(UserConnector):
                             continue
 
                     except Exception, e:
-                        self.log('  DISCOVERY: Failed to detect server from %r' % server)
+                        self.log('  DISCOVERY: Failed to discover a better server than %r' % server)
                         log_exception()
-                        raise
+                        self.log('  DISCOVERY: Try to continue with origin connection')
+                        break # got a connection!
 
             # Got no connection to any server
             if self._ldap_obj is None:
@@ -567,7 +568,7 @@ class LDAPUserConnector(UserConnector):
         # In some environments, the connection to the LDAP server does not seem to
         # be as stable as it is needed. So we try to repeat the query for three times.
         # -> Don't retry when implicit connect is disabled
-        tries_left = 2 if implicit_connect else 0
+        tries_left = 2
         success = False
         last_exc = None
         while not success:
@@ -601,7 +602,7 @@ class LDAPUserConnector(UserConnector):
                                             'within the ldap or adapt the limit settings of the LDAP server.'))
             except (ldap.SERVER_DOWN, ldap.TIMEOUT, MKLDAPException), e:
                 last_exc = e
-                if tries_left:
+                if implicit_connect and tries_left:
                     self.log('  Received %r. Retrying with clean connection...' % e)
                     self.disconnect()
                     time.sleep(0.5)

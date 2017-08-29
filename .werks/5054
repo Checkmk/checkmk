@@ -1,0 +1,20 @@
+Title: SNMPv3 contextes were not always used during discovery
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p11
+Date: 1503996131
+
+The SNMPv3 contextes configured for a host were not used correctly for the SNMP-GET
+request made during service discovery. This has been fixed now. When a single OID
+is requested by Check_MK all configured contextes for a check will be queried until
+an answer is recevied using a context. e.g. in case you have configured two contextes
+for a check, the first configured context will be queried first. In case it answers
+with the OID, this value will be used. In case the requested OID does not exist in
+this context, the next contex will be queried.
+
+The check independent OIDs .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 will always
+be queried without context.

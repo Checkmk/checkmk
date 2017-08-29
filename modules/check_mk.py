@@ -1684,7 +1684,7 @@ def snmp_base_command(what, hostname):
 
     return command + options
 
-def snmp_get_oid(hostname, ipaddress, oid):
+def snmp_get_oid(hostname, ipaddress, oid, context_name):
     if oid.endswith(".*"):
         oid_prefix = oid[:-2]
         commandtype = "getnext"
@@ -1694,8 +1694,12 @@ def snmp_get_oid(hostname, ipaddress, oid):
 
     protospec = snmp_proto_spec(hostname)
     portspec = snmp_port_spec(hostname)
-    command = snmp_base_command(commandtype, hostname) + \
-               [ "-On", "-OQ", "-Oe", "-Ot",
+    command = snmp_base_command(commandtype, hostname)
+
+    if context_name != None:
+        command += [ "-n", context_name ]
+
+    command += [ "-On", "-OQ", "-Oe", "-Ot",
                  "%s%s%s" % (protospec, ipaddress, portspec),
                  oid_prefix ]
 
@@ -1746,7 +1750,8 @@ def set_oid_cache(hostname, oid, value):
     g_single_oid_cache[oid] = value
 
 
-def get_single_oid(hostname, ipaddress, oid):
+# Contextes can only be used when check_type is given.
+def get_single_oid(hostname, ipaddress, oid, check_type=None):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
     # we do a snmpgetnext and try to find an OID with the prefix
     # in question. The *cache* is working including the X, however.
@@ -1775,15 +1780,26 @@ def get_single_oid(hostname, ipaddress, oid):
             value = None
 
     else:
-        try:
-            if is_inline_snmp_host(hostname):
-                value = inline_snmp_get_oid(hostname, oid, ipaddress=ipaddress)
-            else:
-                value = snmp_get_oid(hostname, ipaddress, oid)
-        except:
-            if cmk.debug.enabled():
-                raise
-            value = None
+        # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
+        # SNMP contexts, all contextes will be queried until the first answer is received.
+        if check_type is not None and is_snmpv3_host(hostname):
+            snmp_contexts = snmpv3_contexts_of(hostname, check_type)
+        else:
+            snmp_contexts = [None]
+
+        for context_name in snmp_contexts:
+            try:
+                if is_inline_snmp_host(hostname):
+                    value = inline_snmp_get_oid(hostname, oid, ipaddress=ipaddress, context_name=context_name)
+                else:
+                    value = snmp_get_oid(hostname, ipaddress, oid, context_name=context_name)
+
+                if value is not None:
+                    break # Use first received answer in case of multiple contextes
+            except:
+                if cmk.debug.enabled():
+                    raise
+                value = None
 
     if value != None:
         console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))

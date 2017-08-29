@@ -883,12 +883,12 @@ class LDAPUserConnector(UserConnector):
                 if not result:
                     continue # Skip groups which can not be found
 
-                for dn, cn in result:
-                    matched_groups[dn] = cn
+                for dn, attrs in result:
+                    matched_groups[dn] = attrs["cn"][0]
             else:
                 # in case of asking with DNs in nested mode, the resulting objects have the
                 # cn set to None for all objects. We do not need it in that case.
-                matched_groups[dn] = None
+                matched_groups[filter_val] = None
 
             for dn, cn in matched_groups.items():
                 filt = '(&%s(memberOf:1.2.840.113556.1.4.1941:=%s))' % \

@@ -4,15 +4,15 @@ catalog: os/networking
 license: GPL
 distribution: check_mk
 description:
-  This check evaluates the output of the {netstat} command on Linux and
-  AIX and checks if there are established connections or listeners
-  matching a given criteria.
+  This check evaluates the output of the {netstat} command on Linux and AIX
+  and checks if there are established connections or listeners matching a
+  given criteria.
 
   The check returns {OK} state if the specified connection/listener is present,
   and {CRIT} if not.
 
-  This check needs the agent plugin {netstat_an.bat} to be installed.
+  This check needs the agent plugin {netstat.linux} or {netstat.aix} to
+  be installed.
 
 item:
   A user defined identifier of the connection.
-

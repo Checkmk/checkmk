@@ -1,0 +1,30 @@
+Title: quantum_libsmall_door: Fixed exception in scan function when .1.3.6.1.2.1.1.6.0 is not available
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504006790
+Class: fix
+
+Fixes exceptions like this:
+
+  File "/omd/sites/heute/bin/cmk", line 96, in <module>
+    exit_status = modes.call(o, a, opts, args)
+  File "/omd/sites/heute/lib/python/cmk_base/modes/__init__.py", line 80, in call
+    return mode.handler_function(*handler_args)
+  File "/omd/sites/heute/lib/python/cmk_base/modes/check_mk.py", line 1380, in mode_discover
+    options["discover"] == 1)
+  File "/omd/sites/heute/lib/python/cmk_base/discovery.py", line 110, in do_discovery
+    _do_discovery_for(hostname, check_types, only_new, use_caches, on_error)
+  File "/omd/sites/heute/lib/python/cmk_base/discovery.py", line 131, in _do_discovery_for
+    new_items = _discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error)
+  File "/omd/sites/heute/lib/python/cmk_base/discovery.py", line 750, in _discover_services
+    check_types = _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan)
+  File "/omd/sites/heute/lib/python/cmk_base/discovery.py", line 681, in _gather_check_types_native
+    check_types = snmp_scan(hostname, ipaddress, on_error)
+  File "/omd/sites/heute/lib/python/cmk_base/discovery.py", line 846, in snmp_scan
+    result = scan_function(oid_function)
+  File "/omd/sites/heute/share/check_mk/checks/quantum_libsmall_door", line 49, in <lambda>
+    and "library" in oid(".1.3.6.1.2.1.1.6.0").lower(),
+AttributeError: 'NoneType' object has no attribute 'lower'

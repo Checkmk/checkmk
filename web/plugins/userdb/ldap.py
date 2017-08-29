@@ -298,9 +298,10 @@ class LDAPUserConnector(UserConnector):
                             continue
 
                     except Exception, e:
-                        self.log('  DISCOVERY: Failed to detect server from %r' % server)
+                        self.log('  DISCOVERY: Failed to discover a better server than %r' % server)
                         log_exception()
-                        raise
+                        self.log('  DISCOVERY: Try to continue with origin connection')
+                        break # got a connection!
 
             # Got no connection to any server
             if self._ldap_obj is None:

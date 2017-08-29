@@ -1,0 +1,10 @@
+Title: mailman_lists: fixed path of python modules for some operating systems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504020949
+Class: fix
+
+

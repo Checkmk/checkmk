@@ -66,32 +66,34 @@ factory_settings["filesystem_default_levels"] = {
     "show_reserved"   : False,
 }
 
+
+def ungrouped_mountpoints_and_groups(mplist, group_patterns):
+    ungrouped_mountpoints = []
+    groups = set([])
+
+    for mp in mplist:
+        in_group = False
+        for group_name, patterns in group_patterns.items():
+            for pattern in patterns:
+                if fnmatch.fnmatch(mp, pattern):
+                    groups.add(group_name)
+                    in_group = True
+                    break
+        if not in_group:
+            ungrouped_mountpoints.append((mp, {}))
+
+    return ungrouped_mountpoints, groups
+
+
 def df_inventory(mplist):
     group_patterns = {}
     for line in host_extra_conf(host_name(), filesystem_groups):
         for group_name, pattern in line:
             group_patterns.setdefault(group_name, []).append(pattern)
 
-    # Create one service for each mount point that is not contained
-    # in a filesystem group. And create one service for each non-empty
-    # filesystem group.
-    inventory = []
-    have_groups = set([])
-    for mp in mplist:
-        in_group = False
-        for group_name, patterns in group_patterns.items():
-            for pattern in patterns:
-                if fnmatch.fnmatch(mp, pattern):
-                    have_groups.add(group_name)
-                    in_group = True
-                    break
-        if not in_group:
-            inventory.append((mp, {}))
+    ungrouped_mountpoints, groups = ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
-    for group_name in have_groups:
-        inventory.append((group_name, { "patterns" : group_patterns[group_name] }))
-
-    return inventory
+    return ungrouped_mountpoints + list(groups)
 
 
 # Users might have set filesystem_default_levels to old format like (80, 90)

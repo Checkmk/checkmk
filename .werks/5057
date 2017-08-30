@@ -1,0 +1,14 @@
+Title: Fixed cancelling events by "syslog application" when using similar rules
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p11
+Date: 1504101697
+
+When using two or more rules that both have a "match syslog application" condition and a
+"syslog application to cancel event" condition while all other conditions are equal, it
+could happen that the first rule always caught messages that should not be caught by that
+rule. These messages were not handled by the second rule as expected.

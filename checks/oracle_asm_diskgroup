@@ -149,8 +149,8 @@ def check_oracle_asm_diskgroup(item, params, parsed):
             # EXTERNAL Redundancy
             free_space_mb = int(free_mb)
 
-        status, infotext, perfdata = df_check_filesystem(host_name(), item, int(total_mb),
-                                                         free_space_mb, 0, params)
+        status, infotext, perfdata = df_check_filesystem_single(item, int(total_mb),
+                                                         free_space_mb, 0, None, None, params)
         if disktype is not None:
             infotext += ', %s redundancy' % disktype.lower()
         infotext += add_text

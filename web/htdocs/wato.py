@@ -6232,46 +6232,67 @@ def vs_ldap_connection(new, connection_id):
 
     general_elements += rule_option_elements()
 
+    def vs_directory_options(ty):
+        connect_to_choices = [
+            ("fixed_list", _("Manually specify list of LDAP servers"), Dictionary(
+                elements = [
+                    ("server", TextAscii(
+                        title = _("LDAP Server"),
+                        help = _("Set the host address of the LDAP server. Might be an IP address or "
+                                 "resolvable hostname."),
+                        allow_empty = False,
+                    )),
+                    ("failover_servers", ListOfStrings(
+                        title = _('Failover Servers'),
+                        help = _('When the connection to the first server fails with connect specific errors '
+                                 'like timeouts or some other network related problems, the connect mechanism '
+                                 'will try to use this server instead of the server configured above. If you '
+                                 'use persistent connections (default), the connection is being used until the '
+                                 'LDAP is not reachable or the local webserver is restarted.'),
+                        allow_empty = False,
+                    )),
+                ],
+                optional_keys = ["failover_servers"],
+            )),
+        ]
+
+        if ty == "ad":
+            connect_to_choices.append(
+                ("discover", _("Automatically discover LDAP server"), Dictionary(
+                    elements = [
+                        ("domain", TextAscii(
+                            title = _("DNS domain name to discover LDAP servers of"),
+                            help = _("Configure the DNS domain name of your Active directory domain here, Check_MK "
+                                     "will then query this domain for it's closest domain controller to communicate "
+                                     "with."),
+                            allow_empty = False,
+                        )),
+                    ],
+                    optional_keys = [],
+                )),
+            )
+
+        return Dictionary(
+            elements = [
+                ("connect_to", CascadingDropdown(
+                    title = _("Connect to"),
+                    choices = connect_to_choices,
+                )),
+            ],
+            optional_keys = [],
+        )
+
+
     connection_elements = [
-        ("server", TextAscii(
-            title = _("LDAP Server"),
-            help = _("Set the host address of the LDAP server. Might be an IP address or "
-                     "resolvable hostname."),
-            allow_empty = False,
-            attrencode = True,
-        )),
-        ('failover_servers', ListOfStrings(
-            title = _('Failover Servers'),
-            help = _('When the connection to the first server fails with connect specific errors '
-                     'like timeouts or some other network related problems, the connect mechanism '
-                     'will try to use this server instead of the server configured above. If you '
-                     'use persistent connections (default), the connection is being used until the '
-                     'LDAP is not reachable or the local webserver is restarted.'),
-            allow_empty = False,
-        )),
         ("directory_type", CascadingDropdown(
             title = _("Directory Type"),
             help  = _("Select the software the LDAP directory is based on. Depending on "
                       "the selection e.g. the attribute names used in LDAP queries will "
                       "be altered."),
             choices = [
-                ("ad",                 _("Active Directory"), Dictionary(
-                    elements = [
-                        ("discover_nearest_dc", Checkbox(
-                            title = _("Discover nearest DC"),
-                            label = _("Try to discover and use the nearest DC"),
-                            help = _("When using a single LDAP connection from different sites (locations) "
-                                     "it is a good idea to enable this feature. The LDAP code will the ask "
-                                     "the Active Directory for the nearest reachable DC. Especially in "
-                                     "world wide directories where the connection between sites can have a "
-                                     "higher latency it is a good idea to use this option."),
-                            default_value = True,
-                        )),
-                    ],
-                    optional_keys = [],
-                )),
-                ("openldap",           _("OpenLDAP")),
-                ("389directoryserver", _("389 Directory Server")),
+                ("ad",                 _("Active Directory"),     vs_directory_options("ad")),
+                ("openldap",           _("OpenLDAP"),             vs_directory_options("openldap")),
+                ("389directoryserver", _("389 Directory Server"), vs_directory_options("389directoryserver")),
             ],
         )),
         ("bind", Tuple(
@@ -6514,30 +6535,32 @@ def vs_ldap_connection(new, connection_id):
         )),
     ]
 
-    return Dictionary(
-        title = _('LDAP Connection'),
-        elements = general_elements
-            + connection_elements
-            + user_elements
-            + group_elements
-            + other_elements
-        ,
-        headers = [
-            (_("General Properties"), [ key for key, vs in general_elements ]),
-            (_("LDAP Connection"),    [ key for key, vs in connection_elements ]),
-            (_("Users"),              [ key for key, vs in user_elements ]),
-            (_("Groups"),             [ key for key, vs in group_elements ]),
-            (_("Attribute Sync Plugins"), [ "active_plugins" ]),
-            (_("Other"),              [ "cache_livetime" ]),
-        ],
-        render = "form",
-        form_narrow = True,
-        optional_keys = [
-            'no_persistent', 'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
-            'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
-            'group_filter', 'group_member', 'suffix',
-        ],
-        validate = validate_ldap_connection,
+    return Transform(Dictionary(
+            title = _('LDAP Connection'),
+            elements = general_elements
+                + connection_elements
+                + user_elements
+                + group_elements
+                + other_elements
+            ,
+            headers = [
+                (_("General Properties"), [ key for key, vs in general_elements ]),
+                (_("LDAP Connection"),    [ key for key, vs in connection_elements ]),
+                (_("Users"),              [ key for key, vs in user_elements ]),
+                (_("Groups"),             [ key for key, vs in group_elements ]),
+                (_("Attribute Sync Plugins"), [ "active_plugins" ]),
+                (_("Other"),              [ "cache_livetime" ]),
+            ],
+            render = "form",
+            form_narrow = True,
+            optional_keys = [
+                'no_persistent', 'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
+                'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
+                'group_filter', 'group_member', 'suffix',
+            ],
+            validate = validate_ldap_connection,
+        ),
+        forth = userdb.LDAPUserConnector.transform_config,
     )
 
 

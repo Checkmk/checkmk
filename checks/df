@@ -91,9 +91,53 @@
 
 
 def parse_df(info):
-    df_blocks = []
-    df_inodes = []
-    btrfs_devices = set()
+
+    def parse_blocks_subsection(blocks_subsection):
+        df_blocks = []
+        btrfs_devices = set()
+        for line in blocks_subsection:
+            try:
+                int(line[1])
+            except ValueError:
+                pass
+            else:
+                line = [ line[0], None ] + line[1:]
+
+            if not is_inode:
+                # Handle known cases, where the file system contains spaces
+                for index, entry in enumerate(line):
+                    if entry == "NTFS":
+                        line = [ " ".join(line[:index]) ] + [line[index]] + line[index+1:index+5] + [ " ".join(line[index+5:]) ]
+                        break
+
+                if line[2] == "File" and line[3] == "System":
+                    line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
+
+                if line[1] == "btrfs":
+                    device = line[0]
+                    if device not in btrfs_devices:
+                        btrfs_devices.add(device)
+                        df_blocks.append(line[:6] + [ "btrfs " + line[0] ]) # replace mount point with device
+
+                else:
+                    df_blocks.append(line)
+        return df_blocks
+
+    def parse_inodes_subsection(inodes_subsection):
+        df_inodes = []
+        for line in inodes_subsection:
+            try:
+                int(line[1])
+            except ValueError:
+                pass
+            else:
+                line = [ line[0], None ] + line[1:]
+            df_inodes.append(line)
+        return df_inodes
+
+
+    blocks_subsection = []
+    inodes_subsection = []
 
     is_inode = False
     for line in info:
@@ -104,35 +148,12 @@ def parse_df(info):
             is_inode = False
             continue
 
-        try:
-            int(line[1])
-        except ValueError:
-            pass
+        if is_inode:
+            inodes_subsection.append(line)
         else:
-            line = [ line[0], None ] + line[1:]
+            blocks_subsection.append(line)
 
-        if not is_inode:
-            # Handle known cases, where the file system contains spaces
-            for index, entry in enumerate(line):
-                if entry == "NTFS":
-                    line = [ " ".join(line[:index]) ] + [line[index]] + line[index+1:index+5] + [ " ".join(line[index+5:]) ]
-                    break
-
-            if line[2] == "File" and line[3] == "System":
-                line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
-
-            if line[1] == "btrfs":
-                device = line[0]
-                if device not in btrfs_devices:
-                    btrfs_devices.add(device)
-                    df_blocks.append(line[:6] + [ "btrfs " + line[0] ]) # replace mount point with device
-
-            else:
-                df_blocks.append(line)
-        else:
-            df_inodes.append(line)
-
-    return df_blocks, df_inodes
+    return parse_blocks_subsection(blocks_subsection), parse_inodes_subsection(inodes_subsection)
 
 
 def inventory_df(parsed):

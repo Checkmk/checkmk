@@ -139,6 +139,9 @@ class LDAPUserConnector(UserConnector):
 
     @classmethod
     def transform_config(cls, config):
+        if not config:
+            return config
+
         # For a short time in git master the directory_type could be:
         # ('ad', {'discover_nearest_dc': True/False})
         if type(config["directory_type"]) == tuple and config["directory_type"][0] == "ad" \

@@ -84,7 +84,11 @@ MODULES += psutil-5.2.0.tar.gz # needed for mkbench
 
 MODULES += six-1.10.0.tar.gz
 MODULES += ipaddress-1.0.18.tar.gz
+
 MODULES += netifaces-0.10.6.tar.gz # needed for LDAP (nearest DC detection)
+MODULES += dnspython-1.15.0.zip # needed for LDAP (nearest DC detection)
+MODULES += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detection)
+
 MODULES += idna-2.5.tar.gz
 ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4 squeeze),)
     MODULES += cryptography-1.4.tar.gz
@@ -111,21 +115,7 @@ MODULES+=paramiko-2.1.2.tar.gz
 
 .PHONY: build check-freetds install skel clean
 
-build: check-python check-freetds
-	mkdir -p dest
-	cd dest && \
-	    for M in $(MODULES); do \
-		echo "Unpacking $$M..." ; \
-		if echo $$M | grep .tar.gz; then \
-		    tar xvzf ../src/$$M ; \
-		else \
-		    unzip -o ../src/$$M ; \
-		fi \
-	    done
-	set -e ; for p in $(PATCHES) ; do \
-	    echo "applying $$p..." ; \
-	    patch -p1 -b -d dest < $$p ; \
-	done
+build: check-python check-freetds unpack
 	set -e ; cd dest && \
 	    mkdir -p $(TMP_INSTALL_PATH)/lib || true; \
 	    export PYTHONPATH=$$PYTHONPATH:$(TMP_INSTALL_PATH)/lib ; \
@@ -150,6 +140,23 @@ build: check-python check-freetds
 	            --install-purelib=/lib ; \
 	        cd .. ; \
 	    done
+
+unpack:
+	mkdir -p dest
+	cd dest && \
+	    for M in $(MODULES); do \
+		echo "Unpacking $$M..." ; \
+		if echo $$M | grep .tar.gz; then \
+		    tar xvzf ../src/$$M ; \
+		else \
+		    unzip -o ../src/$$M ; \
+		fi \
+	    done
+	set -e ; for p in $(PATCHES) ; do \
+	    echo "applying $$p..." ; \
+	    patch -p1 -b -d dest < $$p ; \
+	done
+
 
 check-freetds:
 	@if [ ! -d ../freetds/freetds-0.95.95 ]; then \

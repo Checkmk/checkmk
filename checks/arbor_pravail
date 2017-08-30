@@ -31,6 +31,7 @@
 # .1.3.6.1.4.1.9694.1.6.2.6.0 8 --> PRAVAIL-MIB::deviceDiskUsage.0
 # .1.3.6.1.4.1.9694.1.6.2.7.0 49 --> PRAVAIL-MIB::devicePhysicalMemoryUsage.0
 # .1.3.6.1.4.1.9694.1.6.2.8.0 0 --> PRAVAIL-MIB::deviceSwapSpaceUsage.0
+# .1.3.6.1.4.1.9694.1.6.2.39.0 43 --> PRAVAIL-MIB::pravailOverrunDropRatePps.0
 
 
 def parse_pravail(info):
@@ -40,7 +41,8 @@ def parse_pravail(info):
         "cpu_loads"  : valid[:3],
         "disk"       : valid[3],
         "memory"     : valid[4:6],
-        "host_fault" : valid[6]
+        "host_fault" : valid[6],
+        "drop_rate"  : valid[7],
     }
 
 
@@ -59,6 +61,7 @@ check_info["arbor_pravail"] = {
                                                              "7.0", # devicePhysicalMemoryUsage
                                                              "8.0", # deviceSwapSpaceUsage
                                                              "1.0", # pravailHostFault
+                                                             "39.0",# pravailOverrunDropRatePps
                                                              ]
                                ),
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Pravail"),
@@ -92,3 +95,10 @@ check_info["arbor_pravail.host_fault"] = {
     "service_description"   : "Host Fault",
 }
 
+check_info["arbor_pravail.drop_rate"] = {
+    "check_function"        : check_arbor_drop_rate,
+    "inventory_function"    : inventory_arbor_drop_rate,
+    "service_description"   : "%s drop rate",
+    "has_perfdata"          : True,
+    "group"                 : "generic_rate",
+}

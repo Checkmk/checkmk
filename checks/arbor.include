@@ -162,3 +162,56 @@ def check_arbor_host_fault(no_item, no_params, parsed):
 
 
 #.
+#   .--Drop Rate-----------------------------------------------------------.
+#   |             ____                    ____       _                     |
+#   |            |  _ \ _ __ ___  _ __   |  _ \ __ _| |_ ___               |
+#   |            | | | | '__/ _ \| '_ \  | |_) / _` | __/ _ \              |
+#   |            | |_| | | | (_) | |_) | |  _ < (_| | ||  __/              |
+#   |            |____/|_|  \___/| .__/  |_| \_\__,_|\__\___|              |
+#   |                            |_|                                       |
+#   '----------------------------------------------------------------------'
+
+def inventory_arbor_drop_rate(parsed):
+    if 'drop_rate' in parsed:
+        return [("Overrun", {})]
+
+
+def check_arbor_drop_rate(no_item, params, parsed):
+    drop_rate = int(parsed['drop_rate'])
+    infotext = '%s pps' % drop_rate
+
+    lower_status = 0
+    lower_levels = params.get('levels_lower')
+    if lower_levels:
+        warn, crit = lower_levels
+
+        if drop_rate <= crit:
+            lower_status, label = 2, '(!!)'
+        elif drop_rate <= warn:
+            lower_status, label = 1, '(!)'
+
+        if lower_status:
+            infotext += ' (warn/crit below %.1f/%.1f)%s' % (warn, crit, label)
+
+    upper_status = 0
+    upper_levels = params.get('levels')
+    if upper_levels:
+        warn, crit = upper_levels
+
+        if drop_rate >= crit:
+            upper_status, label = 2, '(!!)'
+        elif drop_rate >= warn:
+            upper_status, label = 1, '(!)'
+
+        if upper_status:
+            infotext += ' (warn/crit above %.1f/%.1f)%s' % (warn, crit, label)
+
+        perfdata = [("if_in_pkts", drop_rate, warn, crit)]
+    else:
+        perfdata = [("if_in_pkts", drop_rate)]
+
+    status = max(lower_status, upper_status)
+    yield status, infotext, perfdata
+
+
+#.

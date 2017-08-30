@@ -28,6 +28,9 @@
 # based approach is not very readable. Classes/objects make it a lot
 # easier to understand the mechanics.
 
+# TODO: Think about some subclassing for the different directory types.
+# This would make some code a lot easier to understand.
+
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
@@ -134,8 +137,41 @@ class LDAPUserConnector(UserConnector):
     # stores the ldap connection suffixes of all connections
     connection_suffixes = {}
 
+    @classmethod
+    def transform_config(cls, config):
+        # For a short time in git master the directory_type could be:
+        # ('ad', {'discover_nearest_dc': True/False})
+        if type(config["directory_type"]) == tuple and config["directory_type"][0] == "ad" \
+           and "discover_nearest_dc" in config["directory_type"][1]:
+            auto_discover = config["directory_type"][1]["discover_nearest_dc"]
+
+            if not auto_discover:
+                config["directory_type"] = "ad"
+            else:
+                config["directory_type"] = (config["directory_type"][0], {
+                    "connect_to": ("discover", {
+                        "domain": config["server"],
+                    }),
+                })
+
+        if type(config["directory_type"]) != tuple and "server" in config:
+            # Old separate configuration of directory_type and server
+            servers = {
+                    "server": config["server"],
+            }
+
+            if "failover_servers" in config:
+                servers["failover_servers"] = config["failover_servers"]
+
+            config["directory_type"] = (config["directory_type"], {
+                "connect_to": ("fixed_list", servers),
+            })
+
+        return config
+
+
     def __init__(self, config):
-        super(LDAPUserConnector, self).__init__(self._transform_config(config))
+        super(LDAPUserConnector, self).__init__(self.transform_config(config))
 
         self._ldap_obj        = None
         self._ldap_obj_config = None
@@ -150,22 +186,6 @@ class LDAPUserConnector(UserConnector):
         self._sync_fail_file = cmk.paths.var_dir + '/web/ldap_%s_sync_fail.mk' % self.id()
 
         self.save_suffix()
-
-
-    def _transform_config(self, config):
-        if config["directory_type"] == "ad":
-            # Enable discovery of nearest DC for legacy configs
-            config["discover_nearest_dc"] = True
-
-        elif type(config["directory_type"]) == tuple and config["directory_type"][0] == "ad":
-            # Convert valuespec data structure to internal one
-            config["discover_nearest_dc"] = config["directory_type"][1]["discover_nearest_dc"]
-            config["directory_type"] = "ad"
-
-        else:
-            config["discover_nearest_dc"] = False
-
-        return config
 
 
     @classmethod
@@ -257,12 +277,6 @@ class LDAPUserConnector(UserConnector):
 
         # Some major config var validations
 
-        if not self._config['server']:
-            raise MKLDAPException(_('The LDAP connector is enabled in global settings, but the '
-                                    'LDAP server to connect to is not configured. Please fix this in the '
-                                    '<a href="wato.py?mode=ldap_config">LDAP '
-                                    'connection settings</a>.'))
-
         if not self._config['user_dn']:
             raise MKLDAPException(_('The distinguished name of the container object, which holds '
                                     'the user objects to be authenticated, is not configured. Please '
@@ -282,26 +296,7 @@ class LDAPUserConnector(UserConnector):
                     self._ldap_obj = ldap_obj
                 else:
                     errors.append(error_msg)
-                    continue
-
-                if self._config["discover_nearest_dc"]:
-                    try:
-                        discovered_server = self._discover_nearest_dc(server)
-                        self.log('  DISCOVERY: Detected server %r from %r' % (discovered_server, server))
-
-                        ldap_obj, error_msg = self.connect_server(discovered_server)
-                        if ldap_obj:
-                            self._ldap_obj = ldap_obj
-                            break # got a connection!
-                        else:
-                            errors.append(error_msg)
-                            continue
-
-                    except Exception, e:
-                        self.log('  DISCOVERY: Failed to discover a better server than %r' % server)
-                        log_exception()
-                        self.log('  DISCOVERY: Try to continue with origin connection')
-                        break # got a connection!
+                    continue # In case of an error, try the (optional) fallback servers
 
             # Got no connection to any server
             if self._ldap_obj is None:
@@ -321,6 +316,22 @@ class LDAPUserConnector(UserConnector):
         self._ldap_obj = None
 
 
+    def _discover_nearest_dc(self, domain):
+        import ad, log
+        locator = ad.Locator()
+        locator.m_logger = log.logger
+        try:
+            server = locator.locate(domain)
+            self.log('  DISCOVERY: Discovered server %r from %r' % (server, connect_params["domain"]))
+            return server
+        except Exception, e:
+            self.log('  DISCOVERY: Failed to discover a server from domain %r' % domain)
+            log_exception()
+            self.log('  DISCOVERY: Try to use domain DNS name %r as server' % domain)
+            return domain
+
+
+
     # Active directory only: This function tries to detect the nearest domain controller of the
     # AD found when connecting to the given server. It works as follows:
     #
@@ -329,69 +340,103 @@ class LDAPUserConnector(UserConnector):
     #    the given name is locally resolved using DNS and one answered IP is picked.
     # 2. The authentication with the default credentials is done.
     # 3. The AD site of the local system is detected.
-    #    This is done by gathering the local IP subnets and searching the AD sites for
-    #    these subnets.
-    # 4. A random DC of the found AD site is used instead of "server".
+    #    This is done by gathering the local IP subnets of the Check_MK server, then all subnets
+    #    configured in the domain are fetched and all matching subnets are collected. Then the
+    #    subnets are sorted by their size.
+    # 4. The domain controllers of the AD sites associated with the matched, sorted sites are
+    #    are fetched from the AD
+    # 5. A random DC of the found AD site is used instead of "server".
     #
     # In case the detection does not work the "server" that has been handed over to this
     # function is used.
-    def _discover_nearest_dc(self, server):
-        # First extract the domain part from the user DN
-        domain_dn = self.get_domain_dn()
+    #def _discover_nearest_dc(self, server):
+    #    matched_site_dns = self._find_site_distinguished_names()
+    #    if not matched_site_dns:
+    #        self.log("  DISCOVERY:   Found no site distinguished names matching the "
+    #                 "Check_MK servers IP range -> Skipping discovery")
+    #        return server
 
-        subnet_dn = "CN=Subnets,CN=Sites,CN=Configuration,%s" % domain_dn
+    #    self.log("%r" % matched_site_dns)
 
-        subnet_filters = []
-        subnets = self._subnets_of_check_mk_server()
-        self.log('  DISCOVERY:   Search sites for subnets: %r' % subnets)
-        for subnet in subnets:
-            subnet_filters.append("(cn=%s)" % subnet)
+    #    for site_dn in matched_site_dns:
+    #        # Get list of DCs for this site
+    #        results = self.ldap_search("CN=SERVERS,%s" % site_dn,
+    #            filt="(objectclass=server)",
+    #            columns=["dnshostname"],
+    #            implicit_connect=False)
 
-        # Perform the search for sites matching the subnets of the monitoring server
-        results = self.ldap_search(subnet_dn,
-            filt='(&(objectclass=subnet)(|%s))' % "".join(subnet_filters),
-            columns=["siteobject"],
-            implicit_connect=False)
+    #        if not results:
+    #            continue # Maybe there is another site to lookup
 
-        if not results:
-            self.log("  DISCOVERY:   Found no site -> Skipping discovery")
-            return server
+    #        for server_dn, attrs in results:
+    #            return attrs["dnshostname"][0] # In case there are multiple, use the first one
 
-        site_dn = None
-        for subnet_dn, attrs in results:
-            site_dn = attrs["siteobject"][0]
-            self.log('  DISCOVERY:   Found site: %s (by %s)' % (site_dn, subnet_dn))
-            break # In case there are multiple, use the first one
-
-        # Get list of DCs for this site
-        results = self.ldap_search("CN=SERVERS,%s" % site_dn,
-            filt="(objectclass=server)",
-            columns=["dnshostname"],
-            implicit_connect=False)
-
-        if not results:
-            self.log("  DISCOVERY:   Found no server -> Skipping discovery")
-            return server
-
-        for server_dn, attrs in results:
-            server = attrs["dnshostname"][0]
-            break # In case there are multiple, use the first one
-
-        return server
+    #    self.log("  DISCOVERY:   Found no DC for the sites: %r -> Skipping discovery" % matched_site_dns)
+    #    return server
 
 
-    def _subnets_of_check_mk_server(self):
-        subnets = []
+    #def _find_site_distinguished_names(self):
+    #    server_subnets = self._subnets_of_check_mk_server()
 
-        import netifaces, ipaddress
-        for network_interface in netifaces.interfaces():
-            for link in netifaces.ifaddresses(network_interface).get(netifaces.AF_INET, []):
-                ip_interface = ipaddress.IPv4Interface("%s/%s" % (link["addr"], link["netmask"]))
-                network_addr = "%s" % ip_interface.network
-                if not network_addr.startswith("127."):
-                    subnets.append(network_addr)
+    #    if not server_subnets:
+    #        self.log("  DISCOVERY:   Failed to get the Check_MK server subnets")
+    #        return []
 
-        return subnets
+    #    domain_subnet_map = self._subnets_of_domain()
+
+    #    if not domain_subnet_map:
+    #        self.log("  DISCOVERY:   Found no domain subnets")
+    #        return []
+
+    #    # Now get all nets from domain_subnet_map that match the Check_MK server subnets
+    #    import ipaddress
+
+    #    matched = []
+    #    for subnet_txt in server_subnets:
+    #        server_subnet = ipadress.IPv4Network(subnet_txt)
+
+    #        for domain_subnet_txt, site_dn in domain_subnet_map.items():
+    #            domain_subnet = ipadress.IPv4Network(domain_subnet_txt)
+    #            if server_subnet == domain_subnet or server_subnet.subnet_of(domain_subnet):
+    #                matched.append((domain_subnet.prefixlen, site_dn))
+
+    #    # And sort them by their network size: Smallest subnets first
+    #    return [ e[1] for e in sorted(matched) ]
+
+
+    #def _subnets_of_check_mk_server(self):
+    #    subnets = []
+
+    #    import netifaces, ipaddress
+    #    for network_interface in netifaces.interfaces():
+    #        for link in netifaces.ifaddresses(network_interface).get(netifaces.AF_INET, []):
+    #            ip_interface = ipaddress.IPv4Interface("%s/%s" % (link["addr"], link["netmask"]))
+    #            network_addr = "%s" % ip_interface.network
+    #            if not network_addr.startswith("127."):
+    #                subnets.append(network_addr)
+
+    #    return subnets
+
+
+    #def _subnets_of_domain(self):
+    #    domain_dn = self.get_forest_root_domain_dn()
+    #    subnet_dn = "CN=Subnets,CN=Sites,CN=Configuration,%s" % domain_dn
+
+    #    results = self.ldap_search(subnet_dn,
+    #        filt='(&(objectclass=subnet))',
+    #        columns=["cn", "siteobject"],
+    #        implicit_connect=False)
+
+    #    if not results:
+    #        return []
+
+    #    subnets = {}
+    #    for subnet_dn, attrs in results:
+    #        site_dn = attrs["siteobject"][0]
+    #        cn = attrs["cn"][0]
+    #        subnets[cn] = site_dn
+
+    #    return subnets
 
 
     # Bind with the default credentials
@@ -424,9 +469,14 @@ class LDAPUserConnector(UserConnector):
 
 
     def servers(self):
-        servers = [self._config['server'] ]
-        if self._config.get('failover_servers'):
-            servers += self._config.get('failover_servers')
+        # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
+        connect_method, connect_params = self._config['directory_type'][1]["connect_to"]
+
+        if connect_method == "discover":
+            servers = [ self._discover_nearest_dc(connect_params["domain"]) ]
+        else:
+            servers = [ connect_params['server'] ] + connect_prams.get('failover_servers', [])
+
         return servers
 
 
@@ -434,8 +484,12 @@ class LDAPUserConnector(UserConnector):
         return self._config['active_plugins']
 
 
+    def directory_type(self):
+        return self._config['directory_type'][0]
+
+
     def is_active_directory(self):
-        return self._config['directory_type'] == 'ad'
+        return self.directory_type() == 'ad'
 
 
     def has_user_base_dn_configured(self):
@@ -464,10 +518,6 @@ class LDAPUserConnector(UserConnector):
 
     def get_user_dn(self):
         return self.replace_macros(self._config['user_dn'])
-
-
-    def get_domain_dn(self):
-        return "dc=%s" % self.get_user_dn().lower().split("dc=", 1)[1]
 
 
     def get_suffix(self):
@@ -641,7 +691,7 @@ class LDAPUserConnector(UserConnector):
 
     # Returns the ldap filter depending on the configured ldap directory type
     def ldap_filter(self, key, handle_config = True):
-        value = ldap_filter_map[self._config['directory_type']].get(key, '(objectclass=*)')
+        value = ldap_filter_map[self.directory_type()].get(key, '(objectclass=*)')
         if handle_config:
             if key == 'users':
                 value = self._config.get('user_filter', value)
@@ -654,7 +704,7 @@ class LDAPUserConnector(UserConnector):
     # If a key is not present in the map, the assumption is, that the key matches 1:1
     # Always use lower case here, just to prevent confusions.
     def ldap_attr(self, key):
-        return ldap_attr_map[self._config['directory_type']].get(key, key).lower()
+        return ldap_attr_map[self.directory_type()].get(key, key).lower()
 
 
     # Returns the given distinguished name template with replaced vars

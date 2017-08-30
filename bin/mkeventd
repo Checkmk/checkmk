@@ -2459,11 +2459,21 @@ class EventServer(object):
                 self.logger.info("  did not match because of wrong source IP address '%s' (need '%s')" % (event["ipaddress"], rule.get("match_ipaddress")))
             return False
 
+        cancel_by_application = False
+        if "cancel_application" in rule:
+            cancel_by_application = match(rule.get("cancel_application"),
+                                                   event["application"],
+                                                   complete=False) != False
+
         if match(rule.get("match_application"), event["application"], complete=False) == False \
-           and "cancel_application" not in rule:
+            and not cancel_by_application:
                 if debug:
-                    self.logger.info("  did not match because of wrong application '%s' (need '%s')" %
-                            (event["application"], pattern(rule.get("match_application"))))
+                    need_msg = "need %r" % pattern(rule.get("match_application"))
+                    if "cancel_application" in rule:
+                        need_msg += " or %r for cancelling" % pattern(rule.get("cancel_application"))
+
+                    self.logger.info("  did not match because of wrong application '%s' (%s)" %
+                            (event["application"], need_msg))
                 return False
 
         if "match_facility" in rule and event["facility"] != rule["match_facility"]:
@@ -2482,13 +2492,6 @@ class EventServer(object):
                 cp = event["priority"] >= lo and event["priority"] <= up
             else:
                 cp = True
-
-            if "cancel_application" in rule:
-                cancel_by_application = match(rule.get("cancel_application"),
-                                                       event["application"],
-                                                       complete=False) != False
-            else:
-                cancel_by_application = True
 
             match_groups = match(rule.get("match_ok", ""), event["text"], complete = False)
             if match_groups != False and cp and cancel_by_application:

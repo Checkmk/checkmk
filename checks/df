@@ -93,7 +93,7 @@
 def parse_df(info):
     df_blocks = []
     df_inodes = []
-    btrfs_devices = set() # We might generalize that later
+    btrfs_devices = set()
 
     is_inode = False
     for line in info:

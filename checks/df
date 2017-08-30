@@ -117,10 +117,11 @@ def parse_df(info):
                     device = line[0]
                     if device not in btrfs_devices:
                         btrfs_devices.add(device)
-                        df_blocks.append(line[:6] + [ "btrfs " + line[0] ]) # replace mount point with device
+                        df_blocks.append(line[:6] + [ "btrfs " + device ]) # replace mount point with device
 
                 else:
-                    df_blocks.append(line)
+                    mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /
+                    df_blocks.append(line[:6] + [ mountpoint ])
         return df_blocks
 
     def parse_inodes_subsection(inodes_subsection):
@@ -166,7 +167,7 @@ def inventory_df(parsed):
         if line[2] == '-' or int(line[2]) == 0 or line[5] == '-':
             continue # exclude filesystems without size
 
-        mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /
+        mountpoint = line[6]
         if mountpoint in inventory_df_exclude_mountpoints:
             continue # exclude this mount point (/tmp, /proc, whatever user wants)
 
@@ -183,7 +184,7 @@ def check_df(item, params, parsed):
         # df outputs seven columns:
         # DEVICE FS-TYPE SIZE(KB) USED(KB) AVAIL(KB) USED(%) MOUNTPOINT
         # The mount point may contain spaces (seen on VMWare volumes and on ESX)
-        mountpoint = " ".join(line[6:]).replace('\\', '/')
+        mountpoint = line[6]
         if "patterns" in params or item == mountpoint:
             # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
             # for the superuser, whereas the 4th colum ("used MB") does *not* include that.

@@ -178,6 +178,7 @@ def check_df(item, params, parsed):
                 fslist_inodes.append((mountpoint, int(df_inodes[idx][2]), int(df_inodes[idx][4])))
     return df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes)
 
+
 check_info['df'] = {
     "parse_function"          : parse_df,
     "inventory_function"      : inventory_df,

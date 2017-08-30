@@ -243,9 +243,6 @@ def get_filesystem_levels(mountpoint, size_gb, params):
 
     return levels
 
-# Legacy function for checks that do not support groups yet
-def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, reserved_mb, params):
-    return df_check_filesystem_list(mountpoint, params, [(mountpoint, size_mb, avail_mb, reserved_mb)])
 
 # New function for checks that support groups.
 def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):

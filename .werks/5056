@@ -1,0 +1,11 @@
+Title: WATO: Wrong list of groups shown on user edit page when syncing groups via LDAP
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504092814
+Class: fix
+
+The locked contact group list on the edit user page was listing too many groups when
+using the contact group plugin of the LDAP sync.

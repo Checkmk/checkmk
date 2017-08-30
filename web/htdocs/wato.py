@@ -10910,23 +10910,22 @@ def mode_edit_user(phase):
         html.write(_("Please first create some <a href='%s'>contact groups</a>") %
                 groups_page_url)
     else:
-        entries = sorted([ (group['alias'], c) for c, group in contact_groups.items() ])
+        entries = sorted([ (group['alias'] or c, c) for c, group in contact_groups.items() ])
         is_member_of_at_least_one = False
         for alias, gid in entries:
-            if not alias:
-                alias = gid
+            is_member = gid in user.get("contactgroups", [])
 
             if not is_locked('contactgroups'):
                 html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
             else:
-                is_member = gid in user.get("contactgroups", [])
                 if is_member:
                     is_member_of_at_least_one = True
                 html.hidden_field("cg_" + gid, '1' if is_member else '')
 
-            url = folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
-            html.a(alias, href=url)
-            html.br()
+            if not is_locked('contactgroups') or is_member:
+                url = folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
+                html.a(alias, href=url)
+                html.br()
 
         if is_locked('contactgroups') and not is_member_of_at_least_one:
             html.i(_('No contact groups assigned.'))

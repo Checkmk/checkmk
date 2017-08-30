@@ -322,7 +322,7 @@ class LDAPUserConnector(UserConnector):
         locator.m_logger = log.logger
         try:
             server = locator.locate(domain)
-            self.log('  DISCOVERY: Discovered server %r from %r' % (server, connect_params["domain"]))
+            self.log('  DISCOVERY: Discovered server %r from %r' % (server, domain))
             return server
         except Exception, e:
             self.log('  DISCOVERY: Failed to discover a server from domain %r' % domain)
@@ -475,7 +475,7 @@ class LDAPUserConnector(UserConnector):
         if connect_method == "discover":
             servers = [ self._discover_nearest_dc(connect_params["domain"]) ]
         else:
-            servers = [ connect_params['server'] ] + connect_prams.get('failover_servers', [])
+            servers = [ connect_params['server'] ] + connect_params.get('failover_servers', [])
 
         return servers
 

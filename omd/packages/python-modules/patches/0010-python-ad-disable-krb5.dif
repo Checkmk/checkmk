@@ -1,0 +1,18 @@
+diff -Nur dest.orig/python-ad-0.9/lib/ad/protocol/krb5.py dest/python-ad-0.9/lib/ad/protocol/krb5.py
+--- dest.orig/python-ad-0.9/lib/ad/protocol/krb5.py	1970-01-01 01:00:00.000000000 +0100
++++ dest/python-ad-0.9/lib/ad/protocol/krb5.py	2017-08-30 10:20:55.613686559 +0200
+@@ -0,0 +1 @@
++# Dummy file to disable krb5 import warning because we don't build krb5 binding.
+diff -Nur dest.orig/python-ad-0.9/setup.py dest/python-ad-0.9/setup.py
+--- dest.orig/python-ad-0.9/setup.py	2008-11-02 15:19:14.000000000 +0100
++++ dest/python-ad-0.9/setup.py	2017-08-30 10:19:13.744199717 +0200
+@@ -22,7 +22,7 @@
+         'Programming Language :: Python'],
+     package_dir = {'': 'lib'},
+     packages = ['ad', 'ad.core', 'ad.protocol', 'ad.util'],
+-    ext_modules = [Extension('ad.protocol.krb5', ['lib/ad/protocol/krb5.c'],
+-                             libraries=['krb5'])],
++    #ext_modules = [Extension('ad.protocol.krb5', ['lib/ad/protocol/krb5.c'],
++    #                         libraries=['krb5'])],
+     test_suite = 'nose.collector'
+ )

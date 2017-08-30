@@ -236,8 +236,8 @@ def test_automation_analyse_service_no_check(test_cfg, site):
 
 def test_automation_try_discovery_not_existing_host(test_cfg, site):
     data = _execute_automation(site, "try-inventory",
-        args=["x"],
-        expect_stderr="Failed to lookup IPv4 address of x via DNS: [Errno -2] Name or service not known\n\n",
+        args=["xxx-not-existing-host"],
+        expect_stderr="Failed to lookup IPv4 address of xxx-not-existing-host via DNS: [Errno -2] Name or service not known\n\n",
         expect_stdout="",
         expect_exit_code=2,
         parse_data=False,

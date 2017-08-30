@@ -273,7 +273,7 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
         if count == 0:
             return (3, "No filesystem matching the patterns")
         else:
-            status, infotext, perfdata = df_check_filesystem_single(host_name(), item, total_size_mb, total_avail_mb, total_reserved_mb, total_inodes, total_inodes_avail, params)
+            status, infotext, perfdata = df_check_filesystem_single(item, total_size_mb, total_avail_mb, total_reserved_mb, total_inodes, total_inodes_avail, params)
             infotext += " (%d filesystems)" % count
             return status, infotext, perfdata
     else:
@@ -283,11 +283,11 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
                     inodes_total, inodes_avail = fslist_inodes[idx][1], fslist_inodes[idx][2]
                 else:
                     inodes_total, inodes_avail = None, None
-                return df_check_filesystem_single(host_name(), mp, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params)
+                return df_check_filesystem_single(mp, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params)
         return (3, "filesystem not found")
 
 
-def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params, this_time = None):
+def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params, this_time = None):
     if size_mb == 0:
         return (1, "Size of filesystem is 0 MB", [])
 

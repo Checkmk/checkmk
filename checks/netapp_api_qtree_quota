@@ -55,7 +55,7 @@ def check_netapp_api_qtree_quota(item, params, parsed):
         inodes_total = None
         inodes_avail = None
 
-    return df_check_filesystem_single(host_name(), item, size_total, size_avail, 0,
+    return df_check_filesystem_single(item, size_total, size_avail, 0,
                                       inodes_total, inodes_avail, params)
 
 check_info["netapp_api_qtree_quota"] = {

@@ -57,7 +57,7 @@ def check_netapp_api_luns(item, params, parsed):
     if params.get("ignore_levels"):
         yield 0, "Total size: %s, Used space is ignored" % get_bytes_human_readable(size_total)
     else:
-        yield df_check_filesystem_single(host_name(), item, size_total, size_avail, 0, None, None, params)
+        yield df_check_filesystem_single(item, size_total, size_avail, 0, None, None, params)
 
 def netapp_api_luns_item(name):
     return name.rsplit("/", 1)[-1]

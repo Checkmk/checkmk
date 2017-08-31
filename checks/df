@@ -103,25 +103,42 @@ def parse_df(info):
             else:
                 line = [ line[0], None ] + line[1:]
 
-            if not is_inode:
-                # Handle known cases, where the file system contains spaces
-                for index, entry in enumerate(line):
-                    if entry == "NTFS":
-                        line = [ " ".join(line[:index]) ] + [line[index]] + line[index+1:index+5] + [ " ".join(line[index+5:]) ]
-                        break
+            # Handle known cases, where the file system contains spaces
+            for index, entry in enumerate(line):
+                if entry == "NTFS":
+                    line = [ " ".join(line[:index]) ] + [line[index]] + line[index+1:index+5] + [ " ".join(line[index+5:]) ]
+                    break
 
-                if line[2] == "File" and line[3] == "System":
-                    line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
+            if line[2] == "File" and line[3] == "System":
+                line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
 
-                if line[1] == "btrfs":
-                    device = line[0]
-                    if device not in btrfs_devices:
-                        btrfs_devices.add(device)
-                        df_blocks.append(line[:6] + [ "btrfs " + device ]) # replace mount point with device
+            if line[1] == "btrfs":
+                device = line[0]
+                if device not in btrfs_devices:
+                    btrfs_devices.add(device)
+                    mountpoint = device
 
-                else:
-                    mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /
-                    df_blocks.append(line[:6] + [ mountpoint ])
+            else:
+                mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /
+
+            if line[2] == '-' or int(line[2]) == 0:
+                continue # exclude filesystems without size
+
+            if line[1] in inventory_df_exclude_fs:
+                continue # ignore this filesystem type
+
+
+            # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
+            # for the superuser, whereas the 4th colum ("used MB") does *not* include that.
+            # Beware(2): the column used_mb does not account for the reserved space for
+            # superusers. So we rather use the column 'avail' and subtract that from total
+            # to compute the used space.
+            size_mb    = int(line[2]) / 1024.0
+            avail_mb   = int(line[4]) / 1024.0
+            used_mb    = int(line[3]) / 1024.0
+            reserved_mb = size_mb - avail_mb - used_mb # reserved for root
+            df_blocks.append((mountpoint, size_mb, avail_mb, reserved_mb))
+
         return df_blocks
 
     def parse_inodes_subsection(inodes_subsection):
@@ -133,7 +150,10 @@ def parse_df(info):
                 pass
             else:
                 line = [ line[0], None ] + line[1:]
-            df_inodes.append(line)
+            inodes_total = int(line[2])
+            inodes_avail = int(line[4])
+            mountpoint = line[-1]
+            df_inodes.append((mountpoint, inodes_total, inodes_avail))
         return df_inodes
 
 
@@ -161,13 +181,8 @@ def inventory_df(parsed):
     df_blocks, _ = parsed
     mplist = []
     for line in df_blocks:
-        if line[1] in inventory_df_exclude_fs:
-            continue # ignore this filesystem type
 
-        if line[2] == '-' or int(line[2]) == 0 or line[5] == '-':
-            continue # exclude filesystems without size
-
-        mountpoint = line[6]
+        mountpoint = line[0]
         if mountpoint in inventory_df_exclude_mountpoints:
             continue # exclude this mount point (/tmp, /proc, whatever user wants)
 
@@ -177,28 +192,8 @@ def inventory_df(parsed):
 
 
 def check_df(item, params, parsed):
-    fslist_blocks = []
-    fslist_inodes = []
     df_blocks, df_inodes = parsed
-    for idx, line in enumerate(df_blocks):
-        # df outputs seven columns:
-        # DEVICE FS-TYPE SIZE(KB) USED(KB) AVAIL(KB) USED(%) MOUNTPOINT
-        # The mount point may contain spaces (seen on VMWare volumes and on ESX)
-        mountpoint = line[6]
-        if "patterns" in params or item == mountpoint:
-            # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
-            # for the superuser, whereas the 4th colum ("used MB") does *not* include that.
-            # Beware(2): the column used_mb does not account for the reserved space for
-            # superusers. So we rather use the column 'avail' and subtract that from total
-            # to compute the used space.
-            size_mb    = int(line[2]) / 1024.0
-            avail_mb   = int(line[4]) / 1024.0
-            used_mb    = int(line[3]) / 1024.0
-            reserved_mb = size_mb - avail_mb - used_mb # reserved for root
-            fslist_blocks.append((mountpoint, size_mb, avail_mb, reserved_mb))
-            if df_inodes and len(df_inodes) > idx and not "-" in df_inodes[idx]:
-                fslist_inodes.append((mountpoint, int(df_inodes[idx][2]), int(df_inodes[idx][4])))
-    return df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes)
+    return df_check_filesystem_list(item, params, df_blocks, df_inodes)
 
 
 check_info['df'] = {

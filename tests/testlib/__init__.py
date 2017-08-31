@@ -1136,6 +1136,8 @@ class CMKWebSession(WebSession):
         if allow_foreign_changes != None:
             request["allow_foreign_changes"] = "1" if allow_foreign_changes else "0"
 
+        old_t = self.site.live.query_value("GET status\nColumns: program_start\n")
+
         time_started = time.time()
         result = self._api_request("webapi.py?action=activate_changes", {
             "request": json.dumps(request),
@@ -1149,15 +1151,21 @@ class CMKWebSession(WebSession):
                 "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
-        # HACK: Activating changes can involve an asynchronous(!) monitoring
+        # Activating changes can involve an asynchronous(!) monitoring
         # core restart/reload, so e.g. querying a Livestatus table immediately
-        # might not reflect the changes yet. The right way to handle this would
-        # be polling the "program_start" column of the "status" table until the
-        # reload is complete. But this will only work if there is an actual
-        # restart/reload involved, which we don't know here, only our caller.
-        # Ugly workaround: Wait a moment and hope for the best, wasting a few
-        # seconds is better than a false positive during testing...  >:-P
-        time.sleep(2)
+        # might not reflect the changes yet. Ask the core for a successful reload.
+        def config_reloaded():
+            new_t = self.site.live.query_value("GET status\nColumns: program_start\n")
+            print "New config load time: %s" % new_t
+            return new_t > old_t
+
+        reload_time, timeout = time.time(), 10
+        while not config_reloaded():
+            if time.time() > reload_time + timeout:
+                raise Exception("Config did not update within %d seconds" % timeout)
+            time.sleep(0.2)
+
+        assert config_reloaded()
 
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
@@ -1246,11 +1254,19 @@ class CMKEventConsole(CMKWebSession):
         assert old_t > time.time() - 86400
 
         super(CMKEventConsole, self).activate_changes(allow_foreign_changes=True)
-        time.sleep(1)
 
-        new_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-        print "New config load time: %s" % new_t
-        assert new_t > old_t
+        def config_reloaded():
+            new_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+            print "New config load time: %s" % new_t
+            return new_t > old_t
+
+        reload_time, timeout = time.time(), 10
+        while not config_reloaded():
+            if time.time() > reload_time + timeout:
+                raise Exception("Config did not update within %d seconds" % timeout)
+            time.sleep(0.2)
+
+        assert config_reloaded()
 
 
 

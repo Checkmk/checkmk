@@ -1,0 +1,11 @@
+Title: Fixed highlighting of rules when searching for ineffective rules
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p11
+Date: 1504163636
+
+

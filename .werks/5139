@@ -1,0 +1,16 @@
+Title: Fixed baked agent download page when user had no global bakery permissions
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1504187380
+
+A normal user also required the permission </i>"Register all hosts & download all monitoring agents"</i>
+to be able to download one of his hosts.
+
+
+Additionally no agent download button was shown in the edit host dialog when the permission
+<i>Register Host & download monitoring agents of your hosts</i> waas set.

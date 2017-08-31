@@ -1,0 +1,12 @@
+Title: Made communication with alert helper more robust.
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1504172839
+Class: fix
+
+The Check_MK Micro Core had some trouble restarting the alert helper after a
+failed communication, resulting in alerts not working correctly afterwards. 
+This has been fixed.

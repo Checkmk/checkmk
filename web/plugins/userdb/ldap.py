@@ -736,7 +736,7 @@ class LDAPUserConnector(UserConnector):
                                             self._config['group_scope']):
                 groups[dn] = {
                     'cn'      : obj['cn'][0],
-                    'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
+                    'members' : [ m.lower() for m in obj.get(member_attr,[]) ],
                 }
         else:
             # Special handling for OpenLDAP when searching for groups by DN
@@ -745,7 +745,7 @@ class LDAPUserConnector(UserConnector):
                                                 ['cn', member_attr], 'base'):
                     groups[f_dn] = {
                         'cn'      : obj['cn'][0],
-                        'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
+                        'members' : [ m.lower() for m in obj.get(member_attr,[]) ],
                     }
 
         return groups
@@ -1309,7 +1309,7 @@ def get_connection_choices(add_this=True):
 # This is either the user id or the user distinguished name,
 # depending on the LDAP server to communicate with
 def get_group_member_cmp_val(connection, user_id, ldap_user):
-    return connection.member_attr().lower() == 'memberuid' and user_id or ldap_user['dn']
+    return user_id if connection.member_attr().lower() == 'memberuid' else ldap_user['dn']
 
 
 def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):

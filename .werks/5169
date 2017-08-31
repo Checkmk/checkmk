@@ -1,0 +1,10 @@
+Title: LDAP: Fixed syncing contact groups / roles of users with special characters in their name
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504173591
+Class: fix
+
+

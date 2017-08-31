@@ -49,5 +49,5 @@ setup:
 	    python-pip \
 	    chrpath
 	sudo pip install --upgrade pip
-	sudo pip install --upgrade -r requirements.txt
+	sudo pip install --upgrade --ignore-installed -r requirements.txt
 	$(MAKE) -C pylint setup

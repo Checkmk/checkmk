@@ -67,20 +67,25 @@ factory_settings["filesystem_default_levels"] = {
 }
 
 
+def mountpoints_in_group(mplist, patterns):
+    matching_mountpoints = set()
+    for mountpoint in mplist:
+        for pattern in patterns:
+            if fnmatch.fnmatch(mountpoint, pattern):
+                matching_mountpoints.add(mountpoint)
+                break
+    return matching_mountpoints
+
+
 def ungrouped_mountpoints_and_groups(mplist, group_patterns):
-    ungrouped_mountpoints = []
-    groups = set([])
+    ungrouped_mountpoints = set(mplist)
+    groups = {}
 
     for mp in mplist:
         in_group = False
         for group_name, patterns in group_patterns.items():
-            for pattern in patterns:
-                if fnmatch.fnmatch(mp, pattern):
-                    groups.add(group_name)
-                    in_group = True
-                    break
-        if not in_group:
-            ungrouped_mountpoints.append(mp)
+            groups[group_name] = mountpoints_in_group(mplist, patterns)
+            ungrouped_mountpoints = ungrouped_mountpoints.difference(groups[group_name])
 
     return ungrouped_mountpoints, groups
 
@@ -247,42 +252,51 @@ def get_filesystem_levels(mountpoint, size_gb, params):
 
 # New function for checks that support groups.
 def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
+
+    blocks_info = { mp : { "size_mb"        : size_mb,
+                           "avail_mb"       : avail_mb,
+                           "reserved_mb"    : reserved_mb,
+                         }
+                    for (mp, size_mb, avail_mb, reserved_mb) in fslist_blocks }
+
+    if fslist_inodes:
+        inodes_info = { mp : { "inodes_total"   : inodes_total,
+                               "inodes_avail"   : inodes_avail,
+                             }
+                        for (mp, inodes_total, inodes_avail) in fslist_inodes }
+    else:
+        inodes_info = {}
+
+    mplist = blocks_info.keys()
+
     if "patterns" in params:
         patterns = params["patterns"]
-        count = 0
-        total_size_mb      = 0
-        total_avail_mb     = 0
-        total_reserved_mb  = 0
-        total_inodes       = 0
-        total_inodes_avail = 0
-        for idx, (mp, size_mb, avail_mb, reserved_mb) in enumerate(fslist_blocks):
-            for pattern in patterns:
-                if fnmatch.fnmatch(mp, pattern):
-                    count += 1
-                    total_size_mb     += size_mb
-                    total_avail_mb    += avail_mb
-                    total_reserved_mb += reserved_mb
-                    if fslist_inodes:
-                        total_inodes       += fslist_inodes[idx][1]
-                        total_inodes_avail += fslist_inodes[idx][2]
-                    break
-        # If no filesystem has been found we cannot do the
-        # actual check since the size is zero.
+        matching_mountpoints = mountpoints_in_group(mplist, patterns)
+        count = len(matching_mountpoints)
         if count == 0:
-            return (3, "No filesystem matching the patterns")
-        else:
-            status, infotext, perfdata = df_check_filesystem_single(item, total_size_mb, total_avail_mb, total_reserved_mb, total_inodes, total_inodes_avail, params)
-            infotext += " (%d filesystems)" % count
-            return status, infotext, perfdata
+            return 3, "No filesystem matching the patterns"
+
+        total_size_mb = sum(block_info["size_mb"] for (mp, block_info) in blocks_info.items() if mp in matching_mountpoints)
+        total_avail_mb = sum(block_info["avail_mb"] for (mp, block_info) in blocks_info.items() if mp in matching_mountpoints)
+        total_reserved_mb = sum(block_info["reserved_mb"] for (mp, block_info) in blocks_info.items() if mp in matching_mountpoints)
+
+        total_inodes = sum(inode_info["inodes_total"] for (mp, inode_info) in inodes_info.items() if mp in matching_mountpoints)
+        total_inodes_avail = sum(inode_info["inodes_avail"] for (mp, inode_info) in inodes_info.items() if mp in matching_mountpoints)
+
+        status, infotext, perfdata = df_check_filesystem_single(item, total_size_mb, total_avail_mb, total_reserved_mb, total_inodes, total_inodes_avail, params)
+        infotext += " (%d filesystems)" % count
+        return status, infotext, perfdata
     else:
-        for idx, (mp, size_mb, avail_mb, reserved_mb) in enumerate(fslist_blocks):
-            if mp == item:
-                if fslist_inodes:
-                    inodes_total, inodes_avail = fslist_inodes[idx][1], fslist_inodes[idx][2]
-                else:
-                    inodes_total, inodes_avail = None, None
-                return df_check_filesystem_single(mp, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params)
-        return (3, "filesystem not found")
+        if item in blocks_info:
+            mp = item
+            return df_check_filesystem_single(mp, blocks_info[mp]["size_mb"],
+                                                  blocks_info[mp]["avail_mb"],
+                                                  blocks_info[mp]["reserved_mb"],
+                                                  blocks_info[mp].get("inodes_total", None),
+                                                  blocks_info[mp].get("inodes_avail", None),
+                                                  params)
+        else:
+            return 3, "filesystem not found"
 
 
 def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params, this_time = None):
@@ -456,10 +470,6 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
                     problems.append("time left until disk full: %s" % format_hours(hours_left))
 
             if levels.get("trend_perfdata"):
-                # New in 1.1.13i3: output trend not as MB / trend_range, but as
-                # MB / 24 hours. The same holds for the warn and crit information.
-                # It is configured in MB / trend range but in the performance data
-                # it's sent as MB / 24h.
                 perfdata.append(("trend", rate_avg * H24,
                                 warn_perf != None and (warn_perf / range_sec * H24) or None,
                                 crit_perf != None and (crit_perf / range_sec * H24) or None,

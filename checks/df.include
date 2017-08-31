@@ -80,7 +80,7 @@ def ungrouped_mountpoints_and_groups(mplist, group_patterns):
                     in_group = True
                     break
         if not in_group:
-            ungrouped_mountpoints.append((mp, {}))
+            ungrouped_mountpoints.append(mp)
 
     return ungrouped_mountpoints, groups
 
@@ -93,7 +93,8 @@ def df_inventory(mplist):
 
     ungrouped_mountpoints, groups = ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
-    return ungrouped_mountpoints + list(groups)
+    return [ (mp, {}) for mp in ungrouped_mountpoints ] \
+            + [ (group, {"patterns" : group_patterns[group]}) for group in groups ]
 
 
 # Users might have set filesystem_default_levels to old format like (80, 90)

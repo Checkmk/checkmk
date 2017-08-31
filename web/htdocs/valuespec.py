@@ -2008,6 +2008,7 @@ class ListChoice(ValueSpec):
         self._choices = kwargs.get("choices")
         self._columns = kwargs.get("columns", 1)
         self._allow_empty = kwargs.get("allow_empty", True)
+        self._empty_text = kwargs.get("empty_text", _("(nothing selected)"))
         self._loaded_at = None
         self._render_function = kwargs.get("render_function",
                   lambda id, val: val)
@@ -2068,6 +2069,9 @@ class ListChoice(ValueSpec):
 
 
     def value_to_text(self, value):
+        if not value:
+            return self._empty_text
+
         self.load_elements()
         d = dict(self._elements)
         texts = [ self._render_function(v, d.get(v,v)) for v in value ]

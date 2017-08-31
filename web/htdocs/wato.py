@@ -12926,7 +12926,7 @@ class ModeEditRuleset(WatoMode):
 
             if ruleset.has_rule_search_options(search_options) \
                and rule.matches_search(search_options) \
-               and ("fulltext" in search_options and not ruleset.matches_fulltext_search(search_options)):
+               and ("fulltext" not in search_options or not ruleset.matches_fulltext_search(search_options)):
                 css.append("matches_search")
 
             table.row(css=" ".join(css) if css else None)

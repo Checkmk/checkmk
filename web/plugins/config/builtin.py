@@ -291,6 +291,7 @@ userdb_automatic_sync = "master"
 user_connections = []
 
 default_user_profile  = {
+    'contactgroups': [],
     'roles': ['user'],
 }
 lock_on_logon_failures = False

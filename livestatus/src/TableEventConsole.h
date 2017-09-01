@@ -72,7 +72,7 @@ protected:
                            const std::function<T(std::string)> &f)
             : _column(column), _default_value(default_value), _f(f) {}
 
-        std::string getRaw(ECRow *row) const {
+        std::string getRaw(const ECRow *row) const {
             return row == nullptr ? "" : row->_map.at(_column.name());
         }
 
@@ -157,9 +157,11 @@ protected:
                            : mk::split(x.substr(1), '\001');
             }) {}
 
-        bool isNone(ECRow *row) { return _ecc.getRaw(row) == "\002"; }
+        bool isNone(const ECRow *row) const {
+            return _ecc.getRaw(row) == "\002";
+        }
 
-        _column_t getValue(Row row) { return _ecc.getValue(row); }
+        _column_t getValue(Row row) const { return _ecc.getValue(row); }
 
         void output(Row row, RowRenderer &r,
                     const contact * /* auth_user */) const override {
@@ -198,9 +200,9 @@ protected:
 
 private:
     bool isAuthorizedForEventViaContactGroups(MonitoringCore::Contact *ctc,
-                                              ECRow *row, bool &result);
-    bool isAuthorizedForEventViaHost(MonitoringCore::Contact *ctc, ECRow *row,
-                                     bool &result);
+                                              const ECRow *row, bool &result);
+    bool isAuthorizedForEventViaHost(MonitoringCore::Contact *ctc,
+                                     const ECRow *row, bool &result);
 };
 
 #endif  // TableEventConsole_h

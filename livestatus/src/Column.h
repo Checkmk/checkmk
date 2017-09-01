@@ -81,7 +81,7 @@ private:
     int _extra_offset;
     int _extra_extra_offset;
 
-    void *shiftPointer(Row row) const;
+    const void *shiftPointer(Row row) const;
 };
 
 #endif  // Column_h

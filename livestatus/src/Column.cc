@@ -42,16 +42,17 @@ Column::Column(string name, string description, int indirect_offset,
     , _extra_extra_offset(extra_extra_offset) {}
 
 namespace {
-void *shift(void *data, int offset) {
-    return (data == nullptr || offset < 0) ? data
-                                           : *offset_cast<void *>(data, offset);
+const void *shift(const void *data, int offset) {
+    return (data == nullptr || offset < 0)
+               ? data
+               : *offset_cast<const void *>(data, offset);
 }
 }  // namespace
 
-void *Column::shiftPointer(Row row) const {
-    return shift(
-        shift(shift(row.rawData<void>(), _indirect_offset), _extra_offset),
-        _extra_extra_offset);
+const void *Column::shiftPointer(Row row) const {
+    return shift(shift(shift(row.rawData<const void>(), _indirect_offset),
+                       _extra_offset),
+                 _extra_extra_offset);
 }
 
 unique_ptr<Filter> Column::createFilter(RelationalOperator /*unused*/,

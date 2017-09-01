@@ -36,19 +36,20 @@ bool host_has_contact(const host *hst, const contact *ctc) {
                                          const_cast<contact *>(ctc)) != 0;
 }
 
-bool service_has_contact(MonitoringCore *mc, const host *hst, service *svc,
-                         const contact *ctc) {
+bool service_has_contact(MonitoringCore *mc, const host *hst,
+                         const service *svc, const contact *ctc) {
     // Older Nagios headers are not const-correct... :-P
-    return is_contact_for_service(svc, const_cast<contact *>(ctc)) != 0 ||
-           is_escalated_contact_for_service(svc, const_cast<contact *>(ctc)) !=
-               0 ||
+    return is_contact_for_service(const_cast<service *>(svc),
+                                  const_cast<contact *>(ctc)) != 0 ||
+           is_escalated_contact_for_service(const_cast<service *>(svc),
+                                            const_cast<contact *>(ctc)) != 0 ||
            (mc->serviceAuthorization() == AuthorizationKind::loose &&
             host_has_contact(hst, ctc));
 }
 }  // namespace
 
 bool is_authorized_for(MonitoringCore *mc, const contact *ctc, const host *hst,
-                       service *svc) {
+                       const service *svc) {
     return ctc != unknown_auth_user() &&
            (svc == nullptr ? host_has_contact(hst, ctc)
                            : service_has_contact(mc, hst, svc, ctc));

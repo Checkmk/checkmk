@@ -94,7 +94,7 @@ public:
     virtual Row findObject(const std::string &objectspec);
 
     template <typename T>
-    T *rowData(Row row) const {
+    const T *rowData(Row row) const {
         return row.rawData<T>();
     }
 

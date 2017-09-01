@@ -72,6 +72,7 @@ apache_wait_stop() {
   # running ?
   pid=$(pidof_apache) || true
   if [ -n "${pid:-}" ]; then
+    echo -n "killing ${pid:-}..."
     kill ${pid:-}
   else
     echo -n '(not running)...'
@@ -99,8 +100,9 @@ apache_wait_stop() {
 }
 
 apache_wait_start() {
-  if pidof_apache >/dev/null 2>&1; then
-    echo -n '(already running)...'
+  pid=$(pidof_apache)
+  if [ -n "$pid" ]; then
+    echo -n "(already running: $pid)..."
     return 0
   fi
 

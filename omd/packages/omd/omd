@@ -1851,7 +1851,10 @@ def load_config_hooks():
     load_hook_dependencies()
 
 def config_load_hook(hook_name):
-    hook = { "name" : hook_name }
+    hook = {
+        "name"       : hook_name,
+        "deprecated" : False,
+    }
 
     description = ""
     description_active = False
@@ -1860,6 +1863,8 @@ def config_load_hook(hook_name):
             hook["alias"] = line[8:].strip()
         elif line.startswith("# Menu:"):
             hook["menu"] = line[7:].strip()
+        elif line.startswith("# Deprecated: yes"):
+            hook["deprecated"] = True
         elif line.startswith("# Description:"):
             description_active = True
         elif line.startswith("#  ") and description_active:
@@ -2080,7 +2085,7 @@ def config_show(args):
         hook_names.sort()
         for hook_name in hook_names:
             hook = g_config_hooks[hook_name]
-            if hook["active"]:
+            if hook["active"] and not hook["deprecated"]:
                 sys.stdout.write("%s: %s\n" % (hook_name, g_site_conf[hook_name]))
     else:
         output = []
@@ -2111,7 +2116,7 @@ def config_configure():
         menu = {}
         for hook_name in hook_names:
             hook = g_config_hooks[hook_name]
-            if hook["active"]:
+            if hook["active"] and not hook["deprecated"]:
                 mp = hook.get("menu", "Other")
                 entries = menu.get(mp, [])
                 entries.append((hook_name, g_site_conf[hook_name]))

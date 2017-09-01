@@ -2,6 +2,7 @@
 
 # Alias: Deprecated - Use Dokuwiki for user management
 # Menu: Web GUI
+# Deprecated: yes
 # Description:
 #  In previous versions the Dokuwiki user database could be used as user database
 #  for all OMD components. This was never working correctly and was rarely used.

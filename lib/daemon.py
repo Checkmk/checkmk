@@ -101,18 +101,32 @@ def set_cmdline(cmdline):
     Change the process name and process command line on of the running process
     This works at least with Python 2.x on Linux
     """
-    libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('c'))
-
     argv = ctypes.POINTER(ctypes.c_char_p)()
     argc = ctypes.c_int()
     ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
     cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value
     new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, '\0'))
 
+    set_procname(cmdline)
+
+
+def set_procname(cmdline):
+    """
+    Change the process name of the running process
+    This works at least with Python 2.x on Linux
+    """
+    libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('c'))
+
+    #argv = ctypes.POINTER(ctypes.c_char_p)()
+
     # replace the command line, which is available via /proc/<pid>/cmdline.
     # This is .e.g used by ps
-    libc.memcpy(argv.contents, new_cmdline, cmdlen)
+    #libc.memcpy(argv.contents, new_cmdline, cmdlen)
 
     # replace the prctl name, which is available via /proc/<pid>/status.
     # This is for example used by top and killall
-    libc.prctl(15, new_cmdline, 0, 0, 0)
+    #libc.prctl(15, new_cmdline, 0, 0, 0)
+
+    name_buffer = ctypes.create_string_buffer(len(cmdline)+1)
+    name_buffer.value = cmdline
+    libc.prctl(15, ctypes.byref(name_buffer), 0, 0, 0)

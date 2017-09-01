@@ -43,7 +43,7 @@ inline contact *unknown_auth_user() {
 contact *unknown_auth_user();
 class MonitoringCore;
 bool is_authorized_for(MonitoringCore *mc, const contact *ctc, const host *hst,
-                       service *svc);
+                       const service *svc);
 #endif
 
 #endif  // auth_h

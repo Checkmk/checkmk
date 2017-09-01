@@ -30,18 +30,18 @@
 class Row {
 public:
     // Here we basically forget the actual type of the row...
-    explicit Row(void *ptr) : _ptr(ptr) {}
+    explicit Row(const void *ptr) : _ptr(ptr) {}
 
     // ... and here we reconstruct it, hopefully in a correct way. :-/
     template <typename T>
-    T *rawData() const {
-        return static_cast<T *>(_ptr);
+    const T *rawData() const {
+        return static_cast<const T *>(_ptr);
     }
 
     bool isNull() const { return _ptr == nullptr; }
 
 private:
-    void *_ptr;
+    const void *_ptr;
 };
 
 #endif  // Row_h

@@ -132,7 +132,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row, contact *ctc) {
 }
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
-    MonitoringCore::Contact *ctc, ECRow *row, bool &result) {
+    MonitoringCore::Contact *ctc, const ECRow *row, bool &result) {
     auto col = static_pointer_cast<ListEventConsoleColumn>(
         column("event_contact_groups"));
     if (col->isNone(row)) {
@@ -148,7 +148,7 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
 }
 
 bool TableEventConsole::isAuthorizedForEventViaHost(
-    MonitoringCore::Contact *ctc, ECRow *row, bool &result) {
+    MonitoringCore::Contact *ctc, const ECRow *row, bool &result) {
     if (MonitoringCore::Host *hst = row->_host) {
         return (result = core()->host_has_contact(hst, ctc), true);
     }

@@ -54,7 +54,7 @@ void Table::addDynamicColumn(unique_ptr<DynamicColumn> dyncol) {
     _dynamic_columns.emplace(name, move(dyncol));
 }
 
-shared_ptr<Column> Table::column(string colname) {
+shared_ptr<Column> Table::column(string colname) const {
     // Strip away a sequence of prefixes.
     while (starts_with(colname, namePrefix())) {
         colname = colname.substr(namePrefix().size());
@@ -83,7 +83,7 @@ shared_ptr<Column> Table::column(string colname) {
 }
 
 unique_ptr<Column> Table::dynamicColumn(const string &name,
-                                        const string &rest) {
+                                        const string &rest) const {
     auto it = _dynamic_columns.find(name);
     if (it == _dynamic_columns.end()) {
         Warning(logger()) << "Unknown dynamic column '" << name << "'";
@@ -107,8 +107,10 @@ unique_ptr<Column> Table::dynamicColumn(const string &name,
     return it->second->createColumn(name2, rest.substr(sep_pos + 1));
 }
 
-bool Table::isAuthorized(Row /*unused*/, contact * /*unused*/) { return true; }
+bool Table::isAuthorized(Row /*unused*/, const contact * /*unused*/) const {
+    return true;
+}
 
-Row Table::findObject(const string & /*unused*/) { return Row(nullptr); }
+Row Table::findObject(const string & /*unused*/) const { return Row(nullptr); }
 
 Logger *Table::logger() const { return _mc->loggerLivestatus(); }

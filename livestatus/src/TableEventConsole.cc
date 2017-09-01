@@ -108,9 +108,10 @@ void TableEventConsole::answerQuery(Query *query) {
     }
 }
 
-bool TableEventConsole::isAuthorizedForEvent(Row row, contact *ctc) {
+bool TableEventConsole::isAuthorizedForEvent(Row row,
+                                             const contact *ctc) const {
     // TODO(sp) Remove evil casts below.
-    auto c = reinterpret_cast<MonitoringCore::Contact *>(ctc);
+    auto c = reinterpret_cast<const MonitoringCore::Contact *>(ctc);
     auto r = rowData<ECRow>(row);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
@@ -132,7 +133,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row, contact *ctc) {
 }
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
-    MonitoringCore::Contact *ctc, const ECRow *row, bool &result) {
+    const MonitoringCore::Contact *ctc, const ECRow *row, bool &result) const {
     auto col = static_pointer_cast<ListEventConsoleColumn>(
         column("event_contact_groups"));
     if (col->isNone(row)) {
@@ -148,7 +149,7 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
 }
 
 bool TableEventConsole::isAuthorizedForEventViaHost(
-    MonitoringCore::Contact *ctc, const ECRow *row, bool &result) {
+    const MonitoringCore::Contact *ctc, const ECRow *row, bool &result) const {
     if (MonitoringCore::Host *hst = row->_host) {
         return (result = core()->host_has_contact(hst, ctc), true);
     }

@@ -53,7 +53,7 @@ public:
     void addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol);
 
     template <typename Predicate>
-    bool any_column(Predicate pred) {
+    bool any_column(Predicate pred) const {
         for (auto &c : _columns) {
             if (pred(c.second)) {
                 return true;
@@ -87,11 +87,22 @@ public:
     /// TableLog override it for some dubious reason: They first try the normal
     /// lookup, and if that didn't find a column, the lookup is retried with a
     /// "current_" prefix. This logic should probably not live in cmc at all.
-    virtual std::shared_ptr<Column> column(std::string colname);
+    virtual std::shared_ptr<Column> column(std::string colname) const;
 
+    // NOTE: We can't make the query argument 'const' right now, because we call
+    // the non-const Query::processDataset() member function on it. This is a
+    // bit ugly, but only a minor issue: Each Query instance is only accessed in
+    // the thread which created it. Splitting up the Query class into a const
+    // and a non-const part can probably fix that wart.
+    //
+    // A much bigger problem is that we can't make answerQuery() itself 'const',
+    // because its impementations in TableStateHistory and TableCachedStatehist
+    // are non-const. Tables are shared between threads and the locking in the
+    // problematic answerQuery() implementations is a "bit" chaotic, so this can
+    // be a real correctness problem! This has to be fixed...
     virtual void answerQuery(Query *query) = 0;
-    virtual bool isAuthorized(Row row, contact *ctc);
-    virtual Row findObject(const std::string &objectspec);
+    virtual bool isAuthorized(Row row, const contact *ctc) const;
+    virtual Row findObject(const std::string &objectspec) const;
 
     template <typename T>
     const T *rowData(Row row) const {
@@ -105,7 +116,7 @@ private:
     MonitoringCore *_mc;
 
     std::unique_ptr<Column> dynamicColumn(const std::string &name,
-                                          const std::string &rest);
+                                          const std::string &rest) const;
 
     std::map<std::string, std::shared_ptr<Column>> _columns;
     std::map<std::string, std::unique_ptr<DynamicColumn>> _dynamic_columns;

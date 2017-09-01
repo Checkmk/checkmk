@@ -940,7 +940,7 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
     hs_state->_from = hs_state->_until;
 }
 
-bool TableStateHistory::isAuthorized(Row row, contact *ctc) {
+bool TableStateHistory::isAuthorized(Row row, const contact *ctc) const {
     auto entry = rowData<HostServiceState>(row);
     service *svc = entry->_service;
     host *hst = entry->_host;
@@ -948,7 +948,7 @@ bool TableStateHistory::isAuthorized(Row row, contact *ctc) {
            is_authorized_for(core(), ctc, hst, svc);
 }
 
-shared_ptr<Column> TableStateHistory::column(string colname) {
+shared_ptr<Column> TableStateHistory::column(string colname) const {
     // First try to find column in the usual way
     if (auto col = Table::column(colname)) {
         return col;

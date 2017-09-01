@@ -143,6 +143,6 @@ void TableContacts::answerQuery(Query *query) {
     }
 }
 
-Row TableContacts::findObject(const string &objectspec) {
+Row TableContacts::findObject(const string &objectspec) const {
     return Row(find_contact(const_cast<char *>(objectspec.c_str())));
 }

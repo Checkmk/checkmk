@@ -197,7 +197,7 @@ void Query::invalidHeader(const string &message) {
     _output.setError(OutputBuffer::ResponseCode::invalid_header, message);
 }
 
-void Query::invalidRequest(const string &message) {
+void Query::invalidRequest(const string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
 }
 
@@ -669,7 +669,7 @@ void Query::parseLocaltimeLine(char *line) {
     }
 }
 
-bool Query::doStats() { return !_stats_columns.empty(); }
+bool Query::doStats() const { return !_stats_columns.empty(); }
 
 bool Query::process() {
     // Precondition: output has been reset
@@ -708,7 +708,7 @@ void Query::start(QueryRenderer &q) {
     }
 }
 
-bool Query::timelimitReached() {
+bool Query::timelimitReached() const {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
         _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
                          "Maximum query time of " + to_string(_time_limit) +
@@ -786,15 +786,17 @@ void Query::finish(QueryRenderer &q) {
     }
 }
 
-const string *Query::findValueForIndexing(const string &column_name) {
+const string *Query::findValueForIndexing(const string &column_name) const {
     return _filter.findValueForIndexing(column_name);
 }
 
-void Query::findIntLimits(const string &column_name, int *lower, int *upper) {
+void Query::findIntLimits(const string &column_name, int *lower,
+                          int *upper) const {
     return _filter.findIntLimits(column_name, lower, upper, _timezone_offset);
 }
 
-void Query::optimizeBitmask(const string &column_name, uint32_t *bitmask) {
+void Query::optimizeBitmask(const string &column_name,
+                            uint32_t *bitmask) const {
     _filter.optimizeBitmask(column_name, bitmask, _timezone_offset);
 }
 

@@ -51,8 +51,8 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    bool isAuthorized(Row row, contact *ctc) override;
-    std::shared_ptr<Column> column(std::string colname) override;
+    bool isAuthorized(Row row, const contact *ctc) const override;
+    std::shared_ptr<Column> column(std::string colname) const override;
 
 protected:
     bool _abort_query;
@@ -61,7 +61,7 @@ private:
     LogCache *_log_cache;
 
     int _query_timeframe;
-    Query *_query;
+    const Query *_query;
     int _since;
     int _until;
 

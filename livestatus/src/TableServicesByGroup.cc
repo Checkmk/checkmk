@@ -84,11 +84,11 @@ void TableServicesByGroup::answerQuery(Query *query) {
     }
 }
 
-bool TableServicesByGroup::isAuthorized(Row row, contact *ctc) {
+bool TableServicesByGroup::isAuthorized(Row row, const contact *ctc) const {
     auto svc = &rowData<servicebygroup>(row)->_service;
     return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }
 
-Row TableServicesByGroup::findObject(const string &objectspec) {
+Row TableServicesByGroup::findObject(const string &objectspec) const {
     return Row(getServiceBySpec(objectspec));
 }

@@ -55,6 +55,6 @@ string TableEventConsoleHistory::namePrefix() const {
     return "eventconsolehistory_";
 }
 
-bool TableEventConsoleHistory::isAuthorized(Row row, contact *ctc) {
+bool TableEventConsoleHistory::isAuthorized(Row row, const contact *ctc) const {
     return isAuthorizedForEvent(row, ctc);
 }

@@ -57,19 +57,24 @@ public:
 
     bool process();
 
+    // NOTE: We cannot make this 'const' right now, it increments _current_line
+    // and calls the non-const getAggregatorsFor() member function.
     bool processDataset(Row row);
 
-    bool timelimitReached();
-    void invalidRequest(const std::string &message);
+    bool timelimitReached() const;
+    void invalidRequest(const std::string &message) const;
 
-    contact *authUser() { return _auth_user; }
-    int timezoneOffset() { return _timezone_offset; }
+    const contact *authUser() const { return _auth_user; }
+    int timezoneOffset() const { return _timezone_offset; }
 
-    const std::string *findValueForIndexing(const std::string &column_name);
-    void findIntLimits(const std::string &column_name, int *lower, int *upper);
-    void optimizeBitmask(const std::string &column_name, uint32_t *bitmask);
-    AndingFilter *filter() { return &_filter; }
-    const std::unordered_set<std::shared_ptr<Column>> &allColumns() {
+    const std::string *findValueForIndexing(
+        const std::string &column_name) const;
+    void findIntLimits(const std::string &column_name, int *lower,
+                       int *upper) const;
+    void optimizeBitmask(const std::string &column_name,
+                         uint32_t *bitmask) const;
+    const AndingFilter *filter() const { return &_filter; }
+    const std::unordered_set<std::shared_ptr<Column>> &allColumns() const {
         return _all_columns;
     }
 
@@ -104,7 +109,7 @@ private:
     // invalidHeader can be called during header parsing
     void invalidHeader(const std::string &message);
 
-    bool doStats();
+    bool doStats() const;
     void doWait();
     // TODO(sp) The column parameter should actually be a const reference, but
     // Column::createFilter is not const-correct yet...
@@ -135,6 +140,9 @@ private:
     void parseLocaltimeLine(char *line);
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
+
+    // NOTE: We cannot make this 'const' right now, it adds entries into
+    // _stats_groups.
     const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(
         const RowFragment &groupspec);
 };

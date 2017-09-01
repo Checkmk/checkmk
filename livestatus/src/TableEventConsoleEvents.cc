@@ -100,6 +100,6 @@ string TableEventConsoleEvents::namePrefix() const {
     return "eventconsoleevents_";
 }
 
-bool TableEventConsoleEvents::isAuthorized(Row row, contact *ctc) {
+bool TableEventConsoleEvents::isAuthorized(Row row, const contact *ctc) const {
     return isAuthorizedForEvent(row, ctc);
 }

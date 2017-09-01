@@ -196,13 +196,14 @@ protected:
         }
     };
 
-    bool isAuthorizedForEvent(Row row, contact *ctc);
+    bool isAuthorizedForEvent(Row row, const contact *ctc) const;
 
 private:
-    bool isAuthorizedForEventViaContactGroups(MonitoringCore::Contact *ctc,
-                                              const ECRow *row, bool &result);
-    bool isAuthorizedForEventViaHost(MonitoringCore::Contact *ctc,
-                                     const ECRow *row, bool &result);
+    bool isAuthorizedForEventViaContactGroups(
+        const MonitoringCore::Contact *ctc, const ECRow *row,
+        bool &result) const;
+    bool isAuthorizedForEventViaHost(const MonitoringCore::Contact *ctc,
+                                     const ECRow *row, bool &result) const;
 };
 
 #endif  // TableEventConsole_h

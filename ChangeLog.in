@@ -4802,3 +4802,4 @@
       * setup.sh does not overwrite check_mk.cfg but installs
 	the new default file as check_mk.cfg-1.0.19
       * Put hosts into default hostgroup if none is configured
+

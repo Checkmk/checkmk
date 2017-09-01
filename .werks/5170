@@ -1,0 +1,15 @@
+Title: Removed TMPFS config hook
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504264521
+Class: fix
+
+The "omd config" setting TMPFS, which could be used to disable the ramdisk that is mounted
+below /omd/sites/[site]/tmp, has been removed now. The option was added for rare situations
+where you could not create/mount ramdisks via tmpfs.
+
+Because not using a tmpfs could result in loss of performance we remove this setting now. In
+case you really need sites without tmpfs, please let us know.

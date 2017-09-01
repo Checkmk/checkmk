@@ -1514,30 +1514,16 @@ def tmpfs_mounted(sitename):
 def prepare_and_populate_tmpfs(sitename):
     tmp = tmp_dir(sitename)
 
-    # Only try to mount the tmpfs if it is enabled for this site
-    # When not using the tmpfs the tmp/ hierarchy needs to be
-    # to be populated like the tmpfs afterwards.
-    if g_site_conf["TMPFS"] == "on":
-        if tmpfs_mounted(sitename):
-            return
+    if tmpfs_mounted(sitename):
+        return
 
-        sys.stdout.write("Creating temporary filesystem %s..." % tmp)
-        sys.stdout.flush()
-        if not os.path.exists(tmp):
-            os.mkdir(tmp)
-        if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
-            sys.stdout.write(tty_error + "\n")
-            return
-    else:
-        # Skip initializing when either the tmp dir does not exist
-        # and the site is not totally stopped
-        if os.path.exists(tmp) and not site_is_stopped(sitename):
-            return
-
-        sys.stdout.write("Preparing tmp directory %s..." % tmp)
-        sys.stdout.flush()
-        if not os.path.exists(tmp):
-            os.mkdir(tmp)
+    sys.stdout.write("Creating temporary filesystem %s..." % tmp)
+    sys.stdout.flush()
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
+        sys.stdout.write(tty_error + "\n")
+        return
 
     create_skeleton_files(sitename, "tmp")
     chown_tree(tmp, sitename)

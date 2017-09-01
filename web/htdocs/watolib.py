@@ -8238,7 +8238,8 @@ def delete_group(name, group_type):
     # Check if still used
     usages = find_usages_of_group(name, group_type)
     if usages:
-        raise MKUserError(None, _("Unable to delete group. It is still in use"))
+        raise MKUserError(None, _("Unable to delete group. It is still in use by: %s") %
+                                                    ", ".join([  e[0] for e in usages ]))
 
     # Delete group
     group = groups.pop(name)
@@ -8344,7 +8345,7 @@ def find_usages_of_contact_group(name):
     # Used in default_user_profile?
     domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()['default_user_profile']
     configured = global_config.get('default_user_profile', {})
-    default_value = valuespec.default_value()
+    default_value = domain().default_globals()["default_user_profile"]
     if (configured and name in configured['contactgroups']) \
        or name in  default_value['contactgroups']:
         used_in.append(('%s' % (_('Default User Profile')),
@@ -8354,7 +8355,7 @@ def find_usages_of_contact_group(name):
     if 'mkeventd_notify_contactgroup' in configvars():
         domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()['mkeventd_notify_contactgroup']
         configured = global_config.get('mkeventd_notify_contactgroup')
-        default_value = valuespec.default_value()
+        default_value = domain().default_globals()["mkeventd_notify_contactgroup"]
         if (configured and name == configured) \
            or name == default_value:
             used_in.append(('%s' % (valuespec.title()),

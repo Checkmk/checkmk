@@ -76,9 +76,9 @@ public:
     time_t since() { return _since; }
     unsigned classesRead() { return _logclasses_read; }
     long numEntries() { return _entries.size(); }
-    logfile_entries_t *getEntriesFromQuery(Query *query, LogCache *logcache,
-                                           time_t since, time_t until,
-                                           unsigned);
+    logfile_entries_t *getEntriesFromQuery(const Query *query,
+                                           LogCache *logcache, time_t since,
+                                           time_t until, unsigned);
     bool answerQuery(Query *query, LogCache *logcache, time_t since,
                      time_t until, unsigned);
     bool answerQueryReverse(Query *query, LogCache *logcache, time_t since,

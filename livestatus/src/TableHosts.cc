@@ -696,10 +696,10 @@ void TableHosts::answerQuery(Query *query) {
         }
     }
 }
-bool TableHosts::isAuthorized(Row row, contact *ctc) {
+bool TableHosts::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for(core(), ctc, rowData<host>(row), nullptr);
 }
 
-Row TableHosts::findObject(const string &objectspec) {
+Row TableHosts::findObject(const string &objectspec) const {
     return Row(find_host(const_cast<char *>(objectspec.c_str())));
 }

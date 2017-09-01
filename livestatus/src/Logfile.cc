@@ -211,7 +211,7 @@ bool Logfile::processLogLine(uint32_t lineno, string line,
     return true;
 }
 
-logfile_entries_t *Logfile::getEntriesFromQuery(Query * /*unused*/,
+logfile_entries_t *Logfile::getEntriesFromQuery(const Query * /*unused*/,
                                                 LogCache *logcache,
                                                 time_t since, time_t until,
                                                 unsigned logclasses) {

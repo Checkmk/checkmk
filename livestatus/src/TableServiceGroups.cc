@@ -144,11 +144,11 @@ void TableServiceGroups::answerQuery(Query *query) {
     }
 }
 
-Row TableServiceGroups::findObject(const string &objectspec) {
+Row TableServiceGroups::findObject(const string &objectspec) const {
     return Row(find_servicegroup(const_cast<char *>(objectspec.c_str())));
 }
 
-bool TableServiceGroups::isAuthorized(Row row, contact *ctc) {
+bool TableServiceGroups::isAuthorized(Row row, const contact *ctc) const {
     if (ctc == unknown_auth_user()) {
         return false;
     }

@@ -66,11 +66,11 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
     }
 }
 
-bool TableServicesByHostGroup::isAuthorized(Row row, contact *ctc) {
+bool TableServicesByHostGroup::isAuthorized(Row row, const contact *ctc) const {
     auto svc = &rowData<servicebyhostgroup>(row)->_service;
     return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }
 
-Row TableServicesByHostGroup::findObject(const string &objectspec) {
+Row TableServicesByHostGroup::findObject(const string &objectspec) const {
     return Row(getServiceBySpec(objectspec));
 }

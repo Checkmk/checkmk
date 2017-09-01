@@ -183,11 +183,11 @@ void TableHostGroups::answerQuery(Query *query) {
     }
 }
 
-Row TableHostGroups::findObject(const string &objectspec) {
+Row TableHostGroups::findObject(const string &objectspec) const {
     return Row(find_hostgroup(const_cast<char *>(objectspec.c_str())));
 }
 
-bool TableHostGroups::isAuthorized(Row row, contact *ctc) {
+bool TableHostGroups::isAuthorized(Row row, const contact *ctc) const {
     if (ctc == unknown_auth_user()) {
         return false;
     }

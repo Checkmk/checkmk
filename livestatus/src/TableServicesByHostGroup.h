@@ -40,8 +40,8 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *) override;
-    bool isAuthorized(Row, contact *) override;
-    Row findObject(const std::string &objectspec) override;
+    bool isAuthorized(Row, const contact *) const override;
+    Row findObject(const std::string &objectspec) const override;
 };
 
 #endif  // TableServicesByHostGroup_h

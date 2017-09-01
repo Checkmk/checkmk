@@ -182,7 +182,7 @@ void TableLog::answerQuery(Query *query) {
     }
 }
 
-bool TableLog::isAuthorized(Row row, contact *ctc) {
+bool TableLog::isAuthorized(Row row, const contact *ctc) const {
     auto entry = rowData<LogEntry>(row);
     service *svc = entry->_service;
     host *hst = entry->_host;
@@ -199,7 +199,7 @@ bool TableLog::isAuthorized(Row row, contact *ctc) {
              entry->_logclass == LogEntry::Class::state);
 }
 
-shared_ptr<Column> TableLog::column(string colname) {
+shared_ptr<Column> TableLog::column(string colname) const {
     // First try to find column in the usual way
     if (auto col = Table::column(colname)) {
         return col;

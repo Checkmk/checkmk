@@ -82,11 +82,11 @@ void TableHostsByGroup::answerQuery(Query *query) {
     }
 }
 
-bool TableHostsByGroup::isAuthorized(Row row, contact *ctc) {
+bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for(core(), ctc, &rowData<hostbygroup>(row)->_host,
                              nullptr);
 }
 
-Row TableHostsByGroup::findObject(const string &objectspec) {
+Row TableHostsByGroup::findObject(const string &objectspec) const {
     return Row(find_host(const_cast<char *>(objectspec.c_str())));
 }

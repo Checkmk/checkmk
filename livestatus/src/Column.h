@@ -55,8 +55,8 @@ public:
     std::string description() const { return _description; }
 
     template <typename T>
-    T *columnData(Row row) const {
-        return static_cast<T *>(shiftPointer(row));
+    const T *columnData(Row row) const {
+        return static_cast<const T *>(shiftPointer(row));
     }
 
     virtual ColumnType type() const = 0;

@@ -81,9 +81,10 @@ vector<DowntimeData> DowntimeColumn::downtimes_for_row(Row row) const {
     if (auto data = columnData<void>(row)) {
         return _is_service
                    ? _mc->downtimes_for_service(
-                         reinterpret_cast<MonitoringCore::Service *>(data))
+                         reinterpret_cast<const MonitoringCore::Service *>(
+                             data))
                    : _mc->downtimes_for_host(
-                         reinterpret_cast<MonitoringCore::Host *>(data));
+                         reinterpret_cast<const MonitoringCore::Host *>(data));
     }
     return {};
 }

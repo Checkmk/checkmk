@@ -599,7 +599,7 @@ function handle_start_activation(_unused, response_json)
         show_activation_error(response.result);
         lock_activation_controls(false);
     } else {
-        monitor_activation_progress(response.result.activation_id);
+        monitor_activation_progress(time(), response.result.activation_id);
     }
 }
 
@@ -701,20 +701,23 @@ function show_progress(show)
 
 // Is called after the activation has been started (got the activation_id) and
 // then in interval of 500 ms for updating the dialog state
-function monitor_activation_progress(activation_id)
+function monitor_activation_progress(start_time, activation_id)
 {
     show_activation_info("Activating...");
 
     call_ajax("ajax_activation_state.py?activation_id=" + encodeURIComponent(activation_id), {
         response_handler : handle_activation_progress,
         error_handler    : handle_activation_progress_error,
-        handler_data     : activation_id,
+        handler_data     : {
+            "activation_id" : activation_id,
+            "start_time"    : start_time
+        },
         method           : "GET",
         add_ajax_id      : false
     });
 }
 
-function handle_activation_progress(activation_id, response_json)
+function handle_activation_progress(handler_data, response_json)
 {
     var response = JSON.parse(response_json);
     if (response.result_code == 1) {
@@ -725,7 +728,7 @@ function handle_activation_progress(activation_id, response_json)
 
 	if (!activation_progress_finished(response.result)) {
             setTimeout(function() {
-		return monitor_activation_progress(activation_id);
+		return monitor_activation_progress(handler_data.start_time, handler_data.activation_id);
 	    }, 500);
 	}
 	else {
@@ -818,13 +821,21 @@ function update_site_progress(site_state)
     progress.style.width = width + "px";
 }
 
-function handle_activation_progress_error(activation_id, status_code, error_msg)
+function handle_activation_progress_error(handler_data, status_code, error_msg)
 {
-    show_activation_error("Failed to fetch activation state ["+status_code+"]: " + error_msg + ". " +
-                          "Retrying in 1 second.");
+    if (time() - handler_data.start_time <= 10 && status_code == 503) {
+        show_activation_info("Failed to fetch activation state. In case you changed site management related " +
+                             "global settings this is normal for a period of some seconds.");
+    } else {
+        show_activation_error("Failed to fetch activation state ["+status_code+"]: " + error_msg + ". " +
+                              "Retrying in 1 second." +
+                              "<br><br>" +
+                              "In case this error persists for more than some seconds, please verify that all " +
+                              "processes of the site are running.");
+    }
 
     setTimeout(function() {
-        return monitor_activation_progress(activation_id);
+        return monitor_activation_progress(handler_data.start_time, handler_data.activation_id);
     }, 1000);
 }
 

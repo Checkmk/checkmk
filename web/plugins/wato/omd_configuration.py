@@ -24,8 +24,138 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import log
+from log import logger
 import cmk.paths
 
+group = _('Site Management')
+
+#.
+#   .--omd config----------------------------------------------------------.
+#   |                             _                    __ _                |
+#   |          ___  _ __ ___   __| |   ___ ___  _ __  / _(_) __ _          |
+#   |         / _ \| '_ ` _ \ / _` |  / __/ _ \| '_ \| |_| |/ _` |         |
+#   |        | (_) | | | | | | (_| | | (_| (_) | | | |  _| | (_| |         |
+#   |         \___/|_| |_| |_|\__,_|  \___\___/|_| |_|_| |_|\__, |         |
+#   |                                                       |___/          |
+#   +----------------------------------------------------------------------+
+#   | Settings managed via "omd config"                                    |
+#   '----------------------------------------------------------------------'
+
+register_configvar(group,
+    "AUTOSTART",
+    Checkbox(
+        title = _("Start during system boot"),
+        help = _("Whether or not this site should be started during startup of "
+                 "the Check_MK server."),
+    ),
+    domain = ConfigDomainOMD,
+)
+
+
+def _monitoring_core_choices():
+    cores = []
+    if not cmk.is_raw_edition():
+        cores.append(("cmc", _("Check_MK Micro Core")))
+
+    cores += [
+        ("nagios", _("Nagios 3")),
+        ("none",   _("No monitoring core")),
+    ]
+
+    return cores
+
+
+register_configvar(group,
+    "CORE",
+    DropdownChoice(
+        title = _("Monitoring core"),
+        help = _("Choose the monitoring core to run for monitoring. You can also "
+                 "decide to run no monitoring core in this site. This can be useful "
+                 "for instances running only a GUI for connecting to other monitoring "
+                 "sites."),
+        choices = _monitoring_core_choices,
+    ),
+    domain = ConfigDomainOMD,
+)
+
+
+register_configvar(group,
+    "LIVESTATUS_TCP",
+    Optional(
+        Integer(
+            title = _("Port number"),
+            minvalue = 1,
+            maxvalue = 65535,
+            default_value = 6557,
+        ),
+        title = _("Access to Livestatus via TCP"),
+        help = _("Check_MK Livestatus usually listens only on a local UNIX socket - "
+                 "for reasons of performance and security. This option is used "
+                 "to make it reachable via TCP on a port configurable with LIVESTATUS_TCP_PORT."),
+        label = _("Enable Livestatus access via network (TCP)"),
+        none_label = _("Livestatus is available locally"),
+    ),
+    domain = ConfigDomainOMD,
+)
+
+
+register_configvar(group,
+    "MKEVENTD",
+    Optional(
+        ListChoice(
+            choices = [
+                ("SNMPTRAP",   _("Receive SNMP traps (UDP/162)")),
+                ("SYSLOG",     _("Receive Syslog messages (UDP/514)")),
+                ("SYSLOG_TCP", _("Receive Syslog messages (TCP/514)")),
+            ],
+            title = _("Listen for incoming messages via"),
+            empty_text = _("Locally enabled"),
+        ),
+        title = _("Event Console"),
+        help = _("This option enables the Event Console - The event processing and "
+                 "classification daemon of Check_MK. You can also configure whether "
+                 "or not the Event Console shal listen for incoming SNMP traps or "
+                 "syslog messages. Please note that only a single Check_MK site per "
+                 "Check_MK server can listen for such messages."),
+        label = _("Event Console enabled"),
+        none_label = _("Event Console disabled"),
+        indent = False,
+    ),
+    domain = ConfigDomainOMD,
+)
+
+
+register_configvar(group,
+    "NSCA",
+    Optional(
+        Integer(
+            title = _("Port number"),
+            minvalue = 1,
+            maxvalue = 65535,
+            default_value = 5667,
+        ),
+        title = _("Listen for passive checks via NSCA"),
+        help = _("Enable listening for passible checks via NSCA. With the default configuration "
+                 "the TCP port 5667 will be opened. You may also want to update the NSCA "
+                 "configuration file %s to fit your needs.") % site_neutral_path("etc/nsca/nsca.cfg"),
+        label = _("Enable listening for passive checks using NSCA"),
+        none_label = _("NSCA is disabled"),
+    ),
+    domain = ConfigDomainOMD,
+)
+
+#.
+#   .--Diskspace-----------------------------------------------------------.
+#   |              ____  _     _                                           |
+#   |             |  _ \(_)___| | _____ _ __   __ _  ___ ___               |
+#   |             | | | | / __| |/ / __| '_ \ / _` |/ __/ _ \              |
+#   |             | |_| | \__ \   <\__ \ |_) | (_| | (_|  __/              |
+#   |             |____/|_|___/_|\_\___/ .__/ \__,_|\___\___|              |
+#   |                                  |_|                                 |
+#   +----------------------------------------------------------------------+
+#   | Management of the disk space cleanup settings                        |
+#   '----------------------------------------------------------------------'
 
 # TODO: Diskspace cleanup does not support site specific globals!
 class ConfigDomainDiskspace(ConfigDomain):
@@ -91,8 +221,6 @@ class ConfigDomainDiskspace(ConfigDomain):
         }
 
 
-
-group = _('Site Management')
 
 register_configvar(group,
     "diskspace_cleanup",

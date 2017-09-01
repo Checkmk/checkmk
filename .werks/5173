@@ -1,0 +1,18 @@
+Title: Major OMD config options can now be set via WATO global settings
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504271298
+Class: feature
+
+The OMD configuration options that are used to configure basic aspects of
+the Check_MK sites can now be configured via WATO. The settings are available
+via "WATO > Global settings > Site Management".
+
+These settings are activated during regular activate changes similar to the
+other configuration settings.
+
+It is also possible to set site specific option via the site specific global
+settings.

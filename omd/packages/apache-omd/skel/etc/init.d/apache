@@ -59,7 +59,15 @@ pidof_apache() {
     # It might happen that there is no pidfile but a process is running
     # As fallback check the process table for the oldest apache process
     # running as this user
-    PID=$(pgrep -u $OMD_SITE -o -f $(apache_bin))
+    #
+    # Use the process name instead of the command line (see: pgrep -l).
+    # There may be processes forked from the the apache workers that
+    # need to be ignored by this script where we can not change the full
+    # command line but the process name. This means we can only distinguish
+    # between them using the process name.
+    # One process is in watolib.py: ActivateChangesSite.run()
+    APACHE_BIN_PATH=$(apache_bin)
+    PID=$(pgrep -u $OMD_SITE -o ${APACHE_BIN_PATH##*/})
     if [ -n "$PID" ]; then
         echo $PID
         return 0

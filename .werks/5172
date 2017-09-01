@@ -1,0 +1,11 @@
+Title: Removed CRONTAB configuration option
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504268006
+Class: fix
+
+The crontab is a mandatory part of a Check_MK site which should never
+been disabled. For this reason we drop the configuration option now.

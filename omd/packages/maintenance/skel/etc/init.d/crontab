@@ -2,9 +2,6 @@
 # 
 # Start only if Crontab is enabled
 . ###ROOT###/etc/omd/site.conf
-if [ "$CONFIG_CRONTAB" != on ] ; then
-    exit 5
-fi
 
 NAME="crontab"
 MERGECRONTABS="###ROOT###/bin/merge-crontabs"

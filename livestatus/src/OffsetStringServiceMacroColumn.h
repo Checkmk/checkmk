@@ -39,8 +39,8 @@ public:
                                    int extra_extra_offset)
         : OffsetStringMacroColumn(name, description, offset, indirect_offset,
                                   extra_offset, extra_extra_offset) {}
-    host *getHost(Row row) const override;
-    service *getService(Row row) const override;
+    const host *getHost(Row row) const override;
+    const service *getService(Row row) const override;
 };
 
 #endif  // OffsetStringServiceMacroColumn_h

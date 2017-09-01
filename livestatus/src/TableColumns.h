@@ -45,8 +45,8 @@ public:
     void answerQuery(Query *query) override;
 
     void addTable(Table *);
-    std::string getValue(Column *column, ColumnsColumn::Type colcol) const;
-    std::string tableNameOf(Column *column) const;
+    std::string getValue(const Column *column, ColumnsColumn::Type colcol) const;
+    std::string tableNameOf(const Column *column) const;
 };
 
 #endif  // TableColumns_h

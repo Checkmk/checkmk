@@ -62,7 +62,7 @@ void TableColumns::answerQuery(Query *query) {
     }
 }
 
-string TableColumns::getValue(Column *column,
+string TableColumns::getValue(const Column *column,
                               ColumnsColumn::Type colcol) const {
     static const char *typenames[8] = {"int",  "float", "string", "list",
                                        "time", "dict",  "blob",   "null"};
@@ -80,7 +80,7 @@ string TableColumns::getValue(Column *column,
     return "";
 }
 
-string TableColumns::tableNameOf(Column *column) const {
+string TableColumns::tableNameOf(const Column *column) const {
     for (auto table : _tables) {
         if (table->any_column(
                 [&](shared_ptr<Column> c) { return c.get() == column; })) {

@@ -35,6 +35,8 @@ def init_logging():
 
 
 def _setup_web_log_logging():
+    del logger.handlers[:] # First remove all handlers
+
     handler = _logging.FileHandler("%s/web.log" % cmk.paths.log_dir,
                                    encoding="UTF-8")
 

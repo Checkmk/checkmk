@@ -549,6 +549,170 @@ class ConfigDomainCACertificates(ConfigDomain):
         }
 
 
+
+class ConfigDomainOMD(ConfigDomain):
+    needs_sync       = True
+    needs_activation = True
+    ident            = "omd"
+    omd_config_dir   = "%s/etc/omd" % (cmk.paths.omd_root)
+
+    def __init__(self):
+        super(ConfigDomainOMD, self).__init__()
+        self._logger = logger.getChild("config.omd")
+
+    def config_dir(self):
+        return self.omd_config_dir
+
+
+    def default_globals(self):
+        return self._from_omd_config(self._load_site_config())
+
+
+    def activate(self):
+        current_settings = self._load_site_config()
+
+        settings = {}
+        settings.update(self._to_omd_config(self.load()))
+        settings.update(self._to_omd_config(self.load_site_globals()))
+
+        config_change_commands = []
+        self._logger.debug("Set omd config: %r" % settings)
+
+        for key, val in settings.items():
+            if key not in current_settings:
+                continue # Skip settings unknown to current OMD
+
+            if current_settings[key] == settings[key]:
+                continue # Skip unchanged settings
+
+            config_change_commands.append("%s=%s" % (key, val))
+
+        if not config_change_commands:
+            self._logger.debug("Got no config change commands...")
+            return
+
+        self._logger.debug("Executing \"omd config change\"")
+        self._logger.debug("  Commands: %r" % config_change_commands)
+        p = subprocess.Popen(["omd", "config", "change"],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                stdin=subprocess.PIPE, close_fds=True)
+        stdout = p.communicate(make_utf8("\n".join(config_change_commands)))[0]
+        self._logger.debug("  Exit code: %d" % p.returncode)
+        self._logger.debug("  Output: %r" % stdout)
+        if p.returncode != 0:
+            raise MKGeneralException(_("Failed to activate changed site "
+                "configuration.\nExit code: %d\nConfig: %s\nOutput: %s") %
+                             (p.returncode, config_change_commands, stdout))
+
+
+    def _load_site_config(self):
+        return self._load_omd_config("%s/site.conf" % self.omd_config_dir)
+
+
+    def _load_omd_config(self, path):
+        settings = {}
+
+        if not os.path.exists(path):
+            return {}
+
+        try:
+            for line in file(path):
+                line = line.strip()
+
+                if line == "" or line.startswith("#"):
+                    continue
+
+                var, value = line.split("=", 1)
+
+                if not var.startswith("CONFIG_"):
+                    continue
+
+                key = var[7:].strip()
+                val = value.strip().strip("'")
+
+                settings[key] = val
+        except Exception, e:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                                    (path, e))
+
+        return settings
+
+
+    # Convert the raw OMD configuration settings to the WATO config format.
+    # The format that is understood by the valuespecs. Since some valuespecs
+    # affect multiple OMD config settings, these need to be converted here.
+    #
+    # Sadly we can not use the Transform() valuespecs, because each configvar
+    # only get's the value associated with it's config key.
+    def _from_omd_config(self, config):
+        settings = {}
+
+        for key, value in config.items():
+            if value == "on":
+                settings[key] = True
+            elif value == "off":
+                settings[key] = False
+            else:
+                settings[key] = value
+
+        for toggle_key, port_key in [
+          ("LIVESTATUS_TCP", "LIVESTATUS_TCP_PORT"),
+          ("NSCA", "NSCA_TCP_PORT")
+           ]:
+
+            if toggle_key in settings:
+                if settings[toggle_key]:
+                    settings[toggle_key] = int(settings[port_key])
+                else:
+                    settings[toggle_key] = None
+
+        if "MKEVENTD" in settings:
+            if settings["MKEVENTD"]:
+                settings["MKEVENTD"] = []
+
+                for proto in [ "SNMPTRAP", "SYSLOG", "SYSLOG_TCP" ]:
+                    if settings["MKEVENTD_%s" % proto]:
+                        settings["MKEVENTD"].append(proto)
+            else:
+                settings["MKEVENTD"] = None
+
+        return settings
+
+
+    # Bring the WATO internal representation int OMD configuration settings.
+    # Counterpart of the _from_omd_config() method.
+    def _to_omd_config(self, config):
+        settings = {}
+
+        for toggle_key, port_key in [
+          ("LIVESTATUS_TCP", "LIVESTATUS_TCP_PORT"),
+          ("NSCA", "NSCA_TCP_PORT")
+           ]:
+            if toggle_key in config:
+                if config[toggle_key] is not None:
+                    config[port_key]   = "%s" % config[toggle_key]
+                    config[toggle_key] = "on"
+                else:
+                    config[toggle_key] = "off"
+
+        if "MKEVENTD" in config:
+            if config["MKEVENTD"] is not None:
+                for proto in [ "SNMPTRAP", "SYSLOG", "SYSLOG_TCP" ]:
+                    config["MKEVENTD_%s" % proto] = proto in config["MKEVENTD"]
+
+                config["MKEVENTD"] = "on"
+
+            else:
+                config["MKEVENTD"] = "off"
+
+        for key, value in config.items():
+            if type(value) == bool:
+                settings[key] = "on" if value else "off"
+            else:
+                settings[key] = "%s" % value
+
+        return settings
+
 #.
 #   .--Hosts & Folders-----------------------------------------------------.
 #   | _   _           _          ___     _____     _     _                 |
@@ -5026,6 +5190,27 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
     def run(self):
+        # Ensure this process is not detected as apache process by the apache init script
+        import cmk.daemon as daemon
+        daemon.set_procname("cmk-activate-changes")
+
+        # Detach from parent (apache) -> Remain running when apache is restarted
+        os.setsid()
+
+        # Cleanup ressources of the apache
+        for x in range(3, 256):
+            try:
+                os.close(x)
+            except OSError, e:
+                if e.errno == 9: # Bad file descriptor
+                    pass
+                else:
+                    raise
+
+        # Reinitialize logging targets
+        import log
+        log.init_logging()
+
         try:
             self._do_run()
         except:

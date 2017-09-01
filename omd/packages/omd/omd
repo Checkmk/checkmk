@@ -1934,6 +1934,61 @@ def call_hook(hook_name, args):
     return exitcode, content
 
 
+def config_change():
+    # Check whether or not site needs to be stopped. Stop and remember to start again later
+    site_was_stopped = False
+    if not site_is_stopped(g_sitename):
+        site_was_stopped = True
+        stop_site(g_sitename)
+
+    try:
+        settings = read_config_change_commands()
+
+        if not settings:
+            bail_out("You need to provide config change commands via stdin: KEY=value\n")
+
+        validate_config_change_commands(settings)
+
+        for key, value in settings:
+            config_set_value(key, value, save=False)
+
+        save_site_conf()
+    finally:
+        if site_was_stopped:
+            start_site(g_sitename)
+
+
+def read_config_change_commands():
+    settings = []
+    for line in sys.stdin.read():
+        try:
+            key, value = line.split("=", 1)
+            settings.append((key, value))
+        except ValueError, e:
+            bail_out("Invalid config change command: %r" % line)
+    return settings
+
+
+def validate_config_change_commands(settings):
+    # Validate the provided commands
+    for key, value in settings:
+        hook = g_config_hooks.get(key)
+        if not hook:
+            bail_out("Invalid config option: %r" % key)
+
+        # Check if value is valid. Choices are either a list of allowed
+        # keys or a regular expression
+        if type(hook["choices"]) == list:
+            choices = [ var for (var, descr) in hook["choices"] ]
+            if value not in choices:
+                bail_out("Invalid value %r for %r. Allowed are: %s\n" % \
+                        (value, key, ", ".join(choices)))
+        else:
+            if not hook["choices"].match(value):
+                bail_out("Invalid value %r for %r. Does not match allowed pattern.\n" %
+                           (value, key))
+
+
 def config_set(args):
     if len(args) != 2:
         sys.stderr.write("Please specify variable name and value\n")
@@ -3239,6 +3294,8 @@ def main_config(args, options={}):
             config_show(args)
         elif command == "set":
             config_set(args)
+        elif command == "change":
+            config_change()
         else:
             config_usage()
 

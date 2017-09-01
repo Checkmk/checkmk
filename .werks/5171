@@ -1,0 +1,17 @@
+Title: Removed DEFAULT_GUI config
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504265703
+Class: fix
+
+Removed the DEFAULT_GUI configuration option from "omd config". It was meant to switch
+between different available GUIs in original OMD. In the current Check_MK packages only
+a single GUI is supported, that is the Check_MK default GUI. It is now enabled for all
+Check_MK sites.
+
+This change made some small performance improvements regarding the initial HTTP redirects
+possible. In case you acces http://host/[site]/ two redirects were made in the past. This
+has been reduced to a single redirect.

@@ -361,15 +361,14 @@ class ConfigDomain(object):
 
 
     def default_globals(self):
-        settings = {}
-        for varname, var in configvars().items():
-            domain, valuespec = var[:2]
-            if domain == self.__class__:
-                settings[varname] = valuespec.default_value()
-        return settings
+        """Returns a dictionary that contains the default settings
+        of all configuration variables of this config domain."""
+        raise NotImplementedError()
 
 
     def _get_global_config_var_names(self):
+        """Returns a list of all global config variable names
+        associated with this config domain."""
         return [ varname for (varname, var) in configvars().items() if var[0] == self.__class__ ]
 
 
@@ -539,6 +538,15 @@ class ConfigDomainCACertificates(ConfigDomain):
                 return []
             else:
                 raise
+
+
+    def default_globals(self):
+        return {
+            "trusted_certificate_authorities": {
+                "use_system_wide_cas": True,
+                "trusted_cas": [],
+            }
+        }
 
 
 #.

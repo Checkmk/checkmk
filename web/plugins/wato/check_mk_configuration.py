@@ -875,12 +875,10 @@ register_configvar(_("Site Management"),
                          "these directories for system wide CAs: %s") %
                             ", ".join(ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
                 label = _("Trust system wide configured CAs"),
-                default_value = True,
             )),
             ("trusted_cas", ListOfCAs(
                 title = _("Check_MK specific"),
                 allow_empty = True,
-                default_value = [],
             )),
         ],
         optional_keys = False,

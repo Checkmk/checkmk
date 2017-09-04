@@ -1,0 +1,11 @@
+Title: Added missing change entry when editing customers
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.5.0i1
+Date: 1504520303
+Class: fix
+
+Editing the properties of a customer was not adding a change
+entry to WATO.

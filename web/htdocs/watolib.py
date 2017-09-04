@@ -655,16 +655,25 @@ class ConfigDomainOMD(ConfigDomain):
             else:
                 settings[key] = value
 
-        for toggle_key, port_key in [
-          ("LIVESTATUS_TCP", "LIVESTATUS_TCP_PORT"),
-          ("NSCA", "NSCA_TCP_PORT")
-           ]:
+        if "LIVESTATUS_TCP" in settings:
+            if settings["LIVESTATUS_TCP"]:
+                settings["LIVESTATUS_TCP"] = {
+                    "port": int(settings["LIVESTATUS_TCP_PORT"])
+                }
+                del settings["LIVESTATUS_TCP_PORT"]
 
-            if toggle_key in settings:
-                if settings[toggle_key]:
-                    settings[toggle_key] = int(settings[port_key])
-                else:
-                    settings[toggle_key] = None
+                if settings["LIVESTATUS_TCP_ONLY_FROM"] != "0.0.0.0":
+                    settings["LIVESTATUS_TCP"]["only_from"] = settings["LIVESTATUS_TCP_ONLY_FROM"].split()
+
+                del settings["LIVESTATUS_TCP_ONLY_FROM"]
+            else:
+                settings["LIVESTATUS_TCP"] = None
+
+        if "NSCA" in settings:
+            if settings["NSCA"]:
+                settings["NSCA"] = int(settings["NSCA_TCP_PORT"])
+            else:
+                settings["NSCA"] = None
 
         if "MKEVENTD" in settings:
             if settings["MKEVENTD"]:
@@ -684,16 +693,25 @@ class ConfigDomainOMD(ConfigDomain):
     def _to_omd_config(self, config):
         settings = {}
 
-        for toggle_key, port_key in [
-          ("LIVESTATUS_TCP", "LIVESTATUS_TCP_PORT"),
-          ("NSCA", "NSCA_TCP_PORT")
-           ]:
-            if toggle_key in config:
-                if config[toggle_key] is not None:
-                    config[port_key]   = "%s" % config[toggle_key]
-                    config[toggle_key] = "on"
+        if "LIVESTATUS_TCP" in config:
+            if config["LIVESTATUS_TCP"] is not None:
+                config["LIVESTATUS_TCP_PORT"] = "%s" % config["LIVESTATUS_TCP"]["port"]
+
+                if "only_from" in config["LIVESTATUS_TCP"]:
+                    config["LIVESTATUS_TCP_ONLY_FROM"] = " ".join(config["LIVESTATUS_TCP"]["only_from"])
                 else:
-                    config[toggle_key] = "off"
+                    config["LIVESTATUS_TCP_ONLY_FROM"] = "0.0.0.0"
+
+                config["LIVESTATUS_TCP"] = "on"
+            else:
+                config["LIVESTATUS_TCP"] = "off"
+
+        if "NSCA" in config:
+            if config["NSCA"] is not None:
+                config["NSCA_TCP_PORT"] = "%s" % config["NSCA"]
+                config["NSCA"] = "on"
+            else:
+                config["NSCA"] = "off"
 
         if "MKEVENTD" in config:
             if config["MKEVENTD"] is not None:

@@ -4003,9 +4003,30 @@ class FileUpload(ValueSpec):
 
 
 class ImageUpload(FileUpload):
-    def __init__(self, max_size=None, *args, **kwargs):
+    def __init__(self, max_size=None, show_current_image=False, *args, **kwargs):
         self._max_size = max_size
+        self._show_current_image = show_current_image
         FileUpload.__init__(self, *args, **kwargs)
+
+
+    def render_input(self, varprefix, value):
+        self.classtype_info()
+
+        if self._show_current_image and value:
+            html.open_table()
+            html.open_tr()
+            html.td(_("Current image:"))
+            html.td(html.render_img("data:image/png;base64,%s" % base64.b64encode(value)))
+            html.close_tr()
+            html.open_tr()
+            html.td(_("Upload new:"))
+            html.open_td()
+            super(ImageUpload, self).render_input(varprefix, value)
+            html.close_td()
+            html.close_tr()
+            html.close_table()
+        else:
+            super(ImageUpload, self).render_input(varprefix, value)
 
 
     def validate_value(self, value, varprefix):

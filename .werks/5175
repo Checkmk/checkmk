@@ -1,0 +1,14 @@
+Title: Livestatus TCP: Can now be restricted to specific IP addresses
+Level: 2
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504512154
+Class: feature
+
+When enabling livestatus access via TCP (via "omd config" or the WATO site management)
+it is now possible to restrict the access to a set of client IP addresses.
+
+The new option has been added to the global setting "Access to Livestatus via TCP" which
+then sets the "omd config" option LIVESTATUS_TCP_ONLY_FROM.

@@ -83,11 +83,26 @@ register_configvar(group,
 register_configvar(group,
     "LIVESTATUS_TCP",
     Optional(
-        Integer(
-            title = _("Port number"),
-            minvalue = 1,
-            maxvalue = 65535,
-            default_value = 6557,
+        Dictionary(
+            elements = [
+                ("port", Integer(
+                    title = _("TCP port"),
+                    minvalue = 1,
+                    maxvalue = 65535,
+                    default_value = 6557,
+                )),
+                ("only_from", ListOfStrings(
+                    title = _("Restrict access to IP addresses"),
+                    help = _("The access to Livestatus via TCP will only be allowed from the "
+                             "configured source IP addresses. You can either configure specific "
+                             "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."),
+
+                    valuespec = IPv4Network(),
+                    orientation = "horizontal",
+                    allow_empty = False,
+                )),
+            ],
+            optional_keys = [ "only_from" ],
         ),
         title = _("Access to Livestatus via TCP"),
         help = _("Check_MK Livestatus usually listens only on a local UNIX socket - "

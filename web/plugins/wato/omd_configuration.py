@@ -27,6 +27,7 @@
 import cmk.paths
 
 
+# TODO: Diskspace cleanup does not support site specific globals!
 class ConfigDomainDiskspace(ConfigDomain):
     needs_sync       = True
     needs_activation = False
@@ -38,9 +39,11 @@ class ConfigDomainDiskspace(ConfigDomain):
 
 
     def load(self, site_specific=False):
-	settings = {}
-        cleanup_settings = settings["diskspace_cleanup"] = {}
+        cleanup_settings = {}
         execfile(self.diskspace_config, {}, cleanup_settings)
+
+        if not cleanup_settings:
+            return {}
 
         # Convert old config (min_free_bytes and min_file_age) were independent options
         if "min_free_bytes" in cleanup_settings:
@@ -50,28 +53,42 @@ class ConfigDomainDiskspace(ConfigDomain):
         if cleanup_settings.get("cleanup_abandoned_host_files", False) == None:
             del cleanup_settings["cleanup_abandoned_host_files"]
 
-	return settings
+        return {
+            "diskspace_cleanup": cleanup_settings,
+        }
 
 
     def save(self, settings, site_specific=False):
-        # Convert to old config format.
         config = {}
-        for k, v in settings.get("diskspace_cleanup", {}).items():
-            if k == "min_free_bytes":
-                config["min_free_bytes"], config["min_file_age"] = v
-            else:
-                config[k] = v
 
-        if "cleanup_abandoned_host_files" not in settings.get("diskspace_cleanup", {}):
-            config["cleanup_abandoned_host_files"] = None
+        if "diskspace_cleanup" in settings:
+            # Convert to old config format.
+            for k, v in settings.get("diskspace_cleanup", {}).items():
+                if k == "min_free_bytes":
+                    config["min_free_bytes"], config["min_file_age"] = v
+                else:
+                    config[k] = v
 
-        with file(self.diskspace_config, 'w') as f:
-            for k, v in sorted(config.items()):
-                f.write('%s = %r\n' % (k, v))
+            if "cleanup_abandoned_host_files" not in settings.get("diskspace_cleanup", {}):
+                config["cleanup_abandoned_host_files"] = None
+
+        output = ""
+        for k, v in sorted(config.items()):
+            output += '%s = %r\n' % (k, v)
+
+        cmk.store.save_file(self.diskspace_config, output)
 
 
     def save_site_globals(self, settings):
         pass
+
+
+    def default_globals(self):
+        diskspace_context = {}
+        execfile("%s/bin/diskspace" % cmk.paths.omd_root, {}, diskspace_context)
+        return {
+            "diskspace_cleanup": diskspace_context["default_config"],
+        }
 
 
 

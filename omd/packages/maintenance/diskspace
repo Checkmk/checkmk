@@ -14,11 +14,16 @@ plugin_dir        = omd_root + '/share/diskspace'
 plugin_dir_local  = omd_root + '/local/share/diskspace'
 check_mk_var_dir  = omd_root + '/var/check_mk'
 
-# Initial configuration
+# Configuration variables
 min_free_bytes               = None
 max_file_age                 = None
 min_file_age                 = None
-cleanup_abandoned_host_files = 2592000
+cleanup_abandoned_host_files = None
+
+# Initial configuration
+default_config = {
+    "cleanup_abandoned_host_files" : 2592000,
+}
 
 plugins = {}
 
@@ -37,6 +42,8 @@ def verbose(s):
         log(s)
 
 def read_config():
+    globals().update(default_config)
+
     try:
         execfile(config_file, globals(), globals())
     except IOError:
@@ -319,11 +326,12 @@ def main():
 
 # #############################################################################
 
-read_config()
+if __name__ == "__main__":
+    read_config()
 
-try:
-    main()
-except SystemExit:
-    raise
-except:
-    terminate('Unexpected exception: %s' % traceback.format_exc())
+    try:
+        main()
+    except SystemExit:
+        raise
+    except:
+        terminate('Unexpected exception: %s' % traceback.format_exc())

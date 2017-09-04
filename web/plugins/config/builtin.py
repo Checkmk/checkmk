@@ -79,6 +79,8 @@ sidebar_show_scrollbar = False
 # Enable regular checking for popup notifications
 sidebar_notify_interval = None
 
+sidebar_show_version_in_sidebar = True
+
 # Maximum number of results to show in quicksearch dropdown
 quicksearch_dropdown_limit = 80
 

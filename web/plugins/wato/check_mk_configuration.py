@@ -448,8 +448,6 @@ register_configvar(group,
     domain = "multisite",
 )
 
-
-
 register_configvar(group,
     "reschedule_timeout",
     Float(title = _("Timeout for rescheduling checks in Multisite"),
@@ -461,6 +459,17 @@ register_configvar(group,
           unit = "sec",
           display_format = "%.1f"),
     domain = "multisite")
+
+register_configvar(
+    group,
+    "sidebar_show_version_in_sidebar",
+    Checkbox(title = _("Show Check_MK edition & version in sidebar"),
+             label = _("Show the edition ad version"),
+             help = _("Use this option to hide the Check_MK edition and version information from "
+                      "the header of the sidebar."),
+    ),
+    domain = "multisite"
+)
 
 register_configvar(group,
     "sidebar_update_interval",

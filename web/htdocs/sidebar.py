@@ -229,11 +229,13 @@ def sidebar_head():
     html.open_a(href=config.user.get_attribute("start_url") or config.start_url,
                 target="main", title=_("Go to main overview"))
     html.img(src="images/sidebar_top.png", id_="side_bg")
-    html.open_div(id_="side_version")
-    html.open_a(href="version.py", target="main", title=_("Open release notes"))
-    html.write(get_check_mk_edition_title())
-    html.br()
-    html.write(cmk.__version__)
+
+    if config.sidebar_show_version_in_sidebar:
+        html.open_div(id_="side_version")
+        html.open_a(href="version.py", target="main", title=_("Open release notes"))
+        html.write(get_check_mk_edition_title())
+        html.br()
+        html.write(cmk.__version__)
 
     if werks.may_acknowledge():
         num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()

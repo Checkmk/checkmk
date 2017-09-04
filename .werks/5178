@@ -1,0 +1,11 @@
+Title: Added option to hide edition/version from sidebar header
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504520670
+Class: feature
+
+You can use the new global setting "Show Check_MK edition & version in sidebar" to
+hide the version and edition information from the sidebar header.

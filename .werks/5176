@@ -1,0 +1,11 @@
+Title: CME: Custom design (Logo + color set) can now be set per customer
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.5.0i1
+Date: 1504520210
+Class: feature
+
+It is now possible to customize the GUI design for each customer individually.
+The customer individual setting overrides the globally configured things.

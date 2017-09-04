@@ -1,0 +1,11 @@
+Title: fixed inventory plugin detection for SNMP devices
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504531045
+Class: fix
+
+Fixes a problem with the HW/SW inventory of SNMP devices
+that resulted in too few entries.

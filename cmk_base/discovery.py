@@ -818,7 +818,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
         else:
             if for_inv and not inventory_plugins.is_snmp_plugin(check_type):
                 continue
-            elif not checks.is_snmp_check(check_type):
+            elif not for_inv and not checks.is_snmp_check(check_type):
                 continue
 
         basename = check_type.split(".")[0]
@@ -830,7 +830,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
             scan_function = checks.snmp_scan_functions[check_type]
         elif basename in checks.snmp_scan_functions:
             scan_function = checks.snmp_scan_functions[basename]
-        elif "inventory_plugins" in sys.modules and basename in inventory_plugins.inv_info:
+        elif basename in inventory_plugins.inv_info:
             scan_function = inventory_plugins.inv_info[basename].get("snmp_scan_function")
         else:
             scan_function = None

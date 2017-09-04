@@ -134,5 +134,5 @@ inv_info['inv_if'] = {
         ( ".1.3.6.1.2.1.1", [ "3.0" ] ), # uptime
     ],
     'snmp_scan_function': lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2,
-    'includes': ['if.include'],
+    'includes': ['if.include', 'uptime.include'],
 }

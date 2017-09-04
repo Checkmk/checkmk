@@ -219,7 +219,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
     info_type = check_type.split(".")[0]
     if info_type in checks.snmp_info:
         oid_info = checks.snmp_info[info_type]
-    elif info_type in "inventory_plugins" in sys.modules:
+    elif info_type in inventory_plugins.inv_info:
         oid_info = inventory_plugins.inv_info[info_type].get("snmp_info")
     else:
         oid_info = None

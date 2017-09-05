@@ -55,6 +55,7 @@ def load_plugins(force):
     global multisite_builtin_views   ; multisite_builtin_views    = {}
     global multisite_painter_options ; multisite_painter_options  = {}
     global multisite_commands        ; multisite_commands         = []
+    global multisite_command_groups  ; multisite_command_groups   = {}
     global view_hooks                ; view_hooks                 = {}
     global inventory_displayhints    ; inventory_displayhints     = {}
 
@@ -2544,14 +2545,13 @@ def show_command_form(is_open, datasource):
             # It is currently only used in custom views, not shipped with check_mk.
             if command.get('only_view') and html.var('view_name') != command['only_view']:
                 continue
-            group = command.get("group", _("Various Commands"))
+            group = command.get("group", "various")
             by_group.setdefault(group, []).append(command)
 
-    groups = by_group.keys()
-    groups.sort()
-    for group in groups:
-        forms.header(group, narrow=True)
-        for command in by_group[group]:
+    for group_ident, group_commands in sorted(by_group.items(),
+                                    key=lambda x: multisite_command_groups[x[0]]["sort_index"]):
+        forms.header(multisite_command_groups[group_ident]["title"], narrow=True)
+        for command in group_commands:
             forms.section(command["title"])
             command["render"]()
 
@@ -2738,6 +2738,14 @@ def get_view_by_name(view_name):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+def register_command_group(ident, title, sort_index):
+    multisite_command_groups[ident] = {
+        "title"      : title,
+        "sort_index" : sort_index,
+    }
+
 
 def register_hook(hook, func):
     if not hook in view_hooks:

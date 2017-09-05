@@ -12,10 +12,9 @@ def test_hooks(site):
         "APACHE_TCP_PORT",
         "AUTOSTART",
         "CORE",
-        "CRONTAB",
-        "DEFAULT_GUI",
         "DOKUWIKI_AUTH",
         "LIVESTATUS_TCP",
+        "LIVESTATUS_TCP_ONLY_FROM",
         "LIVESTATUS_TCP_PORT",
         "MKEVENTD",
         "MKEVENTD_SNMPTRAP",
@@ -27,7 +26,6 @@ def test_hooks(site):
         "NSCA",
         "NSCA_TCP_PORT",
         "PNP4NAGIOS",
-        "TMPFS",
     ]
 
     if site.version.edition() == "enterprise":

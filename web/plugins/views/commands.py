@@ -36,6 +36,11 @@
 # - function that outputs the HTML input fields
 # - function that creates the nagios command and title
 
+register_command_group(
+    ident = "various",
+    title = _("Various Commands"),
+    sort_index = 20,
+)
 
 #   .--Reschedule----------------------------------------------------------.
 #   |          ____                _              _       _                |
@@ -303,11 +308,18 @@ def render_fake_form(what):
 
     html.close_table()
 
+
+register_command_group(
+    ident = "fake_check",
+    title = _("Fake check results"),
+    sort_index = 15,
+)
+
 multisite_commands.append({
     "tables"      : [ "host" ],
     "permission"  : "action.fakechecks",
     "title"       : _("Fake check results"),
-    "group"       : _("Fake check results"),
+    "group"       : "fake_check",
     "render"      : lambda: render_fake_form("host"),
     "action"      : command_fake_checks,
 })
@@ -316,7 +328,7 @@ multisite_commands.append({
     "tables"      : [ "service" ],
     "permission"  : "action.fakechecks",
     "title"       : _("Fake check results"),
-    "group"       : _("Fake check results"),
+    "group"       : "fake_check",
     "render"      : lambda: render_fake_form("service"),
     "action"      : command_fake_checks,
 })
@@ -442,6 +454,13 @@ def command_acknowledgement(cmdtag, spec, row):
         return commands, title
 
 
+register_command_group(
+    ident = "acknowledge",
+    title = _("Acknowledge"),
+    sort_index = 5,
+)
+
+
 multisite_commands.append({
     "tables"      : [ "host", "service", "aggr" ],
     "permission"  : "action.acknowledge",
@@ -463,7 +482,7 @@ multisite_commands.append({
         html.write_text(_("Comment") + ": ") == \
         html.text_input("_ack_comment", size=48, submit="_acknowledge"),
     "action"      : command_acknowledgement,
-    "group"       : _("Acknowledge"),
+    "group"       : "acknowledge",
 })
 
 
@@ -764,13 +783,19 @@ def has_recurring_downtimes():
         return False
 
 
+register_command_group(
+    ident = "downtimes",
+    title = _("Downtimes"),
+    sort_index = 10,
+)
+
 multisite_commands.append({
     "tables"      : [ "host" ],
     "permission"  : "action.downtimes",
     "title"       : _("Schedule downtimes"),
     "render"      : lambda: paint_downtime_buttons("host"),
     "action"      : command_downtime,
-    "group"       : _("Downtimes"),
+    "group"       : "downtimes",
 })
 
 multisite_commands.append({
@@ -779,7 +804,7 @@ multisite_commands.append({
     "title"       : _("Schedule downtimes"),
     "render"      : lambda: paint_downtime_buttons("service"),
     "action"      : command_downtime,
-    "group"       : _("Downtimes"),
+    "group"       : "downtimes",
 })
 
 multisite_commands.append({
@@ -788,7 +813,7 @@ multisite_commands.append({
     "title"       : _("Schedule downtimes"),
     "render"      : lambda: paint_downtime_buttons("aggr"),
     "action"      : command_downtime,
-    "group"       : _("Downtimes"),
+    "group"       : "downtimes",
 })
 
 # REMOVE DOWNTIMES (table downtimes)

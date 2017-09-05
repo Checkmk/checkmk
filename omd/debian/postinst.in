@@ -45,7 +45,7 @@ case "$1" in
     update-alternatives --install /omd/versions/default \
        omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
        --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
-       --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/###OMD_VERSION###/lib/omd/omd_bash_completion \
+       --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/###OMD_VERSION###/lib/omd/bash_completion \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
                /omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
 

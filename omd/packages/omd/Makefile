@@ -30,7 +30,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd
 	install -m 644 init_profile $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 755 port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/
-	install -m 644 omd_bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
+	install -m 644 bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 

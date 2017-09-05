@@ -81,6 +81,7 @@ ln -sfn "%{version}" /omd/versions/default
 ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
 ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
 ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
+ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d/omd
 
 IS_SYSTEMD=0
 if [ -d /usr/lib/systemd ] && which systemctl >/dev/null 2>&1; then
@@ -187,6 +188,7 @@ else
     echo "Removing global symbolic links"
     rm -f /usr/bin/omd
     rm -f /usr/share/man/man8/omd.8.gz
+    rm -f /etc/bash_completion.d/omd
 
     # Can be either the symlink /etc/init.d/omd or the regular
     # file /etc/systemd/system/omd.service.

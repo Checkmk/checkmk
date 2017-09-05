@@ -1,8 +1,10 @@
 Title: Order of command boxes in views are language dependent
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2017-07-18 11:29:17
 Targetversion: 1.4.0
-Class: bug
 
 The order in Englisch and German is different but should not.
+
+2017-09-05 09:15:07: changed state open -> done

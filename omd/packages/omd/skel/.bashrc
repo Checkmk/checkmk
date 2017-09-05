@@ -21,6 +21,12 @@ if [ "$PS1" ]; then
   alias la='ls -la'
 
   if [ -f /etc/bash_completion ]; then
+    # Load system wide bash completion (if available)
     . /etc/bash_completion
+
+    # Load site specific bash completions
+    for file in $OMD_ROOT/etc/bash_completion.d/*; do
+        . $file;
+    done
   fi
 fi

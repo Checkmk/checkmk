@@ -1,0 +1,11 @@
+Title: Skype section can now be enabled/disabled in agent bakery
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p11
+Date: 1504610186
+
+

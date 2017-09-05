@@ -1,0 +1,14 @@
+Title: Add bash completion for OMD command
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504596897
+Class: feature
+
+OMD is now installing a bash completion configuration for the OMD command.
+Depending on the context (root or site user) the completion will show the
+available commands. 
+
+This only works on platforms where the bash completion package is installed.

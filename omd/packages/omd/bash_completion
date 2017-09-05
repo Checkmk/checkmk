@@ -1,0 +1,139 @@
+# Bash completion script for "omd"
+#
+
+_omd_cmd_options() {
+    cmd=$1
+    echo "-h --help"
+    omd $cmd -h | awk '{print $1}' | grep -v ^Possible | tr ',' ' '
+    return
+}
+
+_omd()
+{
+    local GLOBALCMDS="sites|version|versions|help"
+    local SITECMDS="start|stop|restart|reload|status|update|config|backup|restore|diff"
+    local ROOTCMDS="create|setversion"
+    local ROOTSITECMDS="rm|mv|cp|disable|enable|init|su"
+
+    COMPREPLY=()
+
+    local subcmd site
+    local opts=""
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+
+    # simply expland files and folders if current item starts with . or /
+    if [[ $cur =~ ^/|^\. ]]; then
+        COMPREPLY=( $(compgen -o default -- ${cur}) )
+        return 0
+    fi
+
+    # check if first arg is omd
+    if [[ ${COMP_WORDS[0]} != omd ]]; then
+        COMPREPLY=( $(compgen -o default -- ${cur}) )
+        return 0
+    fi
+
+    # parse args up to COMP_CWORD
+    subcmdargs=()
+    local i=1
+    while [ $i -lt $COMP_CWORD ]; do
+        local arg=${COMP_WORDS[$i]}
+        case "$arg" in
+            -V)
+                i=$((i + 1))
+            ;;
+            -*)
+                :
+            ;;
+            *)
+                if [ "x$subcmd" = "x" ]; then
+                    subcmd=$arg
+                    if [ $EUID -eq 0 ]; then
+                        site="${COMP_WORDS[$i+1]}"
+                        i=$((i + 1))
+                    else
+                        site="$OMD_SITE"
+                    fi
+                else
+                    subcmdargs+=($arg)
+                fi
+            ;;
+        esac
+        i=$((i + 1))
+    done
+
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    # omd -V|setversion ...
+    if [[ $prev =~ -V|setversion ]]; then
+        opts=$(cd /omd/versions && ls -1 | grep -v default)
+
+    # omd ...
+    elif [ "x$subcmd" = "x" ]; then
+        opts="-V -f --force -v "$(omd help | grep ^\ *omd | awk '{print $2 }' | grep -v COMMAND)
+
+    # omd versions|sites ...
+    elif [[ $subcmd =~ versions|sites ]]; then
+        opts="$(_omd_cmd_options $subcmd)"
+
+    # omd version ...
+    elif [[ $subcmd =~ version ]]; then
+        opts="$(_omd_cmd_options $subcmd) $(omd sites --bare)"
+
+    # omd <sitecmd> ... (as root)
+    elif _complete_as_root && [ $prev = $subcmd ] && [[ $subcmd =~ $ROOTSITECMDS|$SITECMDS ]]; then
+        # complete with site names
+        opts="-h --help $(omd sites --bare)"
+
+    # omd backup|restore ...
+    elif [[ $subcmd =~ backup|restore ]]; then
+        opts="$(_omd_cmd_options $subcmd)"
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) $(compgen -o default -- ${cur}) )
+        return 0
+
+    # omd diff ...
+    elif [[ $subcmd = diff ]]; then
+        if [ $EUID -eq 0 ]; then
+            opts="$(_omd_cmd_options $subcmd) $(omd diff -b $site | awk '{print $2}')"
+        else
+            opts="$(_omd_cmd_options $subcmd) $(omd diff -b | awk '{print $2}')"
+        fi
+
+    # omd start|stop|restart|reload|status  ...
+    elif [[ $subcmd =~ start|stop|restart|reload|status ]]; then
+        opts="$(_omd_cmd_options $subcmd) $(env ls -1 /omd/sites/$site/etc/init.d/ 2>/dev/null)"
+
+    # omd config ...
+    elif [[ $subcmd =~ config ]]; then
+
+        # omd config ...
+        if [ ${#subcmdargs[@]} -eq 0 ]; then
+            opts="$(_omd_cmd_options $subcmd) set show"
+
+        # omd config set|show ...
+        elif [ ${#subcmdargs[@]} -eq 1 ]; then
+            opts=$(cat /omd/sites/$site/etc/omd/site.conf | awk -F= '{ print $1 }' | sed 's/^CONFIG_//')
+
+        # omd config set <option> ...
+        elif [ ${subcmdargs[0]} = "set" ]; then
+            if [ $EUID -eq 0 ]; then
+                opts=$(su - $site ./lib/omd/hooks/$prev choices | awk -F: '{ print $1 }')
+            else
+                opts=$(./lib/omd/hooks/$prev choices | awk -F: '{ print $1 }')
+            fi
+        fi
+
+    else
+        if [[ $subcmd =~ $SITECMDS|$ROOTSITECMDS|$GLOBALCMDS|$ROOTCMDS ]]; then
+            opts="$(_omd_cmd_options $subcmd)"
+        fi
+    fi
+
+    if [ "x$opts" != "x" ]; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+
+# removing nospace breaks dir/file complete on ex. backup/restore
+complete -o default -o nospace -F _omd omd

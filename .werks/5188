@@ -1,0 +1,16 @@
+Title: Sending service metrics to Graphite/InfluxDB can now be fine-tuned
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1504617495
+Class: feature
+
+Previously, there was a service rule to configure one of three levels of
+information to be sent to Graphite/InfluxDB: Send nothing, send only value,
+or send value/warn/crit/min/max.
+
+Now the rule is more fine-grained, so one can choose for each part of the
+metric if it should be sent or not.  Furthermore, one can now send the unity
+of measurement, too.

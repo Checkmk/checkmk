@@ -1,0 +1,10 @@
+Title: Fixed error "program_version" in master control snapin when disabling a site
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504610835
+Class: fix
+
+

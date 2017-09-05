@@ -4546,9 +4546,13 @@ class TimeperiodSelection(ElementSelection):
 
 
 class TimeperiodValuespec(ValueSpec):
-    tp_toggle_var        = "tp_enabled"       # Used by GUI switch
-    tp_default_value_key = "tp_default_value" # Used in value
-    tp_values_key        = "tp_values"        # Used in value
+    tp_toggle_var        = "tp_toggle"        # Used by GUI switch
+    tp_current_mode      = "tp_active"        # The actual set mode
+                                              # "0" - no timespecific settings
+                                              # "1" - timespecific settings active
+
+    tp_default_value_key = "tp_default_value" # Used in valuespec
+    tp_values_key        = "tp_values"        # Used in valuespec
 
 
     def __init__(self, valuespec):
@@ -4568,18 +4572,20 @@ class TimeperiodValuespec(ValueSpec):
         # The display mode differs when the valuespec is activated
         vars_copy = html.vars.copy()
 
+
+        # The timeperiod mode can be set by either the GUI switch or by the value itself
         # GUI switch overrules the information stored in the value
         if html.has_var(self.tp_toggle_var):
             is_active = self._is_switched_on()
         else:
             is_active = self._is_active(value)
 
-        if is_active:
-            mode = _("Disable")
-            vars_copy[self.tp_toggle_var] = "0"
-        else:
-            mode = _("Enable")
-            vars_copy[self.tp_toggle_var] = "1"
+        # Set the actual used mode
+        html.hidden_field(self.tp_current_mode, "%d" % is_active)
+
+        mode = _("Disable") if is_active else _("Enable")
+        vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
+
         toggle_url = html.makeuri(vars_copy.items())
         html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, style=["position: absolute", "right: 18px;"])
 
@@ -4602,18 +4608,16 @@ class TimeperiodValuespec(ValueSpec):
 
 
     def from_html_vars(self, varprefix):
-        parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
-
-        if parameters[self.tp_values_key]:
-            return parameters
-        elif parameters[self.tp_default_value_key]:
-            # If the tp_default_value has any meaningful set, return this
-            return parameters[self.tp_default_value_key]
+        if html.var(self.tp_current_mode) == "1":
+            # Fetch the timespecific settings
+            parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
+            if parameters[self.tp_values_key]:
+                return parameters
+            else:
+                # Fall back to enclosed valuespec data when no timeperiod is set
+                return parameters[self.tp_default_value_key]
         else:
-            # -> Fall back to simple mode
-            # If the tp-valuespec provided no data, it may be really empty, or we simply used the wrong valuespec
-            # to collect the data. Try to fetch the data with the enclosed valuespec
-            # If the second collection result is also empty - no problem, they have the same datatype
+            # Fetch the data from the enclosed valuespec
             return self._enclosed_valuespec.from_html_vars(varprefix)
 
 

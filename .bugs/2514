@@ -1,0 +1,9 @@
+Title: WATO edit user: View not usable anymore if passwords do not match
+Component: wato
+State: open
+Date: 2017-09-06 17:44:23
+Targetversion: 1.5.0
+Class: nastiness
+
+The "save"-Button and many options disappear if the entered password does
+not match with it's repeated. All content after "Idle timeout" is gone.

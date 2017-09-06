@@ -1,0 +1,14 @@
+Title: Bake agents on restart only affects master sites now
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p11
+Date: 1504678337
+
+When enabling the global setting for baking agents during restrt of the
+monitoring core, the agents were baked on all sites in distributed setups.
+Since the agents are only deployed from the master site, the setting is
+now only affecting the master.

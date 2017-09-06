@@ -3718,7 +3718,8 @@ def do_create_config(with_agents=True):
     create_core_config()
     sys.stdout.write(tty.ok + "\n")
 
-    if bake_agents_on_restart and with_agents and 'do_bake_agents' in globals():
+    if bake_agents_on_restart and with_agents and 'do_bake_agents' in globals() \
+       and not is_wato_slave_site:
         sys.stdout.write("Baking agents...")
         sys.stdout.flush()
         try:

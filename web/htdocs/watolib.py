@@ -3561,12 +3561,13 @@ def create_nagvis_backends(sites):
     store.save_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.paths.omd_root, '\n'.join(cfg))
 
 
-def create_distributed_wato_file(siteid):
+def create_distributed_wato_file(siteid, is_slave):
     output = wato_fileheader()
     output += ("# This file has been created by the master site\n"
                "# push the configuration to us. It makes sure that\n"
                "# we only monitor hosts that are assigned to our site.\n\n")
     output += "distributed_wato_site = '%s'\n" % siteid
+    output += "is_wato_slave_site = %r\n" % is_slave
 
     store.save_file(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", output)
 
@@ -3599,7 +3600,7 @@ def update_distributed_wato_file(sites):
             distributed = True
         if config.site_is_local(siteid):
             found_local = True
-            create_distributed_wato_file(siteid)
+            create_distributed_wato_file(siteid, is_slave=False)
 
     # Remove the distributed wato file
     # a) If there is no distributed WATO setup
@@ -3905,7 +3906,7 @@ def automation_push_snapshot():
         call_hook_snapshot_pushed()
 
         # Create rule making this site only monitor our hosts
-        create_distributed_wato_file(site_id)
+        create_distributed_wato_file(site_id, is_slave=True)
     except Exception, e:
         raise MKGeneralException(_("Failed to deploy configuration: \"%s\". "
                                    "Please note that the site configuration has been synchronized "

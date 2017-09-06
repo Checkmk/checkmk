@@ -14608,9 +14608,11 @@ def create_sample_config():
         ],
 
         # Interval for HW/SW-Inventory check
-        'extra_service_conf:check_interval': [
-          ( 1440, [], ALL_HOSTS, [ "Check_MK HW/SW Inventory$" ], {'description': u'Restrict HW/SW-Inventory to once a day'} ),
-        ],
+        'extra_service_conf': {
+            'check_interval': [
+                ( 1440, [], ALL_HOSTS, [ "Check_MK HW/SW Inventory$" ], {'description': u'Restrict HW/SW-Inventory to once a day'} ),
+            ],
+        },
 
         # Periodic service discovery
         'periodic_discovery': [

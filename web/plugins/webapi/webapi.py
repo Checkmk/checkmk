@@ -353,6 +353,7 @@ register_group_apis() # Otherwise, group_type is known in the global scope..
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+
 def action_get_all_users(request):
     validate_request_keys(request, [])
     all_users = userdb.load_users(lock = False)
@@ -387,6 +388,10 @@ def action_add_users(request):
     new_user_objects = {}
     for user_id, values in users_from_request.items():
         user_template = userdb.new_user_template("htpasswd")
+        if "password" in values:
+            values["password"] = userdb.encrypt_password(values["password"])
+            values["serial"]   = 1
+
         user_template.update(values)
         new_user_objects[user_id] = {"attributes": user_template, "is_new_user": True}
 
@@ -425,6 +430,12 @@ def action_edit_users(request):
             if entry not in user_attrs:
                 continue
             del user_attrs[entry]
+
+        new_password = settings.get("set_attributes", {}).get("password")
+        if new_password:
+            user_attrs["password"] = userdb.encrypt_password(new_password)
+            user_attrs["serial"]   = user_attrs.get("serial", 0) + 1
+
         edit_user_objects[user_id] = {"attributes": user_attrs, "is_new_user": False}
 
     edit_users(edit_user_objects)

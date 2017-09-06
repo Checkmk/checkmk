@@ -1,9 +1,9 @@
 Title: Automatic baking agents options breaks activation of changes in distributed setups
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2017-07-18 18:43:49
 Targetversion: 1.2.8
-Class: bug
 
 If the option autimatic bake agents is activated in distributed setups,
 the agents will be build on slave sites. That will break the activation of
@@ -12,3 +12,9 @@ changes on thsi slave site.
 This option should only applied to the master site and have to be ignored on slave sites.
 
 Workaround: Deactivate this option again.
+
+2017-09-06 08:37:30: changed state open -> done
+Fixed for 1.4.0 and master.
+
+For 1.2.8 use the workaround to either disable this option at all or
+disable the option in the site specific global settings for the slave sites.

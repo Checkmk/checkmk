@@ -167,7 +167,6 @@ def site_config_path():
 def acquire_backup_lock():
     global g_backup_lock_f
     lock_file_path = "/tmp/mkbackup.lock"
-
     if not os.path.exists(lock_file_path):
         try:
             g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+", dir="/tmp", delete=False)
@@ -190,6 +189,7 @@ def acquire_backup_lock():
         cloexec_flag = fcntl.FD_CLOEXEC
     except AttributeError:
         cloexec_flag = 1
+
     fd = g_backup_lock_f.fileno()
     fcntl.fcntl(fd, fcntl.F_SETFD, fcntl.fcntl(fd, fcntl.F_GETFD) | cloexec_flag)
 
@@ -672,7 +672,6 @@ def do_site_backup(opts, site=None, try_stop=True):
                 raise MKGeneralException("Failed to backup site that only supports "
                                          "offline backup.")
 
-
         raise MKGeneralException("Site backup failed: %s" % err)
 
 
@@ -749,9 +748,7 @@ class MKBackupStream(object):
 
         while True:
             chunk, finished = self._read_chunk()
-
             self._bytes_copied += len(chunk)
-
             yield self._process_chunk(chunk)
 
             if finished and not self._is_alive():

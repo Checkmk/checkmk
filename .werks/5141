@@ -1,0 +1,19 @@
+Title: WATO Web API: Introducing parameter <tt>request_format</tt>
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504707529
+Class: feature
+
+Web-API calls which set/update specific elements in WATO had trouble interpreting the incoming data.
+
+
+JSON encoded data is not fully capable to represent the python syntax - in detail tuples, it uses lists instead.
+WATO raises an error when a list is reported and a tuple is expected. For example, this error may happen when
+you set a SNMPv3 community for a specific host (the community is configured as tuple).
+
+
+This werk introduces the <tt>request_format=python</tt> parameter.
+If set, the request is parsed as python instead of json code.

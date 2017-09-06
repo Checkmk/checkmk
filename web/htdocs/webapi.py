@@ -99,6 +99,10 @@ def page_api():
         else:
             request_object = html.get_request(exclude_vars=["action"])
 
+        # The request_format parameter is not forwarded into the API action
+        if "request_format" in request_object:
+            del request_object["request_format"]
+
         if api_actions[action].get("locking", True):
             lock_exclusive() # unlock is done automatically
 

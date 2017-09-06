@@ -1752,6 +1752,7 @@ class html(DeprecationWrapper, RequestHandler):
         except ValueError:
             raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
 
+
     # Returns a dictionary containing all parameters the user handed over to this request.
     # The concept is that the user can either provide the data in a single "request" variable,
     # which contains the request data encoded as JSON, or provide multiple GET/POST vars which
@@ -1760,7 +1761,23 @@ class html(DeprecationWrapper, RequestHandler):
         if exclude_vars == None:
             exclude_vars = []
 
-        request = json.loads(self.var("request", "{}"))
+        if self.var("request_format") == "python":
+            try:
+                import ast
+                python_request = self.var("request", "{}")
+                request = ast.literal_eval(python_request)
+            except (SyntaxError, ValueError) as e:
+                raise MKUserError("request", _("Failed to parse Python request: '%s': %s") %
+                                                                    (python_request, e))
+        else:
+            try:
+                json_request = self.var("request", "{}")
+                request = json.loads(json_request)
+                request["request_format"] = "json"
+            except json.JSONDecodeError, e:
+                raise MKUserError("request", _("Failed to parse JSON request: '%s': %s") %
+                                                                    (json_request, e))
+
 
         for key, val in self.all_vars().items():
             if key not in [ "request", "output_format" ] + exclude_vars:

@@ -1,9 +1,9 @@
 Title: Rework setting of environment variables in whole OMD context
 Component: core
-State: open
+Class: bug
+State: closed
 Date: 2017-06-12 09:45:35
 Targetversion: 1.5.0
-Class: bug
 
 Environment variables should only be set in ~/.profile and
 will then be inherited by all sub- and subsubprocesses. It
@@ -21,3 +21,6 @@ All variables should be set just in two places:
 
 All other scripts such auch etc/init.d/* should simply
 rely on correct inheritance.
+
+2017-09-06 16:40:51: changed state open -> closed
+duplicate of #2906. Closing this one.

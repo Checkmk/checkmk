@@ -160,6 +160,7 @@ ipaddresses                          = {} # mapping from hostname to IPv4 addres
 ipv6addresses                        = {} # mapping from hostname to IPv6 address
 only_hosts                           = None
 distributed_wato_site                = None # used by distributed WATO
+is_wato_slave_site                   = False
 extra_host_conf                      = {}
 extra_service_conf                   = {}
 extra_nagios_conf                    = ""

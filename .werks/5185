@@ -1,0 +1,43 @@
+Title: Check_MK HW/SW Inventory: The service was executed too often by default
+Level: 2
+Component: inv
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1504701323
+
+Issue: The HW/SW inventory may produce a lot of load because of wrong scheduling.
+
+You may be affected by this bug in case you created your (master) site with 1.4.0b1
+or newer. If you updated your site from older versions you are likely not affected.
+Slave sites that get their configuration from a master that is not affected will also
+not be affected, regardless of the version they were created with.
+
+When using the hardware software inventory the regular check "Check_MK HW/SW Inventory"
+on each host is executed too often by default. The expected behaviour is that the regular
+check interval of this service is 1 day. The bug we fixed now made the check being executed
+once a minute. In case you have the HW/SW inventory enabled for a lot of hosts, this could
+lead to significant load on your Check_MK server.
+
+Whether or not you have this issue can be checked on the "service detail" page of the
+"Check_MK HW/SW Inventory" service. Have a look at the "Service normal/retry check interval"
+column where you should see 86400s as first value (-> 1 day). If you see a value of 60s, you
+should fix the issue as follows.
+
+<ul>
+<li>Navigate to "WATO > Host & Service parameters > Monitoring configuration > Normal check 
+interval for service checks".</li>
+<li>Create a new rule with the following settings:</li>
+<li>Description: Restrict HW/SW-Inventory to once a day</li>
+<li>Value: 1 day</li>
+<li>Services: <tt>Check_MK HW/SW Inventory$</tt></li>
+<li>Activate the changes via WATO</li>
+<li>
+
+After this you should check the service detail page again and see the 86400s interval.
+
+Even when you update your existing site to 1.4.0p11 or newer, you will have to apply the fix
+manually to existing installations when your installation is affected.
+Sites created with 1.4.0p11 or newer won't be affected.

@@ -1,0 +1,11 @@
+Title: WATO Web API: add_users/edit_users: now able to set password attribute
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504706281
+Class: fix
+
+Fixed incorrect processing of the password attribute.
+The Web API expects the password attribute as plain text and encrypts it subsequently.

@@ -5216,6 +5216,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         # Detach from parent (apache) -> Remain running when apache is restarted
         os.setsid()
 
+        # Cleanup existing livestatus connections (may be opened later when needed)
+        sites.disconnect()
+
         # Cleanup ressources of the apache
         for x in range(3, 256):
             try:

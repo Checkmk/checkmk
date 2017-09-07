@@ -1,0 +1,13 @@
+Title: Delete contact groups: Fixed error message when users have no alias
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1504784015
+
+The error message that prevents the deletion of a contact group when it is
+assigned to a user could contain the text "User: None" when a user had no
+alias set. In case there is no alias for the user it shows the user ID now.

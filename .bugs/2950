@@ -1,0 +1,14 @@
+Title: LDAP: Once synced contact groups can not be deleted anymore
+Component: wato
+State: open
+Date: 2017-09-07 13:35:22
+Targetversion: 1.5.0
+Class: bug
+
+When using the LDAP sync to manage users and contact group memberships one needs to create
+the contact groups to be synced from LDAP manually. From the first sync after creation the
+group memberships are synchronized by the LDAP sync. Since the membership attribute of
+all LDAP users is locked, it is not possible remove the assignment to the group. This makes
+it impossible to delete the group while there are LDAP users for this group.
+
+It should be possible to delete the group after confirming a warning message.

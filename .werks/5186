@@ -1,0 +1,13 @@
+Title: Improved error handling when receiving broken SNMP traps
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504774062
+Class: fix
+
+Made it easier to analyze SNMP trap translation issues. By default
+only a single line is logged to the mkeventd.log. When you enable
+debug logging in the Event Console settings, you'll see more details
+about the trap in the mkeventd.log.

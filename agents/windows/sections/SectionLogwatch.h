@@ -82,7 +82,7 @@ class SectionLogwatch : public Section {
     typedef std::pair<std::string, FILETIME> FileEntryType;
 
 public:
-    SectionLogwatch(Configuration &config, LoggerAdaptor &logger,
+    SectionLogwatch(Configuration &config, Logger *logger,
                     const WinApiAdaptor &winapi);
     virtual ~SectionLogwatch();
 

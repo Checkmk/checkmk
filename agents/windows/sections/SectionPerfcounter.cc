@@ -24,12 +24,12 @@
 
 #include "SectionPerfcounter.h"
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 #include "../PerfCounter.h"
 #include "../stringutil.h"
 
 SectionPerfcounter::SectionPerfcounter(const char *name, const Environment &env,
-                                       LoggerAdaptor &logger,
+                                       Logger *logger,
                                        const WinApiAdaptor &winapi)
     : Section(name, env, logger, winapi) {
     withSeparator(',');
@@ -72,9 +72,7 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
             }
         }
 
-        out << "instance,"
-            << to_utf8(join(counter_object.counterNames(), L",").c_str(),
-                       _winapi)
+        out << "instance," << Utf8(join(counter_object.counterNames(), L","))
             << "\n";
         for (const auto &instance_values : value_map) {
             std::wstring instance_name = L"\"\"";
@@ -82,12 +80,11 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
                 instance_names.size()) {
                 instance_name = instance_names[instance_values.first];
             }
-            out << to_utf8(instance_name.c_str(), _winapi) << ","
-                << to_utf8(join(instance_values.second, L",").c_str(), _winapi)
-                << "\n";
+            out << Utf8(instance_name) << ","
+                << Utf8(join(instance_values.second, L",")) << "\n";
         }
     } catch (const std::exception &e) {
-        _logger.crashLog("Exception: %s", e.what());
+        Error(_logger) << "Exception: " << e.what();
         return false;
     }
     return true;

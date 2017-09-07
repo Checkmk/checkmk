@@ -1,9 +1,11 @@
 #include "stringutil.h"
 #include <cassert>
 #include <cctype>
+#include <codecvt>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <locale>
 #include "WinApiAdaptor.h"
 
 #ifdef _WIN32
@@ -107,6 +109,11 @@ int parse_boolean(const char *value) {
         fprintf(stderr,
                 "Invalid boolean value. Only yes and no are allowed.\r\n");
     return -1;
+}
+
+std::ostream &operator<<(std::ostream &os, const Utf8 &u) {
+    return os << std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(
+               u._value);
 }
 
 string to_utf8(const char *input) {

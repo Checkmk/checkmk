@@ -32,7 +32,7 @@ class SectionCrashDebug : public Section {
     Configurable<bool> _crash_debug;
 
 public:
-    SectionCrashDebug(Configuration &config, LoggerAdaptor &logger,
+    SectionCrashDebug(Configuration &config, Logger *logger,
                       const WinApiAdaptor &winapi);
 
 protected:

@@ -28,11 +28,11 @@
 #include <string>
 #include "types.h"
 
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 class ListenSocket {
-    const LoggerAdaptor &_logger;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
     SOCKET _socket;
     only_from_t _source_whitelist;
@@ -41,8 +41,7 @@ class ListenSocket {
 
 public:
     ListenSocket(int port, const only_from_t &source_whitelist,
-                 bool supportIPV6, const LoggerAdaptor &logger,
-                 const WinApiAdaptor &winapi);
+                 bool supportIPV6, Logger *logger, const WinApiAdaptor &winapi);
     ~ListenSocket();
 
     bool supportsIPV4() const;

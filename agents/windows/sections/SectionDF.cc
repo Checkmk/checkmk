@@ -35,7 +35,7 @@ void char_replace(char what, char into, char *in) {
     }
 }
 
-SectionDF::SectionDF(const Environment &env, LoggerAdaptor &logger,
+SectionDF::SectionDF(const Environment &env, Logger *logger,
                      const WinApiAdaptor &winapi)
     : Section("df", env, logger, winapi) {
     withSeparator('\t');

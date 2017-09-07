@@ -32,6 +32,7 @@
 #include "Environment.h"
 #include "PerfCounter.h"
 #include "stringutil.h"
+
 #define __STDC_FORMAT_MACROS
 
 Configuration::Configuration(const Environment &env) : _environment(env) {}

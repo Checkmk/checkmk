@@ -21,7 +21,7 @@
 #include "sections/SectionWMI.h"
 #include "sections/SectionWinperf.h"
 
-SectionManager::SectionManager(Configuration &config, LoggerAdaptor &logger,
+SectionManager::SectionManager(Configuration &config, Logger *logger,
                                const WinApiAdaptor &winapi)
     : _ps_use_wmi(config, "ps", "use_wmi", false, winapi)
     , _enabled_sections(config, "global", "sections", winapi)
@@ -82,7 +82,6 @@ void SectionManager::loadDynamicSections() {
 }
 
 void SectionManager::loadStaticSections(Configuration &config) {
-    addSection(new SectionCrashDebug(config, _logger, _winapi));
     addSection(new SectionCheckMK(config, _logger, _winapi));
     addSection(new SectionUptime(_env, _logger, _winapi));
     addSection((new SectionDF(_env, _logger, _winapi))->withRealtimeSupport());

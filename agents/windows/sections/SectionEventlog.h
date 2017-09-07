@@ -69,7 +69,7 @@ class SectionEventlog : public Section {
     eventlog_state_t _state;
 
 public:
-    SectionEventlog(Configuration &config, LoggerAdaptor &logger,
+    SectionEventlog(Configuration &config, Logger *logger,
                     const WinApiAdaptor &winapi);
     virtual ~SectionEventlog();
 
@@ -79,7 +79,7 @@ protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 
 private:
-    void outputEventlog(std::ostream &out, LPCWSTR logname,
+    void outputEventlog(std::ostream &out, const char *logname,
                         uint64_t &first_record, int level, int hide_context);
     void registerEventlog(const char *logname);
     bool find_eventlogs(std::ostream &out);

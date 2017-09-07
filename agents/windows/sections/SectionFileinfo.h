@@ -38,7 +38,7 @@ class SectionFileinfo : public Section {
         _fileinfo_paths;
 
 public:
-    SectionFileinfo(Configuration &config, LoggerAdaptor &logger,
+    SectionFileinfo(Configuration &config, Logger *logger,
                     const WinApiAdaptor &winapi);
 
 protected:

@@ -23,11 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OHMMonitor.h"
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "types.h"
 
-OHMMonitor::OHMMonitor(const std::string &bin_path, const LoggerAdaptor &logger,
+OHMMonitor::OHMMonitor(const std::string &bin_path, Logger *logger,
                        const WinApiAdaptor &winapi)
     : _exe_path(bin_path + "\\OpenHardwareMonitorCLI.exe")
     , _logger(logger)
@@ -71,13 +71,13 @@ bool OHMMonitor::checkAvailabe() {
         DWORD exitCode = 0;
         if (!_winapi.GetExitCodeProcess(_current_process, &exitCode)) {
             // handle invalid???
-            _logger.crashLog("ohm process handle invalid");
+            Debug(_logger) << "ohm process handle invalid";
             _winapi.CloseHandle(_current_process);
             _current_process = INVALID_HANDLE_VALUE;
         } else {
             if (exitCode != STILL_ACTIVE) {
-                _logger.crashLog("OHM process ended with exit code %" PRIudword,
-                                 exitCode);
+                Debug(_logger)
+                    << "OHM process ended with exit code " << exitCode;
                 _winapi.CloseHandle(_current_process);
                 _current_process = INVALID_HANDLE_VALUE;
             }
@@ -96,12 +96,12 @@ bool OHMMonitor::checkAvailabe() {
 
         if (!_winapi.CreateProcess(_exe_path.c_str(), nullptr, nullptr, nullptr,
                                    TRUE, 0, nullptr, nullptr, &si, &pi)) {
-            _logger.crashLog("failed to run %s", _exe_path.c_str());
+            Error(_logger) << "failed to run %s" << _exe_path;
             return false;
         } else {
             _current_process = pi.hProcess;
-            _logger.crashLog("started %s (pid %lu)", _exe_path.c_str(),
-                             pi.dwProcessId);
+            Debug(_logger) << "started " << _exe_path << " (pid "
+                           << pi.dwProcessId << ")";
             _winapi.CloseHandle(pi.hThread);
         }
     }

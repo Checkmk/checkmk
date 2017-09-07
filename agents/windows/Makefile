@@ -41,8 +41,8 @@ MKDIR         = mkdir -p
 POSTCOMPILE = mv -f -u $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 
 ifeq ($(shell uname),Linux)
-  CXX        = i686-w64-mingw32-g++
-  CXX_64     = x86_64-w64-mingw32-g++
+  CXX        = i686-w64-mingw32-g++-posix
+  CXX_64     = x86_64-w64-mingw32-g++-posix
   WINDRES_64 = x86_64-w64-mingw32-windres
 else
   CXX = mingw32-g++
@@ -124,7 +124,7 @@ SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Configurable.cc E
        sections/SectionWinperf.cc sections/SectionLogwatch.cc sections/SectionGroup.cc\
        sections/SectionSkype.cc sections/SectionOHM.cc sections/SectionPerfcounter.cc\
        sections/SectionEventlog.cc sections/SectionPluginGroup.cc\
-       sections/SectionCrashDebug.cc sections/SectionSpool.cc sections/SectionMRPE.cc
+       sections/SectionSpool.cc sections/SectionMRPE.cc
 
 OBJS = $(addprefix obj/,$(SRCS:.cc=.o))
 OBJS64 = $(addprefix obj64/,$(SRCS:.cc=.o))

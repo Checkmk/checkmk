@@ -28,7 +28,7 @@
 #include <memory>
 #include <string>
 
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 class IEventLogRecord {
@@ -94,9 +94,8 @@ public:
     //        const char *source) const = 0;
 };
 
-std::unique_ptr<IEventLog> open_eventlog(const wchar_t *name_or_path,
-                                         bool try_vista_api,
-                                         const LoggerAdaptor &logger,
+std::unique_ptr<IEventLog> open_eventlog(const std::wstring &name_or_path,
+                                         bool try_vista_api, Logger *logger,
                                          const WinApiAdaptor &winapi);
 
 #endif  // EventLog_h

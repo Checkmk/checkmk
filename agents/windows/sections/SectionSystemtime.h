@@ -29,7 +29,7 @@
 
 class SectionSystemtime : public Section {
 public:
-    SectionSystemtime(const Environment &env, LoggerAdaptor &logger,
+    SectionSystemtime(const Environment &env, Logger *logger,
                       const WinApiAdaptor &winapi);
 
 protected:

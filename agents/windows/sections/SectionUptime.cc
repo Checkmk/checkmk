@@ -26,11 +26,11 @@
 
 #include "SectionUptime.h"
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 #include "../dynamic_func.h"
 #define WIN32_LEAN_AND_MEAN
 
-SectionUptime::SectionUptime(const Environment &env, LoggerAdaptor &logger,
+SectionUptime::SectionUptime(const Environment &env, Logger *logger,
                              const WinApiAdaptor &winapi)
     : Section("uptime", env, logger, winapi) {
     LPCWSTR dllName = L"kernel32.dll";
@@ -67,8 +67,8 @@ std::string SectionUptime::outputWMI() {
                 return res.get<std::string>(L"SystemUpTime");
             }
         } catch (const wmi::ComException &e) {
-            _logger.crashLog("wmi request for SystemUpTime failed: %s",
-                             e.what());
+            Error(_logger) << "wmi request for SystemUpTime failed: "
+                           << e.what();
         }
     }
     // TODO: wmi appears to be unreliable on some systems so maybe switch

@@ -35,7 +35,7 @@
 #include "WinApiAdaptor.h"
 
 class Environment;
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 class Section {
@@ -48,11 +48,11 @@ class Section {
 
 protected:
     const Environment &_env;
-    LoggerAdaptor &_logger;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 
 public:
-    Section(const char *name, const Environment &env, LoggerAdaptor &logger,
+    Section(const char *name, const Environment &env, Logger *logger,
             const WinApiAdaptor &winapi);
 
     virtual ~Section() = default;

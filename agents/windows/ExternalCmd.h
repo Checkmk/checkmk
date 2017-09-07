@@ -28,13 +28,13 @@
 #include "types.h"
 
 class Environment;
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 class ExternalCmd {
 public:
-    ExternalCmd(const char *cmdline, const Environment &env,
-                const LoggerAdaptor &logger, const WinApiAdaptor &winapi);
+    ExternalCmd(const char *cmdline, const Environment &env, Logger *logger,
+                const WinApiAdaptor &winapi);
 
     ~ExternalCmd();
 
@@ -62,7 +62,7 @@ private:
     HANDLE _job_object;
     WinHandle _stdout;
     WinHandle _stderr;
-    const LoggerAdaptor &_logger;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 };
 

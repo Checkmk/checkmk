@@ -25,13 +25,11 @@
 #ifndef stringutil_h
 #define stringutil_h
 
+#include <stdint.h>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-// umm, this is a C header, not actually part of C++ until C++11. This may be a
-// problem in older
-// MSVCs
-#include <stdint.h>
 
 class WinApiAdaptor;
 
@@ -48,6 +46,13 @@ unsigned long long string_to_llu(const char *s);
 void lowercase(char *s);
 
 int parse_boolean(const char *value);
+
+struct Utf8 {
+    explicit Utf8(const std::wstring &value) : _value(value) {}
+    const std::wstring _value;
+};
+
+std::ostream &operator<<(std::ostream &os, const Utf8 &u);
 
 std::string to_utf8(const char *input);
 std::string to_utf8(const wchar_t *input, const WinApiAdaptor &winapi);

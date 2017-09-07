@@ -24,10 +24,9 @@
 
 #include "SectionCrashDebug.h"
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 
-SectionCrashDebug::SectionCrashDebug(Configuration &config,
-                                     LoggerAdaptor &logger,
+SectionCrashDebug::SectionCrashDebug(Configuration &config, Logger *logger,
                                      const WinApiAdaptor &winapi)
     : Section("logwatch", config.getEnvironment(), logger, winapi)
     , _crash_debug(config, "global", "crash_debug", false, winapi) {}

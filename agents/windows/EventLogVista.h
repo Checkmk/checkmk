@@ -150,7 +150,7 @@ class EventLogVista : public IEventLog {
 public:
     // constructor
     // This throws an UnsupportedException if the vista-api is not supported.
-    EventLogVista(LPCWSTR path, const WinApiAdaptor &winapi);
+    EventLogVista(const std::wstring &path, const WinApiAdaptor &winapi);
 
     EventLogVista(const EventLogVista &reference) = delete;
 

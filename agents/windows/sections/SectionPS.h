@@ -40,7 +40,7 @@ class SectionPS : public Section {
     std::unique_ptr<wmi::Helper> _helper;
 
 public:
-    SectionPS(Configuration &config, LoggerAdaptor &logger,
+    SectionPS(Configuration &config, Logger *logger,
               const WinApiAdaptor &winapi);
 
 protected:

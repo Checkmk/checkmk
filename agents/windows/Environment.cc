@@ -27,7 +27,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <vector>
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "types.h"
 #include "win_error.h"
@@ -41,7 +41,7 @@ static const int MAX_PATH_UNICODE = 32767;
 
 Environment *Environment::s_Instance = nullptr;
 
-Environment::Environment(bool use_cwd, const LoggerAdaptor &logger,
+Environment::Environment(bool use_cwd, Logger *logger,
                          const WinApiAdaptor &winapi)
     : _logger(logger)
     , _winapi(winapi)
@@ -155,9 +155,9 @@ string Environment::assignDirectory(const char *name) const {
     if (!_winapi.CreateDirectoryA(result.c_str(), NULL)) {
         const auto lastError = _winapi.GetLastError();
         if (lastError != ERROR_ALREADY_EXISTS) {
-            _logger.crashLog(
-                "Failed to create directory %s: %s (%lu)", name,
-                get_win_error_as_string(_winapi, lastError).c_str(), lastError);
+            Error(_logger) << "Failed to create directory : " << name << ": "
+                           << get_win_error_as_string(_winapi, lastError)
+                           << " (" << lastError << ")";
         }
     }
     return result;

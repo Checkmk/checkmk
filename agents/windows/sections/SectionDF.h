@@ -31,7 +31,7 @@ class Environment;
 
 class SectionDF : public Section {
 public:
-    SectionDF(const Environment &env, LoggerAdaptor &logger,
+    SectionDF(const Environment &env, Logger *logger,
               const WinApiAdaptor &winapi);
 
 protected:

@@ -28,14 +28,14 @@
 #include <cassert>
 #include <cstring>
 #include <memory>
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "win_error.h"
 
 static const size_t INET6_ADDRSTRLEN = 46;
 
 ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist,
-                           bool supportIPV6, const LoggerAdaptor &logger,
+                           bool supportIPV6, Logger *logger,
                            const WinApiAdaptor &winapi)
     : _logger(logger)
     , _winapi(winapi)
@@ -114,7 +114,7 @@ SOCKET ListenSocket::init_listen_socket(int port) {
         int error_id = _winapi.WSAGetLastError();
         if (error_id == WSAEAFNOSUPPORT) {
             // this will happen on Win2k and WinXP without the ipv6 patch
-            _logger.verbose("IPV6 not supported");
+            Notice(_logger) << "IPV6 not supported";
             _use_ipv6 = false;
             tmp_s = _winapi.socket(AF_INET, SOCK_STREAM, 0);
         }
@@ -140,7 +140,7 @@ SOCKET ListenSocket::init_listen_socket(int port) {
         int v6only = 0;
         if (_winapi.setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&v6only,
                                sizeof(int)) != 0) {
-            _logger.verbose("failed to disable ipv6 only flag");
+            Notice(_logger) << "failed to disable ipv6 only flag";
             _supports_ipv4 = false;
         }
     } else {

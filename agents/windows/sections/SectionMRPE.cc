@@ -26,9 +26,9 @@
 #include <cstring>
 #include "../Environment.h"
 #include "../ExternalCmd.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 
-SectionMRPE::SectionMRPE(Configuration &config, LoggerAdaptor &logger,
+SectionMRPE::SectionMRPE(Configuration &config, Logger *logger,
                          const WinApiAdaptor &winapi)
     : Section("mrpe", config.getEnvironment(), logger, winapi)
     , _entries(config, "mrpe", "check", winapi)
@@ -47,7 +47,7 @@ void SectionMRPE::updateIncludes() {
         std::tie(user, path) = user_path;
         file = fopen(path.c_str(), "r");
         if (!file) {
-            _logger.crashLog("Include file not found %s", path.c_str());
+            Warning(_logger) << "Include file not found " << path;
             continue;
         }
 
@@ -68,8 +68,8 @@ void SectionMRPE::updateIncludes() {
             char *s = l;
             while (*s && *s != '=') s++;
             if (*s != '=') {
-                _logger.crashLog("Invalid line %d in %s.", lineno,
-                                 path.c_str());
+                Warning(_logger)
+                    << "Invalid line " << lineno << " in " << path << ".";
                 continue;
             }
             *s = 0;
@@ -85,9 +85,9 @@ void SectionMRPE::updateIncludes() {
                 char *service_description = next_word(&value);
                 char *command_line = value;
                 if (!command_line || !command_line[0]) {
-                    _logger.crashLog(
-                        "Invalid line %d in %s. Invalid command specification",
-                        lineno, path.c_str());
+                    Warning(_logger)
+                        << "Invalid line " << lineno << " in " << path
+                        << ". Invalid command specification.";
                     continue;
                 }
 
@@ -126,8 +126,8 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
     for (mrpe_entry *entry : all_entries) {
         out << "(" << entry->plugin_name << ") " << entry->service_description
             << " ";
-        _logger.crashLog("%s (%s) %s ", entry->run_as_user, entry->plugin_name,
-                         entry->service_description);
+        Debug(_logger) << entry->run_as_user << " (" << entry->plugin_name
+                       << ") " << entry->service_description;
 
         char modified_command[1024];
         char run_as_prefix[512];
@@ -140,7 +140,7 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
 
         try {
             ExternalCmd command(modified_command, _env, _logger, _winapi);
-            _logger.crashLog("Script started -> collecting data");
+            Debug(_logger) << "Script started -> collecting data";
             std::string buffer;
             buffer.resize(8192);
             char *buf_start = &buffer[0];
@@ -166,9 +166,9 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
                            });
             int nagios_code = command.exitCode();
             out << nagios_code << " " << plugin_output << "\n";
-            _logger.crashLog("Script finished");
+            Debug(_logger) << "Script finished";
         } catch (const std::exception &e) {
-            _logger.crashLog("mrpe failed: %s", e.what());
+            Error(_logger) << "mrpe failed: " << e.what();
             out << "3 Unable to execute - plugin may be missing.\n";
             continue;
         }

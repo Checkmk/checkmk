@@ -30,7 +30,7 @@
 
 class SectionSpool : public Section {
 public:
-    SectionSpool(const Environment &env, LoggerAdaptor &logger,
+    SectionSpool(const Environment &env, Logger *logger,
                  const WinApiAdaptor &winapi);
 
 protected:

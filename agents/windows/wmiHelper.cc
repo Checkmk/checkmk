@@ -31,7 +31,7 @@
 #include <sstream>
 #include <string>
 
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 #include "stringutil.h"
 
 using namespace wmi;

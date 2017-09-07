@@ -30,7 +30,7 @@
 extern double current_time();
 extern double file_time(const FILETIME *filetime);
 
-SectionFileinfo::SectionFileinfo(Configuration &config, LoggerAdaptor &logger,
+SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
     : Section("fileinfo", config.getEnvironment(), logger, winapi)
     , _fileinfo_paths(config, "fileinfo", "path", winapi) {
@@ -148,7 +148,7 @@ bool SectionFileinfo::outputFileinfo(std::ostream &out,
         unsigned long long size =
             (unsigned long long)findData.nFileSizeLow +
             (((unsigned long long)findData.nFileSizeHigh) << 32);
-        out << filename.c_str() << "|" << size << "|" << std::fixed
+        out << filename << "|" << size << "|" << std::fixed
             << std::setprecision(0) << file_time(&findData.ftLastWriteTime)
             << "\n";
         _winapi.FindClose(findHandle);

@@ -52,8 +52,7 @@ struct script_container {
         const std::string &_script_path,  // path of script
         int _max_age, int _timeout, int _max_entries, const std::string &_user,
         script_type _type, script_execution_mode _execution_mode,
-        const Environment &_env, LoggerAdaptor &_logger,
-        const WinApiAdaptor &_winapi);
+        const Environment &_env, Logger *_logger, const WinApiAdaptor &_winapi);
 
     script_container() = delete;
     script_container(const script_container &) = delete;
@@ -79,7 +78,7 @@ struct script_container {
     HANDLE job_object;
     DWORD exit_code;
     const Environment &env;
-    LoggerAdaptor &logger;
+    Logger *logger;
     const WinApiAdaptor &winapi;
 };
 
@@ -134,7 +133,7 @@ class SectionPluginGroup : public Section {
 
 public:
     SectionPluginGroup(Configuration &config, const std::string &path,
-                       script_type type, LoggerAdaptor &logger,
+                       script_type type, Logger *logger,
                        const WinApiAdaptor &winapi,
                        const std::string &user = std::string());
 

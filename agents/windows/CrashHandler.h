@@ -49,15 +49,15 @@ typedef long LONG_PTR;
 typedef struct _EXCEPTION_POINTERS *LPEXCEPTION_POINTERS;
 typedef struct _CONTEXT CONTEXT;
 
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 class CrashHandler {
-    const LoggerAdaptor &_logger;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 
 public:
-    CrashHandler(const LoggerAdaptor &logger, const WinApiAdaptor &winapi);
+    CrashHandler(Logger *logger, const WinApiAdaptor &winapi);
     CrashHandler(const CrashHandler &) = delete;
     CrashHandler &operator=(const CrashHandler &) = delete;
 
@@ -65,7 +65,6 @@ public:
 
 private:
 #ifdef __x86_64
-    void dumpRegisters(CONTEXT *c) const;
     void logBacktrace(PVOID exc_address) const;
 #endif  // __x86_64
 };

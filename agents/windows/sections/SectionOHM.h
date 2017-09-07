@@ -36,7 +36,7 @@ class SectionOHM : public SectionWMI {
     std::string _bin_path;
 
 public:
-    SectionOHM(Configuration &config, LoggerAdaptor &logger,
+    SectionOHM(Configuration &config, Logger *logger,
                const WinApiAdaptor &winapi);
 
     virtual void startIfAsync();

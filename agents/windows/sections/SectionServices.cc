@@ -28,7 +28,7 @@ typedef short SHORT;
 #include "../stringutil.h"
 //#include "../check_mk_agent_def.h"
 
-SectionServices::SectionServices(const Environment &env, LoggerAdaptor &logger,
+SectionServices::SectionServices(const Environment &env, Logger *logger,
                                  const WinApiAdaptor &winapi)
     : Section("services", env, logger, winapi) {}
 
@@ -142,9 +142,9 @@ bool SectionServices::produceOutputInner(std::ostream &out) {
                             if (*w == L' ') *w = L'_';
                         }
 
-                        out << to_utf8(service->lpServiceName, _winapi) << " "
-                            << state_name << "/" << start_type << " "
-                            << to_utf8(service->lpDisplayName, _winapi) << "\n";
+                        out << Utf8(service->lpServiceName) << " " << state_name
+                            << "/" << start_type << " "
+                            << Utf8(service->lpDisplayName) << "\n";
                         ++service;
                     }
                 }

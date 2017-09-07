@@ -280,7 +280,8 @@ EvtFunctionMap::EvtFunctionMap(const WinApiAdaptor &winapi)
     , getLogInfo(getFunc(winapi, _mod->get_module(), decltype(getLogInfo),
                          static_cast<LPCSTR>("EvtGetLogInfo"))) {}
 
-EventLogVista::EventLogVista(LPCWSTR path, const WinApiAdaptor &winapi)
+EventLogVista::EventLogVista(const std::wstring &path,
+                             const WinApiAdaptor &winapi)
     : _path(path), _handle(nullptr), _winapi(winapi) {
     _evt = std::make_shared<EvtFunctionMap>(winapi);
     if (_evt->openLog == nullptr) {

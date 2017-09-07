@@ -23,14 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 #include "../OHMMonitor.h"
 #include "SectionWMI.h"
 #undef CreateMutex
 #include "../Configuration.h"
 #include "SectionOHM.h"
 
-SectionOHM::SectionOHM(Configuration &config, LoggerAdaptor &logger,
+SectionOHM::SectionOHM(Configuration &config, Logger *logger,
                        const WinApiAdaptor &winapi)
     : SectionWMI("openhardwaremonitor", config.getEnvironment(), logger, winapi)
     , _bin_path(_env.binDirectory()) {
@@ -50,11 +50,12 @@ bool SectionOHM::produceOutputInner(std::ostream &out) {
     try {
         res = SectionWMI::produceOutputInner(out);
     } catch (const wmi::ComException &e) {
+        Debug(_logger) << "Exception: " << e.what();
         res = false;
     }
     if (!res && !_ohm_monitor->checkAvailabe()) {
-        _logger.crashLog(
-            "ohm not installed or not runnable -> section disabled");
+        Debug(_logger)
+            << "ohm not installed or not runnable -> section disabled";
         suspend(3600);
     }
     return res;

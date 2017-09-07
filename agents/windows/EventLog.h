@@ -31,7 +31,7 @@
 #include "types.h"
 #include "win_error.h"
 
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 typedef struct HINSTANCE__ *HMODULE;
@@ -106,7 +106,7 @@ private:
 
 class MessageResolver {
 public:
-    MessageResolver(const std::wstring &logName, const LoggerAdaptor &logger,
+    MessageResolver(const std::wstring &logName, Logger *logger,
                     const WinApiAdaptor &winapi)
         : _name(logName), _logger(logger), _winapi(winapi) {}
 
@@ -120,7 +120,7 @@ private:
 
     std::wstring _name;
     mutable std::map<std::wstring, HModuleWrapper> _cache;
-    const LoggerAdaptor &_logger;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 };
 
@@ -129,7 +129,7 @@ public:
     /**
      * Construct a reader for the named eventlog
      */
-    EventLog(LPCWSTR name, const LoggerAdaptor &logger,
+    EventLog(const std::wstring &name, Logger *logger,
              const WinApiAdaptor &winapi);
 
     virtual ~EventLog();
@@ -182,7 +182,7 @@ private:
     DWORD _last_record_read{0};
 
     const MessageResolver _resolver;
-    const LoggerAdaptor &_logger;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 };
 

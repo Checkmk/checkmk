@@ -1,0 +1,14 @@
+Title: Improving curl and python compatibility of cmk-update-agent
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p11
+Date: 1504781077
+Class: fix
+
+This werk fixes some compatibility issues that may occur when executing cmk-update-agent on a linux host without python-requests installed:
+- When running cmk-update-agent with HTTPS and using a Python version < 2.6 , cmk-update-agent may abort with message "ERROR global name 'format' is not defined".
+- For some configurations, curl is not able to perform a HTTP-redirect. This would result in an error message like "Error while fetching deployment URL via curl: Unexpected status code 302"
+- When running cmk-update-agent with a curl version < 7.19 installed, the Agent Updater may abort with an error message including "curl: option --noproxy: is unknown"
+

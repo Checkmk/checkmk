@@ -27,7 +27,7 @@
 #include "../stringutil.h"
 #include "SectionPerfcounter.h"
 
-SectionSkype::SectionSkype(const Environment &env, LoggerAdaptor &logger,
+SectionSkype::SectionSkype(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
     : SectionGroup("skype", env, logger, winapi) {
     withToggleIfMissing();

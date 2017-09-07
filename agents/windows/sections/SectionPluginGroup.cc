@@ -27,7 +27,7 @@
 #include <sys/types.h>
 #include "../Environment.h"
 #include "../ExternalCmd.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 #include "../WinApiAdaptor.h"
 
 extern struct script_statistics_t {
@@ -125,8 +125,8 @@ static int launch_program(script_container *cont) {
             }
 
             if (result == BUFFER_FULL) {
-                logger.crashLog(
-                    "plugin produced more than 2MB output -> dropped");
+                Debug(logger)
+                    << "plugin produced more than 2MB output -> dropped";
             }
 
             if (cont->exit_code != STILL_ACTIVE) {
@@ -152,7 +152,7 @@ static int launch_program(script_container *cont) {
             memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
         }
     } catch (const std::exception &e) {
-        logger.crashLog("%s", e.what());
+        Error(logger) << e.what();
         result = CANCELED;
     }
     return result;
@@ -206,8 +206,7 @@ script_container::script_container(
     const std::string &_script_path,  // path of script
     int _max_age, int _timeout, int _max_entries, const std::string &_user,
     script_type _type, script_execution_mode _execution_mode,
-    const Environment &_env, LoggerAdaptor &_logger,
-    const WinApiAdaptor &_winapi)
+    const Environment &_env, Logger *_logger, const WinApiAdaptor &_winapi)
     : path(_path)
     , script_path(_script_path)
     , max_age(_max_age)
@@ -244,8 +243,8 @@ void SectionPluginGroup::runContainer(script_container *cont) {
     // Return if this script is no longer present
     // However, the script container is preserved
     if (!exists(cont)) {
-        _logger.crashLog("script %s no longer exists",
-                         cont->script_path.c_str());
+        Warning(_logger) << "script " << cont->script_path
+                         << " no longer exists";
         return;
     }
 
@@ -261,7 +260,7 @@ void SectionPluginGroup::runContainer(script_container *cont) {
         if (cont->worker_thread != INVALID_HANDLE_VALUE)
             _winapi.CloseHandle(cont->worker_thread);
 
-        _logger.crashLog("invoke script %s", cont->script_path.c_str());
+        Debug(_logger) << "invoke script " << cont->script_path;
         cont->worker_thread =
             _winapi.CreateThread(nullptr,  // default security attributes
                                  0,        // use default stack size
@@ -273,8 +272,8 @@ void SectionPluginGroup::runContainer(script_container *cont) {
             (cont->execution_mode == ASYNC && *_async_execution == SEQUENTIAL))
             _winapi.WaitForSingleObject(cont->worker_thread, INFINITE);
 
-        _logger.crashLog("finished with status %d (exit code %" PRIudword ")",
-                         cont->status, cont->exit_code);
+        Debug(_logger) << "finished with status " << cont->status
+                       << " (exit code " << cont->exit_code << ")";
     }
 }
 
@@ -283,7 +282,7 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
     for (const auto &kv : _containers) {
         std::shared_ptr<script_container> cont = kv.second;
         if (!exists(cont.get())) {
-            _logger.crashLog("script %s missing", cont->script_path.c_str());
+            Warning(_logger) << "script " << cont->script_path << " missing";
             continue;
         }
 
@@ -383,7 +382,7 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
 
 SectionPluginGroup::SectionPluginGroup(Configuration &config,
                                        const std::string &path,
-                                       script_type type, LoggerAdaptor &logger,
+                                       script_type type, Logger *logger,
                                        const WinApiAdaptor &winapi,
                                        const std::string &user)
     : Section(typeToSection(type), config.getEnvironment(), logger, winapi)
@@ -647,9 +646,9 @@ DataCollectionThread(LPVOID lpParam) {
 }
 
 void SectionPluginGroup::collectData(script_execution_mode mode) {
+    const std::string typeName = _type == PLUGIN ? "plugin" : "local";
     if (mode == SYNC) {
-        _logger.crashLog("Collecting sync %s data",
-                         _type == PLUGIN ? "plugin" : "local");
+        Debug(_logger) << "Collecting sync " << typeName << " data";
         for (const auto &kv : _containers) {
             if (kv.second->execution_mode == SYNC)
                 runContainer(kv.second.get());
@@ -666,8 +665,8 @@ void SectionPluginGroup::collectData(script_execution_mode mode) {
 
         if (_collection_thread != INVALID_HANDLE_VALUE)
             _winapi.CloseHandle(_collection_thread);
-        _logger.crashLog("Start async thread for collecting %s data",
-                         _type == PLUGIN ? "plugin" : "local");
+        Debug(_logger) << "Start async thread for collecting " << typeName
+                       << " data";
         _collection_thread =
             _winapi.CreateThread(nullptr,  // default security attributes
                                  0,        // use default stack size

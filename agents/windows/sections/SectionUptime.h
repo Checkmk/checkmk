@@ -42,7 +42,7 @@ class SectionUptime : public Section {
     std::unique_ptr<wmi::Helper> _wmi_helper;
 
 public:
-    SectionUptime(const Environment &env, LoggerAdaptor &logger,
+    SectionUptime(const Environment &env, Logger *logger,
                   const WinApiAdaptor &winapi);
 
 protected:

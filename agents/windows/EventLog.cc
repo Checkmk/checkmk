@@ -26,8 +26,9 @@
 #include <algorithm>
 #include <map>
 #include <string>
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 #include "WinApiAdaptor.h"
+#include "stringutil.h"
 
 using std::vector;
 using std::wstring;
@@ -77,7 +78,7 @@ vector<wstring> MessageResolver::getMessageFiles(LPCWSTR source) const {
     DWORD ret = _winapi.RegOpenKeyExW(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
                                       KEY_READ, &key);
     if (ret != ERROR_SUCCESS) {
-        _logger.crashLog("failed to open HKLM:%ls", regpath.c_str());
+        Error(_logger) << "failed to open HKLM:" << Utf8(regpath);
         return vector<wstring>();
     }
 
@@ -96,9 +97,9 @@ vector<wstring> MessageResolver::getMessageFiles(LPCWSTR source) const {
                                        nullptr, &buffer[0], &size);
     }
     if (res != ERROR_SUCCESS) {
-        _logger.crashLog("failed to read at EventMessageFile in HKLM:%ls : %s",
-                         regpath.c_str(),
-                         get_win_error_as_string(_winapi, res).c_str());
+        Error(_logger) << "failed to read at EventMessageFile in HKLM:%ls : %s"
+                       << Utf8(regpath) << " : "
+                       << get_win_error_as_string(_winapi, res);
         return vector<wstring>();
     }
 
@@ -127,7 +128,7 @@ wstring MessageResolver::resolveInt(DWORD eventID, LPCWSTR dllpath,
         }
 
         if (!dll) {
-            _logger.crashLog("     --> failed to load %ls", dllpath);
+            Error(_logger) << "     --> failed to load " << Utf8(dllpath);
             return L"";
         }
     } else {
@@ -141,16 +142,16 @@ wstring MessageResolver::resolveInt(DWORD eventID, LPCWSTR dllpath,
     DWORD dwFlags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
     if (dll) dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
 
-    _logger.crashLog("Event ID: %lu.%lu",
-                     eventID / 65536,   // "Qualifiers": no idea what *that* is
-                     eventID % 65536);  // the actual event id
+    Debug(_logger) << "Event ID: "
+                   << eventID / 65536  // "Qualifiers": no idea what *that* is
+                   << "." << eventID % 65536;  // the actual event id
 
-    _logger.crashLog("Formatting Message");
+    Debug(_logger) << "Formatting Message";
     DWORD len =
         _winapi.FormatMessageW(dwFlags, dll, eventID,
                                0,  // accept any language
                                &result[0], result.size(), (char **)parameters);
-    _logger.crashLog("Formatting Message - DONE");
+    Debug(_logger) << "Formatting Message - DONE";
 
     // this trims the result string or empties it if formatting failed
     result.resize(len);
@@ -278,7 +279,7 @@ HANDLE EventlogHandle::open() const {
 
 void EventlogHandle::close() const { _winapi.CloseEventLog(_handle); }
 
-EventLog::EventLog(LPCWSTR name, const LoggerAdaptor &logger,
+EventLog::EventLog(const std::wstring &name, Logger *logger,
                    const WinApiAdaptor &winapi)
     : _name(name)
     , _log(name, winapi)
@@ -372,7 +373,7 @@ bool EventLog::fillBuffer() {
         flags |= EVENTLOG_SEQUENTIAL_READ;
     }
 
-    _logger.crashLog("    . seek to %lu", _record_offset);
+    Debug(_logger) << "    . seek to " << _record_offset;
 
     DWORD bytes_required;
 

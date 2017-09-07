@@ -27,8 +27,7 @@
 
 extern double current_time();
 
-SectionSystemtime::SectionSystemtime(const Environment &env,
-                                     LoggerAdaptor &logger,
+SectionSystemtime::SectionSystemtime(const Environment &env, Logger *logger,
                                      const WinApiAdaptor &winapi)
     : Section("systemtime", env, logger, winapi) {}
 

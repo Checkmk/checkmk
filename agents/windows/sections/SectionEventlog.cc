@@ -28,11 +28,11 @@
 #include <cstring>
 #include <ctime>
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 #include "../WinApiAdaptor.h"
 #include "../stringutil.h"
 
-SectionEventlog::SectionEventlog(Configuration &config, LoggerAdaptor &logger,
+SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
     : Section("logwatch", config.getEnvironment(), logger, winapi)
     , _send_initial(config, "logwatch", "sendall", false, winapi)
@@ -150,22 +150,22 @@ void SectionEventlog::process_eventlog_entry(std::ostream &out,
     std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
     out << type_char << " " << timestamp << " " << event.eventQualifiers()
-        << "." << event.eventId() << " " << source_name << " "
-        << to_utf8(event.message().c_str(), _winapi) << "\n";
+        << "." << event.eventId() << " " << Utf8(event.source()) << " "
+        << Utf8(event.message()) << "\n";
 }
 
-void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
+void SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
                                      uint64_t &first_record, int level,
                                      int hide_context) {
-    _logger.crashLog(" - event log \"%ls\":", logname);
+    Debug(_logger) << " - event log \"" << logname << "\":";
 
     try {
-        std::unique_ptr<IEventLog> log(
-            open_eventlog(logname, *_vista_api, _logger, _winapi));
+        std::unique_ptr<IEventLog> log(open_eventlog(
+            to_utf16(logname, _winapi), *_vista_api, _logger, _winapi));
         {
-            _logger.crashLog("   . successfully opened event log");
+            Debug(_logger) << "   . successfully opened event log";
 
-            out << "[[[" << to_utf8(logname, _winapi) << "]]]\n";
+            out << "[[[" << logname << "]]]\n";
             int worst_state = 0;
             // record_number is the last event we read, so we want to seek past
             // it
@@ -187,7 +187,7 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
                 record = log->read();
             }
 
-            _logger.crashLog("    . worst state: %d", worst_state);
+            Debug(_logger) << "    . worst state: " << worst_state;
 
             // second pass - if there were, print everything
             if (worst_state >= level) {
@@ -209,7 +209,7 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
             first_record = last_record;
         }
     } catch (const std::exception &e) {
-        _logger.crashLog("failed to read event log: %s\n", e.what());
+        Error(_logger) << "failed to read event log: " << e.what() << std::endl;
         out << "[[[" << logname << ":missing]]]\n";
     }
 }
@@ -338,9 +338,8 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
                     }
                 }
                 if (level != -1) {
-                    outputEventlog(
-                        out, to_utf16(state.name.c_str(), _winapi).c_str(),
-                        state.record_no, level, hide_context);
+                    outputEventlog(out, state.name.c_str(), state.record_no,
+                                   level, hide_context);
                 }
             }
         }

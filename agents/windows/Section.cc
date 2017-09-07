@@ -25,10 +25,10 @@
 #include "Section.h"
 #include <sstream>
 #include "Environment.h"
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 
-Section::Section(const char *name, const Environment &env,
-                 LoggerAdaptor &logger, const WinApiAdaptor &winapi)
+Section::Section(const char *name, const Environment &env, Logger *logger,
+                 const WinApiAdaptor &winapi)
     : _name(name != nullptr ? name : "")
     , _env(env)
     , _logger(logger)
@@ -45,7 +45,7 @@ Section *Section::withRealtimeSupport() {
 }
 
 bool Section::produceOutput(std::ostream &out, bool nested) {
-    _logger.crashLog("<<<%s>>>", _name.c_str());
+    Debug(_logger) << "<<<" << _name << ">>>";
 
     std::string output;
     bool res = generateOutput(output);

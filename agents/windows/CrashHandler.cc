@@ -25,28 +25,25 @@
 #define __STDC_FORMAT_MACROS
 #include "CrashHandler.h"
 #include <inttypes.h>
-#include "LoggerAdaptor.h"
+#include <iomanip>
+#include <ostream>
+#include "Logger.h"
 #include "WinApiAdaptor.h"
 
-CrashHandler::CrashHandler(const LoggerAdaptor &logger,
-                           const WinApiAdaptor &winapi)
+using std::ostream;
+
+CrashHandler::CrashHandler(Logger *logger, const WinApiAdaptor &winapi)
     : _logger(logger), _winapi(winapi) {}
 
 #ifdef __x86_64
 
-void CrashHandler::dumpRegisters(CONTEXT *c) const {
-    _logger.crashLog("rax %016" PRIx64 " rbx %016" PRIx64 " rcx %016" PRIx64
-                     " rdx %016" PRIx64,
-                     c->Rax, c->Rbx, c->Rcx, c->Rdx);
-    _logger.crashLog("rsp %016" PRIx64 " rbp %016" PRIx64 " rsi %016" PRIx64
-                     " rdi %016" PRIx64,
-                     c->Rsp, c->Rbp, c->Rsi, c->Rdi);
-    _logger.crashLog("r8  %016" PRIx64 " r9  %016" PRIx64 " r10 %016" PRIx64
-                     " r11 %016" PRIx64,
-                     c->R8, c->R9, c->R10, c->R11);
-    _logger.crashLog("r12 %016" PRIx64 " r13 %016" PRIx64 " r14 %016" PRIx64
-                     " r15 %016" PRIx64,
-                     c->R12, c->R13, c->R14, c->R15);
+ostream &operator<<(ostream &os, const CONTEXT &c) {
+    return os << std::setfill('0') << std::setw(16) << "rax " << c.Rax
+              << " rbx " << c.Rbx << " rcx " << c.Rcx << " rdx " << c.Rdx
+              << "rsp " << c.Rsp << " rbp " << c.Rbp << " rsi " << c.Rsi
+              << " rdi " << c.Rdi << "r8 " << c.R8 << " r9 " << c.R9 << " r10 "
+              << c.R10 << " r11 " << c.R11 << "r12 " << c.R12 << " r13 "
+              << c.R13 << " r14 " << c.R14 << " r15 " << c.R15;
 }
 
 /**
@@ -119,9 +116,9 @@ void CrashHandler::logBacktrace(PVOID exc_address) const {
         }
 
         if (exc_frame != -1) {
-            _logger.crashLog("#%d %016" PRIx64 " %s", i - exc_frame, rip,
-                             resolve(_winapi, rip).c_str());
-            dumpRegisters(&context);
+            Debug(_logger) << "#" << (i - exc_frame) << " " << std::setfill('0')
+                           << std::setw(16) << rip << std::setw(1) << " "
+                           << resolve(_winapi, rip) << " " << context;
         }
 
         PVOID handler_data;
@@ -134,10 +131,12 @@ void CrashHandler::logBacktrace(PVOID exc_address) const {
 #endif  // __x86_64
 
 LONG WINAPI CrashHandler::handleCrash(LPEXCEPTION_POINTERS ptrs) const {
-    _logger.crashLog(
-        "windows exception 0x%" PRIx32 " from address 0x%p (revision %s)",
-        static_cast<unsigned int>(ptrs->ExceptionRecord->ExceptionCode),
-        ptrs->ExceptionRecord->ExceptionAddress, VCS_REV);
+    Debug(_logger) << "windows exception "
+                   << static_cast<unsigned int>(
+                          ptrs->ExceptionRecord->ExceptionCode)
+                   << " from address "
+                   << ptrs->ExceptionRecord->ExceptionAddress << " (revision "
+                   << VCS_REV << ")";
 
 #ifdef __x86_64
 

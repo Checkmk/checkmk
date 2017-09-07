@@ -50,7 +50,7 @@ typedef const wchar_t *LPCWSTR;
 
 class SectionServices : public Section {
 public:
-    SectionServices(const Environment &env, LoggerAdaptor &logger,
+    SectionServices(const Environment &env, Logger *logger,
                     const WinApiAdaptor &winapi);
 
 protected:

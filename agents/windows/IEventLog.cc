@@ -25,18 +25,17 @@
 #include "IEventLog.h"
 #include "EventLog.h"
 #include "EventLogVista.h"
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 
-std::unique_ptr<IEventLog> open_eventlog(LPCWSTR name_or_path,
-                                         bool try_vista_api,
-                                         const LoggerAdaptor &logger,
+std::unique_ptr<IEventLog> open_eventlog(const std::wstring &name_or_path,
+                                         bool try_vista_api, Logger *logger,
                                          const WinApiAdaptor &winapi) {
     if (try_vista_api) {
         try {
             return std::unique_ptr<IEventLog>(
                 new EventLogVista(name_or_path, winapi));
         } catch (const UnsupportedException &) {
-            logger.crashLog("vista-style event-log api not available");
+            Alert(logger) << "vista-style event-log api not available";
         }
     }
     return std::unique_ptr<IEventLog>(

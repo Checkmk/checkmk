@@ -28,7 +28,7 @@
 #include <windows.h>
 #include <string>
 
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 /**
@@ -38,11 +38,11 @@ class OHMMonitor {
     std::string _exe_path;
     bool _available;
     HANDLE _current_process{INVALID_HANDLE_VALUE};
-    const LoggerAdaptor &_logger;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 
 public:
-    OHMMonitor(const std::string &bin_path, const LoggerAdaptor &logger,
+    OHMMonitor(const std::string &bin_path, Logger *logger,
                const WinApiAdaptor &winapi);
     ~OHMMonitor();
 

@@ -33,8 +33,8 @@
 // How to fix broken performance counters
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
-SectionWMI::SectionWMI(const char *name, const Environment &env,
-                       LoggerAdaptor &logger, const WinApiAdaptor &winapi)
+SectionWMI::SectionWMI(const char *name, const Environment &env, Logger *logger,
+                       const WinApiAdaptor &winapi)
     : Section(name, env, logger, winapi) {
     withSeparator(',');
 }
@@ -64,7 +64,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
     if (!data.valid()) {
         return;
     }
-    out << to_utf8(join(data.names(), L",").c_str(), _winapi) << "\n";
+    out << Utf8(join(data.names(), L",")) << "\n";
 
     // output data
     bool more = true;
@@ -75,7 +75,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
                        [&data](const std::wstring &name) {
                            return data.get<std::wstring>(name.c_str());
                        });
-        out << to_utf8(join(values, L",").c_str(), _winapi);
+        out << Utf8(join(values, L","));
 
         more = data.next();
         if (more) {

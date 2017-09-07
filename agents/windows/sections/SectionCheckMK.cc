@@ -23,14 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionCheckMK.h"
-#include <algorithm>
-#include <array>
 #include <cstring>
 #include <iterator>
 #include <string>
 #include <vector>
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 #include "../stringutil.h"
 
 extern const char *check_mk_version;
@@ -44,7 +42,7 @@ struct script_statistics_t {
     int lo_timeouts;
 } g_script_stat;
 
-SectionCheckMK::SectionCheckMK(Configuration &config, LoggerAdaptor &logger,
+SectionCheckMK::SectionCheckMK(Configuration &config, Logger *logger,
                                const WinApiAdaptor &winapi)
     : Section("check_mk", config.getEnvironment(), logger, winapi)
     , _crash_debug(config, "global", "crash_debug", false, winapi)
@@ -76,18 +74,6 @@ std::vector<KVPair> SectionCheckMK::createInfoFields() const {
         {"LogDirectory", _env.logDirectory()},
         {"SpoolDirectory", _env.spoolDirectory()},
         {"LocalDirectory", _env.localDirectory()}};
-
-    if (*_crash_debug) {
-        const std::array<std::string, 3> titles{"ConnectionLog", "CrashLog",
-                                                "SuccessLog"};
-        const auto logFilenames = _logger.getLogFilenames();
-        std::transform(
-            titles.cbegin(), titles.cend(), logFilenames.cbegin(),
-            std::back_inserter(info_fields),
-            [](const std::string &title, const std::string &filename) {
-                return KVPair(title, filename);
-            });
-    }
 
     return info_fields;
 }

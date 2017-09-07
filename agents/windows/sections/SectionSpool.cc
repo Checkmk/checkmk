@@ -25,14 +25,14 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 typedef short SHORT;
 #include "../WinApiAdaptor.h"
 #include "SectionSpool.h"
 
 extern double file_time(const FILETIME *filetime);
 
-SectionSpool::SectionSpool(const Environment &env, LoggerAdaptor &logger,
+SectionSpool::SectionSpool(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
     : Section("spool", env, logger, winapi) {
     withHiddenHeader();
@@ -71,18 +71,20 @@ bool SectionSpool::produceOutputInner(std::ostream &out) {
                     _winapi.FindClose(h);
                     int age = now - mtime;
                     if (age > max_age) {
-                        _logger.crashLog(
-                            "    %s: skipping outdated file: age is %d sec, "
-                            "max age is %d sec.",
-                            name, age, max_age);
+                        Informational(_logger)
+                            << "    " << name
+                            << ": skipping outdated file: age is " << age
+                            << " sec, "
+                            << "max age is " << max_age << " sec.";
                         continue;
                     }
                 } else {
-                    _logger.crashLog("    %s: cannot determine file age", name);
+                    Warning(_logger)
+                        << "    " << name << ": cannot determine file age";
                     continue;
                 }
             }
-            _logger.crashLog("    %s", name);
+            Debug(_logger) << "    " << name;
 
             // Output file in blocks of 4kb
             FILE *file = fopen(path, "r");

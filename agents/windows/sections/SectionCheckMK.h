@@ -41,7 +41,7 @@ class SectionCheckMK : public Section {
     const std::vector<KVPair> _info_fields;
 
 public:
-    SectionCheckMK(Configuration &config, LoggerAdaptor &logger,
+    SectionCheckMK(Configuration &config, Logger *logger,
                    const WinApiAdaptor &winapi);
 
 protected:

@@ -26,15 +26,14 @@
 #include <algorithm>
 #include <iomanip>
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 #include "../PerfCounter.h"
 #include "../stringutil.h"
 
 extern double current_time();
 
 SectionWinperf::SectionWinperf(const char *name, const Environment &env,
-                               LoggerAdaptor &logger,
-                               const WinApiAdaptor &winapi)
+                               Logger *logger, const WinApiAdaptor &winapi)
     : Section((std::string("winperf_") + name).c_str(), env, logger, winapi)
     , _base(0) {}
 
@@ -60,7 +59,7 @@ bool SectionWinperf::produceOutputInner(std::ostream &out) {
                 out << instances.size() << " instances:";
                 for (std::wstring name : counterObject.instanceNames()) {
                     std::replace(name.begin(), name.end(), L' ', L'_');
-                    out << " " << to_utf8(name.c_str(), _winapi);
+                    out << " " << Utf8(name);
                 }
                 out << "\n";
             }
@@ -78,7 +77,7 @@ bool SectionWinperf::produceOutputInner(std::ostream &out) {
         }
         return true;
     } catch (const std::exception &e) {
-        _logger.crashLog("Exception: %s", e.what());
+        Error(_logger) << "Exception: " << e.what();
         return false;
     }
 }

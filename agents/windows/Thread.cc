@@ -25,7 +25,7 @@
 #include "Thread.h"
 #include <stdexcept>
 #include "Environment.h"
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 #include "win_error.h"
 
 Thread::~Thread() {
@@ -34,8 +34,8 @@ Thread::~Thread() {
         _winapi.GetExitCodeThread(_thread_handle, &exitCode);
         if (exitCode == STILL_ACTIVE) {
             // baaad
-            const auto &logger = static_cast<ThreadData *>(_data)->logger;
-            logger.crashLog("thread didn't finish, have to kill it");
+            Logger *logger = static_cast<ThreadData *>(_data)->logger;
+            Warning(logger) << "thread didn't finish, have to kill it";
             _winapi.TerminateThread(_thread_handle, 3);
         }
     }

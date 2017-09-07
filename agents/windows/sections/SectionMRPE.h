@@ -35,7 +35,7 @@ class SectionMRPE : public Section {
     mrpe_entries_t _included_entries;
 
 public:
-    SectionMRPE(Configuration &config, LoggerAdaptor &logger,
+    SectionMRPE(Configuration &config, Logger *logger,
                 const WinApiAdaptor &winapi);
 
 protected:

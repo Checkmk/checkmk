@@ -24,7 +24,7 @@
 
 #include "OutputProxy.h"
 #include <cstdarg>
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 #include "WinApiAdaptor.h"
 
 // urgh
@@ -47,8 +47,7 @@ void FileOutputProxy::flush(bool) {
     // nop
 }
 
-BufferedSocketProxy::BufferedSocketProxy(SOCKET socket,
-                                         const LoggerAdaptor &logger,
+BufferedSocketProxy::BufferedSocketProxy(SOCKET socket, Logger *logger,
                                          const WinApiAdaptor &winapi)
     : _socket(socket), _logger(logger), _winapi(winapi) {
     _buffer.resize(DEFAULT_BUFFER_SIZE);
@@ -101,7 +100,7 @@ void BufferedSocketProxy::flush(bool) {
         }
     }
     if (_length > 0) {
-        _logger.verbose("failed to flush entire buffer\n");
+        Notice(_logger) << "failed to flush entire buffer";
     }
 }
 
@@ -118,12 +117,12 @@ bool BufferedSocketProxy::flushInt() {
             } else if (error == WSAEINPROGRESS) {
                 continue;
             } else if (error == WSAEWOULDBLOCK) {
-                _logger.verbose("send to socket would block");
+                Notice(_logger) << "send to socket would block";
                 error = true;
                 break;
             } else {
-                _logger.verbose("send to socket failed with error code %d",
-                                error);
+                Notice(_logger)
+                    << "send to socket failed with error code " << error;
                 error = true;
                 break;
             }
@@ -145,7 +144,7 @@ bool BufferedSocketProxy::flushInt() {
 }
 
 EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(
-    SOCKET socket, const std::string &passphrase, const LoggerAdaptor &logger,
+    SOCKET socket, const std::string &passphrase, Logger *logger,
     const WinApiAdaptor &winapi)
     : BufferedSocketProxy(socket, logger, winapi)
     , _crypto(passphrase, winapi)

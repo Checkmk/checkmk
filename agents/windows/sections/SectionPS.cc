@@ -25,7 +25,7 @@
 #include "SectionPS.h"
 #include <iomanip>
 #include "../Environment.h"
-#include "../LoggerAdaptor.h"
+#include "../Logger.h"
 #include "../PerfCounter.h"
 #include "../dynamic_func.h"
 #include "../types.h"
@@ -33,7 +33,7 @@
 extern double file_time(const FILETIME *filetime);
 extern double current_time();
 
-SectionPS::SectionPS(Configuration &config, LoggerAdaptor &logger,
+SectionPS::SectionPS(Configuration &config, Logger *logger,
                      const WinApiAdaptor &winapi)
     : Section("ps", config.getEnvironment(), logger, winapi)
     , _use_wmi(config, "ps", "use_wmi", false, winapi)
@@ -228,9 +228,9 @@ bool SectionPS::outputWMI(std::ostream &out) {
     } catch (const wmi::ComException &e) {
         // the most likely cause is that the wmi query fails, i.e. because the
         // service is currently offline.
-        _logger.crashLog("Exception: %s", e.what());
+        Error(_logger) << "Exception: " << e.what();
     } catch (const wmi::ComTypeException &e) {
-        _logger.crashLog("Exception: %s", e.what());
+        Error(_logger) << "Exception: " << e.what();
         std::wstring types;
         std::vector<std::wstring> names;
         for (std::vector<std::wstring>::const_iterator iter = names.begin();
@@ -238,10 +238,9 @@ bool SectionPS::outputWMI(std::ostream &out) {
             types += *iter + L"=" +
                      std::to_wstring(result.typeId(iter->c_str())) + L", ";
         }
-        _logger.crashLog(
-            "Data types are different than expected, please report this and "
-            "include the following: %ls",
-            types.c_str());
+        Error(_logger)
+            << "Data types are different than expected, please report this and "
+            << "include the following: " << Utf8(types);
     }
     return false;
 }
@@ -255,8 +254,8 @@ bool SectionPS::outputNative(std::ostream &out) {
     } catch (const std::runtime_error &e) {
         // the most likely cause is that the wmi query fails, i.e. because the
         // service is currently offline.
-        _logger.crashLog("Exception: Error while querying process perfdata: %s",
-                         e.what());
+        Error(_logger) << "Exception: Error while querying process perfdata: "
+                       << e.what();
     }
 
     WinHandle hProcessSnap(

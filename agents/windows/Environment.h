@@ -27,13 +27,12 @@
 
 #include <string>
 
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 class Environment {
 public:
-    Environment(bool use_cwd, const LoggerAdaptor &logger,
-                const WinApiAdaptor &winapi);
+    Environment(bool use_cwd, Logger *logger, const WinApiAdaptor &winapi);
     ~Environment();
 
     // TODO: this is an evil hack, but currently there is at least one global
@@ -74,7 +73,7 @@ private:
 private:
     static Environment *s_Instance;
 
-    const LoggerAdaptor &_logger;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 
     const std::string _hostname;

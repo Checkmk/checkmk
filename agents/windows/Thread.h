@@ -30,14 +30,14 @@
 #include "types.h"
 
 class Environment;
-class LoggerAdaptor;
+class Logger;
 class WinApiAdaptor;
 
 struct ThreadData {
     time_t push_until;
     bool terminate;
     const Environment &env;
-    const LoggerAdaptor &logger;
+    Logger *logger;
     bool new_request;
     sockaddr_storage last_address;
     Mutex mutex;

@@ -26,7 +26,7 @@
 #include <cstring>
 #include <memory>
 #include "Environment.h"
-#include "LoggerAdaptor.h"
+#include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "types.h"
 #include "win_error.h"
@@ -40,8 +40,7 @@ bool ends_with(std::string const &value, std::string const &ending) {
 }
 
 ExternalCmd::ExternalCmd(const char *cmdline, const Environment &env,
-                         const LoggerAdaptor &logger,
-                         const WinApiAdaptor &winapi)
+                         Logger *logger, const WinApiAdaptor &winapi)
     : _script_stderr{winapi, INVALID_HANDLE_VALUE}
     , _script_stdout{winapi, INVALID_HANDLE_VALUE}
     , _process{INVALID_HANDLE_VALUE}
@@ -100,7 +99,8 @@ ExternalCmd::ExternalCmd(const char *cmdline, const Environment &env,
 
     DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
     if (detach_process) {
-        _logger.crashLog("Detaching process: %s, %d", cmdline, detach_process);
+        Debug(_logger) << "Detaching process: " << cmdline << ", "
+                       << detach_process;
         dwCreationFlags = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
     }
 

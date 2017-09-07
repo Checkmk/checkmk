@@ -25,8 +25,14 @@ if [ "$PS1" ]; then
     . /etc/bash_completion
 
     # Load site specific bash completions
-    for file in $OMD_ROOT/etc/bash_completion.d/*; do
-        . $file;
-    done
+    j="$OMD_ROOT/etc/bash_completion.d"
+    if [ -d "$j" -a -r "$j" -a -x "$j" ]; then
+        for i in $(LC_ALL=C command ls "$j"); do
+            i="$j/$i"
+            [ -f $i -a -r $i ] && . "$i"
+        done
+        unset i
+    fi
+    unset j
   fi
 fi

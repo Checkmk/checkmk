@@ -1543,7 +1543,7 @@ class EventServer(object):
 
 
     # Convert pysnmp datatypes to simply handable ones
-    def snmptrap_translate_varbinds(self, var_bind_list):
+    def snmptrap_translate_varbinds(self, ipaddress, var_bind_list):
         var_binds = []
         if self._mib_resolver is None:
             self.logger.warning('Failed to translate OIDs, no modules loaded (see above)')
@@ -1573,9 +1573,12 @@ class EventServer(object):
 
                 var_binds.append((translated_oid, translated_value))
 
-            except SmiError as e:
-                # Failed to translate? add untranslated
-                self.logger.exception('Failed to translate OID %s: %s' % (oid.prettyPrint(), e))
+            except (SmiError, ValueConstraintError) as e:
+                self.logger.warning('Failed to translate OID %s (in trap from %s): %s (enable debug logging for details)' %
+                    (oid.prettyPrint(), ipaddress, e))
+                self.logger.debug('Failed trap var binds:\n%s' % "\n".join([ "%s: %r" % e for e in var_bind_list ]))
+                self.logger.debug(traceback.format_exc())
+
                 var_binds.append((str(oid), str(value))) # add untranslated
 
         return var_binds
@@ -1597,7 +1600,7 @@ class EventServer(object):
         self.log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
 
         if snmptrap_translation_enabled():
-            trap = self.snmptrap_translate_varbinds(var_binds)
+            trap = self.snmptrap_translate_varbinds(ipaddress, var_binds)
         else:
             trap = self.snmptrap_convert_var_binds(var_binds)
 
@@ -4901,6 +4904,7 @@ try:
         from pysnmp.smi.view import MibViewController
         from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
         from pysnmp.smi.error import SmiError
+        from pyasn1.error import ValueConstraintError
 
     if not g_pipe_path:
         bail_out("Please specify the path to the pipe (using -P).")

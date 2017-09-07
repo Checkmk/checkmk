@@ -7638,11 +7638,10 @@ def find_usages_of_contact_group(name):
     # Is the contactgroup assigned to a user?
     users = userdb.load_users()
     entries = users.items()
-    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
-    for userid, user in entries:
+    for userid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0])):
         cgs = user.get("contactgroups", [])
         if name in cgs:
-            used_in.append(('%s: %s' % (_('User'), user.get('alias')),
+            used_in.append(('%s: %s' % (_('User'), user.get('alias', userid)),
                 folder_preserving_link([('mode', 'edit_user'), ('edit', userid)])))
 
     global_config = load_configuration_settings()

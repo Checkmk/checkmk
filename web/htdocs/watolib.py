@@ -4055,8 +4055,12 @@ def get_url(url, insecure, auth=None, data=None, files=None):
 
     if response.status_code == 401:
         raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
+
+    elif response.status_code == 503 and "Site Not Started" in response.text:
+        raise MKUserError(None, _("Site is not running"))
+
     elif response.status_code != 200:
-        raise MKUserError("_passwd", _("HTTP Error - %d: %s") %
+        raise MKUserError(None, _("HTTP Error - %d: %s") %
                             (response.status_code, response.text))
 
     return response.text

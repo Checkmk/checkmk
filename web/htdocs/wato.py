@@ -6122,7 +6122,7 @@ def render_main_menu(some_modules, columns = 2):
 
 def add_ldap_change(action_name, text):
     add_change(action_name, text, domains=[ConfigDomainGUI],
-        sites=get_login_sites())
+        sites=config.get_login_sites())
 
 
 def mode_ldap_config(phase):
@@ -8697,7 +8697,7 @@ def mode_user_notifications(phase, profilemode):
                 log_text = _("Deleted notification rule %d of user %s") % (nr, userid)
 
                 notification_rule_start_async_repl = False
-                if profilemode and has_wato_slave_sites():
+                if profilemode and config.has_wato_slave_sites():
                     notification_rule_start_async_repl = True
                     log_audit(None, log_what, log_text)
                 else:
@@ -8720,7 +8720,7 @@ def mode_user_notifications(phase, profilemode):
                 log_text = _("Changed position of notification rule %d of user %s") % (from_pos, userid)
 
                 notification_rule_start_async_repl = False
-                if profilemode and has_wato_slave_sites():
+                if profilemode and config.has_wato_slave_sites():
                     notification_rule_start_async_repl = True
                     log_audit(None, log_what, log_text)
                 else:
@@ -8832,7 +8832,7 @@ def mode_notification_rule(phase, profilemode):
             log_text = _("Changed notification rule %d") % edit_nr + suffix
 
         notification_rule_start_async_repl = False
-        if profilemode and has_wato_slave_sites():
+        if profilemode and config.has_wato_slave_sites():
             notification_rule_start_async_repl = True
             log_audit(None, log_what, log_text)
             return # don't redirect to other page
@@ -9698,7 +9698,7 @@ class ModeDistributedMonitoring(ModeSites):
         delete_url = html.makeactionuri([("_delete", site_id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        if (has_wato_slave_sites()
+        if (config.has_wato_slave_sites()
             and (site.get("replication") or config.site_is_local(site_id))) \
            or is_wato_slave_site():
             globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
@@ -9873,7 +9873,7 @@ class ModeEditSiteGlobals(ModeSites, ModeGlobalSettings):
                     "is part of a distributed setup."))
 
         if not is_wato_slave_site():
-            if not has_wato_slave_sites():
+            if not config.has_wato_slave_sites():
                html.show_error(_("You can not configure site specific global settings "
                                  "in non distributed setups."))
                return
@@ -11229,7 +11229,7 @@ def mode_roles(phase):
                 rename_user_role(delid, None) # Remove from existing users
                 del roles[delid]
                 save_roles(roles)
-                add_change("edit-roles", _("Deleted role '%s'") % delid, sites=get_login_sites())
+                add_change("edit-roles", _("Deleted role '%s'") % delid, sites=config.get_login_sites())
             elif c == False:
                 return ""
         elif html.var("_clone"):
@@ -11260,7 +11260,7 @@ def mode_roles(phase):
                 roles[newid] = new_role
                 save_roles(roles)
                 add_change("edit-roles", _("Created new role '%s'") % newid,
-                           sites=get_login_sites())
+                           sites=config.get_login_sites())
         return
 
     table.begin("roles")
@@ -11387,7 +11387,7 @@ def mode_edit_role(phase):
             rename_user_role(role_id, new_id)
 
         save_roles(roles)
-        add_change("edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites())
+        add_change("edit-roles", _("Modified user role '%s'") % new_id, sites=config.get_login_sites())
         return "roles"
 
     search_form(_("Search for permissions: "), "edit_role")
@@ -14329,8 +14329,7 @@ def user_profile_async_replication_dialog():
     html.h3(_('Replication States'))
     html.open_div(id_="profile_repl")
     num_replsites = 0
-    for site_id in get_login_sites():
-        site = config.sites[site_id]
+    for site_id, site in config.user.authorized_login_sites():
         srs  = repstatus.get(site_id, {})
 
         if not "secret" in site:
@@ -14460,7 +14459,7 @@ def page_user_profile(change_pw=False):
             # Now, if in distributed environment where users can login to remote sites,
             # set the trigger for pushing the new auth information to the slave sites
             # asynchronous
-            if get_login_sites():
+            if config.user.authorized_login_sites():
                 start_async_replication = True
 
             userdb.save_users(users)

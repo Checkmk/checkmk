@@ -4155,25 +4155,7 @@ def default_site():
 
 
 def is_wato_slave_site():
-    return has_distributed_wato_file() and not has_wato_slave_sites()
-
-
-def has_wato_slave_sites():
-    return bool(wato_slave_sites())
-
-
-def wato_slave_sites():
-    return [ (site_id, site) for site_id, site in config.sites.items()
-                                                  if site.get("replication") ]
-
-
-# Returns a list of site ids which are WATO slave sites and users can login
-def get_login_sites():
-    sites = []
-    for site_id, site in wato_slave_sites():
-        if site.get('user_login', True) and not config.site_is_local(site_id):
-            sites.append(site_id)
-    return sites
+    return has_distributed_wato_file() and not config.has_wato_slave_sites()
 
 
 # Returns a list of site ids which gets the Event Console configuration replicated
@@ -4592,7 +4574,7 @@ class ActivateChanges(object):
     # these sites are shown on activation page and get change entries
     # added during WATO changes.
     def _activation_sites(self):
-        return [ (site_id, site) for site_id, site in config.user.authorized_sites().items()
+        return [ (site_id, site) for site_id, site in config.user.authorized_sites()
                  if config.site_is_local(site_id)
                     or site.get("replication") ]
 

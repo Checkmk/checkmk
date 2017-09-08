@@ -373,7 +373,7 @@ class ModeBI(WatoMode):
 
 
     def _add_change(self, action_name, text):
-        add_change(action_name, text, domains=[ConfigDomainGUI], sites=get_login_sites())
+        add_change(action_name, text, domains=[ConfigDomainGUI], sites=config.get_login_sites())
 
 
     # .--------------------------------------------------------------------.

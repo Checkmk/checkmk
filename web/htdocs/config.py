@@ -455,14 +455,23 @@ class LoggedInUser(object):
         return siteconf.get("disabled", False)
 
 
-    def authorized_sites(self):
+    def authorized_sites(self, unfiltered_sites=None):
+        if unfiltered_sites is None:
+            unfiltered_sites = allsites().items()
+
         authorized_sites = self.get_attribute("authorized_sites")
-        all_sites = allsites()
         if authorized_sites is None:
-            return all_sites
+            return unfiltered_sites
         else:
-            return dict([ (site_id, site) for site_id, site in all_sites.items()
-                          if site_id in authorized_sites ])
+            return [ (site_id, site) for site_id, site in unfiltered_sites
+                          if site_id in authorized_sites ]
+
+
+    def authorized_login_sites(self):
+        login_site_ids = get_login_sites()
+        login_sites = [ (site_id, site) for site_id, site in allsites().items()
+                             if site_id in login_site_ids ]
+        return self.authorized_sites(login_sites)
 
 
     def may(self, pname):
@@ -684,6 +693,8 @@ def sitenames():
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
 # to disable the sites at all?
 # TODO: Rename this!
+# TODO: All site listing functions should return the same data structure, e.g. a list of
+#       pairs (site_id, site)
 def allsites():
     return dict( [(name, site(name))
                   for name in sitenames()
@@ -695,9 +706,28 @@ def configured_sites():
     return [(site_id, site(site_id)) for site_id in sitenames() ]
 
 
+def has_wato_slave_sites():
+    return bool(wato_slave_sites())
+
+
+# TODO: All site listing functions should return the same data structure, e.g. a list of
+#       pairs (site_id, site)
+def get_login_sites():
+    """Returns a list of site ids which are WATO slave sites and users can login"""
+    sites = []
+    for site_id, site in wato_slave_sites():
+        if site.get('user_login', True) and not site_is_local(site_id):
+            sites.append(site_id)
+    return sites
+
+
+def wato_slave_sites():
+    return [ (site_id, site) for site_id, site in sites.items()
+                                                  if site.get("replication") ]
+
 def sorted_sites():
     sitenames = []
-    for site_id, site in user.authorized_sites().items():
+    for site_id, site in user.authorized_sites():
         sitenames.append((site_id, site['alias']))
     sitenames = sorted(sitenames, key=lambda k: k[1], cmp = lambda a,b: cmp(a.lower(), b.lower()))
 

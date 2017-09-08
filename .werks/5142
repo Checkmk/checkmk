@@ -1,0 +1,9 @@
+Title: BI aggregation: Increased compilation performance for large aggregations
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504873641
+Class: feature
+

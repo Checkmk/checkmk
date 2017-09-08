@@ -13,9 +13,6 @@ def check_mkevents_arguments(params):
     if params.get("ignore_acknowledged"):
         args += "-a "
 
-    if params.get("less_verbose"):
-        args += "-l "
-
     hostspec = params.get("hostspec", "$HOSTADDRESS$")
     if type(hostspec) == list:
         hostspec = "/".join(hostspec)

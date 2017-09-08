@@ -1,0 +1,10 @@
+Title: Removed CEE specific link to Reports from Bookmark list pages
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504862344
+Class: fix
+
+

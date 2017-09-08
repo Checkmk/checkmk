@@ -186,7 +186,7 @@ def _connect_multiple_sites():
 def _get_enabled_and_disabled_sites():
     enabled_sites, disabled_sites = {}, {}
 
-    for site_id, site in config.user.authorized_sites().items():
+    for site_id, site in config.user.authorized_sites():
         if config.user.is_site_disabled(site_id):
             sites = disabled_sites
         else:

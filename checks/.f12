@@ -2,5 +2,5 @@
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 echo "TARGET: /omd/sites/$SITE/share/check_mk/checks"
-sudo rsync --exclude=check_mkevents -ar --delete-after ./ /omd/sites/$SITE/share/check_mk/checks/
+sudo rsync -ar --delete-after ./ /omd/sites/$SITE/share/check_mk/checks/
 

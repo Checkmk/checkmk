@@ -1,0 +1,11 @@
+Title: check_mkevents: Removed deprecated "less verbose output" option
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1504863316
+Class: fix
+
+This parameter was not working anymore for a long time. It is not implemented in the
+current check and has been removed from the GUI now.

@@ -2970,20 +2970,6 @@ register_rule(
                   totext = _("acknowledged events will not be honored"),
                  )
             ),
-            ( "less_verbose",
-              FixedValue(
-                  True,
-                  title = _("Less verbose output"),
-                  help = _("If enabled the check reports less information in its output. "
-                           "You will see no information regarding the worst state or unacknowledged events. "
-                           " For example a default output without this option is "
-                           "<tt>WARN - 1 events (1 unacknowledged), worst state is WARN (Last line: Incomplete Content)</tt>."
-                           "Output with less verbosity: "
-                           "<tt>WARN - 1 events (Worst line: Incomplete Content)</tt><br>"
-                          ),
-                  totext = _("produce a more terse output"),
-                 )
-            ),
             ( "remote",
               Alternative(
                   title = _("Access to the Event Console"),
@@ -3026,7 +3012,8 @@ register_rule(
             )
           ),
         ],
-        optional_keys = [ "application", "remote", "ignore_acknowledged", "less_verbose", "item" ],
+        optional_keys = [ "application", "remote", "ignore_acknowledged", "item" ],
+        ignored_keys = [ "less_verbose" ], # is deprecated
     ),
     match = 'all',
 )

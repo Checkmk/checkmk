@@ -58,6 +58,11 @@ template <typename Rep, typename Period>
 inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
     using namespace std::chrono;
     timeval tv;
+    // NOTE: The static_casts below are needed to avoid warning on e.g. some
+    // 32bit platforms, because the underlying types might be larger than the
+    // timeval fields. We can't use the correct POSIX types time_t and
+    // suseconds_t because of the broken MinGW cross compiler, so we revert to
+    // decltype.
     tv.tv_sec =
         static_cast<decltype(tv.tv_sec)>(duration_cast<seconds>(dur).count());
     tv.tv_usec = static_cast<decltype(tv.tv_usec)>(
@@ -85,9 +90,9 @@ typename Dur::rep time_point_part(std::chrono::system_clock::time_point &tp) {
 class FormattedTimePoint {
 public:
     FormattedTimePoint(std::chrono::system_clock::time_point tp,
-                       const std::string &format = "%F %T")
+                       const std::string &format = default_format)
         : _tp(tp), _format(format) {}
-    FormattedTimePoint(time_t t, const std::string &format = "%F %T")
+    FormattedTimePoint(time_t t, const std::string &format = default_format)
         : _tp(std::chrono::system_clock::from_time_t(t)), _format(format) {}
 
     friend std::ostream &operator<<(std::ostream &os,
@@ -99,6 +104,13 @@ public:
 private:
     std::chrono::system_clock::time_point _tp;
     std::string _format;
+
+    // NOTE: In a perfect world we would simply use "%F %T" below, but the "%F"
+    // format is a C99 addition, and the "%T" format is part of The Single Unix
+    // Specification. Both formats should be available in any C++11-compliant
+    // compiler, but the MinGW cross compiler doesn't get this right. So let's
+    // use their ancient expansions...
+    static constexpr auto default_format = "%Y-%m-%d %H:%M:%S";
 };
 
 #endif  // ChronoUtils_h

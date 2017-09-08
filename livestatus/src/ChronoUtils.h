@@ -46,8 +46,8 @@ inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
 inline tm to_tm(std::chrono::system_clock::time_point tp) {
     time_t t = std::chrono::system_clock::to_time_t(tp);
     struct tm ret;
-    // NOTE: A brilliant example of how to make a simple API function a total
-    // chaos follows...
+// NOTE: A brilliant example of how to make a simple API function a total
+// chaos follows...
 #if defined(__STDC_LIB_EXT1__)
     // C11 function, only guaranteed to be available when a
     //    #define __STDC_WANT_LIB_EXT1_ 1

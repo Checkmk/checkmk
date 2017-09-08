@@ -790,7 +790,16 @@ class Overridable(Base):
         # moved to pagetypes.py
         html.context_button(_("Views"), "edit_views.py", "view")
         html.context_button(_("Dashboards"), "edit_dashboards.py", "dashboard")
-        html.context_button(_("Reports"), "edit_reports.py", "report")
+
+        def has_reporting():
+            try:
+                import reporting
+                return True
+            except ImportError:
+                return False
+
+        if has_reporting():
+            html.context_button(_("Reports"), "edit_reports.py", "report")
 
         ### if render_custom_context_buttons:
         ###     render_custom_context_buttons()

@@ -164,6 +164,14 @@ AC_DEFINE([_GLIBCXX_REGEX_STATE_LIMIT], [2500],
 
 AC_DEFINE([BOOST_SYSTEM_NO_DEPRECATED], [1], [we do not want any old stuff])
 
+# GCC is a bit picky about redefinitions of built-in macros. Alas, "built-in"
+# simply means "starts with double underscore", so we have to hack around that
+# below. Note that clang is happy, even without the guard.
+AH_VERBATIM([__STDC_WANT_LIB_EXT1__], [/* we want C11 library extensions  */
+#ifndef __STDC_WANT_LIB_EXT1__
+# define __STDC_WANT_LIB_EXT1__ 1
+#endif])
+
 # HACKING ALERT: automake can't really handle optional subdirectories, so we
 # have to do this in a slightly hacky way by using M4's silent includes.
 m4_sinclude([livestatus/config_files.m4])

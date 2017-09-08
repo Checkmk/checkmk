@@ -26,7 +26,7 @@
 #define ChronoUtils_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <sys/time.h>
+#include <time.h>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -46,7 +46,30 @@ inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
 inline tm to_tm(std::chrono::system_clock::time_point tp) {
     time_t t = std::chrono::system_clock::to_time_t(tp);
     struct tm ret;
+    // NOTE: A brilliant example of how to make a simple API function a total
+    // chaos follows...
+#if defined(__STDC_LIB_EXT1__)
+    // C11 function, only guaranteed to be available when a
+    //    #define __STDC_WANT_LIB_EXT1_ 1
+    // is done before including <time.h>. Signature:
+    //    struct tm *localtime_s(const time_t *restrict timer,
+    //                           struct tm *restrict result)
+    localtime_s(&t, &ret);
+#elif defined(__WIN32)
+    // Win32 variant, it keeps us entertained with swapped parameters and a
+    // different return value, yay! Signature:
+    //    errno_t localtime_s(struct tm* _tm, const time_t *time)
+    // We have to de-confuse cppcheck:
+    // cppcheck-suppress uninitvar
+    localtime_s(&ret, &t);
+#else
+    // POSIX.1-2008 variant, available under MinGW64 only under obscure
+    // circumstances, so better avoid it there. Signature:
+    //    struct tm *localtime(const time_t *timer)
     localtime_r(&t, &ret);
+#endif
+    // Reason: see Win32 section above
+    // cppcheck-suppress uninitvar
     return ret;
 }
 

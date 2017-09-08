@@ -324,7 +324,7 @@ def check_if_dhcp(item, _no_params, info, nic_names, nic_index):
             match = name == item
 
         if match:
-            if as_dict["DHCPEnabled"]:
+            if as_dict["DHCPEnabled"] == "TRUE":
                 return 1, "dhcp enabled"
             else:
                 return 0, "dhcp %s" % as_dict["DHCPEnabled"]

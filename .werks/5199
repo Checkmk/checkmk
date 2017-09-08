@@ -1,0 +1,10 @@
+Title: winperf_if: DHCP was always shown as enabled
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p11
+Date: 1504861811
+Class: fix
+
+

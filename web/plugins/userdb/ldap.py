@@ -47,7 +47,7 @@ import time
 import copy
 
 import cmk.paths
-from log import logger
+import log
 
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
@@ -178,7 +178,7 @@ class LDAPUserConnector(UserConnector):
 
         self._ldap_obj        = None
         self._ldap_obj_config = None
-        self._ldap_logger     = logger.getChild("ldap")
+        self._logger          = log.logger.getChild("ldap")
 
         self._user_cache  = {}
         self._group_cache = {}
@@ -215,8 +215,9 @@ class LDAPUserConnector(UserConnector):
         return self._config['id']
 
 
+    # TODO: Clean this up and make log calls different log levels
     def log(self, s):
-        self._ldap_logger.debug('LDAP [%s]: %s' % (self.id(), s))
+        self._logger.debug('LDAP [%s]: %s' % (self.id(), s))
 
 
     def connect_server(self, server):
@@ -320,9 +321,9 @@ class LDAPUserConnector(UserConnector):
 
 
     def _discover_nearest_dc(self, domain):
-        import ad, log
+        import ad
         locator = ad.Locator()
-        locator.m_logger = log.logger
+        locator.m_logger = self.logger
         try:
             server = locator.locate(domain)
             self.log('  DISCOVERY: Discovered server %r from %r' % (server, domain))

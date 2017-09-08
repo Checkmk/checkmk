@@ -65,7 +65,8 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
 #else
     // POSIX.1-2008 variant, available under MinGW64 only under obscure
     // circumstances, so better avoid it there. Signature:
-    //    struct tm *localtime(const time_t *timer)
+    //    struct tm *localtime_r(const time_t *restrict timer,
+    //                           struct tm *restrict result);
     localtime_r(&t, &ret);
 #endif
     // Reason: see Win32 section above

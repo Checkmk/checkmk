@@ -58,8 +58,9 @@ template <typename Rep, typename Period>
 inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
     using namespace std::chrono;
     timeval tv;
-    tv.tv_sec = static_cast<time_t>(duration_cast<seconds>(dur).count());
-    tv.tv_usec = static_cast<suseconds_t>(
+    tv.tv_sec =
+        static_cast<decltype(tv.tv_sec)>(duration_cast<seconds>(dur).count());
+    tv.tv_usec = static_cast<decltype(tv.tv_usec)>(
         duration_cast<microseconds>(dur % seconds(1)).count());
     return tv;
 }

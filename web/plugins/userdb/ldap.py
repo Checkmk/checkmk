@@ -323,7 +323,7 @@ class LDAPUserConnector(UserConnector):
     def _discover_nearest_dc(self, domain):
         import ad
         locator = ad.Locator()
-        locator.m_logger = self.logger
+        locator.m_logger = self._logger
         try:
             server = locator.locate(domain)
             self.log('  DISCOVERY: Discovered server %r from %r' % (server, domain))

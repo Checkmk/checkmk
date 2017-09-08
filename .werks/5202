@@ -1,0 +1,16 @@
+Title: Fixed timeouts when generating reports (regression in #4957)
+Level: 2
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p11
+Date: 1504868229
+
+When creating PDF reports that contain grouped view elements, these
+reports were rendering too many data. In case of larger reports with
+a lot of graphs, this could lead to timeouts resulting in "Proxy Errors"
+messages in the GUI.
+
+This issue was introduced with werk 4957 since Check_MK 1.4.0p9.

@@ -178,7 +178,10 @@ try:
     elif opt_dbms == "oracle":
         sys.path.append('/usr/lib/python2.6/site-packages')
         sys.path.append('/usr/lib/python2.7/site-packages')
-        import cx_Oracle
+        try:
+            import cx_Oracle
+        except ImportError:
+            bail_out(3, "Requested python module 'cx_Oracle' not found. Please install it via 'pip install cx_Oracle'.")
         db = cx_Oracle
         if opt_port == None:
             opt_port=1521

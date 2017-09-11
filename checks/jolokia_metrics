@@ -87,7 +87,7 @@ def jolokia_metrics_parse(info):
 
             for part in parts[1:]:
                 if ":" in part:
-                    module, part = part.split(":")
+                    module, part = part.split(":", 1)
                 if "=" in part:
                     key, val = part.split("=")
                     attributes[key] = val

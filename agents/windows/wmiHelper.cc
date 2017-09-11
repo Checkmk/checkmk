@@ -73,8 +73,9 @@ string ComException::toStringHex(HRESULT res) {
     return out.str();
 }
 
-Variant::Variant(const VARIANT &val, const WinApiAdaptor &winapi)
-    : _value(val), _winapi(winapi) {}
+Variant::Variant(const VARIANT &val, Logger *logger,
+                 const WinApiAdaptor &winapi)
+    : _value(val), _logger(logger), _winapi(winapi) {}
 
 Variant::~Variant() { _winapi.VariantClear(&_value); }
 
@@ -84,12 +85,14 @@ void releaseInterface(IUnknown *ptr) {
     }
 }
 
-ObjectWrapper::ObjectWrapper(IWbemClassObject *object,
+ObjectWrapper::ObjectWrapper(IWbemClassObject *object, Logger *logger,
                              const WinApiAdaptor &winapi)
-    : _current(object, releaseInterface), _winapi(winapi) {}
+    : _current(object, releaseInterface), _logger(logger), _winapi(winapi) {}
 
 ObjectWrapper::ObjectWrapper(const ObjectWrapper &reference)
-    : _current(reference._current), _winapi(reference._winapi) {}
+    : _current(reference._current)
+    , _logger(reference._logger)
+    , _winapi(reference._winapi) {}
 
 bool ObjectWrapper::contains(const wchar_t *key) const {
     VARIANT value;
@@ -127,16 +130,18 @@ VARIANT ObjectWrapper::getVarByKey(const wchar_t *key) const {
     return value;
 }
 
-Result::Result(const WinApiAdaptor &winapi)
-    : ObjectWrapper(nullptr, winapi), _enumerator(nullptr, releaseInterface) {}
+Result::Result(Logger *logger, const WinApiAdaptor &winapi)
+    : ObjectWrapper(nullptr, logger, winapi)
+    , _enumerator(nullptr, releaseInterface) {}
 
 Result::Result(const Result &reference)
     : ObjectWrapper(reference)
     , _enumerator(reference._enumerator)
     , _last_error(reference._last_error) {}
 
-Result::Result(IEnumWbemClassObject *enumerator, const WinApiAdaptor &winapi)
-    : ObjectWrapper(nullptr, winapi)
+Result::Result(IEnumWbemClassObject *enumerator, Logger *logger,
+               const WinApiAdaptor &winapi)
+    : ObjectWrapper(nullptr, logger, winapi)
     , _enumerator(enumerator, releaseInterface) {
     if (!next()) {
         // if the first enumeration fails the result is empty
@@ -164,6 +169,7 @@ Result &Result::operator=(const Result &reference) {
 bool Result::valid() const { return _current.get() != nullptr; }
 
 vector<wstring> Result::names() const {
+    Debug(_logger) << "Result::names";
     vector<wstring> result;
     SAFEARRAY *names = nullptr;
     HRESULT res = _current->GetNames(
@@ -189,6 +195,7 @@ vector<wstring> Result::names() const {
 }
 
 bool Result::next() {
+    Debug(_logger) << "Result::next";
     if (_enumerator == nullptr) {
         return false;
     }
@@ -352,16 +359,21 @@ wstring Variant::get() const {
 
 class COMManager {
 public:
-    static void init(const WinApiAdaptor &winapi) {
+    static void init(Logger *logger, const WinApiAdaptor &winapi) {
         // this is apparently thread safe in C++11 and in gcc even before that
         // see §6.4 in C++11 standard or §6.7 in C++14
-        static COMManager s_Instance(winapi);
+        static COMManager s_Instance(logger, winapi);
     }
 
-    ~COMManager() { _winapi.CoUninitialize(); }
+    ~COMManager() {
+        Debug(_logger) << "COMManager::~COMManager";
+        _winapi.CoUninitialize();
+    }
 
 private:
-    explicit COMManager(const WinApiAdaptor &winapi) : _winapi(winapi) {
+    COMManager(Logger *logger, const WinApiAdaptor &winapi)
+        : _logger(logger), _winapi(winapi) {
+        Debug(_logger) << "COMManager::COMManager";
         // Dr.Memory reports a memory leak here, despite the fact CoUninitialize
         // does get called. Am I doing something wrong?
         HRESULT res = _winapi.CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -387,12 +399,13 @@ private:
     }
 
 private:
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 };
 
-Helper::Helper(const WinApiAdaptor &winapi, LPCWSTR path)
-    : _locator(nullptr), _path(path), _winapi(winapi) {
-    COMManager::init(winapi);
+Helper::Helper(Logger *logger, const WinApiAdaptor &winapi, LPCWSTR path)
+    : _locator(nullptr), _path(path), _logger(logger), _winapi(winapi) {
+    COMManager::init(logger, winapi);
 
     _locator = getWBEMLocator();
     _services = connectServer(_locator);
@@ -472,7 +485,7 @@ Result Helper::query(LPCWSTR query) {
             string("Failed to execute query \"") + to_utf8(query) + "\"", res,
             _winapi);
     }
-    return Result(enumerator, _winapi);
+    return Result(enumerator, _logger, _winapi);
 }
 
 Result Helper::getClass(LPCWSTR className) {
@@ -485,7 +498,7 @@ Result Helper::getClass(LPCWSTR className) {
             string("Failed to enum class \"") + to_utf8(className) + "\"", res,
             _winapi);
     }
-    return Result(enumerator, _winapi);
+    return Result(enumerator, _logger, _winapi);
 }
 
 ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method) {
@@ -510,5 +523,5 @@ ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method) {
 
     _winapi.SysFreeString(methodName);
 
-    return ObjectWrapper(outParams, _winapi);
+    return ObjectWrapper(outParams, _logger, _winapi);
 }

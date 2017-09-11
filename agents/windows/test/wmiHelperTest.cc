@@ -1,3 +1,4 @@
+#include "MockLogger.h"
 #include "MockWbem.h"
 #include "MockWinApi.h"
 #include "gmock/gmock.h"
@@ -10,10 +11,11 @@ class wa_wmiHelperTest : public Test {
 protected:
     StrictMock<MockWinApi> _mockwinapi;
     StrictMock<MockIEnumWbemClassObject> _mockenumerator;
+    NiceMock<MockLogger> _mocklogger;
 };
 
 TEST_F(wa_wmiHelperTest, Result_next_enumerator_null) {
-    wmi::Result testResult(nullptr, _mockwinapi);
+    wmi::Result testResult(nullptr, &_mocklogger, _mockwinapi);
     ASSERT_FALSE(testResult.next());
 }
 
@@ -24,7 +26,7 @@ TEST_F(wa_wmiHelperTest, Result_next_failure) {
         .WillOnce(Return(WBEM_E_FAILED));
     EXPECT_CALL(testObject, Release());
     EXPECT_CALL(_mockenumerator, Release());
-    wmi::Result testResult(&_mockenumerator, _mockwinapi);
+    wmi::Result testResult(&_mockenumerator, &_mocklogger, _mockwinapi);
     ASSERT_FALSE(testResult.next());
 }
 
@@ -35,7 +37,7 @@ TEST_F(wa_wmiHelperTest, Result_next_no_more_values) {
         .WillOnce(DoAll(SetArgPointee<3>(0), Return(WBEM_S_FALSE)));
     EXPECT_CALL(testObject, Release());
     EXPECT_CALL(_mockenumerator, Release());
-    wmi::Result testResult(&_mockenumerator, _mockwinapi);
+    wmi::Result testResult(&_mockenumerator, &_mocklogger, _mockwinapi);
     ASSERT_FALSE(testResult.next());
 }
 
@@ -46,7 +48,7 @@ TEST_F(wa_wmiHelperTest, Result_next_object_returned) {
         .WillRepeatedly(DoAll(SetArgPointee<2>(&testObject), SetArgPointee<3>(1), Return(WBEM_NO_ERROR)));
     EXPECT_CALL(testObject, Release()).Times(2);
     EXPECT_CALL(_mockenumerator, Release());
-    wmi::Result testResult(&_mockenumerator, _mockwinapi);
+    wmi::Result testResult(&_mockenumerator, &_mocklogger, _mockwinapi);
     ASSERT_TRUE(testResult.next());
 }
 
@@ -57,6 +59,6 @@ TEST_F(wa_wmiHelperTest, Result_next_wmi_timeout) {
         .WillOnce(DoAll(SetArgPointee<3>(0), Return(WBEM_S_TIMEDOUT)));
     EXPECT_CALL(testObject, Release());
     EXPECT_CALL(_mockenumerator, Release());
-    wmi::Result testResult(&_mockenumerator, _mockwinapi);
+    wmi::Result testResult(&_mockenumerator, &_mocklogger, _mockwinapi);
     ASSERT_THROW(testResult.next(), wmi::Timeout);
 }

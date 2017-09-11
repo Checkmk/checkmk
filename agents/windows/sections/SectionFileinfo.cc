@@ -26,6 +26,7 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
+#include "../Logger.h"
 
 extern double current_time();
 extern double file_time(const FILETIME *filetime);
@@ -38,6 +39,7 @@ SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
 }
 
 bool SectionFileinfo::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionFileinfo::produceOutputInner";
     out << std::fixed << std::setprecision(0) << current_time() << "\n";
 
     for (const std::string &path : *_fileinfo_paths) {

@@ -24,6 +24,7 @@
 
 #include "SectionMem.h"
 #include <iomanip>
+#include "../Logger.h"
 #include "../WinApiAdaptor.h"
 
 SectionMem::SectionMem(const Environment &env, Logger *logger,
@@ -31,6 +32,7 @@ SectionMem::SectionMem(const Environment &env, Logger *logger,
     : Section("mem", "mem", env, logger, winapi) {}
 
 bool SectionMem::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionMem::produceOutputInner";
     typedef std::pair<const char *, DWORDLONG> KVPair;
 
     MEMORYSTATUSEX stat;

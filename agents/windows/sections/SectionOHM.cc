@@ -47,11 +47,12 @@ void SectionOHM::startIfAsync() {
 }
 
 bool SectionOHM::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionOHM::produceOutputInner";
     bool res = false;
     try {
         res = SectionWMI::produceOutputInner(out);
     } catch (const wmi::ComException &e) {
-        Debug(_logger) << "Exception: " << e.what();
+        Debug(_logger) << "ComException: " << e.what();
         res = false;
     }
     if (!res && !_ohm_monitor->checkAvailabe()) {

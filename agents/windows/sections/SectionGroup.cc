@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionGroup.h"
+#include "../Logger.h"
 
 SectionGroup::SectionGroup(const std::string &outputName,
                            const std::string &configName,
@@ -54,6 +55,7 @@ SectionGroup *SectionGroup::withNestedSubtables() {
 }
 
 bool SectionGroup::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionGroup::produceOutputInner";
     time_t now = time(nullptr);
     if (_disabled_until > now) {
         return false;

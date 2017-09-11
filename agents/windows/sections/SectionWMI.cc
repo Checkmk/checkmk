@@ -25,6 +25,7 @@
 #include "SectionWMI.h"
 #include <algorithm>
 #include <ctime>
+#include "../Logger.h"
 #include "../stringutil.h"
 #include "../wmiHelper.h"
 
@@ -97,6 +98,8 @@ void SectionWMI::suspend(int duration) {
 }
 
 bool SectionWMI::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionWMI::produceOutputInner";
+
     if (_disabled_until > time(nullptr)) {
         return false;
     }
@@ -105,10 +108,10 @@ bool SectionWMI::produceOutputInner(std::ostream &out) {
 
     try {
         if (_helper.get() == nullptr) {
-            _helper.reset(new wmi::Helper(_winapi, _namespace.c_str()));
+            _helper.reset(new wmi::Helper(_logger, _winapi, _namespace.c_str()));
         }
 
-    wmi::Result result(_winapi);
+    wmi::Result result(_logger, _winapi);
 
         if (_columns.empty()) {
             // no columns set, return everything

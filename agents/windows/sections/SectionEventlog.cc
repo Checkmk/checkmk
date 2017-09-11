@@ -307,6 +307,7 @@ void SectionEventlog::postprocessConfig() {
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
 bool SectionEventlog::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionEventlog::produceOutputInner";
     // This agent remembers the record numbers
     // of the event logs up to which messages have
     // been processed. When started, the eventlog

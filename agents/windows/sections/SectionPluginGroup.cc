@@ -437,6 +437,7 @@ std::vector<HANDLE> SectionPluginGroup::stopAsync() {
 }
 
 bool SectionPluginGroup::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionPluginGroup::produceOutputInner";
     // gather the data for the sync sections
     collectData(SYNC);
     if (_type == PLUGIN) {

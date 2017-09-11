@@ -45,6 +45,7 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
 }
 
 bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionPerfcounter::produceOutputInner";
     try {
         PerfCounterObject counter_object(_counter_base_number, _winapi,
                                          _logger);

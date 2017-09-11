@@ -129,6 +129,7 @@ bool SectionPS::ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o) {
 }
 
 bool SectionPS::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionPS::produceOutputInner";
     if (*_use_wmi) {
         return outputWMI(out);
     } else {
@@ -152,11 +153,12 @@ void SectionPS::outputProcess(
 }
 
 bool SectionPS::outputWMI(std::ostream &out) {
+    Debug(_logger) << "SectionPS::ouputWMI";
     if (_helper.get() == nullptr) {
-        _helper.reset(new wmi::Helper(_winapi, L"Root\\cimv2"));
+        _helper.reset(new wmi::Helper(_logger, _winapi, L"Root\\cimv2"));
     }
 
-    wmi::Result result(_winapi);
+    wmi::Result result(_logger, _winapi);
     try {
         result = _helper->getClass(L"Win32_Process");
         bool more = result.valid();
@@ -210,9 +212,9 @@ bool SectionPS::outputWMI(std::ostream &out) {
     } catch (const wmi::ComException &e) {
         // the most likely cause is that the wmi query fails, i.e. because the
         // service is currently offline.
-        Error(_logger) << "Exception: " << e.what();
+        Error(_logger) << "ComException: " << e.what();
     } catch (const wmi::ComTypeException &e) {
-        Error(_logger) << "Exception: " << e.what();
+        Error(_logger) << "ComTypeException: " << e.what();
         std::wstring types;
         std::vector<std::wstring> names;
         for (std::vector<std::wstring>::const_iterator iter = names.begin();
@@ -228,6 +230,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
 }
 
 bool SectionPS::outputNative(std::ostream &out) {
+    Debug(_logger) << "SectionPS::ouputNative";
     PROCESSENTRY32 pe32;
 
     process_entry_t process_perfdata;
@@ -250,7 +253,7 @@ bool SectionPS::outputNative(std::ostream &out) {
     bool more = _winapi.Process32First(hProcessSnap, &pe32);
 
     // GetProcessHandleCount is only available winxp upwards
-    typedef BOOL WINAPI (*GetProcessHandleCount_type)(HANDLE, PDWORD);
+    using GetProcessHandleCount_type = BOOL WINAPI (*)(HANDLE, PDWORD);
     LPCWSTR dllName = L"kernel32.dll";
     LPCSTR funcName = "GetProcessHandleCount";
     GetProcessHandleCount_type GetProcessHandleCount_dyn =
@@ -309,6 +312,8 @@ bool SectionPS::outputNative(std::ostream &out) {
                           kernelmodetime.QuadPart, pe32.th32ProcessID,
                           processHandleCount, pe32.cntThreads, user,
                           pe32.szExeFile);
+        } else {
+            Error(_logger) << "SectionPS::outputNative: OpenProcess failed";
         }
         more = _winapi.Process32Next(hProcessSnap, &pe32);
     }

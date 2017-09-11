@@ -39,11 +39,12 @@ SectionUptime::SectionUptime(const Environment &env, Logger *logger,
         dynamic_func<GetTickCount64_type>(dllName, funcName, _winapi);
     if (GetTickCount64_dyn == nullptr) {
         // GetTickCount64 is only available on Vista/2008 and newer
-        _wmi_helper.reset(new wmi::Helper(_winapi, L"Root\\cimv2"));
+        _wmi_helper.reset(new wmi::Helper(_logger, _winapi, L"Root\\cimv2"));
     }
 }
 
 bool SectionUptime::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionUptime::produceOutputInner";
     if (GetTickCount64_dyn != nullptr) {
         out << outputTickCount64();
     } else if (_wmi_helper.get() != nullptr) {
@@ -57,6 +58,7 @@ std::string SectionUptime::outputTickCount64() {
 }
 
 std::string SectionUptime::outputWMI() {
+    Debug(_logger) << "SectionUptime::outputWMI";
     int tries = 2;
     while (tries-- > 0) {
         try {

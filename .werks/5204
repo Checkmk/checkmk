@@ -1,0 +1,20 @@
+Title: Host rename: Fixed broken rename of hosts in rrdcached journal
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1505122976
+
+When using the new Check_MK rrd format (single value per RRD), the
+host rename feature was not renaming host specific entries in the
+journal of the rrdcached.
+
+This resulted in lost RRD values that have not been written to the
+RRDs yet.
+
+Manual fix: You could stop the rrdcached (or the whole site), go
+to var/rrdcached and rename the host in the journal files manually,
+e.g. using <tt>sed</tt>.

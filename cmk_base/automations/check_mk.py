@@ -370,8 +370,9 @@ class AutomationRenameHosts(Automation):
 
             # entries of rrdcached journal
             if self.rename_host_in_files(os.path.join(cmk.paths.omd_root, "var/rrdcached/rrd.journal.*"),
-                                 "/perfdata/%s/" % oldregex,
-                                 "/perfdata/%s/" % newregex):
+                                 "/(perfdata|rrd)/%s/" % oldregex,
+                                 "/\\1/%s/" % newregex,
+                                 extended_regex=True):
                 actions.append("rrdcached")
 
             # Spoolfiles of NPCD

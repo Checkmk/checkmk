@@ -16,6 +16,7 @@
     * 5113 FIX: cifsmounts, nfsmounts: Fixed wrong reported error message if user has not right permissions on mount point
     * 5114 FIX: ps, ps.perf: Allow "/" in process name in manual checks
     * 5115 FIX: zfs_arc_cache: Fixed wrong detected lines from agent output if they contain no counters, eg. 'class = misc'
+    * 5120 FIX: ps, ps.perf: Fixed regex range introduced with werk 5114 which allows "/" in process name in manual checks
 
 
 1.2.8p25:

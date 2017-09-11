@@ -1,0 +1,13 @@
+diff -Nur dest/python-ad-0.9.orig/lib/ad/protocol/netlogon.py dest/python-ad-0.9/lib/ad/protocol/netlogon.py
+--- dest/python-ad-0.9.orig/lib/ad/protocol/netlogon.py	2008-10-31 15:19:34.000000000 +0100
++++ dest/python-ad-0.9/lib/ad/protocol/netlogon.py	2017-09-11 14:20:19.499324819 +0200
+@@ -59,8 +59,8 @@
+         netbios_domain = self._decode_rfc1035()
+         netbios_hostname = self._decode_rfc1035()
+         user = self._decode_rfc1035()
+-        client_site = self._decode_rfc1035()
+         server_site = self._decode_rfc1035()
++        client_site = self._decode_rfc1035()
+         return Reply(type=type, flags=flags, domain_guid=domain_guid,
+                      forest=forest, domain=domain, hostname=hostname,
+                      netbios_domain=netbios_domain,

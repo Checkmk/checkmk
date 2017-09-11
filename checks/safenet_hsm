@@ -1,0 +1,216 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def parse_safenet_hsm(info):
+    return {
+        "operation_requests" : int(info[0][0]),
+        "operation_errors"   : int(info[0][1]),
+        "critical_events"    : int(info[0][2]),
+        "noncritical_events" : int(info[0][3]),
+    }
+
+
+#.
+#   .--Event stats---------------------------------------------------------.
+#   |          _____                 _         _        _                  |
+#   |         | ____|_   _____ _ __ | |_   ___| |_ __ _| |_ ___            |
+#   |         |  _| \ \ / / _ \ '_ \| __| / __| __/ _` | __/ __|           |
+#   |         | |___ \ V /  __/ | | | |_  \__ \ || (_| | |_\__ \           |
+#   |         |_____| \_/ \___|_| |_|\__| |___/\__\__,_|\__|___/           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["safenet_hsm_events_default_levels"] = {
+    "critical_event_rate"   : (0.0001, 0.0005),
+}
+
+
+def inventory_safenet_hsm_events(parsed):
+    if parsed:
+        return [ (None, {}) ]
+
+
+def check_safenet_hsm_events(_no_item, params, parsed):
+    now = time.time()
+
+    def check_events(event_type):
+        events = parsed[event_type + "_events"]
+        infotext = "%d %s events since last reset" % (events, event_type)
+        if params.get(event_type + "_events"):
+            warn, crit = params[event_type + "_events"]
+            levelstext = " (warn, crit at %d/%d events)" % (warn, crit)
+            if events >= crit:
+                status = 2
+            elif events >= warn:
+                status = 1
+            else:
+                status = 0
+            if status:
+                infotext += levelstext
+        else:
+            status = 0
+        return status, infotext
+
+
+    def check_event_rate(event_type):
+        events = parsed[event_type + "_events"]
+        event_rate = get_rate(event_type + "_events", now, events)
+        infotext = "%.2f %s events/s" % (event_rate, event_type)
+        if params.get(event_type + "_event_rate"):
+            warn, crit = params[event_type + "_event_rate"]
+            levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
+            perfdata = [ (event_type + "event_rate", event_rate, warn, crit) ]
+            if event_rate >= crit:
+                status = 2
+            elif event_rate >= warn:
+                status = 1
+            else:
+                status = 0
+            if status:
+                infotext += levelstext
+        else:
+            perfdata = [ (event_type + "_event_rate", event_rate) ]
+            status = 0
+        return status, infotext, perfdata
+
+    yield check_events("critical")
+    yield check_events("noncritical")
+    yield check_event_rate("critical")
+    yield check_event_rate("noncritical")
+
+
+check_info["safenet_hsm.events"] = {
+    "default_levels_variable"   : "safenet_hsm_events_default_levels",
+    "inventory_function"        : inventory_safenet_hsm_events,
+    "check_function"            : check_safenet_hsm_events,
+    "service_description"       : "HSM Safenet Event Stats",
+    "has_perfdata"              : True,
+    "group"                     : "safenet_hsm_eventstats",
+}
+
+
+#.
+#   .--Operation stats-----------------------------------------------------.
+#   |             ___                       _   _                          |
+#   |            / _ \ _ __   ___ _ __ __ _| |_(_) ___  _ __               |
+#   |           | | | | '_ \ / _ \ '__/ _` | __| |/ _ \| '_ \              |
+#   |           | |_| | |_) |  __/ | | (_| | |_| | (_) | | | |             |
+#   |            \___/| .__/ \___|_|  \__,_|\__|_|\___/|_| |_|             |
+#   |                 |_|                                                  |
+#   |                            _        _                                |
+#   |                        ___| |_ __ _| |_ ___                          |
+#   |                       / __| __/ _` | __/ __|                         |
+#   |                       \__ \ || (_| | |_\__ \                         |
+#   |                       |___/\__\__,_|\__|___/                         |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["safenet_hsm_default_levels"] = {
+    "error_rate"            : (0.01, 0.05),
+    "request_rate"          : None
+}
+
+
+def inventory_safenet_hsm(parsed):
+    if parsed:
+        return [ (None, {}) ]
+
+
+def check_safenet_hsm(_no_item, params, parsed):
+    now = time.time()
+
+    def check_operation_request_rate(operation_requests):
+        request_rate = get_rate("operation_requests", now, operation_requests)
+
+        status, extra_info, extra_perf = check_levels(request_rate,
+                                                      "request_rate",
+                                                      params["request_rate"],
+                                                      unit="1/s")
+        perfdata = [ ("requests_per_second", request_rate) ] + extra_perf
+        infotext = ("%.2f requests/s" % request_rate) + extra_info
+        return status, infotext, perfdata
+
+
+    def check_operation_error_rate(operation_errors):
+        error_rate = get_rate("operation_errors", now, operation_errors)
+        infotext = "%.2f operation errors/s" % error_rate
+        if params.get("error_rate"):
+            warn, crit = params["error_rate"]
+            levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
+            perfdata = [ ("error_rate", error_rate, warn, crit) ]
+            if error_rate >= crit:
+                status = 2
+            elif error_rate >= warn:
+                status = 1
+            else:
+                status = 0
+            if status:
+                infotext += levelstext
+        else:
+            perfdata = [ ("error_rate", error_rate) ]
+            status = 0
+        return status, infotext, perfdata
+
+
+    def check_operation_errors(operation_errors):
+        infotext = "%d operation errors since last reset" % operation_errors
+        if params.get("operation_errors"):
+            warn, crit = params["operation_errors"]
+            levelstext = " (warn, crit at %d/%d errors)" % (warn, crit)
+            if operation_errors >= crit:
+                status = 2
+            elif operation_errors >= warn:
+                status = 1
+            else:
+                status = 0
+            if status:
+                infotext += levelstext
+        else:
+            status = 0
+        return status, infotext
+
+
+    yield check_operation_request_rate(parsed["operation_requests"])
+    yield check_operation_error_rate(parsed["operation_errors"])
+    yield check_operation_errors(parsed["operation_errors"])
+
+
+check_info["safenet_hsm"] = {
+    "default_levels_variable"   : "safenet_hsm_default_levels",
+    "parse_function"            : parse_safenet_hsm,
+    "inventory_function"        : inventory_safenet_hsm,
+    "check_function"            : check_safenet_hsm,
+    "service_description"       : "HSM Operation Stats",
+    "snmp_scan_function"        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12383"),
+    "snmp_info"                 :  (".1.3.6.1.4.1.12383.3.1.1", [
+                                                            "1", # hsmOperationRequests
+                                                            "2", # hsmOperationErrors
+                                                            "3", # hsmCriticalEvents
+                                                            "4", # hsmNonCriticalEvents
+                                                        ]),
+    "has_perfdata"              : True,
+    "group"                     : "safenet_hsm_operstats",
+}

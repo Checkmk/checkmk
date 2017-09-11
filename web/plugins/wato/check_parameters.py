@@ -4020,7 +4020,98 @@ register_check_parameters(
         "dict"
    )
 
+register_check_parameters(
+    subgroup_applications,
+    "safenet_hsm_operstats",
+    _("Safenet HSM Operation Stats"),
+    Dictionary(
+        elements=[
+            ("error_rate", Tuple(
+                title=_(u"Error rate"),
+                elements=[
+                    Float(title=_("Warning at"), default_value=0.01, unit=_("1/s")),
+                    Float(title=_("Critical at"), default_value=0.05, unit=_("1/s")),
+                ])),
+            ("request_rate", Levels(
+                title = _(u"Request rate"),
+                unit = _("1/s"),
+                default_value = None,
+                )),
+            ("operation_errors", Tuple(
+                title=_("Operation errors"),
+                help=_("Sets levels on total operation errors since last counter reset."),
+                elements=[
+                    Integer(title=_("Warning at"), default_value=0),
+                    Integer(title=_("Critical at"), default_value=1),
+                ])),
+        ]
+    ),
+    None,
+    "dict"
+)
 
+register_check_parameters(
+    subgroup_applications,
+    "safenet_hsm_eventstats",
+    _("Safenet HSM Event Stats"),
+    Dictionary(
+        elements=[
+            ("critical_events", Tuple(
+                title=_(u"Critical events"),
+                help=_(u"Sets levels on total critical events since last counter reset."),
+                elements=[
+                    Integer(title=_("Warning at"), default_value=0),
+                    Integer(title=_("Critical at"), default_value=1),
+                ])),
+            ("noncritical_events", Tuple(
+                title=_(u"Noncritical events"),
+                help=_(u"Sets levels on total noncritical events since last counter reset."),
+                elements=[
+                    Integer(title=_("Warning at"), default_value=0),
+                    Integer(title=_("Critical at"), default_value=1),
+                ])),
+            ("critical_event_rate", Tuple(
+                title=_(u"Critical event rate"),
+                elements=[
+                    Float(title=_("Warning at"), default_value=0.0001, unit=_("1/s")),
+                    Float(title=_("Critical at"), default_value=0.0005, unit=_("1/s")),
+                ])),
+            ("noncritical_event_rate", Tuple(
+                title=_(u"Noncritical event rate"),
+                elements=[
+                    Float(title=_("Warning at"), default_value=0.0001, unit=_("1/s")),
+                    Float(title=_("Critical at"), default_value=0.0005, unit=_("1/s")),
+                ])),
+        ]
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "safenet_ntls_links",
+    _(u"Safenet NTLS Links"),
+    Levels(
+        title=_(u"NTLS Links"),
+        default_value=None,
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "safenet_ntls_clients",
+    _(u"Safenet NTLS Clients"),
+    Levels(
+        title=_(u"NTLS Clients"),
+        help=_(u"Number of connected clients"),
+        default_value=None,
+    ),
+    None,
+    "dict"
+)
 
 #.
 #   .--Environment---------------------------------------------------------.

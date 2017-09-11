@@ -1,0 +1,10 @@
+Title: safenet_hsm, safenet_hsm.events, safenet_ntls, safenet_ntls.clients, safenet_ntls.connrate, safenet_ntls.expiration, safenet_ntls.links: Several new checks to monitor Safenet HSM appliances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505140089
+Class: feature
+
+

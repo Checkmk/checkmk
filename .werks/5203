@@ -1,0 +1,18 @@
+Title: Removed sorting of perfometers
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p12
+Date: 1505121322
+Class: fix
+
+The user could interactively sort a view by the sorter by clicking on the column header. The
+sorter was not sorting by the shown value(s), but was simply using the first perfdata value
+of the service for sorting. This could be wrong since the base for the shown value is often
+not the first perfdata value.
+
+The broken sorting function has been removed now.
+
+Maybe we could add a more intelligent sorting in the future. For the moment you can create
+a custom view and add a sorter that sorts the view using a custom perfdata value.

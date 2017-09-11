@@ -229,7 +229,6 @@ multisite_painters["perfometer"] = {
     "columns" : [ "service_perf_data", "service_state",
                   "service_check_command", "service_pnpgraph_present", "service_plugin_output" ],
     "paint" : paint_perfometer,
-    "sorter" : "svc_perf_val01",
     "printable" : "perfometer", # Special rendering in PDFs
 }
 

@@ -1,0 +1,11 @@
+Title: check_sql: Added error message if cx_Oracle module is not installed
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1505135287
+
+

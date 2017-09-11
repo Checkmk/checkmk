@@ -1,0 +1,11 @@
+Title: ps, ps.perf: Fixed regex range introduced with werk 5114 which allows "/" in process name in manual checks
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1505108567
+
+

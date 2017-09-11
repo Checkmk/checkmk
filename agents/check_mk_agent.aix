@@ -48,6 +48,10 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
+# All files in SPOOLDIR will simply appended to the agent
+# output if they are not outdated (see below)
+SPOOLDIR=$MK_VARDIR/spool
+
 #Avoid problems with wrong decimal separators in other language verions of aix
 export LC_NUMERIC="en_US"
 
@@ -361,4 +365,40 @@ then
         OUTPUT=$($cmdline)
         echo "(${PLUGIN##*/}) $descr $? $OUTPUT"
     done
+fi
+
+# Agent output snippets created by cronjobs, etc.
+if [ -d "$SPOOLDIR" ]
+then
+    pushd "$SPOOLDIR" > /dev/null
+    now=$(date +%s)
+
+    for file in *
+    do
+        # output every file in this directory. If the file is prefixed
+        # with a number, then that number is the maximum age of the
+        # file in seconds. If the file is older than that, it is ignored.
+        maxage=""
+        part="$file"
+
+        # Each away all digits from the front of the filename and
+        # collect them in the variable maxage.
+        while [ "${part/#[0-9]/}" != "$part" ]
+        do
+            maxage=$maxage${part:0:1}
+            part=${part:1}
+        done
+
+        # If there is at least one digit, than we honor that.
+        if [ "$maxage" ] ; then
+            mtime=$(stat -c %Y "$file")
+            if [ $((now - mtime)) -gt $maxage ] ; then
+                continue
+            fi
+        fi
+
+        # Output the file
+        cat "$file"
+    done
+    popd > /dev/null
 fi

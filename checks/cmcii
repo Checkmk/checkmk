@@ -1,0 +1,563 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_cmcii(info):
+    device_status = info[0][0]
+    device_config = info[1][0]
+    port_statuses = [elem[0] for elem in info[2:6]]
+    sensor_entries = info[6:10]
+    sensor_outputs = info[10:14]
+
+    parsed  = {
+        'tc_unit': {},
+        'tc_config': {},
+        'ports': {},
+        'temperature': {},
+        'access': {},
+        'status_psm': {},
+        'position_psm': {},
+        'psm_on/off': {},
+        'generic_input': {},
+        'generic_output': {},
+    }
+
+    parsed['tc_unit'] = parse_device_status(device_status)
+    parsed['tc_config'] = parse_device_config(device_config)
+
+    for port, status in enumerate(port_statuses, 1):
+        parsed_status = parse_port_status(status)
+        if parsed_status:
+            description, entry = parsed_status
+            name = '%d %s' % (port, description)
+            parsed['ports'][name] = entry
+
+    for parse_func, sensor_table in zip(
+            [parse_entry_sensor, parse_output_sensor],
+            [sensor_entries, sensor_outputs]):
+        for port, entries in enumerate(sensor_table, 1):
+            for sensor in entries:
+                parsed_sensor = parse_func(sensor)
+                if parsed_sensor:
+                    sensor_type, sensor_name, entry = parsed_sensor
+                    full_name = '%s Port %d' % (sensor_name, port)
+                    parsed[sensor_type][full_name] = entry
+
+    return parsed
+
+
+#   .--state---------------------------------------------------------------.
+#   |                            _        _                                |
+#   |                        ___| |_ __ _| |_ ___                          |
+#   |                       / __| __/ _` | __/ _ \                         |
+#   |                       \__ \ || (_| | ||  __/                         |
+#   |                       |___/\__\__,_|\__\___|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                             main check                               |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_cmcii_state(parsed):
+    return [(None, {})]
+
+
+def check_cmcii_state(item, params, parsed):
+    tc_unit = parsed.get('tc_unit')
+    if not tc_unit:
+        return None
+
+    state = 0 if tc_unit['status'] == 'OK' else 2
+    infotext = 'Status: %(status)s, Units connected: %(connected_units)d' % tc_unit
+    return state, infotext
+
+
+check_info['cmcii'] = {
+    "parse_function"      : parse_cmcii,
+    "inventory_function"  : inventory_cmcii_state,
+    "check_function"      : check_cmcii_state,
+    "service_description" : "TC unit state",
+    "includes"            : ["cmcii.include"],
+    "snmp_scan_function"  : lambda oid: ".1.3.6.1.4.1.2606.4" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info"           : [
+                             ( ".1.3.6.1.4.1.2606.4.2", [
+                                    "1",  # cmcTcStatusDeviceCMC
+                                    "2",  # cmcTcUnitsConnected
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.3.1", [  # cmcTcSetupGeneral
+                                    "1",  # cmcTcTempUnit
+                                    "2",  # cmcTcSetBeeper
+                                    "3",  # cmcTcQuitRelay
+                                    "4",  # cmcTcLogicRelay
+                                    "5",  # cmcTcWebAccess
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.3", [  # cmcTcStatusSensorUnit1
+                                    "1",  # cmcTcUnit1TypeOfDevice
+                                    "2",  # cmcTcUnit1Text
+                                    "3",  # cmcTcUnit1Serial
+                                    "4",  # cmcTcUnit1Status
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.4", [  # cmcTcStatusSensorUnit2
+                                    "1",  # cmcTcUnit2TypeOfDevice
+                                    "2",  # cmcTcUnit2Text
+                                    "3",  # cmcTcUnit2Serial
+                                    "4",  # cmcTcUnit2Status
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.5", [  # cmcTcStatusSensorUnit3
+                                    "1",  # cmcTcUnit3TypeOfDevice
+                                    "2",  # cmcTcUnit3Text
+                                    "3",  # cmcTcUnit3Serial
+                                    "4",  # cmcTcUnit3Status
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.6", [  # cmcTcStatusSensorUnit4
+                                    "1",  # cmcTcUnit4TypeOfDevice
+                                    "2",  # cmcTcUnit4Text
+                                    "3",  # cmcTcUnit4Serial
+                                    "4",  # cmcTcUnit4Status
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.3.5.2.1", [  # cmcTcUnit1SensorEntry
+                                    "1",  # unit1SensorIndex
+                                    "2",  # unit1SensorType
+                                    "3",  # unit1SensorText
+                                    "4",  # unit1SensorStatus
+                                    "5",  # unit1SensorValue
+                                    "6",  # unit1SensorSetHigh
+                                    "7",  # unit1SensorSetLow
+                                    "8",  # unit1SensorSetWarn
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.4.5.2.1", [  # cmcTcUnit2SensorEntry
+                                    "1",  # unit2SensorIndex
+                                    "2",  # unit2SensorType
+                                    "3",  # unit2SensorText
+                                    "4",  # unit2SensorStatus
+                                    "5",  # unit2SensorValue
+                                    "6",  # unit2SensorSetHigh
+                                    "7",  # unit2SensorSetLow
+                                    "8",  # unit2SensorSetWarn
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.5.5.2.1", [  # cmcTcUnit3SensorEntry
+                                    "1",  # unit3SensorIndex
+                                    "2",  # unit3SensorType
+                                    "3",  # unit3SensorText
+                                    "4",  # unit3SensorStatus
+                                    "5",  # unit3SensorValue
+                                    "6",  # unit3SensorSetHigh
+                                    "7",  # unit3SensorSetLow
+                                    "8",  # unit3SensorSetWarn
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.6.5.2.1", [  # cmcTcUnit4SensorEntry
+                                    "1",  # unit4SensorIndex
+                                    "2",  # unit4SensorType
+                                    "3",  # unit4SensorText
+                                    "4",  # unit4SensorStatus
+                                    "5",  # unit4SensorValue
+                                    "6",  # unit4SensorSetHigh
+                                    "7",  # unit4SensorSetLow
+                                    "8",  # unit4SensorSetWarn
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.3.6.2.1", [  # cmcTcUnit1OutputEntry
+                                    "1",  # unit1OutputIndex
+                                    "2",  # unit1OutputType
+                                    "3",  # unit1OutputText
+                                    "4",  # unit1OutputStatus
+                                    "5",  # unit1OutputValue
+                                    "6",  # unit1OutputSet
+                                    "7",  # unit1OutputConfig
+                                    "8",  # unit1OutputDelay
+                                    "9",  # unit1OutputTimeoutAction
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.4.6.2.1", [  # cmcTcUnit2OutputEntry
+                                    "1",  # unit1OutputIndex
+                                    "2",  # unit1OutputType
+                                    "3",  # unit1OutputText
+                                    "4",  # unit1OutputStatus
+                                    "5",  # unit1OutputValue
+                                    "6",  # unit1OutputSet
+                                    "7",  # unit1OutputConfig
+                                    "8",  # unit1OutputDelay
+                                    "9",  # unit1OutputTimeoutAction
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.5.6.2.1", [  # cmcTcUnit3OutputEntry
+                                    "1",  # unit1OutputIndex
+                                    "2",  # unit1OutputType
+                                    "3",  # unit1OutputText
+                                    "4",  # unit1OutputStatus
+                                    "5",  # unit1OutputValue
+                                    "6",  # unit1OutputSet
+                                    "7",  # unit1OutputConfig
+                                    "8",  # unit1OutputDelay
+                                    "9",  # unit1OutputTimeoutAction
+                             ]),
+                             ( ".1.3.6.1.4.1.2606.4.2.6.6.2.1", [  # cmcTcUnit4OutputEntry
+                                    "1",  # unit1OutputIndex
+                                    "2",  # unit1OutputType
+                                    "3",  # unit1OutputText
+                                    "4",  # unit1OutputStatus
+                                    "5",  # unit1OutputValue
+                                    "6",  # unit1OutputSet
+                                    "7",  # unit1OutputConfig
+                                    "8",  # unit1OutputDelay
+                                    "9",  # unit1OutputTimeoutAction
+                             ]),
+                            ],
+}
+
+
+#.}
+#   .--Config--------------------------------------------------------------.
+#   |                     ____             __ _                            |
+#   |                    / ___|___  _ __  / _(_) __ _                      |
+#   |                   | |   / _ \| '_ \| |_| |/ _` |                     |
+#   |                   | |__| (_) | | | |  _| | (_| |                     |
+#   |                    \____\___/|_| |_|_| |_|\__, |                     |
+#   |                                           |___/                      |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_cmcii_config(parsed):
+    return [(None, {})]
+
+
+def check_cmcii_config(item, params, parsed):
+    tc_config = parsed.get('tc_config')
+    if not tc_config:
+        return None
+
+    infotext = ('Web access: %(web_access)s, '
+                'Beeper: %(beeper)s, '
+                'Acknowledging: %(acknowledge)s, '
+                'Alarm relay logic in case of alarm: %(alarm_relay_logic)s, '
+                'Temperature unit: %(temp_unit)s') % tc_config
+
+    return 0, infotext
+
+
+check_info['cmcii.config'] = {
+    "inventory_function"  : inventory_cmcii_config,
+    "check_function"      : check_cmcii_config,
+    "service_description" : "TC configuration",
+}
+
+
+#.}
+#   .--Ports---------------------------------------------------------------.
+#   |                       ____            _                              |
+#   |                      |  _ \ ___  _ __| |_ ___                        |
+#   |                      | |_) / _ \| '__| __/ __|                       |
+#   |                      |  __/ (_) | |  | |_\__ \                       |
+#   |                      |_|   \___/|_|   \__|___/                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_cmcii_ports(parsed):
+    for entry in parsed.get('ports', {}):
+        yield entry, {}
+
+
+def check_cmcii_ports(item, params, parsed):
+    port = parsed['ports'].get(item)
+    if not port:
+        return None
+
+    state = 0 if port['status'] == 'OK' else 2
+    infotext = ('Status: %(status)s, '
+                'Device type: %(type)s, '
+                'Serial number: %(serial)s') % port
+
+    return state, infotext
+
+
+check_info['cmcii.ports'] = {
+    "inventory_function"  : inventory_cmcii_ports,
+    "check_function"      : check_cmcii_ports,
+    "service_description" : "Port %s",
+}
+
+
+#.}
+#   .--Temperature---------------------------------------------------------.
+#   |     _____                                   _                        |
+#   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |      | |/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |      | |  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      |_|\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   '----------------------------------------------------------------------'
+
+def inventory_cmcii_temperature(parsed):
+    for entry in parsed.get('temperature', {}):
+        yield entry, {}
+
+
+def check_cmcii_temperature(item, params, parsed):
+    temp_unit = parsed['tc_config'].get('temp_unit')
+    temp_item = parsed['temperature'].get(item)
+    if not temp_item:
+        return None
+
+    state, infotext, perfdata = check_temperature(
+        temp_item["value"],
+        params,
+        "cmcii.temp.%s" % item,
+        dev_unit = temp_unit[0],  # first letter of unit name
+        dev_levels = (temp_item.get("warn"),
+                      temp_item.get("high")),
+        dev_levels_lower = (None,
+                            temp_item.get("lower")),
+    )
+
+    return state, infotext, perfdata
+
+
+check_info['cmcii.temp'] = {
+    "inventory_function"  : inventory_cmcii_temperature,
+    "check_function"      : check_cmcii_temperature,
+    "service_description" : "%s",
+    "has_perfdata"        : True,
+    "group"               : "temperature",
+    "includes"            : [ "temperature.include" ]
+}
+
+
+#.
+#   .--PSM On/Off----------------------------------------------------------.
+#   |         ____  ____  __  __    ___           _____   __  __           |
+#   |        |  _ \/ ___||  \/  |  / _ \ _ __    / / _ \ / _|/ _|          |
+#   |        | |_) \___ \| |\/| | | | | | '_ \  / / | | | |_| |_           |
+#   |        |  __/ ___) | |  | | | |_| | | | |/ /| |_| |  _|  _|          |
+#   |        |_|   |____/|_|  |_|  \___/|_| |_/_/  \___/|_| |_|            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_cmcii_psm_onoff(parsed):
+    for entry in parsed.get('psm_on/off', {}):
+        yield entry, {}
+
+
+def check_cmcii_psm_onoff(item, params, parsed):
+    psm_item = parsed['psm_on/off'].get(item)
+    if not psm_item:
+        return None
+
+    state = 0 if psm_item['status'] == 'on' else 2
+    infotext = ('Status: %(status)s, '
+                'Command: %(command)s, Config: %(config)s, '
+                'Delay: %(delay)d, Timeout action: %(timeout_action)s'
+               ) % psm_item
+
+    return state, infotext
+
+
+check_info['cmcii.psm_onoff'] = {
+    "inventory_function"  : inventory_cmcii_psm_onoff,
+    "check_function"      : check_cmcii_psm_onoff,
+    "service_description" : "%s",
+}
+
+
+#.
+#   .--Position PSM--------------------------------------------------------.
+#   |       ____           _ _   _               ____  ____  __  __        |
+#   |      |  _ \ ___  ___(_) |_(_) ___  _ __   |  _ \/ ___||  \/  |       |
+#   |      | |_) / _ \/ __| | __| |/ _ \| '_ \  | |_) \___ \| |\/| |       |
+#   |      |  __/ (_) \__ \ | |_| | (_) | | | | |  __/ ___) | |  | |       |
+#   |      |_|   \___/|___/_|\__|_|\___/|_| |_| |_|   |____/|_|  |_|       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_cmcii_position_psm(parsed):
+    for entry in parsed.get('position_psm', {}):
+        yield entry, {}
+
+
+def check_cmcii_position_psm(item, params, parsed):
+    position_item = parsed['position_psm'].get(item)
+    if not position_item:
+        return None
+
+    state = 0 if position_item['status'] == 'OK' else 2
+    infotext = ('Status: %(status)s, '
+                'Value: %(value)s') % position_item
+    perfdata = [('position', position_item['value'])]
+
+    return state, infotext, perfdata
+
+
+check_info['cmcii.position_psm'] = {
+    "inventory_function"  : inventory_cmcii_position_psm,
+    "check_function"      : check_cmcii_position_psm,
+    "service_description" : "%s",
+    "has_perfdata"        : True,
+}
+
+
+#.
+#   .--Access--------------------------------------------------------------.
+#   |                       _                                              |
+#   |                      / \   ___ ___ ___  ___ ___                      |
+#   |                     / _ \ / __/ __/ _ \/ __/ __|                     |
+#   |                    / ___ \ (_| (_|  __/\__ \__ \                     |
+#   |                   /_/   \_\___\___\___||___/___/                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_cmcii_access(parsed):
+    for entry in parsed.get('access', {}):
+        yield entry, {}
+
+
+def check_cmcii_access(item, params, parsed):
+    access_item = parsed['access'].get(item)
+    if not access_item:
+        return None
+
+    state = 0 if access_item['status'] == 'OK' else 2
+    infotext = ('Status: %(status)s') % access_item
+
+    return state, infotext
+
+
+check_info['cmcii.access'] = {
+    "inventory_function"  : inventory_cmcii_access,
+    "check_function"      : check_cmcii_access,
+    "service_description" : "%s",
+}
+
+
+#.
+#   .--Status PSM----------------------------------------------------------.
+#   |          ____  _        _               ____  ____  __  __           |
+#   |         / ___|| |_ __ _| |_ _   _ ___  |  _ \/ ___||  \/  |          |
+#   |         \___ \| __/ _` | __| | | / __| | |_) \___ \| |\/| |          |
+#   |          ___) | || (_| | |_| |_| \__ \ |  __/ ___) | |  | |          |
+#   |         |____/ \__\__,_|\__|\__,_|___/ |_|   |____/|_|  |_|          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+def inventory_cmcii_status_psm(parsed):
+    for entry in parsed.get('status_psm', {}):
+        yield entry, {}
+
+
+def check_cmcii_status_psm(item, params, parsed):
+    status_item = parsed['status_psm'].get(item)
+    if not status_item:
+        return None
+
+    state = 0 if status_item['status'] == 'OK' else 2
+    infotext = ('Status: %(status)s') % status_item
+
+    return state, infotext
+
+
+check_info['cmcii.status_psm'] = {
+    "inventory_function"  : inventory_cmcii_status_psm,
+    "check_function"      : check_cmcii_status_psm,
+    "service_description" : "%s",
+}
+
+#.
+#   .--Generic input-------------------------------------------------------.
+#   |      ____                      _        _                   _        |
+#   |     / ___| ___ _ __   ___ _ __(_) ___  (_)_ __  _ __  _   _| |_      |
+#   |    | |  _ / _ \ '_ \ / _ \ '__| |/ __| | | '_ \| '_ \| | | | __|     |
+#   |    | |_| |  __/ | | |  __/ |  | | (__  | | | | | |_) | |_| | |_      |
+#   |     \____|\___|_| |_|\___|_|  |_|\___| |_|_| |_| .__/ \__,_|\__|     |
+#   |                                                |_|                   |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_cmcii_input(parsed):
+    for entry in parsed.get('generic_input', {}):
+        yield entry, {}
+
+
+def check_cmcii_input(item, params, parsed):
+    input_item = parsed['generic_input'].get(item)
+    if not input_item:
+        return None
+
+    state = 0 if input_item['status'] == 'OK' else 2
+    infotext = ('Status: %(status)s, Value: %(value)d, High: %(high)d, '
+                'Low: %(low)d, Warn: %(warn)d') % input_item
+    perfdata = [('input', input_item['value'],
+                 input_item['warn'], input_item['high'])]
+
+    return state, infotext, perfdata
+
+
+check_info['cmcii.input'] = {
+    "inventory_function"  : inventory_cmcii_input,
+    "check_function"      : check_cmcii_input,
+    "service_description" : "%s",
+    "has_perfdata"        : True,
+}
+
+#.
+#   .--Generic output------------------------------------------------------.
+#   |                   ____                      _                        |
+#   |                  / ___| ___ _ __   ___ _ __(_) ___                   |
+#   |                 | |  _ / _ \ '_ \ / _ \ '__| |/ __|                  |
+#   |                 | |_| |  __/ | | |  __/ |  | | (__                   |
+#   |                  \____|\___|_| |_|\___|_|  |_|\___|                  |
+#   |                                                                      |
+#   |                               _               _                      |
+#   |                    ___  _   _| |_ _ __  _   _| |_                    |
+#   |                   / _ \| | | | __| '_ \| | | | __|                   |
+#   |                  | (_) | |_| | |_| |_) | |_| | |_                    |
+#   |                   \___/ \__,_|\__| .__/ \__,_|\__|                   |
+#   |                                  |_|                                 |
+#   +----------------------------------------------------------------------+
+
+def inventory_cmcii_output(parsed):
+    for entry in parsed.get('generic_output', {}):
+        yield entry, {}
+
+
+def check_cmcii_output(item, params, parsed):
+    output_item = parsed['generic_output'].get(item)
+    if not output_item:
+        return None
+
+    state = 0 if output_item['status'] == 'OK' else 2
+    infotext = ('Status: %(status)s, Value: %(value)d, '
+                'Command: %(command)s, Config: %(config)s, '
+                'Delay: %(delay)d, Timeout action: %(timeout_action)s'
+               ) % output_item
+    perfdata = [('output', output_item['value'])]
+
+    return state, infotext, perfdata
+
+
+check_info['cmcii.output'] = {
+    "inventory_function"  : inventory_cmcii_output,
+    "check_function"      : check_cmcii_output,
+    "service_description" : "%s",
+    "has_perfdata"        : True,
+}
+

@@ -1,0 +1,16 @@
+title: Rittal CMC-II Units: General State
+agents: snmp
+catalog: hw/environment/rittal
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the overall status and the number of
+ connected units of Rittal CMC-II devices. The configuration
+ as well as the status of connected units and sensors are
+ handled in the corresponding subchecks.
+
+item:
+ No item.
+
+inventory:
+ One check per host will be created.

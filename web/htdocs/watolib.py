@@ -5924,7 +5924,6 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
         args = [ "--timeout", "%d" % timeout ] + args
 
     cmd = [ 'check_mk', '--automation',  command, '--' ] + args
-
     if command in [ 'restart', 'reload' ]:
         try:
             call_hook_pre_activate_changes()
@@ -5935,7 +5934,6 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
             return
 
     cmd = [ make_utf8(a) for a in cmd ]
-
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output

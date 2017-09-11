@@ -110,6 +110,7 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
 }
 
 bool SectionSkype::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionSkype::produceOutputInner";
     LARGE_INTEGER Counter, Frequency;
     _winapi.QueryPerformanceCounter(&Counter);
     _winapi.QueryPerformanceFrequency(&Frequency);

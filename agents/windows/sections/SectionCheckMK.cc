@@ -79,6 +79,7 @@ std::vector<KVPair> SectionCheckMK::createInfoFields() const {
 }
 
 bool SectionCheckMK::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionCheckMK::produceOutputInner";
     // output static fields
     for (const auto &kv : _info_fields) {
         out << kv.first << ": " << kv.second << "\n";

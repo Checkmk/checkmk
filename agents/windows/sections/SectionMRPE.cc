@@ -116,6 +116,7 @@ void SectionMRPE::updateIncludes() {
 }
 
 bool SectionMRPE::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionMRPE::produceOutputInner";
     updateIncludes();
 
     mrpe_entries_t all_entries;

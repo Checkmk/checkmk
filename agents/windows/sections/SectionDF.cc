@@ -25,6 +25,7 @@
 #include "SectionDF.h"
 #include <cstring>
 #include <iomanip>
+#include "../Logger.h"
 #include "../WinApiAdaptor.h"
 #include "../stringutil.h"
 
@@ -93,6 +94,7 @@ void SectionDF::output_mountpoints(std::ostream &out, char *volid) {
 }
 
 bool SectionDF::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionDF::produceOutputInner";
     char buffer[4096];
     DWORD len = _winapi.GetLogicalDriveStrings(sizeof(buffer), buffer);
 

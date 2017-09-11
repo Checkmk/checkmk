@@ -24,9 +24,9 @@
 
 typedef short SHORT;
 #include "SectionServices.h"
+#include "../Logger.h"
 #include "../WinApiAdaptor.h"
 #include "../stringutil.h"
-//#include "../check_mk_agent_def.h"
 
 SectionServices::SectionServices(const Environment &env, Logger *logger,
                                  const WinApiAdaptor &winapi)
@@ -83,6 +83,7 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
 }
 
 bool SectionServices::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionServices::produceOutputInner";
     SC_HANDLE scm = _winapi.OpenSCManager(
         0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
     if (scm != INVALID_HANDLE_VALUE) {

@@ -462,6 +462,7 @@ void SectionLogwatch::processTextfile(std::ostream &out,
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
 bool SectionLogwatch::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionLogwatch::produceOutputInner";
     // First of all invalidate all textfiles
     for (logwatch_textfile *textfile : _textfiles) {
         textfile->missing = true;

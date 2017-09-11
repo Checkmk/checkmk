@@ -36,6 +36,7 @@
 #include "WinApiAdaptor.h"
 #include "stringutil.h"
 
+class Logger;
 class WinApiAdaptor;
 
 namespace wmi {
@@ -61,11 +62,8 @@ public:
 };
 
 class Variant {
-    VARIANT _value;
-    const WinApiAdaptor &_winapi;
-
 public:
-    Variant(const VARIANT &val, const WinApiAdaptor &winapi);
+    Variant(const VARIANT &val, Logger *logger, const WinApiAdaptor &winapi);
     ~Variant();
 
     template <typename T>
@@ -74,6 +72,9 @@ public:
     VARTYPE type() const;
 
 private:
+    VARIANT _value;
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
 };
 
 template <>
@@ -98,10 +99,12 @@ class ObjectWrapper {
 
 protected:
     std::shared_ptr<IWbemClassObject> _current;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 
 public:
-    ObjectWrapper(IWbemClassObject *object, const WinApiAdaptor &winapi);
+    ObjectWrapper(IWbemClassObject *object, Logger *logger,
+                  const WinApiAdaptor &winapi);
 
     ObjectWrapper(const ObjectWrapper &reference);
     ~ObjectWrapper() noexcept;
@@ -128,7 +131,7 @@ private:
 
 template <typename T>
 T ObjectWrapper::get(const wchar_t *key) const {
-    Variant value(getVarByKey(key), _winapi);
+    Variant value(getVarByKey(key), _logger, _winapi);
     try {
         return value.get<T>();
     } catch (const ComTypeException &e) {
@@ -142,8 +145,9 @@ class Result : public ObjectWrapper {
     HRESULT _last_error{S_OK};
 
 public:
-    Result(const WinApiAdaptor &winapi);
-    Result(IEnumWbemClassObject *enumerator, const WinApiAdaptor &winapi);
+    Result(Logger *logger, const WinApiAdaptor &winapi);
+    Result(IEnumWbemClassObject *enumerator, Logger *logger,
+           const WinApiAdaptor &winapi);
     Result(const Result &reference);
     ~Result() noexcept;
 
@@ -171,10 +175,12 @@ class Helper {
     IWbemLocator *_locator;
     IWbemServices *_services;
     std::wstring _path;
+    Logger *_logger;
     const WinApiAdaptor &_winapi;
 
 public:
-    Helper(const WinApiAdaptor &winapi, LPCWSTR path = L"Root\\Cimv2");
+    Helper(Logger *logger, const WinApiAdaptor &winapi,
+           LPCWSTR path = L"Root\\Cimv2");
 
     Helper(const Helper &reference) = delete;
     Helper &operator=(const Helper &reference) = delete;

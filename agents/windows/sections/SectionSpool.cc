@@ -39,6 +39,7 @@ SectionSpool::SectionSpool(const Environment &env, Logger *logger,
 }
 
 bool SectionSpool::produceOutputInner(std::ostream &out) {
+    Debug(_logger) << "SectionSpool::produceOutputInner";
     // Look for files in the spool directory and append these files to
     // the agent output. The name of the files may begin with a number
     // of digits. If this is the case then it is interpreted as a time

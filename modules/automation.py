@@ -942,7 +942,7 @@ def omd_rename_host(oldname, newname):
 
     # entries of rrdcached journal
     dirpath = cmk.paths.omd_root + "/var/rrdcached/"
-    if not os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' "
+    if not os.system("sed -ri 's@/(rrd|perfdata)/%s/@/\\1/%s/@' "
         "%s/var/rrdcached/rrd.journal.* 2>/dev/null" % ( oldregex, newregex, cmk.paths.omd_root)):
         actions.append("rrdcached")
 

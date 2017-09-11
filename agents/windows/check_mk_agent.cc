@@ -74,10 +74,10 @@
 #include "EventLog.h"
 #include "ExternalCmd.h"
 #include "ListenSocket.h"
-#include "Logger.h"
 #include "OHMMonitor.h"
 #include "OutputProxy.h"
 #include "PerfCounter.h"
+#include "RotatingFileHandler.h"
 #include "SectionManager.h"
 #include "Thread.h"
 #include "WinApi.h"
@@ -154,7 +154,6 @@ HANDLE g_workers_job_object;
 
 bool with_stderr = false;
 
-
 //  .----------------------------------------------------------------------.
 //  |                   _        _                          _              |
 //  |                  | | _ __ | |_  ___  _ __ _ __   __ _| |___          |
@@ -173,10 +172,10 @@ static FILE *fileout;
 class MillisecondsFormatter : public Formatter {
     void format(ostream &os, const LogRecord &record) override {
         auto tp = record.getTimePoint();
-        os << FormattedTimePoint(record.getTimePoint())           //
-           << setfill('0') << "."                                 //
-           << setw(3) << time_point_part<milliseconds>(tp) << " " //
-           << "[" << record.getLevel() << "] "  //
+        os << FormattedTimePoint(record.getTimePoint())            //
+           << setfill('0') << "."                                  //
+           << setw(3) << time_point_part<milliseconds>(tp) << " "  //
+           << "[" << record.getLevel() << "] "                     //
            << record.getMessage();
     }
 };
@@ -219,7 +218,7 @@ struct GlobalConfig {
 
 SectionManager *s_sections;
 
-} //namespace
+}  // namespace
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -745,8 +744,8 @@ void do_adhoc(const Environment &env) {
             }
 
             std::string ip_hr = sock.readableIP(connection);
-            Debug(s_logger) << "Accepted client connection from "
-                            << ip_hr << ".";
+            Debug(s_logger)
+                << "Accepted client connection from " << ip_hr << ".";
             {  // limit lifetime of mutex lock
                 MutexLock guard(thread_data.mutex);
                 thread_data.new_request = true;
@@ -774,8 +773,8 @@ void do_adhoc(const Environment &env) {
 
     if (realtime_checker.wasStarted()) {
         int res = realtime_checker.join();
-        Debug(s_logger) << "Realtime check thread ended with error code "
-                        << res << ".";
+        Debug(s_logger) << "Realtime check thread ended with error code " << res
+                        << ".";
     }
 
     s_winapi.WSACleanup();
@@ -983,26 +982,23 @@ void RunImmediate(const char *mode, int argc, char **argv) {
 
     s_config->parser.readSettings();
 
-    if (!*s_config->crash_debug) { // default level already LogLevel::debug
+    if (!*s_config->crash_debug) {  // default level already LogLevel::debug
         s_logger->setLevel(LogLevel::warning);
     }
 
-    const std::string logFileName = env.logDirectory() + "\\agent.log";
-    std::ofstream logFile(logFileName, std::ofstream::out | std::ofstream::app);
+    const std::string logFilename = env.logDirectory() + "\\agent.log";
 
-    if (logFile.fail()) {
-        Error(s_logger) << "Failed to open " << logFileName;
-        exit(1);
-    }
-    
-    if (strcmp(mode, "debug")) { // if not debugging, use log file
-        s_logger->setHandler(std::make_unique<StreamHandler>(logFile));
+    if (strcmp(mode, "debug")) {  // if not debugging, use log file
+        // TODO: Make logfile rotation parameters configurable
+        s_logger->setHandler(std::make_unique<RotatingFileHandler>(
+            logFilename, std::make_unique<FileRotationApi>(),
+            8388608 /* 8 MB */, 5));
     }
 
     if (Handler *handler = s_logger->getHandler()) {
         handler->setFormatter(make_unique<MillisecondsFormatter>());
     }
-    
+
     postProcessOnlyFrom();
     s_sections->loadDynamicSections();
     s_sections->emitConfigLoaded();

@@ -1,6 +1,7 @@
 1.2.8p26:
     Core & Setup:
     * 5038 FIX: Datasource programs: Prevent zombie processes in case of timeouts...
+    * 5204 FIX: Host rename: Fixed broken rename of hosts in rrdcached journal...
 
     Checks & Agents:
     * 5078 FIX: lnx_distro: Detects version and name of Check_MK Appliance correctly

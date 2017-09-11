@@ -916,7 +916,6 @@ def rename_host_file(basedir, oldname, newname):
 # This functions could be moved out of Check_MK.
 def omd_rename_host(oldname, newname):
     oldregex = oldname.replace(".", "[.]")
-    newregex = newname.replace(".", "[.]")
     actions = []
 
     # Temporarily stop processing of performance data
@@ -943,13 +942,13 @@ def omd_rename_host(oldname, newname):
     # entries of rrdcached journal
     dirpath = cmk.paths.omd_root + "/var/rrdcached/"
     if not os.system("sed -ri 's@/(rrd|perfdata)/%s/@/\\1/%s/@' "
-        "%s/var/rrdcached/rrd.journal.* 2>/dev/null" % ( oldregex, newregex, cmk.paths.omd_root)):
+        "%s/var/rrdcached/rrd.journal.* 2>/dev/null" % ( oldregex, newname, cmk.paths.omd_root)):
         actions.append("rrdcached")
 
     # Spoolfiles of NPCD
     if not os.system("sed -i 's/HOSTNAME::%s	/HOSTNAME::%s	/' "
                      "%s/var/pnp4nagios/perfdata.dump %s/var/pnp4nagios/spool/perfdata.* 2>/dev/null" % (
-                     oldregex, newregex, cmk.paths.omd_root, cmk.paths.omd_root)):
+                     oldregex, newname, cmk.paths.omd_root, cmk.paths.omd_root)):
         actions.append("pnpspool")
 
     if rrdcache_running:
@@ -966,7 +965,7 @@ s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: %(old)s;/\1 \2 STATE: %(new)s;/
 s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: %(old)s;/\1 \2ALERT: %(new)s;/
 s/PASSIVE (HOST|SERVICE) CHECK: %(old)s;/PASSIVE \1 CHECK: %(new)s;/
 s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
-''' % { "old" : oldregex, "new" : newregex }
+''' % { "old" : oldregex, "new" : newname }
     patterns = [
         "var/check_mk/core/history",
         "var/check_mk/core/archive/*",
@@ -986,7 +985,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
     # State retention (important for Downtimes, Acknowledgements, etc.)
     if monitoring_core == "nagios":
         if not os.system("sed -ri 's/^host_name=%s$/host_name=%s/' %s/var/nagios/retention.dat" % (
-                    oldregex, newregex, cmk.paths.omd_root)):
+                    oldregex, newname, cmk.paths.omd_root)):
             actions.append("retention")
 
     else: # CMC
@@ -999,7 +998,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
     # NagVis maps
     if not os.system("sed -i 's/^[[:space:]]*host_name=%s[[:space:]]*$/host_name=%s/' "
                      "%s/etc/nagvis/maps/*.cfg 2>/dev/null" % (
-                     oldregex, newregex, cmk.paths.omd_root)):
+                     oldregex, newname, cmk.paths.omd_root)):
         actions.append("nagvis")
 
     return actions

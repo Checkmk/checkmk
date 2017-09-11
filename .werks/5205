@@ -1,0 +1,30 @@
+Title: Host rename: Fixed broken renaming when new name uses dots
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.4.0p12
+Date: 1505123538
+Class: fix
+
+When using the host rename feature of WATO and setting a new name that
+contains a dot, for example myhost.domain, the rename failed to set
+a correct new name. Instead of setting the intended name, the name was
+set to "myhost[.]domain" in different places.
+
+The affected files are:
+
+<ul>
+<li>Nagios core: <tt>var/nagios/retention.dat</tt></li>
+<li>NagVis maps: <tt>etc/nagvis/maps/*.cfg</tt></li>
+<li>Monitoring history of all supported cores:<ul>
+  <li><tt>var/check_mk/core/history</tt></li>
+  <li><tt>var/check_mk/core/archive/*</tt></li>
+  <li><tt>var/nagios/nagios.log</tt></li>
+  <li><tt>var/nagios/archive/*</tt></li>
+</ul></li>
+</ul>
+
+In case you did such a rename action, you can stop your site and
+fix the wrong names in the mentioned files on your own, e.g. by using
+<tt>sed</tt>.

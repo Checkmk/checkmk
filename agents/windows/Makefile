@@ -117,9 +117,9 @@ directories:
 
 SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Configurable.cc Environment.cc stringutil.cc\
        types.cc wmiHelper.cc ListenSocket.cc PerfCounter.cc PerfCounterCommon.cc Thread.cc OutputProxy.cc\
-       Logger.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc EventLogVista.cc IEventLog.cc\
-       CrashHandler.cc SectionManager.cc Section.cc win_error.cc WinApi.cc sections/SectionPS.cc sections/SectionWMI.cc\
-       sections/SectionUptime.cc sections/SectionCheckMK.cc sections/SectionSystemtime.cc\
+       Logger.cc RotatingFileHandler.cc Crypto.cc OHMMonitor.cc EventLog.cc ExternalCmd.cc EventLogVista.cc\
+       IEventLog.cc CrashHandler.cc SectionManager.cc Section.cc win_error.cc WinApi.cc sections/SectionPS.cc\
+       sections/SectionWMI.cc sections/SectionUptime.cc sections/SectionCheckMK.cc sections/SectionSystemtime.cc\
        sections/SectionDF.cc sections/SectionServices.cc sections/SectionMem.cc sections/SectionFileinfo.cc\
        sections/SectionWinperf.cc sections/SectionLogwatch.cc sections/SectionGroup.cc\
        sections/SectionSkype.cc sections/SectionOHM.cc sections/SectionPerfcounter.cc\

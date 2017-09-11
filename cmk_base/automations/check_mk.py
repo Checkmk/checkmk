@@ -342,7 +342,6 @@ class AutomationRenameHosts(Automation):
     # This functions could be moved out of Check_MK.
     def _omd_rename_host(self, oldname, newname):
         oldregex = oldname.replace(".", "[.]")
-        newregex = newname.replace(".", "[.]")
         actions = []
 
         # Temporarily stop processing of performance data
@@ -358,7 +357,7 @@ class AutomationRenameHosts(Automation):
             # Fix pathnames in XML files
             self.rename_host_in_files(os.path.join(cmk.paths.omd_root, "var/pnp4nagios/perfdata", oldname, "*.xml"),
                                  "/perfdata/%s/" % oldregex,
-                                 "/perfdata/%s/" % newregex)
+                                 "/perfdata/%s/" % newname)
 
             # RRD files
             if self._rename_host_dir(cmk.paths.omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
@@ -371,17 +370,17 @@ class AutomationRenameHosts(Automation):
             # entries of rrdcached journal
             if self.rename_host_in_files(os.path.join(cmk.paths.omd_root, "var/rrdcached/rrd.journal.*"),
                                  "/(perfdata|rrd)/%s/" % oldregex,
-                                 "/\\1/%s/" % newregex,
+                                 "/\\1/%s/" % newname,
                                  extended_regex=True):
                 actions.append("rrdcached")
 
             # Spoolfiles of NPCD
             if self.rename_host_in_files("%s/var/pnp4nagios/perfdata.dump" % cmk.paths.omd_root,
                                  "HOSTNAME::%s    " % oldregex,
-                                 "HOSTNAME::%s    " % newregex) or \
+                                 "HOSTNAME::%s    " % newname) or \
                self.rename_host_in_files("%s/var/pnp4nagios/spool/perfdata.*" % cmk.paths.omd_root,
                                  "HOSTNAME::%s    " % oldregex,
-                                 "HOSTNAME::%s    " % newregex):
+                                 "HOSTNAME::%s    " % newname):
                 actions.append("pnpspool")
         finally:
             if rrdcache_running:
@@ -398,7 +397,7 @@ s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: %(old)s;/\1 \2 STATE: %(new)s;/
 s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: %(old)s;/\1 \2ALERT: %(new)s;/
 s/PASSIVE (HOST|SERVICE) CHECK: %(old)s;/PASSIVE \1 CHECK: %(new)s;/
 s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
-'''     % { "old" : oldregex, "new" : newregex }
+'''     % { "old" : oldregex, "new" : newname }
         path_patterns = [
             "var/check_mk/core/history",
             "var/check_mk/core/archive/*",
@@ -423,7 +422,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         if config.monitoring_core == "nagios":
             if self.rename_host_in_files("%s/var/nagios/retention.dat" % cmk.paths.omd_root,
                              "^host_name=%s$" % oldregex,
-                             "host_name=%s" % newregex,
+                             "host_name=%s" % newname,
                              extended_regex=True):
                 actions.append("retention")
 
@@ -437,7 +436,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         # NagVis maps
         if self.rename_host_in_files("%s/etc/nagvis/maps/*.cfg" % cmk.paths.omd_root,
                             "^[[:space:]]*host_name=%s[[:space:]]*$" % oldregex,
-                            "host_name=%s" % newregex,
+                            "host_name=%s" % newname,
                             extended_regex=True):
             actions.append("nagvis")
 

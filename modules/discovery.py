@@ -176,7 +176,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
 
         # Compute current state of new and existing checks
         services = get_host_services(hostname, use_caches=use_caches,
-                                        do_snmp_scan=do_snmp_scan, on_error=on_error)
+                                     do_snmp_scan=do_snmp_scan, on_error=on_error)
 
         # Create new list of checks
         new_items = {}
@@ -635,31 +635,38 @@ def is_ipaddress(address):
 
 
 # gather auto_discovered check_types for this host
-def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
-    check_types = []
+def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan, use_caches):
+    check_types = set()
     if is_snmp_host(hostname):
-
         # May we do an SNMP scan?
         if do_snmp_scan:
             try:
-                check_types = snmp_scan(hostname, ipaddress, on_error)
+                check_types.update(snmp_scan(hostname, ipaddress, on_error))
             except Exception, e:
                 if on_error == "raise":
                     raise
                 elif on_error == "warn":
                     sys.stderr.write("SNMP scan failed: %s" % e)
 
-        # Otherwise use all check types that we already have discovered
-        # previously
+        # Otherwise we gather all check types from autochecks and cached files.
         else:
+            snmp_check_types = set(discoverable_check_types('snmp'))
             for check_type, _unused_item, _unused_params in read_autochecks_of(hostname):
-                if check_type not in check_types and check_uses_snmp(check_type):
-                    check_types.append(check_type)
+                if check_type in snmp_check_types:
+                    check_types.add(check_type)
+
+            if use_caches and os.path.isdir(cmk.paths.tcp_cache_dir):
+                for cachefile in os.listdir(cmk.paths.tcp_cache_dir):
+                    if not cachefile.startswith("%s." % hostname):
+                        continue
+                    check_type = cachefile.split("%s." % hostname)[-1]
+                    if check_type in snmp_check_types:
+                        check_types.add(check_type)
 
     if is_tcp_host(hostname) or has_piggyback_info(hostname):
-        check_types += discoverable_check_types('tcp')
+        check_types.update(discoverable_check_types('tcp'))
 
-    return check_types
+    return list(check_types)
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -713,7 +720,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
 
     # Check types not specified (via --checks=)? Determine automatically
     if not check_types:
-        check_types = gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan)
+        check_types = gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan, use_caches)
 
     return services + discover_services_impl(hostname, check_types, use_caches, on_error, ipaddress)
 
@@ -988,7 +995,6 @@ def get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan, on_er
             services[(check_type, item)] = ("vanished", paramstring)
         else:
             services[(check_type, item)] = ("old", paramstring)
-
     return services
 
 # Do the actual work for a non-cluster host or node
@@ -1055,8 +1061,7 @@ def merge_manual_services(services, hostname, on_error):
                 continue # ignore
 
         if service_ignored(hostname, check_type, descr):
-            new_source = "ignored"
-            services[(check_type, item)] = (new_source, paramstring)
+            services[(check_type, item)] = ("ignored", paramstring)
 
     return services
 
@@ -1095,6 +1100,7 @@ def get_cluster_services(hostname, use_caches, with_snmp_scan, on_error):
 # all services if possible
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     services = get_host_services(hostname, use_caches, do_snmp_scan, on_error)
+
     if is_cluster(hostname):
         ipaddress = None
     else:

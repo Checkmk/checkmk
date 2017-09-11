@@ -89,10 +89,12 @@
 # C:\ NTFS 41838588 21776048 20062540 53% C:\
 # C:\Program Files\Vision Solutions\Double-Take\Service\MountDir\usauhtest0010_c061b170-ad3f-473f-92ce-088c97fce98e_C\ NTFS 41835516 11895180 29940336 29% C:\Program Files\Vision Solutions\Double-Take\Service\MountDir\usauhtest0010_c061b170-ad3f-473f-92ce-088c97fce98e_C\
 
+inventory_df_rules = []
 
 def parse_df(info):
 
     def parse_blocks_subsection(blocks_subsection):
+        mp_to_volume = {}
         df_blocks = []
         btrfs_devices = set()
         for line in blocks_subsection:
@@ -139,7 +141,9 @@ def parse_df(info):
             reserved_mb = size_mb - avail_mb - used_mb # reserved for root
             df_blocks.append((mountpoint, size_mb, avail_mb, reserved_mb))
 
-        return df_blocks
+            mp_to_volume[mountpoint] = line[0]
+
+        return df_blocks, mp_to_volume
 
     def parse_inodes_subsection(inodes_subsection):
         df_inodes = []
@@ -178,22 +182,44 @@ def parse_df(info):
 
 
 def inventory_df(parsed):
-    df_blocks, _ = parsed
+
+    def is_mountpoint(inventory_entry):
+        return "patterns" not in inventory_entry[1]
+
+    inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
+    include_volume_name = inventory_options.get("include_volume_name", False)
+    (df_blocks, mp_to_volume), _ = parsed
+
     mplist = []
     for line in df_blocks:
 
         mountpoint = line[0]
         if mountpoint in inventory_df_exclude_mountpoints:
             continue # exclude this mount point (/tmp, /proc, whatever user wants)
-
         mplist.append(mountpoint)
 
-    return df_inventory(mplist)
+
+    if include_volume_name:
+        inventory = []
+        for entry in df_inventory(mplist):
+            if is_mountpoint(entry):
+                mountpoint, params = entry
+                item = "%s %s" % (mp_to_volume[mountpoint], mountpoint)
+                inventory.append((item, params))
+            else:
+                inventory.append(entry)
+        return inventory
+    else:
+        return df_inventory(mplist)
 
 
 def check_df(item, params, parsed):
-    df_blocks, df_inodes = parsed
-    return df_check_filesystem_list(item, params, df_blocks, df_inodes)
+    (df_blocks, mp_to_volume), df_inodes = parsed
+    if "patterns" in params or item in mp_to_volume:
+        return df_check_filesystem_list(item, params, df_blocks, df_inodes)
+    else:
+        mountpoint = { ("%s %s" % (mp_to_volume[mp], mp)) : mp for mp in mp_to_volume }[item]
+        return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
 
 
 check_info['df'] = {

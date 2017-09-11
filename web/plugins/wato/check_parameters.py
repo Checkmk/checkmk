@@ -1505,6 +1505,20 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'dict',
 )
 
+register_rule(group + '/' + subgroup_inventory,
+    varname     = "inventory_df_rules",
+    title       = _("Include Volume name in Filesystem Checks"),
+    valuespec   = Dictionary(
+        elements = [
+            ("include_volume_name", Checkbox(
+                title = _("Include Volume name in item")
+                )),
+            ],
+        optional_keys = []
+        ),
+    match = "dict",
+)
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |

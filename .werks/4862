@@ -1,0 +1,11 @@
+Title: MSSQL: detect instances on non-standard TCP ports
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505135694
+Class: feature
+
+The MSSQL plugin detects SQL instances running on non-standard TCP ports now.
+

@@ -147,6 +147,11 @@ For Each rk In regkeys
             registry.GetStringValue HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\" & _
                                           instance_name & "\Cluster", "ClusterName", cluster_name
 
+            ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\SuperSocketNetLib\TCP\IPAll
+            registry.GetStringValue HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\" & _
+                                          instance_name & "\MSSQLServer\SuperSocketNetLib\TCP\IPAll", _
+                                          "tcpPort", tcpport
+
             If IsNull(cluster_name) Then
                 cluster_name = ""
 
@@ -154,14 +159,22 @@ For Each rk In regkeys
                 If instance_id = "MSSQLSERVER" Then
                     sources.add instance_id, "(local)"
                 Else
-                    sources.add instance_id, hostname & "\" & instance_id
+                    If isNull(tcpport) Then
+                        sources.add instance_id, hostname & "\" & instance_id
+                    Else
+                        sources.add instance_id, hostname & "," & tcpport
+                    End If
                 End If
             Else
                 ' In case the instance name is "MSSQLSERVER" always use the virtual server name
                 If instance_id = "MSSQLSERVER" Then
                     sources.add instance_id, cluster_name
                 Else
-                    sources.add instance_id, cluster_name & "\" & instance_id
+                    If isNull(tcpport) Then
+                        sources.add instance_id, cluster_name & "\" & instance_id
+                    Else
+                        sources.add instance_id, cluster_name & "," & tcpport
+                    End If
                 End If
             End If
 

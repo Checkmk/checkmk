@@ -1,0 +1,10 @@
+Title: jolokia_metrics: Fix failing parse function for MBeans containing ":"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p12
+Date: 1505141030
+Class: fix
+
+Thanks to Bernhard Lichtinger for the patch!

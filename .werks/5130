@@ -1,0 +1,11 @@
+Title: cmcii: New check to monitor Rittal CMC-II devices.
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505127544
+Class: feature
+
+This check monitors the overall status and configuration of Rittal CMC-II
+devices as well as the status of attached units.

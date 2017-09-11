@@ -1,0 +1,14 @@
+title: Rittal CMC-II Units: Status PSM
+agents: snmp
+catalog: hw/environment/rittal
+license: GPL
+distribution: check_mk
+description:
+ This check monitors Status PSM sensors connected to 
+ Rittal CMC-II devices.
+
+item:
+ The description of the connected sensor.
+
+inventory:
+ One item per detected sensor.

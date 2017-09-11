@@ -1,0 +1,238 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_device_status(status):
+    status_map = {
+        '1': 'failed',
+        '2': 'OK'
+    }
+
+    tc_status, units = status
+    parsed = {
+        'status': status_map.get(tc_status),
+        'connected_units': int(units),
+    }
+
+    return parsed
+
+
+def parse_device_config(config):
+    temp_unit = {
+        '1': 'celsius',
+        '2': 'fahrenheit',
+    }
+
+    beeper_map = {
+        '1': 'on',
+        '2': 'off',
+    }
+
+    acknowledge_map = {
+        '1': 'disabled',
+        '2': 'enabled',
+    }
+
+    alarm_relay_map = {
+        '1': 'pick up',
+        '2': 'release',
+        '3': 'off',
+    }
+
+    web_access_map = {
+        '1': 'view only',
+        '2': 'full',
+        '3': 'disables',
+    }
+
+    unit, beeper, acknowledge, relay, web_access = config
+
+    parsed = {
+        'temp_unit': temp_unit.get(unit),
+        'beeper': beeper_map.get(beeper),
+        'acknowledge': acknowledge_map.get(acknowledge),
+        'alarm_relay_logic': alarm_relay_map.get(relay),
+        'web_access': web_access_map.get(web_access),
+    }
+
+    return parsed
+
+
+def parse_port_status(status):
+    type_map = {
+        '1': 'not available',
+        '2': 'IO',
+        '3': 'Access',
+        '4': 'Climate',
+        '5': 'FCS',
+        '6': 'RTT',
+        '7': 'RTC',
+        '8': 'PSM',
+        '9': 'PSM8',
+        '10': 'PSM metered',
+        '11': 'IO wireless',
+        '12': 'PSM6 Schuko',
+        '13': 'PSM6C19',
+        '14': 'Fuel Cell',
+        '15': 'DRC',
+        '16': 'TE cooler',
+        '17': 'PSM32 metered',
+        '18': 'PSM8x8',
+        '19': 'PSM6x6 Schuko',
+        '20': 'PSM6x6C19',
+    }
+
+    status_map = {
+        '1': 'OK',
+        '2': 'error',
+        '3': 'configuration changed',
+        '4': 'quit from sensor unit',
+        '5': 'timeout',
+        '6': 'unit detected',
+        '7': 'not available',
+        '8': 'supply voltage low',
+    }
+
+    device_type, description, serial_number, device_status= status
+
+    parsed = {
+        'type': type_map.get(device_type),
+        'status': status_map.get(device_status),
+        'serial': serial_number,
+    }
+
+    if parsed['status'] == 'not available':
+        return None
+
+    return description, parsed
+
+
+def parse_entry_sensor(sensor):
+    # only non generic sensors that are treated specially
+    # are listed here
+    type_map = {
+        '4': 'Access',
+        '10': 'Temperature',
+        '31': 'Status PSM',
+        '32': 'Position PSM',
+    }
+
+    status_map = {
+        '1': 'not available',
+        '2': 'lost',
+        '3': 'changed',
+        '4': 'OK',
+        '5': 'off',
+        '6': 'on',
+        '7': 'warning',
+        '8': 'too low',
+        '9': 'too high',
+        '10': 'error',
+    }
+
+    index, sensor_type, description, status, value, high, low, warn = sensor
+
+    parsed = {
+        'status': status_map.get(status),
+        'value': int(value),
+        'high': int(high),
+        'low': int(low),
+        'warn': int(warn),
+    }
+
+    if parsed['status'] == 'not available':
+        return None
+
+    sensor_type = type_map.get(sensor_type, 'generic input')
+    key = sensor_type.lower().replace(' ', '_')
+    if description:
+        name = '%s Input %s' %(description, index)
+    else:
+        name = 'Input %s' % index
+
+    return key, name, parsed
+
+
+def parse_output_sensor(sensor):
+    # only non generic sensors that are treated specially
+    # are listed here
+    type_map = {
+        '18': 'PSM On/Off',
+    }
+
+    status_map = {
+        '1': 'not available',
+        '2': 'lost',
+        '3': 'changed',
+        '4': 'OK',
+        '5': 'off',
+        '6': 'on',
+        '7': 'set off',
+        '8': 'set on',
+    }
+
+    command_map = {
+        '1': 'off',
+        '2': 'on',
+        '3': 'lock',
+        '4': 'unlock',
+        '5': 'unlock delay',
+    }
+
+    config_map = {
+        '1': 'disable remote control',
+        '2': 'enable remote control',
+    }
+
+    timeout_map = {
+        '1': 'stay',
+        '2': 'off',
+        '3': 'on',
+    }
+
+    (index, sensor_type, description, status, value, command, config,
+     delay, timeout_action) = sensor
+
+    parsed = {
+        'status': status_map.get(status),
+        'value': int(value),
+        'command': command_map.get(command),
+        'config': config_map.get(config),
+        'delay': int(delay),
+        'timeout_action': timeout_map.get(timeout_action),
+    }
+
+    if parsed['status'] == 'not available':
+        return None
+
+    sensor_type = type_map.get(sensor_type, 'generic output')
+    key = sensor_type.lower().replace(' ', '_')
+    if description:
+        name = '%s Output %s' % (description , index)
+    else:
+        name = 'Output %s' % (index)
+
+    return key, name, parsed

@@ -1571,7 +1571,7 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
                                                             graph_render_options)
 
     try:
-        graph_recipes = create_graph_recipes_from_specification(graph_identification)
+        graph_recipes = graph_identification_types.create_graph_recipes(graph_identification)
         if graph_recipes:
             graph_recipe = graph_recipes[0]
         else:

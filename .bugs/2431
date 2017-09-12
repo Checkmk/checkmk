@@ -1,8 +1,11 @@
 Title: Duplicate for git bug 2430 for 1.4.0
 Component: multisite
-State: open
+Class: bug
+State: closed
 Date: 2017-08-10 13:47:36
 Targetversion: 1.4.0
-Class: bug
 
 same issue as git bug #2430. 1.4.0 is also affected here.
+
+2017-09-12 16:51:43: changed state open -> closed
+Duplicate of 2430 (we don't need separate reports for different versions)

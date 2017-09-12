@@ -1,4 +1,4 @@
-Title: cifsmounts, nfsmounts: Fixed wrong reported error message if user has not right permissions on mount point
+Title: cifsmounts: Fixed wrong reported error message if user has not right permissions on mount point
 Level: 1
 Component: checks
 Compatible: compat

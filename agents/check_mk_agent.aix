@@ -138,25 +138,21 @@ if type stat >/dev/null 2>&1 ; then
     echo '<<<nfsmounts>>>'
     mount | grep ' nfs' | awk '{print $3;}' | \
         while read MP
-	do
-        if [ ! -r $MP ]; then
-            echo "$MP Permission denied"
-        else
-	        waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
-		    echo "$MP hanging 0 0 0 0"
-        fi
-	done
+    do
+        waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
+            echo "$MP hanging 0 0 0 0"
+    done
     echo '<<<cifsmounts>>>'
     mount | grep ' cifs' | awk '{print $3;}' | \
         while read MP
-	do
+    do
         if [ ! -r $MP ]; then
             echo "$MP Permission denied"
         else
-	        waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
-		    echo "$MP hanging 0 0 0 0"
+            waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
+                echo "$MP hanging 0 0 0 0"
         fi
-	done
+    done
 fi
 
 echo '<<<ps>>>'

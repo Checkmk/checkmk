@@ -1,0 +1,11 @@
+Title: Service discovery: Find SNMP checks of not yet monitored type when using cached data
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1505140261
+
+

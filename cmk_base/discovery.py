@@ -207,7 +207,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
 
         # Compute current state of new and existing checks
         services = _get_host_services(hostname, use_caches=use_caches,
-                                        do_snmp_scan=do_snmp_scan, on_error=on_error)
+                                      do_snmp_scan=do_snmp_scan, on_error=on_error)
 
         # Create new list of checks
         new_items = {}
@@ -672,29 +672,37 @@ def _in_keepalive_mode():
 #   '----------------------------------------------------------------------'
 
 # gather auto_discovered check_types for this host
-def _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
-    check_types = []
+def _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan, use_caches):
+    check_types = set()
     if config.is_snmp_host(hostname):
         # May we do an SNMP scan?
         if do_snmp_scan:
             try:
-                check_types = snmp_scan(hostname, ipaddress, on_error)
+                check_types.update(snmp_scan(hostname, ipaddress, on_error))
             except Exception, e:
                 if on_error == "raise":
                     raise
                 elif on_error == "warn":
                     console.error("SNMP scan failed: %s" % e)
 
+        # Otherwise we gather all check types from autochecks and cached files.
         else:
-            # Otherwise use all check types that we already have discovered
-            # previously
+            snmp_check_types = set(checks.discoverable_snmp_checks())
             for check_type, _unused_item, _unused_params in read_autochecks_of(hostname):
-                if check_type not in check_types and checks.is_snmp_check(check_type):
-                    check_types.append(check_type)
+                if check_type in snmp_check_types:
+                    check_types.add(check_type)
+
+            if use_caches and os.path.isdir(cmk.paths.tcp_cache_dir):
+                for cachefile in os.listdir(cmk.paths.tcp_cache_dir):
+                    if not cachefile.startswith("%s." % hostname):
+                        continue
+                    check_type = cachefile.split("%s." % hostname)[-1]
+                    if check_type in snmp_check_types:
+                        check_types.add(check_type)
 
     if config.is_tcp_host(hostname) or piggyback.has_piggyback_info(hostname):
-        check_types += checks.discoverable_tcp_checks()
-    return check_types
+        check_types.update(checks.discoverable_tcp_checks())
+    return list(check_types)
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -747,7 +755,7 @@ def _discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error
 
     # Check types not specified (via --checks=)? Determine automatically
     if not check_types:
-        check_types = _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan)
+        check_types = _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan, use_caches)
 
     return services + _discover_services_impl(hostname, check_types, use_caches, on_error, ipaddress)
 
@@ -1085,8 +1093,7 @@ def _merge_manual_services(services, hostname, on_error):
                 continue # ignore
 
         if config.service_ignored(hostname, check_type, descr):
-            new_source = "ignored"
-            services[(check_type, item)] = (new_source, paramstring)
+            services[(check_type, item)] = ("ignored", paramstring)
 
     return services
 

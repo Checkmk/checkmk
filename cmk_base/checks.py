@@ -499,11 +499,17 @@ def is_tcp_check(check_name):
 
 def discoverable_tcp_checks():
     types = []
-
     for check_type, check in check_info.items():
         if is_tcp_check(check_type) and check["inventory_function"]:
             types.append(check_type)
+    return sorted(types)
 
+
+def discoverable_snmp_checks():
+    types = []
+    for check_type, check in check_info.items():
+        if is_snmp_check(check_type) and check["inventory_function"]:
+            types.append(check_type)
     return sorted(types)
 
 

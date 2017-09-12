@@ -4529,6 +4529,24 @@ def ListOfCAs(**args):
     )
 
 
+class SiteChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        import config
+        kwargs.setdefault("title", _("Site"))
+        kwargs.setdefault("help", _("Specify the site of your choice"))
+        kwargs.setdefault("default_value", config.default_site())
+        kwargs.setdefault("invalid_choice_error", _("The configured site is not known to this site."))
+
+        kwargs.update({
+            "choices":              config.site_choices,
+            "invalid_choice":       "complain",
+            "invalid_choice_title": _("Unknown site (%s)"),
+        })
+
+        super(SiteChoice, self).__init__(**kwargs)
+
+
+
 class TimeperiodSelection(ElementSelection):
     def __init__(self, **kwargs):
         ElementSelection.__init__(self, **kwargs)

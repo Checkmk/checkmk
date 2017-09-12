@@ -4176,13 +4176,10 @@ class SiteAttribute(ValueSpecAttribute):
     def __init__(self):
         # Default is is the local one, if one exists or
         # no one if there is no local site
-        ValueSpecAttribute.__init__(self, "site", DropdownChoice(
+        ValueSpecAttribute.__init__(self, "site", SiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
             default_value = default_site(),
-            choices = site_choices,
-            invalid_choice = "complain",
-            invalid_choice_title = _("Unknown site (%s)"),
             invalid_choice_error = _("The configured site is not known to this site. In case you "
                                      "are configuring in a distributed slave, this may be a host "
                                      "monitored by another site. If you want to modify this "

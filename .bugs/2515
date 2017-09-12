@@ -1,0 +1,8 @@
+Title: folder for webapi is missing in local structure
+Component: wato
+State: open
+Date: 2017-09-12 17:23:29
+Targetversion: 1.4.0
+Class: nastiness
+
+The mentioned folder must be created manually.

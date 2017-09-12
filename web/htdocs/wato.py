@@ -2728,11 +2728,15 @@ def ajax_diag_host():
 #   | editing the current services of a host.                              |
 #   '----------------------------------------------------------------------'
 
+
 class ModeDiscovery(WatoMode):
-    SERVICE_ADD     = "add"
-    SERVICE_REMOVE  = "remove"
-    SERVICE_DISABLE = "disable"
-    SERVICE_ENABLE  = "enable"
+    # FIXME active checks are not listed below disabled services
+    SERVICE_UNDECIDED = "new"
+    SERVICE_VANISHED = "vanished"
+    SERVICE_MONITORED = "old"
+    SERVICE_IGNORED = "ignored"
+    SERVICE_REMOVED = "removed"
+
 
     def __init__(self):
         super(ModeDiscovery, self).__init__()
@@ -2746,26 +2750,32 @@ class ModeDiscovery(WatoMode):
             raise MKGeneralException(_("You called this page with an invalid host name."))
 
         self._host.need_permission("read")
-
+        self._do_scan = html.has_var("_scan")
+        self._already_scanned = False
         if config.user.may("wato.services"):
-            self._cache_options   = [ '@scan' ] if html.var("_scan") else [ '@noscan' ]
-
             if html.has_var("_show_checkboxes"):
                 config.user.save_file("discovery_checkboxes", html.var("_show_checkboxes") == "1")
-
+            cache_options = ["@scan"] if self._do_scan else ["@noscan"]
+            self._show_checkboxes = config.user.load_file("discovery_checkboxes", False)
         else:
-            self._cache_options   = [ '@noscan' ]
-
-        self._show_checkboxes = config.user.may("wato.services") \
-                                and config.user.load_file("discovery_checkboxes", False)
+            cache_options = ["@noscan"]
+            self._show_checkboxes = False
 
         if html.has_var("_hide_parameters"):
             config.user.save_file("parameter_column", html.var("_hide_parameters") == "no")
 
+        # Read current check configuration
+        if html.var("ignoreerrors"):
+            error_options = []
+        else:
+            error_options = ["@raiseerrors"]
+        self._options = cache_options + error_options + [self._host_name]
+        self._fixall = html.var("_fixall")
+
 
     def title(self):
         title = _("Services of host %s") % self._host_name
-        if html.var("_scan"):
+        if self._do_scan:
             title += _(" (live scan)")
         else:
             title += _(" (might be cached data)")
@@ -2774,87 +2784,161 @@ class ModeDiscovery(WatoMode):
 
     def buttons(self):
         global_buttons()
-
         html.context_button(_("Folder"),
-            folder_preserving_link([("mode", "folder")]), "back")
-
+             folder_preserving_link([("mode", "folder")]), "back")
         host_status_button(self._host_name, "host")
-        html.context_button(_("Properties"), folder_preserving_link([("mode", "edit_host"),
-                                                    ("host", self._host_name)]), "edit")
-
+        html.context_button(_("Properties"), folder_preserving_link([
+                                                ("mode", "edit_host"),
+                                                ("host", self._host_name)]), "edit")
         if config.user.may('wato.rulesets'):
-            html.context_button(_("Parameters"),
-                                folder_preserving_link([("mode", "object_parameters"),
-                                                        ("host", self._host_name)]), "rulesets")
-
+            html.context_button(_("Parameters"), folder_preserving_link([
+                                                    ("mode", "object_parameters"),
+                                                    ("host", self._host_name)]), "rulesets")
             if self._host.is_cluster():
                 html.context_button(_("Clustered Services"),
-                  folder_preserving_link([("mode", "edit_ruleset"),
-                                          ("varname", "clustered_services")]), "rulesets")
-
+                     folder_preserving_link([("mode", "edit_ruleset"),
+                                             ("varname", "clustered_services")]), "rulesets")
         if not self._host.is_cluster():
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),
-                  folder_preserving_link([("mode", "diag_host"),
-                                          ("host", self._host_name)]), "diagnose")
-
+                 folder_preserving_link([("mode", "diag_host"),
+                                         ("host", self._host_name)]), "diagnose")
 
     def action(self):
-        if html.check_transaction():
-            return self._do_discovery()
-
-
-    def _do_discovery(self):
+        if not html.check_transaction():
+            return
         host     = self._host
         hostname = self._host.name()
-
         config.user.need_permission("wato.services")
-
         if html.var("_refresh"):
-            #message = self._refresh_discovery()
-            self._refresh_discovery()
-
+            self._automatic_refresh_discovery(hostname)
         else:
-            check_table = sorted(check_mk_automation(host.site_id(), "try-inventory",
-                                               self._cache_options + [hostname]))
-
-            checks, to_disable, to_enable = {}, [], []
-            for check_source, check_type, checkgroup, item, paramstring, params, \
-                descr, state, output, perfdata in check_table:
-
-                state = self._get_service_state(check_source, check_type, item)
-
-                if state == ModeDiscovery.SERVICE_ADD:
-                    checks[(check_type, item)] = paramstring
-
-                elif state == ModeDiscovery.SERVICE_DISABLE:
-                    to_disable.append(descr)
-
-                elif state == ModeDiscovery.SERVICE_ENABLE:
-                    to_enable.append(descr)
-                    checks[(check_type, item)] = paramstring
-
-                elif state in [ ModeDiscovery.SERVICE_ENABLE, ModeDiscovery.SERVICE_REMOVE ]:
-                    to_enable.append(descr)
-                    if state == ModeDiscovery.SERVICE_ENABLE:
-                        checks[(check_type, item)] = paramstring
-
-            self._save_services(checks)
-            self._save_host_service_enable_disable_rules(to_enable, to_disable)
-
+            self._do_discovery(host)
         if not host.locked():
-            host.clear_discovery_failed()
+            self._host.clear_discovery_failed()
 
-        #return "folder", message
-        return
 
+    def _automatic_refresh_discovery(self, hostname):
+        counts, failed_hosts = check_mk_automation(self._host.site_id(), "inventory",
+                                                   ["@scan", "refresh", hostname])
+        count_added, count_removed, count_kept, count_new = counts[hostname]
+        message = _("Refreshed check configuration of host '%s' with %d services") % \
+                    (hostname, count_added)
+        add_service_change(self._host, "refresh-autochecks", message)
+        return message
+
+
+    def _do_discovery(self, host):
+        check_table = self._get_check_table()
+        services_to_save, remove_disabled_rule, add_disabled_rule = {}, [], []
+        apply_changes = False
+        for table_source, check_type, checkgroup, item, paramstring, params, \
+            descr, state, output, perfdata in check_table:
+
+            table_target = self._get_table_target(table_source, check_type, item)
+            if not apply_changes and table_source != table_target:
+                apply_changes = True
+
+            if table_source == self.SERVICE_UNDECIDED:
+                if table_target == self.SERVICE_MONITORED:
+                    services_to_save[(check_type, item)] = paramstring
+                elif table_target == self.SERVICE_IGNORED:
+                    add_disabled_rule.append(descr)
+
+            elif table_source == self.SERVICE_VANISHED:
+                if table_target != self.SERVICE_REMOVED:
+                    services_to_save[(check_type, item)] = paramstring
+                if table_target == self.SERVICE_IGNORED:
+                    add_disabled_rule.append(descr)
+
+            elif table_source == self.SERVICE_MONITORED:
+                if table_target in [self.SERVICE_MONITORED, self.SERVICE_IGNORED]:
+                    services_to_save[(check_type, item)] = paramstring
+                if table_target == self.SERVICE_IGNORED:
+                    add_disabled_rule.append(descr)
+
+            elif table_source == self.SERVICE_IGNORED:
+                if table_target in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED,
+                                    self.SERVICE_VANISHED]:
+                    remove_disabled_rule.append(descr)
+                if table_target in [self.SERVICE_MONITORED, self.SERVICE_IGNORED]:
+                    services_to_save[(check_type, item)] = paramstring
+                if table_target == self.SERVICE_IGNORED:
+                    add_disabled_rule.append(descr)
+
+            elif table_source in ["clustered_new", "clustered_old"]:
+                services_to_save[(check_type, item)] = paramstring
+
+        if apply_changes:
+            self._save_services(services_to_save)
+            if remove_disabled_rule or add_disabled_rule:
+                self._save_host_service_enable_disable_rules(remove_disabled_rule, add_disabled_rule)
+
+
+    def page(self):
+        try:
+            check_table = self._get_check_table()
+        except Exception, e:
+            log_exception()
+            if config.debug:
+                raise
+            retry_link = html.render_a(
+                content=_("Retry discovery while ignoring this error (Result might be incomplete)."),
+                href=html.makeuri([("ignoreerrors", "1"), ("_scan", "")])
+            )
+            html.show_warning("<b>%s</b>: %s<br><br>%s" %
+                              (_("Service discovery failed for this host"), e, retry_link))
+            return
+
+        map_icons = {self.SERVICE_UNDECIDED: "undecided",
+                     self.SERVICE_MONITORED: "monitored",
+                     self.SERVICE_IGNORED: "disabled"}
+
+        html.begin_form("checks_action", method = "POST")
+        self._show_action_buttons(check_table)
+        html.hidden_fields()
+        html.end_form()
+
+        by_group = {}
+        for entry in check_table:
+            by_group.setdefault(entry[0], [])
+            by_group[entry[0]].append(entry)
+
+        for table_group, show_bulk_actions, header, help_text in self._ordered_table_groups():
+            checks = by_group.get(table_group, [])
+            if not checks:
+                continue
+
+            html.begin_form("checks_%s" % table_group, method = "POST")
+            table.begin(css="data", searchable=False, limit=None, sortable=False)
+            if table_group in map_icons:
+                group_header = "%s %s" % (html.render_icon("%s_service" % map_icons[table_group]), header)
+            else:
+                group_header = header
+            table.groupheader(group_header + html.render_help(help_text))
+
+            if show_bulk_actions and len(checks) > 10:
+                self._bulk_actions(table_group, collect_headers=False)
+
+            for check in sorted(checks, key=lambda c: c[6].lower()):
+                self._check_row(check, show_bulk_actions)
+
+            if show_bulk_actions:
+                self._bulk_actions(table_group, collect_headers="finished")
+
+            table.end()
+            html.hidden_fields()
+            html.end_form()
+
+    #   .--action helper-------------------------------------------------------.
 
     def _save_services(self, checks):
-        check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()], checks)
+        host = self._host
+        hostname = host.name()
+        check_mk_automation(host.site_id(), "set-autochecks", [hostname], checks)
         message = _("Saved check configuration of host '%s' with %d services") % \
-                    (self._host.name(), len(checks))
-
-        add_service_change(self._host, "set-autochecks", message)
+                    (hostname, len(checks))
+        add_service_change(host, "set-autochecks", message)
 
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
@@ -2875,7 +2959,7 @@ class ModeDiscovery(WatoMode):
             return
 
         def _compile_patterns(services):
-            return [ ("%s$" % s.replace("\\", "\\\\")) for s in services ]
+            return ["%s$" % s.replace("\\", "\\\\") for s in services]
 
         rulesets = AllRulesets()
         rulesets.load()
@@ -2899,7 +2983,6 @@ class ModeDiscovery(WatoMode):
 
         service_patterns = _compile_patterns(services)
         self._update_rule_of_host(ruleset, service_patterns, value=value)
-
         rulesets.save_folder(self._host.folder())
 
 
@@ -2915,11 +2998,10 @@ class ModeDiscovery(WatoMode):
 
     def _update_rule_of_host(self, ruleset, service_patterns, value):
         folder = self._host.folder()
-
         rule = self._get_rule_of_host(ruleset, value)
+
         if rule:
             rule.item_list = sorted(list(set(service_patterns).union(rule.item_list)))
-
             if not rule.item_list:
                 ruleset.delete_rule(rule)
 
@@ -2937,191 +3019,312 @@ class ModeDiscovery(WatoMode):
         return None
 
 
-    def _get_service_state(self, check_source, check_type, item):
-        def _is_checked(check_source, check_type, item):
-            if not self._show_checkboxes:
-                return True
+    def _get_table_target(self, table_source, check_type, item):
+        if self._fixall:
+            if table_source == self.SERVICE_UNDECIDED:
+                return self.SERVICE_MONITORED
+            elif table_source == self.SERVICE_VANISHED:
+                return self.SERVICE_REMOVED
+        else:
+            bulk_target = None
+            for target in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED,
+                           self.SERVICE_IGNORED, self.SERVICE_REMOVED]:
+                if html.has_var("_bulk_%s_%s" % (table_source, target)):
+                    bulk_target = target
+                    break
+            checkbox_var_value = html.var(self._checkbox_name(check_type, item))
+            if bulk_target and (checkbox_var_value == "on" or not self._show_checkboxes):
+                return bulk_target
+            elif checkbox_var_value:
+                return checkbox_var_value
+            else:
+                return table_source
 
-            return html.get_checkbox(self._checkbox_name(check_source, check_type, item))
+    #.
+    #   .--page helper---------------------------------------------------------.
 
-        is_checked = _is_checked(check_source, check_type, item)
-
-        # In case of single object actions the checkboxes are not respected, but the identity
-        # of the services in the action url is constructed like the values produced by checkboxes.
-        is_target_object = html.has_var(self._checkbox_name(check_source, check_type, item))
-
-        if check_source == "new":
-            if html.has_var("_fixall"):
-                return ModeDiscovery.SERVICE_ADD # Fixall does not care about the checkboxes
-
-            if html.has_var("_bulk_new_to_old") and is_checked:
-                return ModeDiscovery.SERVICE_ADD
-
-            if html.has_var("_new_to_old") and is_target_object:
-                return ModeDiscovery.SERVICE_ADD
-
-            if html.has_var("_bulk_new_to_disabled") and is_checked:
-                return ModeDiscovery.SERVICE_DISABLE
-
-            if html.has_var("_new_to_disabled") and is_target_object:
-                return ModeDiscovery.SERVICE_DISABLE
-
-            return ModeDiscovery.SERVICE_REMOVE
-
-        elif check_source == "vanished":
-            if html.has_var("_fixall"):
-                return ModeDiscovery.SERVICE_REMOVE # Fixall does not care about the checkboxes
-
-            if html.has_var("_bulk_vanished_to_new") and is_checked:
-                return ModeDiscovery.SERVICE_REMOVE
-
-            if html.has_var("_vanished_to_new") and is_target_object:
-                return ModeDiscovery.SERVICE_REMOVE
-
-            if html.has_var("_bulk_vanished_to_disabled") and is_checked:
-                return ModeDiscovery.SERVICE_DISABLE
-
-            if html.has_var("_old_vanished_disabled") and is_target_object:
-                return ModeDiscovery.SERVICE_DISABLE
-
-            return ModeDiscovery.SERVICE_ADD
-
-        elif check_source == "old":
-            if html.has_var("_bulk_old_to_new") and is_checked:
-                return ModeDiscovery.SERVICE_REMOVE
-
-            if html.has_var("_old_to_new") and is_target_object:
-                return ModeDiscovery.SERVICE_REMOVE
-
-            if html.has_var("_bulk_old_to_disabled") and is_checked:
-                return ModeDiscovery.SERVICE_DISABLE
-
-            if html.has_var("_old_to_disabled") and is_target_object:
-                return ModeDiscovery.SERVICE_DISABLE
-
-            return ModeDiscovery.SERVICE_ADD
-
-        elif check_source == "ignored":
-            if html.has_var("_bulk_%s_to_old" % check_source) and is_checked:
-                return ModeDiscovery.SERVICE_ENABLE
-
-            if html.has_var("_%s_to_old" % check_source) and is_target_object:
-                return ModeDiscovery.SERVICE_ENABLE
-
-            if html.has_var("_bulk_%s_to_new" % check_source) and is_checked:
-                return ModeDiscovery.SERVICE_REMOVE
-
-            if html.has_var("_%s_to_new" % check_source) and is_target_object:
-                return ModeDiscovery.SERVICE_REMOVE
-
-            return ModeDiscovery.SERVICE_DISABLE
-
-        elif check_source in [ "clustered_old", "clustered_new" ]:
-            return ModeDiscovery.SERVICE_ADD
-
-        return ModeDiscovery.SERVICE_REMOVE
-
-
-    def _refresh_discovery(self):
-        hostname = self._host.name()
-        counts, failed_hosts = check_mk_automation(self._host.site_id(), "inventory",
-                                                   [ "@scan", "refresh", hostname ])
-        count_added, count_removed, count_kept, count_new = counts[hostname]
-
-        message = _("Refreshed check configuration of host '%s' with %d services") % \
-                    (hostname, count_added)
-
-        add_service_change(self._host, "refresh-autochecks", message)
-
-        return message
-
-
-    def page(self):
-        self._service_tables()
-
-
-    def _service_tables(self):
-        host      = self._host
-        hostname  = self._host.name()
-
-        try:
-            check_table = self._get_check_table()
-        except Exception, e:
-            log_exception()
-            if config.debug:
-                raise
-            retry_link = html.render_a(
-                content=_("Retry discovery while ignoring this error (Result might be incomplete)."),
-                href=html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
-            )
-            html.show_warning("<b>%s</b>: %s<br><br>%s" %
-                              (_("Service discovery failed for this host"), e, retry_link))
+    def _show_action_buttons(self, check_table):
+        if not config.user.may("wato.services"):
             return
 
-        html.begin_form("checks", method = "POST")
-        self._show_action_buttons(check_table)
+        fixall = 0
+        already_has_services = False
+        for check in check_table:
+            if check[0] in [self.SERVICE_MONITORED, self.SERVICE_VANISHED]:
+                already_has_services = True
+            if check[0] in [self.SERVICE_UNDECIDED, self.SERVICE_VANISHED]:
+                fixall += 1
 
-        if html.var("_scan"):
-            html.hidden_field("_scan", "on", add_var=True)
+        if fixall >= 1:
+            html.button("_fixall", _("Fix all missing/vanished"))
 
-        table.begin(css="data", searchable=False, limit=None, sortable=False)
+        if already_has_services:
+            html.button("_refresh", _("Automatic refresh (tabula rasa)"))
 
-        checks_by_source = self._checks_by_source(check_table)
+        html.button("_scan", _("Full scan"))
+        if not self._show_checkboxes:
+            checkbox_uri = html.makeuri([('_show_checkboxes', '1'),
+                                         ('selection', weblib.selection_id())])
+            checkbox_title = _('Show checkboxes')
+        else:
+            checkbox_uri = html.makeuri([('_show_checkboxes', '0')])
+            checkbox_title = _('Hide checkboxes')
 
-        for check_source, show_bulk_actions, title, help_text in self._check_sources():
-            checks = checks_by_source.get(check_source, [])
-            if not checks:
-                continue
+        html.buttonlink(checkbox_uri, checkbox_title)
+        if self._show_parameter_column():
+            html.buttonlink(html.makeuri([("_hide_parameters", "yes")]),
+                            _("Hide check parameters"))
+        else:
+            html.buttonlink(html.makeuri([("_hide_parameters", "no")]),
+                            _("Show check parameters"))
 
-            if check_source == "new":
-                icon = "undecided"
-            elif check_source == "ignored":
-                icon = "disabled"
-            elif check_source == "old":
-                icon = "monitored"
+
+    def _show_parameter_column(self):
+        return config.user.load_file("parameter_column", False)
+
+
+    def _bulk_actions(self, table_source, collect_headers):
+        if not config.user.may("wato.services"):
+            return
+
+        def bulk_button(source, target, target_label, label):
+            html.button("_bulk_%s_%s" % (source, target), target_label,
+                        help=_("Move %s to %s services") % (label, target))
+
+        table.row(collect_headers=collect_headers, fixed=True)
+        table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
+
+        if self._show_checkboxes:
+            label = _("selected services")
+        else:
+            label = _("all services")
+
+        if table_source == self.SERVICE_MONITORED:
+            bulk_button(table_source, self.SERVICE_UNDECIDED, _("Undecided"), label)
+            bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
+
+        elif table_source == self.SERVICE_IGNORED:
+            bulk_button(table_source, self.SERVICE_MONITORED, _("Monitor"), label)
+            bulk_button(table_source, self.SERVICE_UNDECIDED, _("Undecided"), label)
+
+        elif table_source == self.SERVICE_VANISHED:
+            html.button("_bulk_%s_removed" % table_source, _("Remove"),
+                        help=_("Remove %s services") % label)
+            bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
+
+        elif table_source == self.SERVICE_UNDECIDED:
+            bulk_button(table_source, self.SERVICE_MONITORED, _("Monitor"), label)
+            bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
+
+
+    def _check_row(self, check, show_bulk_actions):
+        table_source, check_type, checkgroup, item, paramstring, params, \
+            descr, state, output, perfdata = check
+
+        statename = short_service_state_name(state, "")
+        if statename == "":
+            statename = short_service_state_name(-1)
+            stateclass = "state svcstate statep"
+            state = 0 # for tr class
+        else:
+            stateclass = "state svcstate state%s" % state
+
+        table.row(css="data", state=state)
+
+        self._show_bulk_checkbox(table_source, check_type, item, show_bulk_actions)
+        self._show_actions(check)
+
+        table.cell(_("State"), statename, css=stateclass)
+        table.cell(_("Service"), html.attrencode(descr))
+        table.cell(_("Status detail"))
+        if table_source in ("custom", "active"):
+            div_id = "activecheck_%s" % descr
+            html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
+            html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
+                json.dumps(self._host.site_id() or ''),
+                json.dumps(self._host_name),
+                json.dumps(check_type),
+                json.dumps(item),
+                json.dumps(div_id)
+            ))
+        else:
+            html.write_text(output)
+
+        ctype = "check_" + check_type if table_source == "active" else check_type
+        manpage_url = folder_preserving_link([("mode", "check_manpage"),
+                                              ("check_type", ctype)])
+        table.cell(_("Check plugin"), html.render_a(content=ctype, href=manpage_url))
+
+        if self._show_parameter_column():
+            table.cell(_("Check parameters"))
+            self._show_check_parameters(table_source, check_type, checkgroup, params)
+
+
+    def _show_bulk_checkbox(self, table_source, check_type, item, show_bulk_actions):
+        if not self._show_checkboxes:
+            return
+
+        if not show_bulk_actions:
+            table.cell(css="checkbox")
+            return
+
+        table.cell("<input type=button class=checkgroup name=_toggle_group"
+                   " onclick=\"toggle_group_rows(this);\" value=\"X\" />", sortable=False,
+                   css="checkbox")
+        html.checkbox(self._checkbox_name(check_type, item),
+                      True, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+
+
+    def _bulk_action_colspan(self):
+        colspan = 5
+        if self._show_parameter_column():
+            colspan += 1
+        if self._show_checkboxes:
+            colspan += 1
+        return colspan
+
+
+    def _show_actions(self, check):
+        def icon_button(table_source, checkbox_name, table_target, descr_target):
+            html.icon_button(html.makeactionuri([(checkbox_name, table_target), ]),
+                _("Move to %s services") % descr_target, "service_to_%s" % descr_target, ty="icon")
+
+        def icon_button_removed(table_source, checkbox_name):
+            html.icon_button(html.makeactionuri([(checkbox_name, self.SERVICE_REMOVED), ]),
+                _("Remove service"), "service_to_removed", ty="icon")
+
+        def rulesets_button():
+            # Link to list of all rulesets affecting this service
+            html.icon_button(folder_preserving_link(
+                             [("mode", "object_parameters"), ("host", self._host_name),
+                              ("service", descr), ]),
+                _("View and edit the parameters for this service"), "rulesets")
+
+        def check_parameters_button():
+            ruleset_name = self._get_ruleset_name(table_source, check_type, checkgroup)
+            if ruleset_name is None:
+                return
+            html.icon_button(folder_preserving_link(
+                             [("mode", "edit_ruleset"), ("varname", ruleset_name),
+                              ("host", self._host_name), ("item", mk_repr(item)), ]),
+                _("Edit and analyze the check parameters of this service"), "check_parameters")
+
+        def disabled_services_button():
+            html.icon_button(folder_preserving_link(
+                             [("mode", "edit_ruleset"), ("varname", "ignored_services"),
+                              ("host", self._host_name), ("item", mk_repr(descr)), ]),
+                _("Edit and analyze the disabled services rules"), "rulesets")
+
+        table_source, check_type, checkgroup, item, paramstring, params, \
+            descr, state, output, perfdata = check
+        checkbox_name = self._checkbox_name(check_type, item)
+        table.cell(css="buttons")
+        buttons = []
+        if table_source == self.SERVICE_MONITORED:
+            buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))
+            if may_edit_ruleset("ignored_services"):
+                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
             else:
-                icon = None
-            if icon:
-                grouptitle = html.render_icon(icon + "_service") + " " + title
+                buttons.append(html.empty_icon())
+
+        elif table_source == self.SERVICE_IGNORED:
+            if may_edit_ruleset("ignored_services"):
+                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored"))
+                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))
+                buttons.append(disabled_services_button())
+
+        elif table_source == self.SERVICE_VANISHED:
+            buttons.append(icon_button_removed(table_source, checkbox_name))
+            if may_edit_ruleset("ignored_services"):
+                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
             else:
-                grouptitle = title
+                buttons.append(html.empty_icon())
 
-            table.groupheader(grouptitle + html.render_help(help_text))
+        elif table_source == self.SERVICE_UNDECIDED:
+            buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored"))
+            if may_edit_ruleset("ignored_services"):
+                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
+            else:
+                buttons.append(html.empty_icon())
 
-            if show_bulk_actions and len(checks) > 10:
-                self._bulk_actions(check_source, collect_headers=False)
+        else:
+            buttons.append(html.empty_icon())
+            buttons.append(html.empty_icon())
 
-            for check in sorted(checks, key=lambda c: c[6].lower()):
-                self._check_row(check, show_bulk_actions)
+        if table_source not in [self.SERVICE_UNDECIDED,
+                                self.SERVICE_IGNORED] and \
+           config.user.may('wato.rulesets'):
+            buttons.append(rulesets_button())
+            buttons.append(check_parameters_button())
 
-            if show_bulk_actions:
-                self._bulk_actions(check_source, collect_headers="finished")
-
-        table.end()
-
-        html.hidden_fields()
-        html.end_form()
+        while len(buttons) < 4:
+            buttons.append(html.empty_icon())
+        for button in buttons:
+            button
 
 
-    def _check_sources(self):
+    def _get_ruleset_name(self, table_source, check_type, checkgroup):
+        if checkgroup == "logwatch":
+            return "logwatch_rules"
+        elif checkgroup:
+            return "checkgroup_parameters:" + checkgroup
+        elif table_source == "active":
+            return "active_checks:" + check_type
+        else:
+            return None
+
+
+    def _show_check_parameters(self, table_source, check_type, checkgroup, params):
+        varname = self._get_ruleset_name(table_source, check_type, checkgroup)
+        if varname and g_rulespecs.exists(varname):
+            rulespec = g_rulespecs.get(varname)
+            try:
+                rulespec.valuespec.validate_datatype(params, "")
+                rulespec.valuespec.validate_value(params, "")
+                paramtext = rulespec.valuespec.value_to_text(params)
+                html.write_html(paramtext)
+            except Exception, e:
+                if config.debug:
+                    err = traceback.format_exc()
+                else:
+                    err = e
+                paramtext = _("Invalid check parameter: %s!") % err
+                paramtext += _(" The parameter is: %r") % (params,)
+                paramtext += _(" The variable name is: %s") % varname
+                html.write_text(paramtext)
+
+    #.
+    #   .--common helper-------------------------------------------------------.
+
+    def _get_check_table(self):
+        options = self._options[:]
+        if self._do_scan and self._already_scanned and "@scan" in options:
+            options.remove("@scan")
+            options = ["@noscan"] + options
+        if options.count("@scan"):
+            self._already_scanned = True
+        return check_mk_automation(self._host.site_id(), "try-inventory", options)
+
+
+    def _ordered_table_groups(self):
         return [
-            # check_source, show bulk actions, title
-            ("new",           True,  _("Undecided services (currently not monitored)"),
+            # table group, show bulk actions, title, help
+            (self.SERVICE_UNDECIDED, True, _("Undecided services (currently not monitored)"),
             _("These services have been found by the service discovery but are not yet added "
               "to the monitoring. You should either decide to monitor them or to permanently "
               "disable them. If you are sure that they are just transitional, just leave them "
               "until they vanish.")), # undecided
-            ("vanished",      True,  _("Vanished services (monitored, but no longer exist)"),
+            (self.SERVICE_VANISHED, True, _("Vanished services (monitored, but no longer exist)"),
             _("These services had been added to the monitoring by a previous discovery "
               "but the actual items that are monitored are not present anymore. This might "
               "be due to a real failure. In that case you should leave them in the monitoring. "
               "If the actually monitored things are really not relevant for the monitoring "
               "anymore then you should remove them in order to avoid UNKNOWN services in the "
               "monitoring.")),
-            ("old",           True,  _("Monitored services"),
+            (self.SERVICE_MONITORED, True, _("Monitored services"),
             _("These services had been found by a discovery and are currently configured "
               "to be monitored.")),
-            ("ignored",       True,  _("Disabled services"),
+            (self.SERVICE_IGNORED, True, _("Disabled services"),
             _("These services are being discovered but have been disabled by creating a rule "
               "in the rule set <i>Disabled services</i> oder <i>Disabled checks</i>.")),
             ("active",        False, _("Active checks"),
@@ -3148,334 +3351,21 @@ class ModeDiscovery(WatoMode):
         ]
 
 
-    def _check_row(self, check, show_bulk_actions):
-        check_source, check_type, checkgroup, item, paramstring, params, \
-            descr, state, output, perfdata = check
-
-        statename = short_service_state_name(state, "")
-        if statename == "":
-            statename = short_service_state_name(-1)
-            stateclass = "state svcstate statep"
-            state = 0 # for tr class
-        else:
-            stateclass = "state svcstate state%s" % state
-
-        table.row(css="data", state=state)
-
-        self._show_bulk_checkbox(check_source, check_type, item, show_bulk_actions)
-        self._show_actions(check)
-
-        table.cell(_("State"), statename, css=stateclass)
-        table.cell(_("Service"), html.render_text(descr))
-        table.cell(_("Status detail"))
-        if check_source in ("custom", "active"):
-            div_id = "activecheck_%s" % descr
-            html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
-            html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
-                json.dumps(self._host.site_id() or ''),
-                json.dumps(self._host_name),
-                json.dumps(check_type),
-                json.dumps(item),
-                json.dumps(div_id)
-            ))
-        else:
-            html.write_text(output)
-
-        ctype = "check_" + check_type if check_source == "active" else check_type
-        manpage_url = folder_preserving_link([("mode", "check_manpage"),
-                                              ("check_type", ctype)])
-        table.cell(_("Check plugin"),
-                   html.render_a(content=ctype, href=manpage_url))
-
-        if self._show_parameter_column():
-            table.cell(_("Check parameters"))
-            self._show_check_parameters(check_source, check_type, checkgroup, params)
-
-
-    def _show_actions(self, check):
-        check_source, check_type, checkgroup, item, paramstring, params, \
-            descr, state, output, perfdata = check
-
-        def to_disabled_button():
-            url = html.makeactionuri([
-                ("_%s_to_disabled" % check_source, "1"),
-                (self._checkbox_name(check_source, check_type, item), ""),
-            ])
-            html.icon_button(url, _("Move to disabled services"), "service_to_disabled", ty="icon")
-
-
-        def to_enabled_button():
-            url = html.makeactionuri([
-                ("_%s_to_old" % check_source, "1"),
-                (self._checkbox_name(check_source, check_type, item), ""),
-            ])
-            html.icon_button(url, _("Move to monitored services"), "service_to_monitored", ty="icon")
-
-
-        def to_removed_button():
-            url = html.makeactionuri([
-                ("_%s_to_new" % check_source, "1"),
-                (self._checkbox_name(check_source, check_type, item), ""),
-            ])
-            html.icon_button(url, _("Remove from monitoring"),
-                "service_to_removed", ty="icon")
-
-
-        def to_undecided_button():
-            url = html.makeactionuri([
-                ("_%s_to_new" % check_source, "1"),
-                (self._checkbox_name(check_source, check_type, item), ""),
-            ])
-            html.icon_button(url, _("Move to undecided services"),
-                "service_to_undecided", ty="icon")
-
-
-        def rulesets_button():
-            # Link to list of all rulesets affecting this service
-            params_url = folder_preserving_link([("mode", "object_parameters"),
-                                    ("host", self._host_name),
-                                    ("service", descr)])
-            html.icon_button(params_url,
-                _("View and edit the parameters for this service"), "rulesets")
-
-        def check_parameters_button():
-            ruleset_name = self._get_ruleset_name(check_source, check_type, checkgroup)
-            if ruleset_name is None:
-                return
-
-            url = folder_preserving_link([("mode", "edit_ruleset"),
-                             ("varname", ruleset_name),
-                             ("host", self._host_name),
-                             ("item", mk_repr(item))])
-            html.icon_button(url,
-                _("Edit and analyze the check parameters of this service"), "check_parameters")
-
-        def disabled_services_button():
-            url = folder_preserving_link([("mode", "edit_ruleset"),
-                             ("varname", "ignored_services"),
-                             ("host", self._host_name),
-                             ("item", mk_repr(descr))])
-            html.icon_button(url, _("Edit and analyze the disabled services rules"), "rulesets")
-
-
-        table.cell(css="buttons")
-        if check_source == "new":
-            to_enabled_button()
-            if may_edit_ruleset("ignored_services"):
-                to_disabled_button()
-
-        elif check_source == "ignored":
-            if may_edit_ruleset("ignored_services"):
-                to_enabled_button()
-                to_undecided_button()
-                disabled_services_button()
-
-        elif check_source == "old":
-            to_undecided_button()
-            if may_edit_ruleset("ignored_services"):
-                to_disabled_button()
-
-        elif check_source == "vanished":
-            to_removed_button()
-            if may_edit_ruleset("ignored_services"):
-                to_disabled_button()
-
-        else:
-            html.empty_icon()
-            html.empty_icon()
-
-        if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
-            rulesets_button()
-            check_parameters_button()
-
-
-    def _show_parameter_column(self):
-        return config.user.load_file("parameter_column", False)
-
-
-    def _show_check_parameters(self, check_source, check_type, checkgroup, params):
-        varname = self._get_ruleset_name(check_source, check_type, checkgroup)
-        if varname and g_rulespecs.exists(varname):
-            rulespec = g_rulespecs.get(varname)
-            try:
-                rulespec.valuespec.validate_datatype(params, "")
-                rulespec.valuespec.validate_value(params, "")
-                paramtext = rulespec.valuespec.value_to_text(params)
-                html.write_html(paramtext)
-            except Exception, e:
-                if config.debug:
-                    err = traceback.format_exc()
-                else:
-                    err = e
-                paramtext = _("Invalid check parameter: %s!") % err
-                paramtext += _(" The parameter is: %r") % (params,)
-                paramtext += _(" The variable name is: %s") % varname
-                html.write_text(paramtext)
-
-
-    def _get_ruleset_name(self, check_source, check_type, checkgroup):
-        if checkgroup == "logwatch":
-            return "logwatch_rules"
-        elif checkgroup:
-            return "checkgroup_parameters:" + checkgroup
-        elif check_source == "active":
-            return "active_checks:" + check_type
-        else:
-            return None
-
-
-    def _show_bulk_checkbox(self, check_source, check_type, item, show_bulk_actions):
-        if not self._show_checkboxes:
-            return
-
-        if not show_bulk_actions:
-            table.cell(css="checkbox")
-            return
-
-        table.cell(html.render_input("_toggle_group", type_="button",
-                    class_="checkgroup", onclick="toggle_group_rows(this);",
-                    value='X'), sortable=False, css="checkbox")
-
-        html.checkbox(self._checkbox_name(check_source,check_type, item),
-            True, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
-
-
     # This function returns the HTTP variable name to use for a service. This needs to be unique
     # for each host. Since this text is used as variable name, it must not contain any umlauts
     # or other special characters that are disallowed by html.parse_field_storage(). Since item
     # may contain such chars, we need to use some encoded form of it. Simple escaping/encoding
     # like we use for values of variables is not enough here.
-    def _checkbox_name(self, check_source, check_type, item):
-        return "_%s_%s_%s" % (check_source, check_type, hash(item))
+    def _checkbox_name(self, check_type, item):
+        return "_move_%s" % hash("%s_%s" % (check_type, item))
 
-
-    # We first try using the cache (if the user has not pressed Full Scan).
-    # If we do not find any data, we omit the cache and immediately try
-    # again without using the cache.
-    def _get_check_table(self):
-        # Read current check configuration
-        error_options = [ "@raiseerrors" ] if not html.var("ignoreerrors") else []
-
-        options = self._cache_options + error_options + [ self._host_name ]
-        check_table = check_mk_automation(self._host.site_id(), "try-inventory", options)
-
-        if not check_table and self._cache_options != []:
-            check_table = check_mk_automation(self._host.site_id(), "try-inventory",
-                                              [ '@scan', self._host_name ])
-            html.set_var("_scan", "on")
-
-        return sorted(check_table)
-
-
-    def _checks_by_source(self, check_table):
-        by_source = {}
-        for entry in check_table:
-            entries = by_source.setdefault(entry[0], [])
-            entries.append(entry)
-        return by_source
-
-
-    def _show_action_buttons(self, check_table):
-        if not config.user.may("wato.services"):
-            return
-
-        fixall = 0
-        for entry in check_table:
-            if entry[0] == 'new':
-                fixall += 1
-                break
-
-        for entry in check_table:
-            if entry[0] == 'vanished':
-                fixall += 1
-                break
-
-        if fixall == 2:
-            html.button("_fixall", _("Fix all missing/vanished"))
-
-        if self._already_has_services(check_table):
-            html.button("_refresh", _("Automatic refresh (tabula rasa)"))
-
-        html.buttonlink(html.makeuri([("_scan", "yes")]), _("Full scan"),
-                  title=_("Fetch new data from the host and ignore caches"))
-
-
-        if not self._show_checkboxes:
-            checkbox_uri = html.makeuri([('_show_checkboxes', '1'),
-                                         ('selection', weblib.selection_id())])
-            checkbox_title = _('Show checkboxes')
-        else:
-            checkbox_uri = html.makeuri([('_show_checkboxes', '0')])
-            checkbox_title = _('Hide checkboxes')
-
-        html.buttonlink(checkbox_uri, checkbox_title)
-
-
-        if self._show_parameter_column():
-            html.buttonlink(html.makeuri([("_hide_parameters", "yes")]),
-                            _("Hide check parameters"))
-        else:
-            html.buttonlink(html.makeuri([("_hide_parameters", "no")]),
-                            _("Show check parameters"))
-
-
-    def _already_has_services(self, check_table):
-        for check in check_table:
-            if check[0] in [ "old", "vanished" ]:
-                return True
-        return False
-
-
-    def _bulk_actions(self, check_source, collect_headers):
-        if not config.user.may("wato.services"):
-            return
-
-        table.row(collect_headers=collect_headers, fixed=True)
-
-        table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
-
-        if self._show_checkboxes:
-            label = _("selected services")
-        else:
-            label = _("all services")
-
-        if check_source == "new":
-            html.button("_bulk_new_to_old",   _("Monitor"),
-                help=_("Move %s to enabled services") % label)
-            html.button("_bulk_new_to_disabled", _("Disable"),
-                help=_("Move %s to disabled services") % label)
-
-        elif check_source == "vanished":
-            html.button("_bulk_vanished_to_new", _("Remove"),
-                help=_("Move %s to new services") % label)
-            html.button("_bulk_vanished_to_disabled", _("Disable"),
-                help=_("Move %s to disabled services") % label)
-
-        elif check_source == "old":
-            html.button("_bulk_old_to_new", _("Move to undecided"),
-                help=_("Move %s to new services") % label)
-            html.button("_bulk_old_to_disabled", _("Disable"),
-                help=_("Move %s to new services") % label)
-
-        elif check_source == "ignored":
-            html.button("_bulk_ignored_to_old", _("Monitor"),
-                help=_("Move %s to enabled services") % label)
-            html.button("_bulk_ignored_to_new", _("Move to undecided"),
-                help=_("Move %s to new services") % label)
-
-
-    def _bulk_action_colspan(self):
-        colspan = 5
-        if self._show_parameter_column():
-            colspan += 1
-        if self._show_checkboxes:
-            colspan += 1
-        return colspan
+    #.
 
 
 
 class ModeFirstDiscovery(ModeDiscovery):
     pass
+
 
 
 class ModeAjaxExecuteCheck(WatoWebApiMode):

@@ -1,0 +1,11 @@
+Title: Service discovery performance: Do full scan once only right after clicking full scan
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1502272994
+
+

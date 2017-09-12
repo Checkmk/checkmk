@@ -1,0 +1,12 @@
+Title: Ruleset quick search now excludes deprecated rulesets
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p12
+Date: 1505227672
+Class: fix
+
+Deprecated rulesets are now excluded from the search when performing
+a "quick search" for rulesets / rules in WATO when starting the search
+from a view that does not show deprecated rulesets.

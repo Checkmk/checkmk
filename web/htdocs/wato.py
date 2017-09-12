@@ -12301,6 +12301,11 @@ class ModeRulesets(WatoMode):
     def _from_vars(self):
         self._group_name = html.var("group")
 
+        #  Explicitly hide deprecated rulesets by default
+        if not html.has_var("search_p_ruleset_deprecated"):
+            html.set_var("search_p_ruleset_deprecated", "1"),
+            html.set_var("search_p_ruleset_deprecated_USE", "on")
+
         # Transform group argument to the "rule search arguments"
         # Keeping this for compatibility reasons for the moment
         if self._group_name:

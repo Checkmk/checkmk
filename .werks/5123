@@ -1,0 +1,12 @@
+Title: Service discovery: Fix moving services from 'Disabled services' to 'Vanished services' or 'Undecided services'
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p12
+Date: 1505140485
+Class: fix
+
+Before passive services were not always listed in the right group resp.
+they disappeared and just after a reload they were listed in the right
+table. This has been fixed.

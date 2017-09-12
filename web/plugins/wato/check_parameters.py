@@ -6310,7 +6310,7 @@ def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
     ]
 
     def validate_dynamic_levels(value, varprefix):
-        if not [ v for v in value if v[0] == 0 ]:
+        if [ v for v in value if v[0] == 0 ]:
             raise MKUserError(varprefix, _("You need to specify levels for "
                                            "%ss larger than 0 bytes.") % name)
 

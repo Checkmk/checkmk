@@ -1,0 +1,13 @@
+Title: df: Fixed error if dynamic levels should be set
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p12
+Date: 1505220682
+
+Since 1.2.8 no dynamic levels could be set anymore. The error "You need to
+specify levels for filesystems larger than 0 bytes." prevented the user from
+saving a rule if a filesystem has not 0 bytes. Thix has been fixed now.

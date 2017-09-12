@@ -49,8 +49,7 @@ std::string ComException::resolveError(HRESULT result,
         case WBEM_E_INVALID_QUERY:
             return string("Invalid Query");
         default:
-            return to_utf8(
-                _com_error(result, getErrorInfo(winapi)).ErrorMessage());
+            return _com_error(result, getErrorInfo(winapi)).ErrorMessage();
     }
 }
 
@@ -121,8 +120,8 @@ VARIANT ObjectWrapper::getVarByKey(const wchar_t *key) const {
     HRESULT res = _current->Get(key, 0, &value, nullptr, nullptr);
     if (FAILED(res)) {
         throw ComException(
-            std::string("Failed to retrieve key: ") + to_utf8(key, _winapi),
-            res, _winapi);
+            std::string("Failed to retrieve key: ") + to_utf8(key), res,
+            _winapi);
     }
 
     return value;
@@ -279,7 +278,7 @@ template <>
 string Variant::get() const {
     switch (_value.vt) {
         case VT_BSTR:
-            return to_utf8(_value.bstrVal, _winapi);
+            return to_utf8(_value.bstrVal);
         default:
             throw ComTypeException(string("wrong value type requested: ") +
                                    to_string(_value.vt));
@@ -466,9 +465,9 @@ Result Helper::query(LPCWSTR query) {
         &enumerator);
 
     if (FAILED(res)) {
-        throw ComException(string("Failed to execute query \"") +
-                               to_utf8(query, _winapi) + "\"",
-                           res, _winapi);
+        throw ComException(
+            string("Failed to execute query \"") + to_utf8(query) + "\"", res,
+            _winapi);
     }
     return Result(enumerator, _winapi);
 }
@@ -479,9 +478,9 @@ Result Helper::getClass(LPCWSTR className) {
         BSTR(className), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
         nullptr, &enumerator);
     if (FAILED(res)) {
-        throw ComException(string("Failed to enum class \"") +
-                               to_utf8(className, _winapi) + "\"",
-                           res, _winapi);
+        throw ComException(
+            string("Failed to enum class \"") + to_utf8(className) + "\"", res,
+            _winapi);
     }
     return Result(enumerator, _winapi);
 }
@@ -494,9 +493,9 @@ ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method) {
     BSTR className;
     HRESULT res = result._current->GetMethodOrigin(method, &className);
     if (FAILED(res)) {
-        throw ComException(string("Failed to determine method origin: ") +
-                               to_utf8(method, _winapi),
-                           res, _winapi);
+        throw ComException(
+            string("Failed to determine method origin: ") + to_utf8(method),
+            res, _winapi);
     }
 
     // please don't ask me why ExecMethod needs the method name in a writable

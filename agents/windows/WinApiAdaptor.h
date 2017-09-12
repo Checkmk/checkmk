@@ -307,11 +307,6 @@ public:
                                          DWORD dwMilliseconds) const = 0;
     virtual DWORD WaitForSingleObject(HANDLE hHandle,
                                       DWORD dwMilliseconds) const = 0;
-    virtual int WideCharToMultiByte(UINT CodePage, DWORD dwFlags,
-                                    LPCWCH lpWideCharStr, int cchWideChar,
-                                    LPSTR lpMultiByteStr, int cbMultiByte,
-                                    LPCCH lpDefaultChar,
-                                    LPBOOL lpUsedDefaultChar) const = 0;
     virtual WINBOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer,
                               DWORD nNumberOfBytesToWrite,
                               LPDWORD lpNumberOfBytesWritten,

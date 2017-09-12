@@ -34,11 +34,9 @@
 #include <stdexcept>
 #include <vector>
 #include "WinApiAdaptor.h"
+#include "stringutil.h"
 
 class WinApiAdaptor;
-
-// A (re-)declaration of to_utf8 is necessary when used in a template function
-std::string to_utf8(const wchar_t *string, const WinApiAdaptor &winapi);
 
 namespace wmi {
 
@@ -130,7 +128,7 @@ T ObjectWrapper::get(const wchar_t *key) const {
         return value.get<T>();
     } catch (const ComTypeException &e) {
         throw ComTypeException(std::string("failed to retrieve ") +
-                               to_utf8(key, _winapi) + ": " + e.what());
+                               to_utf8(key) + ": " + e.what());
     }
 }
 

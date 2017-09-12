@@ -414,10 +414,8 @@ uint64_t EventLogVista::seek(uint64_t record_id) {
                         EvtSubscribeStartAfterBookmark));
 
     if (_handle->get_handle() == nullptr) {
-        throw win_exception(_winapi,
-                            (std::string("failed to subscribe to ") +
-                             to_utf8(_path.c_str(), _winapi))
-                                .c_str());
+        throw win_exception(
+            _winapi, std::string("failed to subscribe to ") + to_utf8(_path));
     }
 
     return record_id;

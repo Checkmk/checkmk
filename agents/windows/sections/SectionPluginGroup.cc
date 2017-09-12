@@ -145,7 +145,7 @@ static int launch_program(script_container *cont) {
         if ((buf_u[0] == 0xFF) && (buf_u[1] == 0xFE)) {
             wchar_t *buffer_u16 =
                 reinterpret_cast<wchar_t *>(cont->buffer_work + 2);
-            std::string buffer_u8 = to_utf8(buffer_u16, winapi);
+            std::string buffer_u8 = to_utf8(buffer_u16);
             winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
             cont->buffer_work = (char *)winapi.HeapAlloc(
                 winapi.GetProcessHeap(), 0, buffer_u8.size() + 1);

@@ -146,7 +146,7 @@ void SectionEventlog::process_eventlog_entry(std::ostream &out,
     strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
 
     // source is the application that produced the event
-    std::string source_name = to_utf8(event.source().c_str(), _winapi);
+    std::string source_name = to_utf8(event.source());
     std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
     out << type_char << " " << timestamp << " " << event.eventQualifiers()

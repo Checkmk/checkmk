@@ -270,9 +270,8 @@ DWORD EventlogHandle::GetNumberOfEventLogRecords(PDWORD record) const {
 HANDLE EventlogHandle::open() const {
     HANDLE handle = _winapi.OpenEventLogW(nullptr, _name.c_str());
     if (handle == nullptr) {
-        throw win_exception(_winapi,
-                            std::string("failed to open eventlog: ") +
-                                to_utf8(_name.c_str(), _winapi));
+        throw win_exception(
+            _winapi, std::string("failed to open eventlog: ") + to_utf8(_name));
     }
     return handle;
 }
@@ -399,9 +398,8 @@ bool EventLog::fillBuffer() {
             }  // otherwise treat this like any other error
         }
 
-        throw win_exception(_winapi,
-                            std::string("Can't read eventlog ") +
-                                to_utf8(_name.c_str(), _winapi),
-                            error);
+        throw win_exception(
+            _winapi, std::string("Can't read eventlog ") + to_utf8(_name),
+            error);
     }
 }

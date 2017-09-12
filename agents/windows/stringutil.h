@@ -26,7 +26,9 @@
 #define stringutil_h
 
 #include <stdint.h>
+#include <codecvt>
 #include <iostream>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -47,17 +49,20 @@ void lowercase(char *s);
 
 int parse_boolean(const char *value);
 
+inline std::string to_utf8(const std::wstring &input) {
+    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(input);
+}
+
+std::wstring to_utf16(const char *input, const WinApiAdaptor &winapi);
+
 struct Utf8 {
     explicit Utf8(const std::wstring &value) : _value(value) {}
     const std::wstring _value;
 };
 
-std::ostream &operator<<(std::ostream &os, const Utf8 &u);
-
-std::string to_utf8(const char *input);
-std::string to_utf8(const wchar_t *input, const WinApiAdaptor &winapi);
-
-std::wstring to_utf16(const char *input, const WinApiAdaptor &winapi);
+inline std::ostream &operator<<(std::ostream &os, const Utf8 &u) {
+    return os << to_utf8(u._value);
+}
 
 // case insensitive compare
 bool ci_equal(const std::string &lhs, const std::string &rhs);

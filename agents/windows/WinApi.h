@@ -269,11 +269,6 @@ public:
                                          DWORD dwMilliseconds) const override;
     virtual DWORD WaitForSingleObject(HANDLE hHandle,
                                       DWORD dwMilliseconds) const override;
-    virtual int WideCharToMultiByte(UINT CodePage, DWORD dwFlags,
-                                    LPCWCH lpWideCharStr, int cchWideChar,
-                                    LPSTR lpMultiByteStr, int cbMultiByte,
-                                    LPCCH lpDefaultChar,
-                                    LPBOOL lpUsedDefaultChar) const override;
     virtual WINBOOL WriteFile(HANDLE hFile, LPCVOID lpBuffer,
                               DWORD nNumberOfBytesToWrite,
                               LPDWORD lpNumberOfBytesWritten,

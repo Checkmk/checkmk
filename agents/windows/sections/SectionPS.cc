@@ -101,43 +101,27 @@ bool SectionPS::ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o) {
     // Call should have failed due to zero-length buffer.
     if (_winapi.GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
         // Allocate buffer for user information in the token.
-        PTOKEN_USER pUserToken = reinterpret_cast<PTOKEN_USER>(
-            new BYTE[dwProcessTokenInfoAllocSize]);
-        if (pUserToken != NULL) {
-            // Now get user information in the allocated buffer
-            if (_winapi.GetTokenInformation(hProcessToken, TokenUser,
-                                            pUserToken,
-                                            dwProcessTokenInfoAllocSize,
-                                            &dwProcessTokenInfoAllocSize)) {
-                // Some vars that we may need
-                SID_NAME_USE snuSIDNameUse;
-                WCHAR szUser[MAX_PATH] = {0};
-                DWORD dwUserNameLength = MAX_PATH;
-                WCHAR szDomain[MAX_PATH] = {0};
-                DWORD dwDomainNameLength = MAX_PATH;
+        std::vector<unsigned char> UserToken(dwProcessTokenInfoAllocSize, 0);
+        PTOKEN_USER pUserToken =
+            reinterpret_cast<PTOKEN_USER>(UserToken.data());
+        // Now get user information in the allocated buffer
+        if (_winapi.GetTokenInformation(
+                hProcessToken, TokenUser, pUserToken,
+                dwProcessTokenInfoAllocSize, &dwProcessTokenInfoAllocSize)) {
+            // Some vars that we may need
+            SID_NAME_USE snuSIDNameUse;
+            WCHAR szUser[MAX_PATH] = {0};
+            DWORD dwUserNameLength = MAX_PATH;
+            WCHAR szDomain[MAX_PATH] = {0};
+            DWORD dwDomainNameLength = MAX_PATH;
 
-                // Retrieve user name and domain name based on user's SID.
-                if (_winapi.LookupAccountSidW(
-                        NULL, pUserToken->User.Sid, szUser, &dwUserNameLength,
-                        szDomain, &dwDomainNameLength, &snuSIDNameUse)) {
-                    char info[1024];
-                    csOwner_o = "\\\\";
-                    _winapi.WideCharToMultiByte(CP_UTF8, 0, (WCHAR *)&szDomain,
-                                                -1, info, sizeof(info), NULL,
-                                                NULL);
-                    csOwner_o += info;
-
-                    csOwner_o += "\\";
-                    _winapi.WideCharToMultiByte(CP_UTF8, 0, (WCHAR *)&szUser,
-                                                -1, info, sizeof(info), NULL,
-                                                NULL);
-                    csOwner_o += info;
-
-                    delete[] pUserToken;
-                    return true;
-                }
+            // Retrieve user name and domain name based on user's SID.
+            if (_winapi.LookupAccountSidW(
+                    NULL, pUserToken->User.Sid, szUser, &dwUserNameLength,
+                    szDomain, &dwDomainNameLength, &snuSIDNameUse)) {
+                csOwner_o = "\\\\" + to_utf8(szDomain) + "\\" + to_utf8(szUser);
+                return true;
             }
-            delete[] pUserToken;
         }
     }
     return false;
@@ -151,13 +135,11 @@ bool SectionPS::produceOutputInner(std::ostream &out) {
     }
 }
 
-void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
-                              ULONGLONG working_set_size,
-                              ULONGLONG pagefile_usage, ULONGLONG uptime,
-                              ULONGLONG usermode_time,
-                              ULONGLONG kernelmode_time, DWORD process_id,
-                              DWORD process_handle_count, DWORD thread_count,
-                              const std::string &user, LPCSTR exe_file) {
+void SectionPS::outputProcess(
+    std::ostream &out, ULONGLONG virtual_size, ULONGLONG working_set_size,
+    ULONGLONG pagefile_usage, ULONGLONG uptime, ULONGLONG usermode_time,
+    ULONGLONG kernelmode_time, DWORD process_id, DWORD process_handle_count,
+    DWORD thread_count, const std::string &user, const std::string &exe_file) {
     // Note: CPU utilization is determined out of usermodetime and
     // kernelmodetime
     out << "(" << user << "," << virtual_size / 1024 << ","
@@ -219,8 +201,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
                 std::stoull(result.get<std::wstring>(L"UserModeTime")),
                 std::stoull(result.get<std::wstring>(L"KernelModeTime")),
                 processId, result.get<int>(L"HandleCount"),
-                result.get<int>(L"ThreadCount"), user,
-                to_utf8(process_name.c_str(), _winapi).c_str());
+                result.get<int>(L"ThreadCount"), user, to_utf8(process_name));
 
             more = result.next();
         }

@@ -570,16 +570,6 @@ DWORD WinApi::WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds) const {
     return ::WaitForSingleObject(hHandle, dwMilliseconds);
 }
 
-int WinApi::WideCharToMultiByte(UINT CodePage, DWORD dwFlags,
-                                LPCWCH lpWideCharStr, int cchWideChar,
-                                LPSTR lpMultiByteStr, int cbMultiByte,
-                                LPCCH lpDefaultChar,
-                                LPBOOL lpUsedDefaultChar) const {
-    return ::WideCharToMultiByte(CodePage, dwFlags, lpWideCharStr, cchWideChar,
-                                 lpMultiByteStr, cbMultiByte, lpDefaultChar,
-                                 lpUsedDefaultChar);
-}
-
 WINBOOL WinApi::WriteFile(HANDLE hFile, LPCVOID lpBuffer,
                           DWORD nNumberOfBytesToWrite,
                           LPDWORD lpNumberOfBytesWritten,

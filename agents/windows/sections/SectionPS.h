@@ -65,7 +65,7 @@ private:
                        ULONGLONG uptime, ULONGLONG usermode_time,
                        ULONGLONG kernelmode_time, DWORD process_id,
                        DWORD process_handle_count, DWORD thread_count,
-                       const std::string &user, LPCSTR exe_file);
+                       const std::string &user, const std::string &exe_file);
 
     bool outputWMI(std::ostream &out);
     bool outputNative(std::ostream &out);

@@ -1,11 +1,9 @@
 #include "stringutil.h"
 #include <cassert>
 #include <cctype>
-#include <codecvt>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <locale>
 #include "WinApiAdaptor.h"
 
 #ifdef _WIN32
@@ -111,40 +109,11 @@ int parse_boolean(const char *value) {
     return -1;
 }
 
-std::ostream &operator<<(std::ostream &os, const Utf8 &u) {
-    return os << std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(
-               u._value);
-}
-
-string to_utf8(const char *input) {
-    // this isn't right, the input is most likely in locat 8-bit encoding
-    return std::string(input);
-}
-
-string to_utf8(const wchar_t *input, const WinApiAdaptor &winapi) {
-    string result;
-    // preflight: how many bytes to we need?
-    int required_size =
-        winapi.WideCharToMultiByte(CP_UTF8, 0, input, -1, NULL, 0, NULL, NULL);
-    if (required_size == 0) {
-        // conversion failure. What to do?
-        return string();
-    }
-    result.resize(required_size);
-
-    // real conversion
-    winapi.WideCharToMultiByte(CP_UTF8, 0, input, -1, &result[0], required_size,
-                               NULL, NULL);
-
-    // strip away the zero termination. This is necessary, otherwise the stored
-    // string length
-    // in the string is wrong
-    result.resize(required_size - 1);
-
-    return result;
-}
-
 wstring to_utf16(const char *input, const WinApiAdaptor &winapi) {
+    // TODO: Use std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes
+    // instead of WinAPI MultiByteToWideChar. Unfortunately, from_bytes is
+    // broken in currently known versions of MinGW (or, more precisely,
+    // libstdc++.dll. We need to wait until there is a fix for this available.
     wstring result;
     // preflight: how many bytes to we need?
     int required_size =

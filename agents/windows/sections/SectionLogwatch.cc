@@ -240,7 +240,6 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
                                         std::ostream &out, bool write_output) {
     Notice(_logger) << "Checking UNICODE file " << textfile->paths.front();
     ProcessTextfileResponse response;
-    char output_buffer[UNICODE_BUFFER_SIZE];
     char unicode_block[UNICODE_BUFFER_SIZE];
 
     condition_pattern *pattern = 0;
@@ -271,22 +270,24 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
                 // Missing CRNL... this line is not finished yet
                 continue;
         }
-
-        // Convert unicode to utf-8
-        memset(output_buffer, 0, UNICODE_BUFFER_SIZE);
-        _winapi.WideCharToMultiByte(CP_UTF8, 0, (wchar_t *)unicode_block,
-                                    cut_line ? (UNICODE_BUFFER_SIZE - 2) / 2
-                                             : (crnl_end_offset - 4) / 2,
-                                    output_buffer, sizeof(output_buffer), NULL,
-                                    NULL);
-
+        const size_t buffer_size = cut_line ? (UNICODE_BUFFER_SIZE - 2) / 2
+                                            : (crnl_end_offset - 4) / 2;
+        std::wstring unicode_wstr(reinterpret_cast<wchar_t *>(unicode_block));
+        // Argh! The wstring needs to be cut at CRLF as it may go on beyond that
+        unicode_wstr.resize(buffer_size);
+        std::string output_buffer = to_utf8(unicode_wstr);
+        Debug(_logger)
+            << "SectionLogwatch::processTextfileUnicode, output_buffer: "
+            << output_buffer;
         // Check line
         char state = '.';
         for (condition_patterns_t::iterator it_patt =
                  textfile->patterns->begin();
              it_patt != textfile->patterns->end(); it_patt++) {
             pattern = *it_patt;
-            if (globmatch(pattern->glob_pattern, output_buffer)) {
+            Debug(_logger) << "glob_pattern: " << pattern->glob_pattern
+                           << ", state: " << pattern->state;
+            if (globmatch(pattern->glob_pattern, output_buffer.c_str())) {
                 if (!write_output &&
                     (pattern->state == 'C' || pattern->state == 'W' ||
                      pattern->state == 'O')) {
@@ -300,7 +301,7 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
         }
 
         // Output line
-        if (write_output && strlen(output_buffer) > 0) {
+        if (write_output && !output_buffer.empty()) {
             out << state << " " << output_buffer << "\n";
         }
 

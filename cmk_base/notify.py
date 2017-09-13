@@ -447,13 +447,14 @@ def notify_rulebased(raw_context, analyse=False):
             plugintxt = plugin or "plain email"
 
             key = contacts, plugin
-            if plugin_parameters is None and key in notifications: # cancelling
-                locked, plugin_parameters, bulk = notifications[key]
-                if locked and "contact" in rule:
-                    notify_log("   - cannot cancel notification of %s via %s: it is locked" % (contactstxt, plugintxt))
-                else:
-                    notify_log("   - cancelling notification of %s via %s" % (contactstxt, plugintxt))
-                    del notifications[key]
+            if plugin_parameters is None: # cancelling
+                if key in notifications:
+                    locked, plugin_parameters, bulk = notifications[key]
+                    if locked and "contact" in rule:
+                        notify_log("   - cannot cancel notification of %s via %s: it is locked" % (contactstxt, plugintxt))
+                    else:
+                        notify_log("   - cancelling notification of %s via %s" % (contactstxt, plugintxt))
+                        del notifications[key]
             elif contacts:
                 if key in notifications:
                     locked = notifications[key][0]

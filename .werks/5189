@@ -1,0 +1,14 @@
+Title: Fixed scheduling of checks after a start/reload of the Micro Core
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1505303429
+
+After a start/reload the Check_MK Micro Core did not always schedule checks
+early enough to avoid their staleness, which was especially visible for
+checks with a long check interval, e.g.  discovery or HW/SW inventory.  This
+has been fixed.

@@ -1,0 +1,11 @@
+Title: cmk-update-agent: Fix invalid signature error
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p12
+Date: 1505299119
+Class: fix
+
+This werk fixes an issue occuring with the validation of the agent downloaded via cmk-update-agent:
+When executing cmk-update-agent using curl for server communications, the script might abort with error message "invalid signature" and "no valid signature found"

@@ -7807,6 +7807,28 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "memory_relative",
+    _("Main memory usage for Brocade fibre channel switches"),
+    OptionalDropdownChoice(
+        title = _("Memory usage"),
+        choices = [
+            ( None, _("Do not impose levels"))
+        ],
+        otherlabel = _("Percentual levels ->"),
+        explicit = \
+            Tuple(
+                elements = [
+                    Integer(title=_("Warning at"), default_value=85, unit="%"),
+                    Integer(title=_("Critical at"), default_value=90, unit="%"),
+                ]
+            )
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_os,
     "memory_simple",
     _("Main memory usage of simple devices"),
     Transform(

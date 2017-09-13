@@ -1,0 +1,10 @@
+Title: brocade_sys, brocade_sys.mem: New checks to monitor main memory usage and CPU utilization of Brocade fibre channel switches
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505304149
+Class: feature
+
+

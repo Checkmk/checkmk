@@ -3161,7 +3161,7 @@ class ModeDiscovery(WatoMode):
 
 
     def _show_bulk_checkbox(self, table_source, check_type, item, show_bulk_actions):
-        if not self._show_checkboxes:
+        if not self._show_checkboxes or not config.user.may("wato.services"):
             return
 
         if not show_bulk_actions:
@@ -3215,10 +3215,17 @@ class ModeDiscovery(WatoMode):
                               ("host", self._host_name), ("item", mk_repr(descr)), ]),
                 _("Edit and analyze the disabled services rules"), "rulesets")
 
+        table.cell(css="buttons")
+        if not config.user.may("wato.services"):
+            html.empty_icon()
+            html.empty_icon()
+            html.empty_icon()
+            html.empty_icon()
+            return
+
         table_source, check_type, checkgroup, item, paramstring, params, \
             descr, state, output, perfdata = check
         checkbox_name = self._checkbox_name(check_type, item)
-        table.cell(css="buttons")
         buttons = []
         if table_source == self.SERVICE_MONITORED:
             buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))

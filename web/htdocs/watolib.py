@@ -245,8 +245,8 @@ def add_change(action_name, text, obj=None, add_user=True, need_sync=None,
                                        need_sync, need_restart, domains, sites)
 
 
-def add_service_change(host, action_name, text):
-    add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=False)
+def add_service_change(host, action_name, text, need_sync=False):
+    add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=need_sync)
 
 
 def get_number_of_pending_changes():

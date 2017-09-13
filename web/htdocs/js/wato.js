@@ -371,7 +371,7 @@ function progress_retry() {
     // Note: no bulksize limit is applied here
     progress_items = failed_items;
     failed_items = Array();
-    progress_scheduler(progress_mode, progress_url, progress_timeout, [], "", "");
+    progress_scheduler(progress_mode, progress_url, progress_timeout, [], "");
 }
 
 
@@ -453,13 +453,12 @@ function progress_clean_log() {
     log.scrollTop = 0;
 }
 
-function progress_scheduler(mode, url_prefix, timeout, items, transids, end_url, success_stats, fail_stats, term_url, finished_txt) {
+function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_stats, fail_stats, term_url, finished_txt) {
     // Initialize
     if (progress_items === null) {
         total_num_items        = items.length;
         progress_items         = items;
         failed_items           = Array();
-        progress_transids      = transids;
         progress_total_num     = items.length;
         progress_end_url       = end_url;
         progress_term_url      = term_url;
@@ -487,8 +486,7 @@ function progress_scheduler(mode, url_prefix, timeout, items, transids, end_url,
             // Remove leading pipe signs (when having no folder set)
             // update_progress_title(percentage + "%");
             update_progress_title(title);
-            use_transid = progress_transids.shift();
-            get_url(url_prefix + '&_transid=' + use_transid + '&_item=' + encodeURIComponent(progress_items[0]),
+            get_url(url_prefix + '&_transid=-1&_item=' + encodeURIComponent(progress_items[0]),
                 progress_handle_response,    // regular handler (http code 200)
                 [ mode, progress_items[0] ], // data to hand over to handlers
                 progress_handle_error        // error handler
@@ -499,7 +497,7 @@ function progress_scheduler(mode, url_prefix, timeout, items, transids, end_url,
         }
     }
 
-    setTimeout(function() { progress_scheduler(mode, url_prefix, timeout, [], "", ""); }, timeout);
+    setTimeout(function() { progress_scheduler(mode, url_prefix, timeout, [], ""); }, timeout);
 }
 
 function update_bulk_moveto(val) {

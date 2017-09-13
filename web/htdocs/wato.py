@@ -2870,9 +2870,11 @@ class ModeDiscovery(WatoMode):
                 services_to_save[(check_type, item)] = paramstring
 
         if apply_changes:
-            self._save_services(services_to_save)
+            need_sync = False
             if remove_disabled_rule or add_disabled_rule:
                 self._save_host_service_enable_disable_rules(remove_disabled_rule, add_disabled_rule)
+                need_sync = True
+            self._save_services(services_to_save, need_sync)
 
 
     def page(self):
@@ -2932,13 +2934,13 @@ class ModeDiscovery(WatoMode):
 
     #   .--action helper-------------------------------------------------------.
 
-    def _save_services(self, checks):
+    def _save_services(self, checks, need_sync):
         host = self._host
         hostname = host.name()
-        check_mk_automation(host.site_id(), "set-autochecks", [hostname], checks)
         message = _("Saved check configuration of host '%s' with %d services") % \
                     (hostname, len(checks))
-        add_service_change(host, "set-autochecks", message)
+        add_service_change(host, "set-autochecks", message, need_sync=need_sync)
+        check_mk_automation(host.site_id(), "set-autochecks", [hostname], checks)
 
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):

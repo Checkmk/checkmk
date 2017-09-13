@@ -1,0 +1,12 @@
+Title: Service discovery dialog: Fixed moving services to "Disabled services" for remote sites
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1505306976
+
+Previously moving services to table "Disabled services" was broken.
+This concerned only hosts belonging to remote sites and has been fixed.

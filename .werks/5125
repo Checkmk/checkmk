@@ -1,4 +1,4 @@
-Title: brocade_mlx_power: Fixed wrong index usage which leads to undetected power supplies
+Title: brocade_mlx_power: Fixed wrong index usage which led to undetected power supplies
 Level: 1
 Component: checks
 Class: fix

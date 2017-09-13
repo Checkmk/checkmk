@@ -1,0 +1,13 @@
+Title: asciimail, mail: Added macros $COUNT_NOTIFICATIONS$ and $COUNT_HOSTS$ which can be used in bulk notification subject
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505312621
+Class: feature
+
+In notification bulking you're able to customize your own subject.
+Moreover if the macro {{$COUNT_NOTIFICATIONS$}} is used, the amount of
+notifications will be inserted and if you use the macro {{$COUNT_HOSTS$}}
+then the amount of hosts will be applied.

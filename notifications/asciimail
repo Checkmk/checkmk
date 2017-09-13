@@ -216,16 +216,19 @@ def read_bulk_contexts():
 
 
 def get_bulk_notification_subject(parameters, contexts, hosts):
+    hosts = list(hosts)
     if parameters.get("PARAMETER_BULK_SUBJECT"):
-        return parameters["PARAMETER_BULK_SUBJECT"]
-
+        subject = parameters["PARAMETER_BULK_SUBJECT"]
+    elif len(hosts) == 1:
+        subject = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for %s" % hosts[0]
     else:
-        hosts = list(hosts)
-        if len(hosts) == 1:
-            return "Check_MK: %d notifications for %s" % (len(contexts), hosts[0])
-        else:
-            return "Check_MK: %d notifications for %d hosts" % \
-                   (len(contexts), len(hosts))
+        subject = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
+
+    if "$COUNT_NOTIFICATIONS$" in subject:
+        subject.replace("$COUNT_NOTIFICATIONS$", len(contexts))
+    if "$COUNT_HOSTS$" in subject:
+        subject.replace("$COUNT_HOSTS$", len(hosts))
+    return subject
 
 
 def main():

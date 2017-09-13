@@ -7671,9 +7671,14 @@ def vs_notification_rule(userid = None):
                     ( "bulk_subject", TextAscii(
                         title = _("Subject for bulk notifications"),
                         help = _("Customize the subject for bulk notifications and overwrite "
-                                 "default subject 'Check_MK: X notifications for HOST' resp. "
-                                 "'Check_MK: X notifications for Y hosts'."),
+                                 "default subject <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for HOST</tt>"
+                                 " resp. <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts</tt>. "
+                                 "Both macros <tt>$COUNT_NOTIFICATIONS$</tt> and <tt>$COUNT_HOSTS$</tt> can be used in "
+                                 "any customized subject. If <tt>$COUNT_NOTIFICATIONS$</tt> is used, the amount of "
+                                 "notifications will be inserted and if you use <tt>$COUNT_HOSTS$</tt> then the "
+                                 "amount of hosts will be applied."),
                         size = 80,
+                        default_value = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
                     )),
                   ],
                   columns = 1,

@@ -12303,7 +12303,7 @@ class ModeRulesets(WatoMode):
 
         #  Explicitly hide deprecated rulesets by default
         if not html.has_var("search_p_ruleset_deprecated"):
-            html.set_var("search_p_ruleset_deprecated", DropdownChoice.option_id(False)),
+            html.set_var("search_p_ruleset_deprecated", "1")
             html.set_var("search_p_ruleset_deprecated_USE", "on")
 
         # Transform group argument to the "rule search arguments"

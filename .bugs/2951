@@ -1,0 +1,12 @@
+Title: Reflect "cluster aware" information of checks in man pages
+Component: core
+State: open
+Date: 2017-09-13 10:04:25
+Targetversion: 1.5.0
+Class: cleanup
+
+The information whether or not a check is "cluster aware" is
+not shown in the man page of a check. We should read the
+"node_info" and show the information in the man page.
+
+On command line, the WATO GUI and the web page.

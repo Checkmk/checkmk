@@ -3021,10 +3021,10 @@ class ModeDiscovery(WatoMode):
 
     def _get_table_target(self, table_source, check_type, item):
         if self._fixall:
-            if table_source == self.SERVICE_UNDECIDED:
-                return self.SERVICE_MONITORED
-            elif table_source == self.SERVICE_VANISHED:
+            if table_source == self.SERVICE_VANISHED:
                 return self.SERVICE_REMOVED
+            else:
+                return self.SERVICE_MONITORED
         else:
             bulk_target = None
             for target in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED,

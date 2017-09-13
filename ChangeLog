@@ -21,6 +21,7 @@
     * 5120 FIX: ps, ps.perf: Fixed regex range introduced with werk 5114 which allows "/" in process name in manual checks
     * 5121 FIX: check_sql: Added error message if cx_Oracle module is not installed
     * 5014 FIX: df: Fixed error if dynamic levels should be set...
+    * 5125 FIX: brocade_mlx_power: Fixed wrong index usage which leads to undetected power supplies
 
 
 1.2.8p25:

@@ -1,0 +1,10 @@
+Title: Service discovery: Fixed permission if user is not allowed to manage services
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p12
+Date: 1505290711
+Class: fix
+
+

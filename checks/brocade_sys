@@ -1,0 +1,109 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_brocade_sys(info):
+    return {
+        "cpu_util"          : int(info[0][0]),
+        "mem_used_percent"  : int(info[0][1]),
+    }
+
+
+#   .--Memory--------------------------------------------------------------.
+#   |               __  __                                                 |
+#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
+#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
+#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
+#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
+#   |                                                |___/                 |
+#   '----------------------------------------------------------------------'
+
+def inventory_brocade_sys_mem(parsed):
+    return [ (None, None) ]
+
+
+def check_brocade_sys_mem(item, params, parsed):
+    mem_used_percent = parsed["mem_used_percent"]
+    infotext = "%s%%" % mem_used_percent
+    if params is None:
+        perfdata = [ ("mem_used_percent", mem_used_percent) ]
+        return 0, infotext, perfdata
+    else:
+        warn, crit = params
+        perfdata = [ ("mem_used_percent", mem_used_percent, warn, crit) ]
+        levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
+        if mem_used_percent >= crit:
+            status = 2
+        elif mem_used_percent >= warn:
+            status = 1
+        else:
+            status = 0
+        if status:
+            infotext += levelstext
+        return status, infotext, perfdata
+
+
+check_info['brocade_sys.mem'] = {
+    'inventory_function'    : inventory_brocade_sys_mem,
+    'check_function'        : check_brocade_sys_mem,
+    'service_description'   : 'Memory used',
+    'group'                 : 'memory_relative',
+    'has_perfdata'          : True,
+}
+
+#.
+#   .--CPU-----------------------------------------------------------------.
+#   |                           ____ ____  _   _                           |
+#   |                          / ___|  _ \| | | |                          |
+#   |                         | |   | |_) | | | |                          |
+#   |                         | |___|  __/| |_| |                          |
+#   |                          \____|_|    \___/                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_brocade_sys(parsed):
+    return [ (None, None) ]
+
+
+def check_brocade_sys(item, params, parsed):
+    return check_cpu_util(parsed["cpu_util"], params)
+
+
+check_info['brocade_sys'] = {
+    'parse_function'        : parse_brocade_sys,
+    'inventory_function'    : inventory_brocade_sys,
+    'check_function'        : check_brocade_sys,
+    'service_description'   : 'CPU utilization',
+    'snmp_info'             : ('.1.3.6.1.4.1.1588.2.1.1.1.26', [ # Brocade-REG-MIB
+                                            "1",    # swCpuUsage
+                                            "6",    # swMemoryUsage
+                                ]),
+    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1"),
+    'group'                 : 'cpu_utilization',
+    'includes'              : [ 'cpu_util.include' ],
+    'has_perfdata'          : True,
+}

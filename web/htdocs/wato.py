@@ -3905,14 +3905,9 @@ class ModeBulkDiscovery(WatoMode):
 
 
     def action(self):
+        config.user.need_permission("wato.services")
         if not self._item:
             return
-
-        if not html.check_transaction():
-            html.write(json.dumps([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
-            html.write_text(_("Error during discovery: Maximum number of retries reached. "
-                              "You need to restart the bulk service discovery"))
-            return ""
 
         try:
             site_id, folderpath, hostnamesstring = self._item.split("|")
@@ -3921,6 +3916,16 @@ class ModeBulkDiscovery(WatoMode):
             num_skipped_hosts = 0
             num_failed_hosts  = 0
             folder            = Folder.folder(folderpath)
+
+            if site_id not in config.sitenames():
+                raise MKGeneralException(_("The requested site does not exist"))
+
+            for host_name in hostnames:
+                host = folder.host(host_name)
+                if host is None:
+                    raise MKGeneralException(_("The requested host does not exist"))
+                host.need_permission("write")
+
             arguments         = [self._mode,] + hostnames
 
             if self._use_cache:
@@ -5698,16 +5703,8 @@ def interactive_progress(items, title, stats, finishvars, timewait,
     finish_url = folder_preserving_link([("mode", "folder")] + finishvars)
     term_url = folder_preserving_link([("mode", "folder")] + termvars)
 
-    # Reserve a certain amount of transids for the progress scheduler
-    # Each json item requires one transid. Additionally, each "Retry failed hosts" eats
-    # up another one. We reserve 20 additional transids for the retry function
-    # Note: The "retry option" ignores the bulk size
-    transids = []
-    for i in range(len(items) + 20):
-        transids.append(html.fresh_transid())
-
-    html.javascript(('progress_scheduler("%s", "%s", 50, %s, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
-                     (html.var('mode'), base_url, json.dumps(items), json.dumps(transids), finish_url,
+    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
+                     (html.var('mode'), base_url, json.dumps(items), finish_url,
                       json.dumps(success_stats), json.dumps(fail_stats), term_url))
 
 

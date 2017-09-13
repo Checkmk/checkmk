@@ -605,7 +605,7 @@ def action_edit_users(request):
         if user_id not in all_users:
             raise MKUserError(None, _("Unknown user: %s") % user_id)
 
-        if all_users[user_id].get("connector") != "htpasswd":
+        if all_users[user_id].get("connector", "htpasswd") != "htpasswd":
             raise MKUserError(None, _("This user is not a htpasswd user: %s") % user_id)
 
         user_attrs = copy.deepcopy(all_users[user_id])

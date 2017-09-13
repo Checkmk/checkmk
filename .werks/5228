@@ -1,0 +1,12 @@
+Title: WATO Web-API: now able to edit users which were created through the GUI
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505293943
+Class: fix
+
+Users created through the WATO users page lacked the attribute <tt>"connector":"htpasswd"</tt>.
+The edit_users Web API call can now handle this issue.
+

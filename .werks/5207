@@ -1,0 +1,17 @@
+Title: Bulk discovery: Fixed "Maximum number of retries reached" error during bulk discovery
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p12
+Date: 1505307556
+Class: fix
+
+When performing a bulk discovery on more than 40 hosts an error with
+this message could occur:
+
+"Error during discovery: Maximum number of retries reached. You need to restart the bulk service discovery"
+
+After this fix you should be able to perform bulk discoveries with a lot
+larger number of hosts. The limitating factor (limited number of transaction ids)
+has been removed.

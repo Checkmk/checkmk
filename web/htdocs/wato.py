@@ -3855,14 +3855,10 @@ def mode_bulk_discovery(phase):
         html.context_button(_("Folder"), Folder.current().url(), "back")
         return
 
-    elif phase == "action":
-        if html.var("_item"):
-            if not html.check_transaction():
-                html.write(json.dumps([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
-                html.write_text(_("Error during discovery: Maximum number of retries reached. "
-                                  "You need to restart the bulk service discovery"))
-                return ""
+    config.user.need_permission("wato.services")
 
+    if phase == "action":
+        if html.var("_item"):
             how = html.var("how")
             try:
                 site_id, folderpath, hostnamesstring = html.var("_item").split("|")
@@ -3870,7 +3866,18 @@ def mode_bulk_discovery(phase):
                 num_hosts = len(hostnames)
                 num_skipped_hosts = 0
                 num_failed_hosts = 0
+
                 folder = Folder.folder(folderpath)
+
+                if site_id not in config.sitenames():
+                    raise MKGeneralException(_("The requested site does not exist"))
+
+                for host_name in hostnames:
+                    host = folder.host(host_name)
+                    if host is None:
+                        raise MKGeneralException(_("The requested host does not exist"))
+                    host.need_permission("write")
+
                 arguments = [how,] + hostnames
                 if html.var("use_cache"):
                     arguments = [ "@cache" ] + arguments
@@ -3946,8 +3953,6 @@ def mode_bulk_discovery(phase):
             for subfolder in folder.all_subfolders().values():
                 entries += recurse_hosts(subfolder, recurse, only_failed)
         return entries
-
-    config.user.need_permission("wato.services")
 
     if html.get_checkbox("only_failed_invcheck"):
         restrict_to_hosts = find_hosts_with_failed_inventory_check()
@@ -5606,16 +5611,8 @@ def interactive_progress(items, title, stats, finishvars, timewait,
     finish_url = folder_preserving_link([("mode", "folder")] + finishvars)
     term_url = folder_preserving_link([("mode", "folder")] + termvars)
 
-    # Reserve a certain amount of transids for the progress scheduler
-    # Each json item requires one transid. Additionally, each "Retry failed hosts" eats
-    # up another one. We reserve 20 additional transids for the retry function
-    # Note: The "retry option" ignores the bulk size
-    transids = []
-    for i in range(len(items) + 20):
-        transids.append(html.fresh_transid())
-
-    html.javascript(('progress_scheduler("%s", "%s", 50, %s, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
-                     (html.var('mode'), base_url, json.dumps(items), json.dumps(transids), finish_url,
+    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
+                     (html.var('mode'), base_url, json.dumps(items), finish_url,
                       json.dumps(success_stats), json.dumps(fail_stats), term_url))
 
 

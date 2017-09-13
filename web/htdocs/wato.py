@@ -12303,7 +12303,7 @@ class ModeRulesets(WatoMode):
 
         #  Explicitly hide deprecated rulesets by default
         if not html.has_var("search_p_ruleset_deprecated"):
-            html.set_var("search_p_ruleset_deprecated", "1"),
+            html.set_var("search_p_ruleset_deprecated", DropdownChoice.option_id(False)),
             html.set_var("search_p_ruleset_deprecated_USE", "on")
 
         # Transform group argument to the "rule search arguments"
@@ -12482,11 +12482,13 @@ def rule_search_button(search_options=None, mode="rulesets"):
     # Don't highlight the button on "standard page" searches. Meaning the page calls
     # that are no searches from the users point of view because he did not fill the
     # search form, but clicked a link in the GUI
-    if search_options and (search_options.keys() == ["ruleset_group"]
-                           or search_options.keys() == ["ruleset_deprecated"]
-                           or search_options.keys() == ["rule_ineffective"]
-                           or search_options.keys() == ["ruleset_used"]):
-        is_searching = False
+    if is_searching:
+        search_keys = sorted(search_options.keys())
+        if search_keys == ["ruleset_deprecated", "ruleset_group"] \
+           or search_keys == ["ruleset_deprecated"] \
+           or search_keys == ["rule_ineffective"] \
+           or search_keys == ["ruleset_used"]:
+            is_searching = False
 
     if is_searching:
         title = _("Refine search")

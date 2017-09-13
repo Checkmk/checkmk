@@ -1,0 +1,20 @@
+Title: Fix piggyback cleanup mechanism
+Component: core
+State: open
+Date: 2017-09-13 10:52:02
+Targetversion: 1.5.0
+Class: bug
+
+The logic for cleaning up piggyback files is not scaling well and may
+also include race conditions.
+
+Idea:
+
+- Remove the cleanup routine (remove_piggyback_info_from())
+- Also remove the os.remove() from get_piggyback_files()
+- Persist the time the a piggy source host was delivering data for the
+  last time
+- Only use the piggyback data which is of equal age or newer than the
+  last time the piggyback source host was contacted.
+  -> Replace "config.piggyback_max_cachefile_age" handling and replace
+     it with the timestamp of the last source host contact

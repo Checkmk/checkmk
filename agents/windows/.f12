@@ -1,5 +1,9 @@
+#!/bin/bash
+set -e
+
 SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
 
 make || true
-sudo rsync -varx -v CONTENTS *.exe /omd/sites/$SITE/share/check_mk/agents/windows/
+sudo rsync -varx -v CONTENTS *.exe $ROOT/share/check_mk/agents/windows/

@@ -1,13 +1,18 @@
-SITE=${SITE:-$(cat ../../.site || true)}
+#!/bin/bash
+set -e
+
+SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
 echo "Installing to site \"$SITE\"..."
-sudo install -m 755 diskspace /omd/sites/$SITE/bin
-sudo install -m 755 merge-crontabs /omd/sites/$SITE/bin
+sudo install -m 755 diskspace $ROOT/bin
+sudo install -m 755 merge-crontabs $ROOT/bin
 for F in ../*/diskspace; do
-    sudo cp $F /omd/sites/$SITE/share/diskspace
+    sudo cp $F $ROOT/share/diskspace
 done
 
-sudo cp skel/etc/cron.d/* /omd/sites/$SITE/etc/cron.d
+sudo cp skel/etc/cron.d/* $ROOT/etc/cron.d
 sudo omd restart $SITE crontab
 
 sudo omd restart $SITE apache

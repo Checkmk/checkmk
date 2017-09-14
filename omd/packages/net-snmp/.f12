@@ -1,5 +1,10 @@
-SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
+#!/bin/bash
+set -e
+
+SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=$ROOT
+
 echo "Installing to site \"$SITE\"..."
 
 if [ ! -d net-snmp-5.7.3 ]; then
@@ -11,13 +16,13 @@ else
 fi
 
 cd python
-sudo PYTHONPATH=$PYTHONPATH:/omd/sites/$SITE/lib/python \
-    python setup.py install --home=/omd/sites/$SITE \
+sudo PYTHONPATH=$PYTHONPATH:$ROOT/lib/python \
+    python setup.py install --home=$ROOT \
                 --prefix='' \
-                --install-platlib=/omd/sites/$SITE/lib/python \
-                --install-purelib=/omd/sites/$SITE/lib/python
+                --install-platlib=$ROOT/lib/python \
+                --install-purelib=$ROOT/lib/python
 
 cd ..
 
-sudo install -m 755 apps/.libs/snmp{bulkwalk,walk,get} /omd/sites/$SITE/bin
-sudo install -m 644 snmplib/.libs/libnetsnmp.* /omd/sites/$SITE/lib
+sudo install -m 755 apps/.libs/snmp{bulkwalk,walk,get} $ROOT/bin
+sudo install -m 644 snmplib/.libs/libnetsnmp.* $ROOT/lib

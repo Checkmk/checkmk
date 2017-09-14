@@ -1,3 +1,9 @@
 #!/bin/bash
-sudo install -v -m 755 merge-nagios-config /omd/versions/default/bin/merge-nagios-config 
+set -e
+
+SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
+sudo install -v -m 755 merge-nagios-config /omd/versions/default/bin/merge-nagios-config
 sudo install -s -v -m 755 nagios-*.*.*/base/nagios /omd/versions/default/bin/nagios

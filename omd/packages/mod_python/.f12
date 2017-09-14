@@ -1,8 +1,11 @@
 #!/bin/bash -e
-SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
+set -e
+
+SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
 
 echo '#define OMD_VERSION "$(omd versions | grep default | cut -d' ' -f1)"' > mod_python-*/src/omd_version.h
 make -C mod_python-* clean all
-sudo make install OMD_ROOT=/omd/sites/$SITE
+sudo make install OMD_ROOT=$ROOT
 sudo omd restart $SITE apache

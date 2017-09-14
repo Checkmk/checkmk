@@ -1,0 +1,19 @@
+title: Fujitsu SC2: CPU Status
+agents: snmp
+catalog: hw/server/fujitsu
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the CPU status
+ on Fujitsu Siemens Servers which support the 
+ FSC-SERVERCONTROL2-MIB.
+
+ The check goes WARN or CRIT if the device is
+ reporting a failure or pre-failure state.
+ 
+item:
+ The CPU designation
+
+inventory:
+ One service per CPU is created.
+

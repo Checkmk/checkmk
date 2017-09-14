@@ -800,8 +800,6 @@ class ModeBI(WatoMode):
                 sub_rule_ids.append(r[0])
         return sub_rule_ids
 
-
-
     # .--------------------------------------------------------------------.
     # | Generic rendering                                                  |
     # '--------------------------------------------------------------------'
@@ -829,6 +827,18 @@ class ModeBI(WatoMode):
             for sub_rule_id in sub_rule_ids:
                 self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id)
             html.end_foldable_container()
+
+    # .--------------------------------------------------------------------.
+    # | Some helper                                                        |
+    # '--------------------------------------------------------------------'
+
+    def _get_selection(self, _type):
+        checkbox_name = "_c_%s_" % _type
+        selection = []
+        for varname in html.all_varnames_with_prefix(checkbox_name):
+            if html.get_checkbox(varname):
+                selection.append(varname.split(checkbox_name)[-1])
+        return selection
 
 
 
@@ -1032,37 +1042,129 @@ class ModeBIAggregations(ModeBI):
 
 
     def action(self):
-        nr = int(html.var("_del_aggr"))
+        self.must_be_contact_for_pack()
+
+        if html.var("_del_aggr"):
+            return self._delete_after_confirm()
+
+        elif html.var("_bulk_delete_bi_aggregations"):
+            return self._bulk_delete_after_confirm()
+
+        elif html.var("_bulk_move_bi_aggregations"):
+            return self._bulk_move_after_confirm()
+
+
+    def _delete_after_confirm(self):
+        aggregation_id = int(html.var("_del_aggr"))
         c = wato_confirm(_("Confirm aggregation deletion"),
-            _("Do you really want to delete the aggregation number <b>%s</b>?") % (nr+1))
+            _("Do you really want to delete the aggregation number <b>%s</b>?") % (aggregation_id+1))
         if c:
-            del self._pack["aggregations"][nr]
-            self._add_change("bi-delete-aggregation", _("Deleted BI aggregation number %d") % (nr+1))
+            self._pack["aggregations"].remove(aggregation_id)
+            self._add_change("bi-delete-aggregation", _("Deleted BI aggregation number %d") % (aggregation_id+1))
             self.save_config()
         elif c == False: # not yet confirmed
             return ""
 
 
+    def _bulk_delete_after_confirm(self):
+        selection = map(int, self._get_selection("aggregation"))
+        if selection:
+            c = wato_confirm(_("Confirm deletion of %d aggregations") % \
+                               len(selection),
+                             _("Do you really want to delete %d aggregations?") % \
+                               len(selection))
+            if c:
+                for aggregation_id in selection[::-1]:
+                    del self._pack["aggregations"][aggregation_id]
+                    self._add_change("bi-delete-aggregation",
+                                   _("Deleted BI aggregation with ID %s") % (aggregation_id+1))
+                self.save_config()
+
+            elif c == False:
+                return ""
+
+
+    def _bulk_move_after_confirm(self):
+        target = None
+        if html.has_var('bulk_moveto'):
+            target = html.var('bulk_moveto', '')
+            html.javascript('update_bulk_moveto("%s")' % target)
+
+        target_pack = None
+        if target in self._packs:
+            target_pack = self._packs[target]
+            self.must_be_contact_for_pack(target_pack)
+
+        selection = map(int, self._get_selection("aggregation"))
+        if selection and target_pack is not None:
+            c = wato_confirm(_("Confirm moving of %d aggregations to %s") % \
+                              (len(selection), target_pack['title']),
+                             _("Do you really want to move %d aggregations to %s?") % \
+                              (len(selection), target_pack['title']))
+            if c:
+                for aggregation_id in selection[::-1]:
+                    aggregation = self._pack["aggregations"][aggregation_id]
+                    target_pack["aggregations"].append(aggregation)
+                    del self._pack["aggregations"][aggregation_id]
+                    self._add_change("bi-move-aggregation",
+                                   _("Moved BI aggregation with ID %s to BI pack %s") % \
+                                    (aggregation_id+1, target))
+                self.save_config()
+            elif c == False:
+                return ""
+
+
     def page(self):
+        html.begin_form("bulk_delete_form", method="POST")
+        self._render_aggregations()
+        html.hidden_fields()
+        if self._pack["aggregations"]:
+            fieldstyle = "margin-top:10px"
+            html.button("_bulk_delete_bi_aggregations", _("Bulk delete"), "submit", style=fieldstyle)
+            html.button("_bulk_move_bi_aggregations",   _("Bulk move"),   "submit", style=fieldstyle)
+
+            if html.has_var('bulk_moveto'):
+                html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+
+            choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
+                        if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs) ]
+            html.select("bulk_moveto", choices, "@",
+                         onchange = "update_bulk_moveto(this.value)",
+                         attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
+        html.end_form()
+
+
+    def _render_aggregations(self):
         table.begin("bi_aggr", _("Aggregations"))
-        for nr, aggregation in enumerate(self._pack["aggregations"]):
+        for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
             table.row()
+            table.cell(html.render_input("_toggle_group", type_="button",
+                        class_="checkgroup", onclick="toggle_all_rows();",
+                        value='X'), sortable=False, css="checkbox")
+            html.checkbox("_c_aggregation_%s" % aggregation_id)
+
             table.cell(_("Actions"), css="buttons")
-            edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", nr), ("pack", self._pack_id)])
+            edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", aggregation_id), ("pack", self._pack_id)])
             html.icon_button(edit_url, _("Edit this aggregation"), "edit")
+
             if self.is_contact_for_pack():
-                delete_url = html.makeactionuri([("_del_aggr", nr)])
+                delete_url = html.makeactionuri([("_del_aggr", aggregation_id)])
                 html.icon_button(delete_url, _("Delete this aggregation"), "delete")
-            table.cell(_("Nr."), nr + 1, css="number")
+
+            table.cell(_("Nr."), aggregation_id+1, css="number")
             table.cell("", css="buttons")
+
             if aggregation["disabled"]:
                 html.icon(_("This aggregation is currently disabled."), "disabled")
             if aggregation["single_host"]:
                 html.icon(_("This aggregation covers only data from a single host."), "host")
+
             table.cell(_("Groups"), ", ".join(aggregation["groups"]))
+
             ruleid, description = self.rule_called_by_node(aggregation["node"])
             edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id), ("id", ruleid)])
             table.cell(_("Rule Tree"), css="bi_rule_tree")
+
             self.render_aggregation_rule_tree(aggregation)
             table.cell(_("Note"), description)
         table.end()
@@ -1105,9 +1207,8 @@ class ModeBIRules(ModeBI):
         if self._view_type == "list":
             html.context_button(_("Aggregations"), self.url_to_pack([("mode", "bi_aggregations")]), "aggr")
             if self.is_contact_for_pack():
-                html.context_button(_("New Rule"),     self.url_to_pack([("mode", "bi_edit_rule"), ("pack", self._pack_id)]), "new")
+                html.context_button(_("New Rule"), self.url_to_pack([("mode", "bi_edit_rule"), ("pack", self._pack_id)]), "new")
             html.context_button(_("Unused Rules"), self.url_to_pack([("mode", "bi_rules"), ("view", "unused")]), "unusedbirules")
-
         else:
             html.context_button(_("Back"), html.makeuri([("view", "list")]), "back")
 
@@ -1116,63 +1217,59 @@ class ModeBIRules(ModeBI):
         self.must_be_contact_for_pack()
 
         if html.var("_del_rule"):
-            return self._delete_rule_after_confirm()
+            return self._delete_after_confirm()
 
         elif html.var("_bulk_delete_bi_rules"):
-            return self._bulk_delete_rules_after_confirm()
+            return self._bulk_delete_after_confirm()
 
         elif html.var("_bulk_move_bi_rules"):
-            return self._bulk_move_rules_after_confirm()
+            return self._bulk_move_after_confirm()
 
 
-    def _delete_rule_after_confirm(self):
-        ruleid = html.var("_del_rule")
-
-        self._check_delete_ruleid_permission(ruleid)
-
+    def _delete_after_confirm(self):
+        rule_id = html.var("_del_rule")
+        self._check_delete_rule_id_permission(rule_id)
         c = wato_confirm(_("Confirm rule deletion"),
                          _("Do you really want to delete the rule with "
-                           "the id <b>%s</b>?") % ruleid)
+                           "the ID <b>%s</b>?") % rule_id)
         if c:
-            del self._pack["rules"][ruleid]
+            del self._pack["rules"][rule_id]
             self._add_change("bi-delete-rule",
-                           _("Deleted BI rule with id %s") % ruleid)
+                           _("Deleted BI rule with ID %s") % rule_id)
             self.save_config()
-
         elif c == False: # not yet confirmed
             return ""
 
 
-    def _bulk_delete_rules_after_confirm(self):
-        selected_rules = self._get_selected_rules()
-        for ruleid in selected_rules:
-            self._check_delete_ruleid_permission(ruleid)
+    def _bulk_delete_after_confirm(self):
+        selection = self._get_selection("rule")
+        for rule_id in selection:
+            self._check_delete_rule_id_permission(rule_id)
 
-        if selected_rules:
+        if selection:
             c = wato_confirm(_("Confirm deletion of %d rules") % \
-                               len(selected_rules),
+                               len(selection),
                              _("Do you really want to delete %d rules?") % \
-                               len(selected_rules))
+                               len(selection))
             if c:
-                for ruleid in selected_rules:
-                    del self._pack["rules"][ruleid]
+                for rule_id in selection:
+                    del self._pack["rules"][rule_id]
                     self._add_change("bi-delete-rule",
-                                   _("Deleted BI rule with id %s") % ruleid)
+                                   _("Deleted BI rule with ID %s") % rule_id)
                 self.save_config()
-
             elif c == False:
                 return ""
 
 
-    def _check_delete_ruleid_permission(self, ruleid):
-        aggr_refs, rule_refs, level = self.count_rule_references(ruleid)
+    def _check_delete_rule_id_permission(self, rule_id):
+        aggr_refs, rule_refs, level = self.count_rule_references(rule_id)
         if aggr_refs:
             raise MKUserError(None, _("You cannot delete this rule: it is still used by aggregations."))
         if rule_refs:
             raise MKUserError(None, _("You cannot delete this rule: it is still used by other rules."))
 
 
-    def _bulk_move_rules_after_confirm(self):
+    def _bulk_move_after_confirm(self):
         target = None
         if html.has_var('bulk_moveto'):
             target = html.var('bulk_moveto', '')
@@ -1183,36 +1280,26 @@ class ModeBIRules(ModeBI):
             target_pack = self._packs[target]
             self.must_be_contact_for_pack(target_pack)
 
-        selected_rules = self._get_selected_rules()
-        if selected_rules and target_pack is not None:
+        selection = self._get_selection("rule")
+        if selection and target_pack is not None:
             c = wato_confirm(_("Confirm moving of %d rules to %s") % \
-                              (len(selected_rules), target_pack['title']),
+                              (len(selection), target_pack['title']),
                              _("Do you really want to move %d rules to %s?") % \
-                              (len(selected_rules), target_pack['title']))
+                              (len(selection), target_pack['title']))
             if c:
-                for ruleid in selected_rules:
-                    rule_attrs = self._pack["rules"][ruleid]
-                    target_pack["rules"].setdefault(ruleid, rule_attrs)
-                    del self._pack["rules"][ruleid]
+                for rule_id in selection:
+                    rule_attrs = self._pack["rules"][rule_id]
+                    target_pack["rules"].setdefault(rule_id, rule_attrs)
+                    del self._pack["rules"][rule_id]
                     self._add_change("bi-move-rule",
-                                   _("Moved BI rule with id %s to BI pack %s") % (ruleid, target))
+                                   _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target))
                 self.save_config()
-
             elif c == False:
                 return ""
 
 
-    def _get_selected_rules(self):
-        selected_rules = []
-        for varname in html.all_varnames_with_prefix("_c_rule_"):
-            if html.get_checkbox(varname):
-                selected_rules.append(varname.split("_c_rule_")[-1])
-        return selected_rules
-
-
     def page(self):
         self.must_be_contact_for_pack()
-
         if not self._pack["aggregations"] and not self._pack["rules"]:
             new_url = self.url_to_pack([("mode", "bi_edit_rule")])
             menu_items = [
@@ -1224,27 +1311,25 @@ class ModeBIRules(ModeBI):
             return
 
         html.begin_form("bulk_delete_form", method = "POST")
-
         if self._view_type == "list":
             self.render_rules(_("Rules"), only_unused = False)
         else:
             self.render_rules(_("Unused BI Rules"), only_unused = True)
 
         html.hidden_fields()
-        fieldstyle = "margin-top:10px"
+        if self._pack["rules"]:
+            fieldstyle = "margin-top:10px"
+            html.button("_bulk_delete_bi_rules", _("Bulk delete"), "submit", style=fieldstyle)
+            html.button("_bulk_move_bi_rules",   _("Bulk move"),   "submit", style=fieldstyle)
 
-        html.button("_bulk_delete_bi_rules", _("Bulk delete"), "submit", style=fieldstyle)
-        html.button("_bulk_move_bi_rules",   _("Bulk move"),   "submit", style=fieldstyle)
+            if html.has_var('bulk_moveto'):
+                html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
 
-        if html.has_var('bulk_moveto'):
-            html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-        choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
-                    if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs) ]
-
-        html.select("bulk_moveto", choices, "@",
-                     onchange = "update_bulk_moveto(this.value)",
-                     attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
-
+            choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
+                        if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs) ]
+            html.select("bulk_moveto", choices, "@",
+                         onchange = "update_bulk_moveto(this.value)",
+                         attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
         html.end_form()
 
 
@@ -1253,37 +1338,33 @@ class ModeBIRules(ModeBI):
 
         rules = self._pack["rules"].items()
         # Sort rules according to nesting level, and then to id
-        rules_refs = [ (ruleid, rule, self.count_rule_references(ruleid))
-                       for (ruleid, rule) in rules ]
+        rules_refs = [ (rule_id, rule, self.count_rule_references(rule_id))
+                       for (rule_id, rule) in rules ]
         rules_refs.sort(cmp = lambda a,b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
 
         table.begin("bi_rules", title)
-        for ruleid, rule, (aggr_refs, rule_refs, level) in rules_refs:
+        for rule_id, rule, (aggr_refs, rule_refs, level) in rules_refs:
             refs = aggr_refs + rule_refs
             if not only_unused or refs == 0:
                 table.row()
-
-                # Checkboxes
                 table.cell(html.render_input("_toggle_group", type_="button",
                             class_="checkgroup", onclick="toggle_all_rows();",
                             value='X'), sortable=False, css="checkbox")
-
-                html.checkbox("_c_rule_%s" % ruleid)
+                html.checkbox("_c_rule_%s" % rule_id)
 
                 table.cell(_("Actions"), css="buttons")
-
-                edit_url = self.url_to_pack([("mode", "bi_edit_rule"), ("id", ruleid)])
+                edit_url = self.url_to_pack([("mode", "bi_edit_rule"), ("id", rule_id)])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 
-                clone_url = self.url_to_pack([("mode", "bi_edit_rule"), ("clone", ruleid)])
+                clone_url = self.url_to_pack([("mode", "bi_edit_rule"), ("clone", rule_id)])
                 html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
                 if rule_refs == 0:
-                    tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", ruleid)])
+                    tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", rule_id)])
                     html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "bitree")
 
                 if refs == 0:
-                    delete_url = html.makeactionuri_contextless([("mode", "bi_rules"), ("_del_rule", ruleid), ("pack", self._pack_id)])
+                    delete_url = html.makeactionuri_contextless([("mode", "bi_rules"), ("_del_rule", rule_id), ("pack", self._pack_id)])
                     html.icon_button(delete_url, _("Delete this rule"), "delete")
 
                 table.cell("", css="narrow")
@@ -1293,22 +1374,21 @@ class ModeBIRules(ModeBI):
                     html.empty_icon_button()
 
                 table.cell(_("Level"), level or "", css="number")
-                table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, ruleid))
+                table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule_id))
                 table.cell(_("Parameters"), " ".join(rule["params"]))
                 table.cell(_("Title"), rule["title"])
                 table.cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
                 table.cell(_("Nodes"), len(rule["nodes"]), css="number")
                 table.cell(_("Used by"))
                 have_this = set([])
-                for (aggr_id, aggregation) in aggregations_that_use_rule.get(ruleid, []):
+                for (aggr_id, aggregation) in aggregations_that_use_rule.get(rule_id, []):
                     if aggr_id not in have_this:
-                        pack = self.pack_containing_rule(ruleid)
+                        pack = self.pack_containing_rule(rule_id)
                         aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", aggr_id), ("pack", pack["id"])])
                         html.a(self.aggregation_title(aggregation), href=aggr_url)
                         html.br()
                         have_this.add(aggr_id)
                 table.cell(_("Comment"), rule.get("comment", ""))
-
         table.end()
 
 
@@ -1316,9 +1396,9 @@ class ModeBIRules(ModeBI):
         aggregations_that_use_rule = {}
         for pack_id, pack in self._packs.items():
             for aggr_id, aggregation in enumerate(pack["aggregations"]):
-                ruleid, description = self.rule_called_by_node(aggregation["node"])
-                aggregations_that_use_rule.setdefault(ruleid, []).append((aggr_id, aggregation))
-                sub_rule_ids = self._aggregation_recursive_sub_rule_ids(ruleid)
+                rule_id, description = self.rule_called_by_node(aggregation["node"])
+                aggregations_that_use_rule.setdefault(rule_id, []).append((aggr_id, aggregation))
+                sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
                 for sub_rule_id in sub_rule_ids:
                     aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id, aggregation))
         return aggregations_that_use_rule
@@ -1507,7 +1587,7 @@ class ModeBIEditRule(ModeBI):
                 existing_rule = self.find_rule_by_id(self._ruleid)
                 pack = self.pack_containing_rule(self._ruleid)
                 raise MKUserError('rule_p_id',
-                    _("There is already a rule with the id <b>%s</b>. "
+                    _("There is already a rule with the ID <b>%s</b>. "
                       "It is in the pack <b>%s</b> and as the title <b>%s</b>") % (
                             self._ruleid, pack["title"], existing_rule["title"]))
 

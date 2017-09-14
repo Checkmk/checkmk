@@ -1,0 +1,123 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<suse_connect:sep(58)>>>
+# identifier: SLES
+# version: 12.1
+# arch: x86_64
+# status: Registered
+# regcode: 987498234zGDTS
+# starts_at: 2015-12-01 00:00:00 UTC
+# expires_at: 2019-12-31 00:00:00 UTC
+# subscription_status: ACTIVE
+# type: full
+
+
+factory_settings['sles_license_default_levels'] = {
+    'status': 'Registered',
+    'subscription_status': 'ACTIVE',
+    'days_left': (14, 7),
+}
+
+
+def parse_suseconnect(info):
+    parsed = {}
+    used_keys = {
+        'status', 'regcode', 'starts_at', 'expires_at',
+        'subscription_status', 'type'
+    }
+
+    is_sles = False
+    for item in info:
+        # a value may contain the sep ':' as well
+        key, value = item[0], ":".join(item[1:]).strip()
+        if key == 'identifier':
+            is_sles = True if value == 'SLES' else False
+
+        if is_sles and key in used_keys:
+            parsed[key] = value
+
+    return parsed
+
+
+def inventory_suseconnect(parsed):
+    return [(None, {})]
+
+
+def check_suseconnect(_no_item, params, parsed):
+    # we assume here that the parsed data contains all required keys
+
+    if not parsed:
+        yield 3, 'No license information found'
+        return
+
+    state, infotext = 0, 'Status: %(status)s' % parsed
+    if params['status'] != 'Ignore' and params['status'] != parsed['status']:
+        state = 2
+    yield state, infotext
+
+    state, infotext = 0, ', Subscription: %(subscription_status)s' % parsed
+    if (params['subscription_status'] != 'Ignore' and
+            params['subscription_status'] != parsed['subscription_status']):
+        state = 2
+    yield state, infotext
+
+    yield 0, (', Subscription type: %(type)s, Registration code: %(regcode)s, '
+              'Starts at: %(starts_at)s, Expires at: %(expires_at)s'
+             ) % parsed
+
+    expiration_date = time.strptime(parsed['expires_at'], '%Y-%m-%d %H:%M:%S %Z')
+    expiration_time = time.mktime(expiration_date) - time.time()
+
+    if expiration_time > 0:
+        warn, crit = params['days_left']
+        days2seconds = 24 * 60 * 60
+
+        if expiration_time <= crit * days2seconds:
+            state = 2
+        elif expiration_time <= warn * days2seconds:
+            state = 1
+        else:
+            state = 0
+
+        infotext = ', Expires in: %s' % get_age_human_readable(expiration_time)
+        if state:
+            infotext += ' (warn/crit at %d/%d)' % (warn, crit)
+
+        yield state, infotext
+    else:
+        yield 2, ', Expired since: %s' % get_age_human_readable(-1.0*expiration_time)
+
+
+check_info['suseconnect'] = {
+    'service_description': 'SLES license',
+    'parse_function': parse_suseconnect,
+    'inventory_function': inventory_suseconnect,
+    'check_function': check_suseconnect,
+    'group': 'sles_license',
+    'default_levels_variable': 'sles_license_default_levels',
+}

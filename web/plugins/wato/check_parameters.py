@@ -6125,6 +6125,48 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "sles_license",
+    ("SLES License"),
+    Dictionary(
+        elements = [
+            ( "status",
+              DropdownChoice(
+                  title = _("Status"),
+                  help = _("Status of the SLES license"),
+                  choices = [
+                      ('Registered', _('Registered')),
+                      ('Ignore', _('Do not check')),
+                  ]
+              )
+            ),
+            ( "subscription_status",
+              DropdownChoice(
+                  title = _("Subscription"),
+                  help = _("Status of the SLES subscription"),
+                  choices = [
+                      ('ACTIVE', _('ACTIVE')),
+                      ('Ignore', _('Do not check')),
+                  ]
+              )
+            ),
+            ( "days_left",
+              Tuple(
+                  title = _("Time until license expiration"),
+                  help = _("Remaining days until the SLES license expires"),
+                  elements = [
+                      Integer(title = _("Warning at"),  unit = _("days")),
+                      Integer(title = _("Critical at"), unit = _("days"))
+                  ]
+              )
+            ),
+        ]
+    ),
+    None,
+    match_type = "dict",
+)
+
+register_check_parameters(
     subgroup_networking,
     "viprinet_router",
     _("Viprinet router"),

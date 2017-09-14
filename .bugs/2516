@@ -1,0 +1,12 @@
+Title: Sites crashes if connection is changed from slave to no replication
+Component: wato
+State: open
+Date: 2017-09-14 15:09:37
+Targetversion: 1.4.0
+Class: nastiness
+
+At the moment there is no warning, if a site connection is changed from
+"Slave" to "No replication". Configured hosts on the master site still
+persists even if the slave site is not available anymore. You will need to
+manually change the attribute "Monitored on site" on all hosts which did
+belong to the slave site. Otherwise you are not able to remove them.

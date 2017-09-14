@@ -1,0 +1,12 @@
+Title: BI rules: 'Call a rule' in 'Child Node Generation' shows separated pack and rule title
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1503597775
+Class: feature
+
+Previously within the above mentioned choices rule ID,
+pack title and rule title were merged into one.
+Separated them for better overview.

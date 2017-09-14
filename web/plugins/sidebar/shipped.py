@@ -1442,7 +1442,7 @@ class BookmarkList(pagetypes.Overridable):
 
 
     @classmethod
-    def parameters(cls):
+    def parameters(cls, mode):
         vs_topic = TextUnicode(
             title = _("Topic") + "<sup>*</sup>",
             size = 50,
@@ -1463,7 +1463,7 @@ class BookmarkList(pagetypes.Overridable):
                 "topic" : v[3],
             }
 
-        parameters = super(BookmarkList, cls).parameters()
+        parameters = super(BookmarkList, cls).parameters(mode)
 
         parameters += [(_("Bookmarks"), [
             # sort-index, key, valuespec

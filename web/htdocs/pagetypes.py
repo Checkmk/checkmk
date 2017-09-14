@@ -96,7 +96,7 @@ class Base(object):
     # Each element is a triple of order, key and valuespec
     # TODO: Add topic here
     @classmethod
-    def parameters(cls):
+    def parameters(cls, mode):
         return [ ( _("General Properties"), [
             ( 1.1, 'name', ID(
                 title = _('Unique ID'),
@@ -129,9 +129,9 @@ class Base(object):
     # Do *not* override this. It collects all editable parameters of our
     # page type by calling parameters() for each class
     @classmethod
-    def collect_parameters(cls):
+    def _collect_parameters(cls, mode):
         topics = {}
-        for topic, elements in cls.parameters():
+        for topic, elements in cls.parameters(mode):
             el = topics.setdefault(topic, [])
             el += elements
 
@@ -317,8 +317,8 @@ class PageRenderer(Base):
     # Parameters special for page renderers. These can be added to the sidebar,
     # so we need a topic and a checkbox for the visibility
     @classmethod
-    def parameters(cls):
-        parameters = super(PageRenderer, cls).parameters()
+    def parameters(cls, mode):
+        parameters = super(PageRenderer, cls).parameters(mode)
 
         parameters += [(_("General Properties"), [
             ( 1.4, 'topic', TextUnicode(
@@ -412,8 +412,8 @@ class Overridable(Base):
 
 
     @classmethod
-    def parameters(cls):
-        parameters = super(Overridable, cls).parameters()
+    def parameters(cls, mode):
+        parameters = super(Overridable, cls).parameters(mode)
 
         if cls.has_overriding_permission("publish"):
             parameters += [( _("General Properties"), [
@@ -1025,7 +1025,7 @@ class Overridable(Base):
             title = _("General Properties"),
             render = 'form',
             optional_keys = None,
-            elements = cls.collect_parameters(),
+            elements = cls._collect_parameters(mode),
         )
 
         def validate(page_dict):

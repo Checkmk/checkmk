@@ -1,9 +1,12 @@
 #!/bin/bash
+set -e
+
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo rsync -varx --delete --exclude=.f12* --exclude=.gitignore --exclude=baked* ./ /omd/sites/$SITE/share/check_mk/agents/
-if [ -e /etc/check_mk ]
-then
+ROOT=/omd/sites/$SITE
+
+sudo rsync -varx --delete --exclude=.f12* --exclude=.gitignore --exclude=baked* ./ $ROOT/share/check_mk/agents/
+if [ -e /etc/check_mk ]; then
     sudo install -m 644 cfg_examples/logwatch.cfg /etc/check_mk/
 fi
 sudo install -m 755 check_mk_agent.linux /usr/bin/check_mk_agent

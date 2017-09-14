@@ -1,4 +1,8 @@
 #!/bin/bash
+set -e
+
 SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo install -m 755 * /omd/sites/$SITE/share/check_mk/agents/windows/plugins
+ROOT=/omd/sites/$SITE
+
+sudo install -m 755 * $ROOT/share/check_mk/agents/windows/plugins

@@ -1,10 +1,14 @@
 #!/bin/bash
+set -e
+
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
 sudo rsync \
     --exclude "*cmc.py" \
     --exclude "*omd_configuration.py" \
-    -varx htdocs plugins /omd/sites/$SITE/share/check_mk/web/
+    -varx htdocs plugins $ROOT/share/check_mk/web/
 #    --delete \
 echo "$C files copied"
 
@@ -16,11 +20,11 @@ fi
 
 # Per Default wird geguckt, ob die *_min.js-Dateien älter sind, als
 # die Original-Dateien. Wenn ja, dann werden sie neu erstellt.
-sudo make DESTDIR=/omd/sites/$SITE/share/check_mk -C .. install-minified-js
+sudo make DESTDIR=$ROOT/share/check_mk -C .. install-minified-js
 # Wenn man ohne die min-Dateien entwickeln will, kann man das hier
 # auskommentieren. Dies räumt dann auch die Dateien weg, die
 # schon in der original-Installation vom OMD vorhanden waren.
-#sudo rm -f /omd/sites/$SITE/share/check_mk/web/htdocs/js/*_min.js
+#sudo rm -f $ROOT/share/check_mk/web/htdocs/js/*_min.js
 
 # Gecache PNP-Schablonen entfernen
-sudo rm -f /omd/sites/$SITE/var/check_mk/pnp_template_cache/*
+sudo rm -f $ROOT/var/check_mk/pnp_template_cache/*

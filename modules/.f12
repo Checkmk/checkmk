@@ -1,7 +1,11 @@
 #!/bin/bash
-SITE=${SITE:-$(cat ../.site)}
+set -e
+
+SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo cp -v *.py /omd/sites/$SITE/share/check_mk/modules/
+ROOT=/omd/sites/$SITE
+
+sudo cp -v *.py $ROOT/share/check_mk/modules/
 
 if [ -z $ONLY_COPY ]; then
     sudo su - $SITE -c "cmk --debug -R"

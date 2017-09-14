@@ -1,7 +1,11 @@
 #!/bin/bash
-SITE=${SITE:-$(cat ../.site || true)}
+set -e
+
+SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo rsync --delete -varx ./ /omd/sites/$SITE/share/check_mk/pnp-templates/
+ROOT=/omd/sites/$SITE
+
+sudo rsync --delete -varx ./ $ROOT/share/check_mk/pnp-templates/
 
 if [ -z $ONLY_COPY ]; then
     # do nc to port 32000 only if there is someone listening

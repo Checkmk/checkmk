@@ -1,13 +1,15 @@
 #!/bin/bash
+set -e
+
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-OMD_ROOT=/omd/sites/${SITE}
+ROOT=/omd/sites/$SITE
 
 make
-sudo install -m 755 livedump mkeventd mkeventd_open514 mkevent mkbackup mkbench $OMD_ROOT/bin/
-sudo chown root.omd $OMD_ROOT/bin/mkeventd_open514
-sudo chmod 4750 $OMD_ROOT/bin/mkeventd_open514
-echo "Installed to $OMD_ROOT/bin"
+sudo install -m 755 livedump mkeventd mkeventd_open514 mkevent mkbackup mkbench $ROOT/bin/
+sudo chown root.omd $ROOT/bin/mkeventd_open514
+sudo chmod 4750 $ROOT/bin/mkeventd_open514
+echo "Installed to $ROOT/bin"
 
 if [ -z $ONLY_COPY ]; then
     sudo omd restart $SITE mkeventd

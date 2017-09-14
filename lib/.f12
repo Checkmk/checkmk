@@ -1,7 +1,9 @@
 #!/bin/bash
+set -e
+
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-OMD_ROOT=/omd/sites/${SITE}
+ROOT=/omd/sites/$SITE
 
-sudo rsync -a *.py $OMD_ROOT/lib/python/cmk/
-echo "Installed to $OMD_ROOT/lib/python/cmk/"
+sudo rsync -a *.py $ROOT/lib/python/cmk/
+echo "Installed to $ROOT/lib/python/cmk/"

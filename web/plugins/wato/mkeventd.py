@@ -687,9 +687,10 @@ def vs_mkeventd_rule(rule_pack):
         ( "match_sl",
           Tuple(
             title = _("Match service level"),
-            help = _("This setting is only useful for events that result from monitoring notifications "
-                     "sent by Check_MK. Those can set a service level already in the event. In such a "
-                     "case you can make this rule match only certain service levels. Events that do not "),
+            help = _("This setting is only useful if you've configured service levels for hosts. "
+                     "If the event results from forwarded service notifications or logwatch "
+                     "messages the service's configured service level is used here. In such cases "
+                     "you can make this rule match only certain service levels."),
             orientation = "horizontal",
             show_titles = False,
             elements = [

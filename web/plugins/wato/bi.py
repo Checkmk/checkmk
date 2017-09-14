@@ -66,7 +66,6 @@ class ModeBI(WatoMode):
             self._user_contactgroups = userdb.contactgroups_of_user(config.user.id)
         else:
             self._user_contactgroups = None # meaning I am admin
-        self._create_valuespecs()
 
         # Most modes need a pack as context
         if html.has_var("pack"):
@@ -77,6 +76,8 @@ class ModeBI(WatoMode):
         else:
             self._pack_id = None
             self._pack = None
+
+        self._create_valuespecs()
 
 
     def title(self):
@@ -390,10 +391,10 @@ class ModeBI(WatoMode):
 
     def _allowed_rule_choices(self):
         choices = []
-        for pack_id, pack in sorted(self._packs.items()):
+        for pack_id, pack in sorted(self._packs.iteritems()):
             if self.may_use_rules_in_pack(pack):
-                for rule_id, rule in sorted(pack["rules"].items()):
-                    choices.append((rule_id, "%s - %s/%s" % (rule_id, pack["title"], rule["title"])))
+                pack_choices = [(rule_id, rule["title"]) for rule_id, rule in pack["rules"].iteritems()]
+                choices.append((pack_id, pack["title"], DropdownChoice(choices=sorted(pack_choices))))
         return choices
 
 
@@ -437,10 +438,14 @@ class ModeBI(WatoMode):
     def _get_vs_call_rule(self):
         return Tuple(
             elements = [
-                DropdownChoice(
-                    title = _("Rule:"),
-                    choices = self._allowed_rule_choices(),
-                    sorted = True,
+                Transform(CascadingDropdown(
+                        title=_("Rule:"),
+                        orientation="horizontal",
+                        choices=self._allowed_rule_choices(),
+                        sorted=True,
+                    ),
+                    back=self._transform_back_vs_call_rule,
+                    forth=self._transform_forth_vs_call_rule,
                 ),
                 ListOfStrings(
                     orientation = "horizontal",
@@ -450,6 +455,15 @@ class ModeBI(WatoMode):
             ],
             validate = lambda v, vp: self._validate_rule_call(v, vp),
         )
+
+
+    def _transform_back_vs_call_rule(self, choice):
+        return choice[1]
+
+
+    def _transform_forth_vs_call_rule(self, choice):
+        pack = self.pack_containing_rule(choice)
+        return (pack['id'], choice)
 
 
     def _get_vs_host_re(self):

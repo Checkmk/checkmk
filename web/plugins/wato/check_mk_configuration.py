@@ -1620,7 +1620,7 @@ register_rule(group,
         forth = lambda v: int(v * 60),
         back = lambda v: float(v) / 60.0,
         title = _("Normal check interval for host checks"),
-        help = _("The default interval is set to one minute. Here you can specify a larger "
+        help = _("The default interval is set to 6 seconds for smart ping and one minute for all other. Here you can specify a larger "
                  "interval. The host is contacted in this interval on a regular base. The host "
                  "check is also being executed when a problematic service state is detected to check "
                  "wether or not the service problem is resulting from a host problem.")
@@ -1638,7 +1638,7 @@ register_rule(group,
                  "attempts to a number greater than one. In case a host check is not UP "
                  "and the maximum number of check attempts is not yet reached, it will be "
                  "rescheduled with this interval. The retry interval is usually set to a smaller "
-                 "value than the normal interval."),
+                 "value than the normal interval. The default is 6 seconds for smart ping and 60 seconds for all other."),
     )
 )
 

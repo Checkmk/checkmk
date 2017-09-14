@@ -1,0 +1,23 @@
+title: SLES license information
+agents: linux
+catalog: app/sles
+license: GPL
+distribution: check_mk
+description:
+ This check parses the information provided by the SUSEConnect command.
+ If the command is availible, information about the registration status,
+ subscription status, subscription type, registration code as well as the
+ start and end date of the SLES license are shown. The information is
+ also shown in the Hardware/Software Inventory. 
+
+ As a preparation you need to install the agent plugin {SUSEConnect}
+ into your agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).
+
+ The check can be configured via the corresponding WATO rule {SLES License}.
+
+inventory:
+ The service {SLES license} is created.
+
+item:
+ No item.
+

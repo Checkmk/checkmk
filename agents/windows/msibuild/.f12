@@ -1,4 +1,8 @@
 #!/bin/bash
-SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
+set -e
+
+SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo cp -p msi-update /omd/sites/$SITE/bin
+ROOT=/omd/sites/$SITE
+
+sudo cp -p msi-update $ROOT/bin

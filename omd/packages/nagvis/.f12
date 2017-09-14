@@ -1,4 +1,9 @@
 #!/bin/bash
+set -e
+
+SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
 
 for hook in *.hook; do
     sudo cp -v $hook /omd/versions/default/lib/omd/hooks/${hook%*.hook}

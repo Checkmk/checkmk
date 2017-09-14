@@ -1591,6 +1591,7 @@ class DropdownChoice(ValueSpec):
         self._no_preselect_title = kwargs.get("no_preselect_title", "") # if not preselected
         self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
         self._on_change          = kwargs.get("on_change")
+        self._read_only          = kwargs.get("read_only", False)
 
     def choices(self):
         result = []
@@ -1644,7 +1645,10 @@ class DropdownChoice(ValueSpec):
                                deflt=self.option_id(defval))
         else:
             html.dropdown(varprefix, self._options_for_html(options),
-                        deflt=self.option_id(defval),onchange=self._on_change, sorted=self._sorted)
+                        deflt=self.option_id(defval),
+                        onchange=self._on_change,
+                        sorted=self._sorted,
+                        read_only=self._read_only)
 
 
     def _get_invalid_choice_title(self, value):

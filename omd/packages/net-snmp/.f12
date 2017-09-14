@@ -3,7 +3,7 @@ set -e
 
 SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-ROOT=$ROOT
+ROOT=/omd/sites/$SITE
 
 echo "Installing to site \"$SITE\"..."
 

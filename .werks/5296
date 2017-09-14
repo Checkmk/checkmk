@@ -1,0 +1,10 @@
+Title: fsc_if64, fsc_sc2_cpu_status, fsc_sc2_fans, fsc_sc2_inf, fsc_sc2_mem_status, fsc_sc2_power_consumption, fsc_sc2_psu, fsc_sc2_temp, fsc_sc2_voltage: New checks for Fujitsu Server
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505978773
+Class: feature
+
+

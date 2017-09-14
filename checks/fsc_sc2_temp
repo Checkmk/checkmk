@@ -1,0 +1,116 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.1 "Ambient"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.2 "Systemboard 1"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.3 "Systemboard 2"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.4 "CPU1"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.5 "CPU2"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.6 "MEM A"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.7 "MEM B"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.8 "MEM C"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.9 "MEM D"
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.1 8
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.2 8
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.3 8
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.4 8
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.5 2
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.6 8
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.7 8
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.8 8
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.5.1.9 8
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.1 26
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.2 27
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.3 33
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.4 27
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.5 0
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.6 28
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.7 28
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.8 27
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.6.1.9 27
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.1 37
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.2 75
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.3 75
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.4 77
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.5 89
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.6 78
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.7 78
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.8 78
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.7.1.9 78
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.1 42
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.2 80
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.3 80
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.4 81
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.5 93
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.6 82
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.7 82
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.8 82
+#.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.8.1.9 82
+
+def inventory_fsc_sc2_temp(info):
+    for line in info:
+        if line[1] != '2':
+            yield line[0], {}
+
+
+def check_fsc_sc2_temp(item, params, info):
+    def get_temp_status(status):
+        return {
+            '1' :   (3, 'unknown'),
+            '2' :   (0, 'not-available'),
+            '3' :   (0, 'ok'),
+            '4' :   (2, 'sensor-failed'),
+            '5' :   (2, 'failed'),
+            '6' :   (1, 'temperature-warning-toohot'),
+            '7' :   (2, 'temperature-critical-toohot'),
+            '8' :   (0, 'temperature-normal'),
+            '9' :   (1, 'temperature-warning')
+        }.get(status, (3, 'unknown'))
+
+    for designation, status, temp, dev_warn, dev_crit in info:
+        if designation == item:
+            dev_levels = int(dev_warn), int(dev_crit)
+            dev_status, dev_status_name = get_temp_status(status)
+            return check_temperature(int(temp), params, 'temp_{}'.format(item.replace(' ', '_')), \
+                    'c', dev_levels, None, dev_status, dev_status_name)
+
+
+check_info['fsc_sc2_temp'] = {
+    'inventory_function'    :   inventory_fsc_sc2_temp,
+    'check_function'        :   check_fsc_sc2_temp,
+    'service_description'   :   'Temperature %s',
+    'has_perfdata'          :   True,
+    'snmp_info'             :   ('.1.3.6.1.4.1.231.2.10.2.2.10.5.1.1', [
+                                    '3',    #sc2tempSensorDesignation
+                                    '5',    #sc2tempSensorStatus
+                                    '6',    #sc2tempCurrentTemperature
+                                    '7',    #sc2tempWarningLevel
+                                    '8',    #sc2tempCriticalLevel
+                                ]),
+    'snmp_scan_function'    :   lambda oid: oid('.1.3.6.1.4.1.231.2.10.2.2.10.1.1.0'),
+    'group'                 :   'temperature',
+    'includes'              :   [ 'temperature.include' ],
+}

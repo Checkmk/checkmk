@@ -104,7 +104,7 @@ def check_oracle_performance(item, _no_params, parsed):
                 perfdata.append((what, rate))
 
             if db_block_gets + consistent_gets > 0:
-                hit_ratio = (1 - (physical_reads / (db_block_gets + consistent_gets))) * 100
+                hit_ratio = (1 - (float(physical_reads) / (float(db_block_gets) + float(consistent_gets)))) * 100
                 yield 0, "Buffer hit ratio: %.1f%%" % hit_ratio, \
                       [('oracle_buffer_hit_ratio', hit_ratio)]
 

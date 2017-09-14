@@ -142,16 +142,18 @@ class Base(object):
         sorted_topics = topics.items()
         sorted_topics.sort(cmp = lambda t1, t2: cmp(t1[1][0], t2[1][0]))
 
-        # Now remove order numbers. Also drop the topic completely
-        # for the while
-        # TODO: Reenable topic as soon as we have the first page type
-        # with more than one topic
-        parameters = []
+        # Now remove order numbers and produce the structures for the Dictionary VS
+        parameters, keys_by_topic = [], []
         for topic, elements in sorted_topics:
+            topic_keys = []
+
             for _unused_order, key, vs in elements:
                 parameters.append((key, vs))
+                topic_keys.append(key)
 
-        return parameters
+            keys_by_topic.append((topic, topic_keys))
+
+        return parameters, keys_by_topic
 
 
     # Object methods that *can* be overridden - for cases where
@@ -1020,12 +1022,13 @@ class Overridable(Base):
         html.context_button(_("Back"), back_url, "back")
         html.end_context_buttons()
 
-        # TODO: Implement multiple topics
+        parameters, keys_by_topic = cls._collect_parameters(mode)
         vs = Dictionary(
             title = _("General Properties"),
             render = 'form',
             optional_keys = None,
-            elements = cls._collect_parameters(mode),
+            elements = parameters,
+            headers=keys_by_topic,
         )
 
         def validate(page_dict):

@@ -148,8 +148,8 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
             // Do not touch the logfile the Query is currently accessing
             break;
         }
-        if (it->second->numEntries() > 0) {
-            num_cached_log_messages -= it->second->numEntries();
+        if (it->second->size() > 0) {
+            num_cached_log_messages -= it->second->size();
             it->second->flush();  // drop all messages of that file
             if (static_cast<unsigned long>(num_cached_log_messages) <=
                 _max_cached_messages) {
@@ -170,7 +170,7 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     // Starting from the current logfile (wo broke out of the
     // previous loop just when 'it' pointed to that)
     for (; it != _logfiles.end(); ++it) {
-        if (it->second->numEntries() > 0 &&
+        if (it->second->size() > 0 &&
             (it->second->classesRead() & ~logclasses) != 0) {
             Debug(logger()) << "freeing classes " << ~logclasses << " of file "
                             << it->second->path();
@@ -190,10 +190,10 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     // flushing logfiles from the oldest to the newest starting
     // at the file just after (i.e. newer than) the current logfile
     for (it = ++queryit; it != _logfiles.end(); ++it) {
-        if (it->second->numEntries() > 0) {
-            Debug(logger()) << "flush newer log, " << it->second->numEntries()
+        if (it->second->size() > 0) {
+            Debug(logger()) << "flush newer log, " << it->second->size()
                             << " number of entries";
-            num_cached_log_messages -= it->second->numEntries();
+            num_cached_log_messages -= it->second->size();
             it->second->flush();
             if (static_cast<unsigned long>(num_cached_log_messages) <=
                 _max_cached_messages) {

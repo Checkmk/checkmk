@@ -75,7 +75,7 @@ public:
     void flush();
     time_t since() { return _since; }
     unsigned classesRead() { return _logclasses_read; }
-    long numEntries() { return _entries.size(); }
+    size_t size() { return _entries.size(); }
     logfile_entries_t *getEntriesFromQuery(const Query *query,
                                            LogCache *logcache, time_t since,
                                            time_t until, unsigned);

@@ -27,7 +27,7 @@
 
 using std::string;
 
-int mk_inventory_last(const string &path) {
+time_t mk_inventory_last(const string &path) {
     struct stat st;
     return stat(path.c_str(), &st) != 0 ? 0 : st.st_mtime;
 }

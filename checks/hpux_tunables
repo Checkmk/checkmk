@@ -67,8 +67,8 @@ hpux_tunables_nkthread_default_levels = (80.0, 85.0)
 def parse_hpux_tunables(info):
     parsed = {}
     for line in info:
-        if "Tunable" in line[0]:
-            key = line[1]
+        if "Tunable" in line[0] or "Parameter" in line[0]:
+            key       = line[1].strip()
         elif "Usage"   in line[0]:
             usage = int(line[1])
         elif "Setting" in line[0]:

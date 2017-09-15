@@ -86,4 +86,5 @@ check_info['rds_licenses'] = {
     'service_description'       : "RDS Licenses %s",
     'group'                     : "rds_licenses",
     'has_perfdata'              : True,
+    'includes'                  : ['license.include'],
 }

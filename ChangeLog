@@ -25,6 +25,7 @@
     * 5278 FIX: check_mk_agent.linux: Fixed wrong detected sensors in state "State disasserted"
     * 5279 FIX: qnap_disks: Just discover slots that are not empty
     * 5281 FIX: apache_status: Fixed ignoring invalid lines
+    * 5282 FIX: hpux_tunables: Fixed discovering kernel tunables on HPUX 11.23
 
 
 1.2.8p25:

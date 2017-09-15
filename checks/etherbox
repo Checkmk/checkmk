@@ -107,27 +107,7 @@ def check_etherbox_humidity(item, params, info):
     except Exception, error:
         return 3, error.message
 
-    state = 0
-    temp = int(value) / 10.0
-    levels_info = ""
-    if params:
-        crit_low, warn_low, warn_high, crit_high = params
-        levels_info = " (warn/crit below %.1f/%.1f %%RH / warn/crit at %.1f/%.1f %%RH )" %\
-                        (crit_low, warn_low, warn_high, crit_high)
-        if temp <= crit_low:
-            state = 2
-        elif temp >= crit_high:
-            state = 2
-        elif temp <= warn_low:
-            state = 1
-        elif temp >= warn_high:
-            state = 1
-    else:
-        crit_low, warn_low, warn_high, crit_high = None, None, None, None
-
-    perfdata = [ ("humidity", temp, crit_low, warn_low, warn_high, crit_high) ]
-    infotext = "%s: Humidity %.1f %%RH %s" % (name, temp, levels_info)
-    return (state, infotext, perfdata)
+    return check_humidity(int(value) / 10.0, params)
 
 check_info["etherbox.humidity"] = {
     "check_function"        : check_etherbox_humidity,
@@ -137,6 +117,7 @@ check_info["etherbox.humidity"] = {
     "group"                 : "humidity",
     "snmp_scan_function"    : etherbox_scan,
     "snmp_info"             : etherbox_info,
+    "includes"              : ["humidity.include"],
 }
 
 

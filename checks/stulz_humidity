@@ -32,20 +32,7 @@ def inventory_stulz_humidity(info):
 def check_stulz_humidity(item, params, info):
     for line in info:
         if line[0] == item:
-            critlow, warnlow, warnhigh, crithigh = params
-            humidity = savefloat(line[1])/10
-            infotext = "%s%% (warn/crit below %.1f/%.1f or above %.1f/%.1f %%)" % \
-                            ( humidity, warnlow, critlow, warnhigh, crithigh)
-
-            perfdata = [ ('humidity', humidity, critlow, warnlow, warnhigh, crithigh ) ]
-            if humidity <= critlow or humidity >= crithigh:
-                return (2, "Humidity is: " + infotext, perfdata )
-            elif humidity <= warnlow or humidity >= warnhigh:
-                return (1, "Humidity is: " + infotext, perfdata )
-            else:
-                return (0, "Humidity is: " + infotext, perfdata )
-
-    return 3, "No information found about the device"
+            return check_humidity(savefloat(line[1])/10, params)
 
 check_info["stulz_humidity"] = {
     "check_function"        : check_stulz_humidity,
@@ -55,5 +42,6 @@ check_info["stulz_humidity"] = {
     "group"                 : "humidity",
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
     "snmp_info"             : ( ".1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1.1194", [ OID_END, 1] ),
+    "includes"              : ["humidity.include"],
 }
 

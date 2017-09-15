@@ -43,5 +43,5 @@ check_info["akcp_sensor_humidity"] = {
                                          5, # SPAGENT-MIB::sensorProbeHumidityOnline
                                         ] ),
     "group"               : "humidity",
-    "includes"            : [ "akcp_sensor.include" ],
+    "includes"            : ["humidity.include", "akcp_sensor.include"],
 }

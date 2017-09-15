@@ -127,19 +127,7 @@ def check_tinkerforge_humidity(item, params, parsed):
         return max([abs(x[0] - x[1][0]) for x in enumerate(sorted_by_val)])
 
     if 'humidity' in parsed and item in parsed['humidity']:
-        crit_lower, warn_lower, warn_upper, crit_upper = params
-
-        reading = float(parsed['humidity'][item][0]) / 10.0
-        status = expect_order(crit_lower, warn_lower,
-                              reading,
-                              warn_upper, crit_upper)
-        if status != 0:
-            level_msg = " (warn/crit at or below %.1f/%.1f or at or above %.1f/%.1f)" % \
-                (warn_lower, crit_lower, warn_upper, crit_upper)
-        else:
-            level_msg = ""
-        return (status, "%.1f %%RH%s" % (reading, level_msg),
-                [('humidity', reading, warn_upper, crit_upper)])
+        return check_humidity(float(parsed['humidity'][item][0]) / 10.0, params)
 
 
 def check_tinkerforge_motion(item, params, parsed):
@@ -201,6 +189,7 @@ check_info['tinkerforge.humidity'] = {
     'has_perfdata'            : True,
     'group'                   : 'humidity',
     'service_description'     : "Humidity %s",
+    'includes'                : ["humidity.include"],
 }
 
 

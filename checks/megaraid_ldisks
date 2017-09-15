@@ -42,6 +42,7 @@ def parse_megaraid_ldisks(info):
     parsed = {}
     adapter = None
     disk = None
+    item = None
     for line in info:
         l = " ".join(line)
         if line[0] == "Adapter" and not l.endswith('No Virtual Drive Configured.'):
@@ -51,7 +52,7 @@ def parse_megaraid_ldisks(info):
             item = "%d/%d" % (adapter, disk)
             parsed[item] = {}
 
-        elif item in parsed.keys():
+        elif item is not None and item in parsed.keys():
 
             if line[0].startswith("State"):
                 parsed[item]["state"] = l.split(":")[1].strip()

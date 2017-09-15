@@ -1,0 +1,11 @@
+Title: megaraid_ldisks: Fixed error during discovery: UnboundLocalError: local variable 'item' referenced before assignment
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1505469977
+
+

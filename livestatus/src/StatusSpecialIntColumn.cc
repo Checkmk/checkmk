@@ -34,7 +34,8 @@ int32_t StatusSpecialIntColumn::getValue(Row /* row */,
     switch (_type) {
         case Type::mk_inventory_last:
             // Check_MK Inventory touches the file ".last" after each inventory
-            return mk_inventory_last(_mc->mkInventoryPath() + "/.last");
+            return static_cast<int32_t>(
+                mk_inventory_last(_mc->mkInventoryPath() + "/.last"));
     }
     // never reached, make -Wall happy
     return 0;

@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <poll.h>
 #include <cerrno>
+#include <chrono>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -46,10 +47,13 @@ public:
         // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:
         // https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
         do {
-            retval = ::poll(
-                &_pollfds[0], _pollfds.size(),
-                std::chrono::duration_cast<std::chrono::milliseconds>(timeout)
-                    .count());
+            auto millis =
+                std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+            // The cast below is OK because int has at least 32 bits on all
+            // platforms we care about: The timeout is then limited to 24.85
+            // days, which should be more than enough for our needs.
+            retval = ::poll(&_pollfds[0], _pollfds.size(),
+                            static_cast<int>(millis.count()));
         } while (retval == -1 && errno == EINTR);
         return retval;
     }
@@ -70,8 +74,11 @@ private:
     std::unordered_map<int, size_t> _fd_to_pollfd;
 
     static short toMask(PollEvents e) {
-        return (is_empty_bit_mask(e & PollEvents::in) ? 0 : POLLIN) |
-               (is_empty_bit_mask(e & PollEvents::out) ? 0 : POLLOUT);
+        // The cast below is OK because all POLLFOO values are within the
+        // guaranteed short value range.
+        return static_cast<short>(
+            (is_empty_bit_mask(e & PollEvents::in) ? 0 : POLLIN) |
+            (is_empty_bit_mask(e & PollEvents::out) ? 0 : POLLOUT));
     }
 };
 

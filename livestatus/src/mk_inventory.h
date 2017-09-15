@@ -26,8 +26,9 @@
 #define mk_inventory_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <ctime>
 #include <string>
 
-int mk_inventory_last(const std::string &path);
+time_t mk_inventory_last(const std::string &path);
 
 #endif  // mk_inventory_h

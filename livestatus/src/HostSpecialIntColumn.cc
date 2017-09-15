@@ -49,8 +49,8 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                                         dummy_service_description());
 
             case Type::mk_inventory_last: {
-                return mk_inventory_last(_mc->mkInventoryPath() + "/" +
-                                         hst->name);
+                return static_cast<int32_t>(mk_inventory_last(
+                    _mc->mkInventoryPath() + "/" + hst->name));
             }
         }
     }

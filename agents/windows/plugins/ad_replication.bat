@@ -1,6 +1,8 @@
 @echo off
 
 REM ***
+REM * Following information concerns only Windows Server <2012R2
+REM *
 REM * To be able to run this check you need appropriate credentials
 REM * in the target domain.
 REM *

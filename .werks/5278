@@ -1,0 +1,9 @@
+Title: check_mk_agent.linux: Fixed wrong detected sensors in state "State disasserted"
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p26
+Date: 1505461781
+Class: fix
+
+

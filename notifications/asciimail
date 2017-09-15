@@ -215,19 +215,25 @@ def read_bulk_contexts():
     return parameters, contexts
 
 
-def get_bulk_notification_subject(parameters, contexts, hosts):
+def get_bulk_notification_subject(contexts, hosts):
     hosts = list(hosts)
-    if parameters.get("PARAMETER_BULK_SUBJECT"):
-        subject = parameters["PARAMETER_BULK_SUBJECT"]
+    bulk_subject = None
+    for context in contexts:
+        if context.get("PARAMETER_BULK_SUBJECT"):
+            bulk_subject = context["PARAMETER_BULK_SUBJECT"]
+            break
+
+    if bulk_subject:
+        subject = bulk_subject
     elif len(hosts) == 1:
         subject = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for %s" % hosts[0]
     else:
         subject = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
 
     if "$COUNT_NOTIFICATIONS$" in subject:
-        subject.replace("$COUNT_NOTIFICATIONS$", len(contexts))
+        subject = subject.replace("$COUNT_NOTIFICATIONS$", str(len(contexts)))
     if "$COUNT_HOSTS$" in subject:
-        subject.replace("$COUNT_HOSTS$", len(hosts))
+        subject = subject.replace("$COUNT_HOSTS$", str(len(hosts)))
     return subject
 
 
@@ -242,7 +248,7 @@ def main():
             mailto = context['CONTACTEMAIL'] # Assume the same in each context
             subject = context['SUBJECT']
             hosts.add(context["HOSTNAME"])
-        subject = get_bulk_notification_subject(parameters, contexts, hosts)
+        subject = get_bulk_notification_subject(contexts, hosts)
 
     else:
         # gather all options from env

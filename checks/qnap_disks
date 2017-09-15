@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_qnap_disks(info):
-    return [ (x[0], None) for x in info ]
+    return [ (x[0], None) for x in info if x[2] != "-5"]
 
 def check_qnap_disks(item, _no_params, info):
     for desc, temp, status, model, size, cond in info:

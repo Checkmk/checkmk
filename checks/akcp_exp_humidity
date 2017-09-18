@@ -43,5 +43,5 @@ check_info["akcp_exp_humidity"] = {
                                          8, # SPAGENT-MIB::sensorHumidityGoOffline
                                         ] ),
     "group"                   : "humidity",
-    "includes"                : [ "akcp_sensor.include" ],
+    "includes"                : ["humidity.include", "akcp_sensor.include"],
 }

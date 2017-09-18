@@ -27,7 +27,7 @@
 
 # old params = (crit_low , warn_low, warn, crit)
 def check_humidity(humidity, params):
-    if params is None or params == {}:
+    if not params:
         params = {
             "levels_lower" : (-1, -1),
             "levels"       : (101, 101),

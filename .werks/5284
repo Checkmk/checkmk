@@ -1,0 +1,11 @@
+Title: akcp_exp_humidity, akcp_sensor_humidity, allnet_ip_sensoric, apc_humidity, etherbox, humidity.include, knuerr_rms_humidity, stulz_humidity, tinkerforge: Fixed wrong parameters
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1505477718
+
+

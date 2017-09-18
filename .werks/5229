@@ -1,0 +1,11 @@
+Title: Rename host: fixed exception when having more than 1024 users configured
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p13
+Date: 1505736767
+Class: fix
+
+For each configured user, WATO kept a file open during the rename procedure.
+Having more than 1024 users breached the <tt>ulimit -n</tt> option and a <tt>Too many open files</tt> exception occurred.

@@ -1970,6 +1970,7 @@ def rename_host_in_multisite(oldname, newname):
             store.save_data_to_file(favpath, favorites)
             users_changed += 1
             total_changed += num_changed
+        store.release_lock(favpath)
 
     if users_changed:
         return [ "favorites" ] * total_changed

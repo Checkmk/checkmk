@@ -31,19 +31,7 @@ def inventory_knuerr_rms_humidity(info):
 
 def check_knuerr_rms_humidity(_no_item, params, info):
     name, reading = info[0]
-    reading = float(reading) / 10
-    crit_low, warn_low, warn_high, crit_high = params
-    infotext = "Humidity is: %.1f %% on Sensor %s" % ( reading, name )
-    levels = ' (Warn/Crit at %s/%s or below %s/%s)' % ( warn_high, crit_high, warn_low, crit_low )
-    perfdata = [ ('humidity', reading, crit_low, warn_low, warn_high, crit_high ) ]
-    state = 0
-    if reading >= crit_high or reading <= crit_low:
-        state = 2
-        infotext += levels
-    elif reading >= warn_high or reading <= warn_low:
-        state = 1
-        infotext += levels
-    return state, infotext, perfdata
+    return check_humidity(float(reading) / 10, params)
 
 check_info["knuerr_rms_humidity"] = {
     "check_function"        : check_knuerr_rms_humidity,
@@ -52,6 +40,7 @@ check_info["knuerr_rms_humidity"] = {
     "has_perfdata"          : True,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3711.15.1",
     "snmp_info"             : ( ".1.3.6.1.4.1.3711.15.1.1.1.2" , [ 2 , 4 ]),
-    "group"                 : "single_humidity"
+    "group"                 : "single_humidity",
+    "includes"              : ["humidity.include"],
 }
 

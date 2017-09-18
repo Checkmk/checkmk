@@ -218,25 +218,12 @@ def inventory_allnet_ip_sensoric_humidity(info):
     return inventory
 
 def check_allnet_ip_sensoric_humidity(item, params, info):
-    critlow, warnlow, warnhigh, crithigh = params
     parsed = allnet_ip_sensoric_parse(info)
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
-
     if sensor_id not in parsed.keys():
         return 3, "%s not found in agent output" % item
 
-    humidity = float(parsed[sensor_id]["value_float"])
-
-    perfdata = [ ("humidity", humidity, critlow, warnlow, warnhigh, crithigh) ]
-
-    if humidity <= critlow or humidity >= crithigh:
-        status = 2
-    elif humidity <= warnlow or humidity >= warnhigh:
-        status = 1
-    else:
-        status = 0
-
-    return status, "%s is %0.2f %%" % (item, humidity), perfdata
+    return check_humidity(float(parsed[sensor_id]["value_float"]), params)
 
 check_info["allnet_ip_sensoric.humidity"] = {
     "check_function"        : check_allnet_ip_sensoric_humidity,
@@ -244,6 +231,7 @@ check_info["allnet_ip_sensoric.humidity"] = {
     "service_description"   : "Humidity %s",
     "has_perfdata"          : True,
     "group"                 : "humidity",
+    "includes"              : ["humidity.include"],
 }
 
 #.

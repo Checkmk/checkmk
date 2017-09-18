@@ -1,0 +1,10 @@
+Title: temperature.include: Allow floating point numbers in upper and lower levels in 'Temperature' ruleset
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505736688
+Class: feature
+
+

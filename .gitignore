@@ -33,6 +33,7 @@ config.log
 config.status
 config.sub
 configure
+.coverage
 depcomp
 install-sh
 missing

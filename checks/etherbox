@@ -135,7 +135,8 @@ def check_etherbox_humidity(item, params, info):
     except Exception, error:
         return 3, error.message
 
-    return check_humidity(int(value) / 10.0, params)
+    state, infotext, perfdata = check_humidity(int(value) / 10.0, params)
+    return state, "[%s] %s" % (name, infotext), perfdata
 
 
 check_info["etherbox.humidity"] = {
@@ -211,13 +212,11 @@ def check_etherbox_smoke(item, no_params, info):
 
     state = 0
     perfdata = [ ("smoke", value) ]
-    extra_info = ""
+    infotext = "Status: OK"
     if value != "0":
-        extra_info = " - Smoke alarm!"
+        infotext = "Status: smoke alarm"
         state = 2
-
-    return (state, "[%s] Smoke sensor%s" % (name, extra_info), perfdata)
-
+    return state, "[%s] %s" % (name, infotext), perfdata
 
 check_info["etherbox.smoke"] = {
     "check_function"        : check_etherbox_smoke,

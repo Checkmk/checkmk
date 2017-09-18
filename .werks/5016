@@ -1,0 +1,13 @@
+Title: hp_proliant_temp: Fixed crash if thresholds are set manually
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p26
+Date: 1505738884
+
+The device delivers optionally thresholds for it's parts. If not, -99 will
+be that value. A service with that device threshold crashed if a user would
+set up thresholds for it's own. This is now fixed.

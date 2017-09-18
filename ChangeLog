@@ -26,6 +26,7 @@
     * 5279 FIX: qnap_disks: Just discover slots that are not empty
     * 5281 FIX: apache_status: Fixed ignoring invalid lines
     * 5282 FIX: hpux_tunables: Fixed discovering kernel tunables on HPUX 11.23
+    * 5016 FIX: hp_proliant_temp: Fixed crash if thresholds are set manually...
 
 
 1.2.8p25:

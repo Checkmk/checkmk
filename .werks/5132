@@ -1,0 +1,10 @@
+Title: cisco_ip_sla: fix snmp scan function
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505749473
+Class: fix
+
+

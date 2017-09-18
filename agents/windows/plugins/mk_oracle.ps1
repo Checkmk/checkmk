@@ -27,13 +27,11 @@
 # and Mathias Kettner. Thorsten is responsible for the ORACLE
 # stuff, Mathias for the shell hacking, Andrew for the powershell...
 
-# NOTE: This plugin is still EXPERIMENTAL!
 
 ###############################################################################
 # open issues
 ###############################################################################
 # 1. error connection to instance, old async still shown is this ok?
-# 2. login to database using Oracle wallet (nice to have, currently not planned)
 
 ###############################################################################
 # usage

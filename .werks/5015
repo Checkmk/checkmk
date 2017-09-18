@@ -1,0 +1,11 @@
+Title: mk_oracle.bat: Removed deprecated plugin
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505724422
+Class: fix
+
+Removed obsolete plugin which is deprecated since 1.2.6. Please use
+mk_oracle.ps1 instead.

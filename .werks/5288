@@ -1,0 +1,10 @@
+Title: BI packs: Fixed permission of target pack for bulk moving operation of rules
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505736108
+Class: fix
+
+

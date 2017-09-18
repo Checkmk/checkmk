@@ -414,9 +414,13 @@ class ModeBI(WatoMode):
         return False
 
 
-    def must_be_contact_for_pack(self):
-        if not self.is_contact_for_pack():
-            raise MKAuthException(_("You have no permission for changes in this BI pack."))
+    def must_be_contact_for_pack(self, pack=None):
+        if not self.is_contact_for_pack(pack=pack):
+            if pack is None:
+                pack_title = self._pack["title"]
+            else:
+                pack_title = pack["title"]
+            raise MKAuthException(_("You have no permission for changes in this BI pack %s.") % pack_title)
 
 
     def _validate_rule_call(self, value, varprefix):
@@ -1177,6 +1181,7 @@ class ModeBIRules(ModeBI):
         target_pack = None
         if target in self._packs:
             target_pack = self._packs[target]
+            self.must_be_contact_for_pack(target_pack)
 
         selected_rules = self._get_selected_rules()
         if selected_rules and target_pack is not None:

@@ -1,0 +1,12 @@
+Title: PDF: Improved handling of long words in text wrapping
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505743729
+Class: fix
+
+Added some word wrapping functionality to the text wrapping algorithm
+that is used to fit texts into areas of PDF documents. For example
+when adding text to table cells words may now be wrapped if needed.

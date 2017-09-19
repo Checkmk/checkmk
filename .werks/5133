@@ -1,0 +1,12 @@
+Title: infoblox_services, infoblox_node_services: checks are now cluster aware
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505819216
+Class: feature
+
+The checks infoblox_services and infoblox_node_services are now cluster aware,
+i.e. the overall status of a clustered service is now the best status of all
+nodes containing the service.

@@ -1,0 +1,14 @@
+title: SAP HANA: Filesystem
+agents: linux
+catalog: app/sap-hana
+license: GPL
+distribution: check_mk
+description:
+ This check monitors filesystem usage of SAP HANA instances.
+ No default levels are set.
+
+item:
+ Instance and filesystem name.
+
+inventory:
+ One service per filesystem is created.

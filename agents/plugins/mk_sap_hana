@@ -1,0 +1,143 @@
+#!/bin/bash
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+#   .--config--------------------------------------------------------------.
+#   |                                      __ _                            |
+#   |                      ___ ___  _ __  / _(_) __ _                      |
+#   |                     / __/ _ \| '_ \| |_| |/ _` |                     |
+#   |                    | (_| (_) | | | |  _| | (_| |                     |
+#   |                     \___\___/|_| |_|_| |_|\__, |                     |
+#   |                                           |___/                      |
+#   '----------------------------------------------------------------------'
+
+
+# Config might include
+# DB_USER_hpy=foo
+# DB_PASSWORD_hpy=bar
+if [ -f $MK_CONFDIR/sap_hana.cfg ];
+then
+    . $MK_CONFDIR/sap_hana.cfg
+fi
+
+
+LSSAP=/usr/sap/hostctrl/exe/lssap
+if [[ ! -x $LSSAP ]]; then
+    exit 1
+fi
+
+
+#.
+#   .--queries-------------------------------------------------------------.
+#   |                                        _                             |
+#   |                   __ _ _   _  ___ _ __(_) ___  ___                   |
+#   |                  / _` | | | |/ _ \ '__| |/ _ \/ __|                  |
+#   |                 | (_| | |_| |  __/ |  | |  __/\__ \                  |
+#   |                  \__, |\__,_|\___|_|  |_|\___||___/                  |
+#   |                     |_|                                              |
+#   '----------------------------------------------------------------------'
+
+
+# Just do: su - sidadm -c "$CMD"
+function process_list () {
+    echo "<<<sap_hana_process_list:sep(44)>>>"
+    su - $1 -c "sapcontrol -nr $2 -function GetProcessList"
+}
+
+
+function hdb_version () {
+    echo "<<<sap_hana_version:sep(58)>>>"
+    su - $1 -c "HDB version"
+}
+
+
+# Do: sudo -i -u sidadm hdbsql -n localhost -i 65 -u <dbuser> -p '<dbpassword>' -j -a -x
+function full_backup () {
+    local sidadm=$1
+    local inst_nr=$2
+    local db_user=$3
+    local db_password="$4"
+    echo "<<<sap_hana_full_backup:sep(44)>>>"
+    sudo -i -u ${sidadm} hdbsql -n localhost -i ${inst_nr} -u ${db_user} -p "${db_password}" -j -a -x "SELECT TO_DATE(SYS_END_TIME), days_between(SYS_END_TIME,CURRENT_TIMESTAMP) ,seconds_between(SYS_START_TIME,SYS_END_TIME), STATE_NAME,COMMENT FROM M_BACKUP_CATALOG WHERE ENTRY_TYPE_NAME = 'complete data backup' AND SYS_START_TIME = (SELECT MAX(SYS_START_TIME) FROM M_BACKUP_CATALOG WHERE  ENTRY_TYPE_NAME = 'complete data backup');"
+}
+
+
+function sap_hana_mem () {
+    local sidadm=$1
+    local inst_nr=$2
+    local db_user=$3
+    local db_password="$4"
+    echo "<<<sap_hana_mem:sep(44)>>>"
+    echo "[[[resident]]]"
+    sudo -i -u ${sidadm} hdbsql -n localhost -i ${inst_nr} -u ${db_user} -p "${db_password}" -j -a -x "SELECT HOST, ROUND(SUM(PHYSICAL_MEMORY_SIZE/1024/1024/1024),2) FROM M_SERVICE_MEMORY GROUP BY HOST;"
+    echo "[[[database]]]"
+    sudo -i -u ${sidadm} hdbsql -n localhost -i ${inst_nr} -u ${db_user} -p "${db_password}" -j -a -x "select HOST,  round(INSTANCE_TOTAL_MEMORY_ALLOCATED_SIZE/(1024*1024*1024), 2), round(ALLOCATION_LIMIT/(1024*1024*1024), 2), ROUND((USED_PHYSICAL_MEMORY + FREE_PHYSICAL_MEMORY)/1024/1024/1024,2) from M_HOST_RESOURCE_UTILIZATION;"
+}
+
+
+
+function sap_hana_filesystem () {
+    local sidadm=$1
+    local inst_nr=$2
+    local db_user=$3
+    local db_password="$4"
+    echo "<<<sap_hana_filesystem:sep(44)>>>"
+    sudo -i -u ${sidadm} hdbsql -n localhost -i ${inst_nr} -u ${db_user} -p "${db_password}" -j -a -x "select D1.HOST, D1.USAGE_TYPE, ROUND(D2.USED_SIZE/1024/1024/1024,2),ROUND(D1.TOTAL_SIZE/1024/1024/1024,2) FROM M_DISKS AS D1 INNER JOIN M_DISK_USAGE AS D2 ON D1.USAGE_TYPE = D2.USAGE_TYPE;"
+}
+
+
+#.
+#   .--main----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+echo "<<<sap_hana_products>>>"
+$LSSAP
+
+for line in $($LSSAP | awk -F"|" '{if ($0 ~/\//) print tolower($1)"adm|"$2}' | sed "s/\s*//g")
+do
+    sidadm=$(echo "$line" | cut -d"|" -f1)
+    sidadm_short=$(echo "$sidadm" | sed "s/adm$//")
+    inst_nr=$(echo "$line" | cut -d"|" -f2)
+    process_list $sidadm $inst_nr
+    hdb_version $sidadm
+
+    DB_USER=DB_USER_$sidadm_short
+    DB_USER=${!DB_USER}
+    DB_PASSWORD=DB_PASSWORD_$sidadm_short
+    DB_PASSWORD=${!DB_PASSWORD}
+    if [ -n "$DB_USER" ] && [ -n "$DB_PASSWORD" ];
+    then
+        full_backup $sidadm $inst_nr ${DB_USER} ${DB_PASSWORD}
+        sap_hana_mem $sidadm $inst_nr ${DB_USER} ${DB_PASSWORD}
+        sap_hana_filesystem $sidadm $inst_nr ${DB_USER} ${DB_PASSWORD}
+    fi
+done

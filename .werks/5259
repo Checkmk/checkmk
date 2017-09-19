@@ -1,0 +1,17 @@
+Title: cmk-update-agent: Improving robustness in curl handling
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p13
+Date: 1505816132
+Class: fix
+
+
+In some cases, cmk-update-agent might abort showing the following Error:
+AttributeError: 'NoneType' object has no attribute 'group'
+
+This Error only occurs when curl is used for server communications. This is the case if python-requests is not installed.
+
+After updating Check_MK and rebaking your agents, it is also required to reinstall the Check_MK Agent on affected hosts.
+A workaround would be to install the Python requests module on the affected hosts.

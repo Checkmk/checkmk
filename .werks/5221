@@ -1,0 +1,9 @@
+Title: esx_vsphere_hostsystem.cpu_usage, esx_vsphere_hostsystem.cpu_util_cluster: Fix min/max values in perfdata
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p13
+Date: 1505824220
+Class: fix
+

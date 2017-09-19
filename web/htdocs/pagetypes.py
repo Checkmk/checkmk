@@ -84,6 +84,9 @@ class Base(object):
     # "add_to"       : Text like "Add to foo bar..."
     # TODO: Look at GraphCollection for the complete list of phrases to
     # be defined for each page type and explain that here.
+    # TODO: Refactor this to different indepentent class methods. For example
+    # the "add_to" phrase is not relevant for non container elements. In the
+    # moment we use dedicated methods, wrong usage will be found by pylint.
     @classmethod
     def phrase(cls, phrase):
         return _("MISSING '%s'") % phrase
@@ -491,6 +494,17 @@ class Overridable(Base):
         ###     custom.append((owner, visual_name, visual))
         ### elif visual["public"] and owner == "":
         ###     builtin.append((owner, visual_name, visual))
+
+
+    @classmethod
+    def permitted_instances_sorted(cls):
+        instances = []
+        for instance in cls.instances_sorted():
+            if (instance.is_mine() and instance.may_see()) or \
+               (not instance.is_mine() and instance.is_public() and instance.may_see()):
+                instances.append(instance)
+        return instances
+
 
     def may_delete(self):
         if self.is_builtin():

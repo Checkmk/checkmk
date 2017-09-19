@@ -85,6 +85,9 @@ def parse_ucs_bladecenter_if(info):
     for key, values in data.get("fabricDceSwEp", {}).items():
         icnt_interfaces.setdefault(values["EpDn"], {}).update(values)
 
+    for key, values in data.get("fabricDceSwSrvEp", {}).items():
+        icnt_interfaces.setdefault(values["EpDn"], {}).update(values)
+
     # Get info for each portchannel
     icnt_pc_info = {}
     for key, values in data.get("fabricDceSwSrvPc", {}).items():

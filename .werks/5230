@@ -1,0 +1,17 @@
+Title: logwatch/logwatch.ec: fixed "no forwarding" option in rule "Logwatch Event Console Forwarding"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505810291
+Class: fix
+
+If you configured a "Logwatch Event Console Forwarding" rule and used the
+setting "No forwarding" (Messages are handled by logwatch), the logfiles weren't handled
+by logwatch at all. They simply got dropped.
+
+This has been fixed. If you update to this version you might see an increase
+in logwatch checks, if you used the "No forwarding" setting.
+
+

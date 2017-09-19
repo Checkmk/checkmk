@@ -1,0 +1,14 @@
+Title: ucs_bladecenter_if: Fixed wrong indexing of single detected interfaces
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1505830369
+Class: fix
+
+Indexing of single interfaces was wrong which had only an impact
+on single discovered interfaces where the index was used as item
+in service description.
+Interface groups and single interfaces with interface alias or
+description are not affected.

@@ -252,7 +252,6 @@ def parse_ucs_bladecenter_if(info):
        }
     }
 
-
     # Ethernet
     converted = []
     last_index = 0
@@ -261,39 +260,34 @@ def parse_ucs_bladecenter_if(info):
           ("ethernet",     "Ethernet-Group",      eth_interfaces, "Slot %s Switch %s Port %s"),
           ("interconnect", "Interconnect-Group", icnt_interfaces, "Slot %s IC-Switch %s Port %s"),
     ]:
+        index = 0
         for index, (name, values) in enumerate(interfaces.items()):
             item = item_template % ( values.get("SlotId"),
                                      values.get("SwitchId"),
                                      values.get("PortId") )
-
             entry = ['0'] * 20
             converted.append(entry)
 
             # Interfaces in portchannels are automatically grouped by within if.include
             # Grouped interfaces are identified when the type of the ifIndex field is a tuple
+            # Speed and OperState
             if "portchannel" in values:
                 entry[0] = (group_prefix + " " + values["portchannel"].get("Name", values["portchannel"].get("PortId", "")),\
-                           str(last_index + index))
-            else:
-                entry[0] = str(last_index + index)
-            entry[1] = item
-
-            # Speed and OperState
-            if values.get("portchannel"):
+                            str(last_index + index))
                 speed = values["portchannel"].get("AdminSpeed") or values["portchannel"].get("OperSpeed")
                 # It looks like that the AdminSpeed of a portchannel is the speed of one member
                 # speed = str(int(float(speed.replace("gbps", "000000000")) / values["portchannel"]["members"]))
-                speed = speed.replace("gbps", "000000000")
+                entry[3] = speed.replace("gbps", "000000000")
                 operStatus = values["portchannel"].get("AdminState", "disabled") == "enabled" and \
                              values["portchannel"].get("OperState",  "down") == "up"
             else:
-                speed = values.get("AdminSpeed", "").replace("gbps", "000000000")
+                entry[0] = str(last_index + index)
+                entry[3] = values.get("AdminSpeed", "").replace("gbps", "000000000")
                 operStatus = values.get("AdminState", "disabled") == "enabled" and \
                              values.get("OperState",  "down") == "up"
 
-            entry[3] = speed
+            entry[1] = item
             entry[4] = operStatus and "1" or "2"
-
             entry[18] = item # ifAlias
             entry[19] = ''   # MAC address not known here
             for table_index , ctr_keys in tableindex.get(what).items():
@@ -309,8 +303,7 @@ def parse_ucs_bladecenter_if(info):
                         else:
                             ctr_value += int(values.get(ctr_key, "0"))
                 entry[table_index] = str(ctr_value)
-        else:
-            index = 0
+
         last_index += index + 1
 
     return converted

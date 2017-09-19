@@ -81,7 +81,7 @@ def logwatch_select_forwarded(info):
             logfile_name = line[3:-3]
 
             # Is forwarding enabled in general?
-            if forward_settings and forward_settings[0] != None:
+            if forward_settings and forward_settings[0]:
                 if logwatch_ec_forwarding_enabled(forward_settings[0], logfile_name):
                     forwarded_logs.append(logfile_name)
                 else:

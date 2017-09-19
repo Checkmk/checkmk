@@ -103,11 +103,23 @@ def parse_infoblox_services(info):
         "59" : "taxii",
     }
 
+    map_status_id = {
+        "1" : "working",
+        "2" : "warning",
+        "3" : "failed",
+        "4" : "inactive",
+        "5" : "unknown",
+    }
+
     parsed = {}
-    for service_id, status, status_descr in info:
+    for _node, service_id, status_id, description in info:
+        status = map_status_id.get(status_id, "unexpected")
+        if status in ["inactive", "unknown"]:
+            continue
+
         service_name = map_service_ids[service_id]
-        if status not in [ "5", "4" ]:
-            parsed.setdefault(service_name, (status, status_descr))
+        service_nodes = parsed.setdefault(service_name, [])
+        service_nodes.append((status, description))
 
     return parsed
 
@@ -118,22 +130,29 @@ def inventory_infoblox_services(parsed):
 
 
 def check_infoblox_services(item, _no_params, parsed):
-    map_states = {
-        "1" : (0, "working"),
-        "2" : (1, "warning"),
-        "3" : (2, "failed"),
-        "4" : (3, "inactive"),
-        "5" : (3, "unknown")
-    }
-
     if item in parsed:
-        status, descr = parsed[item]
-        state, state_readable = \
-            map_states.get(status, (3, "unexpected(%s)" % status))
-        extra_info = ""
-        if descr:
-            extra_info += " (%s)" % descr
-        return state, "Status: %s%s" % (state_readable, extra_info)
+        map_status = {
+            "working": 0,
+            "warning": 1,
+            "failed": 2,
+            "unexpected": 3,
+        }
+        node_data = parsed[item]
+
+        # For a clustered service the best state is used
+        min_status, min_descr = node_data[0]
+        min_state = map_status[min_status]
+
+        for status, descr in node_data[1:]:
+            state = map_status[status]
+            if state < min_state:
+                min_state, min_status, min_descr = state, status, descr
+
+        infotext = "Status: %s" % min_status
+        if min_descr:
+            infotext += " (%s)" % min_descr
+
+        return min_state, infotext
 
 
 #.

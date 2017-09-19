@@ -8,8 +8,10 @@ description:
  support the IB-PLATFORMONE MIB.
 
  The check is OK if the status of the service is working. It goes WARN
- if it is warning, the check reports CRIT, if it fails. Otherwise the
+ if it is warning, and reports CRIT, if it fails. Otherwise the
  check goes UNKNOWN.
+
+ If the service is clustered the best status of all nodes is shown.
 
 item:
  The service name.

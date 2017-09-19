@@ -60,4 +60,5 @@ check_info['infoblox_node_services'] = {
                                   ]),
     'snmp_scan_function'        : scan_infoblox,
     'includes'                  : [ "infoblox.include" ],
+    'node_info'                 : True,
 }

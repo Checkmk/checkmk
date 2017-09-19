@@ -145,8 +145,10 @@ def check_http_arguments(params):
     if settings.get("urlize"):
         args += [ '-L' ]
 
-    if not omit_ip:
+    if (not omit_ip) and ("proxy" not in settings):
         args = [ "-I", address ] + args
+    elif "proxy" in settings:
+        args = [ "-I", settings["proxy"] ] + args
 
     return args
 

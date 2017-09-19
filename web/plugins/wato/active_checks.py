@@ -989,6 +989,15 @@ register_rule(group,
                                     ]
                                 )
                             ),
+                            ( "proxy",
+                                TextAscii(
+                                    title = _("Proxy host"),
+                                    help = _("To use a proxy you have to use the Port of the proxy, "
+                                             "specify the virtual host and the URL to fetch, "
+                                             "use the HTTP Method CONNECT, and use SSL/HTTPS "
+                                             "for the connection")
+                                ),
+                            ),
                             ( "proxy_auth",
                                 Tuple(
                                     title = _("Proxy-Authorization"),

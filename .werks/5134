@@ -1,0 +1,10 @@
+Title: check_http: Add the option to specify a proxy server in check_http
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505821515
+Class: feature
+
+

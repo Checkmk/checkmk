@@ -1,0 +1,12 @@
+diff -Nur dest/python-ad-0.9.orig/lib/ad/core/locate.py dest/python-ad-0.9/lib/ad/core/locate.py
+--- dest/python-ad-0.9.orig/lib/ad/core/locate.py	2008-10-31 15:19:34.000000000 +0100
++++ dest/python-ad-0.9/lib/ad/core/locate.py	2017-09-19 15:03:40.363809822 +0200
+@@ -162,7 +162,7 @@
+                 netlogon.query(addr, domain)
+             replies += netlogon.call()
+             self.m_logger.debug('%d replies' % len(replies))
+-            if replies >= 3:
++            if len(replies) >= 3:
+                 break
+         if not replies:
+             self.m_logger.error('could not detect site')

@@ -1,0 +1,35 @@
+Title: Graphs: Vertical axis scaling and mirroring can now be customized
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1505832008
+Class: feature
+
+You can now customize the vertical axis scaling mode and mirror the
+metrics in a graph if you like. This can be done just for yourself
+or for all your users.
+
+This can be useful, for example, if you like to change the scaling
+of all CPU usage graphs from fixed 100% to dynamical scaling based
+on the measured values.
+
+This feature is usable for all template based and combined graphs.
+It does not affect custom graphs at all.
+
+To configure such a customization open your GUI and click the {{Edit}}
+button of your {{Views}} snapin. Then click on the {{Graph tunings}}
+button on the top of the page. From this page you can then create a
+new graph tuning where you first need to set a title and the graph
+type you want to customize
+.
+Then you need to add a new tuning setting where you can first configure
+to which graphs you want it to be applied and then configure the options
+you want to change.
+
+If you like you can enable to share this tuning with others, which will
+make your changes effective for other users graphs.
+
+After saving the new tunings it's settings will be applied immediately
+to fresh rendered graphs.

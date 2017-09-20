@@ -71,6 +71,7 @@ package_parts = [ (part, title, perm, ldir and ldir or dir) for part, title, per
   ( "web",           "Multisite extensions",      0644, cmk.paths.web_dir,             cmk.paths.local_web_dir ),
   ( "pnp-templates", "PNP4Nagios templates",      0644, cmk.paths.pnp_templates_dir,   cmk.paths.local_pnp_templates_dir ),
   ( "doc",           "Documentation files",       0644, cmk.paths.doc_dir,             cmk.paths.local_doc_dir ),
+  ( "locales",       "Localizations",             0644, cmk.paths.locale_dir,          cmk.paths.local_locale_dir ),
   ( "bin",           "Binaries",                  0755, None,                          cmk.paths.local_bin_dir ),
   ( "lib",           "Libraries",                 0644, None,                          cmk.paths.local_lib_dir),
   ( "mibs",          "SNMP MIBs",                 0644, None,                          cmk.paths.local_mib_dir),

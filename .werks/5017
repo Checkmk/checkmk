@@ -1,0 +1,15 @@
+Title: check_mk_agent: Fixed false positive error messages while installing rpm from bakery
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1505899691
+Class: fix
+
+Previously a rpm package of the linux agent assumed sysvinit while checking for
+xinetd to be installed. The check failed if systemd was the init system. This
+affects only rpm packages built by agent bakery.
+
+Now the rpm packages verifies the presence of xinetd by looking for the
+presence of the binary (/usr/sbin/xinetd) which seems to be less error-prone.

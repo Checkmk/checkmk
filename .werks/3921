@@ -1,0 +1,11 @@
+Title: MKP: Custom localizations can now be packed
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505897971
+Class: feature
+
+Custom localization files below {{local/share/check_mk/locale}}
+can now be packed into MKP files.

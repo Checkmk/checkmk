@@ -1,0 +1,17 @@
+Title: Service discovery: Fixed permission handling regarding foreign changes if user just performs a service discovery
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p13
+Date: 1505896357
+Class: fix
+
+If a user is not allowed to activate foreign changes but wants to
+perform a service discovery of hosts configured on slave sites,
+this action was falsely forbidden by Check_MK showing
+<tt>There are some changes made by your colleagues that you can not
+activate because you are not permitted to. You can only activate
+the changes on the sites that are not affected by these changes.</tt>
+Only if the user wants to activate these changes and does not have
+the right permissions the above warning message should be displayed.

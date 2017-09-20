@@ -4558,18 +4558,16 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _create_site_sync_snapshot(self, site_id):
-        has_foreign = self._site_has_foreign_changes(site_id)
+        if self._site_has_foreign_changes(site_id) and not self._activate_foreign:
+            if not config.user.may("wato.activateforeign"):
+                raise MKUserError(None,
+                    _("There are some changes made by your colleagues that you can not "
+                      "activate because you are not permitted to. You can only activate "
+                      "the changes on the sites that are not affected by these changes. "
+                      "<br>"
+                      "If you need to activate your changes on all sites, please contact "
+                      "a permitted user to do it for you."))
 
-        if has_foreign and not config.user.may("wato.activateforeign"):
-            raise MKUserError(None,
-                _("There are some changes made by your colleagues that you can not "
-                  "activate because you are not permitted to. You can only activate "
-                  "the changes on the sites that are not affected by these changes. "
-                  "<br>"
-                  "If you need to activate your changes on all sites, please contact "
-                  "a permitted user to do it for you."))
-
-        if has_foreign and not self._activate_foreign:
             raise MKUserError(None,
                 _("There are some changes made by your colleagues and you did not "
                   "confirm to activate these changes. In order to proceed, you will "

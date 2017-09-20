@@ -220,7 +220,5 @@ setup:
 	sudo apt-get install \
 	    nsis \
 	    lcab \
-	    binutils-mingw-w64-i686 \
-	    binutils-mingw-w64-x86-64 \
-	    g++-mingw-w64-i686 \
-	    g++-mingw-w64-x86-64
+	    debootstrap \
+	    ubuntu-archive-keyring

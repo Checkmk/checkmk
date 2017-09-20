@@ -1,0 +1,30 @@
+#!/bin/bash
+export HOSTNAME=cmk-windows-agent-chroot
+unset LANG
+
+BASE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MNT=$BASE/chroot
+
+if [ ! -e $MNT/proc/self ] ; then
+    mount -t proc proc $MNT/proc
+fi
+
+if [ ! -e $MNT/dev/sda ] ; then
+    mount -o bind /dev $MNT/dev
+fi
+
+if [ ! -e $MNT/dev/pts/ptmx ] ; then
+    mount -t devpts devpts $MNT/dev/pts 2>/dev/null || true
+fi
+
+if [ ! -e $MNT/build/Makefile ] ; then
+    mount -o bind $BASE $MNT/build
+fi
+
+chroot chroot bash -l
+
+umount $MNT/build
+umount $MNT/dev/pts
+sleep 2
+umount $MNT/dev
+umount $MNT/proc

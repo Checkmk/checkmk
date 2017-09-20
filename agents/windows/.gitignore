@@ -17,3 +17,4 @@ testtools
 *.d
 *.o
 wmitest.exe
+chroot

@@ -38,8 +38,8 @@ def check_humidity(humidity, params):
             "levels"       : (params[2], params[3]),
         }
 
-    crit_lower, warn_lower = params["levels_lower"]
-    warn_upper, crit_upper = params["levels"]
+    crit_lower, warn_lower = params.get("levels_lower", [-1, -1])
+    warn_upper, crit_upper = params.get("levels", [101, 101])
     perfdata = [ ("humidity", humidity, warn_upper, crit_upper, 0, 100) ]
     infotext = get_percent_human_readable(humidity)
 

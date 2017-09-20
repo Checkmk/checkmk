@@ -81,17 +81,16 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/check_mk_agent
 /var/lib/check_mk_agent
 
-%define reload_xinetd if [ -x /etc/init.d/xinetd ] ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; /etc/init.d/xinetd reload ; else echo "Starting xinetd..." ; /etc/init.d/xinetd start ; fi ; fi
+%define reload_xinetd if which xinetd >/dev/null 2>&1 ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service xinetd start ; fi ; fi
 
-%define reload_xinetd_systemd if [ ! -x /etc/init.d/xinetd ] && [ -x /usr/sbin/xinetd ]; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service init.d/xinetd start ; fi ; fi
+%define activate_xinetd if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1 ; then echo "Activating startscript of xinetd" ; chkconfig xinetd on ; fi
 
-%define activate_xinetd if [ -x /usr/bin/xinetd ] && [ which chkconfig >/dev/null 2>&1 ] ; then echo "Activating startscript of xinetd" ; chkconfig xinetd on ; fi
 %define cleanup_rpmnew if [ -f /etc/xinetd.d/check_mk.rpmnew ] ; then rm /etc/xinetd.d/check_mk.rpmnew ; fi
 
-%define systemd_enable if [ -x /usr/bin/systemctl ] && [ ! -x /usr/sbin/xinetd ] ; then echo "Enable Check_MK_Agent in systemd..." ; systemctl enable check_mk.socket ; systemctl restart sockets.target ; fi
+%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Check_MK_Agent in systemd..." ; systemctl enable check_mk.socket ; systemctl restart sockets.target ; fi
 
 %pre
-if [ ! -x /usr/sbin/xinetd ] && [ ! -x /usr/bin/systemctl ] ; then
+if ! which xinetd >/dev/null 2>&1 && ! which systemctl >/dev/null 2>&1 ; then
     echo
     echo "---------------------------------------------"
     echo "WARNING"
@@ -111,7 +110,6 @@ fi
 %cleanup_rpmnew
 %activate_xinetd
 %reload_xinetd
-%reload_xinetd_systemd
 %systemd_enable
 
 %postun

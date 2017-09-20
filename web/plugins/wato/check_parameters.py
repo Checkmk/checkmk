@@ -3849,7 +3849,7 @@ register_check_parameters(
         allow_empty = False,
         regex = "^[a-zA-Z_0-9 _./-]*$",
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
-                        "dot, hyphon and slash for your service description"),
+                        "dot, hyphen and slash for your service description"),
     ),
     "dict",
     has_inventory = False,
@@ -14761,7 +14761,7 @@ register_check_parameters(
         allow_empty = False,
         regex = "^[a-zA-Z_0-9 _.-]*$",
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
-                        "dot and hyphon for your service description"),
+                        "dot and hyphen for your service description"),
     ),
     match_type = "dict",
     has_inventory = False

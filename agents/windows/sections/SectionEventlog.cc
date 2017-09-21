@@ -71,8 +71,7 @@ void SectionEventlog::parseStateLine(char *line) {
 }
 
 void SectionEventlog::loadEventlogOffsets(const std::string &statefile) {
-    static bool records_loaded = false;
-    if (!records_loaded) {
+    if (!_records_loaded) {
         FILE *file = fopen(statefile.c_str(), "r");
         if (file) {
             char line[256];
@@ -81,7 +80,7 @@ void SectionEventlog::loadEventlogOffsets(const std::string &statefile) {
             }
             fclose(file);
         }
-        records_loaded = true;
+        _records_loaded = true;
     }
 }
 
@@ -297,13 +296,12 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
     // been processed. When started, the eventlog
     // is skipped to the end. Historic messages are
     // not been processed.
-    static bool first_run = true;
 
     if (find_eventlogs(out)) {
         // Special handling on startup (first_run)
         // The last processed record number of each eventlog is stored in the
         // file eventstate.txt
-        if (first_run && !*_send_initial) {
+        if (_first_run && !*_send_initial) {
             for (eventlog_file_state &state : _state) {
                 bool found_hint = false;
                 for (eventlog_hint_t *hint : _hints) {
@@ -345,6 +343,6 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
         }
         saveEventlogOffsets(_env.eventlogStatefile());
     }
-    first_run = false;
+    _first_run = false;
     return true;
 }

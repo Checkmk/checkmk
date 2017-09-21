@@ -67,6 +67,8 @@ class SectionEventlog : public Section {
 
     eventlog_hints_t _hints;
     eventlog_state_t _state;
+    bool _records_loaded = false;
+    bool _first_run = true;
 
 public:
     SectionEventlog(Configuration &config, Logger *logger,

@@ -1,0 +1,13 @@
+Title: mrpe: Fix compatibility of bakery ruleset when updating from 1.2.8*
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1506002395
+
+A change in the bakelet's parameters introduced in 1.4.0i1 (cf. Werk #3137)
+led to previously configured rules blocking the baking process as well as
+leading to errors when searching for rulesets. This has been fixed.

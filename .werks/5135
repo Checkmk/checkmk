@@ -1,0 +1,13 @@
+Title: hitachi_hnas_virtual.volume: New subcheck to monitor virtual volumes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1505979807
+Class: feature
+
+The check monitors the quota of virtual volumes on Hitachi NAS devices.
+If a quota is defined the output of the check is similar to the output
+of the volumes check of Hitachi NAS devices. If no quota is defined the
+check returns the status OK.

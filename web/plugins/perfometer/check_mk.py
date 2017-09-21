@@ -1191,6 +1191,7 @@ perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
 perfometers["check_mk-esx_vsphere_counters.ramdisk"] = perfometer_check_mk_df
 perfometers["check_mk-hitachi_hnas_span"] = perfometer_check_mk_df
 perfometers["check_mk-hitachi_hnas_volume"] = perfometer_check_mk_df
+perfometers["check_mk-hitachi_hnas_volume.virtual"] = perfometer_check_mk_df
 perfometers["check_mk-emcvnx_raidgroups.capacity"] = perfometer_check_mk_df
 perfometers["check_mk-emcvnx_raidgroups.capacity_contiguous"] = perfometer_check_mk_df
 perfometers["check_mk-ibm_svc_mdiskgrp"] = perfometer_check_mk_df

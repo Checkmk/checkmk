@@ -1,0 +1,21 @@
+Title: dotnet_clrmemory, msexch_rpcclientaccess, wmi_cpuload: Fixed activate changes because of inconsistent item handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1505989362
+
+WATO groups, inventory functions in wmi.include and service descriptions
+were inconsistent.
+<ul>
+<li>Werk 4099 changed WATO item type.</li>
+<li>Library {{wmi.include}} returned wrong item for {{wmi_cpuload}}.</li>
+<li>Check {{dotnet_clrmemory}} had not '%s' in service description (not incomp.).</li>
+</ul>
+In the first case the existing rules must be discharged and new ones have
+to be applied.
+Second issue requires a re-discovery on the affected hosts.
+Third one is not incompatible; just a cosmetic change.

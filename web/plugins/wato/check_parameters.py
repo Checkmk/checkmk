@@ -6718,7 +6718,7 @@ register_check_parameters(
         ],
         optional_keys=[]
     ),
-    FixedValue("", title=""),
+    None,
     match_type = 'dict'
 )
 

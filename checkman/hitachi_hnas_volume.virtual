@@ -1,0 +1,21 @@
+title: Hitachi HNAS: Usage and Status of Virtual Volumes
+agents: snmp
+catalog: hw/storagehw/hitachi
+license: GPL
+distribution: check_mk
+description:
+ Checks the Usage and Status of Virtual Volumes on Hitachi HNAS storage systems.
+
+ It uses the check logic of the {df} check, so for configuration
+ parameters and examples please refer to the man page of {df}.
+
+ If no quota is defined or a quota without usage and limit is defined, the
+ check returns the status {OK}.
+
+item:
+ The label of the virtual volume followed by the label of the physical volume
+ the virtual volume belongs to.
+
+inventory:
+ One item per virtual volume.
+

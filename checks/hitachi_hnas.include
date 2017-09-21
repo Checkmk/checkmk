@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_hnas_physical_volumes(volume_data):
+def parse_physical_volumes(volume_data):
     status_map = {
         '1': 'unformatted',
         '2': 'mounted',
@@ -33,18 +33,62 @@ def parse_hnas_physical_volumes(volume_data):
         '4': 'needsChecking',
     }
 
+    map_label = {}
     parsed_volumes = {}
 
     for volume_id, label, status_id, size, avail, evs in volume_data:
         if volume_id == '':
             continue
+
+        map_label[volume_id] = label
+
         volume = '%s %s' % (volume_id, label)
         status = status_map.get(status_id, 'unidentified')
         size_mb = int(size) / 1048576.0 if size else None
         avail_mb = int(avail) / 1048576.0 if avail else None
         parsed_volumes[volume] = (status, size_mb, avail_mb, evs)
 
-    return parsed_volumes
+    return map_label, parsed_volumes
+
+
+def parse_virtual_volumes(map_label, virtual_volumes, quotas):
+    # Note: A virtual volume may have no quota or a quota without a limit
+    # and usage.
+    # Besides quotas for virtual volumes the quota table also contains
+    # user and group quotas.
+
+    # A QuotasEntry is indexed by a concatenation of the physical
+    # volume_id the virtual volume belongs to and the oid_end without
+    # the first element of the virtual volume.
+    def quota_oid_end(phys_volume_id, virtual_volume_oid_end):
+        return '.'.join(
+            [phys_volume_id] + virtual_volume_oid_end.split('.')[1:] + ['0']
+        )
+
+    parsed = {}
+    map_quota_oid = {}
+    for oid_end, phys_volume_id, virtual_volume_label in virtual_volumes:
+        phys_volume_label = map_label[phys_volume_id]
+        volume = '%s on %s' % (virtual_volume_label, phys_volume_label)
+        parsed[volume] = None
+
+        ref_oid_end = quota_oid_end(phys_volume_id, oid_end)
+        map_quota_oid[ref_oid_end] = volume
+
+    volume_quota = '3'
+    for oid_end, quota_type, usage, limit in quotas:
+        if quota_type != volume_quota:
+            continue
+
+        if usage and limit:
+            volume = map_quota_oid[oid_end]
+            size_mb = int(limit) / 1048576.0
+            avail_mb = size_mb - int(usage)/1048576.0
+            parsed[volume] = (size_mb, avail_mb)
+        else:
+            parsed[volume] = (None, None)
+
+    return parsed
 
 
 def hitachin_hnas_scan_function(oid):

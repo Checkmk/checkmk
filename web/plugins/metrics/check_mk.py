@@ -4426,6 +4426,7 @@ check_metrics["check_mk-oracle_asm_diskgroup"]                  = df_translation
 check_metrics["check_mk-esx_vsphere_counters.ramdisk"]          = df_translation
 check_metrics["check_mk-hitachi_hnas_span"]                     = df_translation
 check_metrics["check_mk-hitachi_hnas_volume"]                   = df_translation
+check_metrics["check_mk-hitachi_hnas_volume.virtual"]           = df_translation
 check_metrics["check_mk-emcvnx_raidgroups.capacity"]            = df_translation
 check_metrics["check_mk-emcvnx_raidgroups.capacity_contiguous"] = df_translation
 check_metrics["check_mk-ibm_svc_mdiskgrp"]                      = df_translation

@@ -1,0 +1,12 @@
+Title: Do not skip first entry in Windows eventlog
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p13
+Date: 1506332777
+Class: fix
+
+Under certain circumstances, the first entry in Windows eventlog was skipped after starting the Windows agent. Now the first entry is always processed as expected.
+
+

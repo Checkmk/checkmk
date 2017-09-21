@@ -84,7 +84,7 @@ public:
      * quick most of the time but occasionally cause a fetch via api that takes
      * longer
      */
-    virtual std::shared_ptr<IEventLogRecord> read() = 0;
+    virtual std::unique_ptr<IEventLogRecord> read() = 0;
 
     /**
      * get a list of dlls that contain eventid->message mappings for this

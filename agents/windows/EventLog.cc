@@ -316,7 +316,7 @@ uint64_t EventLog::seek(uint64_t record_number) {
     return _record_offset;
 }
 
-std::shared_ptr<IEventLogRecord> EventLog::read() {
+std::unique_ptr<IEventLogRecord> EventLog::read() {
     EVENTLOGRECORD *result = nullptr;
     while (result == nullptr) {
         while (_buffer_offset < _buffer_used) {
@@ -345,10 +345,9 @@ std::shared_ptr<IEventLogRecord> EventLog::read() {
     }
     if (result != nullptr) {
         _last_record_read = result->RecordNumber;
-        return std::shared_ptr<IEventLogRecord>(
-            new EventLogRecord(result, _resolver));
+        return std::make_unique<EventLogRecord>(result, _resolver);
     } else {
-        return std::shared_ptr<IEventLogRecord>();
+        return std::unique_ptr<IEventLogRecord>();
     }
 }
 

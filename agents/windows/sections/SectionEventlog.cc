@@ -105,8 +105,11 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
     fclose(file);
 }
 
-static std::pair<char, int> determine_event_state(const IEventLogRecord &event,
-                                                  int level) {
+namespace {
+
+using uint64limits = std::numeric_limits<uint64_t>;
+
+std::pair<char, int> getEventState(const IEventLogRecord &event, int level) {
     switch (event.level()) {
         case IEventLogRecord::Level::Error:
             return {'C', 2};
@@ -126,16 +129,16 @@ static std::pair<char, int> determine_event_state(const IEventLogRecord &event,
     }
 }
 
-void SectionEventlog::process_eventlog_entry(std::ostream &out,
-                                             const IEventLog &event_log,
-                                             const IEventLogRecord &event,
-                                             int level, int hide_context) {
+// The int return value is there just for convenience, actually we are not
+// interested in the state int value at this point any more.
+int outputEventlogRecord(std::ostream &out, const IEventLogRecord &event,
+                         int level, int hide_context) {
     char type_char;
     int this_state;
-    std::tie(type_char, this_state) = determine_event_state(event, level);
+    std::tie(type_char, this_state) = getEventState(event, level);
 
     if (hide_context && (type_char == '.')) {
-        return;
+        return this_state;
     }
 
     // convert UNIX timestamp to local time
@@ -151,11 +154,32 @@ void SectionEventlog::process_eventlog_entry(std::ostream &out,
     out << type_char << " " << timestamp << " " << event.eventQualifiers()
         << "." << event.eventId() << " " << source_name << " "
         << Utf8(event.message()) << "\n";
+
+    return this_state;
 }
 
-void SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
-                                     uint64_t &first_record, int level,
-                                     int hide_context) {
+std::pair<uint64_t, int> processEventLog(
+    IEventLog &log, uint64_t previouslyReadId, int level,
+    const std::function<int(const IEventLogRecord &, int)> &processFunc) {
+    // we must seek past the previously read event - if there was one
+    const uint64_t seekPosition =
+        previouslyReadId + (uint64limits::max() == previouslyReadId ? 0 : 1);
+    int worstState = 0;
+    uint64_t lastRecordId = previouslyReadId;
+    log.seek(seekPosition);
+    while (auto record = std::move(log.read())) {
+        lastRecordId = record->recordId();
+        worstState = std::max(worstState, processFunc(*record, level));
+    }
+
+    return {lastRecordId, worstState};
+}
+
+}  // namespace
+
+uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
+                                         uint64_t previouslyReadId, int level,
+                                         int hideContext) {
     Debug(_logger) << " - event log \"" << logname << "\":";
 
     try {
@@ -163,53 +187,36 @@ void SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
             to_utf16(logname, _winapi), *_vista_api, _logger, _winapi));
         {
             Debug(_logger) << "   . successfully opened event log";
-
             out << "[[[" << logname << "]]]\n";
-            int worst_state = 0;
-            // record_number is the last event we read, so we want to seek past
-            // it
-            bool record_maxxed =
-                std::numeric_limits<uint64_t>::max() == first_record;
-            log->seek(first_record + (record_maxxed ? 0 : 1));
 
-            uint64_t last_record = first_record;
+            const auto getState = [](const IEventLogRecord &record, int level) {
+                return getEventState(record, level).second;
+            };
+            uint64_t lastReadId = 0;
+            int worstState = 0;
 
             // first pass - determine if there are records above level
-            std::shared_ptr<IEventLogRecord> record = log->read();
-
-            while (record.get() != nullptr) {
-                std::pair<char, int> state =
-                    determine_event_state(*record, level);
-                worst_state = std::max(worst_state, state.second);
-
-                last_record = record->recordId();
-                record = log->read();
-            }
-
-            Debug(_logger) << "    . worst state: " << worst_state;
+            std::tie(lastReadId, worstState) =
+                processEventLog(*log, previouslyReadId, level, getState);
+            Debug(_logger) << "    . worst state: " << worstState;
 
             // second pass - if there were, print everything
-            if (worst_state >= level) {
+            if (worstState >= level) {
                 log->reset();
-                bool record_maxxed =
-                    std::numeric_limits<uint64_t>::max() == first_record;
-                log->seek(first_record + (record_maxxed ? 0 : 1));
-
-                std::shared_ptr<IEventLogRecord> record = log->read();
-                while (record.get() != nullptr) {
-                    process_eventlog_entry(out, *log, *record, level,
-                                           hide_context);
-
-                    // store highest record number we found
-                    last_record = record->recordId();
-                    record = log->read();
-                }
+                const auto outputRecord = [&out, hideContext](
+                    const IEventLogRecord &record, int level) {
+                    return outputEventlogRecord(out, record, level,
+                                                hideContext);
+                };
+                processEventLog(*log, previouslyReadId, level, outputRecord);
             }
-            first_record = last_record;
+
+            return lastReadId;
         }
     } catch (const std::exception &e) {
         Error(_logger) << "failed to read event log: " << e.what() << std::endl;
         out << "[[[" << logname << ":missing]]]\n";
+        return previouslyReadId;
     }
 }
 
@@ -314,7 +321,7 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
                 // If there is no entry for the given eventlog we start at the
                 // end
                 if (!found_hint) {
-                    state.record_no = std::numeric_limits<uint64_t>::max();
+                    state.record_no = uint64limits::max();
                 }
             }
         }
@@ -336,8 +343,9 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
                     }
                 }
                 if (level != -1) {
-                    outputEventlog(out, state.name.c_str(), state.record_no,
-                                   level, hide_context);
+                    state.record_no =
+                        outputEventlog(out, state.name.c_str(), state.record_no,
+                                       level, hide_context);
                 }
             }
         }

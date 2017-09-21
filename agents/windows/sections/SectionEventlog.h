@@ -81,16 +81,14 @@ protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 
 private:
-    void outputEventlog(std::ostream &out, const char *logname,
-                        uint64_t &first_record, int level, int hide_context);
+    uint64_t outputEventlog(std::ostream &out, const char *logname,
+                            uint64_t previouslyReadId, int level,
+                            int hideContext);
     void registerEventlog(const char *logname);
     bool find_eventlogs(std::ostream &out);
     void parseStateLine(char *line);
     void loadEventlogOffsets(const std::string &statefile);
     void saveEventlogOffsets(const std::string &statefile);
-    void process_eventlog_entry(std::ostream &out, const IEventLog &event_log,
-                                const IEventLogRecord &event, int level,
-                                int hide_context);
 };
 
 #endif  // SectionEventlog_h

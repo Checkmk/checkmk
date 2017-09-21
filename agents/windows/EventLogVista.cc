@@ -414,13 +414,13 @@ uint64_t EventLogVista::seek(uint64_t record_id) {
     return record_id;
 }
 
-std::shared_ptr<IEventLogRecord> EventLogVista::read() {
+std::unique_ptr<IEventLogRecord> EventLogVista::read() {
     if ((_next_event == _events.size()) || (_events[_next_event] == nullptr)) {
         if (!fillBuffer()) {
-            return std::shared_ptr<IEventLogRecord>();
+            return std::unique_ptr<IEventLogRecord>();
         }
     }
-    return std::make_shared<EventLogRecordVista>(
+    return std::make_unique<EventLogRecordVista>(
         _events[_next_event++], _evt.get(), _render_context->get_handle(),
         _winapi);
 }

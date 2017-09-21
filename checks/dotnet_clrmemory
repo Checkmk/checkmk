@@ -46,7 +46,7 @@ check_info['dotnet_clrmemory'] = {
     'check_function'      : check_dotnet_clrmemory,
     'parse_function'      : parse_wmi_table,
     'has_perfdata'        : True,
-    'service_description' : "DotNet Memory Management",
+    'service_description' : "DotNet Memory Management %s",
     'includes'            : ['wmi.include'],
     'group'               : "clr_memory"
 }

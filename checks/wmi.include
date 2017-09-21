@@ -221,7 +221,7 @@ def inventory_wmi_table(tables, **kwargs):
             # 'system_perf' section has only counters and comes together
             # with 'computer_system' which has table names and intersection
             # of these tables would be empty. Thus no service is discovered.
-            potential_instances = [""]
+            potential_instances = [None]
 
         else:
             # inventarize one item per instance that exists in all tables

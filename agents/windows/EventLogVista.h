@@ -152,7 +152,7 @@ public:
 
     virtual uint64_t seek(uint64_t record_id) override;
 
-    virtual std::shared_ptr<IEventLogRecord> read() override;
+    virtual std::unique_ptr<IEventLogRecord> read() override;
 
 private:
     static const int EVENT_BLOCK_SIZE = 16;

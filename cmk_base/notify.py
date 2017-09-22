@@ -413,8 +413,8 @@ def notify_rulebased(raw_context, analyse=False):
     # cannot cancel this notification via his personal notification rules.
     # Example:
     # notifications = {
-    #  ( (aa, hh, ll), "email" ) : ( False, [], None ),
-    #  ( (hh,), "sms"   ) : ( True, [ "0171737337", "bar", {
+    #  ( frozenset({"aa", "hh", "ll"}), "email" ) : ( False, [], None ),
+    #  ( frozenset({"hh"}), "sms"   ) : ( True, [ "0171737337", "bar", {
     #       'groupby': 'host', 'interval': 60} ] ),
     # }
 
@@ -448,13 +448,31 @@ def notify_rulebased(raw_context, analyse=False):
 
             key = contacts, plugin
             if plugin_parameters is None: # cancelling
-                if key in notifications:
-                    locked, plugin_parameters, bulk = notifications[key]
+                # notifications.keys() produces a copy of the keys. This copy
+                # is used to either delete a notification or to modify the
+                # notification contacts of an existing notification.
+                # For Python 3 list(notifications.keys()) would be necessary.
+                for notify_key in notifications.keys():
+                    notify_contacts, notify_plugin = notify_key
+
+                    overlap = notify_contacts.intersection(contacts)
+                    if plugin != notify_plugin or not overlap:
+                        continue
+
+                    locked, plugin_parameters, bulk = notifications[notify_key]
+
                     if locked and "contact" in rule:
                         notify_log("   - cannot cancel notification of %s via %s: it is locked" % (contactstxt, plugintxt))
-                    else:
-                        notify_log("   - cancelling notification of %s via %s" % (contactstxt, plugintxt))
+                        continue
+
+                    notify_log("   - cancelling notification of %s via %s" % (", ".join(overlap), plugintxt))
+
+                    remaining = notify_contacts.difference(contacts)
+                    if not remaining:
                         del notifications[key]
+                    else:
+                        new_key = remaining, plugin
+                        notifications[new_key] = notifications.pop(notify_key)
             elif contacts:
                 if key in notifications:
                     locked = notifications[key][0]
@@ -601,7 +619,7 @@ def rbn_fake_email_contact(email):
 
 def rbn_add_contact_information(plugin_context, contacts):
     # TODO tb: Make contacts a reliable type. Righ now contacts can be
-    # a list of dicts or a list of strings.
+    # a list of dicts or a frozenset of strings.
     contact_dicts = []
     keys = {"name", "alias", "email", "pager"}
 
@@ -794,7 +812,7 @@ def rbn_rule_contacts(rule, context):
 
         all_enabled.append(contactname)
 
-    return tuple(all_enabled)  # has to be hashable
+    return frozenset(all_enabled)  # has to be hashable
 
 
 def rbn_match_contact_macros(rule, contactname, contact):

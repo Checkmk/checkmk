@@ -37,8 +37,281 @@ import itertools
 from lib import *
 from log import logger
 
+
+
+class SnapshotComponentsParser(object):
+    def __init__(self, component_list):
+        super(SnapshotComponentsParser, self).__init__()
+        self.components = []
+        self._from_component_list(component_list)
+
+    def _from_component_list(self, component_list):
+        for component in component_list:
+            self.components.append(SnapshotComponent(component))
+
+    def get_component_names(self):
+        return [ x.name for x in self.components ]
+
+
+
+class SnapshotComponent(object):
+    def __init__(self, component):
+        self.component_type = None # file or dir
+        self.excludes = None       # exclude files from dir
+        self.name = None           # the name of the subtar
+
+        self.configured_path = None # complete path, dir or file
+        self.base_dir        = None # real path
+        self.filename        = None # real filename, . for directories
+
+        self._from_tuple(component)
+
+
+    def _from_tuple(self, component):
+        # Self explanatory, tuples are ugly to parse..
+        if len(component) == 4:
+            self.component_type, self.name, self.configured_path, excludes = component
+            self.excludes = excludes[:]
+        else:
+            self.component_type, self.name, self.configured_path = component
+            self.excludes = []
+
+        self.configured_path = os.path.abspath(self.configured_path).rstrip("/")
+        if self.component_type== "dir":
+            self.filename = None
+            self.base_dir = self.configured_path
+        else:
+            self.filename = os.path.basename(self.configured_path)
+            self.base_dir = os.path.dirname( self.configured_path)
+
+        self.excludes.append(".*new*")    # exclude all temporary files
+
+
+    def __str__(self):
+        return "type: %s, name: %s, configured_path: %s, base_dir: %s, filename: %s, excludes: %s" % \
+                (self.component_type, self.name, self.configured_path, self.base_dir, self.filename, self.excludes)
+
+
+
+class SnapshotCreator(object):
+    def __init__(self, work_dir, all_components):
+        super(SnapshotCreator, self).__init__()
+        self._logger = logger
+        self._logger.debug(_("============= Create snapshots ============="))
+        self._multitar_workdir = os.path.join(work_dir, "multitar_workdir")
+        self._rsync_target_dir = os.path.join(self._multitar_workdir, "synced_files")
+        self._tarfile_dir      = os.path.join(self._multitar_workdir, "subtars")
+        self._setup_directories()
+
+        self._parsed_components = SnapshotComponentsParser(all_components)
+
+        self._available_snapshots = {}
+
+        # Debugging stuff
+        self._statistics = {"rsync": [], "tar": {}}
+        self._start_time = None
+
+
+    def _setup_directories(self):
+        for path in [ self._rsync_target_dir,
+                      self._tarfile_dir ]:
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+
+    def output_statistics(self):
+        self._logger.debug(_("============= Snapshot creation statistics ============="))
+        for line in self._statistics["rsync"]:
+            self._logger.debug("RSYNC: %s" % line)
+
+        for filepath, lines in self._statistics["tar"].items():
+            self._logger.debug("TAR: %s" % filepath)
+            for line in lines:
+                self._logger.debug("TAR:     - %s" % line)
+
+
+    def __enter__(self):
+        self._prepare_generic_tar_files()
+        return self
+
+
+    def __exit__(self, type, value, traceback):
+        self.output_statistics()
+
+
+    def _prepare_generic_tar_files(self):
+        start_time = time.time()
+        bash_commands = []
+        for component in self._parsed_components.components:
+            rsync_target_dir = os.path.join(self._rsync_target_dir, component.name)
+            os.makedirs(rsync_target_dir)
+
+            if os.path.exists(component.configured_path):
+                bash_commands.extend(
+                        self._get_rsync_and_tar_commands(component,
+                                                         rsync_target_dir,
+                                                         self._tarfile_dir))
+            else:
+                # create an empty tarfile for this component
+                tar = tarfile.open(os.path.join(self._tarfile_dir, "%s.tar" % component.name), "w")
+                tar.close()
+
+        self._execute_bash_commands(bash_commands)
+        self._statistics["rsync"].append(_("RSync of generic files took %.4fsec") % (time.time() - start_time))
+        self._logger.debug(_("Rsync generic files into work dir took %.4fsec") % (time.time() - start_time))
+
+
+    def _get_rsync_and_tar_commands(self, component, rsync_target_dir, tarfile_target_dir):
+        bash_commands = []
+
+        # Rsync from source
+        bash_commands.append(self._get_rsync_command(component, rsync_target_dir))
+
+        # Create subtar
+        bash_commands.append(self._get_subtar_command(component, rsync_target_dir, tarfile_target_dir))
+        return bash_commands
+
+
+    def _get_rsync_command(self, component, rsync_target_dir):
+        exclude_args = list(itertools.chain.from_iterable([ ("--exclude", f) for f in component.excludes ]))
+        if component.component_type == "dir":
+            # Sync the content of the directory, but not the directory itself
+            archive_path = "%s/" % component.configured_path
+        else:
+            # component.configured_path points to the file
+            archive_path = component.configured_path
+
+        return [ "rsync", "-av", "--delete", archive_path, rsync_target_dir] + exclude_args
+
+
+    def _get_subtar_command(self, component, source_dir, tarfile_target_dir):
+        if component.component_type == "dir":
+            files_location = [source_dir, "."]
+        else:
+            files_location = [source_dir, component.filename]
+
+        return [ "tar", "cf", os.path.join(tarfile_target_dir, component.name + ".tar"),
+                              "--force-local", "-C" ] + files_location
+
+
+    def generate_snapshot(self, target_filepath, generic_components, custom_components = None):
+        self._start_time = time.time()
+        target_basename  = os.path.basename(target_filepath)
+
+        self._generate_snapshot(target_filepath, generic_components, custom_components)
+
+        self._logger.debug("Snapshot creation for %s took %.4fsec" % (target_basename, (time.time() - self._start_time)))
+
+
+    def _generate_snapshot(self, target_filepath, generic_components, custom_components = None):
+        if not custom_components:
+            custom_components = []
+
+        target_basename = os.path.basename(target_filepath)
+
+        # Convert the tuple lists into a more managable format
+        parsed_generic_components = SnapshotComponentsParser(generic_components)
+        parsed_custom_components  = SnapshotComponentsParser(custom_components)
+
+
+        # Note/Requirement: there is (currently) no need to rsync custom components, since these components are always
+        #                   generated on the fly in a custom directory
+        # Check if a snapshot with the same content has already been packed.
+        snapshot_fingerprint = self._get_snapshot_fingerprint(parsed_generic_components, parsed_custom_components)
+        identical_snapshot = self._available_snapshots.get(snapshot_fingerprint)
+        if identical_snapshot:
+            os.symlink(identical_snapshot, target_filepath)
+            self._statistics["tar"][os.path.basename(identical_snapshot)].append("Reused by %-40s (took %.4fsec)" %\
+                                                                    (target_basename, time.time() - self._start_time))
+            return
+
+
+        # Generate the final tar command
+        required_subtars = map(lambda x: "%s.tar" % x, parsed_generic_components.get_component_names())
+        final_tar_command = ["tar", "czf", target_filepath, "--owner=0", "--group=0", "-C", self._tarfile_dir] + required_subtars
+
+
+        # Add custom files to final tar command
+        if parsed_custom_components.components:
+            base_dir = os.path.basename(target_filepath)
+            tarfile_dir = "%s/custom_files/%s" % (self._tarfile_dir, base_dir)
+            os.makedirs(tarfile_dir)
+
+            self._create_custom_components_tarfiles(parsed_custom_components, tarfile_dir)
+            required_custom_subtars = map(lambda x: "%s.tar" % x, parsed_custom_components.get_component_names())
+            final_tar_command.extend(["-C", tarfile_dir] + required_custom_subtars)
+
+
+        # Execute final tar command, create the snapshot
+        self._execute_bash_commands([final_tar_command])
+        self._available_snapshots[snapshot_fingerprint] = target_filepath
+
+        self._statistics["tar"].setdefault(target_basename, []).append("Snapshot creation took %.4fsec" % (time.time() - self._start_time))
+
+
+    def _create_custom_components_tarfiles(self, parsed_custom_components, tarfile_dir):
+        # Add any custom_components
+        custom_components_commands = []
+        for component in parsed_custom_components.components:
+            if not os.path.exists(component.configured_path):
+                continue
+            custom_components_commands.append(self._get_subtar_command(component, component.base_dir, tarfile_dir))
+        self._execute_bash_commands(custom_components_commands)
+
+
+    def _get_snapshot_fingerprint(self, parsed_generic_components, parsed_custom_components):
+        custom_components_md5sum = self._get_custom_components_md5sum(parsed_custom_components)
+        return tuple(sorted(parsed_generic_components.get_component_names()) + [custom_components_md5sum])
+
+
+    def _get_custom_components_md5sum(self, parsed_custom_components):
+        if not parsed_custom_components:
+            return ""
+
+        # Note: currently there is only one custom component, the sitespecific.mk
+        #       If there additional custom components in the future this call will fail
+        #       This function raises an exception in case of an unknown component
+        def is_supported(component):
+            if component.name != "sitespecific":
+                return False
+            elif component.component_type != "file":
+                return False
+            elif not component.configured_path.endswith("sitespecific.mk"):
+                return False
+            return True
+
+
+        import hashlib
+        for component in parsed_custom_components.components:
+            if not is_supported(component):
+                raise MKGeneralException(_("Cannot create md5sum. Unsupported custom snapshot component: %s") % str(component))
+
+        # Simply compute the checksum of the sitespecific.mk
+        return hashlib.md5(file(parsed_custom_components.components[0].configured_path).read()).hexdigest()
+
+
+    def _execute_bash_commands(self, commands, debug = False):
+        if not commands:
+            return
+
+        for command in commands:
+            if debug:
+                self._logger.debug(" ".join(command))
+            try:
+                p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False, close_fds=True)
+                stdout, stderr = p.communicate()
+                if p.returncode != 0:
+                    raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s") %\
+                                                        (command, stdout, stderr))
+            except OSError, e:
+                raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r, Exception: %s") % (command, str(e)))
+
+
+
+# Can be removed soon, since it is deprecated by the SnapshotCreator
 def create(tar_filename, components):
     tar = tarfile.open(tar_filename, "w:gz")
+    start = time.time()
     for component in components:
         if len(component) == 4:
             what, name, path, excludes = component
@@ -76,6 +349,7 @@ def create(tar_filename, components):
 
             tar.addfile(info, subtar_buffer)
 
+    logger.debug("%s took %.3fsec" % (tar_filename, time.time() - start))
 
 def filter_subtar_files(tarinfo, excludes):
     filename = os.path.basename(tarinfo.name)

@@ -4921,11 +4921,17 @@ class ActivateChangesManager(ActivateChanges):
         # Create (legacy) WATO config snapshot
         create_snapshot(self._comment)
 
-        # TODO: This can easily be parallelized by executing all sites in own threads and wait for
-        # completion of all the threads.
         try:
-            for site_id in self._sites:
-                self._create_site_sync_snapshot(site_id)
+            use_new_mechanism = True
+            # TODO: this if/else can be removed once the new mechanism is considered stable
+            if use_new_mechanism and not cmk.is_managed_edition():
+                work_dir = "%s/%s" % (self.activation_base_dir, self._activation_id)
+                with multitar.SnapshotCreator(work_dir, replication_paths) as snapshot_creator:
+                    for site_id in self._sites:
+                        self._create_site_sync_snapshot(site_id, snapshot_creator)
+            else:
+                for site_id in self._sites:
+                    self._create_site_sync_snapshot(site_id)
         finally:
             if cmk.is_managed_edition():
                 # Discards any data which was shared during the snapshot creation
@@ -4935,7 +4941,7 @@ class ActivateChangesManager(ActivateChanges):
         unlock_exclusive()
 
 
-    def _create_site_sync_snapshot(self, site_id):
+    def _create_site_sync_snapshot(self, site_id, snapshot_creator = None):
         if self._site_has_foreign_changes(site_id) and not self._activate_foreign:
             if not config.user.may("wato.activateforeign"):
                 raise MKUserError(None,
@@ -4990,10 +4996,15 @@ class ActivateChangesManager(ActivateChanges):
             site_specific_globals_tmp_path = site_tmp_dir
             self.create_site_globals_file(site_id, site_tmp_dir)
 
-        # Add site-specific global settings
-        paths.append(("dir", "sitespecific", site_specific_globals_tmp_path))
 
-        multitar.create(snapshot_path, paths)
+        # Add site-specific global settings
+        site_specific_paths = [("file", "sitespecific", os.path.join(site_specific_globals_tmp_path, "sitespecific.mk"))]
+        if snapshot_creator:
+            snapshot_creator.generate_snapshot(snapshot_path, paths, site_specific_paths)
+        else:
+            paths.extend(site_specific_paths)
+            multitar.create(snapshot_path, paths)
+
         shutil.rmtree(site_tmp_dir)
 
 
@@ -5245,7 +5256,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                              state=STATE_ERROR)
 
         finally:
-            self._cleanup_snapshot()
             self._unlock_activation()
 
 

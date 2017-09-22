@@ -4,7 +4,7 @@ Component: checks
 Compatible: compat
 Edition: cre
 Version: 1.5.0i1
-Date: 1500275762
+Date: 1505920200
 Class: feature
 
 Check_MK now monitors OTN interfaces including the status, consumed power,

@@ -4,9 +4,9 @@ catalog: hw/server/dell
 license: GPL
 distribution: check_mk
 description:
- This checks monitors the disk and component status of a Dell iDrac and
- gives information about the number of physical disks which can be lost
- before the$ virtual disk loses its redundancy.
+ This checks monitors the disk, raid level and component status of a
+ Dell iDrac and gives information about the number of physical disks
+ which can be lost before the$ virtual disk loses its redundancy.
 
  The check goes CRIT if the disk fails or is degraded or if the component
  reports critical or non-recoverable.

@@ -59,9 +59,22 @@ def check_dell_idrac_virtdisks(item, _no_params, info):
             "5" : (2, "critical"),
             "6" : (2, "non-recoverable"),
         },
+	"raidlevel" : {
+            "1" : "none",
+            "2" : "Raid-0",
+            "3" : "Raid-1",
+            "4" : "Raid-5",
+            "5" : "Raid-6",
+            "6" : "Raid-10",
+            "7" : "Raid-50",
+            "8" : "Raid-60",
+        },
+
     }
-    for name, disk_state, component_state, redundancy in info:
+    for name, disk_state, raid_level, component_state, redundancy in info:
         if item == name:
+            yield 0, "Raid level: %s" % map_states["raidlevel"][raid_level]
+
             for what, what_key in [
                 (disk_state, "Disk"),
                 (component_state, "Component")]:
@@ -79,6 +92,7 @@ check_info["dell_idrac_virtdisks"] = {
     "snmp_info"             : (".1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1", [
                                     "2",    # virtualDiskName
                                     "4",    # virtualDiskState
+                                    "13",   # virtualDiskRaidLevel
                                     "20",   # virtualComponentStatus
                                     "34",   # virtualDiskRemainingRedundancy
                               ]),

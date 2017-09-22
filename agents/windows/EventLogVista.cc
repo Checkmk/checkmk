@@ -241,44 +241,29 @@ EventApiModule::~EventApiModule() {
     }
 }
 
-#define getFunc(winapi, hModule, funcType, funcName) \
-    hModule ? (funcType)(winapi.GetProcAddress(hModule, funcName)) : nullptr
+#define GET_FUNC(func) \
+    ((decltype(&func))winapi.GetProcAddress(_mod->get_module(), #func))
 
 EvtFunctionMap::EvtFunctionMap(const WinApiAdaptor &winapi)
-    : _mod(std::make_unique<EventApiModule>(winapi))
-    , openLog(getFunc(winapi, _mod->get_module(), decltype(openLog),
-                      static_cast<LPCSTR>("EvtOpenLog")))
-    , query(getFunc(winapi, _mod->get_module(), decltype(query),
-                    static_cast<LPCSTR>("EvtQuery")))
-    , close(getFunc(winapi, _mod->get_module(), decltype(close),
-                    static_cast<LPCSTR>("EvtClose")))
-    , seek(getFunc(winapi, _mod->get_module(), decltype(seek),
-                   static_cast<LPCSTR>("EvtSeek")))
-    , next(getFunc(winapi, _mod->get_module(), decltype(next),
-                   static_cast<LPCSTR>("EvtNext")))
-    , createBookmark(getFunc(winapi, _mod->get_module(),
-                             decltype(createBookmark),
-                             static_cast<LPCSTR>("EvtCreateBookmark")))
-    , updateBookmark(getFunc(winapi, _mod->get_module(),
-                             decltype(updateBookmark),
-                             static_cast<LPCSTR>("EvtUpdateBookmark")))
-    , createRenderContext(
-          getFunc(winapi, _mod->get_module(), decltype(createRenderContext),
-                  static_cast<LPCSTR>("EvtCreateRenderContext")))
-    , render(getFunc(winapi, _mod->get_module(), decltype(render),
-                     static_cast<LPCSTR>("EvtRender")))
-    , subscribe(getFunc(winapi, _mod->get_module(), decltype(subscribe),
-                        static_cast<LPCSTR>("EvtSubscribe")))
-    , formatMessage(getFunc(winapi, _mod->get_module(), decltype(formatMessage),
-                            static_cast<LPCSTR>("EvtFormatMessage")))
-    , getEventMetadataProperty(getFunc(
-          winapi, _mod->get_module(), decltype(getEventMetadataProperty),
-          static_cast<LPCSTR>("EvtGetEventMetadataProperty")))
-    , openPublisherMetadata(
-          getFunc(winapi, _mod->get_module(), decltype(openPublisherMetadata),
-                  static_cast<LPCSTR>("EvtOpenPublisherMetadata")))
-    , getLogInfo(getFunc(winapi, _mod->get_module(), decltype(getLogInfo),
-                         static_cast<LPCSTR>("EvtGetLogInfo"))) {}
+    : _mod(std::make_unique<EventApiModule>(winapi)) {
+    if (_mod->get_module() == nullptr) {
+        return;
+    }
+    this->openLog = GET_FUNC(EvtOpenLog);
+    this->query = GET_FUNC(EvtQuery);
+    this->close = GET_FUNC(EvtClose);
+    this->seek = GET_FUNC(EvtSeek);
+    this->next = GET_FUNC(EvtNext);
+    this->createBookmark = GET_FUNC(EvtCreateBookmark);
+    this->updateBookmark = GET_FUNC(EvtUpdateBookmark);
+    this->createRenderContext = GET_FUNC(EvtCreateRenderContext);
+    this->render = GET_FUNC(EvtRender);
+    this->subscribe = GET_FUNC(EvtSubscribe);
+    this->formatMessage = GET_FUNC(EvtFormatMessage);
+    this->getEventMetadataProperty = GET_FUNC(EvtGetEventMetadataProperty);
+    this->openPublisherMetadata = GET_FUNC(EvtOpenPublisherMetadata);
+    this->getLogInfo = GET_FUNC(EvtGetLogInfo);
+}
 
 EventLogVista::EventLogVista(const std::wstring &path,
                              const WinApiAdaptor &winapi)

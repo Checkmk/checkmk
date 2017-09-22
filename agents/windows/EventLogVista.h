@@ -63,30 +63,20 @@ struct EvtFunctionMap {
     explicit EvtFunctionMap(const WinApiAdaptor &winapi);
 
     std::unique_ptr<EventApiModule> _mod;
-    const EVT_HANDLE (*openLog)(EVT_HANDLE, LPCWSTR, DWORD);
-    const EVT_HANDLE (*query)(EVT_HANDLE, LPCWSTR, LPCWSTR, DWORD);
-    const WINBOOL (*close)(EVT_HANDLE);
-    const WINBOOL (*seek)(EVT_HANDLE, LONGLONG, EVT_HANDLE, DWORD, DWORD);
-    const WINBOOL (*next)(EVT_HANDLE, DWORD, EVT_HANDLE *, DWORD, DWORD,
-                          PDWORD);
-    const EVT_HANDLE (*createBookmark)(LPCWSTR);
-    const WINBOOL (*updateBookmark)(EVT_HANDLE, EVT_HANDLE);
-    const EVT_HANDLE (*createRenderContext)(DWORD, LPCWSTR *, DWORD);
-    const WINBOOL (*render)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD,
-                            PDWORD);
-    const EVT_HANDLE (*subscribe)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR,
-                                  EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK,
-                                  DWORD);
-    const WINBOOL (*formatMessage)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD,
-                                   PEVT_VARIANT, DWORD, DWORD, LPWSTR, PDWORD);
-    const WINBOOL (*getEventMetadataProperty)(EVT_HANDLE,
-                                              EVT_EVENT_METADATA_PROPERTY_ID,
-                                              DWORD, DWORD, PEVT_VARIANT,
-                                              PDWORD);
-    const EVT_HANDLE (*openPublisherMetadata)(EVT_HANDLE, LPCWSTR, LPCWSTR,
-                                              LCID, DWORD);
-    const WINBOOL (*getLogInfo)(EVT_HANDLE, EVT_LOG_PROPERTY_ID, DWORD,
-                                PEVT_VARIANT, PDWORD);
+    decltype(&EvtOpenLog) openLog;
+    decltype(&EvtQuery) query;
+    decltype(&EvtClose) close;
+    decltype(&EvtSeek) seek;
+    decltype(&EvtNext) next;
+    decltype(&EvtCreateBookmark) createBookmark;
+    decltype(&EvtUpdateBookmark) updateBookmark;
+    decltype(&EvtCreateRenderContext) createRenderContext;
+    decltype(&EvtRender) render;
+    decltype(&EvtSubscribe) subscribe;
+    decltype(&EvtFormatMessage) formatMessage;
+    decltype(&EvtGetEventMetadataProperty) getEventMetadataProperty;
+    decltype(&EvtOpenPublisherMetadata) openPublisherMetadata;
+    decltype(&EvtGetLogInfo) getLogInfo;
 };
 
 class ManagedEventHandle {

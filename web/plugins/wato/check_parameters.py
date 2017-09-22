@@ -7658,7 +7658,7 @@ register_check_parameters(
             )),
             ("timeout_occured",
              DropdownChoice(
-                 title = _("Timeout occured occured"),
+                 title = _("Timeout occured"),
                  choices = [
                      ( "yes",  _("yes")),
                      ( "no", _("no")),

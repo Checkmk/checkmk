@@ -1,0 +1,9 @@
+Title: Manually defined log level for web.log is not used
+Component: wato
+State: open
+Date: 2017-09-22 10:36:07
+Targetversion: 1.4.0
+Class: bug
+
+If the log level is set manually in WATO nothing changes in the global.mk. It
+seems that the setting is not used at all.

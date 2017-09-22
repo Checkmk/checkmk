@@ -8,6 +8,9 @@ description:
  Status of Hardisks attached to server. Currently tested with iDrac V7.
  The check returns a {CRIT} in case of an error state reported
  by the device. The check also reports Size, SMART Errors and Spare state for each disk.
+ Moreover the disk power status is monitored. The check goes WARN if this status
+ is REBUILDING, data-erased or COPY-BACK, it's OK in case of no-operation, otherwise
+ UNKNOWN.
 
 item:
  The compination of EnclosureID, Channel and TargetID seperated by colums

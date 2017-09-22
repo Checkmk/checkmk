@@ -40,6 +40,8 @@
 # .1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.55.1 Disk 0 in Backplane 1 of Integrated RAID Controller 1 --> IDRAC-MIB::physicalDiskDisplayName.1
 # .1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.55.2 Disk 1 in Backplane 1 of Integrated RAID Controller 1 --> IDRAC-MIB::physicalDiskDisplayName.2
 
+# 2017-08-04: M. Hoffmann (MPI of Biochemistry): added rebuild/copyback information
+
 
 def inventory_dell_idrac_disks(info):
     inventory = []
@@ -69,14 +71,22 @@ def check_dell_idrac_disks(item, _no_params, info):
             "5" : (2, "critical"),
             "6" : (1, "non-recoverable"),
         },
+        "diskpower_states" : {
+            "1" : (0, "no-operation"),
+            "2" : (1, "REBUILDING"),
+            "3" : (1, "data-erased"),
+            "4" : (1, "COPY-BACK"),
+        },
     }
+
     map_spare_state_info = {
         "1" : "not a spare",
         "2" : "dedicated hotspare",
         "3" : "global hotspare",
     }
+
     for disk_name, disk_state, capacity_MB, spare_state, \
-        component_state, smart_alert, display_name in info:
+        component_state, smart_alert, diskpower_state, display_name in info:
         if disk_name == item:
             yield 0, "[%s] Size: %s" % \
                 (display_name, get_bytes_human_readable(int(capacity_MB) * 1024 * 1024))
@@ -93,6 +103,10 @@ def check_dell_idrac_disks(item, _no_params, info):
             if spare_state != "1":
                 yield 0, map_spare_state_info[spare_state]
 
+            if diskpower_state != "1":
+                state, state_readable = map_states["diskpower_states"][diskpower_state]
+                yield state, "%s" % (state_readable)
+
 
 check_info["dell_idrac_disks"] = {
     "check_function"        : check_dell_idrac_disks,
@@ -106,6 +120,7 @@ check_info["dell_idrac_disks"] = {
                                     "22",   # physicalDiskSpareState
                                     "24",   # physicalDiskComponentStatus
                                     "31",   # physicalDiskSmartAlertIndication
+                                    "50",   # physicalDiskPowerState
                                     "55",   # physicalDiskDisplayName
                               ]),
 }

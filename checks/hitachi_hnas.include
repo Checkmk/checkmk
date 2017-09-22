@@ -25,6 +25,28 @@
 # Boston, MA 02110-1301 USA.
 
 
+def parse_hnas_physical_volumes(volume_data):
+    status_map = {
+        '1': 'unformatted',
+        '2': 'mounted',
+        '3': 'formatted',
+        '4': 'needsChecking',
+    }
+
+    parsed_volumes = {}
+
+    for volume_id, label, status_id, size, avail, evs in volume_data:
+        if volume_id == '':
+            continue
+        volume = '%s %s' % (volume_id, label)
+        status = status_map.get(status_id, 'unidentified')
+        size_mb = int(size) / 1048576.0 if size else None
+        avail_mb = int(avail) / 1048576.0 if avail else None
+        parsed_volumes[volume] = (status, size_mb, avail_mb, evs)
+
+    return parsed_volumes
+
+
 def hitachin_hnas_scan_function(oid):
     system_oid = oid(".1.3.6.1.2.1.1.2.0")
 

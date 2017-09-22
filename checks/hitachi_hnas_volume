@@ -24,66 +24,66 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_includes["hitachi_hnas_volume"] = [ "df.include" ]
 
-def inventory_hitachi_hnas_volume(info):
-    mplist = []
-    for id, label, volume_status, total, free, evs in info:
-        mplist.append(id + " " + label)
-    return df_inventory(mplist)
+def parse_hitachi_hnas_volume(info):
+    parsed = {
+        'volumes': parse_hnas_physical_volumes(info),
+    }
 
-def check_hitachi_hnas_volume(item, params, info):
-    # use checks from df.include
-    fslist = []
-    for volid, label, volume_status, total, free, evs in info:
-        if volid == '':
-            continue
-        if volid + " " + label == item:
-            if total and free:
-                size_mb = int(total) / 1048576.0
-                avail_mb = int(free) / 1048576.0
-                fslist.append((item, size_mb, avail_mb, 0))
-                status, message, perfdata = df_check_filesystem_list(item, params, fslist)
-            else:
-                status = 0
-                message = "no filesystem size information"
-                perfdata = []
+    return parsed
 
-            # evaluate volumeStatus
-            statusmap = (("", 3),
-                        ("unformatted", 1),
-                        ("mounted", 0),
-                        ("formatted", 1),
-                        ("needsChecking", 2),
-                        )
 
-            error_string = ( "", " (!)", " (!!)", "" )
-            volume_status = int(volume_status)
+def inventory_hitachi_hnas_volume(parsed):
+    return df_inventory(
+        volume for volume in parsed['volumes']
+    )
 
-            if volume_status == 0 or volume_status >= len(statusmap):
-                message += ", Volume reports unidentified status %s" % volume_status
-                status = max(status, 3)
-            else:
-                message += ", Status %s%s" % (statusmap[volume_status][0], error_string[statusmap[volume_status][1]])
-                status = max(status, statusmap[volume_status][1])
 
-            # report evs
-            message += ", assigned to EVS %s" % evs
-            return status, message, perfdata
+def check_hitachi_hnas_volume(item, params, parsed):
+    volume_data = parsed['volumes'].get(item)
+    if not volume_data:
+        yield 3, "Volume %s not found" % item
+        return
+    status, size_mb, avail_mb, evs = volume_data
 
-    return 3, "Volume %s not found" % item
+    if size_mb and avail_mb:
+        fslist = [(item, size_mb, avail_mb, 0)]
+        yield df_check_filesystem_list(item, params, fslist)
+    else:
+        yield 0, "no filesystem size information", []
+
+    state_map = {
+        'mounted': 0,
+        'unformatted': 1,
+        'formatted': 1,
+        'needsChecking': 2,
+    }
+
+    if status == 'unidentified':
+        yield 3, 'Volume reports unidentified status'
+    else:
+        yield state_map[status], 'Status: %s' % status
+
+    yield 0, 'assigned to EVS %s' % evs
 
 
 check_info["hitachi_hnas_volume"] = {
+    "parse_function"         : parse_hitachi_hnas_volume,
     "check_function"         : check_hitachi_hnas_volume,
     "inventory_function"     : inventory_hitachi_hnas_volume,
     "service_description"    : "Volume %s",
     "has_perfdata"           : True,
-    "snmp_info"              : (".1.3.6.1.4.1.11096.6.1.1.1.3.5.2.1", [1, 3, 4, 5, 6, 7]),
-                               # volumeSysDriveIndex, volumeLabel, volumeStatus, volumeCapacity,
-                               # volumeFreeCapacity, volumeEnterpriseVirtualServer
+    "snmp_info"              : (  # BLUEARC-SERVER-MIB
+                                ".1.3.6.1.4.1.11096.6.1.1.1.3.5.2.1", [  # volumeEntry
+                                    1,  # volumeSysDriveIndex
+                                    3,  # volumeLabel
+                                    4,  # volumeStatus
+                                    5,  # volumeCapacity
+                                    6,  # volumeFreeCapacity
+                                    7,  # volumeEnterpriseVirtualServer
+                               ]),
     "snmp_scan_function"    : hitachin_hnas_scan_function,
     "group"                  : "filesystem",
     "default_levels_variable": "filesystem_default_levels",
-    "includes"              : [ "hitachi_hnas.include" ],
+    "includes"              : ["df.include", "hitachi_hnas.include"],
 }

@@ -1,0 +1,11 @@
+Title: juniper_alarm, juniper_bgp_state, juniper_cpu, juniper_cpu_util, juniper_fru, juniper_mem: Try discovery also on QFX series devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506089035
+Class: feature
+
+The scan functions of these checks previously were overly restrictive.
+Thanks to Ricardo Fribeiro for pointing this out!

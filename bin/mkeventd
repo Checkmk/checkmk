@@ -3212,7 +3212,7 @@ class StatusServer(object):
                                        addr_info and addr_info[0] or "")
 
                     duration = time.time() - before
-                    verbose("Answered request in %0.2f ms" % (duration*1000))
+                    self.logger.verbose("Answered request in %0.2f ms" % (duration*1000))
                     g_perfcounters.count_time("request", duration)
 
             except Exception as e:

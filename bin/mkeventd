@@ -3202,7 +3202,7 @@ class StatusServer(object):
                             self._tcp_access_list:
                             client_socket.close()
                             client_socket = None
-                            self.logger.info("Denying access to status socket from %s (allowed ist only %s)" %
+                            self.logger.info("Denying access to status socket from %s (allowed is only %s)" %
                                     (addr_info[0], ", ".join(self._tcp_access_list)))
                             continue
                     else:

@@ -178,7 +178,7 @@ void SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
             // it
             bool record_maxxed =
                 std::numeric_limits<uint64_t>::max() == first_record;
-            first_record = log->seek(first_record + (record_maxxed ? 0 : 1));
+            log->seek(first_record + (record_maxxed ? 0 : 1));
 
             uint64_t last_record = first_record;
 

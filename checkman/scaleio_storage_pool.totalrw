@@ -1,6 +1,6 @@
 title: EMC ScaleIO: Storage Pool Total read/write
 agents: linux
-catalog: os/storage/emc
+catalog: os/storage
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
 title: EMC ScaleIO: Storage Pool Rebalance read/write
 agents: linux
-catalog: os/storage/emc
+catalog: os/storage
 license: GPL
 distribution: check_mk
 description:

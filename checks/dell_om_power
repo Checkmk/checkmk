@@ -39,12 +39,12 @@
 # .1.3.6.1.4.1.674.10892.1.600.12.1.8.1.2 PS2 Status
 
 
-def inventory_dell_idrac_power(info):
+def inventory_dell_om_power(info):
     for index, status, count in info[0]:
         yield ( index, None )
 
 
-def check_dell_idrac_power(item, params, info):
+def check_dell_om_power(item, params, info):
     translate_status = {
         "1" : (3, "other"),
         "2" : (3, "unknown"),
@@ -62,8 +62,8 @@ def check_dell_idrac_power(item, params, info):
 
 
 check_info['dell_om_power'] = {
-    'inventory_function'    : inventory_dell_idrac_power,
-    'check_function'        : check_dell_idrac_power,
+    'inventory_function'    : inventory_dell_om_power,
+    'check_function'        : check_dell_om_power,
     'service_description'   : 'Power Supply Redundancy %s',
     'snmp_info'             : [ ('.1.3.6.1.4.1.674.10892.1.600.10.1', [
                                         "2", # MIB-Dell-10892::powerUnitIndex
@@ -82,12 +82,12 @@ check_info['dell_om_power'] = {
 }
 
 
-def inventory_dell_idrac_power_unit(info):
+def inventory_dell_om_power_unit(info):
     for line in info[1]:
         yield ( line[0], None )
 
 
-def check_dell_idrac_power_unit(item, _no_params, info):
+def check_dell_om_power_unit(item, _no_params, info):
     translate_status = {
         "1" : (3, "OTHER"),
         "2" : (3, "UNKNOWN"),
@@ -119,7 +119,7 @@ def check_dell_idrac_power_unit(item, _no_params, info):
                             ( state_readable, psu_type_readable, location )
 
 check_info['dell_om_power.unit'] = {
-    'inventory_function'    : inventory_dell_idrac_power_unit,
-    'check_function'        : check_dell_idrac_power_unit,
+    'inventory_function'    : inventory_dell_om_power_unit,
+    'check_function'        : check_dell_om_power_unit,
     'service_description'   : 'Power Supply %s',
 }

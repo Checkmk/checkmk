@@ -3018,7 +3018,10 @@ class StatusServer:
 
                     self.handle_client(client_socket, allow_commands,
                                        addr_info and addr_info[0] or "")
-                    g_perfcounters.count_time("request", time.time() - before)
+
+                    duration = time.time() - before
+                    verbose("Answered request in %0.2f ms" % (duration*1000))
+                    g_perfcounters.count_time("request", duration)
 
             except Exception, e:
                 log("Error handling client %s: %s" % (addr_info, e))

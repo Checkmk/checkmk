@@ -28,6 +28,9 @@
     * 5282 FIX: hpux_tunables: Fixed discovering kernel tunables on HPUX 11.23
     * 5016 FIX: hp_proliant_temp: Fixed crash if thresholds are set manually...
 
+    Multisite:
+    * 5208 SEC: Fix possibe information disclosure to unauthenticated users...
+
 
 1.2.8p25:
     Checks & Agents:

@@ -570,7 +570,6 @@ def save_users(profiles):
     out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
     out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
     out.close()
-    os.rename(filename, filename[:-4])
 
     # Users with passwords for Multisite
     filename = multisite_dir + "users.mk.new"
@@ -648,6 +647,7 @@ def save_users(profiles):
     # Release the lock to make other threads access possible again asap
     # This lock is set by load_users() only in the case something is expected
     # to be written (like during user syncs, wato, ...)
+    os.rename(root_dir + "contacts.mk.new", root_dir + "contacts.mk")
     release_lock(root_dir + "contacts.mk")
 
     # populate the users cache

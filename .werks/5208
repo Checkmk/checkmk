@@ -1,0 +1,25 @@
+Title: Fix possibe information disclosure to unauthenticated users
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.8p26
+Date: 1506322345
+Class: security
+
+In Check_MK versions it was possible to get information about the internal user
+database as unauthenticated user.
+
+The latest oldstable version 1.2.8p25 of Check_MK is vulnerable to an unauthenticated information
+disclosure through a race condition during the authentication process when trying to authenticate
+with a valid username and an invalid password.
+
+Check_MK 1.4 or newer is not affected by this issue.
+
+The issue is caused by a logic that saves the number of failed logins for each user. During saving
+it could happen that parallel calls try to rename a non-exisiting file, which has just been renamed
+by a previous concurrent process. This causes the Check_MK GUI to fail and generate a crash report
+disclosing a variety of information, such as internal server paths and detailed user information.
+
+The race condition causing this issue has been fixed with this werk.
+
+This issue is currently identified with the ID: RCESEC-2017-001

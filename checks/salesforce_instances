@@ -1,0 +1,70 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_salesforce(info):
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
+
+    parsed = []
+    for line in info:
+        parsed.append(json.loads(" ".join(line)))
+    return parsed
+
+
+def inventory_salesforce_instances(parsed):
+    for entry in parsed:
+        if entry.get("key") and entry.get("isActive"):
+            yield entry["key"], {}
+
+
+def check_salesforce_instances(item, params, parsed):
+    for entry in parsed:
+        if entry.get("key") == item:
+            if entry.get("status") != "OK":
+                yield 2, "Status: %s" % entry.get("status", "not OK")
+            else:
+                yield 0, "Status: OK"
+
+            if entry.get("environment"):
+                yield 0, "Environment: %s" % entry["environment"]
+            release_info = []
+            if entry.get("releaseNumber"):
+                release_info.append("Number: %s" % entry["releaseNumber"])
+            if entry.get("releaseVersion"):
+                release_info.append("Version: %s" % entry["releaseVersion"])
+            if release_info:
+                yield 0, "Release %s" % ", ".join(release_info)
+
+
+check_info['salesforce_instances'] = {
+    'parse_function'        : parse_salesforce,
+    'inventory_function'    : inventory_salesforce_instances,
+    'check_function'        : check_salesforce_instances,
+    'service_description'   : 'Salesforce Instance %s',
+}

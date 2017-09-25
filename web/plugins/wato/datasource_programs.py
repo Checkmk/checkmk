@@ -1077,3 +1077,17 @@ register_rule(
              "instead of the normal Check_MK agent and allows monitoring via Web API. "),
     match = "first",
 )
+
+
+register_rule(
+    group,
+    "special_agents:salesforce",
+    Dictionary(elements=[
+        ("instances", ListOfStrings(
+            title=_("Instances"),
+            allow_empty=False)),
+    ], optional_keys=[]),
+    title=_("Check Salesforce"),
+    help=_("This rule selects the special agent for Salesforce."),
+    match="first",
+)

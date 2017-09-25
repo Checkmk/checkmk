@@ -27,7 +27,7 @@
 import os, sys, getopt, livestatus, tempfile, time
 
 # These variable will be substituted at 'make dist' time
-__version__ = "1.4.0p13"
+__version__ = "1.4.0p14"
 
 def dump_templates():
     check_interval = ""

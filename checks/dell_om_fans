@@ -26,11 +26,11 @@
 
 
 
-def inventory_dell_idrac_fans(info):
+def inventory_dell_om_fans(info):
     for line in info:
         yield ( line[0], {} )
 
-def check_dell_idrac_fans(item, params, info):
+def check_dell_om_fans(item, params, info):
     translate_status = {
         "1"  : (3, "OTHER"),
         "2"  : (3, "UNKNOWN"),
@@ -64,19 +64,19 @@ def check_dell_idrac_fans(item, params, info):
 
 
 check_info["dell_om_fans"] = {
-    "check_function"        : check_dell_idrac_fans,
-    "inventory_function"    : inventory_dell_idrac_fans,
+    "check_function"        : check_dell_om_fans,
+    "inventory_function"    : inventory_dell_om_fans,
     "service_description"   : "Fan %s",
     "snmp_scan_function"    : scan_dell_om,
     "snmp_info"             : (".1.3.6.1.4.1.674.10892.1.700.12.1", [
-                                    "2",  # IDRAC-MIB::coolingDeviceIndex
-                                    "5",  # IDRAC-MIB::coolingDeviceStatus
-                                    "6",  # IDRAC-MIB::coolingDeviceReading
-                                    "8",  # IDRAC-MIB::coolingDeviceLocationName
-                                    "10", # IDRAC-MIB::coolingDeviceUpperNonCriticalThreshold
-                                    "11", # IDRAC-MIB::coolingDeviceUpperCriticalThreshold
-                                    "12", # IDRAC-MIB::coolingDeviceLowerNonCriticalThreshold
-                                    "13", # IDRAC-MIB::coolingDeviceLowerCriticalThreshold
+                                    "2",  # MIB-Dell-10892::coolingDeviceIndex
+                                    "5",  # MIB-Dell-10892::coolingDeviceStatus
+                                    "6",  # MIB-Dell-10892::coolingDeviceReading
+                                    "8",  # MIB-Dell-10892::coolingDeviceLocationName
+                                    "10", # MIB-Dell-10892::coolingDeviceUpperNonCriticalThreshold
+                                    "11", # MIB-Dell-10892::coolingDeviceUpperCriticalThreshold
+                                    "12", # MIB-Dell-10892::coolingDeviceLowerNonCriticalThreshold
+                                    "13", # MIB-Dell-10892::coolingDeviceLowerCriticalThreshold
                               ]),
     "includes"              : [ "fan.include", "dell_om.include" ],
     "group"                 : "hw_fans",

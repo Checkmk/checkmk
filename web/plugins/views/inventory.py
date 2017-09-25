@@ -614,6 +614,7 @@ inventory_displayhints.update({
     ".hardware.system."                                : { "title" : _("System") },
     ".hardware.system.product"                         : { "title" : _("Product") },
     ".hardware.system.serial"                          : { "title" : _("Serial Number") },
+    ".hardware.system.expresscode"                     : { "title" : _("Express Servicecode") },
     ".hardware.system.model"                           : { "title" : _("Model Name") },
 
     # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
@@ -729,6 +730,8 @@ inventory_displayhints.update({
     ".hardware.components.stacks:*.location"          : { "title" : _("Location") },
 
     ".hardware.storage."                               : { "title" : _("Storage") },
+    ".hardware.storage.controller."                    : { "title" : _("Controller") },
+    ".hardware.storage.controller.version"             : { "title" : _("Version") },
     ".hardware.storage.disks:"                         : { "title" : _("Block Devices"), "render" : render_inv_dicttable },
     ".hardware.storage.disks:*."                       : { "title" : _("Block Device %d") },
     ".hardware.storage.disks:*.signature"              : { "title" : _("Disk ID") },

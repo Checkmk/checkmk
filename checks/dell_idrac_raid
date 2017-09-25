@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# example output
+
+
+def inventory_dell_idrac_raid(info):
+    for index, name, status in info[0]:
+        yield index, None
+
+
+def check_dell_idrac_raid(item, _no_params, info):
+    translate_status = {
+            "1" : (3, "other"),
+            "2" : (3, "unknown"),
+            "3" : (0, "OK"),
+            "4" : (1, "non-critical"),
+            "5" : (2, "critical"),
+            "6" : (2, "non-recoverable"),
+    }
+
+    for index, name, status in info[0]:
+        if index == item:
+            state, state_readable = translate_status[status]
+            yield state, "Status of %s: %s" % (name, state_readable)
+
+check_info['dell_idrac_raid'] = {
+    'inventory_function'    : inventory_dell_idrac_raid,
+    'check_function'        : check_dell_idrac_raid,
+    'service_description'   : 'Raid Controller %s',
+    'snmp_info'             : [ ('.1.3.6.1.4.1.674.10892.5.5.1.20.130.1.1', [
+                                        "1",  # IDRAC-MIB::controllerNumber
+                                        "2",  # IDRAC-MIB::controllerName
+                                        "38", # IDRAC-MIB::controllerComponentStatus
+                                ]),
+                                ('.1.3.6.1.4.1.674.10892.5.5.1.20.130.15.1', [
+                                        "1",  # IDRAC-MIB::batterNumber
+                                        "4",  # IDRAC-MIB::batteryState
+                                        "6",  # IDRAC-MIB::batteryComponentStatus
+                                        "21", # IDRAC-MIB::batteryDisplayName
+                                ]),
+                              ],
+    'snmp_scan_function'    : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith(".1.3.6.1.4.1.674.10892.5"),
+}
+
+def inventory_dell_idrac_raid_bbu(info):
+    for index, status, comp_status, name in info[1]:
+        yield index, None
+
+
+def check_dell_idrac_raid_bbu(item, params, info):
+    translate_bbu_status = {
+        "1" : (3, "UNKNOWN"),
+        "2" : (0, "READY"),
+        "3" : (2, "FAILED"),
+        "4" : (1, "DEGRADED"),
+        "5" : (3, "MISSING"),
+        "6" : (1, "CHARGING"),
+        "7" : (2, "BELOW THRESHOLD"),
+    }
+
+    for index, status, comp_status, name in info[1]:
+        if index == item:
+            state, state_readable = translate_bbu_status[status]
+            yield state, "Battery status: %s" % state_readable
+
+check_info['dell_idrac_raid.bbu'] = {
+    'inventory_function'    : inventory_dell_idrac_raid_bbu,
+    'check_function'        : check_dell_idrac_raid_bbu,
+    'service_description'   : 'Raid BBU %s',
+}

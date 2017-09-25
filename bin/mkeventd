@@ -3265,6 +3265,8 @@ class StatusServer(object):
                 except socket.error as e:
                     if e.errno == 32: # Broken pipe -> ignore this
                         pass
+                    else:
+                        raise
 
         client_socket.close()
 

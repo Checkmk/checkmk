@@ -1,0 +1,11 @@
+Title: Fix error when spaces are present in custom agent files
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1506359902
+Class: fix
+
+Resolves an error while baking agents when custom agent files that
+contain spaces exist.

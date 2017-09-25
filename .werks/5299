@@ -1,0 +1,14 @@
+Title: dell_idrac_info: Added Dell HW information to inventory
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506324149
+Class: feature
+
+The new information will be provided if got by idrac and includes:
+- Serial number
+- Express Service Code
+- Bios version, vendor and date of version
+- Raid controller name and version

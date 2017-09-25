@@ -7,6 +7,6 @@ Version: 1.5.0i1
 Date: 1506332777
 Class: fix
 
-Under certain circumstances, the first entry in Windows eventlog was skipped after starting the Windows agent. Now the first entry is always processed as expected.
+The first entry in Windows eventlog was skipped after starting the Windows agent in standard configuration, that is, without vista_api=yes. With a certain pace of new events, also following eventlog entries might go missed. The bug was introduced through the fix in Werk 3134. All releases on branches 1.4.0 and master contained the bug. Now the first entry is always processed as expected.
 
 

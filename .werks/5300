@@ -1,0 +1,11 @@
+Title: dell_idrac_fans, dell_idrac_power dell_idrac_power.unit, dell_idrac raid, dell_idrac_raid.bbu: New checks for Dell iDRAC
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506326631
+Class: feature
+
+These new check plugins create services if a Dell hardware is checked by
+the idrac snmp interface. Please see the manpages for more information.

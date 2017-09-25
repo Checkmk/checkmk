@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+
+def inventory_dell_idrac_fans(info):
+    for line in info:
+        yield line[0], {}
+
+def check_dell_idrac_fans(item, params, info):
+    translate_status = {
+        "1"  : (3, "OTHER"),
+        "2"  : (3, "UNKNOWN"),
+        "3"  : (0, "OK"),
+        "4"  : (1, "NON CRITICAL UPPER"),
+        "5"  : (2, "CRITICAL UPPER"),
+        "6"  : (2, "NON RECOVERABLE UPPER"),
+        "7"  : (1, "NON CRITICAL LOWER"),
+        "8"  : (2, "CRITICAL LOWER"),
+        "9"  : (2, "NON RECOVERABLE LOWER"),
+        "10" : (2, "FAILED"),
+    }
+
+    for index, status, value, name, warn_upper, crit_upper, \
+            warn_lower, crit_lower in info:
+        if index == item:
+            state, state_readable = translate_status[status]
+            yield state, "Status: %s, Name: %s" % \
+                            (state_readable, name)
+
+            value = int(value)
+            if not params:
+                params = { 'lower' : (int(warn_lower), int(crit_lower)) }
+                if not warn_upper == "" and \
+                       crit_upper == "":
+                    params["upper"] = (int(warn_upper), int(crit_upper))
+
+            yield check_fan(value, params)
+
+
+check_info["dell_idrac_fans"] = {
+    "inventory_function"    : inventory_dell_idrac_fans,
+    "check_function"        : check_dell_idrac_fans,
+    "service_description"   : "Fan %s",
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith(".1.3.6.1.4.1.674.10892.5"),
+    "snmp_info"             : (".1.3.6.1.4.1.674.10892.5.4.700.12.1", [
+                                    "2",  # IDRAC-MIB::coolingDeviceIndex
+                                    "5",  # IDRAC-MIB::coolingDeviceStatus
+                                    "6",  # IDRAC-MIB::coolingDeviceReading
+                                    "8",  # IDRAC-MIB::coolingDeviceLocationName
+                                    "10", # IDRAC-MIB::coolingDeviceUpperNonCriticalThreshold
+                                    "11", # IDRAC-MIB::coolingDeviceUpperCriticalThreshold
+                                    "12", # IDRAC-MIB::coolingDeviceLowerNonCriticalThreshold
+                                    "13", # IDRAC-MIB::coolingDeviceLowerCriticalThreshold
+                              ]),
+    "includes"              : [ "fan.include" ],
+    "has_perfdata"          : True,
+    "group"                 : "hw_fans",
+}

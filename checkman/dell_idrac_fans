@@ -1,0 +1,18 @@
+title: Dell iDRAC: Fan States
+agents: snmp
+catalog: hw/server/dell
+license: GPL
+distribution: check_mk
+description:
+
+ This check measures the states of the fans of Dell device. The check will be
+ {OK}, if the overall state of the fan device detects no problems. It will
+ be {WARN}, if the overall state detects some minor problems or a manually
+ given threshold for {WARN} is reached and it will be {CRIT} if major problems
+ are detected or a manually given threshold for {CRIT} is reached.
+
+ This check is configurable for upper or lower levels. If no levels are given
+ the defaults from this device will be used.
+
+item:
+ One service for each fan will be created

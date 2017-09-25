@@ -1,0 +1,12 @@
+title: Dell iDRAC: Status of power supply redundancy
+agents: snmp
+catalog: hw/server/dell
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the power supply redundancy in a Dell device. The
+ check will be {UNKNOWN} if the state is "other" or "unknown", {WARN}
+ if the state is "degraded" or "redundancy offline", {CRIT} if the state is "lost" and {OK} if the state is "full" or "not redundant".
+
+item:
+ One service for each redundancy group will be created

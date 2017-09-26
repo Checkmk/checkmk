@@ -1,0 +1,11 @@
+Title: citrix_sessions: Fixed crash if not all session values 'total', 'active' or 'inactive' are available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1506413396
+
+

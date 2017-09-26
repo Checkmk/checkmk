@@ -1238,11 +1238,17 @@ def register_user_attribute_sync_plugins():
         if attr_name not in ldap_builtin_attribute_plugin_names:
             del ldap_attribute_plugins[attr_name]
 
+    def default_attr_value(attr):
+        return lambda: ldap_attr_of_connection(g_editing_connection_id, attr)
+
+    def needed_attributes(attr):
+        return lambda connection, params: [ params.get('attr', connection.ldap_attr(attr)).lower() ]
+
     for attr, val in get_user_attributes():
         ldap_attribute_plugins[attr] = {
             'title': val['valuespec'].title(),
             'help':  val['valuespec'].help(),
-            'needed_attributes': lambda connection, params: [ params.get('attr', connection.ldap_attr(attr)).lower() ],
+            'needed_attributes': needed_attributes(attr),
             'sync_func':         lambda connection, plugin, params, user_id, ldap_user, user: \
                                          ldap_sync_simple(user_id, ldap_user, user, plugin,
                                                         params.get('attr', connection.ldap_attr(plugin)).lower()),
@@ -1251,7 +1257,7 @@ def register_user_attribute_sync_plugins():
                 ('attr', TextAscii(
                     title = _("LDAP attribute to sync"),
                     help  = _("The LDAP attribute whose contents shall be synced into this custom attribute."),
-                    default_value = lambda: ldap_attr_of_connection(g_editing_connection_id, attr),
+                    default_value = default_attr_value(attr),
                 )),
             ],
         }

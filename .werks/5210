@@ -1,0 +1,12 @@
+Title: LDAP: Fixed equal default value for custom variable sync plugins
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p14
+Date: 1506420627
+Class: fix
+
+The LDAP sync plugins that are dynamically created for each configured
+custom user attribute all had the same default value for the LDAP field
+to use during syncing.

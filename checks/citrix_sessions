@@ -24,43 +24,53 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 #<<<citrix_sessions>>>
 #sessions 1
 #active_sessions 1
 #inactive_sessions 0
 
+
 citrix_sessions_default_levels = {
-   "total"     : ( 60, 65 ),
-   "active"     : ( 60, 65 ),
-   "inactive"   : ( 10, 15 ),
+   "total"    : (60, 65),
+   "active"   : (60, 65),
+   "inactive" : (10, 15),
 }
+
+
 def inventory_citrix_sessions(info):
     return [ ( None, "citrix_sessions_default_levels" )]
 
+
 def check_citrix_sessions(_no_item, params, info):
-
-    if map(len, info) == [1, 1, 1]:
-        return 3, "Could not collect session information. Please check the agent configuration."
-
     session = {}
-    session['total'], session['active'], session['inactive'] = \
-    map(int, (info[0][1], info[1][1], info[2][1]))
-    state = 0
-    messages = []
-    perf = []
-    for what in [ 'total', 'active', 'inactive' ]:
-        warn, crit = params.get(what, (None, None))
-        perf.append(( what, session[what], warn, crit ))
-        if crit != None and session[what] > crit:
-            messages.append("%s: %s(!!)" % ( what, session[what] ))
-            state = 2
-        elif warn != None and session[what] > warn:
-            messages.append("%s: %s(!)" % ( what, session[what] ))
-            state = max(state, 1)
-        else:
-            messages.append("%s: %s" % ( what, session[what] ))
+    for line in info:
+        if len(line) > 1:
+            session.setdefault(line[0], int(line[1]))
 
-    return state, ", ".join(messages), perf
+    if not session:
+        yield 3, "Could not collect session information. Please check the agent configuration."
+        return
+
+    for key, what in [
+        ('sessions', 'total'),
+        ('active_sessions', 'active'),
+        ('inactive_sessions', 'inactive')
+    ]:
+        if session.get(key) is None:
+            continue
+        state = 0
+        value = session[key]
+        infotext = "%s: %s" % (what.title(), value)
+        warn, crit = params.get(what, (None, None))
+        if crit != None and value > crit:
+            state = 2
+        elif warn != None and value > warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        yield state, infotext, [(what, value, warn, crit)]
+
 
 check_info["citrix_sessions"] = {
     "group"                 : "citrix_sessions",

@@ -71,3 +71,21 @@ def test_clear_all():
     assert dict_cache.is_empty()
     assert set_cache.is_empty()
 
+
+def test_populated():
+    mgr = cmk_base.caching.CacheManager()
+
+    cache = mgr.get_set("test1")
+    assert not cache.is_populated()
+    cache.set_populated()
+    assert cache.is_populated()
+
+    cache = mgr.get_dict("test2")
+    assert not cache.is_populated()
+    cache.set_populated()
+    assert cache.is_populated()
+
+    cache = mgr.get_list("test3")
+    assert not cache.is_populated()
+    cache.set_populated()
+    assert cache.is_populated()

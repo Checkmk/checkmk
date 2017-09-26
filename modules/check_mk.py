@@ -563,8 +563,9 @@ def management_protocol(hostname):
 # cluster hosts.
 def all_configured_realhosts():
     cache = cmk_base.config_cache.get_set("all_configured_realhosts")
-    if cache.is_empty():
+    if not cache.is_populated():
         cache.update(strip_tags(all_hosts))
+        cache.set_populated()
     return cache
 
 
@@ -573,8 +574,9 @@ def all_configured_realhosts():
 # normal hosts.
 def all_configured_clusters():
     cache = cmk_base.config_cache.get_set("all_configured_clusters")
-    if cache.is_empty():
+    if not cache.is_populated():
         cache.update(strip_tags(clusters.keys()))
+        cache.set_populated()
     return cache
 
 
@@ -582,16 +584,18 @@ def all_configured_clusters():
 # disabled or monitored on a remote site.
 def all_configured_hosts():
     cache = cmk_base.config_cache.get_set("all_configured_hosts")
-    if cache.is_empty():
+    if not cache.is_populated():
         cache.update(all_configured_realhosts(), all_configured_clusters())
+        cache.set_populated()
     return cache
 
 
 # Returns a set of all active hosts
 def all_active_hosts():
     cache = cmk_base.config_cache.get_set("all_active_hosts")
-    if cache.is_empty():
+    if not cache.is_populated():
         cache.update(all_active_realhosts(), all_active_clusters())
+        cache.set_populated()
     return cache
 
 
@@ -641,8 +645,9 @@ def duplicate_hosts():
 def all_active_realhosts():
     active_realhosts = cmk_base.config_cache.get_set("active_realhosts")
 
-    if active_realhosts.is_empty():
+    if not active_realhosts.is_populated():
         active_realhosts.update(filter_active_hosts(all_configured_realhosts()))
+        active_realhosts.set_populated()
 
     return active_realhosts
 
@@ -652,8 +657,9 @@ def all_active_realhosts():
 def all_active_clusters():
     active_clusters = cmk_base.config_cache.get_set("active_clusters")
 
-    if active_clusters.is_empty():
+    if not active_clusters.is_populated():
         active_clusters.update(filter_active_hosts(all_configured_clusters()))
+        active_clusters.set_populated()
 
     return active_clusters
 
@@ -1834,11 +1840,12 @@ def is_cluster(hostname):
 # If not, return an empty list.
 def clusters_of(hostname):
     cache = cmk_base.config_cache.get_dict("clusters_of")
-    if cache.is_empty():
+    if not cache.is_populated():
         for cluster, hosts in clusters.items():
             clustername = cluster.split('|', 1)[0]
             for name in hosts:
                 cache.setdefault(name, []).append(clustername)
+        cache.set_populated()
 
     return cache.get(hostname, [])
 

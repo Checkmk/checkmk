@@ -68,8 +68,23 @@ class CacheManager(object):
 
 
 class Cache(object):
+    _populated = False
+
     def is_empty(self):
+        """Whether or not there is something in the collection at the moment"""
         return not self
+
+
+    def is_populated(self):
+        """Whether or not the cache has been marked as populated. This is just a flag
+        to tell the caller the initialization state of the cache. It has to be set
+        to True manually by using self.set_populated()"""
+        return self._populated
+
+
+    def set_populated(self):
+        self._populated = True
+
 
 
 # Just a small wrapper round a dict to get some caching specific functionality

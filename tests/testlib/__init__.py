@@ -407,8 +407,14 @@ class Site(object):
         execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
             (src_version, new_version_name, self.version.version_path()))
 
-        execute("sudo chrpath -r %s/lib %s/bin/python" %
-            (self.root, self.version.version_path()))
+        # we should use self.version.version_path() in the RPATH, but that is limited to
+        # 32 bytes and our versions exceed this limit. We need to use some hack to make
+        # this possible
+        if not os.path.exists("/omd/v"):
+            execute("sudo /bin/ln -s /omd/versions /omd/v")
+
+        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" %
+            (self.version.version_directory(), self.version.version_path()))
 
         self._add_version_path_to_index_py()
 

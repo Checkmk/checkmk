@@ -221,4 +221,4 @@ setup:
 	    nsis \
 	    lcab \
 	    debootstrap \
-	    ubuntu-archive-keyring
+	    debian-archive-keyring

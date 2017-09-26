@@ -86,3 +86,8 @@ skel:
 
 clean:
 	rm -rf $(DIR) bin build tmp.python27
+
+upstream:
+	git rm Python-*.tgz
+	wget https://www.python.org/ftp/python/$(VERSION)/Python-$(VERSION).tgz
+	git add Python-$(VERSION).tgz

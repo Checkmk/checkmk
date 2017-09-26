@@ -148,17 +148,10 @@ void SectionEventlog::process_eventlog_entry(std::ostream &out,
     // source is the application that produced the event
     std::string source_name = to_utf8(event.source());
     std::replace(source_name.begin(), source_name.end(), ' ', '_');
-    auto message = event.message();
-    // Nice surprise: EvtFormatMessage (used by Vista API) delivers wstring
-    // messages with trailing null character within the allocated wstring size!
-    // Later, this causes the socket output to be cut at the 1st null character,
-    // so we need to trim trailing null(s) away here.
-    while (message.back() == L'\0') {
-        message.resize(message.size() - 1);
-    }
+
     out << type_char << " " << timestamp << " " << event.eventQualifiers()
-        << "." << event.eventId() << " " << Utf8(event.source()) << " "
-        << Utf8(message) << "\n";
+        << "." << event.eventId() << " " << source_name << " "
+        << Utf8(event.message()) << "\n";
 }
 
 void SectionEventlog::outputEventlog(std::ostream &out, const char *logname,

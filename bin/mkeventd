@@ -72,6 +72,19 @@ logger = cmk.log.get_logger("mkeventd")
 #   |  Global declarations and defaults settings                           |
 #   '----------------------------------------------------------------------'
 
+# Defaults for command line modifiable options (TODO: Encapsulate this somehow)
+opt_verbose       = 0
+opt_debug         = False
+opt_debug_locking = False
+opt_foreground    = False
+opt_profile       = {}
+opt_syslog        = False
+opt_syslog_fd     = None
+opt_syslog_tcp    = False
+opt_syslog_tcp_fd = None
+opt_snmptrap      = False
+opt_snmptrap_fd   = None
+
 # Set default values for options (TODO: Move to smaller scopes)
 g_socket_path       = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
 g_eventsocket_path  = cmk.paths.omd_root + "/tmp/run/mkeventd/eventsocket"
@@ -4797,180 +4810,170 @@ The following paths are used by the Event Console:
 #   |  Main entry and option parsing                                       |
 #   '----------------------------------------------------------------------'
 
-opt_verbose       = 0
-opt_debug         = False
-opt_debug_locking = False
-opt_foreground    = False
-opt_profile       = {}
-opt_syslog        = False
-opt_syslog_fd     = None
-opt_syslog_tcp    = False
-opt_syslog_tcp_fd = None
-opt_snmptrap      = False
-opt_snmptrap_fd   = None
+if __name__ == "__main__":
+    os.unsetenv("LANG")
 
+    short_options = "hvVg"
+    long_options = [ "help", "version", "verbose", "debug", "foreground",
+                     "profile-status", "profile-event", "debug-locking",
+                     "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd=" ]
 
-short_options = "hvVg"
-long_options = [ "help", "version", "verbose", "debug", "foreground",
-                 "profile-status", "profile-event", "debug-locking",
-                 "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd=" ]
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+        # first parse modifers
+        for o, a in opts:
+            if o in [ '-v', '--verbose' ]:
+                opt_verbose += 1
+            elif o in [ '-d', '--debug' ]:
+                opt_debug = True
+            elif o in [ '--debug-locking' ]:
+                opt_debug_locking = True
+            elif o in [ '-g', '--foreground' ]:
+                opt_foreground = True
+            elif o == '--syslog':
+                opt_syslog = True
+            elif o == '--syslog-fd':
+                opt_syslog_fd = int(a)
+            elif o == '--syslog-tcp':
+                opt_syslog_tcp = True
+            elif o == '--syslog-tcp-fd':
+                opt_syslog_tcp_fd = int(a)
+            elif o == '--snmptrap':
+                opt_snmptrap = True
+            elif o == '--snmptrap-fd':
+                opt_snmptrap_fd = int(a)
+            elif o.startswith('--profile-'):
+                opt_profile[o[10:]] = True
 
-    # first parse modifers
-    for o, a in opts:
-        if o in [ '-v', '--verbose' ]:
-            opt_verbose += 1
-        elif o in [ '-d', '--debug' ]:
-            opt_debug = True
-        elif o in [ '--debug-locking' ]:
-            opt_debug_locking = True
-        elif o in [ '-g', '--foreground' ]:
-            opt_foreground = True
-        elif o == '--syslog':
-            opt_syslog = True
-        elif o == '--syslog-fd':
-            opt_syslog_fd = int(a)
-        elif o == '--syslog-tcp':
-            opt_syslog_tcp = True
-        elif o == '--syslog-tcp-fd':
-            opt_syslog_tcp_fd = int(a)
-        elif o == '--snmptrap':
-            opt_snmptrap = True
-        elif o == '--snmptrap-fd':
-            opt_snmptrap_fd = int(a)
-        elif o.startswith('--profile-'):
-            opt_profile[o[10:]] = True
+        cmk.log.open_log(sys.stderr)
+        cmk.log.set_verbosity(opt_verbose)
 
-    cmk.log.open_log(sys.stderr)
-    cmk.log.set_verbosity(opt_verbose)
+        # now handle action options
+        for o, a in opts:
+            if o in [ '-h', '--help' ]:
+                usage()
+                sys.exit(0)
+            elif o in [ '-V', '--version' ]:
+                sys.stdout.write("mkeventd version %s\n" % cmk.__version__)
+                sys.exit(0)
 
-    # now handle action options
-    for o, a in opts:
-        if o in [ '-h', '--help' ]:
-            usage()
-            sys.exit(0)
-        elif o in [ '-V', '--version' ]:
-            sys.stdout.write("mkeventd version %s\n" % cmk.__version__)
-            sys.exit(0)
+        if opt_snmptrap:
+            # Needed for receiving traps
+            from pysnmp.entity import engine as snmp_engine
+            from pysnmp.entity import config as snmp_config
+            from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
+            from pysnmp.proto.api import v2c as snmp_v2c, v1 as snmp_v1
 
-    if opt_snmptrap:
-        # Needed for receiving traps
-        from pysnmp.entity import engine as snmp_engine
-        from pysnmp.entity import config as snmp_config
-        from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
-        from pysnmp.proto.api import v2c as snmp_v2c, v1 as snmp_v1
+            from pysnmp.proto import api as pysnmp_api
+            from pyasn1.codec.ber import decoder as pyasn_decoder
+            import pysnmp.proto.proxy.rfc2576
 
-        from pysnmp.proto import api as pysnmp_api
-        from pyasn1.codec.ber import decoder as pyasn_decoder
-        import pysnmp.proto.proxy.rfc2576
+            # Needed for trap translation
+            from pysnmp.smi.builder import MibBuilder, DirMibSource
+            from pysnmp.smi.view import MibViewController
+            from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
+            from pysnmp.smi.error import SmiError
+            from pyasn1.error import ValueConstraintError
 
-        # Needed for trap translation
-        from pysnmp.smi.builder import MibBuilder, DirMibSource
-        from pysnmp.smi.view import MibViewController
-        from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
-        from pysnmp.smi.error import SmiError
-        from pyasn1.error import ValueConstraintError
+        if not opt_foreground:
+            cmk.log.open_log(g_logfile_path)
 
-    if not opt_foreground:
-        cmk.log.open_log(g_logfile_path)
+        logger.info("-" * 65)
+        logger.info("mkeventd version %s starting" % cmk.__version__)
 
-    logger.info("-" * 65)
-    logger.info("mkeventd version %s starting" % cmk.__version__)
+        load_configuration()
 
-    load_configuration()
+        if os.path.exists(g_pid_file):
+            old_pid = int(file(g_pid_file).read())
+            if process_exists(old_pid):
+                bail_out("Old PID file %s still existing and mkeventd still running with PID %d." %
+                    (g_pid_file, old_pid))
+            os.remove(g_pid_file)
+            logger.info("Removed orphaned PID file %s (process %d not running anymore)." % (g_pid_file, old_pid))
 
-    if os.path.exists(g_pid_file):
-        old_pid = int(file(g_pid_file).read())
-        if process_exists(old_pid):
-            bail_out("Old PID file %s still existing and mkeventd still running with PID %d." %
-                (g_pid_file, old_pid))
+        # Make sure paths exist
+        make_parentdirs(g_socket_path)
+        if g_eventsocket_path:
+            make_parentdirs(g_eventsocket_path)
+        make_parentdirs(g_pipe_path)
+        make_parentdirs(g_logfile_path)
+        make_parentdirs(g_state_dir + "/state")
+
+        # Create locks for global data structures
+        if opt_debug_locking:
+            lock_eventstatus = VerboseLock("eventstatus")
+            lock_configuration = VerboseLock("configuration")
+            lock_logging = VerboseLock("logging")
+        else:
+            lock_eventstatus = thread.allocate_lock()
+            lock_configuration = thread.allocate_lock()
+            lock_logging = thread.allocate_lock()
+
+        # First do all things that might fail, before daemonizing
+        g_perfcounters = Perfcounters()
+        g_event_status  = EventStatus()
+        g_status_server = StatusServer()
+        g_event_server  = EventServer()
+
+        g_event_status.load_status()
+
+        initialize_snmptrap_handling()
+
+        g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
+
+        if not opt_foreground:
+            make_parentdirs(g_pid_file)
+            cmk.daemon.daemonize()
+            logger.info("Daemonized with PID %d." % os.getpid())
+
+        # Create PID file
+        file(g_pid_file, "w").write("%d\n" % os.getpid())
+
+        # Install signal hander
+        signal.signal(signal.SIGHUP,  signal_handler)
+        signal.signal(signal.SIGINT,  signal_handler)
+        signal.signal(signal.SIGQUIT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        # Now let's go...
+        run_eventd()
+
+        # We reach this point, if the server has been killed by
+        # a signal or hitting Ctrl-C (in foreground mode)
+
+        # Remove event pipe and drain it, so that we make sure
+        # that processes (syslog, etc) will not hang when trying
+        # to write into the pipe.
+        logger.verbose("Cleaning up event pipe")
+        pipe = g_event_server.open_pipe()  # Open it
+        os.remove(g_pipe_path)             # Remove pipe
+        drain_pipe(pipe)                   # Drain any data
+        os.close(pipe)                     # Close pipe
+
+        logger.verbose("Saving final event state")
+        g_event_status.save_status()
+
+        logger.verbose("Cleaning up sockets")
+        os.remove(g_socket_path)
+        if g_eventsocket_path:
+            os.remove(g_eventsocket_path)
+
+        logger.verbose("Output hash stats")
+        g_event_server.output_hash_stats()
+
+        logger.verbose("Closing fds which might be still open")
+        for fd in [ opt_syslog_fd, opt_syslog_tcp_fd, opt_snmptrap_fd ]:
+            try:
+                os.close(fd)
+            except:
+                pass
+
+        logger.info("Successfully shut down.")
         os.remove(g_pid_file)
-        logger.info("Removed orphaned PID file %s (process %d not running anymore)." % (g_pid_file, old_pid))
+        sys.exit(0)
 
-    # Make sure paths exist
-    make_parentdirs(g_socket_path)
-    if g_eventsocket_path:
-        make_parentdirs(g_eventsocket_path)
-    make_parentdirs(g_pipe_path)
-    make_parentdirs(g_logfile_path)
-    make_parentdirs(g_state_dir + "/state")
-
-    # Create locks for global data structures
-    if opt_debug_locking:
-        lock_eventstatus = VerboseLock("eventstatus")
-        lock_configuration = VerboseLock("configuration")
-        lock_logging = VerboseLock("logging")
-    else:
-        lock_eventstatus = thread.allocate_lock()
-        lock_configuration = thread.allocate_lock()
-        lock_logging = thread.allocate_lock()
-
-    # First do all things that might fail, before daemonizing
-    g_perfcounters = Perfcounters()
-    g_event_status  = EventStatus()
-    g_status_server = StatusServer()
-    g_event_server  = EventServer()
-
-    g_event_status.load_status()
-
-    initialize_snmptrap_handling()
-
-    g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
-
-    if not opt_foreground:
-        make_parentdirs(g_pid_file)
-        cmk.daemon.daemonize()
-        logger.info("Daemonized with PID %d." % os.getpid())
-
-    # Create PID file
-    file(g_pid_file, "w").write("%d\n" % os.getpid())
-
-    # Install signal hander
-    signal.signal(signal.SIGHUP,  signal_handler)
-    signal.signal(signal.SIGINT,  signal_handler)
-    signal.signal(signal.SIGQUIT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-
-    # Now let's go...
-    run_eventd()
-
-    # We reach this point, if the server has been killed by
-    # a signal or hitting Ctrl-C (in foreground mode)
-
-    # Remove event pipe and drain it, so that we make sure
-    # that processes (syslog, etc) will not hang when trying
-    # to write into the pipe.
-    logger.verbose("Cleaning up event pipe")
-    pipe = g_event_server.open_pipe()  # Open it
-    os.remove(g_pipe_path)             # Remove pipe
-    drain_pipe(pipe)                   # Drain any data
-    os.close(pipe)                     # Close pipe
-
-    logger.verbose("Saving final event state")
-    g_event_status.save_status()
-
-    logger.verbose("Cleaning up sockets")
-    os.remove(g_socket_path)
-    if g_eventsocket_path:
-        os.remove(g_eventsocket_path)
-
-    logger.verbose("Output hash stats")
-    g_event_server.output_hash_stats()
-
-    logger.verbose("Closing fds which might be still open")
-    for fd in [ opt_syslog_fd, opt_syslog_tcp_fd, opt_snmptrap_fd ]:
-        try:
-            os.close(fd)
-        except:
-            pass
-
-    logger.info("Successfully shut down.")
-    os.remove(g_pid_file)
-    sys.exit(0)
-
-except Exception as e:
-    if opt_debug:
-        raise
-    bail_out(traceback.format_exc())
+    except Exception as e:
+        if opt_debug:
+            raise
+        bail_out(traceback.format_exc())

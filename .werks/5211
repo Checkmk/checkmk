@@ -1,0 +1,15 @@
+Title: Agent bakery: Reduced agent baking time when monitoring 0 hosts from central site
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p14
+Date: 1506432991
+Class: fix
+
+When having a distributed Check_MK/WATO environment where the central management site
+has zero hosts configured to be monitored, the time needed to bake agents was increased
+by a broken cache. This cache is now being used even when the central site is not monitoring
+any host.
+
+You could workaround this issue by adding a single host to be monitored from the central site.

@@ -51,6 +51,7 @@ import json
 
 import cmk
 import cmk.log
+import cmk.paths
 import cmk.defines as defines
 import cmk.daemon
 import cmk.event_console
@@ -70,6 +71,16 @@ logger = cmk.log.get_logger("mkeventd")
 #   +----------------------------------------------------------------------+
 #   |  Global declarations and defaults settings                           |
 #   '----------------------------------------------------------------------'
+
+# Set default values for options (TODO: Move to smaller scopes)
+g_socket_path       = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
+g_eventsocket_path  = cmk.paths.omd_root + "/tmp/run/mkeventd/eventsocket"
+g_pipe_path         = cmk.paths.omd_root + "/tmp/run/mkeventd/events"
+g_pid_file          = cmk.paths.omd_root + "/tmp/run/mkeventd/pid"
+g_logfile_path      = cmk.paths.omd_root + "/var/log/mkeventd.log"
+g_state_dir         = cmk.paths.omd_root + "/var/mkeventd"
+g_compiled_mibs_dir = cmk.paths.omd_root + "/local/share/check_mk/compiled_mibs"
+
 
 # Basic settings, can be changed with configuration file (at
 # least I hope so)
@@ -713,7 +724,7 @@ g_mongo_db   = None
 
 def mongodb_local_connection_opts():
     ip, port = None, None
-    for l in file('%s/etc/mongodb.conf' % os.environ['OMD_ROOT']):
+    for l in file('%s/etc/mongodb.conf' % cmk.paths.omd_root):
         if l.startswith('bind_ip'):
             ip = l.split('=')[1].strip()
         elif l.startswith('port'):
@@ -843,7 +854,7 @@ def get_event_history_from_mongodb(filters, limit):
 
     result = g_mongo_db.ec_archive.find(query).sort('time', -1)
     # Might be used for debugging / profiling
-    #file(os.environ['OMD_ROOT'] + '/var/log/check_mk/ec_history_debug.log', 'a').write(pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
+    #file(cmk.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
     if limit:
         result = result.limit(limit + 1)
 
@@ -1434,7 +1445,7 @@ class EventServer(object):
     def run(self):
         if opt_profile.get("event"):
             import cProfile
-            profilefile = omd_root + "/var/mkeventd/event.profile"
+            profilefile = cmk.paths.omd_root + "/var/mkeventd/event.profile"
             self.logger.info("Writing profile of event thread to %s." % profilefile)
             try:
                 cProfile.run("g_event_server.run_loop()", profilefile)
@@ -3153,7 +3164,7 @@ class StatusServer(object):
             try:
                 if opt_profile.get("status"):
                     import cProfile
-                    profilefile = omd_root + "/var/mkeventd/status.profile"
+                    profilefile = cmk.paths.omd_root + "/var/mkeventd/status.profile"
                     self.logger.info("Writing profile of status thread to %s." % profilefile)
                     cProfile.run("g_status_server.serve()", profilefile)
                     file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
@@ -4666,13 +4677,13 @@ def load_configuration():
     global g_config, g_last_config_reload
     g_config = cmk.event_console.default_config()
 
-    main_file = os.path.join(g_config_dir, "mkeventd.mk")
+    main_file = os.path.join(cmk.paths.default_config_dir, "mkeventd.mk")
     if not os.path.exists(main_file):
         bail_out("Main configuration file %s missing." % main_file)
 
     config_files = (
         os.path.join(dirpath, filename)
-        for dirpath, _dirnames, filenames in os.walk(os.path.join(g_config_dir, "mkeventd.d"))
+        for dirpath, _dirnames, filenames in os.walk(os.path.join(cmk.paths.default_config_dir, "mkeventd.d"))
         for filename in filenames
         if filename.endswith(".mk") )
 
@@ -4752,27 +4763,18 @@ def usage():
    -g, --foreground     Do not daemonize, run in foreground
    --debug              Enable debug mode (let exceptions through)
    --debug-locking      Debug locking and unlocking (thread communication)
-   -C, --configdir      Path to directory where mkevent.mk lives
-   -S, --socket P       Path to unix socket for querying status
-   -E, --eventsocket P  Path to unix socket for receiving events (optional)
-   -P, --pipe P         Path to pipe for receiving events
    --syslog             Enable builtin UDP syslog server
    --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
    --syslog-tcp         Enable builtin TCP syslog server
    --syslog-tcp-fd FD   Do not open TCP port 514, but inherit it via this FD
    --snmptrap           Enable builtin snmptrap server
    --snmptrap-fd FD     Do not open UDP port 162, but inherit it via this FD
-   --statedir D         Path to directory for saving status
-   --logdir D           Path to directory where mkeventd.log is created
-   -p, --pidfile        Path to PID file
    --profile-status     Create Python profile for status thread
 
 """)
-    if os.getenv("OMD_ROOT"):
-        sys.stdout.write("""You are running OMD, which is generally a good idea.
-The following defaults are set:
+    sys.stdout.write("""
+The following paths are used by the Event Console:
 
-  Config dir:       %(g_config_dir)s
   Unix socket:      %(g_socket_path)s
   Event socket:     %(g_eventsocket_path)s
   Event Pipe:       %(g_pipe_path)s
@@ -4781,9 +4783,6 @@ The following defaults are set:
   Status dir:       %(g_state_dir)s
 
 """ % globals())
-
-    else:
-        sys.stdout.write("You are not running OMD, please specify -S and -P.\n")
 
 
 #.
@@ -4798,8 +4797,6 @@ The following defaults are set:
 #   |  Main entry and option parsing                                       |
 #   '----------------------------------------------------------------------'
 
-os.unsetenv("LANG")
-
 opt_verbose       = 0
 opt_debug         = False
 opt_debug_locking = False
@@ -4812,31 +4809,10 @@ opt_syslog_tcp_fd = None
 opt_snmptrap      = False
 opt_snmptrap_fd   = None
 
-# Set default values for options
-omd_root = os.getenv("OMD_ROOT")
-if omd_root:
-    g_config_dir        = omd_root + "/etc/check_mk"
-    g_socket_path       = omd_root + "/tmp/run/mkeventd/status"
-    g_eventsocket_path  = omd_root + "/tmp/run/mkeventd/eventsocket"
-    g_pipe_path         = omd_root + "/tmp/run/mkeventd/events"
-    g_pid_file          = omd_root + "/tmp/run/mkeventd/pid"
-    g_logfile_path      = omd_root + "/var/log/mkeventd.log"
-    g_state_dir         = omd_root + "/var/mkeventd"
-    g_compiled_mibs_dir = omd_root + "/local/share/check_mk/compiled_mibs"
-else:
-    g_config_dir        = "/etc/check_mk"
-    g_socket_path       = None
-    g_eventsocket_path  = None
-    g_pipe_path         = None
-    g_pid_file          = "/var/run/mkeventd.pid"
-    g_logfile_path      = "/var/log/mkeventd.log"
-    g_state_dir         = "/var/lib/mkeventd"
-    g_compiled_mibs_dir = "/var/lib/mkeventd/compiled_mibs"
 
-
-short_options = "hvVgS:P:p:C:E:"
-long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "eventsocket=", "pipe=",
-                 "pidfile=", "statedir=", "configdir=", "logdir=", "profile-status", "profile-event", "debug-locking",
+short_options = "hvVg"
+long_options = [ "help", "version", "verbose", "debug", "foreground",
+                 "profile-status", "profile-event", "debug-locking",
                  "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd=" ]
 
 try:
@@ -4852,12 +4828,6 @@ try:
             opt_debug_locking = True
         elif o in [ '-g', '--foreground' ]:
             opt_foreground = True
-        elif o in [ '-S', '--socket' ]:
-            g_socket_path = a
-        elif o in [ '-E', '--eventsocket' ]:
-            g_eventsocket_path = a
-        elif o in [ '-P', '--pipe' ]:
-            g_pipe_path = a
         elif o == '--syslog':
             opt_syslog = True
         elif o == '--syslog-fd':
@@ -4870,14 +4840,6 @@ try:
             opt_snmptrap = True
         elif o == '--snmptrap-fd':
             opt_snmptrap_fd = int(a)
-        elif o in [ '-p', '--pidfile' ]:
-            g_pid_file = a
-        elif o in [ '-C', '--configdir' ]:
-            g_config_dir = a
-        elif o == '--logdir':
-            g_logfile_path = a + "/mkeventd.log"
-        elif o in [ '--statedir' ]:
-            g_state_dir = a
         elif o.startswith('--profile-'):
             opt_profile[o[10:]] = True
 
@@ -4910,12 +4872,6 @@ try:
         from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
         from pysnmp.smi.error import SmiError
         from pyasn1.error import ValueConstraintError
-
-    if not g_pipe_path:
-        bail_out("Please specify the path to the pipe (using -P).")
-
-    if not g_socket_path:
-        bail_out("Please specify the path to the socket (using -S).")
 
     if not opt_foreground:
         cmk.log.open_log(g_logfile_path)

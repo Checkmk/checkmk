@@ -3,7 +3,22 @@
 
 import pytest
 import time
-from testlib import web, ec
+from testlib import web, ec, cmk_path
+
+#
+# UNIT TESTS
+#
+
+import imp
+mkeventd = imp.load_source("mkeventd", "%s/bin/mkeventd" % cmk_path())
+
+def test_mkeventd_unit():
+    assert mkeventd
+
+
+#
+# INTEGRATION TESTS
+#
 
 def ensure_core_and_get_connection(site, ec, core):
     if core != None:

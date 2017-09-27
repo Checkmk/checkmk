@@ -1,0 +1,24 @@
+Title: Global settings can now be filtered to show only modified settings
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506512099
+Class: feature
+
+To get a better view on the locally modified global settings it is now
+possible to filter the list of global settings to show only the modified
+ones.
+
+This affects the following places:
+
+<ul>
+    <li>global settings</li>
+    <li>site specific global settings</li>
+    <li>event console settings</li>
+</ul>
+
+When the filtering is enabled, each page only shows the settings that
+have been modified on this page. E.g. the site specific global settings
+page only shows modified settings that are set specific for this site.

@@ -682,9 +682,11 @@ form#form_timeperiod td.vlof_content {
 
 /* main menu */
 
-form.search {
+form.search, div.filter_buttons {
     padding-top: 10px;
     clear: both;
+    display: inline-block;
+    margin-bottom: 10px;
 }
 
 .wato div.mainmenu a {

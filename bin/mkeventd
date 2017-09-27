@@ -75,7 +75,6 @@ logger = cmk.log.get_logger("mkeventd")
 # Defaults for command line modifiable options (TODO: Encapsulate this somehow)
 opt_verbose       = 0
 opt_debug         = False
-opt_debug_locking = False
 opt_foreground    = False
 opt_profile       = {}
 opt_syslog        = False
@@ -403,24 +402,6 @@ def replace_groups(text, origtext, groups):
     for nr, g in enumerate(groups):
         text = text.replace("\\%d" % (nr+1), g)
     return text
-
-
-# Class for debugging locking. Beware: This does not really
-# implement a true locking! It's just for detecting deadlocks!
-class VerboseLock(object):
-    def __init__(self, name):
-        self._depth = 0
-        self._name = name
-        self.logger = logger.getChild("VerboseLock(%s)" % name)
-
-    def __enter__(self):
-        self._depth += 1
-        self.logger.debug("%d -> %d" % (self._depth-1, self._depth))
-        return self
-
-    def __exit__(self, type, value, tb):
-        self._depth -= 1
-        self.logger.debug("%d -> %d" % (self._depth+1, self._depth))
 
 
 class MKSignalException(Exception):
@@ -4810,12 +4791,17 @@ The following paths are used by the Event Console:
 #   |  Main entry and option parsing                                       |
 #   '----------------------------------------------------------------------'
 
+# Create locks for global data structures
+lock_eventstatus = thread.allocate_lock()
+lock_configuration = thread.allocate_lock()
+lock_logging = thread.allocate_lock()
+
 if __name__ == "__main__":
     os.unsetenv("LANG")
 
     short_options = "hvVg"
     long_options = [ "help", "version", "verbose", "debug", "foreground",
-                     "profile-status", "profile-event", "debug-locking",
+                     "profile-status", "profile-event",
                      "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd=" ]
 
     try:
@@ -4827,8 +4813,6 @@ if __name__ == "__main__":
                 opt_verbose += 1
             elif o in [ '-d', '--debug' ]:
                 opt_debug = True
-            elif o in [ '--debug-locking' ]:
-                opt_debug_locking = True
             elif o in [ '-g', '--foreground' ]:
                 opt_foreground = True
             elif o == '--syslog':
@@ -4899,16 +4883,6 @@ if __name__ == "__main__":
         make_parentdirs(g_pipe_path)
         make_parentdirs(g_logfile_path)
         make_parentdirs(g_state_dir + "/state")
-
-        # Create locks for global data structures
-        if opt_debug_locking:
-            lock_eventstatus = VerboseLock("eventstatus")
-            lock_configuration = VerboseLock("configuration")
-            lock_logging = VerboseLock("logging")
-        else:
-            lock_eventstatus = thread.allocate_lock()
-            lock_configuration = thread.allocate_lock()
-            lock_logging = thread.allocate_lock()
 
         # First do all things that might fail, before daemonizing
         g_perfcounters = Perfcounters()

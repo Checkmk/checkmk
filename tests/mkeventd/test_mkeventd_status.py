@@ -16,6 +16,27 @@ def test_mkeventd_unit():
     assert mkeventd
 
 
+def test_handle_client(monkeypatch):
+    class FakeSocket(object):
+        def __init__(self, sock):
+            pass
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            return ["GET events"]
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(mkeventd, "Queries", FakeSocket)
+    monkeypatch.setattr(mkeventd.StatusServer, "open_sockets", lambda x: None)
+    status = mkeventd.StatusServer()
+
+    print status.handle_client(None, True, "127.0.0.1")
+
+
 #
 # INTEGRATION TESTS
 #

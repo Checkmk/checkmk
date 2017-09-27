@@ -6945,9 +6945,9 @@ class ModeEditGlobals(ModeGlobalSettings):
 
 
 
-# TODO: Move site specific global setting stuff to separate class
 class ModeEditGlobalSetting(WatoMode):
     def __init__(self):
+        super(ModeEditGlobalSetting, self).__init__()
         self._from_vars()
         self._back_mode = "globalvars"
 

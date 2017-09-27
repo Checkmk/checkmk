@@ -97,15 +97,12 @@ void usage() {
         " HOST  may be a hostname, and IP address or hostname/IP-address.");
 }
 
-string prepare_hostname_regex(const char *s) {
+string prepare_host_match_list(const char *s) {
     const char *scan = s;
     string result;
     while (*scan != 0) {
-        if (strchr(R"([](){}^$.*+?|\)", *scan) != nullptr) {
-            result += R"(\)";
-            result += *scan;
-        } else if (*scan == '/') {
-            result += "|";
+        if (*scan == '/') {
+            result += " ";
         } else {
             result += *scan;
         }
@@ -228,9 +225,8 @@ int main(int argc, char **argv) {
     string query_message;
     query_message += "GET events\nFilter: event_host ";
     if (strchr(host, '/') != nullptr) {
-        query_message += "~~ ^(";
-        query_message += prepare_hostname_regex(host);
-        query_message += ")$";
+        query_message += "in ";
+        query_message += prepare_host_match_list(host);
     } else {
         query_message += "=~ ";
         query_message += host;

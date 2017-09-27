@@ -17,43 +17,114 @@ def test_mkeventd_unit():
     assert mkeventd
 
 
-def test_handle_client(monkeypatch):
-    class FakeQueries(object):
-        def __init__(self, sock):
-            self._sent = False
-            pass
+class FakeStatusSocket(object):
+    def __init__(self, query):
+        self._query = query
+        self._sent = False
+        self._response = ""
 
-        def __iter__(self):
-            return self
+    def recv(self, size):
+        if self._sent:
+            return ""
 
-        def next(self):
-            if self._sent:
-                raise StopIteration()
+        self._sent = True
+        return self._query
 
-            self._sent = True
-            return ["GET events"]
+    def sendall(self, data):
+        self._response += data
 
+    def close(self):
+        pass
 
-    class FakeSocket(object):
-        def sendall(self, data):
-            if data == "\n":
-                return
-            response = ast.literal_eval(data)
-            assert type(response) == list
-            assert len(response) == 1
-            assert "event_id" in response[0]
-
-        def close(self):
-            pass
+    def get_response(self):
+        response = ast.literal_eval(self._response)
+        assert type(response) == list
+        return response
 
 
-    monkeypatch.setattr(mkeventd, "Queries", FakeQueries)
-    monkeypatch.setattr(mkeventd.StatusServer, "open_sockets", lambda x: None)
+@pytest.fixture(scope="function")
+def config():
+    mkeventd.load_configuration()
 
+
+@pytest.fixture(scope="function")
+def status_server():
     mkeventd.g_status_server = mkeventd.StatusServer()
-    mkeventd.g_event_status  = mkeventd.EventStatus()
+    return mkeventd.g_status_server
 
-    mkeventd.g_status_server.handle_client(FakeSocket(), True, "127.0.0.1")
+
+@pytest.fixture(scope="function")
+def event_status():
+    mkeventd.g_event_status = mkeventd.EventStatus()
+    return mkeventd.g_event_status
+
+
+@pytest.fixture(scope="function")
+def perfcounters():
+    mkeventd.g_perfcounters = mkeventd.Perfcounters()
+    return mkeventd.g_perfcounters
+
+
+def test_handle_client(status_server, event_status):
+    s = FakeStatusSocket("GET events")
+
+    status_server.handle_client(s, True, "127.0.0.1")
+
+    response = s.get_response()
+    assert len(response) == 1
+    assert "event_id" in response[0]
+
+
+def test_mkevent_check_query_perf(config, status_server, event_status, perfcounters):
+    def new_event(num):
+        return {
+            "rule_id":      815,
+            "text":         "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R" \
+                            " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@" % \
+                                (time.time(), num),
+            "phase":        "open",
+            "count":        1,
+            "time":         time.time(),
+            "first":        time.time(),
+            "last":         time.time(),
+            "comment":      "",
+            "host":         "heute-%d" % num,
+            "ipaddress":    "127.0.0.1",
+            "application":  "",
+            "pid":          0,
+            "priority":     3,
+            "facility":     1, # user
+            "match_groups": (),
+        }
+
+    for n in range(10000):
+        event_status.new_event(new_event(n))
+    assert len(event_status.events()) == 10000
+
+    s = FakeStatusSocket("GET events\n"
+        "Filter: event_host in heute-1 127.0.0.1 heute123\n"
+        "Filter: event_phase in open ack\n"
+        #"OutputFormat: plain\n"
+        #"Filter: event_application ~~ xxx\n"
+    )
+
+    before = time.time()
+
+    #import cProfile, StringIO, pstats
+    #pr = cProfile.Profile()
+    #pr.enable()
+    status_server.handle_client(s, True, "127.0.0.1")
+    #pr.disable()
+    #ps = pstats.Stats(pr, stream=StringIO.StringIO())
+    #ps.dump_stats("/tmp/test_mkevent_check_query_perf.profile")
+
+    duration = time.time() - before
+
+    response = s.get_response()
+    assert len(response) == 2
+    assert "event_id" in response[0]
+
+    assert duration < 0.2
 
 
 #

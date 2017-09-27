@@ -3,6 +3,7 @@
 
 import pytest
 import time
+import ast
 from testlib import web, ec, cmk_path
 
 #
@@ -17,24 +18,42 @@ def test_mkeventd_unit():
 
 
 def test_handle_client(monkeypatch):
-    class FakeSocket(object):
+    class FakeQueries(object):
         def __init__(self, sock):
+            self._sent = False
             pass
 
         def __iter__(self):
             return self
 
         def next(self):
+            if self._sent:
+                raise StopIteration()
+
+            self._sent = True
             return ["GET events"]
+
+
+    class FakeSocket(object):
+        def sendall(self, data):
+            if data == "\n":
+                return
+            response = ast.literal_eval(data)
+            assert type(response) == list
+            assert len(response) == 1
+            assert "event_id" in response[0]
 
         def close(self):
             pass
 
-    monkeypatch.setattr(mkeventd, "Queries", FakeSocket)
-    monkeypatch.setattr(mkeventd.StatusServer, "open_sockets", lambda x: None)
-    status = mkeventd.StatusServer()
 
-    print status.handle_client(None, True, "127.0.0.1")
+    monkeypatch.setattr(mkeventd, "Queries", FakeQueries)
+    monkeypatch.setattr(mkeventd.StatusServer, "open_sockets", lambda x: None)
+
+    mkeventd.g_status_server = mkeventd.StatusServer()
+    mkeventd.g_event_status  = mkeventd.EventStatus()
+
+    mkeventd.g_status_server.handle_client(FakeSocket(), True, "127.0.0.1")
 
 
 #

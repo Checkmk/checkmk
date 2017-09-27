@@ -114,11 +114,13 @@ def parse_df(info):
             if line[2] == "File" and line[3] == "System":
                 line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
 
+            # This particular bit of magic originated in Werk #2671 and has the purpose of avoiding duplicate checks,
+            # as btrfs filesystems are often mounted at multiple mountpoints. We keep it for compatibility.
             if line[1] == "btrfs":
                 device = line[0]
                 if device not in btrfs_devices:
                     btrfs_devices.add(device)
-                    mountpoint = device
+                    mountpoint = "btrfs " + device
 
             else:
                 mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /

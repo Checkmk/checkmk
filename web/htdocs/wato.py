@@ -6730,6 +6730,7 @@ class ModeGlobalSettings(WatoMode):
     def __init__(self):
         super(ModeGlobalSettings, self).__init__()
         self._search = None
+        self._show_only_modified = False
 
         self._default_values   = ConfigDomain.get_all_default_globals()
         self._global_settings  = {}
@@ -6740,6 +6741,7 @@ class ModeGlobalSettings(WatoMode):
 
     def _from_vars(self):
         self._search = get_search_expression()
+        self._show_only_modified = html.has_var("show_only_modified")
 
 
     def _group_names(self, show_all=False):
@@ -6769,6 +6771,15 @@ class ModeGlobalSettings(WatoMode):
         search_form(_("Search for settings:"))
         search = self._search
 
+        html.open_div(class_="filter_buttons")
+        if self._show_only_modified:
+            html.buttonlink(html.makeuri([], delvars=["show_only_modified"]),
+                _("Show all settings"))
+        else:
+            html.buttonlink(html.makeuri([("show_only_modified", "1")]),
+                _("Show only modified settings"))
+        html.close_div()
+
         at_least_one_painted = False
         html.open_div(class_="globalvars")
         for group_name in group_names:
@@ -6785,6 +6796,9 @@ class ModeGlobalSettings(WatoMode):
                 if not configvar_show_in_global_settings(varname):
                     continue
 
+                if self._show_only_modified and varname not in self._current_settings:
+                    continue
+
                 help_text  = valuespec.help() or ''
                 title_text = valuespec.title()
 
@@ -6798,7 +6812,7 @@ class ModeGlobalSettings(WatoMode):
 
                 if not header_is_painted:
                     # always open headers when searching
-                    forms.header(group_name, isopen=search)
+                    forms.header(group_name, isopen=search or self._show_only_modified)
                     header_is_painted = True
 
                 default_value = self._default_values[varname]
@@ -12355,7 +12369,6 @@ def search_form(title=None, mode=None, default_value=""):
     html.write_text(" ")
     html.button("_do_seach", _("Search"))
     html.end_form()
-    html.br()
 
 
 def get_search_expression():

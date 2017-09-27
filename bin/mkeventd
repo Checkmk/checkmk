@@ -3081,12 +3081,12 @@ class EventServer(object):
 
 class StatusServer(object):
     def __init__(self):
+        super(StatusServer, self).__init__()
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
         self._should_terminate = False
         self.logger = logger.getChild("StatusServer")
-        self.open_sockets()
 
 
     def open_sockets(self):
@@ -4888,6 +4888,7 @@ if __name__ == "__main__":
         g_perfcounters = Perfcounters()
         g_event_status  = EventStatus()
         g_status_server = StatusServer()
+        g_status_server.open_sockets()
         g_event_server  = EventServer()
 
         g_event_status.load_status()

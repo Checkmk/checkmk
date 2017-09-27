@@ -32,7 +32,7 @@ Option Explicit
 
 Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
 Dim sources, instances, instance, instance_id, instance_name
-Dim cfg_dir, cfg_file, hostname
+Dim cfg_dir, cfg_file, hostname, tcpport
 
 Const HKLM = &H80000002
 

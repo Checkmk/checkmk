@@ -6944,6 +6944,7 @@ class ModeEditGlobals(ModeGlobalSettings):
         self._show_configuration_variables(self._group_names())
 
 
+
 # TODO: Move site specific global setting stuff to separate class
 class ModeEditGlobalSetting(WatoMode):
     def __init__(self):
@@ -6952,14 +6953,6 @@ class ModeEditGlobalSetting(WatoMode):
 
 
     def _from_vars(self):
-        self._site_id = html.var("site")
-        if self._site_id:
-            self._configured_sites = SiteManagement.load_sites()
-            try:
-                site = self._configured_sites[self._site_id]
-            except KeyError:
-                raise MKUserError("site", _("Invalid site"))
-
         self._varname = html.var("varname")
         try:
             self._domain, self._valuespec, self._need_restart, \
@@ -6970,26 +6963,16 @@ class ModeEditGlobalSetting(WatoMode):
         if not may_edit_configvar(self._varname):
             raise MKAuthException(_("You are not permitted to edit this global setting."))
 
-        if self._site_id:
-            self._current_settings = site.setdefault("globals", {})
-            self._global_settings  = load_configuration_settings()
-        else:
-            self._current_settings = load_configuration_settings()
-            self._global_settings  = {}
+        self._current_settings = load_configuration_settings()
+        self._global_settings  = {}
 
 
     def title(self):
-        if self._site_id:
-            return _("Site-specific global configuration for %s") % self._site_id
-        else:
-            return _("Global configuration settings for Check_MK")
+        return _("Global configuration settings for Check_MK")
 
 
     def buttons(self):
-        if self._site_id:
-            html.context_button(_("Abort"), folder_preserving_link([("mode", "edit_site_globals"), ("site", self._site_id)]), "abort")
-        else:
-            html.context_button(_("Abort"), folder_preserving_link([("mode", "globalvars")]), "abort")
+        html.context_button(_("Abort"), folder_preserving_link([("mode", "globalvars")]), "abort")
 
 
     def action(self):
@@ -7020,22 +7003,18 @@ class ModeEditGlobalSetting(WatoMode):
             # FIXME: THIS HTML(...) is needed because we do not know what we get from value_to_text!!
             msg = HTML(msg)
 
-        if self._site_id:
-            SiteManagement.save_sites(self._configured_sites, activate=False)
-            if self._site_id == config.omd_site():
-                save_site_global_settings(self._current_settings)
-            add_change("edit-configvar", msg, sites=[self._site_id], domains=[self._domain], need_restart=self._need_restart)
+        self._save()
+        add_change("edit-configvar", msg, sites=self._affected_sites(), domains=[self._domain], need_restart=self._need_restart)
 
-            return "edit_site_globals"
-        else:
-            save_global_settings(self._current_settings)
-            add_change("edit-configvar", msg, domains=[self._domain], need_restart=self._need_restart, sites=self._affected_sites())
-
-            return self._back_mode
+        return self._back_mode
 
 
     def _affected_sites(self):
         return None # All sites
+
+
+    def _save(self):
+        save_global_settings(self._current_settings)
 
 
     def page(self):
@@ -7043,11 +7022,6 @@ class ModeEditGlobalSetting(WatoMode):
         is_configured_globally = self._varname in self._global_settings
 
         default_values  = ConfigDomain.get_all_default_globals()
-
-        if self._site_id:
-            self._global_settings = load_configuration_settings()
-        else:
-            self._global_settings = {}
 
         defvalue = default_values[self._varname]
         value    = self._current_settings.get(self._varname, self._global_settings.get(self._varname, defvalue))
@@ -7063,9 +7037,8 @@ class ModeEditGlobalSetting(WatoMode):
         self._valuespec.set_focus("ve")
         html.help(self._valuespec.help())
 
-        if self._site_id and is_configured_globally:
-            forms.section(_("Global setting"))
-            html.write_html(self._valuespec.value_to_text(self._global_settings[self._varname]))
+        if is_configured_globally:
+            self._show_global_setting()
 
         forms.section(_("Factory setting"))
         html.write_html(self._valuespec.value_to_text(defvalue))
@@ -7092,6 +7065,56 @@ class ModeEditGlobalSetting(WatoMode):
             html.button("_reset", _("Remove explicit setting") if curvalue == defvalue else _("Reset to default"))
         html.hidden_fields()
         html.end_form()
+
+
+    def _show_global_setting(self):
+        pass
+
+
+
+class ModeEditSiteGlobalSetting(ModeEditGlobalSetting):
+    def __init__(self):
+        super(ModeEditSiteGlobalSetting, self).__init__()
+        self._back_mode = "edit_site_globals"
+
+
+    def _from_vars(self):
+        super(ModeEditSiteGlobalSetting, self)._from_vars()
+
+        self._site_id = html.var("site")
+        if self._site_id:
+            self._configured_sites = SiteManagement.load_sites()
+            try:
+                site = self._configured_sites[self._site_id]
+            except KeyError:
+                raise MKUserError("site", _("Invalid site"))
+
+        self._current_settings = site.setdefault("globals", {})
+        self._global_settings  = load_configuration_settings()
+
+
+    def title(self):
+        return _("Site-specific global configuration for %s") % self._site_id
+
+
+    def buttons(self):
+        html.context_button(_("Abort"), folder_preserving_link([("mode", "edit_site_globals"),
+                                                                ("site", self._site_id)]), "abort")
+
+
+    def _affected_sites(self):
+        return [self._site_id]
+
+
+    def _save(self):
+        SiteManagement.save_sites(self._configured_sites, activate=False)
+        if self._site_id == config.omd_site():
+            save_site_global_settings(self._current_settings)
+
+
+    def _show_global_setting(self):
+        forms.section(_("Global setting"))
+        html.write_html(self._valuespec.value_to_text(self._global_settings[self._varname]))
 
 
 #.
@@ -9781,6 +9804,10 @@ class ModeEditSiteGlobals(ModeSites, ModeGlobalSettings):
 
         else:
             return None
+
+
+    def _edit_mode(self):
+        return "edit_site_configvar"
 
 
     def page(self):
@@ -17208,6 +17235,7 @@ modes = {
    "auditlog"           : (["auditlog"], ModeAuditLog),
    "globalvars"         : (["global"], ModeEditGlobals),
    "edit_configvar"     : (["global"], ModeEditGlobalSetting),
+   "edit_site_configvar": (["global"], ModeEditSiteGlobalSetting),
    "ldap_config"        : (["global"], mode_ldap_config),
    "edit_ldap_connection": (["global"], mode_edit_ldap_connection),
    "static_checks"      : (["rulesets"], ModeStaticChecksRulesets),

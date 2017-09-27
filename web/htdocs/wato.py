@@ -6930,52 +6930,57 @@ class ModeEditGlobals(ModeGlobalSettings):
         self._show_configuration_variables(self._group_names())
 
 
+# TODO: Move site specific global setting stuff to separate class
+class ModeEditGlobalSetting(WatoMode):
+    def __init__(self):
+        self._from_vars()
+        self._back_mode = "globalvars"
 
-def mode_edit_configvar(phase, what = 'globalvars'):
-    siteid = html.var("site")
-    if siteid:
-        configured_sites = SiteManagement.load_sites()
-        site = configured_sites[siteid]
 
-    if phase == "title":
-        if what == 'mkeventd':
-            return _("Event Console Configuration")
-        elif siteid:
-            return _("Site-specific global configuration for %s") % siteid
+    def _from_vars(self):
+        self._site_id = html.var("site")
+        if self._site_id:
+            self._configured_sites = SiteManagement.load_sites()
+            try:
+                site = self._configured_sites[self._site_id]
+            except KeyError:
+                raise MKUserError("site", _("Invalid site"))
+
+        self._varname = html.var("varname")
+        try:
+            self._domain, self._valuespec, self._need_restart, \
+            self._allow_reset, in_global_settings = configvars()[self._varname]
+        except KeyError:
+            raise MKGeneralException(_("The global setting \"%s\" does not exist.") % self._varname)
+
+        if not may_edit_configvar(self._varname):
+            raise MKAuthException(_("You are not permitted to edit this global setting."))
+
+        if self._site_id:
+            self._current_settings = site.setdefault("globals", {})
+            self._global_settings  = load_configuration_settings()
+        else:
+            self._current_settings = load_configuration_settings()
+            self._global_settings  = {}
+
+
+    def title(self):
+        if self._site_id:
+            return _("Site-specific global configuration for %s") % self._site_id
         else:
             return _("Global configuration settings for Check_MK")
 
-    elif phase == "buttons":
-        if what == 'mkeventd':
-            html.context_button(_("Abort"), folder_preserving_link([("mode", "mkeventd_config")]), "abort")
-        elif siteid:
-            html.context_button(_("Abort"), folder_preserving_link([("mode", "edit_site_globals"), ("site", siteid)]), "abort")
+
+    def buttons(self):
+        if self._site_id:
+            html.context_button(_("Abort"), folder_preserving_link([("mode", "edit_site_globals"), ("site", self._site_id)]), "abort")
         else:
             html.context_button(_("Abort"), folder_preserving_link([("mode", "globalvars")]), "abort")
-        return
 
-    varname = html.var("varname")
-    try:
-        domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
-    except KeyError:
-        raise MKGeneralException(_("The global setting \"%s\" does not exist.") % varname)
 
-    if not may_edit_configvar(varname):
-        raise MKAuthException(_("You are not permitted to edit this global setting."))
-
-    if siteid:
-        current_settings = site.setdefault("globals", {})
-        global_settings  = load_configuration_settings()
-    else:
-        current_settings = load_configuration_settings()
-        global_settings  = {}
-
-    is_configured = varname in current_settings
-    is_configured_globally = varname in global_settings
-
-    if phase == "action":
+    def action(self):
         if html.var("_reset"):
-            if not is_a_checkbox(valuespec):
+            if not is_a_checkbox(self._valuespec):
                 c = wato_confirm(
                     _("Resetting configuration variable"),
                     _("Do you really want to reset this configuration variable "
@@ -6988,95 +6993,91 @@ def mode_edit_configvar(phase, what = 'globalvars'):
                 return
 
             try:
-                del current_settings[varname]
+                del self._current_settings[self._varname]
             except KeyError:
                 pass
 
-            msg = _("Resetted configuration variable %s to its default.") % varname
+            msg = _("Resetted configuration variable %s to its default.") % self._varname
         else:
-            new_value = get_edited_value(valuespec)
-            current_settings[varname] = new_value
+            new_value = get_edited_value(self._valuespec)
+            self._current_settings[self._varname] = new_value
             msg = _("Changed global configuration variable %s to %s.") \
-                  % (varname, valuespec.value_to_text(new_value))
+                  % (self._varname, self._valuespec.value_to_text(new_value))
             # FIXME: THIS HTML(...) is needed because we do not know what we get from value_to_text!!
             msg = HTML(msg)
 
-        if what == 'mkeventd':
-            need_restart = None
-
-        if siteid:
-            SiteManagement.save_sites(configured_sites, activate=False)
-            if siteid == config.omd_site():
-                save_site_global_settings(current_settings)
-            add_change("edit-configvar", msg, sites=[siteid], domains=[domain], need_restart=need_restart)
+        if self._site_id:
+            SiteManagement.save_sites(self._configured_sites, activate=False)
+            if self._site_id == config.omd_site():
+                save_site_global_settings(self._current_settings)
+            add_change("edit-configvar", msg, sites=[self._site_id], domains=[self._domain], need_restart=self._need_restart)
 
             return "edit_site_globals"
         else:
-            save_global_settings(current_settings)
+            save_global_settings(self._current_settings)
+            add_change("edit-configvar", msg, domains=[self._domain], need_restart=self._need_restart, sites=self._affected_sites())
 
-            sites = None
-            if what == 'mkeventd':
-                sites = get_event_console_sync_sites()
-
-            add_change("edit-configvar", msg, domains=[domain], need_restart=need_restart, sites=sites)
-
-            if what == 'mkeventd':
-                return 'mkeventd_config'
-            else:
-                return "globalvars"
+            return self._back_mode
 
 
-    default_values  = ConfigDomain.get_all_default_globals()
+    def _affected_sites(self):
+        return None # All sites
 
-    if siteid:
-        global_settings = load_configuration_settings()
-    else:
-        global_settings = {}
 
-    defvalue = default_values[varname]
-    value    = current_settings.get(varname, global_settings.get(varname, defvalue))
+    def page(self):
+        is_configured = self._varname in self._current_settings
+        is_configured_globally = self._varname in self._global_settings
 
-    html.begin_form("value_editor", method="POST")
-    forms.header(valuespec.title())
-    if not config.wato_hide_varnames:
-        forms.section(_("Configuration variable:"))
-        html.tt(varname)
+        default_values  = ConfigDomain.get_all_default_globals()
 
-    forms.section(_("Current setting"))
-    valuespec.render_input("ve", value)
-    valuespec.set_focus("ve")
-    html.help(valuespec.help())
-
-    if siteid and is_configured_globally:
-        forms.section(_("Global setting"))
-        html.write_html(valuespec.value_to_text(global_settings[varname]))
-
-    forms.section(_("Factory setting"))
-    html.write_html(valuespec.value_to_text(defvalue))
-
-    forms.section(_("Current state"))
-    if is_configured_globally:
-        html.write_text(_("This variable is configured in <a href=\"%s\">global settings</a>.") %
-                                            ("wato.py?mode=edit_configvar&varname=%s" % varname))
-    elif not is_configured:
-        html.write_text(_("This variable is at factory settings."))
-    else:
-        curvalue = current_settings[varname]
-        if is_configured_globally and curvalue == global_settings[varname]:
-            html.write_text(_("Site setting and global setting are identical."))
-        elif curvalue == defvalue:
-            html.write_text(_("Your setting and factory settings are identical."))
+        if self._site_id:
+            self._global_settings = load_configuration_settings()
         else:
-            html.write(valuespec.value_to_text(defvalue))
+            self._global_settings = {}
 
-    forms.end()
-    html.button("save", _("Save"))
-    if allow_reset and is_configured:
-        curvalue = current_settings[varname]
-        html.button("_reset", _("Remove explicit setting") if curvalue == defvalue else _("Reset to default"))
-    html.hidden_fields()
-    html.end_form()
+        defvalue = default_values[self._varname]
+        value    = self._current_settings.get(self._varname, self._global_settings.get(self._varname, defvalue))
 
+        html.begin_form("value_editor", method="POST")
+        forms.header(self._valuespec.title())
+        if not config.wato_hide_varnames:
+            forms.section(_("Configuration variable:"))
+            html.tt(self._varname)
+
+        forms.section(_("Current setting"))
+        self._valuespec.render_input("ve", value)
+        self._valuespec.set_focus("ve")
+        html.help(self._valuespec.help())
+
+        if self._site_id and is_configured_globally:
+            forms.section(_("Global setting"))
+            html.write_html(self._valuespec.value_to_text(self._global_settings[self._varname]))
+
+        forms.section(_("Factory setting"))
+        html.write_html(self._valuespec.value_to_text(defvalue))
+
+        forms.section(_("Current state"))
+        if is_configured_globally:
+            html.write_text(_("This variable is configured in <a href=\"%s\">global settings</a>.") %
+                                                ("wato.py?mode=edit_configvar&varname=%s" % self._varname))
+        elif not is_configured:
+            html.write_text(_("This variable is at factory settings."))
+        else:
+            curvalue = self._current_settings[self._varname]
+            if is_configured_globally and curvalue == self._global_settings[self._varname]:
+                html.write_text(_("Site setting and global setting are identical."))
+            elif curvalue == defvalue:
+                html.write_text(_("Your setting and factory settings are identical."))
+            else:
+                html.write(self._valuespec.value_to_text(defvalue))
+
+        forms.end()
+        html.button("save", _("Save"))
+        if self._allow_reset and is_configured:
+            curvalue = self._current_settings[self._varname]
+            html.button("_reset", _("Remove explicit setting") if curvalue == defvalue else _("Reset to default"))
+        html.hidden_fields()
+        html.end_form()
 
 
 #.
@@ -17193,7 +17194,7 @@ modes = {
    "changelog"          : ([], ModeActivateChanges),
    "auditlog"           : (["auditlog"], ModeAuditLog),
    "globalvars"         : (["global"], ModeEditGlobals),
-   "edit_configvar"     : (["global"], mode_edit_configvar),
+   "edit_configvar"     : (["global"], ModeEditGlobalSetting),
    "ldap_config"        : (["global"], mode_ldap_config),
    "edit_ldap_connection": (["global"], mode_edit_ldap_connection),
    "static_checks"      : (["rulesets"], ModeStaticChecksRulesets),

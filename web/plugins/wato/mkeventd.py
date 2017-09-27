@@ -1869,6 +1869,27 @@ def ec_config_variable_groups():
     ]
 
 
+
+class ModeEventConsoleEditGlobalSetting(ModeEditGlobalSetting):
+    def __init__(self):
+        super(ModeEventConsoleEditGlobalSetting, self).__init__()
+        self._need_restart = None
+        self._back_mode = "mkeventd_config"
+
+
+    def title(self):
+        return _("Event Console Configuration")
+
+
+    def buttons(self):
+        html.context_button(_("Abort"), folder_preserving_link([("mode", "mkeventd_config")]), "abort")
+
+
+    def _affected_sites(self):
+        return get_event_console_sync_sites()
+
+
+
 def mode_mkeventd_mibs(phase):
     if phase == 'title':
         return _('SNMP MIBs for Trap Translation')
@@ -2203,7 +2224,7 @@ if mkeventd_enabled:
     modes["mkeventd_edit_rule_pack"] = (["mkeventd.edit"], mode_mkeventd_edit_rule_pack)
     modes["mkeventd_status"]         = ([], mode_mkeventd_status)
     modes["mkeventd_config"]         = (['mkeventd.config'], ModeEventConsoleSettings)
-    modes["mkeventd_edit_configvar"] = (['mkeventd.config'], lambda p: mode_edit_configvar(p, 'mkeventd'))
+    modes["mkeventd_edit_configvar"] = (['mkeventd.config'], ModeEventConsoleEditGlobalSetting)
     modes["mkeventd_mibs"]           = (['mkeventd.config'], mode_mkeventd_mibs)
 
 

@@ -3474,9 +3474,11 @@ class StatusServer(object):
                 argument = argument.strip()
                 if header == "Filter":
                     name, opfunc, argument = self.parse_filter(argument, columns)
-                    # Needed for later optimization
-                    if name == "event_host" and opfunc == filter_operators['=']:
-                        only_host = argument
+
+                    # Needed for later optimization (check_mkevents)
+                    if name == "event_host" and opfunc == filter_operators['in']:
+                        only_host = set(argument)
+
                     filters.append((name, opfunc, argument))
                 elif header == "Limit":
                     limit = int(argument)
@@ -4042,14 +4044,18 @@ class EventStatus(object):
     def get_events(self, only_host = None):
         result = []
         for event in self._events:
-            # A small optimization for check_mkevents
-            if only_host and event["host"] != only_host:
+            # Optimize filters that are set by the check_mkevents active check. Since users
+            # may have a lot of those checks running, it is a good idea to optimize this.
+            if only_host and event["host"] not in only_host:
                 continue
+
             event_line = []
             for col_name, col_default in event_columns:
                 without_prefix = col_name[6:] # drop event_
                 event_line.append(event.get(without_prefix, col_default))
+
             result.append(event_line)
+
         return [ e[0] for e in event_columns ], result
 
 

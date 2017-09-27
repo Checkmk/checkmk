@@ -1,0 +1,11 @@
+Title: check_mkevents: Improved performance
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506505155
+Class: fix
+
+The performance of the check check_mkevents has been improved. This
+check is used when you configure the WATO rule "Check event state in Event Console".

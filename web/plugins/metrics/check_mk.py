@@ -3776,6 +3776,12 @@ for what, descr, unit, color in [
         "color" : color,
     }
 
+metric_info["dhcp_discovery"] = {
+    "title" : _("DHCP Discovery messages"),
+    "unit"  : "count",
+    "color" : "11/a",
+}
+
 metric_info["dhcp_requests"] = {
     "title" : _("DHCP received requests"),
     "unit"  : "count",

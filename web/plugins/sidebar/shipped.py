@@ -649,13 +649,17 @@ def get_tactical_overview_data(extra_filter_headers):
                         stat_only=True,
                         extra_headers=extra_filter_headers)
 
-        try:
-            sites.live().set_auth_domain("ec")
-            event_data = sites.live().query_summed_stats(event_query)
-        except livestatus.MKLivestatusNotFoundError:
-            event_data = [0, 0, 0]
-        finally:
-            sites.live().set_auth_domain("read")
+
+        if config.user.may("mkeventd.see_in_tactical_overview"):
+            try:
+                sites.live().set_auth_domain("ec")
+                event_data = sites.live().query_summed_stats(event_query)
+            except livestatus.MKLivestatusNotFoundError:
+                event_data = [0, 0, 0]
+            finally:
+                sites.live().set_auth_domain("read")
+        else:
+                event_data = [0, 0, 0]
 
     except livestatus.MKLivestatusNotFoundError:
         return None, None, None, None
@@ -717,8 +721,11 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
                     ("view_name", "uncheckedsvc"),
                 ],
             },
-        },
-        {
+        }
+    ]
+
+    if config.user.may("mkeventd.see_in_tactical_overview"):
+        rows.append({
             "what"  : "event",
             "title" : _("Events"),
             "data"  : event_data,
@@ -743,8 +750,7 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
                 ],
                 "stale"     : None,
             },
-        },
-    ]
+        })
 
     html.open_table(class_=["content_center", "tacticaloverview"], cellspacing=2, cellpadding=0, border=0)
 

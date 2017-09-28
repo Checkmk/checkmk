@@ -406,6 +406,9 @@ setup:
 	$(MAKE) -C tests setup
 	$(MAKE) -C omd setup
 
+linesofcode:
+	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n
+
 ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	  autoreconf --install --include=m4
 

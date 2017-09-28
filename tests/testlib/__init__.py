@@ -292,15 +292,39 @@ class Site(object):
         else:
             return open("%s/%s" % (self.root, rel_path), "w").write(content)
 
+
+    def write_file(self, rel_path, content):
+        if not self._is_running_as_site_user():
+            p = self.execute(["dd", "of=%s/%s" % (self.root, rel_path)],
+                             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            p.communicate(content)
+            if p.wait() != 0:
+                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        else:
+            return open("%s/%s" % (self.root, rel_path), "w").write(content)
+
+
+    def delete_file(self, rel_path):
+        if not self._is_running_as_site_user():
+            p = self.execute(["rm", os.path.join(self.root, rel_path)],
+                             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            p.communicate()
+            if p.wait() != 0:
+                raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        else:
+            return os.unlink(os.path.join(self.root, rel_path))
+
+
     def create_rel_symlink(self, link_rel_target, rel_link_name):
         if not self._is_running_as_site_user():
-            p = self.execute(["ln", "-s", link_rel_target, os.path.join(rel_link_name)],
+            p = self.execute(["ln", "-s", link_rel_target, rel_link_name],
                              stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             p.communicate()
             if p.wait() != 0:
                 raise Exception("Failed to create symlink from %s to ./%s. Exit-Code: %d" % (rel_link_name, link_rel_target, p.wait()))
         else:
-            return os.symlink(os.path.join(self.root, link_rel_target), os.path.join(self.root, rel_link_name))
+            return os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
+
 
     def file_exists(self, rel_path):
         if not self._is_running_as_site_user():
@@ -455,6 +479,7 @@ class Site(object):
     def rm_if_not_reusing(self):
         if not self.reuse:
             self.rm()
+            return True
 
 
     def rm(self, site_id=None):

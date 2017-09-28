@@ -1,0 +1,13 @@
+Title: Events in tactical overview can now be disabled
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p14
+Date: 1506585388
+
+A new permission "See events in tactical overview snapin" has been added
+that can be used to disable the "Events" row in the tactical overview
+snapin.

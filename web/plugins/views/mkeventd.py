@@ -135,6 +135,12 @@ if mkeventd_enabled:
              "and that do not have been assigned specific contact groups to via the event rule."),
            [ "user", "admin", "guest" ])
 
+    config.declare_permission("mkeventd.see_in_tactical_overview",
+           _("See events in tactical overview snapin"),
+           _("Whether or not the user is permitted to see the number of open events in the "
+             "tactical overview snapin."),
+           [ "user", "admin", "guest" ])
+
     multisite_datasources["mkeventd_events"] = {
         "title"       : _("Event Console: Current Events"),
         "table"       : (query_ec_table, ["eventconsoleevents"]),

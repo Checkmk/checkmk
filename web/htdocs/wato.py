@@ -3026,7 +3026,9 @@ class ModeDiscovery(WatoMode):
         if self._fixall:
             if table_source == self.SERVICE_VANISHED:
                 return self.SERVICE_REMOVED
-            else:
+            elif table_source == self.SERVICE_IGNORED:
+                return self.SERVICE_IGNORED
+            else: #table_source in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED]
                 return self.SERVICE_MONITORED
         else:
             bulk_target = None

@@ -1,0 +1,11 @@
+Title: Service discovery: Fixed 'Fix all missing/vanished' action: Disabled services were listed below 'Monitored services' after that button click.
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1506597290
+
+

@@ -2770,6 +2770,9 @@ if mkeventd_enabled:
                  _("Log level for managing already created events")),
                 ("cmk.mkeventd.StatusServer", _("Status queries"),
                  _("Log level for handling of incoming queries to the status socket")),
+                ("cmk.mkeventd.lock", _("Locking"),
+                 _("Log level for the locking mechanics. Setting this to debug will enable "
+                   "log entries for each lock/unlock action.")),
                 ]:
             elements.append(
                 (component, DropdownChoice(

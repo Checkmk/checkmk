@@ -291,6 +291,40 @@ filter_operators = {
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
 
+class ECLock(object):
+    def __init__(self, ident):
+        super(ECLock, self).__init__()
+        self._lock   = threading.Lock()
+        self.logger = logger.getChild("lock.%s" % ident)
+
+
+    def acquire(self, blocking=True):
+        self.logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
+
+        ret = self._lock.acquire(blocking)
+        if ret == True:
+            self.logger.debug("[%s] Acquired lock", threading.current_thread().name)
+        else:
+            self.logger.debug("[%s] Non-blocking aquire failed", threading.current_thread().name)
+
+        return ret
+
+
+    def release(self):
+        self.logger.debug("[%s] Releasing lock", threading.current_thread().name)
+        self._lock.release()
+
+
+    def __enter__(self):
+        self.acquire()
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release()
+        return False # Do not swallow exceptions
+
+
+
 def bail_out(reason):
     logger.error("FATAL ERROR: %s" % reason)
     sys.exit(1)
@@ -1129,7 +1163,7 @@ def get_logfile_timespan(path):
 #   '----------------------------------------------------------------------'
 class Perfcounters(object):
     def __init__(self):
-        self._lock = thread.allocate_lock()
+        self._lock = ECLock("perfcounters")
         # Event counters
         self._counters = {
             "messages":   0,
@@ -4700,12 +4734,16 @@ def load_configuration():
                 "cmk.mkeventd.EventServer":  log_level,
                 "cmk.mkeventd.EventStatus":  log_level,
                 "cmk.mkeventd.StatusServer": log_level,
+                "cmk.mkeventd.lock":         log_level,
             }
 
         logger.setLevel(g_config["log_level"]["cmk.mkeventd"])
         logger.getChild("EventServer").setLevel(g_config["log_level"]["cmk.mkeventd.EventServer"])
         logger.getChild("EventStatus").setLevel(g_config["log_level"]["cmk.mkeventd.EventStatus"])
         logger.getChild("StatusServer").setLevel(g_config["log_level"]["cmk.mkeventd.StatusServer"])
+
+        if "cmk.mkeventd.lock" in g_config["log_level"]:
+            logger.getChild("lock").setLevel(g_config["log_level"]["cmk.mkeventd.lock"])
 
     # Configure the auto deleting indexes in the DB when mongodb is enabled
     if g_config['archive_mode'] == 'mongodb':
@@ -4796,9 +4834,9 @@ The following paths are used by the Event Console:
 #   '----------------------------------------------------------------------'
 
 # Create locks for global data structures
-lock_eventstatus = thread.allocate_lock()
-lock_configuration = thread.allocate_lock()
-lock_logging = thread.allocate_lock()
+lock_eventstatus = ECLock("eventstatus")
+lock_configuration = ECLock("configuration")
+lock_logging = ECLock("history")
 
 if __name__ == "__main__":
     os.unsetenv("LANG")

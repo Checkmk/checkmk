@@ -1279,8 +1279,9 @@ class EventServer(threading.Thread):
 
 
     def __init__(self):
+        super(EventServer, self).__init__(name="EventServer")
         # TODO: Change from daemon mode to explicit and clean termination
-        super(EventServer, self).__init__(name="EventServer", daemon=True)
+        self.setDaemon(True)
         self._syslog       = None
         self._syslog_tcp   = None
         self._snmptrap     = None
@@ -3117,8 +3118,9 @@ class EventServer(threading.Thread):
 
 class StatusServer(threading.Thread):
     def __init__(self):
+        super(StatusServer, self).__init__(name="StatusServer")
         # TODO: Change from daemon mode to explicit and clean termination
-        super(StatusServer, self).__init__(name="StatusServer", daemon=True)
+        self.setDaemon(True)
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False

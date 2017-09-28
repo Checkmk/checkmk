@@ -1,0 +1,11 @@
+Title: infoblox_dhcp_stats: Fixed crash of graphs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506586333
+Class: fix
+
+One definition has been missing and led into a crash of the graphs for
+these services.

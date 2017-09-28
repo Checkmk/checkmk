@@ -152,7 +152,7 @@ unpack:
 		    unzip -o ../src/$$M ; \
 		fi \
 	    done
-	set -e ; for p in $(PATCHES) ; do \
+	set -e ; for p in $$(echo $(PATCHES) | tr " " "\n" | sort); do \
 	    echo "applying $$p..." ; \
 	    patch -p1 -b -d dest < $$p ; \
 	done

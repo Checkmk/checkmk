@@ -293,17 +293,6 @@ class Site(object):
             return open("%s/%s" % (self.root, rel_path), "w").write(content)
 
 
-    def write_file(self, rel_path, content):
-        if not self._is_running_as_site_user():
-            p = self.execute(["dd", "of=%s/%s" % (self.root, rel_path)],
-                             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            p.communicate(content)
-            if p.wait() != 0:
-                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
-        else:
-            return open("%s/%s" % (self.root, rel_path), "w").write(content)
-
-
     def delete_file(self, rel_path):
         if not self._is_running_as_site_user():
             p = self.execute(["rm", os.path.join(self.root, rel_path)],

@@ -39,7 +39,7 @@ import time
 import sys
 import getopt
 import signal
-import thread
+import threading
 import pprint
 import re
 import select
@@ -1239,12 +1239,13 @@ class Perfcounters(object):
 #   |  Verarbeitung und Klassifizierung von eingehenden Events.            |
 #   '----------------------------------------------------------------------'
 
-class EventServer(object):
+class EventServer(threading.Thread):
     month_names = { "Jan": 1, "Feb": 2, "Mar": 3, "Apr":  4, "May":  5, "Jun":  6,
                     "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12, }
 
 
     def __init__(self):
+        super(EventServer, self).__init__(name="EventServer")
         self._syslog       = None
         self._syslog_tcp   = None
         self._snmptrap     = None
@@ -3079,9 +3080,9 @@ class EventServer(object):
 #   |  Beantworten von Status- und Kommandoanfragen über das UNIX-Socket   |
 #   '----------------------------------------------------------------------'
 
-class StatusServer(object):
+class StatusServer(threading.Thread):
     def __init__(self):
-        super(StatusServer, self).__init__()
+        super(StatusServer, self).__init__(name="StatusServer")
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
@@ -3571,12 +3572,9 @@ class StatusServer(object):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_thread(run_function, args=()):
-    return thread.start_new_thread(run_function, args)
-
 def run_eventd():
-    run_thread(g_status_server.run)
-    run_thread(g_event_server.run)
+    g_status_server.start()
+    g_event_server.start()
     now = time.time()
     next_housekeeping = now + g_config["housekeeping_interval"]
     next_retention = now + g_config["retention_interval"]

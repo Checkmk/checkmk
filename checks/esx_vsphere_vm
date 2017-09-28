@@ -471,6 +471,8 @@ def parse_esx_vsphere_vm_mounted_devices(info):
     data = esx_vsphere_vm_convert(info).get("config.hardware.device", [])
     parsed = {}
     for device_data in " ".join(data).split("@@"):
+        if "|" not in device_data:
+            continue
         device_attrs = {}
         for entry in device_data.split("|"):
             k, v = entry.split(" ", 1)

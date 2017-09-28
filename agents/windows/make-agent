@@ -1,0 +1,53 @@
+#!/bin/bash
+# The script builds Windows agent within a chroot jail.
+#
+# Possible targets given as parameter(s) to this script:
+#    setup    - install dependencies for chroot
+#    chroot   - create a chroot for building Windows agent
+#    *        - other targets passed to make within chroot, see Makefile
+
+targets="$@" # no parameter -> default make target
+setup_target=setup
+chroot_target=chroot
+
+check_no_of_targets() {
+    if [ $1 != 1 ] ; then
+        echo "You cannot combine $2 with other targets."
+        exit 1
+    fi
+}
+
+# setup target: install dependencies for chroot
+if [[ " $targets " =~ " $setup_target " ]] ; then
+    check_no_of_targets $# $setup_target
+    sudo apt-get install \
+         nsis \
+         lcab \
+         debootstrap \
+         debian-archive-keyring
+    exit
+fi
+
+# chroot target: create a chroot for building Windows agent
+if [[ " $targets " =~ " $chroot_target " ]] ; then
+    check_no_of_targets $# $chroot_target
+    sudo ./make-chroot
+    exit
+fi
+
+# all other targets: assume chroot exists and pass targets to make inside chroot
+
+base="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
+mnt=$base/agents/windows/chroot
+
+if [ ! -d "$mnt/build" ] ; then
+    echo "Did you forget to call '${BASH_SOURCE[0]} chroot' first?"
+    exit 1
+fi
+
+sudo ./do-chroot "cd build/agents/windows; make $targets"
+
+# Some cleanup: chown build artifacts to the original user.
+find . -maxdepth 1 -regextype egrep \
+-regex '(.*\.(exe|msi|rc|res))|.*\/obj.*|.*build_version|.*plugins|.*msibuild' \
+-exec sudo chown -R $USER:$USER {} \;

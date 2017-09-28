@@ -10,8 +10,8 @@ MIRROR=http://de.archive.ubuntu.com/ubuntu
 export HOSTNAME=cmk-windows-agent-chroot
 export LC_ALL=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LANG=en_US.UTF-8
 
-BASE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MNT=$BASE/chroot
+BASE="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
+MNT=$BASE/agents/windows/chroot
 
 cleanup_chroot() {
     PIDS=$(lsof -Fp $MNT 2>/dev/null | cut -dp -f2)
@@ -42,10 +42,63 @@ rm -rf $MNT/*
 
 echo "+ INSTALLING SYSTEM"
 
+package_names=(
+    "ca-certificates"
+    "gcc"
+    "gettext"
+    "git"
+    "lcab"
+    "libauthen-sasl-perl"
+    "libc6-dev"
+    "libencode-locale-perl"
+    "libfile-listing-perl"
+    "libfont-afm-perl"
+    "libglib2.0-dev"
+    "libgsf-1-dev"
+    "libgtk2.0-dev"
+    "libhtml-form-perl"
+    "libhtml-format-perl"
+    "libhtml-parser-perl"
+    "libhtml-tagset-perl"
+    "libhtml-tree-perl"
+    "libhttp-cookies-perl"
+    "libhttp-daemon-perl"
+    "libhttp-date-perl"
+    "libhttp-message-perl"
+    "libhttp-negotiate-perl"
+    "libio-html-perl"
+    "libio-socket-ssl-perl"
+    "liblwp-mediatypes-perl"
+    "liblwp-protocol-https-perl"
+    "libmailtools-perl"
+    "libnet-http-perl"
+    "libnet-smtp-ssl-perl"
+    "libnet-ssleay-perl"
+    "libperl-dev"
+    "libtimedate-perl"
+    "liburi-perl"
+    "libwww-perl"
+    "libwww-robotrules-perl"
+    "libxml-parser-perl"
+    "linux-base"
+    "locales"
+    "make"
+    "mingw-w64"
+    "nsis"
+    "openssl"
+    "patch"
+    "perl-openssl-defaults"
+    "pkg-config"
+    "python2.7"
+    "uuid-dev"
+    "wine-stable"
+)
+packages=$(IFS=,; echo "${package_names[*]}")
+
 # TODO: Would use --force-check-gpg, but not supported on wheezy (root server)
 debootstrap \
     --components=main,universe \
-    --include=linux-base,locales,mingw-w64,wine-stable \
+    --include="$packages" \
     --arch amd64 $DISTRO $MNT $MIRROR
 
 # Need to be installed for installation.
@@ -77,6 +130,13 @@ debian_chroot=$(hostname)
 PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\$ '
 PS1="\[\e]0;\${debian_chroot:+(\$debian_chroot)}\u@\h: \w\a\]\$PS1"
 EOF
+
+# Debian pkg installation does not seem to link python executable
+if [ ! -h $MNT/usr/bin/python ] ; then
+    cd $MNT/usr/bin
+    ln -s python2.7 python
+    cd -
+fi
 
 mkdir $MNT/build
 

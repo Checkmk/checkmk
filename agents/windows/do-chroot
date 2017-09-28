@@ -1,9 +1,14 @@
 #!/bin/bash
+
+# $1: cmd(s) to be executed within chroot jail
+# if non-existent, enter chroot jail with 'bash -l'
+CMD="$1"
+
 export HOSTNAME=cmk-windows-agent-chroot
 unset LANG
 
-BASE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MNT=$BASE/chroot
+BASE="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
+MNT=$BASE/agents/windows/chroot
 
 if [ ! -e $MNT/proc/self ] ; then
     mount -t proc proc $MNT/proc
@@ -21,7 +26,11 @@ if [ ! -e $MNT/build/Makefile ] ; then
     mount -o bind $BASE $MNT/build
 fi
 
-chroot chroot bash -l
+if [ -n "$CMD" ] ; then
+    chroot chroot bash -c "$CMD"
+else
+    chroot chroot bash -l
+fi
 
 umount $MNT/build
 umount $MNT/dev/pts

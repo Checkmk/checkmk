@@ -215,10 +215,3 @@ clean:
 
 mrproper: clean
 	rm -f *.exe
-
-setup:
-	sudo apt-get install \
-	    nsis \
-	    lcab \
-	    debootstrap \
-	    debian-archive-keyring

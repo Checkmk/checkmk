@@ -1,0 +1,18 @@
+Title: Failed notification checking is now limited to 7 days
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1506680272
+
+This change fixes a GUI (sidebar) rendering performance issue which
+was caused by the check for failed notifications. For individual 
+admin users the GUI could be very slow because the core was searching
+far in the past of the monitoring history.
+
+The failed notification checking is now being limited by a configurable
+"Failed notification horizon" which is set to 7 days be default. You can
+configure this value according to your needs in the Global settings.

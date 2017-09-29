@@ -87,6 +87,8 @@ quicksearch_dropdown_limit = 80
 # Quicksearch search order
 quicksearch_search_order = [("h", "continue"), ("al", "continue"), ("ad", "continue"), ("s", "continue")]
 
+failed_notification_horizon = 7 * 60 * 60 * 24
+
 #    _     _           _ _
 #   | |   (_)_ __ ___ (_) |_ ___
 #   | |   | | '_ ` _ \| | __/ __|

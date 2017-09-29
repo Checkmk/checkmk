@@ -499,6 +499,7 @@ class MKClientError(Exception):
 
 class Queries(object):
     def __init__(self, sock):
+        super(Queries, self).__init__()
         self._socket = sock
         self._buffer = ""
 
@@ -518,7 +519,62 @@ class Queries(object):
                 break
             self._buffer += data
         request, self._buffer = parts
-        return request.decode("utf-8").splitlines()
+        return Query(request.decode("utf-8").splitlines())
+
+
+class Query(object):
+    _allowed_methods = set(["GET", "REPLICATE", "COMMAND"])
+    _allowed_formats = set(["python", "plain", "json"])
+    _allowed_headers = set(["OutputFormat", "Filter", "Columns"])
+
+    def __init__(self, raw_query):
+        super(Query, self).__init__()
+        self._raw_query = raw_query
+        self._from_raw_query()
+
+
+    def _from_raw_query(self):
+        self._parse_method_and_table()
+        self._parse_header_lines()
+
+
+    def _parse_method_and_table(self):
+        parts = self._raw_query[0].split(None, 1)
+        if len(parts) != 2:
+            raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
+
+        method, method_arg = parts
+
+        if method not in self._allowed_methods:
+            raise MKClientError("Invalid method %s (allowed are %s) " %
+                                            ", ".join(self._allowed_methods))
+
+        self.method = method
+        # TODO: Subclass Query for the different query types to parse and validate
+        # the args query type specific
+        self.method_arg = method_arg
+
+
+    def _parse_header_lines(self):
+        self.output_format = "python"
+
+        self.header_lines = []
+        for line in self._raw_query[1:]:
+            header, argument = line.rstrip("\n").split(":", 1)
+            argument = argument.lstrip(" ")
+
+            if header == "OutputFormat":
+                if argument not in self._allowed_formats:
+                    raise MKClientError("Invalid output format \"%s\" "
+                            "(allowed are: %s)" % ", ".join(self._allowed_formats))
+
+                self.output_format = argument
+            else:
+                self.header_lines.append(line)
+
+
+    def __repr__(self):
+        return repr("\\n".join(self._raw_query))
 
 
 #.
@@ -3251,42 +3307,26 @@ class StatusServer(ECServerThread):
 
     def handle_client(self, client_socket, allow_commands, client_ip):
         for query in Queries(client_socket):
-            self.logger.verbose("Client livestatus query: %s" % "\\n".join(query))
-            parts = query[0].split(None, 1)
-            if len(parts) != 2:
-                raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
-
-            method, table = parts
-            output_format = "python"
-            # TODO(sp) Handle all header lines centrally in a separate method
-            header_lines = []
-            for line in query[1:]:
-                header, argument = line.rstrip().split(":", 1)
-                argument = argument.strip()
-                if header == "OutputFormat":
-                    output_format = argument
-                else:
-                    header_lines.append(line)
+            self.logger.verbose("Client livestatus query: %r" % query)
 
             with lock_eventstatus:
-                if method == "GET":
-                    response = self.handle_get_request(table, header_lines)
+                if query.method == "GET":
+                    response = self.handle_get_request(query.method_arg, query.header_lines)
 
-                elif method == "REPLICATE":
-                    response = self.handle_replicate(table, client_ip)
+                elif query.method == "REPLICATE":
+                    response = self.handle_replicate(query.method_arg, client_ip)
 
-                elif method == "COMMAND":
+                elif query.method == "COMMAND":
                     if not allow_commands:
                         raise MKClientError("Sorry. Commands are disallowed via TCP")
-                    self.handle_command_request(table)
+                    self.handle_command_request(query.method_arg)
                     response = None
 
                 else:
-                    raise MKClientError("Invalid method %s (allowed are GET, COMMAND "
-                                        "and REPLICATE)" % method)
+                    raise NotImplementedError()
 
                 try:
-                    self._answer_query(client_socket, output_format, response)
+                    self._answer_query(client_socket, query.output_format, response)
                 except socket.error as e:
                     if e.errno == 32: # Broken pipe -> ignore this
                         pass
@@ -3311,8 +3351,7 @@ class StatusServer(ECServerThread):
             client_socket.sendall("\n")
 
         else:
-            raise MKClientError("Invalid output format \"%s\" "
-                    "(allowed are python, json and plain)" % output_format)
+            raise NotImplementedError()
 
 
     # All commands are already locked with lock_eventstatus

@@ -105,57 +105,6 @@ syslog_facilities = [ "kern", "user", "mail", "daemon", "auth", "syslog", "lpr",
                       "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7",
                       None, None, None, None, None, None, None, "snmptrap" ]
 
-# If you need a new column here, then these are the places to change:
-# bin/mkeventd:
-# - add column to the end of event_columns
-# - add column to grepping_filters if it is a str column
-# - deal with convert_history_line() (if not a str column)
-# - make sure that the new column is filled at *every* place where
-#   an event is being created:
-#   * create_event_from_trap()
-#   * create_event_from_line()
-#   * handle_absent_event()
-#   * _create_overflow_event()
-# - When loading the status file add the possibly missing column to all
-#   loaded events (load_status())
-# - Maybe add matching/rewriting for the new column
-# - write the actual code using the new column
-# web:
-# - Add column painter for the new column
-# - Create a sorter
-# - Create a filter
-# - Add painter and filter to all views where appropriate
-# - maybe add WATO code for matching rewriting
-# - do not forget event_rule_matches() in web!
-# - maybe add a field into the event simulator
-
-event_columns = [
-    ( "event_id",                          1 ),
-    ( "event_count",                       1 ),
-    ( "event_text",                       "" ),
-    ( "event_first",                     0.0 ),
-    ( "event_last",                      0.0 ),
-    ( "event_comment",                    "" ),
-    ( "event_sl",                          0 ), # filter fehlt
-    ( "event_host",                       "" ),
-    ( "event_contact",                    "" ),
-    ( "event_application",                "" ),
-    ( "event_pid",                         0 ),
-    ( "event_priority",                    5 ),
-    ( "event_facility",                    1 ),
-    ( "event_rule_id",                    "" ),
-    ( "event_state",                       0 ),
-    ( "event_phase",                      "" ),
-    ( "event_owner",                      "" ),
-    ( "event_match_groups",               "" ),
-    ( "event_contact_groups",             "" ),
-    ( "event_ipaddress",                  "" ), # introduced in 1.2.7
-    ( "event_orig_host",                  "" ),
-    ( "event_contact_groups_precedence",  "host" ), # introduced in 1.4.0b1
-    ( "event_core_host",                  "" ), # introduced in 1.5.0i1
-    ( "event_host_in_downtime",           False ), # introduced in 1.5.0i1
-]
-
 grepping_filters = [
     'event_text',
     'event_comment',
@@ -167,19 +116,6 @@ grepping_filters = [
     'event_owner',
     'event_ipaddress',
     'event_core_host',
-]
-
-history_columns = [
-    ( "history_line",         0 ), # Line number in event history file
-    ( "history_time",       0.0 ),
-    ( "history_what",        "" ),
-    ( "history_who",         "" ),
-    ( "history_addinfo",     "" ),
-] + event_columns
-
-rule_columns = [
-    ( "rule_id",             "" ),
-    ( "rule_hits",            0 ),
 ]
 
 # Alas, we often have no clue about the actual encoding, so we have to guess:
@@ -859,7 +795,7 @@ def log_event_history_to_mongodb(event, what, who, addinfo):
 
 def get_event_history_from_mongodb(filters, limit):
     history_entries = []
-    headers = [ c[0] for c in history_columns ]
+    headers = [ c[0] for c in g_status_server.table_history.columns ]
 
     if not g_mongo_conn:
         connect_mongodb()
@@ -915,7 +851,7 @@ def get_event_history_from_mongodb(filters, limit):
             entry['who'],
             entry['addinfo'],
         ]
-        for colname, defval in event_columns:
+        for colname, defval in g_status_server.table_events.columns:
             key = colname[6:] # drop "event_"
             item.append(entry['event'].get(key, defval))
         history_entries.append(item)
@@ -949,7 +885,7 @@ def log_event_history(event, what, who="", addinfo=""):
 # 1: type of entry (keyword)
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
-# 4-oo: event_columns
+# 4-oo: StatusTableEvents.columns
 def log_event_history_to_file(event, what, who, addinfo):
     with lock_logging:
         columns = [
@@ -958,7 +894,7 @@ def log_event_history_to_file(event, what, who, addinfo):
             scrub_string(who),
             scrub_string(addinfo) ]
         columns += [ quote_tab(event.get(colname[6:], defval)) # drop "event_"
-                     for colname, defval in event_columns ]
+                     for colname, defval in g_status_server.table_events.columns ]
 
         get_logfile("history").write("\t".join(map(to_utf8, columns)) + "\n")
 
@@ -1063,7 +999,7 @@ def get_event_history(filters, limit):
 
 def get_event_history_from_file(filters, limit):
     history_entries = []
-    headers = [ c[0] for c in history_columns ]
+    headers = [ c[0] for c in g_status_server.table_history.columns ]
     log_dir = g_state_dir + "/history"
     if not os.path.exists(log_dir):
         return headers, []
@@ -1182,25 +1118,28 @@ def get_logfile_timespan(path):
 #   |  Helper class for performance counting                               |
 #   '----------------------------------------------------------------------'
 class Perfcounters(object):
+    _counter_names = [
+        "messages",
+        "rule_tries",
+        "rule_hits",
+        "drops",
+        "overflows",
+        "events",
+        "connects",
+    ]
+
+    # Average processing times
+    _weights = {
+        "processing": 0.99, # event processing
+        "sync":       0.95, # Replication sync
+        "request":    0.95, # Client requests
+    }
+
     def __init__(self):
         self._lock = ECLock("perfcounters")
-        # Event counters
-        self._counters = {
-            "messages":   0,
-            "rule_tries": 0,
-            "rule_hits":  0,
-            "drops":      0,
-            "overflows":  0,
-            "events":     0,
-            "connects":   0,
-        }
 
-        # Average processing times
-        self._weights = {
-            "processing": 0.99, # event processing
-            "sync":       0.95, # Replication sync
-            "request":    0.95, # Client requests
-        }
+        # Initialize counters
+        self._counters = dict([ (n, 0) for n in self._counter_names ])
 
         self._old_counters = {}
         self._rates = {}
@@ -1246,18 +1185,18 @@ class Perfcounters(object):
             self._old_counters = self._counters.copy()
 
 
-    def status_columns(self):
-        with self._lock:
-            columns = []
-            for name in self._counters:
-                columns.append(("status_" + name, 0.0))
-                columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
-                columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
+    @classmethod
+    def status_columns(cls):
+        columns = []
+        for name in cls._counter_names:
+            columns.append(("status_" + name, 0.0))
+            columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
+            columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
 
-            for name in self._weights:
-                columns.append(("status_average_%s_time" % name, 0.0))
+        for name in cls._weights:
+            columns.append(("status_average_%s_time" % name, 0.0))
 
-            return columns
+        return columns
 
 
     def get_status(self):
@@ -1319,15 +1258,17 @@ class EventServer(ECServerThread):
         self.host_config = HostConfig()
 
 
-    def status_columns(self):
-        columns  = self._general_columns()
-        columns += g_perfcounters.status_columns()
-        columns += self._replication_columns()
-        columns += self._event_limit_columns()
+    @classmethod
+    def status_columns(cls):
+        columns  = cls._general_columns()
+        columns += Perfcounters.status_columns()
+        columns += cls._replication_columns()
+        columns += cls._event_limit_columns()
         return columns
 
 
-    def _general_columns(self):
+    @classmethod
+    def _general_columns(cls):
         return [
             ("status_config_load_time",    0),
             ("status_num_open_events",     0),
@@ -1335,7 +1276,8 @@ class EventServer(ECServerThread):
         ]
 
 
-    def _replication_columns(self):
+    @classmethod
+    def _replication_columns(cls):
         return [
             ("status_replication_slavemode", ""),
             ("status_replication_last_sync", 0.0),
@@ -1343,7 +1285,8 @@ class EventServer(ECServerThread):
         ]
 
 
-    def _event_limit_columns(self):
+    @classmethod
+    def _event_limit_columns(cls):
         return [
             ("status_event_limit_host",    0),
             ("status_event_limit_rule",    0),
@@ -3087,17 +3030,16 @@ class EventServer(ECServerThread):
         return new_event
 
 
-
 #.
-#   .--StatusServer--------------------------------------------------------.
-#   |     ____  _        _             ____                                |
-#   |    / ___|| |_ __ _| |_ _   _ ___/ ___|  ___ _ ____   _____ _ __      |
-#   |    \___ \| __/ _` | __| | | / __\___ \ / _ \ '__\ \ / / _ \ '__|     |
-#   |     ___) | || (_| | |_| |_| \__ \___) |  __/ |   \ V /  __/ |        |
-#   |    |____/ \__\__,_|\__|\__,_|___/____/ \___|_|    \_/ \___|_|        |
+#   .--Status Queries------------------------------------------------------.
+#   |  ____  _        _                ___                  _              |
+#   | / ___|| |_ __ _| |_ _   _ ___   / _ \ _   _  ___ _ __(_) ___  ___    |
+#   | \___ \| __/ _` | __| | | / __| | | | | | | |/ _ \ '__| |/ _ \/ __|   |
+#   |  ___) | || (_| | |_| |_| \__ \ | |_| | |_| |  __/ |  | |  __/\__ \   |
+#   | |____/ \__\__,_|\__|\__,_|___/  \__\_\\__,_|\___|_|  |_|\___||___/   |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Beantworten von Status- und Kommandoanfragen über das UNIX-Socket   |
+#   | Parsing and processing of status queries                             |
 #   '----------------------------------------------------------------------'
 
 class Queries(object):
@@ -3191,13 +3133,13 @@ class QueryGET(Query):
 
         # TODO: Move to table object and add a reference to the table object here
         if self.table == "events":
-            self.columns = event_columns
+            self.columns = g_status_server.table_events.columns
         elif self.table == "history":
-            self.columns = history_columns
+            self.columns = g_status_server.table_history.columns
         elif self.table == "rules":
-            self.columns = rule_columns
+            self.columns = g_status_server.table_rules.columns
         elif self.table == "status":
-            self.columns = g_event_server.status_columns()
+            self.columns = g_status_server.table_status.columns
         else:
             raise NotImplementedError()
 
@@ -3295,6 +3237,116 @@ class QueryCOMMAND(Query):
     pass
 
 
+#.
+#   .--Status Tables-------------------------------------------------------.
+#   |     ____  _        _               _____     _     _                 |
+#   |    / ___|| |_ __ _| |_ _   _ ___  |_   _|_ _| |__ | | ___  ___       |
+#   |    \___ \| __/ _` | __| | | / __|   | |/ _` | '_ \| |/ _ \/ __|      |
+#   |     ___) | || (_| | |_| |_| \__ \   | | (_| | |_) | |  __/\__ \      |
+#   |    |____/ \__\__,_|\__|\__,_|___/   |_|\__,_|_.__/|_|\___||___/      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Definitions of the tables available for status queries               |
+#   '----------------------------------------------------------------------'
+# If you need a new column here, then these are the places to change:
+# bin/mkeventd:
+# - add column to the end of StatusTableEvents.columns
+# - add column to grepping_filters if it is a str column
+# - deal with convert_history_line() (if not a str column)
+# - make sure that the new column is filled at *every* place where
+#   an event is being created:
+#   * create_event_from_trap()
+#   * create_event_from_line()
+#   * handle_absent_event()
+#   * _create_overflow_event()
+# - When loading the status file add the possibly missing column to all
+#   loaded events (load_status())
+# - Maybe add matching/rewriting for the new column
+# - write the actual code using the new column
+# web:
+# - Add column painter for the new column
+# - Create a sorter
+# - Create a filter
+# - Add painter and filter to all views where appropriate
+# - maybe add WATO code for matching rewriting
+# - do not forget event_rule_matches() in web!
+# - maybe add a field into the event simulator
+
+
+class StatusTable(object):
+    columns = []
+
+    def __init__(self):
+        super(StatusTable, self).__init__()
+        #self.column_names = [ c[0] for c in self.columns ]
+
+
+
+class StatusTableEvents(StatusTable):
+    columns = [
+        ( "event_id",                          1 ),
+        ( "event_count",                       1 ),
+        ( "event_text",                       "" ),
+        ( "event_first",                     0.0 ),
+        ( "event_last",                      0.0 ),
+        ( "event_comment",                    "" ),
+        ( "event_sl",                          0 ), # filter fehlt
+        ( "event_host",                       "" ),
+        ( "event_contact",                    "" ),
+        ( "event_application",                "" ),
+        ( "event_pid",                         0 ),
+        ( "event_priority",                    5 ),
+        ( "event_facility",                    1 ),
+        ( "event_rule_id",                    "" ),
+        ( "event_state",                       0 ),
+        ( "event_phase",                      "" ),
+        ( "event_owner",                      "" ),
+        ( "event_match_groups",               "" ),
+        ( "event_contact_groups",             "" ),
+        ( "event_ipaddress",                  "" ), # introduced in 1.2.7
+        ( "event_orig_host",                  "" ),
+        ( "event_contact_groups_precedence",  "host" ), # introduced in 1.4.0b1
+        ( "event_core_host",                  "" ), # introduced in 1.5.0i1
+        ( "event_host_in_downtime",           False ), # introduced in 1.5.0i1
+    ]
+
+
+
+class StatusTableHistory(StatusTable):
+    columns = [
+        ( "history_line",         0 ), # Line number in event history file
+        ( "history_time",       0.0 ),
+        ( "history_what",        "" ),
+        ( "history_who",         "" ),
+        ( "history_addinfo",     "" ),
+    ] + StatusTableEvents.columns
+
+
+
+class StatusTableRules(StatusTable):
+    columns = [
+        ( "rule_id",             "" ),
+        ( "rule_hits",            0 ),
+    ]
+
+
+
+class StatusTableStatus(StatusTable):
+    columns = EventServer.status_columns()
+
+
+
+#.
+#   .--StatusServer--------------------------------------------------------.
+#   |     ____  _        _             ____                                |
+#   |    / ___|| |_ __ _| |_ _   _ ___/ ___|  ___ _ ____   _____ _ __      |
+#   |    \___ \| __/ _` | __| | | / __\___ \ / _ \ '__\ \ / / _ \ '__|     |
+#   |     ___) | || (_| | |_| |_| \__ \___) |  __/ |   \ V /  __/ |        |
+#   |    |____/ \__\__,_|\__|\__,_|___/____/ \___|_|    \_/ \___|_|        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Beantworten von Status- und Kommandoanfragen über das UNIX-Socket   |
+#   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
     def __init__(self):
@@ -3302,6 +3354,11 @@ class StatusServer(ECServerThread):
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
+
+        self.table_events  = StatusTableEvents()
+        self.table_history = StatusTableHistory()
+        self.table_rules   = StatusTableRules()
+        self.table_status  = StatusTableStatus()
 
 
     def open_sockets(self):
@@ -4157,17 +4214,17 @@ class EventStatus(object):
                 continue
 
             event_line = []
-            for col_name, col_default in event_columns:
+            for col_name, col_default in g_status_server.table_events.columns:
                 without_prefix = col_name[6:] # drop event_
                 event_line.append(event.get(without_prefix, col_default))
 
             result.append(event_line)
 
-        return [ e[0] for e in event_columns ], result
+        return [ e[0] for e in g_status_server.table_events.columns ], result
 
 
     def get_rule_stats(self):
-        return [ e[0] for e in rule_columns ], sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
+        return [ e[0] for e in g_status_Server.table_rules.columns ], sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
 
 #.
 #   .--Actions-------------------------------------------------------------.
@@ -4273,7 +4330,7 @@ def get_event_tags(event):
                for (nr, g)
                 in enumerate(event.get("match_groups", ()))]
 
-    for key, defaultvalue in event_columns:
+    for key, defaultvalue in g_status_server.table_events.columns:
         varname = key[6:]
         substs.append((varname, event.get(varname, defaultvalue)))
 

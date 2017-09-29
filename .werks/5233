@@ -1,0 +1,11 @@
+Title: agent_ucs_bladecenter: Now uses python requests to fetch the data
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1506678996
+
+

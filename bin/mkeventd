@@ -795,7 +795,7 @@ def log_event_history_to_mongodb(event, what, who, addinfo):
 
 def get_event_history_from_mongodb(filters, limit):
     history_entries = []
-    headers = [ c[0] for c in g_status_server.table_history.columns ]
+    headers = g_status_server.table_history.column_names
 
     if not g_mongo_conn:
         connect_mongodb()
@@ -999,7 +999,7 @@ def get_event_history(filters, limit):
 
 def get_event_history_from_file(filters, limit):
     history_entries = []
-    headers = [ c[0] for c in g_status_server.table_history.columns ]
+    headers = g_status_server.table_history.column_names
     log_dir = g_state_dir + "/history"
     if not os.path.exists(log_dir):
         return headers, []
@@ -3278,7 +3278,7 @@ class StatusTable(object):
 
     def __init__(self):
         super(StatusTable, self).__init__()
-        #self.column_names = [ c[0] for c in self.columns ]
+        self.column_names = [ c[0] for c in self.columns ]
 
 
 
@@ -4220,11 +4220,11 @@ class EventStatus(object):
 
             result.append(event_line)
 
-        return [ e[0] for e in g_status_server.table_events.columns ], result
+        return g_status_server.table_events.column_names, result
 
 
     def get_rule_stats(self):
-        return [ e[0] for e in g_status_Server.table_rules.columns ], sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
+        return g_status_Server.table_rules.column_names, sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
 
 #.
 #   .--Actions-------------------------------------------------------------.

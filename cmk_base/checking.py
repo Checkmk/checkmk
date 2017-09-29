@@ -212,6 +212,9 @@ def _is_expected_agent_version(agent_version, expected_version):
                     return False
 
             elif 'release' in spec:
+                if cmk_base.utils.is_daily_build_version(agent_version):
+                    return False
+
                 if cmk_base.utils.parse_check_mk_version(agent_version) \
                     < cmk_base.utils.parse_check_mk_version(spec['release']):
                     return False

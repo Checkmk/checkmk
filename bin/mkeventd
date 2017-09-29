@@ -3209,7 +3209,7 @@ class StatusServer(threading.Thread):
                 else:
                     self.serve()
             except Exception:
-                self.logger.exception("Exception in status server:\n%s" % e)
+                self.logger.exception("Exception in status server")
                 if opt_debug:
                     raise
                 time.sleep(1)

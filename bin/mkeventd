@@ -497,85 +497,6 @@ class MKClientError(Exception):
         Exception.__init__(self, t)
 
 
-class Queries(object):
-    def __init__(self, sock):
-        super(Queries, self).__init__()
-        self._socket = sock
-        self._buffer = ""
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        while True:
-            parts = self._buffer.split("\n\n", 1)
-            if len(parts) > 1:
-                break
-            data = self._socket.recv(4096)
-            if len(data) == 0:
-                if len(self._buffer) == 0:
-                    raise StopIteration()
-                parts = [self._buffer, ""]
-                break
-            self._buffer += data
-        request, self._buffer = parts
-        return Query(request.decode("utf-8").splitlines())
-
-
-class Query(object):
-    _allowed_methods = set(["GET", "REPLICATE", "COMMAND"])
-    _allowed_formats = set(["python", "plain", "json"])
-    _allowed_headers = set(["OutputFormat", "Filter", "Columns"])
-
-    def __init__(self, raw_query):
-        super(Query, self).__init__()
-        self._raw_query = raw_query
-        self._from_raw_query()
-
-
-    def _from_raw_query(self):
-        self._parse_method_and_table()
-        self._parse_header_lines()
-
-
-    def _parse_method_and_table(self):
-        parts = self._raw_query[0].split(None, 1)
-        if len(parts) != 2:
-            raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
-
-        method, method_arg = parts
-
-        if method not in self._allowed_methods:
-            raise MKClientError("Invalid method %s (allowed are %s) " %
-                                            ", ".join(self._allowed_methods))
-
-        self.method = method
-        # TODO: Subclass Query for the different query types to parse and validate
-        # the args query type specific
-        self.method_arg = method_arg
-
-
-    def _parse_header_lines(self):
-        self.output_format = "python"
-
-        self.header_lines = []
-        for line in self._raw_query[1:]:
-            header, argument = line.rstrip("\n").split(":", 1)
-            argument = argument.lstrip(" ")
-
-            if header == "OutputFormat":
-                if argument not in self._allowed_formats:
-                    raise MKClientError("Invalid output format \"%s\" "
-                            "(allowed are: %s)" % ", ".join(self._allowed_formats))
-
-                self.output_format = argument
-            else:
-                self.header_lines.append(line)
-
-
-    def __repr__(self):
-        return repr("\n".join(self._raw_query))
-
 
 #.
 #   .--SNMP-Traps----------------------------------------------------------.
@@ -3179,6 +3100,202 @@ class EventServer(ECServerThread):
 #   |  Beantworten von Status- und Kommandoanfragen über das UNIX-Socket   |
 #   '----------------------------------------------------------------------'
 
+class Queries(object):
+    def __init__(self, sock):
+        super(Queries, self).__init__()
+        self._socket = sock
+        self._buffer = ""
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        while True:
+            parts = self._buffer.split("\n\n", 1)
+            if len(parts) > 1:
+                break
+            data = self._socket.recv(4096)
+            if len(data) == 0:
+                if len(self._buffer) == 0:
+                    raise StopIteration()
+                parts = [self._buffer, ""]
+                break
+            self._buffer += data
+        request, self._buffer = parts
+
+        request_lines = request.decode("utf-8").splitlines()
+
+        cls = Query.get_query_class(request_lines)
+        return cls(request_lines)
+
+
+class Query(object):
+    _allowed_methods = set(["GET", "REPLICATE", "COMMAND"])
+    _allowed_formats = set(["python", "plain", "json"])
+    _allowed_headers = set(["OutputFormat", "Filter", "Columns", "Limit"])
+
+
+    @classmethod
+    def get_query_class(cls, raw_query):
+        parts = raw_query[0].split(None, 1)
+        if len(parts) != 2:
+            raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
+
+        method = parts[0]
+
+        if method not in cls._allowed_methods:
+            raise MKClientError("Invalid method %s (allowed are %s) " %
+                                            ", ".join(cls._allowed_methods))
+
+        return globals()["Query%s" % method]
+
+
+    def __init__(self, raw_query):
+        super(Query, self).__init__()
+        self._raw_query = raw_query
+        self._from_raw_query()
+
+
+    def _from_raw_query(self):
+        self._parse_method_and_args()
+
+
+    def _parse_method_and_args(self):
+        parts = self._raw_query[0].split(None, 1)
+        if len(parts) != 2:
+            raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
+
+        self.method, self.method_arg = parts
+
+
+    def __repr__(self):
+        return repr("\n".join(self._raw_query))
+
+
+
+class QueryGET(Query):
+    _allowed_tables = set([ "events", "history", "rules", "status" ])
+
+    def _from_raw_query(self):
+        super(QueryGET, self)._from_raw_query()
+        self._parse_table()
+        self._parse_header_lines()
+
+
+    def _parse_table(self):
+        self.table = self.method_arg
+
+        if self.table not in self._allowed_tables:
+            raise MKClientError("Invalid table: %s (allowed are: %s)" %
+                                        ", ".join(self._allowed_tables))
+
+        # TODO: Move to table object and add a reference to the table object here
+        if self.table == "events":
+            self.columns = event_columns
+        elif self.table == "history":
+            self.columns = history_columns
+        elif self.table == "rules":
+            self.columns = rule_columns
+        elif self.table == "status":
+            self.columns = g_event_server.status_columns()
+        else:
+            raise NotImplementedError()
+
+
+    def _parse_header_lines(self):
+        self.output_format     = "python"
+        self.requested_columns = []
+        self.filters           = []
+        self.limit             = None
+        self.only_host         = None
+
+        self.header_lines = []
+        for line in self._raw_query[1:]:
+            try:
+                header, argument = line.rstrip("\n").split(":", 1)
+                argument = argument.lstrip(" ")
+
+                # TODO: Be compatible with livestatus: Only log the issue to the log
+                #if header not in self._allowed_headers:
+                #    raise MKClientError("Invalid header: \"%s\" (allowed are %s)" %
+                #                                ", ".join(self._allowed_headers))
+
+                if header == "OutputFormat":
+                    if argument not in self._allowed_formats:
+                        raise MKClientError("Invalid output format \"%s\" "
+                                "(allowed are: %s)" % ", ".join(self._allowed_formats))
+
+                    self.output_format = argument
+
+                elif header == "Columns":
+                    self.requested_columns = argument.split(" ")
+
+                elif header == "Filter":
+                    name, opfunc, argument = self._parse_filter(argument)
+
+                    # Needed for later optimization (check_mkevents)
+                    if name == "event_host" and opfunc == filter_operators['in']:
+                        self.only_host = set(argument)
+
+                    filters.append((name, opfunc, argument))
+
+
+                elif header == "Limit":
+                    self.limit = int(argument)
+
+                else:
+                    self.logger.info("Ignoring not-implemented header %s" % header)
+
+            except Exception as e:
+                raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
+
+
+    def _parse_filter(self, textspec):
+        # Examples:
+        # id = 17
+        # name ~= This is some .* text
+        # host_name =
+        parts = textspec.split(None, 2)
+        if len(parts) == 2:
+            parts.append("")
+        column, operator, argument = parts
+
+        # TODO: Use a map of columns for performance reasons!
+        for name, def_val in self.columns:
+            if name == column:
+                if type(def_val) == int:
+                    convert = lambda c: int(c)
+                elif type(def_val) == float:
+                    convert = lambda c: float(c)
+                else:
+                    convert = lambda c: str(c)
+                break
+        else:
+            raise MKClientError("Unknown column: %s (Available are: %s" % (column, ", ".join([x[0] for x in self.columns])))
+
+        if operator == 'in':
+            argument = map(convert, argument.split())
+        else:
+            argument = convert(argument)
+
+        opfunc = filter_operators.get(operator)
+        if not opfunc:
+            raise MKClientError("Unknown filter operator '%s'" % operator)
+
+        return (column, opfunc, argument)
+
+
+
+class QueryREPLICATE(Query):
+    pass
+
+
+
+class QueryCOMMAND(Query):
+    pass
+
+
+
 class StatusServer(ECServerThread):
     def __init__(self):
         super(StatusServer, self).__init__(name="StatusServer")
@@ -3311,7 +3428,7 @@ class StatusServer(ECServerThread):
 
             with lock_eventstatus:
                 if query.method == "GET":
-                    response = self.handle_get_request(query.method_arg, query.header_lines)
+                    response = self.handle_get_request(query)
 
                 elif query.method == "REPLICATE":
                     response = self.handle_replicate(query.method_arg, client_ip)
@@ -3511,59 +3628,23 @@ class StatusServer(ECServerThread):
             raise MKClientError("Invalid arguments to command REPLICATE")
         return replication_send(last_update)
 
-    def handle_get_request(self, table, headerlines):
-        if table == "events":
-            columns = event_columns
-        elif table == "history":
-            columns = history_columns
-        elif table == "rules":
-            columns = rule_columns
-        elif table == "status":
-            columns = g_event_server.status_columns()
-        else:
-            raise MKClientError("Invalid table %s, we only have 'events', 'history', "
-                                "'rules' and 'status'" % table)
-
-        filters = []
-        only_host = None
-        limit = None
-        for line in headerlines:
-            try:
-                header, argument = line.rstrip().split(":", 1)
-                argument = argument.strip()
-                if header == "Filter":
-                    name, opfunc, argument = self.parse_filter(argument, columns)
-
-                    # Needed for later optimization (check_mkevents)
-                    if name == "event_host" and opfunc == filter_operators['in']:
-                        only_host = set(argument)
-
-                    filters.append((name, opfunc, argument))
-                elif header == "Limit":
-                    limit = int(argument)
-                elif header == "Columns":
-                    # TODO(sp) Actually filter columns
-                    pass
-                else:
-                    self.logger.info("Ignoring not-implemented header %s" % header)
-
-            except Exception as e:
-                raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
-
-        if table == "events":
-            headers, list_rows = g_event_status.get_events(only_host)
-        elif table == "history":
-            headers, list_rows = get_event_history(filters, limit)
-        elif table == "rules":
+    def handle_get_request(self, query):
+        if query.table == "events":
+            headers, list_rows = g_event_status.get_events(query.only_host)
+        elif query.table == "history":
+            headers, list_rows = get_event_history(query.filters, query.limit)
+        elif query.table == "rules":
             headers, list_rows = g_event_status.get_rule_stats()
-        else:
+        elif query.table == "status":
             headers, list_rows = g_event_server.get_status()
+        else:
+            raise NotImplementedError()
 
         rows = [headers]
-        if table != "history": # Do filtering now
+        if query.table != "history": # Do filtering now
             for list_row in list_rows:
-                if filters:
-                    match = self.filter_row(headers, filters, list_row)
+                if query.filters:
+                    match = self.filter_row(headers, query.filters, list_row)
                     if match:
                         rows.append(list_row)
                 else:
@@ -3582,40 +3663,6 @@ class StatusServer(ECServerThread):
             if not opfunc(row[column], argument):
                 return None
         return list_row
-
-    def parse_filter(self, textspec, columns):
-        # Examples:
-        # id = 17
-        # name ~= This is some .* text
-        # host_name =
-        parts = textspec.split(None, 2)
-        if len(parts) == 2:
-            parts.append("")
-        column, operator, argument = parts
-
-        for name, def_val in columns:
-            if name == column:
-                if type(def_val) == int:
-                    convert = lambda c: int(c)
-                elif type(def_val) == float:
-                    convert = lambda c: float(c)
-                else:
-                    convert = lambda c: str(c)
-                break
-        else:
-            raise MKClientError("Unknown column '%s'. Available columns are: %s" % (
-                  column, ", ".join([x[0] for x in columns])))
-
-        if operator == 'in':
-            argument = map(convert, argument.split())
-        else:
-            argument = convert(argument)
-
-        opfunc = filter_operators.get(operator)
-        if not opfunc:
-            raise MKClientError("Unknown filter operator '%s'" % operator)
-
-        return (column, opfunc, argument)
 
 
 #.

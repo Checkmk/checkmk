@@ -1,0 +1,10 @@
+Title: postfix_mailq_status: Now reports if PID file is not readable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506692807
+Class: feature
+
+

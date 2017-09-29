@@ -1,0 +1,22 @@
+Title: fileinfo: date variables can be defined in fileinfo.cfg
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506670399
+Class: feature
+
+This werk adds the possibility to define date variables in the file
+fileinfo.cfg either directly or via the corresponding rule Count,
+size and age of files. Date variables can be used on linux and solaris
+hosts and have the form $DATE:format-spec$ where format-spec is a list
+of time format directives of the unix date command. Example:
+$DATE:%Y%m%d$ is todays date in the format YYYYMMDD.
+Using this option the agent will only send files containing the
+current date. Date variables can be used together with the rules
+File Grouping Patterns and Size, age count of file groups to monitor
+if files are created in a directory on a dayly basis. Note that the
+option Only check during the folling times of the day should be set.
+Otherwise a warning may be displayed if the file of the current day
+is not present yet.

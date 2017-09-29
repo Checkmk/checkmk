@@ -574,7 +574,7 @@ class Query(object):
 
 
     def __repr__(self):
-        return repr("\\n".join(self._raw_query))
+        return repr("\n".join(self._raw_query))
 
 
 #.

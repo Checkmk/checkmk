@@ -106,8 +106,14 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         query_filters.append("time <= %d" % before)
     if after is not None:
         query_filters.append("time >= %d" % after)
-    if may_see_notifications and not config.user.may("general.see_failed_notifications"):
-        query_filters.append("time > %d" % (int(time.time()) - 86400))
+
+    if may_see_notifications:
+        if config.user.may("general.see_failed_notifications"):
+            horizon = config.failed_notification_horizon
+        else:
+            horizon = 86400
+
+        query_filters.append("time > %d" % (int(time.time()) - horizon))
 
     query = ["GET log"]
     if stat_only:
@@ -118,6 +124,8 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
     query += ["Filter: %s" % filt for filt in query_filters]
 
     query = "\n".join(query)
+
+    html.debug(query)
 
     if extra_headers is not None:
         query += extra_headers

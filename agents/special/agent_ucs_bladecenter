@@ -28,7 +28,8 @@
 # about connection configuration and status.
 
 
-import sys, getopt, httplib, socket, pprint, re, ssl
+import sys, getopt, pprint, re, ssl
+import requests
 
 def usage():
     sys.stderr.write("""Check_MK UCS Bladecenter Agent
@@ -93,9 +94,9 @@ def get_pattern(pattern, line):
 
 class Server:
     def __init__(self, host_address):
-        self.netloc       = host_address
-        self.conn_handle  = httplib.HTTPSConnection(self.netloc, context = ssl._create_unverified_context())
-        self.cookie       = None
+        self.netloc         = host_address
+        self.session_handle = requests.Session()
+        self.cookie         = None
 
         if opt_debug:
             sys.stderr.write("Connecting to %s...\n" % self.netloc)
@@ -105,18 +106,21 @@ class Server:
         if params is None:
             params = {}
 
-        params.update({"cookie": self.cookie})
+        cookies = {}
+        if self.cookie:
+            cookies.update({"cookie": self.cookie})
+
         payload = payload % params
         if opt_debug:
             sys.stderr.write("====> %s\n" % payload)
 
-        self.conn_handle.putrequest("POST", "/nuova")
-        self.conn_handle.putheader("Content-Length", "%d" % len(payload))
-        self.conn_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
-        self.conn_handle.endheaders()
-        self.conn_handle.send(payload)
-        response = self.conn_handle.getresponse()
-        data = response.read()
+        headers = {
+            "Content-Length": "%d" % len(payload),
+            "Content-Type": 'text/xml; charset="utf-8"'
+        }
+
+        response = self.session_handle.post("https://%s/nuova" % self.netloc, headers = headers, cookies = cookies)
+        data = response.text
         if opt_debug:
             sys.stderr.write("<==== %s\n" % data)
         return data

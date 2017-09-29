@@ -660,11 +660,15 @@ if type postfix >/dev/null ; then
     for i in $(ls -d /var/spool/postfix*)
         do
             if [ -e "$i/pid/master.pid" ]; then
-                postfix_pid=$(cat $i/pid/master.pid | sed 's/ //g') # handle possible spaces in output
-                if readlink -- "/proc/$postfix_pid/exe" | grep -q ".*postfix/\(sbin/\)\?master.*"; then
-                    echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
+                if [ -r "$i/pid/master.pid" ]; then
+                    postfix_pid=$(cat $i/pid/master.pid | sed 's/ //g') # handle possible spaces in output
+                    if readlink -- "/proc/$postfix_pid/exe" | grep -q ".*postfix/\(sbin/\)\?master.*"; then
+                        echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
+                    else
+                        echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
+                    fi
                 else
-                    echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
+                    echo "$i:PID file exists but is not readable"
                 fi
             else
                 echo "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'

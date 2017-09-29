@@ -1875,6 +1875,8 @@ class EventServer(threading.Thread):
         host_downtimes = {}
 
         for event in g_event_status.events():
+            if "host_in_downtime" not in event:
+                self.logger.warning(repr(event))
             if not event["host_in_downtime"]:
                 continue # only care about events created in downtime
 
@@ -3058,6 +3060,8 @@ class EventServer(threading.Thread):
             "match_groups": (),
             "state":        2, # crit
             "sl":           event["sl"],
+            "core_host":    "",
+            "host_in_downtime": False,
         }
         self._add_rule_contact_groups_to_event({}, new_event)
 
@@ -3205,7 +3209,7 @@ class StatusServer(threading.Thread):
                 else:
                     self.serve()
             except Exception:
-                self.logger.exception("Exception in status server:\n%s" % e)
+                self.logger.exception("Exception in status server")
                 if opt_debug:
                     raise
                 time.sleep(1)
@@ -4802,7 +4806,6 @@ def usage():
    -v, --verbose        Enable verbose output
    -g, --foreground     Do not daemonize, run in foreground
    --debug              Enable debug mode (let exceptions through)
-   --debug-locking      Debug locking and unlocking (thread communication)
    --syslog             Enable builtin UDP syslog server
    --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
    --syslog-tcp         Enable builtin TCP syslog server

@@ -150,7 +150,7 @@ def load_plugins(force):
 
     config.declare_permission("general.see_failed_notifications_24h",
          _("See failed Notifications (last 24 hours)"),
-         _("If check_mk is unable to notify users about problems, the site will warn about this situation "
+         _("If Check_MK is unable to notify users about problems, the site will warn about this situation "
            "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
            "users with this permission. Users with this permission will only see failed notifications "
            "that occured within the last 24 hours."),
@@ -158,10 +158,10 @@ def load_plugins(force):
 
     config.declare_permission("general.see_failed_notifications",
          _("See failed Notifications (all)"),
-         _("If check_mk is unable to notify users about problems, the site will warn about this situation "
+         _("If Check_MK is unable to notify users about problems, the site will warn about this situation "
            "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
-           "users with this permission. Users with this permission will also see failed notifications "
-           "older than 24 hours."),
+           "users with this permission. Users with this permission will see failed notifications between now "
+           "and the configured <a href=\"wato.py?mode=edit_configvar&varname=failed_notification_horizon\">Failed notification horizon</a>."),
          [ "admin" ])
 
     loaded_with_language = current_language

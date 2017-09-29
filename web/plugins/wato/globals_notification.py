@@ -161,3 +161,16 @@ register_configvar(group,
     allow_reset = False,
 )
 
+
+register_configvar(group,
+    "failed_notification_horizon",
+    Age(
+        title = _("Failed notification horizon"),
+        help = _("The tactical overview snapin is reporing about notifications that could not be sent "
+                 "by Check_MK. Users with the permission \"See failed Notifications (all)\" get the number "
+                 "of failed notification within the configured horizon."),
+        default_value = 60*60*24*7,
+        display = ["days"],
+        minvalue = 60*60*24,
+    ),
+    domain = "multisite")

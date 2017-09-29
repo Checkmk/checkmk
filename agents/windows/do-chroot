@@ -6,6 +6,7 @@ CMD="$1"
 
 export HOSTNAME=cmk-windows-agent-chroot
 unset LANG
+CHROOTNAME=WinAgent
 
 BASE="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
 MNT=$BASE/agents/windows/chroot
@@ -27,9 +28,9 @@ if [ ! -e $MNT/build/Makefile ] ; then
 fi
 
 if [ -n "$CMD" ] ; then
-    chroot chroot bash -c "$CMD"
+    chroot chroot /usr/bin/env CHROOTNAME=$CHROOTNAME bash -c "$CMD"
 else
-    chroot chroot bash -l
+    chroot chroot /usr/bin/env CHROOTNAME=$CHROOTNAME bash -l
 fi
 
 umount $MNT/build

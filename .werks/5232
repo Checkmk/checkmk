@@ -1,0 +1,11 @@
+Title: Agent version check: fixed exception when an offcial release is expected and the agents version is a daily build
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p14
+Date: 1506678406
+
+

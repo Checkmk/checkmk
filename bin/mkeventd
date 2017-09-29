@@ -4806,7 +4806,6 @@ def usage():
    -v, --verbose        Enable verbose output
    -g, --foreground     Do not daemonize, run in foreground
    --debug              Enable debug mode (let exceptions through)
-   --debug-locking      Debug locking and unlocking (thread communication)
    --syslog             Enable builtin UDP syslog server
    --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
    --syslog-tcp         Enable builtin TCP syslog server

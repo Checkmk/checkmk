@@ -1875,6 +1875,8 @@ class EventServer(threading.Thread):
         host_downtimes = {}
 
         for event in g_event_status.events():
+            if "host_in_downtime" not in event:
+                self.logger.warning(repr(event))
             if not event["host_in_downtime"]:
                 continue # only care about events created in downtime
 
@@ -3058,6 +3060,8 @@ class EventServer(threading.Thread):
             "match_groups": (),
             "state":        2, # crit
             "sl":           event["sl"],
+            "core_host":    "",
+            "host_in_downtime": False,
         }
         self._add_rule_contact_groups_to_event({}, new_event)
 

@@ -348,6 +348,22 @@ fi
 
 
 # Fileinfo-Check: put patterns for files into $MK_CONFDIR/fileinfo.cfg
+function replace_datevariable()
+{
+    # Replace the date variable of the input, e.g. $DATE:%Y%m%d$, by
+    # the current date. If there's no match just return the input.
+    local file_name="$1"
+    local pattern='(\$DATE:(.*)\$)'
+
+    if [[ ! $file_name =~ $pattern ]]; then
+        echo "$file_name"
+    else
+        date_variable="${BASH_REMATCH[1]}"
+        format_string="${BASH_REMATCH[2]}"
+        echo "${file_name/$date_variable/$(date +$format_string)}"
+    fi
+}
+
 if [ -f "$MK_CONFDIR/fileinfo.cfg" ]
 then
     echo '<<<fileinfo:sep(124)>>>'
@@ -357,7 +373,9 @@ then
     do
         # only work on lines containing files, skip e.g. comments and blank lines
         if [ ${file:0:1} = "/" ]; then
+            file="$(replace_datevariable $file)"
             ls $file > /dev/null 2>&1
+
             if [ $? -eq 0 ]; then
                 echo $file | \
                 /usr/bin/perl -e '

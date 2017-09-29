@@ -745,6 +745,22 @@ fi
 
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+function replace_datevariable()
+{
+    # Replace the date variable of the input, e.g. $DATE:%Y%m%d$, by
+    # the current date. If there's no match just return the input.
+    local file_name="$1"
+    local pattern='(\$DATE:(.*)\$)'
+
+    if [[ ! $file_name =~ $pattern ]]; then
+        echo "$file_name"
+    else
+        date_variable="${BASH_REMATCH[1]}"
+        format_string="${BASH_REMATCH[2]}"
+        echo "${file_name/$date_variable/$(date +$format_string)}"
+    fi
+}
+
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     echo '<<<fileinfo:sep(124)>>>'
     date +%s
@@ -752,6 +768,7 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     do
         # only work on lines containing files, skip e.g. comments and blank lines
         if [ ${line:0:1} = "/" ]; then
+            line="$(replace_datevariable $line)"
             stat -c "%n|%s|%Y" "${line}" 2>/dev/null
 
             if [ $? -ne 0 ]; then

@@ -55,6 +55,7 @@ import cmk.paths
 import cmk.defines as defines
 import cmk.daemon
 import cmk.event_console
+import cmk.profile
 from cmk.regex import regex, is_regex
 
 import livestatus
@@ -1474,22 +1475,10 @@ class EventServer(threading.Thread):
 
 
     def run(self):
-        if opt_profile.get("event"):
-            import cProfile
-            profilefile = cmk.paths.omd_root + "/var/mkeventd/event.profile"
-            self.logger.info("Writing profile of event thread to %s." % profilefile)
-            try:
-                cProfile.run("g_event_server.run_loop()", profilefile)
-            except:
-                raise
-            finally:
-                file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
-                os.chmod(profilefile + ".py", 0o755)
-                self.logger.info("Created profile conversion script %s.py." % profilefile)
-
-        else:
+        while not self._should_terminate:
+            with cmk.profile.profile(enabled=opt_profile.get("event"),
+    	                         profile_file=cmk.paths.omd_root + "/var/mkeventd/event.profile"):
             self.run_loop()
-
 
 
     def run_loop(self):
@@ -1505,8 +1494,6 @@ class EventServer(threading.Thread):
                     raise
                 time.sleep(1)
 
-            if opt_profile.get("event") and c > 100:
-                return
 
     def open_pipe(self):
         # Beware: we must open the pipe also for writing. Otherwise
@@ -1827,8 +1814,6 @@ class EventServer(threading.Thread):
                 else:
                     select_timeout = 1 # restore default select timeout
 
-            if opt_profile.get("event"):
-                return
 
     # Processes incoming data, just a wrapper between the real data and the
     # handler function to record some statistics etc.
@@ -3199,15 +3184,9 @@ class StatusServer(threading.Thread):
     def run(self):
         while not self._should_terminate:
             try:
-                if opt_profile.get("status"):
-                    import cProfile
-                    profilefile = cmk.paths.omd_root + "/var/mkeventd/status.profile"
-                    self.logger.info("Writing profile of status thread to %s." % profilefile)
-                    cProfile.run("g_status_server.serve()", profilefile)
-                    file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
-                    os.chmod(profilefile + ".py", 0o755)
-                else:
-                    self.serve()
+		with cmk.profile.profile(enabled=opt_profile.get("status"),
+	                                 profile_file=cmk.paths.omd_root + "/var/mkeventd/status.profile"):
+		    self.serve()
             except Exception:
                 self.logger.exception("Exception in status server")
                 if opt_debug:
@@ -4813,6 +4792,7 @@ def usage():
    --snmptrap           Enable builtin snmptrap server
    --snmptrap-fd FD     Do not open UDP port 162, but inherit it via this FD
    --profile-status     Create Python profile for status thread
+   --profile-event      Create Python profile for event thread
 
 """)
     sys.stdout.write("""

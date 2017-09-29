@@ -125,8 +125,6 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
 
     query = "\n".join(query)
 
-    html.debug(query)
-
     if extra_headers is not None:
         query += extra_headers
 

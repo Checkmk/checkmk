@@ -144,8 +144,9 @@ InputBuffer::Result InputBuffer::readRequest() {
             // of the buffer's content is already processed. So we simply
             // shift the yet unprocessed data to the very left of the buffer.
             else if (_read_index > 0) {
-                int shift_by = _read_index;  // distance to beginning of buffer
-                int size =
+                size_t shift_by =
+                    _read_index;  // distance to beginning of buffer
+                size_t size =
                     _write_index - _read_index;  // amount of data to shift
                 memmove(&_readahead_buffer[0], &_readahead_buffer[_read_index],
                         size);
@@ -176,7 +177,7 @@ InputBuffer::Result InputBuffer::readRequest() {
                 return Result::request_read;
 
             }  // non-empty line: belongs to current request
-            int length = r - _read_index;
+            size_t length = r - _read_index;
             for (size_t end = r; end > _read_index &&
                                  (isspace(_readahead_buffer[--end]) != 0);) {
                 length--;

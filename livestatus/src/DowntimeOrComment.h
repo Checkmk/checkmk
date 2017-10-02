@@ -99,6 +99,8 @@ public:
     time_t _start_time;
     time_t _end_time;
     int _fixed;
+    // TODO(sp): Wrong types, caused by TableDowntimes accessing it via
+    // OffsetIntColumn, should be unsigned long
     int _duration;
     int _triggered_by;
     explicit Downtime(nebstruct_downtime_struct *dt);

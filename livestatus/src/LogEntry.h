@@ -78,7 +78,7 @@ public:
 
     // TODO(sp): Wrong type, caused by TableLog accessing it via
     // OffsetIntColumn, should be size_t
-    int32_t _lineno;  // line number in file
+    int _lineno;  // line number in file
     time_t _time;
     Class _logclass;
     LogEntryType _type;

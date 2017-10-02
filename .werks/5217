@@ -1,0 +1,12 @@
+Title: BI: Improved error handling in case of not existing but referenced rule
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1506926056
+
+The error handling has been improved for the situation where an aggregation
+references a not existing BI rule.

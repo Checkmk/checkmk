@@ -1066,6 +1066,9 @@ class ModeBIAggregations(ModeBI):
 
     def render_aggregation_rule_tree(self, aggregation):
         toplevel_rule = self.aggregation_toplevel_rule(aggregation)
+        if not toplevel_rule:
+            html.show_error(_("The top level rule does not exist."))
+            return
         self.render_rule_tree(toplevel_rule["id"], toplevel_rule["id"])
 
 
@@ -1318,9 +1321,13 @@ class ModeBIRules(ModeBI):
 
     def _aggregation_recursive_sub_rule_ids(self, ruleid):
         rule = self.find_rule_by_id(ruleid)
+        if not rule:
+            return []
+
         sub_rule_ids = self.aggregation_sub_rule_ids(rule)
         if not sub_rule_ids:
             return []
+
         result = sub_rule_ids[:]
         for sub_rule_id in sub_rule_ids:
             result += self._aggregation_recursive_sub_rule_ids(sub_rule_id)

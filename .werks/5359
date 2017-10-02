@@ -1,0 +1,16 @@
+Title: Reduced size of PDF exports containing graphs
+Level: 2
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1506947471
+
+The size of PDF exports increased dramatically when graphs were shown. This
+was caused by the gradients used in the rendered metric areas.
+
+For example a PDF with 10 graphs had a size of 6 MB with gradients compared
+to 260 KB without gradients. The gradients have now been dropped completely.
+

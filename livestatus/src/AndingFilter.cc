@@ -27,10 +27,8 @@
 #include "Filter.h"
 #include "Row.h"
 
-using std::string;
-
 bool AndingFilter::accepts(Row row, const contact *auth_user,
-                           int timezone_offset) const {
+                           std::chrono::seconds timezone_offset) const {
     for (const auto &filter : _subfilters) {
         if (!filter->accepts(row, auth_user, timezone_offset)) {
             return false;
@@ -39,8 +37,9 @@ bool AndingFilter::accepts(Row row, const contact *auth_user,
     return true;
 }
 
-bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
-                                   int timezone_offset) const {
+bool AndingFilter::optimizeBitmask(const std::string &column_name,
+                                   uint32_t *mask,
+                                   std::chrono::seconds timezone_offset) const {
     bool optimized = false;
     for (const auto &filter : _subfilters) {
         if (filter->optimizeBitmask(column_name, mask, timezone_offset)) {
@@ -50,8 +49,8 @@ bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
     return optimized;
 }
 
-const string *AndingFilter::findValueForIndexing(
-    const string &column_name) const {
+const std::string *AndingFilter::findValueForIndexing(
+    const std::string &column_name) const {
     for (const auto &filter : _subfilters) {
         if (auto value = filter->valueForIndexing(column_name)) {
             return value;

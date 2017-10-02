@@ -29,14 +29,12 @@
 #include "Logger.h"
 #include "Row.h"
 
-using std::string;
-
 DoubleFilter::DoubleFilter(const DoubleColumn &column, RelationalOperator relOp,
-                           const string &value)
+                           const std::string &value)
     : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
 bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
-                           int /* timezone_offset */) const {
+                           std::chrono::seconds /* timezone_offset */) const {
     double act_value = _column.getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:
@@ -65,4 +63,4 @@ bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string DoubleFilter::columnName() const { return _column.name(); }
+std::string DoubleFilter::columnName() const { return _column.name(); }

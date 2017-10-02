@@ -30,26 +30,25 @@
 #include "Logger.h"
 #include "Row.h"
 
-using std::move;
-using std::string;
-
+// Alas, cppcheck is a bit behind the times regarding move semantics...
 IntFilter::IntFilter(const IntColumn &column, RelationalOperator relOp,
-                     string value)
-    : _column(column), _relOp(relOp), _ref_string(move(value)) {}
+                     // cppcheck-suppress passedByValue
+                     std::string value)
+    : _column(column), _relOp(relOp), _ref_string(std::move(value)) {}
 
-string IntFilter::columnName() const { return _column.name(); }
+std::string IntFilter::columnName() const { return _column.name(); }
 
 // overridden by TimeFilter in order to apply timezone offset from Localtime:
 // header
 bool IntFilter::adjustWithTimezoneOffset() const { return false; }
 
-int32_t IntFilter::convertRefValue(int timezone_offset) const {
+int32_t IntFilter::convertRefValue(std::chrono::seconds timezone_offset) const {
     return atoi(_ref_string.c_str()) -
-           (adjustWithTimezoneOffset() ? timezone_offset : 0);
+           (adjustWithTimezoneOffset() ? timezone_offset.count() : 0);
 }
 
 bool IntFilter::accepts(Row row, const contact *auth_user,
-                        int timezone_offset) const {
+                        std::chrono::seconds timezone_offset) const {
     int32_t act_value = _column.getValue(row, auth_user);
     int32_t ref_value = convertRefValue(timezone_offset);
     switch (_relOp) {
@@ -81,8 +80,9 @@ bool IntFilter::accepts(Row row, const contact *auth_user,
     return false;  // unreachable
 }
 
-void IntFilter::findIntLimits(const string &column_name, int *lower, int *upper,
-                              int timezone_offset) const {
+void IntFilter::findIntLimits(const std::string &column_name, int *lower,
+                              int *upper,
+                              std::chrono::seconds timezone_offset) const {
     if (column_name != columnName()) {
         return;  // wrong column
     }
@@ -144,8 +144,8 @@ void IntFilter::findIntLimits(const string &column_name, int *lower, int *upper,
     }
 }
 
-bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
-                                int timezone_offset) const {
+bool IntFilter::optimizeBitmask(const std::string &column_name, uint32_t *mask,
+                                std::chrono::seconds timezone_offset) const {
     int32_t ref_value = convertRefValue(timezone_offset);
 
     if (column_name != columnName()) {

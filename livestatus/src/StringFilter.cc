@@ -29,14 +29,11 @@
 #include "Row.h"
 #include "StringColumn.h"
 
-using std::move;
-using std::regex;
-using std::regex_search;
-using std::string;
-
+// Alas, cppcheck is a bit behind the times regarding move semantics...
 StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
-                           string value)
-    : _column(column), _relOp(relOp), _ref_string(move(value)) {
+                           // cppcheck-suppress passedByValue
+                           std::string value)
+    : _column(column), _relOp(relOp), _ref_string(std::move(value)) {
     switch (_relOp) {
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
@@ -45,8 +42,8 @@ StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
             _regex.assign(_ref_string,
                           (_relOp == RelationalOperator::matches_icase ||
                            _relOp == RelationalOperator::doesnt_match_icase)
-                              ? regex::extended | regex::icase
-                              : regex::extended);
+                              ? std::regex::extended | std::regex::icase
+                              : std::regex::extended);
             break;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -61,8 +58,8 @@ StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
 }
 
 bool StringFilter::accepts(Row row, const contact * /* auth_user */,
-                           int /* timezone_offset */) const {
-    string act_string = _column.getValue(row);
+                           std::chrono::seconds /* timezone_offset */) const {
+    std::string act_string = _column.getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_string == _ref_string;
@@ -90,7 +87,8 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-const string *StringFilter::valueForIndexing(const string &column_name) const {
+const std::string *StringFilter::valueForIndexing(
+    const std::string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -112,4 +110,4 @@ const string *StringFilter::valueForIndexing(const string &column_name) const {
     return nullptr;  // unreachable
 }
 
-string StringFilter::columnName() const { return _column.name(); }
+std::string StringFilter::columnName() const { return _column.name(); }

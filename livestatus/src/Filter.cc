@@ -24,20 +24,19 @@
 
 #include "Filter.h"
 
-using std::string;
-
 Filter::~Filter() = default;
 
-const string *Filter::valueForIndexing(const string & /* column_name */) const {
+const std::string *Filter::valueForIndexing(
+    const std::string & /* column_name */) const {
     return nullptr;
 }
 
-void Filter::findIntLimits(const string & /* column_name */, int * /* lower */,
-                           int * /* upper */, int /* timezone_offset */) const {
-}
+void Filter::findIntLimits(const std::string & /* column_name */,
+                           int * /* lower */, int * /* upper */,
+                           std::chrono::seconds /* timezone_offset */) const {}
 
-bool Filter::optimizeBitmask(const string & /* column_name */,
+bool Filter::optimizeBitmask(const std::string & /* column_name */,
                              uint32_t * /* mask */,
-                             int /* timezone_offset */) const {
+                             std::chrono::seconds /* timezone_offset */) const {
     return false;
 }

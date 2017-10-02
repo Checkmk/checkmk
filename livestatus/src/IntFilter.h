@@ -26,6 +26,7 @@
 #define IntFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include "ColumnFilter.h"
@@ -39,11 +40,11 @@ public:
     IntFilter(const IntColumn &column, RelationalOperator relOp,
               std::string value);
     bool accepts(Row row, const contact *auth_user,
-                 int timezone_offset) const override;
+                 std::chrono::seconds timezone_offset) const override;
     void findIntLimits(const std::string &column_name, int *lower, int *upper,
-                       int timezone_offset) const override;
+                       std::chrono::seconds timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
-                         int timezone_offset) const override;
+                         std::chrono::seconds timezone_offset) const override;
     std::string columnName() const override;
 
 private:
@@ -52,7 +53,7 @@ private:
     const std::string _ref_string;
 
     virtual bool adjustWithTimezoneOffset() const;
-    int32_t convertRefValue(int timezone_offset) const;
+    int32_t convertRefValue(std::chrono::seconds timezone_offset) const;
 };
 
 #endif  // IntFilter_h

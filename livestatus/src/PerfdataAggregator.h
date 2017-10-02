@@ -26,6 +26,7 @@
 #define PerfdataAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <map>
 #include <string>
 #include "Aggregator.h"
@@ -44,7 +45,7 @@ public:
     PerfdataAggregator(StatsOperation operation, const StringColumn *column)
         : Aggregator(operation), _column(column) {}
     void consume(Row row, const contact *auth_user,
-                 int timezone_offset) override;
+                 std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;
 
 private:

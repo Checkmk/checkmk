@@ -26,6 +26,7 @@
 #define Query_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <list>
@@ -65,7 +66,7 @@ public:
     void invalidRequest(const std::string &message) const;
 
     const contact *authUser() const { return _auth_user; }
-    int timezoneOffset() const { return _timezone_offset; }
+    std::chrono::seconds timezoneOffset() const { return _timezone_offset; }
 
     const std::string *findValueForIndexing(
         const std::string &column_name) const;
@@ -98,7 +99,7 @@ private:
     int _time_limit;
     time_t _time_limit_timeout;
     unsigned _current_line;
-    int _timezone_offset;
+    std::chrono::seconds _timezone_offset;
     Logger *const _logger;
     std::vector<std::shared_ptr<Column>> _columns;
     std::vector<std::unique_ptr<StatsColumn>> _stats_columns;

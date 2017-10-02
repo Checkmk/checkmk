@@ -26,6 +26,7 @@
 #define NegatingFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <memory>
 #include "Filter.h"
 class FilterVisitor;
@@ -42,7 +43,7 @@ public:
     explicit NegatingFilter(std::unique_ptr<Filter> filter);
     void accept(FilterVisitor &v) const override;
     bool accepts(Row row, const contact *auth_user,
-                 int timezone_offset) const override;
+                 std::chrono::seconds timezone_offset) const override;
     const std::unique_ptr<Filter> &subfilter() const;
 
 private:

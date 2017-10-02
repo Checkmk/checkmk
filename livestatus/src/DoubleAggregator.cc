@@ -35,7 +35,7 @@
  */
 
 void DoubleAggregator::consume(Row row, const contact* /* auth_user */,
-                               int /* timezone_offset */) {
+                               std::chrono::seconds /* timezone_offset */) {
     _count++;
     double value = _column->getValue(row);
     switch (getOperation()) {

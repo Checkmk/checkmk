@@ -28,38 +28,35 @@
 #include "FilterVisitor.h"
 #include "OringFilter.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 // static
-unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
+std::unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
     switch (logicOp) {
         case LogicalOperator::and_:
-            return make_unique<AndingFilter>();
+            return std::make_unique<AndingFilter>();
         case LogicalOperator::or_:
-            return make_unique<OringFilter>();
+            return std::make_unique<OringFilter>();
     }
     return nullptr;  // unreachable
 }
 
 void VariadicFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 
-void VariadicFilter::addSubfilter(unique_ptr<Filter> f) {
+void VariadicFilter::addSubfilter(std::unique_ptr<Filter> f) {
     _subfilters.push_back(move(f));
 }
 
-unique_ptr<Filter> VariadicFilter::stealLastSubfiler() {
+std::unique_ptr<Filter> VariadicFilter::stealLastSubfiler() {
     if (_subfilters.empty()) {
         return nullptr;
     }
-    unique_ptr<Filter> l = move(_subfilters.back());
+    std::unique_ptr<Filter> l = move(_subfilters.back());
     _subfilters.pop_back();
     return l;
 }
 
-void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
-                                   int *upper, int timezone_offset) const {
+void VariadicFilter::findIntLimits(const std::string &colum_nname, int *lower,
+                                   int *upper,
+                                   std::chrono::seconds timezone_offset) const {
     for (const auto &filter : _subfilters) {
         filter->findIntLimits(colum_nname, lower, upper, timezone_offset);
     }

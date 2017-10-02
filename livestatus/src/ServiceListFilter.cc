@@ -29,8 +29,6 @@
 #include "ServiceListColumn.h"
 #include "nagios.h"
 
-using std::string;
-
 namespace {
 constexpr char hostservice_separator = '|';
 }  // namespace
@@ -38,7 +36,7 @@ constexpr char hostservice_separator = '|';
 ServiceListFilter::ServiceListFilter(const ServiceListColumn &column,
                                      bool hostname_required,
                                      RelationalOperator relOp,
-                                     const string &value)
+                                     const std::string &value)
     : _column(column), _hostname_required(hostname_required), _relOp(relOp) {
     if ((_relOp == RelationalOperator::equal ||
          _relOp == RelationalOperator::not_equal) &&
@@ -49,12 +47,12 @@ ServiceListFilter::ServiceListFilter(const ServiceListColumn &column,
     // ref_value must be of the form
     //    hostname hostservice_separator service_description
     auto pos = value.find(hostservice_separator);
-    if (pos == string::npos) {
+    if (pos == std::string::npos) {
         if (_hostname_required) {
             Informational(column.logger())
                 << "Invalid reference value for service "
                    "list membership. Must be 'hostname"
-                << string(1, hostservice_separator) << "servicename'";
+                << std::string(1, hostservice_separator) << "servicename'";
         } else {
             _ref_service = value;
         }
@@ -64,10 +62,11 @@ ServiceListFilter::ServiceListFilter(const ServiceListColumn &column,
     }
 }
 
-bool ServiceListFilter::accepts(Row row, const contact * /* auth_user */,
-                                int /* timezone_offset */) const {
-    // data points to a primary data object. We need to extract
-    // a pointer to a service list
+bool ServiceListFilter::accepts(
+    Row row, const contact * /* auth_user */,
+    std::chrono::seconds /* timezone_offset */) const {
+    // data points to a primary data object. We need to extract a pointer to a
+    // service list
     servicesmember *mem = _column.getMembers(row);
 
     // test for empty list
@@ -113,4 +112,4 @@ bool ServiceListFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string ServiceListFilter::columnName() const { return _column.name(); }
+std::string ServiceListFilter::columnName() const { return _column.name(); }

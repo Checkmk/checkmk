@@ -26,6 +26,7 @@
 #define RendererJSON_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -35,8 +36,8 @@ class Logger;
 
 class RendererJSON : public Renderer {
 public:
-    RendererJSON(std::ostream &os, Logger *logger, int timezone_offset,
-                 Encoding data_encoding);
+    RendererJSON(std::ostream &os, Logger *logger,
+                 std::chrono::seconds timezone_offset, Encoding data_encoding);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

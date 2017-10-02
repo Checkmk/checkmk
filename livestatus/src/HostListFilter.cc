@@ -30,15 +30,15 @@
 #include "Row.h"
 #include "nagios.h"
 
-using std::move;
-using std::string;
-
+// Alas, cppcheck is a bit behind the times regarding move semantics...
 HostListFilter::HostListFilter(const HostListColumn &column,
-                               RelationalOperator relOp, string value)
-    : _column(column), _relOp(relOp), _ref_value(move(value)) {}
+                               RelationalOperator relOp,
+                               // cppcheck-suppress passedByValue
+                               std::string value)
+    : _column(column), _relOp(relOp), _ref_value(std::move(value)) {}
 
 bool HostListFilter::accepts(Row row, const contact * /* auth_user */,
-                             int /* timezone_offset */) const {
+                             std::chrono::seconds /* timezone_offset */) const {
     // data points to a primary data object. We need to extract a pointer to a
     // host list
     hostsmember *mem = _column.getMembers(row);
@@ -89,4 +89,4 @@ bool HostListFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string HostListFilter::columnName() const { return _column.name(); }
+std::string HostListFilter::columnName() const { return _column.name(); }

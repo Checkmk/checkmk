@@ -28,22 +28,20 @@
 #include "Logger.h"
 #include "Row.h"
 
-using std::move;
-using std::string;
-using std::unique_ptr;
-
+// Alas, cppcheck is a bit behind the times regarding move semantics...
 ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
-                       string element,
-                       unique_ptr<ListColumn::Contains> predicate,
+                       // cppcheck-suppress passedByValue
+                       std::string element,
+                       std::unique_ptr<ListColumn::Contains> predicate,
                        bool isEmptyValue)
     : _column(column)
     , _relOp(relOp)
-    , _element(move(element))
-    , _predicate(move(predicate))
+    , _element(std::move(element))
+    , _predicate(std::move(predicate))
     , _empty_ref(isEmptyValue) {}
 
 bool ListFilter::accepts(Row row, const contact * /* auth_user */,
-                         int /* timezone_offset */) const {
+                         std::chrono::seconds /* timezone_offset */) const {
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -74,7 +72,8 @@ bool ListFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-const string *ListFilter::valueForIndexing(const string &column_name) const {
+const std::string *ListFilter::valueForIndexing(
+    const std::string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::greater_or_equal:
             return column_name == columnName() ? &_element : nullptr;
@@ -94,4 +93,4 @@ const string *ListFilter::valueForIndexing(const string &column_name) const {
     return nullptr;  // unreachable
 }
 
-string ListFilter::columnName() const { return _column.name(); }
+std::string ListFilter::columnName() const { return _column.name(); }

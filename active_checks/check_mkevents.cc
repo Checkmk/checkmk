@@ -223,7 +223,10 @@ int main(int argc, char **argv) {
 
     // Create query message
     string query_message;
-    query_message += "GET events\nFilter: event_host ";
+    query_message += "GET events\n";
+    query_message += "Columns: event_phase event_state event_text\n";
+
+    query_message += "Filter: event_host ";
     if (strchr(host, '/') != nullptr) {
         query_message += "in ";
         query_message += prepare_host_match_list(host);

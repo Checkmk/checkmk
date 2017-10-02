@@ -194,16 +194,19 @@ template <typename ContainerT, typename BlockModeT = BlockMode::Nop<ContainerT>,
           typename AddModeT = AddMode::Append<ContainerT>>
 class SplittingListConfigurable
     : public ListConfigurable<ContainerT, BlockModeT, AddModeT> {
-    char _split_char;
 
     typedef ListConfigurable<ContainerT, BlockModeT, AddModeT> SuperT;
-
     typedef typename ContainerT::value_type DataT;
+    typedef std::function<std::string(const std::string &)> MapFunction;
 
 public:
     SplittingListConfigurable(Configuration &config, const char *section,
-                              const char *key, char split_char = ' ')
-        : SuperT(config, section, key), _split_char(split_char) {}
+                              const char *key, const MapFunction &mapFunction =
+                                  [](const std::string &s) { return s; },
+                              char split_char = ' ')
+    : SuperT(config, section, key)
+    , _mapFunction(mapFunction)
+    , _split_char(split_char) {}
 
     virtual void feed(const std::string &key,
                       const std::string &value) override {
@@ -211,7 +214,7 @@ public:
         std::stringstream str(value);
         std::string item;
         while (getline(str, item, _split_char)) {
-            SuperT::feed(key, item);
+            SuperT::feed(key, _mapFunction(item));
         }
     }
 
@@ -223,6 +226,10 @@ public:
         }
         out << "\n";
     }
+
+private:
+    const MapFunction _mapFunction;
+    char _split_char;
 };
 
 #endif  // Configurable_h

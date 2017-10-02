@@ -1,0 +1,12 @@
+Title: Windows agent: Ensure backwards compatibility of section webservices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p14
+Date: 1506950547
+
+Version 1.4.0 'corrected' the naming of section wmi_webservices. Unfortunately, this broke the backwards compatibility of old ini files that still call this 'webservices'. The fix maps the old name to the new one so that both old and new ini files work. Moreover, the agent bakery was still writing ini files with the old name. Now the agent bakery is also fixed.
+

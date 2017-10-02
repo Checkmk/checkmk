@@ -44,8 +44,8 @@ Downtime::Downtime(nebstruct_downtime_struct *dt)
     , _start_time(dt->start_time)
     , _end_time(dt->end_time)
     , _fixed(dt->fixed)
-    , _duration(dt->duration)
-    , _triggered_by(dt->triggered_by) {}
+    , _duration(static_cast<int>(dt->duration))
+    , _triggered_by(static_cast<int>(dt->triggered_by)) {}
 
 Comment::Comment(nebstruct_comment_struct *co)
     : DowntimeOrComment(reinterpret_cast<nebstruct_downtime_struct *>(co),

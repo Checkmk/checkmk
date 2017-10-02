@@ -195,8 +195,7 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
 }
 
 void Store::answerCommandRequest(const char *command) {
-    int len = strlen(command);
-    if (len < 14 || command[0] != '[' || command[11] != ']' ||
+    if (strlen(command) < 14 || command[0] != '[' || command[11] != ']' ||
         command[12] != ' ') {
         Warning(logger()) << "Ignoring malformed command '" << command << "'";
         return;

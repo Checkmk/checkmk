@@ -793,7 +793,9 @@ def log_event_history_to_mongodb(event, what, who, addinfo):
         'addinfo': addinfo,
     })
 
-def get_event_history_from_mongodb(filters, limit):
+def get_event_history_from_mongodb(query):
+    filters, limit = query.filters, query.limit
+
     history_entries = []
 
     if not g_mongo_conn:
@@ -994,7 +996,8 @@ def flush_event_history_files():
         expire_logfiles(True)
 
 
-def get_event_history_from_file(filters, limit):
+def get_event_history_from_file(query):
+    filters, limit = query.filters, query.limit
     history_entries = []
     log_dir = g_state_dir + "/history"
     if not os.path.exists(log_dir):
@@ -1055,7 +1058,7 @@ def get_event_history_from_file(filters, limit):
                     logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue # skip this file
 
-        new_entries = parse_history_file(path, filters, greptexts, limit)
+        new_entries = parse_history_file(path, query, greptexts, limit)
         history_entries += new_entries
         if limit != None:
             limit -= len(new_entries)
@@ -1064,7 +1067,7 @@ def get_event_history_from_file(filters, limit):
 
 
 
-def parse_history_file(path, filters, greptexts, limit):
+def parse_history_file(path, query, greptexts, limit):
     entries = []
     line_no = 0
     # If we have greptexts we pre-filter the file using the extremely
@@ -1088,7 +1091,7 @@ def parse_history_file(path, filters, greptexts, limit):
             parts = line.decode('utf-8').rstrip('\n').split('\t')
             convert_history_line(parts)
             values = [line_no] + parts
-            if g_status_server.table_history.filter_row(headers, filters, values):
+            if g_status_server.table_history.filter_row(query, values):
                 entries.append(values)
         except Exception as e:
             logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))
@@ -3301,8 +3304,7 @@ class StatusTable(object):
             # Apply filters
             # TODO: History filtering is done in history load code. Check for improvements
             if query.filters and query.table_name != "history":
-                # TODO: Hand over whole query object to filter_row()
-                match = self.filter_row(query.table.column_names, query.filters, row)
+                match = self.filter_row(query, row)
                 if not match:
                     continue
 
@@ -3325,15 +3327,11 @@ class StatusTable(object):
         return result_row
 
 
-    def filter_row(self, headers, filters, list_row):
-        # TODO(sp) This is a real performance killer: We should just calculate
-        # the column indices for column names *once*, not doing some dict/list
-        # Kung Fu for every row...
-        row = dict(zip(headers, list_row))
-        for column, opfunc, argument in filters:
-            if not opfunc(row[column], argument):
+    def filter_row(self, query, row):
+        for column, opfunc, argument in query.filters:
+            if not opfunc(row[query.table.column_indices[column]], argument):
                 return None
-        return list_row
+        return row
 
 
 
@@ -3400,9 +3398,9 @@ class StatusTableHistory(StatusTable):
 
     def _enumerate(self, query):
         if g_config['archive_mode'] == 'mongodb':
-            return get_event_history_from_mongodb(query.filters, query.limit)
+            return get_event_history_from_mongodb(query)
         else:
-            return get_event_history_from_file(query.filters, query.limit)
+            return get_event_history_from_file(query)
 
 
 

@@ -99,6 +99,40 @@ def load_plugins(force):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+class UserVisualsCache(object):
+    """Realizes a in memory cache (per apache process). This has been introduced to improve the
+    situation where there are hundrets of custom visuals (views here). These visuals are rarely
+    changed, but read and evaluated(!) during each page request which costs a lot of time."""
+    def __init__(self):
+        super(UserVisualsCache, self).__init__()
+        self._cache = {}
+
+
+    def get(self, path):
+        try:
+            cached_modification_timestamp, cached_user_visuals = self._cache[path]
+
+            try:
+                current_modification_timestamp = os.stat(path).st_mtime
+            except IOError:
+                return None # Invalidate cache (file to readable)
+
+            if os.stat(path).st_mtime <= cached_modification_timestamp:
+                return cached_user_visuals # Use cache
+            else:
+                return None # Cache is outdated
+        except KeyError:
+            return None # Not cached yet
+
+
+    def add(self, path, modification_timestamp, user_visuals):
+        self._cache[path] = modification_timestamp, user_visuals
+
+
+_user_visuals_cache = UserVisualsCache()
+
+
+
 def save(what, visuals, user_id = None):
     if user_id == None:
         user_id = config.user.id
@@ -108,6 +142,7 @@ def save(what, visuals, user_id = None):
         if user_id == owner_id:
             uservisuals[name] = visual
     config.save_user_file('user_' + what, uservisuals, user = user_id)
+
 
 # FIXME: Currently all user visual files of this type are locked. We could optimize
 # this not to lock all files but only lock the files the user is about to modify.
@@ -128,6 +163,14 @@ def load(what, builtin_visuals, skip_func = None, lock=False):
         visuals[('', name)] = visual
 
     # Now scan users subdirs for files "user_*.mk"
+    visuals.update(load_user_visuals(what, builtin_visuals, skip_func, lock))
+
+    return visuals
+
+
+def load_user_visuals(what, builtin_visuals, skip_func, lock):
+    visuals = {}
+
     subdirs = os.listdir(config.config_dir)
     for user in subdirs:
         try:
@@ -148,39 +191,51 @@ def load(what, builtin_visuals, skip_func = None, lock=False):
             if not userdb.user_exists(user):
                 continue
 
-            user_visuals = store.load_data_from_file(path, {}, lock)
-            for name, visual in user_visuals.items():
-                visual["owner"] = user
-                visual["name"] = name
+            user_visuals = _user_visuals_cache.get(path)
+            if user_visuals is None:
+                modification_timestamp = os.stat(path).st_mtime
+                user_visuals = load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user)
+                _user_visuals_cache.add(path, modification_timestamp, user_visuals)
 
-                if skip_func and skip_func(visual):
-                    continue
-
-                # Maybe resolve inherited attributes. This was a feature for several versions
-                # to make the visual texts localizable. This has been removed because the visual
-                # texts can now be localized using the custom localization strings.
-                # This is needed for backward compatibility to make the visuals without these
-                # attributes get the attributes from their builtin visual.
-                builtin_visual = visuals.get(('', name))
-                if builtin_visual:
-                    for attr in [ 'title', 'linktitle', 'topic', 'description' ]:
-                        if attr not in visual and attr in builtin_visual:
-                            visual[attr] = builtin_visual[attr]
-
-                # Repair visuals with missing 'title' or 'description'
-                visual.setdefault("title", name)
-                visual.setdefault("description", "")
-
-                # Declare custom permissions
-                declare_visual_permission(what, name, visual)
-
-                visuals[(user, name)] = visual
-
+            visuals.update(user_visuals)
 
         except SyntaxError, e:
             raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, path, e))
 
     return visuals
+
+
+def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
+    user_visuals = {}
+    for name, visual in store.load_data_from_file(path, {}, lock).items():
+        visual["owner"] = user
+        visual["name"] = name
+
+        if skip_func and skip_func(visual):
+            continue
+
+        # Maybe resolve inherited attributes. This was a feature for several versions
+        # to make the visual texts localizable. This has been removed because the visual
+        # texts can now be localized using the custom localization strings.
+        # This is needed for backward compatibility to make the visuals without these
+        # attributes get the attributes from their builtin visual.
+        builtin_visual = builtin_visuals.get(name)
+        if builtin_visual:
+            for attr in [ 'title', 'linktitle', 'topic', 'description' ]:
+                if attr not in visual and attr in builtin_visual:
+                    visual[attr] = builtin_visual[attr]
+
+        # Repair visuals with missing 'title' or 'description'
+        visual.setdefault("title", name)
+        visual.setdefault("description", "")
+
+        # Declare custom permissions
+        declare_visual_permission(what, name, visual)
+
+        user_visuals[(user, name)] = visual
+
+    return user_visuals
+
 
 def declare_visual_permission(what, name, visual):
     permname = "%s.%s" % (what[:-1], name)

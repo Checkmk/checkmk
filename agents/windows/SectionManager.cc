@@ -1,4 +1,5 @@
 #include "SectionManager.h"
+#include <unordered_map>
 #include "Configuration.h"
 #include "Environment.h"
 #include "sections/SectionCheckMK.h"
@@ -21,12 +22,26 @@
 #include "sections/SectionWMI.h"
 #include "sections/SectionWinperf.h"
 
+namespace {
+// Fix possible backwards incompatibility of section names by mapping
+// 'old' names to 'new' ones.
+std::string mapSectionName(const std::string &sectionName) {
+    const std::unordered_map<std::string, std::string> mappedSectionNames = {
+        {"webservices", "wmi_webservices"}};
+    const auto it = mappedSectionNames.find(sectionName);
+    return it == mappedSectionNames.end() ? sectionName : it->second;
+}
+
+}  // namespace
+
 SectionManager::SectionManager(Configuration &config, Logger *logger,
                                const WinApiAdaptor &winapi)
     : _ps_use_wmi(config, "ps", "use_wmi", false, winapi)
-    , _enabled_sections(config, "global", "sections", winapi)
-    , _disabled_sections(config, "global", "disabled_sections", winapi)
-    , _realtime_sections(config, "global", "realtime_sections", winapi)
+    , _enabled_sections(config, "global", "sections", winapi, mapSectionName)
+    , _disabled_sections(config, "global", "disabled_sections", winapi,
+                         mapSectionName)
+    , _realtime_sections(config, "global", "realtime_sections", winapi,
+                         mapSectionName)
     , _script_local_includes(config, "local", "include", winapi)
     , _script_plugin_includes(config, "plugin", "include", winapi)
     , _winperf_counters(config, "winperf", "counters", winapi)

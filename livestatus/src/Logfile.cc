@@ -190,8 +190,7 @@ long Logfile::freeMessages(unsigned logclasses) {
     return freed;
 }
 
-bool Logfile::processLogLine(uint32_t lineno, string line,
-                             unsigned logclasses) {
+bool Logfile::processLogLine(size_t lineno, string line, unsigned logclasses) {
     auto entry = make_unique<LogEntry>(_mc, lineno, std::move(line));
     // ignored invalid lines
     if (entry->_logclass == LogEntry::Class::invalid) {
@@ -258,7 +257,7 @@ bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
     return true;
 }
 
-uint64_t Logfile::makeKey(time_t t, unsigned lineno) {
+uint64_t Logfile::makeKey(time_t t, size_t lineno) {
     return (static_cast<uint64_t>(t) << 32) | static_cast<uint64_t>(lineno);
 }
 

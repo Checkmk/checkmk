@@ -76,7 +76,9 @@ public:
     };
     static constexpr uint32_t all_classes = 0xffffu;
 
-    unsigned _lineno;  // line number in file
+    // TODO(sp): Wrong type, caused by TableLog accessing it via
+    // OffsetIntColumn, should be size_t
+    int32_t _lineno;  // line number in file
     time_t _time;
     Class _logclass;
     LogEntryType _type;
@@ -99,7 +101,7 @@ public:
     Command _command;
 
     // NOTE: line gets modified!
-    LogEntry(MonitoringCore *mc, unsigned lineno, std::string line);
+    LogEntry(MonitoringCore *mc, size_t lineno, std::string line);
     unsigned updateReferences(MonitoringCore *mc);
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);

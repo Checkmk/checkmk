@@ -1783,8 +1783,6 @@ class EventServer(ECServerThread):
         host_downtimes = {}
 
         for event in g_event_status.events():
-            if "host_in_downtime" not in event:
-                self.logger.warning(repr(event))
             if not event["host_in_downtime"]:
                 continue # only care about events created in downtime
 

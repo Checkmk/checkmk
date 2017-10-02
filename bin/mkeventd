@@ -3080,6 +3080,7 @@ class Query(object):
     def __init__(self, raw_query):
         super(Query, self).__init__()
 
+        self.logger = logger
         self.output_format = "python"
 
         self._raw_query = raw_query

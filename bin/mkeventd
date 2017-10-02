@@ -3179,7 +3179,7 @@ class QueryGET(Query):
                     if name == "event_host" and opfunc == filter_operators['in']:
                         self.only_host = set(argument)
 
-                    filters.append((name, opfunc, argument))
+                    self.filters.append((name, opfunc, argument))
 
 
                 elif header == "Limit":

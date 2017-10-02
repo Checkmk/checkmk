@@ -46,9 +46,9 @@ ifneq (,$(MAKECMDGOALS))
 endif
 
 # Check if called inside chroot jail.
-ifneq (WinAgent,$(CHROOTNAME))
-  $(error "Not allowed outside chroot. Please call './make-agent$(SEPARATOR)$(MAKECMDGOALS)' instead")
-endif
+#ifneq (WinAgent,$(CHROOTNAME))
+#  $(error "Not allowed outside chroot. Please call './make-agent$(SEPARATOR)$(MAKECMDGOALS)' instead")
+#endif
 
 ifeq ($(shell uname),Linux)
   CXX        = i686-w64-mingw32-g++-posix

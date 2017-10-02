@@ -116,7 +116,7 @@ def load_data_from_file(path, default=None, lock=False):
                 # May be created empty during locking
                 return default
             else:
-                return ast.literal_eval(file(path).read())
+                return ast.literal_eval(content)
         except IOError, e:
             if e.errno == 2: # IOError: [Errno 2] No such file or directory
                 return default

@@ -1,0 +1,12 @@
+Title: Event console status queries now handle the Limit header correctly
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506938154
+Class: fix
+
+The event console status queries (e.g. used to show data in the GUI) were
+ignoring the Limit header which caused the EC to process too many rows
+in the response to status queries.

@@ -3300,7 +3300,11 @@ class StatusTable(object):
         # TODO: Add support for ColumnHeaders like in livestatus?
         yield query.requested_columns
 
+        num_rows = 0
         for row in self._enumerate(query):
+            if query.limit is not None and num_rows >= query.limit:
+                break # The maximum number of rows has been reached
+
             # Apply filters
             # TODO: History filtering is done in history load code. Check for improvements
             if query.filters and query.table_name != "history":
@@ -3309,6 +3313,7 @@ class StatusTable(object):
                     continue
 
             yield self._build_result_row(row, requested_column_indexes)
+            num_rows += 1
 
 
     # Must return a enumerable type containing fully populated lists (rows) matching the

@@ -795,7 +795,6 @@ def log_event_history_to_mongodb(event, what, who, addinfo):
 
 def get_event_history_from_mongodb(filters, limit):
     history_entries = []
-    headers = g_status_server.table_history.column_names
 
     if not g_mongo_conn:
         connect_mongodb()
@@ -856,7 +855,7 @@ def get_event_history_from_mongodb(filters, limit):
             item.append(entry['event'].get(key, defval))
         history_entries.append(item)
 
-    return headers, history_entries
+    return history_entries
 
 #.
 #   .--History-------------------------------------------------------------.
@@ -905,14 +904,17 @@ def to_utf8(x):
         return x
 
 def quote_tab(col):
-    if type(col) in [ float, int ]:
+    ty = type(col)
+    if ty in [ float, int ]:
         return str(col)
-    elif type(col) == bool:
+    elif ty is bool:
         return col and "1" or "0"
-    elif type(col) in [ tuple, list ]:
+    elif ty in [ tuple, list ]:
         col = "\1" + "\1".join([ quote_tab(e) for e in col ])
-    elif col == None:
+    elif col is None:
         col = "\2"
+    elif col is unicode:
+        col = col.encode("utf-8")
 
     return col.replace("\t", " ")
 
@@ -991,18 +993,12 @@ def flush_event_history_files():
     with lock_logging:
         expire_logfiles(True)
 
-def get_event_history(filters, limit):
-    if g_config['archive_mode'] == 'mongodb':
-        return get_event_history_from_mongodb(filters, limit)
-    else:
-        return get_event_history_from_file(filters, limit)
 
 def get_event_history_from_file(filters, limit):
     history_entries = []
-    headers = g_status_server.table_history.column_names
     log_dir = g_state_dir + "/history"
     if not os.path.exists(log_dir):
-        return headers, []
+        return []
 
     # Optimization: use grep in order to reduce amount
     # of read lines based on some frequently used filters.
@@ -1059,16 +1055,16 @@ def get_event_history_from_file(filters, limit):
                     logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue # skip this file
 
-        new_entries = parse_history_file(path, headers, filters, greptexts, limit)
+        new_entries = parse_history_file(path, filters, greptexts, limit)
         history_entries += new_entries
         if limit != None:
             limit -= len(new_entries)
 
-    return headers, history_entries
+    return history_entries
 
 
 
-def parse_history_file(path, headers, filters, greptexts, limit):
+def parse_history_file(path, filters, greptexts, limit):
     entries = []
     line_no = 0
     # If we have greptexts we pre-filter the file using the extremely
@@ -1078,6 +1074,8 @@ def parse_history_file(path, headers, filters, greptexts, limit):
     if greptexts:
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE) # nosec
+
+    headers = g_status_server.table_history.column_names
 
     for line in grep.stdout:
         line_no += 1
@@ -1090,7 +1088,7 @@ def parse_history_file(path, headers, filters, greptexts, limit):
             parts = line.decode('utf-8').rstrip('\n').split('\t')
             convert_history_line(parts)
             values = [line_no] + parts
-            if g_status_server.filter_row(headers, filters, values):
+            if g_status_server.table_history.filter_row(headers, filters, values):
                 entries.append(values)
         except Exception as e:
             logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))
@@ -1201,23 +1199,18 @@ class Perfcounters(object):
 
     def get_status(self):
         with self._lock:
-            headers = []
             row = []
             for name, value in self._counters.iteritems():
                 rate_name = name.rstrip("s") + "_rate"
                 average_rate_name = "average_" + name.rstrip("s") + "_rate"
-                headers.append("status_" + name)
-                headers.append("status_" + rate_name)
-                headers.append("status_" + average_rate_name)
                 row.append(value)
                 row.append(self._rates.get(name, 0.0))
                 row.append(self._average_rates.get(name, 0.0))
 
             for name in self._weights.iterkeys():
-                headers.append("status_average_%s_time" % name)
                 row.append(self._times.get(name, 0.0))
 
-            return headers, row
+            return row
 
 
 #.
@@ -1298,20 +1291,18 @@ class EventServer(ECServerThread):
 
 
     def get_status(self):
-        headers, row = [], []
+        row = []
 
-        self._add_general_status(headers, row)
-        self._add_perfcounter_status(headers, row)
-        self._add_replication_status(headers, row)
-        self._add_event_limit_status(headers, row)
+        row += self._add_general_status()
+        row += g_perfcounters.get_status()
+        row += self._add_replication_status()
+        row += self._add_event_limit_status()
 
-        return headers, [row]
+        return [row]
 
 
-    def _add_general_status(self, headers, row):
-        headers += [ s[0] for s in self._general_columns() ]
-
-        row += [
+    def _add_general_status(self):
+        return [
             g_last_config_reload,
             g_event_status.num_existing_events,
             self._virtual_memory_size(),
@@ -1323,28 +1314,19 @@ class EventServer(ECServerThread):
         return int(parts[22]) # in Bytes
 
 
-    def _add_perfcounter_status(self, headers, row):
-        status_headers, status_row = g_perfcounters.get_status()
-        headers += status_headers
-        row += status_row
-
-
-    def _add_replication_status(self, headers, row):
-        headers += [ s[0] for s in self._replication_columns() ]
-
+    def _add_replication_status(self):
         if is_replication_slave():
-            row += [
+            return [
                 g_slave_status["mode"],
                 g_slave_status["last_sync"],
                 g_slave_status["success"],
             ]
         else:
-            row += [ "master", 0.0, False ]
+            return [ "master", 0.0, False ]
 
 
-    def _add_event_limit_status(self, headers, row):
-        headers += [ s[0] for s in self._event_limit_columns() ]
-        row += [
+    def _add_event_limit_status(self):
+        return [
             g_config["event_limit"]["by_host"]["limit"],
             g_config["event_limit"]["by_rule"]["limit"],
             g_config["event_limit"]["overall"]["limit"],
@@ -3094,6 +3076,9 @@ class Query(object):
 
     def __init__(self, raw_query):
         super(Query, self).__init__()
+
+        self.output_format = "python"
+
         self._raw_query = raw_query
         self._from_raw_query()
 
@@ -3125,28 +3110,17 @@ class QueryGET(Query):
 
 
     def _parse_table(self):
-        self.table = self.method_arg
+        self.table_name = self.method_arg
 
-        if self.table not in self._allowed_tables:
+        if self.table_name not in self._allowed_tables:
             raise MKClientError("Invalid table: %s (allowed are: %s)" %
                                         ", ".join(self._allowed_tables))
 
-        # TODO: Move to table object and add a reference to the table object here
-        if self.table == "events":
-            self.columns = g_status_server.table_events.columns
-        elif self.table == "history":
-            self.columns = g_status_server.table_history.columns
-        elif self.table == "rules":
-            self.columns = g_status_server.table_rules.columns
-        elif self.table == "status":
-            self.columns = g_status_server.table_status.columns
-        else:
-            raise NotImplementedError()
+        self.table = g_status_server.table(self.table_name)
 
 
     def _parse_header_lines(self):
-        self.output_format     = "python"
-        self.requested_columns = []
+        self.requested_columns = self.table.column_names # use all columns as default
         self.filters           = []
         self.limit             = None
         self.only_host         = None
@@ -3170,7 +3144,15 @@ class QueryGET(Query):
                     self.output_format = argument
 
                 elif header == "Columns":
-                    self.requested_columns = argument.split(" ")
+                    # TODO: The EC is handling unknown columns different than regular livestatus. The EC
+                    # silently ignores them and outputs only the known ones. We can only fix this in case
+                    # the core sends only the columns that the EC knows. At the moment it also requests
+                    # the host columns.
+                    #self.requested_columns = argument.split(" ")
+                    self.requested_columns = []
+                    for column_name in argument.split(" "):
+                        if column_name in self.table.column_defaults:
+                            self.requested_columns.append(column_name)
 
                 elif header == "Filter":
                     name, opfunc, argument = self._parse_filter(argument)
@@ -3202,19 +3184,18 @@ class QueryGET(Query):
             parts.append("")
         column, operator, argument = parts
 
-        # TODO: Use a map of columns for performance reasons!
-        for name, def_val in self.columns:
-            if name == column:
-                if type(def_val) == int:
-                    convert = lambda c: int(c)
-                elif type(def_val) == float:
-                    convert = lambda c: float(c)
-                else:
-                    convert = lambda c: str(c)
-                break
-        else:
-            raise MKClientError("Unknown column: %s (Available are: %s" % (column, ", ".join([x[0] for x in self.columns])))
+        try:
+            convert = self.table.column_types[column]
+        except KeyError:
+            raise MKClientError("Unknown column: %s (Available are: %s)" %
+                                        (column, self.table.column_names))
 
+        # TODO: BUG: The query is decoded to unicode after receiving it from
+        # the socket. The columns with type str (initialied with "") will apply
+        # str(argument) here and convert the value back to str! This will crash
+        # when the filter contains non ascii characters!
+        # Fix this by making the default values unicode and skip unicode conversion
+        # here (for performance reasons) because argument is already unicode.
         if operator == 'in':
             argument = map(convert, argument.split())
         else:
@@ -3225,6 +3206,21 @@ class QueryGET(Query):
             raise MKClientError("Unknown filter operator '%s'" % operator)
 
         return (column, opfunc, argument)
+
+
+    def requested_column_indexes(self):
+        indexes = []
+
+        for column_name in self.requested_columns:
+            try:
+                column_index = self.table.column_indices[column_name]
+            except KeyError:
+                # The column is not known: Use None as index and None value later
+                column_index = None
+            indexes.append(column_index)
+
+        return indexes
+
 
 
 
@@ -3274,15 +3270,76 @@ class QueryCOMMAND(Query):
 
 
 class StatusTable(object):
+    prefix  = None
     columns = []
 
     def __init__(self):
         super(StatusTable, self).__init__()
+        self._populate_column_views()
+
+
+    def _populate_column_views(self):
         self.column_names = [ c[0] for c in self.columns ]
+        self.column_defaults = dict(self.columns)
+
+        self.column_types = {}
+        for name, def_val in self.columns:
+            self.column_types[name] = type(def_val)
+
+        self.column_indices = dict([ (name, index) for index, name
+                                                   in enumerate(self.column_names) ])
+
+
+    def query(self, query):
+        requested_column_indexes = query.requested_column_indexes()
+
+        # Output the column headers
+        # TODO: Add support for ColumnHeaders like in livestatus?
+        yield query.requested_columns
+
+        for row in self._enumerate(query):
+            # Apply filters
+            # TODO: History filtering is done in history load code. Check for improvements
+            if query.filters and query.table_name != "history":
+                # TODO: Hand over whole query object to filter_row()
+                match = self.filter_row(query.table.column_names, query.filters, row)
+                if not match:
+                    continue
+
+            yield self._build_result_row(row, requested_column_indexes)
+
+
+    # Must return a enumerable type containing fully populated lists (rows) matching the
+    # columns of the table
+    def _enumerate(self, query):
+        raise NotImplementedError()
+
+
+    def _build_result_row(self, row, requested_column_indexes):
+        result_row = []
+        for index in requested_column_indexes:
+            if index is None:
+                result_row.append(None)
+            else:
+                result_row.append(row[index])
+        return result_row
+
+
+    def filter_row(self, headers, filters, list_row):
+        # TODO(sp) This is a real performance killer: We should just calculate
+        # the column indices for column names *once*, not doing some dict/list
+        # Kung Fu for every row...
+        row = dict(zip(headers, list_row))
+        for column, opfunc, argument in filters:
+            if not opfunc(row[column], argument):
+                return None
+        return list_row
+
 
 
 
 class StatusTableEvents(StatusTable):
+    prefix  = "event"
     columns = [
         ( "event_id",                          1 ),
         ( "event_count",                       1 ),
@@ -3311,8 +3368,27 @@ class StatusTableEvents(StatusTable):
     ]
 
 
+    def _enumerate(self, query):
+        for event in g_event_status.get_events():
+            # Optimize filters that are set by the check_mkevents active check. Since users
+            # may have a lot of those checks running, it is a good idea to optimize this.
+            if query.only_host and event["host"] not in query.only_host:
+                continue
+
+            row = []
+            for column_name in self.column_names:
+                try:
+                    row.append(event[column_name[6:]])
+                except KeyError:
+                    # The row does not have this value. Use the columns default value
+                    row.append(self.column_defaults[column_name])
+
+            yield row
+
+
 
 class StatusTableHistory(StatusTable):
+    prefix  = "history"
     columns = [
         ( "history_line",         0 ), # Line number in event history file
         ( "history_time",       0.0 ),
@@ -3322,18 +3398,34 @@ class StatusTableHistory(StatusTable):
     ] + StatusTableEvents.columns
 
 
+    def _enumerate(self, query):
+        if g_config['archive_mode'] == 'mongodb':
+            return get_event_history_from_mongodb(query.filters, query.limit)
+        else:
+            return get_event_history_from_file(query.filters, query.limit)
+
+
 
 class StatusTableRules(StatusTable):
+    prefix  = "rule"
     columns = [
         ( "rule_id",             "" ),
         ( "rule_hits",            0 ),
     ]
 
 
+    def _enumerate(self, query):
+        return g_event_status.get_rule_stats()
+
+
 
 class StatusTableStatus(StatusTable):
+    prefix  = "status"
     columns = EventServer.status_columns()
 
+
+    def _enumerate(self, query):
+        return g_event_server.get_status()
 
 
 #.
@@ -3359,6 +3451,10 @@ class StatusServer(ECServerThread):
         self.table_history = StatusTableHistory()
         self.table_rules   = StatusTableRules()
         self.table_status  = StatusTableStatus()
+
+
+    def table(self, name):
+        return getattr(self, "table_%s" % name)
 
 
     def open_sockets(self):
@@ -3485,7 +3581,7 @@ class StatusServer(ECServerThread):
 
             with lock_eventstatus:
                 if query.method == "GET":
-                    response = self.handle_get_request(query)
+                    response = self.table(query.table_name).query(query)
 
                 elif query.method == "REPLICATE":
                     response = self.handle_replicate(query.method_arg, client_ip)
@@ -3512,16 +3608,16 @@ class StatusServer(ECServerThread):
 
     def _answer_query(self, client_socket, output_format, response):
         if output_format == "plain":
-            for line in response:
-                client_socket.sendall("\t".join([to_utf8(quote_tab(c)) for c in line]))
+            for row in response:
+                client_socket.sendall("\t".join([quote_tab(c) for c in row]))
                 client_socket.sendall("\n")
 
         elif output_format == "json":
-            client_socket.sendall(json.dumps(response))
+            client_socket.sendall(json.dumps(list(response)))
             client_socket.sendall("\n")
 
         elif output_format == "python":
-            client_socket.sendall(repr(response))
+            client_socket.sendall(repr(list(response)))
             client_socket.sendall("\n")
 
         else:
@@ -3684,42 +3780,6 @@ class StatusServer(ECServerThread):
         except:
             raise MKClientError("Invalid arguments to command REPLICATE")
         return replication_send(last_update)
-
-    def handle_get_request(self, query):
-        if query.table == "events":
-            headers, list_rows = g_event_status.get_events(query.only_host)
-        elif query.table == "history":
-            headers, list_rows = get_event_history(query.filters, query.limit)
-        elif query.table == "rules":
-            headers, list_rows = g_event_status.get_rule_stats()
-        elif query.table == "status":
-            headers, list_rows = g_event_server.get_status()
-        else:
-            raise NotImplementedError()
-
-        rows = [headers]
-        if query.table != "history": # Do filtering now
-            for list_row in list_rows:
-                if query.filters:
-                    match = self.filter_row(headers, query.filters, list_row)
-                    if match:
-                        rows.append(list_row)
-                else:
-                    rows.append(list_row)
-        else:
-            rows += list_rows
-
-        return rows
-
-    def filter_row(self, headers, filters, list_row):
-        # TODO(sp) This is a real performance killer: We should just calculate
-        # the column indices for column names *once*, not doing some dict/list
-        # Kung Fu for every row...
-        row = dict(zip(headers, list_row))
-        for column, opfunc, argument in filters:
-            if not opfunc(row[column], argument):
-                return None
-        return list_row
 
 
 #.
@@ -4205,26 +4265,13 @@ class EventStatus(object):
                 return
         raise MKClientError("No event with id %s" % event_id)
 
-    def get_events(self, only_host = None):
-        result = []
-        for event in self._events:
-            # Optimize filters that are set by the check_mkevents active check. Since users
-            # may have a lot of those checks running, it is a good idea to optimize this.
-            if only_host and event["host"] not in only_host:
-                continue
 
-            event_line = []
-            for col_name, col_default in g_status_server.table_events.columns:
-                without_prefix = col_name[6:] # drop event_
-                event_line.append(event.get(without_prefix, col_default))
-
-            result.append(event_line)
-
-        return g_status_server.table_events.column_names, result
+    def get_events(self):
+        return self._events
 
 
     def get_rule_stats(self):
-        return g_status_Server.table_rules.column_names, sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
+        return sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
 
 #.
 #   .--Actions-------------------------------------------------------------.

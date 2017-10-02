@@ -38,8 +38,8 @@ static constexpr size_t timestamp_prefix_length = 13;
 
 // TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
 // this set-me-to-zero-to-be-sure-block.
-LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, string line)
-    : _lineno(lineno)
+LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, string line)
+    : _lineno(static_cast<int32_t>(lineno))
     , _complete(std::move(line))
     , _state(0)
     , _attempt(0)

@@ -46,7 +46,7 @@ class HostServiceState {
 public:
     bool _is_host;
     time_t _time;
-    int _lineno;
+    int32_t _lineno;
     time_t _from;
     time_t _until;
 

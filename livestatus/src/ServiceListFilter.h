@@ -26,6 +26,7 @@
 #define ServiceListFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <string>
 #include "ColumnFilter.h"
 #include "contact_fwd.h"
@@ -38,7 +39,7 @@ public:
     ServiceListFilter(const ServiceListColumn &column, bool hostname_required,
                       RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
-                 int timezone_offset) const override;
+                 std::chrono::seconds timezone_offset) const override;
     std::string columnName() const override;
 
 private:

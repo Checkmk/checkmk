@@ -26,6 +26,7 @@
 #define VariadicFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstddef>
 #include <deque>
 #include <memory>
@@ -46,7 +47,7 @@ public:
     auto begin() const { return _subfilters.begin(); }
     auto end() const { return _subfilters.end(); }
     void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
-                       int timezone_offset) const override;
+                       std::chrono::seconds timezone_offset) const override;
 
 protected:
     std::deque<std::unique_ptr<Filter>> _subfilters;

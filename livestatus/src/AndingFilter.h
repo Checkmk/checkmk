@@ -26,6 +26,7 @@
 #define AndingFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include "VariadicFilter.h"
@@ -40,9 +41,9 @@ class Row;
 class AndingFilter : public VariadicFilter {
 public:
     bool accepts(Row row, const contact *auth_user,
-                 int timezone_offset) const override;
+                 std::chrono::seconds timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
-                         int timezone_offset) const override;
+                         std::chrono::seconds timezone_offset) const override;
     const std::string *findValueForIndexing(
         const std::string &column_name) const;
 };

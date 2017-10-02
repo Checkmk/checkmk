@@ -27,10 +27,8 @@
 #include "Filter.h"
 #include "Row.h"
 
-using std::string;
-
 bool OringFilter::accepts(Row row, const contact *auth_user,
-                          int timezone_offset) const {
+                          std::chrono::seconds timezone_offset) const {
     for (const auto &filter : _subfilters) {
         if (filter->accepts(row, auth_user, timezone_offset)) {
             return true;
@@ -39,8 +37,9 @@ bool OringFilter::accepts(Row row, const contact *auth_user,
     return false;
 }
 
-bool OringFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
-                                  int timezone_offset) const {
+bool OringFilter::optimizeBitmask(const std::string &column_name,
+                                  uint32_t *mask,
+                                  std::chrono::seconds timezone_offset) const {
     // We can only optimize, if *all* subfilters are filters for the
     // same column.
     uint32_t m = 0;

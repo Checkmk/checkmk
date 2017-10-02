@@ -24,6 +24,7 @@
 
 #include "Renderer.h"
 #include <cmath>
+#include <ctime>
 #include <iomanip>
 #include <ostream>
 #include "Logger.h"
@@ -34,20 +35,8 @@
 #include "RendererPython.h"
 #include "RendererPython3.h"
 
-using std::chrono::system_clock;
-using std::hex;
-using std::make_unique;
-using std::ostream;
-using std::ostringstream;
-using std::setfill;
-using std::setw;
-using std::size_t;
-using std::string;
-using std::unique_ptr;
-using std::vector;
-
-Renderer::Renderer(ostream &os, Logger *logger, int timezone_offset,
-                   Encoding data_encoding)
+Renderer::Renderer(std::ostream &os, Logger *logger,
+                   std::chrono::seconds timezone_offset, Encoding data_encoding)
     : _os(os)
     , _data_encoding(data_encoding)
     , _timezone_offset(timezone_offset)
@@ -56,27 +45,27 @@ Renderer::Renderer(ostream &os, Logger *logger, int timezone_offset,
 Renderer::~Renderer() = default;
 
 // static
-unique_ptr<Renderer> Renderer::make(OutputFormat format, ostream &os,
-                                    Logger *logger,
-                                    const CSVSeparators &separators,
-                                    int timezone_offset,
-                                    Encoding data_encoding) {
+std::unique_ptr<Renderer> Renderer::make(OutputFormat format, std::ostream &os,
+                                         Logger *logger,
+                                         const CSVSeparators &separators,
+                                         std::chrono::seconds timezone_offset,
+                                         Encoding data_encoding) {
     switch (format) {
         case OutputFormat::csv:
-            return make_unique<RendererCSV>(os, logger, timezone_offset,
-                                            data_encoding);
+            return std::make_unique<RendererCSV>(os, logger, timezone_offset,
+                                                 data_encoding);
         case OutputFormat::broken_csv:
-            return make_unique<RendererBrokenCSV>(
+            return std::make_unique<RendererBrokenCSV>(
                 os, logger, separators, timezone_offset, data_encoding);
         case OutputFormat::json:
-            return make_unique<RendererJSON>(os, logger, timezone_offset,
-                                             data_encoding);
+            return std::make_unique<RendererJSON>(os, logger, timezone_offset,
+                                                  data_encoding);
         case OutputFormat::python:
-            return make_unique<RendererPython>(os, logger, timezone_offset,
-                                               data_encoding);
+            return std::make_unique<RendererPython>(os, logger, timezone_offset,
+                                                    data_encoding);
         case OutputFormat::python3:
-            return make_unique<RendererPython3>(os, logger, timezone_offset,
-                                                data_encoding);
+            return std::make_unique<RendererPython3>(
+                os, logger, timezone_offset, data_encoding);
     }
     return nullptr;  // unreachable
 }
@@ -94,7 +83,7 @@ void Renderer::output(PlainChar value) { _os.put(value._ch); }
 
 void Renderer::output(HexEscape value) {
     OStreamStateSaver s(_os);
-    _os << R"(\x)" << hex << setw(2) << setfill('0')
+    _os << R"(\x)" << std::hex << std::setw(2) << std::setfill('0')
         << static_cast<unsigned>(static_cast<unsigned char>(value._ch));
 }
 
@@ -102,7 +91,7 @@ void Renderer::output(RowFragment value) { _os << value._str; }
 
 void Renderer::output(char16_t value) {
     OStreamStateSaver s(_os);
-    _os << R"(\u)" << hex << setw(4) << setfill('0') << value;
+    _os << R"(\u)" << std::hex << std::setw(4) << std::setfill('0') << value;
 }
 
 void Renderer::output(char32_t value) {
@@ -118,12 +107,12 @@ void Renderer::output(char32_t value) {
 
 void Renderer::output(Null /* unused */) { outputNull(); }
 
-void Renderer::output(const vector<char> &value) { outputBlob(value); }
+void Renderer::output(const std::vector<char> &value) { outputBlob(value); }
 
-void Renderer::output(const string &value) { outputString(value); }
+void Renderer::output(const std::string &value) { outputString(value); }
 
-void Renderer::output(system_clock::time_point value) {
-    output(system_clock::to_time_t(value) + _timezone_offset);
+void Renderer::output(std::chrono::system_clock::time_point value) {
+    output(std::chrono::system_clock::to_time_t(value + _timezone_offset));
 }
 
 namespace {
@@ -141,8 +130,8 @@ void Renderer::invalidUTF8(unsigned char ch) {
     Warning(_logger) << "invalid byte " << int(ch) << " in UTF-8 sequence";
 }
 
-void Renderer::outputByteString(const string &prefix,
-                                const vector<char> &value) {
+void Renderer::outputByteString(const std::string &prefix,
+                                const std::vector<char> &value) {
     _os << prefix << R"(")";  // "
     for (auto ch : value) {
         if (isBoringChar(ch)) {
@@ -154,7 +143,7 @@ void Renderer::outputByteString(const string &prefix,
     _os << R"(")";  // "
 }
 
-void Renderer::outputUnicodeString(const string &prefix, const char *start,
+void Renderer::outputUnicodeString(const std::string &prefix, const char *start,
                                    const char *end, Encoding data_encoding) {
     _os << prefix << R"(")";  // "
     // TODO(sp) Use polymorphism instead of switch.

@@ -26,11 +26,8 @@
 #include <ostream>
 class Logger;
 
-using std::ostream;
-using std::string;
-using std::vector;
-
-RendererCSV::RendererCSV(ostream &os, Logger *logger, int timezone_offset,
+RendererCSV::RendererCSV(std::ostream &os, Logger *logger,
+                         std::chrono::seconds timezone_offset,
                          Encoding data_encoding)
     : Renderer(os, logger, timezone_offset, data_encoding) {}
 
@@ -72,16 +69,16 @@ void RendererCSV::endDict() {}
 void RendererCSV::outputNull() {}
 
 void RendererCSV::outputEscaped(char ch) {
-    _os << (ch == '"' ? R"("")" : string(1, ch));
+    _os << (ch == '"' ? R"("")" : std::string(1, ch));
 }
 
-void RendererCSV::outputBlob(const vector<char> &value) {
+void RendererCSV::outputBlob(const std::vector<char> &value) {
     for (auto ch : value) {
         outputEscaped(ch);
     }
 }
 
-void RendererCSV::outputString(const string &value) {
+void RendererCSV::outputString(const std::string &value) {
     for (auto ch : value) {
         outputEscaped(ch);
     }

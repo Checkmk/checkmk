@@ -59,7 +59,8 @@ private:
 class RendererBrokenCSV : public Renderer {
 public:
     RendererBrokenCSV(std::ostream& os, Logger* logger,
-                      const CSVSeparators& separators, int timezone_offset,
+                      const CSVSeparators& separators,
+                      std::chrono::seconds timezone_offset,
                       Encoding data_encoding)
         : Renderer(os, logger, timezone_offset, data_encoding)
         , _separators(separators) {}

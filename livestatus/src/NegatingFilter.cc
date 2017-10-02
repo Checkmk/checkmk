@@ -40,6 +40,6 @@ const unique_ptr<Filter> &NegatingFilter::subfilter() const { return _filter; }
 #endif
 
 bool NegatingFilter::accepts(Row row, const contact *auth_user,
-                             int timezone_offset) const {
+                             std::chrono::seconds timezone_offset) const {
     return !_filter->accepts(row, auth_user, timezone_offset);
 }

@@ -26,6 +26,7 @@
 #define Filter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstdint>
 #include <string>
 class FilterVisitor;
@@ -43,13 +44,14 @@ public:
     virtual void accept(FilterVisitor &) const = 0;
 
     virtual bool accepts(Row row, const contact *auth_user,
-                         int timezone_offset) const = 0;
+                         std::chrono::seconds timezone_offset) const = 0;
     virtual const std::string *valueForIndexing(
         const std::string &column_name) const;
     virtual void findIntLimits(const std::string &column_name, int *lower,
-                               int *upper, int timezone_offset) const;
+                               int *upper,
+                               std::chrono::seconds timezone_offset) const;
     virtual bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
-                                 int timezone_offset) const;
+                                 std::chrono::seconds timezone_offset) const;
 };
 
 #endif  // Filter_h

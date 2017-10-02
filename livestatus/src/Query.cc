@@ -22,12 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// duration_cast uses enable_if as an implementation detail, similar bug as
+// https://github.com/include-what-you-use/include-what-you-use/issues/434
+// IWYU pragma: no_include <type_traits>
 #include "Query.h"
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <ostream>
+#include <ratio>
 #include <stdexcept>
 #include <utility>
 #include "Aggregator.h"
@@ -51,23 +56,9 @@
 #include "nagios.h"
 #endif
 
-using std::chrono::duration_cast;
-using std::chrono::milliseconds;
-using std::chrono::system_clock;
-using std::list;
-using std::make_shared;
-using std::make_unique;
-using std::map;
-using std::ostringstream;
-using std::runtime_error;
-using std::shared_ptr;
-using std::string;
-using std::to_string;
-using std::unique_ptr;
-using std::vector;
-
-Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
-             size_t max_response_size, OutputBuffer &output)
+Query::Query(const std::list<std::string> &lines, Table *table,
+             Encoding data_encoding, size_t max_response_size,
+             OutputBuffer &output)
     : _data_encoding(data_encoding)
     , _max_response_size(max_response_size)
     , _output(output)
@@ -87,7 +78,7 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
     , _timezone_offset(0)
     , _logger(table->logger()) {
     for (auto &line : lines) {
-        vector<char> line_copy(line.begin(), line.end());
+        std::vector<char> line_copy(line.begin(), line.end());
         line_copy.push_back('\0');
         char *buffer = &line_copy[0];
         rstrip(buffer);
@@ -178,13 +169,14 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
             break;
 
         } else {
-            invalidHeader("Undefined request header '" + string(buffer) + "'");
+            invalidHeader("Undefined request header '" + std::string(buffer) +
+                          "'");
             break;
         }
     }
 
     if (_columns.empty() && !doStats()) {
-        table->any_column([this](shared_ptr<Column> c) {
+        table->any_column([this](std::shared_ptr<Column> c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
@@ -193,19 +185,20 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
     }
 }
 
-void Query::invalidHeader(const string &message) {
+void Query::invalidHeader(const std::string &message) {
     _output.setError(OutputBuffer::ResponseCode::invalid_header, message);
 }
 
-void Query::invalidRequest(const string &message) const {
+void Query::invalidRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
 }
 
-unique_ptr<Filter> Query::createFilter(Column &column, RelationalOperator relOp,
-                                       const string &value) {
+std::unique_ptr<Filter> Query::createFilter(Column &column,
+                                            RelationalOperator relOp,
+                                            const std::string &value) {
     try {
         return column.createFilter(relOp, value);
-    } catch (const runtime_error &e) {
+    } catch (const std::runtime_error &e) {
         invalidHeader("error creating filter on table " + _table->name() +
                       ": " + e.what());
         return nullptr;
@@ -213,7 +206,7 @@ unique_ptr<Filter> Query::createFilter(Column &column, RelationalOperator relOp,
 }
 
 void Query::parseAndOrLine(char *line, LogicalOperator andor,
-                           VariadicFilter &filter, const string &header) {
+                           VariadicFilter &filter, const std::string &header) {
     char *value = next_field(&line);
     if (value == nullptr) {
         invalidHeader("Missing value for " + header +
@@ -232,9 +225,9 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
         invalidHeader("error combining filters for table " + _table->name() +
                       " with '" +
                       (andor == LogicalOperator::and_ ? "AND" : "OR") +
-                      "': expected " + to_string(number) +
-                      " filters, but only " + to_string(filter.size()) + " " +
-                      (filter.size() == 1 ? "is" : "are") + " on stack");
+                      "': expected " + std::to_string(number) +
+                      " filters, but only " + std::to_string(filter.size()) +
+                      " " + (filter.size() == 1 ? "is" : "are") + " on stack");
         return;
     }
 
@@ -242,7 +235,7 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
 }
 
 void Query::parseNegateLine(char *line, VariadicFilter &filter,
-                            const string &header) {
+                            const std::string &header) {
     if (next_field(&line) != nullptr) {
         invalidHeader(header + ": does not take any arguments");
         return;
@@ -254,11 +247,11 @@ void Query::parseNegateLine(char *line, VariadicFilter &filter,
         return;
     }
 
-    filter.addSubfilter(make_unique<NegatingFilter>(move(to_negate)));
+    filter.addSubfilter(std::make_unique<NegatingFilter>(move(to_negate)));
 }
 
 void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
-    string kind = andor == LogicalOperator::or_ ? "StatsOr" : "StatsAnd";
+    std::string kind = andor == LogicalOperator::or_ ? "StatsOr" : "StatsAnd";
     char *value = next_field(&line);
     if (value == nullptr) {
         invalidHeader("Missing value for " + kind +
@@ -291,8 +284,8 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
         variadic->addSubfilter(col->stealFilter());
         _stats_columns.pop_back();
     }
-    _stats_columns.push_back(make_unique<StatsColumn>(nullptr, move(variadic),
-                                                      StatsOperation::count));
+    _stats_columns.push_back(std::make_unique<StatsColumn>(
+        nullptr, move(variadic), StatsOperation::count));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -310,10 +303,10 @@ void Query::parseStatsNegateLine(char *line) {
             "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
-    auto negated = make_unique<NegatingFilter>(col->stealFilter());
+    auto negated = std::make_unique<NegatingFilter>(col->stealFilter());
     _stats_columns.pop_back();
-    _stats_columns.push_back(make_unique<StatsColumn>(nullptr, move(negated),
-                                                      StatsOperation::count));
+    _stats_columns.push_back(std::make_unique<StatsColumn>(
+        nullptr, move(negated), StatsOperation::count));
 }
 
 void Query::parseStatsLine(char *line) {
@@ -356,29 +349,29 @@ void Query::parseStatsLine(char *line) {
     auto column = _table->column(column_name);
     if (!column) {
         invalidHeader("invalid stats header: table '" + _table->name() +
-                      "' has no column '" + string(column_name) + "'");
+                      "' has no column '" + std::string(column_name) + "'");
         return;
     }
 
-    unique_ptr<Filter> filter;
+    std::unique_ptr<Filter> filter;
     if (operation == StatsOperation::count) {
         char *operator_name = next_field(&line);
         if (operator_name == nullptr) {
             invalidHeader(
                 "invalid stats header: missing operator after table '" +
-                string(column_name) + "'");
+                std::string(column_name) + "'");
             return;
         }
         RelationalOperator relOp;
         if (!relationalOperatorForName(operator_name, relOp)) {
-            invalidHeader("invalid stats operator '" + string(operator_name) +
-                          "'");
+            invalidHeader("invalid stats operator '" +
+                          std::string(operator_name) + "'");
             return;
         }
         char *value = lstrip(line);
         if (value == nullptr) {
             invalidHeader("invalid stats: missing value after operator '" +
-                          string(operator_name) + "'");
+                          std::string(operator_name) + "'");
             return;
         }
 
@@ -388,7 +381,7 @@ void Query::parseStatsLine(char *line) {
         }
     }
     _stats_columns.push_back(
-        make_unique<StatsColumn>(column.get(), move(filter), operation));
+        std::make_unique<StatsColumn>(column.get(), move(filter), operation));
     _all_columns.insert(column);
 
     /* Default to old behaviour: do not output column headers if we
@@ -406,26 +399,26 @@ void Query::parseFilterLine(char *line, VariadicFilter &filter) {
     auto column = _table->column(column_name);
     if (!column) {
         invalidHeader("invalid filter: table '" + _table->name() +
-                      "' has no column '" + string(column_name) + "'");
+                      "' has no column '" + std::string(column_name) + "'");
         return;
     }
 
     char *operator_name = next_field(&line);
     if (operator_name == nullptr) {
         invalidHeader("invalid filter header: missing operator after table '" +
-                      string(column_name) + "'");
+                      std::string(column_name) + "'");
         return;
     }
     RelationalOperator relOp;
     if (!relationalOperatorForName(operator_name, relOp)) {
-        invalidHeader("invalid filter operator '" + string(operator_name) +
+        invalidHeader("invalid filter operator '" + std::string(operator_name) +
                       "'");
         return;
     }
     char *value = lstrip(line);
     if (value == nullptr) {
         invalidHeader("invalid filter: missing value after operator '" +
-                      string(operator_name) + "'");
+                      std::string(operator_name) + "'");
         return;
     }
 
@@ -460,8 +453,8 @@ void Query::parseColumnsLine(char *line) {
             // older Livestatus versions.
             Informational(_logger) << "Replacing non-existing column '"
                                    << column_name << "' with null column";
-            column =
-                make_shared<NullColumn>(column_name, "non-existing column");
+            column = std::make_shared<NullColumn>(column_name,
+                                                  "non-existing column");
         }
         _columns.push_back(column);
         _all_columns.insert(column);
@@ -471,38 +464,39 @@ void Query::parseColumnsLine(char *line) {
 
 void Query::parseSeparatorsLine(char *line) {
     char *token = next_field(&line);
-    string dsep =
-        token == nullptr ? _separators.dataset() : string(1, char(atoi(token)));
+    std::string dsep = token == nullptr ? _separators.dataset()
+                                        : std::string(1, char(atoi(token)));
     token = next_field(&line);
-    string fsep =
-        token == nullptr ? _separators.field() : string(1, char(atoi(token)));
+    std::string fsep = token == nullptr ? _separators.field()
+                                        : std::string(1, char(atoi(token)));
 
     token = next_field(&line);
-    string lsep =
-        token == nullptr ? _separators.list() : string(1, char(atoi(token)));
+    std::string lsep = token == nullptr ? _separators.list()
+                                        : std::string(1, char(atoi(token)));
 
     token = next_field(&line);
-    string hsep = token == nullptr ? _separators.hostService()
-                                   : string(1, char(atoi(token)));
+    std::string hsep = token == nullptr ? _separators.hostService()
+                                        : std::string(1, char(atoi(token)));
 
     _separators = CSVSeparators(dsep, fsep, lsep, hsep);
 }
 
 namespace {
-map<string, OutputFormat> formats{{"CSV", OutputFormat::csv},
-                                  {"csv", OutputFormat::broken_csv},
-                                  {"json", OutputFormat::json},
-                                  {"python", OutputFormat::python},
-                                  {"python3", OutputFormat::python3}};
+std::map<std::string, OutputFormat> formats{{"CSV", OutputFormat::csv},
+                                            {"csv", OutputFormat::broken_csv},
+                                            {"json", OutputFormat::json},
+                                            {"python", OutputFormat::python},
+                                            {"python3", OutputFormat::python3}};
 }  // namespace
 
 void Query::parseOutputFormatLine(char *line) {
     auto format_and_rest = mk::nextField(line);
     auto it = formats.find(format_and_rest.first);
     if (it == formats.end()) {
-        string msg;
+        std::string msg;
         for (const auto &entry : formats) {
-            msg += string(msg.empty() ? "" : ", ") + "'" + entry.first + "'";
+            msg +=
+                std::string(msg.empty() ? "" : ", ") + "'" + entry.first + "'";
         }
         invalidHeader("Missing/invalid output format, use one of " + msg + ".");
         return;
@@ -559,7 +553,7 @@ void Query::parseResponseHeaderLine(char *line) {
     } else if (strcmp(value, "fixed16") == 0) {
         _output.setResponseHeader(OutputBuffer::ResponseHeader::fixed16);
     } else {
-        invalidHeader("Invalid value '" + string(value) +
+        invalidHeader("Invalid value '" + std::string(value) +
                       "' for ResponseHeader: must be 'off' or 'fixed16'");
     }
 }
@@ -618,7 +612,7 @@ void Query::parseWaitTriggerLine(char *line) {
     }
     struct trigger *t = trigger_find(value);
     if (t == nullptr) {
-        invalidHeader("WaitTrigger: invalid trigger '" + string(value) +
+        invalidHeader("WaitTrigger: invalid trigger '" + std::string(value) +
                       "'. Allowed are " + trigger_all_names() + ".");
         return;
     }
@@ -629,7 +623,7 @@ void Query::parseWaitObjectLine(char *line) {
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (_wait_object.isNull()) {
-        invalidHeader("WaitObject: object '" + string(objectspec) +
+        invalidHeader("WaitObject: object '" + std::string(objectspec) +
                       "' not found or not supported by this table");
     }
 }
@@ -640,40 +634,40 @@ void Query::parseLocaltimeLine(char *line) {
         invalidHeader("Header Localtime: missing value");
         return;
     }
-    time_t their_time = atoi(value);
-    time_t our_time = time(nullptr);
 
-    // compute offset to be *added* each time we output our time and
-    // *substracted* from reference value by filter headers
-    int dif = their_time - our_time;
+    // Compute offset to be *added* each time we output our time and
+    // *subtracted* from reference value by filter headers
+    auto diff = std::chrono::system_clock::from_time_t(atoi(value)) -
+                std::chrono::system_clock::now();
 
-    // Round difference to half hour. We assume, that both clocks are more
-    // or less synchronized and that the time offset is only due to being
-    // in different time zones.
-    int full = dif / 1800;
-    int rem = dif % 1800;
-    if (rem <= -900) {
-        full--;
-    } else if (rem >= 900) {
-        full++;
-    }
-    if (full >= 48 || full <= -48) {
+    // Round difference to half hour. We assume, that both clocks are more or
+    // less synchronized and that the time offset is only due to being in
+    // different time zones. This would be a one-liner if we already had C++17's
+    // std::chrono::round().
+    using half_an_hour = std::chrono::duration<double, std::ratio<1800>>;
+    auto hah = std::chrono::duration_cast<half_an_hour>(diff);
+    auto rounded = half_an_hour(round(hah.count()));
+    auto offset = std::chrono::duration_cast<std::chrono::seconds>(rounded);
+    if (offset <= std::chrono::hours(-24) || offset >= std::chrono::hours(24)) {
         invalidHeader(
-            "Invalid Localtime header: timezone difference greater then 24 hours");
+            "Invalid Localtime header: timezone difference greater than or equal to 24 hours");
         return;
     }
-    _timezone_offset = full * 1800;
-    if (_timezone_offset != 0) {
-        Debug(_logger) << "timezone difference is " << _timezone_offset / 3600.0
-                       << " hours";
+
+    if (offset != std::chrono::seconds(0)) {
+        using hour = std::chrono::duration<double, std::ratio<3600>>;
+        Debug(_logger) << "timezone offset is "
+                       << std::chrono::duration_cast<hour>(offset).count()
+                       << "h";
     }
+    _timezone_offset = offset;
 }
 
 bool Query::doStats() const { return !_stats_columns.empty(); }
 
 bool Query::process() {
     // Precondition: output has been reset
-    auto start_time = system_clock::now();
+    auto start_time = std::chrono::system_clock::now();
     auto renderer =
         Renderer::make(_output_format, _output.os(), _output.getLogger(),
                        _separators, _timezone_offset, _data_encoding);
@@ -683,8 +677,8 @@ bool Query::process() {
     start(q);
     _table->answerQuery(this);
     finish(q);
-    auto elapsed =
-        duration_cast<milliseconds>(system_clock::now() - start_time);
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start_time);
     Informational(_logger) << "processed request in " << elapsed.count()
                            << " ms, replied with " << _output.os().tellp()
                            << " bytes";
@@ -703,7 +697,7 @@ void Query::start(QueryRenderer &q) {
 
         // Output dummy headers for stats columns
         for (size_t col = 1; col <= _stats_columns.size(); ++col) {
-            r.output(string("stats_") + to_string(col));
+            r.output(std::string("stats_") + std::to_string(col));
         }
     }
 }
@@ -711,7 +705,8 @@ void Query::start(QueryRenderer &q) {
 bool Query::timelimitReached() const {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
         _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
-                         "Maximum query time of " + to_string(_time_limit) +
+                         "Maximum query time of " +
+                             std::to_string(_time_limit) +
                              " seconds exceeded!");
         return true;
     }
@@ -748,11 +743,11 @@ bool Query::processDataset(Row row) {
             // then.  :-/ The slightly hacky workaround is to pre-render all
             // non-stats columns into a single string here (RowFragment) and
             // output it later in a verbatim manner.
-            ostringstream os;
+            std::ostringstream os;
             {
                 auto renderer = Renderer::make(
                     _output_format, os, _output.getLogger(), _separators,
-                    _timezone_offset, _data_encoding);
+                    timezoneOffset(), _data_encoding);
                 QueryRenderer q(*renderer, EmitBeginEnd::off);
                 RowRenderer r(q);
                 for (const auto &column : _columns) {
@@ -760,7 +755,7 @@ bool Query::processDataset(Row row) {
                 }
             }
             for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
-                aggr->consume(row, _auth_user, _timezone_offset);
+                aggr->consume(row, _auth_user, timezoneOffset());
             }
         } else {
             RowRenderer r(*_renderer_query);
@@ -786,25 +781,26 @@ void Query::finish(QueryRenderer &q) {
     }
 }
 
-const string *Query::findValueForIndexing(const string &column_name) const {
+const std::string *Query::findValueForIndexing(
+    const std::string &column_name) const {
     return _filter.findValueForIndexing(column_name);
 }
 
-void Query::findIntLimits(const string &column_name, int *lower,
+void Query::findIntLimits(const std::string &column_name, int *lower,
                           int *upper) const {
-    return _filter.findIntLimits(column_name, lower, upper, _timezone_offset);
+    return _filter.findIntLimits(column_name, lower, upper, timezoneOffset());
 }
 
-void Query::optimizeBitmask(const string &column_name,
+void Query::optimizeBitmask(const std::string &column_name,
                             uint32_t *bitmask) const {
-    _filter.optimizeBitmask(column_name, bitmask, _timezone_offset);
+    _filter.optimizeBitmask(column_name, bitmask, timezoneOffset());
 }
 
-const vector<unique_ptr<Aggregator>> &Query::getAggregatorsFor(
+const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     const RowFragment &groupspec) {
     auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
-        vector<unique_ptr<Aggregator>> aggrs;
+        std::vector<std::unique_ptr<Aggregator>> aggrs;
         for (const auto &sc : _stats_columns) {
             aggrs.push_back(sc->createAggregator());
         }
@@ -823,7 +819,7 @@ void Query::doWait() {
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
     if (_wait_condition.size() > 0 &&
-        _wait_condition.accepts(_wait_object, _auth_user, _timezone_offset)) {
+        _wait_condition.accepts(_wait_object, _auth_user, timezoneOffset())) {
         Debug(_logger) << "Wait condition true, no waiting neccessary";
         return;
     }
@@ -847,5 +843,5 @@ void Query::doWait() {
             }
         }
     } while (
-        !_wait_condition.accepts(_wait_object, _auth_user, _timezone_offset));
+        !_wait_condition.accepts(_wait_object, _auth_user, timezoneOffset()));
 }

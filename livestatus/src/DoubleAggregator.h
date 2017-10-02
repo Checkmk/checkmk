@@ -26,6 +26,7 @@
 #define DoubleAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstdint>
 #include "Aggregator.h"
 class DoubleColumn;
@@ -46,7 +47,8 @@ public:
         , _count(0)
         , _aggr(0)
         , _sumq(0) {}
-    void consume(Row row, const contact *contact, int timezone_offset) override;
+    void consume(Row row, const contact *contact,
+                 std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;
 
 private:

@@ -47,7 +47,7 @@ public:
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
     // fixed, it is just an artifact.
     virtual void consume(Row row, const contact *auth_user,
-                         int timezone_offset) = 0;
+                         std::chrono::seconds timezone_offset) = 0;
 
     virtual void output(RowRenderer &r) const = 0;
 

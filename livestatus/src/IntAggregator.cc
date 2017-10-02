@@ -30,7 +30,7 @@
 #include "contact_fwd.h"
 
 void IntAggregator::consume(Row row, const contact *auth_user,
-                            int /* timezone_offset */) {
+                            std::chrono::seconds /* timezone_offset */) {
     _count++;
     int32_t value = _column->getValue(row, auth_user);
     switch (getOperation()) {

@@ -26,12 +26,9 @@
 #include <ostream>
 class Logger;
 
-using std::ostream;
-using std::string;
-using std::vector;
-
-RendererPython3::RendererPython3(ostream &os, Logger *logger,
-                                 int timezone_offset, Encoding data_encoding)
+RendererPython3::RendererPython3(std::ostream &os, Logger *logger,
+                                 std::chrono::seconds timezone_offset,
+                                 Encoding data_encoding)
     : Renderer(os, logger, timezone_offset, data_encoding) {}
 
 // --------------------------------------------------------------------------
@@ -71,10 +68,10 @@ void RendererPython3::endDict() { _os << "}"; }
 
 void RendererPython3::outputNull() { _os << "None"; }
 
-void RendererPython3::outputBlob(const vector<char> &value) {
+void RendererPython3::outputBlob(const std::vector<char> &value) {
     outputByteString("b", value);
 }
 
-void RendererPython3::outputString(const string &value) {
+void RendererPython3::outputString(const std::string &value) {
     outputUnicodeString("", &value[0], &value[value.size()], _data_encoding);
 }

@@ -30,22 +30,15 @@
 #include "Row.h"
 #include "StringUtils.h"
 
-using mk::lstrip;
-using mk::nextField;
-using std::regex;
-using std::regex_search;
-using std::string;
-using std::tie;
-
 CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn &column,
                                            RelationalOperator relOp,
-                                           const string &value)
+                                           const std::string &value)
     : _column(column), _relOp(relOp) {
     // Filter for custom_variables:
     //    Filter: custom_variables = PATH /hirni.mk
     // The variable name is part of the value and separated with spaces
-    tie(_ref_varname, _ref_string) = nextField(value);
-    _ref_string = lstrip(_ref_string);
+    std::tie(_ref_varname, _ref_string) = mk::nextField(value);
+    _ref_string = mk::lstrip(_ref_string);
 
     // Prepare regular expression
     switch (_relOp) {
@@ -56,8 +49,8 @@ CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn &column,
             _regex.assign(_ref_string,
                           (_relOp == RelationalOperator::matches_icase ||
                            _relOp == RelationalOperator::doesnt_match_icase)
-                              ? regex::extended | regex::icase
-                              : regex::extended);
+                              ? std::regex::extended | std::regex::icase
+                              : std::regex::extended);
             break;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -71,9 +64,10 @@ CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn &column,
     }
 }
 
-bool CustomVarsDictFilter::accepts(Row row, const contact * /* auth_user */,
-                                   int /* timezone_offset */) const {
-    string act_string = _column.getVariable(row, _ref_varname);
+bool CustomVarsDictFilter::accepts(
+    Row row, const contact * /* auth_user */,
+    std::chrono::seconds /* timezone_offset */) const {
+    std::string act_string = _column.getVariable(row, _ref_varname);
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_string == _ref_string;
@@ -101,4 +95,4 @@ bool CustomVarsDictFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string CustomVarsDictFilter::columnName() const { return _column.name(); }
+std::string CustomVarsDictFilter::columnName() const { return _column.name(); }

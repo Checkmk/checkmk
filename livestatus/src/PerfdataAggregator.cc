@@ -34,14 +34,10 @@
 #include "contact_fwd.h"
 #include "strutil.h"
 
-using std::string;
-using std::to_string;
-using std::vector;
-
 void PerfdataAggregator::consume(Row row, const contact * /* auth_user */,
-                                 int /* timezone_offset */) {
-    string perf_data = _column->getValue(row);
-    vector<char> perf_data_vec(perf_data.begin(), perf_data.end());
+                                 std::chrono::seconds /* timezone_offset */) {
+    std::string perf_data = _column->getValue(row);
+    std::vector<char> perf_data_vec(perf_data.begin(), perf_data.end());
     perf_data_vec.push_back('\0');
     char *scan = &perf_data_vec[0];
 
@@ -70,7 +66,8 @@ void PerfdataAggregator::consume(Row row, const contact * /* auth_user */,
     }
 }
 
-void PerfdataAggregator::consumeVariable(const string &varname, double value) {
+void PerfdataAggregator::consumeVariable(const std::string &varname,
+                                         double value) {
     auto it = _aggr.find(varname);
     if (it == _aggr.end()) {  // first entry
         perf_aggr new_entry;
@@ -114,7 +111,7 @@ void PerfdataAggregator::consumeVariable(const string &varname, double value) {
 }
 
 void PerfdataAggregator::output(RowRenderer &r) const {
-    string perf_data;
+    std::string perf_data;
     bool first = true;
     for (const auto &entry : _aggr) {
         double value;
@@ -155,7 +152,7 @@ void PerfdataAggregator::output(RowRenderer &r) const {
         } else {
             perf_data += " ";
         }
-        perf_data += entry.first + "=" + to_string(value);
+        perf_data += entry.first + "=" + std::to_string(value);
     }
     r.output(perf_data);
 }

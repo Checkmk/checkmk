@@ -26,6 +26,7 @@
 #define StringFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <regex>
 #include <string>
 #include "ColumnFilter.h"
@@ -39,7 +40,7 @@ public:
     StringFilter(const StringColumn &column, RelationalOperator relOp,
                  std::string value);
     bool accepts(Row row, const contact *auth_user,
-                 int timezone_offset) const override;
+                 std::chrono::seconds timezone_offset) const override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
     std::string columnName() const override;

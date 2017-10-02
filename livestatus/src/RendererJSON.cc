@@ -26,11 +26,8 @@
 #include <ostream>
 class Logger;
 
-using std::ostream;
-using std::string;
-using std::vector;
-
-RendererJSON::RendererJSON(ostream &os, Logger *logger, int timezone_offset,
+RendererJSON::RendererJSON(std::ostream &os, Logger *logger,
+                           std::chrono::seconds timezone_offset,
                            Encoding data_encoding)
     : Renderer(os, logger, timezone_offset, data_encoding) {}
 
@@ -71,10 +68,10 @@ void RendererJSON::endDict() { _os << "}"; }
 
 void RendererJSON::outputNull() { _os << "null"; }
 
-void RendererJSON::outputBlob(const vector<char> &value) {
+void RendererJSON::outputBlob(const std::vector<char> &value) {
     outputUnicodeString("", &value[0], &value[value.size()], Encoding::latin1);
 }
 
-void RendererJSON::outputString(const string &value) {
+void RendererJSON::outputString(const std::string &value) {
     outputUnicodeString("", &value[0], &value[value.size()], _data_encoding);
 }

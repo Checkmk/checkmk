@@ -57,7 +57,7 @@ public:
     static std::unique_ptr<Renderer> make(OutputFormat format, std::ostream &os,
                                           Logger *logger,
                                           const CSVSeparators &separators,
-                                          int timezone_offset,
+                                          std::chrono::seconds timezone_offset,
                                           Encoding data_encoding);
 
     virtual ~Renderer();
@@ -111,8 +111,8 @@ protected:
     std::ostream &_os;
     const Encoding _data_encoding;
 
-    Renderer(std::ostream &os, Logger *logger, int timezone_offset,
-             Encoding data_encoding);
+    Renderer(std::ostream &os, Logger *logger,
+             std::chrono::seconds timezone_offset, Encoding data_encoding);
 
     void outputByteString(const std::string &prefix,
                           const std::vector<char> &value);
@@ -120,7 +120,7 @@ protected:
                              const char *end, Encoding data_encoding);
 
 private:
-    const int _timezone_offset;
+    const std::chrono::seconds _timezone_offset;
     Logger *const _logger;
 
     void outputUTF8(const char *start, const char *end);

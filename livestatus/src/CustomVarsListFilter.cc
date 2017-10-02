@@ -29,16 +29,16 @@
 #include "Logger.h"
 #include "Row.h"
 
-using std::move;
-using std::string;
-
+// Alas, cppcheck is a bit behind the times regarding move semantics...
 CustomVarsListFilter::CustomVarsListFilter(const CustomVarsColumn &column,
                                            RelationalOperator relOp,
-                                           string value)
-    : _column(column), _relOp(relOp), _ref_text(move(value)) {}
+                                           // cppcheck-suppress passedByValue
+                                           std::string value)
+    : _column(column), _relOp(relOp), _ref_text(std::move(value)) {}
 
-bool CustomVarsListFilter::accepts(Row row, const contact * /* auth_user */,
-                                   int /* timezone_offset */) const {
+bool CustomVarsListFilter::accepts(
+    Row row, const contact * /* auth_user */,
+    std::chrono::seconds /* timezone_offset */) const {
     bool is_member = _column.contains(row, _ref_text);
     switch (_relOp) {
         case RelationalOperator::less:
@@ -63,4 +63,4 @@ bool CustomVarsListFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string CustomVarsListFilter::columnName() const { return _column.name(); }
+std::string CustomVarsListFilter::columnName() const { return _column.name(); }

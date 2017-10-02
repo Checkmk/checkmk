@@ -1,0 +1,10 @@
+Title: Improved GUI performance when having a large number of custom views or dashboards
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1506952133
+Class: fix
+
+

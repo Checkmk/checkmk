@@ -436,6 +436,8 @@ def check_cmciii_access(item, params, parsed):
 
         if state_readable == "Closed":
             state = 0
+        elif state_readable == "Open":
+            state = 1
         else:
             state = 2
 

@@ -5,46 +5,77 @@
 #    setup    - install dependencies for chroot
 #    chroot   - create a chroot for building Windows agent
 #    *        - other targets passed to make within chroot, see Makefile
+#
+# Note: setup and chroot can be combined with explicit targets passed to make
+# inside chroot. However, giving setup or chroot without further targets does
+# *not* implicitly trigger default make target within chroot.
 
 targets="$@" # no parameter -> default make target
 setup_target=setup
 chroot_target=chroot
-
-check_no_of_targets() {
-    if [ $1 != 1 ] ; then
-        echo "You cannot combine $2 with other targets."
-        exit 1
-    fi
-}
-
-# setup target: install dependencies for chroot
-if [[ " $targets " =~ " $setup_target " ]] ; then
-    check_no_of_targets $# $setup_target
-    sudo apt-get install \
-         nsis \
-         lcab \
-         debootstrap \
-         debian-archive-keyring
-    exit
-fi
-
-# chroot target: create a chroot for building Windows agent
-if [[ " $targets " =~ " $chroot_target " ]] ; then
-    check_no_of_targets $# $chroot_target
-    sudo ./make-chroot
-    exit
-fi
-
-# all other targets: assume chroot exists and pass targets to make inside chroot
+chroot_dependencies=(nsis lcab debootstrap debian-archive-keyring)
+versionfile=chroot_version
 
 base="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
 mnt=$base/agents/windows/chroot
 
-if [ ! -d "$mnt/build" ] ; then
-    echo "Did you forget to call '${BASH_SOURCE[0]} chroot' first?"
+setup() {
+    sudo apt-get install "${chroot_dependencies[@]}" 
+}
+
+ensure_chroot() {
+    # Ensure that versionfile exists...
+    if [ ! -f "$mnt/$versionfile" ] ; then
+        echo "chroot version not found."
+        create=yes
+    #  ... and it is up to date.
+    elif [ $(cat "$mnt/$versionfile") -ne $(cat "$base/agents/windows/$versionfile") ] ; then
+        echo "chroot is out of date."
+        create=yes
+    fi
+
+    if [ -z $create ] ; then
+        echo "chroot is up to date."
+    else
+        setup
+        sudo VERSIONFILE=$versionfile ./make-chroot
+    fi
+}
+
+remove_target() {
+    targets=$(sed -e "s/$1//g" \
+                  -e "s/^[[:blank:]]*//g" \
+                  -e "s/[[:blank:]]*$//g" <<< "$targets")
+}
+
+if [ ! -f "$base/agents/windows/$versionfile" ] ; then
+    echo "Error: File $base/agents/windows/$versionfile not found."
+    echo "Is your Git repository up to date?"
     exit 1
 fi
 
+# 1) setup target: install dependencies for chroot
+if [[ " $targets " =~ " $setup_target " ]] ; then
+    setup
+    remove_target $setup_target
+fi
+
+# 2) chroot target: create a chroot for building Windows agent
+if [[ " $targets " =~ " $chroot_target " ]] ; then
+    ensure_chroot
+    remove_target $chroot_target
+fi
+
+# If no other targets are left but originally there was at least one,
+# we did either setup or chroot -> we are done now (let us not do default make)
+[ -z "$targets" ] && [ $# != 0 ] && exit
+
+# 3) all other targets (including default target):
+
+# Ensure that chroot exists and is up to date.
+ensure_chroot
+
+# Pass remaining targets to make inside chroot.
 sudo ./do-chroot "cd build/agents/windows; make $targets"
 
 # Some cleanup: chown build artifacts to the original user.

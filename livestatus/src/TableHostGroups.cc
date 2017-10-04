@@ -72,13 +72,13 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<HostListColumn>(
         prefix + "members",
         "A list of all host names that are members of the hostgroup",
-        table->core(), DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset,
-        false, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(hostgroup, members),
+        table->core(), false));
     table->addColumn(make_unique<HostListColumn>(
         prefix + "members_with_state",
         "A list of all host names that are members of the hostgroup together with state and has_been_checked",
-        table->core(), DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset,
-        true, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(hostgroup, members),
+        table->core(), true));
 
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "worst_host_state",

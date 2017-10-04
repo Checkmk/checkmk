@@ -44,7 +44,8 @@ TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
         "alias", "The alias of the contactgroup",
         DANGEROUS_OFFSETOF(contactgroup, alias), -1, -1, -1));
     addColumn(make_unique<ContactGroupsMemberColumn>(
-        "members", "A list of all members of this contactgroup", -1, -1, -1));
+        "members", "A list of all members of this contactgroup", -1, -1, -1,
+        0));
 }
 
 string TableContactGroups::name() const { return "contactgroups"; }

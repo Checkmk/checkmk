@@ -39,11 +39,11 @@ class RowRenderer;
 class DowntimeColumn : public ListColumn {
 public:
     DowntimeColumn(const std::string &name, const std::string &description,
-                   MonitoringCore *mc, bool is_service, bool with_info,
                    int indirect_offset, int extra_offset,
-                   int extra_extra_offset)
+                   int extra_extra_offset, int offset, MonitoringCore *mc,
+                   bool is_service, bool with_info)
         : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset)
+                     extra_extra_offset, offset)
         , _mc(mc)
         , _is_service(is_service)
         , _with_info(with_info) {}

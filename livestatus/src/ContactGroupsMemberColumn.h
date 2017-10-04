@@ -36,9 +36,9 @@ public:
     ContactGroupsMemberColumn(const std::string& name,
                               const std::string& description,
                               int indirect_offset, int extra_offset,
-                              int extra_extra_offset)
+                              int extra_extra_offset, int offset)
         : ContactsColumn(name, description, indirect_offset, extra_offset,
-                         extra_extra_offset) {}
+                         extra_extra_offset, offset) {}
 
 private:
     std::unordered_set<std::string> contactNames(Row row) const override;

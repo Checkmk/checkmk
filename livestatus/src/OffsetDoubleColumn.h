@@ -36,12 +36,8 @@ public:
                        int offset, int indirect_offset, int extra_offset,
                        int extra_extra_offset)
         : DoubleColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset)
-        , _offset(offset) {}
+                       extra_extra_offset, offset) {}
     double getValue(Row row) const override;
-
-protected:
-    const int _offset;
 };
 
 #endif  // OffsetDoubleColumn_h

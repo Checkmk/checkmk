@@ -453,8 +453,8 @@ void Query::parseColumnsLine(char *line) {
             // older Livestatus versions.
             Informational(_logger) << "Replacing non-existing column '"
                                    << column_name << "' with null column";
-            column = std::make_shared<NullColumn>(column_name,
-                                                  "non-existing column");
+            column = std::make_shared<NullColumn>(
+                column_name, "non-existing column", -1, -1, -1, 0);
         }
         _columns.push_back(column);
         _all_columns.insert(column);

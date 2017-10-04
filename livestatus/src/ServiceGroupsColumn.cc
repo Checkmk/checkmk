@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceGroupsColumn.h"
-#include "Column.h"
 #include "Renderer.h"
 #include "Row.h"
 
@@ -72,8 +71,8 @@ bool ServiceGroupsColumn::isEmpty(Row row) const {
 }
 
 objectlist *ServiceGroupsColumn::getData(Row row) const {
-    if (auto p = columnData<void>(row)) {
-        return *offset_cast<objectlist *>(p, _offset);
+    if (auto p = columnData<objectlist *>(row)) {
+        return *p;
     }
     return nullptr;
 }

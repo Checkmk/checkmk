@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactGroupsColumn.h"
-#include "Column.h"
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -74,8 +73,8 @@ bool ContactGroupsColumn::isEmpty(Row row) const {
 }
 
 contactgroupsmember *ContactGroupsColumn::getData(Row row) const {
-    if (auto data = columnData<void>(row)) {
-        return *offset_cast<contactgroupsmember *>(data, _offset);
+    if (auto p = columnData<contactgroupsmember *>(row)) {
+        return *p;
     }
     return nullptr;
 }

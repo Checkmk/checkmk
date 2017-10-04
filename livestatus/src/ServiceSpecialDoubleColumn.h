@@ -35,11 +35,11 @@ public:
     enum class Type { staleness };
 
     ServiceSpecialDoubleColumn(const std::string& name,
-                               const std::string& description, Type ssdc_type,
-                               int indirect, int extra_offset,
-                               int extra_extra_offset)
+                               const std::string& description, int indirect,
+                               int extra_offset, int extra_extra_offset,
+                               int offset, Type ssdc_type)
         : DoubleColumn(name, description, indirect, extra_offset,
-                       extra_extra_offset)
+                       extra_extra_offset, offset)
         , _type(ssdc_type) {}
     double getValue(Row row) const override;
 

@@ -33,13 +33,14 @@ using std::string;
 using std::unique_ptr;
 
 Column::Column(string name, string description, int indirect_offset,
-               int extra_offset, int extra_extra_offset)
+               int extra_offset, int extra_extra_offset, int offset)
     : _logger(Logger::getLogger("cmk.livestatus"))
     , _name(move(name))
     , _description(move(description))
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
-    , _extra_extra_offset(extra_extra_offset) {}
+    , _extra_extra_offset(extra_extra_offset)
+    , _offset(offset) {}
 
 namespace {
 const void *shift(const void *data, int offset) {
@@ -50,9 +51,11 @@ const void *shift(const void *data, int offset) {
 }  // namespace
 
 const void *Column::shiftPointer(Row row) const {
-    return shift(shift(shift(row.rawData<const void>(), _indirect_offset),
-                       _extra_offset),
-                 _extra_extra_offset);
+    return offset_cast<const void *>(
+        shift(shift(shift(row.rawData<const void>(), _indirect_offset),
+                    _extra_offset),
+              _extra_extra_offset),
+        _offset);
 }
 
 unique_ptr<Filter> Column::createFilter(RelationalOperator /*unused*/,

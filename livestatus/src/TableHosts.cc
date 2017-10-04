@@ -485,26 +485,26 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<HostContactsColumn>(
         prefix + "contacts",
         "A list of all contacts of this host, either direct or via a contact group",
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, 0));
     table->addColumn(make_unique<DowntimeColumn>(
         prefix + "downtimes",
-        "A list of the ids of all scheduled downtimes of this host", mc, false,
-        false, indirect_offset, extra_offset, -1));
+        "A list of the ids of all scheduled downtimes of this host",
+        indirect_offset, extra_offset, -1, 0, mc, false, false));
     table->addColumn(make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of the all scheduled downtimes of the host with id, author and comment",
-        mc, false, true, indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, 0, mc, false, true));
     table->addColumn(make_unique<CommentColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        mc, false, false, false, indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, 0, mc, false, false, false));
     table->addColumn(make_unique<CommentColumn>(
         prefix + "comments_with_info",
-        "A list of all comments of the host with id, author and comment", mc,
-        false, true, false, indirect_offset, extra_offset, -1));
+        "A list of all comments of the host with id, author and comment",
+        indirect_offset, extra_offset, -1, 0, mc, false, true, false));
     table->addColumn(make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        mc, false, true, true, indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, 0, mc, false, true, true));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
@@ -532,12 +532,12 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
 
     table->addColumn(make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        table->core(), DANGEROUS_OFFSETOF(host, parent_hosts), indirect_offset,
-        false, extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, parent_hosts), table->core(), false));
     table->addColumn(make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct childs of the host",
-        table->core(), DANGEROUS_OFFSETOF(host, child_hosts), indirect_offset,
-        false, extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, child_hosts), table->core(), false));
 
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services of the host",
@@ -617,16 +617,16 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory",
         "The file content content of the Check_MK HW/SW-Inventory",
-        mc->mkInventoryPath(), "", indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, 0, mc->mkInventoryPath(), ""));
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory_gz",
         "The gzipped file content content of the Check_MK HW/SW-Inventory",
-        mc->mkInventoryPath(), ".gz", indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, 0, mc->mkInventoryPath(), ".gz"));
 
     table->addColumn(make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
-        "This list of logfiles with problems fetched via mk_logwatch", mc,
-        indirect_offset, extra_offset, -1));
+        "This list of logfiles with problems fetched via mk_logwatch",
+        indirect_offset, extra_offset, -1, 0, mc));
 
     table->addDynamicColumn(make_unique<DynamicLogwatchFileColumn>(
         prefix + "mk_logwatch_file",
@@ -635,43 +635,42 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
 
     table->addColumn(make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",
-        HostSpecialDoubleColumn::Type::staleness, indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1, 0,
+        HostSpecialDoubleColumn::Type::staleness));
 
     table->addColumn(make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",
-        DANGEROUS_OFFSETOF(host, hostgroups_ptr), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, hostgroups_ptr)));
     table->addColumn(make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
-        "A list of all contact groups this host is in", mc,
-        DANGEROUS_OFFSETOF(host, contact_groups), indirect_offset, extra_offset,
-        -1));
+        "A list of all contact groups this host is in", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, contact_groups), mc));
 
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",
-        table->core(), false, false, 0, DANGEROUS_OFFSETOF(host, services),
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
+        table->core(), false, false, 0));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
-        table->core(), false, false, 1, DANGEROUS_OFFSETOF(host, services),
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
+        table->core(), false, false, 1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
-        table->core(), false, false, 2, DANGEROUS_OFFSETOF(host, services),
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
+        table->core(), false, false, 2));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
-        table->core(), false, false, 3, DANGEROUS_OFFSETOF(host, services),
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
+        table->core(), false, false, 3));
 
     table->addColumn(make_unique<MetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, 0, mc));
 }
 
 void TableHosts::answerQuery(Query *query) {

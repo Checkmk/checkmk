@@ -72,7 +72,14 @@ rpm $(RPM_PACKAGE):
 	mkdir -p $(RPM_TOPDIR)/SOURCES
 	mkdir -p $(RPM_TOPDIR)/BUILD
 	mkdir -p $(RPM_TOPDIR)/SPECS
-	tar czf $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz --transform='s@^@$(DISTNAME)/@' *
+	tar czf \
+	    $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz \
+	    --transform='s@^@$(DISTNAME)/@' \
+	    cfg_examples \
+	    check_mk_agent.linux \
+	    check_mk_caching_agent.linux \
+	    waitmax \
+	    mk-job
 	sed "s/^Version:.*/Version: $(RPM_VERSION)/" $(NAME).spec > $(NAME)-$(VERSION).spec
 	rm -f *.rpm
 	rpmbuild -ba --buildroot "$(RPM_BUILDROOT)" \

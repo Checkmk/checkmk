@@ -1240,18 +1240,20 @@ class EventServer(ECServerThread):
         self._snmptrap     = None
         self._mib_resolver = None
 
-        self.create_pipe()
-        self.open_eventsocket()
-        self.open_syslog()
-        self.open_syslog_tcp()
-        self.open_snmptrap()
-
         self._rules = []
         self._hash_stats = []
         for _unused_facility in xrange(32):
             self._hash_stats.append([ 0 ] * 8 )
 
         self.host_config = HostConfig()
+
+
+    def open_sockets(self):
+        self.create_pipe()
+        self.open_eventsocket()
+        self.open_syslog()
+        self.open_syslog_tcp()
+        self.open_snmptrap()
 
 
     @classmethod
@@ -5126,6 +5128,7 @@ if __name__ == "__main__":
         g_status_server = StatusServer()
         g_status_server.open_sockets()
         g_event_server  = EventServer()
+        g_event_server.open_sockets()
 
         g_event_status.load_status()
 

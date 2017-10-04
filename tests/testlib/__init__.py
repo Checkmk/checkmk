@@ -1289,6 +1289,31 @@ class CMKEventConsole(CMKWebSession):
         assert config_reloaded()
 
 
+    @classmethod
+    def new_event(cls, attrs):
+        default_event = {
+            "rule_id":      815,
+            "text":         "",
+            "phase":        "open",
+            "count":        1,
+            "time":         time.time(),
+            "first":        time.time(),
+            "last":         time.time(),
+            "comment":      "",
+            "host":         "test-host",
+            "ipaddress":    "127.0.0.1",
+            "application":  "",
+            "pid":          0,
+            "priority":     3,
+            "facility":     1, # user
+            "match_groups": (),
+        }
+
+        event = default_event.copy()
+        event.update(attrs)
+        return event
+
+
 
 class CMKEventConsoleStatus(object):
     def __init__(self, address):

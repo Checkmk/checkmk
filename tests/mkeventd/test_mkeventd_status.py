@@ -4,7 +4,7 @@
 import pytest
 import time
 import ast
-from testlib import web, ec, cmk_path
+from testlib import web, ec, cmk_path, CMKEventConsole
 
 #
 # UNIT TESTS
@@ -76,29 +76,14 @@ def test_handle_client(status_server, event_status):
 
 
 def test_mkevent_check_query_perf(config, status_server, event_status, perfcounters):
-    def new_event(num):
-        return {
-            "rule_id":      815,
-            "text":         "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R" \
-                            " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@" % \
-                                (time.time(), num),
-            "phase":        "open",
-            "count":        1,
-            "time":         time.time(),
-            "first":        time.time(),
-            "last":         time.time(),
-            "comment":      "",
-            "host":         "heute-%d" % num,
-            "ipaddress":    "127.0.0.1",
-            "application":  "",
-            "pid":          0,
-            "priority":     3,
-            "facility":     1, # user
-            "match_groups": (),
-        }
-
     for n in range(10000):
-        event_status.new_event(new_event(n))
+        event_status.new_event(CMKEventConsole.new_event({
+            "host": "heute-%d" % num,
+            "text": "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R" \
+                    " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@" % \
+                    (time.time(), num),
+        }))
+
     assert len(event_status.events()) == 10000
 
     s = FakeStatusSocket("GET events\n"

@@ -61,7 +61,7 @@ setversion:
 	    fi ; \
 	done ; \
 	$(MAKE) packages
-	$(MAKE) -C windows NEW_VERSION=$(NEW_VERSION) setversion
+	cd windows ; ./make-agent
 
 packages: rpm deb
 

@@ -1,6 +1,7 @@
 1.2.8p27:
     Checks & Agents:
     * 5302 FIX: oracle_instance: Fixed crash if output contains more than 12 columns
+    * 5316 FIX: cmciii.access: Fixed error state handling...
 
 
 1.2.8p26:

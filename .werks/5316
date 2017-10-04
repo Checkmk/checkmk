@@ -1,0 +1,12 @@
+Title: cmciii.access: Fixed error state handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p27
+Date: 1507118033
+
+If status is 'Closed' Check_MK reports OK,
+if it is 'Open' check goes WARN, otherwise CRIT.

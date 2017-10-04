@@ -9,8 +9,8 @@ description:
  No limits are set in the check, since limits are configured in the
  Rittal device itself. The state given by the Rittal device is
  taken as the state of the check as follows:
- If the Rittal device returns {Closed}, the check is {OK}. Otherwise
- the check is {CRIT}.
+ If the Rittal device returns {Closed}, the check is {OK}, if it is
+ {Open} Check_MK reports WARN, otherwise {CRIT}.
 
 item:
  None

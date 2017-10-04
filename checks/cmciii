@@ -468,6 +468,9 @@ def check_cmciii_access(item, params, parsed):
     if status == "Closed":
         state = 0
         sym = ""
+    elif status == "Open":
+        state = 1
+        sym = "(!)"
     else:
         state = 2
         sym = "(!!)"

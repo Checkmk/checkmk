@@ -3598,7 +3598,7 @@ class StatusServer(ECServerThread):
                     raise NotImplementedError()
 
                 try:
-                    self._answer_query(client_socket, query.output_format, response)
+                    self._answer_query(client_socket, query, response)
                 except socket.error as e:
                     if e.errno == 32: # Broken pipe -> ignore this
                         pass
@@ -3608,22 +3608,29 @@ class StatusServer(ECServerThread):
         client_socket.close()
 
 
-    def _answer_query(self, client_socket, output_format, response):
-        if output_format == "plain":
+    # Only GET queries have customizable output formats. COMMAND is always
+    # a dictionay and COMMAND is always None and always output as "python"
+    def _answer_query(self, client_socket, query, response):
+        if query.method != "GET":
+            self._answer_query_python(client_socket, response)
+            return
+
+        if query.output_format == "plain":
             for row in response:
-                client_socket.sendall("\t".join([quote_tab(c) for c in row]))
-                client_socket.sendall("\n")
+                client_socket.sendall("\t".join([quote_tab(c) for c in row])+"\n")
 
-        elif output_format == "json":
-            client_socket.sendall(json.dumps(list(response)))
-            client_socket.sendall("\n")
+        elif query.output_format == "json":
+            client_socket.sendall(json.dumps(list(response))+"\n")
 
-        elif output_format == "python":
-            client_socket.sendall(repr(list(response)))
-            client_socket.sendall("\n")
+        elif query.output_format == "python":
+            self._answer_query_python(client_socket, list(response))
 
         else:
             raise NotImplementedError()
+
+
+    def _answer_query_python(self, client_socket, response):
+        client_socket.sendall(repr(response)+"\n")
 
 
     # All commands are already locked with lock_eventstatus

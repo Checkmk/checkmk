@@ -139,6 +139,7 @@ if [ ! -h $MNT/usr/bin/python ] ; then
 fi
 
 mkdir $MNT/build
+cp "$BASE/agents/windows/$VERSIONFILE" "$MNT/"
 
 echo "+ CLEANING UP"
 

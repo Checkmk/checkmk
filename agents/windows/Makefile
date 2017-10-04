@@ -62,9 +62,8 @@ all: directories fix_linebreaks check_mk_agent.exe check_mk_agent-64.exe install
 .PHONY: directories inc_build_version fix_linebreaks
 
 setversion:
-	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi ; \
-	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
-	$(MAKE) clean install_agent.exe install_agent-64.exe msi_installer
+	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi
+	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile
 
 # Converts all files which are targeted to a windows system to CRLF
 fix_linebreaks:

@@ -34,6 +34,7 @@ DEB_PACKAGE     = check-mk-agent_$(VERSION)-1_all.deb
 
 usage:
 	@echo "make waitmax  -- compile waitmax.c"
+	@echo "make build    -- create all files needed for \"make dist\" of Check_MK"
 	@echo "make rpm      -- create RPM package of Linux agent"
 	@echo "make deb      -- create DEB package of Linux agent"
 	@echo "make packages -- create RPM and DEB package of Linux agent"
@@ -59,7 +60,9 @@ setversion:
 	    if [ "$$agent" != windows -a "$$agent" != plugins -a "$$agent" != hpux ] ; then \
 	        sed -i 's/echo Version: [0-9.a-z-]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
 	    fi ; \
-	done ; \
+	done
+
+build:
 	$(MAKE) packages
 	cd windows ; ./make-agent
 

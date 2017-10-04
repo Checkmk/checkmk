@@ -9,32 +9,37 @@ unset LANG
 CHROOTNAME=WinAgent
 
 BASE="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
-MNT=$BASE/agents/windows/chroot
 
-if [ ! -e $MNT/proc/self ] ; then
-    mount -t proc proc $MNT/proc
+if [ -z $CHROOT_PATH ]; then
+    echo "ERROR: CHROOT_PATH not set"
+    exit 1
 fi
 
-if [ ! -e $MNT/dev/sda ] ; then
-    mount -o bind /dev $MNT/dev
+
+if [ ! -e $CHROOT_PATH/proc/self ] ; then
+    mount -t proc proc $CHROOT_PATH/proc
 fi
 
-if [ ! -e $MNT/dev/pts/ptmx ] ; then
-    mount -t devpts devpts $MNT/dev/pts 2>/dev/null || true
+if [ ! -e $CHROOT_PATH/dev/sda ] ; then
+    mount -o bind /dev $CHROOT_PATH/dev
 fi
 
-if [ ! -e $MNT/build/Makefile ] ; then
-    mount -o bind $BASE $MNT/build
+if [ ! -e $CHROOT_PATH/dev/pts/ptmx ] ; then
+    mount -t devpts devpts $CHROOT_PATH/dev/pts 2>/dev/null || true
+fi
+
+if [ ! -e $CHROOT_PATH/build/Makefile ] ; then
+    mount -o bind $BASE $CHROOT_PATH/build
 fi
 
 if [ -n "$CMD" ] ; then
-    chroot chroot /usr/bin/env CHROOTNAME=$CHROOTNAME bash -c "$CMD"
+    chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME bash -c "$CMD"
 else
-    chroot chroot /usr/bin/env CHROOTNAME=$CHROOTNAME bash -l
+    chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME bash -l
 fi
 
-umount $MNT/build
-umount $MNT/dev/pts
+umount $CHROOT_PATH/build
+umount $CHROOT_PATH/dev/pts
 sleep 2
-umount $MNT/dev
-umount $MNT/proc
+umount $CHROOT_PATH/dev
+umount $CHROOT_PATH/proc

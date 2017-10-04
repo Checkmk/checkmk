@@ -411,7 +411,7 @@ def parse_perf_data(perf_data_string, check_command=None):
     try:
         parts = split_perf_data(perf_data_string)
     except ValueError, e:
-        html.log("Failed to parse perfdata string: %s" % perf_data_string)
+        logger.exception("Failed to parse perfdata string: %s", perf_data_string)
         return [], check_command
 
     if not parts:
@@ -464,8 +464,7 @@ def parse_perf_data(perf_data_string, check_command=None):
 
             perf_data.append(perf_data_tuple)
         except:
-            html.log("Failed to parse perfdata '%s': %s" %
-                       (perf_data_string, traceback.format_exc()))
+            logger.exception("Failed to parse perfdata '%s'", perf_data_string)
             if config.debug:
                 raise
 

@@ -1,9 +1,12 @@
 Title: Manually defined log level for web.log is not used
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2017-09-22 10:36:07
 Targetversion: 1.4.0
-Class: bug
 
 If the log level is set manually in WATO nothing changes in the global.mk. It
 seems that the setting is not used at all.
+
+2017-10-04 07:49:37: changed state open -> works4me
+The setting "User Interface > Logging" is stored in etc/check_mk/multisite.d/wato/global.mk by saving the option log_levels. It works as expected in 1.4 and master.

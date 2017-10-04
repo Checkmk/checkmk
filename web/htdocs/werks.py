@@ -245,7 +245,7 @@ def werk_table_option_entries():
                title = _("Edition"),
                choices = [
                    ( None, _("All editions") ),
-                   ( "cme", _("Werks only concerning the Managed Service Edition") ),
+                   ( "cme", _("Werks only concerning the Managed Services Edition") ),
                    ( "cee", _("Werks only concerning the Enterprise Edition") ),
                    ( "cre", _("Werks also concerning the Raw Edition") ),
                 ],

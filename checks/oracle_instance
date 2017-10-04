@@ -82,7 +82,7 @@ def check_oracle_instance(item, params, info):
                 return state, infotext
 
             sid, version, openmode, logins, archiver, up_seconds, dbid, \
-                log_mode, database_role, force_logging, name = line
+                log_mode, database_role, force_logging, name = line[:11]
 
             infotext = "Database Name %s, Status %s" % \
                        (name, openmode)

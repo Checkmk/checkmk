@@ -1,0 +1,9 @@
+Title: oracle_instance: Fixed crash if output contains more than 12 columns
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p27
+Date: 1507106219
+Class: fix
+
+

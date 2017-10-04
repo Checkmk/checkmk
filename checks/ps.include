@@ -488,8 +488,11 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
         infotext += " (ok from %d to %d)(!)" % (okmin, okmax)
 
     if virtual_size:
-        for size, name in [ (virtual_size, "virtual"), (resident_size, "resident") ]:
-            infotext += " %.1f MB %s" % ((size / 1024.0), name)
+        for size, name, title in [
+            (virtual_size, "virtual", "virtual"),
+            (resident_size, "resident", "physical"),
+        ]:
+            infotext += " %.1f MB %s" % ((size / 1024.0), title)
             if "%s_levels" % name in params:
                 warn_level, crit_level = params["%s_levels" % name]
                 if size * 1024 >= crit_level:

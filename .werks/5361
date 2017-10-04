@@ -1,0 +1,10 @@
+Title: Fixed cancelling events by "text" (regression #5057, since 1.4.0p11)
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.4.0p14
+Date: 1507100833
+Class: fix
+
+

@@ -214,8 +214,6 @@ dist: mk-livestatus-$(VERSION).tar.gz $(DISTNAME).tar.gz config.h.in $(DIST_DEPS
 	    --exclude .gitignore \
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
-	    --exclude agents/windows/\*.exe \
-	    --exclude agents/windows/chroot \
 	    --exclude $(DIST_ARCHIVE) \
 	    $$EXCLUDES \
 	    * .werks .clang* | tar x -C check-mk-$(EDITION)-$(OMD_VERSION) ; \

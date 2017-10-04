@@ -46,9 +46,9 @@ ifneq (,$(MAKECMDGOALS))
 endif
 
 # Check if called inside chroot jail.
-#ifneq (WinAgent,$(CHROOTNAME))
-#  $(error "Not allowed outside chroot. Please call './make-agent$(SEPARATOR)$(MAKECMDGOALS)' instead")
-#endif
+ifneq (WinAgent,$(CHROOTNAME))
+  $(error "Not allowed outside chroot. Please call './make-agent$(SEPARATOR)$(MAKECMDGOALS)' instead")
+endif
 
 ifeq ($(shell uname),Linux)
   CXX        = i686-w64-mingw32-g++-posix
@@ -65,8 +65,7 @@ all: directories fix_linebreaks check_mk_agent.exe check_mk_agent-64.exe install
 setversion:
 	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi ; \
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
-	rm check_mk_agent.exe check_mk_agent-64.exe check_mk_agent.msi ; \
-	make install_agent.exe install_agent-64.exe msi_installer
+	$(MAKE) clean install_agent.exe install_agent-64.exe msi_installer
 
 # Converts all files which are targeted to a windows system to CRLF
 fix_linebreaks:

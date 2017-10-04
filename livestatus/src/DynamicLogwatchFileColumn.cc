@@ -69,8 +69,7 @@ unique_ptr<Column> DynamicLogwatchFileColumn::createColumn(
         return nullptr;
     }
 
-    return make_unique<HostFileColumn>(name, "Contents of logwatch file",
-                                       _mc->mkLogwatchPath(),
-                                       "/" + unescape_filename(arguments),
-                                       _indirect_offset, _extra_offset, -1);
+    return make_unique<HostFileColumn>(
+        name, "Contents of logwatch file", _indirect_offset, _extra_offset, -1,
+        0, _mc->mkLogwatchPath(), "/" + unescape_filename(arguments));
 }

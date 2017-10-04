@@ -48,7 +48,9 @@ enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
 class Column {
 public:
     Column(std::string name, std::string description, int indirect_offset,
-           int extra_offset, int extra_extra_offset);
+           int extra_offset, int extra_extra_offset,
+           // TODO(sp): Remove default argument when all subclasses are fixed
+           int offset = 0);
     virtual ~Column() {}
 
     std::string name() const { return _name; }
@@ -80,6 +82,7 @@ private:
     int _indirect_offset;
     int _extra_offset;
     int _extra_extra_offset;
+    int _offset;
 
     const void *shiftPointer(Row row) const;
 };

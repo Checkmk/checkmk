@@ -45,11 +45,11 @@ using std::unique_ptr;
 using std::vector;
 
 HostFileColumn::HostFileColumn(const string& name, const string& description,
-                               std::string base_dir, std::string suffix,
                                int indirect_offset, int extra_offset,
-                               int extra_extra_offset)
+                               int extra_extra_offset, int offset,
+                               std::string base_dir, std::string suffix)
     : BlobColumn(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset)
+                 extra_extra_offset, offset)
     , _base_dir(move(base_dir))
     , _suffix(move(suffix)) {}
 

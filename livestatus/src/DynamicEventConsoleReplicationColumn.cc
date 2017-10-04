@@ -62,9 +62,9 @@ class ReplicationColumn : public BlobColumn {
 public:
     ReplicationColumn(const string &name, const string &description,
                       string blob, int indirect_offset, int extra_offset,
-                      int extra_extra_offset)
+                      int extra_extra_offset, int offset)
         : BlobColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset)
+                     extra_extra_offset, offset)
         , _blob(move(blob)) {}
 
     unique_ptr<vector<char>> getBlob(Row /* unused */) const override {
@@ -96,5 +96,5 @@ unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
         }
     }
     return make_unique<ReplicationColumn>(name, "replication value", result, -1,
-                                          -1, -1);
+                                          -1, -1, 0);
 }

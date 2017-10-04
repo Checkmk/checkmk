@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostGroupsColumn.h"
-#include "Column.h"
 #include "Renderer.h"
 #include "Row.h"
 
@@ -71,8 +70,8 @@ bool HostGroupsColumn::isEmpty(Row row) const {
 }
 
 objectlist *HostGroupsColumn::getData(Row row) const {
-    if (auto data = columnData<void>(row)) {
-        return *offset_cast<objectlist *>(data, _offset);
+    if (auto p = columnData<objectlist *>(row)) {
+        return *p;
     }
     return nullptr;
 }

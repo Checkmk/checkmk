@@ -28,5 +28,6 @@
 
 void MetricsColumn::output(Row /* row */, RowRenderer &r,
                            const contact * /* auth_user */) const {
+    (void)_mc;
     ListRenderer l(r);
 }

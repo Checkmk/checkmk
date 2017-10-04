@@ -352,7 +352,8 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
         -1, -1));
     table->addColumn(make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
-        ServiceSpecialDoubleColumn::Type::staleness, indirect_offset, -1, -1));
+        indirect_offset, -1, -1, 0,
+        ServiceSpecialDoubleColumn::Type::staleness));
 
     // columns of type double
     table->addColumn(make_unique<OffsetDoubleColumn>(
@@ -412,25 +413,25 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<ServiceContactsColumn>(
         prefix + "contacts",
         "A list of all contacts of the service, either direct or via a contact group",
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1, 0));
     table->addColumn(make_unique<DowntimeColumn>(
-        prefix + "downtimes", "A list of all downtime ids of the service", mc,
-        true, false, indirect_offset, -1, -1));
+        prefix + "downtimes", "A list of all downtime ids of the service",
+        indirect_offset, -1, -1, 0, mc, true, false));
     table->addColumn(make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        mc, true, true, indirect_offset, -1, -1));
+        indirect_offset, -1, -1, 0, mc, true, true));
     table->addColumn(make_unique<CommentColumn>(
-        prefix + "comments", "A list of all comment ids of the service", mc,
-        true, false, false, indirect_offset, -1, -1));
+        prefix + "comments", "A list of all comment ids of the service",
+        indirect_offset, -1, -1, 0, mc, true, false, false));
     table->addColumn(make_unique<CommentColumn>(
         prefix + "comments_with_info",
-        "A list of all comments of the service with id, author and comment", mc,
-        true, true, false, indirect_offset, -1, -1));
+        "A list of all comments of the service with id, author and comment",
+        indirect_offset, -1, -1, 0, mc, true, true, false));
     table->addColumn(make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        mc, true, true, true, indirect_offset, -1, -1));
+        indirect_offset, -1, -1, 0, mc, true, true, true));
 
     if (add_hosts) {
         TableHosts::addColumns(table, mc, "host_",
@@ -454,17 +455,17 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
 
     table->addColumn(make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",
-        DANGEROUS_OFFSETOF(service, servicegroups_ptr), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, servicegroups_ptr)));
     table->addColumn(make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
-        "A list of all contact groups this service is in", mc,
-        DANGEROUS_OFFSETOF(service, contact_groups), indirect_offset, -1, -1));
+        "A list of all contact groups this service is in", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(service, contact_groups), mc));
 
     table->addColumn(make_unique<MetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1, 0, mc));
     table->addColumn(make_unique<FixedIntColumn>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite", 0));

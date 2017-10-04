@@ -37,11 +37,10 @@ class RowRenderer;
 class HostGroupsColumn : public ListColumn {
 public:
     HostGroupsColumn(const std::string &name, const std::string &description,
-                     int offset, int indirect_offset, int extra_offset,
-                     int extra_extra_offset)
+                     int indirect_offset, int extra_offset,
+                     int extra_extra_offset, int offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset)
-        , _offset(offset) {}
+                     extra_extra_offset, offset) {}
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
     std::unique_ptr<Contains> makeContains(
@@ -49,8 +48,6 @@ public:
     bool isEmpty(Row row) const override;
 
 private:
-    int _offset;
-
     objectlist *getData(Row row) const;
 };
 

@@ -29,34 +29,25 @@
 #include <string>
 #include "Column.h"
 #include "contact_fwd.h"
+class MonitoringCore;
 class Row;
 class RowRenderer;
 
-#ifdef CMC
-class Core;
-#endif
-
 class MetricsColumn : public Column {
-#ifdef CMC
-    Core *_core;
-#endif
 public:
-#ifdef CMC
     MetricsColumn(const std::string &name, const std::string &description,
-                  Core *core, int indirect_offset, int extra_offset,
-                  int extra_extra_offset)
+                  int indirect_offset, int extra_offset, int extra_extra_offset,
+                  int offset, MonitoringCore *mc)
         : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset)
-        , _core(core) {}
-#else
-    MetricsColumn(const std::string &name, const std::string &description,
-                  int indirect_offset, int extra_offset, int extra_extra_offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset) {}
-#endif
+                 extra_extra_offset, offset)
+        , _mc(mc) {}
+
     ColumnType type() const override { return ColumnType::list; }
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
+
+private:
+    MonitoringCore *const _mc;
 };
 
 #endif  // MetricsColumn_h

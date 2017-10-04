@@ -36,10 +36,10 @@ class RowRenderer;
 class LogwatchListColumn : public Column {
 public:
     LogwatchListColumn(const std::string &name, const std::string &description,
-                       MonitoringCore *mc, int indirect_offset,
-                       int extra_offset, int extra_extra_offset)
+                       int indirect_offset, int extra_offset,
+                       int extra_extra_offset, int offset, MonitoringCore *mc)
         : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset)
+                 extra_extra_offset, offset)
         , _mc(mc) {}
     ColumnType type() const override { return ColumnType::list; }
     void output(Row row, RowRenderer &r,

@@ -38,8 +38,8 @@ using std::string;
 using std::unique_ptr;
 
 servicesmember *ServiceListColumn::getMembers(Row row) const {
-    if (auto p = columnData<void>(row)) {
-        return *offset_cast<servicesmember *>(p, _offset);
+    if (auto p = columnData<servicesmember *>(row)) {
+        return *p;
     }
     return nullptr;
 }

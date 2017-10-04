@@ -72,13 +72,13 @@ void TableServiceGroups::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        table->core(), true, true, 0, DANGEROUS_OFFSETOF(servicegroup, members),
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
+        table->core(), true, true, 0));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and has_been_checked",
-        table->core(), true, true, 1, DANGEROUS_OFFSETOF(servicegroup, members),
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
+        table->core(), true, true, 1));
 
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",

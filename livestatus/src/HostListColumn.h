@@ -46,12 +46,12 @@ class Host;
 class HostListColumn : public Column {
 public:
     HostListColumn(const std::string &name, const std::string &description,
-                   MonitoringCore *mc, int offset, int indirect_offset,
-                   bool show_state, int extra_offset, int extra_extra_offset)
+                   int indirect_offset, int extra_offset,
+                   int extra_extra_offset, int offset, MonitoringCore *mc,
+                   bool show_state)
         : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset)
+                 extra_extra_offset, offset)
         , _mc(mc)
-        , _offset(offset)
         , _show_state(show_state) {}
     ColumnType type() const override { return ColumnType::list; }
     void output(Row row, RowRenderer &r,
@@ -66,7 +66,6 @@ public:
 
 private:
     MonitoringCore *_mc;
-    const int _offset;
     const bool _show_state;
 };
 

@@ -34,8 +34,8 @@ using std::string;
 using std::unique_ptr;
 
 hostsmember *HostListColumn::getMembers(Row row) const {
-    if (auto p = columnData<void>(row)) {
-        return *offset_cast<hostsmember *>(p, _offset);
+    if (auto p = columnData<hostsmember *>(row)) {
+        return *p;
     }
     return nullptr;
 }

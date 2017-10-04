@@ -120,7 +120,7 @@ protected:
     public:
         DoubleEventConsoleColumn(const std::string &name,
                                  const std::string &description)
-            : DoubleColumn(name, description, -1, -1, -1)
+            : DoubleColumn(name, description, -1, -1, -1, 0)
             , _ecc(*this, 0, [](std::string x) { return atof(x.c_str()); }) {}
 
         double getValue(Row row) const override { return _ecc.getValue(row); }
@@ -150,7 +150,7 @@ protected:
     public:
         ListEventConsoleColumn(const std::string &name,
                                const std::string &description)
-            : ListColumn(name, description, -1, -1, -1)
+            : ListColumn(name, description, -1, -1, -1, 0)
             , _ecc(*this, _column_t(), [](std::string x) {
                 return x.empty() || x == "\002"
                            ? _column_t()

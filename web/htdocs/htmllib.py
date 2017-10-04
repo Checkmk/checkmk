@@ -1735,10 +1735,6 @@ class html(HTMLGenerator, RequestHandler):
             self.lowlevel_write("%s" % self.render_pre(formatted))
 
 
-    def log(self, *args):
-        raise NotImplementedError()
-
-
     #
     # URL building
     #

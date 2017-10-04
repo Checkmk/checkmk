@@ -229,13 +229,6 @@ class html_mod_python(htmllib.html):
         self.javascript('update_header_timer()')
         self.top_heading_right()
 
-    def log(self, *args):
-        for arg in args:
-            if type(arg) in (str, unicode):
-                text = arg
-            else:
-                text = repr(arg)
-            logger.warning(text)
 
     def http_redirect(self, url):
         self.set_http_header('Location', url)

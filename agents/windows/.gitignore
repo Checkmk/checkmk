@@ -11,10 +11,10 @@ state
 log
 .ycm_extra_conf.py
 .depend
-check_mk_agent*.unstripped.exe
 depend
 testtools
 *.d
 *.o
-wmitest.exe
 chroot
+*.exe
+*.msi

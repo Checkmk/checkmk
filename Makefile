@@ -279,7 +279,6 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 		--exclude "*.ico" \
 		--exclude "endless.bat" \
 		--exclude "logstate.txt" \
-		--exclude "*.unversioned.exe" \
 		--exclude "*.res" \
 		--exclude "*~" \
 		--exclude "*.c" \

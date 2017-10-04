@@ -25,14 +25,13 @@
 
 SHELL         = /bin/bash
 VERSION       = 1.5.0i1
-VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
 GIT_REV       = $(shell git rev-parse --verify --short HEAD)
 
 DEPDIR = depend
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 
-COMMON_OPTS   = -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++14 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(VERSION)-$(GIT_REV)\"
+COMMON_OPTS   = -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++14 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(VERSION)-$(GIT_REV)\"
 COPTIONS      = -O2 -Wformat=2 -Werror $(COMMON_OPTS) $(DEPFLAGS)
 # for debug builds
 #COPTIONS      = -O0 $(COMMON_OPTS) $(DEPFLAGS)
@@ -96,7 +95,7 @@ wmitest.exe: wmitest.o stringutil.o wmiHelper.o
 inc_build_version:
 	echo $$(( $$(cat build_version) + 1 )) > build_version.new && mv build_version.new build_version
 	BUILD_VERSION=$$(cat build_version) ; \
-	   sed -e "s/%VERSION%/$(VERSION_DUMMY)/g" \
+	   sed -e "s/%VERSION%/$(VERSION)/g" \
 	       -e "s/%YEAR%/$$(date +%Y)/g" \
 	       -e "s/%BUILD_VERSION%/$$BUILD_VERSION/g" check_mk_agent.rc.in > check_mk_agent.rc
 
@@ -120,8 +119,7 @@ directories:
 
 
 # -----------------------------------------------------------------------------
-# 3. Compile the Windows agent from the sources, without a specific version
-# number. Instead a placeholder is being used as version.a
+# 3. Compile the Windows agent from the sources
 # -----------------------------------------------------------------------------
 
 SRCS = check_mk_agent.cc SettingsCollector.cc Configuration.cc Configurable.cc Environment.cc stringutil.cc\
@@ -158,10 +156,10 @@ check_mk_agent-64.unstripped.exe: $(OBJS64)
 	$(CXX_64) $(COPTIONS) -o $@ $^ check_mk_agent-64.res -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp
 
 
-check_mk_agent.unversioned.exe: check_mk_agent.unstripped.exe
+check_mk_agent.exe: check_mk_agent.unstripped.exe
 	strip -o $@ $^
 
-check_mk_agent-64.unversioned.exe: check_mk_agent-64.unstripped.exe
+check_mk_agent-64.exe: check_mk_agent-64.unstripped.exe
 	strip -o $@ $^
 
 $(DEPDIR)/%.d: ;
@@ -170,28 +168,9 @@ $(DEPDIR)/%.d: ;
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
 
 # -----------------------------------------------------------------------------
-# 4. Create final executable files by inserting actual version number. No
-# recompilation is thus needed during 'make version'
-# -----------------------------------------------------------------------------
-
-check_mk_agent.exe.versioned:
-	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent.unversioned.exe > check_mk_agent.exe
-	chmod 755 check_mk_agent.exe
-
-check_mk_agent-64.exe.versioned:
-	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < check_mk_agent-64.unversioned.exe > check_mk_agent-64.exe
-	chmod 755 check_mk_agent-64.exe
-
-# important: %.exe.versioned must not depend on %.exe.unversioned because on the
-# automated build system, "make ...versioned" is called and that system doesn't
-# provide the right compiler to build this agent
-%.exe: %.unversioned.exe %.exe.versioned
-	true
-
-# -----------------------------------------------------------------------------
 # NSIS installer will be removed and replaced by multiarch MSI installer
 # -----------------------------------------------------------------------------
-install_agent.exe: check_mk_agent.exe.versioned crash.exe nowin.exe
+install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
 	if ! which makensis; then \
 	    echo "ERROR: makensis missing. Please install the nsis package." ; \
 	    exit 1 ; \
@@ -199,7 +178,7 @@ install_agent.exe: check_mk_agent.exe.versioned crash.exe nowin.exe
 	makensis installer.nsi
 	chmod +x install_agent.exe
 
-install_agent-64.exe: check_mk_agent-64.exe.versioned crash.exe nowin.exe
+install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 	if ! which makensis; then \
 	    echo "ERROR: makensis missing. Please install the nsis package." ; \
 	    exit 1 ; \

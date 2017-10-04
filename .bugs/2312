@@ -1,7 +1,12 @@
 Title: Notifications: on exception send a notification mail to fallback address
 Component: notification
-State: open
+Class: bug
+State: done
 Date: 2015-04-09 10:09:22
 Targetversion: future
-Class: bug
 
+
+2017-10-04 18:52:50: changed state open -> done
+Failed notifications handling is implemented now. There are also fallback notification
+settings configurable to configure recipients that get notifications that do not match
+any notification rule.

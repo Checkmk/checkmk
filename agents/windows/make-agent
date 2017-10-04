@@ -21,6 +21,7 @@ base="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
 # May be set from external environment. Otherwise use chroot
 # directory in agents/windows
 export CHROOT_PATH=${CHROOT_PATH:-$base/agents/windows/chroot}
+export CHROOT_BUILD_DIR=${CHROOT_BUILD_DIR:-build}
 
 setup() {
     sudo apt-get install "${chroot_dependencies[@]}" 
@@ -79,7 +80,8 @@ fi
 ensure_chroot
 
 # Pass remaining targets to make inside chroot.
-sudo CHROOT_PATH=$CHROOT_PATH ./do-chroot "cd build/agents/windows; make $targets"
+sudo CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR \
+    ./do-chroot "cd $CHROOT_BUILD_DIR/agents/windows; make $targets"
 
 # Some cleanup: chown build artifacts to the original user.
 find . -maxdepth 1 -regextype egrep \

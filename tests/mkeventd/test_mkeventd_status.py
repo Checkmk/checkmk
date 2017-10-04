@@ -76,7 +76,7 @@ def test_handle_client(status_server, event_status):
 
 
 def test_mkevent_check_query_perf(config, status_server, event_status, perfcounters):
-    for n in range(10000):
+    for num in range(10000):
         event_status.new_event(CMKEventConsole.new_event({
             "host": "heute-%d" % num,
             "text": "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R" \

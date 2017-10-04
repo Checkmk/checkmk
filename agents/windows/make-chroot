@@ -143,7 +143,6 @@ if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
     cd -
 fi
 
-mkdir $CHROOT_PATH/build
 cp "$BASE/agents/windows/$VERSIONFILE" "$CHROOT_PATH/"
 
 echo "+ CLEANING UP"

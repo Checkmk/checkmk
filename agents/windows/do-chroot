@@ -15,6 +15,10 @@ if [ -z $CHROOT_PATH ]; then
     exit 1
 fi
 
+if [ -z $CHROOT_BUILD_DIR ]; then
+    echo "ERROR: CHROOT_BUILD_DIR not set"
+    exit 1
+fi
 
 if [ ! -e $CHROOT_PATH/proc/self ] ; then
     mount -t proc proc $CHROOT_PATH/proc
@@ -28,8 +32,12 @@ if [ ! -e $CHROOT_PATH/dev/pts/ptmx ] ; then
     mount -t devpts devpts $CHROOT_PATH/dev/pts 2>/dev/null || true
 fi
 
-if [ ! -e $CHROOT_PATH/build/Makefile ] ; then
-    mount -o bind $BASE $CHROOT_PATH/build
+if [ ! -e $CHROOT_PATH/$CHROOT_BUILD_DIR ]; then
+    mkdir $CHROOT_PATH/$CHROOT_BUILD_DIR
+fi
+
+if [ ! -e $CHROOT_PATH/$CHROOT_BUILD_DIR/Makefile ] ; then
+    mount -o bind $BASE $CHROOT_PATH/$CHROOT_BUILD_DIR
 fi
 
 if [ -n "$CMD" ] ; then
@@ -38,7 +46,7 @@ else
     chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME bash -l
 fi
 
-umount $CHROOT_PATH/build
+umount $CHROOT_PATH/$CHROOT_BUILD_DIR
 umount $CHROOT_PATH/dev/pts
 sleep 2
 umount $CHROOT_PATH/dev

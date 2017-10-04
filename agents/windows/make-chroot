@@ -11,18 +11,23 @@ export HOSTNAME=cmk-windows-agent-chroot
 export LC_ALL=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LANG=en_US.UTF-8
 
 BASE="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
-MNT=$BASE/agents/windows/chroot
+
+if [ -z $CHROOT_PATH ]; then
+    echo "ERROR: CHROOT_PATH not set"
+    exit 1
+fi
+
 
 cleanup_chroot() {
-    PIDS=$(lsof -Fp $MNT 2>/dev/null | cut -dp -f2)
+    PIDS=$(lsof -Fp $CHROOT_PATH 2>/dev/null | cut -dp -f2)
     [ -n "$PIDS" ] && kill -9 $PIDS 2>&1
 
-    [ -e $MNT/dev/pts/ptmx ] && umount $MNT/dev/pts && sleep 2
-    [ -e $MNT/dev/sda ] && umount $MNT/dev && sleep 2
-    [ -e $MNT/proc/self ] && umount $MNT/proc && sleep 2
+    [ -e $CHROOT_PATH/dev/pts/ptmx ] && umount $CHROOT_PATH/dev/pts && sleep 2
+    [ -e $CHROOT_PATH/dev/sda ] && umount $CHROOT_PATH/dev && sleep 2
+    [ -e $CHROOT_PATH/proc/self ] && umount $CHROOT_PATH/proc && sleep 2
 
-    if mount | grep $MNT >/dev/null; then
-        echo "Error: There are still mounts below $MNT. Terminating."
+    if mount | grep $CHROOT_PATH >/dev/null; then
+        echo "Error: There are still mounts below $CHROOT_PATH. Terminating."
         exit 1
     fi
 }
@@ -38,7 +43,7 @@ echo "+ CLEANING UP CHROOT"
 cleanup_chroot
 
 # chroot leer machen
-rm -rf $MNT/*
+rm -rf $CHROOT_PATH/*
 
 echo "+ INSTALLING SYSTEM"
 
@@ -99,10 +104,10 @@ packages=$(IFS=,; echo "${package_names[*]}")
 debootstrap \
     --components=main,universe \
     --include="$packages" \
-    --arch amd64 $DISTRO $MNT $MIRROR
+    --arch amd64 $DISTRO $CHROOT_PATH $MIRROR
 
 # Need to be installed for installation.
-cat <<EOF > $MNT/etc/fstab
+cat <<EOF > $CHROOT_PATH/etc/fstab
 # created by make-chroot
 /dev/sda1 / ext2 rw,noatime,nodiratime,errors=continue 0 1
 EOF
@@ -110,42 +115,42 @@ EOF
 # Nun ein kleiner Hack um zu verhindern, dass beim Installieren der Pakete
 # die Daemonen der Pakete gestartet werden. Ist nicht dramatisch, erzeugt
 # aber doofe Fehlermeldungen.
-echo exit 101 > $MNT/usr/sbin/policy-rc.d
-chmod +x $MNT/usr/sbin/policy-rc.d
+echo exit 101 > $CHROOT_PATH/usr/sbin/policy-rc.d
+chmod +x $CHROOT_PATH/usr/sbin/policy-rc.d
 
-cp /etc/resolv.conf $MNT/etc/resolv.conf
+cp /etc/resolv.conf $CHROOT_PATH/etc/resolv.conf
 
-if [ ! -e $MNT/bin/hostname.bin ] ; then
-    mv $MNT/bin/hostname{,.bin}
+if [ ! -e $CHROOT_PATH/bin/hostname.bin ] ; then
+    mv $CHROOT_PATH/bin/hostname{,.bin}
 fi
-cat <<EOF > $MNT/bin/hostname
+cat <<EOF > $CHROOT_PATH/bin/hostname
 echo $HOSTNAME
 EOF
-chmod +x $MNT/bin/hostname
+chmod +x $CHROOT_PATH/bin/hostname
 
 # Uses debian_chroot, but use it for all distros!
 #debian_chroot=\$(hostname)
-cat <<EOF > $MNT/root/.bashrc
+cat <<EOF > $CHROOT_PATH/root/.bashrc
 debian_chroot=$(hostname)
 PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\$ '
 PS1="\[\e]0;\${debian_chroot:+(\$debian_chroot)}\u@\h: \w\a\]\$PS1"
 EOF
 
 # Debian pkg installation does not seem to link python executable
-if [ ! -h $MNT/usr/bin/python ] ; then
-    cd $MNT/usr/bin
+if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
+    cd $CHROOT_PATH/usr/bin
     ln -s python2.7 python
     cd -
 fi
 
-mkdir $MNT/build
-cp "$BASE/agents/windows/$VERSIONFILE" "$MNT/"
+mkdir $CHROOT_PATH/build
+cp "$BASE/agents/windows/$VERSIONFILE" "$CHROOT_PATH/"
 
 echo "+ CLEANING UP"
 
 # Raeume apt-cache auf
-ls $MNT/var/cache/apt/archives/*.deb >/dev/null 2>&1 \
-    && rm $MNT/var/cache/apt/archives/*.deb 2>&1 || true
+ls $CHROOT_PATH/var/cache/apt/archives/*.deb >/dev/null 2>&1 \
+    && rm $CHROOT_PATH/var/cache/apt/archives/*.deb 2>&1 || true
 
 # Alle Prozesse aus dem chroot killen
 cleanup_chroot

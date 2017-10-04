@@ -17,7 +17,10 @@ chroot_dependencies=(nsis lcab debootstrap debian-archive-keyring)
 versionfile=chroot_version
 
 base="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
-mnt=$base/agents/windows/chroot
+
+# May be set from external environment. Otherwise use chroot
+# directory in agents/windows
+export CHROOT_PATH=${CHROOT_PATH:-$base/agents/windows/chroot}
 
 setup() {
     sudo apt-get install "${chroot_dependencies[@]}" 
@@ -25,11 +28,11 @@ setup() {
 
 ensure_chroot() {
     # Ensure that versionfile exists...
-    if [ ! -f "$mnt/$versionfile" ] ; then
+    if [ ! -f "$CHROOT_PATH/$versionfile" ] ; then
         echo "chroot version not found."
         create=yes
     #  ... and it is up to date.
-    elif [ $(cat "$mnt/$versionfile") -ne $(cat "$base/agents/windows/$versionfile") ] ; then
+    elif [ $(cat "$CHROOT_PATH/$versionfile") -ne $(cat "$base/agents/windows/$versionfile") ] ; then
         echo "chroot is out of date."
         create=yes
     fi
@@ -38,7 +41,7 @@ ensure_chroot() {
         echo "chroot is up to date."
     else
         setup
-        sudo VERSIONFILE=$versionfile ./make-chroot
+        sudo VERSIONFILE=$versionfile CHROOT_PATH=$CHROOT_PATH ./make-chroot
     fi
 }
 
@@ -76,7 +79,7 @@ fi
 ensure_chroot
 
 # Pass remaining targets to make inside chroot.
-sudo ./do-chroot "cd build/agents/windows; make $targets"
+sudo CHROOT_PATH=$CHROOT_PATH ./do-chroot "cd build/agents/windows; make $targets"
 
 # Some cleanup: chown build artifacts to the original user.
 find . -maxdepth 1 -regextype egrep \

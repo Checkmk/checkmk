@@ -26,8 +26,9 @@
 #define HostServiceState_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <cstdint>
 #include <ctime>
-#include <string>  // for string
+#include <string>
 #include <vector>
 class HostServiceState;
 

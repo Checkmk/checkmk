@@ -2448,7 +2448,7 @@ class EventServer(ECServerThread):
                 cp = True
 
             match_groups = match(rule.get("match_ok", ""), event["text"], complete = False)
-            if match_groups != False and cp and cancel_by_application:
+            if match_groups != False and cp and ("cancel_application" not in rule or cancel_by_application):
                 if debug:
                     self.logger.info("  found cancelling event")
                 if match_groups == True:

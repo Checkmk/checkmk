@@ -13,7 +13,7 @@
 targets="$@" # no parameter -> default make target
 setup_target=setup
 chroot_target=chroot
-chroot_dependencies=(nsis lcab debootstrap debian-archive-keyring)
+chroot_dependencies=(debootstrap debian-archive-keyring)
 versionfile=chroot_version
 
 base="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"

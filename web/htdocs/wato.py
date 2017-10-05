@@ -6827,11 +6827,17 @@ class ModeGlobalSettings(WatoMode):
                          html.strip_tags(help_text), title_text))
 
                 if varname in self._current_settings:
-                    to_text = valuespec.value_to_text(self._current_settings[varname])
+                    value = self._current_settings[varname]
                 elif varname in self._global_settings:
-                    to_text = valuespec.value_to_text(self._global_settings[varname])
+                    value = self._global_settings[varname]
                 else:
-                    to_text = valuespec.value_to_text(default_value)
+                    value = default_value
+
+                try:
+                    to_text = valuespec.value_to_text(value)
+                except Exception, e:
+                    log_exception()
+                    to_text = html.render_error(_("Failed to render value: %r") % value)
 
                 # Is this a simple (single) value or not? change styling in these cases...
                 simple = True
@@ -6840,15 +6846,12 @@ class ModeGlobalSettings(WatoMode):
                 forms.section(title, simple=simple)
 
                 if varname in self._current_settings:
-                    value = self._current_settings[varname]
                     modified_cls = "modified"
                     title = _("This option has been modified.")
                 elif varname in self._global_settings:
-                    value = self._global_settings[varname]
                     modified_cls = "modified globally"
                     title = _("This option has been modified in global settings.")
                 else:
-                    value = default_value
                     modified_cls = None
                     title = None
 

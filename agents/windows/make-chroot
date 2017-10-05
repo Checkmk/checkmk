@@ -89,7 +89,6 @@ package_names=(
     "locales"
     "make"
     "mingw-w64"
-    "nsis"
     "openssl"
     "patch"
     "perl-openssl-defaults"

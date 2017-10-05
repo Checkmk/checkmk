@@ -57,12 +57,11 @@ else
   CXX = mingw32-g++
 endif
 
-all: directories fix_linebreaks check_mk_agent.exe check_mk_agent-64.exe install_agent.exe install_agent-64.exe msi_installer
+all: directories fix_linebreaks check_mk_agent.exe check_mk_agent-64.exe msi_installer
 
 .PHONY: directories inc_build_version fix_linebreaks
 
 setversion:
-	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile
 
 # Converts all files which are targeted to a windows system to CRLF
@@ -166,35 +165,10 @@ $(DEPDIR)/%.d: ;
 
 -include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
 
-# -----------------------------------------------------------------------------
-# NSIS installer will be removed and replaced by multiarch MSI installer
-# -----------------------------------------------------------------------------
-install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
-	if ! which makensis; then \
-	    echo "ERROR: makensis missing. Please install the nsis package." ; \
-	    exit 1 ; \
-	fi
-	makensis installer.nsi
-	chmod +x install_agent.exe
-
-install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
-	if ! which makensis; then \
-	    echo "ERROR: makensis missing. Please install the nsis package." ; \
-	    exit 1 ; \
-	fi
-	makensis installer-64.nsi
-	chmod +x install_agent-64.exe
-
 msi_installer:
 	cd msibuild ; make BUILD_VERSION=$$(cat ../build_version) CHECK_MK_VERSION=$(VERSION)
 	mv msibuild/check_mk_agent.msi .
 	chmod +x check_mk_agent.msi
-
-crash.exe: crash.cc
-	$(CXX) -o $@ $<
-
-nowin.exe: nowin.cc
-	$(CXX) -o $@ $<
 
 clean:
 	rm -f *.o *.d *.exe *~ svn-*.tmp *.rc *.res obj/*.o obj64/*.o obj/sections/*.o obj64/sections/*.o

@@ -33,9 +33,6 @@
 #include "Row.h"
 #include "VariadicFilter.h"
 
-using std::string;
-using std::unique_ptr;
-
 extern char *macro_user[MAX_USER_MACROS];
 
 std::string OffsetStringMacroColumn::getValue(Row row) const {
@@ -48,12 +45,12 @@ std::string OffsetStringMacroColumn::getValue(Row row) const {
 
 void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
                                      const contact * /*unused*/) const {
-    string raw = getValue(row);
+    std::string raw = getValue(row);
     const host *hst = getHost(row);
     const service *svc = getService(row);
 
     // search for macro names, beginning with $
-    string result;
+    std::string result;
     const char *scan = raw.c_str();
 
     while (*scan != 0) {
@@ -62,18 +59,19 @@ void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
             result += scan;
             break;
         }
-        result += string(scan, dollar - scan);
+        result += std::string(scan, dollar - scan);
         const char *otherdollar = strchr(dollar + 1, '$');
         if (otherdollar == nullptr) {  // unterminated macro, do not expand
             result += scan;
             break;
         }
-        string macroname = string(dollar + 1, otherdollar - dollar - 1);
+        std::string macroname =
+            std::string(dollar + 1, otherdollar - dollar - 1);
         const char *replacement = expandMacro(macroname.c_str(), hst, svc);
         if (replacement != nullptr) {
             result += replacement;
         } else {
-            result += string(
+            result += std::string(
                 dollar, otherdollar - dollar + 1);  // leave macro unexpanded
         }
         scan = otherdollar + 1;
@@ -81,8 +79,8 @@ void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
     r.output(result);
 }
 
-unique_ptr<Filter> OffsetStringMacroColumn::createFilter(
-    RelationalOperator /*unused */, const string & /*unused*/) const {
+std::unique_ptr<Filter> OffsetStringMacroColumn::createFilter(
+    RelationalOperator /*unused */, const std::string & /*unused*/) const {
     Informational(logger())
         << "Sorry. No filtering on macro columns implemented yet";
     return VariadicFilter::make(LogicalOperator::and_);

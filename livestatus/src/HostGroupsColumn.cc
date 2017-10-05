@@ -26,21 +26,17 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 void HostGroupsColumn::output(Row row, RowRenderer &r,
                               const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
         auto sg = static_cast<hostgroup *>(list->object_ptr);
-        l.output(string(sg->group_name));
+        l.output(std::string(sg->group_name));
     }
 }
 
-unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
-    const string &name) const {
+std::unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
+    const std::string &name) const {
     class ContainsHostGroup : public Contains {
     public:
         ContainsHostGroup(hostgroup *element, const HostGroupsColumn *column)
@@ -61,7 +57,7 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
         const HostGroupsColumn *const _column;
     };
 
-    return make_unique<ContainsHostGroup>(
+    return std::make_unique<ContainsHostGroup>(
         find_hostgroup(const_cast<char *>(name.c_str())), this);
 }
 

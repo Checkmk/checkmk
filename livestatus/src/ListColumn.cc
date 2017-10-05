@@ -26,14 +26,10 @@
 #include "Filter.h"
 #include "ListFilter.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 ListColumn::Contains::~Contains() = default;
 
-unique_ptr<Filter> ListColumn::createFilter(RelationalOperator relOp,
-                                            const string &value) const {
-    return make_unique<ListFilter>(*this, relOp, value, makeContains(value),
-                                   value.empty());
+std::unique_ptr<Filter> ListColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<ListFilter>(*this, relOp, value,
+                                        makeContains(value), value.empty());
 }

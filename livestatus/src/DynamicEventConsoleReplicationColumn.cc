@@ -35,44 +35,39 @@
 #include "MonitoringCore.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::move;
-using std::string;
-using std::unique_ptr;
-using std::vector;
-
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *mc, string command)
+    ECTableConnection(MonitoringCore *mc, std::string command)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
-        , _command(move(command)) {}
-    string getResult() const { return _result; }
+        , _command(std::move(command)) {}
+    std::string getResult() const { return _result; }
 
 private:
     void sendRequest(std::ostream &os) override { os << _command; }
     void receiveReply(std::istream &is) override { std::getline(is, _result); }
 
-    const string _command;
-    string _result;
+    const std::string _command;
+    std::string _result;
 };
 
 class ReplicationColumn : public BlobColumn {
 public:
-    ReplicationColumn(const string &name, const string &description,
-                      string blob, int indirect_offset, int extra_offset,
+    ReplicationColumn(const std::string &name, const std::string &description,
+                      std::string blob, int indirect_offset, int extra_offset,
                       int extra_extra_offset, int offset)
         : BlobColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset)
-        , _blob(move(blob)) {}
+        , _blob(std::move(blob)) {}
 
-    unique_ptr<vector<char>> getBlob(Row /* unused */) const override {
-        return make_unique<vector<char>>(_blob.begin(), _blob.end());
+    std::unique_ptr<std::vector<char>> getBlob(
+        Row /* unused */) const override {
+        return std::make_unique<std::vector<char>>(_blob.begin(), _blob.end());
     };
 
 private:
-    const string _blob;
+    const std::string _blob;
 };
 }  // namespace
 
@@ -83,9 +78,9 @@ DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
                     extra_offset, extra_extra_offset)
     , _mc(mc) {}
 
-unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
+std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
     const std::string &name, const std::string &arguments) {
-    string result;
+    std::string result;
     if (_mc->mkeventdEnabled()) {
         try {
             ECTableConnection ec(_mc, "REPLICATE " + arguments);
@@ -95,6 +90,6 @@ unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
             Alert(_mc->loggerLivestatus()) << err.what();
         }
     }
-    return make_unique<ReplicationColumn>(name, "replication value", result, -1,
-                                          -1, -1, 0);
+    return std::make_unique<ReplicationColumn>(name, "replication value",
+                                               result, -1, -1, -1, 0);
 }

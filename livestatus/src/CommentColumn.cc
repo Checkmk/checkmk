@@ -30,11 +30,6 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-using std::vector;
-
 void CommentColumn::output(Row row, RowRenderer &r,
                            const contact * /* auth_user */) const {
     ListRenderer l(r);
@@ -54,8 +49,8 @@ void CommentColumn::output(Row row, RowRenderer &r,
     }
 }
 
-unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
-    const string &name) const {
+std::unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
+    const std::string &name) const {
     class ContainsCommentID : public Contains {
     public:
         ContainsCommentID(unsigned long element, const CommentColumn *column)
@@ -76,14 +71,14 @@ unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
     };
 
     unsigned long id = strtoul(name.c_str(), nullptr, 10);
-    return make_unique<ContainsCommentID>(id, this);
+    return std::make_unique<ContainsCommentID>(id, this);
 }
 
 bool CommentColumn::isEmpty(Row row) const {
     return comments_for_row(row).empty();
 }
 
-vector<CommentData> CommentColumn::comments_for_row(Row row) const {
+std::vector<CommentData> CommentColumn::comments_for_row(Row row) const {
     if (auto data = columnData<void>(row)) {
         return _is_service
                    ? _mc->comments_for_service(

@@ -29,21 +29,17 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 void DoubleColumn::output(Row row, RowRenderer &r,
                           const contact * /* auth_user */) const {
     r.output(getValue(row));
 }
 
-unique_ptr<Filter> DoubleColumn::createFilter(RelationalOperator relOp,
-                                              const string &value) const {
-    return make_unique<DoubleFilter>(*this, relOp, value);
+std::unique_ptr<Filter> DoubleColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<DoubleFilter>(*this, relOp, value);
 }
 
-unique_ptr<Aggregator> DoubleColumn::createAggregator(
+std::unique_ptr<Aggregator> DoubleColumn::createAggregator(
     StatsOperation operation) const {
-    return make_unique<DoubleAggregator>(operation, this);
+    return std::make_unique<DoubleAggregator>(operation, this);
 }

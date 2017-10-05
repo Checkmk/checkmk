@@ -27,11 +27,6 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::move;
-using std::string;
-using std::unique_ptr;
-
 void ContactsColumn::output(Row row, RowRenderer &r,
                             const contact * /* auth_user */) const {
     ListRenderer l(r);
@@ -40,12 +35,12 @@ void ContactsColumn::output(Row row, RowRenderer &r,
     }
 }
 
-unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
-    const string &name) const {
+std::unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
+    const std::string &name) const {
     class ContainsContact : public ListColumn::Contains {
     public:
-        ContainsContact(string name, const ContactsColumn *column)
-            : _name(move(name)), _column(column) {}
+        ContainsContact(std::string name, const ContactsColumn *column)
+            : _name(std::move(name)), _column(column) {}
 
         bool operator()(Row row) override {
             const auto &names = _column->contactNames(row);
@@ -53,11 +48,11 @@ unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
         }
 
     private:
-        string _name;
+        std::string _name;
         const ContactsColumn *const _column;
     };
 
-    return make_unique<ContainsContact>(name, this);
+    return std::make_unique<ContainsContact>(name, this);
 }
 
 bool ContactsColumn::isEmpty(Row row) const {

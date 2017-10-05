@@ -37,8 +37,6 @@
 #include "nagios.h"
 #endif
 
-using std::string;
-
 void LogwatchListColumn::output(Row row, RowRenderer &r,
                                 const contact * /* auth_user */) const {
     ListRenderer l(r);
@@ -52,13 +50,13 @@ void LogwatchListColumn::output(Row row, RowRenderer &r,
     if (hst == nullptr) {
         return;
     }
-    string host_name = hst->name();
+    std::string host_name = hst->name();
 #else
     auto hst = columnData<host>(row);
     if (hst == nullptr) {
         return;
     }
-    string host_name = hst->name;
+    std::string host_name = hst->name;
 #endif
 
     auto dir = logwatch_path + pnp_cleanup(host_name);

@@ -45,7 +45,7 @@ public:
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
         , _mc(mc)
-        , _table_name(move(table_name))
+        , _table_name(std::move(table_name))
         , _query(query) {}
 
 private:

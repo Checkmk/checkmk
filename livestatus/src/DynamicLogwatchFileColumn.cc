@@ -29,13 +29,10 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
+namespace {
 // Replace \\ with \ and \s with space
-string unescape_filename(string filename) {
-    string filename_native;
+std::string unescape_filename(std::string filename) {
+    std::string filename_native;
     bool quote_active = false;
     for (auto c : filename) {
         if (quote_active) {
@@ -53,8 +50,9 @@ string unescape_filename(string filename) {
     }
     return filename_native;
 }
+}  // namespace
 
-unique_ptr<Column> DynamicLogwatchFileColumn::createColumn(
+std::unique_ptr<Column> DynamicLogwatchFileColumn::createColumn(
     const std::string &name, const std::string &arguments) {
     // arguments contains a file name
     if (arguments.empty()) {
@@ -63,13 +61,13 @@ unique_ptr<Column> DynamicLogwatchFileColumn::createColumn(
         return nullptr;
     }
 
-    if (arguments.find('/') != string::npos) {
+    if (arguments.find('/') != std::string::npos) {
         Warning(_logger) << "Invalid arguments for column '" << _name
                          << "': file name '" << arguments << "' contains slash";
         return nullptr;
     }
 
-    return make_unique<HostFileColumn>(
+    return std::make_unique<HostFileColumn>(
         name, "Contents of logwatch file", _indirect_offset, _extra_offset, -1,
         0, _mc->mkLogwatchPath(), "/" + unescape_filename(arguments));
 }

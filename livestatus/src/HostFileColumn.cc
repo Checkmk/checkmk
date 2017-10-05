@@ -39,21 +39,17 @@
 #include "nagios.h"
 #endif
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-using std::vector;
-
-HostFileColumn::HostFileColumn(const string& name, const string& description,
+HostFileColumn::HostFileColumn(const std::string& name,
+                               const std::string& description,
                                int indirect_offset, int extra_offset,
                                int extra_extra_offset, int offset,
                                std::string base_dir, std::string suffix)
     : BlobColumn(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset)
-    , _base_dir(move(base_dir))
-    , _suffix(move(suffix)) {}
+    , _base_dir(std::move(base_dir))
+    , _suffix(std::move(suffix)) {}
 
-unique_ptr<vector<char>> HostFileColumn::getBlob(Row row) const {
+std::unique_ptr<std::vector<char>> HostFileColumn::getBlob(Row row) const {
     if (_base_dir.empty()) {
         return nullptr;  // Path is not configured
     }
@@ -63,16 +59,16 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(Row row) const {
     if (hst == nullptr) {
         return nullptr;
     }
-    string host_name = hst->name();
+    std::string host_name = hst->name();
 #else
     auto hst = columnData<host>(row);
     if (hst == nullptr) {
         return nullptr;
     }
-    string host_name = hst->name;
+    std::string host_name = hst->name;
 #endif
 
-    string path = _base_dir + "/" + host_name + _suffix;
+    std::string path = _base_dir + "/" + host_name + _suffix;
     int fd = open(path.c_str(), O_RDONLY);
     if (fd == -1) {
         // It is OK when inventory/logwatch files do not exist.
@@ -95,7 +91,7 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(Row row) const {
     }
 
     size_t bytes_to_read = st.st_size;
-    unique_ptr<vector<char>> result = make_unique<vector<char>>(bytes_to_read);
+    auto result = std::make_unique<std::vector<char>>(bytes_to_read);
     char* buffer = &(*result)[0];
     while (bytes_to_read > 0) {
         ssize_t bytes_read = read(fd, buffer, bytes_to_read);

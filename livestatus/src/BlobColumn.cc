@@ -26,12 +26,9 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::unique_ptr;
-using std::vector;
-
 void BlobColumn::output(Row row, RowRenderer &r,
                         const contact * /* auth_user */) const {
-    if (unique_ptr<vector<char>> blob = getBlob(row)) {
+    if (std::unique_ptr<std::vector<char>> blob = getBlob(row)) {
         r.output(*blob);
     } else {
         r.output(Null());

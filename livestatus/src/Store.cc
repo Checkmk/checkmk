@@ -42,9 +42,6 @@
 #include "Table.h"
 #include "mk_logwatch.h"
 
-using mk::lstrip;
-using mk::split;
-using mk::starts_with;
 using std::list;
 using std::lock_guard;
 using std::mutex;
@@ -161,23 +158,23 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
         return false;
     }
     string line = input.nextLine();
-    if (starts_with(line, "GET ")) {
+    if (mk::starts_with(line, "GET ")) {
         auto lines = getLines(input);
         logRequest(line, lines);
-        return answerGetRequest(lines, output, lstrip(line.substr(4)));
+        return answerGetRequest(lines, output, mk::lstrip(line.substr(4)));
     }
-    if (starts_with(line, "GET")) {
+    if (mk::starts_with(line, "GET")) {
         // only to get error message
         auto lines = getLines(input);
         logRequest(line, lines);
         return answerGetRequest(lines, output, "");
     }
-    if (starts_with(line, "COMMAND ")) {
+    if (mk::starts_with(line, "COMMAND ")) {
         logRequest(line, {});
-        answerCommandRequest(lstrip(line.substr(8)).c_str());
+        answerCommandRequest(mk::lstrip(line.substr(8)).c_str());
         return true;
     }
-    if (starts_with(line, "LOGROTATE")) {
+    if (mk::starts_with(line, "LOGROTATE")) {
         logRequest(line, {});
         Informational(logger()) << "Forcing logfile rotation";
         rotate_log_file(time(nullptr));
@@ -219,7 +216,8 @@ namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(Logger *logger, string path, string command)
-        : EventConsoleConnection(logger, move(path)), _command(move(command)) {}
+        : EventConsoleConnection(logger, move(path))
+        , _command(std::move(command)) {}
 
 private:
     void sendRequest(std::ostream &os) override { os << _command; }
@@ -229,7 +227,7 @@ private:
 }  // namespace
 
 bool Store::handleCommand(const string &command) {
-    auto parts = split(command, ';');
+    auto parts = mk::split(command, ';');
     if (parts.empty()) {
         return false;
     }
@@ -246,7 +244,7 @@ bool Store::handleCommand(const string &command) {
         return true;
     }
 
-    if (starts_with(command_name, "EC_")) {
+    if (mk::starts_with(command_name, "EC_")) {
         if (!_mc->mkeventdEnabled()) {
             Notice(logger()) << "event console disabled, ignoring command '"
                              << command << "'";

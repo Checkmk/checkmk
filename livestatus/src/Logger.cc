@@ -140,7 +140,7 @@ void LoggerDecorator::setLevel(LogLevel level) { _logger->setLevel(level); }
 Handler *LoggerDecorator::getHandler() const { return _logger->getHandler(); }
 
 void LoggerDecorator::setHandler(unique_ptr<Handler> handler) {
-    _logger->setHandler(move(handler));
+    _logger->setHandler(std::move(handler));
 }
 
 bool LoggerDecorator::getUseParentHandlers() const {

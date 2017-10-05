@@ -27,8 +27,6 @@
 #include "Row.h"
 #include "mk_inventory.h"
 
-using std::string;
-
 int32_t StatusSpecialIntColumn::getValue(Row /* row */,
                                          const contact* /* auth_user */) const {
     switch (_type) {

@@ -28,11 +28,6 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-using std::vector;
-
 void DowntimeColumn::output(Row row, RowRenderer &r,
                             const contact * /* auth_user */) const {
     ListRenderer l(r);
@@ -48,8 +43,8 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
     }
 }
 
-unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
-    const string &name) const {
+std::unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
+    const std::string &name) const {
     class ContainsDowntimeID : public Contains {
     public:
         ContainsDowntimeID(unsigned long element, const DowntimeColumn *column)
@@ -70,14 +65,14 @@ unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
     };
 
     unsigned long id = strtoul(name.c_str(), nullptr, 10);
-    return make_unique<ContainsDowntimeID>(id, this);
+    return std::make_unique<ContainsDowntimeID>(id, this);
 }
 
 bool DowntimeColumn::isEmpty(Row row) const {
     return downtimes_for_row(row).empty();
 }
 
-vector<DowntimeData> DowntimeColumn::downtimes_for_row(Row row) const {
+std::vector<DowntimeData> DowntimeColumn::downtimes_for_row(Row row) const {
     if (auto data = columnData<void>(row)) {
         return _is_service
                    ? _mc->downtimes_for_service(

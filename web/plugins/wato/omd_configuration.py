@@ -198,6 +198,9 @@ class ConfigDomainDiskspace(ConfigDomain):
         if cleanup_settings.get("cleanup_abandoned_host_files", False) == None:
             del cleanup_settings["cleanup_abandoned_host_files"]
 
+        if cleanup_settings.get("max_file_age", False) == None:
+            del cleanup_settings["max_file_age"]
+
         return {
             "diskspace_cleanup": cleanup_settings,
         }

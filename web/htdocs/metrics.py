@@ -156,6 +156,22 @@ scalar_colors = {
 }
 
 
+class GraphDestinations(object):
+    dashlet      = "dashlet"
+    view         = "view"
+    report       = "report"
+    notification = "notification"
+
+    @classmethod
+    def choices(self):
+        return [
+            (GraphDestinations.dashlet,      _("Dashlet")),
+            (GraphDestinations.view,         _("View")),
+            (GraphDestinations.report,       _("Report")),
+            (GraphDestinations.notification, _("Notification")),
+        ]
+
+
 #.
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -1577,7 +1593,8 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
                                                             graph_render_options)
 
     try:
-        graph_recipes = graph_identification_types.create_graph_recipes(graph_identification)
+        graph_recipes = graph_identification_types.create_graph_recipes(graph_identification,
+                                                            destination=GraphDestinations.dashlet)
         if graph_recipes:
             graph_recipe = graph_recipes[0]
         else:

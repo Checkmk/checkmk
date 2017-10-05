@@ -4098,16 +4098,20 @@ class TextOrRegExp(Alternative):
     _regex_valuespec_class = RegExp
 
     def __init__(self, **kwargs):
+        allow_empty = kwargs.pop("allow_empty", True)
+
         if "text_valuespec" in kwargs:
             vs_text = kwargs.pop("text_valuespec")
         else:
             vs_text = self._text_valuespec_class(
                 title = _("Explicit match"),
+                allow_empty = allow_empty,
             )
 
         vs_regex = self._regex_valuespec_class(
             mode = RegExp.prefix,
             title = _("Regular expression match"),
+            allow_empty = allow_empty,
         )
 
         kwargs.update({

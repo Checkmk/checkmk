@@ -1,0 +1,15 @@
+Title: Fixed possible exception on global settings page related to "diskspace cleanup"
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507194818
+Class: fix
+
+In 1.2.8 or older it was possible to configure "max_file_age = None" in the etc/diskspace.conf
+file. This value was not interpreted correctly by the current code which lead to an exception
+"TypeError: unsupported operand type(s) for divmod(): 'NoneType' and 'int'" on the global settings
+page.
+
+To workaround this issue, you could remove this option form the etc/diskspace.conf file.

@@ -639,6 +639,7 @@ class RegExpUnicode(TextUnicode, RegExp):
         ValueSpec.custom_validate(self, value, varprefix)
 
 
+
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 40)
@@ -4089,6 +4090,48 @@ class UploadOrPasteTextFile(Alternative):
         if type(value) != tuple:
             value = (None, None, value)
         return value
+
+
+
+class TextOrRegExp(Alternative):
+    _text_valuespec_class  = TextAscii
+    _regex_valuespec_class = RegExp
+
+    def __init__(self, **kwargs):
+        if "text_valuespec" in kwargs:
+            vs_text = kwargs.pop("text_valuespec")
+        else:
+            vs_text = self._text_valuespec_class(
+                title = _("Explicit match"),
+            )
+
+        vs_regex = self._regex_valuespec_class(
+            mode = RegExp.prefix,
+            title = _("Regular expression match"),
+        )
+
+        kwargs.update({
+            "elements": [
+                vs_text,
+                Transform(
+                    vs_regex,
+                    forth = lambda v: v[1:],  # strip of "~"
+                    back = lambda v: "~" + v, # add "~"
+                ),
+            ],
+            # Use RegExp field when value is prefixed with "~"
+            "match"       : lambda v: 1 if v and v[0] == "~" else 0,
+            "style"       : "dropdown",
+            "orientation" : "horizontal",
+        })
+
+        super(TextOrRegExp, self).__init__(**kwargs)
+
+
+
+class TextOrRegExpUnicode(TextOrRegExp):
+    _default_valuespec_class = TextUnicode
+    _regex_valuespec_class   = RegExpUnicode
 
 
 

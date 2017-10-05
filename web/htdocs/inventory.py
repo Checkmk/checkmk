@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 import re
 import os
 
@@ -32,160 +33,146 @@ try:
 except ImportError:
     import json
 
-
 import config
 import sites
 import cmk.paths
 import cmk.store as store
+import cmk.profile
 from lib import MKException, MKGeneralException, MKAuthException, MKUserError, lqencode
+from cmk.structured_data import StructuredDataTree, Container, Numeration, Attributes
 
-# Load data of a host, cache it in the current HTTP request
-def host(hostname):
+
+def get_inventory_data(inventory_tree, tree_path):
+    invdata = None
+    parsed_path, attributes_key = parse_tree_path(tree_path)
+    if attributes_key == []:
+        numeration = inventory_tree.get_sub_numeration(parsed_path)
+        if numeration is not None:
+            invdata = numeration.get_child_data()
+    elif attributes_key:
+        attributes =  inventory_tree.get_sub_attributes(parsed_path)
+        if attributes is not None:
+            invdata = attributes.get_child_data().get(attributes_key)
+    return invdata
+
+
+def parse_tree_path(tree_path):
+    # tree_path may look like:
+    # .hardware.cpu.model        (leaf) => path = ["hardware", "cpu"],          key = "model"
+    # .hardware.cpu.             (dict) => path = ["hardware", "cpu"],          key = None
+    # .software.packages:17.name (leaf) => path = ["software", "packages", 17], key = "name"
+    # .software.packages:        (list) => path = ["software", "packages"],     key = []
+    if tree_path.endswith(":"):
+        path = tree_path[:-1].strip(".").split(".")
+        attributes_key = []
+    elif tree_path.endswith("."):
+        path = tree_path[:-1].strip(".").split(".")
+        attributes_key = None
+    else:
+        path = tree_path.strip(".").split(".")
+        attributes_key = path.pop(-1)
+
+    parsed_path = []
+    for part in path:
+        if ":" in part:
+            # Nested numerations, see also lib/structured_data.py
+            parts = part.split(":")
+        else:
+            parts = [part]
+        for part in parts:
+            if not part:
+                continue
+            try:
+                part = int(part)
+            except ValueError:
+                pass
+            finally:
+                parsed_path.append(part)
+    return parsed_path, attributes_key
+
+
+def sort_children(children):
+    if not children:
+        return []
+    ordering = {
+        type(Attributes()): 1,
+        type(Numeration()): 2,
+        type(Container()): 3,
+    }
+    return sorted(children, key=lambda x: ordering[type(x)])
+
+
+def load_tree(hostname):
+    # Load data of a host, cache it in the current HTTP request
     if not hostname:
         return {}
 
-    invcache = html.get_cached("inventory")
-    if not invcache:
-        invcache = {}
-        html.set_cache("inventory", invcache)
+    inventory_tree_cache = html.get_cached("inventory")
+    if not inventory_tree_cache:
+        inventory_tree_cache = {}
+        html.set_cache("inventory", inventory_tree_cache)
 
-    if hostname in invcache:
-        return invcache[hostname]
+    if hostname in inventory_tree_cache:
+        inventory_tree = inventory_tree_cache[hostname]
     else:
-        invdata = load_host(hostname)
-        invcache[hostname] = invdata
-        return invdata
+        if '/' in hostname:
+            return StructuredDataTree() # just for security reasons
+        cache_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+        inventory_tree = StructuredDataTree().load_from(cache_path)
+        inventory_tree_cache[hostname] = inventory_tree
+        return inventory_tree
 
-def has_inventory(hostname):
-    if not hostname:
-        return False
-    path = cmk.paths.var_dir + "/inventory/" + hostname
-    return os.path.exists(path)
 
-def load_host(hostname):
+def load_delta_tree(hostname, timestamp):
+    # Timestamp is timestamp of the younger of both trees. For the oldest
+    # tree we will just return the complete tree - without any delta
+    # computation.
+    for old_timestamp, old_tree, new_tree in get_history(hostname):
+        if old_timestamp == timestamp:
+            _, __, ___, delta = new_tree.compare_with(old_tree)
+            return delta
+    return None
+
+
+def get_history(hostname):
+    # List of triple: timestamp (old), old tree, new tree
     if '/' in hostname:
         return None # just for security reasons
-    path = cmk.paths.var_dir + "/inventory/" + hostname
-    return store.load_data_from_file(path, {})
 
-# Return a list of timestamps of all inventory snapshost
-# of a host.
-def get_host_history(hostname):
-    if '/' in hostname:
-        return None # just for security reasons
-
-    path = cmk.paths.var_dir + "/inventory/" + hostname
     try:
-        history = [ int(os.stat(path).st_mtime) ]
+        inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+        timestamp = int(os.stat(inventory_path).st_mtime)
+        inventory_tree = load_tree(hostname)
     except:
         return [] # No inventory for this host
+    else:
+        history = [(timestamp, inventory_tree)]
 
-    arcdir = cmk.paths.var_dir + "/inventory_archive/" + hostname
-    if os.path.exists(arcdir):
-        for ts in os.listdir(arcdir):
+    inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.paths.var_dir, hostname)
+    if os.path.exists(inventory_archive_dir):
+        for timestamp_str in os.listdir(inventory_archive_dir):
             try:
-                history.append(int(ts))
+                timestamp = int(timestamp_str)
+                inventory_archive_path = "%s/%d" % (inventory_archive_dir, timestamp)
+                inventory_tree = StructuredDataTree().load_from(inventory_archive_path)
             except:
                 pass
-    history.sort()
-    history.reverse()
-    return history
-
-# Timestamp is timestamp of the younger of both trees. For the oldest
-# tree we will just return the complete tree - without any delta
-# computation.
-def load_delta_tree(hostname, timestamp):
-    history = get_host_history(hostname)
-    prev = None
-    for ts in history[::-1]:
-        if ts == timestamp:
-            tree = load_historic_host(hostname, ts)
-            if prev:
-                old_tree = load_historic_host(hostname, prev)
             else:
-                old_tree = None
-            delta_tree = compare_trees(old_tree, tree)[3]
-            return delta_tree
-        prev = ts
+                history.append((timestamp, inventory_tree))
 
-
-def load_historic_host(hostname, timestamp):
-    if '/' in hostname:
-        return None # just for security reasons
-
-    path = cmk.paths.var_dir + "/inventory/" + hostname
-
-    # Try current tree
-    if int(os.stat(path).st_mtime) == timestamp:
-        return host(hostname)
-
-    path = cmk.paths.var_dir + "/inventory_archive/" + hostname + "/%d" % timestamp
-    return store.load_data_from_file(path, {})
-
-
-# Example for the paths:
-# .hardware.cpu.model        (leaf)
-# .hardware.cpu.             (dict)
-# .software.packages:17.name (leaf)
-# .software.packages:        (list)
-# Non-existings paths return None for leave nodes,
-# {} for dict nodes and [] for list nodes
-def get(tree, path):
-    if path[0] != '.':
-        raise MKGeneralException(_("Invalid inventory path. Must start with dot."))
-    path = path[1:]
-
-    node = tree
-
-    # The root node of the tree MUST be dictionary
-    # This info is taken from the host_inventory column in a livestatus table
-    # Older versions, which do not know this column, report None as fallback value
-    # This workaround prevents the inevitable crash
-    if node == None:
-        node = {}
-
-    current_what = "."
-    while path not in ('.', ':', ''):
-        parts = re.split("[:.]", path)
-        name = parts[0]
-        path = path[len(name):]
-        if path:
-            what = path[0]
-            path = path[1:]
+    comparable_trees = []
+    previous = None
+    for this_timestamp, inventory_tree in sorted(history, key=lambda x: x[0], reverse=True):
+        if previous is None:
+            previous = inventory_tree
         else:
-            what = None # leaf node
+            comparable_trees.append((this_timestamp, inventory_tree, previous))
+            previous = inventory_tree
+    return comparable_trees
 
-        if current_what == '.': # node is a dict
-            if name not in node:
-                if what == '.':
-                    node = {}
-                elif what == ':':
-                    node = []
-                else:
-                    node = None
-            else:
-                node = node[name]
 
-        elif current_what == ':': # node is a list
-            index = int(name)
-            if index >= len(node) or index < 0:
-                if what == '.':
-                    node = {}
-                elif what == ':':
-                    node = []
-                else:
-                    node = None
-            else:
-                node = node[index]
-
-        current_what = what
-        if what == None:
-            return node # return leaf node
-
-    return node
-
-# Gets the parent path by dropping the last component
 def parent_path(invpath):
+    # Gets the parent path by dropping the last component
     if invpath == ".":
         return None # No parent
 
@@ -195,139 +182,28 @@ def parent_path(invpath):
     last_sep = max(invpath.rfind(":"), invpath.rfind("."))
     return invpath[:last_sep+1]
 
-# Compare two inventory trees. Returns a tuple of
-# 2. The number of removed nodes
-# 1. The number of new nodes
-# 3. The number of changed nodes
-# 4. A delta tree. The delta tree has the same architecture
-#    as the sum of both trees, but:
-#    - leaf nodes are replaced with pairs (old_value, new_value)
-#    - list nodes are replaced with triples (removed_items, new_items, changed_items)
-# keep_identical: if False then remove nodes where old == new
-def compare_trees(old, new, keep_identical=False):
-    if type(old) == list or type(new) == list:
-        return compare_list_nodes(old or [], new or [])
-    elif type(old) == dict or type(new) == dict:
-        return compare_dict_nodes(old or {}, new or {}, keep_identical=keep_identical)
-    else:
-        return compare_leaf_nodes(old, new)
 
-def compare_list_nodes(old, new):
-    # Try two algorithms and choose the one with the least
-    # changes. First one only works if the lists have the
-    # same length.
-    r, n, c, dt = compare_list_nodes_variable(old, new)
-    if len(old) == len(new):
-        r2, n2, c2, dt2 = compare_list_nodes_fixed(old, new)
-        if r2 + n2 + c2 <= r + n + c:
-            r, n, c, dt = r2, n2, c2, dt2
-
-    return r, n, c, dt
-
-
-def compare_list_nodes_variable(old, new):
-    removed_items = []
-    new_items = []
-    for entry in old:
-        if entry not in new:
-            removed_items.append(entry)
-    for entry in new:
-        if entry not in old:
-            new_items.append(entry)
-    return len(removed_items), len(new_items), 0, \
-           (removed_items, new_items)
-
-
-def compare_list_nodes_fixed(old, new):
-    num_removed = 0
-    num_new = 0
-    num_changed = 0
-    delta_tree = []
-
-    for old_item, new_item in zip(old, new):
-        r, n, c, dt = compare_trees(old_item, new_item, keep_identical=True)
-        num_removed += r
-        num_new += n
-        num_changed += c
-        if dt not in ([], {}) and old_item != new_item:
-            delta_tree.append(dt)
-
-    return num_removed, num_new, num_changed, delta_tree
-
-
-def compare_dict_nodes(old, new, keep_identical=False):
-    num_removed = 0
-    num_new = 0
-    num_changed = 0
-    delta_tree = {}
-
-    # Find vanished paths
-    for key, value in old.items():
-        if key not in new:
-            r,n,u,dt = compare_trees(value, None)
-            delta_tree[key] = dt
-            num_removed += r
-            num_new += n
-
-    # Find new and prevailing paths
-    for key, value in new.items():
-        if key not in old:
-            r,n,u,dt = compare_trees(None, value)
-            num_new += n
-            if dt not in ([], {}):
-                delta_tree[key] = dt
-        else:
-            if value != old[key] or keep_identical: # omit unchanged paths
-                r, n, c, dt = compare_trees(old[key], value)
-                num_removed += r
-                num_new += n
-                num_changed += c
-                if dt not in ([], {}):
-                    delta_tree[key] = dt
-
-    return num_removed, num_new, num_changed, delta_tree
-
-def compare_leaf_nodes(old, new):
-    if old == None and new != None:
-        return 0, 1, 0, (old, new)
-    elif old != None and new == None:
-        return 1, 0, 1, (old, new)
-    if old == new:
-        return 0, 0, 0, (old, new)
-    else:
-        return 0, 0, 1, (old, new)
-
-def count_items(tree):
-    if type(tree) == dict:
-        return sum(map(count_items, tree.values()))
-    elif type(tree) == list:
-        return sum(map(count_items, tree))
-    else:
-        return 1
-
-
-# The response is always a top level dict with two elements:
-# a) result_code - This is 0 for expected processing and 1 for an error
-# b) result      - In case of an error this is the error message, a UTF-8 encoded string.
-#                  In case of success this is a dictionary containing the host inventory.
 def page_host_inv_api():
+    # The response is always a top level dict with two elements:
+    # a) result_code - This is 0 for expected processing and 1 for an error
+    # b) result      - In case of an error this is the error message, a UTF-8 encoded string.
+    #                  In case of success this is a dictionary containing the host inventory.
     try:
         request = html.get_request()
-
         # The user can either specify a single host or provide a list of host names. In case
         # multiple hosts are handled, there is a top level dict added with "host > invdict" pairs
         hosts = request.get("hosts")
         if hosts:
             result = {}
             for host_name in hosts:
-                result[host_name] = inventory_of_host(host_name, request)
+                result[host_name] = _inventory_of_host(host_name, request)
 
         else:
             host_name = request.get("host")
             if host_name == None:
                 raise MKUserError("host", _("You need to provide a \"host\"."))
 
-            result = inventory_of_host(host_name, request)
+            result = _inventory_of_host(host_name, request)
 
             if not result and not has_inventory(host_name):
                 raise MKGeneralException(_("Found no inventory data for this host."))
@@ -343,56 +219,43 @@ def page_host_inv_api():
         response = { "result_code": 1, "result": "%s" % e }
 
     if html.output_format == "json":
-        write_json(response)
+        _write_json(response)
     elif html.output_format == "xml":
-        write_xml(response)
+        _write_xml(response)
     else:
-        write_python(response)
+        _write_python(response)
 
 
-def inventory_of_host(host_name, request):
-    if not may_see(host_name, site=request.get("site")):
+def has_inventory(hostname):
+    if not hostname:
+        return False
+    inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+    return os.path.exists(inventory_path)
+
+
+def _inventory_of_host(host_name, request):
+    if not _may_see(host_name, site=request.get("site")):
         raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % host_name)
 
-    host_inv = host(host_name)
-
+    inventory_tree = load_tree(host_name)
     if "paths" in request:
-        host_inv = filter_tree_by_paths(host_inv, request["paths"])
-
-    return host_inv
-
-
-def filter_tree_by_paths(tree, paths):
-    filtered = {}
-
-    for path in paths:
-        node = get(tree, path)
-
-        parts = path.split(".")
-        this_tree = filtered
-        while True:
-            key = parts.pop(0)
-            if parts:
-                this_tree = this_tree.setdefault(key, {})
-            else:
-                this_tree[key] = node
-                break
-
-    return filtered
+        parsed_paths = []
+        for path in request["paths"]:
+            parsed_path, _key = parse_tree_path(path)
+            parsed_paths.append(parsed_path)
+        inventory_tree = inventory_tree.get_filtered_tree(parsed_paths)
+    return inventory_tree.get_raw_tree()
 
 
-def may_see(host_name, site=None):
+def _may_see(host_name, site=None):
     if config.user.may("general.see_all"):
         return True
 
-
     query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)
-
     if site:
         sites.live().set_only_sites([site])
 
     result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
-
     if site:
         sites.live().set_only_sites()
 
@@ -402,12 +265,12 @@ def may_see(host_name, site=None):
         return result[0] > 0
 
 
-def write_xml(response):
+def _write_xml(response):
     try:
         import dicttoxml
     except ImportError:
-        raise MKGeneralException(_("You need to have the \"dicttoxml\" python module installed to "
-                                   "be able to use the XML format."))
+        raise MKGeneralException(_("You need to have the \"dicttoxml\" python module installed "
+                                   "to be able to use the XML format."))
 
     unformated_xml = dicttoxml.dicttoxml(response)
 
@@ -417,10 +280,9 @@ def write_xml(response):
     html.write(dom.toprettyxml())
 
 
-def write_json(response):
-    html.write(json.dumps(response,
-                          sort_keys=True, indent=4, separators=(',', ': ')))
+def _write_json(response):
+    html.write(json.dumps(response, sort_keys=True, indent=4, separators=(',', ': ')))
 
 
-def write_python(response):
+def _write_python(response):
     html.write(repr(response))

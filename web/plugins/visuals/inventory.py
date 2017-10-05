@@ -354,7 +354,7 @@ class FilterInvText(Filter):
 
         newrows = []
         for row in rows:
-            invdata = inventory.get(row["host_inventory"], self._invpath)
+            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
             if invdata == None:
                 invdata = ""
             if regex.search(invdata):
@@ -411,7 +411,7 @@ class FilterInvFloat(Filter):
 
         newrows = []
         for row in rows:
-            invdata = inventory.get(row["host_inventory"], self._invpath)
+            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
             if lower != None and invdata < lower:
                 continue
             if upper != None and invdata > upper:
@@ -437,10 +437,9 @@ class FilterInvBool(FilterTristate):
             return rows
         else:
             wanted_value = tri == 1
-
             newrows = []
             for row in rows:
-                invdata = inventory.get(row["host_inventory"], self._invpath)
+                invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
                 if wanted_value == invdata:
                     newrows.append(row)
             return newrows
@@ -515,7 +514,10 @@ class FilterInvHasSoftwarePackage(Filter):
 
         new_rows = []
         for row in rows:
-            packages = inventory.get(row["host_inventory"], ".software.packages:")
+            packages_numeration = row["host_inventory"].get_sub_numeration(["software", "packages"])
+            if packages_numeration is None:
+                continue
+            packages = packages_numeration.get_child_data()
             is_in = self.find_package(packages, name, from_version, to_version)
             if is_in != negate:
                 new_rows.append(row)

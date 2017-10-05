@@ -1538,6 +1538,7 @@ def ajax_popup_add():
     add_type = html.var("add_type")
 
     html.open_ul()
+
     pagetypes.render_addto_popup(add_type)
 
     for visual_type_name, visual_type in visual_types.items():
@@ -1564,6 +1565,22 @@ def ajax_popup_add():
                 html.write(title)
                 html.close_a()
                 html.close_li()
+
+    # TODO: Find a good place for this special case. This needs to be modularized.
+    if add_type == "pnpgraph":
+        html.open_li()
+        html.open_span()
+        html.write("%s:" % _("Export"))
+        html.close_span()
+        html.close_li()
+
+        html.open_li()
+        html.open_a(href="javascript:graph_export()")
+        html.img(src="images/icon_download.png")
+        html.write(_("Export as JSON"))
+        html.close_a()
+        html.close_li()
+
     html.close_ul()
 
 

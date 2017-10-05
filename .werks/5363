@@ -1,0 +1,12 @@
+Title: Exporting graph data in JSON format via GUI is now possible
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1507210788
+Class: feature
+
+When viewing a graph in the GUI it is now possible to open the context menu
+and click on "Export as JSON" to get the data that is shown in the graph as
+JSON output.

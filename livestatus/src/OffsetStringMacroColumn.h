@@ -36,15 +36,17 @@ class Filter;
 class Row;
 class RowRenderer;
 
-class OffsetStringMacroColumn : public OffsetStringColumn {
+class OffsetStringMacroColumn : public StringColumn {
 public:
     OffsetStringMacroColumn(const std::string &name,
                             const std::string &description, int indirect_offset,
                             int extra_offset, int extra_extra_offset,
-                            int offset)
-        : OffsetStringColumn(name, description, indirect_offset, extra_offset,
-                             extra_extra_offset, offset) {}
-    // reimplement several functions from StringColumn
+                            int offset, int string_offset)
+        : StringColumn(name, description, indirect_offset, extra_offset,
+                       extra_extra_offset, offset)
+        , _string_offset(string_offset) {}
+
+    std::string getValue(Row row) const override;
 
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
@@ -56,6 +58,8 @@ public:
     virtual const service *getService(Row) const = 0;
 
 private:
+    const int _string_offset;
+
     const char *expandMacro(const char *macroname, const host *hst,
                             const service *svc) const;
     const char *expandCustomVariables(

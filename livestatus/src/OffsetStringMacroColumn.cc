@@ -37,6 +37,14 @@ using std::unique_ptr;
 
 extern char *macro_user[MAX_USER_MACROS];
 
+std::string OffsetStringMacroColumn::getValue(Row row) const {
+    if (auto p = columnData<void>(row)) {
+        auto s = offset_cast<const char *>(p, _string_offset);
+        return *s == nullptr ? "" : *s;
+    }
+    return "";
+}
+
 void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
                                      const contact * /*unused*/) const {
     string raw = getValue(row);

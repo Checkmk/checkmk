@@ -98,7 +98,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, 0,
         DANGEROUS_OFFSETOF(host, check_command)));
 #else
     table->addColumn(make_unique<OffsetStringColumn>(
@@ -108,7 +108,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, 0,
         DANGEROUS_OFFSETOF(host, host_check_command)));
 #endif
     table->addColumn(make_unique<OffsetStringColumn>(
@@ -135,7 +135,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
-        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, notes)));
+        indirect_offset, extra_offset, -1, 0, DANGEROUS_OFFSETOF(host, notes)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL with further information about the host",
@@ -144,7 +144,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, 0,
         DANGEROUS_OFFSETOF(host, notes_url)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
@@ -154,7 +154,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, 0,
         DANGEROUS_OFFSETOF(host, action_url)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "plugin_output", "Output of the last host check",
@@ -172,7 +172,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, 0,
         DANGEROUS_OFFSETOF(host, icon_image)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",

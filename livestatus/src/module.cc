@@ -66,7 +66,6 @@
 #include "strutil.h"
 #include "waittriggers.h"
 
-using mk::unsafe_tolower;
 using std::chrono::milliseconds;
 using std::chrono::minutes;
 using std::chrono::seconds;
@@ -581,7 +580,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 class NagiosCore : public MonitoringCore {
 public:
     Host *getHostByDesignation(const string &designation) override {
-        auto it = fl_hosts_by_designation.find(unsafe_tolower(designation));
+        auto it = fl_hosts_by_designation.find(mk::unsafe_tolower(designation));
         return it == fl_hosts_by_designation.end() ? nullptr
                                                    : fromImpl(it->second);
     }
@@ -745,12 +744,12 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
         case NEBTYPE_PROCESS_START:
             for (host *hst = host_list; hst != nullptr; hst = hst->next) {
                 if (const char *address = hst->address) {
-                    fl_hosts_by_designation[unsafe_tolower(address)] = hst;
+                    fl_hosts_by_designation[mk::unsafe_tolower(address)] = hst;
                 }
                 if (const char *alias = hst->alias) {
-                    fl_hosts_by_designation[unsafe_tolower(alias)] = hst;
+                    fl_hosts_by_designation[mk::unsafe_tolower(alias)] = hst;
                 }
-                fl_hosts_by_designation[unsafe_tolower(hst->name)] = hst;
+                fl_hosts_by_designation[mk::unsafe_tolower(hst->name)] = hst;
             }
             fl_store = new Store(&core);
             fl_client_queue = new ClientQueue();

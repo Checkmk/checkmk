@@ -67,7 +67,6 @@ class VariadicFilter;
 #include "nagios.h"
 #endif
 
-using mk::starts_with;
 using std::deque;
 using std::lock_guard;
 using std::make_unique;
@@ -262,9 +261,9 @@ public:
     void visit(const ColumnFilter &f) override {
         if (_value) {
             auto column_name = f.columnName();
-            _value = starts_with(column_name, string("current_")) ||
-                     starts_with(column_name, string("host_")) ||
-                     starts_with(column_name, string("service_"));
+            _value = mk::starts_with(column_name, string("current_")) ||
+                     mk::starts_with(column_name, string("host_")) ||
+                     mk::starts_with(column_name, string("service_"));
         }
     }
     void visit(const NegatingFilter & /*unused*/) override {}
@@ -795,7 +794,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
         case LogEntryType::downtime_alert_host: {
             int downtime_active =
-                starts_with(entry->_state_type, "STARTED") ? 1 : 0;
+                mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
 
             if (hs_state->_in_host_downtime != downtime_active) {
                 if (!only_update) {
@@ -814,7 +813,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
         case LogEntryType::downtime_alert_service: {
             int downtime_active =
-                starts_with(entry->_state_type, "STARTED") ? 1 : 0;
+                mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
                 if (!only_update) {
                     process(query, hs_state);
@@ -827,7 +826,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         case LogEntryType::flapping_host:
         case LogEntryType::flapping_service: {
             int flapping_active =
-                starts_with(entry->_state_type, "STARTED") ? 1 : 0;
+                mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
                 if (!only_update) {
                     process(query, hs_state);

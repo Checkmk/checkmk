@@ -30,22 +30,17 @@
 #include "Row.h"
 #include "TimeFilter.h"
 
-using std::chrono::system_clock;
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 void TimeColumn::output(Row row, RowRenderer &r,
                         const contact *auth_user) const {
-    r.output(system_clock::from_time_t(getValue(row, auth_user)));
+    r.output(std::chrono::system_clock::from_time_t(getValue(row, auth_user)));
 }
 
-unique_ptr<Filter> TimeColumn::createFilter(RelationalOperator relOp,
-                                            const string &value) const {
-    return make_unique<TimeFilter>(*this, relOp, value);
+std::unique_ptr<Filter> TimeColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<TimeFilter>(*this, relOp, value);
 }
 
-unique_ptr<Aggregator> TimeColumn::createAggregator(
+std::unique_ptr<Aggregator> TimeColumn::createAggregator(
     StatsOperation operation) const {
-    return make_unique<IntAggregator>(operation, this);
+    return std::make_unique<IntAggregator>(operation, this);
 }

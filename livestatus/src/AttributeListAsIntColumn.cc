@@ -30,13 +30,9 @@
 #include "IntFilter.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
-unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
-    RelationalOperator relOp, const string &value) const {
-    return make_unique<IntFilter>(
+std::unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<IntFilter>(
         *this, relOp, AttributeListColumn::refValueFor(value, logger()));
 }
 

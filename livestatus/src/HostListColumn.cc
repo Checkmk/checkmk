@@ -29,10 +29,6 @@
 #include "Row.h"
 #include "auth.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 hostsmember *HostListColumn::getMembers(Row row) const {
     if (auto p = columnData<hostsmember *>(row)) {
         return *p;
@@ -48,10 +44,10 @@ void HostListColumn::output(Row row, RowRenderer &r,
         if (auth_user == nullptr ||
             is_authorized_for(_mc, auth_user, hst, nullptr)) {
             if (!_show_state) {
-                l.output(string(hst->name));
+                l.output(std::string(hst->name));
             } else {
                 SublistRenderer s(l);
-                s.output(string(hst->name));
+                s.output(std::string(hst->name));
                 s.output(hst->current_state);
                 s.output(hst->has_been_checked);
             }
@@ -59,7 +55,7 @@ void HostListColumn::output(Row row, RowRenderer &r,
     }
 }
 
-unique_ptr<Filter> HostListColumn::createFilter(RelationalOperator relOp,
-                                                const string &value) const {
-    return make_unique<HostListFilter>(*this, relOp, value);
+std::unique_ptr<Filter> HostListColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<HostListFilter>(*this, relOp, value);
 }

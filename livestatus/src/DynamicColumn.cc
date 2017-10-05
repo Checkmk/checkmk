@@ -25,14 +25,11 @@
 #include "DynamicColumn.h"
 #include <utility>
 
-using std::move;
-using std::string;
-
-DynamicColumn::DynamicColumn(string name, string description, Logger *logger,
-                             int indirect_offset, int extra_offset,
-                             int extra_extra_offset)
-    : _name(move(name))
-    , _description(move(description))
+DynamicColumn::DynamicColumn(std::string name, std::string description,
+                             Logger *logger, int indirect_offset,
+                             int extra_offset, int extra_extra_offset)
+    : _name(std::move(name))
+    , _description(std::move(description))
     , _logger(logger)
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
@@ -40,4 +37,4 @@ DynamicColumn::DynamicColumn(string name, string description, Logger *logger,
 
 DynamicColumn::~DynamicColumn() = default;
 
-string DynamicColumn::name() const { return _name; }
+std::string DynamicColumn::name() const { return _name; }

@@ -37,17 +37,9 @@
 #include "Row.h"
 #include "strutil.h"
 
-using std::bitset;
-using std::make_unique;
-using std::map;
-using std::string;
-using std::to_string;
-using std::unique_ptr;
-using std::vector;
-
 namespace {
 // see MODATTR_FOO in nagios/common.h
-map<string, unsigned long> known_attributes = {
+std::map<std::string, unsigned long> known_attributes = {
     {"notifications_enabled", 0},    {"active_checks_enabled", 1},
     {"passive_checks_enabled", 2},   {"event_handler_enabled", 3},
     {"flap_detection_enabled", 4},   {"failure_prediction_enabled", 5},
@@ -58,7 +50,7 @@ map<string, unsigned long> known_attributes = {
     {"check_timeperiod", 14},        {"custom_variable", 15},
     {"notification_timeperiod", 16}};
 
-using modified_atttibutes = bitset<32>;
+using modified_atttibutes = std::bitset<32>;
 }  // namespace
 
 int32_t AttributeListColumn::getValue(Row row,
@@ -80,18 +72,20 @@ void AttributeListColumn::output(Row row, RowRenderer &r,
     }
 }
 
-unique_ptr<Filter> AttributeListColumn::createFilter(
-    RelationalOperator relOp, const string &value) const {
-    return make_unique<IntFilter>(*this, relOp, refValueFor(value, logger()));
+std::unique_ptr<Filter> AttributeListColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<IntFilter>(*this, relOp,
+                                       refValueFor(value, logger()));
 }
 
 // static
-string AttributeListColumn::refValueFor(const string &value, Logger *logger) {
+std::string AttributeListColumn::refValueFor(const std::string &value,
+                                             Logger *logger) {
     if (isdigit(value[0]) != 0) {
         return value;
     }
 
-    vector<char> value_vec(value.begin(), value.end());
+    std::vector<char> value_vec(value.begin(), value.end());
     value_vec.push_back('\0');
     char *scan = &value_vec[0];
 
@@ -105,5 +99,5 @@ string AttributeListColumn::refValueFor(const string &value, Logger *logger) {
         }
         values[it->second] = true;
     }
-    return to_string(values.to_ulong());
+    return std::to_string(values.to_ulong());
 }

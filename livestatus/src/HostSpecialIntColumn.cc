@@ -29,8 +29,6 @@
 #include "nagios.h"
 #include "pnp4nagios.h"
 
-using std::string;
-
 int32_t HostSpecialIntColumn::getValue(Row row,
                                        const contact* /* auth_user */) const {
     if (auto hst = columnData<host>(row)) {

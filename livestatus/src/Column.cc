@@ -27,16 +27,11 @@
 #include <utility>
 #include "Logger.h"
 
-using std::move;
-using std::runtime_error;
-using std::string;
-using std::unique_ptr;
-
-Column::Column(string name, string description, int indirect_offset,
+Column::Column(std::string name, std::string description, int indirect_offset,
                int extra_offset, int extra_extra_offset, int offset)
     : _logger(Logger::getLogger("cmk.livestatus"))
-    , _name(move(name))
-    , _description(move(description))
+    , _name(std::move(name))
+    , _description(std::move(description))
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
     , _extra_extra_offset(extra_extra_offset)
@@ -62,12 +57,12 @@ const void *Column::shiftPointer(Row row) const {
                _offset);
 }
 
-unique_ptr<Filter> Column::createFilter(RelationalOperator /*unused*/,
-                                        const std::string & /*unused*/) const {
-    throw runtime_error("filtering on column " + _name + " not supported");
+std::unique_ptr<Filter> Column::createFilter(
+    RelationalOperator /*unused*/, const std::string & /*unused*/) const {
+    throw std::runtime_error("filtering on column " + _name + " not supported");
 }
 
-unique_ptr<Aggregator> Column::createAggregator(
+std::unique_ptr<Aggregator> Column::createAggregator(
     StatsOperation /*unused*/) const {
     return nullptr;
 }

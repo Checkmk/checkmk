@@ -27,11 +27,10 @@
 #include "FilterVisitor.h"
 #include "Row.h"
 
-using std::move;
 using std::unique_ptr;
 
 NegatingFilter::NegatingFilter(unique_ptr<Filter> filter)
-    : _filter(move(filter)) {}
+    : _filter(std::move(filter)) {}
 
 void NegatingFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 

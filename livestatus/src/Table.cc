@@ -33,8 +33,6 @@
 #include "MonitoringCore.h"
 #include "StringUtils.h"
 
-using mk::starts_with;
-using std::move;
 using std::string;
 using std::shared_ptr;
 using std::unique_ptr;
@@ -56,7 +54,7 @@ void Table::addDynamicColumn(unique_ptr<DynamicColumn> dyncol) {
 
 shared_ptr<Column> Table::column(string colname) const {
     // Strip away a sequence of prefixes.
-    while (starts_with(colname, namePrefix())) {
+    while (mk::starts_with(colname, namePrefix())) {
         colname = colname.substr(namePrefix().size());
     }
 

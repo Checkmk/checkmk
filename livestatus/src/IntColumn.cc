@@ -29,21 +29,17 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 void IntColumn::output(Row row, RowRenderer &r,
                        const contact *auth_user) const {
     r.output(getValue(row, auth_user));
 }
 
-unique_ptr<Filter> IntColumn::createFilter(RelationalOperator relOp,
-                                           const string &value) const {
-    return make_unique<IntFilter>(*this, relOp, value);
+std::unique_ptr<Filter> IntColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<IntFilter>(*this, relOp, value);
 }
 
-unique_ptr<Aggregator> IntColumn::createAggregator(
+std::unique_ptr<Aggregator> IntColumn::createAggregator(
     StatsOperation operation) const {
-    return make_unique<IntAggregator>(operation, this);
+    return std::make_unique<IntAggregator>(operation, this);
 }

@@ -27,12 +27,10 @@
 #include "TimeperiodsCache.h"
 #include "nagios.h"
 
-using std::string;
-
 extern TimeperiodsCache* g_timeperiods_cache;
 
-TimeperiodColumn::TimeperiodColumn(const string& name,
-                                   const string& description,
+TimeperiodColumn::TimeperiodColumn(const std::string& name,
+                                   const std::string& description,
                                    int indirect_offset, int extra_offset,
                                    int extra_extra_offset)
     : IntColumn(name, description, indirect_offset, extra_offset,

@@ -42,7 +42,7 @@ std::unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
 void VariadicFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 
 void VariadicFilter::addSubfilter(std::unique_ptr<Filter> f) {
-    _subfilters.push_back(move(f));
+    _subfilters.push_back(std::move(f));
 }
 
 std::unique_ptr<Filter> VariadicFilter::stealLastSubfiler() {
@@ -65,8 +65,8 @@ void VariadicFilter::findIntLimits(const std::string &colum_nname, int *lower,
 void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
     auto variadic = VariadicFilter::make(andor);
     for (auto i = 0; i < count; ++i) {
-        variadic->addSubfilter(move(_subfilters.back()));
+        variadic->addSubfilter(std::move(_subfilters.back()));
         _subfilters.pop_back();
     }
-    addSubfilter(move(variadic));
+    addSubfilter(std::move(variadic));
 }

@@ -27,20 +27,16 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 void ContactGroupsColumn::output(Row row, RowRenderer &r,
                                  const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (auto cgm = getData(row); cgm != nullptr; cgm = cgm->next) {
-        l.output(string(cgm->group_ptr->group_name));
+        l.output(std::string(cgm->group_ptr->group_name));
     }
 }
 
-unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
-    const string &name) const {
+std::unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
+    const std::string &name) const {
     class ContainsContactGroup : public Contains {
     public:
         ContainsContactGroup(MonitoringCore::ContactGroup *element,
@@ -64,8 +60,8 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
         const ContactGroupsColumn *const _column;
     };
 
-    return make_unique<ContainsContactGroup>(_mc->find_contactgroup(name),
-                                             this);
+    return std::make_unique<ContainsContactGroup>(_mc->find_contactgroup(name),
+                                                  this);
 }
 
 bool ContactGroupsColumn::isEmpty(Row row) const {

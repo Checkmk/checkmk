@@ -247,7 +247,7 @@ void Query::parseNegateLine(char *line, VariadicFilter &filter,
         return;
     }
 
-    filter.addSubfilter(std::make_unique<NegatingFilter>(move(to_negate)));
+    filter.addSubfilter(std::make_unique<NegatingFilter>(std::move(to_negate)));
 }
 
 void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
@@ -423,7 +423,7 @@ void Query::parseFilterLine(char *line, VariadicFilter &filter) {
     }
 
     if (auto sub_filter = createFilter(*column, relOp, value)) {
-        filter.addSubfilter(move(sub_filter));
+        filter.addSubfilter(std::move(sub_filter));
         _all_columns.insert(column);
     }
 }

@@ -26,11 +26,9 @@
 #include "Row.h"
 #include "nagios.h"
 
-using std::string;
-using std::unordered_set;
-
-unordered_set<string> HostContactsColumn::contactNames(Row row) const {
-    unordered_set<string> names;
+std::unordered_set<std::string> HostContactsColumn::contactNames(
+    Row row) const {
+    std::unordered_set<std::string> names;
     if (auto hst = columnData<host>(row)) {
         for (auto cm = hst->contacts; cm != nullptr; cm = cm->next) {
             names.insert(cm->contact_ptr->name);

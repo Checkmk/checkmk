@@ -26,21 +26,17 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 void ServiceGroupsColumn::output(Row row, RowRenderer &r,
                                  const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
         auto sg = static_cast<servicegroup *>(list->object_ptr);
-        l.output(string(sg->group_name));
+        l.output(std::string(sg->group_name));
     }
 }
 
-unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
-    const string &name) const {
+std::unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
+    const std::string &name) const {
     class ContainsServiceGroup : public Contains {
     public:
         ContainsServiceGroup(servicegroup *element,
@@ -62,7 +58,7 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
         const ServiceGroupsColumn *const _column;
     };
 
-    return make_unique<ContainsServiceGroup>(
+    return std::make_unique<ContainsServiceGroup>(
         find_servicegroup(const_cast<char *>(name.c_str())), this);
 }
 

@@ -96,7 +96,7 @@ bool TimeperiodsCache::inTimeperiod(const string &tpname) const {
             return inTimeperiod(tp);
         }
     }
-    return true;  // unknown timeperiod is assumed to be 7X24
+    return true;  // unknown timeperiod is assumed to be 24X7
 }
 
 bool TimeperiodsCache::inTimeperiod(const timeperiod *tp) const {

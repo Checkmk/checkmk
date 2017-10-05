@@ -98,5 +98,5 @@ int ServiceListColumn::inCustomTimeperiod(service *svc,
                 g_timeperiods_cache->inTimeperiod(cvm->variable_value));
         }
     }
-    return 1;  // assume 7X24
+    return 1;  // assume 24X7
 }

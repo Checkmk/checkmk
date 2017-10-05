@@ -43,6 +43,6 @@ int32_t TimeperiodColumn::getValue(Row row,
     if (auto tp = columnData<timeperiod>(row)) {
         return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
     }
-    // no timeperiod set -> Nagios assumes 7x24
+    // no timeperiod set -> Nagios assumes 24X7
     return 0;
 }

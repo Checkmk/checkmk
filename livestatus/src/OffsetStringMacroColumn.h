@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
-#include "OffsetStringColumn.h"
+#include "StringColumn.h"
 #include "contact_fwd.h"
 #include "nagios.h"
 #include "opids.h"

@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include "Column.h"
 #include "Filter.h"
 #include "Logger.h"
 #include "Renderer.h"

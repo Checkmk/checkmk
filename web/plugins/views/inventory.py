@@ -24,30 +24,57 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 import inventory
 from cmk.regex import regex
 import cmk.defines as defines
 
 
-def paint_host_inventory(row, invpath):
-    invdata = inventory.get(row.get("host_inventory"), invpath)
-
-    hint = inv_display_hint(invpath)
-    if "paint_function" in hint:
-        return hint["paint_function"](invdata)
-    elif invdata == None:
+def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
+    struct_tree = row.get(column)
+    if struct_tree is None:
         return "", ""
-    elif type(invdata) in ( str, unicode ):
-        return "", invdata
-    elif not is_leaf_type(invdata):
-        return paint_inv_tree(row, invpath)
-    else:
-        return "number", str(invdata)
 
-def cmp_inventory_node(a, b, invpath):
-    val_a = inventory.get(a["host_inventory"], invpath)
-    val_b = inventory.get(b["host_inventory"], invpath)
-    return cmp(val_a, val_b)
+    if column == "host_inventory":
+        tree_renderer = AttributeRenderer(row["host_name"], "", invpath)
+    else:
+        tree_id = "/" + str(row["invhist_time"])
+        tree_renderer = DeltaNodeRenderer(row["host_name"], tree_id, invpath)
+
+    parsed_path, attributes_key = inventory.parse_tree_path(invpath)
+    if attributes_key is None:
+        return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
+    else:
+        return _paint_host_inventory_tree_value(struct_tree, parsed_path, invpath, attributes_key)
+
+
+def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
+    if parsed_path:
+        children = struct_tree.get_sub_children(parsed_path)
+    else:
+        children = [struct_tree.get_root_container()]
+    if children is None:
+        return "", ""
+    with html.plugged():
+        for child in children:
+            child.show(tree_renderer)
+        code = html.drain()
+    return "invtree", code
+
+
+def _paint_host_inventory_tree_value(struct_tree, parsed_path, invpath, attributes_key):
+    #TODO what about numerations?
+    if attributes_key == []:
+        child = struct_tree.get_sub_numeration(parsed_path)
+    else:
+        child = struct_tree.get_sub_attributes(parsed_path)
+    if child is None:
+        return  "", ""
+    with html.plugged():
+        show_child_value(invpath, child.get_child_data().get(attributes_key))
+        code = html.drain()
+    return "invtree", code
+
 
 inv_filter_info = {
     "bytes"         : { "unit" : _("MB"),    "scale" : 1024*1024 },
@@ -56,6 +83,7 @@ inv_filter_info = {
     "volt"          : { "unit" : _("Volt") },
     "timestamp"     : { "unit" : _("secs") },
 }
+
 
 # Declares painters, sorters and filters to be used in views based on all host related datasources.
 def declare_inv_column(invpath, datatype, title, short = None):
@@ -69,7 +97,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
         "title"    : invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
         "columns"  : ["host_inventory"],
         "load_inv" : True,
-        "paint"    : lambda row: paint_host_inventory(row, invpath),
+        "paint"    : lambda row: paint_host_inventory_tree(row, invpath),
         "sorter"   : name,
     }
     if short:
@@ -97,254 +125,10 @@ def declare_inv_column(invpath, datatype, title, short = None):
                scale = filter_info.get("scale", 1.0)))
 
 
-# Tree painter
-def paint_inv_tree(row, invpath = ".", column = "host_inventory"):
-    hostname = row["host_name"]
-    tree = row[column]
-    if column == "host_inventory":
-        tree_id = ""
-    else:
-        tree_id = "/" + str(row["invhist_time"])
-    node = inventory.get(tree, invpath)
-    with html.plugged():
-        render_inv_subtree_container(hostname, tree_id, invpath, node)
-        code = html.drain()
-    return "invtree", code
-
-def render_inv_subtree(hostname, tree_id, invpath, node):
-    if is_leaf_type(node):
-        render_inv_subtree_leaf(hostname, tree_id, invpath, node)
-    else:
-        render_inv_subtree_foldable(hostname, tree_id, invpath, node)
-
-def render_inv_subtree_foldable(hostname, tree_id, invpath, node):
-    if node: # omit empty nodes completely
-        icon, title = inv_titleinfo(invpath, node)
-
-        if "%d" in title: # Replace with list index
-            list_index = int(invpath.split(":")[-1].rstrip(".")) + 1
-            title = title % list_index
-
-        fetch_url = html.makeuri_contextless([("host", hostname), ("path", invpath), ("treeid", tree_id)], "ajax_inv_render_tree.py")
-        if html.begin_foldable_container("inv_" + hostname + tree_id, invpath, False,
-                                         title, icon=icon, fetch_url=fetch_url, tree_img="tree_black"):
-            # Render only if it is open. We'll get the stuff via ajax later if it's closed
-            render_inv_subtree_container(hostname, tree_id, invpath, node)
-        html.end_foldable_container()
-
-def render_inv_subtree_container(hostname, tree_id, invpath, node):
-    hint = inv_display_hint(invpath)
-
-    if "render" in hint:
-        try:
-            hint["render"](hostname, invpath, node)
-        except:
-            hint["render"](hostname, tree_id, invpath, node)
-
-    elif type(node) == dict:
-        render_inv_subtree_dict(hostname, tree_id, invpath, node)
-    else:
-        render_inv_subtree_list(hostname, tree_id, invpath, node)
-
-def is_leaf_type(value):
-    if type(value) in (list, dict):
-        return False
-    elif type(value) == tuple and type(value[0]) == list: # Delta mode lists
-        return False
-    else:
-        return True
-
-def render_inv_subtree_dict(hostname, tree_id, invpath, node):
-    items = node.items()
-    items.sort()
-
-    leaf_nodes = []
-    for key, value in items:
-        if is_leaf_type(value):
-            invpath_sub = invpath + key
-            icon, title = inv_titleinfo(invpath_sub, value)
-            leaf_nodes.append((title, invpath_sub, value))
-
-    if leaf_nodes:
-        leaf_nodes.sort()
-        html.open_table()
-        for title, invpath_sub, value in leaf_nodes:
-            html.open_tr()
-            html.open_th(title=invpath_sub)
-            html.write(title)
-            html.close_th()
-
-            html.open_td()
-            render_inv_subtree(hostname, tree_id, invpath_sub, value)
-            html.close_td()
-            html.close_tr()
-        html.close_table()
-
-    non_leaf_nodes = [ item for item in items if not is_leaf_type(item[1]) ]
-    non_leaf_nodes.sort()
-    for key, value in non_leaf_nodes:
-        invpath_sub = invpath + key
-        if type(value) == dict:
-            invpath_sub += "."
-        elif type(value) == list or (type(value) == tuple and type(value[0]) == list):
-            invpath_sub += ":"
-        render_inv_subtree_foldable(hostname, tree_id, invpath_sub, value)
-
-def render_inv_subtree_list(hostname, tree_id, invpath, node):
-    # In delta-mode node is a pair of (removed, new)
-    if not node:
-        return
-
-    elif type(node) == tuple:
-        if node[0]:
-            html.write(_("Removed entries") + ":<br>")
-            html.open_span(class_="invold")
-            render_inv_subtree_list(hostname, tree_id, invpath, node[0])
-            html.close_span()
-
-        if node[1]:
-            html.write(_("New entries") + ":<br>")
-            html.open_span(class_="invnew")
-            render_inv_subtree_list(hostname, tree_id, invpath, node[1])
-            html.close_span()
-
-    else:
-        for nr, value in enumerate(node):
-            invpath_sub = invpath + str(nr)
-            if type(value) == dict:
-                invpath_sub += "."
-            elif type(value) == list or (type(value) == tuple and type(value[0]) == list):
-                invpath_sub += ":"
-            render_inv_subtree(hostname, tree_id, invpath_sub, value)
-
-
-def render_inv_subtree_leaf(hostname, tree_id, invpath, node):
-    # In delta mode node is a pair (old_value, new_value)
-    if type(node) == tuple:
-        if node[0] == node[1] or node[0] == None:
-            if node[0] == None:
-                html.open_span(class_="invnew")
-            render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[1])
-            if node[0] == None:
-                html.close_span()
-        else:
-            html.open_span(class_="invold")
-            render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[0])
-            html.close_span()
-            html.write(u" → ")
-            html.open_span(class_="invnew")
-            render_inv_subtree_leaf_value(hostname, tree_id, invpath, node[1])
-            html.close_span()
-    else:
-        render_inv_subtree_leaf_value(hostname, tree_id, invpath, node)
-    html.br()
-
-def render_inv_subtree_leaf_value(hostname, tree_id, invpath, node):
-    hint = inv_display_hint(invpath)
-    if "paint_function" in hint:
-        tdclass, code = hint["paint_function"](node)
-        html.write(code)
-    elif "render" in hint:
-        hint["render"](node)
-    elif type(node) == str:
-        try:
-            text = node.decode("utf-8")
-        except:
-            text = node
-        html.write_text(text)
-    elif type(node) == unicode:
-        html.write_text(node)
-    elif type(node) == int:
-        html.write(str(node))
-    elif type(node) == float:
-        html.write("%.2f" % node)
-    elif node != None:
-        html.write(str(node))
-
-
-def render_inv_dicttable(hostname, tree_id, invpath, node):
-    # In delta mode where nodes have been added/removed, node is a pair of
-    # (old_items, new_items)
-    if type(node) == tuple:
-        if node[0]:
-            html.write_text(_("Removed entries") + ":")
-            html.open_span(class_="invold")
-            render_inv_dicttable(hostname, tree_id, invpath, node[0])
-            html.close_span()
-
-        if node[1]:
-            html.write(_("New entries") + ":")
-            html.open_span(class_="invnew")
-            render_inv_dicttable(hostname, tree_id, invpath, node[1])
-            html.close_span()
-        return
-
-    hint = inv_display_hint(invpath)
-    keyorder = hint.get("keyorder", []) # well known keys
-
-    # Add titles for those keys
-    titles = []
-    for key in keyorder:
-        invpath_sub = invpath + "0." + key
-        icon, title = inv_titleinfo(invpath_sub, None)
-        sub_hint = inv_display_hint(invpath_sub)
-        short_title = sub_hint.get("short", title)
-        titles.append((short_title, key))
-
-    # Determine *all* keys, in order to find unknown ones
-    keys = set([])
-    for entry in node:
-        keys.update(entry.keys())
-
-    # Order not well-known keys alphabetically
-    extratitles = []
-    for key in keys:
-        if key not in keyorder:
-            icon, title = inv_titleinfo(invpath + "0." + key, None)
-            extratitles.append((title, key))
-    extratitles.sort()
-    titles += extratitles
-
-    # Link to Multisite view with exactly this table
-    if "view" in hint:
-        url = html.makeuri_contextless([
-            ("view_name", hint["view"] ),
-            ("host", hostname)],
-            filename="view.py")
-        html.div(html.render_a(_("Open this table for filtering / sorting"), href=url),
-                 class_="invtablelink")
-
-    # We cannot use table here, since html.plug() does not work recursively
-    html.open_table(class_="data")
-    html.open_tr()
-    for title, key in titles:
-        html.th(title)
-    html.close_tr()
-
-    for nr, entry in enumerate(node):
-        html.open_tr(class_="even0")
-        for title, key in titles:
-            value = entry.get(key)
-            invpath_sub = invpath + "%d.%s" % (nr, key)
-            if type(value) == dict:
-                invpath_sub += "."
-            elif type(value) == list or (type(value) == tuple and type(value[0]) == list):
-                invpath_sub += ":"
-
-            hint = inv_display_hint(invpath_sub)
-
-            if "paint_function" in hint:
-                # The value is not really needed, but we need to deal with the delta mode
-                value = value[1] if type(value) == tuple else value
-                td_class, text = hint["paint_function"](value)
-            else:
-                td_class = None
-
-            html.open_td(class_=td_class)
-            render_inv_subtree(hostname, tree_id, invpath_sub, value)
-            html.close_td()
-        html.close_tr()
-    html.close_table()
+def cmp_inventory_node(a, b, invpath):
+    val_a = inventory.get_inventory_data(a["host_inventory"], invpath)
+    val_b = inventory.get_inventory_data(b["host_inventory"], invpath)
+    return cmp(val_a, val_b)
 
 
 # Convert .foo.bar:18.test to .foo.bar:*.test
@@ -360,6 +144,7 @@ def inv_display_hint(invpath):
 
     return hint
 
+
 def inv_titleinfo(invpath, node):
     hint = inv_display_hint(invpath)
     icon = hint.get("icon")
@@ -370,6 +155,7 @@ def inv_titleinfo(invpath, node):
     else:
         title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_", " ").title()
     return icon, title
+
 
 # The titles of the last two path components of the node, e.g. "BIOS / Vendor"
 def inv_titleinfo_long(invpath, node):
@@ -386,7 +172,8 @@ multisite_painters["inventory_tree"] = {
     "title"    : _("Hardware & Software Tree"),
     "columns"  : ["host_inventory"],
     "load_inv" : True,
-    "paint"    : paint_inv_tree,
+    #"paint"    : paint_inv_tree,
+    "paint"    : paint_host_inventory_tree,
 }
 
 
@@ -406,6 +193,7 @@ def inv_paint_hz(hz):
         return "number", "%.1f MHz" % (hz / 1000000)
     else:
         return "number", "%.2f GHz" % (hz / 1000000000)
+
 
 def inv_paint_bytes(b):
     if b == None:
@@ -433,6 +221,7 @@ def inv_paint_number(b):
     else:
         return "number", str(b)
 
+
 # Similar to paint_number, but is allowed to
 # abbreviate things if numbers are very large
 # (though it doesn't do so yet)
@@ -441,6 +230,7 @@ def inv_paint_count(b):
         return "", ""
     else:
         return "number", str(b)
+
 
 def inv_paint_bytes_rounded(b):
     if b == None:
@@ -459,6 +249,7 @@ def inv_paint_bytes_rounded(b):
         return "number", "%.2f&nbsp;%s" % (b / fac, units[i])
     else:
         return "number", "%d&nbsp;%s" % (b, units[0])
+
 
 def inv_paint_nic_speed(bits_per_second):
     if bits_per_second == 0:
@@ -483,9 +274,11 @@ def inv_paint_if_oper_status(oper_status):
 def inv_paint_if_admin_status(admin_status):
     return inv_paint_if_oper_status(admin_status)
 
+
 def inv_paint_if_port_type(port_type):
     type_name = interface_port_types.get(port_type, _("unknown"))
     return "", "%d - %s" % (port_type, type_name)
+
 
 def inv_paint_if_available(available):
     if available == None:
@@ -494,18 +287,22 @@ def inv_paint_if_available(available):
         return "if_state " + (available and "if_available" or "if_not_available"), \
            (available and _("free") or _("used"))
 
+
 def inv_paint_mssql_is_clustered(clustered):
     return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
        (clustered and _("is clustered") or _("is not clustered"))
 
+
 def inv_paint_mssql_node_names(node_names):
     return "", ", ".join(node_names)
+
 
 def inv_paint_ipv4_network(nw):
     if nw == "0.0.0.0/0":
         return "", _("Default")
     else:
         return "", nw
+
 
 def inv_paint_ip_address_type(t):
     if t == "ipv4":
@@ -529,6 +326,7 @@ def inv_paint_volt(volt):
     else:
         return "", ""
 
+
 def inv_paint_date(timestamp):
     if timestamp:
         date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
@@ -536,12 +334,14 @@ def inv_paint_date(timestamp):
     else:
         return "", ""
 
+
 def inv_paint_date_and_time(timestamp):
     if timestamp:
         date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
         return "number", "%s" % date_painted
     else:
         return "", ""
+
 
 def inv_paint_age(age):
     if age:
@@ -560,9 +360,11 @@ def inv_paint_timestamp_as_age(timestamp):
     age = time.time() - timestamp
     return inv_paint_age(age)
 
+
 def round_to_day(ts):
     broken = time.localtime(ts)
     return int(time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday, broken.tm_yday, broken.tm_isdst)))
+
 
 def inv_paint_timestamp_as_age_days(timestamp):
     now_day = round_to_day(time.time())
@@ -576,6 +378,7 @@ def inv_paint_timestamp_as_age_days(timestamp):
         return css_class, _("yesterday")
     else:
         return css_class, "%d %s ago" % (int(age_days), _("days"))
+
 
 inventory_displayhints.update({
     "."                                                : { "title" : _("Inventory") },
@@ -603,7 +406,7 @@ inventory_displayhints.update({
     ".hardware.memory.total_vmalloc"                   : { "title" : _("Virtual addresses for mapping"),  "paint" : "bytes_rounded" },
     ".hardware.memory.arrays:"                         : { "title" : _("Arrays (Controllers)") },
     ".hardware.memory.arrays:*."                       : { "title" : _("Controller %d") },
-    ".hardware.memory.arrays:*.devices:"               : { "title" : _("Devices"), "render" : render_inv_dicttable,
+    ".hardware.memory.arrays:*.devices:"               : { "title" : _("Devices"),
                                                            "keyorder" : [ "locator", "bank_locator", "type", "form_factor", "speed",
                                                                           "data_width", "total_width", "manufacturer", "serial" ]},
     ".hardware.memory.arrays:*.maximum_capacity"       : { "title" : _("Maximum Capacity"),       "paint" : "bytes" },
@@ -625,7 +428,7 @@ inventory_displayhints.update({
 
     ".hardware.components."                            : { "title" : _("Physical Components") },
 
-    ".hardware.components.others:"                    : { "title" : _("Other entities"), "render" : render_inv_dicttable,
+    ".hardware.components.others:"                    : { "title" : _("Other entities"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invother_of_host" },
     ".hardware.components.others:*.index"             : { "title" : _("Index") },
@@ -635,7 +438,7 @@ inventory_displayhints.update({
     ".hardware.components.others:*.model"             : { "title" : _("Model Name") },
     ".hardware.components.others:*.location"          : { "title" : _("Location") },
 
-    ".hardware.components.unknowns:"                    : { "title" : _("Unknown entities"), "render" : render_inv_dicttable,
+    ".hardware.components.unknowns:"                    : { "title" : _("Unknown entities"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invunknown_of_host" },
     ".hardware.components.unknowns:*.index"             : { "title" : _("Index") },
@@ -645,7 +448,7 @@ inventory_displayhints.update({
     ".hardware.components.unknowns:*.model"             : { "title" : _("Model Name") },
     ".hardware.components.unknowns:*.location"          : { "title" : _("Location") },
 
-    ".hardware.components.chassis:"                    : { "title" : _("Chassis"), "render" : render_inv_dicttable,
+    ".hardware.components.chassis:"                    : { "title" : _("Chassis"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invchassis_of_host" },
     ".hardware.components.chassis:*.index"             : { "title" : _("Index") },
@@ -655,7 +458,7 @@ inventory_displayhints.update({
     ".hardware.components.chassis:*.model"             : { "title" : _("Model Name") },
     ".hardware.components.chassis:*.location"          : { "title" : _("Location") },
 
-    ".hardware.components.backplanes:"                 : { "title" : _("Backplanes"), "render" : render_inv_dicttable,
+    ".hardware.components.backplanes:"                 : { "title" : _("Backplanes"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invbackplane_of_host" },
     ".hardware.components.backplanes:*.index"          : { "title" : _("Index") },
@@ -665,7 +468,7 @@ inventory_displayhints.update({
     ".hardware.components.backplanes:*.model"          : { "title" : _("Model Name") },
     ".hardware.components.backplanes:*.location"       : { "title" : _("Location") },
 
-    ".hardware.components.containers:"                 : { "title" : _("Containers"), "render" : render_inv_dicttable,
+    ".hardware.components.containers:"                 : { "title" : _("Containers"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invcontainer_of_host" },
     ".hardware.components.containers:*.index"          : { "title" : _("Index") },
@@ -675,7 +478,7 @@ inventory_displayhints.update({
     ".hardware.components.containers:*.model"          : { "title" : _("Model Name") },
     ".hardware.components.containers:*.location"       : { "title" : _("Location") },
 
-    ".hardware.components.psus:"                       : { "title" : _("Power Supplies"), "render" : render_inv_dicttable,
+    ".hardware.components.psus:"                       : { "title" : _("Power Supplies"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invpsu_of_host" },
     ".hardware.components.psus:*.index"                : { "title" : _("Index") },
@@ -685,7 +488,7 @@ inventory_displayhints.update({
     ".hardware.components.psus:*.model"                : { "title" : _("Model Name") },
     ".hardware.components.psus:*.location"             : { "title" : _("Location") },
 
-    ".hardware.components.fans:"                       : { "title" : _("Fans"), "render" : render_inv_dicttable,
+    ".hardware.components.fans:"                       : { "title" : _("Fans"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invfan_of_host" },
     ".hardware.components.fans:*.index"                : { "title" : _("Index") },
@@ -695,7 +498,7 @@ inventory_displayhints.update({
     ".hardware.components.fans:*.model"                : { "title" : _("Model Name") },
     ".hardware.components.fans:*.location"             : { "title" : _("Location") },
 
-    ".hardware.components.sensors:"                    : { "title" : _("Sensors"), "render" : render_inv_dicttable,
+    ".hardware.components.sensors:"                    : { "title" : _("Sensors"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invsensor_of_host" },
     ".hardware.components.sensors:*.index"             : { "title" : _("Index") },
@@ -705,7 +508,7 @@ inventory_displayhints.update({
     ".hardware.components.sensors:*.model"             : { "title" : _("Model Name") },
     ".hardware.components.sensors:*.location"          : { "title" : _("Location") },
 
-    ".hardware.components.modules:"                    : { "title" : _("Modules"), "render" : render_inv_dicttable,
+    ".hardware.components.modules:"                    : { "title" : _("Modules"),
                                                            "keyorder" : [ "index", "name", "description", "serial", "model",
                                                                           "location", "bootloader", "firmware", "type" ],
                                                            "view" : "invmodule_of_host" },
@@ -719,20 +522,20 @@ inventory_displayhints.update({
     ".hardware.components.modules:*.firmware"          : { "title" : _("Firmware") },
     ".hardware.components.modules:*.type"              : { "title" : _("Type") },
 
-    ".hardware.components.stacks:"                    : { "title" : _("Stacks"), "render" : render_inv_dicttable,
-                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
-                                                           "view" : "invstack_of_host" },
-    ".hardware.components.stacks:*.index"             : { "title" : _("Index") },
-    ".hardware.components.stacks:*.name"              : { "title" : _("Name") },
-    ".hardware.components.stacks:*.description"       : { "title" : _("Description") },
-    ".hardware.components.stacks:*.serial"            : { "title" : _("Serial Number") },
-    ".hardware.components.stacks:*.model"             : { "title" : _("Model Name") },
-    ".hardware.components.stacks:*.location"          : { "title" : _("Location") },
+    ".hardware.components.stacks:"                     : { "title" : _("Stacks"),
+                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                            "view" : "invstack_of_host" },
+    ".hardware.components.stacks:*.index"              : { "title" : _("Index") },
+    ".hardware.components.stacks:*.name"               : { "title" : _("Name") },
+    ".hardware.components.stacks:*.description"        : { "title" : _("Description") },
+    ".hardware.components.stacks:*.serial"             : { "title" : _("Serial Number") },
+    ".hardware.components.stacks:*.model"              : { "title" : _("Model Name") },
+    ".hardware.components.stacks:*.location"           : { "title" : _("Location") },
 
     ".hardware.storage."                               : { "title" : _("Storage") },
     ".hardware.storage.controller."                    : { "title" : _("Controller") },
     ".hardware.storage.controller.version"             : { "title" : _("Version") },
-    ".hardware.storage.disks:"                         : { "title" : _("Block Devices"), "render" : render_inv_dicttable },
+    ".hardware.storage.disks:"                         : { "title" : _("Block Devices"), },
     ".hardware.storage.disks:*."                       : { "title" : _("Block Device %d") },
     ".hardware.storage.disks:*.signature"              : { "title" : _("Disk ID") },
     ".hardware.storage.disks:*.vendor"                 : { "title" : _("Vendor") },
@@ -774,14 +577,14 @@ inventory_displayhints.update({
     ".software.os.kernel_version"                      : { "title" : _("Kernel Version"), "short" : _("Kernel") },
     ".software.os.arch"                                : { "title" : _("Kernel Architecture"), "short" : _("Architecture") },
     ".software.os.service_pack"                        : { "title" : _("Latest Service Pack"), "short" : _("Service Pack") },
-    ".software.os.service_packs:"                      : { "title" : _("Service Packs"), "render" : render_inv_dicttable,
+    ".software.os.service_packs:"                      : { "title" : _("Service Packs"),
                                                             "keyorder" : [ "name" ] },
     ".software.configuration."                         : { "title" : _("Configuration"), },
     ".software.configuration.snmp_info."               : { "title" : _("SNMP Information"), },
     ".software.configuration.snmp_info.contact"        : { "title" : _("Contact"), },
     ".software.configuration.snmp_info.location"       : { "title" : _("Location"), },
     ".software.configuration.snmp_info.name"           : { "title" : _("System name"), },
-    ".software.packages:"                              : { "title" : _("Packages"), "icon" : "packages", "render": render_inv_dicttable,
+    ".software.packages:"                              : { "title" : _("Packages"), "icon" : "packages",
                                                            "keyorder" : [ "name", "version", "arch", "package_type", "summary"], "view" : "invswpac_of_host" },
     ".software.packages:*.name"                        : { "title" : _("Name"), },
     ".software.packages:*.arch"                        : { "title" : _("Architecture"), },
@@ -801,8 +604,7 @@ inventory_displayhints.update({
                                                                    "short"    : _("Cluster"),
                                                                    "paint"    : "bool",
                                                                  },
-    ".software.applications.check_mk.cluster.nodes:"           : { "title"    : _("Nodes"),
-                                                                  "render"   : render_inv_dicttable, },
+    ".software.applications.check_mk.cluster.nodes:"           : { "title"    : _("Nodes"),},
 
     ".software.applications.citrix."                              : { "title" : _("Citrix") },
     ".software.applications.citrix.controller."                   : { "title" : _("Controller") },
@@ -815,7 +617,6 @@ inventory_displayhints.update({
     ".software.applications.oracle." : { "title" : _("Oracle DB") },
 
     ".software.applications.oracle.instance:"                   : { "title"    : _("Instances"),
-                                                                    "render"   : render_inv_dicttable,
                                                                     "keyorder" : [ "sid", "version", "openmode", "logmode",
                                                                                    "logins", "db_creation_time" ],
                                                                     "view"     : "invorainstance_of_host" },
@@ -827,7 +628,6 @@ inventory_displayhints.update({
     ".software.applications.oracle.instance:*.db_creation_time" : { "title" : _("Creation time"), "paint" : "date_and_time" },
 
     ".software.applications.oracle.dataguard_stats:"             : { "title"    : _("Dataguard statistics"),
-                                                                     "render"   : render_inv_dicttable,
                                                                      "keyorder" : [ "sid", "db_unique", "role", "switchover" ],
                                                                      "view"     : "invoradataguardstats_of_host" },
     ".software.applications.oracle.dataguard_stats:*.sid"        : { "title" : _("SID"), },
@@ -836,14 +636,12 @@ inventory_displayhints.update({
     ".software.applications.oracle.dataguard_stats:*.switchover" : { "title" : _("Switchover"), },
 
     ".software.applications.oracle.recovery_area:"            : { "title"    : _("Recovery area"),
-                                                                  "render"   : render_inv_dicttable,
                                                                   "keyorder" : [ "sid", "flashback" ],
                                                                   "view"     : "invorarecoveryarea_of_host" },
     ".software.applications.oracle.recovery_area:*.sid"       : { "title" : _("SID"), },
     ".software.applications.oracle.recovery_area:*.flashback" : { "title" : _("Flashback"), },
 
     ".software.applications.oracle.tablespaces:"                 : { "title"    : _("Tablespaces"),
-                                                                     "render"   : render_inv_dicttable,
                                                                      "keyorder" : [ "sid", "name", "version", "type", "autoextensible" ],
                                                                      "view"     : "invoratablespace_of_host" },
     ".software.applications.oracle.tablespaces:*.sid"            : { "title" : _("SID"), },
@@ -856,7 +654,7 @@ inventory_displayhints.update({
     ".software.applications.vmwareesx:*.clusters:*."   : { "title" : _("Cluster %d") },
 
     ".software.applications.mssql."                    : { "title" : _("MSSQL") },
-    ".software.applications.mssql.instances:"          : { "title" : _("Instances"), "render" : render_inv_dicttable,
+    ".software.applications.mssql.instances:"          : { "title" : _("Instances"),
                                                            "keyorder" : [ "name", "product", "edition", "version", "clustered",
                                                                           "cluster_name", "active_node", "node_names" ],
                                                          },
@@ -866,18 +664,18 @@ inventory_displayhints.update({
     ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },
     ".networking.total_ethernet_ports"                 : { "title" : _("Ports"), "paint" : "count", },
     ".networking.available_ethernet_ports"             : { "title" : _("Ports available"), "paint" : "count", },
-    ".networking.addresses:"                           : { "title" : _("IP Addresses"), "render" : render_inv_dicttable,
+    ".networking.addresses:"                           : { "title" : _("IP Addresses"),
                                                            "keyorder" : [ "address", "device", "type" ], },
     ".networking.addresses:*.address"                  : { "title" : _("Address") },
     ".networking.addresses:*.device"                   : { "title" : _("Device") },
     ".networking.addresses:*.type"                     : { "title" : _("Address Type"), "paint" : "ip_address_type" },
-    ".networking.routes:"                              : { "title" : _("Routes"), "render" : render_inv_dicttable,
+    ".networking.routes:"                              : { "title" : _("Routes"),
                                                            "keyorder" : [ "target", "device", "type", "gateway" ] },
     ".networking.routes:*.target"                      : { "title" : _("Target"), "paint" : "ipv4_network" },
     ".networking.routes:*.device"                      : { "title" : _("Device") },
     ".networking.routes:*.type"                        : { "title" : _("Type of route"), "paint" : "route_type" },
     ".networking.routes:*.gateway"                     : { "title" : _("Gateway") },
-    ".networking.interfaces:"                          : { "title" : _("Interfaces"), "render" : render_inv_dicttable,
+    ".networking.interfaces:"                          : { "title" : _("Interfaces"),
                                                            "keyorder" : [ "index", "description", "alias", "oper_status", "admin_status", "available", "speed" ],
                                                            "view" : "invinterface_of_host", },
     ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : visuals.FilterInvtableIDRange },
@@ -895,7 +693,7 @@ inventory_displayhints.update({
 
     ".networking.wlan"                                 : { "title" : _("WLAN") },
     ".networking.wlan.controller"                      : { "title" : _("Controller") },
-    ".networking.wlan.controller.accesspoints:"        : { "title" : _("Access Points"), "keyorder" : ["name", "group", "ip_addr", "model", "serial", "sys_location"], "render" : render_inv_dicttable },
+    ".networking.wlan.controller.accesspoints:"        : { "title" : _("Access Points"), "keyorder" : ["name", "group", "ip_addr", "model", "serial", "sys_location"], },
     ".networking.wlan.controller.accesspoints:*.name"         : { "title" : _("Name") },
     ".networking.wlan.controller.accesspoints:*.group"        : { "title" : _("Group") },
     ".networking.wlan.controller.accesspoints:*.ip_addr"      : { "title" : _("IP Address") },
@@ -933,13 +731,17 @@ def declare_inventory_columns():
 #   '----------------------------------------------------------------------'
 
 def create_inv_rows(hostname, invpath, infoname):
-    tree     = inventory.host(hostname)
-    entries = inventory.get(tree, invpath)
-    for entry in entries:
+    struct_tree = inventory.load_tree(hostname)
+    invdata = inventory.get_inventory_data(struct_tree, invpath)
+    if invdata is None:
+        return []
+    entries = []
+    for entry in invdata:
         newrow = {}
         for key, value in entry.items():
             newrow[infoname + "_" + key] = value
-        yield newrow
+        entries.append(newrow)
+    return entries
 
 
 def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters):
@@ -951,7 +753,6 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
             filter_code += header
     host_columns = [ "host_name" ] + list(set(filter(lambda c: c.startswith("host_")
                                                                and c != "host_name", columns)))
-
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(host_columns)) + "\n"
     query += filter_code
@@ -1173,20 +974,19 @@ def _create_view_enabled_check_func(invpath):
         context = dict(context_vars)
         if "host" not in context:
             return True # No host data? Keep old behaviour
-
         if context["host"] == "":
             return False
-
-        tree = inventory.host(context["host"])
-        if not tree:
-            return False # Don't show when no inventory data available
-
-        invdata = inventory.get(tree, invpath)
-        if not invdata:
+        struct_tree = inventory.load_tree(context["host"])
+        if struct_tree.is_empty():
             return False
+        parsed_path, unused_key = inventory.parse_tree_path(invpath)
+        if parsed_path:
+            children = struct_tree.get_sub_children(parsed_path)
         else:
-            return True
-
+            children = [struct_tree.get_root_container()]
+        if children is None:
+            return False
+        return True
     return _check_view_enabled
 
 # Now declare Multisite views for a couple of embedded tables
@@ -1375,24 +1175,23 @@ multisite_builtin_views["inv_hosts_ports"] = {
 #   |  Code for history view of inventory                                  |
 #   '----------------------------------------------------------------------'
 
+
 def inv_history_table(columns, add_headers, only_sites, limit, filters):
     return inv_multisite_table("invhist", None, columns, add_headers, only_sites, limit, filters)
 
+
 def create_hist_rows(hostname, columns):
-    hist_tree = None
-    # Iterate over all known historic inventory states - from new to old
-    for timestamp in inventory.get_host_history(hostname)[::-1]:
-        old_hist_tree = hist_tree
-        hist_tree = inventory.load_historic_host(hostname, timestamp)
-        removed, new, changed, delta_tree = inventory.compare_trees(old_hist_tree, hist_tree)
+    for old_timestamp, old_tree, new_tree in inventory.get_history(hostname):
+        new, changed, removed, delta_tree = new_tree.compare_with(old_tree)
         newrow = {
-            "invhist_time"    : timestamp,
+            "invhist_time"    : old_timestamp,
             "invhist_delta"   : delta_tree,
             "invhist_removed" : removed,
             "invhist_new"     : new,
             "invhist_changed" : changed,
         }
         yield newrow
+
 
 visuals.declare_info('invhist', {
     'title'       : _('Inventory History'),
@@ -1419,7 +1218,7 @@ multisite_painters["invhist_time"] = {
 multisite_painters["invhist_delta"] = {
     "title"    : _("Inventory changes"),
     "columns"  : [ "invhist_delta" "invhist_time" ],
-    "paint"    : lambda row: paint_inv_tree(row, column="invhist_delta"),
+    "paint"    : lambda row: paint_host_inventory_tree(row, column="invhist_delta"),
 }
 
 
@@ -1502,3 +1301,229 @@ multisite_builtin_views["inv_host_history"] = {
 }
 
 view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".")
+
+#.
+#   .--Node Renderer-------------------------------------------------------.
+#   |  _   _           _        ____                _                      |
+#   | | \ | | ___   __| | ___  |  _ \ ___ _ __   __| | ___ _ __ ___ _ __   |
+#   | |  \| |/ _ \ / _` |/ _ \ | |_) / _ \ '_ \ / _` |/ _ \ '__/ _ \ '__|  |
+#   | | |\  | (_) | (_| |  __/ |  _ <  __/ | | | (_| |  __/ | |  __/ |     |
+#   | |_| \_|\___/ \__,_|\___| |_| \_\___|_| |_|\__,_|\___|_|  \___|_|     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# Just for compatibility
+def render_inv_dicttable(*args):
+    pass
+
+
+def show_child_value(invpath, value):
+    if invpath.endswith(".") or invpath.endswith(":"):
+        invpath = invpath[:-1]
+    hint = inv_display_hint(invpath)
+    if "paint_function" in hint:
+        tdclass, code = hint["paint_function"](value)
+        html.write(code)
+    elif type(value) == str:
+        try:
+            text = value.decode("utf-8")
+        except:
+            text = value
+        html.write_text(text)
+    elif type(value) == unicode:
+        html.write_text(value)
+    elif type(value) == int:
+        html.write(str(value))
+    elif type(value) == float:
+        html.write("%.2f" % value)
+    elif value != None:
+        html.write(str(value))
+
+
+
+class NodeRenderer(object):
+    def __init__(self, hostname, tree_id, invpath):
+        self._hostname = hostname
+        self._tree_id = tree_id
+        self._invpath = invpath
+
+    #   ---container------------------------------------------------------------
+
+    def show_container(self, container, path=None):
+        for _, node in container.get_edge_nodes():
+            node_abs_path = node.get_absolute_path()
+
+            #FIXME clean this up
+            _titleinfo = []
+            for part in node_abs_path:
+                try:
+                    part = int(part)
+                except ValueError:
+                    pass
+                else:
+                    last = _titleinfo.pop(-1)
+                    part = "%s:%d" % (last, part)
+                finally:
+                    _titleinfo.append(part)
+            titleinfo_path = ".%s." % ".".join(_titleinfo)
+            icon, title = inv_titleinfo(titleinfo_path, node)
+            if "%d" in title: # Replace with list index
+                list_index = int(titleinfo_path.split(":")[-1].rstrip(".")) + 1
+                title = title % list_index
+            # Some displayhints may end with ":", eg. ".software.packages:"
+            if "%s:" % titleinfo_path[:-1] in inventory_displayhints:
+                icon, title = inv_titleinfo("%s:" % titleinfo_path[:-1], node)
+
+            raw_invpath = self._get_raw_path(".".join(map(str, node_abs_path)))
+            invpath = ".%s." % raw_invpath
+
+            fetch_url = html.makeuri_contextless([("host", self._hostname),
+                                                  ("path", invpath),
+                                                  ("treeid", self._tree_id)],
+                                                 "ajax_inv_render_tree.py")
+            if html.begin_foldable_container("inv_%s%s" % (self._hostname, self._tree_id), invpath, False,
+                                             title, icon=icon, fetch_url=fetch_url, tree_img="tree_black"):
+                # Render only if it is open. We'll get the stuff via ajax later if it's closed
+                for child in inventory.sort_children(node.get_node_children()):
+                    child.show(self, path=raw_invpath)
+            html.end_foldable_container()
+
+    #   ---numeration-----------------------------------------------------------
+
+    def show_numeration(self, numeration, path=None):
+        #FIXME these kind of paths are required for hints.
+        # Clean this up one day.
+        invpath = ".%s:" % self._get_raw_path(path)
+        hint = inv_display_hint(invpath)
+        keyorder = hint.get("keyorder", []) # well known keys
+        data = numeration.get_child_data()
+
+        # Add titles for those keys
+        titles = []
+        for key in keyorder:
+            sub_invpath = "%s0.%s" % (invpath, key)
+            icon, title = inv_titleinfo(sub_invpath, None)
+            sub_hint = inv_display_hint(sub_invpath)
+            short_title = sub_hint.get("short", title)
+            titles.append((short_title, key))
+
+        # Determine *all* keys, in order to find unknown ones
+        keys = self._get_numeration_keys(data)
+
+        # Order not well-known keys alphabetically
+        extratitles = []
+        for key in keys:
+            if key not in keyorder:
+                icon, title = inv_titleinfo("%s0.%s" % (invpath, key), None)
+                extratitles.append((title, key))
+        extratitles.sort()
+        titles += extratitles
+
+        # Link to Multisite view with exactly this table
+        if "view" in hint:
+            url = html.makeuri_contextless([
+                ("view_name", hint["view"] ),
+                ("host", self._hostname)],
+                filename="view.py")
+            html.div(html.render_a(_("Open this table for filtering / sorting"), href=url),
+                     class_="invtablelink")
+
+        self._show_numeration_table(titles, invpath, data)
+
+
+    def _get_numeration_keys(self, data):
+        keys = set([])
+        for entry in data:
+            keys.update(entry.keys())
+        return keys
+
+
+    def _show_numeration_table(self, titles, invpath, data):
+        # We cannot use table here, since html.plug() does not work recursively
+        html.open_table(class_="data")
+        html.open_tr()
+        for title, key in titles:
+            html.th(title)
+        html.close_tr()
+        for index, entry in enumerate(data):
+            html.open_tr(class_="even0")
+            for title, key in titles:
+                html.open_td()
+                self._show_numeration_value("%s%d.%s" % \
+                    (invpath, index, key), entry.get(key))
+                html.close_td()
+            html.close_tr()
+        html.close_table()
+
+
+    def _show_numeration_value(self, sub_invpath, value):
+        raise NotImplementedError()
+
+    #   ---attributes-----------------------------------------------------------
+
+    def show_attributes(self, attributes, path=None):
+        invpath = ".%s" % self._get_raw_path(path)
+        html.open_table()
+        for key, value in attributes.get_child_data().iteritems():
+            sub_invpath = "%s.%s" % (invpath, key)
+            icon, title = inv_titleinfo(sub_invpath, key)
+            html.open_tr()
+            html.open_th(title=sub_invpath)
+            html.write(title)
+            html.close_th()
+            html.open_td()
+            self._show_attribute(sub_invpath, value)
+            html.close_td()
+            html.close_tr()
+        html.close_table()
+
+    def _show_attribute(self, invpath, value):
+        raise NotImplementedError()
+
+    #   ---helper---------------------------------------------------------------
+
+    def _get_raw_path(self, path):
+        if path is None:
+            return self._invpath.strip(".")
+        else:
+            return path.strip(".")
+
+
+
+class AttributeRenderer(NodeRenderer):
+    def _show_numeration_value(self, invpath, value):
+        html.write(show_child_value(invpath, value))
+
+
+    def _show_attribute(self, invpath, value):
+        html.write(show_child_value(invpath, value))
+
+
+
+class DeltaNodeRenderer(NodeRenderer):
+    def _show_numeration_value(self, invpath, value):
+        if value is None:
+            value = (None, None)
+        html.write(self._show_attribute(invpath, value))
+
+
+    def _show_attribute(self, invpath, value):
+        old, new = value
+        if old is None and new is not None:
+            html.open_span(class_="invnew")
+            html.write(show_child_value(invpath, new))
+            html.close_span()
+        elif old is not None and new is None:
+            html.open_span(class_="invold")
+            html.write(show_child_value(invpath, old))
+            html.close_span()
+        elif old is not None and new is not None:
+            html.open_span(class_="invold")
+            html.write(show_child_value(invpath, old))
+            html.close_span()
+            html.write(u" → ")
+            html.open_span(class_="invnew")
+            html.write(show_child_value(invpath, new))
+            html.close_span()
+        elif old == new:
+            html.write(show_child_value(invpath, old))

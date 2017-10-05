@@ -280,7 +280,6 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fet
         cmk_info["version"] = None
 
     missing_section_list = sorted(list(missing_sections))
-
     return cmk_info, num_success, missing_section_list
 
 

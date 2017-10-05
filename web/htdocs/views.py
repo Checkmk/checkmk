@@ -1632,7 +1632,7 @@ def show_view(view, show_heading = False, show_buttons = True,
         if is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
             for row in rows:
                  if "host_name" in row:
-                     row["host_inventory"] = inventory.host(row["host_name"])
+                     row["host_inventory"] = inventory.load_tree(row["host_name"])
 
         sort_data(rows, sorters)
     else:
@@ -3037,21 +3037,33 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
     return painter_name
 
 
-
 # Ajax call for fetching parts of the tree
 def ajax_inv_render_tree():
     hostname = html.var("host")
     invpath = html.var("path")
     tree_id = html.var("treeid", "")
     if tree_id:
-        tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        struct_tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        tree_renderer = DeltaNodeRenderer(hostname, tree_id, invpath)
     else:
-        tree = inventory.host(hostname)
-    node = inventory.get(tree, invpath)
-    if not node:
-        html.show_error(_("Invalid path %s in inventory tree") % invpath)
+        struct_tree = inventory.load_tree(hostname)
+        tree_renderer = AttributeRenderer(hostname, "", invpath)
+
+    if struct_tree is None:
+        html.show_error(_("No such inventory tree."))
+
+    parsed_path, attributes_key = inventory.parse_tree_path(invpath)
+    if parsed_path:
+        children = struct_tree.get_sub_children(parsed_path)
     else:
-        render_inv_subtree_container(hostname, tree_id, invpath, node)
+        children = [struct_tree.get_root_container()]
+
+    if children is None:
+        html.show_error(_("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))
+    else:
+        for child in inventory.sort_children(children):
+            child.show(tree_renderer, path=invpath)
+
 
 def output_csv_headers(view):
     filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))

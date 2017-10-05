@@ -41,6 +41,7 @@ import cmk.paths
 import cmk.tty as tty
 import cmk.defines as defines
 from cmk.exceptions import MKGeneralException
+from cmk.structured_data import StructuredDataTree
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -121,33 +122,31 @@ def do_inv_check(options, hostname):
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        inv_tree, old_timestamp = _do_inv_for(hostname, ipaddress)
-        num_entries = _count_nodes(g_inv_tree)
-        if not num_entries:
+        old_timestamp = _do_inv_for(hostname, ipaddress)
+        if g_inv_tree.is_empty():
             console.output("OK - Found no data\n")
             return 0
 
         infotexts = []
-
-        infotexts.append("found %d entries" % num_entries)
+        infotexts.append("found %d entries" % g_inv_tree.count_entries())
         state = 0
-        if not inv_tree.get("software") and _inv_sw_missing:
+        if not g_inv_tree.has_edge("software") and _inv_sw_missing:
             infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
             state = _inv_sw_missing
 
         if old_timestamp:
             # TODO: Use cmk.store
-            path = inventory_archive_dir + "/" + hostname + "/%d" % old_timestamp
-            old_tree = eval(file(path).read())
+            path = "%s/%s/%d" % (inventory_archive_dir, hostname, old_timestamp)
+            old_tree = StructuredDataTree().load_from(path)
 
-            if inv_tree.get("software") != old_tree.get("software"):
+            if not old_tree.is_equal(g_inv_tree, edges=["software"]):
                 infotext = "software changes"
                 if _inv_sw_changes:
                     state = _inv_sw_changes
                     infotext += check_api.state_markers[_inv_sw_changes]
                 infotexts.append(infotext)
 
-            if inv_tree.get("hardware") != old_tree.get("hardware"):
+            if not old_tree.is_equal(g_inv_tree, edges=["hardware"]):
                 infotext = "hardware changes"
                 if state == 2 or _inv_hw_changes == 2:
                     state = 2
@@ -177,7 +176,6 @@ def _do_inv_for(hostname, ipaddress):
     _initialize_inventory_tree()
 
     node = inv_tree("software.applications.check_mk.cluster.")
-
     if config.is_cluster(hostname):
         node["is_cluster"] = True
         _do_inv_for_cluster(hostname)
@@ -185,15 +183,13 @@ def _do_inv_for(hostname, ipaddress):
         node["is_cluster"] = False
         _do_inv_for_realhost(hostname, ipaddress)
 
-    # Remove empty paths
-    _cleanup_inventory_tree(g_inv_tree)
+    g_inv_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname)
-
     console.verbose("..%s%s%d%s entries" %
-            (tty.bold, tty.yellow, _count_nodes(g_inv_tree), tty.normal))
+            (tty.bold, tty.yellow, g_inv_tree.count_entries(), tty.normal))
 
     _run_inventory_export_hooks(hostname)
-    return _get_inventory_tree(), old_timestamp
+    return old_timestamp
 
 
 def _do_inv_for_cluster(hostname):
@@ -278,154 +274,52 @@ def _ensure_directory(path):
 #   | Managing the inventory tree of a host                                |
 #   '----------------------------------------------------------------------'
 
-g_inv_tree = {}
+
+g_inv_tree = StructuredDataTree()
+
 
 def _initialize_inventory_tree():
     global g_inv_tree
-    g_inv_tree = {}
+    g_inv_tree = StructuredDataTree()
 
 
-def _get_inventory_tree():
-    return g_inv_tree
+# Dict based
+def inv_tree(path):
+    return g_inv_tree.get_dict(path)
 
 
-# This is just a small wrapper for the inv_tree() function which makes
-# it clear that the requested tree node is treated as a list.
+# List based
 def inv_tree_list(path):
-    # The [] is needed to tell pylint that a list is returned
-    return inv_tree(path, [])
+    return g_inv_tree.get_list(path)
 
 
-# Function for accessing the inventory tree of the current host
-# Example: path = "software.packages:17."
-# Function for accessing the inventory tree of the current host
-# Example: path = "software.packages:17."
-# The path must end with : or .
-# -> software is a dict
-# -> packages is a list
-def inv_tree(path, default_value=None):
-    if default_value != None:
-        node = default_value
-    else:
-        node = {}
-
-    current_what = "."
-    current_path = ""
-
-    while path:
-        if current_path == "":
-            node = g_inv_tree
-
-        parts = re.split("[:.]", path)
-        name = parts[0]
-        what = path[len(name)]
-        path = path[1 + len(name):]
-        current_path += what + name
-
-        if current_what == '.': # node is a dict
-            if name not in node:
-                if what == '.':
-                    node[name] = {}
-                else:
-                    node[name] = []
-            node = node[name]
-
-        else: # node is a list
-            try:
-                index = int(name)
-            except:
-                raise MKGeneralException("Cannot convert index %s of path %s into int" % (name, current_path))
-
-            if type(node) != list:
-                raise MKGeneralException("Path %s is exptected to by of type list, but is dict" % current_path)
-
-            if index < 0 or index >= len(node):
-                raise MKGeneralException("Index %d not existing in list node %s" % (index, current_path))
-            node = node[index]
-
-        current_what = what
-
-    return node
-
-
-# Removes empty nodes from a (sub)-tree. Returns
-# True if the tree itself is empty
-def _cleanup_inventory_tree(tree):
-    if type(tree) == dict:
-        for key, value in tree.items():
-            if _cleanup_inventory_tree(value):
-                del tree[key]
-        return not tree
-
-    elif type(tree) == list:
-        to_delete = []
-        for nr, entry in enumerate(tree):
-            if _cleanup_inventory_tree(entry):
-                to_delete.append(nr)
-        for nr in to_delete[::-1]:
-            del tree[nr]
-        return not tree
-
-    else:
-        return False # cannot clean non-container nodes
-
-
-def _count_nodes(tree):
-    if type(tree) == dict:
-        return len(tree) + sum([_count_nodes(v) for v in tree.values()])
-    elif type(tree) == list:
-        return len(tree) + sum([_count_nodes(v) for v in tree])
-    elif tree == None:
-        return 0
-    else:
-        return 1
-
-
-# Returns the time stamp of the previous inventory with different
-# outcome or None.
 def _save_inventory_tree(hostname):
     if not os.path.exists(inventory_output_dir):
         os.makedirs(inventory_output_dir)
 
     old_time = None
-
-    if inventory_pprint_output:
-        r = pprint.pformat(g_inv_tree)
-    else:
-        r = repr(g_inv_tree)
-
-    path = inventory_output_dir + "/" + hostname
+    filepath = inventory_output_dir + "/" + hostname
     if g_inv_tree:
-        old_tree = None
-        if os.path.exists(path):
-            try:
-                old_tree = eval(file(path).read())
-            except:
-                pass
-
-        if old_tree != g_inv_tree:
-            if old_tree:
+        old_tree = StructuredDataTree().load_from(filepath)
+        if old_tree.is_equal(g_inv_tree):
+            console.verbose("..unchanged")
+        else:
+            if old_tree.is_empty():
+                console.verbose("..new")
+            else:
                 console.verbose("..changed")
-                old_time = os.stat(path).st_mtime
+                old_time = os.stat(filepath).st_mtime
                 arcdir = "%s/%s" % (inventory_archive_dir, hostname)
                 if not os.path.exists(arcdir):
                     os.makedirs(arcdir)
-                os.rename(path, arcdir + ("/%d" % old_time))
-            else:
-                console.verbose("..new")
-
-            file(path, "w").write(r + "\n")
-            gzip.open(path + ".gz", "w").write(r + "\n")
-            # Inform Livestatus about the latest inventory update
-            file(inventory_output_dir + "/.last", "w")
-        else:
-            console.verbose("..unchanged")
+                os.rename(filepath, arcdir + ("/%d" % old_time))
+            g_inv_tree.save_to(inventory_output_dir, hostname, pretty=inventory_pprint_output)
 
     else:
-        if os.path.exists(path): # Remove empty inventory files. Important for host inventory icon
-            os.remove(path)
-        if os.path.exists(path + ".gz"):
-            os.remove(path + ".gz")
+        if os.path.exists(filepath): # Remove empty inventory files. Important for host inventory icon
+            os.remove(filepath)
+        if os.path.exists(filepath + ".gz"):
+            os.remove(filepath + ".gz")
 
     return old_time
 
@@ -438,7 +332,7 @@ def _run_inventory_export_hooks(hostname):
             console.verbose(", running %s%s%s%s..." % (tty.blue, tty.bold, hookname, tty.normal))
             params = entries[0]
             try:
-                cmk_base.inventory_plugins.inv_export[hookname]["export_function"](hostname, params, g_inv_tree)
+                cmk_base.inventory_plugins.inv_export[hookname]["export_function"](hostname, params, g_inv_tree.get_raw_tree())
             except Exception, e:
                 if cmk.debug.enabled():
                     raise

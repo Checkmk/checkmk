@@ -30,11 +30,8 @@
 #include "Row.h"
 #include "nagios.h"
 
-// Alas, cppcheck is a bit behind the times regarding move semantics...
 HostListFilter::HostListFilter(const HostListColumn &column,
-                               RelationalOperator relOp,
-                               // cppcheck-suppress passedByValue
-                               std::string value)
+                               RelationalOperator relOp, std::string value)
     : _column(column), _relOp(relOp), _ref_value(std::move(value)) {}
 
 bool HostListFilter::accepts(Row row, const contact * /* auth_user */,

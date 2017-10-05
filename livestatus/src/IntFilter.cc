@@ -30,9 +30,7 @@
 #include "Logger.h"
 #include "Row.h"
 
-// Alas, cppcheck is a bit behind the times regarding move semantics...
 IntFilter::IntFilter(const IntColumn &column, RelationalOperator relOp,
-                     // cppcheck-suppress passedByValue
                      std::string value)
     : _column(column), _relOp(relOp), _ref_string(std::move(value)) {}
 

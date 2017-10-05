@@ -28,9 +28,7 @@
 #include "Logger.h"
 #include "Row.h"
 
-// Alas, cppcheck is a bit behind the times regarding move semantics...
 ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
-                       // cppcheck-suppress passedByValue
                        std::string element,
                        std::unique_ptr<ListColumn::Contains> predicate,
                        bool isEmptyValue)

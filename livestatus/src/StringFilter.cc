@@ -29,9 +29,7 @@
 #include "Row.h"
 #include "StringColumn.h"
 
-// Alas, cppcheck is a bit behind the times regarding move semantics...
 StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
-                           // cppcheck-suppress passedByValue
                            std::string value)
     : _column(column), _relOp(relOp), _ref_string(std::move(value)) {
     switch (_relOp) {

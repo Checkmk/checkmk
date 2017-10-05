@@ -29,10 +29,8 @@
 #include "Logger.h"
 #include "Row.h"
 
-// Alas, cppcheck is a bit behind the times regarding move semantics...
 CustomVarsListFilter::CustomVarsListFilter(const CustomVarsColumn &column,
                                            RelationalOperator relOp,
-                                           // cppcheck-suppress passedByValue
                                            std::string value)
     : _column(column), _relOp(relOp), _ref_text(std::move(value)) {}
 

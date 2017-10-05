@@ -1672,8 +1672,24 @@ class html(HTMLGenerator, RequestHandler):
         self.message(msg, 'warning')
 
 
-    # obj might be either a string (str or unicode) or an exception object
+    def render_info(self, msg):
+        return self.render_message(msg, 'message')
+
+
+    def render_error(self, msg):
+        return self.render_message(msg, 'error')
+
+
+    def render_warning(self, msg):
+        return self.render_message(msg, 'warning')
+
+
     def message(self, msg, what='message'):
+        self.write(self.render_message(msg, what))
+
+
+    # obj might be either a string (str or unicode) or an exception object
+    def render_message(self, msg, what='message'):
         if what == 'message':
             cls    = 'success'
             prefix = _('MESSAGE')
@@ -1684,18 +1700,16 @@ class html(HTMLGenerator, RequestHandler):
             cls    = 'error'
             prefix = _('ERROR')
 
-        if self.output_format == "html":
-            if self.mobile:
-                self.open_center()
-            self.open_div(class_=cls)
-            self.write_text(msg)
-            self.close_div()
-            if self.mobile:
-                self.close_center()
-        else:
-            self.write_text('%s: %s\n' % (prefix, self.strip_tags(msg)))
+        code = ""
 
-        #self.guitest_record_output("message", (what, msg))
+        if self.output_format == "html":
+            code += self.render_div(self.render_text(msg), class_=cls)
+            if self.mobile:
+                code += self.render_center(code)
+        else:
+            code += self.render_text('%s: %s\n' % (prefix, self.strip_tags(msg)))
+
+        return code
 
 
     def show_localization_hint(self):

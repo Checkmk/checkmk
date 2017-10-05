@@ -53,22 +53,22 @@ string TableHostGroups::namePrefix() const { return "hostgroup_"; }
 void TableHostGroups::addColumns(Table *table, const string &prefix,
                                  int indirect_offset) {
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "name", "Name of the hostgroup",
-        DANGEROUS_OFFSETOF(hostgroup, group_name), indirect_offset, -1, -1));
+        prefix + "name", "Name of the hostgroup", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(hostgroup, group_name)));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "alias", "An alias of the hostgroup",
-        DANGEROUS_OFFSETOF(hostgroup, alias), indirect_offset, -1, -1));
+        prefix + "alias", "An alias of the hostgroup", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(hostgroup, alias)));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "notes", "Optional notes to the hostgroup",
-        DANGEROUS_OFFSETOF(hostgroup, notes), indirect_offset, -1, -1));
+        prefix + "notes", "Optional notes to the hostgroup", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(hostgroup, notes)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL with further information about the hostgroup",
-        DANGEROUS_OFFSETOF(hostgroup, notes_url), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(hostgroup, notes_url)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL to custom actions or information about the hostgroup",
-        DANGEROUS_OFFSETOF(hostgroup, action_url), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(hostgroup, action_url)));
     table->addColumn(make_unique<HostListColumn>(
         prefix + "members",
         "A list of all host names that are members of the hostgroup",

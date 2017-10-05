@@ -38,11 +38,11 @@ extern contactgroup *contactgroup_list;
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetStringColumn>(
-        "name", "The name of the contactgroup",
-        DANGEROUS_OFFSETOF(contactgroup, group_name), -1, -1, -1));
+        "name", "The name of the contactgroup", -1, -1, -1,
+        DANGEROUS_OFFSETOF(contactgroup, group_name)));
     addColumn(make_unique<OffsetStringColumn>(
-        "alias", "The alias of the contactgroup",
-        DANGEROUS_OFFSETOF(contactgroup, alias), -1, -1, -1));
+        "alias", "The alias of the contactgroup", -1, -1, -1,
+        DANGEROUS_OFFSETOF(contactgroup, alias)));
     addColumn(make_unique<ContactGroupsMemberColumn>(
         "members", "A list of all members of this contactgroup", -1, -1, -1,
         0));

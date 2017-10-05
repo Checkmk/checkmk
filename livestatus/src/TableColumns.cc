@@ -34,18 +34,18 @@ using std::shared_ptr;
 using std::string;
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
-    addColumn(make_unique<ColumnsColumn>("table", "The name of the table",
-                                         ColumnsColumn::Type::table, this, -1,
-                                         -1, -1));
+    addColumn(make_unique<ColumnsColumn>("table", "The name of the table", -1,
+                                         -1, -1, 0, ColumnsColumn::Type::table,
+                                         this));
     addColumn(make_unique<ColumnsColumn>(
-        "name", "The name of the column within the table",
-        ColumnsColumn::Type::name, this, -1, -1, -1));
+        "name", "The name of the column within the table", -1, -1, -1, 0,
+        ColumnsColumn::Type::name, this));
     addColumn(make_unique<ColumnsColumn>(
-        "description", "A description of the column",
-        ColumnsColumn::Type::description, this, -1, -1, -1));
+        "description", "A description of the column", -1, -1, -1, 0,
+        ColumnsColumn::Type::description, this));
     addColumn(make_unique<ColumnsColumn>(
-        "type", "The data type of the column (int, float, string, list)",
-        ColumnsColumn::Type::type, this, -1, -1, -1));
+        "type", "The data type of the column (int, float, string, list)", -1,
+        -1, -1, 0, ColumnsColumn::Type::type, this));
 }
 
 string TableColumns::name() const { return "columns"; }

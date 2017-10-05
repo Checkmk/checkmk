@@ -53,22 +53,22 @@ string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 void TableServiceGroups::addColumns(Table *table, const string &prefix,
                                     int indirect_offset) {
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "name", "The name of the service group",
-        DANGEROUS_OFFSETOF(servicegroup, group_name), indirect_offset, -1, -1));
+        prefix + "name", "The name of the service group", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(servicegroup, group_name)));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "alias", "An alias of the service group",
-        DANGEROUS_OFFSETOF(servicegroup, alias), indirect_offset, -1, -1));
+        prefix + "alias", "An alias of the service group", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(servicegroup, alias)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional additional notes about the service group",
-        DANGEROUS_OFFSETOF(servicegroup, notes), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, notes)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL to further notes on the service group",
-        DANGEROUS_OFFSETOF(servicegroup, notes_url), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, notes_url)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
-        DANGEROUS_OFFSETOF(servicegroup, action_url), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, action_url)));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",

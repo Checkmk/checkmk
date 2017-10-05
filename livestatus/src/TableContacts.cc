@@ -55,31 +55,31 @@ void TableContacts::addColumns(Table *table, const string &prefix,
                                int indirect_offset) {
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "The login name of the contact person",
-        DANGEROUS_OFFSETOF(contact, name), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, name)));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "alias", "The full name of the contact",
-        DANGEROUS_OFFSETOF(contact, alias), indirect_offset, -1, -1));
+        prefix + "alias", "The full name of the contact", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(contact, alias)));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "email", "The email address of the contact",
-        DANGEROUS_OFFSETOF(contact, email), indirect_offset, -1, -1));
+        prefix + "email", "The email address of the contact", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(contact, email)));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "pager", "The pager address of the contact",
-        DANGEROUS_OFFSETOF(contact, pager), indirect_offset, -1, -1));
+        prefix + "pager", "The pager address of the contact", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(contact, pager)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "host_notification_period",
         "The time period in which the contact will be notified about host problems",
-        DANGEROUS_OFFSETOF(contact, host_notification_period), indirect_offset,
-        -1, -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, host_notification_period)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "service_notification_period",
         "The time period in which the contact will be notified about service problems",
-        DANGEROUS_OFFSETOF(contact, service_notification_period),
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, service_notification_period)));
     for (int i = 1; i <= MAX_CONTACT_ADDRESSES; ++i) {
         string b = "address" + to_string(i);
         table->addColumn(make_unique<OffsetStringColumn>(
-            prefix + b, "The additional field " + b,
-            DANGEROUS_OFFSETOF(contact, address[i]), indirect_offset, -1, -1));
+            prefix + b, "The additional field " + b, indirect_offset, -1, -1,
+            DANGEROUS_OFFSETOF(contact, address[i])));
     }
 
     table->addColumn(make_unique<OffsetIntColumn>(
@@ -111,18 +111,17 @@ void TableContacts::addColumns(Table *table, const string &prefix,
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
-        "A list of all custom variables of the contact",
-        DANGEROUS_OFFSETOF(contact, custom_variables), indirect_offset, -1,
-        -1));
+        "A list of all custom variables of the contact", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(contact, custom_variables)));
     table->addColumn(make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact",
-        DANGEROUS_OFFSETOF(contact, custom_variables), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, custom_variables)));
     table->addColumn(make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        DANGEROUS_OFFSETOF(contact, custom_variables), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, custom_variables)));
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",

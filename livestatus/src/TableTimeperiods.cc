@@ -38,11 +38,11 @@ extern timeperiod *timeperiod_list;
 
 TableTimeperiods::TableTimeperiods(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetStringColumn>(
-        "name", "The name of the timeperiod",
-        DANGEROUS_OFFSETOF(timeperiod, name), -1, -1, -1));
+        "name", "The name of the timeperiod", -1, -1, -1,
+        DANGEROUS_OFFSETOF(timeperiod, name)));
     addColumn(make_unique<OffsetStringColumn>(
-        "alias", "The alias of the timeperiod",
-        DANGEROUS_OFFSETOF(timeperiod, alias), -1, -1, -1));
+        "alias", "The alias of the timeperiod", -1, -1, -1,
+        DANGEROUS_OFFSETOF(timeperiod, alias)));
     addColumn(make_unique<TimeperiodColumn>(
         "in", "Wether we are currently in this period (0/1)", -1, -1, -1));
     // TODO(mk): add days and exceptions

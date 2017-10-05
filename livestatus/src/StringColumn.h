@@ -38,9 +38,10 @@ class RowRenderer;
 class StringColumn : public Column {
 public:
     StringColumn(const std::string &name, const std::string &description,
-                 int indirect_offset, int extra_offset, int extra_extra_offset)
+                 int indirect_offset, int extra_offset, int extra_extra_offset,
+                 int offset)
         : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset) {}
+                 extra_extra_offset, offset) {}
     virtual std::string getValue(Row row) const = 0;
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;

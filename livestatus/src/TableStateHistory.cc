@@ -141,30 +141,28 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         -1));
     addColumn(make_unique<OffsetStringColumn>(
         "notification_period",
-        "The notification period of the host or service in question",
-        DANGEROUS_OFFSETOF(HostServiceState, _notification_period), -1, -1,
-        -1));
+        "The notification period of the host or service in question", -1, -1,
+        -1, DANGEROUS_OFFSETOF(HostServiceState, _notification_period)));
     addColumn(make_unique<OffsetIntColumn>(
         "in_service_period",
         "Shows if the host or service is within its service period",
         DANGEROUS_OFFSETOF(HostServiceState, _in_service_period), -1, -1, -1));
     addColumn(make_unique<OffsetSStringColumn>(
         "service_period",
-        "The service period of the host or service in question",
-        DANGEROUS_OFFSETOF(HostServiceState, _service_period), -1, -1, -1));
+        "The service period of the host or service in question", -1, -1, -1,
+        DANGEROUS_OFFSETOF(HostServiceState, _service_period)));
     addColumn(make_unique<OffsetSStringColumn>(
-        "debug_info", "Debug information",
-        DANGEROUS_OFFSETOF(HostServiceState, _debug_info), -1, -1, -1));
+        "debug_info", "Debug information", -1, -1, -1,
+        DANGEROUS_OFFSETOF(HostServiceState, _debug_info)));
     addColumn(make_unique<OffsetSStringColumn>(
-        "host_name", "Host name",
-        DANGEROUS_OFFSETOF(HostServiceState, _host_name), -1, -1, -1));
+        "host_name", "Host name", -1, -1, -1,
+        DANGEROUS_OFFSETOF(HostServiceState, _host_name)));
     addColumn(make_unique<OffsetSStringColumn>(
-        "service_description", "Description of the service",
-        DANGEROUS_OFFSETOF(HostServiceState, _service_description), -1, -1,
-        -1));
+        "service_description", "Description of the service", -1, -1, -1,
+        DANGEROUS_OFFSETOF(HostServiceState, _service_description)));
     addColumn(make_unique<OffsetSStringColumn>(
-        "log_output", "Logfile output relevant for this state",
-        DANGEROUS_OFFSETOF(HostServiceState, _log_output), -1, -1, -1));
+        "log_output", "Logfile output relevant for this state", -1, -1, -1,
+        DANGEROUS_OFFSETOF(HostServiceState, _log_output)));
     addColumn(make_unique<OffsetIntColumn>(
         "duration_ok", "OK duration of state ( until - from )",
         DANGEROUS_OFFSETOF(HostServiceState, _duration_state_OK), -1, -1, -1));

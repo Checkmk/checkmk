@@ -44,11 +44,11 @@ string TableCommands::namePrefix() const { return "command_"; }
 // static
 void TableCommands::addColumns(Table *table, const string &prefix, int offset) {
     table->addColumn(make_unique<OffsetSStringColumn>(
-        prefix + "name", "The name of the command",
-        offset + DANGEROUS_OFFSETOF(Command, _name), -1, -1, -1));
+        prefix + "name", "The name of the command", -1, -1, -1,
+        offset + DANGEROUS_OFFSETOF(Command, _name)));
     table->addColumn(make_unique<OffsetSStringColumn>(
-        prefix + "line", "The shell command line",
-        offset + DANGEROUS_OFFSETOF(Command, _command_line), -1, -1, -1));
+        prefix + "line", "The shell command line", -1, -1, -1,
+        offset + DANGEROUS_OFFSETOF(Command, _command_line)));
 }
 
 void TableCommands::answerQuery(Query *query) {

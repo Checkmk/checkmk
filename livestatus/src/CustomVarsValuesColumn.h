@@ -39,8 +39,8 @@ class RowRenderer;
 class CustomVarsValuesColumn : public CustomVarsColumn {
 public:
     CustomVarsValuesColumn(std::string name, std::string description,
-                           int offset, int indirect_offset, int extra_offset,
-                           int extra_extra_offset);
+                           int indirect_offset, int extra_offset,
+                           int extra_extra_offset, int offset);
     ColumnType type() const override;
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;

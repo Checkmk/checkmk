@@ -47,11 +47,11 @@ using std::string;
 
 TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetSStringColumn>(
-        "author", "The contact that scheduled the downtime",
-        DANGEROUS_OFFSETOF(Downtime, _author_name), -1, -1, -1));
+        "author", "The contact that scheduled the downtime", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Downtime, _author_name)));
     addColumn(make_unique<OffsetSStringColumn>(
-        "comment", "A comment text", DANGEROUS_OFFSETOF(Downtime, _comment), -1,
-        -1, -1));
+        "comment", "A comment text", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Downtime, _comment)));
     addColumn(make_unique<OffsetIntColumn>("id", "The id of the downtime",
                                            DANGEROUS_OFFSETOF(Downtime, _id),
                                            -1, -1, -1));

@@ -37,8 +37,9 @@ class SectionPerfcounter : public Section {
     time_t _disabled_until{0};
 
 public:
-    SectionPerfcounter(const char *name, const Environment &env, Logger *logger,
-                       const WinApiAdaptor &winapi);
+    SectionPerfcounter(const std::string &outputName,
+                       const std::string &configName, const Environment &env,
+                       Logger *logger, const WinApiAdaptor &winapi);
 
     SectionPerfcounter *withCounter(const wchar_t *counter);
     SectionPerfcounter *withToggleIfMissing();

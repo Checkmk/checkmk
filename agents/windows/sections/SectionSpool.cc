@@ -34,7 +34,7 @@ extern double file_time(const FILETIME *filetime);
 
 SectionSpool::SectionSpool(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
-    : Section("spool", env, logger, winapi) {
+    : Section("spool", "spool", env, logger, winapi) {
     withHiddenHeader();
 }
 

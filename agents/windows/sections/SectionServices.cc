@@ -30,7 +30,7 @@ typedef short SHORT;
 
 SectionServices::SectionServices(const Environment &env, Logger *logger,
                                  const WinApiAdaptor &winapi)
-    : Section("services", env, logger, winapi) {}
+    : Section("services", "services", env, logger, winapi) {}
 
 // Determine the start type of a service. Unbelievable how much
 // code is needed for that...

@@ -41,7 +41,8 @@ class WinApiAdaptor;
 class Section {
     friend class SectionGroup;
 
-    const std::string _name;
+    const std::string _outputName;
+    const std::string _configName;
     bool _show_header{true};
     char _separator{' '};
     bool _realtime_support{false};
@@ -52,7 +53,8 @@ protected:
     const WinApiAdaptor &_winapi;
 
 public:
-    Section(const char *name, const Environment &env, Logger *logger,
+    Section(const std::string &outputName, const std::string &configName,
+            const Environment &env, Logger *logger,
             const WinApiAdaptor &winapi);
 
     virtual ~Section() = default;
@@ -65,7 +67,8 @@ public:
     Section *withHiddenHeader(bool hidden = true);
     Section *withRealtimeSupport();
 
-    std::string name() const { return _name; }
+    std::string outputName() const { return _outputName; }
+    std::string configName() const { return _configName; }
 
     virtual void postprocessConfig() {}
 

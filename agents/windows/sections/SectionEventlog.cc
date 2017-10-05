@@ -34,7 +34,7 @@
 
 SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
-    : Section("logwatch", config.getEnvironment(), logger, winapi)
+    : Section("logwatch", "logwatch", config.getEnvironment(), logger, winapi)
     , _send_initial(config, "logwatch", "sendall", false, winapi)
     , _vista_api(config, "logwatch", "vista_api", false, winapi)
     , _config(config, "logwatch", "logname", winapi) {

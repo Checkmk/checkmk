@@ -115,50 +115,61 @@ void SectionManager::loadStaticSections(Configuration &config) {
     addSection(new SectionEventlog(config, _logger, _winapi));
     addSection(new SectionLogwatch(config, _logger, _winapi));
 
-    addSection((new SectionWMI("dotnet_clrmemory", _env, _logger, _winapi))
+    addSection((new SectionWMI("dotnet_clrmemory", "dotnet_clrmemory", _env,
+                               _logger, _winapi))
                    ->withObject(L"Win32_PerfRawData_NETFramework_NETCLRMemory")
                    ->withToggleIfMissing());
 
-    addSection((new SectionGroup("wmi_cpuload", _env, _logger, _winapi))
-                   ->withToggleIfMissing()
-                   ->withNestedSubtables()
-                   ->withSubSection(
-                       (new SectionWMI("system_perf", _env, _logger, _winapi))
-                           ->withObject(L"Win32_PerfRawData_PerfOS_System"))
-                   ->withSubSection((new SectionWMI("computer_system", _env,
-                                                    _logger, _winapi))
-                                        ->withObject(L"Win32_ComputerSystem"))
-                   ->withSeparator(','));
+    addSection(
+        (new SectionGroup("wmi_cpuload", "wmi_cpuload", _env, _logger, _winapi))
+            ->withToggleIfMissing()
+            ->withNestedSubtables()
+            ->withSubSection(
+                (new SectionWMI("system_perf", "system_perf", _env, _logger,
+                                _winapi))
+                    ->withObject(L"Win32_PerfRawData_PerfOS_System"))
+            ->withSubSection(
+                (new SectionWMI("computer_system", "computer_system", _env,
+                                _logger, _winapi))
+                    ->withObject(L"Win32_ComputerSystem"))
+            ->withSeparator(','));
 
     addSection(
-        (new SectionGroup("msexch", _env, _logger, _winapi))
+        (new SectionGroup("msexch", "msexch", _env, _logger, _winapi))
             ->withToggleIfMissing()
             ->withSubSection(
-                (new SectionWMI("msexch_activesync", _env, _logger, _winapi))
+                (new SectionWMI("msexch_activesync", "msexch_activesync", _env,
+                                _logger, _winapi))
                     ->withObject(
                         L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"))
             ->withSubSection(
-                (new SectionWMI("msexch_availability", _env, _logger, _winapi))
+                (new SectionWMI("msexch_availability", "msexch_availability",
+                                _env, _logger, _winapi))
                     ->withObject(
                         L"Win32_PerfRawData_MSExchangeAvailabilityService"))
             ->withSubSection(
-                (new SectionWMI("msexch_owa", _env, _logger, _winapi))
+                (new SectionWMI("msexch_owa", "msexch_owa", _env, _logger,
+                                _winapi))
                     ->withObject(
                         L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"))
             ->withSubSection(
-                (new SectionWMI("msexch_autodiscovery", _env, _logger, _winapi))
+                (new SectionWMI("msexch_autodiscovery", "msexch_autodiscovery",
+                                _env, _logger, _winapi))
                     ->withObject(
                         L"Win32_PerfRawData_MSExchangeAutodiscover_MSExchangeAutodiscover"))
             ->withSubSection(
-                (new SectionWMI("msexch_isclienttype", _env, _logger, _winapi))
+                (new SectionWMI("msexch_isclienttype", "msexch_isclienttype",
+                                _env, _logger, _winapi))
                     ->withObject(
                         L"Win32_PerfRawData_MSExchangeISClientType_MSExchangeISClientType"))
             ->withSubSection(
-                (new SectionWMI("msexch_isstore", _env, _logger, _winapi))
+                (new SectionWMI("msexch_isstore", "msexch_isstore", _env,
+                                _logger, _winapi))
                     ->withObject(
                         L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"))
             ->withSubSection(
-                (new SectionWMI("msexch_rpcclientaccess", _env, _logger,
+                (new SectionWMI("msexch_rpcclientaccess",
+                                "msexch_rpcclientaccess", _env, _logger,
                                 _winapi))
                     ->withObject(
                         L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"))
@@ -167,7 +178,8 @@ void SectionManager::loadStaticSections(Configuration &config) {
 
     addSection(new SectionSkype(_env, _logger, _winapi));
 
-    addSection((new SectionWMI("wmi_webservices", _env, _logger, _winapi))
+    addSection((new SectionWMI("wmi_webservices", "wmi_webservices", _env,
+                               _logger, _winapi))
                    ->withObject(L"Win32_PerfRawData_W3SVC_WebService")
                    ->withToggleIfMissing());
 

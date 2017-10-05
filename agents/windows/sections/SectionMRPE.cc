@@ -30,7 +30,7 @@
 
 SectionMRPE::SectionMRPE(Configuration &config, Logger *logger,
                          const WinApiAdaptor &winapi)
-    : Section("mrpe", config.getEnvironment(), logger, winapi)
+    : Section("mrpe", "mrpe", config.getEnvironment(), logger, winapi)
     , _entries(config, "mrpe", "check", winapi)
     , _includes(config, "mrpe", "include", winapi) {}
 

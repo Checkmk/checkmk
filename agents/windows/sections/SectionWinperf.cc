@@ -32,9 +32,9 @@
 
 extern double current_time();
 
-SectionWinperf::SectionWinperf(const char *name, const Environment &env,
+SectionWinperf::SectionWinperf(const std::string &name, const Environment &env,
                                Logger *logger, const WinApiAdaptor &winapi)
-    : Section((std::string("winperf_") + name).c_str(), env, logger, winapi)
+    : Section("winperf_" + name, "winperf_" + name, env, logger, winapi)
     , _base(0) {}
 
 SectionWinperf *SectionWinperf::withBase(unsigned int base) {

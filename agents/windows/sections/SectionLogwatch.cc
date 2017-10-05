@@ -36,7 +36,7 @@ static const size_t UNICODE_BUFFER_SIZE = 8192;
 
 SectionLogwatch::SectionLogwatch(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
-    : Section("logwatch", config.getEnvironment(), logger, winapi)
+    : Section("logwatch", "logfiles", config.getEnvironment(), logger, winapi)
     , _globlines(config, "logfiles", winapi) {
     _globlines.setGroupFunction(&SectionLogwatch::addConditionPattern);
 

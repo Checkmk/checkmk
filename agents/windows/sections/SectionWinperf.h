@@ -41,8 +41,8 @@ class SectionWinperf : public Section {
     DWORD _base;
 
 public:
-    SectionWinperf(const char *name, const Environment &env, Logger *logger,
-                   const WinApiAdaptor &winapi);
+    SectionWinperf(const std::string &name, const Environment &env,
+                   Logger *logger, const WinApiAdaptor &winapi);
 
     SectionWinperf *withBase(unsigned int base);
 

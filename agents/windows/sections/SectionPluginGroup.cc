@@ -385,7 +385,8 @@ SectionPluginGroup::SectionPluginGroup(Configuration &config,
                                        script_type type, Logger *logger,
                                        const WinApiAdaptor &winapi,
                                        const std::string &user)
-    : Section(typeToSection(type), config.getEnvironment(), logger, winapi)
+    : Section(typeToSection(type), typeToSection(type), config.getEnvironment(),
+              logger, winapi)
     , _path(path)
     , _type(type)
     , _user(user)

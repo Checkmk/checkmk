@@ -42,7 +42,8 @@ class SectionWMI : public Section {
     std::unique_ptr<wmi::Helper> _helper;
 
 public:
-    SectionWMI(const char *name, const Environment &env, Logger *logger,
+    SectionWMI(const std::string &outputName, const std::string &configName,
+               const Environment &env, Logger *logger,
                const WinApiAdaptor &winapi);
 
     SectionWMI *withNamespace(const wchar_t *name);

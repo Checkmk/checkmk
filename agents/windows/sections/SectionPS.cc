@@ -35,7 +35,7 @@ extern double current_time();
 
 SectionPS::SectionPS(Configuration &config, Logger *logger,
                      const WinApiAdaptor &winapi)
-    : Section("ps", config.getEnvironment(), logger, winapi)
+    : Section("ps", "ps", config.getEnvironment(), logger, winapi)
     , _use_wmi(config, "ps", "use_wmi", false, winapi)
     , _full_commandline(config, "ps", "full_path", false, winapi) {
     withSeparator('\t');
@@ -105,9 +105,9 @@ bool SectionPS::ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o) {
         PTOKEN_USER pUserToken =
             reinterpret_cast<PTOKEN_USER>(UserToken.data());
         // Now get user information in the allocated buffer
-        if (_winapi.GetTokenInformation(
-                hProcessToken, TokenUser, pUserToken,
-                dwProcessTokenInfoAllocSize, &dwProcessTokenInfoAllocSize)) {
+        if (_winapi.GetTokenInformation(hProcessToken, TokenUser, pUserToken,
+                                        dwProcessTokenInfoAllocSize,
+                                        &dwProcessTokenInfoAllocSize)) {
             // Some vars that we may need
             SID_NAME_USE snuSIDNameUse;
             WCHAR szUser[MAX_PATH] = {0};

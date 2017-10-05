@@ -33,9 +33,10 @@
 // How to fix broken performance counters
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
-SectionWMI::SectionWMI(const char *name, const Environment &env, Logger *logger,
-                       const WinApiAdaptor &winapi)
-    : Section(name, env, logger, winapi) {
+SectionWMI::SectionWMI(const std::string &outputName,
+                       const std::string &configName, const Environment &env,
+                       Logger *logger, const WinApiAdaptor &winapi)
+    : Section(outputName, configName, env, logger, winapi) {
     withSeparator(',');
 }
 

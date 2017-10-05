@@ -28,7 +28,7 @@
 
 SectionMem::SectionMem(const Environment &env, Logger *logger,
                        const WinApiAdaptor &winapi)
-    : Section("mem", env, logger, winapi) {}
+    : Section("mem", "mem", env, logger, winapi) {}
 
 bool SectionMem::produceOutputInner(std::ostream &out) {
     typedef std::pair<const char *, DWORDLONG> KVPair;

@@ -29,7 +29,7 @@ extern HANDLE g_crashlogMutex;
 extern char g_crash_log[256];
 
 SectionCrashDebug::SectionCrashDebug(Configuration &config)
-    : Section("logwatch")
+  : Section("logwatch", "logwatch")
     , _crash_debug(config, "global", "crash_debug", false) {}
 
 bool SectionCrashDebug::produceOutputInner(std::ostream &out,

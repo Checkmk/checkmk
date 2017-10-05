@@ -29,7 +29,7 @@
 #include "SectionWMI.h"
 
 SectionOHM::SectionOHM(Configuration &config, const Environment &env)
-    : SectionWMI("openhardwaremonitor")
+    : SectionWMI("openhardwaremonitor", "openhardwaremonitor")
     , _bin_path(env.binDirectory()) {
     withNamespace(L"Root\\OpenHardwareMonitor");
     withObject(L"Sensor");

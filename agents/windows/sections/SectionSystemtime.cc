@@ -29,7 +29,7 @@
 extern double current_time();
 
 SectionSystemtime::SectionSystemtime()
-    : Section("systemtime")
+    : Section("systemtime", "systemtime")
 {
 }
 

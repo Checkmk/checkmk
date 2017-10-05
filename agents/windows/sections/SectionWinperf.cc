@@ -30,15 +30,11 @@
 
 extern double current_time();
 
+SectionWinperf::SectionWinperf(const std::string &name)
+    : Section("winperf_" + name, "winperf_" + name)
+    , _base(0) {}
 
-SectionWinperf::SectionWinperf(const char *name)
-    : Section((std::string("winperf_") + name).c_str())
-    , _base(0)
-{
-}
-
-SectionWinperf *SectionWinperf::withBase(unsigned int base)
-{
+SectionWinperf *SectionWinperf::withBase(unsigned int base) {
     _base = base;
     return this;
 }

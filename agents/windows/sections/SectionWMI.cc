@@ -31,7 +31,11 @@
 // How to fix broken performance counters
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
-SectionWMI::SectionWMI(const char *name) : Section(name) { withSeparator(','); }
+SectionWMI::SectionWMI(const std::string &outputName,
+                       const std::string &configName)
+    : Section(outputName, configName) {
+    withSeparator(',');
+}
 
 SectionWMI *SectionWMI::withNamespace(const wchar_t *name) {
     _namespace = name;

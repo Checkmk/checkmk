@@ -27,7 +27,7 @@
 
 
 SectionServices::SectionServices()
-    : Section("services")
+    : Section("services", "services")
 {
 }
 

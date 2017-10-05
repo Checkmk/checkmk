@@ -30,7 +30,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-SectionUptime::SectionUptime() : Section("uptime") {
+SectionUptime::SectionUptime() : Section("uptime", "uptime") {
     GetTickCount64_dyn = DYNAMIC_FUNC(GetTickCount64, L"kernel32.dll");
     if (GetTickCount64_dyn == nullptr) {
         // GetTickCount64 is only available on Vista/2008 and newer

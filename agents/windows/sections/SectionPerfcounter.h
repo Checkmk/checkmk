@@ -36,7 +36,8 @@ class SectionPerfcounter : public Section {
     time_t _disabled_until{0};
 
 public:
-    SectionPerfcounter(const char *name);
+    SectionPerfcounter(const std::string &outputName,
+                       const std::string &configName);
 
     SectionPerfcounter *withCounter(const wchar_t *counter);
     SectionPerfcounter *withToggleIfMissing();

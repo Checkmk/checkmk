@@ -27,7 +27,7 @@
 #include "../logging.h"
 
 SectionMRPE::SectionMRPE(Configuration &config)
-    : Section("mrpe")
+    : Section("mrpe", "mrpe")
     , _entries(config, "mrpe", "check")
     , _includes(config, "mrpe", "include") {}
 

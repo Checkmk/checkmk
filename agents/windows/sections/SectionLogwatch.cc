@@ -31,7 +31,7 @@
 #include <inttypes.h>
 
 SectionLogwatch::SectionLogwatch(Configuration &config, const Environment &env)
-    : Section("logwatch")
+    : Section("logwatch", "logfiles")
     , _globlines(config, "logfiles")
 {
     _globlines.setGroupFunction(&SectionLogwatch::addConditionPattern);

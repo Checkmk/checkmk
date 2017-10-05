@@ -30,7 +30,7 @@ extern double current_time();
 extern double file_time(const FILETIME *filetime);
 
 SectionFileinfo::SectionFileinfo(Configuration &config)
-    : Section("fileinfo")
+    : Section("fileinfo", "fileinfo")
     , _fileinfo_paths(config, "fileinfo", "path")
 {
     withSeparator('|');

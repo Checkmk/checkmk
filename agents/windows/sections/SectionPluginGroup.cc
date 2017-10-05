@@ -338,7 +338,7 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
 
 SectionPluginGroup::SectionPluginGroup(Configuration &config, const std::string &path, script_type type,
                                const std::string &user)
-    : Section(typeToSection(type))
+    : Section(typeToSection(type), typeToSection(type))
     , _path(path)
     , _type(type)
     , _user(user)

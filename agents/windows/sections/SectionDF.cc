@@ -36,7 +36,7 @@ void char_replace(char what, char into, char *in) {
 
 
 SectionDF::SectionDF()
-    : Section("df")
+    : Section("df", "df")
 {
     withSeparator('\t');
 }

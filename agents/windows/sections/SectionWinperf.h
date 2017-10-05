@@ -39,7 +39,7 @@ class SectionWinperf : public Section {
     DWORD _base;
 
 public:
-    SectionWinperf(const char *name);
+    SectionWinperf(const std::string &name);
 
     SectionWinperf *withBase(unsigned int base);
 

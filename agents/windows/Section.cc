@@ -25,7 +25,9 @@
 #include "Section.h"
 #include "logging.h"
 
-Section::Section(const char *name) : _name(name != nullptr ? name : "") {}
+Section::Section(const std::string &outputName, const std::string &configName)
+    : _outputName(outputName)
+    , _configName(configName) {}
 
 Section *Section::withHiddenHeader(bool hidden) {
     _show_header = !hidden;
@@ -39,7 +41,7 @@ Section *Section::withRealtimeSupport() {
 
 bool Section::produceOutput(std::ostream &out, const Environment &env,
                             bool nested) {
-    crash_log("<<<%s>>>", _name.c_str());
+    crash_log("<<<%s>>>", _outputName.c_str());
     std::string output;
     bool res = generateOutput(env, output);
 
@@ -48,8 +50,8 @@ bool Section::produceOutput(std::ostream &out, const Environment &env,
         const char *right_bracket = nested ? "]" : ">>>";
 
         if (!output.empty()) {
-            if (!_name.empty() && _show_header) {
-                out << left_bracket << _name;
+            if (!_outputName.empty() && _show_header) {
+                out << left_bracket << _outputName;
                 if ((_separator != ' ') && !nested) {
                     out << ":sep(" << (int)_separator << ")";
                 }

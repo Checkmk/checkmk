@@ -30,7 +30,7 @@
 #include <inttypes.h>
 
 SectionEventlog::SectionEventlog(Configuration &config)
-    : Section("logwatch")
+    : Section("logwatch", "logwatch")
     , _send_initial(config, "logwatch", "sendall", false)
     , _vista_api(config, "logwatch", "vista_api", false)
     , _config(config, "logwatch", "logname") {

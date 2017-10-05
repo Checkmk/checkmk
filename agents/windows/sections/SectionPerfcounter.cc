@@ -27,9 +27,9 @@
 #include "../stringutil.h"
 #include "../logging.h"
 
-SectionPerfcounter::SectionPerfcounter(const char *name)
-    : Section(name)
-{
+SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
+                                       const std::string &configName)
+    : Section(outputName, configName) {
     withSeparator(',');
 }
 

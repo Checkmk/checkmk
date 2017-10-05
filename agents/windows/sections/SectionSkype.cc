@@ -25,7 +25,8 @@
 #include "SectionSkype.h"
 #include "SectionPerfcounter.h"
 
-SectionSkype::SectionSkype() : SectionGroup("skype") {
+SectionSkype::SectionSkype()
+    : SectionGroup("skype", "skype") {
     withToggleIfMissing();
     withFailIfMissing();
     withNestedSubtables();
@@ -62,14 +63,17 @@ SectionSkype::SectionSkype() : SectionGroup("skype") {
           L"LS:XmppFederationProxy - Streams",
           L"LS:A/V Edge - TCP Counters",
           L"LS:A/V Edge - UDP Counters"}) {
-        withSubSection((new SectionPerfcounter(to_utf8(data_source).c_str()))
-                           ->withCounter(data_source));
+        const auto name = to_utf8(data_source);
+        withSubSection(
+            (new SectionPerfcounter(name, name))
+                ->withCounter(data_source));
     }
 
     // TODO the version number in the counter name isn't exactly inspiring
     // trust,
     // but there currently is no support for wildcards.
-    withDependentSubSection((new SectionPerfcounter("ASP.NET Apps v4.0.30319"))
+    withDependentSubSection((new SectionPerfcounter("ASP.NET Apps v4.0.30319",
+                                                    "ASP.NET Apps v4.0.30319"))
                                 ->withCounter(L"ASP.NET Apps v4.0.30319"));
 }
 

@@ -36,13 +36,14 @@
 class Section {
     friend class SectionGroup;
 
-    std::string _name;
+    const std::string _outputName;
+    const std::string _configName;
     bool _show_header{true};
     char _separator{' '};
     bool _realtime_support{false};
 
 public:
-    Section(const char *name);
+    Section(const std::string &outputName, const std::string &configName);
 
     virtual ~Section() {}
 
@@ -54,7 +55,8 @@ public:
     Section *withHiddenHeader(bool hidden = true);
     Section *withRealtimeSupport();
 
-    std::string name() const { return _name; }
+    std::string outputName() const { return _outputName; }
+    std::string configName() const { return _configName; }
 
     virtual void postprocessConfig(const Environment &env) {}
 
@@ -75,7 +77,6 @@ public:
     virtual bool realtimeSupport() const { return _realtime_support; }
 
 protected:
-    void setName(const char *name) { _name = name; }
     char separator() const { return _separator; }
 
 private:

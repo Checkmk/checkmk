@@ -32,7 +32,7 @@ extern double file_time(const FILETIME *filetime);
 
 
 SectionSpool::SectionSpool()
-    : Section("spool")
+    : Section("spool", "spool")
 {
     withHiddenHeader();
 }

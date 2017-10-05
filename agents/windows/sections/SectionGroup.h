@@ -47,7 +47,7 @@ class SectionGroup : public Section {
     time_t _disabled_until{0};
 
 public:
-    SectionGroup(const char *name = nullptr);
+    SectionGroup(const std::string &outputName, const std::string &configName);
     SectionGroup *withNestedSubtables();
     /**
      * add a section that will be printed as part of this group

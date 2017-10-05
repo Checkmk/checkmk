@@ -26,7 +26,7 @@
 #include <iomanip>
 
 SectionMem::SectionMem()
-    : Section("mem")
+    : Section("mem", "mem")
 {
 }
 

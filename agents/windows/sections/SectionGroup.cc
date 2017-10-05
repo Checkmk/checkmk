@@ -24,9 +24,9 @@
 
 #include "SectionGroup.h"
 
-SectionGroup::SectionGroup(const char *name)
-    : Section(name)
-{
+SectionGroup::SectionGroup(const std::string &outputName,
+                           const std::string &configName)
+    : Section(outputName, configName) {
     withHiddenHeader();
 }
 

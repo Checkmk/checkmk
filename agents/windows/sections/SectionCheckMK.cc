@@ -45,7 +45,7 @@ struct script_statistics_t {
 
 
 SectionCheckMK::SectionCheckMK(Configuration &config, const Environment &env)
-    : Section("check_mk")
+    : Section("check_mk", "check_mk")
     , _crash_debug(config, "global", "crash_debug", false)
     , _only_from(config, "global", "only_from")
 {

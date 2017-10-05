@@ -41,7 +41,7 @@ class SectionWMI : public Section {
     std::unique_ptr<wmi::Helper> _helper;
 
 public:
-    SectionWMI(const char *name);
+    SectionWMI(const std::string &outputName, const std::string &configName);
 
     SectionWMI *withNamespace(const wchar_t *name);
     SectionWMI *withObject(const wchar_t *path);

@@ -37,7 +37,7 @@ extern double current_time();
 
 
 SectionPS::SectionPS(Configuration &config)
-    : Section("ps")
+    : Section("ps", "ps")
     , _use_wmi(config, "ps", "use_wmi", false)
     , _full_commandline(config, "ps", "full_path", false)
 {

@@ -270,30 +270,27 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12
 	gzip $(DISTNAME)/doc.tar
 
-	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents \
-		--exclude "msibuild" \
-		--exclude "build_version" \
-		--exclude "*.rc" \
-		--exclude "*.rc.in" \
-		--exclude "bin_replace" \
-		--exclude "*.nsi" \
-		--exclude "*.ico" \
-		--exclude "endless.bat" \
-		--exclude "logstate.txt" \
-		--exclude "*.res" \
-		--exclude "*~" \
-		--exclude "*.c" \
-		--exclude "Makefile" \
-		--exclude "windows/README" \
-		--exclude "windows/crash.exe" \
-		--exclude "windows/*.cc" \
-		--exclude "windows/*.h" \
-		--exclude "windows/openhardwaremonitor" \
-		--exclude "windows/sections" \
-		--exclude "windows/frozen_binaries" \
-		--exclude "windows/chroot" \
-		--exclude "special/lib" \
-		--exclude .f12 $$(cd agents ; ls)
+	cd agents ; tar czf ../$(DISTNAME)/agents.tar.gz $(TAROPTS) \
+		--exclude check_mk_agent.spec \
+		--exclude special/lib \
+		cfg_examples \
+		plugins \
+		sap \
+		special \
+		z_os \
+		check-mk-agent_*.deb \
+		check-mk-agent-*.rpm \
+		check_mk_agent.* \
+		check_mk_caching_agent.linux \
+		CONTENTS \
+		mk-job* \
+		waitmax \
+		windows/cfg_examples \
+		windows/check_mk_agent*.{exe,msi} \
+		windows/check_mk.example.ini \
+		windows/CONTENTS \
+		windows/mrpe \
+		windows/plugins
 	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog standalone.make $(DISTNAME)

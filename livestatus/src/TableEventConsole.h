@@ -89,7 +89,7 @@ protected:
     public:
         StringEventConsoleColumn(const std::string &name,
                                  const std::string &description)
-            : StringColumn(name, description, -1, -1, -1)
+            : StringColumn(name, description, -1, -1, -1, 0)
             , _ecc(*this, std::string(), [](std::string x) { return x; }) {}
 
         std::string getValue(Row row) const override {

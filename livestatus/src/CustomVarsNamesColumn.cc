@@ -30,16 +30,13 @@
 #include "Renderer.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
-CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
-                                             int offset, int indirect_offset,
+CustomVarsNamesColumn::CustomVarsNamesColumn(std::string name,
+                                             std::string description,
+                                             int indirect_offset,
                                              int extra_offset,
-                                             int extra_extra_offset)
-    : CustomVarsColumn(std::move(name), std::move(description), offset,
-                       indirect_offset, extra_offset, extra_extra_offset) {}
+                                             int extra_extra_offset, int offset)
+    : CustomVarsColumn(std::move(name), std::move(description), indirect_offset,
+                       extra_offset, extra_extra_offset, offset) {}
 
 ColumnType CustomVarsNamesColumn::type() const { return ColumnType::list; }
 
@@ -51,12 +48,12 @@ void CustomVarsNamesColumn::output(Row row, RowRenderer &r,
     }
 }
 
-unique_ptr<Filter> CustomVarsNamesColumn::createFilter(
-    RelationalOperator relOp, const string &value) const {
-    return make_unique<CustomVarsListFilter>(*this, relOp, value);
+std::unique_ptr<Filter> CustomVarsNamesColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<CustomVarsListFilter>(*this, relOp, value);
 }
 
-bool CustomVarsNamesColumn::contains(Row row, const string &value) const {
+bool CustomVarsNamesColumn::contains(Row row, const std::string &value) const {
     auto cvm = getCVM(row);
     return cvm.find(value) != cvm.end();
 }

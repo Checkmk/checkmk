@@ -34,11 +34,11 @@ class Row;
 class OffsetStringServiceMacroColumn : public OffsetStringMacroColumn {
 public:
     OffsetStringServiceMacroColumn(const std::string &name,
-                                   const std::string &description, int offset,
+                                   const std::string &description,
                                    int indirect_offset, int extra_offset,
-                                   int extra_extra_offset)
-        : OffsetStringMacroColumn(name, description, offset, indirect_offset,
-                                  extra_offset, extra_extra_offset) {}
+                                   int extra_extra_offset, int offset)
+        : OffsetStringMacroColumn(name, description, indirect_offset,
+                                  extra_offset, extra_extra_offset, offset) {}
     const host *getHost(Row row) const override;
     const service *getService(Row row) const override;
 };

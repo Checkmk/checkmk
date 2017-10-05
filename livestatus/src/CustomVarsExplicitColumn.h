@@ -32,21 +32,20 @@
 class Row;
 
 class CustomVarsExplicitColumn : public StringColumn {
-    int _offset;  // within data structure (differs from host/service)
-    std::string _varname;
-
 public:
     CustomVarsExplicitColumn(const std::string &name,
-                             const std::string &description, int offset,
-                             const char *varname, int indirect_offset,
-                             int extra_offset, int extra_extra_offset)
+                             const std::string &description,
+                             int indirect_offset, int extra_offset,
+                             int extra_extra_offset, int offset,
+                             const char *varname)
         : StringColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset)
-        , _offset(offset)
+                       extra_extra_offset, offset)
         , _varname(varname) {}
     std::string getValue(Row row) const override;
 
 private:
+    std::string _varname;
+
     customvariablesmember *getCVM(Row row) const;
 };
 

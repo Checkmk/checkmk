@@ -34,11 +34,10 @@
 class OffsetPerfdataColumn : public OffsetStringColumn {
 public:
     OffsetPerfdataColumn(const std::string& name,
-                         const std::string& description, int offset,
-                         int indirect_offset, int extra_offset,
-                         int extra_extra_offset)
-        : OffsetStringColumn(name, description, offset, indirect_offset,
-                             extra_offset, extra_extra_offset) {}
+                         const std::string& description, int indirect_offset,
+                         int extra_offset, int extra_extra_offset, int offset)
+        : OffsetStringColumn(name, description, indirect_offset, extra_offset,
+                             extra_extra_offset, offset) {}
 
     std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const override;

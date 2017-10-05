@@ -69,47 +69,47 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
         DANGEROUS_OFFSETOF(LogEntry, _logclass), -1, -1, -1));
     addColumn(make_unique<OffsetSStringColumn>(
-        "message", "The complete message line including the timestamp",
-        DANGEROUS_OFFSETOF(LogEntry, _complete), -1, -1, -1));
+        "message", "The complete message line including the timestamp", -1, -1,
+        -1, DANGEROUS_OFFSETOF(LogEntry, _complete)));
     addColumn(make_unique<OffsetStringColumn>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
-        DANGEROUS_OFFSETOF(LogEntry, _text), -1, -1, -1));
+        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _text)));
     addColumn(make_unique<OffsetStringColumn>(
-        "options", "The part of the message after the ':'",
-        DANGEROUS_OFFSETOF(LogEntry, _options), -1, -1, -1));
+        "options", "The part of the message after the ':'", -1, -1, -1,
+        DANGEROUS_OFFSETOF(LogEntry, _options)));
     addColumn(make_unique<OffsetSStringColumn>(
-        "comment", "A comment field used in various message types",
-        DANGEROUS_OFFSETOF(LogEntry, _comment), -1, -1, -1));
+        "comment", "A comment field used in various message types", -1, -1, -1,
+        DANGEROUS_OFFSETOF(LogEntry, _comment)));
     addColumn(make_unique<OffsetSStringColumn>(
         "plugin_output",
-        "The output of the check, if any is associated with the message",
-        DANGEROUS_OFFSETOF(LogEntry, _check_output), -1, -1, -1));
+        "The output of the check, if any is associated with the message", -1,
+        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _check_output)));
     addColumn(make_unique<OffsetIntColumn>(
         "state", "The state of the host or service in question",
         DANGEROUS_OFFSETOF(LogEntry, _state), -1, -1, -1));
     addColumn(make_unique<OffsetSStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
-        DANGEROUS_OFFSETOF(LogEntry, _state_type), -1, -1, -1));
+        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
     addColumn(make_unique<OffsetIntColumn>(
         "attempt", "The number of the check attempt",
         DANGEROUS_OFFSETOF(LogEntry, _attempt), -1, -1, -1));
     addColumn(make_unique<OffsetSStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
-        DANGEROUS_OFFSETOF(LogEntry, _svc_desc), -1, -1, -1));
+        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _svc_desc)));
     addColumn(make_unique<OffsetSStringColumn>(
         "host_name",
-        "The name of the host the log entry is about (might be empty)",
-        DANGEROUS_OFFSETOF(LogEntry, _host_name), -1, -1, -1));
+        "The name of the host the log entry is about (might be empty)", -1, -1,
+        -1, DANGEROUS_OFFSETOF(LogEntry, _host_name)));
     addColumn(make_unique<OffsetSStringColumn>(
         "contact_name",
-        "The name of the contact the log entry is about (might be empty)",
-        DANGEROUS_OFFSETOF(LogEntry, _contact_name), -1, -1, -1));
+        "The name of the contact the log entry is about (might be empty)", -1,
+        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _contact_name)));
     addColumn(make_unique<OffsetSStringColumn>(
         "command_name",
-        "The name of the command of the log entry (e.g. for notifications)",
-        DANGEROUS_OFFSETOF(LogEntry, _command_name), -1, -1, -1));
+        "The name of the command of the log entry (e.g. for notifications)", -1,
+        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _command_name)));
 
     // join host and service tables
     TableHosts::addColumns(this, mc, "current_host_",

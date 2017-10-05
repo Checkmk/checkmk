@@ -32,29 +32,25 @@
 #include "nagios.h"
 #endif
 
-using std::string;
-using std::unordered_map;
-
-CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
+CustomVarsColumn::CustomVarsColumn(std::string name, std::string description,
                                    int indirect_offset, int extra_offset,
-                                   int extra_extra_offset)
+                                   int extra_extra_offset, int offset)
     : Column(std::move(name), std::move(description), indirect_offset,
-             extra_offset, extra_extra_offset)
-    , _offset(offset) {}
+             extra_offset, extra_extra_offset, offset) {}
 
 CustomVarsColumn::~CustomVarsColumn() = default;
 
 // TODO(sp) This should live in our abstraction layer for cores.
-unordered_map<string, string> CustomVarsColumn::getCVM(Row row) const {
+std::unordered_map<std::string, std::string> CustomVarsColumn::getCVM(
+    Row row) const {
 #ifdef CMC
     auto *object = columnData<Object>(row);
-    return object == nullptr ? unordered_map<string, string>()
+    return object == nullptr ? std::unordered_map<std::string, std::string>()
                              : object->customAttributes();
 #else
-    unordered_map<string, string> result;
-    if (auto p = columnData<void>(row)) {
-        for (auto cvm = *offset_cast<customvariablesmember *>(p, _offset);
-             cvm != nullptr; cvm = cvm->next) {
+    std::unordered_map<std::string, std::string> result;
+    if (auto p = columnData<customvariablesmember *>(row)) {
+        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
             result.emplace(cvm->variable_name, cvm->variable_value);
         }
     }
@@ -62,7 +58,8 @@ unordered_map<string, string> CustomVarsColumn::getCVM(Row row) const {
 #endif
 }
 
-string CustomVarsColumn::getVariable(Row row, const string &varname) const {
+std::string CustomVarsColumn::getVariable(Row row,
+                                          const std::string &varname) const {
     auto cvm = getCVM(row);
     auto it = cvm.find(varname);
     return it == cvm.end() ? "" : it->second;

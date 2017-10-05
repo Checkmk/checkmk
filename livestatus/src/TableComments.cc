@@ -47,11 +47,11 @@ using std::string;
 
 TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetSStringColumn>(
-        "author", "The contact that entered the comment",
-        DANGEROUS_OFFSETOF(Comment, _author_name), -1, -1, -1));
+        "author", "The contact that entered the comment", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Comment, _author_name)));
     addColumn(make_unique<OffsetSStringColumn>(
-        "comment", "A comment text", DANGEROUS_OFFSETOF(Comment, _comment), -1,
-        -1, -1));
+        "comment", "A comment text", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Comment, _comment)));
     addColumn(make_unique<OffsetIntColumn>("id", "The id of the comment",
                                            DANGEROUS_OFFSETOF(Comment, _id), -1,
                                            -1, -1));

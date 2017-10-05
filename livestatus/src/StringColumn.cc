@@ -28,16 +28,12 @@
 #include "Row.h"
 #include "StringFilter.h"
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
-
 void StringColumn::output(Row row, RowRenderer &r,
                           const contact * /* auth_user */) const {
     r.output(row.isNull() ? "" : getValue(row));
 }
 
-unique_ptr<Filter> StringColumn::createFilter(RelationalOperator relOp,
-                                              const string &value) const {
-    return make_unique<StringFilter>(*this, relOp, value);
+std::unique_ptr<Filter> StringColumn::createFilter(
+    RelationalOperator relOp, const std::string &value) const {
+    return std::make_unique<StringFilter>(*this, relOp, value);
 }

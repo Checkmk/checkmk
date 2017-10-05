@@ -25,10 +25,7 @@
 #include "OffsetPerfdataColumn.h"
 #include "PerfdataAggregator.h"
 
-using std::make_unique;
-using std::unique_ptr;
-
-unique_ptr<Aggregator> OffsetPerfdataColumn::createAggregator(
+std::unique_ptr<Aggregator> OffsetPerfdataColumn::createAggregator(
     StatsOperation operation) const {
-    return make_unique<PerfdataAggregator>(operation, this);
+    return std::make_unique<PerfdataAggregator>(operation, this);
 }

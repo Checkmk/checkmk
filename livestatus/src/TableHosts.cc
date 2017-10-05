@@ -77,119 +77,115 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
                             const string &prefix, int indirect_offset,
                             int extra_offset) {
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "name", "Host name", DANGEROUS_OFFSETOF(host, name),
-        indirect_offset, extra_offset, -1));
+        prefix + "name", "Host name", indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, name)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "display_name",
         "Optional display name of the host - not used by Nagios' web interface",
-        DANGEROUS_OFFSETOF(host, display_name), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, display_name)));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "alias", "An alias name for the host",
-        DANGEROUS_OFFSETOF(host, alias), indirect_offset, extra_offset, -1));
+        prefix + "alias", "An alias name for the host", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, alias)));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "address", "IP address", DANGEROUS_OFFSETOF(host, address),
-        indirect_offset, extra_offset, -1));
+        prefix + "address", "IP address", indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, address)));
 #ifdef NAGIOS4
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command",
-        "Nagios command for active host check of this host",
-        DANGEROUS_OFFSETOF(host, check_command), indirect_offset, extra_offset,
-        -1));
+        "Nagios command for active host check of this host", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, check_command)));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        DANGEROUS_OFFSETOF(host, check_command), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, check_command)));
 #else
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command",
-        "Nagios command for active host check of this host",
-        DANGEROUS_OFFSETOF(host, host_check_command), indirect_offset,
-        extra_offset, -1));
+        "Nagios command for active host check of this host", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, host_check_command)));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        DANGEROUS_OFFSETOF(host, host_check_command), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, host_check_command)));
 #endif
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "event_handler", "Nagios command used as event handler",
-        DANGEROUS_OFFSETOF(host, event_handler), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, event_handler)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notification_period",
         "Time period in which problems of this host will be notified. If empty then notification will be always",
-        DANGEROUS_OFFSETOF(host, notification_period), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, notification_period)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_period",
         "Time period in which this host will be checked. If empty then the host will always be checked.",
-        DANGEROUS_OFFSETOF(host, check_period), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, check_period)));
     table->addColumn(make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period", "The name of the service period of the host",
-        DANGEROUS_OFFSETOF(host, custom_variables), "SERVICE_PERIOD",
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, custom_variables), "SERVICE_PERIOD"));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "notes", "Optional notes for this host",
-        DANGEROUS_OFFSETOF(host, notes), indirect_offset, extra_offset, -1));
+        prefix + "notes", "Optional notes for this host", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, notes)));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
-        DANGEROUS_OFFSETOF(host, notes), indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, notes)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL with further information about the host",
-        DANGEROUS_OFFSETOF(host, notes_url), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, notes_url)));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
-        DANGEROUS_OFFSETOF(host, notes_url), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, notes_url)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL to custom actions or information about this host",
-        DANGEROUS_OFFSETOF(host, action_url), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, action_url)));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
-        DANGEROUS_OFFSETOF(host, action_url), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, action_url)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "plugin_output", "Output of the last host check",
-        DANGEROUS_OFFSETOF(host, plugin_output), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, plugin_output)));
     table->addColumn(make_unique<OffsetPerfdataColumn>(
         prefix + "perf_data",
-        "Optional performance data of the last host check",
-        DANGEROUS_OFFSETOF(host, perf_data), indirect_offset, extra_offset,
-        -1));
+        "Optional performance data of the last host check", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, perf_data)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image",
         "The name of an image file to be used in the web pages",
-        DANGEROUS_OFFSETOF(host, icon_image), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, icon_image)));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
-        DANGEROUS_OFFSETOF(host, icon_image), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, icon_image)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
-        DANGEROUS_OFFSETOF(host, icon_image_alt), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, icon_image_alt)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "statusmap_image",
-        "The name of in image file for the status map",
-        DANGEROUS_OFFSETOF(host, statusmap_image), indirect_offset,
-        extra_offset, -1));
+        "The name of in image file for the status map", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, statusmap_image)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "long_plugin_output", "Complete output from check plugin",
-        DANGEROUS_OFFSETOF(host, long_plugin_output), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, long_plugin_output)));
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "initial_state", "Initial host state",
@@ -508,18 +504,16 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
-        "A list of the names of all custom variables",
-        DANGEROUS_OFFSETOF(host, custom_variables), indirect_offset,
-        extra_offset, -1));
+        "A list of the names of all custom variables", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables)));
     table->addColumn(make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
-        "A list of the values of the custom variables",
-        DANGEROUS_OFFSETOF(host, custom_variables), indirect_offset,
-        extra_offset, -1));
+        "A list of the values of the custom variables", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables)));
     table->addColumn(make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        DANGEROUS_OFFSETOF(host, custom_variables), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, custom_variables)));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom
@@ -527,8 +521,8 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     // ordinary Nagios columns.
     table->addColumn(make_unique<CustomVarsExplicitColumn>(
         prefix + "filename", "The value of the custom variable FILENAME",
-        DANGEROUS_OFFSETOF(host, custom_variables), "FILENAME", indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, custom_variables), "FILENAME"));
 
     table->addColumn(make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",

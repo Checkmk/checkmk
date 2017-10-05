@@ -75,93 +75,91 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "description", "Description of the service (also used as key)",
-        DANGEROUS_OFFSETOF(service, description), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, description)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "display_name",
         "An optional display name (not used by Nagios standard web pages)",
-        DANGEROUS_OFFSETOF(service, display_name), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, display_name)));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command", "Nagios command used for active checks",
-        DANGEROUS_OFFSETOF(service, service_check_command), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, service_check_command)));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        DANGEROUS_OFFSETOF(service, service_check_command), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, service_check_command)));
 #else
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command", "Nagios command used for active checks",
-        DANGEROUS_OFFSETOF(service, check_command), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_command)));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        DANGEROUS_OFFSETOF(service, check_command), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_command)));
 #endif
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "event_handler", "Nagios command used as event handler",
-        DANGEROUS_OFFSETOF(service, event_handler), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, event_handler)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "plugin_output", "Output of the last check plugin",
-        DANGEROUS_OFFSETOF(service, plugin_output), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, plugin_output)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "long_plugin_output",
-        "Unabbreviated output of the last check plugin",
-        DANGEROUS_OFFSETOF(service, long_plugin_output), indirect_offset, -1,
-        -1));
+        "Unabbreviated output of the last check plugin", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(service, long_plugin_output)));
     table->addColumn(make_unique<OffsetPerfdataColumn>(
         prefix + "perf_data", "Performance data of the last check plugin",
-        DANGEROUS_OFFSETOF(service, perf_data), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, perf_data)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notification_period",
         "The name of the notification period of the service. It this is empty, service problems are always notified.",
-        DANGEROUS_OFFSETOF(service, notification_period), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, notification_period)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_period",
         "The name of the check period of the service. It this is empty, the service is always checked.",
-        DANGEROUS_OFFSETOF(service, check_period), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_period)));
     table->addColumn(make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period",
-        "The name of the service period of the service",
-        DANGEROUS_OFFSETOF(service, custom_variables), "SERVICE_PERIOD",
-        indirect_offset, -1, -1));
+        "The name of the service period of the service", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(service, custom_variables), "SERVICE_PERIOD"));
     table->addColumn(make_unique<OffsetStringColumn>(
-        prefix + "notes", "Optional notes about the service",
-        DANGEROUS_OFFSETOF(service, notes), indirect_offset, -1, -1));
+        prefix + "notes", "Optional notes about the service", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(service, notes)));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_expanded",
-        "The notes with (the most important) macros expanded",
-        DANGEROUS_OFFSETOF(service, notes), indirect_offset, -1, -1));
+        "The notes with (the most important) macros expanded", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(service, notes)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL for additional notes about the service",
-        DANGEROUS_OFFSETOF(service, notes_url), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, notes_url)));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_url_expanded",
         "The notes_url with (the most important) macros expanded",
-        DANGEROUS_OFFSETOF(service, notes_url), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, notes_url)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL for actions or custom information about the service",
-        DANGEROUS_OFFSETOF(service, action_url), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, action_url)));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "action_url_expanded",
         "The action_url with (the most important) macros expanded",
-        DANGEROUS_OFFSETOF(service, action_url), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, action_url)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image",
         "The name of an image to be used as icon in the web interface",
-        DANGEROUS_OFFSETOF(service, icon_image), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, icon_image)));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "icon_image_expanded",
         "The icon_image with (the most important) macros expanded",
-        DANGEROUS_OFFSETOF(service, icon_image), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, icon_image)));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image_alt",
         "An alternative text for the icon_image for browsers not displaying icons",
-        DANGEROUS_OFFSETOF(service, icon_image_alt), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, icon_image_alt)));
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "initial_state", "The initial state of the service",
@@ -441,17 +439,17 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of the names of all custom variables of the service",
-        DANGEROUS_OFFSETOF(service, custom_variables), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, custom_variables)));
     table->addColumn(make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service",
-        DANGEROUS_OFFSETOF(service, custom_variables), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, custom_variables)));
     table->addColumn(make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        DANGEROUS_OFFSETOF(service, custom_variables), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, custom_variables)));
 
     table->addColumn(make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",

@@ -27,9 +27,7 @@
 #include "TableColumns.h"
 class Column;
 
-using std::string;
-
-string ColumnsColumn::getValue(Row row) const {
+std::string ColumnsColumn::getValue(Row row) const {
     if (auto p = columnData<Column>(row)) {
         return _table_columns->getValue(p, _colcol);
     }

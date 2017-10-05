@@ -3,7 +3,6 @@
 #include "Configuration.h"
 #include "Environment.h"
 #include "sections/SectionCheckMK.h"
-#include "sections/SectionCrashDebug.h"
 #include "sections/SectionDF.h"
 #include "sections/SectionEventlog.h"
 #include "sections/SectionFileinfo.h"

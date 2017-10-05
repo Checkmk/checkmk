@@ -258,8 +258,9 @@ bool in_set(const T &val, const std::set<T> &test_set) {
 void foreach_enabled_section(bool realtime,
                              const std::function<void(Section *)> &func) {
     for (auto &section : s_sections->sections()) {
-        if ((realtime && s_sections->realtimeSectionEnabled(section->name())) ||
-            (!realtime && s_sections->sectionEnabled(section->name()))) {
+        if ((realtime &&
+             s_sections->realtimeSectionEnabled(section->configName())) ||
+            (!realtime && s_sections->sectionEnabled(section->configName()))) {
             func(section.get());
         }
     }

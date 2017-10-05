@@ -32,7 +32,8 @@
 
 SectionOHM::SectionOHM(Configuration &config, Logger *logger,
                        const WinApiAdaptor &winapi)
-    : SectionWMI("openhardwaremonitor", config.getEnvironment(), logger, winapi)
+    : SectionWMI("openhardwaremonitor", "openhardwaremonitor",
+                 config.getEnvironment(), logger, winapi)
     , _bin_path(_env.binDirectory()) {
     withNamespace(L"Root\\OpenHardwareMonitor");
     withObject(L"Sensor");

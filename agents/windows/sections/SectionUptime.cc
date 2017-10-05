@@ -32,7 +32,7 @@
 
 SectionUptime::SectionUptime(const Environment &env, Logger *logger,
                              const WinApiAdaptor &winapi)
-    : Section("uptime", env, logger, winapi) {
+    : Section("uptime", "uptime", env, logger, winapi) {
     LPCWSTR dllName = L"kernel32.dll";
     LPCSTR funcName = "GetTickCount64";
     GetTickCount64_dyn =

@@ -32,7 +32,7 @@ extern double file_time(const FILETIME *filetime);
 
 SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
-    : Section("fileinfo", config.getEnvironment(), logger, winapi)
+    : Section("fileinfo", "fileinfo", config.getEnvironment(), logger, winapi)
     , _fileinfo_paths(config, "fileinfo", "path", winapi) {
     withSeparator('|');
 }

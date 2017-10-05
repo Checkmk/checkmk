@@ -27,9 +27,11 @@
 #include "Environment.h"
 #include "Logger.h"
 
-Section::Section(const char *name, const Environment &env, Logger *logger,
+Section::Section(const std::string &outputName, const std::string &configName,
+                 const Environment &env, Logger *logger,
                  const WinApiAdaptor &winapi)
-    : _name(name != nullptr ? name : "")
+    : _outputName(outputName)
+    , _configName(configName)
     , _env(env)
     , _logger(logger)
     , _winapi(winapi) {}
@@ -45,7 +47,7 @@ Section *Section::withRealtimeSupport() {
 }
 
 bool Section::produceOutput(std::ostream &out, bool nested) {
-    Debug(_logger) << "<<<" << _name << ">>>";
+    Debug(_logger) << "<<<" << _outputName << ">>>";
 
     std::string output;
     bool res = generateOutput(output);
@@ -55,8 +57,8 @@ bool Section::produceOutput(std::ostream &out, bool nested) {
         const char *right_bracket = nested ? "]" : ">>>";
 
         if (!output.empty()) {
-            if (!_name.empty() && _show_header) {
-                out << left_bracket << _name;
+            if (!_outputName.empty() && _show_header) {
+                out << left_bracket << _outputName;
                 if ((_separator != ' ') && !nested) {
                     out << ":sep(" << (int)_separator << ")";
                 }

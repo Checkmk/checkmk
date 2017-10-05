@@ -28,10 +28,11 @@
 #include "../PerfCounter.h"
 #include "../stringutil.h"
 
-SectionPerfcounter::SectionPerfcounter(const char *name, const Environment &env,
-                                       Logger *logger,
+SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
+                                       const std::string &configName,
+                                       const Environment &env, Logger *logger,
                                        const WinApiAdaptor &winapi)
-    : Section(name, env, logger, winapi) {
+    : Section(outputName, configName, env, logger, winapi) {
     withSeparator(',');
 }
 

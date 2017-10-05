@@ -24,9 +24,11 @@
 
 #include "SectionGroup.h"
 
-SectionGroup::SectionGroup(const char *name, const Environment &env,
-                           Logger *logger, const WinApiAdaptor &winapi)
-    : Section(name, env, logger, winapi) {
+SectionGroup::SectionGroup(const std::string &outputName,
+                           const std::string &configName,
+                           const Environment &env, Logger *logger,
+                           const WinApiAdaptor &winapi)
+    : Section(outputName, configName, env, logger, winapi) {
     withHiddenHeader();
 }
 

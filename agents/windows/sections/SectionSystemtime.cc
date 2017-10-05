@@ -29,7 +29,7 @@ extern double current_time();
 
 SectionSystemtime::SectionSystemtime(const Environment &env, Logger *logger,
                                      const WinApiAdaptor &winapi)
-    : Section("systemtime", env, logger, winapi) {}
+    : Section("systemtime", "systemtime", env, logger, winapi) {}
 
 bool SectionSystemtime::produceOutputInner(std::ostream &out) {
     out << std::fixed << std::setprecision(0) << current_time();

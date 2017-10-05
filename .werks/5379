@@ -1,0 +1,14 @@
+Title: Allow Windows logfiles to be monitored without monitoring also eventlog
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507190400
+Class: fix
+
+Since 1.4.0, monitoring Windows logfiles has required that also Windows
+eventlog is being monitored. The fix restores the functionality available
+until version 1.2.8 so that Windows logfiles and eventlogs can be selected
+for monitoring separately.
+

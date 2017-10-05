@@ -48,7 +48,8 @@ class SectionGroup : public Section {
     time_t _disabled_until{0};
 
 public:
-    SectionGroup(const char *name, const Environment &env, Logger *logger,
+    SectionGroup(const std::string &outputName, const std::string &configName,
+                 const Environment &env, Logger *logger,
                  const WinApiAdaptor &winapi);
     SectionGroup *withNestedSubtables();
     /**

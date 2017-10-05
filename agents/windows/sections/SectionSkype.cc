@@ -29,7 +29,7 @@
 
 SectionSkype::SectionSkype(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
-    : SectionGroup("skype", env, logger, winapi) {
+    : SectionGroup("skype", "skype", env, logger, winapi) {
     withToggleIfMissing();
     withFailIfMissing();
     withNestedSubtables();
@@ -66,15 +66,17 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
           L"LS:XmppFederationProxy - Streams",
           L"LS:A/V Edge - TCP Counters",
           L"LS:A/V Edge - UDP Counters"}) {
-        withSubSection((new SectionPerfcounter(to_utf8(data_source).c_str(),
-                                               _env, _logger, _winapi))
-                           ->withCounter(data_source));
+        const auto name = to_utf8(data_source);
+        withSubSection(
+            (new SectionPerfcounter(name, name, _env, _logger, _winapi))
+                ->withCounter(data_source));
     }
 
     // TODO the version number in the counter name isn't exactly inspiring
     // trust,
     // but there currently is no support for wildcards.
     withDependentSubSection((new SectionPerfcounter("ASP.NET Apps v4.0.30319",
+                                                    "ASP.NET Apps v4.0.30319",
                                                     _env, _logger, _winapi))
                                 ->withCounter(L"ASP.NET Apps v4.0.30319"));
 }

@@ -44,7 +44,7 @@ struct script_statistics_t {
 
 SectionCheckMK::SectionCheckMK(Configuration &config, Logger *logger,
                                const WinApiAdaptor &winapi)
-    : Section("check_mk", config.getEnvironment(), logger, winapi)
+    : Section("check_mk", "check_mk", config.getEnvironment(), logger, winapi)
     , _crash_debug(config, "global", "crash_debug", false, winapi)
     , _only_from(config, "global", "only_from", winapi)
     , _info_fields(createInfoFields()) {}

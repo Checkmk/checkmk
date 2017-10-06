@@ -1617,17 +1617,20 @@ class ModeBIEditRule(ModeBI):
         vs_rule.validate_value(new_rule, 'rule')
 
         if self._ruleid and self._ruleid != new_rule["id"]:
-            existing_ruleid = self._ruleid
+            #TODO test
+            forbidden_packs = self._get_forbidden_packs_using_rule()
+            if forbidden_packs:
+                raise MKAuthException(_("You have no permission for changes in BI packs <b>%s</b> "
+                                        "which uses rule <b>%s</b>.") % (", ".join(forbidden_packs), self._ruleid))
+
             new_ruleid = new_rule["id"]
             c = wato_confirm(_("Confirm renaming existing BI rule"),
                              _("Do you really want to rename the existing BI rule <b>%s</b> to <b>%s</b>?") % \
-                              (existing_ruleid, new_ruleid))
+                              (self._ruleid, new_ruleid))
+
             if c:
-                self._ruleid = new_ruleid
-                del self._pack["rules"][existing_ruleid]
-                self._pack["rules"][new_ruleid] = new_rule
-                self._rename_existing_ruleid_after_confirm(existing_ruleid)
-                self._add_change("bi-edit-rule", _("Renamed BI rule %s") % self._ruleid)
+                self._rename_ruleid_after_confirm(new_ruleid)
+                self._add_change("bi-edit-rule", _("Renamed BI rule from %s to %s") % (self._ruleid, new_ruleid))
                 self.save_config()
 
             else:
@@ -1666,17 +1669,87 @@ class ModeBIEditRule(ModeBI):
         return "bi_rules"
 
 
-    def _rename_existing_ruleid_after_confirm(self, existing_ruleid):
-        for packinfo in self._packs.values():
-            for rule_id, rule_info in packinfo['rules'].items():
-                new_nodes = []
-                for this_node in rule_info.get('nodes', []):
-                    node_ty, node_info = this_node
-                    if node_ty == 'call' and existing_ruleid == node_info[0]:
-                        new_nodes.append( ('call', tuple( [self._ruleid] + list(node_info)[1:] )) )
-                    else:
-                        new_nodes.append( this_node )
-                rule_info['nodes'] = new_nodes
+    def _get_forbidden_packs_using_rule(self):
+        forbidden_packs = set()
+        for packid, packinfo in self._packs.iteritems():
+            uses_rule = False
+            if self._pack == packinfo:
+                continue
+            for ruleid, rule_info in packinfo['rules'].iteritems():
+                if ruleid == self._ruleid:
+                    uses_rule = True
+                    break
+                for node_type, node_info in rule_info.get('nodes', []):
+                    if node_type == 'call' and self._ruleid == node_info[0]:
+                        uses_rule = True
+                        break
+
+            for aggregation in packinfo.get("aggregations", []):
+                node = aggregation.get('node')
+                if node is None:
+                    continue
+                if (node[0] == 'call' and self._ruleid == node[1][0]) or \
+                   (node[0] in ["foreach_host", "foreach_service"] and node[-1][-1][0] == 'call' and \
+                    self._ruleid == node[-1][-1][1][0]):
+                    uses_rule = True
+                    break
+            if uses_rule and not self.is_contact_for_pack(pack=packinfo):
+                forbidden_packs.add(packid)
+        return forbidden_packs
+
+
+    def _rename_ruleid_after_confirm(self, new_ruleid):
+        new_packs = self._packs.copy()
+        for packid, packinfo in self._packs.iteritems():
+            for ruleid, rule_info in packinfo['rules'].iteritems():
+                if ruleid == self._ruleid:
+                    new_rule_info = rule_info.copy()
+                    new_rule_info['id'] = new_ruleid
+                    new_packs[packid]['rules'][new_ruleid] = new_rule_info
+                    del new_packs[packid]['rules'][ruleid]
+                    continue
+
+                for node in rule_info.get('nodes', [])[::-1]:
+                    new_node = self._get_new_node(node, new_ruleid)
+                    if new_node is None:
+                        continue
+                    idx = new_packs[packid]['rules'][ruleid]['nodes'].index(node)
+                    del new_packs[packid]['rules'][ruleid]['nodes'][idx]
+                    new_packs[packid]['rules'][ruleid]['nodes'].insert(idx, new_node)
+
+            for aggregation in packinfo.get("aggregations", [])[::-1]:
+                node = aggregation.get('node')
+                if node is None:
+                    continue
+                new_node = self._get_new_node(node, new_ruleid)
+                if new_node is None:
+                    continue
+                new_aggregation = aggregation.copy()
+                new_aggregation['node'] = new_node
+                idx = new_packs[packid]["aggregations"].index(aggregation)
+                del new_packs[packid]["aggregations"][idx]
+                new_packs[packid]["aggregations"].insert(idx, new_aggregation)
+
+        self._packs = new_packs
+        self._ruleid = new_ruleid
+
+
+    def _get_new_node(self, node, new_ruleid):
+        new_node = None
+        if node[0] == 'call' and self._ruleid == node[1][0]:
+            new_node = self._create_call_node(new_ruleid, node[1][1])
+        elif node[0] in ["foreach_host", "foreach_service"] and node[-1][-1][0] == 'call' and \
+             self._ruleid == node[-1][-1][1][0]:
+            new_node = self._create_foreach_node(node[0], list(node[1][:-1]), new_ruleid, node[-1][-1][1][1])
+        return new_node
+
+
+    def _create_call_node(self, ruleid, arguments):
+        return ('call', (ruleid, arguments))
+
+
+    def _create_foreach_node(self, what, parameters, ruleid, arguments):
+        return (what, tuple(parameters + [self._create_call_node(ruleid, arguments)]))
 
 
     def page(self):

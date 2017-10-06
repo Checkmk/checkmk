@@ -62,7 +62,7 @@ public:
                            Type logictype, int offset, int indirect_offset,
                            int extra_offset, int extra_extra_offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset)
+                    extra_extra_offset, 0000)
         , _mc(mc)
         , _offset(offset)
         , _logictype(logictype) {}

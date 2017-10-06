@@ -52,33 +52,33 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetSStringColumn>(
         "comment", "A comment text", -1, -1, -1,
         DANGEROUS_OFFSETOF(Comment, _comment)));
-    addColumn(make_unique<OffsetIntColumn>("id", "The id of the comment",
-                                           DANGEROUS_OFFSETOF(Comment, _id), -1,
-                                           -1, -1));
+    addColumn(make_unique<OffsetIntColumn>("id", "The id of the comment", -1,
+                                           -1, -1,
+                                           DANGEROUS_OFFSETOF(Comment, _id)));
     addColumn(make_unique<OffsetTimeColumn>(
         "entry_time", "The time the entry was made as UNIX timestamp",
         DANGEROUS_OFFSETOF(Comment, _entry_time), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
-        "type", "The type of the comment: 1 is host, 2 is service",
-        DANGEROUS_OFFSETOF(Comment, _type), -1, -1, -1));
+        "type", "The type of the comment: 1 is host, 2 is service", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Comment, _type)));
     addColumn(make_unique<OffsetBoolColumn>(
         "is_service",
-        "0, if this entry is for a host, 1 if it is for a service",
-        DANGEROUS_OFFSETOF(Comment, _is_service), -1, -1, -1));
+        "0, if this entry is for a host, 1 if it is for a service", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Comment, _is_service)));
 
     addColumn(make_unique<OffsetIntColumn>(
-        "persistent", "Whether this comment is persistent (0/1)",
-        DANGEROUS_OFFSETOF(Comment, _persistent), -1, -1, -1));
+        "persistent", "Whether this comment is persistent (0/1)", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Comment, _persistent)));
     addColumn(make_unique<OffsetIntColumn>(
         "source", "The source of the comment (0 is internal and 1 is external)",
-        DANGEROUS_OFFSETOF(Comment, _source), -1, -1, -1));
+        -1, -1, -1, DANGEROUS_OFFSETOF(Comment, _source)));
     addColumn(make_unique<OffsetIntColumn>(
         "entry_type",
         "The type of the comment: 1 is user, 2 is downtime, 3 is flap and 4 is acknowledgement",
-        DANGEROUS_OFFSETOF(Comment, _entry_type), -1, -1, -1));
+        -1, -1, -1, DANGEROUS_OFFSETOF(Comment, _entry_type)));
     addColumn(make_unique<OffsetIntColumn>(
-        "expires", "Whether this comment expires",
-        DANGEROUS_OFFSETOF(Comment, _expires), -1, -1, -1));
+        "expires", "Whether this comment expires", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Comment, _expires)));
     addColumn(make_unique<OffsetTimeColumn>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         DANGEROUS_OFFSETOF(Comment, _expire_time), -1, -1, -1));

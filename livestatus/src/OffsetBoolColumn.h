@@ -35,10 +35,10 @@ class Row;
 class OffsetBoolColumn : public OffsetIntColumn {
 public:
     OffsetBoolColumn(const std::string& name, const std::string& description,
-                     int offset, int indirect_offset, int extra_offset,
-                     int extra_extra_offset)
-        : OffsetIntColumn(name, description, offset, indirect_offset,
-                          extra_offset, extra_extra_offset) {}
+                     int indirect_offset, int extra_offset,
+                     int extra_extra_offset, int offset)
+        : OffsetIntColumn(name, description, indirect_offset, extra_offset,
+                          extra_extra_offset, offset) {}
     int32_t getValue(Row row, const contact* auth_user) const override;
 };
 

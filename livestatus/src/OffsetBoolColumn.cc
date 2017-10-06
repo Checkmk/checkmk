@@ -23,13 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetBoolColumn.h"
-#include "Column.h"
 #include "Row.h"
 
 int32_t OffsetBoolColumn::getValue(Row row,
                                    const contact* /* auth_user */) const {
-    if (auto p = columnData<void>(row)) {
-        return *offset_cast<bool>(p, _offset) ? 1 : 0;
+    if (auto p = columnData<bool>(row)) {
+        return *p ? 1 : 0;
     }
     return 0;
 }

@@ -40,9 +40,10 @@ class RowRenderer;
 class IntColumn : public Column {
 public:
     IntColumn(const std::string &name, const std::string &description,
-              int indirect_offset, int extra_offset, int extra_extra_offset)
+              int indirect_offset, int extra_offset, int extra_extra_offset,
+              int offset)
         : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset) {}
+                 extra_extra_offset, offset) {}
 
     // TODO(sp) Get rid of the contact* parameter, it doesn't really belong here
     // and is only used in ServiceListStateColumn and HostListStateColumn for

@@ -44,7 +44,7 @@ public:
                         int offset, int indirect_offset, int extra_offset,
                         int extra_extra_offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset)
+                    extra_extra_offset, 0000)
         , _offset(offset) {}
 
     // API of Column

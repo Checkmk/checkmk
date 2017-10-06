@@ -32,7 +32,7 @@ class FixedIntColumn : public IntColumn {
 public:
     FixedIntColumn(const std::string& name, const std::string& description,
                    int value)
-        : IntColumn(name, description, -1, -1, -1), _value(value) {}
+        : IntColumn(name, description, -1, -1, -1, 0), _value(value) {}
 
     int32_t getValue(Row /* row */,
                      const contact* /* auth_user */) const override {

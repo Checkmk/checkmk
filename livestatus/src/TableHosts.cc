@@ -188,68 +188,61 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
         DANGEROUS_OFFSETOF(host, long_plugin_output)));
 
     table->addColumn(make_unique<OffsetIntColumn>(
-        prefix + "initial_state", "Initial host state",
-        DANGEROUS_OFFSETOF(host, initial_state), indirect_offset, extra_offset,
-        -1));
+        prefix + "initial_state", "Initial host state", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, initial_state)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "max_check_attempts",
-        "Max check attempts for active host checks",
-        DANGEROUS_OFFSETOF(host, max_attempts), indirect_offset, extra_offset,
-        -1));
+        "Max check attempts for active host checks", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, max_attempts)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "flap_detection_enabled",
-        "Whether flap detection is enabled (0/1)",
-        DANGEROUS_OFFSETOF(host, flap_detection_enabled), indirect_offset,
-        extra_offset, -1));
+        "Whether flap detection is enabled (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, flap_detection_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_freshness",
-        "Whether freshness checks are activated (0/1)",
-        DANGEROUS_OFFSETOF(host, check_freshness), indirect_offset,
-        extra_offset, -1));
+        "Whether freshness checks are activated (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, check_freshness)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "process_performance_data",
         "Whether processing of performance data is enabled (0/1)",
-        DANGEROUS_OFFSETOF(host, process_performance_data), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, process_performance_data)));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
-        "Whether passive host checks are accepted (0/1)",
-        DANGEROUS_OFFSETOF(host, accept_passive_host_checks), indirect_offset,
-        extra_offset, -1));
+        "Whether passive host checks are accepted (0/1)", indirect_offset,
+        extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, accept_passive_host_checks)));
 #else
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
-        "Whether passive host checks are accepted (0/1)",
-        DANGEROUS_OFFSETOF(host, accept_passive_checks), indirect_offset,
-        extra_offset, -1));
+        "Whether passive host checks are accepted (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, accept_passive_checks)));
 #endif  // NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "event_handler_enabled",
-        "Whether event handling is enabled (0/1)",
-        DANGEROUS_OFFSETOF(host, event_handler_enabled), indirect_offset,
-        extra_offset, -1));
+        "Whether event handling is enabled (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, event_handler_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "acknowledgement_type",
         "Type of acknowledgement (0: none, 1: normal, 2: stick)",
-        DANGEROUS_OFFSETOF(host, acknowledgement_type), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, acknowledgement_type)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_type", "Type of check (0: active, 1: passive)",
-        DANGEROUS_OFFSETOF(host, check_type), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, check_type)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "last_state", "State before last state change",
-        DANGEROUS_OFFSETOF(host, last_state), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, last_state)));
     table->addColumn(make_unique<OffsetIntColumn>(
-        prefix + "last_hard_state", "Last hard state",
-        DANGEROUS_OFFSETOF(host, last_hard_state), indirect_offset,
-        extra_offset, -1));
+        prefix + "last_hard_state", "Last hard state", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, last_hard_state)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "current_attempt", "Number of the current check attempts",
-        DANGEROUS_OFFSETOF(host, current_attempt), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, current_attempt)));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_notification",
@@ -285,59 +278,53 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
         extra_offset, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "has_been_checked",
-        "Whether the host has already been checked (0/1)",
-        DANGEROUS_OFFSETOF(host, has_been_checked), indirect_offset,
-        extra_offset, -1));
+        "Whether the host has already been checked (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, has_been_checked)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "current_notification_number",
-        "Number of the current notification",
-        DANGEROUS_OFFSETOF(host, current_notification_number), indirect_offset,
-        extra_offset, -1));
+        "Number of the current notification", indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, current_notification_number)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "pending_flex_downtime",
-        "Number of pending flexible downtimes",
-        DANGEROUS_OFFSETOF(host, pending_flex_downtime), indirect_offset,
-        extra_offset, -1));
+        "Number of pending flexible downtimes", indirect_offset, extra_offset,
+        -1, DANGEROUS_OFFSETOF(host, pending_flex_downtime)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "total_services", "The total number of services of the host",
-        DANGEROUS_OFFSETOF(host, total_services), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, total_services)));
     // Note: this is redundant with "active_checks_enabled". Nobody noted this
     // before...
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "checks_enabled",
-        "Whether checks of the host are enabled (0/1)",
-        DANGEROUS_OFFSETOF(host, checks_enabled), indirect_offset, extra_offset,
-        -1));
+        "Whether checks of the host are enabled (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, checks_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "notifications_enabled",
-        "Whether notifications of the host are enabled (0/1)",
-        DANGEROUS_OFFSETOF(host, notifications_enabled), indirect_offset,
-        extra_offset, -1));
+        "Whether notifications of the host are enabled (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, notifications_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "acknowledged",
         "Whether the current host problem has been acknowledged (0/1)",
-        DANGEROUS_OFFSETOF(host, problem_has_been_acknowledged),
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, problem_has_been_acknowledged)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "state",
         "The current state of the host (0: up, 1: down, 2: unreachable)",
-        DANGEROUS_OFFSETOF(host, current_state), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, current_state)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "state_type", "Type of the current state (0: soft, 1: hard)",
-        DANGEROUS_OFFSETOF(host, state_type), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, state_type)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "no_more_notifications",
-        "Whether to stop sending notifications (0/1)",
-        DANGEROUS_OFFSETOF(host, no_more_notifications), indirect_offset,
-        extra_offset, -1));
+        "Whether to stop sending notifications (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, no_more_notifications)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_flapping_recovery_notification",
         "Whether to check to send a recovery notification when flapping stops (0/1)",
-        DANGEROUS_OFFSETOF(host, check_flapping_recovery_notification),
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, check_flapping_recovery_notification)));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_check", "Time of the last check (Unix timestamp)",
         DANGEROUS_OFFSETOF(host, last_check), indirect_offset, extra_offset,
@@ -366,39 +353,35 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "is_flapping", "Whether the host state is flapping (0/1)",
-        DANGEROUS_OFFSETOF(host, is_flapping), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, is_flapping)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "scheduled_downtime_depth",
-        "The number of downtimes this host is currently in",
-        DANGEROUS_OFFSETOF(host, scheduled_downtime_depth), indirect_offset,
-        extra_offset, -1));
+        "The number of downtimes this host is currently in", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, scheduled_downtime_depth)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "is_executing",
-        "is there a host check currently running... (0/1)",
-        DANGEROUS_OFFSETOF(host, is_executing), indirect_offset, extra_offset,
-        -1));
+        "is there a host check currently running... (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, is_executing)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "active_checks_enabled",
-        "Whether active checks are enabled for the host (0/1)",
-        DANGEROUS_OFFSETOF(host, checks_enabled), indirect_offset, extra_offset,
-        -1));
+        "Whether active checks are enabled for the host (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, checks_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_options",
         "The current check option, forced, normal, freshness... (0-2)",
-        DANGEROUS_OFFSETOF(host, check_options), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, check_options)));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "obsess_over_host",
-        "The current obsess_over_host setting... (0/1)",
-        DANGEROUS_OFFSETOF(host, obsess_over_host), indirect_offset,
-        extra_offset, -1));
+        "The current obsess_over_host setting... (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, obsess_over_host)));
 #else
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "obsess_over_host",
-        "The current obsess_over_host setting... (0/1)",
-        DANGEROUS_OFFSETOF(host, obsess), indirect_offset, extra_offset, -1));
+        "The current obsess_over_host setting... (0/1)", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, obsess)));
 #endif  // NAGIOS4
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
@@ -415,52 +398,50 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the host",
-        DANGEROUS_OFFSETOF(host, check_interval), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, check_interval)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a soft error",
-        DANGEROUS_OFFSETOF(host, retry_interval), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, retry_interval)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "notification_interval",
-        "Interval of periodic notification or 0 if its off",
-        DANGEROUS_OFFSETOF(host, notification_interval), indirect_offset,
-        extra_offset, -1));
+        "Interval of periodic notification or 0 if its off", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, notification_interval)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "first_notification_delay",
-        "Delay before the first notification",
-        DANGEROUS_OFFSETOF(host, first_notification_delay), indirect_offset,
-        extra_offset, -1));
+        "Delay before the first notification", indirect_offset, extra_offset,
+        -1, DANGEROUS_OFFSETOF(host, first_notification_delay)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
-        DANGEROUS_OFFSETOF(host, low_flap_threshold), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, low_flap_threshold)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
-        DANGEROUS_OFFSETOF(host, high_flap_threshold), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, high_flap_threshold)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
-        prefix + "x_3d", "3D-Coordinates: X", DANGEROUS_OFFSETOF(host, x_3d),
-        indirect_offset, extra_offset, -1));
+        prefix + "x_3d", "3D-Coordinates: X", indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, x_3d)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
-        prefix + "y_3d", "3D-Coordinates: Y", DANGEROUS_OFFSETOF(host, y_3d),
-        indirect_offset, extra_offset, -1));
+        prefix + "y_3d", "3D-Coordinates: Y", indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, y_3d)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
-        prefix + "z_3d", "3D-Coordinates: Z", DANGEROUS_OFFSETOF(host, z_3d),
-        indirect_offset, extra_offset, -1));
+        prefix + "z_3d", "3D-Coordinates: Z", indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, z_3d)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
-        DANGEROUS_OFFSETOF(host, latency), indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, latency)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "execution_time", "Time the host check needed for execution",
-        DANGEROUS_OFFSETOF(host, execution_time), indirect_offset, extra_offset,
-        -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, execution_time)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "percent_state_change", "Percent state change",
-        DANGEROUS_OFFSETOF(host, percent_state_change), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, percent_state_change)));
 
     table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_notification_period",
@@ -475,8 +456,8 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this host is currently in its service period (0/1)",
-        DANGEROUS_OFFSETOF(host, custom_variables), "SERVICE_PERIOD",
-        indirect_offset, extra_offset, -1));
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, custom_variables), "SERVICE_PERIOD"));
 
     table->addColumn(make_unique<HostContactsColumn>(
         prefix + "contacts",

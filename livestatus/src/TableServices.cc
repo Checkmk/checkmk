@@ -164,51 +164,49 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "initial_state", "The initial state of the service",
-        DANGEROUS_OFFSETOF(service, initial_state), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, initial_state)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "max_check_attempts", "The maximum number of check attempts",
-        DANGEROUS_OFFSETOF(service, max_attempts), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, max_attempts)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "current_attempt", "The number of the current check attempt",
-        DANGEROUS_OFFSETOF(service, current_attempt), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, current_attempt)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "state",
         "The current state of the service (0: OK, 1: WARN, 2: CRITICAL, 3: UNKNOWN)",
-        DANGEROUS_OFFSETOF(service, current_state), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, current_state)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "has_been_checked",
-        "Whether the service already has been checked (0/1)",
-        DANGEROUS_OFFSETOF(service, has_been_checked), indirect_offset, -1,
-        -1));
+        "Whether the service already has been checked (0/1)", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(service, has_been_checked)));
     table->addColumn(make_unique<OffsetIntColumn>(
-        prefix + "last_state", "The last state of the service",
-        DANGEROUS_OFFSETOF(service, last_state), indirect_offset, -1, -1));
+        prefix + "last_state", "The last state of the service", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(service, last_state)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "last_hard_state", "The last hard state of the service",
-        DANGEROUS_OFFSETOF(service, last_hard_state), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, last_hard_state)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "state_type",
-        "The type of the current state (0: soft, 1: hard)",
-        DANGEROUS_OFFSETOF(service, state_type), indirect_offset, -1, -1));
+        "The type of the current state (0: soft, 1: hard)", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(service, state_type)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_type",
-        "The type of the last check (0: active, 1: passive)",
-        DANGEROUS_OFFSETOF(service, check_type), indirect_offset, -1, -1));
+        "The type of the last check (0: active, 1: passive)", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(service, check_type)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "acknowledged",
         "Whether the current service problem has been acknowledged (0/1)",
-        DANGEROUS_OFFSETOF(service, problem_has_been_acknowledged),
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, problem_has_been_acknowledged)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "acknowledgement_type",
         "The type of the acknownledgement (0: none, 1: normal, 2: sticky)",
-        DANGEROUS_OFFSETOF(service, acknowledgement_type), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, acknowledgement_type)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "no_more_notifications",
-        "Whether to stop sending notifications (0/1)",
-        DANGEROUS_OFFSETOF(service, no_more_notifications), indirect_offset, -1,
-        -1));
+        "Whether to stop sending notifications (0/1)", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, no_more_notifications)));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_time_ok",
         "The last time the service was OK (Unix timestamp)",
@@ -248,9 +246,8 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
         -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "current_notification_number",
-        "The number of the current notification",
-        DANGEROUS_OFFSETOF(service, current_notification_number),
-        indirect_offset, -1, -1));
+        "The number of the current notification", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, current_notification_number)));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_state_change",
         "The time of the last state change - soft or hard (Unix timestamp)",
@@ -264,75 +261,73 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "scheduled_downtime_depth",
         "The number of scheduled downtimes the service is currently in",
-        DANGEROUS_OFFSETOF(service, scheduled_downtime_depth), indirect_offset,
-        -1, -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, scheduled_downtime_depth)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "is_flapping", "Whether the service is flapping (0/1)",
-        DANGEROUS_OFFSETOF(service, is_flapping), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, is_flapping)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "checks_enabled",
         "Whether active checks are enabled for the service (0/1)",
-        DANGEROUS_OFFSETOF(service, checks_enabled), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, checks_enabled)));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
-        "Whether the service accepts passive checks (0/1)",
-        DANGEROUS_OFFSETOF(service, accept_passive_service_checks),
-        indirect_offset, -1, -1));
+        "Whether the service accepts passive checks (0/1)", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(service, accept_passive_service_checks)));
 #else
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
-        "Whether the service accepts passive checks (0/1)",
-        DANGEROUS_OFFSETOF(service, accept_passive_checks), indirect_offset, -1,
-        -1));
+        "Whether the service accepts passive checks (0/1)", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(service, accept_passive_checks)));
 #endif  // NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "event_handler_enabled",
         "Whether and event handler is activated for the service (0/1)",
-        DANGEROUS_OFFSETOF(service, event_handler_enabled), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, event_handler_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "notifications_enabled",
         "Whether notifications are enabled for the service (0/1)",
-        DANGEROUS_OFFSETOF(service, notifications_enabled), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, notifications_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "process_performance_data",
         "Whether processing of performance data is enabled for the service (0/1)",
-        DANGEROUS_OFFSETOF(service, process_performance_data), indirect_offset,
-        -1, -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, process_performance_data)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "is_executing",
-        "is there a service check currently running... (0/1)",
-        DANGEROUS_OFFSETOF(service, is_executing), indirect_offset, -1, -1));
+        "is there a service check currently running... (0/1)", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(service, is_executing)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "active_checks_enabled",
         "Whether active checks are enabled for the service (0/1)",
-        DANGEROUS_OFFSETOF(service, checks_enabled), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, checks_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_options",
         "The current check option, forced, normal, freshness... (0/1)",
-        DANGEROUS_OFFSETOF(service, check_options), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_options)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "flap_detection_enabled",
         "Whether flap detection is enabled for the service (0/1)",
-        DANGEROUS_OFFSETOF(service, flap_detection_enabled), indirect_offset,
-        -1, -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, flap_detection_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_freshness",
-        "Whether freshness checks are activated (0/1)",
-        DANGEROUS_OFFSETOF(service, check_freshness), indirect_offset, -1, -1));
+        "Whether freshness checks are activated (0/1)", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, check_freshness)));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
-        DANGEROUS_OFFSETOF(service, obsess_over_service), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, obsess_over_service)));
 #else
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
-        DANGEROUS_OFFSETOF(service, obsess), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, obsess)));
 #endif  // NAGIOS4
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
@@ -358,41 +353,39 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the service",
-        DANGEROUS_OFFSETOF(service, check_interval), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_interval)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a soft error",
-        DANGEROUS_OFFSETOF(service, retry_interval), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, retry_interval)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "notification_interval",
-        "Interval of periodic notification or 0 if its off",
-        DANGEROUS_OFFSETOF(service, notification_interval), indirect_offset, -1,
-        -1));
+        "Interval of periodic notification or 0 if its off", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(service, notification_interval)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "first_notification_delay",
-        "Delay before the first notification",
-        DANGEROUS_OFFSETOF(service, first_notification_delay), indirect_offset,
-        -1, -1));
+        "Delay before the first notification", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, first_notification_delay)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
-        DANGEROUS_OFFSETOF(service, low_flap_threshold), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, low_flap_threshold)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
-        DANGEROUS_OFFSETOF(service, high_flap_threshold), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, high_flap_threshold)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
-        DANGEROUS_OFFSETOF(service, latency), indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, latency)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "execution_time",
-        "Time the service check needed for execution",
-        DANGEROUS_OFFSETOF(service, execution_time), indirect_offset, -1, -1));
+        "Time the service check needed for execution", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, execution_time)));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "percent_state_change", "Percent state change",
-        DANGEROUS_OFFSETOF(service, percent_state_change), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, percent_state_change)));
 
     table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_check_period",
@@ -401,8 +394,8 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
-        DANGEROUS_OFFSETOF(service, custom_variables), "SERVICE_PERIOD",
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        "SERVICE_PERIOD"));
     table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",

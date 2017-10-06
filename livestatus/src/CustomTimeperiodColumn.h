@@ -34,21 +34,19 @@
 class Row;
 
 class CustomTimeperiodColumn : public IntColumn {
-    int _offset;  // within data structure (differs from host/service)
-    std::string _varname;
-
 public:
     CustomTimeperiodColumn(const std::string &name,
-                           const std::string &description, int offset,
-                           const char *varname, int indirect_offset,
-                           int extra_offset, int extra_extra_offset)
+                           const std::string &description, int indirect_offset,
+                           int extra_offset, int extra_extra_offset, int offset,
+                           const std::string &varname)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset)
-        , _offset(offset)
+                    extra_extra_offset, offset)
         , _varname(varname) {}
     int32_t getValue(Row row, const contact *auth_user) const override;
 
 private:
+    std::string _varname;
+
     customvariablesmember *getCVM(Row row) const;
 };
 

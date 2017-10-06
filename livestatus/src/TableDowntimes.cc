@@ -52,20 +52,20 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetSStringColumn>(
         "comment", "A comment text", -1, -1, -1,
         DANGEROUS_OFFSETOF(Downtime, _comment)));
-    addColumn(make_unique<OffsetIntColumn>("id", "The id of the downtime",
-                                           DANGEROUS_OFFSETOF(Downtime, _id),
-                                           -1, -1, -1));
+    addColumn(make_unique<OffsetIntColumn>("id", "The id of the downtime", -1,
+                                           -1, -1,
+                                           DANGEROUS_OFFSETOF(Downtime, _id)));
     addColumn(make_unique<OffsetTimeColumn>(
         "entry_time", "The time the entry was made as UNIX timestamp",
         DANGEROUS_OFFSETOF(Downtime, _entry_time), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "type",
-        "The type of the downtime: 0 if it is active, 1 if it is pending",
-        DANGEROUS_OFFSETOF(Downtime, _type), -1, -1, -1));
+        "The type of the downtime: 0 if it is active, 1 if it is pending", -1,
+        -1, -1, DANGEROUS_OFFSETOF(Downtime, _type)));
     addColumn(make_unique<OffsetBoolColumn>(
         "is_service",
-        "0, if this entry is for a host, 1 if it is for a service",
-        DANGEROUS_OFFSETOF(Downtime, _is_service), -1, -1, -1));
+        "0, if this entry is for a host, 1 if it is for a service", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Downtime, _is_service)));
 
     addColumn(make_unique<OffsetTimeColumn>(
         "start_time", "The start time of the downtime as UNIX timestamp",
@@ -74,15 +74,15 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "end_time", "The end time of the downtime as UNIX timestamp",
         DANGEROUS_OFFSETOF(Downtime, _end_time), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
-        "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible",
-        DANGEROUS_OFFSETOF(Downtime, _fixed), -1, -1, -1));
+        "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible", -1, -1,
+        -1, DANGEROUS_OFFSETOF(Downtime, _fixed)));
     addColumn(make_unique<OffsetIntColumn>(
-        "duration", "The duration of the downtime in seconds",
-        DANGEROUS_OFFSETOF(Downtime, _duration), -1, -1, -1));
+        "duration", "The duration of the downtime in seconds", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Downtime, _duration)));
     addColumn(make_unique<OffsetIntColumn>(
         "triggered_by",
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
-        DANGEROUS_OFFSETOF(Downtime, _triggered_by), -1, -1, -1));
+        -1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _triggered_by)));
 
     TableHosts::addColumns(this, mc, "host_",
                            DANGEROUS_OFFSETOF(Downtime, _host), -1);

@@ -85,18 +85,18 @@ void TableContacts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "can_submit_commands",
         "Wether the contact is allowed to submit commands (0/1)",
-        DANGEROUS_OFFSETOF(contact, can_submit_commands), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, can_submit_commands)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "host_notifications_enabled",
         "Wether the contact will be notified about host problems in general (0/1)",
-        DANGEROUS_OFFSETOF(contact, host_notifications_enabled),
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, host_notifications_enabled)));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "service_notifications_enabled",
         "Wether the contact will be notified about service problems in general (0/1)",
-        DANGEROUS_OFFSETOF(contact, service_notifications_enabled),
-        indirect_offset, -1, -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, service_notifications_enabled)));
 
     table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_host_notification_period",

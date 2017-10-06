@@ -62,12 +62,12 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "time", "Time of the log event (UNIX timestamp)",
         DANGEROUS_OFFSETOF(LogEntry, _time), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
-        "lineno", "The number of the line in the log file",
-        DANGEROUS_OFFSETOF(LogEntry, _lineno), -1, -1, -1));
+        "lineno", "The number of the line in the log file", -1, -1, -1,
+        DANGEROUS_OFFSETOF(LogEntry, _lineno)));
     addColumn(make_unique<OffsetIntColumn>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
-        DANGEROUS_OFFSETOF(LogEntry, _logclass), -1, -1, -1));
+        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _logclass)));
     addColumn(make_unique<OffsetSStringColumn>(
         "message", "The complete message line including the timestamp", -1, -1,
         -1, DANGEROUS_OFFSETOF(LogEntry, _complete)));
@@ -86,14 +86,14 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "The output of the check, if any is associated with the message", -1,
         -1, -1, DANGEROUS_OFFSETOF(LogEntry, _check_output)));
     addColumn(make_unique<OffsetIntColumn>(
-        "state", "The state of the host or service in question",
-        DANGEROUS_OFFSETOF(LogEntry, _state), -1, -1, -1));
+        "state", "The state of the host or service in question", -1, -1, -1,
+        DANGEROUS_OFFSETOF(LogEntry, _state)));
     addColumn(make_unique<OffsetSStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
         -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
     addColumn(make_unique<OffsetIntColumn>(
-        "attempt", "The number of the check attempt",
-        DANGEROUS_OFFSETOF(LogEntry, _attempt), -1, -1, -1));
+        "attempt", "The number of the check attempt", -1, -1, -1,
+        DANGEROUS_OFFSETOF(LogEntry, _attempt)));
     addColumn(make_unique<OffsetSStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",

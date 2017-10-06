@@ -38,11 +38,11 @@ public:
     enum class Type { pnp_graph_present };
 
     ServiceSpecialIntColumn(const std::string& name,
-                            const std::string& description, MonitoringCore* mc,
-                            Type ssic_type, int indirect_offset,
-                            int extra_offset, int extra_extra_offset)
+                            const std::string& description, int indirect_offset,
+                            int extra_offset, int extra_extra_offset,
+                            int offset, MonitoringCore* mc, Type ssic_type)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, 0000)
+                    extra_extra_offset, offset)
         , _mc(mc)
         , _type(ssic_type) {}
     int32_t getValue(Row row, const contact* auth_user) const override;

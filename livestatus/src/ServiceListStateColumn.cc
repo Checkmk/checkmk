@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceListStateColumn.h"
-#include "Column.h"
 #include "Row.h"
 #include "auth.h"
 
@@ -45,8 +44,8 @@ bool ServiceListStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
 }
 
 servicesmember *ServiceListStateColumn::getMembers(Row row) const {
-    if (auto p = columnData<void>(row)) {
-        return *offset_cast<servicesmember *>(p, _offset);
+    if (auto p = columnData<servicesmember *>(row)) {
+        return *p;
     }
     return nullptr;
 }

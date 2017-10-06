@@ -32,9 +32,9 @@ extern TimeperiodsCache* g_timeperiods_cache;
 TimeperiodColumn::TimeperiodColumn(const std::string& name,
                                    const std::string& description,
                                    int indirect_offset, int extra_offset,
-                                   int extra_extra_offset)
+                                   int extra_extra_offset, int offset)
     : IntColumn(name, description, indirect_offset, extra_offset,
-                extra_extra_offset, 0000) {}
+                extra_extra_offset, offset) {}
 
 int32_t TimeperiodColumn::getValue(Row row,
                                    const contact* /* auth_user */) const {

@@ -55,8 +55,8 @@ using modified_atttibutes = std::bitset<32>;
 
 int32_t AttributeListColumn::getValue(Row row,
                                       const contact * /*unused*/) const {
-    if (auto p = columnData<void>(row)) {
-        return static_cast<int32_t>(*offset_cast<unsigned long>(p, _offset));
+    if (auto p = columnData<unsigned long>(row)) {
+        return static_cast<int32_t>(*p);
     }
     return 0;
 }

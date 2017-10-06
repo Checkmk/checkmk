@@ -102,12 +102,12 @@ void TableContacts::addColumns(Table *table, const string &prefix,
         prefix + "in_host_notification_period",
         "Wether the contact is currently in his/her host notification period (0/1)",
         indirect_offset,
-        DANGEROUS_OFFSETOF(contact, host_notification_period_ptr), -1));
+        DANGEROUS_OFFSETOF(contact, host_notification_period_ptr), -1, 0));
     table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_service_notification_period",
         "Wether the contact is currently in his/her service notification period (0/1)",
         indirect_offset,
-        DANGEROUS_OFFSETOF(contact, service_notification_period_ptr), -1));
+        DANGEROUS_OFFSETOF(contact, service_notification_period_ptr), -1, 0));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
@@ -125,13 +125,12 @@ void TableContacts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        DANGEROUS_OFFSETOF(contact, modified_attributes), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, modified_attributes)));
     table->addColumn(make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes",
-        DANGEROUS_OFFSETOF(contact, modified_attributes), indirect_offset, -1,
-        -1));
+        "A list of all modified attributes", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(contact, modified_attributes)));
 }
 
 void TableContacts::answerQuery(Query *query) {

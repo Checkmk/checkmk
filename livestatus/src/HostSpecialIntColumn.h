@@ -38,11 +38,11 @@ public:
     enum class Type { real_hard_state, pnp_graph_present, mk_inventory_last };
 
     HostSpecialIntColumn(const std::string& name,
-                         const std::string& description, MonitoringCore* mc,
-                         Type hsic_type, int indirect_offset, int extra_offset,
-                         int extra_extra_offset)
+                         const std::string& description, int indirect_offset,
+                         int extra_offset, int extra_extra_offset, int offset,
+                         MonitoringCore* mc, Type hsic_type)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, 0000)
+                    extra_extra_offset, offset)
         , _mc(mc)
         , _type(hsic_type) {}
     int32_t getValue(Row row, const contact* auth_user) const override;

@@ -38,11 +38,11 @@ public:
     enum class Type { mk_inventory_last };
 
     StatusSpecialIntColumn(const std::string& name,
-                           const std::string& description, MonitoringCore* mc,
-                           Type type, int indirect_offset, int extra_offset,
-                           int extra_extra_offset)
+                           const std::string& description, int indirect_offset,
+                           int extra_offset, int extra_extra_offset, int offset,
+                           MonitoringCore* mc, Type type)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, 0000)
+                    extra_extra_offset, offset)
         , _mc(mc)
         , _type(type) {}
     int32_t getValue(Row row, const contact* auth_user) const override;

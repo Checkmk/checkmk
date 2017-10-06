@@ -332,18 +332,17 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        DANGEROUS_OFFSETOF(service, modified_attributes), indirect_offset, -1,
-        -1));
+        indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, modified_attributes)));
     table->addColumn(make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes",
-        DANGEROUS_OFFSETOF(service, modified_attributes), indirect_offset, -1,
-        -1));
+        "A list of all modified attributes", indirect_offset, -1, -1,
+        DANGEROUS_OFFSETOF(service, modified_attributes)));
     table->addColumn(make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        mc, ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
-        -1, -1));
+        indirect_offset, -1, -1, 0, mc,
+        ServiceSpecialIntColumn::Type::pnp_graph_present));
     table->addColumn(make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
         indirect_offset, -1, -1, 0,
@@ -390,7 +389,7 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_check_period",
         "Whether the service is currently in its check period (0/1)",
-        indirect_offset, DANGEROUS_OFFSETOF(service, check_period_ptr), -1));
+        indirect_offset, DANGEROUS_OFFSETOF(service, check_period_ptr), -1, 0));
     table->addColumn(make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
@@ -400,7 +399,7 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
         indirect_offset, DANGEROUS_OFFSETOF(service, notification_period_ptr),
-        -1));
+        -1, 0));
 
     table->addColumn(make_unique<ServiceContactsColumn>(
         prefix + "contacts",

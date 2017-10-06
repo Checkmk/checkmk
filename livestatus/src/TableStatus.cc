@@ -239,7 +239,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<StatusSpecialIntColumn>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        mc, StatusSpecialIntColumn::Type::mk_inventory_last, -1, -1, -1));
+        -1, -1, -1, 0, mc, StatusSpecialIntColumn::Type::mk_inventory_last));
 }
 
 void TableStatus::addCounterColumns(const string &name,

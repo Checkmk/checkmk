@@ -1,0 +1,16 @@
+Title: Activate Changes fails after update if some host with an deprecated check is down
+Component: checks
+State: open
+Date: 2017-10-06 11:12:29
+Targetversion: 1.4.0
+Class: bug
+
+To reproduce the bug:
+- Create site with version 1.2.8 or earlier
+- Configure a host with a postfix service (postfix_mailq)
+- Cut the connection to the host (services will be stale)
+- update to 1.4.0
+- create a rule for the postfix service (Number of mails in outgoing mail queue)
+- Activate Changes
+
+It seems, that the autochecks.mk is not updated, if the agent_data of a host is not reachable.

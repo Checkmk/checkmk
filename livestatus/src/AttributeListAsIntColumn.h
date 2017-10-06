@@ -38,12 +38,11 @@ class Row;
 class AttributeListAsIntColumn : public IntColumn {
 public:
     AttributeListAsIntColumn(const std::string &name,
-                             const std::string &description, int offset,
+                             const std::string &description,
                              int indirect_offset, int extra_offset,
-                             int extra_extra_offset)
+                             int extra_extra_offset, int offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, 0000)
-        , _offset(offset) {}
+                    extra_extra_offset, offset) {}
 
     /// API of Column
     std::unique_ptr<Filter> createFilter(RelationalOperator,
@@ -51,9 +50,6 @@ public:
 
     // API of IntColumn
     int32_t getValue(Row row, const contact *auth_user) const override;
-
-private:
-    const int _offset;
 };
 
 #endif  // AttributeListAsIntColumn_h

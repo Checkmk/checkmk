@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostListStateColumn.h"
-#include "Column.h"
 #include "Row.h"
 #include "auth.h"
 
@@ -44,8 +43,8 @@ static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
 }
 
 hostsmember *HostListStateColumn::getMembers(Row row) const {
-    if (auto p = columnData<void>(row)) {
-        return *offset_cast<hostsmember *>(p, _offset);
+    if (auto p = columnData<hostsmember *>(row)) {
+        return *p;
     }
     return nullptr;
 }

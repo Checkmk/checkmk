@@ -41,11 +41,10 @@ class RowRenderer;
 class AttributeListColumn : public IntColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
-                        int offset, int indirect_offset, int extra_offset,
-                        int extra_extra_offset)
+                        int indirect_offset, int extra_offset,
+                        int extra_extra_offset, int offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, 0000)
-        , _offset(offset) {}
+                    extra_extra_offset, offset) {}
 
     // API of Column
     ColumnType type() const override { return ColumnType::list; }
@@ -58,9 +57,6 @@ public:
     int32_t getValue(Row row, const contact *auth_user) const override;
 
     static std::string refValueFor(const std::string &value, Logger *logger);
-
-private:
-    int _offset;
 };
 
 #endif  // AttributeListColumn_h

@@ -58,13 +58,12 @@ public:
     };
 
     ServiceListStateColumn(const std::string &name,
-                           const std::string &description, MonitoringCore *mc,
-                           Type logictype, int offset, int indirect_offset,
-                           int extra_offset, int extra_extra_offset)
+                           const std::string &description, int indirect_offset,
+                           int extra_offset, int extra_extra_offset, int offset,
+                           MonitoringCore *mc, Type logictype)
         : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, 0000)
+                    extra_extra_offset, offset)
         , _mc(mc)
-        , _offset(offset)
         , _logictype(logictype) {}
     int32_t getValue(Row row, const contact *auth_user) const override;
 #ifdef CMC
@@ -80,7 +79,6 @@ public:
 
 private:
     MonitoringCore *_mc;
-    const int _offset;
     const Type _logictype;
 };
 

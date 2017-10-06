@@ -44,7 +44,7 @@ TableTimeperiods::TableTimeperiods(MonitoringCore *mc) : Table(mc) {
         "alias", "The alias of the timeperiod", -1, -1, -1,
         DANGEROUS_OFFSETOF(timeperiod, alias)));
     addColumn(make_unique<TimeperiodColumn>(
-        "in", "Wether we are currently in this period (0/1)", -1, -1, -1));
+        "in", "Wether we are currently in this period (0/1)", -1, -1, -1, 0));
     // TODO(mk): add days and exceptions
 }
 

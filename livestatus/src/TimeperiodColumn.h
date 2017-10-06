@@ -36,7 +36,7 @@ class TimeperiodColumn : public IntColumn {
 public:
     TimeperiodColumn(const std::string& name, const std::string& description,
                      int indirect_offset, int extra_offset,
-                     int extra_extra_offset);
+                     int extra_extra_offset, int offset);
     int32_t getValue(Row row, const contact* auth_user) const override;
 };
 

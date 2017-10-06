@@ -45,21 +45,21 @@
     wmiHelper             - Wrapper for windows wmi API
     ListenSocket          - Wrapper for listening network socket (6556)
     Thread                - Wrapper for windows threading api (very basic)
+    WinApi(Adaptor)       - Wrapper for all windows API calls
 ** Other helpers
     OHMMontior            - Manages the OpenHardwareMonitorCLI process for SectionOHM
     OutputProxy           - proxy for the regular agent output
                             (subclasses implement buffering and encryption)
-    logging               - logging functions (very rudimentary)
+    Logger                - logging utility (implementation from CMC / livestatus)
+    RotatingFileHandler   - (log)file rotation utility
     stringutil            - helper functions for string operations (some very crude, some are
                             probably obsolete)
     types                 - declaration of data types (most are probably superfluous)
-    crashhandling         - produces backtraces on crashes
+    CrashHandler          - produces backtraces on crashes
     dynamic_func          - small helper to get function handles dynamically
                             (for those functions not available on all windowses)
 
 ** Remaining files are not part of the agent
-    nowin.cc              - converts time units
-    crash.cc              - causes a crash
     perftest.cc           - commandline tool to test perfcounter interface (old api)
     pdhtest.cc            - commandline tool to test perfcounter interface (pdh api)
     wmitest.cc            - commandline tool to test wmi interface
@@ -73,20 +73,23 @@
 
 ** Compilation dependencies
 
-Currently mingw-w64 4.0.4 (http://mingw-w64.org), based on gcc 5.3.1 is used to build the agent.
-On Ubuntu 16.04 the following command installs the dependency:
-    sudo apt install g++-mingw-w64-i686 g++-mingw-w64
+Currently mingw-w64 5.0.1-1 (http://mingw-w64.org), based on gcc 6.2.1, is used to build the agent.
+The compilation uses GNU autotools and takes place within a chroot jail. The bash script
+'make-agent' is used for setting up the chroot jail and executing the desired build steps within it.
 
 ** Build output
 
-make generates 4 binaries (2 for x86, 2 for x64):
-    check_mk_agent.unstripped.exe  (initial compile output with all debugging symbols.
-                                    This is not commited to the repo due to size)
-    check_mk_agent.exe             (above with debugging symbols removed)
+The default make ('make-agent' without parameters) generates 4 binaries (2 for x86, 2 for x64):
+    check_mk_agent.exe             (debugging symbols removed)
+    check_mk_agent-64.exe          (debugging symbols removed)
+    wmitest.exe                    (debugging symbols removed)
+    wmitest-64.exe                 (debugging symbols removed)
 
-object files are stored in the subdirectories "obj" and "obj64", depends (header dependencies)
-are stored in "depend". The latter are only generated once (in the build process for x86)
-under the assumption that they don't differ between the builds.
+In order to create executables with all debugging symbols (that is, without stripping the symbols
+during the installation step), please call 'make-agent install'.
+
+Object files and other intermediate build artifacts are stored in the subdirectories "build" and
+"build64".
 
 ** Debugging
 
@@ -98,5 +101,3 @@ under the assumption that they don't differ between the builds.
 
 during the make project, the msitools are downloaded if necessary and a msi is generated.
 (details plx)
-
-The nsis installer files are currently not used.

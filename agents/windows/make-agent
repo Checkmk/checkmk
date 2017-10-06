@@ -1,18 +1,28 @@
 #!/bin/bash
 # The script builds Windows agent within a chroot jail.
 #
-# Possible targets given as parameter(s) to this script:
-#    setup    - install dependencies for chroot
-#    chroot   - create a chroot for building Windows agent
-#    *        - other targets passed to make within chroot, see Makefile
-#
-# Note: setup and chroot can be combined with explicit targets passed to make
-# inside chroot. However, giving setup or chroot without further targets does
-# *not* implicitly trigger default make target within chroot.
+# Options:
+#          -jN  where N is the number of parallel build jobs
+#          (for usage, see 'man make'). Default: half of available CPU cores.
+# Parameters:
+#          Possible make targets. By default, a parallel build and
+#          install-strip (non-debug) is done and an msi installer produced.
 
+while getopts "j:" arg ; do
+    case $arg in
+        j)
+            njobs=${OPTARG}
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+[ "$1" = "--" ] && shift
 targets="$@" # no parameter -> default make target
-setup_target=setup
-chroot_target=chroot
 chroot_dependencies=(debootstrap debian-archive-keyring)
 versionfile=chroot_version
 
@@ -23,67 +33,40 @@ base="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
 export CHROOT_PATH=${CHROOT_PATH:-$base/agents/windows/chroot}
 export CHROOT_BUILD_DIR=${CHROOT_BUILD_DIR:-build}
 
-setup() {
-    sudo apt-get install "${chroot_dependencies[@]}" 
-}
-
-ensure_chroot() {
-    # Ensure that versionfile exists...
-    if [ ! -f "$CHROOT_PATH/$versionfile" ] ; then
-        echo "chroot version not found."
-        create=yes
-    #  ... and it is up to date.
-    elif [ $(cat "$CHROOT_PATH/$versionfile") -ne $(cat "$base/agents/windows/$versionfile") ] ; then
-        echo "chroot is out of date."
-        create=yes
-    fi
-
-    if [ -z $create ] ; then
-        echo "chroot is up to date."
-    else
-        setup
-        sudo VERSIONFILE=$versionfile CHROOT_PATH=$CHROOT_PATH ./make-chroot
-    fi
-}
-
-remove_target() {
-    targets=$(sed -e "s/$1//g" \
-                  -e "s/^[[:blank:]]*//g" \
-                  -e "s/[[:blank:]]*$//g" <<< "$targets")
-}
-
 if [ ! -f "$base/agents/windows/$versionfile" ] ; then
     echo "Error: File $base/agents/windows/$versionfile not found."
     echo "Is your Git repository up to date?"
     exit 1
 fi
 
-# 1) setup target: install dependencies for chroot
-if [[ " $targets " =~ " $setup_target " ]] ; then
-    setup
-    remove_target $setup_target
+# Ensure that chroot exists and is up to date:
+# ensure that versionfile exists...
+if [ ! -f "$CHROOT_PATH/$versionfile" ] ; then
+    echo "chroot version not found."
+    create=yes
+    #  ... and it is up to date.
+elif [ $(cat "$CHROOT_PATH/$versionfile") -ne \
+       $(cat "$base/agents/windows/$versionfile") ] ; then
+    echo "chroot is out of date."
+    create=yes
 fi
 
-# 2) chroot target: create a chroot for building Windows agent
-if [[ " $targets " =~ " $chroot_target " ]] ; then
-    ensure_chroot
-    remove_target $chroot_target
+if [ -z $create ] ; then
+    echo "chroot is up to date."
+else
+    sudo apt-get -y install "${chroot_dependencies[@]}" 
+    sudo VERSIONFILE=$versionfile CHROOT_PATH=$CHROOT_PATH ./make-chroot
 fi
 
-# If no other targets are left but originally there was at least one,
-# we did either setup or chroot -> we are done now (let us not do default make)
-[ -z "$targets" ] && [ $# != 0 ] && exit
+# If njobs is not set, use half of available CPU cores.
+[[ -n $njobs ]] || njobs=$(($(grep -c processor /proc/cpuinfo)/2))
+[[ $njobs -le 0 ]] && njobs=1 # Ensure one core after arithmetic division.
 
-# 3) all other targets (including default target):
-
-# Ensure that chroot exists and is up to date.
-ensure_chroot
-
-# Pass remaining targets to make inside chroot.
-sudo CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR \
-    ./do-chroot "cd $CHROOT_BUILD_DIR/agents/windows; make $targets"
+# Build the Windows agent within chroot by calling the 'build-agent' script.
+sudo CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./do-chroot \
+     "$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets"
 
 # Some cleanup: chown build artifacts to the original user.
 find . -maxdepth 1 -regextype egrep \
--regex '(.*\.(exe|msi|rc|res))|.*\/obj.*|.*build_version|.*plugins|.*msibuild' \
+-regex '(.*\.(exe|msi|m4))|.*\/build.*|.*build_version|.*plugins|.*msibuild|.*Makefile.*|.*configure' \
 -exec sudo chown -R $USER:$USER {} \;

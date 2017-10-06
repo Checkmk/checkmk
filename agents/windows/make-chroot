@@ -48,6 +48,9 @@ rm -rf $CHROOT_PATH/*
 echo "+ INSTALLING SYSTEM"
 
 package_names=(
+    "autoconf"
+    "automake"
+    "build-essential"
     "ca-certificates"
     "gcc"
     "gettext"

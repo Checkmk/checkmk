@@ -1,8 +1,8 @@
 check_mk.ini
 logstate.txt
+build
+build64
 spool
-obj
-obj64
 success.log
 *.res
 *.rc
@@ -18,3 +18,5 @@ testtools
 chroot
 *.exe
 *.msi
+Makefile.in
+

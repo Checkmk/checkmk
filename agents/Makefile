@@ -64,10 +64,7 @@ setversion:
 
 build:
 	$(MAKE) packages
-	cd windows \
-	    && ./make-agent setup \
-	    && ./make-agent chroot \
-	    && ./make-agent
+	cd windows && ./make-agent
 
 packages: rpm deb
 

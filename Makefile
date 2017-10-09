@@ -546,12 +546,12 @@ cppcheck: compile_commands.json
 	@scripts/compiled_sources | \
 	grep /livestatus/src/ |\
 	sed 's/^"\(.*\)"$$/\1/' | \
-	( cd livestatus && $(CPPCHECK) -DHAVE_CONFIG_H -UCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --inline-suppr -I src -I .. -I . --file-list=- --quiet --template=gcc )
+	( cd livestatus && $(CPPCHECK) -DHAVE_CONFIG_H -UCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=passedByValue --inline-suppr -I src -I .. -I . --file-list=- --quiet --template=gcc )
 ifeq ($(ENTERPRISE),yes)
 	@scripts/compiled_sources | \
 	grep /enterprise/core/ |\
 	sed 's/^"\(.*\)"$$/\1/' | \
-	( cd enterprise/core/src && $(CPPCHECK) -DHAVE_CONFIG_H -DCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --inline-suppr -I . -I ../../.. -I livestatus -I checkhelper --file-list=- --quiet --template=gcc )
+	( cd enterprise/core/src && $(CPPCHECK) -DHAVE_CONFIG_H -DCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=passedByValue --inline-suppr -I . -I ../../.. -I livestatus -I checkhelper --file-list=- --quiet --template=gcc )
 endif
 
 # XML output into file intended for machine processing.
@@ -559,12 +559,12 @@ cppcheck-xml: compile_commands.json
 	scripts/compiled_sources | \
 	grep /livestatus/src/ |\
 	sed 's/^"\(.*\)"$$/\1/' | \
-	( cd livestatus && $(CPPCHECK) -DHAVE_CONFIG_H -UCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --inline-suppr -I src -I .. -I . --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml )
+	( cd livestatus && $(CPPCHECK) -DHAVE_CONFIG_H -UCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=passedByValue --inline-suppr -I src -I .. -I . --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml )
 ifeq ($(ENTERPRISE),yes)
 	scripts/compiled_sources | \
 	grep /enterprise/core/ |\
 	sed 's/^"\(.*\)"$$/\1/' | \
-	( cd enterprise/core/src && $(CPPCHECK) -DHAVE_CONFIG_H -DCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --inline-suppr -I . -I ../../.. -I livestatus -I checkhelper --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml )
+	( cd enterprise/core/src && $(CPPCHECK) -DHAVE_CONFIG_H -DCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=passedByValue --inline-suppr -I . -I ../../.. -I livestatus -I checkhelper --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml )
 endif
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in

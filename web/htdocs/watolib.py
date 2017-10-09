@@ -8244,10 +8244,11 @@ class Rule(object):
         return self.rule_options.get("comment", "")
 
 
-    def is_discovery_rule_of(self, host_name):
-        return self.host_list == [host_name] \
+    def is_discovery_rule_of(self, host):
+        return self.host_list == [host.name()] \
                and self.tag_specs == [] \
-               and all([ i.endswith("$") for i in self.item_list ])
+               and all([ i.endswith("$") for i in self.item_list ]) \
+               and self.folder.is_transitive_parent_of(host.folder())
 
 
 

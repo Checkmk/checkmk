@@ -1,0 +1,18 @@
+Title: Fixed disabling services via discovery page when a host rule exists in wrong folder
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1507532119
+
+Fixed two situation where disabling of services did not work correctly:
+
+<ul>
+    <li>When a specific disable services rule was existing but not applying to the host,
+        because it was located in a non parent folder.</li>
+    <li>When a specific disable services rule was existing in a partent folder of the
+        host and not in the same folder as the host.</li>
+</ul>

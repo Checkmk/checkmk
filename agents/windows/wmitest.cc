@@ -1,7 +1,12 @@
 #include <algorithm>
 #include <string>
 #include "stringutil.h"
+#include "WinApi.h"
 #include "wmiHelper.h"
+
+namespace {
+WinApi winapi;
+}
 
 void print_usage(const char *exe_name) {
     printf(
@@ -13,7 +18,7 @@ void print_usage(const char *exe_name) {
 }
 
 void print_namespace(const std::wstring &path, int depth = 0) {
-    wmi::Helper helper(path.c_str());
+    wmi::Helper helper(winapi, path.c_str());
 
     std::string offset = std::string(depth * 2, ' ');
     {
@@ -43,7 +48,7 @@ void print_namespace(const std::wstring &path, int depth = 0) {
 }
 
 void print_table(const std::string &ns, const std::string &pattern) {
-    wmi::Helper helper(to_utf16(ns.c_str()).c_str());
+    wmi::Helper helper(winapi, to_utf16(ns.c_str(), winapi).c_str());
 
     wmi::Result result = helper.query(L"SELECT * FROM meta_class");
     bool more = result.valid();
@@ -98,7 +103,7 @@ int main(int argc, char **argv) {
             if (argc < 3) {
                 print_namespace(L"Root");
             } else {
-                print_namespace(to_utf16(argv[2]).c_str());
+                print_namespace(to_utf16(argv[2], winapi).c_str());
             }
         }
 

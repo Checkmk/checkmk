@@ -82,8 +82,8 @@ fix_linebreaks:
 -include wmitest.d
 -include stringutil.d
 -include wmiHelper.d
-wmitest.exe: wmitest.o stringutil.o wmiHelper.o
-	$(CXX) $(COMMON_OPTS) $^ -o $@ -lwsock32 -lole32 -loleaut32 -lwbemuuid
+wmitest.exe: wmitest.o stringutil.o WinApi.o wmiHelper.o
+	$(CXX) $(COMMON_OPTS) $^ -o $@ -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp -lntdll
 
 # -----------------------------------------------------------------------------
 # 1. Create ressource files with version and product information. Note: That file

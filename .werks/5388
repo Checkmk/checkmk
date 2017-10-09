@@ -1,0 +1,11 @@
+Title: Dokuwiki: Fixed missing page edit dialog toolbar when using SLES
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507531365
+Class: fix
+
+The toolbar above the page edit text area on the edit page was missing when Check_MK
+is running on a SLES server.

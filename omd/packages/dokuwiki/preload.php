@@ -78,7 +78,9 @@ $config_cascade = array(
         'all'     => DOKU_CONF.'userall.css',
     ),
     'userscript' => array(
-        'default' => DOKU_CONF.'userscript.js'
+        'default' => array(
+            DOKU_CONF.'userscript.js',
+        ),
     ),
 );
 

@@ -591,7 +591,7 @@ def files_in_dir(part, dir, prefix = ""):
     result = []
     files = os.listdir(dir)
     for f in files:
-        if f in [ '.', '..' ] or f.startswith('.') or f.endswith('~'):
+        if f in [ '.', '..' ] or f.startswith('.') or f.endswith('~') or f.endswith(".pyc"):
             continue
 
         ignored = package_ignored_files.get(part, [])

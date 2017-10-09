@@ -1,0 +1,13 @@
+Title: MKP: Ignore *.pyc files when creating MKP packages
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507543532
+Class: fix
+
+Packing the compiled pyc files into MKP packages is not a good idea,
+because they are python version specific and can be created by the
+target system at any time. So better ignore these files when creating
+packages.

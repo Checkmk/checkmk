@@ -30,8 +30,6 @@
 #include "auth.h"
 #include "nagios.h"
 
-using std::string;
-
 extern host *host_list;
 extern hostgroup *hostgroup_list;
 
@@ -48,9 +46,9 @@ TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
                                 DANGEROUS_OFFSETOF(hostbygroup, _hostgroup));
 }
 
-string TableHostsByGroup::name() const { return "hostsbygroup"; }
+std::string TableHostsByGroup::name() const { return "hostsbygroup"; }
 
-string TableHostsByGroup::namePrefix() const { return "host_"; }
+std::string TableHostsByGroup::namePrefix() const { return "host_"; }
 
 void TableHostsByGroup::answerQuery(Query *query) {
     // When groupAuthorization() is set to AuthorizationKind::strict we need to
@@ -87,6 +85,6 @@ bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {
                              nullptr);
 }
 
-Row TableHostsByGroup::findObject(const string &objectspec) const {
+Row TableHostsByGroup::findObject(const std::string &objectspec) const {
     return Row(find_host(const_cast<char *>(objectspec.c_str())));
 }

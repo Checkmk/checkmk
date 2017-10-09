@@ -35,16 +35,12 @@ class Row;
 class OffsetTimeColumn : public TimeColumn {
 public:
     OffsetTimeColumn(const std::string& name, const std::string& description,
-                     int offset, int indirect_offset, int extra_offset,
-                     int extra_extra_offset)
+                     int indirect_offset, int extra_offset,
+                     int extra_extra_offset, int offset)
         : TimeColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset)
-        , _offset(offset) {}
+                     extra_extra_offset, offset) {}
 
     int32_t getValue(Row row, const contact* auth_user) const override;
-
-protected:
-    const int _offset;
 };
 
 #endif  // OffsetTimeColumn_h

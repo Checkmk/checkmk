@@ -28,30 +28,29 @@
 #include "Row.h"
 #include "TableEventConsoleEvents.h"
 
-using std::make_unique;
-using std::string;
-
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    addColumn(make_unique<IntEventConsoleColumn>(
+    addColumn(std::make_unique<IntEventConsoleColumn>(
         "history_line", "The line number of the event in the history file"));
-    addColumn(make_unique<TimeEventConsoleColumn>(
+    addColumn(std::make_unique<TimeEventConsoleColumn>(
         "history_time",
         "Time when the event was written into the history file (Unix timestamp)"));
-    addColumn(make_unique<StringEventConsoleColumn>(
+    addColumn(std::make_unique<StringEventConsoleColumn>(
         "history_what",
         "What happened (one of ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)"));
-    addColumn(make_unique<StringEventConsoleColumn>(
+    addColumn(std::make_unique<StringEventConsoleColumn>(
         "history_who", "The user who triggered the command"));
-    addColumn(make_unique<StringEventConsoleColumn>(
+    addColumn(std::make_unique<StringEventConsoleColumn>(
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID"));
     TableEventConsoleEvents::addColumns(this, mc);
 }
 
-string TableEventConsoleHistory::name() const { return "eventconsolehistory"; }
+std::string TableEventConsoleHistory::name() const {
+    return "eventconsolehistory";
+}
 
-string TableEventConsoleHistory::namePrefix() const {
+std::string TableEventConsoleHistory::namePrefix() const {
     return "eventconsolehistory_";
 }
 

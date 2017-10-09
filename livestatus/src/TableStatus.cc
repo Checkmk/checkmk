@@ -36,11 +36,6 @@
 #include "global_counters.h"
 #include "nagios.h"
 
-using std::make_unique;
-using std::string;
-
-// Nagios status values
-
 extern time_t program_start;
 extern int nagios_pid;
 #ifndef NAGIOS4
@@ -100,161 +95,162 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         Counter::livecheck_overflows);
 
     // Nagios program status data
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "nagios_pid", "The process ID of the Nagios main process",
         &nagios_pid));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "enable_notifications",
         "Whether notifications are enabled in general (0/1)",
         &enable_notifications));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "execute_service_checks",
         "Whether active service checks are activated in general (0/1)",
         &execute_service_checks));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "accept_passive_service_checks",
         "Whether passive service checks are activated in general (0/1)",
         &accept_passive_service_checks));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "execute_host_checks",
         "Whether host checks are executed in general (0/1)",
         &execute_host_checks));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "accept_passive_host_checks",
         "Whether passive host checks are accepted in general (0/1)",
         &accept_passive_host_checks));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "enable_event_handlers",
         "Whether event handlers are activated in general (0/1)",
         &enable_event_handlers));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "obsess_over_services",
         "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
         &obsess_over_services));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "obsess_over_hosts",
         "Whether Nagios will obsess over host checks (0/1)",
         &obsess_over_hosts));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "check_service_freshness",
         "Whether service freshness checking is activated in general (0/1)",
         &check_service_freshness));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "check_host_freshness",
         "Whether host freshness checking is activated in general (0/1)",
         &check_host_freshness));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "enable_flap_detection",
         "Whether flap detection is activated in general (0/1)",
         &enable_flap_detection));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "process_performance_data",
         "Whether processing of performance data is activated in general (0/1)",
         &process_performance_data));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",
         &check_external_commands));
-    addColumn(make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimePointerColumn>(
         "program_start", "The time of the last program start as UNIX timestamp",
         &program_start));
 #ifndef NAGIOS4
-    addColumn(make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimePointerColumn>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp",
         &last_command_check));
 #else
-    addColumn(make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimePointerColumn>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp (placeholder)",
         &dummy_time));
 #endif  // NAGIOS4
-    addColumn(make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimePointerColumn>(
         "last_log_rotation", "Time time of the last log file rotation",
         &last_log_rotation));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "interval_length", "The default interval length from nagios.cfg",
         &interval_length));
 
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "num_hosts", "The total number of hosts", &g_num_hosts));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "num_services", "The total number of services", &g_num_services));
 
-    addColumn(make_unique<StringPointerColumn>(
+    addColumn(std::make_unique<StringPointerColumn>(
         "program_version", "The version of the monitoring daemon",
         get_program_version()));
 
 // External command buffer
 #ifndef NAGIOS4
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands",
         &external_command_buffer_slots));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer",
         &(external_command_buffer.items)));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer",
         &(external_command_buffer.high)));
 #else
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands (placeholder)",
         &dummy_int));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer (placeholder)",
         &dummy_int));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer (placeholder)",
         &dummy_int));
 #endif  // NAGIOS4
 
     // Livestatus' own status
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "cached_log_messages",
         "The current number of log messages MK Livestatus keeps in memory",
         &num_cached_log_messages));
-    addColumn(make_unique<StringPointerColumn>(
+    addColumn(std::make_unique<StringPointerColumn>(
         "livestatus_version", "The version of the MK Livestatus module",
         VERSION));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus",
         &g_livestatus_active_connections));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "livestatus_queued_connections",
         "The current number of queued connections to MK Livestatus (that wait for a free thread)",
         &g_num_queued_connections));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<IntPointerColumn>(
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
         &g_livestatus_threads));
 
     // Special stuff for Check_MK
-    addColumn(make_unique<StatusSpecialIntColumn>(
+    addColumn(std::make_unique<StatusSpecialIntColumn>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
         -1, -1, -1, 0, mc, StatusSpecialIntColumn::Type::mk_inventory_last));
 }
 
-void TableStatus::addCounterColumns(const string &name,
-                                    const string &description, Counter which) {
-    addColumn(make_unique<DoublePointerColumn>(
+void TableStatus::addCounterColumns(const std::string &name,
+                                    const std::string &description,
+                                    Counter which) {
+    addColumn(std::make_unique<DoublePointerColumn>(
         name, "The number of " + description + " since program start",
         counterAddress(which)));
-    addColumn(make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoublePointerColumn>(
         name + "_rate", "The averaged number of " + description + " per second",
         counterRateAddress(which)));
 }
 
-string TableStatus::name() const { return "status"; }
+std::string TableStatus::name() const { return "status"; }
 
-string TableStatus::namePrefix() const { return "status_"; }
+std::string TableStatus::namePrefix() const { return "status_"; }
 
 void TableStatus::answerQuery(Query *query) {
     query->processDataset(Row(this));

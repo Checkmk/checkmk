@@ -36,98 +36,94 @@
 #include "TimeperiodColumn.h"
 #include "nagios.h"
 
-using std::make_unique;
-using std::string;
-using std::to_string;
-
 extern contact *contact_list;
 
 TableContacts::TableContacts(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", -1);
 }
 
-string TableContacts::name() const { return "contacts"; }
+std::string TableContacts::name() const { return "contacts"; }
 
-string TableContacts::namePrefix() const { return "contact_"; }
+std::string TableContacts::namePrefix() const { return "contact_"; }
 
 // static
-void TableContacts::addColumns(Table *table, const string &prefix,
+void TableContacts::addColumns(Table *table, const std::string &prefix,
                                int indirect_offset) {
-    table->addColumn(make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "name", "The login name of the contact person",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, name)));
-    table->addColumn(make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "alias", "The full name of the contact", indirect_offset, -1,
         -1, DANGEROUS_OFFSETOF(contact, alias)));
-    table->addColumn(make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "email", "The email address of the contact", indirect_offset,
         -1, -1, DANGEROUS_OFFSETOF(contact, email)));
-    table->addColumn(make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "pager", "The pager address of the contact", indirect_offset,
         -1, -1, DANGEROUS_OFFSETOF(contact, pager)));
-    table->addColumn(make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "host_notification_period",
         "The time period in which the contact will be notified about host problems",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, host_notification_period)));
-    table->addColumn(make_unique<OffsetStringColumn>(
+    table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "service_notification_period",
         "The time period in which the contact will be notified about service problems",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, service_notification_period)));
     for (int i = 1; i <= MAX_CONTACT_ADDRESSES; ++i) {
-        string b = "address" + to_string(i);
-        table->addColumn(make_unique<OffsetStringColumn>(
+        std::string b = "address" + std::to_string(i);
+        table->addColumn(std::make_unique<OffsetStringColumn>(
             prefix + b, "The additional field " + b, indirect_offset, -1, -1,
             DANGEROUS_OFFSETOF(contact, address[i])));
     }
 
-    table->addColumn(make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "can_submit_commands",
         "Wether the contact is allowed to submit commands (0/1)",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, can_submit_commands)));
-    table->addColumn(make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "host_notifications_enabled",
         "Wether the contact will be notified about host problems in general (0/1)",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, host_notifications_enabled)));
-    table->addColumn(make_unique<OffsetIntColumn>(
+    table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "service_notifications_enabled",
         "Wether the contact will be notified about service problems in general (0/1)",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, service_notifications_enabled)));
 
-    table->addColumn(make_unique<TimeperiodColumn>(
+    table->addColumn(std::make_unique<TimeperiodColumn>(
         prefix + "in_host_notification_period",
         "Wether the contact is currently in his/her host notification period (0/1)",
         indirect_offset,
         DANGEROUS_OFFSETOF(contact, host_notification_period_ptr), -1, 0));
-    table->addColumn(make_unique<TimeperiodColumn>(
+    table->addColumn(std::make_unique<TimeperiodColumn>(
         prefix + "in_service_notification_period",
         "Wether the contact is currently in his/her service notification period (0/1)",
         indirect_offset,
         DANGEROUS_OFFSETOF(contact, service_notification_period_ptr), -1, 0));
 
-    table->addColumn(make_unique<CustomVarsNamesColumn>(
+    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact", indirect_offset, -1,
         -1, DANGEROUS_OFFSETOF(contact, custom_variables)));
-    table->addColumn(make_unique<CustomVarsValuesColumn>(
+    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, custom_variables)));
-    table->addColumn(make_unique<CustomVarsDictColumn>(
+    table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, custom_variables)));
-    table->addColumn(make_unique<AttributeListAsIntColumn>(
+    table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, modified_attributes)));
-    table->addColumn(make_unique<AttributeListColumn>(
+    table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes", indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, modified_attributes)));
@@ -141,6 +137,6 @@ void TableContacts::answerQuery(Query *query) {
     }
 }
 
-Row TableContacts::findObject(const string &objectspec) const {
+Row TableContacts::findObject(const std::string &objectspec) const {
     return Row(find_contact(const_cast<char *>(objectspec.c_str())));
 }

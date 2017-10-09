@@ -33,33 +33,29 @@
 #include "MonitoringCore.h"
 #include "StringUtils.h"
 
-using std::string;
-using std::shared_ptr;
-using std::unique_ptr;
-
 Table::Table(MonitoringCore *mc) : _mc(mc) {}
 
 Table::~Table() = default;
 
-void Table::addColumn(unique_ptr<Column> col) {
-    string name = col->name();
+void Table::addColumn(std::unique_ptr<Column> col) {
+    std::string name = col->name();
     assert(column(name) == nullptr);
     _columns.emplace(name, move(col));
 }
 
-void Table::addDynamicColumn(unique_ptr<DynamicColumn> dyncol) {
-    string name = dyncol->name();
+void Table::addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol) {
+    std::string name = dyncol->name();
     _dynamic_columns.emplace(name, move(dyncol));
 }
 
-shared_ptr<Column> Table::column(string colname) const {
+std::shared_ptr<Column> Table::column(std::string colname) const {
     // Strip away a sequence of prefixes.
     while (mk::starts_with(colname, namePrefix())) {
         colname = colname.substr(namePrefix().size());
     }
 
     auto sep = colname.find(':');
-    if (sep != string::npos) {
+    if (sep != std::string::npos) {
         // TODO(sp) Use shared_ptr
         return dynamicColumn(colname.substr(0, sep), colname.substr(sep + 1));
     }
@@ -80,8 +76,8 @@ shared_ptr<Column> Table::column(string colname) const {
     return nullptr;
 }
 
-unique_ptr<Column> Table::dynamicColumn(const string &name,
-                                        const string &rest) const {
+std::unique_ptr<Column> Table::dynamicColumn(const std::string &name,
+                                             const std::string &rest) const {
     auto it = _dynamic_columns.find(name);
     if (it == _dynamic_columns.end()) {
         Warning(logger()) << "Unknown dynamic column '" << name << "'";
@@ -89,13 +85,13 @@ unique_ptr<Column> Table::dynamicColumn(const string &name,
     }
 
     auto sep_pos = rest.find(':');
-    if (sep_pos == string::npos) {
+    if (sep_pos == std::string::npos) {
         Warning(logger()) << "Missing separator in dynamic column '" << name
                           << "'";
         return nullptr;
     }
 
-    string name2 = rest.substr(0, sep_pos);
+    std::string name2 = rest.substr(0, sep_pos);
     if (name2.empty()) {
         Warning(logger()) << "Empty column name for dynamic column '" << name
                           << "'";
@@ -109,6 +105,8 @@ bool Table::isAuthorized(Row /*unused*/, const contact * /*unused*/) const {
     return true;
 }
 
-Row Table::findObject(const string & /*unused*/) const { return Row(nullptr); }
+Row Table::findObject(const std::string & /*unused*/) const {
+    return Row(nullptr);
+}
 
 Logger *Table::logger() const { return _mc->loggerLivestatus(); }

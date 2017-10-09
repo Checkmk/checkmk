@@ -29,9 +29,6 @@
 #include "Table.h"
 #include "TableHosts.h"
 
-using std::make_unique;
-using std::string;
-
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
     : TableEventConsole(mc) {
     addColumns(this, mc);
@@ -39,54 +36,54 @@ TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
 
 // static
 void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc) {
-    table->addColumn(make_unique<IntEventConsoleColumn>(
+    table->addColumn(std::make_unique<IntEventConsoleColumn>(
         "event_id", "The unique ID for this event"));
-    table->addColumn(make_unique<IntEventConsoleColumn>(
+    table->addColumn(std::make_unique<IntEventConsoleColumn>(
         "event_count",
         "The number of occurrences of this event within period"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_text", "The textual description of the event"));
-    table->addColumn(make_unique<TimeEventConsoleColumn>(
+    table->addColumn(std::make_unique<TimeEventConsoleColumn>(
         "event_first",
         "Time of the first occurrence of the event (Unix timestamp)"));
-    table->addColumn(make_unique<TimeEventConsoleColumn>(
+    table->addColumn(std::make_unique<TimeEventConsoleColumn>(
         "event_last",
         "Time of the last occurrence of this event (Unix timestamp)"));
-    table->addColumn(make_unique<StringEventConsoleColumn>("event_comment",
-                                                           "Event comment"));
-    table->addColumn(make_unique<IntEventConsoleColumn>(
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
+        "event_comment", "Event comment"));
+    table->addColumn(std::make_unique<IntEventConsoleColumn>(
         "event_sl", "The service level for this event"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_host", "Host name for this event"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_contact", "Contact information"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_application", "Syslog tag/application"));
-    table->addColumn(make_unique<IntEventConsoleColumn>(
+    table->addColumn(std::make_unique<IntEventConsoleColumn>(
         "event_pid", "The process ID of the originating process"));
-    table->addColumn(make_unique<IntEventConsoleColumn>("event_priority",
-                                                        "Syslog priority"));
-    table->addColumn(make_unique<IntEventConsoleColumn>("event_facility",
-                                                        "Syslog facility"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<IntEventConsoleColumn>(
+        "event_priority", "Syslog priority"));
+    table->addColumn(std::make_unique<IntEventConsoleColumn>(
+        "event_facility", "Syslog facility"));
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_rule_id", "The ID of the rule"));
-    table->addColumn(make_unique<IntEventConsoleColumn>(
+    table->addColumn(std::make_unique<IntEventConsoleColumn>(
         "event_state", "The state of the event (0/1/2/3)"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_phase",
         "The phase the event is currently in (one of open/closed/delayed/counting/ack)"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_owner", "The owner of the event"));
-    table->addColumn(make_unique<ListEventConsoleColumn>(
+    table->addColumn(std::make_unique<ListEventConsoleColumn>(
         "event_match_groups", "Text groups from regular expression match"));
-    table->addColumn(make_unique<ListEventConsoleColumn>("event_contact_groups",
-                                                         "Contact groups"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<ListEventConsoleColumn>(
+        "event_contact_groups", "Contact groups"));
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_contact_groups_precedence",
         "Whether or not the host- or rule groups have precedence"));
-    table->addColumn(make_unique<StringEventConsoleColumn>(
+    table->addColumn(std::make_unique<StringEventConsoleColumn>(
         "event_ipaddress", "The IP address where the event originated"));
-    table->addColumn(make_unique<IntEventConsoleColumn>(
+    table->addColumn(std::make_unique<IntEventConsoleColumn>(
         "event_host_in_downtime",
         "Whether or not the host (if found in core) was in downtime during event creation (0/1)"));
 
@@ -94,9 +91,11 @@ void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc) {
                            -1);
 }
 
-string TableEventConsoleEvents::name() const { return "eventconsoleevents"; }
+std::string TableEventConsoleEvents::name() const {
+    return "eventconsoleevents";
+}
 
-string TableEventConsoleEvents::namePrefix() const {
+std::string TableEventConsoleEvents::namePrefix() const {
     return "eventconsoleevents_";
 }
 

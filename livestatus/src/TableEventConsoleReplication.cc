@@ -29,20 +29,17 @@
 #include "Query.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::string;
-
 TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *mc)
     : Table(mc) {
-    addDynamicColumn(make_unique<DynamicEventConsoleReplicationColumn>(
+    addDynamicColumn(std::make_unique<DynamicEventConsoleReplicationColumn>(
         "value", "The replication value", mc, -1, -1, -1));
 }
 
-string TableEventConsoleReplication::name() const {
+std::string TableEventConsoleReplication::name() const {
     return "eventconsolereplication";
 }
 
-string TableEventConsoleReplication::namePrefix() const {
+std::string TableEventConsoleReplication::namePrefix() const {
     return "eventconsolereplication_";
 }
 

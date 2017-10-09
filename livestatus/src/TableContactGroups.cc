@@ -31,26 +31,23 @@
 #include "Query.h"
 #include "nagios.h"
 
-using std::make_unique;
-using std::string;
-
 extern contactgroup *contactgroup_list;
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(std::make_unique<OffsetStringColumn>(
         "name", "The name of the contactgroup", -1, -1, -1,
         DANGEROUS_OFFSETOF(contactgroup, group_name)));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(std::make_unique<OffsetStringColumn>(
         "alias", "The alias of the contactgroup", -1, -1, -1,
         DANGEROUS_OFFSETOF(contactgroup, alias)));
-    addColumn(make_unique<ContactGroupsMemberColumn>(
+    addColumn(std::make_unique<ContactGroupsMemberColumn>(
         "members", "A list of all members of this contactgroup", -1, -1, -1,
         0));
 }
 
-string TableContactGroups::name() const { return "contactgroups"; }
+std::string TableContactGroups::name() const { return "contactgroups"; }
 
-string TableContactGroups::namePrefix() const { return "contactgroup_"; }
+std::string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
 void TableContactGroups::answerQuery(Query *query) {
     for (contactgroup *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
@@ -60,6 +57,6 @@ void TableContactGroups::answerQuery(Query *query) {
     }
 }
 
-Row TableContactGroups::findObject(const string &objectspec) const {
+Row TableContactGroups::findObject(const std::string &objectspec) const {
     return Row(core()->find_contactgroup(objectspec));
 }

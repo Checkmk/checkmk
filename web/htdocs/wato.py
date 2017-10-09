@@ -1289,7 +1289,7 @@ def mode_edit_host(phase, new, is_cluster):
 
             html.context_button(_("Services"),
                   folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
-            if config.user.may('wato.download_agents'):
+            if has_agent_bakery() and config.user.may('wato.download_agents'):
                 html.context_button(_("Monitoring Agent"),
                   folder_preserving_link([("mode", "agent_of_host"), ("host", hostname)]), "agents")
             if config.user.may('wato.rulesets'):

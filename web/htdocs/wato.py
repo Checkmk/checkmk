@@ -2965,8 +2965,10 @@ class ModeDiscovery(WatoMode):
         except KeyError:
             ruleset = Ruleset("ignored_services")
 
+        modified_folders = []
+
         service_patterns = _compile_patterns(services)
-        self._remove_from_rule_of_host(ruleset, service_patterns, value=not value)
+        modified_folders += self._remove_from_rule_of_host(ruleset, service_patterns, value=not value)
 
         # Check whether or not the service still needs a host specific setting after removing
         # the host specific setting above and remove all services from the service list
@@ -2978,8 +2980,10 @@ class ModeDiscovery(WatoMode):
                 services.remove(service)
 
         service_patterns = _compile_patterns(services)
-        self._update_rule_of_host(ruleset, service_patterns, value=value)
-        rulesets.save_folder(self._host.folder())
+        modified_folders += self._update_rule_of_host(ruleset, service_patterns, value=value)
+
+        for folder in modified_folders:
+            rulesets.save_folder(folder)
 
 
     def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
@@ -2990,6 +2994,10 @@ class ModeDiscovery(WatoMode):
 
             if not other_rule.item_list:
                 ruleset.delete_rule(other_rule)
+
+            return [ other_rule.folder ]
+
+        return []
 
 
     def _update_rule_of_host(self, ruleset, service_patterns, value):
@@ -3007,10 +3015,15 @@ class ModeDiscovery(WatoMode):
             rule.value = value
             ruleset.prepend_rule(folder, rule)
 
+        if rule:
+            return [rule.folder]
+        else:
+            return []
+
 
     def _get_rule_of_host(self, ruleset, value):
         for folder, index, rule in ruleset.get_rules():
-            if rule.is_discovery_rule_of(self._host.name()) and rule.value == value:
+            if rule.is_discovery_rule_of(self._host) and rule.value == value:
                 return rule
         return None
 

@@ -24,13 +24,12 @@
 
 #include "OffsetTimeColumn.h"
 #include <ctime>
-#include "Column.h"
 #include "Row.h"
 
 int32_t OffsetTimeColumn::getValue(Row row,
                                    const contact* /* auth_user */) const {
-    if (auto p = columnData<void>(row)) {
-        return static_cast<int32_t>(*offset_cast<time_t>(p, _offset));
+    if (auto p = columnData<time_t>(row)) {
+        return static_cast<int32_t>(*p);
     }
     return 0;
 }

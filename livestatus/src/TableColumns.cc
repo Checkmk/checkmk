@@ -29,41 +29,37 @@
 #include "Query.h"
 #include "Row.h"
 
-using std::make_unique;
-using std::shared_ptr;
-using std::string;
-
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
-    addColumn(make_unique<ColumnsColumn>("table", "The name of the table", -1,
-                                         -1, -1, 0, ColumnsColumn::Type::table,
-                                         this));
-    addColumn(make_unique<ColumnsColumn>(
+    addColumn(std::make_unique<ColumnsColumn>(
+        "table", "The name of the table", -1, -1, -1, 0,
+        ColumnsColumn::Type::table, this));
+    addColumn(std::make_unique<ColumnsColumn>(
         "name", "The name of the column within the table", -1, -1, -1, 0,
         ColumnsColumn::Type::name, this));
-    addColumn(make_unique<ColumnsColumn>(
+    addColumn(std::make_unique<ColumnsColumn>(
         "description", "A description of the column", -1, -1, -1, 0,
         ColumnsColumn::Type::description, this));
-    addColumn(make_unique<ColumnsColumn>(
+    addColumn(std::make_unique<ColumnsColumn>(
         "type", "The data type of the column (int, float, string, list)", -1,
         -1, -1, 0, ColumnsColumn::Type::type, this));
 }
 
-string TableColumns::name() const { return "columns"; }
+std::string TableColumns::name() const { return "columns"; }
 
-string TableColumns::namePrefix() const { return "column_"; }
+std::string TableColumns::namePrefix() const { return "column_"; }
 
 void TableColumns::addTable(Table *table) { _tables.push_back(table); }
 
 void TableColumns::answerQuery(Query *query) {
     for (auto table : _tables) {
-        table->any_column([&](shared_ptr<Column> c) {
+        table->any_column([&](std::shared_ptr<Column> c) {
             return !query->processDataset(Row(c.get()));
         });
     }
 }
 
-string TableColumns::getValue(const Column *column,
-                              ColumnsColumn::Type colcol) const {
+std::string TableColumns::getValue(const Column *column,
+                                   ColumnsColumn::Type colcol) const {
     static const char *typenames[8] = {"int",  "float", "string", "list",
                                        "time", "dict",  "blob",   "null"};
 
@@ -80,10 +76,10 @@ string TableColumns::getValue(const Column *column,
     return "";
 }
 
-string TableColumns::tableNameOf(const Column *column) const {
+std::string TableColumns::tableNameOf(const Column *column) const {
     for (auto table : _tables) {
         if (table->any_column(
-                [&](shared_ptr<Column> c) { return c.get() == column; })) {
+                [&](std::shared_ptr<Column> c) { return c.get() == column; })) {
             return table->name();
         }
     }

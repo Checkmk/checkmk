@@ -30,8 +30,6 @@
 #include "auth.h"
 #include "nagios.h"
 
-using std::string;
-
 extern hostgroup *hostgroup_list;
 
 namespace {
@@ -48,9 +46,11 @@ TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
         this, "hostgroup_", DANGEROUS_OFFSETOF(servicebyhostgroup, _hostgroup));
 }
 
-string TableServicesByHostGroup::name() const { return "servicesbyhostgroup"; }
+std::string TableServicesByHostGroup::name() const {
+    return "servicesbyhostgroup";
+}
 
-string TableServicesByHostGroup::namePrefix() const { return "service_"; }
+std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByHostGroup::answerQuery(Query *query) {
     for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
@@ -71,6 +71,6 @@ bool TableServicesByHostGroup::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }
 
-Row TableServicesByHostGroup::findObject(const string &objectspec) const {
+Row TableServicesByHostGroup::findObject(const std::string &objectspec) const {
     return Row(getServiceBySpec(objectspec));
 }

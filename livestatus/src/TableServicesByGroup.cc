@@ -31,8 +31,6 @@
 #include "auth.h"
 #include "nagios.h"
 
-using std::string;
-
 extern servicegroup *servicegroup_list;
 
 namespace {
@@ -49,9 +47,9 @@ TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
         DANGEROUS_OFFSETOF(servicebygroup, _servicegroup));
 }
 
-string TableServicesByGroup::name() const { return "servicesbygroup"; }
+std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
 
-string TableServicesByGroup::namePrefix() const { return "service_"; }
+std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByGroup::answerQuery(Query *query) {
     // When groupAuthorization() is set to AuthorizationKind::strict we need to
@@ -89,6 +87,6 @@ bool TableServicesByGroup::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }
 
-Row TableServicesByGroup::findObject(const string &objectspec) const {
+Row TableServicesByGroup::findObject(const std::string &objectspec) const {
     return Row(getServiceBySpec(objectspec));
 }

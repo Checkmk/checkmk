@@ -26,20 +26,17 @@
 #include <memory>
 #include "Column.h"
 
-using std::make_unique;
-using std::string;
-
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    addColumn(
-        make_unique<StringEventConsoleColumn>("rule_id", "The ID of the rule"));
+    addColumn(std::make_unique<StringEventConsoleColumn>("rule_id",
+                                                         "The ID of the rule"));
 
-    addColumn(make_unique<IntEventConsoleColumn>(
+    addColumn(std::make_unique<IntEventConsoleColumn>(
         "rule_hits", "The times rule matched an incoming message"));
 }
 
-string TableEventConsoleRules::name() const { return "eventconsolerules"; }
+std::string TableEventConsoleRules::name() const { return "eventconsolerules"; }
 
-string TableEventConsoleRules::namePrefix() const {
+std::string TableEventConsoleRules::namePrefix() const {
     return "eventconsolerules_";
 }

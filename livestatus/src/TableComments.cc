@@ -40,48 +40,45 @@
 #include "auth.h"
 #include "nagios.h"
 
-using std::make_unique;
-using std::string;
-
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
-    addColumn(make_unique<OffsetSStringColumn>(
+    addColumn(std::make_unique<OffsetSStringColumn>(
         "author", "The contact that entered the comment", -1, -1, -1,
         DANGEROUS_OFFSETOF(Comment, _author_name)));
-    addColumn(make_unique<OffsetSStringColumn>(
+    addColumn(std::make_unique<OffsetSStringColumn>(
         "comment", "A comment text", -1, -1, -1,
         DANGEROUS_OFFSETOF(Comment, _comment)));
-    addColumn(make_unique<OffsetIntColumn>("id", "The id of the comment", -1,
-                                           -1, -1,
-                                           DANGEROUS_OFFSETOF(Comment, _id)));
-    addColumn(make_unique<OffsetTimeColumn>(
-        "entry_time", "The time the entry was made as UNIX timestamp",
-        DANGEROUS_OFFSETOF(Comment, _entry_time), -1, -1, -1));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
+        "id", "The id of the comment", -1, -1, -1,
+        DANGEROUS_OFFSETOF(Comment, _id)));
+    addColumn(std::make_unique<OffsetTimeColumn>(
+        "entry_time", "The time the entry was made as UNIX timestamp", -1, -1,
+        -1, DANGEROUS_OFFSETOF(Comment, _entry_time)));
+    addColumn(std::make_unique<OffsetIntColumn>(
         "type", "The type of the comment: 1 is host, 2 is service", -1, -1, -1,
         DANGEROUS_OFFSETOF(Comment, _type)));
-    addColumn(make_unique<OffsetBoolColumn>(
+    addColumn(std::make_unique<OffsetBoolColumn>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", -1, -1, -1,
         DANGEROUS_OFFSETOF(Comment, _is_service)));
 
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "persistent", "Whether this comment is persistent (0/1)", -1, -1, -1,
         DANGEROUS_OFFSETOF(Comment, _persistent)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "source", "The source of the comment (0 is internal and 1 is external)",
         -1, -1, -1, DANGEROUS_OFFSETOF(Comment, _source)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "entry_type",
         "The type of the comment: 1 is user, 2 is downtime, 3 is flap and 4 is acknowledgement",
         -1, -1, -1, DANGEROUS_OFFSETOF(Comment, _entry_type)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "expires", "Whether this comment expires", -1, -1, -1,
         DANGEROUS_OFFSETOF(Comment, _expires)));
-    addColumn(make_unique<OffsetTimeColumn>(
+    addColumn(std::make_unique<OffsetTimeColumn>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
-        DANGEROUS_OFFSETOF(Comment, _expire_time), -1, -1, -1));
+        -1, -1, -1, DANGEROUS_OFFSETOF(Comment, _expire_time)));
 
     TableHosts::addColumns(this, mc, "host_",
                            DANGEROUS_OFFSETOF(Comment, _host), -1);
@@ -90,9 +87,9 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
                               false /* no hosts table */);
 }
 
-string TableComments::name() const { return "comments"; }
+std::string TableComments::name() const { return "comments"; }
 
-string TableComments::namePrefix() const { return "comment_"; }
+std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query *query) {
     for (const auto &entry : core()->impl<Store>()->_comments) {

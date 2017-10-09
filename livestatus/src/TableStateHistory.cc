@@ -67,15 +67,6 @@ class VariadicFilter;
 #include "nagios.h"
 #endif
 
-using std::deque;
-using std::lock_guard;
-using std::make_unique;
-using std::map;
-using std::mutex;
-using std::set;
-using std::shared_ptr;
-using std::string;
-
 namespace {
 constexpr unsigned classmask_statehist =
     (1u << static_cast<int>(LogEntry::Class::alert)) |    //
@@ -86,7 +77,8 @@ constexpr unsigned classmask_statehist =
 
 #ifndef CMC
 namespace {
-string getCustomVariable(customvariablesmember *cvm, const string &name) {
+std::string getCustomVariable(customvariablesmember *cvm,
+                              const std::string &name) {
     for (; cvm != nullptr; cvm = cvm->next) {
         if (cvm->variable_name == name) {
             return cvm->variable_value == nullptr ? "" : cvm->variable_value;
@@ -99,105 +91,105 @@ string getCustomVariable(customvariablesmember *cvm, const string &name) {
 
 TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
-    addColumn(make_unique<OffsetTimeColumn>(
-        "time", "Time of the log event (seconds since 1/1/1970)",
-        DANGEROUS_OFFSETOF(HostServiceState, _time), -1, -1, -1));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetTimeColumn>(
+        "time", "Time of the log event (seconds since 1/1/1970)", -1, -1, -1,
+        DANGEROUS_OFFSETOF(HostServiceState, _time)));
+    addColumn(std::make_unique<OffsetIntColumn>(
         "lineno", "The number of the line in the log file", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _lineno)));
-    addColumn(make_unique<OffsetTimeColumn>(
-        "from", "Start time of state (seconds since 1/1/1970)",
-        DANGEROUS_OFFSETOF(HostServiceState, _from), -1, -1, -1));
-    addColumn(make_unique<OffsetTimeColumn>(
-        "until", "End time of state (seconds since 1/1/1970)",
-        DANGEROUS_OFFSETOF(HostServiceState, _until), -1, -1, -1));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetTimeColumn>(
+        "from", "Start time of state (seconds since 1/1/1970)", -1, -1, -1,
+        DANGEROUS_OFFSETOF(HostServiceState, _from)));
+    addColumn(std::make_unique<OffsetTimeColumn>(
+        "until", "End time of state (seconds since 1/1/1970)", -1, -1, -1,
+        DANGEROUS_OFFSETOF(HostServiceState, _until)));
+    addColumn(std::make_unique<OffsetIntColumn>(
         "duration", "Duration of state (until - from)", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _duration)));
-    addColumn(make_unique<OffsetDoubleColumn>(
+    addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part", "Duration part in regard to the query timeframe", -1,
         -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "state",
         "The state of the host or service in question - OK(0) / WARNING(1) / CRITICAL(2) / UNKNOWN(3) / UNMONITORED(-1)",
         -1, -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _state)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "host_down", "Shows if the host of this service is down", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _host_down)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "in_downtime", "Shows if the host or service is in downtime", -1, -1,
         -1, DANGEROUS_OFFSETOF(HostServiceState, _in_downtime)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "in_host_downtime", "Shows if the host of this service is in downtime",
         -1, -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _in_host_downtime)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "is_flapping", "Shows if the host or service is flapping", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _is_flapping)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "in_notification_period",
         "Shows if the host or service is within its notification period", -1,
         -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _in_notification_period)));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(std::make_unique<OffsetStringColumn>(
         "notification_period",
         "The notification period of the host or service in question", -1, -1,
         -1, DANGEROUS_OFFSETOF(HostServiceState, _notification_period)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "in_service_period",
         "Shows if the host or service is within its service period", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _in_service_period)));
-    addColumn(make_unique<OffsetSStringColumn>(
+    addColumn(std::make_unique<OffsetSStringColumn>(
         "service_period",
         "The service period of the host or service in question", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _service_period)));
-    addColumn(make_unique<OffsetSStringColumn>(
+    addColumn(std::make_unique<OffsetSStringColumn>(
         "debug_info", "Debug information", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _debug_info)));
-    addColumn(make_unique<OffsetSStringColumn>(
+    addColumn(std::make_unique<OffsetSStringColumn>(
         "host_name", "Host name", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _host_name)));
-    addColumn(make_unique<OffsetSStringColumn>(
+    addColumn(std::make_unique<OffsetSStringColumn>(
         "service_description", "Description of the service", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _service_description)));
-    addColumn(make_unique<OffsetSStringColumn>(
+    addColumn(std::make_unique<OffsetSStringColumn>(
         "log_output", "Logfile output relevant for this state", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _log_output)));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "duration_ok", "OK duration of state ( until - from )", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _duration_state_OK)));
-    addColumn(make_unique<OffsetDoubleColumn>(
+    addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_ok", "OK duration part in regard to the query timeframe",
         -1, -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part_OK)));
 
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "duration_warning", "WARNING duration of state (until - from)", -1, -1,
         -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_state_WARNING)));
-    addColumn(make_unique<OffsetDoubleColumn>(
+    addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_warning",
         "WARNING duration part in regard to the query timeframe", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _duration_part_WARNING)));
 
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "duration_critical", "CRITICAL duration of state (until - from)", -1,
         -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _duration_state_CRITICAL)));
-    addColumn(make_unique<OffsetDoubleColumn>(
+    addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_critical",
         "CRITICAL duration part in regard to the query timeframe", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _duration_part_CRITICAL)));
 
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "duration_unknown", "UNKNOWN duration of state (until - from)", -1, -1,
         -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_state_UNKNOWN)));
-    addColumn(make_unique<OffsetDoubleColumn>(
+    addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_unknown",
         "UNKNOWN duration part in regard to the query timeframe", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _duration_part_UNKNOWN)));
 
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(std::make_unique<OffsetIntColumn>(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
         -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _duration_state_UNMONITORED)));
-    addColumn(make_unique<OffsetDoubleColumn>(
+    addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_unmonitored",
         "UNMONITORED duration part in regard to the query timeframe", -1, -1,
         -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part_UNMONITORED)));
@@ -210,9 +202,9 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
                               false /* no hosts table */);
 }
 
-string TableStateHistory::name() const { return "statehist"; }
+std::string TableStateHistory::name() const { return "statehist"; }
 
-string TableStateHistory::namePrefix() const { return "statehist_"; }
+std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
 void TableStateHistory::getPreviousLogentry() {
     while (_it_entries == _entries->begin()) {
@@ -254,9 +246,9 @@ public:
     void visit(const ColumnFilter &f) override {
         if (_value) {
             auto column_name = f.columnName();
-            _value = mk::starts_with(column_name, string("current_")) ||
-                     mk::starts_with(column_name, string("host_")) ||
-                     mk::starts_with(column_name, string("service_"));
+            _value = mk::starts_with(column_name, std::string("current_")) ||
+                     mk::starts_with(column_name, std::string("host_")) ||
+                     mk::starts_with(column_name, std::string("service_"));
         }
     }
     void visit(const NegatingFilter & /*unused*/) override {}
@@ -267,7 +259,7 @@ public:
 
 class TimeperiodTransition {
 public:
-    explicit TimeperiodTransition(const string &str) {
+    explicit TimeperiodTransition(const std::string &str) {
         auto fields = mk::split(str, ';');
         if (fields.size() != 3) {
             throw std::invalid_argument("expected 3 arguments");
@@ -277,12 +269,12 @@ public:
         _to = std::stoi(fields[2]);
     }
 
-    string name() const { return _name; }
+    std::string name() const { return _name; }
     int from() const { return _from; }
     int to() const { return _to; }
 
 private:
-    string _name;
+    std::string _name;
     int _from;
     int _to;
 };
@@ -291,7 +283,7 @@ private:
 void TableStateHistory::answerQuery(Query *query) {
     // Create a partial filter, that contains only such filters that
     // check attributes of current hosts and services
-    deque<Filter *> object_filter;
+    std::deque<Filter *> object_filter;
 
     if (core()->stateHistoryFilteringEnabled()) {
         for (const auto &filter : *query->filter()) {
@@ -303,7 +295,7 @@ void TableStateHistory::answerQuery(Query *query) {
         }
     }
 
-    lock_guard<mutex> lg(_log_cache->_lock);
+    std::lock_guard<std::mutex> lg(_log_cache->_lock);
     if (!_log_cache->logCachePreChecks()) {
         return;
     }
@@ -312,10 +304,10 @@ void TableStateHistory::answerQuery(Query *query) {
     _abort_query = false;
 
     // Keep track of the historic state of services/hosts here
-    map<HostServiceKey, HostServiceState *> state_info;
+    std::map<HostServiceKey, HostServiceState *> state_info;
 
     // Store hosts/services that we have filtered out here
-    set<HostServiceKey> object_blacklist;
+    std::set<HostServiceKey> object_blacklist;
 
     _query = query;
     _since = 0;
@@ -938,16 +930,15 @@ bool TableStateHistory::isAuthorized(Row row, const contact *ctc) const {
            is_authorized_for(core(), ctc, hst, svc);
 }
 
-shared_ptr<Column> TableStateHistory::column(string colname) const {
+std::shared_ptr<Column> TableStateHistory::column(std::string colname) const {
     // First try to find column in the usual way
     if (auto col = Table::column(colname)) {
         return col;
     }
 
-    // Now try with prefix "current_", since our joined
-    // tables have this prefix in order to make clear that
-    // we access current and not historic data and in order
-    // to prevent mixing up historic and current fields with
-    // the same name.
-    return Table::column(string("current_") + colname);
+    // Now try with prefix "current_", since our joined tables have this prefix
+    // in order to make clear that we access current and not historic data and
+    // in order to prevent mixing up historic and current fields with the same
+    // name.
+    return Table::column(std::string("current_") + colname);
 }

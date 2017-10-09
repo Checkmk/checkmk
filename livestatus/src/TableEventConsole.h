@@ -132,7 +132,7 @@ protected:
     public:
         TimeEventConsoleColumn(const std::string &name,
                                const std::string &description)
-            : TimeColumn(name, description, -1, -1, -1)
+            : TimeColumn(name, description, -1, -1, -1, 0)
             , _ecc(*this, 0, [](std::string x) {
                 return static_cast<int32_t>(atof(x.c_str()));
             }) {}

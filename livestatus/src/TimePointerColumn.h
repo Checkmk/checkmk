@@ -37,7 +37,7 @@ class TimePointerColumn : public TimeColumn {
 public:
     TimePointerColumn(const std::string &name, const std::string &description,
                       const time_t *number)
-        : TimeColumn(name, description, -1, -1, -1), _number(number) {}
+        : TimeColumn(name, description, -1, -1, -1, 0), _number(number) {}
 
     int32_t getValue(Row /* row */,
                      const contact * /* auth_user */) const override {

@@ -33,15 +33,10 @@
 #include "Logger.h"
 #include "Query.h"
 
-using std::ostream;
-using std::static_pointer_cast;
-using std::string;
-using std::vector;
-
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *mc, string table_name, Query *query)
+    ECTableConnection(MonitoringCore *mc, std::string table_name, Query *query)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
         , _mc(mc)
@@ -54,21 +49,23 @@ private:
         os << std::nounitbuf << "GET " << _table_name
            << "\nOutputFormat: plain\nColumns:";
         for (const auto &c : _query->allColumns()) {
-            os << " " << c->name();
+            if (!mk::starts_with(c->name(), "host_")) {
+                os << " " << c->name();
+            }
         }
         os << std::endl;
     }
 
     void receiveReply(std::istream &is) override {
         bool is_header = true;
-        vector<string> headers;
+        std::vector<std::string> headers;
         do {
-            string line;
+            std::string line;
             std::getline(is, line);
             if (!is || line.empty()) {
                 return;
             }
-            vector<string> columns = mk::split(line, '\t');
+            std::vector<std::string> columns = mk::split(line, '\t');
             if (is_header) {
                 headers = std::move(columns);
                 is_header = false;
@@ -114,7 +111,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row, contact *ctc) {
     auto r = rowData<ECRow>(row);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
-    auto precedence = static_pointer_cast<StringEventConsoleColumn>(
+    auto precedence = std::static_pointer_cast<StringEventConsoleColumn>(
                           column("event_contact_groups_precedence"))
                           ->getValue(row);
     if (precedence == "rule") {
@@ -133,7 +130,7 @@ bool TableEventConsole::isAuthorizedForEvent(Row row, contact *ctc) {
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     MonitoringCore::Contact *ctc, ECRow *row, bool &result) {
-    auto col = static_pointer_cast<ListEventConsoleColumn>(
+    auto col = std::static_pointer_cast<ListEventConsoleColumn>(
         column("event_contact_groups"));
     if (col->isNone(row)) {
         return false;

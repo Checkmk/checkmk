@@ -184,7 +184,6 @@ class MillisecondsFormatter : public Formatter {
 // service stuff. At least, let us *not* make these yet another global variables
 // and access them from other compilation units...
 const WinApi s_winapi;
-Logger *s_logger = Logger::getLogger("winagent");
 
 struct GlobalConfig {
     Configuration parser;
@@ -516,20 +515,21 @@ void usage() {
 }
 
 void do_debug(const Environment &env) {
-    const auto saveLevel = s_logger->getLevel();
-    s_logger->setLevel(LogLevel::notice);
+    Logger *logger = Logger::getLogger("winagent");
+    const auto saveLevel = logger->getLevel();
+    logger->setLevel(LogLevel::notice);
 
     FileOutputProxy dummy(do_file ? fileout : stdout);
 
     output_data(dummy, env, false, *s_config->section_flush);
-    s_logger->setLevel(saveLevel);
+    logger->setLevel(saveLevel);
 }
 
 void do_test(bool output_stderr, const Environment &env) {
     // TODO: Set logger handler to match fileout / stdout
     with_stderr = output_stderr;
     FileOutputProxy dummy(do_file ? fileout : stdout);
-    Notice(s_logger) << "Started in test mode.";
+    Notice(Logger::getLogger("winagent")) << "Started in test mode.";
     output_data(dummy, env, false, *s_config->section_flush);
 }
 
@@ -547,6 +547,7 @@ bool ctrl_handler(DWORD fdwCtrlType) {
 
 DWORD WINAPI realtime_check_func(void *data_in) {
     ThreadData *data = (ThreadData *)data_in;
+    Logger *logger = Logger::getLogger("winagent");
 
     try {
         sockaddr_storage current_address;
@@ -554,13 +555,12 @@ DWORD WINAPI realtime_check_func(void *data_in) {
         SOCKET current_socket = INVALID_SOCKET;
 
         std::unique_ptr<BufferedSocketProxy> out;
-
         if (*s_config->encrypted_rt) {
             out.reset(new EncryptingBufferedSocketProxy(
-                INVALID_SOCKET, *s_config->passphrase, s_logger, s_winapi));
+                INVALID_SOCKET, *s_config->passphrase, logger, s_winapi));
         } else {
             out.reset(
-                new BufferedSocketProxy(INVALID_SOCKET, s_logger, s_winapi));
+                new BufferedSocketProxy(INVALID_SOCKET, logger, s_winapi));
         }
 
         timeval before;
@@ -640,7 +640,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                         current_socket = s_winapi.socket(
                             current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
                         if (current_socket == INVALID_SOCKET) {
-                            Emergency(s_logger)
+                            Emergency(logger)
                                 << "failed to establish socket: "
                                 << s_winapi.WSAGetLastError();
                             return 1;
@@ -648,7 +648,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                         if (s_winapi.connect(current_socket,
                                              (const sockaddr *)&current_address,
                                              sockaddr_size) == SOCKET_ERROR) {
-                            Emergency(s_logger) << "failed to connect: "
+                            Emergency(logger) << "failed to connect: "
                                                 << s_winapi.WSAGetLastError();
                             s_winapi.closesocket(current_socket);
                             current_socket = INVALID_SOCKET;
@@ -680,16 +680,17 @@ DWORD WINAPI realtime_check_func(void *data_in) {
 
         return 0;
     } catch (const std::exception &e) {
-        Alert(s_logger) << "failed to run realtime check: " << e.what();
+        Alert(logger) << "failed to run realtime check: " << e.what();
         return 1;
     }
 }
 
 void do_adhoc(const Environment &env) {
     g_should_terminate = false;
+    Logger *logger = Logger::getLogger("winagent");
 
     ListenSocket sock(*s_config->port, *s_config->only_from,
-                      *s_config->support_ipv6, s_logger, s_winapi);
+                      *s_config->support_ipv6, logger, s_winapi);
 
     printf("Listening for TCP connections (%s) on port %d\n",
            sock.supportsIPV6()
@@ -717,7 +718,7 @@ void do_adhoc(const Environment &env) {
     foreach_enabled_section(
         false, [](Section *section) { section->waitForCompletion(); });
 
-    ThreadData thread_data{0,   false,          env, s_logger, false,
+    ThreadData thread_data{0,   false,          env, logger, false,
                            {0}, Mutex{s_winapi}};
     Thread realtime_checker(realtime_check_func, thread_data, s_winapi);
 
@@ -730,9 +731,9 @@ void do_adhoc(const Environment &env) {
 
     if (*s_config->encrypted) {
         out.reset(new EncryptingBufferedSocketProxy(
-            INVALID_SOCKET, *s_config->passphrase, s_logger, s_winapi));
+            INVALID_SOCKET, *s_config->passphrase, logger, s_winapi));
     } else {
-        out.reset(new BufferedSocketProxy(INVALID_SOCKET, s_logger, s_winapi));
+        out.reset(new BufferedSocketProxy(INVALID_SOCKET, logger, s_winapi));
     }
 
     while (!g_should_terminate) {
@@ -745,7 +746,7 @@ void do_adhoc(const Environment &env) {
             }
 
             std::string ip_hr = sock.readableIP(connection);
-            Debug(s_logger)
+            Debug(logger)
                 << "Accepted client connection from " << ip_hr << ".";
             {  // limit lifetime of mutex lock
                 MutexLock guard(thread_data.mutex);
@@ -760,7 +761,7 @@ void do_adhoc(const Environment &env) {
             try {
                 output_data(*out, env, false, *s_config->section_flush);
             } catch (const std::exception &e) {
-                Alert(s_logger) << "unhandled exception: " << e.what();
+                Alert(Logger::getLogger("winagent")) << "unhandled exception: " << e.what();
             }
             s_winapi.closesocket(connection);
         }
@@ -774,7 +775,7 @@ void do_adhoc(const Environment &env) {
 
     if (realtime_checker.wasStarted()) {
         int res = realtime_checker.join();
-        Debug(s_logger) << "Realtime check thread ended with error code " << res
+        Debug(logger) << "Realtime check thread ended with error code " << res
                         << ".";
     }
 
@@ -964,10 +965,11 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     // base directory structure on current working directory or registered dir
     // (from registry)?
     bool use_cwd = !strcmp(mode, "adhoc") || !strcmp(mode, "test");
-    Environment env(use_cwd, s_logger, s_winapi);
+    Logger *logger = Logger::getLogger("winagent");
+    Environment env(use_cwd, logger, s_winapi);
 
     s_config = new GlobalConfig(env);
-    s_sections = new SectionManager(s_config->parser, s_logger, s_winapi);
+    s_sections = new SectionManager(s_config->parser, logger, s_winapi);
 
     // careful: destroying the section manager destroys the wmi helpers created
     // for
@@ -984,19 +986,19 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     s_config->parser.readSettings();
 
     if (!*s_config->crash_debug) {  // default level already LogLevel::debug
-        s_logger->setLevel(LogLevel::warning);
+        logger->setLevel(LogLevel::warning);
     }
 
     const std::string logFilename = env.logDirectory() + "\\agent.log";
 
     if (strcmp(mode, "debug")) {  // if not debugging, use log file
         // TODO: Make logfile rotation parameters configurable
-        s_logger->setHandler(std::make_unique<RotatingFileHandler>(
+        logger->setHandler(std::make_unique<RotatingFileHandler>(
             logFilename, std::make_unique<FileRotationApi>(),
             8388608 /* 8 MB */, 5));
     }
 
-    if (Handler *handler = s_logger->getHandler()) {
+    if (Handler *handler = logger->getHandler()) {
         handler->setFormatter(make_unique<MillisecondsFormatter>());
     }
 
@@ -1038,7 +1040,7 @@ void RunImmediate(const char *mode, int argc, char **argv) {
 }
 
 inline LONG WINAPI exception_handler(LPEXCEPTION_POINTERS ptrs) {
-    return CrashHandler(s_logger, s_winapi).handleCrash(ptrs);
+    return CrashHandler(Logger::getLogger("winagent"), s_winapi).handleCrash(ptrs);
 }
 
 int main(int argc, char **argv) {
@@ -1051,7 +1053,7 @@ int main(int argc, char **argv) {
     if ((argc > 2) && (strcmp(argv[1], "file") && strcmp(argv[1], "unpack"))) {
         // need to parse config so we can display defaults in usage
         bool use_cwd = true;
-        Environment env(use_cwd, s_logger, s_winapi);
+        Environment env(use_cwd, Logger::getLogger("winagent"), s_winapi);
         s_config = new GlobalConfig(env);
         usage();
     }

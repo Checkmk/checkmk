@@ -54,5 +54,5 @@ check_info['ucd_disk'] = {
     'snmp_scan_function'        : avoid_ucd_scan_function,
     "group"                     : "filesystem",
     'default_levels_variable'   : "filesystem_default_levels",
-    'includes'                  : [ "ucd.include", "df.include" ],
+    'includes'                  : [ "ucd.include", "size_trend.include", "df.include" ],
 }

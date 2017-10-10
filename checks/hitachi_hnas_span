@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_includes["hitachi_hnas_span"] = [ "df.include" ]
+check_includes["hitachi_hnas_span"] = [ "size_trend.include", "df.include" ]
 
 def inventory_hitachi_hnas_span(info):
     mplist = []
@@ -56,5 +56,5 @@ check_info["hitachi_hnas_span"] = {
     "snmp_scan_function"    : hitachin_hnas_scan_function,
     "group"                  : "filesystem",
     "default_levels_variable": "filesystem_default_levels",
-    "includes"              : [ "hitachi_hnas.include" ],
+    "includes"              : [ "size_trend.include", "hitachi_hnas.include" ],
 }

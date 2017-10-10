@@ -55,7 +55,7 @@ check_info['scaleio_sds'] = {
     'service_description'   : 'ScaleIO SDS capacity %s',
     'group'                 : "filesystem",
     'has_perfdata'          : True,
-    'includes'              : [ 'df.include' ],
+    'includes'              : [ 'size_trend.include', 'df.include' ],
 }
 
 def inventory_scaleio_sds_status(parsed):

@@ -45,7 +45,7 @@ check_info["emc_datadomain_fs"] = {
     "check_function"          : check_emc_datadomain_fs,
     "inventory_function"      : inventory_emc_datadomain_fs,
     "service_description"     : "DD-Filesystem %s",
-    "includes"                : [ "df.include" ],
+    "includes"                : [ "size_trend.include", "df.include" ],
     "group"                   : "filesystem",
     "default_levels_variable" : "filesystem_default_levels",
     "has_perfdata"            : True,

@@ -54,5 +54,5 @@ check_info['3par_system'] = {
     'inventory_function'    : inventory_3par_system,
     'check_function'        : check_3par_system,
     'service_description'   : "3PAR %s",
-    'includes'              : [ "3par.include", "df.include" ]
+    'includes'              : [ "3par.include", "size_trend.include", "df.include" ]
 }

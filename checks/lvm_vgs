@@ -44,5 +44,5 @@ check_info['lvm_vgs'] = {
     "has_perfdata"            : True,
     "group"                   : "volume_groups",
     "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "df.include" ]
+    "includes"                : [ "size_trend.include", "df.include" ]
 }

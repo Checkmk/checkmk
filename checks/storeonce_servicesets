@@ -116,5 +116,5 @@ check_info['storeonce_servicesets.capacity'] = {
     'service_description'   : "ServiceSet %s Capacity",
     'has_perfdata'          : True,
     'group'                 : "filesystem",
-    'includes'              : [ "df.include" ],
+    'includes'              : [ "size_trend.include", "df.include" ],
 }

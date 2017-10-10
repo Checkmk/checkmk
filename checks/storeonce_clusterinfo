@@ -156,7 +156,7 @@ check_info['storeonce_clusterinfo.space'] = {
     'check_function'          : check_storeonce_clusterinfo_space,
     'service_description'     : "%s",
     'has_perfdata'            : True,
-    'includes'                : [ "df.include"],
+    'includes'                : [ "size_trend.include", "df.include"],
     'group'                   : "filesystem",
     'default_levels_variable' : "filesystem_Default_levels",
 }

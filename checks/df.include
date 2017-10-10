@@ -25,145 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 
-def trend_computation(levels, this_time, mountpoint, used_mb, size_mb):
-    # Returns a tuple of (status, infotext, perfdata) for the trend
-    # computation. If a MKCounterWrapped occurs (i.e. there is not enough
-    # data present for the trend computation) the tuple (0, '', []) is
-    # returned.
-    #
-    # The trends are computed in two steps. In the first step we compute
-    # the delta to the last check, using a normal check_mk counter.
-    # In the second step we compute an average over that counter and can
-    # make a long-time prediction. If we have that values we can optionally
-    # apply levels.
-
-    # Trend parameters:
-    #    "trend_range"    : 24,        # hours
-    #    "trend_mb"       : (10, 20),  # MB of change during trend_range
-    #    "trend_perc"     : (1, 2),    # Percent change during trend_range
-    #    "trend_timeleft" : (72, 48)   # run time left in hours until full
-
-    status, infotext, perfdata, problems = 0, '', [], []
-
-    MB = 1024 * 1024.0
-    H24 = 60 * 60 * 24
-
-    range_hours = levels["trend_range"]
-    range_sec = range_hours * 3600.0
-    if not this_time:
-        this_time = time.time()
-
-    # first compute current rate in MB/s by computing delta since last check
-    try:
-        rate = get_rate("df.%s.delta" % mountpoint, this_time, used_mb, allow_negative=True, onwrap=ZERO)
-    except MKCounterWrapped:
-        # need more data for computing a trend
-        return 0, '', []
-
-    if levels.get("trend_perfdata"):
-        # Change in 1.1.13i3: The trend perfdata always outputs
-        # the growth in MB/24h, not any longer in MB/trendrange
-        perfdata.append(("growth", rate * H24))
-
-    # average trend, initialize with zero, rate_avg is in MB/s
-    rate_avg = get_average("df.%s.trend" % mountpoint, this_time,
-                           rate, range_sec / 60.0, True)
-
-    # rate_avg is growth in MB/s, trend is in MB per trend range hours
-    trend = rate_avg * range_sec
-    sign = '+' if trend > 0 else ""
-    infotext += ", trend: %s%s / %g hours" % \
-        (sign, get_bytes_human_readable(trend * MB), range_hours)
-
-    # levels for performance data
-    warn_perf, crit_perf = None, None
-
-    # apply levels for absolute growth in MB / interval
-    trend_mb = levels.get("trend_mb")
-    if trend_mb:
-        wa, cr = trend_mb
-        warn_perf, crit_perf = wa, cr
-        if trend >= wa:
-            problems.append("growing too fast (warn/crit at %s/%s per %.1f h)(!" %
-            ( get_bytes_human_readable(wa * MB), get_bytes_human_readable(cr * MB), range_hours))
-            status = max(1, status)
-            if trend >= cr:
-                status = 2
-                problems[-1] += "!"
-            problems[-1] += ")"
-    else:
-        wa, cr = None, None
-
-    # apply levels for growth relative to filesystem size
-    trend_perc = levels.get("trend_perc")
-    if trend_perc:
-        wa_perc, cr_perc = trend_perc
-        wa = wa_perc / 100.0 * size_mb
-        cr = cr_perc / 100.0 * size_mb
-        if warn_perf != None:
-            warn_perf = min(warn_perf, wa)
-            crit_perf = min(crit_perf, cr)
-        else:
-            warn_perf, crit_perf = wa, cr
-        if trend >= wa:
-            problems.append("growing too fast (warn/crit at %.3f%%/%.3f%% per %.1f h)(!" %
-            ( wa_perc, cr_perc, range_hours))
-            status = max(1, status)
-            if trend >= cr:
-                status = 2
-                problems[-1] += "!"
-            problems[-1] += ")"
-
-
-    # compute time until filesystem is full (only for positive trend, of course)
-
-    # The start value of hours_left is negative. The pnp graph and the perfometer
-    # will interpret this as inifinite -> not growing
-    hours_left = -1
-    if trend > 0:
-        space_left = size_mb - used_mb
-        hours_left = space_left / trend * range_hours
-        timeleft = levels.get("trend_timeleft")
-        def format_hours(hours):
-            if hours > 365 * 24:
-                return "more than a year"
-            elif hours > 90 * 24:
-                return "%0d months" % (hours/ (30 * 24))
-            elif hours > 4 * 7 * 24: # 4 weeks
-                return "%0d weeks" % (hours/ (7 * 24))
-            elif hours > 7 * 24:   # 1 week
-                return "%0.1f weeks" % (hours/ (7 * 24))
-            elif hours > 2 * 24:   # 2 days
-                return "%0.1f days" % (hours/24)
-            else:
-                return "%d hours" % hours
-
-        if timeleft:
-            wa, cr = timeleft
-            if hours_left <= cr:
-                status = 2
-                problems.append("only %s until disk full(!!)" % format_hours(hours_left))
-            elif hours_left <= wa:
-                status = max(status, 1)
-                problems.append("only %s until disk full(!)" % format_hours(hours_left))
-            elif hours_left <= wa * 2 or levels.get("trend_showtimeleft"):
-                problems.append("time left until disk full: %s" % format_hours(hours_left))
-        elif levels.get("trend_showtimeleft"):
-            problems.append("time left until disk full: %s" % format_hours(hours_left))
-
-    if levels.get("trend_perfdata"):
-        perfdata.append(("trend", rate_avg * H24,
-                        warn_perf != None and (warn_perf / range_sec * H24) or None,
-                        crit_perf != None and (crit_perf / range_sec * H24) or None,
-                        0, size_mb / range_hours))
-
-    if levels.get("trend_showtimeleft"):
-        perfdata.append(("trend_hoursleft", hours_left))
-
-    if problems:
-        infotext += " - %s" % ", ".join(problems)
-
-    return status, infotext, perfdata
+# If the size_trend function is not provided via size_trend.include raise
+# an exception to provide an error message to the user. If dependencies
+# between include files are possible this will not be necessary anymore.
+if 'size_trend' not in globals():
+    def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
+        raise MKGeneralException('Function size_trend not found. Please include '
+                                 '"size_trend.include" in your check')
 
 
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
@@ -495,7 +363,9 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
             perfdata.append(("reserved", reserved_mb))
 
     if levels.get("trend_range"):
-        trend_status, trend_infotext, trend_perfdata = trend_computation(levels, this_time, mountpoint, used_mb, size_mb)
+        trend_status, trend_infotext, trend_perfdata = size_trend(
+            'df', mountpoint, "disk", levels, used_mb, size_mb, this_time
+        )
         status = max(status, trend_status)
         infotext += trend_infotext
         perfdata.extend(trend_perfdata)

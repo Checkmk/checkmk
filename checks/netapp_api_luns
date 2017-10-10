@@ -72,6 +72,6 @@ check_info["netapp_api_luns"] = {
     'service_description'     : 'LUN %s',
     'has_perfdata'            : True,
     'group'                   : "netapp_luns",
-    'includes'                : [ "df.include", "netapp_api.include" ],
+    'includes'                : [ "size_trend.include", "df.include", "netapp_api.include" ],
     "default_levels_variable" : "netapp_api_luns_default_levels",
 }

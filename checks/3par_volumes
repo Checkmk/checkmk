@@ -76,5 +76,5 @@ check_info['3par_volumes'] = {
     'service_description'   : "Volume %s",
     'has_perfdata'          : True,
     'group'                 : "filesystem",
-    'includes'              : [ "3par.include", "df.include" ]
+    'includes'              : [ "3par.include", "size_trend.include", "df.include" ]
 }

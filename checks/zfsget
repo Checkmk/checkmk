@@ -219,5 +219,5 @@ check_info['zfsget'] = {
     "has_perfdata"            : True,
     "group"                   : "filesystem",
     "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "df.include" ],
+    "includes"                : [ "size_trend.include", "df.include" ],
 }

@@ -24,9 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_includes['df_netapp'] = [ "df.include", "df_netapp.include" ]
-
-
+check_includes['df_netapp'] = [ "size_trend.include", "df.include", "df_netapp.include" ]
 
 
 check_info["df_netapp"] = {

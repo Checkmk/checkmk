@@ -86,6 +86,6 @@ check_info['zpool'] = {
     "service_description" : "Storage Pool %s",
     "has_perfdata"        : True,
     "group"               : "filesystem",
-    "includes"            : ["df.include"],
+    "includes"            : ["size_trend.include", "df.include"],
 }
 

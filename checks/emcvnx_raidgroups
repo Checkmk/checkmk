@@ -213,7 +213,7 @@ check_info['emcvnx_raidgroups.capacity'] = {
     "service_description"     : "RAID Group %s Capacity",
     "has_perfdata"            : True,
     "group"                   : "filesystem",
-    "includes"                : [ "df.include" ],
+    "includes"                : [ "size_trend.include", "df.include" ],
     "default_levels_variable" : "filesystem_default_levels",
 }
 
@@ -261,7 +261,7 @@ check_info['emcvnx_raidgroups.capacity_contiguous'] = {
     "service_description"     : "RAID Group %s Capacity Contiguous",
     "has_perfdata"            : True,
     "group"                   : "filesystem",
-    "includes"                : [ "df.include" ],
+    "includes"                : [ "size_trend.include", "df.include" ],
     "default_levels_variable" : "filesystem_default_levels",
 }
 

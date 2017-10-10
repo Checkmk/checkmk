@@ -54,7 +54,7 @@ check_info['scaleio_pd'] = {
     'inventory_function'    : inventory_scaleio_pd,
     'check_function'        : check_scaleio_pd,
     'service_description'   : 'ScaleIO PD capacity %s',
-    'includes'              : [ "scaleio.include", "df.include" ],
+    'includes'              : [ "scaleio.include", "size_trend.include", "df.include" ],
     'has_perfdata'          : True,
     'group'                 : "filesystem",
 }

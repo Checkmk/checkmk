@@ -51,7 +51,7 @@ check_info["netapp_api_aggr"] = {
     'service_description'     : 'Aggregation %s',
     'group'                   : 'filesystem',
     'has_perfdata'            : True,
-    'includes'                : [ "df.include", "netapp_api.include" ],
+    'includes'                : [ "size_trend.include", "df.include", "netapp_api.include" ],
     'default_levels_variable' : 'filesystem_default_levels',
 
 }

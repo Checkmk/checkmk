@@ -176,5 +176,5 @@ check_info["oracle_asm_diskgroup"] = {
     'has_perfdata'            : True,
     'group'                   : 'asm_diskgroup',
     'default_levels_variable' : 'asm_diskgroup_default_levels',
-    "includes"                : [ "df.include" ],
+    "includes"                : [ "size_trend.include", "df.include" ],
 }

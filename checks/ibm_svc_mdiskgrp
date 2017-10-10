@@ -126,7 +126,7 @@ check_info["ibm_svc_mdiskgrp"] = {
     "service_description"     : "Pool Capacity %s",
     "has_perfdata"            : True,
     "group"                   : "ibm_svc_mdiskgrp",
-    "includes"                : [ "df.include" ],
+    "includes"                : [ "size_trend.include", "df.include" ],
     "default_levels_variable" : "filesystem_default_levels",
 }
 

@@ -85,5 +85,5 @@ check_info["hitachi_hnas_volume"] = {
     "snmp_scan_function"    : hitachin_hnas_scan_function,
     "group"                  : "filesystem",
     "default_levels_variable": "filesystem_default_levels",
-    "includes"              : ["df.include", "hitachi_hnas.include"],
+    "includes"              : ["size_trend.include", "df.include", "hitachi_hnas.include"],
 }

@@ -401,7 +401,7 @@ check_info["libelle_business_shadow.archive_dir"] = {
     "service_description"   : "Libelle Business Shadow %s",
     "has_perfdata"          : True,
     "group"                 : "filesystem",
-    "includes"              : [ "df.include" ],
+    "includes"              : [ "size_trend.include", "df.include" ],
 }
 
 #.

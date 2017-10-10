@@ -118,7 +118,7 @@ check_info['esx_vsphere_datastores'] = {
     "inventory_function"      : inventory_esx_vsphere_datastores,
     "check_function"          : check_esx_vsphere_datastores,
     "service_description"     : "Filesystem %s",
-    "includes"                : [ 'df.include' ],
+    "includes"                : [ 'size_trend.include', 'df.include' ],
     "has_perfdata"            : True,
     "group"                   : "esx_vsphere_datastores",
     "default_levels_variable" : "filesystem_default_levels",

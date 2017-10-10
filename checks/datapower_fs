@@ -56,7 +56,7 @@ check_info["datapower_fs"] = {
     "inventory_function"      : inventory_datapower_fs,
     "check_function"          : check_datapower_fs,
     "service_description"     : "Filesystem %s",
-    "includes"                : [ "df.include" ],
+    "includes"                : [ "size_trend.include", "df.include" ],
     "group"                   : "filesystem",
     "default_levels_variable" : "filesystem_default_levels",
     "has_perfdata"            : True,

@@ -58,7 +58,8 @@ check_info['scaleio_storage_pool'] = {
     'inventory_function'    : inventory_scaleio_storage_pool,
     'check_function'        : check_scaleio_storage_pool,
     'service_description'   : 'ScaleIO SP capacity %s',
-    'includes'              : [ 'scaleio.include', 'df.include', 'diskstat.include' ],
+    'includes'              : [ 'scaleio.include', 'size_trend.include',
+                                'df.include', 'diskstat.include' ],
     'has_perfdata'          : True,
     'group'                 : 'filesystem',
 }

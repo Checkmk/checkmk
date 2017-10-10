@@ -205,7 +205,7 @@ check_info['hp_msa_volume.df'] = {
     'has_perfdata'              : True,
     "group"                     : "filesystem",
     'default_levels_variable'   : "filesystem_default_levels",
-    'includes'                  : [ "hp_msa.include", "df.include" ],
+    'includes'                  : [ "hp_msa.include", "size_trend.include", "df.include" ],
 }
 
 

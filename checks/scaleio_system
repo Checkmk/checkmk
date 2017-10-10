@@ -51,7 +51,7 @@ check_info['scaleio_system'] = {
     'inventory_function'    : inventory_scaleio_system,
     'check_function'        : check_scaleio_system,
     'service_description'   : 'ScaleIO System %s',
-    'includes'              : [ 'df.include', 'scaleio.include' ],
+    'includes'              : [ 'size_trend.include', 'df.include', 'scaleio.include' ],
     'group'                 : 'filesystem',
     'has_perfdata'          : True,
 }

@@ -46,7 +46,7 @@ check_info["fast_lta_silent_cubes.capacity"] = {
     "service_description"   : "Fast LTA SC Capacity %s",
     "has_perfdata"          : True,
     "group"                 : "filesystem",
-    "includes"              : [ "df.include" ],
+    "includes"              : [ "size_trend.include", "df.include" ],
     "snmp_info"             : (".1.3.6.1.4.1.27417.3", [2, # scTotalCapacity
                                                         3] # scTotalUsedCapacity
                               ),

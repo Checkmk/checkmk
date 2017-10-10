@@ -1,0 +1,13 @@
+Title: Fixed recently introduced issue with non working WATO rules
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p15
+Date: 1507633099
+Class: fix
+
+In 1.4.0p14 an internal caching mechanism was changed.
+This broke some caches and caused unexpected behaviours,
+because most configurable rules were considered as empty.
+

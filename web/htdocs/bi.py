@@ -979,7 +979,7 @@ class BIJobManager(object):
                 time.sleep(0.05)
 
             try:
-                check_title_uniqueness(g_bi_cache_manager.get_compiled_trees()["forest"])
+                check_aggregation_title_uniqueness(g_bi_cache_manager.get_compiled_trees()["aggr_ref"])
             except MKConfigError, e:
                 error_info += str(e)
 
@@ -1670,6 +1670,8 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
 
 def check_title_uniqueness(forest):
+    # Legacy, will be removed any decade from now
+    # One aggregation cannot be in mutliple groups.
     known_titles = set()
     for group, aggrs in forest.iteritems():
         for aggr in aggrs:
@@ -1682,6 +1684,21 @@ def check_title_uniqueness(forest):
                     html.attrencode(title)))
             else:
                 known_titles.add(title)
+
+
+def check_aggregation_title_uniqueness(aggregations):
+    known_titles = set()
+    for attrs in aggregations.values():
+        title = attrs["title"]
+        if title in known_titles:
+            raise MKConfigError(_("Duplicate BI aggregation with the title \"<b>%s</b>\". "
+                     "Please check your BI configuration and make sure that within each group no aggregation has "
+                     "the same title as any other. Note: you can use arguments in the top level "
+                     "aggregation rule, like <tt>Host $HOST$</tt>.") % \
+                     (html.attrencode(title)))
+        else:
+            known_titles.add(title)
+
 
 # Execute an aggregation rule, but prepare arguments
 # and iterate FOREACH first

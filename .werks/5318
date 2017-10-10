@@ -1,0 +1,13 @@
+Title: BI aggregations can be configured to be in multiple groups
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1507646464
+
+Previously if more than one group were stated in the
+configuration of any aggregation, the related view displayed
+an error {{Duplicate BI aggregation}}. Fixed that.

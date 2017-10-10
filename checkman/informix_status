@@ -8,9 +8,9 @@ description:
  Informix Database application.
 
  The check is OK if the instance status is in state
- initialization, quiescent, recovery, backup, shutdown,
- online, abort, single user.
- It goes CRIT if the state is offline.
+ initialization or online. It is WARN if the state is
+ quiescent, recovery, backup, abort or single user and
+ it goes CRIT if the state is shutdown or offline.
 
 item:
  Instance name.

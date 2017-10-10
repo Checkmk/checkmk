@@ -48,13 +48,13 @@ def inventory_informix_status(parsed):
 def check_informix_status(item, params, parsed):
     map_states = {
         "0": (0, "initialization"),
-        "1": (0, "quiescent"),
-        "2": (0, "recovery"),
-        "3": (0, "backup"),
-        "4": (0, "shutdown"),
+        "1": (1, "quiescent"),
+        "2": (1, "recovery"),
+        "3": (1, "backup"),
+        "4": (2, "shutdown"),
         "5": (0, "online"),
-        "6": (0, "abort"),
-        "7": (0, "single user"),
+        "6": (1, "abort"),
+        "7": (1, "single user"),
         "-1": (2, "offline"),
         "255": (2, "offline"),
     }

@@ -94,6 +94,10 @@ class Cache(object):
         self._populated = True
 
 
+    def set_not_populated(self):
+        self._populated = False
+
+
 
 # Just a small wrapper round a dict to get some caching specific functionality
 # for analysis etc.
@@ -129,10 +133,20 @@ class DictCache(dict, Cache):
         }
 
 
+    def clear(self):
+        super(DictCache, self).clear()
+        self.set_not_populated()
+
+
+
 class SetCache(set, Cache):
-    pass
+    def clear(self):
+        super(SetCache, self).clear()
+        self.set_not_populated()
+
 
 
 class ListCache(list, Cache):
     def clear(self):
         del self[:] # Clear the list in place
+        self.set_not_populated()

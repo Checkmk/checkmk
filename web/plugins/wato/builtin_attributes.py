@@ -482,3 +482,31 @@ declare_host_attribute(ValueSpecAttribute("management_snmp_community",
     show_in_folder = False,
     topic = _("Management Board")
 )
+
+
+class SiteAttribute(ValueSpecAttribute):
+    def __init__(self):
+        # Default is is the local one, if one exists or
+        # no one if there is no local site
+        ValueSpecAttribute.__init__(self, "site", SiteChoice(
+            title=_("Monitored on site"),
+            help=_("Specify the site that should monitor this host."),
+            default_value = default_site,
+            invalid_choice_error = _("The configured site is not known to this site. In case you "
+                                     "are configuring in a distributed slave, this may be a host "
+                                     "monitored by another site. If you want to modify this "
+                                     "host, you will have to change the site attribute to the "
+                                     "local site. But this may make the host be monitored from "
+                                     "multiple sites.")
+        ))
+
+    def get_tag_list(self, value):
+        if value == False:
+            return [ "site:" ]
+        elif value != None:
+            return [ "site:" + value ]
+        else:
+            return []
+
+
+declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)

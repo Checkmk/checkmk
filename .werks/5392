@@ -1,0 +1,23 @@
+Title: Fixed host monitored from all sites after editing custom host attributes
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p16
+Date: 1507729401
+Class: fix
+
+In distributed environments it could happen that all configured hosts are monitored
+from all configured sites.
+
+The now fixed issue was triggered by saving (adding/editing/removing) custom host attributes
+using the "WATO > Hosts > Custom host attributes" dialog.
+
+Background: This editing step was undeclaring the internal "site" attribute by accident
+and rewriting all hosts.mk files. These files were missing the "site:..." host tag in the
+all_hosts data structure. This makes all sites think that they are responsible for these
+hosts.
+
+The configured site information of the hosts/folders was not lost because it was retained
+in the host_attributes data strucuture. So the hosts.mk files could be "repaired" by
+saving the hosts, parent folders or host tags.

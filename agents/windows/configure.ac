@@ -4,6 +4,10 @@
 AC_PREREQ([2.69])
 AC_INIT([Check_MK Windows Agent], [1.5.0i1], [feedback@check-mk.org])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
+AC_CONFIG_COMMANDS([check_chroot], \
+                   [[[ -z $CHROOTNAME ]] && \
+                   echo "Not allowed outside chroot. Please call './make-agent' instead." && \
+                   exit 1])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 

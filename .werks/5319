@@ -1,0 +1,10 @@
+Title: lnx_if: Now this check is cluster-aware
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507733715
+Class: feature
+
+

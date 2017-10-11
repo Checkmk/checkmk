@@ -137,7 +137,6 @@ def init_watolib_datastructures():
         prepare_git_commit()
 
     declare_host_tag_attributes() # create attributes out of tag definitions
-    declare_site_attribute()      # create attribute for distributed WATO
 
 #.
 #   .--Constants-----------------------------------------------------------.
@@ -3845,7 +3844,6 @@ class CRESiteManagement(object):
         if activate:
             config.load_config() # make new site configuration active
             update_distributed_wato_file(sites)
-            declare_site_attribute()
             Folder.invalidate_caches()
             need_sidebar_reload()
 
@@ -3919,8 +3917,6 @@ def our_site_id():
         if config.site_is_local(site_id):
             return site_id
     return None
-
-
 
 
 def create_nagvis_backends(sites):
@@ -4165,36 +4161,6 @@ def get_event_console_sync_sites():
 
 # TODO: cleanup all call sites to this name
 site_choices = config.site_choices
-
-
-def declare_site_attribute():
-    undeclare_host_attribute("site")
-    declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
-
-
-class SiteAttribute(ValueSpecAttribute):
-    def __init__(self):
-        # Default is is the local one, if one exists or
-        # no one if there is no local site
-        ValueSpecAttribute.__init__(self, "site", SiteChoice(
-            title=_("Monitored on site"),
-            help=_("Specify the site that should monitor this host."),
-            default_value = default_site(),
-            invalid_choice_error = _("The configured site is not known to this site. In case you "
-                                     "are configuring in a distributed slave, this may be a host "
-                                     "monitored by another site. If you want to modify this "
-                                     "host, you will have to change the site attribute to the "
-                                     "local site. But this may make the host be monitored from "
-                                     "multiple sites.")
-        ))
-
-    def get_tag_list(self, value):
-        if value == False:
-            return [ "site:" ]
-        elif value != None:
-            return [ "site:" + value ]
-        else:
-            return []
 
 
 def load_site_replication_status(site_id, lock=False):

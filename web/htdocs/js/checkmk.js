@@ -3265,7 +3265,8 @@ function pagetype_add_to_container(page_type, page_name)
 function graph_export()
 {
     var request = {
-        "specification": popup_data[2]
+        "specification": popup_data[2]["definition"]["specification"],
+        "data_range": popup_data[2]["data_range"],
     };
     location.href = "graph_export.py?request=" + encodeURIComponent(JSON.stringify(request));
 }

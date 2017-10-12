@@ -1,0 +1,18 @@
+Title: agent_vsphere: change of the option "Display VM power state on"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507799865
+Class: feature
+
+The option "Display VM power state on" of the WATO rule now displays
+the power state of VMs <i>additionally</i> on either the ESX host or
+the VM. The option is therefore renamed to "Display power state
+additionally on". This will result in services for <i>both</i> the
+queried system and the ESX host / VM. By disabling the unwanted
+services it is then possible to configure where the corresponding
+services are displayed. Because the data is now still available on
+the queried system the service "Object count" will now display the
+correct count when the option is used.

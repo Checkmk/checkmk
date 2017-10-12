@@ -206,7 +206,7 @@ class html_mod_python(htmllib.html):
         except IOError, e:
             # Catch writing problems to client, prevent additional writes
             self.io_error = True
-            self.log('%s' % e)
+            logger.debug('%s' % e)
 
     def get_button_counts(self):
         return config.user.load_file("buttoncounts", {})

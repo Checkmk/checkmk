@@ -28,6 +28,9 @@ def check_http_arguments(params):
     description, settings = params
     args = []
 
+    if "verbose" in settings:
+        args += [ "-v" ]
+
     if "vhost" in settings:
         args += [ "-H", settings["vhost"] ]
 

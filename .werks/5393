@@ -1,0 +1,22 @@
+Title: MySQL agent plugin: With agent bakery it's now possible to use a local mysql config file
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1507793522
+Class: feature
+
+By default the mk_mysql agent plugin is using the /etc/check_mk/mysql.cfg configuration file
+to load the configuration set in the agent bakery. This file is under control of the bakery
+and may not be modified by the user locally.
+
+It is now possible to include an optional file that the user is allowed to store and modify
+locally. This may be useful in case on wants to put the agent under bakery control, but
+don't want to store the database credentials in the bakery. Instead of that the credentials
+can be put into this file manually.
+
+The new file is loaded from the same directory as the mysql.cfg and it must be named
+mysql.local.cfg. When using the default paths, the full path is: 
+<tt>/etc/check_mk/mysql.local.cfg</tt>.
+

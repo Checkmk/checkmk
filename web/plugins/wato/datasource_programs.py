@@ -158,7 +158,13 @@ register_rule(group,
                  ),
                  ( "vm_pwr_display",
                    DropdownChoice(
-                       title = _("Display VM power state on"),
+                       title = _("Display VM power state <i>additionally</i> on"),
+                       help = _("The power state can be displayed additionally either "
+                                "on the ESX host or the VM. This will result in services "
+                                "for <i>both</i> the queried system and the ESX host / VM. "
+                                "By disabling the unwanted services it is then possible "
+                                "to configure where the services are displayed."
+                       ),
                        choices = [
                            ( None,      _("The queried ESX system (vCenter / Host)") ),
                            ( "esxhost", _("The ESX Host") ),

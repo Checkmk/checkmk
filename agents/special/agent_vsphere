@@ -1662,8 +1662,7 @@ if not error:
                             host_info = "hostsystem\t%s\t\t%s" % (converted_hostname, hostsystems_properties[hostname]["runtime.powerState"][0])
                             if opt_host_pwr_display == "esxhost" and not opt_direct:
                                 host_piggy_data.setdefault(converted_hostname, []).append(host_info)
-                            else:
-                                output(host_info)
+                            output(host_info)
 
             if "virtualmachine" in query_objects:
                 for key in vms.keys():
@@ -1676,8 +1675,7 @@ if not error:
                         vm_piggy_data.setdefault(vm_name, []).append(vm_info)
                     elif opt_vm_pwr_display == "esxhost" and not opt_direct:
                         host_piggy_data.setdefault(running_on, []).append(vm_info)
-                    else:
-                        output(vm_info)
+                    output(vm_info)
 
             if "virtualmachine" in query_objects and "hostsystem" in query_objects and opt_host_pwr_display == "vm":
                 def find_host(hostname):

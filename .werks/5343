@@ -1,0 +1,10 @@
+Title: Bulk import for custom attributes of hosts
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507812901
+Class: feature
+
+Adds the possibility to import custom attributes of hosts with bulk imports.

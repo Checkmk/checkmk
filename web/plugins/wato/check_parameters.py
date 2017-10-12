@@ -12022,6 +12022,14 @@ register_check_parameters(
                      title = _("Trend performance data"),
                      label = _("Enable generation of performance data from trends"))
                ),
+               ( "read_only",
+                 Checkbox(
+                     title = _("LUN is read-only"),
+                     help = _("Display a warning if a LUN is not read-only. Without "
+                              "this setting a warning will be displayed if a LUN is "
+                              "read-only."),
+                     label = _("Enable"))
+               ),
       ]
     ),
     TextAscii(title = _("LUN name")),

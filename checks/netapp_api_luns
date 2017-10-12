@@ -31,6 +31,7 @@ factory_settings["netapp_api_luns_default_levels"] = {
     "levels"          : (80.0, 90.0), # warn/crit in percent
     "trend_range"     : 24,
     "trend_perfdata"  : True,    # do send performance data for trends
+    "read_only"       : False,
 }
 
 def inventory_netapp_api_luns(parsed):
@@ -47,8 +48,10 @@ def check_netapp_api_luns(item, params, parsed):
     if lun.get("online") != "true":
         yield 2, "LUN is offline"
 
-    if lun.get("read-only") != "false":
-        yield 1, "read-only is %s" % lun.get("read-only")
+    read_only = lun.get("read-only") == "true"
+    if read_only != params.get("read_only"):
+        expected = str(params.get("read_only")).lower()
+        yield 1, "read-only is %s (expected: %s)" % (lun.get("read-only"), expected)
 
     mega = 1024.0 * 1024.0
     size_total = int(lun.get("size")) / mega

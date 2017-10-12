@@ -1,0 +1,11 @@
+Title: Distributed monitoring: Fixed race condition when unpacking snapshots
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1507797868
+
+Fix exception during snapshot extraction when a file planned for removal was deleted by another process.

@@ -614,7 +614,7 @@ def cleanup_dir(root_path, exclude_files=None):
 
     for path in paths_to_remove:
         if os.path.exists(path) and os.path.isdir(path):
-            shutil.rmtree(path)
+            shutil.rmtree(path, ignore_errors=True)
 
     for filename in files_to_remove:
         if os.path.dirname(filename) not in paths_to_remove:
@@ -625,9 +625,9 @@ def wipe_directory(path):
         if entry not in [ '.', '..' ]:
             p = path + "/" + entry
             if os.path.isdir(p):
-                shutil.rmtree(p)
+                shutil.rmtree(p, ignore_errors=True)
             else:
-		try:
+                try:
                     os.remove(p)
                 except OSError as e:
                     if e.errno == 2:  # no such file or directory

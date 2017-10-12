@@ -54,7 +54,6 @@ package_names=(
     "ca-certificates"
     "gcc"
     "gettext"
-    "git"
     "lcab"
     "libauthen-sasl-perl"
     "libc6-dev"

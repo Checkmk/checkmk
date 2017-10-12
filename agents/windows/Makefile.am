@@ -12,21 +12,17 @@ check_mk_agent_LDADD = check_mk_agent.res $(LD_COMMON)
 
 wmitest_LDADD = $(LD_COMMON)
 
-# A left-over generated rc file in parent dir may disturb the build process.
-clean_check_mk_agent_rc:
-	rm -f ../check_mk_agent.rc
+build_version: $(check_mk_agent_SOURCES:.cc=.o)
+	echo $$(( $$(cat $(VPATH)/build_version) + 1 )) > $(VPATH)/build_version
 
-check_mk_agent.rc:
-	BUILD_VERSION=$$(( $$(cat ../build_version) + 1 )) ; \
-	echo $$BUILD_VERSION > ../build_version ; \
-	ln -s ../check_mk_agent.ico check_mk_agent.ico ; \
+check_mk_agent.rc: $(VPATH)/check_mk_agent.rc.in build_version
 	sed -e "s/%VERSION%/$(VERSION)/g" \
 	    -e "s/%YEAR%/$$(date +%Y)/g" \
-	    -e "s/%BUILD_VERSION%/$$BUILD_VERSION/g" \
-	    ../check_mk_agent.rc.in > check_mk_agent.rc
+	    -e "s/%BUILD_VERSION%/$$(cat $(VPATH)/build_version)/g" $< > $@
 
-check_mk_agent.res: check_mk_agent.rc | clean_check_mk_agent_rc
-	$(WINDRES) $^ -O coff -o $@
+check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
+	cp $(VPATH)/check_mk_agent.ico check_mk_agent.ico
+	$(WINDRES) $< -O coff -o $@
 
 check_mk_agent_SOURCES = \
         Configurable.cc \
@@ -51,7 +47,6 @@ check_mk_agent_SOURCES = \
         Thread.cc \
         WinApi.cc \
         check_mk_agent.cc \
-        check_mk_agent.rc \
         stringutil.cc \
         types.cc \
         win_error.cc \
@@ -78,11 +73,16 @@ check_mk_agent_SOURCES = \
 
 wmitest_SOURCES = wmitest.cc stringutil.cc WinApi.cc wmiHelper.cc
 
-clean-local:
-	-rm -f check_mk_agent.*
-	-rm -f $(addprefix $(bindir)/,$(bin_PROGRAMS)) \
-	$(patsubst %$(EXEEXT),%-64$(EXEEXT),$(addprefix $(bindir)/,$(bin_PROGRAMS))) \
-	$(patsubst %$(EXEEXT),%.msi,$(addprefix $(bindir)/,$(bin_PROGRAMS)))
+CLEANFILES = \
+        *.ico *.res *.rc config.* stamp-* Makefile \
+        sections/.dirstamp \
+        $$(find .deps/ sections/.deps -type f) \
+        $(addprefix $(bindir)/,$(bin_PROGRAMS)) \
+        $(patsubst %$(EXEEXT),%-64$(EXEEXT),$(addprefix $(bindir)/,$(bin_PROGRAMS))) \
+        $(patsubst %$(EXEEXT),%.msi,$(addprefix $(bindir)/,$(bin_PROGRAMS)))
 
 setversion:
-	sed -i 's/^AC_INIT.*/AC_INIT([Check_MK Windows Agent], ['"$(NEW_VERSION)"'], [feedback@check-mk.org])/' ../configure.ac
+	package="Check_MK Windows Agent" ; \
+	mail=feedback@check-mk.org ; \
+	sed -i "s/^AC_INIT.*/AC_INIT([$$package], [$(NEW_VERSION)], [$$mail])/" \
+	    $(VPATH)/configure.ac

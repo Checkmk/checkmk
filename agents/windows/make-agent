@@ -63,7 +63,10 @@ fi
 [[ $njobs -le 0 ]] && njobs=1 # Ensure one core after arithmetic division.
 
 # Build the Windows agent within chroot by calling the 'build-agent' script.
-sudo CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./do-chroot \
+sudo CHROOT_PATH=$CHROOT_PATH \
+     CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR \
+     NEW_VERSION=$NEW_VERSION \
+     ./do-chroot \
      "$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets"
 EXIT_CODE=$?
 

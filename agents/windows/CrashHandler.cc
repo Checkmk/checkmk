@@ -135,8 +135,8 @@ LONG WINAPI CrashHandler::handleCrash(LPEXCEPTION_POINTERS ptrs) const {
                    << static_cast<unsigned int>(
                           ptrs->ExceptionRecord->ExceptionCode)
                    << " from address "
-                   << ptrs->ExceptionRecord->ExceptionAddress << " (revision "
-                   << VCS_REV << ")";
+                   << ptrs->ExceptionRecord->ExceptionAddress << " (Check_MK Version "
+                   << CHECK_MK_VERSION << ")";
 
 #ifdef __x86_64
 

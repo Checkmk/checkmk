@@ -1,10 +1,8 @@
 bin_PROGRAMS = check_mk_agent wmitest
 
 AUTOMAKE_OPTIONS = foreign
-GIT_REV = $(shell git rev-parse --verify --short HEAD)
 COMMON_OPTS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++14 -gdwarf-2 \
-              -DCHECK_MK_VERSION='"$(VERSION)"' -D__USE_MINGW_ANSI_STDIO \
-              -DVCS_REV=\"$(VERSION)-$(GIT_REV)\"
+              -DCHECK_MK_VERSION='"$(VERSION)"' -D__USE_MINGW_ANSI_STDIO
 AM_CPPFLAGS = $(COMMON_OPTS)
 
 AM_LDFLAGS = -static -static-libgcc -static-libstdc++

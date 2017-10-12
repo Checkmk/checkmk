@@ -3830,6 +3830,11 @@ class ModeBulkImport(WatoMode):
         for entry in configured_host_tags():
             attributes.append(("tag_" + entry[0], _("Tag: %s") % entry[1]))
 
+        # Add custom attributes
+        for entry in load_custom_attrs()['host']:
+            name = entry['name']
+            attributes.append((name, _("Custom variable: %s") % name))
+
         return attributes
 
 

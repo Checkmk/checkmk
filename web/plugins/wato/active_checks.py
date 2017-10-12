@@ -1142,6 +1142,11 @@ register_rule(group,
                                          "like the connect time, header time, time till first byte received and the "
                                          "transfer time."),
                             )),
+                            ( "verbose", FixedValue(
+                                value=True,
+                                title=_("Verbose output"),
+                                totext=_("Give verbose output"),
+                            )),
                         ]
                     ),
 

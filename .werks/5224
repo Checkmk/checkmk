@@ -1,0 +1,11 @@
+Title: check_http: Support verbose output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507818178
+Class: feature
+
+This allows to use the -v option of the classic check_http active check.
+This will extend the long output of the plugin by header and body information.

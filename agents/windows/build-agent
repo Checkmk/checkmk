@@ -77,8 +77,7 @@ function build {
 
 cd $CHROOT_BUILD_DIR/agents/windows
 
-aclocal && autoconf
-automake --add-missing
+autoreconf --install
 
 # Build 32 and 64 bit in parallel, wait for child processes to terminate.
 for i in {0..1} ; do

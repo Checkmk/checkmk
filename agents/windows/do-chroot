@@ -41,7 +41,9 @@ if [ ! -e $CHROOT_PATH/$CHROOT_BUILD_DIR/Makefile ] ; then
 fi
 
 if [ -n "$CMD" ] ; then
-    chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME bash -c "$CMD"
+    chroot $CHROOT_PATH \
+           /usr/bin/env CHROOTNAME=$CHROOTNAME NEW_VERSION=$NEW_VERSION \
+           bash -c "$CMD"
 else
     chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME bash -l
 fi

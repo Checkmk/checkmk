@@ -1296,32 +1296,35 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
         return
 
     if dashlet_type == "pnpgraph":
-        # Context will always be None here, but the graph_identification (in params)
+        # Context will always be None here, but the specification (in params)
         # will contain it. Transform the data to the format needed by the dashlets.
 
         # Example:
         # params = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
         #                         'graph_index': 0, 'host_name': 'server123'}])
-        graph_identification = params[1]
-        if params[0] == "template":
+        specification = params["definition"]["specification"]
+        if specification[0] == "template":
             context = {
-                "host" : graph_identification["host_name"]
+                "host" : specification[1]["host_name"]
             }
-            if graph_identification.get("service_description") != "_HOST_":
-                context["service"] = graph_identification["service_description"]
+            if specification[1].get("service_description") != "_HOST_":
+                context["service"] = specification[1]["service_description"]
             params = {
-                "source" : graph_identification["graph_index"] + 1
+                "source" : specification[1]["graph_index"] + 1
             }
 
-        elif params[0] == "custom":
+        elif specification[0] == "custom":
             # Override the dashlet type here. It would be better to get the
             # correct dashlet type from the menu. But this does not seem to
             # be a trivial change.
             dashlet_type = "custom_graph"
             context = {}
             params = {
-                "custom_graph": params[1],
+                "custom_graph": specification[1],
             }
+
+        else:
+            raise MKGeneralException(_("Invalid graph type '%s'") % specification[0])
 
 
     load_dashboards(lock=True)

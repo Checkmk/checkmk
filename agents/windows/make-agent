@@ -65,8 +65,11 @@ fi
 # Build the Windows agent within chroot by calling the 'build-agent' script.
 sudo CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./do-chroot \
      "$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets"
+EXIT_CODE=$?
 
 # Some cleanup: chown build artifacts to the original user.
 find . -maxdepth 1 -regextype egrep \
 -regex '(.*\.(exe|msi|m4))|.*\/build.*|.*build_version|.*plugins|.*msibuild|.*Makefile.*|.*configure' \
 -exec sudo chown -R $USER:$USER {} \;
+
+exit $EXIT_CODE

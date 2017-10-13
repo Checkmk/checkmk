@@ -1,0 +1,40 @@
+#!/bin/bash
+# Build MinGW libraries for Google Test and Google Mock.
+
+set -e
+version=1.8.0
+[[ -z $CHROOT_BUILD_DIR ]] && exit 1
+
+. $CHROOT_BUILD_DIR/agents/windows/build.sh
+parse-args "$@"
+
+cd $CHROOT_BUILD_DIR/agents/windows
+tar xzf /$CHROOT_BUILD_DIR/omd/packages/googletest/googletest-release-${version}.tar.gz
+cd googletest-release-${version}
+
+# Fix googletest compilation with MinGW, see
+# https://github.com/google/googletest/issues/606
+cd googletest/include/gtest/internal
+patch gtest-port.h < /$CHROOT_BUILD_DIR/omd/packages/googletest/patches/0001-Fix-googletest-compilation-MinGW-gtest-port.h.diff
+cd -
+
+for project in test mock ; do
+    cd google${project}
+    # we only need the libs...
+    targets=lib/libg${project}.la
+    autoreconf --install
+    for arch in 32 64 ; do
+        build $arch &
+    done
+    wait
+    # make install is not supported by Google -> copy headers and libs
+    cp -r include/g${project} /usr/share/mingw-w64/include/
+    for arch in 32 64 ; do
+        cp ${builddirs[$arch]}/lib/.libs/libg${project}.a /usr/${archs[$arch]}${common}/lib/
+        ln -frs /usr/share/mingw-w64/include/g${project} /usr/${archs[$arch]}${common}/include/g${project}
+    done
+    cd -
+done
+
+cd ..
+rm -rf googletest-release-${version}

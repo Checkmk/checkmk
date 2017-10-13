@@ -13,75 +13,15 @@
 # Ensure that CHROOT_BUILD_DIR is set.
 [[ -z $CHROOT_BUILD_DIR ]] && exit 1
 
-while getopts "j:" arg ; do
-    case $arg in
-        j)
-            njobs=${OPTARG}
-            ;;
-        *)
-            exit 1
-            ;;
-    esac
-done
+. $CHROOT_BUILD_DIR/agents/windows/build.sh
 
-shift $((OPTIND-1))
-
-[ "$1" = "--" ] && shift
-targets="$@" # no parameter -> default make target
-
-# If njobs is not set, use half of available CPU cores.
-[[ -n $njobs ]] || njobs=$(($(grep -c processor /proc/cpuinfo)/2))
-[[ $njobs -le 0 ]] && njobs=1 # Ensure one core after arithmetic division.
-
-# Build architecture configuration:
-common=-w64-mingw32- # common part of all MinGW binaries
-builddirs=(build build64) # build directories for 32 and 64 bit
-archs=(i686 x86_64) # target architectures for 32 and 64 bit
-transforms=(s/// s/$/-64/g) # sed expr's for transforming 32 and 64 bit exe's
-
-# function build:
-# The build steps to be repeated for each target architecture (Win 32 and 64).
-#
-# param $1 : the index in the architecture configuration arrays
-function build {
-    mkdir -p ${builddirs[$1]}
-    cd ${builddirs[$1]}
-    # options and variables for 'configure':
-    # --bindir : target install dir
-    # --program-transform-name : sed expression for renaming binary executable
-    #                            during install step
-    # --build : architecture of build machine (for cross-compilation)
-    # --host : target architecture of cross-compilation
-    # CC : C compiler (redundant but quiets a cross-compilation warning)
-    # CXX : C++ compiler
-    # WINDRES : program for manipulating Windows resource files
-    # STRIP : program for stripping debugging symbols
-    ../configure --bindir=$(dirname $(pwd)) \
-                 --program-transform-name=${transforms[$1]} \
-                 --build i686-pc-linux-gnu \
-                 --host ${archs[$1]}${common}g++-posix \
-                 CC=${archs[$1]}${common}gcc-posix \
-                 CXX=${archs[$1]}${common}g++-posix \
-                 WINDRES=${archs[$1]}${common}windres \
-                 STRIP=${archs[$1]}${common}strip
-
-    # Default (no targets given): do parallel build and install non-debug exe's.
-    if [ -z "$targets" ] ; then
-        make -j${njobs} && make install-strip
-    else
-        # If special targets given, do just them.
-        make "$targets"
-    fi
-    cd -
-}
-
+parse-args "$@"
 cd $CHROOT_BUILD_DIR/agents/windows
-
 autoreconf --install
 
 # Build 32 and 64 bit in parallel, wait for child processes to terminate.
-for i in {0..1} ; do
-    build $i &
+for arch in 32 64 ; do
+    build $arch &
 done
 wait
 

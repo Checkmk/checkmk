@@ -1,0 +1,12 @@
+Title: Nagios: Log external commands to nagios.log by default
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507887368
+Class: fix
+
+Nagios is now logging external commands to the core log (nagios.log)
+in the default configuration. This makes Nagios behave like the Microcore
+in this case.

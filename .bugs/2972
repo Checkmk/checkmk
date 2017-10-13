@@ -1,0 +1,8 @@
+Title: Timespecific parameters in manpage of a check plugin
+Component: checks
+State: open
+Date: 2017-10-13 10:34:17
+Targetversion: 1.5.0
+Class: nastiness
+
+The option "Enable timespecific timeperiods" does appear on man pages which contains examples for parameters.

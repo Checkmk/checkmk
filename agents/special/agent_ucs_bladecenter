@@ -106,9 +106,9 @@ class Server:
         if params is None:
             params = {}
 
-        cookies = {}
         if self.cookie:
-            cookies.update({"cookie": self.cookie})
+            # Beware: This is no HTTP cookie. Just a shared secret between the server and the client.
+            params.update({"cookie": self.cookie})
 
         payload = payload % params
         if opt_debug:
@@ -119,7 +119,7 @@ class Server:
             "Content-Type": 'text/xml; charset="utf-8"'
         }
 
-        response = self.session_handle.post("https://%s/nuova" % self.netloc, headers = headers, cookies = cookies)
+        response = self.session_handle.post("https://%s/nuova" % self.netloc, headers=headers, data=payload)
         data = response.text
         if opt_debug:
             sys.stderr.write("<==== %s\n" % data)

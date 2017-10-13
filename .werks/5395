@@ -1,0 +1,19 @@
+Title: Nagios: Enable passive host check translation by default
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507886901
+Class: fix
+
+The monitoring cores Nagios and Microcore where treating "fake check results"
+that can be sent from the GUI differently.
+
+These fake check results are in fact passive host checks. From these passive host
+checks Nagios simply takes over the reported state and uses it as new host state,
+ignoring the parent logic. The microcore takes the parent logic into account and
+may change a DOWN check result to UNREACHABLE when all parents are down.
+
+We have now changed the configuration option <tt>translate_passive_host_checks</tt>
+of Nagios to be enabled by default to make Nagios also check this logic.

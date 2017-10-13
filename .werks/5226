@@ -1,0 +1,10 @@
+Title: netstat, win_netstat: Checks now include performance graphs for number of connections
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507894897
+Class: feature
+
+

@@ -87,4 +87,5 @@ check_info["win_netstat"] = {
     'service_description'   : "TCP Connection %s",
     'group'                 : "tcp_connections",
     'includes'              : [ "netstat.include" ],
+    'has_perfdata'          : True,
 }

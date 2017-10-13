@@ -69,6 +69,7 @@ def check_netstat_generic(item, params, connections):
 
     if params.get("max_states"):
         max_warn, max_crit = params["max_states"]
+        perfdata = [ ("connections", found, max_warn, max_crit) ]
         if found >= max_crit:
             max_state = 2
         elif found >= max_warn:
@@ -78,6 +79,8 @@ def check_netstat_generic(item, params, connections):
         if max_state:
             states.append(max_state)
             infotext += " (warn/crit at %d/%d)" % (max_warn, max_crit)
+    else:
+        perfdata = [ ("connections", found) ]
 
-    yield max(states), infotext
+    yield max(states), infotext, perfdata
 

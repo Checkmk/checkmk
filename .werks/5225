@@ -1,0 +1,10 @@
+Title: apache_status: Change autodetection logic of agent plugin to include a process multiple times if it listens on multiple ports
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1507881782
+Class: feature
+
+

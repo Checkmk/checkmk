@@ -65,7 +65,6 @@ if os.path.exists(config_file):
 
 
 def try_detect_servers():
-    pids    = []
     results = []
 
     for line in os.popen('netstat -tlnp 2>/dev/null').readlines():
@@ -87,11 +86,6 @@ def try_detect_servers():
         # Skip unwanted processes
         if proc not in procs:
             continue
-
-        # Add only the first found port of a single server process
-        if pid in pids:
-            continue
-        pids.append(pid)
 
         address, port = parts[3].rsplit(':', 1)
         port = int(port)

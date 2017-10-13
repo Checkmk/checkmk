@@ -239,6 +239,26 @@ class Site(object):
         return live
 
 
+    def send_host_check_result(self, hostname, state, output, expected_state=None):
+        if expected_state is None:
+            expected_state = state
+
+        self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (time.time(), hostname, state, output))
+
+        # Wait for processed command
+        timeout = 10
+        host_state = self.get_host_state(hostname)
+        while timeout and not host_state == expected_state:
+            timeout -= 1
+            time.sleep(1)
+            host_state = self.get_host_state(hostname)
+        assert host_state == expected_state, "Expected %d state, got %d state" % (expected_state, host_state)
+
+
+    def get_host_state(self, hostname):
+        return self.live.query_value("GET hosts\nColumns: state\nFilter: host_name = %s" % hostname)
+
+
     def _is_running_as_site_user(self):
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
@@ -577,6 +597,10 @@ class Site(object):
         if with_restart:
             self.start()
             print "Started site"
+
+
+    def set_core(self, core):
+        self.set_config("CORE", core, with_restart=True)
 
 
     def get_config(self, key):

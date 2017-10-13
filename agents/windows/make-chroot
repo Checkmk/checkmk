@@ -48,56 +48,58 @@ rm -rf $CHROOT_PATH/*
 echo "+ INSTALLING SYSTEM"
 
 package_names=(
-    "autoconf"
-    "automake"
-    "build-essential"
-    "ca-certificates"
-    "gcc"
-    "gettext"
-    "lcab"
-    "libauthen-sasl-perl"
-    "libc6-dev"
-    "libencode-locale-perl"
-    "libfile-listing-perl"
-    "libfont-afm-perl"
-    "libglib2.0-dev"
-    "libgsf-1-dev"
-    "libgtk2.0-dev"
-    "libhtml-form-perl"
-    "libhtml-format-perl"
-    "libhtml-parser-perl"
-    "libhtml-tagset-perl"
-    "libhtml-tree-perl"
-    "libhttp-cookies-perl"
-    "libhttp-daemon-perl"
-    "libhttp-date-perl"
-    "libhttp-message-perl"
-    "libhttp-negotiate-perl"
-    "libio-html-perl"
-    "libio-socket-ssl-perl"
-    "liblwp-mediatypes-perl"
-    "liblwp-protocol-https-perl"
-    "libmailtools-perl"
-    "libnet-http-perl"
-    "libnet-smtp-ssl-perl"
-    "libnet-ssleay-perl"
-    "libperl-dev"
-    "libtimedate-perl"
-    "liburi-perl"
-    "libwww-perl"
-    "libwww-robotrules-perl"
-    "libxml-parser-perl"
-    "linux-base"
-    "locales"
-    "make"
-    "mingw-w64"
-    "openssl"
-    "patch"
-    "perl-openssl-defaults"
-    "pkg-config"
-    "python2.7"
-    "uuid-dev"
-    "wine-stable"
+    autoconf
+    automake
+    build-essential
+    ca-certificates
+    gcc
+    gettext
+    language-pack-en
+    lcab
+    libauthen-sasl-perl
+    libc6-dev
+    libencode-locale-perl
+    libfile-listing-perl
+    libfont-afm-perl
+    libglib2.0-dev
+    libgsf-1-dev
+    libgtk2.0-dev
+    libhtml-form-perl
+    libhtml-format-perl
+    libhtml-parser-perl
+    libhtml-tagset-perl
+    libhtml-tree-perl
+    libhttp-cookies-perl
+    libhttp-daemon-perl
+    libhttp-date-perl
+    libhttp-message-perl
+    libhttp-negotiate-perl
+    libio-html-perl
+    libio-socket-ssl-perl
+    liblwp-mediatypes-perl
+    liblwp-protocol-https-perl
+    libmailtools-perl
+    libnet-http-perl
+    libnet-smtp-ssl-perl
+    libnet-ssleay-perl
+    libperl-dev
+    libtimedate-perl
+    libtool
+    liburi-perl
+    libwww-perl
+    libwww-robotrules-perl
+    libxml-parser-perl
+    linux-base
+    locales
+    make
+    mingw-w64
+    openssl
+    patch
+    perl-openssl-defaults
+    pkg-config
+    python2.7
+    uuid-dev
+    wine-stable
 )
 packages=$(IFS=,; echo "${package_names[*]}")
 
@@ -139,10 +141,14 @@ EOF
 
 # Debian pkg installation does not seem to link python executable
 if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
-    cd $CHROOT_PATH/usr/bin
-    ln -s python2.7 python
-    cd -
+    ln -frs $CHROOT_PATH/usr/bin/python2.7 $CHROOT_PATH/usr/bin/python
 fi
+
+# We need to enable 32bit Wine
+./do-chroot "dpkg --add-architecture i386 && apt-get update && apt-get -y install wine32"
+
+# Build Google Test and Google Mock
+./do-chroot "$CHROOT_BUILD_DIR/agents/windows/test/build-googletest"
 
 cp "$BASE/agents/windows/$VERSIONFILE" "$CHROOT_PATH/"
 

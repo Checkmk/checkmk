@@ -8,21 +8,9 @@
 #          Possible make targets. By default, a parallel build and
 #          install-strip (non-debug) is done and an msi installer produced.
 
-while getopts "j:" arg ; do
-    case $arg in
-        j)
-            njobs=${OPTARG}
-            ;;
-        *)
-            exit 1
-            ;;
-    esac
-done
+. build.sh
+parse-args "$@"
 
-shift $((OPTIND-1))
-
-[ "$1" = "--" ] && shift
-targets="$@" # no parameter -> default make target
 chroot_dependencies=(debootstrap debian-archive-keyring)
 versionfile=chroot_version
 
@@ -55,12 +43,10 @@ if [ -z $create ] ; then
     echo "chroot is up to date."
 else
     sudo apt-get -y install "${chroot_dependencies[@]}" 
-    sudo VERSIONFILE=$versionfile CHROOT_PATH=$CHROOT_PATH ./make-chroot
+    sudo VERSIONFILE=$versionfile \
+         CHROOT_PATH=$CHROOT_PATH \
+         CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./make-chroot
 fi
-
-# If njobs is not set, use half of available CPU cores.
-[[ -n $njobs ]] || njobs=$(($(grep -c processor /proc/cpuinfo)/2))
-[[ $njobs -le 0 ]] && njobs=1 # Ensure one core after arithmetic division.
 
 # Build the Windows agent within chroot by calling the 'build-agent' script.
 sudo CHROOT_PATH=$CHROOT_PATH \

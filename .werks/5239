@@ -1,0 +1,14 @@
+Title: Managed Services Edition: Improved activate changes performance
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.4.0p17
+Date: 1510142508
+Class: fix
+
+The activate changes procedure determining the relevant files for each site was way too slow.
+This update improved the overall activate changes performance by a factor of at least 100.
+An example setup with 40 remote sites now takes around 2 seconds instead of 300.
+Keep in mind, there are still other functions which are triggered during an activate changes.
+Their performance will be improved in the next innovation version.

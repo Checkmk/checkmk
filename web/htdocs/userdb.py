@@ -809,10 +809,21 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir = None):
         multisite_config_dir = "%s/multisite.d/wato" % cmk.paths.default_config_dir
 
 
+    non_contact_attributes_cache = {}
+    multisite_attributes_cache   = {}
+    for user_settings in updated_profiles.itervalues():
+        connector = user_settings.get("connector")
+        if connector not in non_contact_attributes_cache:
+            non_contact_attributes_cache[connector] = non_contact_attributes(user_settings.get('connector'))
+        if connector not in multisite_attributes_cache:
+            multisite_attributes_cache[connector]   = multisite_attributes(user_settings.get('connector'))
+
+
     # Remove multisite keys in contacts.
+    # TODO: Clean this up. Just improved the performance, but still have no idea what its actually doing...
     contacts = dict(
         e for e in
-            [ (id, split_dict(user, non_contact_keys + non_contact_attributes(user.get('connector')), False))
+            [ (id, split_dict(user, non_contact_keys + non_contact_attributes_cache[user.get('connector')], False))
                for (id, user)
                in updated_profiles.items() ])
 
@@ -821,14 +832,14 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir = None):
     for uid, profile in updated_profiles.items():
         users[uid] = dict([ (p, val)
                             for p, val in profile.items()
-                            if p in multisite_keys + multisite_attributes(profile.get('connector'))])
+                            if p in multisite_keys + multisite_attributes_cache[profile.get('connector')]])
 
 
     # Check_MK's monitoring contacts
-    store.save_to_mk_file("%s/%s" % (check_mk_config_dir, "contacts.mk"), "contacts", contacts)
+    store.save_to_mk_file("%s/%s" % (check_mk_config_dir, "contacts.mk"), "contacts", contacts, pprint_value = config.wato_use_git)
 
     # GUI specific user configuration
-    store.save_to_mk_file("%s/%s" % (multisite_config_dir, "users.mk"), "multisite_users", users)
+    store.save_to_mk_file("%s/%s" % (multisite_config_dir, "users.mk"), "multisite_users", users, pprint_value = config.wato_use_git)
 
 
 def rewrite_users():

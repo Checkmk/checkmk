@@ -1296,14 +1296,17 @@ class CREFolder(BaseFolder):
 
     def _save_wato_info(self):
         self._ensure_folder_directory()
-        wato_info = {
+        store.save_data_to_file(self.wato_info_path(), self.get_wato_info())
+
+
+    def get_wato_info(self):
+        return {
             "title"           : self._title,
             "attributes"      : self._attributes,
             "num_hosts"       : self._num_hosts,
             "lock"            : self._locked,
             "lock_subfolders" : self._locked_subfolders,
         }
-        store.save_data_to_file(self.wato_info_path(), wato_info)
 
 
     def _ensure_folder_directory(self):
@@ -3486,7 +3489,7 @@ def load_sites():
 
 def save_sites(sites, activate=True):
     make_nagios_directory(multisite_dir)
-    store.save_to_mk_file(sites_mk, "sites", sites)
+    store.save_to_mk_file(sites_mk, "sites", sites, pprint_value = config.wato_use_git)
 
     # Do not activate when just the site's global settings have
     # been edited
@@ -3514,7 +3517,7 @@ def save_liveproxyd_config(sites):
         if type(s) == tuple and s[0] == "proxy":
             conf[siteid] = s[1]
 
-    store.save_to_mk_file(path, "sites", conf)
+    store.save_to_mk_file(path, "sites", conf, pprint_value = config.wato_use_git)
 
     try:
         pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
@@ -4505,30 +4508,92 @@ class ActivateChangesManager(ActivateChanges):
                                 "to ensure you also want to activate it now and start the "
                                 "activation again."))
 
+
         # Create (legacy) WATO config snapshot
+        start = time.time()
+        logger.debug("Snapshot creation started")
+
         create_snapshot(self._comment)
 
-        try:
+
+        # TODO: refactor this block in master branch. instantiate one snapshot creator (CEE/CME) and call generate snapshots
+        #       remove _create_site_sync_snapshot
+        site_configurations = {}
+        work_dir = "%s/%s" % (self.activation_base_dir, self._activation_id)
+        if cmk.is_managed_edition():
+            for site_id in self._sites:
+                site_configurations[site_id] = self._get_site_configuration(site_id)
+
+            import managed_snapshots
+            managed_snapshots.CMESnapshotManager(work_dir, site_configurations).generate_snapshots()
+        else:
             use_new_mechanism = True
-            # TODO: this if/else can be removed once the new mechanism is considered stable
-            if use_new_mechanism and not cmk.is_managed_edition():
-                work_dir = "%s/%s" % (self.activation_base_dir, self._activation_id)
+            if use_new_mechanism:
                 with multitar.SnapshotCreator(work_dir, replication_paths) as snapshot_creator:
                     for site_id in self._sites:
                         self._create_site_sync_snapshot(site_id, snapshot_creator)
             else:
                 for site_id in self._sites:
                     self._create_site_sync_snapshot(site_id)
-        finally:
-            if cmk.is_managed_edition():
-                # Discards any data which was shared during the snapshot creation
-                import managed_snapshots
-                managed_snapshots.CMESnapshot.discard_cached_data()
-
+        logger.debug("Snapshot creation took %.4f" % (time.time() - start))
         unlock_exclusive()
 
 
+    def _get_site_configuration(self, site_id):
+        site_configuration = {}
+        self._check_snapshot_creation_permissions(site_id)
+
+
+        site_configuration["snapshot_path"] = self._site_snapshot_file(site_id)
+        # TODO: id(html) may reappear
+        site_configuration["work_dir"]      = cmk.paths.tmp_dir + "/sync-%s-specific-%s-%.4f" % (site_id, id(html), time.time())
+
+
+        # Change all default replication paths to be in the site specific temporary directory
+        # These paths are then packed into the sync snapshot
+        replication_components = []
+        for entry in map(list, self._get_replication_components(site_id)):
+            entry[2] = entry[2].replace(cmk.paths.omd_root, site_configuration["work_dir"])
+            replication_components.append(tuple(entry))
+
+        # Add site-specific global settings
+        replication_components.append(("file", "sitespecific", os.path.join(site_configuration["work_dir"], "site_globals", "sitespecific.mk")))
+
+        # Generate a quick reference_by_name for each component
+        site_configuration["snapshot_components"] = replication_components
+        site_configuration["component_ref"] = {}
+        for component in site_configuration["snapshot_components"]:
+            site_configuration["component_ref"][component[1]] = component
+
+        return site_configuration
+
+
     def _create_site_sync_snapshot(self, site_id, snapshot_creator = None):
+        self._check_snapshot_creation_permissions(site_id)
+
+        snapshot_path = self._site_snapshot_file(site_id)
+
+        site_tmp_dir = cmk.paths.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
+
+        paths = self._get_replication_components(site_id)
+        self.create_site_globals_file(site_id, site_tmp_dir)
+
+        # Add site-specific global settings
+        site_specific_paths = [("file", "sitespecific", os.path.join(site_tmp_dir, "sitespecific.mk"))]
+        if snapshot_creator:
+            snapshot_creator.generate_snapshot(snapshot_path,
+                                               paths,
+                                               site_specific_paths,
+                                               reuse_identical_snapshots = True)
+        else:
+            # Legacy packaging
+            paths.extend(site_specific_paths)
+            multitar.create(snapshot_path, paths)
+
+        shutil.rmtree(site_tmp_dir)
+
+
+    def _check_snapshot_creation_permissions(self, site_id):
         if self._site_has_foreign_changes(site_id) and not self._activate_foreign:
             if not config.user.may("wato.activateforeign"):
                 raise MKUserError(None,
@@ -4545,57 +4610,22 @@ class ActivateChangesManager(ActivateChanges):
                   "have to confirm the activation or ask you colleagues to activate "
                   "these changes in their own."))
 
-        snapshot_path = self._site_snapshot_file(site_id)
 
-        site_tmp_dir = cmk.paths.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
-
+    def _get_replication_components(self, site_id):
         paths = replication_paths[:]
-
         # Remove Event Console settings, if this site does not want it (might
         # be removed in some future day)
-        replicate_components = set()
         if not config.sites[site_id].get("replicate_ec"):
             paths = [ e for e in paths if e[1] != "mkeventd" ]
-        else:
-            replicate_components.add("mkeventd")
 
         # Remove extensions if site does not want them
         if not config.sites[site_id].get("replicate_mkps"):
             paths = [ e for e in paths if e[1] not in [ "local", "mkps" ] ]
-        else:
-            replicate_components.add("mkps")
 
-        if cmk.is_managed_edition():
-            import managed_snapshots
-            snapshot = managed_snapshots.CMESnapshot(site_id, site_tmp_dir, replicate_components)
-            snapshot.create_site_snapshot()
-
-            site_specific_globals_tmp_path = snapshot.get_site_globals_tmp_dir()
-
-            # Change all replication paths to be in the site specific temporary directory
-            # These paths are then packed into the sync snapshot
-            new_paths = []
-            for entry in map(list, paths):
-                entry[2] = entry[2].replace(cmk.paths.omd_root, site_tmp_dir)
-                new_paths.append(tuple(entry))
-            paths = new_paths
-        else:
-            site_specific_globals_tmp_path = site_tmp_dir
-            self.create_site_globals_file(site_id, site_tmp_dir)
+        return paths
 
 
-        # Add site-specific global settings
-        site_specific_paths = [("file", "sitespecific", os.path.join(site_specific_globals_tmp_path, "sitespecific.mk"))]
-        if snapshot_creator:
-            snapshot_creator.generate_snapshot(snapshot_path, paths, site_specific_paths)
-        else:
-            paths.extend(site_specific_paths)
-            multitar.create(snapshot_path, paths)
-
-        shutil.rmtree(site_tmp_dir)
-
-
-    def create_site_globals_file(self, site_id, tmp_dir):
+    def create_site_globals_file(self, site_id, tmp_dir, sites = None):
         try:
             os.makedirs(tmp_dir)
         except OSError, e:
@@ -4604,7 +4634,8 @@ class ActivateChangesManager(ActivateChanges):
             else:
                 raise
 
-        sites = load_sites()
+        if not sites:
+            sites = load_sites()
         site = sites[site_id]
         config = site.get("globals", {})
 
@@ -7405,7 +7436,7 @@ def load_timeperiods():
 
 def save_timeperiods(timeperiods):
     make_nagios_directory(wato_root_dir)
-    store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", timeperiods)
+    store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", timeperiods, pprint_value = config.wato_use_git)
 
 
 #.
@@ -7584,7 +7615,10 @@ def save_group_information(all_groups, custom_default_config_dir = None):
     for what in [ "host", "service", "contact" ]:
         if check_mk_groups.get(what):
             output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
-            output += "define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what]))
+            if config.wato_use_git:
+                output += "define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what]))
+            else:
+                output += "define_%sgroups.update(%s)\n\n" % (what, repr(check_mk_groups[what]))
     cmk.store.save_file("%s/groups.mk" % check_mk_config_dir, output)
 
     # Users with passwords for Multisite
@@ -7592,7 +7626,10 @@ def save_group_information(all_groups, custom_default_config_dir = None):
     output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
         if multisite_groups.get(what):
-            output += "multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what]))
+            if config.wato_use_git:
+                output += "multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what]))
+            else:
+                output += "multisite_%sgroups = \\\n%s\n\n" % (what, repr(multisite_groups[what]))
     cmk.store.save_file("%s/groups.mk" % multisite_config_dir, output)
 
 
@@ -7698,7 +7735,7 @@ def load_notification_rules():
 def save_notification_rules(rules):
     make_nagios_directory(wato_root_dir)
     store.save_to_mk_file(wato_root_dir + "notifications.mk",
-                          "notification_rules", rules)
+                          "notification_rules", rules, pprint_value = config.wato_use_git)
 
 
 #.

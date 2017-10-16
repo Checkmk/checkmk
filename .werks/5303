@@ -1,0 +1,13 @@
+Title: local: Fixed missing warn/crit in graphs if upper and lower thresholds are in perfdata
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p16
+Date: 1508158546
+
+A graph did not display warn/crit values if there has been upper and lower
+thresholds in the perfdata of a local check. The cause of this has been a colon
+in between these values. The upper thresholds are represented in a graph now.

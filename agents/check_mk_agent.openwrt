@@ -675,14 +675,14 @@ fi
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     echo '<<<fileinfo:sep(124)>>>'
     date +%s
-    for line in $(cat "$MK_CONFDIR/fileinfo.cfg")
+    while read line
     do
-        stat -c "%n|%s|%Y" $line 2>/dev/null
+        stat -c "%n|%s|%Y" "$line" 2>/dev/null
 
         if [ $? -ne 0 ]; then
             echo "$line|missing|$(date +%s)"
         fi
-    done
+    done < "$MK_CONFDIR/fileinfo.cfg"
 fi
 
 # Get stats about OMD monitoring cores running on this machine.

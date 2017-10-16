@@ -354,13 +354,13 @@ then
     echo '<<<fileinfo:sep(124)>>>'
     /usr/bin/perl -e 'print time."\n"'
     # note: patterns in the fileinfo.cfg are resolved inside this loop
-    for file in $(cat "$MK_CONFDIR/fileinfo.cfg")
+    while read file
     do
         # only work on lines containing files, skip e.g. comments and blank lines
-        if [ ${file:0:1} = "/" ]; then
-            ls $file > /dev/null 2>&1
+        if [ "${file:0:1}" = "/" ]; then
+            ls "$file" > /dev/null 2>&1
             if [ $? -eq 0 ]; then
-                echo $file | \
+                echo "$file" | \
                 /usr/bin/perl -e '
                     while(my $file = <>) {
                         $file =~ s/\n$//;
@@ -371,7 +371,7 @@ then
                 echo "$file|missing|$(/usr/bin/perl -e 'print time')"
             fi
         fi
-    done
+    done < "$MK_CONFDIR/fileinfo.cfg"
 fi
 
 # Libelle Business Shadow

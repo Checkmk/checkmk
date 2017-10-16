@@ -121,19 +121,24 @@ def _parse_local_line(line):
     output = " ".join(line[3:]).replace("\\n", "\n")
 
     perfdata = []
+    compute_data = []
     if perftxt != "-":
         for entry in perftxt.split('|'):
             try:
                 varname, valuetxt = entry.split('=')
                 values = valuetxt.split(';')
-                perfdata.append( tuple([varname] + values) )
+                compute_data.append( tuple([varname] + values) )
+                # perfdata must not contain values with colons. So we split
+                # these values and use the upper levels only.
+                upper_values = [v.split(':')[-1] for v in values]
+                perfdata.append( tuple([varname] + upper_values) )
 
             except ValueError:
                 return 3, "Invalid performance data %s in local check output %s" % \
                        (perftxt, " ".join(line)), []
 
     if statechar == 'P':
-        state, texts = local_compute_state(perfdata)
+        state, texts = local_compute_state(compute_data)
         if output:
             texts = [output] + texts
         output = ", ".join(texts)

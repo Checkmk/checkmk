@@ -287,12 +287,20 @@ fi
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
-   echo '<<<fileinfo:sep(124)>>>'
-   date +%s
-   # simulate output of the Linux "stat -c "%n|%s|%Y" command
-   # TODO: feel free to improve this command. It opens the perl interpreter for every file found...
-   for pattern in $(cat "$MK_CONFDIR/fileinfo.cfg" 2>/dev/null); do if [ -f $pattern ]; then ls -1 "$pattern" ; fi; done |\
-   while read file ; do /usr/bin/perl -e 'printf "$_|%s|%s\n", (stat) [7,9] for @ARGV' "$file" ; done
+    echo '<<<fileinfo:sep(124)>>>'
+    date +%s
+    # simulate output of the Linux "stat -c "%n|%s|%Y" command
+    # TODO: feel free to improve this command. It opens the perl interpreter for every file found...
+    while read pattern
+    do
+        if [ -f "$pattern" ]; then
+            ls -1 "$pattern"
+        fi
+    done < "$MK_CONFDIR/fileinfo.cfg" 2>/dev/null |\
+    while read file
+    do
+        /usr/bin/perl -e 'printf "$_|%s|%s\n", (stat) [7,9] for @ARGV' "$file"
+    done
 fi
 
 # powerHA

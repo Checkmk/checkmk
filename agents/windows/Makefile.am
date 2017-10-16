@@ -1,14 +1,15 @@
-bin_PROGRAMS = check_mk_agent wmitest
+bin_PROGRAMS = check_mk_agent
+check_PROGRAMS = WindowsAgentTest wmitest
 
 AUTOMAKE_OPTIONS = foreign
-COMMON_OPTS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++14 -gdwarf-2 \
+AM_CPPFLAGS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++14 -gdwarf-2 \
               -DCHECK_MK_VERSION='"$(VERSION)"' -D__USE_MINGW_ANSI_STDIO
-AM_CPPFLAGS = $(COMMON_OPTS)
-
 AM_LDFLAGS = -static -static-libgcc -static-libstdc++
 LD_COMMON = -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp -lntdll
 
 check_mk_agent_LDADD = check_mk_agent.res $(LD_COMMON)
+
+WindowsAgentTest_LDADD = -lgtest -lgmock
 
 wmitest_LDADD = $(LD_COMMON)
 
@@ -23,6 +24,11 @@ check_mk_agent.rc: $(VPATH)/check_mk_agent.rc.in build_version
 check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 	cp $(VPATH)/check_mk_agent.ico check_mk_agent.ico
 	$(WINDRES) $< -O coff -o $@
+
+# Wine seems to depend on X Window authorization. Quiet "No protocol specified"
+# warning by setting the DISPLAY variable accordingly.
+unittest: WindowsAgentTest$(EXEEXT)
+	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT)
 
 check_mk_agent_SOURCES = \
         Configurable.cc \
@@ -70,6 +76,12 @@ check_mk_agent_SOURCES = \
         sections/SectionUptime.cc \
         sections/SectionWMI.cc \
         sections/SectionWinperf.cc
+
+WindowsAgentTest_SOURCES = \
+        Logger.cc \
+        test/MockLogger.cc \
+        test/MockWinApi.cc \
+        test/gtest_main.cc
 
 wmitest_SOURCES = wmitest.cc stringutil.cc WinApi.cc wmiHelper.cc
 

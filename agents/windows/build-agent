@@ -19,8 +19,17 @@ parse-args "$@"
 cd $CHROOT_BUILD_DIR/agents/windows
 autoreconf --install
 
+build_archs=(32 64)
+if [[ "$targets" == unittest ]] ; then
+    # Only unittest
+    build_archs=()
+elif [[ " $targets " =~ " unittest " ]] ; then
+    # unittest together with other target(s)
+    targets=${targets/unittest/}
+fi
+
 # Build 32 and 64 bit in parallel, wait for child processes to terminate.
-for arch in 32 64 ; do
+for arch in "${build_archs[@]}" ; do
     build $arch &
 done
 wait
@@ -33,4 +42,10 @@ if [[ -z "$targets" ]] ; then
     chmod +x check_mk_agent.msi
     mv check_mk_agent.msi ..
     cd -
+fi
+
+if [[ ! "$targets" =~ clean ]] ; then
+    # Run unittest only in 64 bit
+    targets=unittest
+    build 64
 fi

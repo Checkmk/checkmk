@@ -78,7 +78,10 @@ check_mk_agent_SOURCES = \
         sections/SectionWinperf.cc
 
 WindowsAgentTest_SOURCES = \
+        Environment.cc \
         Logger.cc \
+        win_error.cc \
+        test/EnvironmentTest.cc \
         test/MockLogger.cc \
         test/MockWinApi.cc \
         test/gtest_main.cc

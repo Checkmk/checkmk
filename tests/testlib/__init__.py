@@ -14,6 +14,7 @@ import subprocess
 import sys
 import shutil
 import lockfile
+import ast
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
@@ -1041,11 +1042,17 @@ class CMKWebSession(WebSession):
         }
 
 
-    def _api_request(self, url, data, expect_error=False):
+    def _api_request(self, url, data, expect_error=False, output_format="json"):
         data.update(self._automation_credentials())
 
         req = self.post(url, data=data)
-        response = json.loads(req.text)
+
+        if output_format == "json":
+            response = json.loads(req.text)
+        elif output_format == "python":
+            response = ast.literal_eval(req.text)
+        else:
+            raise NotImplementedError()
 
         if not expect_error:
             assert response["result_code"] == 0, \
@@ -1093,6 +1100,34 @@ class CMKWebSession(WebSession):
         assert "attributes" in result
 
         return result
+
+
+    def get_ruleset(self, ruleset_name):
+        result = self._api_request("webapi.py?action=get_ruleset&output_format=python", {
+            "request": json.dumps({
+                "ruleset_name": ruleset_name,
+            }),
+        }, output_format="python")
+
+        print result
+        assert type(result) == dict
+        assert "ruleset" in result
+        assert "configuration_hash" in result
+
+        return result
+
+
+    def set_ruleset(self, ruleset_name, ruleset_spec):
+        request = {
+            "ruleset_name": ruleset_name,
+        }
+        request.update(ruleset_spec)
+
+        result = self._api_request("webapi.py?action=set_ruleset&output_format=python&request_format=python", {
+            "request": repr(request),
+        }, output_format="python")
+
+        assert result == None
 
 
     def get_all_hosts(self, effective_attributes=False):

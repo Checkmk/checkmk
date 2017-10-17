@@ -243,16 +243,38 @@ class Site(object):
         if expected_state is None:
             expected_state = state
 
-        self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (time.time(), hostname, state, output))
+        last_check_before = self.live.query_value(
+            "GET hosts\n" \
+            "Columns: last_check\n" \
+            "Filter: host_name = %s\n" % (hostname))
 
-        # Wait for processed command
-        timeout = 10
-        host_state = self.get_host_state(hostname)
-        while timeout and not host_state == expected_state:
-            timeout -= 1
-            time.sleep(1)
-            host_state = self.get_host_state(hostname)
-        assert host_state == expected_state, "Expected %d state, got %d state" % (expected_state, host_state)
+        schedule_ts, wait_timeout = time.time(), 10
+
+        # Ensure the next check result is not in same second as the previous check
+        while int(last_check_before) == int(schedule_ts):
+            schedule_ts = time.time()
+            time.sleep(0.1)
+
+        self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (schedule_ts, hostname, state, output))
+
+        last_check, host_state = self.live.query_row(
+            "GET hosts\n" \
+            "Columns: last_check state\n" \
+            "Filter: host_name = %s\n" \
+            "WaitObject: %s\n" \
+            "WaitTimeout: %d\n" \
+            "WaitCondition: last_check > %d\n" \
+            "WaitCondition: state = %d\n" \
+            "WaitTrigger: check\n" % (hostname, hostname, wait_timeout*1000, last_check_before, expected_state))
+
+        print "processing host check result took %0.2f seconds" % (time.time() - schedule_ts)
+
+        assert last_check > last_check_before, \
+            "Check result not processed within %d seconds (%d, %d)" % \
+                (wait_timeout, last_check, last_check_before)
+
+        assert host_state == expected_state, \
+            "Expected %d state, got %d state" % (expected_state, host_state)
 
 
     def get_host_state(self, hostname):

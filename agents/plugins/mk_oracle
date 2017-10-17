@@ -742,12 +742,14 @@ sql_asm_diskgroup()
 
 function set_osenv () {
     ostype=$(uname -s)
+    AWK=$(which awk)
 
     if [ ${ostype} = 'Linux' ] ; then
 
         GREP=$(which grep)
         STATCX='stat -c %X'
         STATCY='stat -c %Y'
+        AWK=$(which nawk)
 
     elif [ ${ostype} = 'SunOS' ] ; then
 
@@ -1256,7 +1258,7 @@ fi
 
 # Get list of all running databases
 # Do not work on ASM in this plugin. => Ignore a running ASM-Instance!
-SIDS=$(UNIX95=true ps -ef | awk '{print $NF}' | ${GREP} -E '^asm_pmon_|^ora_pmon_|^xe_pmon_XE' | cut -d"_" -f3-)
+SIDS=$(UNIX95=true ps -ef | ${AWK} '{print $NF}' | ${GREP} -E '^asm_pmon_|^ora_pmon_|^xe_pmon_XE' | cut -d"_" -f3-)
 
 # If we do not have found any running database instance, then either
 # no ORACLE is present on this system or it's just currently not running.

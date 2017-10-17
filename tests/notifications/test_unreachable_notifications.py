@@ -3,10 +3,19 @@
 
 import pytest
 import time
+import os
+import sys
 from testlib import web
 
-@pytest.fixture(scope="module")
-def test_cfg(web, site):
+STATE_UP          = 0
+STATE_DOWN        = 1
+STATE_UNREACHABLE = 2
+
+@pytest.fixture(scope="module", params=["nagios", "cmc"])
+def core(request, web, site):
+    core = request.param
+    site.set_core(core)
+
     try:
         print "Applying test config"
 
@@ -23,122 +32,272 @@ def test_cfg(web, site):
 
         site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-parent" % time.time())
         site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-child" % time.time())
+        site.live.command("[%d] DISABLE_FLAP_DETECTION" % time.time())
 
-        yield None
+        #set_initial_state(site, core)
+
+        yield core
     finally:
         #
         # Cleanup code
         #
         print "Cleaning up default config"
 
+        site.live.command("[%d] ENABLE_FLAP_DETECTION" % time.time())
+        site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())
+        site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-parent" % time.time())
+
         web.delete_host("notify-test-child")
         web.delete_host("notify-test-parent")
 
 
-def set_initial_state(site):
+@pytest.fixture(scope="function")
+def initial_state(site, core):
     # Before each test: Set to initial state: Both UP
     site.send_host_check_result("notify-test-child", 0, "UP")
     site.send_host_check_result("notify-test-parent", 0, "UP")
 
     # Before each test: Clear logs
-    site.live.command("[%d] ROTATE_LOGFILE" % time.time())
+    if core == "cmc":
+        site.live.command("[%d] ROTATE_LOGFILE" % time.time())
+    else:
+        site.delete_file("var/nagios/nagios.log")
+
     time.sleep(1) # TODO: Add check for rotation
 
 
-def open_history_log(core):
-    if core == "cmc":
-        return open("var/check_mk/core/history")
-    elif core == "nagios":
-        return open("var/nagios/nagios.log")
-    else:
-        raise NotImplementedError()
+class HistoryLog(object):
+    def __init__(self, core):
+        self._core = core
+        self._log = self._open_log()
+        self._buf = []
 
 
-STATE_UP          = 0
-STATE_DOWN        = 1
-STATE_UNREACHABLE = 2
+    def _log_path(self):
+        if self._core == "cmc":
+            return "var/check_mk/core/history"
+        elif self._core == "nagios":
+            return "var/nagios/nagios.log"
+        else:
+            raise NotImplementedError()
 
-@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
-def test_unreachable_child_down_before_parent_down(test_cfg, site, core):
-    site.set_core(core)
-    set_initial_state(site)
 
-    # TODO:
+    def _open_log(self):
+        if not os.path.exists(self._log_path()):
+            open(self._log_path(), "a+")
+
+        fobj = open(self._log_path(), "r", 1)
+        fobj.seek(0, 2) # go to end of file
+        return fobj
+
+
+    def check_logged(self, match_for, timeout=5):
+        if not self._check_for_line(match_for, timeout):
+            raise Exception("Did not find %r in %s after %d seconds" %
+                                (match_for, self._log_path(), timeout))
+
+
+    def check_not_logged(self, match_for, timeout=5):
+        if self._check_for_line(match_for, timeout):
+            raise Exception("Found %r in %s after %d seconds" %
+                                (match_for, self._log_path(), timeout))
+
+
+    def _check_for_line(self, match_for, timeout):
+        timeout_at = time.time() + timeout
+        while time.time() < timeout_at:
+            #print "read till timeout %0.2f sec left" % (timeout_at - time.time())
+            line = self._log.readline()
+            sys.stdout.write(line)
+            if match_for in line:
+                return True
+            time.sleep(0.1)
+
+        return False
+
+
+# Test the situation where:
+# a) Child goes down
+# b) Parent goes down
+# c) child becomes unreachable
+def test_unreachable_child_down_before_parent_down(core, site, initial_state):
+    log = HistoryLog(core)
+
     # - Set child down, expect DOWN notification
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
 
-    assert "HOST ALERT: notify-test-child;DOWN;HARD;1;DOWN" in open_history_log(core).read()
+    log.check_logged("HOST ALERT: notify-test-child;DOWN;HARD;1;DOWN")
 
     # - Set parent down, expect DOWN notification for parent and UNREACHABLE notification for child
     site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
+
+    log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
+
+    # This is checked later for nagios
+    if core == "cmc":
+        log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
 
     # Difference beween nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
     # the nagios core needs another child down check result to report it as unreachable.
     if core == "nagios":
         site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+        log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
-    history_log = open_history_log(core).read()
-
-    assert "HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN" in history_log
-    assert "HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;" in history_log
-
-    if core == "cmc":
-        assert "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;" in history_log
-        assert "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;" in history_log
-    else:
-        # TODO: Nagios does not log the entries checked above for cmc. This may be a problem e.g. for availability.
-        pass
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
 
-@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
-def test_unreachable_child_after_parent_is_down(test_cfg, site, core):
-    site.set_core(core)
-    set_initial_state(site)
+# Test the situation where:
+# a) Parent goes down
+# b) Child goes down, becomes unreachable
+def test_unreachable_child_after_parent_is_down(core, site, initial_state):
+    log = HistoryLog(core)
 
-
-    # TODO:
     # - Set parent down, expect DOWN notification
     site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
 
-    assert "HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN" in open_history_log(core).read()
+    log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
 
     # - set child down, expect UNREACHABLE notification
     assert site.get_host_state("notify-test-child") == STATE_UP
-    site.send_host_check_result("notify-test-ychild", STATE_DOWN, "DOWN")
-    assert site.get_host_state("notify-test-child") == STATE_UNREACHABLE
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
 
-    history_log = open_history_log(core).read()
+    log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
-    assert "HOST ALERT: notify-test-child;DOWN;HARD;1;DOWN" in history_log
 
-    #if core == "cmc":
-    #    assert "HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;child becomes unreachable due to state change of parent host" in history_log
+# Test the situation where:
+# a) Child goes down
+# b) Parent goes down
+# c) Child goes up while parent is down
+def test_parent_down_child_up_on_up_result(core, site, initial_state):
+    log = HistoryLog(core)
 
-    #    assert "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;" in history_log
-    #    assert "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;" in history_log
-    #else:
-    #    # TODO: Nagios does not log the entries checked above for cmc. This may be a problem e.g. for availability.
-    #    pass
+    # - Set child down, expect DOWN notification
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
+    log.check_logged("HOST ALERT: notify-test-child;DOWN;HARD;1;DOWN")
 
-    # TODO:
     # - Set parent down, expect DOWN notification
-    # - Set child up, expect no notification
+    site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
 
-    # TODO:
+    log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
+    # - Set child up, expect UP notification
+    site.send_host_check_result("notify-test-child", STATE_UP, "UP")
+
+    log.check_logged("HOST ALERT: notify-test-child;UP;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP")
+
+
+# Test the situation where:
+# a) Parent goes down
+# b) Child goes down and becomes unreachable
+# c) Child goes up while parent is down
+# d) Child goes down and becomes unreachable while parent is down
+def test_parent_down_child_state_changes(core, site, initial_state):
+    log = HistoryLog(core)
+
     # - Set parent down, expect DOWN notification
+    site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
+
+    log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
     # - set child down, expect UNREACHABLE notification
+    assert site.get_host_state("notify-test-child") == STATE_UP
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+
+    log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+
     # - set child up, expect UP notification
-    # - set child down, expect UNREACHABLE notification
+    site.send_host_check_result("notify-test-child", STATE_UP, "UP")
 
-    # TODO:
+    log.check_logged("HOST ALERT: notify-test-child;UP;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;")
+
+    # - set child down, expect UNREACHABLE notification
+    assert site.get_host_state("notify-test-child") == STATE_UP
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+
+    log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+
+
+# Test the situation where:
+# a) Parent goes down
+# b) Child goes down and becomes unreachable
+# c) Parent goes up
+# d) Child is still down and becomes down
+def test_child_down_after_parent_recovers(core, site, initial_state):
+    log = HistoryLog(core)
+
     # - Set parent down, expect DOWN notification
+    site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
+
+    log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
     # - set child down, expect UNREACHABLE notification
-    # - Set parent up, expect UP notification and child DOWN notification
-    # - Set parent down, expect DOWN notification and UNREACHABLE child notification
+    assert site.get_host_state("notify-test-child") == STATE_UP
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+
+    log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+
+    # - Set parent up, expect UP notification
+    site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+    log.check_logged("HOST ALERT: notify-test-parent;UP;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;UP")
+
+    # - Next child check DOWN, expect no notification (till next parent check confirms UP)
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
+    log.check_logged("HOST ALERT: notify-test-child;DOWN;HARD;1;")
+
+    if core == "cmc":
+        # - Set parent UP (again), expect DOWN notification for child
+        site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+
+        # Seems the child notification is not processed immediately (TODO check this)
+        #time.sleep(1)
+
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;DOWN;check-mk-notify;")
 
 
-#@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
-#def test_unreachable_disabled_by_default(test_cfg, site, core):
-#    # TODO: Set child down, set parent down
-#    # TODO: Check log that no UNREACHABLE notification has been created
-#    pass
+# Test the situation where:
+# a) Parent goes down
+# b) Child goes down and becomes unreachable
+# c) Parent goes up
+# d) Child goes up
+def test_child_up_after_parent_recovers(core, site, initial_state):
+    log = HistoryLog(core)
+
+    # - Set parent down, expect DOWN notification
+    site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
+
+    log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
+    # - set child down, expect UNREACHABLE notification
+    assert site.get_host_state("notify-test-child") == STATE_UP
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+
+    log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+
+    # - Set parent up, expect UP notification
+    site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+    log.check_logged("HOST ALERT: notify-test-parent;UP;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;UP")
+
+    # - Next service check UP, expect no notification (till next parent check confirms UP)
+    site.send_host_check_result("notify-test-child", STATE_UP, "UP")
+    log.check_logged("HOST ALERT: notify-test-child;UP;HARD;1;")
+
+    # - Set parent UP, expect UP notification for child
+    site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")

@@ -356,4 +356,128 @@ def test_child_up_after_parent_recovers(scenario, site, initial_state):
     # - Set parent UP, expect UP notification for child
     site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
 
-    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
+    if scenario.unreachable_enabled:
+        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
+    else:
+        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
+
+
+# Test the situation where:
+# a) Child goes down
+# b) Parent goes down, child becomes unreachable
+# d) Parent goes up, child becomes down
+def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_state):
+    log = HistoryLog(scenario.core)
+
+    # - Set child down, expect DOWN notification
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
+    log.check_logged("HOST ALERT: notify-test-child;DOWN;HARD;1;DOWN")
+
+    if scenario.core == "cmc":
+        # CMC: Send a new check result for the parent to make the CMC create the host notification
+        # for the child
+        site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;DOWN;check-mk-notify;")
+
+    # - Set parent down, expect DOWN notification for parent and UNREACHABLE notification for child
+    site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
+    log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
+
+    # Difference beween nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
+    # the nagios core needs another child down check result to report it as unreachable.
+    if scenario.core == "cmc":
+        log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+
+        if scenario.unreachable_enabled:
+            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+        # TODO: Can not test this because it drains too many entries from the log. HistoryLog could deal
+        # with this by readding the read lines after succeeded test or similar
+        #else:
+        #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+
+        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
+    elif scenario.core == "nagios":
+        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
+        site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+        log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+
+        if scenario.unreachable_enabled:
+            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+
+    # - Set parent up, expect UP notification
+    site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+    log.check_logged("HOST ALERT: notify-test-parent;UP;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;UP")
+
+    # - Next child check DOWN
+    #   cmc: expect no notification (till next parent check confirms UP)
+    #   nagios: expect notification without 
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
+    log.check_logged("HOST ALERT: notify-test-child;DOWN;HARD;1;")
+
+    if scenario.core == "cmc":
+        # - Set parent UP (again), expect DOWN notification for child
+        site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;DOWN;check-mk-notify;")
+
+
+# Test the situation where:
+# a) Child goes down
+# b) Parent goes down, child becomes unreachable
+# c) Child goes up
+def test_down_child_becomes_unreachable_then_up(scenario, site, initial_state):
+    log = HistoryLog(scenario.core)
+
+    # - Set child down, expect DOWN notification
+    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
+    log.check_logged("HOST ALERT: notify-test-child;DOWN;HARD;1;DOWN")
+
+    if scenario.core == "cmc":
+        # CMC: Send a new check result for the parent to make the CMC create the host notification
+        # for the child
+        site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;DOWN;check-mk-notify;")
+
+    # - Set parent down, expect DOWN notification for parent and UNREACHABLE notification for child
+    site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
+    log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
+
+    # Difference beween nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
+    # the nagios core needs another child down check result to report it as unreachable.
+    if scenario.core == "cmc":
+        log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+
+        if scenario.unreachable_enabled:
+            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+        # TODO: Can not test this because it drains too many entries from the log. HistoryLog could deal
+        # with this by readding the read lines after succeeded test or similar
+        #else:
+        #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+
+        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
+    elif scenario.core == "nagios":
+        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
+        site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+        log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+
+        if scenario.unreachable_enabled:
+            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+
+    # - Set child up, expect:
+    #   cmc: pending UP notification, and sent up notification after next parent check
+    #   nagios: UP notification
+    site.send_host_check_result("notify-test-child", STATE_UP, "UP")
+    log.check_logged("HOST ALERT: notify-test-child;UP;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP")
+
+    ## - Set parent up, expect UP notification
+    site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+    log.check_logged("HOST ALERT: notify-test-parent;UP;HARD;1;")
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;UP")

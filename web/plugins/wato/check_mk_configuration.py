@@ -1731,13 +1731,19 @@ register_rule(group,
                ( "f",  _("Start or end of flapping state")),
                ( "s",  _("Start or end of a scheduled downtime")),
             ],
-            default_value = [ "d", "u", "r", "f", "s" ],
+            default_value = [ "d", "r", "f", "s" ],
         ),
         title = _("Notified events for hosts"),
         help = _("This ruleset allows you to restrict notifications of host problems to certain "
                "states, e.g. only notify on DOWN, but not on UNREACHABLE. Please select the types "
                "of events that should initiate notifications. Please note that several other "
-               "filters must also be passed in order for notifications to finally being sent out."),
+               "filters must also be passed in order for notifications to finally being sent out."
+               "<br><br>"
+               "Please note: There is a difference between the Microcore and Nagios when you have "
+               "a host that has no matching rule in this ruleset. In this case the Microcore will "
+               "not send out UNREACHABLE notifications while the Nagios core would send out "
+               "UNREACHABLE notifications. To align this behaviour, create a rule matching "
+               "all your hosts and configure it to either send UNREACHABLE notifications or not."),
         forth = lambda x: x != 'n' and x.split(",") or [],
         back = lambda x: ",".join(x) or "n",
     ),

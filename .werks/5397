@@ -1,0 +1,44 @@
+Title: Microcore can now be configured to send UNREACHABLE notifications
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1508230324
+Class: feature
+
+Normally you don't want to receive UNREACHABLE notifications of hosts. Configuring
+client/parent relationships between your hosts is a good idea to be able to 
+detect network outages. DOWN states of hosts will then be translated into UNREACHABLE,
+making your view clear for the real cause (e.g. a router in DOWN state).
+
+But there may be situations where you want to be able to receive these UNREACHABLE
+notifications. This was already configurable when using the Nagios core for a long
+time. For the Microcore the suppression of UNREACHABLE notifications was hard coded.
+This has been changed now.
+
+The default behaviour will not be changed. New sites or updates sites will not send
+out UNREACHABLE notifications by default. To enable the new feature, you will first
+have to tell the core to send out UNREACHABLE notifications.
+
+To have a seamless transition we additionally changed these things:
+
+<ul>
+<li>A default rule that disables the UNREACHABLE notifications is being created
+    for new sites in the ruleset "Notified events for hosts". Whenever you want
+    to enable UNREACHABLE notifications, simply enable them using this rule.</li>
+<li>Updated sites:
+    <ul>
+        <li>If you have configured rules for all your hosts in the
+        "Notified events for hosts" ruleset, the core will continue working
+        as configured.</li>
+        <li>Microcore: For hosts that have no matching rule in "Notified events for hosts",
+        the Microcore will <i>not send</i> out UNREACHABLE notifications.</li>
+        <li>Microcore: If you previously had configured a rule in "Notified events for hosts"
+        which enabled the UNREACHABLE notifications, this rule had no effect. It will now
+        be working after updating.</li>
+        <li>Nagios: For hosts that have no matching rule in "Notified events for hosts",
+        the Nagios core will <i>send</i> out UNREACHABLE notifications.</li>
+    </ul>
+</li>
+</ul>

@@ -7990,9 +7990,11 @@ def event_rule_match_conditions(flavour):
        ( "match_host_event",
           ListChoice(
                title = _("Match host event type"),
-               help = _("Select the host event types and transitions this rule should handle. Note: "
-                        "If you activate this option and do <b>not</b> also specify service event "
-                        "types then this rule will never hold for service notifications!"),
+               help = _("Select the host event types and transitions this rule should handle.<br>"
+                        "Note: If you activate this option and do <b>not</b> also specify service event "
+                        "types then this rule will never hold for service notifications!<br>"
+                        "Note: You can only match on event types <a href=\"%s\">created by the core</a>.") % \
+                            "wato.py?mode=edit_ruleset&varname=extra_host_conf%3Anotification_options",
                choices = [
                    ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
                    ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
@@ -8013,9 +8015,11 @@ def event_rule_match_conditions(flavour):
        ( "match_service_event",
            ListChoice(
                title = _("Match service event type"),
-                help  = _("Select the service event types and transitions this rule should handle. Note: "
-                          "If you activate this option and do <b>not</b> also specify host event "
-                          "types then this rule will never hold for host notifications!"),
+                help  = _("Select the service event types and transitions this rule should handle.<br>"
+                          "Note: If you activate this option and do <b>not</b> also specify host event "
+                          "types then this rule will never hold for host notifications!<br>"
+                          "Note: You can only match on event types <a href=\"%s\">created by the core</a>.") % \
+                            "wato.py?mode=edit_ruleset&varname=extra_service_conf%3Anotification_options",
                choices = [
                    ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
                    ( 'rr', _("OK")      + u" ➤ " + _("OK")),
@@ -14765,6 +14769,13 @@ def create_sample_config():
         'extra_service_conf': {
             'check_interval': [
                 ( 1440, [], ALL_HOSTS, [ "Check_MK HW/SW Inventory$" ], {'description': u'Restrict HW/SW-Inventory to once a day'} ),
+            ],
+        },
+
+        # Disable unreachable notifications by default
+        'extra_host_conf': {
+            'notification_options': [
+                ( 'd,r,f,s', [], ALL_HOSTS, {} ),
             ],
         },
 

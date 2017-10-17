@@ -102,7 +102,8 @@ def initial_state(site, scenario):
 
 
 class HistoryLog(object):
-    def __init__(self, core):
+    def __init__(self, site, core):
+        self._site = site
         self._core = core
         self._log = self._open_log()
         self._buf = []
@@ -118,10 +119,10 @@ class HistoryLog(object):
 
 
     def _open_log(self):
-        if not os.path.exists(self._log_path()):
-            open(self._log_path(), "a+")
+        if not self._site.file_exists(self._log_path()):
+            self._site.write_file(self._log_path(), "")
 
-        fobj = open(self._log_path(), "r", 1)
+        fobj = open(self._site.path(self._log_path()), "r")
         fobj.seek(0, 2) # go to end of file
         return fobj
 
@@ -156,7 +157,7 @@ class HistoryLog(object):
 # b) Parent goes down
 # c) child becomes unreachable
 def test_unreachable_child_down_before_parent_down(scenario, site, initial_state):
-    log = HistoryLog(scenario.core)
+    log = HistoryLog(site, scenario.core)
 
     # - Set child down, expect DOWN notification
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
@@ -190,7 +191,7 @@ def test_unreachable_child_down_before_parent_down(scenario, site, initial_state
 # a) Parent goes down
 # b) Child goes down, becomes unreachable
 def test_unreachable_child_after_parent_is_down(scenario, site, initial_state):
-    log = HistoryLog(scenario.core)
+    log = HistoryLog(site, scenario.core)
 
     # - Set parent down, expect DOWN notification
     site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
@@ -215,7 +216,7 @@ def test_unreachable_child_after_parent_is_down(scenario, site, initial_state):
 # b) Parent goes down
 # c) Child goes up while parent is down
 def test_parent_down_child_up_on_up_result(scenario, site, initial_state):
-    log = HistoryLog(scenario.core)
+    log = HistoryLog(site, scenario.core)
 
     # - Set child down, expect DOWN notification
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
@@ -240,7 +241,7 @@ def test_parent_down_child_up_on_up_result(scenario, site, initial_state):
 # c) Child goes up while parent is down
 # d) Child goes down and becomes unreachable while parent is down
 def test_parent_down_child_state_changes(scenario, site, initial_state):
-    log = HistoryLog(scenario.core)
+    log = HistoryLog(site, scenario.core)
 
     # - Set parent down, expect DOWN notification
     site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
@@ -283,7 +284,7 @@ def test_parent_down_child_state_changes(scenario, site, initial_state):
 # c) Parent goes up
 # d) Child is still down and becomes down
 def test_child_down_after_parent_recovers(scenario, site, initial_state):
-    log = HistoryLog(scenario.core)
+    log = HistoryLog(site, scenario.core)
 
     # - Set parent down, expect DOWN notification
     site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
@@ -326,7 +327,7 @@ def test_child_down_after_parent_recovers(scenario, site, initial_state):
 # c) Parent goes up
 # d) Child goes up
 def test_child_up_after_parent_recovers(scenario, site, initial_state):
-    log = HistoryLog(scenario.core)
+    log = HistoryLog(site, scenario.core)
 
     # - Set parent down, expect DOWN notification
     site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
@@ -367,7 +368,7 @@ def test_child_up_after_parent_recovers(scenario, site, initial_state):
 # b) Parent goes down, child becomes unreachable
 # d) Parent goes up, child becomes down
 def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_state):
-    log = HistoryLog(scenario.core)
+    log = HistoryLog(site, scenario.core)
 
     # - Set child down, expect DOWN notification
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
@@ -430,7 +431,7 @@ def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_s
 # b) Parent goes down, child becomes unreachable
 # c) Child goes up
 def test_down_child_becomes_unreachable_then_up(scenario, site, initial_state):
-    log = HistoryLog(scenario.core)
+    log = HistoryLog(site, scenario.core)
 
     # - Set child down, expect DOWN notification
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")

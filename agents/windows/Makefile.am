@@ -80,10 +80,12 @@ check_mk_agent_SOURCES = \
 WindowsAgentTest_SOURCES = \
         Environment.cc \
         Logger.cc \
+        RotatingFileHandler.cc \
         win_error.cc \
         test/EnvironmentTest.cc \
         test/MockLogger.cc \
         test/MockWinApi.cc \
+        test/RotatingFileHandlerTest.cc \
         test/gtest_main.cc
 
 wmitest_SOURCES = wmitest.cc stringutil.cc WinApi.cc wmiHelper.cc

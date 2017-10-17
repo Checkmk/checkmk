@@ -1,0 +1,12 @@
+Title: mk_oracle: Fixed usage of awk command in case of SunOS which causes 'record ... too long' error
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p16
+Date: 1508241149
+Class: fix
+
+The consequence of above error was that Check_MK did not
+find any ORACLE instances any more. Fixed that by using
+{{nawk}} in case of SunOS.

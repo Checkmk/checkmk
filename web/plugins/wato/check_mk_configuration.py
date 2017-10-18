@@ -110,14 +110,21 @@ register_configvar(group,
 
 register_configvar(group,
     "profile",
-    Checkbox(
+    DropdownChoice(
         title = _("Profile requests"),
-        label = _("enable profile mode"),
         help = _("It is possible to profile the rendering process of Multisite pages. This "
-                 "Is done using the Python module cProfile. When enabled two files are placed "
-                 "into the Multisite var directory named <tt>multisite.profile</tt> and "
-                 "<tt>multisite.profile.py</tt>. By executing the later file you can get "
-                 "runtime statistics about the last processed page."),
+                 "Is done using the Python module cProfile. When profiling is performed "
+                 "two files are created <tt>%s</tt> and <tt>%s</tt>. By executing the later "
+                 "file you can get runtime statistics about the last processed page. When "
+                 "enabled by request the profiling mode is enabled by providing the HTTP "
+                 "variable <tt>_profile</tt>.") %
+                    (site_neutral_path(cmk.paths.var_dir + "/multisite.profile"),
+                     site_neutral_path(cmk.paths.var_dir + "/multisite.profile.py")),
+        choices = [
+            (False,           _("Disable profiling")),
+            ("enable_by_var", _("Enable profiling by request")),
+            (True,            _("Enable profiling for all requests")),
+        ],
     ),
     domain = "multisite"
 )

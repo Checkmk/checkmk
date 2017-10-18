@@ -239,24 +239,32 @@ def init_sys_path():
 
 
 def init_profiling(is_profiling):
-    if not is_profiling and config.profile:
-        import cProfile
+    if is_profiling:
+        return # Don't start again when already profiling
 
-        # Ubuntu: install python-profiler when using this feature
-        profile_file = cmk.paths.var_dir + "/multisite.profile"
+    if config.profile == False:
+        return # Not enabled
 
-        p = cProfile.Profile()
-        p.runcall(handler, html.req, html.fields, True)
-        p.dump_stats(profile_file)
+    if config.profile == "enable_by_var" and not html.has_var("_profile"):
+        return # Not enabled by HTTP variable
 
-        file(profile_file + ".py", "w").write(
-            "#!/usr/bin/env python\n"
-            "import pstats\n"
-            "stats = pstats.Stats(%r)\n"
-            "stats.sort_stats('time').print_stats()\n" % profile_file)
-        os.chmod(profile_file + ".py", 0755)
+    import cProfile
 
-        raise FinalizeRequest()
+    # Ubuntu: install python-profiler when using this feature
+    profile_file = cmk.paths.var_dir + "/multisite.profile"
+
+    p = cProfile.Profile()
+    p.runcall(handler, html.req, html.fields, True)
+    p.dump_stats(profile_file)
+
+    file(profile_file + ".py", "w").write(
+        "#!/usr/bin/env python\n"
+        "import pstats\n"
+        "stats = pstats.Stats(%r)\n"
+        "stats.sort_stats('time').print_stats()\n" % profile_file)
+    os.chmod(profile_file + ".py", 0755)
+
+    raise FinalizeRequest()
 
 
 # Early initialization upon first start of the application by the server

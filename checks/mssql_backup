@@ -48,16 +48,15 @@
 
 # Might be None to have no thresholds or a tuple of two ints
 # (<warn age in seconds>, <crit age in seconds>)
-### mssql_backup_default_levels = None
 factory_settings["mssql_backup_default_levels"] = {
-    "database":             (None, None),
-    "database_diff":        (None, None),
-    "log":                  (None, None),
-    "file_or_filegroup":    (None, None),
-    "file_diff":            (None, None),
-    "partial":              (None, None),
-    "partial_diff":         (None, None),
-    "unspecific":           (None, None)
+    "database":             (0, 0),
+    "database_diff":        (0, 0),
+    "log":                  (0, 0),
+    "file_or_filegroup":    (0, 0),
+    "file_diff":            (0, 0),
+    "partial":              (0, 0),
+    "partial_diff":         (0, 0),
+    "unspecific":           (0, 0)
 }
 
 
@@ -134,11 +133,11 @@ def check_mssql_backup(item, params, parsed):
             age_warn, age_crit = params["database"]
         else:
             backup_type_var = backup_type_name.strip().replace(" ", "_")
-            age_warn, age_crit = params.get(backup_type_var, (None, None))
+            age_warn, age_crit = params[backup_type_var]
 
         state = 0
         sec_ago = time.time() - timestamp
-        if age_warn is not None and age_crit is not None:
+        if age_warn > 0 and age_crit > 0:
             if sec_ago >= age_crit:
                 state = 2
             elif sec_ago >= age_warn:
@@ -150,6 +149,11 @@ def check_mssql_backup(item, params, parsed):
             time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)),
             get_age_human_readable(sec_ago)
         )
+
+        if state != 0:
+            infotext += " (warn/crit at %s/%s)" % (
+                get_age_human_readable(age_warn), get_age_human_readable(age_crit)
+            )
 
         yield state, infotext, perfdata
 

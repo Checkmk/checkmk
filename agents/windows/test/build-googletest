@@ -31,7 +31,7 @@ for project in test mock ; do
     cp -r include/g${project} /usr/share/mingw-w64/include/
     for arch in 32 64 ; do
         cp ${builddirs[$arch]}/lib/.libs/libg${project}.a /usr/${archs[$arch]}${common}/lib/
-        ln -frs /usr/share/mingw-w64/include/g${project} /usr/${archs[$arch]}${common}/include/g${project}
+        ln -sf ../../share/mingw-w64/include/g${project} /usr/${archs[$arch]}${common}/include/g${project}
     done
     cd -
 done

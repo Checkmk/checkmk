@@ -64,7 +64,7 @@ setversion:
 
 build:
 	$(MAKE) packages
-	cd windows && ./make-agent
+	cd windows && sudo ./make-agent
 
 packages: rpm deb
 

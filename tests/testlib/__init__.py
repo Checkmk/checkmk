@@ -611,10 +611,15 @@ class Site(object):
 
 
     def set_config(self, key, val, with_restart=False):
+        if self.get_config(key) == val:
+            print "omd config: %s is already at %r" % (key, val)
+            return
+
         if with_restart:
             print "Stopping site"
             self.stop()
 
+        print "omd config: Set %s to %r" % (key, val)
         assert self.omd("config", "set", key, val) == 0
 
         if with_restart:
@@ -1080,7 +1085,6 @@ class CMKWebSession(WebSession):
 
         host = self.get_host(hostname)
 
-        print host
         assert host["hostname"] == hostname
         assert host["path"] == folder
         assert host["attributes"] == attributes
@@ -1109,7 +1113,6 @@ class CMKWebSession(WebSession):
             }),
         }, output_format="python")
 
-        print result
         assert type(result) == dict
         assert "ruleset" in result
         assert "configuration_hash" in result
@@ -1268,7 +1271,6 @@ class CMKWebSession(WebSession):
         # might not reflect the changes yet. Ask the core for a successful reload.
         def config_reloaded():
             new_t = self.site.live.query_value("GET status\nColumns: program_start\n")
-            print "New config load time: %s" % new_t
             return new_t > old_t
 
         reload_time, timeout = time.time(), 10
@@ -1362,14 +1364,14 @@ class CMKEventConsole(CMKWebSession):
 
     def activate_changes(self, web):
         old_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-        print "Old config load time: %s" % old_t
+        #print "Old config load time: %s" % old_t
         assert old_t > time.time() - 86400
 
         super(CMKEventConsole, self).activate_changes(allow_foreign_changes=True)
 
         def config_reloaded():
             new_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-            print "New config load time: %s" % new_t
+            #print "New config load time: %s" % new_t
             return new_t > old_t
 
         reload_time, timeout = time.time(), 10

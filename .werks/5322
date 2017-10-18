@@ -1,0 +1,10 @@
+Title: fortigate_node_sessions: Now upper levels are configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508311477
+Class: feature
+
+

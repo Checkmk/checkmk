@@ -24,9 +24,10 @@ for project in test mock ; do
     targets=lib/libg${project}.la
     autoreconf --install
     for arch in 32 64 ; do
-        build $arch &
+        build $arch
+        #&
     done
-    wait
+    #wait
     # make install is not supported by Google -> copy headers and libs
     cp -r include/g${project} /usr/share/mingw-w64/include/
     for arch in 32 64 ; do

@@ -524,8 +524,9 @@ def notify_rulebased(raw_context, analyse=False):
                 plugin_context = create_plugin_context(raw_context, params)
                 rbn_add_contact_information(plugin_context, contacts)
 
-                split_contexts = (params.get("disable_multiplexing") or
-                                  plugin not in ["", "mail", "asciimail"] or
+                split_contexts = (plugin not in ["", "mail", "asciimail"] or
+                                  # params can be a list (e.g. for custom notificatios)
+                                  params.get("disable_multiplexing") or
                                   bulk)
                 if not split_contexts:
                     plugin_contexts = [plugin_context]

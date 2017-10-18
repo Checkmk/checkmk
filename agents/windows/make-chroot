@@ -141,7 +141,7 @@ EOF
 
 # Debian pkg installation does not seem to link python executable
 if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
-    ln -frs $CHROOT_PATH/usr/bin/python2.7 $CHROOT_PATH/usr/bin/python
+    ln -sf python2.7 $CHROOT_PATH/usr/bin/python
 fi
 
 # We need to enable 32bit Wine

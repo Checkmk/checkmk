@@ -44,23 +44,20 @@ fi
 if [ -z $create ] ; then
     echo "chroot is up to date."
 else
-    sudo apt-get -y install "${chroot_dependencies[@]}" 
-    sudo VERSIONFILE=$versionfile \
-         CHROOT_PATH=$CHROOT_PATH \
-         CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./make-chroot
+    apt-get -y install "${chroot_dependencies[@]}"
+    VERSIONFILE=$versionfile CHROOT_PATH=$CHROOT_PATH \
+        CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./make-chroot
 fi
 
 # Build the Windows agent within chroot by calling the 'build-agent' script.
-sudo CHROOT_PATH=$CHROOT_PATH \
-     CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR \
-     NEW_VERSION=$NEW_VERSION \
-     ./do-chroot \
-     "$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets"
+CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR \
+    NEW_VERSION=$NEW_VERSION ./do-chroot \
+    "$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets"
 EXIT_CODE=$?
 
 # Some cleanup: chown build artifacts to the original user.
 find . -maxdepth 1 -regextype egrep \
 -regex '(.*\.(exe|msi|m4|cache|in))|.*\/.*build.*|.*plugins|.*Makefile.*|.*configure|.*comp.*|.*install.*|.*missing' \
--exec sudo chown -R $USER:$USER {} \;
+-exec chown -R $USER:$USER {} \;
 
 exit $EXIT_CODE

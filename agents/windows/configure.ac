@@ -41,7 +41,7 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MKTIME
 AC_CHECK_FUNCS([gethostname gettimeofday localtime_r memmove memset select setlocale socket strcasecmp strchr strcspn strdup strerror strrchr strtol strtoul strtoull])
 
-AC_CONFIG_FILES([Makefile test/Makefile])
+AC_CONFIG_FILES([Makefile])
 
 AC_SUBST([MT], ['mt${EXEEXT}'])
 

@@ -7569,6 +7569,17 @@ graph_info["round_trip_average"] = {
     ]
 }
 
+graph_info["packet_loss"] = {
+    "title" : _("Packet loss"),
+    "metrics" : [
+        ("pl", "area"),
+    ],
+    "scalars": [
+        "rta:warn",
+        "rta:crit",
+    ]
+}
+
 for idx in range(1, MAX_NUMBER_HOPS):
     graph_info["hop_%d_round_trip_average" % idx] = {
         "title" : _("Hop %d Round trip average") % idx,

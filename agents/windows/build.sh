@@ -66,14 +66,14 @@ function build {
                  CC=${archs[$1]}${common}-gcc-posix \
                  CXX=${archs[$1]}${common}-g++-posix \
                  WINDRES=${archs[$1]}${common}-windres \
-                 STRIP=${archs[$1]}${common}-strip
+                 STRIP=${archs[$1]}${common}-strip || return 1
 
     # Default (no targets given): do parallel build and install non-debug exe's.
     if [ -z "$targets" ] ; then
-        make -j${njobs} && make install-strip
+        make -j${njobs} && make install-strip || return 1
     else
         # If special targets given, do just them.
-        make -j${njobs} "$targets"
+        make -j${njobs} "$targets" || return 1
     fi
     cd -
 }

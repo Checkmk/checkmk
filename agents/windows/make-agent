@@ -60,7 +60,7 @@ EXIT_CODE=$?
 
 # Some cleanup: chown build artifacts to the original user.
 find . -maxdepth 1 -regextype egrep \
--regex '(.*\.(exe|msi|m4))|.*\/build.*|.*build_version|.*plugins|.*msibuild|.*Makefile.*|.*configure' \
+-regex '(.*\.(exe|msi|m4|cache|in))|.*\/.*build.*|.*plugins|.*Makefile.*|.*configure|.*comp.*|.*install.*|.*missing' \
 -exec sudo chown -R $USER:$USER {} \;
 
 exit $EXIT_CODE

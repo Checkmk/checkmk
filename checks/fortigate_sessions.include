@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,29 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 
-fortigate_sessions_default_levels = (100000, 150000)
-
-
-def inventory_fortigate_sessions(info):
-    return [(None, "fortigate_sessions_default_levels")]
-
-
-def check_fortigate_sessions(item, params, info):
-    try:
-        return fortigate_sessions(int(info[0][0]), params)
-    except (IndexError, ValueError):
-        return
-
-
-check_info["fortigate_sessions"] = {
-    "inventory_function"    : inventory_fortigate_sessions,
-    "check_function"        : check_fortigate_sessions,
-    "group"                 : "fortigate_sessions",
-    "service_description"   : "Sessions",
-    "has_perfdata"          : True,
-    # uses mib FORTINET-MIB-280
-    "snmp_scan_function"    : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0") and\
-                                     oid(".1.3.6.1.4.1.12356.1.10.0"),
-    "snmp_info"		        : ( ".1.3.6.1.4.1.12356.1", [ 10 ]),
-    "includes"              : ["fortigate_sessions.include"],
-}
+def fortigate_sessions(sessions, params):
+    warn, crit = params
+    infotext = "%d Sessions" % sessions
+    state = 0
+    if sessions >= crit:
+        state = 2
+    elif sessions >= warn:
+        state = 1
+    if state:
+        infotext += " (warn/crit at %d/%d)" % (warn, crit)
+    return state, infotext, [("session", sessions, warn, crit)]

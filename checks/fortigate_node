@@ -235,24 +235,7 @@ def check_fortigate_node_ses(item, params, parsed):
     if item in parsed["nodes"]:
         if type(params) == dict:
             params = params["levels"]
-
-        warn, crit = map(int, params)
-
-        current = parsed["nodes"][item]["sessions"]
-
-        status = 0
-        if current >= crit:
-            status = 2
-        elif current >= warn:
-            status = 1
-
-        if status > 0:
-            wcsuffix = ", (warn/crit at %d/%d)" % (warn, crit)
-        else:
-            wcsuffix = ""
-
-        return status, "%s Sessions%s" % (current, wcsuffix),\
-            [("session", current, warn, crit)]
+        return fortigate_sessions(parsed["nodes"][item]["sessions"], params)
 
 
 check_info["fortigate_node.sessions"] = {
@@ -260,4 +243,6 @@ check_info["fortigate_node.sessions"] = {
     "check_function"      : check_fortigate_node_ses,
     "service_description" : "Sessions %s",
     "has_perfdata"        : True,
+    "group"               : "fortigate_node_sessions",
+    "includes"            : ["fortigate_sessions.include"],
 }

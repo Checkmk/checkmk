@@ -228,17 +228,31 @@ register_check_parameters(
         'dict'
 )
 
+fortigate_sessions_element = Tuple(
+    title = _(u"Levels for active sessions"),
+    elements = [
+        Integer( title = _(u"Warning at"), default_value = 100000, size = 10 ),
+        Integer( title = _(u"Critical at"), default_value = 150000, size = 10 ),
+    ])
+
 register_check_parameters(
     subgroup_networking,
     "fortigate_sessions",
     _(u"Fortigate Active Sessions"),
-    Tuple(
-        title = _(u"Levels for active sessions"),
-        elements = [
-            Integer( title = _(u"Warning at"), default_value = 100000, size = 10 ),
-            Integer( title = _(u"Critical at"), default_value = 150000, size = 10 ),
-        ]),
+    fortigate_sessions_element,
     None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_networking,
+    "fortigate_node_sessions",
+    _(u"Fortigate Active Sessions"),
+    fortigate_sessions_element,
+    TextAscii(
+        title = _("Node name"),
+        allow_empty = False
+    ),
     "first"
 )
 

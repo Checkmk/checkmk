@@ -10,6 +10,8 @@
 #
 # Requires the environment variable CHROOT_BUILD_DIR to be set.
 
+set -e
+
 # Ensure that CHROOT_BUILD_DIR is set.
 [[ -z $CHROOT_BUILD_DIR ]] && exit 1
 
@@ -29,10 +31,16 @@ elif [[ " $targets " =~ " unittest " ]] ; then
 fi
 
 # Build 32 and 64 bit in parallel, wait for child processes to terminate.
+children=()
 for arch in "${build_archs[@]}" ; do
     build $arch &
+    children+=($!)
 done
-wait
+
+for pid in "${children[@]}" ; do
+    # If any subprocess fails, wait for the rest to exit in a controlled way.
+    wait $pid || { wait; exit 1; }
+done
 
 # If no special targets given, produce msi installer as post-install step.
 if [[ -z "$targets" ]] ; then

@@ -8,6 +8,8 @@
 #          Possible make targets. By default, a parallel build and
 #          install-strip (non-debug) is done and an msi installer produced.
 
+set -e
+
 . build.sh
 parse-args "$@"
 

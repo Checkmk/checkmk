@@ -144,6 +144,9 @@ if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
     ln -sf python2.7 $CHROOT_PATH/usr/bin/python
 fi
 
+# "Disable" apt privilege dropping in chroot
+sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
+
 # We need to enable 32bit Wine
 ./do-chroot "dpkg --add-architecture i386 && apt-get update && apt-get -y install wine32"
 

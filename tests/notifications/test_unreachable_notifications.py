@@ -69,8 +69,6 @@ def scenario(request, web, site):
         site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-child" % time.time())
         site.live.command("[%d] DISABLE_FLAP_DETECTION" % time.time())
 
-        #set_initial_state(site, core)
-
         yield request.param
     finally:
         #
@@ -330,9 +328,6 @@ def test_child_down_after_parent_recovers(scenario, site, initial_state):
         # - Set parent UP (again), expect DOWN notification for child
         site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
 
-        # Seems the child notification is not processed immediately (TODO check this)
-        #time.sleep(1)
-
     log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;DOWN;check-mk-notify;")
 
 
@@ -341,36 +336,58 @@ def test_child_down_after_parent_recovers(scenario, site, initial_state):
 # b) Child goes down and becomes unreachable
 # c) Parent goes up
 # d) Child goes up
-# TODO: Broken: test_child_up_after_parent_recovers[cmc-unreachable_disabled]
-#def test_child_up_after_parent_recovers(scenario, site, initial_state):
-#    log = HistoryLog(site, scenario.core)
-#
-#    # - Set parent down, expect DOWN notification
-#    _send_parent_down(scenario, site, log)
-#    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
-#
-#    # - set child down, expect UNREACHABLE notification
-#    _send_child_down_expect_unreachable(scenario, site, log)
-#
-#    # - Set parent up, expect UP notification
-#    _send_parent_recovery(scenario, site, log)
-#
-#    # - Next service check UP, expect no notification (till next parent check confirms UP)
-#    site.send_host_check_result("notify-test-child", STATE_UP, "UP")
-#    log.check_logged("HOST ALERT: notify-test-child;UP;HARD;1;")
-#
-#    # - Set parent UP, expect UP notification for child
-#    site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
-#
-#    if scenario.unreachable_enabled:
-#        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
-#    else:
-#        # TODO: Bug: It sends a recovery notification for a problem that has never
-#        #            been notified before.
-#        # Problem: We can not disable the recovery notification since
-#        #          we don't know whether or not the host was down before it
-#        #          became unreachable.
-#        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
+def test_child_up_after_parent_recovers(scenario, site, initial_state):
+    log = HistoryLog(site, scenario.core)
+
+    # - Set parent down, expect DOWN notification
+    _send_parent_down(scenario, site, log)
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
+    # - set child down, expect UNREACHABLE notification
+    _send_child_down_expect_unreachable(scenario, site, log)
+
+    # - Set parent up, expect UP notification
+    _send_parent_recovery(scenario, site, log)
+
+    # - Next service check UP, expect no notification (till next parent check confirms UP)
+    site.send_host_check_result("notify-test-child", STATE_UP, "UP")
+    log.check_logged("HOST ALERT: notify-test-child;UP;HARD;1;")
+
+    # - Set parent UP, expect UP notification for child
+    site.send_host_check_result("notify-test-parent", STATE_UP, "UP")
+
+    if scenario.unreachable_enabled:
+        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
+    else:
+        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
+
+
+# Test the situation where:
+# a) Parent goes down
+# b) Child goes down and becomes unreachable
+# c) Child goes up
+# d) Parent goes up
+def test_child_down_and_up_while_not_reachable(scenario, site, initial_state):
+    log = HistoryLog(site, scenario.core)
+
+    # - Set parent down, expect DOWN notification
+    _send_parent_down(scenario, site, log)
+    log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+
+    # - set child down, expect UNREACHABLE notification
+    _send_child_down_expect_unreachable(scenario, site, log)
+
+    # - Set child up, expect no notification
+    site.send_host_check_result("notify-test-child", STATE_UP, "UP")
+    log.check_logged("HOST ALERT: notify-test-child;UP;HARD;1;")
+
+    if scenario.unreachable_enabled:
+        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
+    else:
+        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP")
+
+    # - Set parent up, expect UP notification
+    _send_parent_recovery(scenario, site, log)
 
 
 # Test the situation where:
@@ -429,6 +446,7 @@ def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_s
 # a) Child goes down
 # b) Parent goes down, child becomes unreachable
 # c) Child goes up
+# d) Parent goes up
 def test_down_child_becomes_unreachable_then_up(scenario, site, initial_state):
     log = HistoryLog(site, scenario.core)
 

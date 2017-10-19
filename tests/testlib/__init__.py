@@ -865,8 +865,8 @@ class WebSession(requests.Session):
                    response.url, response.headers.get('Location', "None"))
 
         if response.history:
-            print "Followed redirect (%d) %s -> %s" % \
-                (response.history[0].status_code, response.history[0].url, response.url)
+            #print "Followed redirect (%d) %s -> %s" % \
+            #    (response.history[0].status_code, response.history[0].url, response.url)
             if not allow_redirect_to_login:
                 assert "check_mk/login.py" not in response.url, \
                        "Followed redirect (%d) %s -> %s" % \

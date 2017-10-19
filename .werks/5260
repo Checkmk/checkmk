@@ -1,0 +1,11 @@
+Title: Fix presentation of mirrored areas
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1508413904
+Class: fix
+
+This werk fixes a bug in Check_MK metrics system:
+When chosing "Mirrored Area" as a style in Graph Designer for multiple metrics, a "Mirrored Stacked" presentation got displayed instead.

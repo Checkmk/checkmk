@@ -1,0 +1,13 @@
+Title: table.cell(): Fix escaping of cell content
+Component: multisite
+State: open
+Date: 2017-10-19 15:43:24
+Targetversion: 1.5.0
+Class: bug
+
+The content of the cell, that can be provided via argument, is not escaped by default. This opens
+several places for XSS attacks. We need to make this method escape the content by default. In
+case one wants to add HTML code there, it must be wrapped into a HTML() object or written out after
+table.cell() with html.write(...).
+
+There may be several places where wanted HTML code is "destroyed". Can we somehow find these places?

@@ -16,7 +16,7 @@ parse-args "$@"
 chroot_dependencies=(debootstrap debian-archive-keyring)
 versionfile=chroot_version
 
-base="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
+base="$(realpath ../..)"
 
 # May be set from external environment. Otherwise use chroot
 # directory in agents/windows
@@ -49,15 +49,11 @@ else
         CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./make-chroot
 fi
 
-# Build the Windows agent within chroot by calling the 'build-agent' script.
+# Build the Windows agent within chroot by calling the 'build-agent' script as
+# $SUDO_USER.
 CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR \
     NEW_VERSION=$NEW_VERSION ./do-chroot \
-    "$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets"
+    "/bin/su - $SUDO_USER -m -c '$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"
 EXIT_CODE=$?
-
-# Some cleanup: chown build artifacts to the original user.
-find . -maxdepth 1 -regextype egrep \
--regex '(.*\.(exe|msi|m4|cache|in))|.*\/.*build.*|.*plugins|.*Makefile.*|.*configure|.*comp.*|.*install.*|.*missing' \
--exec chown -R $USER:$USER {} \;
 
 exit $EXIT_CODE

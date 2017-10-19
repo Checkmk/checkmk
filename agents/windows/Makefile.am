@@ -25,10 +25,11 @@ check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 	cp $(VPATH)/check_mk_agent.ico check_mk_agent.ico
 	$(WINDRES) $< -O coff -o $@
 
-# Wine seems to depend on X Window authorization. Quiet "No protocol specified"
-# warning by setting the DISPLAY variable accordingly.
+# Wine depends on X Server and may produce a number of warnings at startup.
+# Using Xvfb does not work properly, either. Simply send those stderr warnings
+# to /dev/null as the test output will go to stdout (and/or xml file) anyway.
 unittest: WindowsAgentTest$(EXEEXT)
-	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT)
+	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
 
 check_mk_agent_SOURCES = \
         Configurable.cc \
@@ -92,8 +93,8 @@ wmitest_SOURCES = wmitest.cc stringutil.cc WinApi.cc wmiHelper.cc
 
 CLEANFILES = \
         *.ico *.res *.rc config.* stamp-* Makefile \
-        sections/.dirstamp \
-        $$(find .deps/ sections/.deps -type f) \
+        sections/.dirstamp test/.dirstamp \
+        $$(find .deps/ sections/.deps test/.deps -type f) \
         $(addprefix $(bindir)/,$(bin_PROGRAMS)) \
         $(patsubst %$(EXEEXT),%-64$(EXEEXT),$(addprefix $(bindir)/,$(bin_PROGRAMS))) \
         $(patsubst %$(EXEEXT),%.msi,$(addprefix $(bindir)/,$(bin_PROGRAMS)))

@@ -10,7 +10,7 @@ MIRROR=http://de.archive.ubuntu.com/ubuntu
 export HOSTNAME=cmk-windows-agent-chroot
 export LC_ALL=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LANG=en_US.UTF-8
 
-BASE="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
+BASE="$(realpath ../..)"
 
 if [ -z $CHROOT_PATH ]; then
     echo "ERROR: CHROOT_PATH not set"
@@ -78,7 +78,7 @@ package_names=(
     libio-socket-ssl-perl
     liblwp-mediatypes-perl
     liblwp-protocol-https-perl
-    libmailtools-perl
+     libmailtools-perl
     libnet-http-perl
     libnet-smtp-ssl-perl
     libnet-ssleay-perl
@@ -143,6 +143,9 @@ EOF
 if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
     ln -sf python2.7 $CHROOT_PATH/usr/bin/python
 fi
+
+# Add user for building windows agent without root privileges
+./do-chroot "useradd -lmo -u $(id -u $SUDO_USER) -s /bin/bash $SUDO_USER"
 
 # "Disable" apt privilege dropping in chroot
 sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd

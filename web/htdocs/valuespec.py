@@ -3676,7 +3676,7 @@ class ElementSelection(ValueSpec):
 
     def value_to_text(self, value):
         self.load_elements()
-        return self._elements.get(value, value)
+        return html.attrencode(self._elements.get(value, value))
 
     def from_html_vars(self, varprefix):
         return html.var(varprefix)

@@ -448,16 +448,29 @@ def getch():
     return ch
 
 def input_choice(what, choices):
+    next_index = 0
     ctc = {}
     texts = []
     for choice in choices:
         if type(choice) == tuple:
             choice = choice[0]
+
+        added = False
+
+        # Find an identifying character for the input choice. In case all possible
+        # characters are already used start using unique numbers
         for c in str(choice):
             if c not in ".-_/" and c not in ctc:
                 ctc[c] = choice
                 texts.append(str(choice).replace(c, tty_bold + c + tty_normal, 1))
+                added = True
                 break
+
+        if not added:
+            ctc["%s" % next_index] = choice
+            texts.append("%s:%s" % ("%s%d%s" % (tty_bold, next_index, tty_normal), choice))
+            next_index += 1
+
 
     while True:
         sys.stdout.write("%s (%s): " % (what, ", ".join(texts)))

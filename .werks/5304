@@ -1,0 +1,12 @@
+Title: mssql_backup: Fixed error if existing rule has been set before 1.5.0
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508398316
+Class: fix
+
+In werk #4811 the ruleset for mssql_backup has been extended. Since then the
+GUI would crash if a rule has been set up previously to this update. This
+has been fixed now.

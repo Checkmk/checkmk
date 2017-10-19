@@ -14,7 +14,7 @@ echo "$C files copied"
 
 if [ "$KILL_SITE_APACHE" -eq "1" ]; then
     echo "KILLING site apache of $SITE"
-    sudo killall -9 -u $SITE apache2
+    sudo killall -9 -u $SITE apache2 || true
 fi
 
 if [ -z $ONLY_COPY ]; then

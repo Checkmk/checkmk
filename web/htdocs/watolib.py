@@ -8396,8 +8396,25 @@ def edit_group(name, group_type, extra_info):
     if name not in groups:
         raise MKUserError("name", _("Unknown group: %s") % name)
 
+
+    import copy
+    old_group = copy.deepcopy(groups[name])
+    old_customer = managed.get_customer_id(old_group)
+    new_customer = managed.get_customer_id(extra_info)
+
     _set_group(all_groups, group_type, name, extra_info)
-    add_group_change(extra_info, "edit-%sgroups" % group_type, _("Updated properties of %s group %s") % (group_type, name))
+    if cmk.is_managed_edition() and old_customer != new_customer:
+        add_group_change(old_group, "edit-%sgroups" % group_type,
+                    _("Removed %sgroup %s from customer %s") % (group_type,
+                                                                name,
+                                                                managed.get_customer_name_by_id(old_customer)))
+        add_group_change(extra_info, "edit-%sgroups" % group_type,
+                        _("Moved %sgroup %s to customer %s. Additional properties may have changed.") %
+                                (group_type,
+                                 name,
+                                 managed.get_customer_name_by_id(new_customer)))
+    else:
+        add_group_change(extra_info, "edit-%sgroups" % group_type, _("Updated properties of %s group %s") % (group_type, name))
 
 
 def delete_group(name, group_type):
@@ -8425,8 +8442,8 @@ def delete_group(name, group_type):
 # by the CME code for better encapsulation.
 def add_group_change(group, action_name, text):
     group_sites = None
-    if cmk.is_managed_edition() and not managed.is_global(group["customer"]):
-        group_sites = managed.get_sites_of_customer(group["customer"])
+    if cmk.is_managed_edition() and not managed.is_global(managed.get_customer_id(group)):
+        group_sites = managed.get_sites_of_customer(managed.get_customer_id(group))
 
     add_change(action_name, text, sites=group_sites)
 

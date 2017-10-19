@@ -1,0 +1,10 @@
+Title: Edit host/service/contactgroups: Fixed exception in CME, improved audit logging
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cme
+State: unknown
+Version: 1.5.0i1
+Date: 1508409286
+

@@ -1,9 +1,9 @@
 Title: Notification bulking seems to sometimes duplicate notification emails
 Component: notification
-State: open
+Class: bug
+State: wontfix
 Date: 2015-02-25 12:07:45
 Targetversion: future
-Class: bug
 
 A logfile:
 2015-02-09 00:00:08 Bulk /omd/sites/MYSITE/var/check_mk/notify/bulk/HARRI.HIRSCH/mail/300,1000,host,BLABAC01 is not ripe yet (age: 250, count: 1)!
@@ -1696,3 +1696,6 @@ A logfile:
 2015-02-09 14:28:12    -> HARRI/mail /omd/sites/MYSITE/var/check_mk/notify/bulk/HARRI.HIRSCH/mail/300,1000,host,BLASWI004
 2015-02-09 14:28:13 Cannot remove /omd/sites/MYSITE/var/check_mk/notify/bulk/HARRI.HIRSCH/mail/300,1000,host,BLASWI004/0d32a364-f644-4c96-8dbb-211c7b7701f3: [Errno 2] No such file or directory: '/omd/sites/MYSITE/var/check_mk/notify/bulk/HARRI.HIRSCH/mail/300,1000,host,BLASWI004/0d32a364-f644-4c96-8dbb-211c7b7701f3'
 2015-02-09 14:28:13 Warning: cannot remove directory /omd/sites/MYSITE/var/check_mk/notify/bulk/HARRI.HIRSCH/mail/300,1000,host,BLASWI004: [Errno 2] No such file or directory: '/omd/sites/MYSITE/var/check_mk/notify/bulk/HARRI.HIRSCH/mail/300,1000,host,BLASWI004'
+
+2017-10-19 08:05:16: changed state open -> wontfix
+Needs more details. Closing the ticket for now.

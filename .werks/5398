@@ -1,0 +1,10 @@
+Title: Agent bakery: Hide "Bake Agents" context button when not permitted to bake
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1508395191
+Class: fix
+
+

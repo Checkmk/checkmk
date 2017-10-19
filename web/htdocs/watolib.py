@@ -8396,23 +8396,27 @@ def edit_group(name, group_type, extra_info):
     if name not in groups:
         raise MKUserError("name", _("Unknown group: %s") % name)
 
-
     import copy
-    old_group = copy.deepcopy(groups[name])
-    old_customer = managed.get_customer_id(old_group)
-    new_customer = managed.get_customer_id(extra_info)
+    old_group_backup = copy.deepcopy(groups[name])
 
     _set_group(all_groups, group_type, name, extra_info)
-    if cmk.is_managed_edition() and old_customer != new_customer:
-        add_group_change(old_group, "edit-%sgroups" % group_type,
-                    _("Removed %sgroup %s from customer %s") % (group_type,
-                                                                name,
-                                                                managed.get_customer_name_by_id(old_customer)))
-        add_group_change(extra_info, "edit-%sgroups" % group_type,
-                        _("Moved %sgroup %s to customer %s. Additional properties may have changed.") %
-                                (group_type,
-                                 name,
-                                 managed.get_customer_name_by_id(new_customer)))
+    if cmk.is_managed_edition():
+        old_customer = managed.get_customer_id(old_group_backup)
+        new_customer = managed.get_customer_id(extra_info)
+        if old_customer != new_customer:
+            add_group_change(old_group_backup, "edit-%sgroups" % group_type,
+                        _("Removed %sgroup %s from customer %s") % (group_type,
+                                                                    name,
+                                                                    managed.get_customer_name_by_id(old_customer)))
+            add_group_change(extra_info, "edit-%sgroups" % group_type,
+                            _("Moved %sgroup %s to customer %s. Additional properties may have changed.") %
+                                    (group_type,
+                                     name,
+                                     managed.get_customer_name_by_id(new_customer)))
+        else:
+            add_group_change(old_group_backup, "edit-%sgroups" % group_type,
+                        _("Updated properties of %sgroup %s") % (group_type,
+                                                                    name))
     else:
         add_group_change(extra_info, "edit-%sgroups" % group_type, _("Updated properties of %s group %s") % (group_type, name))
 

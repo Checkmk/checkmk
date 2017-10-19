@@ -276,8 +276,8 @@ def test_parent_down_child_state_changes(scenario, site, initial_state):
     # - set child down, expect UNREACHABLE notification
     assert site.get_host_state("notify-test-child") == STATE_UP
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
-
     log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+
     if scenario.unreachable_enabled:
         log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
     else:
@@ -285,17 +285,18 @@ def test_parent_down_child_state_changes(scenario, site, initial_state):
 
     # - set child up, expect UP notification
     site.send_host_check_result("notify-test-child", STATE_UP, "UP")
-
     log.check_logged("HOST ALERT: notify-test-child;UP;HARD;1;")
 
-    if scenario.core == "cmc" or scenario.unreachable_enabled:
+    if scenario.unreachable_enabled:
         log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;")
+    else:
+        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;")
 
     # - set child down, expect UNREACHABLE notification
     assert site.get_host_state("notify-test-child") == STATE_UP
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
-
     log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
+
     if scenario.unreachable_enabled:
         log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
     else:

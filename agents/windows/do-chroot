@@ -2,13 +2,13 @@
 
 # $1: cmd(s) to be executed within chroot jail
 # if non-existent, enter chroot jail with 'bash -l'
-CMD="$1"
 
+CMD="$1"
 export HOSTNAME=cmk-windows-agent-chroot
 unset LANG
 CHROOTNAME=WinAgent
 
-BASE="$(dirname "$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")")"
+BASE="$(realpath ../..)"
 
 if [ -z $CHROOT_PATH ]; then
     echo "ERROR: CHROOT_PATH not set"
@@ -41,11 +41,10 @@ if [ ! -e $CHROOT_PATH/$CHROOT_BUILD_DIR/Makefile ] ; then
 fi
 
 if [ -n "$CMD" ] ; then
-    chroot $CHROOT_PATH \
-           /usr/bin/env CHROOTNAME=$CHROOTNAME HOME=/root NEW_VERSION=$NEW_VERSION \
-           bash -c "$CMD"
+    chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME \
+           NEW_VERSION=$NEW_VERSION bash -c "$CMD"
 else
-    chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME HOME=/root bash -l
+    chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME bash -l
 fi
 
 umount $CHROOT_PATH/$CHROOT_BUILD_DIR

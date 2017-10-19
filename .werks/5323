@@ -1,0 +1,21 @@
+Title: Notification mail: Added variables which will be replaced by the entities choosen below 'Create separate notification bulks based on'
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508416809
+Class: feature
+
+If bulking is enabled in notification mail the following variables
+will be replaced if the related entity is choosen below
+<i>Create separate notification bulks based on</i>. These are
+<ul>
+<li>Folder: <code>$FOLDER$</code></li>
+<li>Hostname: <code>$HOSTNAME$</code></li>
+<li>Service description: <code>$SERVICEDESC$</code></li>
+<li>Service level: <code>$SERVICE_LEVEL$</code></li>
+<li>Check type: <code>$CHECKCOMMAND$</code></li>
+<li>Host/Service state: <code>$STATE$</code></li>
+<li>Event console contact: <code>$EC_CONTACT$</code></li>
+</ul>

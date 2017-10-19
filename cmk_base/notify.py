@@ -1444,8 +1444,12 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
         bulk_path = (contact, plugin, str(bulk["interval"]), str(bulk["count"]))
     bulkby = bulk["groupby"]
 
+    if "bulk_subject" in bulk:
+        plugin_context["PARAMETER_BULK_SUBJECT"] = bulk["bulk_subject"]
+
     if "host" in bulkby:
         bulk_path += ("host", plugin_context["HOSTNAME"])
+
     elif "folder" in bulkby:
         bulk_path += ("folder", find_wato_folder(plugin_context))
 
@@ -1453,27 +1457,19 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
         bulk_path += ("service", plugin_context.get("SERVICEDESC", ""))
 
     if "sl" in bulkby:
-        sl = plugin_context.get(what + "_SL", "")
-        bulk_path += ("sl", sl)
+        bulk_path += ("sl", plugin_context.get(what + "_SL", ""))
 
     if "check_type" in bulkby:
-        command = plugin_context.get(what + "CHECKCOMMAND", "").split("!")[0]
-        bulk_path += ("check_type", command)
+        bulk_path += ("check_type", plugin_context.get(what + "CHECKCOMMAND", "").split("!")[0])
 
     if "state" in bulkby:
-        state = plugin_context.get(what + "STATE", "")
-        bulk_path += ("state", state)
+        bulk_path += ("state", plugin_context.get(what + "STATE", ""))
 
     if "ec_contact" in bulkby:
-        ec_contact = plugin_context.get("EC_CONTACT", "")
-        bulk_path += ("ec_contact", ec_contact)
+        bulk_path += ("ec_contact", plugin_context.get("EC_CONTACT", ""))
 
     if "ec_comment" in bulkby:
-        ec_comment = plugin_context.get("EC_COMMENT", "")
-        bulk_path += ("ec_comment", ec_comment)
-
-    if "bulk_subject" in bulk:
-        plugin_context["PARAMETER_BULK_SUBJECT"] = bulk["bulk_subject"]
+        bulk_path += ("ec_comment", plugin_context.get("EC_COMMENT", ""))
 
     # User might have specified _FOO instead of FOO
     bulkby_custom = bulk.get("groupby_custom", [])

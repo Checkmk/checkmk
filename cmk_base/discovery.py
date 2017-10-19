@@ -36,6 +36,7 @@ import cmk.paths
 import cmk.defines as defines
 from cmk.exceptions import MKGeneralException
 
+import cmk.store as store
 import cmk_base.crash_reporting
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
@@ -672,33 +673,17 @@ def _in_keepalive_mode():
 #   '----------------------------------------------------------------------'
 
 # gather auto_discovered check_types for this host
-def _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan, use_caches):
+def _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
     check_types = set()
     if config.is_snmp_host(hostname):
-        # May we do an SNMP scan?
-        if do_snmp_scan:
-            try:
-                check_types.update(snmp_scan(hostname, ipaddress, on_error))
-            except Exception, e:
-                if on_error == "raise":
-                    raise
-                elif on_error == "warn":
-                    console.error("SNMP scan failed: %s" % e)
-
-        # Otherwise we gather all check types from autochecks and cached files.
-        else:
-            snmp_check_types = set(checks.discoverable_snmp_checks())
-            for check_type, _unused_item, _unused_params in read_autochecks_of(hostname):
-                if check_type in snmp_check_types:
-                    check_types.add(check_type)
-
-            if use_caches and os.path.isdir(cmk.paths.tcp_cache_dir):
-                for cachefile in os.listdir(cmk.paths.tcp_cache_dir):
-                    if not cachefile.startswith("%s." % hostname):
-                        continue
-                    check_type = cachefile.split("%s." % hostname)[-1]
-                    if check_type in snmp_check_types:
-                        check_types.add(check_type)
+        try:
+            check_types.update(snmp_scan(hostname, ipaddress, on_error=on_error,
+                                         do_snmp_scan=do_snmp_scan))
+        except Exception, e:
+            if on_error == "raise":
+                raise
+            elif on_error == "warn":
+                console.error("SNMP scan failed: %s" % e)
 
     if config.is_tcp_host(hostname) or piggyback.has_piggyback_info(hostname):
         check_types.update(checks.discoverable_tcp_checks())
@@ -740,7 +725,8 @@ def _discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error
         if protocol == "snmp":
             management_check_types = []
             try:
-                management_check_types = snmp_scan(hostname, address, on_error)
+                management_check_types = snmp_scan(hostname, address, on_error=on_error,
+                                                   do_snmp_scan=do_snmp_scan)
             except Exception, e:
                 if on_error == "raise":
                     raise
@@ -755,7 +741,7 @@ def _discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error
 
     # Check types not specified (via --checks=)? Determine automatically
     if not check_types:
-        check_types = _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan, use_caches)
+        check_types = _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan)
 
     return services + _discover_services_impl(hostname, check_types, use_caches, on_error, ipaddress)
 
@@ -768,6 +754,7 @@ def _discover_services_impl(hostname, check_types, use_caches, on_error,
 
     discovered_services = []
     try:
+        snmp.initialize_snmp_cache_info_tables(hostname)
         for check_type in check_types:
             try:
                 for item, paramstring in _discover_check_type(hostname, ipaddress, check_type,
@@ -779,12 +766,15 @@ def _discover_services_impl(hostname, check_types, use_caches, on_error,
                 if cmk.debug.enabled():
                     raise
                 raise MKGeneralException("Exception in check plugin '%s': %s" % (check_type, e))
+
+        snmp.write_snmp_cache_info_tables(hostname, do_submit=agent_data.do_submit())
         return discovered_services
+
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
+def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_scan=True):
     import cmk_base.inventory_plugins as inventory_plugins
 
     # Make hostname globally available for scan functions.
@@ -792,11 +782,12 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     # this to evaluate if_disabled_if64_checks.
     checks.set_hostname(hostname)
 
+    snmp.initialize_single_oid_cache(hostname)
     console.vverbose("  SNMP scan:\n")
     if not rulesets.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
         for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
                            (".1.3.6.1.2.1.1.2.0", "system object") ]:
-            value = snmp.get_single_oid(hostname, ipaddress, oid)
+            value = snmp.get_single_oid(hostname, ipaddress, oid, do_snmp_scan=do_snmp_scan)
             if value == None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
@@ -807,9 +798,8 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "
                  "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
-        snmp.set_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
-        snmp.set_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
-
+        snmp.set_single_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
+        snmp.set_single_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
 
     found = []
     if for_inv:
@@ -846,11 +836,12 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
         if scan_function:
             try:
                 def oid_function(oid, default_value=None):
-                    value = snmp.get_single_oid(hostname, ipaddress, oid, check_type)
+                    value = snmp.get_single_oid(hostname, ipaddress, oid, check_type, do_snmp_scan=do_snmp_scan)
                     if value == None:
                         return default_value
                     else:
                         return value
+
                 result = scan_function(oid_function)
                 if result is not None and type(result) not in [ str, bool ]:
                     if on_error == "warn":
@@ -878,6 +869,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     if default_found:
         console.vverbose("   without scan function: %s%s%s%s\n" % (tty.bold, tty.blue, " ".join(default_found), tty.normal))
 
+    snmp.write_single_oid_cache(hostname)
     return sorted(found)
 
 
@@ -1046,7 +1038,7 @@ def _get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan, on_e
     # Match with existing items -> "old" and "vanished"
     old_items = parse_autochecks_file(hostname)
     for check_type, item, paramstring in old_items:
-        if(check_type, item) not in services:
+        if (check_type, item) not in services:
             services[(check_type, item)] = ("vanished", paramstring)
         else:
             services[(check_type, item)] = ("old", paramstring)
@@ -1363,8 +1355,8 @@ def parse_autochecks_file(hostname):
     path = "%s/%s.mk" % (cmk.paths.autochecks_dir, hostname)
     if not os.path.exists(path):
         return []
-    lineno = 0
 
+    lineno = 0
     table = []
     for line in file(path):
         lineno += 1

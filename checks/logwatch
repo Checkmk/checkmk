@@ -278,7 +278,7 @@ def inventory_logwatch(info):
 # ignored.
 def check_logwatch(item, params, info):
     def cachefile_path(node):
-        return cmk.paths.tcp_cache_dir + "/" + node
+        return "%s/%s" % (cmk.paths.tcp_cache_dir, node)
 
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)

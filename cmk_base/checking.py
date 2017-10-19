@@ -41,6 +41,7 @@ import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
+import cmk_base.snmp as snmp
 import cmk_base.agent_data as agent_data
 import cmk_base.item_state as item_state
 import cmk_base.core as core
@@ -388,6 +389,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
     else:
         is_management_snmp = False
 
+    snmp.initialize_snmp_cache_info_tables(hostname)
     for checkname, item, params, description in table:
         if checks.is_snmp_check(checkname) and is_management_snmp:
             address = management_addr
@@ -397,6 +399,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         res = execute_check(checkname, item, params, description, address)
         if res:
             num_success += 1
+    snmp.write_snmp_cache_info_tables(hostname)
 
     if fetch_agent_version:
         cmk_info = { "version" : "(unknown)" }

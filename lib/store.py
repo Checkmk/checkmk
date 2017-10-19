@@ -153,6 +153,7 @@ def save_data_to_file(path, data, pretty=True):
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
 def save_file(path, content, mode=0660):
+    tmp_path = None
     try:
         tmp_path = None
 

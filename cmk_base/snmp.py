@@ -35,6 +35,7 @@ import cmk_base.utils
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.classic_snmp as classic_snmp
+import cmk.store as store
 import cmk.cpu_tracking as cpu_tracking
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.agent_simulator
@@ -55,9 +56,91 @@ OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the
 _enforce_stored_walks = False
 
 # TODO: Replace this by generic caching
-g_single_oid_hostname        = None
-g_single_oid_cache           = {}
-g_walk_cache                 = {}
+_g_single_oid_hostname    = None
+_g_single_oid_cache       = {}
+_g_walk_cache             = {}
+_g_snmp_cache_info_tables = {} # Information about SNMP caching
+
+
+#.
+#   .--caching-------------------------------------------------------------.
+#   |                                _     _                               |
+#   |                  ___ __ _  ___| |__ (_)_ __   __ _                   |
+#   |                 / __/ _` |/ __| '_ \| | '_ \ / _` |                  |
+#   |                | (_| (_| | (__| | | | | | | | (_| |                  |
+#   |                 \___\__,_|\___|_| |_|_|_| |_|\__, |                  |
+#   |                                              |___/                   |
+#   '----------------------------------------------------------------------'
+
+#TODO CACHING
+
+def initialize_snmp_cache_info_tables(hostname):
+    global _g_snmp_cache_info_tables
+    _g_snmp_cache_info_tables = {}
+
+
+def write_snmp_cache_info_tables(hostname, do_submit=True):
+    # only write cache file in non interactive mode. Otherwise it would
+    # prevent the regular checking from getting status updates during
+    # interactive debugging, for example with cmk -nv.
+    # TODO: Why is SNMP different from TCP/Datasource handling?
+    if do_submit:
+        cache_dir = cmk.paths.snmp_cache_dir
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+        cache_path = "%s/%s" % (cache_dir, hostname)
+        store.save_data_to_file(cache_path, _g_snmp_cache_info_tables, pretty=False)
+
+
+def set_snmp_cache_info_tables(check_type, table):
+    _g_snmp_cache_info_tables[check_type] = table
+
+
+def get_snmp_cache_info_tables(hostname):
+    cache_path = "%s/%s" % (cmk.paths.snmp_cache_dir, hostname)
+    return store.load_data_from_file(cache_path)
+
+
+def initialize_single_oid_cache(hostname):
+    global _g_single_oid_cache
+    _g_single_oid_cache = _get_single_oid_cache(hostname)
+
+
+def write_single_oid_cache(hostname):
+    cache_dir = cmk.paths.snmp_scan_cache_dir
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+    cache_path = "%s/%s" % (cache_dir, hostname)
+    store.save_data_to_file(cache_path, _g_single_oid_cache, pretty=False)
+
+
+def set_single_oid_cache(hostname, oid, value):
+    _clear_other_hosts_oid_cache(hostname)
+    _g_single_oid_cache[oid] = value
+
+
+def _get_single_oid_cache(hostname):
+    cache_path = "%s/%s" % (cmk.paths.snmp_scan_cache_dir, hostname)
+    cached_single_oids = store.load_data_from_file(cache_path)
+    if cached_single_oids is None:
+        return {}
+    return cached_single_oids
+
+
+def cleanup_host_caches():
+    global _g_walk_cache
+    _g_walk_cache = {}
+    _clear_other_hosts_oid_cache(None)
+    if inline_snmp:
+        inline_snmp.cleanup_inline_snmp_globals()
+
+
+def _clear_other_hosts_oid_cache(hostname):
+    global _g_single_oid_hostname
+    if _g_single_oid_hostname != hostname:
+        _g_single_oid_cache.clear()
+        _g_single_oid_hostname = hostname
+
 
 #.
 #   .--CheckHelpers--------------------------------------------------------.
@@ -207,7 +290,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
 
 
 # Contextes can only be used when check_type is given.
-def get_single_oid(hostname, ipaddress, oid, check_type=None):
+def get_single_oid(hostname, ipaddress, oid, check_type=None, do_snmp_scan=True):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
     # we do a snmpgetnext and try to find an OID with the prefix
     # in question. The *cache* is working including the X, however.
@@ -221,8 +304,8 @@ def get_single_oid(hostname, ipaddress, oid, check_type=None):
     _clear_other_hosts_oid_cache(hostname)
 
     # TODO: Use generic cache mechanism
-    if oid in g_single_oid_cache:
-        return g_single_oid_cache[oid]
+    if not do_snmp_scan or oid in _g_single_oid_cache:
+        return _g_single_oid_cache.get(oid)
 
     console.vverbose("       Getting OID %s: " % oid)
     if _enforce_stored_walks or config.is_usewalk_host(hostname):
@@ -263,7 +346,7 @@ def get_single_oid(hostname, ipaddress, oid, check_type=None):
     else:
         console.vverbose("failed.\n")
 
-    set_oid_cache(hostname, oid, value)
+    set_single_oid_cache(hostname, oid, value)
     return value
 
 
@@ -275,30 +358,9 @@ def walk_for_export(hostname, ip, oid):
         return classic_snmp.walk(hostname, ip, oid, hex_plain=True)
 
 
-def set_oid_cache(hostname, oid, value):
-    _clear_other_hosts_oid_cache(hostname)
-    g_single_oid_cache[oid] = value
-
-
 def enforce_use_stored_walks():
     global _enforce_stored_walks
     _enforce_stored_walks = True
-
-
-def cleanup_host_caches():
-    global g_walk_cache
-    g_walk_cache = {}
-    _clear_other_hosts_oid_cache(None)
-
-    if inline_snmp:
-        inline_snmp.cleanup_inline_snmp_globals()
-
-
-def _clear_other_hosts_oid_cache(hostname):
-    global g_single_oid_hostname
-    if g_single_oid_hostname != hostname:
-        g_single_oid_cache.clear()
-        g_single_oid_hostname = hostname
 
 
 #.
@@ -514,8 +576,7 @@ def _is_snmpwalk_cachable(column):
 
 
 def _get_cached_snmpwalk(hostname, fetchoid):
-    path = cmk.paths.var_dir + "/snmp_cache/" + hostname + "/" + fetchoid
-
+    path = "%s/snmp_cache/%s/%s" % (cmk.paths.var_dir, hostname, fetchoid)
     try:
         console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
         # TODO: Use store.load_data_from_file()
@@ -530,7 +591,7 @@ def _get_cached_snmpwalk(hostname, fetchoid):
 
 
 def _save_snmpwalk_cache(hostname, fetchoid, rowinfo):
-    base_dir = cmk.paths.var_dir + "/snmp_cache/" + hostname + "/"
+    base_dir = "%s/snmp_cache/%s/" % (cmk.paths.var_dir, hostname)
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
     console.vverbose("  Caching walk of %s\n" % fetchoid)
@@ -570,14 +631,14 @@ def _get_stored_snmpwalk(hostname, oid):
             result = cmp(aa, bb)
         return result
 
-    if hostname in g_walk_cache:
-        lines = g_walk_cache[hostname]
+    if hostname in _g_walk_cache:
+        lines = _g_walk_cache[hostname]
     else:
         try:
             lines = file(path).readlines()
         except IOError:
             raise MKSNMPError("No snmpwalk file %s" % path)
-        g_walk_cache[hostname] = lines
+        _g_walk_cache[hostname] = lines
 
     begin = 0
     end = len(lines)

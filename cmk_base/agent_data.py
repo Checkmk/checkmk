@@ -61,6 +61,7 @@ _no_tcp                      = False
 _no_submit                   = False
 _enforce_persisting          = False
 
+
 def get_info_for_check(hostname, ipaddress, section_name,
                        max_cachefile_age=None, ignore_check_interval=False):
     info = apply_parse_function(_get_host_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval), section_name)
@@ -211,8 +212,6 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
     if info and info.has_key(check_type):
         return info[check_type]
 
-    cache_relpath = hostname + "." + check_type
-
     # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
     # Please note, that if the check_type is foo.bar then we lookup the
     # snmp info for "foo", not for "foo.bar".
@@ -225,7 +224,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
         oid_info = None
 
     if oid_info:
-        cache_path = cmk.paths.tcp_cache_dir + "/" + cache_relpath
+        cache_path = "%s/%s" % (cmk.paths.snmp_cache_dir, hostname)
 
         # Handle SNMP check interval. The idea: An SNMP check should only be
         # executed every X seconds. Skip when called too often.
@@ -238,14 +237,14 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
             raise MKSkipCheck()
 
         try:
-            content = read_cache_file(cache_relpath, max_cache_age)
+            snmp_output = snmp.get_snmp_cache_info_tables(hostname)
         except:
             if config.simulation_mode and not _no_cache:
                 return # Simply ignore missing SNMP cache files
             raise
 
-        if content:
-            return eval(content)
+        if snmp_output and check_type in snmp_output:
+            return snmp_output[check_type]
         # Not cached -> need to get info via SNMP
 
         # Try to contact host only once
@@ -264,15 +263,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
         else:
             table = snmp.get_snmp_table(hostname, ipaddress, check_type, oid_info, use_snmpwalk_cache)
 
+        snmp.set_snmp_cache_info_tables(check_type, table)
         _store_cached_checkinfo(hostname, check_type, table)
-
-        # only write cache file in non interactive mode. Otherwise it would
-        # prevent the regular checking from getting status updates during
-        # interactive debugging, for example with cmk -nv.
-        # TODO: Why is SNMP different from TCP/Datasource handling?
-        if not _no_submit:
-            write_cache_file(cache_relpath, repr(table) + "\n")
-
         return table
 
     # Note: even von SNMP-tagged hosts TCP based checks can be used, if
@@ -457,7 +449,7 @@ def parse_info(lines, hostname):
 #   | |_|  |_|\___|_| |_| |_|\___/|_|   \__, |\____\__,_|\___|_| |_|\___|  |
 #   |                                   |___/                              |
 #   +----------------------------------------------------------------------+
-#   | In memory caching of host info data during a single exceution        |
+#   | In memory caching of host info data during a single execution        |
 #   '----------------------------------------------------------------------'
 
 # Gets all information about one host so far cached.
@@ -560,7 +552,7 @@ def _add_persisted_info(hostname, info):
 def read_cache_file(relpath, max_cache_age):
     # Cache file present, caching allowed? -> read from cache
     # TODO: Use store.load_data_from_file
-    cachefile = cmk.paths.tcp_cache_dir + "/" + relpath
+    cachefile = "%s/%s" % (cmk.paths.tcp_cache_dir, relpath)
     if os.path.exists(cachefile) and (
         (opt_use_cachefile and ( not _no_cache ) )
         or (config.simulation_mode and not _no_cache) ):
@@ -582,7 +574,7 @@ def read_cache_file(relpath, max_cache_age):
 
 
 def write_cache_file(relpath, output):
-    cachefile = cmk.paths.tcp_cache_dir + "/" + relpath
+    cachefile = "%s/%s" % (cmk.paths.tcp_cache_dir, relpath)
     if not os.path.exists(cmk.paths.tcp_cache_dir):
         try:
             os.makedirs(cmk.paths.tcp_cache_dir)
@@ -950,6 +942,10 @@ def disable_tcp():
 def disable_submit():
     global _no_submit
     _no_submit = True
+
+
+def do_submit():
+    return not _no_submit
 
 
 def enforce_persisting():

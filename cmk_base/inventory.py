@@ -48,6 +48,7 @@ import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.checks as checks
 import cmk_base.check_api as check_api
+import cmk_base.snmp as snmp
 import cmk_base.discovery as discovery
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.agent_data as agent_data
@@ -195,6 +196,7 @@ def _do_inv_for_realhost(hostname):
     else:
         snmp_check_types = []
 
+    snmp.initialize_snmp_cache_info_tables(hostname)
     import cmk_base.inventory_plugins
     for info_type, plugin in cmk_base.inventory_plugins.inv_info.items():
         # Skip SNMP sections that are not supported by this device
@@ -225,6 +227,7 @@ def _do_inv_for_realhost(hostname):
             inv_function(info, params)
         else:
             inv_function(info)
+    snmp.write_snmp_cache_info_tables(hostname)
 
 
 def _get_inv_params(hostname, info_type):

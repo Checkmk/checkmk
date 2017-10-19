@@ -91,7 +91,7 @@ def _create_crash_dump_info_file(crash_dir, hostname, check_type, item, is_manua
 
 
 def _write_crash_dump_snmp_info(crash_dir, hostname, check_type):
-    cachefile = cmk.paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
+    cachefile = "%s/%s" % (cmk.paths.snmp_cache_dir, hostname)
     if os.path.exists(cachefile):
         file(crash_dir + "/snmp_info", "w").write(file(cachefile).read())
 
@@ -105,7 +105,7 @@ def _write_crash_dump_agent_output(crash_dir, hostname):
     if real_time_checks and real_time_checks.is_real_time_check_helper():
         file(crash_dir + "/agent_output", "w").write(real_time_checks.get_rtc_package())
     else:
-        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname
+        cachefile = "%s/%s" % (cmk.paths.tcp_cache_dir, hostname)
         if os.path.exists(cachefile):
             file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
 

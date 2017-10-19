@@ -610,6 +610,7 @@ class AutomationDeleteHosts(Automation):
             "%s/%s.mk"               % (cmk.paths.autochecks_dir, hostname),
             "%s/%s"                  % (cmk.paths.counters_dir, hostname),
             "%s/%s"                  % (cmk.paths.tcp_cache_dir, hostname),
+            "%s/%s"                  % (cmk.paths.snmp_cache_dir, hostname),
             "%s/persisted/%s"        % (cmk.paths.var_dir, hostname),
             "%s/inventory/%s"        % (cmk.paths.var_dir, hostname),
             "%s/inventory/%s.gz"     % (cmk.paths.var_dir, hostname),
@@ -617,11 +618,6 @@ class AutomationDeleteHosts(Automation):
             ]:
             if os.path.exists(path):
                 os.unlink(path)
-
-        # files from snmp devices
-        for filename in os.listdir(cmk.paths.tcp_cache_dir):
-            if filename.startswith("%s." % hostname):
-                os.unlink("%s/%s" % (cmk.paths.tcp_cache_dir, filename))
 
         # softlinks for baked agents. obsolete packages are removed upon next bake action
         # TODO: Move to bakery code

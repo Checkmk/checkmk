@@ -459,10 +459,13 @@ def normal_login_page(called_directly = True):
     html.open_div(id_="foot")
     html.write("Version: %s - &copy; " % cmk.__version__)
     html.a("Mathias Kettner", href="https://mathias-kettner.com")
-    html.br()
-    html.br()
-    html.write(_('You can use, modify and distribute Check_MK under the terms of the <a href="%s">'
-                 'GNU GPL Version 2</a>.') % "https://mathias-kettner.com/gpl.html")
+
+    if cmk.is_raw_edition():
+        html.br()
+        html.br()
+        html.write(_('You can use, modify and distribute Check_MK under the terms of the <a href="%s">'
+                     'GNU GPL Version 2</a>.') % "https://mathias-kettner.com/gpl.html")
+
     html.close_div()
 
     html.set_focus('_username')

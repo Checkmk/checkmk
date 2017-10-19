@@ -1561,8 +1561,8 @@ def page_graph_dashlet():
 
 
 def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options):
-    size = (int(((float(html.var("width")) - 49 - 5)/html_size_per_ex)),
-            int((float(html.var("height")) - 23)/html_size_per_ex))
+    size = (int(((float(html.var("width")) - 25)/html_size_per_ex)),
+            int((float(html.var("height")) - 18)/html_size_per_ex))
 
     graph_render_options = {
         "size"          : size,

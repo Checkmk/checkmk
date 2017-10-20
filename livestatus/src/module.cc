@@ -493,10 +493,17 @@ int broker_log(int event_type __attribute__((__unused__)),
     return 0;
 }
 
+// called twice (start/end) for each external command, even builtin ones
 int broker_command(int event_type __attribute__((__unused__)), void *data) {
     auto sc = static_cast<nebstruct_external_command_data *>(data);
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
+        if (sc->command_type == CMD_CUSTOM_COMMAND &&
+            strcmp(sc->command_string, "_LOG") == 0) {
+            write_to_all_logs(sc->command_args, -1);
+            counterIncrement(Counter::log_messages);
+            trigger_notify_all(trigger_log());
+        }
     }
     counterIncrement(Counter::neb_callbacks);
     trigger_notify_all(trigger_command());

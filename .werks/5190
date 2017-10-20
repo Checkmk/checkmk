@@ -1,0 +1,17 @@
+Title: The Livestatus command LOG works for the Nagios core now, too.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508494518
+Class: feature
+
+Previously only the CMC understood the Livestatus command LOG.  This works
+for the Nagios core now, too.
+
+Note: For technical reasons the command is available under the name _LOG,
+too, when the Nagios core is used, but this name is discouraged when using
+Livestatus.  On the other hand: If you use the Nagios command pipe, you have
+to use _LOG.  This tiny inconsistency is a bit unfortunate, but it is caused
+by the way how Nagios handles custom commands.

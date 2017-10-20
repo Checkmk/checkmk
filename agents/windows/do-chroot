@@ -6,7 +6,6 @@
 CMD="$1"
 export HOSTNAME=cmk-windows-agent-chroot
 unset LANG
-CHROOTNAME=WinAgent
 
 BASE="$(realpath ../..)"
 
@@ -41,10 +40,12 @@ if [ ! -e $CHROOT_PATH/$CHROOT_BUILD_DIR/Makefile ] ; then
 fi
 
 if [ -n "$CMD" ] ; then
-    chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME \
+    chroot $CHROOT_PATH /usr/bin/env \
            NEW_VERSION=$NEW_VERSION bash -c "$CMD"
+    EXIT_CODE=$?
 else
     chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME bash -l
+    EXIT_CODE=$?
 fi
 
 umount $CHROOT_PATH/$CHROOT_BUILD_DIR
@@ -52,3 +53,5 @@ umount $CHROOT_PATH/dev/pts
 sleep 2
 umount $CHROOT_PATH/dev
 umount $CHROOT_PATH/proc
+
+exit $EXIT_CODE

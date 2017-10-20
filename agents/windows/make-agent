@@ -10,6 +10,11 @@
 
 set -e
 
+if [ -z $SUDO_USER ]; then
+    echo "ERROR: $0 must be executed with sudo"
+    exit 1
+fi
+
 . build.sh
 parse-args "$@"
 
@@ -22,6 +27,7 @@ base="$(realpath ../..)"
 # directory in agents/windows
 export CHROOT_PATH=${CHROOT_PATH:-$base/agents/windows/chroot}
 export CHROOT_BUILD_DIR=${CHROOT_BUILD_DIR:-build}
+export CHROOT_NAME=${CHROOT_NAME:-WinAgent}
 
 if [ ! -f "$base/agents/windows/$versionfile" ] ; then
     echo "Error: File $base/agents/windows/$versionfile not found."
@@ -51,9 +57,5 @@ fi
 
 # Build the Windows agent within chroot by calling the 'build-agent' script as
 # $SUDO_USER.
-CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR \
-    NEW_VERSION=$NEW_VERSION ./do-chroot \
-    "/bin/su - $SUDO_USER -m -c '$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"
-EXIT_CODE=$?
-
-exit $EXIT_CODE
+./do-chroot \
+        "/bin/su - $SUDO_USER -c bash -c 'CHROOT_NAME=$CHROOT_NAME CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR NEW_VERSION=$NEW_VERSION /$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"

@@ -1134,7 +1134,7 @@ def mode_editfolder(phase, new):
         page_title = _("Create new folder")
         name, title = None, None
     else:
-        page_title = _("Folder Properties")
+        page_title = _("Folder properties")
         name  = Folder.current().name()
         title = Folder.current().title()
 
@@ -1191,7 +1191,7 @@ def mode_editfolder(phase, new):
 
         # title
         forms.header(_("Title"))
-        forms.section()
+        forms.section(_("Title"))
         TextUnicode().render_input("title", title)
         html.set_focus("title")
 
@@ -17160,7 +17160,9 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                     content = _("empty")
 
                 if isinstance(attr, ValueSpecAttribute):
+                    html.open_b()
                     html.write(content)
+                    html.close_b()
                 else:
                     html.b(_u(content))
 

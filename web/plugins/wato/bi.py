@@ -915,13 +915,13 @@ class ModeBIPacks(ModeBI):
             table.cell(_("Public"), pack["public"] and _("Yes") or _("No"))
             table.cell(_("Aggregations"), len(pack["aggregations"]), css="number")
             table.cell(_("Rules"), len(pack["rules"]), css="number")
-            table.cell(_("Contact Groups"), ", ".join(map(self._render_contact_group, pack["contact_groups"])))
+            table.cell(_("Contact groups"), HTML(", ").join(map(self._render_contact_group, pack["contact_groups"])))
         table.end()
 
 
     def _render_contact_group(self, c):
         display_name = self._contact_group_names.get(c, {'alias': c})['alias']
-        return '<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (c, display_name)
+        return html.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
 
 #.
@@ -1388,7 +1388,7 @@ class ModeBIRules(ModeBI):
                     html.empty_icon_button()
 
                 table.cell(_("Level"), level or "", css="number")
-                table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule_id))
+                table.cell(_("ID"), html.render_a(rule_id, edit_url))
                 table.cell(_("Parameters"), " ".join(rule["params"]))
                 table.cell(_("Title"), rule["title"])
                 table.cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))

@@ -182,8 +182,8 @@ def paint_aggr_hosts(row, link_to_view):
     h = []
     for site, host in row["aggr_hosts"]:
         url = html.makeuri([("view_name", link_to_view), ("site", site), ("host", host)])
-        h.append('<a href="%s">%s</a>' % (url, host))
-    return "", " ".join(h)
+        h.append(html.render_a(host, url))
+    return "", HTML(" ").join(h)
 
 multisite_painters["aggr_hosts"] = {
     "title"   : _("Aggregation: affected hosts"),

@@ -247,8 +247,8 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
             text  = _("Your query matched more than %d log entries. "
                       "<b>Note:</b> The number of shown rows does not necessarily reflect the "
                       "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
-            text += '<a href="%s">%s</a>' % \
-                    (html.makeuri([("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]), _('Repeat query without limit.'))
+            text += html.render_a(_('Repeat query without limit.'),
+                                  html.makeuri([("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]))
             html.show_warning(text)
 
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
@@ -408,7 +408,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
         # Column with host/service or aggregate name
         for title, (name, url) in zip(av_table["object_titles"], row["object"]):
-            table.cell(title, '<a href="%s">%s</a>' % (url, name))
+            table.cell(title, html.render_a(name, url))
 
         if "timeline" in row:
             show_timeline = True
@@ -632,8 +632,8 @@ def render_bi_availability(title, aggr_rows):
             text  = _("Your query matched more than %d log entries. "
                       "<b>Note:</b> The shown data does not necessarily reflect the "
                       "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
-            text += '<a href="%s">%s</a>' % \
-                    (html.makeuri([("_unset_logrow_limit", "1")]), _('Repeat query without limit.'))
+            text += html.render_a(_('Repeat query without limit.'),
+                                  html.makeuri([("_unset_logrow_limit", "1")]))
             html.show_warning(text)
 
         if html.output_format == "csv_export":
@@ -717,14 +717,14 @@ def render_annotations(annotations, av_rawdata, what, avoptions, omit_service):
         if not omit_service:
             if not "omit_host" in avoptions["labelling"]:
                 host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site_id), ("host", host)])
-                table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
+                table.cell(_("Host"), html.render_a(host, host_url))
 
             if what == "service":
                 if service:
                     service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site_id), ("host", host), ("service", service)])
                     # TODO: honor use_display_name. But we have no display names here...
                     service_name = service
-                    table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service_name))
+                    table.cell(_("Service"), html.render_a(service_name, service_url))
                 else:
                     table.cell(_("Service"), "") # Host annotation in service table
 

@@ -25,35 +25,32 @@
 #include "ListFilter.h"
 #include <algorithm>
 #include <ostream>
+#include <vector>
+#include "ListColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
-                       std::string element,
-                       std::unique_ptr<ListColumn::Contains> predicate,
-                       bool isEmptyValue)
-    : _column(column)
-    , _relOp(relOp)
-    , _element(std::move(element))
-    , _predicate(std::move(predicate))
-    , _empty_ref(isEmptyValue) {}
+                       std::string element)
+    : _column(column), _relOp(relOp), _element(std::move(element)) {}
 
-bool ListFilter::accepts(Row row, const contact * /* auth_user */,
+bool ListFilter::accepts(Row row, const contact *auth_user,
                          std::chrono::seconds /* timezone_offset */) const {
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
-            if (!_empty_ref) {
+            if (!_element.empty()) {
                 Informational(_column.logger())
-                    << "Sorry, equality for lists implemented only "
-                       "for emptyness";
+                    << "Sorry, equality for lists implemented only for emptyness";
             }
-            return _column.isEmpty(row) ==
+            return _column.getValue(row, auth_user).empty() ==
                    (_relOp == RelationalOperator::equal);
         case RelationalOperator::less:
-            return !((*_predicate)(row));
-        case RelationalOperator::greater_or_equal:
-            return (*_predicate)(row);
+        case RelationalOperator::greater_or_equal: {
+            auto val = _column.getValue(row, auth_user);
+            return (std::find(val.begin(), val.end(), _element) == val.end()) ==
+                   (_relOp == RelationalOperator::less);
+        }
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:

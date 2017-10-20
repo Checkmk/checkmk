@@ -26,15 +26,14 @@
 #define CommentColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
 #include <vector>
 #include "ListColumn.h"
 #include "contact_fwd.h"
 struct CommentData;
 class MonitoringCore;
-class Row;
 class RowRenderer;
+class Row;
 
 class CommentColumn : public ListColumn {
 public:
@@ -48,11 +47,12 @@ public:
         , _is_service(is_service)
         , _with_info(with_info)
         , _with_extra_info(with_extra_info) {}
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
-    std::unique_ptr<Contains> makeContains(
-        const std::string &name) const override;
-    bool isEmpty(Row row) const override;
+
+    std::vector<std::string> getValue(Row row,
+                                      const contact *auth_user) const override;
 
 private:
     MonitoringCore *_mc;

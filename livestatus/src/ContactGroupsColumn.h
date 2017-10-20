@@ -26,42 +26,26 @@
 #define ContactGroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
+#include <vector>
 #include "ListColumn.h"
 #include "contact_fwd.h"
-class MonitoringCore;
 class Row;
 class RowRenderer;
-
-#ifndef CMC
-#include "nagios.h"
-#endif
 
 class ContactGroupsColumn : public ListColumn {
 public:
     ContactGroupsColumn(const std::string &name, const std::string &description,
                         int indirect_offset, int extra_offset,
-                        int extra_extra_offset, int offset, MonitoringCore *mc)
+                        int extra_extra_offset, int offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset)
-        , _mc(mc) {
-#ifdef CMC
-        (void)_mc;
-#endif
-    }
+                     extra_extra_offset, offset) {}
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
-    std::unique_ptr<Contains> makeContains(
-        const std::string &name) const override;
-    bool isEmpty(Row row) const override;
 
-private:
-    MonitoringCore *_mc;
-
-#ifndef CMC
-    contactgroupsmember *getData(Row row) const;
-#endif
+    std::vector<std::string> getValue(Row row,
+                                      const contact *auth_user) const override;
 };
 
 #endif  // ContactGroupsColumn_h

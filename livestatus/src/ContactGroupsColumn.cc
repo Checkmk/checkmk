@@ -23,54 +23,25 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactGroupsColumn.h"
-#include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "nagios.h"
 
 void ContactGroupsColumn::output(Row row, RowRenderer &r,
-                                 const contact * /* auth_user */) const {
+                                 const contact *auth_user) const {
     ListRenderer l(r);
-    for (auto cgm = getData(row); cgm != nullptr; cgm = cgm->next) {
-        l.output(std::string(cgm->group_ptr->group_name));
+    for (const auto &name : getValue(row, auth_user)) {
+        l.output(name);
     }
 }
 
-std::unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
-    const std::string &name) const {
-    class ContainsContactGroup : public Contains {
-    public:
-        ContainsContactGroup(MonitoringCore::ContactGroup *element,
-                             const ContactGroupsColumn *column)
-            : _element(element), _column(column) {}
-
-        bool operator()(Row row) override {
-            for (auto cgm = _column->getData(row); cgm != nullptr;
-                 cgm = cgm->next) {
-                // TODO(sp) Remove evil cast below.
-                if (cgm->group_ptr ==
-                    reinterpret_cast<contactgroup *>(_element)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-    private:
-        MonitoringCore::ContactGroup *const _element;
-        const ContactGroupsColumn *const _column;
-    };
-
-    return std::make_unique<ContainsContactGroup>(_mc->find_contactgroup(name),
-                                                  this);
-}
-
-bool ContactGroupsColumn::isEmpty(Row row) const {
-    return getData(row) == nullptr;
-}
-
-contactgroupsmember *ContactGroupsColumn::getData(Row row) const {
+std::vector<std::string> ContactGroupsColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    std::vector<std::string> names;
     if (auto p = columnData<contactgroupsmember *>(row)) {
-        return *p;
+        for (auto cgm = *p; cgm != nullptr; cgm = cgm->next) {
+            names.emplace_back(cgm->group_ptr->group_name);
+        }
     }
-    return nullptr;
+    return names;
 }

@@ -27,20 +27,17 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <memory>
 #include <string>
 #include "ColumnFilter.h"
-#include "ListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class ListColumn;
 class Row;
 
 class ListFilter : public ColumnFilter {
 public:
     ListFilter(const ListColumn &column, RelationalOperator relOp,
-               std::string element,
-               std::unique_ptr<ListColumn::Contains> predicate,
-               bool isEmptyValue);
+               std::string element);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     const std::string *valueForIndexing(
@@ -51,8 +48,6 @@ private:
     const ListColumn &_column;
     const RelationalOperator _relOp;
     const std::string _element;
-    const std::unique_ptr<ListColumn::Contains> _predicate;
-    const bool _empty_ref;  // distinct from unknown ref
 };
 
 #endif  // ListFilter_h

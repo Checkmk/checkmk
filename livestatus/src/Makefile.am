@@ -41,7 +41,6 @@ liblivestatus_a_SOURCES = \
         CommentColumn.cc \
         ContactGroupsColumn.cc \
         ContactGroupsMemberColumn.cc \
-        ContactsColumn.cc \
         CountAggregator.cc \
         CustomTimeperiodColumn.cc \
         CustomVarsColumn.cc \

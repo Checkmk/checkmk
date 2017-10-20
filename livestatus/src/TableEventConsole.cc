@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsole.h"
+#include <algorithm>
 #include <iosfwd>
 #include <iostream>
 #include <memory>

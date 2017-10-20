@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DowntimeColumn.h"
-#include <cstdlib>
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -43,33 +42,13 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
     }
 }
 
-std::unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
-    const std::string &name) const {
-    class ContainsDowntimeID : public Contains {
-    public:
-        ContainsDowntimeID(unsigned long element, const DowntimeColumn *column)
-            : _element(element), _column(column) {}
-
-        bool operator()(Row row) override {
-            for (const auto &downtime : _column->downtimes_for_row(row)) {
-                if (downtime._id == _element) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-    private:
-        const unsigned long _element;
-        const DowntimeColumn *const _column;
-    };
-
-    unsigned long id = strtoul(name.c_str(), nullptr, 10);
-    return std::make_unique<ContainsDowntimeID>(id, this);
-}
-
-bool DowntimeColumn::isEmpty(Row row) const {
-    return downtimes_for_row(row).empty();
+std::vector<std::string> DowntimeColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    std::vector<std::string> ids;
+    for (const auto &downtime : downtimes_for_row(row)) {
+        ids.push_back(std::to_string(downtime._id));
+    }
+    return ids;
 }
 
 std::vector<DowntimeData> DowntimeColumn::downtimes_for_row(Row row) const {

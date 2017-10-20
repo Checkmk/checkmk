@@ -26,11 +26,10 @@
 #define ServiceGroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
+#include <vector>
 #include "ListColumn.h"
 #include "contact_fwd.h"
-#include "nagios.h"
 class Row;
 class RowRenderer;
 
@@ -41,14 +40,12 @@ public:
                         int extra_extra_offset, int offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset) {}
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
-    std::unique_ptr<Contains> makeContains(
-        const std::string &name) const override;
-    bool isEmpty(Row row) const override;
 
-private:
-    objectlist *getData(Row row) const;
+    std::vector<std::string> getValue(Row row,
+                                      const contact *auth_user) const override;
 };
 
 #endif  // ServiceGroupsColumn_h

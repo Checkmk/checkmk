@@ -593,6 +593,56 @@ register_rule(group,
     match = "first")
 
 register_rule(group,
+    "special_agents:hivemanager_ng",
+    Dictionary(
+        title = _("Aerohive HiveManager NG"),
+        help = _("Activate monitoring of the HiveManagerNG cloud."),
+        elements = [
+            ( "url",
+              HTTPUrl(
+                  title = _("URL to HiveManagerNG, e.g. https://cloud.aerohive.com"),
+                  allow_empty = False,
+              )
+            ),
+            ( "vhm_id",
+              TextAscii(
+                  title = _("Numerical ID of the VHM, e.g. 102"),
+                  allow_empty = False,
+              )
+            ),
+            ( "api_token",
+              TextAscii(
+                  title = _("API Access Token"),
+                  size = 64,
+                  allow_empty = False,
+              )
+            ),
+            ( "client_id",
+              TextAscii(
+                  title = _("Client ID"),
+                  allow_empty = False,
+              )
+            ),
+            ( "client_secret",
+              Password(
+                  title = _("Client secret"),
+                  allow_empty = False,
+              )
+            ),
+            ( "redirect_url",
+              HTTPUrl(
+                  title = _("Redirect URL (has to be https)"),
+                  allow_empty = False,
+              )
+            ),
+        ],
+        optional_keys = None,
+    ),
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED,
+    match = "first",
+)
+
+register_rule(group,
     "special_agents:allnet_ip_sensoric",
      Dictionary(
         title = _("Check state of ALLNET IP Sensoric Devices"),

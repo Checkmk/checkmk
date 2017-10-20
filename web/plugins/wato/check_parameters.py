@@ -6735,6 +6735,29 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
+    "hivemanager_ng_devices",
+    _("HiveManager NG Devices"),
+    Dictionary(
+        elements = [
+            ('max_clients',
+             Tuple(
+                title = _("Number of clients"),
+                help  = _("Number of clients connected to a Device."),
+                elements = [
+                    Integer(title = _("Warning at"),  unit=_("clients")),
+                    Integer(title = _("Critical at"), unit=_("clients")),
+                ]
+             )
+            ),
+        ]),
+    TextAscii(
+       title = _("Hostname of the Device")
+    ),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_networking,
     "wlc_clients",
     _("WLC WiFi client connections"),
     Transform(

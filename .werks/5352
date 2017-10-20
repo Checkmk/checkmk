@@ -1,0 +1,16 @@
+Title: agent_hivemanager_ng/hivemanager_ng_devices: new special agent and check
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1509093944
+Class: feature
+
+Add the special agent agent_hivemanager_ng and the corresponding check
+hivemanager_ng_devices. Together they can be used to monitor devices
+in the Aerohive HiveManager NG cloud.
+
+Setup of the special agent is possible via the WATO rule "Aerohive
+HiveManager NG". For each device one check is created. The devices
+can be configured via the WATO rule "HiveManager NG Devices".

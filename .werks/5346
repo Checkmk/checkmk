@@ -1,0 +1,12 @@
+Title: cisco_mem/cisco_mem_asa/cisco_mem_asa64: trend computation
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508498744
+Class: feature
+
+It is now possible to enable the trend computation for the checks
+cisco_mem, cisco_mem_asa, and cisco_mem_asa64 via the corresponding
+WATO rule.

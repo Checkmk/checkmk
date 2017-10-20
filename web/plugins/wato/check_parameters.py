@@ -7035,11 +7035,11 @@ fs_magic_elements = [
               Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=60)]))
 ]
 
-fs_trend_elements = [
+size_trend_elements = [
     (  "trend_range",
        Optional(
            Integer(
-               title = _("Time Range for filesystem trend computation"),
+               title = _("Time Range for trend computation"),
                default_value = 24,
                minvalue = 1,
                unit= _("hours")),
@@ -7061,7 +7061,7 @@ fs_trend_elements = [
            ])),
     (  "trend_timeleft",
        Tuple(
-           title = _("Levels on the time left until the filesystem gets full"),
+           title = _("Levels on the time left until full"),
            elements = [
                Integer(title = _("Warning if below"), unit = _("hours"), default_value = 12,),
                Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
@@ -7137,7 +7137,7 @@ fs_reserved_elements = [
 ]
 
 filesystem_elements = fs_levels_elements + fs_levels_elements_hack + fs_reserved_elements +\
-                      fs_inodes_elements + fs_magic_elements + fs_trend_elements
+                      fs_inodes_elements + fs_magic_elements + size_trend_elements
 
 register_check_parameters(
     subgroup_storage,
@@ -7160,7 +7160,7 @@ register_check_parameters(
     "mongodb_collections",
     _("MongoDB Collection Size"),
     Dictionary(
-        elements = fs_levels_elements + fs_trend_elements
+        elements = fs_levels_elements + size_trend_elements
     ),
     TextAscii(
         title = _("Collection name"),
@@ -7915,23 +7915,32 @@ register_check_parameters(
     subgroup_os,
     "cisco_mem",
     _("Cisco Memory Usage"),
-    Alternative(
-        elements = [
-            Tuple(
-                title = _("Specify levels in percentage of total RAM"),
-                elements = [
-                  Percentage(title = _("Warning at a usage of"), unit = _("% of RAM"), maxvalue = None),
-                  Percentage(title = _("Critical at a usage of"), unit = _("% of RAM"), maxvalue = None)
-                ]
-            ),
-            Tuple(
-                title = _("Specify levels in absolute usage values"),
-                elements = [
-                  Integer(title = _("Warning at"), unit = _("MB")),
-                  Integer(title = _("Critical at"), unit = _("MB"))
-                ]
-            ),
-        ]
+    Transform(
+        Dictionary(
+            elements = [
+                ("levels",
+                 Alternative(
+                     title = _("Levels for memory usage"),
+                     elements = [
+                         Tuple(
+                             title = _("Specify levels in percentage of total RAM"),
+                             elements = [
+                             Percentage(title = _("Warning at a usage of"), unit = _("% of RAM"), maxvalue = None),
+                             Percentage(title = _("Critical at a usage of"), unit = _("% of RAM"), maxvalue = None)
+                             ]
+                         ),
+                         Tuple(
+                             title = _("Specify levels in absolute usage values"),
+                             elements = [
+                             Integer(title = _("Warning at"), unit = _("MB")),
+                             Integer(title = _("Critical at"), unit = _("MB"))
+                             ]
+                         ),
+                     ]
+                )),
+            ] + size_trend_elements
+        ),
+        forth = lambda spec: spec if type(spec) == dict else {"levels": spec},
     ),
     TextAscii(
         title = _("Memory Pool Name"),

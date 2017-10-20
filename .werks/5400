@@ -1,0 +1,10 @@
+Title: Added new permission for baking and signing agents using the bakery
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1508496388
+Class: feature
+
+

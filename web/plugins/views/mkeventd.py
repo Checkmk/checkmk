@@ -319,7 +319,7 @@ if mkeventd_enabled:
         rule_id = row["event_rule_id"]
         if config.user.may("mkeventd.edit"):
             urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
-            return "", '<a href="wato.py?%s">%s</a>' % (urlvars, rule_id)
+            return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
         else:
             return "", rule_id
 

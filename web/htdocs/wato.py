@@ -2156,11 +2156,11 @@ def mode_object_parameters(phase):
 
     def render_rule_reason(title, title_url, reason, reason_url, is_default, setting):
         if title_url:
-            title = '<a href="%s">%s</a>' % (title_url, title)
+            title = html.render_a(title, href=title_url)
         forms.section(title)
 
         if reason:
-            reason = '<a href="%s">%s</a>' % (reason_url, reason)
+            reason = html.render_a(reason, href=reason_url)
 
         html.open_table(class_="setting")
         html.open_tr()
@@ -2264,7 +2264,7 @@ def mode_object_parameters(phase):
                 rule_folder, rule_index, rule = rules[rule_nr]
 
                 url = folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', hostname)])
-                forms.section('<a href="%s">%s</a>' % (url, _("Command Line")))
+                forms.section(html.render_a(_("Command Line"), href=url))
                 url = folder_preserving_link([
                     ('mode', 'edit_rule'),
                     ('varname', "custom_checks"),
@@ -2334,7 +2334,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         ('item', mk_repr(service)),
     ])
 
-    forms.section('<a href="%s">%s</a>' % (url, rulespec.title))
+    forms.section(html.render_a(rulespec.title, url))
 
     ruleset = all_rulesets.get(varname)
     setting, rules = ruleset.analyse_ruleset(hostname, service)
@@ -6840,9 +6840,11 @@ class ModeGlobalSettings(WatoMode):
                 edit_url = folder_preserving_link([("mode", self._edit_mode()),
                                                    ("varname", varname),
                                                    ("site", html.var("site", ""))])
-                title = HTML('<a href="%s" class=%s title="%s">%s</a>' % \
-                        (edit_url, '"modified"' if varname in self._current_settings else '""',
-                         html.strip_tags(help_text), title_text))
+                title = html.render_a(title_text,
+                    href=edit_url,
+                    class_="modified" if varname in self._current_settings else None,
+                    title=html.strip_tags(help_text)
+                )
 
                 if varname in self._current_settings:
                     value = self._current_settings[varname]
@@ -15580,7 +15582,7 @@ def render_manpage_list(manpage_list, titles, path_comp, heading):
             continue
         table.row()
         url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]), ("back", html.makeuri([]))])
-        table.cell(_("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
+        table.cell(_("Type of Check"), html.render_a(entry["title"], href=url), css="title")
         table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
         table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
     table.end()
@@ -15656,7 +15658,7 @@ def mode_check_manpage(phase):
         if g_rulespecs.exists(varname):
             rulespec = g_rulespecs.get(varname)
             url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
-            param_ruleset = '<a href="%s">%s</a>' % (url, rulespec.title)
+            param_ruleset = html.render_a(rulespec.title, url)
             html.open_tr()
             html.th(_("Parameter rule set"))
             html.open_td()
@@ -17023,7 +17025,8 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container.title())
+                        inherited_from = _("Inherited from ") + html.render_a(container.title(), href=url)
+
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
                         if topic == _("Host tags"):

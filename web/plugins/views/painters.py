@@ -172,8 +172,8 @@ def paint_nagios_link(row):
     else:
         url += "&type=1"
         what = "host"
-    return "singleicon", "<a href=\"%s\">%s</a>" % \
-        (url, html.render_icon('nagios', _('Show this %s in Nagios') % what))
+    return "singleicon", html.render_a(
+        html.render_icon('nagios', _('Show this %s in Nagios') % what), url)
 
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
@@ -981,8 +981,8 @@ def paint_service_group_memberlist(row):
     links = []
     for group in row["service_groups"]:
         link = "view.py?view_name=servicegroup&servicegroup=" + group
-        links.append('<a href="%s">%s</a>' % (link, group))
-    return "", ", ".join(links)
+        links.append(html.render_a(group, link))
+    return "", HTML(", ").join(links)
 
 multisite_painters["svc_group_memberlist"] = {
     "title"   : _("Service groups the service is member of"),
@@ -1460,9 +1460,9 @@ def paint_host_black_with_link_to_old_nagios_services(row):
     url = baseurl + "/status.cgi?host=" + html.urlencode(host)
     state = row["host_state"]
     if state != 0:
-        return None, '<div class=hostdown><a href="%s">%s</a></div>' % (url, host)
+        return None, html.render_div(html.render_a(host, url), class_="hostdown")
     else:
-        return None, '<a href="%s">%s</a>' % (url, host)
+        return None, html.render_a(host, url)
 
 
 multisite_painters["host_black_nagios"] = {
@@ -1655,13 +1655,13 @@ multisite_painters["num_services_pending"] = {
 }
 
 def paint_service_list(row, columnname):
-    h = "<div class=objectlist>"
     def sort_key(entry):
         if columnname.startswith("servicegroup"):
             return entry[0].lower(), entry[1].lower()
         else:
             return entry[0].lower()
 
+    h = ""
     for entry in sorted(row[columnname], key = sort_key):
         if columnname.startswith("servicegroup"):
             host, svc, state, checked = entry
@@ -1678,9 +1678,10 @@ def paint_service_list(row, columnname):
             css = "state%d" % state
         else:
             css = "statep"
-        h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, text)
-    h += "</div>"
-    return "", h
+
+        h += html.render_div(html.render_a(text, link), class_=css)
+
+    return "", html.render_div(h, class_="objectlist")
 
 multisite_painters["host_services"] = {
     "title"   : _("Services colored according to state"),
@@ -1709,8 +1710,8 @@ def paint_host_group_memberlist(row):
         link = "view.py?view_name=hostgroup&hostgroup=" + group
         if html.var("display_options"):
             link += "&display_options=%s" % html.attrencode(html.var("display_options"))
-        links.append('<a href="%s">%s</a>' % (link, group))
-    return "", ", ".join(links)
+        links.append(html.render_a(group, link))
+    return "", HTML(", ").join(links)
 
 multisite_painters["host_group_memberlist"] = {
     "title"   : _("Host groups the host is member of"),
@@ -1810,7 +1811,7 @@ def paint_discovery_output(field, row):
                 html.urlencode(row["site"]),
                 html.urlencode(row["host_name"]),
                 html.urlencode(value))
-        return None, "<div><a href=\"%s\">%s</a></div>" % (link, value)
+        return None, html.render_div(html.render_a(value, link))
     else:
         return None, value
 
@@ -1844,7 +1845,7 @@ multisite_painters["service_discovery_service"] = {
 #                       |___/                |_|
 #
 def paint_hg_host_list(row):
-    h = "<div class=objectlist>"
+    h = ""
     for host, state, checked in row["hostgroup_members_with_state"]:
         link = "view.py?view_name=host&site=%s&host=%s" % (
                 html.urlencode(row["site"]),
@@ -1853,9 +1854,8 @@ def paint_hg_host_list(row):
             css = "hstate%d" % state
         else:
             css = "hstatep"
-        h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, host)
-    h += "</div>"
-    return "", h
+        h += html.render_div(html.render_a(host, link), class_=css)
+    return "", html.render_div(h, class_="objectlist")
 
 multisite_painters["hostgroup_hosts"] = {
     "title"   : _("Hosts colored according to state (Host Group)"),

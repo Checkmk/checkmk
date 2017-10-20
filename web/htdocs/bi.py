@@ -3080,12 +3080,13 @@ def aggr_render_leaf(tree, show_host, bare = False):
         service_url = html.makeuri_contextless([("view_name", "service"), ("site", site), ("host", host), ("service", service)], filename="view.py")
 
     if show_host:
-        content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host.replace(" ", "&nbsp;"))
+        content += html.render_a(host.replace(" ", "&nbsp;"), href=host_url) \
+                 + html.render_b("&diams;", class_="bullet")
 
     if not service:
-        content += '<a href="%s">%s</a>' % (host_url, _("Host&nbsp;status"))
+        content += html.render_a(_("Host&nbsp;status"), href=host_url)
     else:
-        content += '<a href="%s">%s</a>' % (service_url, service.replace(" ", "&nbsp;"))
+        content += html.render_a(service.replace(" ", "&nbsp;"), href=service_url)
 
     if bare:
         return content

@@ -431,7 +431,7 @@ def render_werk_table_options():
 def render_werk_id(werk, with_link):
     if with_link:
         url = html.makeuri([("werk", werk["id"])], filename="werk.py")
-        return '<a href="%s">%s</a>' % (url, render_werk_id(werk, with_link=False))
+        return html.render_a(render_werk_id(werk, with_link=False), url)
     else:
         return "#%04d" % werk["id"]
 

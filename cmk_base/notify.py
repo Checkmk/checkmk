@@ -1742,20 +1742,6 @@ def substitute_context(template, context):
 #   |  Some generic helper functions                                       |
 #   '----------------------------------------------------------------------'
 
-def livestatus_send_command(command):
-    try:
-        message = "COMMAND [%d] %s\n" % (time.time(), command)
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.connect(cmk.paths.livestatus_unix_socket)
-        sock.send(message)
-        sock.close()
-    except Exception, e:
-        if cmk.debug.enabled():
-            raise
-        notify_log("WARNING: cannot send livestatus command: %s" % e)
-        notify_log("Command was: %s" % command)
-
-
 def format_exception():
     import traceback, StringIO, sys
     txt = StringIO.StringIO()
@@ -1809,4 +1795,14 @@ def core_notification_log(plugin, plugin_context):
     log_message = "%s NOTIFICATION: %s;%s;%s;%s;%s" % (
             what, contact, spec, state, plugin or "plain email", output)
 
-    livestatus_send_command("LOG;" + log_message.encode("utf-8"))
+    _send_livestatus_command("LOG;%s" % log_message)
+
+
+def _send_livestatus_command(command):
+    try:
+        livestatus.LocalConnection().command("[%d] %s" % (time.time(), command.encode("utf-8")))
+    except Exception, e:
+        if cmk.debug.enabled():
+            raise
+        notify_log("WARNING: cannot send livestatus command: %s" % e)
+        notify_log("Command was: %s" % command)

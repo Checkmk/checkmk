@@ -942,7 +942,7 @@ class HTTPUrl(TextAscii):
             if parts.path in [ '', '/' ]:
                 text = parts.netloc
             else:
-                text = url[7:]
+                text = parts.netloc + parts.path
         except:
             text = url[7:]
 

@@ -29,6 +29,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <vector>
 #include "LogCache.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
@@ -151,8 +152,30 @@ private:
                     const std::list<std::string> &lines);
     bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
-    void answerCommandRequest(const char *);
-    bool handleCommand(const std::string &command);
+
+    class ExternalCommand {
+    public:
+        explicit ExternalCommand(const std::string &str);
+        ExternalCommand withName(const std::string &name) const;
+        std::string name() const { return _name; }
+        std::string arguments() const { return _arguments; }
+        std::string str() const;
+        std::vector<std::string> args() const;
+
+    private:
+        std::string _prefix;  // including brackets and space
+        std::string _name;
+        std::string _arguments;
+
+        ExternalCommand(const std::string &prefix, const std::string &name,
+                        const std::string &arguments)
+            : _prefix(prefix), _name(name), _arguments(arguments) {}
+    };
+
+    void answerCommandRequest(const ExternalCommand &command);
+    void answerCommandMkLogwatchAcknowledge(const ExternalCommand &command);
+    void answerCommandEventConsole(const ExternalCommand &command);
+    void answerCommandNagios(const ExternalCommand &command);
 #endif
 };
 

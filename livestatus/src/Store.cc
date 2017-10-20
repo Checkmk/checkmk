@@ -42,11 +42,6 @@
 #include "Table.h"
 #include "mk_logwatch.h"
 
-using std::list;
-using std::lock_guard;
-using std::mutex;
-using std::string;
-
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
     , _log_cache(mc, mc->maxCachedMessages())
@@ -101,7 +96,7 @@ void Store::addTable(Table *table) {
     _table_columns.addTable(table);
 }
 
-Table *Store::findTable(const string &name) {
+Table *Store::findTable(const std::string &name) {
     auto it = _tables.find(name);
     if (it == _tables.end()) {
         return nullptr;
@@ -118,8 +113,8 @@ void Store::registerComment(nebstruct_comment_data *data) {
 }
 
 namespace {
-list<string> getLines(InputBuffer &input) {
-    list<string> lines;
+std::list<std::string> getLines(InputBuffer &input) {
+    std::list<std::string> lines;
     while (!input.empty()) {
         lines.push_back(input.nextLine());
         if (lines.back().empty()) {
@@ -130,7 +125,8 @@ list<string> getLines(InputBuffer &input) {
 }
 }  // namespace
 
-void Store::logRequest(const string &line, const list<string> &lines) {
+void Store::logRequest(const std::string &line,
+                       const std::list<std::string> &lines) {
     Informational log(logger());
     log << "request: " << line;
     if (logger()->isLoggable(LogLevel::debug)) {
@@ -146,6 +142,36 @@ void Store::logRequest(const string &line, const list<string> &lines) {
     }
 }
 
+Store::ExternalCommand::ExternalCommand(const std::string &str) {
+    constexpr int timestamp_len = 10;
+    constexpr int prefix_len = timestamp_len + 3;
+    if (str.size() <= prefix_len || str[0] != '[' ||
+        str[prefix_len - 2] != ']' || str[prefix_len - 1] != ' ') {
+        throw std::invalid_argument("malformed timestamp in command '" + str +
+                                    "'");
+    }
+    auto semi = str.find(';', prefix_len);
+    _prefix = str.substr(0, prefix_len);
+    _name = str.substr(prefix_len, semi - prefix_len);
+    _arguments = semi == std::string::npos ? "" : str.substr(semi);
+}
+
+Store::ExternalCommand Store::ExternalCommand::withName(
+    const std::string &name) const {
+    return ExternalCommand(_prefix, name, _arguments);
+}
+
+std::string Store::ExternalCommand::str() const {
+    return _prefix + _name + _arguments;
+}
+
+std::vector<std::string> Store::ExternalCommand::args() const {
+    if (_arguments.empty()) {
+        return {};
+    }
+    return mk::split(_arguments.substr(1), ';');
+}
+
 bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     // Precondition: output has been reset
     InputBuffer::Result res = input.readRequest();
@@ -157,7 +183,7 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
         }
         return false;
     }
-    string line = input.nextLine();
+    std::string line = input.nextLine();
     if (mk::starts_with(line, "GET ")) {
         auto lines = getLines(input);
         logRequest(line, lines);
@@ -171,7 +197,11 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     }
     if (mk::starts_with(line, "COMMAND ")) {
         logRequest(line, {});
-        answerCommandRequest(mk::lstrip(line.substr(8)).c_str());
+        try {
+            answerCommandRequest(ExternalCommand(mk::lstrip(line.substr(8))));
+        } catch (const std::invalid_argument &err) {
+            Warning(logger()) << err.what();
+        }
         return true;
     }
     if (mk::starts_with(line, "LOGROTATE")) {
@@ -191,80 +221,76 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     return false;
 }
 
-void Store::answerCommandRequest(const char *command) {
-    if (strlen(command) < 14 || command[0] != '[' || command[11] != ']' ||
-        command[12] != ' ') {
-        Warning(logger()) << "Ignoring malformed command '" << command << "'";
+void Store::answerCommandRequest(const ExternalCommand &command) {
+    if (command.name() == "MK_LOGWATCH_ACKNOWLEDGE") {
+        answerCommandMkLogwatchAcknowledge(command);
         return;
     }
-
-    if (handleCommand(command + 13)) {
+    if (mk::starts_with(command.name(), "EC_")) {
+        answerCommandEventConsole(command);
         return;
     }
+    // Nagios doesn't have a LOG command, so we map it to the custom command
+    // _LOG, which we implement for ourselves.
+    answerCommandNagios(command.name() == "LOG" ? command.withName("_LOG")
+                                                : command);
+}
 
-    lock_guard<mutex> lg(_command_mutex);
-#ifdef NAGIOS4
-    process_external_command1((char *)command);
-#else
-    int buffer_items = -1;
-    /* int ret = */
-    submit_external_command(const_cast<char *>(command), &buffer_items);
-#endif
+void Store::answerCommandMkLogwatchAcknowledge(const ExternalCommand &command) {
+    // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
+    auto args = command.args();
+    if (args.size() != 2) {
+        Warning(logger()) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
+        return;
+    }
+    mk_logwatch_acknowledge(logger(), _mc->mkLogwatchPath(), args[0], args[1]);
 }
 
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(Logger *logger, string path, string command)
+    ECTableConnection(Logger *logger, std::string path, std::string command)
         : EventConsoleConnection(logger, move(path))
         , _command(std::move(command)) {}
 
 private:
     void sendRequest(std::ostream &os) override { os << _command; }
     void receiveReply(std::istream & /*is*/) override {}
-    string _command;
+    std::string _command;
 };
 }  // namespace
 
-bool Store::handleCommand(const string &command) {
-    auto parts = mk::split(command, ';');
-    if (parts.empty()) {
-        return false;
+void Store::answerCommandEventConsole(const ExternalCommand &command) {
+    if (!_mc->mkeventdEnabled()) {
+        Notice(logger()) << "event console disabled, ignoring command '"
+                         << command.str() << "'";
+        return;
     }
-    string command_name = parts[0];
-
-    if (command_name == "MK_LOGWATCH_ACKNOWLEDGE") {
-        // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
-        if (parts.size() != 3) {
-            Warning(logger()) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
-        } else {
-            mk_logwatch_acknowledge(logger(), _mc->mkLogwatchPath(), parts[1],
-                                    parts[2]);
-        }
-        return true;
+    try {
+        ECTableConnection(
+            logger(), _mc->mkeventdSocketPath(),
+            "COMMAND " + command.name().substr(3) + command.arguments())
+            .run();
+    } catch (const std::runtime_error &err) {
+        Alert(logger()) << err.what();
     }
-
-    if (mk::starts_with(command_name, "EC_")) {
-        if (!_mc->mkeventdEnabled()) {
-            Notice(logger()) << "event console disabled, ignoring command '"
-                             << command << "'";
-        } else {
-            try {
-                ECTableConnection(logger(), _mc->mkeventdSocketPath(),
-                                  "COMMAND " + command.substr(3))
-                    .run();
-            } catch (const std::runtime_error &err) {
-                Alert(logger()) << err.what();
-            }
-        }
-        return true;
-    }
-
-    return false;
 }
 
-bool Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
-                             const string &tablename) {
+void Store::answerCommandNagios(const ExternalCommand &command) {
+    std::lock_guard<std::mutex> lg(_command_mutex);
+    auto command_str = command.str();
+    // The Nagios headers are (once again) not const-correct...
+    auto cmd = const_cast<char *>(command_str.c_str());
+#ifdef NAGIOS4
+    process_external_command1(cmd);
+#else
+    submit_external_command(cmd, nullptr);
+#endif
+}
+
+bool Store::answerGetRequest(const std::list<std::string> &lines,
+                             OutputBuffer &output,
+                             const std::string &tablename) {
     if (tablename.empty()) {
         output.setError(OutputBuffer::ResponseCode::invalid_request,
                         "Invalid GET request, missing tablename");
@@ -273,9 +299,9 @@ bool Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
 
     Table *table = findTable(tablename);
     if (table == nullptr) {
-        output.setError(
-            OutputBuffer::ResponseCode::not_found,
-            "Invalid GET request, no such table '" + string(tablename) + "'");
+        output.setError(OutputBuffer::ResponseCode::not_found,
+                        "Invalid GET request, no such table '" +
+                            std::string(tablename) + "'");
         return false;
     }
 

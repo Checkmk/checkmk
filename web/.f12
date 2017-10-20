@@ -21,7 +21,7 @@ if [ ${ALL_EDITIONS:-1} != 0 ]; then
     done
 fi
 
-if [ "$KILL_SITE_APACHE" -eq "1" ]; then
+if [ "$KILL_SITE_APACHE" = "1" ]; then
     echo "KILLING site apache of $SITE"
     sudo killall -9 -u $SITE apache2
 fi

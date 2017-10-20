@@ -43,5 +43,6 @@ check_info["cisco_mem_asa64"] = {
                                     "20",   # cempMemPoolHCFree
                               ]),
     "group"                 : "cisco_mem",
-    "includes"              : [ 'cisco_mem.include' ],
+    "default_levels_variable": "cisco_mem_default_levels",
+    "includes"              : ['size_trend.include', 'cisco_mem.include'],
 }

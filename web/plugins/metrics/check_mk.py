@@ -614,6 +614,24 @@ metric_info["mem_perm_used"] = {
     "unit" : "bytes",
 }
 
+metric_info["mem_growth"] = {
+    "title" : _("Memory usage growth"),
+    "unit"  : "bytes/d",
+    "color" : "#29cfaa",
+}
+
+metric_info["mem_trend"] = {
+    "title" : _("Trend of memory usage growth"),
+    "unit"  : "bytes/d",
+    "color" : "#808080",
+}
+
+metric_info["trend_hoursleft"] = {
+    "title" : _("Hours left until full"),
+    "unit"  : "s",
+    "color" : "#94b65a",
+}
+
 metric_info["swap_total"] = {
     "title" : _("Swap installed"),
     "color": "#e0e0e0",
@@ -5061,7 +5079,9 @@ check_metrics["check_mk-mssql_counters.file_sizes"] = {
 }
 
 check_metrics["check_mk-cisco_mem"] = {
-    "mem_used" : { "name" : "mem_used_percent" }
+    "mem_used" : { "name" : "mem_used_percent" },
+    "growth"   : { "name" : "mem_growth" },
+    "trend"    : { "name" : "mem_trend" },
 }
 
 check_metrics["check_mk-cisco_sys_mem"] = {
@@ -5069,7 +5089,15 @@ check_metrics["check_mk-cisco_sys_mem"] = {
 }
 
 check_metrics["check_mk-cisco_mem_asa"] = {
-    "mem_used" : { "name" : "mem_used_percent" }
+    "mem_used" : { "name" : "mem_used_percent" },
+    "growth"   : { "name" : "mem_growth" },
+    "trend"    : { "name" : "mem_trend" },
+}
+
+check_metrics["check_mk-cisco_mem_asa64"] = {
+    "mem_used" : { "name" : "mem_used_percent" },
+    "growth"   : { "name" : "mem_growth" },
+    "trend"    : { "name" : "mem_trend" },
 }
 
 check_metrics["check_mk-fortigate_sessions_base"] = {
@@ -6982,6 +7010,27 @@ graph_info["mem_used_percent"] = {
         "mem_used_percent:crit",
     ],
     "range" : (0, 100),
+}
+
+graph_info["mem_trend"] = {
+    "metrics": [
+       ("mem_trend", "line"),
+    ],
+}
+
+graph_info["mem_growing"] = {
+    "title": _("Growing"),
+    "metrics": [
+       ("mem_growth.max,0,MAX", "area", _("Growth"),),
+    ],
+}
+
+graph_info["mem_shrinking"] = {
+    "title": _("Shrinking"),
+    "consolidation_function": "min",
+    "metrics": [
+       ("mem_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),
+    ],
 }
 
 # Linux memory graphs. They are a lot...

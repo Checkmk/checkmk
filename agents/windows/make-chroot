@@ -17,6 +17,10 @@ if [ -z $CHROOT_PATH ]; then
     exit 1
 fi
 
+if [ -z $SUDO_USER ]; then
+    echo "ERROR: $0 must be executed with sudo"
+    exit 1
+fi
 
 cleanup_chroot() {
     PIDS=$(lsof -Fp $CHROOT_PATH 2>/dev/null | cut -dp -f2)

@@ -49,8 +49,9 @@ else
 fi
 
 umount $CHROOT_PATH/$CHROOT_BUILD_DIR
+
 umount $CHROOT_PATH/dev/pts
-sleep 2
+sleep 4
 umount $CHROOT_PATH/dev
 umount $CHROOT_PATH/proc
 

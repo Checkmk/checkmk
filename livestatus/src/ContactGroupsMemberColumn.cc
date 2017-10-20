@@ -23,15 +23,24 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactGroupsMemberColumn.h"
+#include "Renderer.h"
 #include "Row.h"
 #include "nagios.h"
 
-std::unordered_set<std::string> ContactGroupsMemberColumn::contactNames(
-    Row row) const {
-    std::unordered_set<std::string> names;
+void ContactGroupsMemberColumn::output(Row row, RowRenderer &r,
+                                       const contact *auth_user) const {
+    ListRenderer l(r);
+    for (const auto &name : getValue(row, auth_user)) {
+        l.output(name);
+    }
+}
+
+std::vector<std::string> ContactGroupsMemberColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    std::vector<std::string> names;
     if (auto cg = columnData<contactgroup>(row)) {
         for (auto cm = cg->members; cm != nullptr; cm = cm->next) {
-            names.insert(cm->contact_ptr->name);
+            names.emplace_back(cm->contact_ptr->name);
         }
     }
     return names;

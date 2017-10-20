@@ -23,11 +23,21 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostContactsColumn.h"
+#include <unordered_set>
+#include "Renderer.h"
 #include "Row.h"
 #include "nagios.h"
 
-std::unordered_set<std::string> HostContactsColumn::contactNames(
-    Row row) const {
+void HostContactsColumn::output(Row row, RowRenderer &r,
+                                const contact *auth_user) const {
+    ListRenderer l(r);
+    for (const auto &name : getValue(row, auth_user)) {
+        l.output(name);
+    }
+}
+
+std::vector<std::string> HostContactsColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
     std::unordered_set<std::string> names;
     if (auto hst = columnData<host>(row)) {
         for (auto cm = hst->contacts; cm != nullptr; cm = cm->next) {
@@ -40,5 +50,5 @@ std::unordered_set<std::string> HostContactsColumn::contactNames(
             }
         }
     }
-    return names;
+    return std::vector<std::string>(names.begin(), names.end());
 }

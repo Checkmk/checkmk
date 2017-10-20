@@ -25,10 +25,18 @@
 #include "CommentColumn.h"
 #include <chrono>
 #include <cstdint>
-#include <cstdlib>
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
+
+std::vector<std::string> CommentColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    std::vector<std::string> ids;
+    for (const auto &comment : comments_for_row(row)) {
+        ids.push_back(std::to_string(comment._id));
+    }
+    return ids;
+}
 
 void CommentColumn::output(Row row, RowRenderer &r,
                            const contact * /* auth_user */) const {
@@ -47,35 +55,6 @@ void CommentColumn::output(Row row, RowRenderer &r,
             l.output(comment._id);
         }
     }
-}
-
-std::unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
-    const std::string &name) const {
-    class ContainsCommentID : public Contains {
-    public:
-        ContainsCommentID(unsigned long element, const CommentColumn *column)
-            : _element(element), _column(column) {}
-
-        bool operator()(Row row) override {
-            for (const auto &comment : _column->comments_for_row(row)) {
-                if (comment._id == _element) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-    private:
-        const unsigned long _element;
-        const CommentColumn *const _column;
-    };
-
-    unsigned long id = strtoul(name.c_str(), nullptr, 10);
-    return std::make_unique<ContainsCommentID>(id, this);
-}
-
-bool CommentColumn::isEmpty(Row row) const {
-    return comments_for_row(row).empty();
 }
 
 std::vector<CommentData> CommentColumn::comments_for_row(Row row) const {

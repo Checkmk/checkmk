@@ -26,7 +26,6 @@
 #define DowntimeColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
 #include <vector>
 #include "ListColumn.h"
@@ -47,11 +46,12 @@ public:
         , _mc(mc)
         , _is_service(is_service)
         , _with_info(with_info) {}
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
-    std::unique_ptr<Contains> makeContains(
-        const std::string &name) const override;
-    bool isEmpty(Row row) const override;
+
+    std::vector<std::string> getValue(Row row,
+                                      const contact *auth_user) const override;
 
 private:
     MonitoringCore *_mc;

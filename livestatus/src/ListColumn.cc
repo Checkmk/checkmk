@@ -26,10 +26,7 @@
 #include "Filter.h"
 #include "ListFilter.h"
 
-ListColumn::Contains::~Contains() = default;
-
 std::unique_ptr<Filter> ListColumn::createFilter(
     RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<ListFilter>(*this, relOp, value,
-                                        makeContains(value), value.empty());
+    return std::make_unique<ListFilter>(*this, relOp, value);
 }

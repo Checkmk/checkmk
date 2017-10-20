@@ -27,20 +27,25 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include <unordered_set>
-#include "ContactsColumn.h"
+#include <vector>
+#include "ListColumn.h"
+#include "contact_fwd.h"
 class Row;
+class RowRenderer;
 
-class ServiceContactsColumn : public ContactsColumn {
+class ServiceContactsColumn : public ListColumn {
 public:
     ServiceContactsColumn(const std::string& name,
                           const std::string& description, int indirect_offset,
                           int extra_offset, int extra_extra_offset, int offset)
-        : ContactsColumn(name, description, indirect_offset, extra_offset,
-                         extra_extra_offset, offset) {}
+        : ListColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset, offset) {}
 
-private:
-    std::unordered_set<std::string> contactNames(Row row) const override;
+    void output(Row row, RowRenderer& r,
+                const contact* auth_user) const override;
+
+    std::vector<std::string> getValue(Row row,
+                                      const contact* auth_user) const override;
 };
 
 #endif  // ServiceContactsColumn_h

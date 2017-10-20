@@ -27,12 +27,10 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <sys/types.h>
-#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 #include "Column.h"
@@ -157,6 +155,11 @@ protected:
                            : mk::split(x.substr(1), '\001');
             }) {}
 
+        std::vector<std::string> getValue(
+            Row row, const contact * /*auth_user*/) const override {
+            return _ecc.getValue(row);
+        }
+
         bool isNone(const ECRow *row) const {
             return _ecc.getRaw(row) == "\002";
         }
@@ -169,30 +172,6 @@ protected:
             for (const auto &elem : _ecc.getValue(row)) {
                 l.output(elem);
             }
-        }
-
-        std::unique_ptr<Contains> makeContains(
-            const std::string &name) const override {
-            class ContainsElem : public Contains {
-            public:
-                ContainsElem(const std::string &name,
-                             const EventConsoleColumn<_column_t> &ecc)
-                    : _name(name), _ecc(ecc) {}
-                bool operator()(Row row) override {
-                    const _column_t &values = _ecc.getValue(row);
-                    return std::find(values.begin(), values.end(), _name) !=
-                           values.end();
-                }
-
-            private:
-                std::string _name;
-                const EventConsoleColumn<_column_t> &_ecc;
-            };
-            return std::make_unique<ContainsElem>(name, _ecc);
-        }
-
-        bool isEmpty(Row row) const override {
-            return _ecc.getValue(row).empty();
         }
     };
 

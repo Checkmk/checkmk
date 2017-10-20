@@ -25,49 +25,24 @@
 #include "HostGroupsColumn.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "nagios.h"
 
 void HostGroupsColumn::output(Row row, RowRenderer &r,
-                              const contact * /* auth_user */) const {
+                              const contact *auth_user) const {
     ListRenderer l(r);
-    for (objectlist *list = getData(row); list != nullptr; list = list->next) {
-        auto sg = static_cast<hostgroup *>(list->object_ptr);
-        l.output(std::string(sg->group_name));
+    for (const auto &name : getValue(row, auth_user)) {
+        l.output(name);
     }
 }
 
-std::unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
-    const std::string &name) const {
-    class ContainsHostGroup : public Contains {
-    public:
-        ContainsHostGroup(hostgroup *element, const HostGroupsColumn *column)
-            : _element(element), _column(column) {}
-
-        bool operator()(Row row) override {
-            for (auto list = _column->getData(row); list != nullptr;
-                 list = list->next) {
-                if (list->object_ptr == _element) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-    private:
-        hostgroup *const _element;
-        const HostGroupsColumn *const _column;
-    };
-
-    return std::make_unique<ContainsHostGroup>(
-        find_hostgroup(const_cast<char *>(name.c_str())), this);
-}
-
-bool HostGroupsColumn::isEmpty(Row row) const {
-    return getData(row) == nullptr;
-}
-
-objectlist *HostGroupsColumn::getData(Row row) const {
+std::vector<std::string> HostGroupsColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    std::vector<std::string> group_names;
     if (auto p = columnData<objectlist *>(row)) {
-        return *p;
+        for (objectlist *list = *p; list != nullptr; list = list->next) {
+            auto hg = static_cast<hostgroup *>(list->object_ptr);
+            group_names.emplace_back(hg->group_name);
+        }
     }
-    return nullptr;
+    return group_names;
 }

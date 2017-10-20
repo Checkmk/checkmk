@@ -149,7 +149,9 @@ if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
 fi
 
 # Add user for building windows agent without root privileges
-./do-chroot "useradd -lmo -u $(id -u $SUDO_USER) -s /bin/bash $SUDO_USER"
+if ! grep -q $SUDO_USER "$CHROOT_PATH/etc/passwd" ; then
+    ./do-chroot "useradd -lmo -u $(id -u $SUDO_USER) -s /bin/bash $SUDO_USER"
+fi
 
 # "Disable" apt privilege dropping in chroot
 sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd

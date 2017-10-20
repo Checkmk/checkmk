@@ -29,7 +29,9 @@
 #include <list>
 #include <map>
 #include <string>
+#ifndef CMC
 #include <vector>
+#endif
 #include "LogCache.h"
 #include "TableColumns.h"
 #include "TableCommands.h"

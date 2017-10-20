@@ -15,10 +15,12 @@ set -e
 # Ensure that CHROOT_BUILD_DIR is set.
 [[ -z $CHROOT_BUILD_DIR ]] && exit 1
 
-. $CHROOT_BUILD_DIR/agents/windows/build.sh
+. /$CHROOT_BUILD_DIR/agents/windows/build.sh
 
 parse-args "$@"
-cd $CHROOT_BUILD_DIR/agents/windows
+
+cd /$CHROOT_BUILD_DIR/agents/windows
+
 autoreconf --install
 
 build_archs=(32 64)

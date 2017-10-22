@@ -1,4 +1,4 @@
-Title: Windows Agent/Agent Updater: Fixed raise condition which removed the windows service
+Title: Windows Agent/Agent Updater: Fixed race condition which removed the windows service
 Level: 2
 Component: checks
 Compatible: compat

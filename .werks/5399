@@ -1,0 +1,15 @@
+Title: Fixed multiple stored XSS injections in WATO dialogs
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p16
+Date: 1508420225
+Class: security
+
+It was possible to inject Javascript code to using configuration fields of different objects
+(users, hosts, groups, roles, timeperiods).
+
+These issues could only be triggered by authenticated users that have permissons to use WATO
+and add/edit the objects mentioned above. Normally these are users with the roles admin or
+users.

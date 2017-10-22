@@ -793,7 +793,7 @@ def show_hosts(folder):
     contact_group_names = userdb.load_group_information().get("contact", {})
     def render_contact_group(c):
         display_name = contact_group_names.get(c, {'alias': c})['alias']
-        return '<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (c, display_name)
+        return html.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
     host_errors = folder.host_validation_errors()
     rendered_hosts = []
@@ -851,7 +851,7 @@ def show_hosts(folder):
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
-                table.cell(attr.title(), tdcontent, css=tdclass)
+                table.cell(attr.title(), html.attrencode(tdcontent), css=tdclass)
 
         # Am I authorized?
         reason = host.reason_why_may_not("read")
@@ -866,8 +866,8 @@ def show_hosts(folder):
 
         # Permissions and Contact groups - through complete recursion and inhertance
         permitted_groups, host_contact_groups, use_for_services = host.groups()
-        table.cell(_("Permissions"), ", ".join(map(render_contact_group, permitted_groups)))
-        table.cell(_("Contact Groups"), ", ".join(map(render_contact_group, host_contact_groups)))
+        table.cell(_("Permissions"), HTML(", ").join(map(render_contact_group, permitted_groups)))
+        table.cell(_("Contact Groups"), HTML(", ").join(map(render_contact_group, host_contact_groups)))
 
         if not config.wato_hide_hosttags:
             # Raw tags
@@ -6993,8 +6993,8 @@ class ModeGroups(WatoMode):
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        table.cell(_("Name"), name)
-        table.cell(_("Alias"), group['alias'])
+        table.cell(_("Name"), html.attrencode(name))
+        table.cell(_("Alias"), html.attrencode(group['alias']))
 
 
     def page(self):
@@ -8632,8 +8632,8 @@ def mode_timeperiods(phase):
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        table.cell(_("Name"), name)
-        table.cell(_("Alias"), timeperiod.get("alias", ""))
+        table.cell(_("Name"), html.attrencode(name))
+        table.cell(_("Alias"), html.attrencode(timeperiod.get("alias", "")))
     table.end()
 
 
@@ -10366,7 +10366,7 @@ def mode_users(phase):
             html.icon(_('Notifications are disabled'), 'notif_disabled')
 
         # Full name / Alias
-        table.cell(_("Alias"), user.get("alias", ""))
+        table.cell(_("Alias"), html.attrencode(user.get("alias", "")))
 
         # Email
         table.cell(_("Email"), user.get("email", ""))
@@ -10374,14 +10374,14 @@ def mode_users(phase):
         # Roles
         table.cell(_("Roles"))
         if user.get("roles", []):
-            html.write(", ".join(
+            html.write_text(", ".join(
                [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_role"), ("edit", r)]), roles[r].get('alias')) for r in user["roles"]]))
 
         # contact groups
         table.cell(_("Contact groups"))
         cgs = user.get("contactgroups", [])
         if cgs:
-            html.write(", ".join(
+            html.write_text(", ".join(
                [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)]),
                                           c in contact_groups and contact_groups[c]['alias'] or c) for c in cgs]))
         else:
@@ -11080,10 +11080,10 @@ def mode_roles(phase):
             html.icon_button(delete_url, _("Delete this role"), "delete")
 
         # ID
-        table.cell(_("Name"), id)
+        table.cell(_("Name"), html.attrencode(id))
 
         # Alias
-        table.cell(_("Alias"), role["alias"])
+        table.cell(_("Alias"), html.attrencode(role["alias"]))
 
         # Type
         table.cell(_("Type"), role.get("builtin") and _("builtin") or _("custom"))
@@ -11094,8 +11094,7 @@ def mode_roles(phase):
 
         # Users
         table.cell(_("Users"),
-          ", ".join([ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]),
-             user.get("alias", user_id))
+          HTML(", ").join([ html.render_a(user.get("alias", user_id), folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]))
             for (user_id, user) in users.items() if (id in user["roles"])]))
 
 

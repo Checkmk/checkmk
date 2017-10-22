@@ -220,10 +220,9 @@ class ParentsAttribute(ValueSpecAttribute):
         return "parents"
 
     def paint(self, value, hostname):
-        parts = [ '<a href="%s">%s</a>' % (
-                   "wato.py?" + html.urlencode_vars([("mode", "edit_host"), ("host", hn)]), hn)
+        parts = [ html.render_a(hn, "wato.py?" + html.urlencode_vars([("mode", "edit_host"), ("host", hn)]))
                   for hn in value ]
-        return "", ", ".join(parts)
+        return "", HTML(", ").join(parts)
 
 
 declare_host_attribute(ParentsAttribute(),

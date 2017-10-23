@@ -2573,11 +2573,13 @@ def mode_diag_host(phase):
     html.open_table()
     html.open_tr()
     html.open_td()
+
     html.begin_form('diag_host', method = "POST")
+    html.prevent_password_auto_completion()
+
     forms.header(_('Host Properties'))
 
     forms.section(legend = False)
-    html.prevent_password_auto_completion()
 
     # The diagnose page shows both snmp variants at the same time
     # We need to analyse the preconfigured community and set either the

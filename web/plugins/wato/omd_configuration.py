@@ -337,7 +337,7 @@ class ConfigDomainApache(ConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(["omd", "restart", "apache"], shell=False, stdin=open(os.devnull),
+            p = subprocess.Popen(["omd", "reload", "apache"], shell=False, stdin=open(os.devnull),
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
             stdout = p.communicate()[0]
@@ -354,8 +354,10 @@ class ConfigDomainApache(ConfigDomain):
         config = self._get_effective_config()
 
         output = wato_fileheader()
-        output += "ServerLimit %d\n" % config["process_tuning"]["number_of_processes"]
-        output += "MaxClients %d\n" % config["process_tuning"]["number_of_processes"]
+
+        if config:
+            output += "ServerLimit %d\n" % config["process_tuning"]["number_of_processes"]
+            output += "MaxClients %d\n" % config["process_tuning"]["number_of_processes"]
 
         config_file_path = os.path.join(cmk.paths.omd_root, "etc/apache/conf.d", "zzz_check_mk.conf")
         store.save_file(config_file_path, output)
@@ -363,8 +365,7 @@ class ConfigDomainApache(ConfigDomain):
 
 
     def _get_effective_config(self):
-        config = self.default_globals()
-        config.update(self.load(site_specific=False))
+        config = self.load(site_specific=False)
         config.update(self.load(site_specific=True))
         return config
 
@@ -372,12 +373,12 @@ class ConfigDomainApache(ConfigDomain):
     def default_globals(self):
         return {
             "process_tuning": {
-                "number_of_processes" : self._get_value_from_apache_config("MaxClients", int, 64),
+                "number_of_processes" : self._get_value_from_config("MaxClients", int, 64),
             }
         }
 
 
-    def _get_value_from_apache_config(self, varname, conv_func, default_value):
+    def _get_value_from_config(self, varname, conv_func, default_value):
         config_files = [ os.path.join(cmk.paths.omd_root, "etc/apache/apache.conf") ]
         config_files += sorted(glob.glob(os.path.join(cmk.paths.omd_root, "etc/apache/conf.d", "*.conf")))
 
@@ -388,7 +389,7 @@ class ConfigDomainApache(ConfigDomain):
                 continue # Skip the file written by this config domain
 
             for line in open(config_file):
-                if line.lstrip().startswith("MaxClients"):
+                if line.lstrip().startswith(varname):
                     raw_value = line.split()[1]
                     value = conv_func(raw_value)
 
@@ -412,4 +413,123 @@ register_configvar(group,
         ],
     ),
     domain = ConfigDomainApache,
+)
+
+
+#.
+#   .--rrdcached-----------------------------------------------------------.
+#   |                        _                _              _             |
+#   |           _ __ _ __ __| | ___ __ _  ___| |__   ___  __| |            |
+#   |          | '__| '__/ _` |/ __/ _` |/ __| '_ \ / _ \/ _` |            |
+#   |          | |  | | | (_| | (_| (_| | (__| | | |  __/ (_| |            |
+#   |          |_|  |_|  \__,_|\___\__,_|\___|_| |_|\___|\__,_|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Use these options to tune the performance of the rrdcached           |
+#   '----------------------------------------------------------------------'
+
+class ConfigDomainRRDCached(ConfigDomain):
+    needs_sync       = True
+    needs_activation = True
+    ident            = "rrdcached"
+
+    def config_dir(self):
+        return cmk.paths.default_config_dir + "/rrdcached.d/wato/"
+
+
+    def activate(self):
+        try:
+            self._write_config_file()
+
+            p = subprocess.Popen(["omd", "restart", "rrdcached"], shell=False, stdin=open(os.devnull),
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+            stdout = p.communicate()[0]
+            if p.returncode != 0:
+                raise Exception(stdout)
+
+            return []
+        except Exception, e:
+            log_exception()
+            return ["Failed to activate rrdcached configuration: %s" % (traceback.format_exc())]
+
+
+    def _write_config_file(self):
+        config = self._get_effective_config()
+
+        output = wato_fileheader()
+        for key, val in sorted(config.get("tuning", {}).items()):
+            output += "%s=%d\n" % (key, val)
+
+        config_file_path = os.path.join(cmk.paths.omd_root, "etc/rrdcached.d", "zzz_check_mk.conf")
+        store.save_file(config_file_path, output)
+
+
+    def _get_effective_config(self):
+        config = self.load(site_specific=False)
+        config.update(self.load(site_specific=True))
+        return config
+
+
+    def default_globals(self):
+        return {
+            "tuning": {
+                "TIMEOUT"       : self._get_value_from_config("TIMEOUT", int, 3600),
+                "RANDOM_DELAY"  : self._get_value_from_config("RANDOM_DELAY", int, 1800),
+                "FLUSH_TIMEOUT" : self._get_value_from_config("FLUSH_TIMEOUT", int, 7200),
+            }
+        }
+
+
+    def _get_value_from_config(self, varname, conv_func, default_value):
+        config_files = [ os.path.join(cmk.paths.omd_root, "etc/rrdcached.conf") ]
+        config_files += sorted(glob.glob(os.path.join(cmk.paths.omd_root, "etc/rrdcached.d", "*.conf")))
+
+        value = default_value
+
+        for config_file in config_files:
+            if config_file.endswith("zzz_check_mk.conf"):
+                continue # Skip the file written by this config domain
+
+            for line in open(config_file):
+                if line.lstrip().startswith(varname):
+                    raw_value = line.split("=")[1]
+                    value = conv_func(raw_value)
+
+        return value
+
+
+register_configvar(group,
+    "tuning",
+    Dictionary(
+        title = _("RRDCached tuning"),
+        elements = [
+            ("TIMEOUT", Age(
+                title = _("Disk flush interval of updated metrics"),
+                help = _("Updated metrics are written to disk in the configured interval. "
+                         "The write operation is only performed for metrics that are being "
+                         "updated. Old metrics are not affected by this option."),
+                minvalue = 0,
+            )),
+            ("RANDOM_DELAY", Age(
+                title = _("Random delay"),
+                help = _("The rrdcached will delay writing of each metric for a random "
+                         "number of seconds in the range [0..delay]. This will avoid too many "
+                         "writes being queued simultaneously. This number should not be "
+                         "higher than the value specified in \"Disk flush interval of "
+                         "updated metrics\"."),
+                minvalue = 0,
+            )),
+            ("FLUSH_TIMEOUT", Age(
+                title = _("Disk flush interval of old data"),
+                help = _("The entire cache is searched in the interval configured here for old "
+                         "values which shal be written to disk. This only concerns RRD files to "
+                         "which updates have stopped, so setting this to a high value is "
+                         "acceptable in most cases."),
+                minvalue = 0,
+            )),
+        ],
+        optional_keys = [],
+    ),
+    domain = ConfigDomainRRDCached,
 )

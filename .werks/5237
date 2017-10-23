@@ -1,0 +1,10 @@
+Title: agent_updater was unable to update itself
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1508768208
+Class: fix
+
+

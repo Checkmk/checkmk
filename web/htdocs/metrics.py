@@ -1565,11 +1565,12 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
             int((float(html.var("height")) - 18)/html_size_per_ex))
 
     graph_render_options = {
-        "size"          : size,
-        "font_size"     : 8,
-        "show_legend"   : False,
-        "show_controls" : False,
-        "resizable"     : False,
+        "size"                     : size,
+        "font_size"                : 8,
+        "show_legend"              : False,
+        "show_controls"            : False,
+        "resizable"                : False,
+        "show_time_range_previews" : False,
     }
     graph_render_options.update(custom_graph_render_options)
 
@@ -1610,7 +1611,7 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
         graph_artwork = compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options)
         graph_render_options["size"] = (size[0], size[1] - graph_legend_height_ex(graph_render_options, graph_artwork))
 
-    html_code = render_graphs_from_definitions([graph_recipe], graph_data_range, graph_render_options)
+    html_code = render_graphs_from_definitions([graph_recipe], graph_data_range, graph_render_options, render_async=False)
     html.write(html_code)
 
 

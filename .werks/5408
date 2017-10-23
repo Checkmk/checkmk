@@ -1,0 +1,13 @@
+Title: Windows perf counter base number formatting was broken
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508768670
+Class: fix
+
+Since v1.4.0, Windows agent output has been malformatted in section(s)
+winperf_*, having no space between performance counter base number and
+frequency. At lest the 'Disk IO' check and any possible other checks
+depending on this information have been broken since v1.4.0. 

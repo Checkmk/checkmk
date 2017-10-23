@@ -1,0 +1,20 @@
+Title: RRDCached tuning can now be configured via Global Settings
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508763950
+Class: feature
+
+It is now possible to configure the tuning settings of the rrdcached via
+WATO (Global Settings > Site Management > RRDCached tuning).
+
+This option is often changed to tune the disk IO behavious of the RRDCached. Details
+about this can be found here: http://mathias-kettner.de/cms_graphing.html
+
+The option can be configured globally for all sites or in the site specific globals,
+depending on your needs.
+
+The default values of the options are read from the existing configuration files
+(etc/rrdcached.conf and etc/rrdcached.d/*.conf).

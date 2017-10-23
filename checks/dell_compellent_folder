@@ -52,4 +52,5 @@ check_info['dell_compellent_folder'] = {
                                         9, # DELL-STORAGE-SC-MIB::scDiskFolderSUSpareSpace
                               ]),
     'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0"),
+    'includes'              : [ 'df.include' ],
 }

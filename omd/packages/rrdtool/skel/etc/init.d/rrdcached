@@ -30,9 +30,15 @@ if [ -e "$CONFFILE" ] ; then
     . $CONFFILE
 fi
 
-TIMING=""
-
-
+CONFDIR=$OMD_ROOT/etc/rrdcached.d
+if [ -d $CONFDIR ]; then
+  for i in $CONFDIR/*.conf; do
+    if [ -r $i ]; then
+      . $i
+    fi
+  done
+  unset i
+fi
 
 # Please do not touch the code below
 CACHE_DIR="###ROOT###/tmp/rrdcached"

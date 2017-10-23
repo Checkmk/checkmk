@@ -1,0 +1,11 @@
+Title: check_mk_agent.hpux: Fix hardcoded version in lib path
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1508765713
+Class: fix
+
+The original path for lib files has been hardcoded to omd version 0.45. The
+path now uses the regular path which is standard for linux and solaris.

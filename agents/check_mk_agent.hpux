@@ -26,7 +26,7 @@
 
 export PATH=$PATH:/usr/sbin:/usr/bin:/usr/contrib/bin
 
-export MK_LIBDIR="/omd/versions/0.45.20110123/lib/check_mk_agent"
+export MK_LIBDIR="/usr/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk"
 
 # All executables in PLUGINSDIR will simply be executed and their

@@ -3792,7 +3792,7 @@ class LDAPDistinguishedName(TextUnicode):
 class Password(TextAscii):
     def __init__(self, **kwargs):
         self._is_stored_plain = kwargs.get("is_stored_plain", True)
-        self._autocomplete = kwargs.get("autocomplete", False)
+        kwargs.setdefault("autocomplete", False)
 
         if self._is_stored_plain:
             plain_help = _("The password entered here is stored in plain text within the "
@@ -3806,6 +3806,7 @@ class Password(TextAscii):
                 kwargs["help"] = plain_help
 
         TextAscii.__init__(self, attrencode = True, **kwargs)
+
 
     def render_input(self, varprefix, value):
         self.classtype_info()

@@ -1,0 +1,12 @@
+Title: dell_compellent_folder: Fixed crash because of missing library
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508766328
+Class: fix
+
+In the original check plugin the connection to df.include has been
+missing. This is a problem only since 1.4.0, when check plugins run in their
+own namespace.

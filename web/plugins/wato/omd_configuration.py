@@ -310,3 +310,106 @@ register_configvar(group,
 
 
 replication_paths.append(("file", "diskspace", ConfigDomainDiskspace.diskspace_config))
+
+
+#.
+#   .--Apache--------------------------------------------------------------.
+#   |                    _                     _                           |
+#   |                   / \   _ __   __ _  ___| |__   ___                  |
+#   |                  / _ \ | '_ \ / _` |/ __| '_ \ / _ \                 |
+#   |                 / ___ \| |_) | (_| | (__| | | |  __/                 |
+#   |                /_/   \_\ .__/ \__,_|\___|_| |_|\___|                 |
+#   |                        |_|                                           |
+#   +----------------------------------------------------------------------+
+#   | Manage settings of the site apache                                   |
+#   '----------------------------------------------------------------------'
+
+class ConfigDomainApache(ConfigDomain):
+    needs_sync       = True
+    needs_activation = True
+    ident            = "apache"
+
+    def config_dir(self):
+        return cmk.paths.default_config_dir + "/apache.d/wato/"
+
+
+    def activate(self):
+        try:
+            self._write_config_file()
+
+            p = subprocess.Popen(["omd", "restart", "apache"], shell=False, stdin=open(os.devnull),
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+            stdout = p.communicate()[0]
+            if p.returncode != 0:
+                raise Exception(stdout)
+
+            return []
+        except Exception, e:
+            log_exception()
+            return ["Failed to activate apache configuration: %s" % (traceback.format_exc())]
+
+
+    def _write_config_file(self):
+        config = self._get_effective_config()
+
+        output = wato_fileheader()
+        output += "ServerLimit %d\n" % config["process_tuning"]["number_of_processes"]
+        output += "MaxClients %d\n" % config["process_tuning"]["number_of_processes"]
+
+        config_file_path = os.path.join(cmk.paths.omd_root, "etc/apache/conf.d", "zzz_check_mk.conf")
+        store.save_file(config_file_path, output)
+
+
+
+    def _get_effective_config(self):
+        config = self.default_globals()
+        config.update(self.load(site_specific=False))
+        config.update(self.load(site_specific=True))
+        return config
+
+
+    def default_globals(self):
+        return {
+            "process_tuning": {
+                "number_of_processes" : self._get_value_from_apache_config("MaxClients", int, 64),
+            }
+        }
+
+
+    def _get_value_from_apache_config(self, varname, conv_func, default_value):
+        config_files = [ os.path.join(cmk.paths.omd_root, "etc/apache/apache.conf") ]
+        config_files += sorted(glob.glob(os.path.join(cmk.paths.omd_root, "etc/apache/conf.d", "*.conf")))
+
+        value = default_value
+
+        for config_file in config_files:
+            if config_file.endswith("zzz_check_mk.conf"):
+                continue # Skip the file written by this config domain
+
+            for line in open(config_file):
+                if line.lstrip().startswith("MaxClients"):
+                    raw_value = line.split()[1]
+                    value = conv_func(raw_value)
+
+        return value
+
+
+register_configvar(group,
+    "process_tuning",
+    Dictionary(
+        title = _("Apache process tuning"),
+        elements = [
+            ("number_of_processes", Integer(
+                title = _("Number of apache processes"),
+                help = _("Use this value to tune the maximum number of apache client requests that will be processed simultaneously "
+                         "(maximum number of apache server processes allowed to start). In case you have a lot of incoming "
+                         "requests in parallel it may be a good idea to increase this value. But do this carefully, more is "
+                         "not always better. The apache processes normally need a decent amount of memory and you should "
+                         "only configure as many apache processes as your system can handle in high load situations."),
+                minvalue = 5,
+            )),
+        ],
+    ),
+    domain = ConfigDomainApache,
+)

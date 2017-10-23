@@ -1,0 +1,21 @@
+Title: Number of apache processes can now be configured via Global Settings
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508761368
+Class: feature
+
+It is now possible to configure the apache configuration option {MaxClients} via
+WATO (Global Settings > Site Management > Apache process tuning).
+
+This option is often changed to tune the site apache to either consume less memory
+(reduce the number of maximum processes) or being able to handle more users in the
+GUI simultaneously.
+
+The option can be configured globally for all sites or in the site specific globals,
+depending on your needs.
+
+The defaul value of this option is read from the existing configuration files
+(etc/apache/apache.conf and etc/apache/conf.d/*.conf) and defaults to {64}.

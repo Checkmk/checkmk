@@ -1,0 +1,11 @@
+Title: Fixed password auto completion prevention for current Chrome versions
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1508752658
+
+

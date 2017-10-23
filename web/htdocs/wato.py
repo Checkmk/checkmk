@@ -7083,7 +7083,7 @@ class ModeEditGlobalSetting(WatoMode):
             elif curvalue == defvalue:
                 html.write_text(_("Your setting and factory settings are identical."))
             else:
-                html.write(self._valuespec.value_to_text(defvalue))
+                html.write(self._valuespec.value_to_text(curvalue))
 
         forms.end()
         html.button("save", _("Save"))

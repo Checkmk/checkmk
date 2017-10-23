@@ -1020,6 +1020,8 @@ def paint_time_graph_cmk(row, cell, show_timeranges=False):
     # b) the painter options set per user and view
     graph_render_options = cell.painter_parameters().copy()
 
+    graph_render_options["show_time_range_previews"] = show_timeranges
+
     options = painter_options.get_without_default("graph_render_options")
     if options != None:
         graph_render_options.update(options)
@@ -1047,8 +1049,7 @@ def paint_time_graph_cmk(row, cell, show_timeranges=False):
     return "", metrics.render_graphs_from_specification_html(
             graph_identification,
             graph_data_range,
-            graph_render_options,
-            show_timeranges)
+            graph_render_options)
 
 
 def get_graph_timerange_from_painter_options():

@@ -1,0 +1,15 @@
+Title: mssql_counters.cache_hits: Discover services for which the agent plugins does not provide any base for the counter 'cache_hits'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508845164
+Class: feature
+
+Some base values for counters might be zero or None
+if they are currently not available, eg.
+MSSQL_FOOBAR:Databases log_cache_hit_ratio ANY-PATH 0
+MSSQL_FOOBAR:Databases log_cache_hit_ratio_base ANY-PATH 0
+This may lead to a flapping state of the
+{{Check_MK Discovery Service}} which reports vanished services.

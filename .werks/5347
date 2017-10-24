@@ -1,0 +1,12 @@
+Title: agent_ucs_bladecenter: add option to disable certificate validation
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p16
+Date: 1508829646
+
+The SSL certificate validation of the agent_ucs_bladecenter can now be
+disabled in the WATO rule "Check state of UCS Bladecenter".

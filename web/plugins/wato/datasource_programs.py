@@ -602,8 +602,15 @@ register_rule(group,
                   allow_empty = False,
               )
             ),
+            ( "no_cert_check",
+              FixedValue(
+                  True,
+                  title = _("Disable SSL certificate validation"),
+                  totext = _("SSL certificate validation is disabled"),
+              )
+            ),
         ],
-        optional_keys = False
+        optional_keys = ['no_cert_check']
     ),
     title = _("Check state of UCS Bladecenter"),
     help = _("This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "

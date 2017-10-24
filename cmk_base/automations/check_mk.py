@@ -570,9 +570,8 @@ class AutomationAnalyseServices(Automation):
         for acttype, rules in config.active_checks.items():
             entries = rulesets.host_extra_conf(hostname, rules)
             if entries:
-                act_info = checks.active_check_info[acttype]
                 for params in entries:
-                    description = act_info["service_description"](params)
+                    description = config.active_check_service_description(hostname, acttype, params)
                     if description == servicedesc:
                         return {
                             "origin"     : "active",
@@ -1106,7 +1105,7 @@ class AutomationActiveCheck(Automation):
                 if entries:
                     act_info = checks.active_check_info[plugin]
                     for params in entries:
-                        description = act_info["service_description"](params).replace('$HOSTNAME$', hostname)
+                        description = config.active_check_service_description(hostname, act_info, params)
                         if description == item:
                             args = core_config.active_check_arguments(hostname, description, act_info["argument_function"](params))
                             command_line = self._replace_core_macros(hostname, act_info["command_line"].replace("$ARG1$", args))

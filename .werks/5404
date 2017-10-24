@@ -1,0 +1,11 @@
+Title: Changing "Agent encryption" ruleset now marks bakery as dirty
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p16
+Date: 1508823881
+
+

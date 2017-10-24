@@ -1,0 +1,13 @@
+Title: veritas_vcs: add timeout in the Check_MK agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508833185
+Class: fix
+
+Add a timeout of 2 seconds for the check veritas_vcs
+in the Check_MK agent. This circumvents the problem
+that the agent blocks if there is a problem with a
+Veritas cluster.

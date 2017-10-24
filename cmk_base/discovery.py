@@ -1074,10 +1074,9 @@ def _merge_manual_services(services, hostname, on_error):
 
     # Similar for 'active_checks', but here we have parameters
     for acttype, rules in config.active_checks.items():
-        act_info = checks.active_check_info[acttype]
         entries = rulesets.host_extra_conf(hostname, rules)
         for params in entries:
-            descr = act_info["service_description"](params)
+            descr = config.active_check_service_description(hostname, acttype, params)
             services[(acttype, descr)] = ('active', repr(params))
 
     # Handle disabled services -> "ignored"

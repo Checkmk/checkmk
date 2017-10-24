@@ -311,11 +311,6 @@ def do_update(with_precompile):
 #   | Active check specific functions                                      |
 #   '----------------------------------------------------------------------'
 
-def active_check_service_description(hostname, act_info, params):
-    description = act_info["service_description"](params).replace('$HOSTNAME$', hostname)
-    return config.get_final_service_description(hostname, description)
-
-
 def active_check_arguments(hostname, description, args):
     if type(args) in [ str, unicode ]:
         return args

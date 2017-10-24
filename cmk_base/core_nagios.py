@@ -403,7 +403,7 @@ define service {
             checks.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = core_config.active_check_service_description(hostname, act_info, params)
+            description = config.active_check_service_description(hostname, acttype, params)
 
             if do_omit_service(hostname, description):
                 continue

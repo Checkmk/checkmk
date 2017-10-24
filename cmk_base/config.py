@@ -461,7 +461,7 @@ def all_configured_clusters():
     return cache
 
 
-# This function should only be used during duplicate host check! It has to work like 
+# This function should only be used during duplicate host check! It has to work like
 # all_active_hosts() but with the difference that duplicates are not removed.
 def all_active_hosts_with_duplicates():
     # Only available with CEE
@@ -1048,6 +1048,18 @@ def service_description(hostname, check_type, item):
                                  (hostname, check_type, item))
 
     return get_final_service_description(hostname, descr)
+
+
+def active_check_service_description(hostname, active_check_type, params):
+    import cmk_base.checks as checks
+    if active_check_type not in checks.active_check_info:
+        return "Unimplemented check %s" % active_check_type
+
+    act_info = checks.active_check_info[active_check_type]
+    description = act_info["service_description"](params)
+    description = description.replace('$HOSTNAME$', hostname)
+
+    return get_final_service_description(hostname, description)
 
 
 def get_final_service_description(hostname, description):

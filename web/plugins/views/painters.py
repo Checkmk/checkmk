@@ -527,7 +527,7 @@ multisite_painters["sitename_plain"] = {
 multisite_painters["sitealias"] = {
     "title"   : _("Site alias"),
     "columns" : ["site"],
-    "paint"   : lambda row: (None, config.site(row["site"])["alias"]),
+    "paint"   : lambda row: (None, html.attrencode(config.site(row["site"])["alias"])),
 }
 
 
@@ -1507,7 +1507,7 @@ multisite_painters["alias"] = {
     "title"   : _("Host alias"),
     "short"   : _("Alias"),
     "columns" : ["host_alias"],
-    "paint"   : lambda row: ("", row["host_alias"]),
+    "paint"   : lambda row: ("", html.attrencode(row["host_alias"])),
 }
 
 multisite_painters["host_address"] = {
@@ -1941,7 +1941,7 @@ multisite_painters["hg_alias"] = {
     "title"   : _("Hostgroup alias"),
     "short"   : _("Alias"),
     "columns" : ["hostgroup_alias"],
-    "paint"   : lambda row: (None, row["hostgroup_alias"]),
+    "paint"   : lambda row: (None, html.attrencode(row["hostgroup_alias"])),
 }
 
 #    ____                  _
@@ -2009,7 +2009,7 @@ multisite_painters["sg_alias"] = {
     "title" : _("Servicegroup alias"),
     "short" : _("Alias"),
     "columns" : ["servicegroup_alias"],
-    "paint" : lambda row: (None, row["servicegroup_alias"])
+    "paint" : lambda row: (None, html.attrencode(row["servicegroup_alias"]))
 }
 
 

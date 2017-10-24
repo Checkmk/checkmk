@@ -1,4 +1,4 @@
-Title: Fixed multiple stored XSS injections in WATO dialogs
+Title: Fixed multiple stored XSS injections in GUI dialogs
 Level: 1
 Component: wato
 Compatible: compat

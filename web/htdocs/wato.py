@@ -6254,12 +6254,6 @@ def vs_ldap_connection(new, connection_id):
             value  = True,
             totext = _("Encrypt the network connection using SSL."),
         )),
-        ("no_persistent", FixedValue(
-            title  = _("No persistent connection"),
-            help   = _("The connection to the LDAP server is not persisted."),
-            value  = True,
-            totext = _("Don't use persistent LDAP connections."),
-        )),
         ("connect_timeout", Float(
             title = _("Connect Timeout"),
             help = _("Timeout for the initial connection to the LDAP server in seconds."),
@@ -6473,7 +6467,7 @@ def vs_ldap_connection(new, connection_id):
             render = "form",
             form_narrow = True,
             optional_keys = [
-                'no_persistent', 'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
+                'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
                 'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
                 'group_filter', 'group_member', 'suffix',
             ],

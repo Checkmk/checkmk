@@ -264,7 +264,6 @@ class LDAPUserConnector(UserConnector):
         connection_id = self.id()
 
         if not enforce_new \
-           and not "no_persistent" in self._config \
            and self._ldap_obj \
            and self._config == self._ldap_obj_config:
             self._logger.debug('LDAP CONNECT - Using existing connecting')

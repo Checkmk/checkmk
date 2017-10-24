@@ -25,7 +25,6 @@ base="$(realpath ../..)"
 
 # May be set from external environment. Otherwise use chroot
 # directory in agents/windows
-export CHROOT_PATH=${CHROOT_PATH:-$base/agents/windows/chroot}
 export CHROOT_BUILD_DIR=${CHROOT_BUILD_DIR:-build}
 export CHROOT_NAME=${CHROOT_NAME:-WinAgent}
 
@@ -34,6 +33,14 @@ if [ ! -f "$base/agents/windows/$versionfile" ] ; then
     echo "Is your Git repository up to date?"
     exit 1
 fi
+
+# Get possible CHROOT_BASE_PATH from environment. Default to the "chroot"
+# subdirectory. Add the CHROOT_NAME and CHROOT_VERSION as additional path
+# elements to make
+# a) different namespaces possible for (windows agent, agent updater)
+# b) parallel builds of different chroot versions possible
+CHROOT_BASE_PATH=${CHROOT_BASE_PATH:-$base/$base_rel_dir/chroot}
+export CHROOT_PATH=$CHROOT_PATH/$CHROOT_NAME/$CHROOT_VERSION
 
 # Realize a file based locking for the chroot setup. There must be only
 # a single caller executing the setup of a chroot. Once the chroot was

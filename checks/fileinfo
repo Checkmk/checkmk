@@ -215,7 +215,8 @@ def fileinfo_groups_precompile(hostname, item, params):
 
 def check_fileinfo_groups(item, params, info):
     if not info:
-        return 3, "No information sent by agent"
+        yield 3, "No information sent by agent"
+        return
 
     outof_range_txt = fileinfo_check_timeranges(params)
     reftime         = None
@@ -226,6 +227,8 @@ def check_fileinfo_groups(item, params, info):
     size_smallest   = None
     size_largest    = 0
     date_inclusion  = ""
+    include_patterns = set([])
+    exclude_patterns = set([])
 
     # Start counting values on all files
     for line in info:
@@ -248,6 +251,8 @@ def check_fileinfo_groups(item, params, info):
                 pattern = (pattern, '')
 
             inclusion, exclusion = pattern
+            include_patterns.add(inclusion)
+            exclude_patterns.add(exclusion)
             inclusion_is_regex   = False
             exclusion_is_regex   = False
 
@@ -311,7 +316,11 @@ def check_fileinfo_groups(item, params, info):
     if date_inclusion:
         check_definition.append(("Date pattern", "date pattern", date_inclusion, str))
 
-    return fileinfo_check_function(check_definition, params, outof_range_txt)
+    yield fileinfo_check_function(check_definition, params, outof_range_txt)
+    if include_patterns:
+        yield 0, "\nInclude patterns: %s" % ", ".join(include_patterns)
+    if exclude_patterns:
+        yield 0, "\nExclude patterns: %s" % ", ".join(exclude_patterns)
 
 
 def fileinfo_check_function(check_definition, params, outof_range_txt):

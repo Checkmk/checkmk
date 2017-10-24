@@ -26,18 +26,21 @@
 #define ListFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <algorithm>
 #include <chrono>
+#include <regex>
 #include <string>
+#include <vector>
 #include "ColumnFilter.h"
+#include "ListColumn.h"
+#include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class ListColumn;
-class Row;
 
 class ListFilter : public ColumnFilter {
 public:
     ListFilter(const ListColumn &column, RelationalOperator relOp,
-               std::string element);
+               std::string value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     const std::string *valueForIndexing(
@@ -47,7 +50,14 @@ public:
 private:
     const ListColumn &_column;
     const RelationalOperator _relOp;
-    const std::string _element;
+    const std::string _ref_string;
+    std::regex _regex;
+
+    template <typename UnaryPredicate>
+    bool any(Row row, const contact *auth_user, UnaryPredicate pred) const {
+        auto val = _column.getValue(row, auth_user);
+        return std::any_of(val.begin(), val.end(), pred);
+    }
 };
 
 #endif  // ListFilter_h

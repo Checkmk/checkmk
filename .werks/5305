@@ -9,3 +9,7 @@ Class: fix
 
 The original path for lib files has been hardcoded to omd version 0.45. The
 path now uses the regular path which is standard for linux and solaris.
+
+If the agent will be replaced by this new version, the lib path has to be changed also:
+Old: /omd/versions/0.45.20110123/lib/check_mk_agent
+New: /usr/lib/check_mk_agent

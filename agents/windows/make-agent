@@ -22,6 +22,7 @@ chroot_dependencies=(debootstrap debian-archive-keyring)
 versionfile=chroot_version
 
 base="$(realpath ../..)"
+base_rel_dir=agents/windows
 
 # May be set from external environment. Otherwise use chroot
 # directory in agents/windows
@@ -39,8 +40,9 @@ fi
 # elements to make
 # a) different namespaces possible for (windows agent, agent updater)
 # b) parallel builds of different chroot versions possible
+CHROOT_VERSION=$(<$base/agents/windows/$versionfile)
 CHROOT_BASE_PATH=${CHROOT_BASE_PATH:-$base/$base_rel_dir/chroot}
-export CHROOT_PATH=$CHROOT_PATH/$CHROOT_NAME/$CHROOT_VERSION
+export CHROOT_PATH=$CHROOT_BASE_PATH/$CHROOT_NAME/$CHROOT_VERSION
 
 echo "CHROOT_PATH is $CHROOT_PATH"
 

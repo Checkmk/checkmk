@@ -4094,6 +4094,10 @@ check_metrics["check_icmp"] = {
     "rtmin" : { "scale" : m },
 }
 
+check_metrics["check_tcp"] = {
+    "time": { "name": "response_time" }
+}
+
 check_metrics["check-mk-host-ping"] = {
     "rta"   : { "scale" : m },
     "rtmax" : { "scale" : m },

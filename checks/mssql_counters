@@ -54,12 +54,15 @@ def mssql_counters_item(line, add_counter_name):
         return obj + ' ' + instance
 
 
-def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name, dflt = None):
+inventory_mssql_counters_rules = []
+
+
+def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name, dflt=None):
+    rules = host_extra_conf_merged(host_name(), inventory_mssql_counters_rules)
     inventory = []
     for line in info:
         if line[1] in want_counters:
             this_counter = line[1]
-
             # Get the base value for perc values
             if perc_w_base:
                 base = 0.0
@@ -68,8 +71,10 @@ def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name,
                        mssql_counters_item(line, add_counter_name) + '_base':
                         base = float(line2[-1])
                         break
-                if base == 0.0:
-                    continue # Skip counters where base is "0"
+                if base == 0.0 and not rules.get('add_zero_based_services', False):
+                    # Skip counters where base is "0"
+                    # Only cache_hits could have counters with base == 0.0
+                    continue
 
             inventory.append((mssql_counters_item(line, add_counter_name), dflt))
     return inventory

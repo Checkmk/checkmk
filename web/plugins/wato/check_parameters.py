@@ -1561,6 +1561,17 @@ register_rule(group + '/' + subgroup_inventory,
     match = "dict",
 )
 
+register_rule(group + '/' + subgroup_inventory,
+    varname     = "inventory_mssql_counters_rules",
+    title       = _("Include MSSQL Counters services"),
+    valuespec   = Dictionary(elements=[
+            ("add_zero_based_services", Checkbox(title=_("Include service with zero base."))),
+        ],
+        optional_keys = []
+    ),
+    match = "dict",
+)
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |

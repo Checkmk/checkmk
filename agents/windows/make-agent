@@ -35,25 +35,36 @@ if [ ! -f "$base/agents/windows/$versionfile" ] ; then
     exit 1
 fi
 
-# Ensure that chroot exists and is up to date:
-# ensure that versionfile exists...
-if [ ! -f "$CHROOT_PATH/$versionfile" ] ; then
-    echo "chroot version not found."
-    create=yes
-    #  ... and it is up to date.
-elif [ $(cat "$CHROOT_PATH/$versionfile") -ne \
-       $(cat "$base/agents/windows/$versionfile") ] ; then
-    echo "chroot is out of date."
-    create=yes
-fi
+# Realize a file based locking for the chroot setup. There must be only
+# a single caller executing the setup of a chroot. Once the chroot was
+# created, multiple jobs may be executed in the chroot simultaneously,
+# but the setup must be performed only by a single job.
+(
+    echo "[MAKE-CHROOT LOCK] aquire"
+    flock -x -w 1800 200 || (echo "[MAKE-CHROOT LOCK] ERROR: Failed to get lock within 1800 seconds" ; exit 1)
+    echo "[MAKE-CHROOT LOCK] got it"
 
-if [ -z $create ] ; then
-    echo "chroot is up to date."
-else
-    apt-get -y install "${chroot_dependencies[@]}"
-    VERSIONFILE=$versionfile CHROOT_PATH=$CHROOT_PATH \
-        CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./make-chroot
-fi
+    # Ensure that chroot exists and is up to date:
+    # ensure that versionfile exists...
+    if [ ! -f "$CHROOT_PATH/$versionfile" ] ; then
+        echo "chroot version not found."
+        create=yes
+        #  ... and it is up to date.
+    elif [ $(cat "$CHROOT_PATH/$versionfile") -ne \
+           $(cat "$base/agents/windows/$versionfile") ] ; then
+        echo "chroot is out of date."
+        create=yes
+    fi
+
+    if [ -z $create ] ; then
+        echo "chroot is up to date."
+    else
+        apt-get -y install "${chroot_dependencies[@]}"
+        VERSIONFILE=$versionfile CHROOT_PATH=$CHROOT_PATH \
+            CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./make-chroot
+    fi
+) 200>/var/lock/cmk-make-agent_${CHROOT_PATH//\//-}.lock
+echo "[MAKE-CHROOT LOCK] released"
 
 # Build the Windows agent within chroot by calling the 'build-agent' script as
 # $SUDO_USER.

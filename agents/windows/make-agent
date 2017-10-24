@@ -42,6 +42,8 @@ fi
 CHROOT_BASE_PATH=${CHROOT_BASE_PATH:-$base/$base_rel_dir/chroot}
 export CHROOT_PATH=$CHROOT_PATH/$CHROOT_NAME/$CHROOT_VERSION
 
+echo "CHROOT_PATH is $CHROOT_PATH"
+
 # Realize a file based locking for the chroot setup. There must be only
 # a single caller executing the setup of a chroot. Once the chroot was
 # created, multiple jobs may be executed in the chroot simultaneously,

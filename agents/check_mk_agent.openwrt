@@ -669,10 +669,10 @@ if [ -x /opt/VRTSvcs/bin/haclus ]
 then
     echo "<<<veritas_vcs>>>"
     vcshost=$(hostname | cut -d. -f1)
-    /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
-    /opt/VRTSvcs/bin/hasys -display -attribute SysState
-    /opt/VRTSvcs/bin/hagrp -display -sys $vcshost -attribute State -localclus
-    /opt/VRTSvcs/bin/hares -display -sys $vcshost -attribute State -localclus
+    waitmax -s 9 2/opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
+    waitmax -s 9 2/opt/VRTSvcs/bin/hasys -display -attribute SysState
+    waitmax -s 9 2/opt/VRTSvcs/bin/hagrp -display -sys $vcshost -attribute State -localclus
+    waitmax -s 9 2/opt/VRTSvcs/bin/hares -display -sys $vcshost -attribute State -localclus
 fi
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg

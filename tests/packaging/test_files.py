@@ -25,9 +25,10 @@ def _get_package_paths(version_path, what):
 
 # In case packages grow/shrink this check has to be changed.
 @pytest.mark.parametrize("what,min_size,max_size", [
-    ("rpm", 119*1024*1024, 210*1024*1024),
-    ("deb", 94*1024*1024,  195*1024*1024),
-    ("cma", 169*1024*1024, 215*1024*1024),
+    ("rpm",    119*1024*1024, 210*1024*1024),
+    ("deb",    94*1024*1024,  195*1024*1024),
+    ("cma",    169*1024*1024, 215*1024*1024),
+    ("tar.gz", 320*1024*1024, 400*1024*1024),
 ])
 def test_package_sizes(version_path, what, min_size, max_size):
     for pkg in _get_package_paths(version_path, what):
@@ -95,3 +96,11 @@ def test_cma_only_contains_version_paths(version_path):
         for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines():
             path = line.split()[5]
             assert not path.startswith(version + "/")
+
+
+def test_src_only_contains_relative_version_paths(version_path):
+    for pkg in _get_package_paths(version_path, "tar.gz"):
+        prefix = pkg.replace(".tar.gz", "")
+        for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines():
+            path = line.split()[5]
+            assert not path.startswith(prefix + "/")

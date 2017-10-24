@@ -24,41 +24,86 @@
 
 #include "ListFilter.h"
 #include <algorithm>
-#include <ostream>
-#include <vector>
+#include <cstring>
+#include <sstream>
+#include <string>
 #include "ListColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
-                       std::string element)
-    : _column(column), _relOp(relOp), _element(std::move(element)) {}
+                       std::string value)
+    : _column(column), _relOp(relOp), _ref_string(std::move(value)) {
+    switch (_relOp) {
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            _regex.assign(_ref_string,
+                          (_relOp == RelationalOperator::matches_icase ||
+                           _relOp == RelationalOperator::doesnt_match_icase)
+                              ? std::regex::extended | std::regex::icase
+                              : std::regex::extended);
+            break;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            break;
+    }
+}
 
 bool ListFilter::accepts(Row row, const contact *auth_user,
                          std::chrono::seconds /* timezone_offset */) const {
     switch (_relOp) {
         case RelationalOperator::equal:
-        case RelationalOperator::not_equal:
-            if (!_element.empty()) {
+            if (!_ref_string.empty()) {
                 Informational(_column.logger())
-                    << "Sorry, equality for lists implemented only for emptyness";
+                    << "Sorry, equality for lists implemented only for emptiness";
+                return false;
             }
-            return _column.getValue(row, auth_user).empty() ==
-                   (_relOp == RelationalOperator::equal);
-        case RelationalOperator::less:
-        case RelationalOperator::greater_or_equal: {
-            auto val = _column.getValue(row, auth_user);
-            return (std::find(val.begin(), val.end(), _element) == val.end()) ==
-                   (_relOp == RelationalOperator::less);
-        }
+            return !any(row, auth_user,
+                        [](const std::string &) { return true; });
+        case RelationalOperator::not_equal:
+            if (!_ref_string.empty()) {
+                Informational(_column.logger())
+                    << "Sorry, inequality for lists implemented only for emptiness";
+                return false;
+            }
+            return any(row, auth_user,
+                       [](const std::string &) { return true; });
         case RelationalOperator::matches:
+        case RelationalOperator::matches_icase:
+            return any(row, auth_user, [&](const std::string &elem) {
+                return regex_search(elem, _regex);
+            });
         case RelationalOperator::doesnt_match:
+        case RelationalOperator::doesnt_match_icase:
+            return !any(row, auth_user, [&](const std::string &elem) {
+                return regex_search(elem, _regex);
+            });
+        case RelationalOperator::less:
+            return !any(row, auth_user, [&](const std::string &elem) {
+                return _ref_string == elem;
+            });
+        case RelationalOperator::greater_or_equal:
+            return any(row, auth_user, [&](const std::string &elem) {
+                return _ref_string == elem;
+            });
+        case RelationalOperator::greater:
+            return !any(row, auth_user, [&](const std::string &elem) {
+                return strcasecmp(_ref_string.c_str(), elem.c_str()) == 0;
+            });
+        case RelationalOperator::less_or_equal:
+            return any(row, auth_user, [&](const std::string &elem) {
+                return strcasecmp(_ref_string.c_str(), elem.c_str()) == 0;
+            });
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
-        case RelationalOperator::matches_icase:
-        case RelationalOperator::doesnt_match_icase:
-        case RelationalOperator::greater:
-        case RelationalOperator::less_or_equal:
             Informational(_column.logger())
                 << "Sorry. Operator " << _relOp
                 << " for list columns not implemented.";
@@ -71,7 +116,7 @@ const std::string *ListFilter::valueForIndexing(
     const std::string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::greater_or_equal:
-            return column_name == columnName() ? &_element : nullptr;
+            return column_name == columnName() ? &_ref_string : nullptr;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:

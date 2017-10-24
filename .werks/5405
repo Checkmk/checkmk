@@ -1,0 +1,15 @@
+Title: LDAP: Removed missleading and confusing "No persistent connection" option
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508824163
+Class: fix
+
+The LDAP connector had an option to tell it that the connection to the LDAP server
+should not be reused. This made the connector reconnect to the LDAP server for each
+LDAP query.
+
+Because enabling this option can result in a much longer synchronization run, the
+option has now been dropped.

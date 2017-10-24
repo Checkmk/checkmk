@@ -1,7 +1,9 @@
 Title: Agent encryption rule edit dosn't mark bakery dirty
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2017-10-20 09:37:10
 Targetversion: 1.4.0
-Class: bug
 
+
+2017-10-24 07:45:59: changed state open -> done

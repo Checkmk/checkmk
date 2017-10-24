@@ -64,7 +64,11 @@ setversion:
 
 build:
 	$(MAKE) packages
-	cd windows && sudo ./make-agent
+	cd windows && sudo \
+			CHROOT_NAME=$$CHROOT_NAME \
+			CHROOT_PATH=$$CHROOT_PATH \
+			CHROOT_BUILD_DIR=$$CHROOT_BUILD_DIR \
+			./make-agent
 
 packages: rpm deb
 

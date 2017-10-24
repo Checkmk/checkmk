@@ -3148,15 +3148,7 @@ class QueryGET(Query):
                     self.output_format = argument
 
                 elif header == "Columns":
-                    # TODO: The EC is handling unknown columns different than regular livestatus. The EC
-                    # silently ignores them and outputs only the known ones. We can only fix this in case
-                    # the core sends only the columns that the EC knows. At the moment it also requests
-                    # the host columns.
-                    #self.requested_columns = argument.split(" ")
-                    self.requested_columns = []
-                    for column_name in argument.split(" "):
-                        if column_name in self.table.column_defaults:
-                            self.requested_columns.append(column_name)
+                    self.requested_columns = argument.split(" ")
 
                 elif header == "Filter":
                     name, opfunc, argument = self._parse_filter(argument)

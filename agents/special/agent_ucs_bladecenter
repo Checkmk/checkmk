@@ -44,12 +44,13 @@ OPTIONS:
   -h, --help                    Show this help message and exit
   -u, --username                Sets the username
   -p, --password                Sets the password
+  --no-cert-check               Disables the checking of the servers ssl certificate
   --debug                       Debug mode: let Python exceptions come through
 """)
 
 short_options = 'hu:p:'
 long_options  = [
-    'help', 'username=', 'password=', 'debug', 'ucssdk'
+    'help', 'username=', 'password=', 'debug', 'ucssdk', 'no-cert-check'
 ]
 
 try:
@@ -61,6 +62,7 @@ except getopt.GetoptError, err:
 opt_debug    = False
 opt_username = ""
 opt_password = ""
+opt_verify   = True
 opt_ucssdk   = False
 
 for o,a in opts:
@@ -73,6 +75,8 @@ for o,a in opts:
         from UcsSdk import *
     elif o in [ '-p', '--password' ]:
         opt_password = a
+    elif o in [ '--no-cert-check' ]:
+        opt_verify = False
     elif o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
@@ -119,7 +123,8 @@ class Server:
             "Content-Type": 'text/xml; charset="utf-8"'
         }
 
-        response = self.session_handle.post("https://%s/nuova" % self.netloc, headers=headers, data=payload)
+        response = self.session_handle.post("https://%s/nuova" % self.netloc, headers=headers,
+                                            data=payload, verify=opt_verify)
         data = response.text
         if opt_debug:
             sys.stderr.write("<==== %s\n" % data)

@@ -63,6 +63,15 @@ fi
         VERSIONFILE=$versionfile CHROOT_PATH=$CHROOT_PATH \
             CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR ./make-chroot
     fi
+
+    # Add user for building windows agent without root privileges.
+    # Check that user does not exist before since SUDO_USER may be root, as well.
+    #
+    # Do this not only during setup, because the setup is only executed once and
+    # the build may be started with different SUDO_USER users).
+    if ! grep -q "\<${SUDO_USER}\>" "$CHROOT_PATH/etc/passwd" ; then
+        ./do-chroot "useradd -lmo -u $(id -u $SUDO_USER) -s /bin/bash $SUDO_USER"
+    fi
 ) 200>/var/lock/cmk-make-agent_${CHROOT_PATH//\//-}.lock
 echo "[MAKE-CHROOT LOCK] released"
 

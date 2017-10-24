@@ -378,8 +378,10 @@ fi
 
 # Same for Open vSwitch bonding
 if type ovs-appctl > /dev/null ; then
+    BONDS=$(ovs-appctl bond/list)
+    COL=$(echo "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
     echo '<<<ovs_bonding:sep(58)>>>'
-    for bond in $(ovs-appctl bond/list | sed -e 1d | rev | cut -f3 | rev) ; do
+    for bond in $(echo "$BONDS" | sed -e 1d | cut -f${COL}) ; do
         echo "[$bond]"
         ovs-appctl bond/show $bond
     done

@@ -1,0 +1,12 @@
+Title: ovs_bonding: display bonding correctly for newer ovs-appctl versions
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p16
+Date: 1508837666
+
+The bonding information for the check ovs_bonding is now provided correctly
+by the Check_MK agent for newer versions of ovs-appctl.

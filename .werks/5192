@@ -11,7 +11,7 @@ Previously only 4 operators were available for filtering list-valued
 columns:
 
 <ul>
-   <li<tt>=</tt>: checks that the list is empty</li>
+   <li><tt>=</tt>: checks that the list is empty</li>
    <li><tt>!=</tt>: checks that the list is non-empty</li>
    <li><tt>&lt;</tt>: checks that an element is not contained in the list using equality</li>
    <li><tt>&gt;=</tt>: checks that an element is contained in the list using equality</li>

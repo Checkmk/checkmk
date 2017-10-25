@@ -427,7 +427,7 @@ public:
                                WINBOOL fInvadeProcess));
     MOCK_CONST_METHOD1(SymSetOptions, DWORD(DWORD SymOptions));
 
-    // NTAPI:
+// NTAPI:
 #ifdef __x86_64
     MOCK_CONST_METHOD1(RtlCaptureContext, VOID(PCONTEXT ContextRecord));
     MOCK_CONST_METHOD3(RtlLookupFunctionEntry,

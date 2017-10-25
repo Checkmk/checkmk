@@ -9,10 +9,10 @@ public:
     MockLogger();
     virtual ~MockLogger();
     MOCK_CONST_METHOD0(getName, std::string());
-    MOCK_CONST_METHOD0(getParent, Logger*());
+    MOCK_CONST_METHOD0(getParent, Logger *());
     MOCK_CONST_METHOD0(getLevel, LogLevel());
     MOCK_METHOD1(setLevel, void(LogLevel level));
-    MOCK_CONST_METHOD0(getHandler, Handler*());
+    MOCK_CONST_METHOD0(getHandler, Handler *());
     void setHandler(std::unique_ptr<Handler> handler) override {
         Handler *_handler = handler.release();
         auto helper = std::unique_ptr<Handler>(_handler);

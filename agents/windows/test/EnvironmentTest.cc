@@ -9,7 +9,7 @@
 #include "gtest/gtest.h"
 
 using namespace std;
-using namespace testing;
+using namespace ::testing;
 
 class wa_EnvironmentTest : public Test {
 protected:

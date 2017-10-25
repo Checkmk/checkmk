@@ -9,7 +9,7 @@ LD_COMMON = -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -
 
 check_mk_agent_LDADD = check_mk_agent.res $(LD_COMMON)
 
-WindowsAgentTest_LDADD = -lgtest -lgmock
+WindowsAgentTest_LDADD = -lwbemuuid -lgtest -lgmock
 
 wmitest_LDADD = $(LD_COMMON)
 
@@ -83,11 +83,13 @@ WindowsAgentTest_SOURCES = \
         Logger.cc \
         RotatingFileHandler.cc \
         win_error.cc \
+        wmiHelper.cc \
         test/EnvironmentTest.cc \
         test/MockLogger.cc \
         test/MockWinApi.cc \
         test/RotatingFileHandlerTest.cc \
-        test/gtest_main.cc
+        test/gtest_main.cc \
+        test/wmiHelperTest.cc
 
 wmitest_SOURCES = wmitest.cc stringutil.cc WinApi.cc wmiHelper.cc
 

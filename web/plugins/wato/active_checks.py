@@ -1044,7 +1044,7 @@ register_rule(group,
                                 )
                             ),
                             ( "expect_string",
-                                TextAscii(
+                                TextUnicode(
                                     title = _("Fixed string to expect in the content"),
                                     allow_empty = False,
                                 )

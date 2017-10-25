@@ -1,0 +1,12 @@
+Title: check_http: Special characters in expected string of the content
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508925797
+Class: feature
+
+The option "Fixed string to expect in the content" of the WATO-Rule
+"Check HTTP service" now allows the user to enter special character
+like umlauts.

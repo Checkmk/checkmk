@@ -32,19 +32,19 @@
 #include "ColumnFilter.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class CustomVarsColumn;
+class CustomVarsDictColumn;
 class Row;
 
 class CustomVarsDictFilter : public ColumnFilter {
 public:
-    CustomVarsDictFilter(const CustomVarsColumn &column,
+    CustomVarsDictFilter(const CustomVarsDictColumn &column,
                          RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     std::string columnName() const override;
 
 private:
-    const CustomVarsColumn &_column;
+    const CustomVarsDictColumn &_column;
     const RelationalOperator _relOp;
     std::regex _regex;
     std::string _ref_string;

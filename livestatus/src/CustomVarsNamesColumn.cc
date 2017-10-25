@@ -23,37 +23,41 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsNamesColumn.h"
-#include <unordered_map>
-#include <utility>
-#include "CustomVarsListFilter.h"
-#include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
 
-CustomVarsNamesColumn::CustomVarsNamesColumn(std::string name,
-                                             std::string description,
-                                             int indirect_offset,
-                                             int extra_offset,
-                                             int extra_extra_offset, int offset)
-    : CustomVarsColumn(std::move(name), std::move(description), indirect_offset,
-                       extra_offset, extra_extra_offset, offset) {}
-
-ColumnType CustomVarsNamesColumn::type() const { return ColumnType::list; }
+#ifdef CMC
+#include <algorithm>
+#include <iterator>
+#include <unordered_map>
+#include "Object.h"
+#else
+#include "nagios.h"
+#endif
 
 void CustomVarsNamesColumn::output(Row row, RowRenderer &r,
-                                   const contact * /* auth_user */) const {
+                                   const contact *auth_user) const {
     ListRenderer l(r);
-    for (const auto &it : getCVM(row)) {
-        l.output(it.first);
+    for (const auto &name : getValue(row, auth_user)) {
+        l.output(name);
     }
 }
 
-std::unique_ptr<Filter> CustomVarsNamesColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<CustomVarsListFilter>(*this, relOp, value);
-}
-
-bool CustomVarsNamesColumn::contains(Row row, const std::string &value) const {
-    auto cvm = getCVM(row);
-    return cvm.find(value) != cvm.end();
+std::vector<std::string> CustomVarsNamesColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    std::vector<std::string> names;
+#ifdef CMC
+    if (auto *object = columnData<Object>(row)) {
+        auto attrs = object->customAttributes();
+        std::transform(attrs.begin(), attrs.end(), std::back_inserter(names),
+                       [](const auto &entry) { return entry.first; });
+    }
+#else
+    if (auto p = columnData<customvariablesmember *>(row)) {
+        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
+            names.emplace_back(cvm->variable_name);
+        }
+    }
+#endif
+    return names;
 }

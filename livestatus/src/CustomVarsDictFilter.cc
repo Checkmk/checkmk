@@ -26,11 +26,13 @@
 #include <cstring>
 #include <sstream>
 #include <tuple>
-#include "CustomVarsColumn.h"
+#include <unordered_map>
+#include <utility>
+#include "CustomVarsDictColumn.h"
 #include "Row.h"
 #include "StringUtils.h"
 
-CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn &column,
+CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsDictColumn &column,
                                            RelationalOperator relOp,
                                            const std::string &value)
     : _column(column), _relOp(relOp) {
@@ -67,7 +69,9 @@ CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn &column,
 bool CustomVarsDictFilter::accepts(
     Row row, const contact * /* auth_user */,
     std::chrono::seconds /* timezone_offset */) const {
-    std::string act_string = _column.getVariable(row, _ref_varname);
+    auto cvm = _column.getValue(row);
+    auto it = cvm.find(_ref_varname);
+    auto act_string = it == cvm.end() ? "" : it->second;
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_string == _ref_string;

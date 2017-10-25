@@ -23,38 +23,41 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsValuesColumn.h"
-#include <utility>
-#include "CustomVarsListFilter.h"
-#include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
 
-CustomVarsValuesColumn::CustomVarsValuesColumn(
-    std::string name, std::string description, int indirect_offset,
-    int extra_offset, int extra_extra_offset, int offset)
-    : CustomVarsColumn(std::move(name), std::move(description), indirect_offset,
-                       extra_offset, extra_extra_offset, offset) {}
-
-ColumnType CustomVarsValuesColumn::type() const { return ColumnType::list; }
+#ifdef CMC
+#include <algorithm>
+#include <iterator>
+#include <unordered_map>
+#include "Object.h"
+#else
+#include "nagios.h"
+#endif
 
 void CustomVarsValuesColumn::output(Row row, RowRenderer &r,
-                                    const contact * /* auth_user */) const {
+                                    const contact *auth_user) const {
     ListRenderer l(r);
-    for (const auto &it : getCVM(row)) {
-        l.output(it.second);
+    for (const auto &value : getValue(row, auth_user)) {
+        l.output(value);
     }
 }
 
-std::unique_ptr<Filter> CustomVarsValuesColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<CustomVarsListFilter>(*this, relOp, value);
-}
-
-bool CustomVarsValuesColumn::contains(Row row, const std::string &value) const {
-    for (const auto &it : getCVM(row)) {
-        if (it.second == value) {
-            return true;
+std::vector<std::string> CustomVarsValuesColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    std::vector<std::string> values;
+#ifdef CMC
+    if (auto *object = columnData<Object>(row)) {
+        auto attrs = object->customAttributes();
+        std::transform(attrs.begin(), attrs.end(), std::back_inserter(values),
+                       [](const auto &entry) { return entry.second; });
+    }
+#else
+    if (auto p = columnData<customvariablesmember *>(row)) {
+        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
+            values.emplace_back(cvm->variable_value);
         }
     }
-    return false;
+#endif
+    return values;
 }

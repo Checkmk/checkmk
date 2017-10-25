@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "LogwatchListColumn.h"
+#include <algorithm>
+#include <iterator>
 #include <ostream>
 #include "FileSystem.h"
 #include "Logger.h"
@@ -38,35 +40,52 @@
 #endif
 
 void LogwatchListColumn::output(Row row, RowRenderer &r,
-                                const contact * /* auth_user */) const {
+                                const contact *auth_user) const {
     ListRenderer l(r);
-    auto logwatch_path = _mc->mkLogwatchPath();
-    if (logwatch_path.empty()) {
-        return;
+    for (const auto &filename : getValue(row, auth_user)) {
+        l.output(filename);
     }
+}
 
-#ifdef CMC
-    auto hst = columnData<Host>(row);
-    if (hst == nullptr) {
-        return;
+std::vector<std::string> LogwatchListColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    auto dir = getDirectory(row);
+    if (dir.empty()) {
+        return {};
     }
-    std::string host_name = hst->name();
-#else
-    auto hst = columnData<host>(row);
-    if (hst == nullptr) {
-        return;
-    }
-    std::string host_name = hst->name;
-#endif
-
-    auto dir = logwatch_path + pnp_cleanup(host_name);
     try {
         if (fs::exists(dir)) {
-            for (const auto &entry : fs::directory_iterator(dir)) {
-                l.output(entry.path().filename().string());
-            }
+            std::vector<std::string> filenames;
+            auto it = fs::directory_iterator(dir);
+            std::transform(begin(it), end(it), std::back_inserter(filenames),
+                           [](const auto &entry) {
+                               return entry.path().filename().string();
+                           });
+            return filenames;
         }
     } catch (const fs::filesystem_error &e) {
         Warning(logger()) << name() << ": " << e.what();
     }
+    return {};
+}
+
+std::string LogwatchListColumn::getDirectory(Row row) const {
+    auto logwatch_path = _mc->mkLogwatchPath();
+    auto host_name = getHostName(row);
+    return logwatch_path.empty() || host_name.empty()
+               ? ""
+               : logwatch_path + pnp_cleanup(host_name);
+}
+
+std::string LogwatchListColumn::getHostName(Row row) const {
+#ifdef CMC
+    if (auto hst = columnData<Host>(row)) {
+        return hst->name();
+    }
+#else
+    if (auto hst = columnData<host>(row)) {
+        return hst->name;
+    }
+#endif
+    return "";
 }

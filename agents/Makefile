@@ -66,7 +66,7 @@ build:
 	$(MAKE) packages
 	cd windows && sudo \
 			CHROOT_NAME=$$CHROOT_NAME \
-			CHROOT_PATH=$$CHROOT_PATH \
+			CHROOT_BASE_PATH=$$CHROOT_BASE_PATH \
 			CHROOT_BUILD_DIR=$$CHROOT_BUILD_DIR \
 			./make-agent
 

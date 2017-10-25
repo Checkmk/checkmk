@@ -29,7 +29,7 @@
 #include "Row.h"
 #include "auth.h"
 
-hostsmember *HostListColumn::getMembers(Row row) const {
+HostListColumn::host_list HostListColumn::getMembers(Row row) const {
     if (auto p = columnData<hostsmember *>(row)) {
         return *p;
     }
@@ -39,7 +39,8 @@ hostsmember *HostListColumn::getMembers(Row row) const {
 void HostListColumn::output(Row row, RowRenderer &r,
                             const contact *auth_user) const {
     ListRenderer l(r);
-    for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
+    for (const hostsmember *mem = getMembers(row); mem != nullptr;
+         mem = mem->next) {
         host *hst = mem->host_ptr;
         if (auth_user == nullptr ||
             is_authorized_for(_mc, auth_user, hst, nullptr)) {

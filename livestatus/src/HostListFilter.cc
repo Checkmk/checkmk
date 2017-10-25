@@ -28,48 +28,70 @@
 #include "HostListColumn.h"
 #include "Logger.h"
 #include "Row.h"
+
+#ifdef CMC
+#include <unordered_set>
+#include "World.h"
+#include "cmc.h"
+class Host;
+#else
 #include "nagios.h"
+#endif
 
 HostListFilter::HostListFilter(const HostListColumn &column,
                                RelationalOperator relOp, std::string value)
     : _column(column), _relOp(relOp), _ref_value(std::move(value)) {}
 
+namespace {
+bool isEmpty(HostListColumn::host_list hostlist) {
+#ifdef CMC
+    return hostlist->empty();
+#else
+    return hostlist == nullptr;
+#endif
+}
+
+bool contains(HostListColumn::host_list hostlist,
+              const std::string &ref_value) {
+#ifdef CMC
+    return hostlist->find(g_live_world->getHost(ref_value)) != hostlist->end();
+#else
+    for (; hostlist != nullptr; hostlist = hostlist->next) {
+        char *host_name = hostlist->host_name;
+        if (host_name == nullptr) {
+            host_name = hostlist->host_ptr->name;
+        }
+        if (host_name == ref_value) {
+            return true;
+        }
+    }
+    return false;
+#endif
+}
+}  // namespace
+
 bool HostListFilter::accepts(Row row, const contact * /* auth_user */,
                              std::chrono::seconds /* timezone_offset */) const {
-    // data points to a primary data object. We need to extract a pointer to a
-    // host list
-    hostsmember *mem = _column.getMembers(row);
-
-    // test for empty list
-    if (_ref_value.empty()) {
-        if (_relOp == RelationalOperator::equal) {
-            return mem == nullptr;
-        }
-        if (_relOp == RelationalOperator::not_equal) {
-            return mem != nullptr;
-        }
-    }
-
-    bool is_member = false;
-    for (; mem != nullptr; mem = mem->next) {
-        char *host_name = mem->host_name;
-        if (host_name == nullptr) {
-            host_name = mem->host_ptr->name;
-        }
-
-        if (host_name == _ref_value) {
-            is_member = true;
-            break;
-        }
-    }
-
+    auto hostlist = _column.getMembers(row);
     switch (_relOp) {
-        case RelationalOperator::less:
-            return !is_member;
-        case RelationalOperator::greater_or_equal:
-            return is_member;
         case RelationalOperator::equal:
+            if (!_ref_value.empty()) {
+                Informational(_column.logger())
+                    << "Sorry, equality for host lists implemented only for emptiness";
+                return false;
+            }
+            return isEmpty(hostlist);
         case RelationalOperator::not_equal:
+            if (!_ref_value.empty()) {
+                Informational(_column.logger())
+                    << "Sorry, inequality for host lists implemented only for emptiness";
+                return false;
+            }
+            return !isEmpty(hostlist);
+        case RelationalOperator::less:
+            return !contains(hostlist, _ref_value);
+        case RelationalOperator::greater_or_equal:
+            return contains(hostlist, _ref_value);
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:

@@ -194,6 +194,9 @@ check-version:
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
 dist: mk-livestatus-$(VERSION).tar.gz $(DISTNAME).tar.gz config.h.in $(DIST_DEPS)
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise make-agent-updater
+endif
 	@EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \

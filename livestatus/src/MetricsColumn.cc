@@ -26,8 +26,16 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void MetricsColumn::output(Row /* row */, RowRenderer &r,
-                           const contact * /* auth_user */) const {
-    (void)_mc;
+void MetricsColumn::output(Row row, RowRenderer &r,
+                           const contact *auth_user) const {
     ListRenderer l(r);
+    for (const auto &metric : getValue(row, auth_user)) {
+        l.output(metric);
+    }
+}
+
+std::vector<std::string> MetricsColumn::getValue(
+    Row /*row*/, const contact * /*auth_user*/) const {
+    (void)_mc;
+    return {};
 }

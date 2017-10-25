@@ -51,7 +51,7 @@ public:
     // TODO(sp) What we actually want here is a stream of strings, not a
     // concrete container.
     virtual std::vector<std::string> getValue(
-        Row data, const contact *auth_user) const = 0;
+        Row row, const contact *auth_user) const = 0;
 };
 
 #endif  // ListColumn_h

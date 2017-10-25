@@ -27,24 +27,27 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "Column.h"
+#include <vector>
+#include "ListColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
 class Row;
 class RowRenderer;
 
-class MetricsColumn : public Column {
+class MetricsColumn : public ListColumn {
 public:
     MetricsColumn(const std::string &name, const std::string &description,
                   int indirect_offset, int extra_offset, int extra_extra_offset,
                   int offset, MonitoringCore *mc)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset)
+        : ListColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset, offset)
         , _mc(mc) {}
 
-    ColumnType type() const override { return ColumnType::list; }
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
+
+    std::vector<std::string> getValue(Row row,
+                                      const contact *auth_user) const override;
 
 private:
     MonitoringCore *const _mc;

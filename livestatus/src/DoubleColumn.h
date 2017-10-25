@@ -43,7 +43,7 @@ public:
                  int offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset) {}
-    virtual double getValue(Row data) const = 0;
+    virtual double getValue(Row row) const = 0;
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
     ColumnType type() const override { return ColumnType::double_; }

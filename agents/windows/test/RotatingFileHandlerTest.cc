@@ -149,8 +149,7 @@ TEST_F(wa_RotatingFileHandlerTest, publish_maxBytes_8_backupCount_0) {
     unique_ptr<Handler> testHandler = make_unique<RotatingFileHandler>(
         testFile.name(), unique_ptr<FileRotationApi>(fileapimock), 8, 0);
 
-    EXPECT_CALL(*fileapimock, remove(testFile.name()))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*fileapimock, remove(testFile.name())).WillOnce(Return(true));
 
     testHandler->publish(testRecord);
 
@@ -199,17 +198,14 @@ TEST_F(wa_RotatingFileHandlerTest, publish_maxBytes_8_backupCount_2) {
     const auto firstBackup = testFile.name() + ".1";
     const auto secondBackup = testFile.name() + ".2";
 
-    EXPECT_CALL(*fileapimock, fileExists(secondBackup))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*fileapimock, fileExists(secondBackup)).WillOnce(Return(true));
     EXPECT_CALL(*fileapimock, fileExists(firstBackup))
         .Times(2)
         .WillRepeatedly(Return(true));
     EXPECT_CALL(*fileapimock, fileExists(testFile.name()))
         .WillOnce(Return(true));
-    EXPECT_CALL(*fileapimock, remove(secondBackup))
-        .WillOnce(Return(true));
-    EXPECT_CALL(*fileapimock, remove(firstBackup))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*fileapimock, remove(secondBackup)).WillOnce(Return(true));
+    EXPECT_CALL(*fileapimock, remove(firstBackup)).WillOnce(Return(true));
     EXPECT_CALL(*fileapimock, rename(firstBackup, secondBackup))
         .WillOnce(Return(true));
     EXPECT_CALL(*fileapimock, rename(testFile.name(), firstBackup))
@@ -234,8 +230,7 @@ TEST_F(wa_RotatingFileHandlerTest,
         testFile.name(), unique_ptr<FileRotationApi>(fileapimock), 8, 1);
 
     const auto backup = testFile.name() + ".1";
-    EXPECT_CALL(*fileapimock, fileExists(backup))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*fileapimock, fileExists(backup)).WillOnce(Return(true));
     EXPECT_CALL(*fileapimock, fileExists(testFile.name()))
         .WillOnce(Return(true));
     EXPECT_CALL(*fileapimock, remove(backup))

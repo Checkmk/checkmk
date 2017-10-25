@@ -28,25 +28,31 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include "Column.h"
-#include "CustomVarsColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
 class Row;
 class RowRenderer;
 
-class CustomVarsDictColumn : public CustomVarsColumn {
+class CustomVarsDictColumn : public Column {
 public:
     CustomVarsDictColumn(std::string name, std::string description,
                          int indirect_offset, int extra_offset,
-                         int extra_extra_offset, int offset);
-    ColumnType type() const override;
+                         int extra_extra_offset, int offset)
+        : Column(name, description, indirect_offset, extra_offset,
+                 extra_extra_offset, offset) {}
+
+    ColumnType type() const override { return ColumnType::dict; };
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
+
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
-    bool contains(Row row, const std::string &value) const override;
+
+    std::unordered_map<std::string, std::string> getValue(Row row) const;
 };
 
 #endif  // CustomVarsDictColumn_h

@@ -43,11 +43,9 @@ liblivestatus_a_SOURCES = \
         ContactGroupsMemberColumn.cc \
         CountAggregator.cc \
         CustomTimeperiodColumn.cc \
-        CustomVarsColumn.cc \
         CustomVarsDictColumn.cc \
         CustomVarsDictFilter.cc \
         CustomVarsExplicitColumn.cc \
-        CustomVarsListFilter.cc \
         CustomVarsNamesColumn.cc \
         CustomVarsValuesColumn.cc \
         DoubleAggregator.cc \

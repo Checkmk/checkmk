@@ -101,7 +101,7 @@ public:
     virtual void separateSublistElements() = 0;
     virtual void endSublist() = 0;
 
-    // Output a dictionary, see CustomVarsColumn.
+    // Output a dictionary, see CustomVarsDictColumn.
     virtual void beginDict() = 0;
     virtual void separateDictElements() = 0;
     virtual void separateDictKeyValue() = 0;

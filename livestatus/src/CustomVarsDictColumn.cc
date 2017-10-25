@@ -29,20 +29,16 @@
 #include "Renderer.h"
 #include "Row.h"
 
-CustomVarsDictColumn::CustomVarsDictColumn(std::string name,
-                                           std::string description,
-                                           int indirect_offset,
-                                           int extra_offset,
-                                           int extra_extra_offset, int offset)
-    : CustomVarsColumn(std::move(name), std::move(description), indirect_offset,
-                       extra_offset, extra_extra_offset, offset) {}
-
-ColumnType CustomVarsDictColumn::type() const { return ColumnType::dict; }
+#ifdef CMC
+#include "Object.h"
+#else
+#include "nagios.h"
+#endif
 
 void CustomVarsDictColumn::output(Row row, RowRenderer &r,
                                   const contact * /* auth_user */) const {
     DictRenderer d(r);
-    for (const auto &it : getCVM(row)) {
+    for (const auto &it : getValue(row)) {
         d.output(it.first, it.second);
     }
 }
@@ -52,11 +48,19 @@ std::unique_ptr<Filter> CustomVarsDictColumn::createFilter(
     return std::make_unique<CustomVarsDictFilter>(*this, relOp, value);
 }
 
-bool CustomVarsDictColumn::contains(Row row, const std::string &value) const {
-    for (const auto &it : getCVM(row)) {
-        if (it.second == value) {
-            return true;
+std::unordered_map<std::string, std::string> CustomVarsDictColumn::getValue(
+    Row row) const {
+    std::unordered_map<std::string, std::string> dict;
+#ifdef CMC
+    if (auto *object = columnData<Object>(row)) {
+        return object->customAttributes();
+    }
+#else
+    if (auto p = columnData<customvariablesmember *>(row)) {
+        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
+            dict.emplace(cvm->variable_name, cvm->variable_value);
         }
     }
-    return false;
+#endif
+    return dict;
 }

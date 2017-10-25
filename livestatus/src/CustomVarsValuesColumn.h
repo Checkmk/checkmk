@@ -26,27 +26,26 @@
 #define CustomVarsValuesColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
-#include "Column.h"
-#include "CustomVarsColumn.h"
+#include <vector>
+#include "ListColumn.h"
 #include "contact_fwd.h"
-#include "opids.h"
-class Filter;
 class Row;
 class RowRenderer;
 
-class CustomVarsValuesColumn : public CustomVarsColumn {
+class CustomVarsValuesColumn : public ListColumn {
 public:
-    CustomVarsValuesColumn(std::string name, std::string description,
-                           int indirect_offset, int extra_offset,
-                           int extra_extra_offset, int offset);
-    ColumnType type() const override;
+    CustomVarsValuesColumn(const std::string &name,
+                           const std::string &description, int indirect_offset,
+                           int extra_offset, int extra_extra_offset, int offset)
+        : ListColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset, offset) {}
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
-    std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const override;
-    bool contains(Row row, const std::string &value) const override;
+
+    std::vector<std::string> getValue(Row row,
+                                      const contact *auth_user) const override;
 };
 
 #endif  // CustomVarsValuesColumn_h

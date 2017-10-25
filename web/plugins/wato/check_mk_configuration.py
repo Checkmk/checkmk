@@ -1010,7 +1010,7 @@ register_configvar(group,
              label = _("enable GIT version control"),
              help = _("When enabled, all changes of configuration files are tracked with the "
                       "version control system GIT. You need to make sure that git is installed "
-                      "on your Nagios server. The version history currently cannot be viewed "
+                      "on your monitoring server. The version history currently cannot be viewed "
                       "via the web GUI. Please use git command line tools within your Check_MK "
                       "configuration directory."),
     ),

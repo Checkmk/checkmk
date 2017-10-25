@@ -1,0 +1,11 @@
+Title: New filters: Regex matches for host and service contacts
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508937092
+Class: feature
+
+There are 2 new filters for the GUI views available which can be used
+to filter lists of hosts or services using regex matches on their contacts.

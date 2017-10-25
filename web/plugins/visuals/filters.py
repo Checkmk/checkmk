@@ -403,8 +403,10 @@ declare_filter(205, FilterMultigroup("service",         _("Several Service Group
 declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contact Group"),    False), _("Optional selection of host contact group"))
 declare_filter(206, FilterGroupCombo("service_contact", _("Service Contact Group"), False), _("Optional selection of service contact group"))
 
-declare_filter(107, FilterText("host_ctc",    _("Host Contact"),    "host",    "host_contacts",    "host_ctc",    ">="))
-declare_filter(207, FilterText("service_ctc", _("Service Contact"), "service", "service_contacts", "service_ctc", ">="))
+declare_filter(107, FilterText("host_ctc",          _("Host Contact"),            "host",    "host_contacts",    "host_ctc",          ">="))
+declare_filter(107, FilterText("host_ctc_regex",    _("Host Contact (Regex)"),    "host",    "host_contacts",    "host_ctc_regex",    "~~"))
+declare_filter(207, FilterText("service_ctc",       _("Service Contact"),         "service", "service_contacts", "service_ctc",       ">="))
+declare_filter(207, FilterText("service_ctc_regex", _("Service Contact (Regex)"), "service", "service_contacts", "service_ctc_regex", "~~"))
 
 
 # Selection of one group to be used in the info "hostgroup" or "servicegroup".

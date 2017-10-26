@@ -157,10 +157,18 @@ def check_http_arguments(params):
 
 
 def check_http_desc(params):
-    if params[0].startswith("^"):
-        return params[0][1:]
+    description, settings = params
 
-    return "HTTP %s" % params[0]
+    if description.startswith("^"):
+        return description[1:]
+
+    # here we have to cover connection and certificate checks
+    if settings.get("ssl") or settings.get("cert_days"):
+        protocol = "HTTPS"
+    else:
+        protocol = "HTTP"
+
+    return "%s %s" % (protocol, description)
 
 
 active_check_info['http'] = {

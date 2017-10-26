@@ -14698,6 +14698,7 @@ def create_sample_config():
                 "nullmailer_mailq",
                 "barracuda_mailqueues",
                 "qmail_stats",
+                "http",
             ],
             "enable_rulebased_notifications": True,
         }

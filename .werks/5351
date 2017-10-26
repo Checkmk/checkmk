@@ -1,0 +1,20 @@
+Title: check_http: Use HTTPS instead of HTTP in service description for SSL/TLS connections
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1509024010
+Class: feature
+
+For Check HTTP checks the service description now uses HTTPS instead of
+HTTP if a connection via SSL/TLS is used. This makes it easy to distinguish
+if a Check uses HTTP or HTTPS for a connection.
+
+This feature is automatically enabled for new Check_MK installations.
+If you upgrade an existing Check_MK installation you have to enable it
+in the global settings via the option "Use new service descriptions"
+in the section "Execution of checks". Be aware that the change may effect
+existing rules, performance data (if present), and the availability
+history.
+

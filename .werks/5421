@@ -1,0 +1,11 @@
+Title: LDAP: Fixed broken sync of group memberships for users with capital umlauts in names
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1509022446
+
+

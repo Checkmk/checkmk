@@ -33,7 +33,6 @@
 #include <unordered_set>
 #include "World.h"
 #include "cmc.h"
-class Host;
 #else
 #include "nagios.h"
 #endif

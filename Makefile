@@ -197,7 +197,7 @@ check-version:
 # And --transform is also missing ...
 dist: mk-livestatus-$(VERSION).tar.gz $(DISTNAME).tar.gz config.h.in $(DIST_DEPS)
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise enterprise/agents/plugins/cmk-update-agent
+	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
 endif
 	@EXCLUDES= ; \
 	if [ -d .git ]; then \

@@ -63,7 +63,6 @@ liblivestatus_a_SOURCES = \
         HostFileColumn.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
-        HostListFilter.cc \
         HostListStateColumn.cc \
         HostServiceState.cc \
         HostSpecialDoubleColumn.cc \

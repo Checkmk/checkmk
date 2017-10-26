@@ -28,47 +28,50 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
-#include "Column.h"
+#include <vector>
+#include "ListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+enum class HostState;
 class MonitoringCore;
 class Row;
 class RowRenderer;
 
-#ifdef CMC
-#include <unordered_set>
-class Host;
-#else
-#include "nagios.h"
-#endif
-
-class HostListColumn : public Column {
+class HostListColumn : public ListColumn {
 public:
     HostListColumn(const std::string &name, const std::string &description,
                    int indirect_offset, int extra_offset,
                    int extra_extra_offset, int offset, MonitoringCore *mc,
                    bool show_state)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset)
+        : ListColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset, offset)
         , _mc(mc)
         , _show_state(show_state) {}
-    ColumnType type() const override { return ColumnType::list; }
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
+
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 
-#ifdef CMC
-    using host_list = const std::unordered_set<Host *> *;
-#else
-    using host_list = const hostsmember *;
-#endif
-    host_list getMembers(Row row) const;
+    std::vector<std::string> getValue(Row row,
+                                      const contact *auth_user) const override;
 
 private:
     MonitoringCore *_mc;
     const bool _show_state;
+
+    struct Member {
+        Member(const std::string &hn, HostState cs, bool hbc)
+            : host_name(hn), current_state(cs), has_been_checked(hbc) {}
+
+        std::string host_name;
+        HostState current_state;
+        bool has_been_checked;
+    };
+
+    std::vector<Member> getMembers(Row row, const contact *auth_user) const;
 };
 
 #endif  // HostListColumn_h

@@ -1,0 +1,13 @@
+Title: windows_updates: Added information about default cache age and asynchronious execution
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p16
+Date: 1509006506
+
+In werk #4835 a default caching and asynchronious execution of the plugin
+has been added. The information about default caching and execution mode is
+now also available in the help text of the bakery rule.

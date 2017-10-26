@@ -31,6 +31,7 @@
 
 #ifdef CMC
 #include "Object.h"
+#include "cmc.h"
 #else
 #include "nagios.h"
 #endif

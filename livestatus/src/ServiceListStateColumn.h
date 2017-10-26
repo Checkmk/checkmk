@@ -29,12 +29,12 @@
 #include <cstdint>
 #include <string>
 #include "IntColumn.h"
-#include "contact_fwd.h"
 class MonitoringCore;
 class Row;
 
 #ifdef CMC
 #include "Host.h"
+#include "cmc.h"
 #else
 #include "nagios.h"
 #endif

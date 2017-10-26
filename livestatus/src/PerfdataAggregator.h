@@ -30,15 +30,10 @@
 #include <map>
 #include <string>
 #include "Aggregator.h"
+#include "contact_fwd.h"
 class Row;
 class RowRenderer;
 class StringColumn;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class PerfdataAggregator : public Aggregator {
 public:

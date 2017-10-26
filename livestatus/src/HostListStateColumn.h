@@ -30,12 +30,12 @@
 #include <string>
 #include "IntColumn.h"
 #include "ServiceListStateColumn.h"
-#include "contact_fwd.h"
 class MonitoringCore;
 class Row;
 
 #ifdef CMC
 #include <unordered_set>
+#include "cmc.h"
 class Host;
 #else
 #include "nagios.h"

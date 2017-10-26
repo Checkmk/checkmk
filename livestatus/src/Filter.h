@@ -29,14 +29,9 @@
 #include <chrono>
 #include <cstdint>
 #include <string>
+#include "contact_fwd.h"
 class FilterVisitor;
 class Row;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class Filter {
 public:

@@ -44,7 +44,7 @@
 #include "StringUtils.h"
 #include "Table.h"
 #include "TimeColumn.h"
-#include "contact_fwd.h"
+#include "nagios.h"
 class Query;
 
 class TableEventConsole : public Table {

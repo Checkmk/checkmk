@@ -29,7 +29,6 @@
 #include <memory>
 #include <string>
 #include "Column.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class Filter;
 class MonitoringCore;
@@ -38,6 +37,7 @@ class RowRenderer;
 
 #ifdef CMC
 #include "Host.h"
+#include "cmc.h"
 #else
 #include "nagios.h"
 #endif

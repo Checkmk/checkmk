@@ -28,6 +28,7 @@
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "nagios.h"
 
 std::vector<std::string> CommentColumn::getValue(
     Row row, const contact * /*auth_user*/) const {

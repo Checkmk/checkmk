@@ -31,6 +31,7 @@
 #include <iterator>
 #include <unordered_map>
 #include "Object.h"
+#include "cmc.h"
 #else
 #include "nagios.h"
 #endif

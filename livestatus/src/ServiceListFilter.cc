@@ -27,7 +27,14 @@
 #include "Logger.h"
 #include "Row.h"
 #include "ServiceListColumn.h"
+
+#ifdef CMC
+#include <memory>
+#include "Host.h"
+#include "Service.h"
+#else
 #include "nagios.h"
+#endif
 
 namespace {
 constexpr char hostservice_separator = '|';
@@ -49,7 +56,7 @@ ServiceListFilter::ServiceListFilter(const ServiceListColumn &column,
     auto pos = value.find(hostservice_separator);
     if (pos == std::string::npos) {
         if (_hostname_required) {
-            Informational(column.logger())
+            Informational(_column.logger())
                 << "Invalid reference value for service "
                    "list membership. Must be 'hostname"
                 << std::string(1, hostservice_separator) << "servicename'";
@@ -62,40 +69,64 @@ ServiceListFilter::ServiceListFilter(const ServiceListColumn &column,
     }
 }
 
+namespace {
+bool isEmpty(ServiceListColumn::service_list servicelist) {
+#ifdef CMC
+    return servicelist->empty();
+#else
+    return servicelist == nullptr;
+#endif
+}
+
+bool contains(ServiceListColumn::service_list servicelist,
+              const std::string &ref_host, const std::string &ref_service,
+              bool hostname_required) {
+#ifdef CMC
+    for (const auto &service : *servicelist) {
+        if ((!hostname_required || service->host()->name() == ref_host) &&
+            service->name() == ref_service) {
+            return true;
+        }
+    }
+    return false;
+#else
+    for (; servicelist != nullptr; servicelist = servicelist->next) {
+        service *svc = servicelist->service_ptr;
+        if ((!hostname_required || svc->host_name == ref_host) &&
+            svc->description == ref_service) {
+            return true;
+        }
+    }
+    return false;
+#endif
+}
+}  // namespace
+
 bool ServiceListFilter::accepts(
     Row row, const contact * /* auth_user */,
     std::chrono::seconds /* timezone_offset */) const {
-    // data points to a primary data object. We need to extract a pointer to a
-    // service list
-    servicesmember *mem = _column.getMembers(row);
-
-    // test for empty list
-    if (_ref_host.empty()) {
-        if (_relOp == RelationalOperator::equal) {
-            return mem == nullptr;
-        }
-        if (_relOp == RelationalOperator::not_equal) {
-            return mem != nullptr;
-        }
-    }
-
-    bool is_member = false;
-    for (; mem != nullptr; mem = mem->next) {
-        service *svc = mem->service_ptr;
-        if ((!_hostname_required || svc->host_name == _ref_host) &&
-            svc->description == _ref_service) {
-            is_member = true;
-            break;
-        }
-    }
-
+    auto servicelist = _column.getMembers(row);
     switch (_relOp) {
-        case RelationalOperator::less:
-            return !is_member;
-        case RelationalOperator::greater_or_equal:
-            return is_member;
         case RelationalOperator::equal:
+            if (!_ref_host.empty()) {
+                Informational(_column.logger())
+                    << "Sorry, equality for service lists implemented only for emptiness";
+                return false;
+            }
+            return isEmpty(servicelist);
         case RelationalOperator::not_equal:
+            if (!_ref_host.empty()) {
+                Informational(_column.logger())
+                    << "Sorry, inequality for service lists implemented only for emptiness";
+                return false;
+            }
+            return !isEmpty(servicelist);
+        case RelationalOperator::less:
+            return !contains(servicelist, _ref_host, _ref_service,
+                             _hostname_required);
+        case RelationalOperator::greater_or_equal:
+            return contains(servicelist, _ref_host, _ref_service,
+                            _hostname_required);
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:

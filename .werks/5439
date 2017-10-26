@@ -1,0 +1,10 @@
+Title: storcli_vdrives: Configured check state of related device state was not set properly in some cases. Made that more robust.
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p16
+Date: 1509025127
+Class: fix
+
+

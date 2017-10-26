@@ -36,11 +36,11 @@ factory_settings["storcli_vdrives_default_levels"] = {
 def parse_storcli_vdrives(info):
 
     raid_statenames = {
-        "Optl"      : "Optimal",
-        "Pdgd"      : "Partially Degraded",
+        "optl"      : "Optimal",
+        "pdgd"      : "Partially Degraded",
         "dgrd"      : "Degraded",
-        "OfLn"      : "Offline",
-        "Rec"       : "Recovery",
+        "ofln"      : "Offline",
+        "rec"       : "Recovery",
     }
 
     parsed = {}
@@ -53,7 +53,7 @@ def parse_storcli_vdrives(info):
             item, raid_type, rawstate, access, consistent = line[:5]
             parsed[item] = {
                 "raid_type"     : raid_type,
-                "state"         : raid_statenames.get(rawstate, rawstate),
+                "state"         : raid_statenames.get(rawstate.lower(), rawstate),
                 "access"        : access,
                 "consistent"    : consistent,
             }
@@ -81,7 +81,11 @@ def check_storcli_vdrives(item, params, parsed):
     device_state = parsed[item]["state"]
     infotext = "State is %s" % device_state
 
-    status = params.get(device_state, 3)
+    if device_state in params:
+        status = params[device_state]
+    else:
+        status = 3
+        infotext += " (unknown[%s])" % device_state
     yield status, infotext
 
 

@@ -59,11 +59,13 @@ public:
                 const contact *auth_user) const override;
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
+
 #ifdef CMC
-    const Host::services_t *getMembers(Row row) const;
+    using service_list = const Host::services_t *;
 #else
-    servicesmember *getMembers(Row row) const;
+    using service_list = servicesmember *;
 #endif
+    service_list getMembers(Row row) const;
 
 private:
     MonitoringCore *_mc;

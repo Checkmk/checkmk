@@ -33,7 +33,7 @@
 
 extern TimeperiodsCache *g_timeperiods_cache;
 
-servicesmember *ServiceListColumn::getMembers(Row row) const {
+ServiceListColumn::service_list ServiceListColumn::getMembers(Row row) const {
     if (auto p = columnData<servicesmember *>(row)) {
         return *p;
     }

@@ -189,6 +189,8 @@ check-version:
 	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
 	    false ; }
 
+# Is executed by our build environment from a "git archive" snapshot and during
+# RPM building to create the source tar.gz for the RPM build process.
 # Would use --exclude-vcs-ignores but that's available from tar 1.29 which
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available

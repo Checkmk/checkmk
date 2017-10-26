@@ -220,7 +220,7 @@ endif
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
 	    --exclude $(DIST_ARCHIVE) \
-	    --exclude enterprise/agents/plugins/build \
+	    --exclude enterprise/agents/plugins/{build,src} \
 	    $$EXCLUDES \
 	    * .werks .clang* | tar x -C check-mk-$(EDITION)-$(OMD_VERSION) ; \
 	if [ -f COMMIT ]; then \

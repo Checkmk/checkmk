@@ -43,9 +43,9 @@ diskstat_inventory = []
 #  ( [ 'summary', 'physical', 'lvm', 'vxvm' ], ALL_HOSTS ),
 # ]
 
-def inventory_diskstat_generic(info):
+def inventory_diskstat_generic(parsed):
     # Skip over on empty data
-    if not info:
+    if not parsed:
         return
 
     # New style: use rule based configuration, defaulting to summary mode
@@ -70,23 +70,28 @@ def inventory_diskstat_generic(info):
     if "legacy" in modes:
         inventory += [ ( "read", None ), ( "write", None ) ]
 
-    if "physical" in modes:
-        inventory += [ (line[1], "diskstat_default_levels")
-                       for line in info
-                       if not ' ' in line[1] ]
+    for line in parsed:
+        name = line[1]
+        if "physical" in modes and \
+           not ' ' in name and \
+           not diskstat_diskless_pattern.match(name):
+            inventory.append((name, "diskstat_default_levels"))
 
-    if "lvm" in modes:
-        inventory += [ (line[1], "diskstat_default_levels")
-                       for line in info
-                       if line[1].startswith("LVM ") ]
+        if "lvm" in modes and \
+           name.startswith("LVM "):
+            inventory.append((name, "diskstat_default_levels"))
 
-    if "vxvm" in modes:
-        inventory += [ (line[1], "diskstat_default_levels")
-                       for line in info
-                       if line[1].startswith("VxVM ") ]
+        if "vxvm" in modes and \
+           name.startswith("VxVM "):
+            inventory.append((name, "diskstat_default_levels"))
+
+        if "diskless" in modes and \
+           diskstat_diskless_pattern.match(name):
+            # Sort of partitions with disks - typical in XEN virtual setups.
+            # Eg. there are xvda1, xvda2, but no xvda...
+            inventory.append((name, "diskstat_default_levels"))
 
     return inventory
-
 
 
 def check_diskstat_line(this_time, item, params, line, mode='sectors'):

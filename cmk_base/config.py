@@ -1050,13 +1050,24 @@ def service_description(hostname, check_type, item):
     return get_final_service_description(hostname, descr)
 
 
+_old_active_check_service_descriptions = {
+    "http": lambda params: (params[0][1:] if params[0].startswith("^")
+                            else "HTTP %s" % params[0])
+}
+
+
 def active_check_service_description(hostname, active_check_type, params):
     import cmk_base.checks as checks
     if active_check_type not in checks.active_check_info:
         return "Unimplemented check %s" % active_check_type
 
-    act_info = checks.active_check_info[active_check_type]
-    description = act_info["service_description"](params)
+    if (active_check_type in _old_active_check_service_descriptions and
+            active_check_type not in use_new_descriptions_for):
+        description = _old_active_check_service_descriptions[active_check_type](params)
+    else:
+        act_info = checks.active_check_info[active_check_type]
+        description = act_info["service_description"](params)
+
     description = description.replace('$HOSTNAME$', hostname)
 
     return get_final_service_description(hostname, description)

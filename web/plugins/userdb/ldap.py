@@ -526,8 +526,8 @@ class LDAPUserConnector(UserConnector):
                         new_obj = {}
                         for key, val in obj.iteritems():
                             # Convert all keys to lower case!
-                            new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
-                        result.append((dn.lower().decode('utf-8'), new_obj))
+                            new_obj[key.decode('utf-8').lower()] = [ i.decode('utf-8') for i in val ]
+                        result.append((dn.decode('utf-8').lower(), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT, e:
                     raise MKLDAPException(_('The given base object "%s" does not exist in LDAP (%s))') % (base, e))

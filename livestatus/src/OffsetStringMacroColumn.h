@@ -29,7 +29,6 @@
 #include <memory>
 #include <string>
 #include "StringColumn.h"
-#include "contact_fwd.h"
 #include "nagios.h"
 #include "opids.h"
 class Filter;

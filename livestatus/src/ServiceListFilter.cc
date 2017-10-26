@@ -32,6 +32,7 @@
 #include <memory>
 #include "Host.h"
 #include "Service.h"
+#include "cmc.h"
 #else
 #include "nagios.h"
 #endif

@@ -28,13 +28,8 @@
 #include "config.h"  // IWYU pragma: keep
 #include "Renderer.h"
 #include "Row.h"
+#include "contact_fwd.h"
 class Query;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 enum class StatsOperation { count, sum, min, max, avg, std, suminv, avginv };
 

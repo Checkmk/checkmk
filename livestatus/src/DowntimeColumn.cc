@@ -27,6 +27,10 @@
 #include "Renderer.h"
 #include "Row.h"
 
+#ifndef CMC
+#include "nagios.h"
+#endif
+
 void DowntimeColumn::output(Row row, RowRenderer &r,
                             const contact * /* auth_user */) const {
     ListRenderer l(r);

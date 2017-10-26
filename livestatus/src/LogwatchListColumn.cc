@@ -35,6 +35,7 @@
 
 #ifdef CMC
 #include "Host.h"
+#include "cmc.h"
 #else
 #include "nagios.h"
 #endif

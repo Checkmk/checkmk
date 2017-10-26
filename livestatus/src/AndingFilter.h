@@ -30,13 +30,8 @@
 #include <cstdint>
 #include <string>
 #include "VariadicFilter.h"
+#include "contact_fwd.h"
 class Row;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class AndingFilter : public VariadicFilter {
 public:

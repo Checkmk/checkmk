@@ -26,6 +26,7 @@
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "mk_inventory.h"
+#include "nagios.h"
 
 int32_t StatusSpecialIntColumn::getValue(Row /* row */,
                                          const contact* /* auth_user */) const {

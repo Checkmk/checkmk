@@ -32,17 +32,18 @@
 #include "LogCache.h"
 #include "Logfile.h"
 #include "Table.h"
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "contact_fwd.h"
-#endif
 class Column;
 class HostServiceState;
 class LogEntry;
 class MonitoringCore;
 class Query;
 class Row;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "contact_fwd.h"
+#endif
 
 class TableStateHistory : public Table {
 public:

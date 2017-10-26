@@ -29,15 +29,10 @@
 #include <chrono>
 #include <cstdint>
 #include "Aggregator.h"
+#include "contact_fwd.h"
 class DoubleColumn;
 class Row;
 class RowRenderer;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class DoubleAggregator : public Aggregator {
 public:

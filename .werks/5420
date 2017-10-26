@@ -1,0 +1,10 @@
+Title: diskspace cleanup: Fixed exception when "Delete additional files when disk space is below" is enabled
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1509020904
+Class: fix
+
+

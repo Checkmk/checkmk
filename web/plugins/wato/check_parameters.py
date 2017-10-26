@@ -11752,6 +11752,7 @@ register_rule(
            ( "physical", _("Create a separate check for each physical disk") ),
            ( "lvm",      _("Create a separate check for each LVM volume (Linux)") ),
            ( "vxvm",     _("Creata a separate check for each VxVM volume (Linux)") ),
+           ( "diskless", _("Creata a separate check for each partition (XEN)") ),
         ],
         default_value = [ 'summary' ],
     ),

@@ -100,16 +100,31 @@
 #
 # Returns a pair of the timestamp and that dictionary
 # parsed = timestamp, disks
+
+
+diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
+
+
 def parse_diskstat(info):
     timestamp_str, proc_diskstat, name_info = diskstat_extract_name_info(info)
     timestamp = int(timestamp_str)
 
-    disks = {}
+    # Here we discover real partitions and exclude them:
+    # Sort of partitions with disks - typical in XEN virtual setups.
+    # Eg. there are xvda1, xvda2, but no xvda...
+    device_names = [line[3] for line in proc_diskstat]
+    real_partitions = {device_name for device_name in device_names
+                       if diskstat_diskless_pattern.match(device_name)
+                          and re.sub('[0-9]+$', '', device_name)}
 
+    disks = {}
     for node_name, major, minor, device, \
         read_ios, read_merges, read_sectors, read_ticks, \
         write_ios, write_merges, write_sectors, write_ticks, \
         ios_in_prog, total_ticks, rq_ticks in proc_diskstat:
+
+        if device in real_partitions:
+            continue
 
         if (node_name, int(major), int(minor)) in name_info:
             device = name_info[(node_name, int(major), int(minor))]
@@ -259,6 +274,7 @@ def diskstat_extract_name_info(info):
     for line in info:
         if node == None:
             node = line[0]
+
         if line[1] == '[dmsetup_info]':
             phase = 'dmsetup_info'
         elif line[1] == '[vx_dsk]':

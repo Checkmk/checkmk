@@ -23,40 +23,79 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostListColumn.h"
+#include <algorithm>
+#include <iterator>
 #include "Filter.h"
-#include "HostListFilter.h"
+#include "ListFilter.h"
 #include "Renderer.h"
 #include "Row.h"
-#include "auth.h"
 
-HostListColumn::host_list HostListColumn::getMembers(Row row) const {
-    if (auto p = columnData<hostsmember *>(row)) {
-        return *p;
-    }
-    return nullptr;
-}
+#ifdef CMC
+#include <unordered_set>
+#include "Host.h"
+#include "LogEntry.h"
+#include "State.h"
+#else
+#include "auth.h"
+#include "nagios.h"
+#endif
 
 void HostListColumn::output(Row row, RowRenderer &r,
                             const contact *auth_user) const {
     ListRenderer l(r);
-    for (const hostsmember *mem = getMembers(row); mem != nullptr;
-         mem = mem->next) {
-        host *hst = mem->host_ptr;
-        if (auth_user == nullptr ||
-            is_authorized_for(_mc, auth_user, hst, nullptr)) {
-            if (!_show_state) {
-                l.output(std::string(hst->name));
-            } else {
-                SublistRenderer s(l);
-                s.output(std::string(hst->name));
-                s.output(hst->current_state);
-                s.output(hst->has_been_checked);
-            }
+    for (const auto &member : getMembers(row, auth_user)) {
+        if (_show_state) {
+            SublistRenderer s(l);
+            s.output(member.host_name);
+            s.output(static_cast<int>(member.current_state));
+            s.output(static_cast<int>(member.has_been_checked));
+        } else {
+            l.output(member.host_name);
         }
     }
 }
 
 std::unique_ptr<Filter> HostListColumn::createFilter(
     RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<HostListFilter>(*this, relOp, value);
+    return std::make_unique<ListFilter>(*this, relOp, value);
+}
+
+std::vector<std::string> HostListColumn::getValue(
+    Row row, const contact *auth_user) const {
+    auto members = getMembers(row, auth_user);
+    std::vector<std::string> host_names;
+    std::transform(members.begin(), members.end(),
+                   std::back_inserter(host_names),
+                   [](const auto &member) { return member.host_name; });
+    return host_names;
+};
+
+std::vector<HostListColumn::Member> HostListColumn::getMembers(
+    Row row, const contact *auth_user) const {
+    std::vector<Member> members;
+#ifdef CMC
+    if (auto p = columnData<std::unordered_set<Host *>>(row)) {
+        for (const auto &hst : *p) {
+            if (auth_user == nullptr || hst->hasContact(_mc, auth_user)) {
+                members.emplace_back(
+                    hst->name(),
+                    static_cast<HostState>(hst->state()->_current_state),
+                    hst->state()->_has_been_checked);
+            }
+        }
+    }
+#else
+    if (auto p = columnData<hostsmember *>(row)) {
+        for (const hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
+            host *hst = mem->host_ptr;
+            if (auth_user == nullptr ||
+                is_authorized_for(_mc, auth_user, hst, nullptr)) {
+                members.emplace_back(hst->name,
+                                     static_cast<HostState>(hst->current_state),
+                                     hst->has_been_checked != 0);
+            }
+        }
+    }
+#endif
+    return members;
 }

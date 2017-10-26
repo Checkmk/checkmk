@@ -1575,9 +1575,13 @@ def ajax_popup_add():
         html.close_li()
 
         html.open_li()
-        html.open_a(href="javascript:graph_export()")
+        html.open_a(href="javascript:graph_export(\"graph_export\")")
         html.img(src="images/icon_download.png")
         html.write(_("Export as JSON"))
+        html.close_a()
+        html.open_a(href="javascript:graph_export(\"graph_image\")")
+        html.img(src="images/icon_download.png")
+        html.write(_("Export as PNG"))
         html.close_a()
         html.close_li()
 

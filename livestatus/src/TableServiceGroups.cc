@@ -70,12 +70,12 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
-        table->core(), true, true, 0));
+        table->core(), true, 0));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and has_been_checked",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
-        table->core(), true, true, 1));
+        table->core(), true, 1));
 
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",

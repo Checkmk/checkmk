@@ -47,12 +47,11 @@ public:
     ServiceListColumn(const std::string &name, const std::string &description,
                       int indirect_offset, int extra_offset,
                       int extra_extra_offset, int offset, MonitoringCore *mc,
-                      bool hostname_required, bool show_host, int info_depth)
+                      bool hostname_required, int info_depth)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset)
         , _mc(mc)
         , _hostname_required(hostname_required)
-        , _show_host(show_host)
         , _info_depth(info_depth) {}
     ColumnType type() const override { return ColumnType::list; };
     void output(Row row, RowRenderer &r,
@@ -70,7 +69,6 @@ public:
 private:
     MonitoringCore *_mc;
     bool _hostname_required;
-    bool _show_host;
     int _info_depth;
 
 #ifndef CMC

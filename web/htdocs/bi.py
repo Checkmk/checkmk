@@ -2884,8 +2884,8 @@ def render_tree_json(row):
 
 
 def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
-    tree = FoldableTreeRenderer(row, boxes, omit_root, expansion_level, only_problems, lazy)
-    return tree.css_class(), tree.render()
+    renderer = FoldableTreeRenderer(row, boxes, omit_root, expansion_level, only_problems, lazy)
+    return renderer.css_class(), renderer.render()
 
 
 class FoldableTreeRenderer(object):
@@ -2943,9 +2943,25 @@ class FoldableTreeRenderer(object):
 
 
     def _render_subtree(self, tree, path, show_host):
-        is_leaf = len(tree) == 3
-        path_id = "/".join(path)
-        is_open = self._treestate.get(path_id)
+        if self._boxes:
+            return self._render_bi_boxes(tree, path, show_host)
+        else:
+            if not self._is_leaf(tree):
+                return self._render_foldable_trees(tree, path, show_host)
+            else:
+                return self._aggr_render_leaf(tree, show_host, bare=self._boxes)
+
+
+    def _is_leaf(self, tree):
+        return len(tree) == 3
+
+
+    def _path_id(self, path):
+        return "/".join(path)
+
+
+    def _is_open(self, path):
+        is_open = self._treestate.get(self._path_id(path))
         if is_open == None:
             is_open = len(path) <= self._expansion_level
 
@@ -2953,77 +2969,83 @@ class FoldableTreeRenderer(object):
         if not is_open and self._omit_root and len(path) == 1:
             is_open = True
 
-        h = ""
-        state = tree[0]
-        omit_content = self._lazy and not is_open
-        mousecode = 'onclick="bi_toggle_%s(this, %d);" ' % ("box" if self._boxes else "subtree", omit_content)
+        return is_open
 
-        # Variant: BI-Boxes
-        if self._boxes:
-            # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
-            if tree[1] and tree[0] != tree[1]:
-                addclass = " " + _("assumed")
-                effective_state = tree[1]
-            else:
-                addclass = ""
-                effective_state = tree[0]
+
+    def _omit_content(self, path):
+        return self._lazy and not self._is_open(path)
+
+
+    def _get_mousecode(self, path):
+        return 'onclick="bi_toggle_%s(this, %d);" ' % ("box" if self._boxes else "subtree", self._omit_content(path))
+
+
+    def _render_bi_boxes(self, tree, path, show_host):
+        # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+        if tree[1] and tree[0] != tree[1]:
+            addclass = " " + _("assumed")
+            effective_state = tree[1]
+        else:
+            addclass = ""
+            effective_state = tree[0]
+
+        is_leaf = self._is_leaf(tree)
+        if is_leaf:
+            leaf = "leaf"
+            mc = ""
+        else:
+            leaf = "noleaf"
+            mc = self._get_mousecode(path)
+
+        omit = self._omit_root and len(path) == 1
+        h = ""
+        if not omit:
+            h += '<span id="%d:%s" %s class="bibox_box %s %s state state%s%s">' % (
+                    self._expansion_level or 0, self._path_id(path), mc, leaf,"open" if self._is_open(path) else "closed", effective_state["state"], addclass)
 
             if is_leaf:
-                leaf = "leaf"
-                mc = ""
+                h += self._aggr_render_leaf(tree, show_host, bare=True)
             else:
-                leaf = "noleaf"
-                mc = mousecode
+                h += html.attrencode(tree[2]["title"].replace(" ", "&nbsp;"))
 
-            omit = self._omit_root and len(path) == 1
-            if not omit:
-                h += '<span id="%d:%s" %s class="bibox_box %s %s state state%s%s">' % (
-                        self._expansion_level or 0, path_id, mc, leaf, is_open and "open" or "closed", effective_state["state"], addclass)
+            h += '</span> '
 
-                if is_leaf:
-                    h += self._aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
-                else:
-                    h += html.attrencode(tree[2]["title"].replace(" ", "&nbsp;"))
+        if not is_leaf and not self._omit_content(path):
+            h += '<span class="bibox" style="%s">' % ("display: none;" if not self._is_open(path) and not omit else "")
+            parts = []
+            for node in tree[3]:
+                new_path = path + [node[2]["title"]]
+                h += self._render_subtree(node, new_path, show_host)
+            h += '</span>'
 
-                h += '</span> '
+        return h
 
-            if not is_leaf and not omit_content:
-                h += '<span class="bibox" style="%s">' % ((not is_open and not omit) and "display: none;" or "")
-                parts = []
-                for node in tree[3]:
-                    new_path = path + [node[2]["title"]]
-                    h += self._render_subtree(node, new_path, show_host)
-                h += '</span>'
 
-            return h
+    def _render_foldable_trees(self, tree, path, show_host):
+        h = ""
+        h += '<span class=title>'
 
-        # Variant: foldable trees
+        is_empty = len(tree[3]) == 0
+        if is_empty:
+            mc = ''
         else:
-            if is_leaf: # leaf
-                return self._aggr_render_leaf(tree, show_host, bare = self._boxes)
+            mc = self._get_mousecode(path)
 
-            h += '<span class=title>'
-            is_empty = len(tree[3]) == 0
-            if is_empty:
-                mc = ''
-            else:
-                mc = mousecode
+        css_class = "open" if self._is_open(path) else "closed"
 
-            css_class = "open" if is_open else "closed"
+        h += self._aggr_render_node(tree, html.attrencode(tree[2]["title"]), show_host,
+                              mousecode=mc, img_class=css_class)
+        if not is_empty:
+            h += '<ul id="%d:%s" class="subtree %s">' % \
+                    (self._expansion_level or 0, self._path_id(path), css_class)
 
-            h += self._aggr_render_node(tree, html.attrencode(tree[2]["title"]), show_host,
-                                  mousecode=mc, img_class=css_class)
-            if not is_empty:
-                h += '<ul id="%d:%s" class="subtree %s">' % \
-                        (self._expansion_level or 0, path_id, css_class)
-
-                if not omit_content:
-                    for node in tree[3]:
-                        if not node[2].get("hidden"):
-                            new_path = path + [node[2]["title"]]
-                            h += '<li>' + self._render_subtree(node, new_path, show_host) + '</li>\n'
-                h += '</ul>'
-            return h + '</span>\n'
+            if not self._omit_content(path):
+                for node in tree[3]:
+                    if not node[2].get("hidden"):
+                        new_path = path + [node[2]["title"]]
+                        h += '<li>' + self._render_subtree(node, new_path, show_host) + '</li>\n'
+            h += '</ul>'
+        return h + '</span>\n'
 
 
     def _aggr_render_node(self, tree, title, show_host, mousecode=None, img_class=None):
@@ -3054,6 +3076,7 @@ class FoldableTreeRenderer(object):
 
         h = '<span class="content state state%d%s">%s</span>\n' \
              % (effective_state["state"] if effective_state["state"] != None else -1, addclass, render_bi_state(effective_state["state"]))
+
         if mousecode:
             state_message = ""
             if str(effective_state["state"]) in tree[2].get("state_messages", {}):
@@ -3063,6 +3086,7 @@ class FoldableTreeRenderer(object):
                 h += '<img src="images/tree_black_closed.png" class="treeangle %s"%s>' % \
                                                                        (img_class, mousecode)
             h += '<span class="content name" %s>%s%s</span>' % (mousecode, title, state_message)
+
         else:
             h += title
 
@@ -3075,7 +3099,7 @@ class FoldableTreeRenderer(object):
         return h
 
 
-    def _aggr_render_leaf(self, tree, show_host, bare = False):
+    def _aggr_render_leaf(self, tree, show_host, bare=False):
         site, host = tree[2]["host"]
         service = tree[2].get("service")
         if bare:

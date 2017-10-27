@@ -249,6 +249,8 @@ multisite_painter_options["aggr_wrap"] = {
     )
 }
 
+# TODO: Cleanup this render mode to be handled equal to bi.FoldableTreeRenderer().
+#       The different render modes should be handled with subclasses.
 def paint_aggr_tree_ltr(row, mirror):
     wrap = painter_options.get("aggr_wrap")
 
@@ -257,6 +259,9 @@ def paint_aggr_tree_ltr(row, mirror):
     else:
         td = '<td style="white-space: nowrap;"'
 
+    renderer = bi.FoldableTreeRenderer(row, boxes=False, omit_root=False,
+                                    expansion_level=999, only_problems=False, lazy=False)
+
     def gen_table(tree, height, show_host):
         if len(tree) == 3:
             return gen_leaf(tree, height, show_host)
@@ -264,7 +269,7 @@ def paint_aggr_tree_ltr(row, mirror):
             return gen_node(tree, height, show_host)
 
     def gen_leaf(tree, height, show_host):
-        return [(bi.aggr_render_leaf(tree, show_host), height, [])]
+        return [(renderer._aggr_render_leaf(tree, show_host), height, [])]
 
     def gen_node(tree, height, show_host):
         leaves = []
@@ -272,7 +277,7 @@ def paint_aggr_tree_ltr(row, mirror):
             if not node[2].get("hidden"):
                 leaves += gen_table(node, height - 1, show_host)
         h = '<div class="aggr tree">' \
-            + bi.aggr_render_node(tree, html.attrencode(tree[2]["title"]), show_host) + "</div>"
+            + renderer._aggr_render_node(tree, html.attrencode(tree[2]["title"]), show_host) + "</div>"
         if leaves:
             leaves[0][2].append((len(leaves), h))
         return leaves

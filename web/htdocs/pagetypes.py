@@ -715,10 +715,10 @@ class Overridable(Base):
             cls.add_instance(("", name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
-        subdirs = os.listdir(config.config_dir)
-        for user in subdirs:
+        for user in os.listdir(config.config_dir):
+            user = user.decode("utf-8")
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, user, cls.type_name())
+                path = "%s/%s/user_%ss.mk" % (config.config_dir, user.encode("utf-8"), cls.type_name())
                 if not os.path.exists(path):
                     continue
 
@@ -1026,7 +1026,7 @@ class Overridable(Base):
                 cls.remove_instance((owner_user_id, page_name)) # will be added later again
             else: # clone
                 title = cls.phrase("clone")
-                load_user = html.var("load_user") # FIXME: Change varname to "owner"
+                load_user = html.var_utf8("load_user") # FIXME: Change varname to "owner"
                 page = cls.instance((load_user, page_name))
             page_dict = page.internal_representation()
 

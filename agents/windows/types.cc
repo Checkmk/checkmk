@@ -86,22 +86,18 @@ mrpe_entry *from_string<mrpe_entry *>(const std::string &value) {
     }
 
     if (command_line.empty()) {
-        fprintf(stderr,
-                "Invalid command specification for mrpe:\r\n"
-                "Format: SERVICEDESC COMMANDLINE\r\n");
-        return nullptr;
+        throw StringConversionError(
+            "Invalid command specification for mrpe:\r\n"
+            "Format: SERVICEDESC COMMANDLINE");
     }
 
     if (PathIsRelative(command_line.c_str())) {
         Environment *env = Environment::instance();
-        if (env != nullptr) {
-            snprintf(result->command_line, sizeof(result->command_line),
-                     "%s\\%s", env->agentDirectory().c_str(),
-                     lstrip(command_line.c_str()));
-        } else {
-            fprintf(stderr, "No environment\n");
-            return nullptr;
+        if (env == nullptr) {
+            throw StringConversionError("No environment");
         }
+        snprintf(result->command_line, sizeof(result->command_line), "%s\\%s",
+                 env->agentDirectory().c_str(), lstrip(command_line.c_str()));
     } else {
         strncpy(result->command_line, command_line.c_str(),
                 sizeof(result->command_line));
@@ -146,10 +142,8 @@ winperf_counter *from_string<winperf_counter *>(const std::string &value) {
     } else {
         result->id = PerfCounterObject::resolve_counter_name(base_id.c_str());
         if (result->id == -1) {
-            fprintf(stderr,
-                    "No matching performance counter id found for %s.\n",
-                    value.c_str());
-            return nullptr;
+            throw StringConversionError(
+                "No matching performance counter id found for " + value);
         }
     }
 

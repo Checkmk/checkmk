@@ -25,8 +25,6 @@
 #include "HostListColumn.h"
 #include <algorithm>
 #include <iterator>
-#include "Filter.h"
-#include "ListFilter.h"
 #include "Renderer.h"
 #include "Row.h"
 
@@ -54,11 +52,6 @@ void HostListColumn::output(Row row, RowRenderer &r,
             l.output(member.host_name);
         }
     }
-}
-
-std::unique_ptr<Filter> HostListColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<ListFilter>(*this, relOp, value);
 }
 
 std::vector<std::string> HostListColumn::getValue(

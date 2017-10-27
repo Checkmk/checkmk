@@ -26,13 +26,10 @@
 #define HostListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
 #include <vector>
 #include "ListColumn.h"
 #include "contact_fwd.h"
-#include "opids.h"
-class Filter;
 enum class HostState;
 class MonitoringCore;
 class Row;
@@ -51,9 +48,6 @@ public:
 
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
-
-    std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const override;
 
     std::vector<std::string> getValue(Row row,
                                       const contact *auth_user) const override;

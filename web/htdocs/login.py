@@ -254,7 +254,6 @@ def auth_cookie_is_valid(cookie_name):
     except MKAuthException:
         return False
     except Exception:
-        log_exception()
         return False
 
 

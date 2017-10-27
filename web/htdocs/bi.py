@@ -2884,31 +2884,74 @@ def render_tree_json(row):
 
 
 def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
-    saved_expansion_level = load_ex_level()
-    treestate = html.get_tree_states('bi')
-    if expansion_level != saved_expansion_level:
-        treestate = {}
-        html.set_tree_states('bi', treestate)
-        html.save_tree_states()
+    tree = FoldableTreeRenderer(row, boxes, omit_root, expansion_level, only_problems, lazy)
+    return tree.css_class(), tree.render()
 
-    def render_subtree(tree, path, show_host):
+
+class FoldableTreeRenderer(object):
+    def __init__(self, row, boxes, omit_root, expansion_level, only_problems, lazy):
+        self._row             = row
+        self._boxes           = boxes
+        self._omit_root       = omit_root
+        self._expansion_level = expansion_level
+        self._only_problems   = only_problems
+        self._lazy            = lazy
+
+
+    def css_class(self):
+        return "aggrtree" + ("_box" if self._boxes else "")
+
+
+    def render(self):
+        return html._render_tree()
+
+    def _render_tree(self):
+        saved_expansion_level = load_ex_level()
+        treestate = html.get_tree_states('bi')
+        if self._expansion_level != saved_expansion_level:
+            treestate = {}
+            html.set_tree_states('bi', treestate)
+            html.save_tree_states()
+
+        tree = self._row["aggr_treestate"]
+        if self._only_problems:
+            tree = filter_tree_only_problems(tree)
+
+        affected_hosts = self._row["aggr_hosts"]
+        title = self._row["aggr_tree"]["title"]
+        group = self._row["aggr_group"]
+        url_id = html.urlencode_vars([
+            ( "group", group ),
+            ( "title", title ),
+            ( "omit_root", "yes" if self._omit_root else ""),
+            ( "boxes", "yes" if self._boxes else ""),
+            ( "only_problems", "yes" if self._only_problems else ""),
+            ( "reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts) ),
+        ])
+
+        return '<div id="%s" class=bi_tree_container>' % html.attrencode(url_id) + \
+               self._render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1) + \
+               '</div>'
+
+
+    def _render_subtree(self, tree, path, show_host):
         is_leaf = len(tree) == 3
         path_id = "/".join(path)
         is_open = treestate.get(path_id)
         if is_open == None:
-            is_open = len(path) <= expansion_level
+            is_open = len(path) <= self._expansion_level
 
         # Make sure that in case of BI Boxes (omit root) the root level is *always* visible
-        if not is_open and omit_root and len(path) == 1:
+        if not is_open and self._omit_root and len(path) == 1:
             is_open = True
 
         h = ""
         state = tree[0]
-        omit_content = lazy and not is_open
-        mousecode = 'onclick="bi_toggle_%s(this, %d);" ' % ("box" if boxes else "subtree", omit_content)
+        omit_content = self._lazy and not is_open
+        mousecode = 'onclick="bi_toggle_%s(this, %d);" ' % ("box" if self._boxes else "subtree", omit_content)
 
         # Variant: BI-Boxes
-        if boxes:
+        if self._boxes:
             # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
             if tree[1] and tree[0] != tree[1]:
                 addclass = " " + _("assumed")
@@ -2924,10 +2967,10 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
                 leaf = "noleaf"
                 mc = mousecode
 
-            omit = omit_root and len(path) == 1
+            omit = self._omit_root and len(path) == 1
             if not omit:
                 h += '<span id="%d:%s" %s class="bibox_box %s %s state state%s%s">' % (
-                        expansion_level or 0, path_id, mc, leaf, is_open and "open" or "closed", effective_state["state"], addclass)
+                        self._expansion_level or 0, path_id, mc, leaf, is_open and "open" or "closed", effective_state["state"], addclass)
                 if is_leaf:
                     h += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
                 else:
@@ -2939,14 +2982,14 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
                 parts = []
                 for node in tree[3]:
                     new_path = path + [node[2]["title"]]
-                    h += render_subtree(node, new_path, show_host)
+                    h += _render_subtree(node, new_path, show_host)
                 h += '</span>'
             return h
 
         # Variant: foldable trees
         else:
             if is_leaf: # leaf
-                return aggr_render_leaf(tree, show_host, bare = boxes)
+                return aggr_render_leaf(tree, show_host, bare = self._boxes)
 
             h += '<span class=title>'
             is_empty = len(tree[3]) == 0
@@ -2961,36 +3004,16 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
                                   mousecode=mc, img_class=css_class)
             if not is_empty:
                 h += '<ul id="%d:%s" class="subtree %s">' % \
-                        (expansion_level or 0, path_id, css_class)
+                        (self._expansion_level or 0, path_id, css_class)
 
                 if not omit_content:
                     for node in tree[3]:
                         if not node[2].get("hidden"):
                             new_path = path + [node[2]["title"]]
-                            h += '<li>' + render_subtree(node, new_path, show_host) + '</li>\n'
+                            h += '<li>' + _render_subtree(node, new_path, show_host) + '</li>\n'
                 h += '</ul>'
             return h + '</span>\n'
 
-    tree = row["aggr_treestate"]
-    if only_problems:
-        tree = filter_tree_only_problems(tree)
-
-    affected_hosts = row["aggr_hosts"]
-    title = row["aggr_tree"]["title"]
-    group = row["aggr_group"]
-    url_id = html.urlencode_vars([
-        ( "group", group ),
-        ( "title", title ),
-        ( "omit_root", omit_root and "yes" or ""),
-        ( "boxes", boxes and "yes" or ""),
-        ( "only_problems", only_problems and "yes" or ""),
-        ( "reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts) ),
-    ])
-
-    htmlcode = '<div id="%s" class=bi_tree_container>' % html.attrencode(url_id) + \
-               render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1) + \
-               '</div>'
-    return "aggrtree" + (boxes and "_box" or ""), htmlcode
 
 def aggr_render_node(tree, title, show_host, mousecode=None, img_class=None):
     # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])

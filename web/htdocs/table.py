@@ -110,25 +110,37 @@ def add_row(css=None, state=0, collect_headers=True, fixed=False):
 def groupheader(title):
     table["next_header"] = title
 
+
+def text_cell(*args, **kwargs):
+    kwargs["escape_text"] = True
+    cell(*args, **kwargs)
+
+
 def cell(*posargs, **kwargs):
     finish_previous()
     global next_func, next_args
     next_func = add_cell
     next_args = posargs, kwargs
 
-def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True):
 
-    if isinstance(text, HTML):
-        text = "%s" % text
-    if type(text) != unicode:
-        text = str(text)
+def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True, escape_text=False):
+    if escape_text:
+        text = html.permissive_attrencode(text)
+    else:
+        if isinstance(text, HTML):
+            text = "%s" % text
+        if type(text) != unicode:
+            text = str(text)
+
     htmlcode = text + html.drain()
+
     if table["collect_headers"] == True:
         # small helper to make sorting introducion easier. Cells which contain
         # buttons are never sortable
         if css and 'buttons' in css and sortable:
             sortable = False
         table["headers"].append((title, css, help, sortable))
+
     table["rows"][-1][0].append((htmlcode, css, colspan))
 
 

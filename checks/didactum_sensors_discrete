@@ -44,13 +44,20 @@
 
 
 def inventory_didactum_sensors_discrete_dry(parsed):
-    return inventory_didactum_sensors(parsed, "dry")
+    inventory = []
+    for discrete_sensort_type in ["dry", "smoke"]:
+        inventory += inventory_didactum_sensors(parsed, discrete_sensort_type)
+    return inventory
 
 
 def check_didactum_sensors_discrete_dry(item, params, parsed):
     if item in parsed.get("dry", {}):
         data = parsed["dry"][item]
-        return data["state"], "Status: %s" % data["state_readable"]
+    elif item in parsed.get("smoke", {}):
+        data = parsed["smoke"][item]
+    else:
+        return 3, "Discrete sensor %s not found in SNMP data." % item
+    return data["state"], "Status: %s" % data["state_readable"]
 
 
 check_info['didactum_sensors_discrete'] = {
@@ -62,7 +69,6 @@ check_info['didactum_sensors_discrete'] = {
                                     "4",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretType
                                     "5",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretName
                                     "6",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretState
-                                    "7",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretValue
                               ]),
     'snmp_scan_function'    : scan_didactum,
     'includes'              : [ 'didactum.include' ],

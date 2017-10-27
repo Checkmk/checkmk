@@ -1,0 +1,10 @@
+Title: didactum_sensors_discrete: Discovers also smoke sensors
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1509088657
+Class: feature
+
+

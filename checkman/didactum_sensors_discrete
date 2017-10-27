@@ -7,6 +7,11 @@ description:
  This check monitors discrete sensors of Didactum devices
  which support the DIDACTUM-SYSTEM-MIB.
 
+ The check is OK if the device status is "normal" or "on",
+ it is WARN if the device status is "warning", "high warning"
+ or "low warning" and the check reports CRIT in case of
+ "alarm", "high alarm" or "low alarm", otherwise UNKNOWN.
+
 item:
  The discrete sensor identifier.
 

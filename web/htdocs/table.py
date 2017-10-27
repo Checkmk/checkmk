@@ -50,6 +50,11 @@ def row(*posargs, **kwargs):
     tables[-1].row(*posargs, **kwargs)
 
 
+def text_cell(*posargs, **kwargs):
+    assert tables
+    tables[-1].text_cell(*posargs, **kwargs)
+
+
 def cell(*posargs, **kwargs):
     assert tables
     tables[-1].cell(*posargs, **kwargs)

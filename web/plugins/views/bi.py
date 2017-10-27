@@ -161,14 +161,14 @@ multisite_painters["aggr_group"] = {
     "title"   : _("Aggregation group"),
     "short"   : _("Group"),
     "columns" : [ "aggr_group" ],
-    "paint"   : lambda row: ("", row["aggr_group"])
+    "paint"   : lambda row: ("", html.attrencode(row["aggr_group"]))
 }
 
 multisite_painters["aggr_name"] = {
     "title"   : _("Aggregation name"),
     "short"   : _("Aggregation"),
     "columns" : [ "aggr_name" ],
-    "paint"   : lambda row: ("", row["aggr_name"])
+    "paint"   : lambda row: ("", html.attrencode(row["aggr_name"]))
 }
 
 multisite_painters["aggr_output"] = {
@@ -272,7 +272,7 @@ def paint_aggr_tree_ltr(row, mirror):
             if not node[2].get("hidden"):
                 leaves += gen_table(node, height - 1, show_host)
         h = '<div class="aggr tree">' \
-            + bi.aggr_render_node(tree, tree[2]["title"], show_host) + "</div>"
+            + bi.aggr_render_node(tree, html.attrencode(tree[2]["title"]), show_host) + "</div>"
         if leaves:
             leaves[0][2].append((len(leaves), h))
         return leaves

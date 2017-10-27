@@ -193,7 +193,7 @@ void Query::invalidRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
 }
 
-std::unique_ptr<Filter> Query::createFilter(Column &column,
+std::unique_ptr<Filter> Query::createFilter(const Column &column,
                                             RelationalOperator relOp,
                                             const std::string &value) {
     try {

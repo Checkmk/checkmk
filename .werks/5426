@@ -1,0 +1,10 @@
+Title: df perfometer: Fixed exception when maximum value is not available
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p17
+Date: 1509092934
+Class: fix
+
+

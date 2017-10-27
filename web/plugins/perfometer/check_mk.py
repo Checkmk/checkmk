@@ -1178,8 +1178,12 @@ def perfometer_check_mk_df(row, check_command, perf_data):
             hours_left = float(data[1])
             break
 
+    if not maxx:
+        return "", ""
+
     perc_used = 100 * (float(value) / float(maxx))
     perc_free = 100 - float(perc_used)
+
     if hours_left or hours_left == 0:
         h = '<div class="stacked"><table><tr>'
         h += perfometer_td(perc_used, "#00ffc6")

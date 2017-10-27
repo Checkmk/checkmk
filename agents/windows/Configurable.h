@@ -89,7 +89,11 @@ public:
     virtual void startBlock() { _block_mode.startBlock(_values); }
 
     virtual void feed(const std::string &, const std::string &value) override {
-        this->add(from_string<DataT>(_winapi, value));
+        try {
+            this->add(from_string<DataT>(_winapi, value));
+        } catch (const StringConversionError &e) {
+            std::cerr << e.what() << std::endl;
+        }
     }
 
     virtual void output(const std::string &key,
@@ -158,8 +162,12 @@ public:
             key = std::string(var.begin() + pos + 1, var.end());
         }
         startBlock();
-        _add_mode.add(_values,
-                      std::make_pair(key, from_string<DataT>(_winapi, value)));
+        try {
+            _add_mode.add(_values, std::make_pair(key, from_string<DataT>(
+                                                           _winapi, value)));
+        } catch (const StringConversionError &e) {
+            std::cerr << e.what() << std::endl;
+        }
     }
 
     virtual void output(const std::string &key,

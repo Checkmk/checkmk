@@ -82,6 +82,12 @@ static const unsigned int SECTION_WINPERF =
     SECTION_WINPERF_IF | SECTION_WINPERF_CPU | SECTION_WINPERF_PHYDISK |
     SECTION_WINPERF_CONFIG;
 
+class StringConversionError : public std::invalid_argument {
+public:
+    explicit StringConversionError(const std::string &what)
+        : std::invalid_argument(what) {}
+};
+
 template <typename T>
 T from_string(const WinApiAdaptor &winapi, const std::string &input);
 

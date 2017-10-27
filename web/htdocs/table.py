@@ -141,6 +141,11 @@ class Table(object):
         self.next_args = posargs, kwargs
 
 
+    def text_cell(self, *args, **kwargs):
+        kwargs["escape_text"] = True
+        cell(*args, **kwargs)
+
+
     def cell(self, *posargs, **kwargs):
         self.finish_previous()
         self.next_func = self.add_cell
@@ -167,18 +172,24 @@ class Table(object):
             self.options["collect_headers"] = False
 
 
-    def add_cell(self, title="", text="", css=None, help=None, colspan=None, sortable=True):
-        if isinstance(text, HTML):
-            text = "%s" % text
-        if type(text) != unicode:
-            text = str(text)
+    def add_cell(self, title="", text="", css=None, help=None, colspan=None, sortable=True, escape_text=False):
+        if escape_text:
+            text = html.permissive_attrencode(text)
+        else:
+            if isinstance(text, HTML):
+                text = "%s" % text
+            if type(text) != unicode:
+                text = str(text)
+
         htmlcode = text + html.drain()
+
         if self.options["collect_headers"] == True:
             # small helper to make sorting introducion easier. Cells which contain
             # buttons are never sortable
             if css and 'buttons' in css and sortable:
                 sortable = False
             self.headers.append((title, css, help, sortable))
+
         self.rows[-1][0].append((htmlcode, css, colspan))
 
 

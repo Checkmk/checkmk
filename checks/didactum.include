@@ -48,17 +48,7 @@ def parse_didactum_sensors(info):
 
     parsed = {}
     for line in info:
-        ty, name, status, value_str = line[:4]
-        parsed.setdefault(ty, {})
-
-        if value_str.isdigit():
-            value = int(value_str)
-        else:
-            try:
-                value = float(value_str)
-            except:
-                value = value_str
-
+        ty, name, status = line[:3]
         if status in map_states:
             state = map_states[status]
             state_readable = status
@@ -66,11 +56,22 @@ def parse_didactum_sensors(info):
             state = 3
             state_readable = "unknown[%s]" % status
 
+        parsed.setdefault(ty, {})
         parsed[ty].setdefault(name, {
             "state"          : state,
             "state_readable" : state_readable,
-            "value"          : value,
         })
+
+        if len(line) >= 4:
+            value_str = line[3]
+            if value_str.isdigit():
+                value = int(value_str)
+            else:
+                try:
+                    value = float(value_str)
+                except:
+                    value = value_str
+            parsed[ty][name].update({"value": value})
 
         if len(line) == 8:
             crit_lower, warn_lower, warn, crit = line[4:]

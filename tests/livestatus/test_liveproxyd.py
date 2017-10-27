@@ -3,6 +3,7 @@
 import os
 import time
 import pytest
+import signal
 from testlib import web
 
 @pytest.fixture(scope="module")
@@ -43,7 +44,7 @@ def _change_liveproxyd_sites(site, sites):
     site.execute(["rm", "tmp/run/liveproxy/*"])
 
     # Trigger config reload
-    os.kill(int(site.read_file("tmp/run/liveproxyd.pid").strip()), 10) # SIGHUP
+    os.kill(int(site.read_file("tmp/run/liveproxyd.pid").strip()), signal.SIGUSR1)
 
     def _all_sockets_opened():
         return all([ site.file_exists("tmp/run/liveproxy/%s" % site_id)

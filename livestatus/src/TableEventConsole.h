@@ -38,7 +38,6 @@
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
-#include "Renderer.h"
 #include "Row.h"
 #include "StringColumn.h"
 #include "StringUtils.h"

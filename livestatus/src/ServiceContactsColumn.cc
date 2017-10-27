@@ -28,7 +28,7 @@
 #include "nagios.h"
 
 std::vector<std::string> ServiceContactsColumn::getValue(
-    Row row, const contact * /*auth_user*/) const {
+    Row row, const contact* /*auth_user*/) const {
     std::unordered_set<std::string> names;
     if (auto svc = columnData<service>(row)) {
         for (auto cm = svc->contacts; cm != nullptr; cm = cm->next) {

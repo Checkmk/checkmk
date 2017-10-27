@@ -26,7 +26,7 @@
 #include "Row.h"
 
 std::vector<std::string> MetricsColumn::getValue(
-    Row /*row*/, const contact * /*auth_user*/) const {
+    Row /*row*/, const contact* /*auth_user*/) const {
     (void)_mc;
     return {};
 }

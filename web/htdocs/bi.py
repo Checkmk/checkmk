@@ -3034,7 +3034,7 @@ def aggr_render_node(tree, title, show_host, mousecode=None, img_class=None):
 
     output = format_plugin_output(effective_state["output"])
     if output:
-        output = "<b class=bullet>&diams;</b>" + output
+        output = html.render_b(HTML("&diams;"), class_="bullet") + output
     else:
         output = ""
     h += '<span class="content output">%s</span>\n' % output
@@ -3081,7 +3081,7 @@ def aggr_render_leaf(tree, show_host, bare = False):
 
     if show_host:
         content += html.render_a(host.replace(" ", "&nbsp;"), href=host_url) \
-                 + html.render_b("&diams;", class_="bullet")
+                 + html.render_b(HTML("&diams;"), class_="bullet")
 
     if not service:
         content += html.render_a(_("Host&nbsp;status"), href=host_url)

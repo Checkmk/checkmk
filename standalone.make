@@ -23,7 +23,9 @@
 # Boston, MA 02110-1301 USA.
 
 # TODO(sp) We should really use autotools here...
-ifneq ($(shell which g++-6 2>/dev/null),)
+ifneq ($(shell which g++-7 2>/dev/null),)
+        CXX := g++-7 -std=c++14
+else ifneq ($(shell which g++-6 2>/dev/null),)
         CXX := g++-6 -std=c++14
 else
         CXX := g++-5 -std=c++14

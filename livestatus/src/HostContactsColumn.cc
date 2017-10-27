@@ -24,17 +24,8 @@
 
 #include "HostContactsColumn.h"
 #include <unordered_set>
-#include "Renderer.h"
 #include "Row.h"
 #include "nagios.h"
-
-void HostContactsColumn::output(Row row, RowRenderer &r,
-                                const contact *auth_user) const {
-    ListRenderer l(r);
-    for (const auto &name : getValue(row, auth_user)) {
-        l.output(name);
-    }
-}
 
 std::vector<std::string> HostContactsColumn::getValue(
     Row row, const contact * /*auth_user*/) const {

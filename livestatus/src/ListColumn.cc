@@ -25,6 +25,16 @@
 #include "ListColumn.h"
 #include "Filter.h"
 #include "ListFilter.h"
+#include "Renderer.h"
+#include "Row.h"
+
+void ListColumn::output(Row row, RowRenderer &r,
+                        const contact *auth_user) const {
+    ListRenderer l(r);
+    for (const auto &val : getValue(row, auth_user)) {
+        l.output(val);
+    }
+}
 
 std::unique_ptr<Filter> ListColumn::createFilter(
     RelationalOperator relOp, const std::string &value) const {

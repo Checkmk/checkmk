@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsNamesColumn.h"
-#include "Renderer.h"
 #include "Row.h"
 
 #ifdef CMC
@@ -35,14 +34,6 @@
 #else
 #include "nagios.h"
 #endif
-
-void CustomVarsNamesColumn::output(Row row, RowRenderer &r,
-                                   const contact *auth_user) const {
-    ListRenderer l(r);
-    for (const auto &name : getValue(row, auth_user)) {
-        l.output(name);
-    }
-}
 
 std::vector<std::string> CustomVarsNamesColumn::getValue(
     Row row, const contact * /*auth_user*/) const {

@@ -61,13 +61,12 @@ public:
 
     virtual ColumnType type() const = 0;
 
-    // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
-    // fixed, it is just an artifact.
     virtual void output(Row row, RowRenderer &r,
                         const contact *auth_user) const = 0;
 
     virtual std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const;
+
     virtual std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const;
 

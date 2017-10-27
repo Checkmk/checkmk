@@ -49,11 +49,11 @@ void ServiceListColumn::output(Row row, RowRenderer &r,
         if ((auth_user == nullptr) ||
             is_authorized_for(_mc, auth_user, svc->host_ptr, svc)) {
             // show only service name => no sublist
-            if (!_show_host && _info_depth == 0) {
+            if (!_hostname_required && _info_depth == 0) {
                 l.output(std::string(svc->description));
             } else {
                 SublistRenderer s(l);
-                if (_show_host) {
+                if (_hostname_required) {
                     s.output(std::string(svc->host_name));
                 }
                 s.output(std::string(svc->description));

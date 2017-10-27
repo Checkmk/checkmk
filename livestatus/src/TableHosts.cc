@@ -613,22 +613,22 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",
         indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
-        table->core(), false, false, 0));
+        table->core(), false, 0));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
         indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
-        table->core(), false, false, 1));
+        table->core(), false, 1));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
         indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
-        table->core(), false, false, 2));
+        table->core(), false, 2));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
         indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
-        table->core(), false, false, 3));
+        table->core(), false, 3));
 
     table->addColumn(std::make_unique<MetricsColumn>(
         prefix + "metrics",

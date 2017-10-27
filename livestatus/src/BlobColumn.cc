@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "BlobColumn.h"
+#include <stdexcept>
 #include "Renderer.h"
 #include "Row.h"
 
@@ -33,4 +34,10 @@ void BlobColumn::output(Row row, RowRenderer &r,
     } else {
         r.output(Null());
     }
+}
+
+std::unique_ptr<Filter> BlobColumn::createFilter(
+    RelationalOperator /*unused*/, const std::string & /*unused*/) const {
+    throw std::runtime_error("filtering on blob column " + name() +
+                             " not supported");
 }

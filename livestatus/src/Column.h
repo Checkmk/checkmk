@@ -65,7 +65,7 @@ public:
                         const contact *auth_user) const = 0;
 
     virtual std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const;
+        RelationalOperator relOp, const std::string &value) const = 0;
 
     virtual std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const;

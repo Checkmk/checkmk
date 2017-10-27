@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Column.h"
-#include <stdexcept>
 #include <utility>
 #include "Logger.h"
 
@@ -55,11 +54,6 @@ const void *Column::shiftPointer(Row row) const {
                            _extra_offset),
                      _extra_extra_offset),
                _offset);
-}
-
-std::unique_ptr<Filter> Column::createFilter(
-    RelationalOperator /*unused*/, const std::string & /*unused*/) const {
-    throw std::runtime_error("filtering on column " + _name + " not supported");
 }
 
 std::unique_ptr<Aggregator> Column::createAggregator(

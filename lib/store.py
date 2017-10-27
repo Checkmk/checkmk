@@ -154,13 +154,14 @@ def save_data_to_file(path, data, pretty=True):
 # Then the new file is written to a temporary file and moved to the target path
 def save_file(path, content, mode=0660):
     try:
+        tmp_path = None
+
         # Normally the file is already locked (when data has been loaded before with lock=True),
         # but lock it just to be sure we have the lock on the file.
         #
         # Please note that this already creates the file with 0 bytes (in case it is missing).
         aquire_lock(path)
 
-        tmp_path = None
         with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(path),
                                          prefix=".%s.new" % os.path.basename(path),
                                          delete=False) as tmp:

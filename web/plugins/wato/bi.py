@@ -832,7 +832,7 @@ class ModeBI(WatoMode):
         if not sub_rule_ids:
             html.open_li()
             html.open_a(href=edit_url)
-            html.write(title)
+            html.write_text(title)
             html.close_a()
             html.close_li()
         else:
@@ -910,12 +910,12 @@ class ModeBIPacks(ModeBI):
                 html.icon_button(delete_url, _("Delete this BI pack"), "delete")
             rules_url  = html.makeuri_contextless([("mode", "bi_rules"), ("pack", pack_id)])
             html.icon_button(rules_url, _("View and edit the rules and aggregations in this BI pack"), "bi_rules")
-            table.cell(_("ID"), pack_id)
-            table.cell(_("Title"), pack["title"])
-            table.cell(_("Public"), pack["public"] and _("Yes") or _("No"))
-            table.cell(_("Aggregations"), len(pack["aggregations"]), css="number")
-            table.cell(_("Rules"), len(pack["rules"]), css="number")
-            table.cell(_("Contact groups"), HTML(", ").join(map(self._render_contact_group, pack["contact_groups"])))
+            table.text_cell(_("ID"), pack_id)
+            table.text_cell(_("Title"), pack["title"])
+            table.text_cell(_("Public"), pack["public"] and _("Yes") or _("No"))
+            table.text_cell(_("Aggregations"), len(pack["aggregations"]), css="number")
+            table.text_cell(_("Rules"), len(pack["rules"]), css="number")
+            table.text_cell(_("Contact groups"), HTML(", ").join(map(self._render_contact_group, pack["contact_groups"])))
         table.end()
 
 
@@ -1165,22 +1165,22 @@ class ModeBIAggregations(ModeBI):
                 delete_url = html.makeactionuri([("_del_aggr", aggregation_id)])
                 html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 
-            table.cell(_("Nr."), aggregation_id+1, css="number")
-            table.cell("", css="buttons")
+            table.text_cell(_("Nr."), aggregation_id+1, css="number")
+            table.text_cell("", css="buttons")
 
             if aggregation["disabled"]:
                 html.icon(_("This aggregation is currently disabled."), "disabled")
             if aggregation["single_host"]:
                 html.icon(_("This aggregation covers only data from a single host."), "host")
 
-            table.cell(_("Groups"), ", ".join(aggregation["groups"]))
+            table.text_cell(_("Groups"), ", ".join(aggregation["groups"]))
 
             ruleid, description = self.rule_called_by_node(aggregation["node"])
             edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id), ("id", ruleid)])
             table.cell(_("Rule Tree"), css="bi_rule_tree")
 
             self.render_aggregation_rule_tree(aggregation)
-            table.cell(_("Note"), description)
+            table.text_cell(_("Note"), description)
         table.end()
 
 
@@ -1387,12 +1387,12 @@ class ModeBIRules(ModeBI):
                 else:
                     html.empty_icon_button()
 
-                table.cell(_("Level"), level or "", css="number")
-                table.cell(_("ID"), html.render_a(rule_id, edit_url))
-                table.cell(_("Parameters"), " ".join(rule["params"]))
-                table.cell(_("Title"), rule["title"])
-                table.cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
-                table.cell(_("Nodes"), len(rule["nodes"]), css="number")
+                table.text_cell(_("Level"), level or "", css="number")
+                table.text_cell(_("ID"), html.render_a(rule_id, edit_url))
+                table.text_cell(_("Parameters"), " ".join(rule["params"]))
+                table.text_cell(_("Title"), rule["title"])
+                table.text_cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
+                table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
                 table.cell(_("Used by"))
                 have_this = set([])
                 for (aggr_id, aggregation) in aggregations_that_use_rule.get(rule_id, []):
@@ -1402,7 +1402,7 @@ class ModeBIRules(ModeBI):
                         html.a(self.aggregation_title(aggregation), href=aggr_url)
                         html.br()
                         have_this.add(aggr_id)
-                table.cell(_("Comment"), rule.get("comment", ""))
+                table.text_cell(_("Comment"), rule.get("comment", ""))
         table.end()
 
 

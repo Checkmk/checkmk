@@ -2931,7 +2931,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
                 if is_leaf:
                     h += aggr_render_leaf(tree, show_host, bare = True) # .replace(" ", "&nbsp;")
                 else:
-                    h += tree[2]["title"].replace(" ", "&nbsp;")
+                    h += html.attrencode(tree[2]["title"].replace(" ", "&nbsp;"))
                 h += '</span> '
 
             if not is_leaf and not omit_content:
@@ -2957,7 +2957,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
 
             css_class = "open" if is_open else "closed"
 
-            h += aggr_render_node(tree, tree[2]["title"], show_host,
+            h += aggr_render_node(tree, html.attrencode(tree[2]["title"]), show_host,
                                   mousecode=mc, img_class=css_class)
             if not is_empty:
                 h += '<ul id="%d:%s" class="subtree %s">' % \

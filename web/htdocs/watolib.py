@@ -661,6 +661,9 @@ class ConfigDomainOMD(ConfigDomain):
                 }
                 del settings["LIVESTATUS_TCP_PORT"]
 
+                # Be compatible to older sites that don't have the key in their config yet
+                settings.setdefault("LIVESTATUS_TCP_ONLY_FROM", "0.0.0.0")
+
                 if settings["LIVESTATUS_TCP_ONLY_FROM"] != "0.0.0.0":
                     settings["LIVESTATUS_TCP"]["only_from"] = settings["LIVESTATUS_TCP_ONLY_FROM"].split()
 

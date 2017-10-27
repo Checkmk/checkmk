@@ -112,9 +112,7 @@ private:
 
     bool doStats() const;
     void doWait();
-    // TODO(sp) The column parameter should actually be a const reference, but
-    // Column::createFilter is not const-correct yet...
-    std::unique_ptr<Filter> createFilter(Column &column,
+    std::unique_ptr<Filter> createFilter(const Column &column,
                                          RelationalOperator relOp,
                                          const std::string &value);
     void parseFilterLine(char *line, VariadicFilter &filter);

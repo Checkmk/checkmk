@@ -31,7 +31,6 @@
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class Row;
-class RowRenderer;
 
 class CustomVarsValuesColumn : public ListColumn {
 public:
@@ -40,9 +39,6 @@ public:
                            int extra_offset, int extra_extra_offset, int offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset) {}
-
-    void output(Row row, RowRenderer &r,
-                const contact *auth_user) const override;
 
     std::vector<std::string> getValue(Row row,
                                       const contact *auth_user) const override;

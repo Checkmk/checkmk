@@ -23,17 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceGroupsColumn.h"
-#include "Renderer.h"
 #include "Row.h"
 #include "nagios.h"
-
-void ServiceGroupsColumn::output(Row row, RowRenderer &r,
-                                 const contact *auth_user) const {
-    ListRenderer l(r);
-    for (const auto &name : getValue(row, auth_user)) {
-        l.output(name);
-    }
-}
 
 std::vector<std::string> ServiceGroupsColumn::getValue(
     Row row, const contact * /*auth_user*/) const {

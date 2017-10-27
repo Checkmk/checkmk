@@ -29,7 +29,6 @@
 #include "FileSystem.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
-#include "Renderer.h"
 #include "Row.h"
 #include "pnp4nagios.h"
 
@@ -39,14 +38,6 @@
 #else
 #include "nagios.h"
 #endif
-
-void LogwatchListColumn::output(Row row, RowRenderer &r,
-                                const contact *auth_user) const {
-    ListRenderer l(r);
-    for (const auto &filename : getValue(row, auth_user)) {
-        l.output(filename);
-    }
-}
 
 std::vector<std::string> LogwatchListColumn::getValue(
     Row row, const contact * /*auth_user*/) const {

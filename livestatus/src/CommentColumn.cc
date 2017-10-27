@@ -23,21 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CommentColumn.h"
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <iterator>
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
 #include "nagios.h"
-
-std::vector<std::string> CommentColumn::getValue(
-    Row row, const contact * /*auth_user*/) const {
-    std::vector<std::string> ids;
-    for (const auto &comment : comments_for_row(row)) {
-        ids.push_back(std::to_string(comment._id));
-    }
-    return ids;
-}
 
 void CommentColumn::output(Row row, RowRenderer &r,
                            const contact * /* auth_user */) const {
@@ -56,6 +49,16 @@ void CommentColumn::output(Row row, RowRenderer &r,
             l.output(comment._id);
         }
     }
+}
+
+std::vector<std::string> CommentColumn::getValue(
+    Row row, const contact * /*auth_user*/) const {
+    std::vector<std::string> ids;
+    auto comments = comments_for_row(row);
+    std::transform(
+        comments.begin(), comments.end(), std::back_inserter(ids),
+        [](const auto &comment) { return std::to_string(comment._id); });
+    return ids;
 }
 
 std::vector<CommentData> CommentColumn::comments_for_row(Row row) const {

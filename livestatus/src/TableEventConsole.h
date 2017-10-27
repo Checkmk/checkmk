@@ -165,14 +165,6 @@ protected:
         }
 
         _column_t getValue(Row row) const { return _ecc.getValue(row); }
-
-        void output(Row row, RowRenderer &r,
-                    const contact * /* auth_user */) const override {
-            ListRenderer l(r);
-            for (const auto &elem : _ecc.getValue(row)) {
-                l.output(elem);
-            }
-        }
     };
 
     bool isAuthorizedForEvent(Row row, const contact *ctc) const;

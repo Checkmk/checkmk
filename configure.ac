@@ -49,12 +49,12 @@ AS_IF([test "x$enable_rrd_is_thread_safe" != "xno"], [RRDLIB_TO_CHECK=rrd],
       [RRDLIB_TO_CHECK=rrd_th])
 
 # Checks for programs.
-AC_PROG_CC([gcc-6 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])
+AC_PROG_CC([gcc-7 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])
 AC_PROG_CC_C99([], [])
 if test "x$ac_cv_prog_cc_c99" = xno; then
   AC_MSG_ERROR([Need a C99-compliant C compiler])
 fi
-AC_PROG_CXX([g++-6 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++])
+AC_PROG_CXX([g++-7 clang++-5.0 g++-6 clang++-4.0 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++])
 AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory])
 AC_PROG_RANLIB
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it. :-P

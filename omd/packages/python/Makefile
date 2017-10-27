@@ -38,7 +38,7 @@ build: bin/gcc bin/g++
 # The compiler detection code below is basically what part of AC_PROC_CXX does.
 bin/gcc:
 	@CC="" ; \
-	for PROG in gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang; do \
+	for PROG in gcc-7 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang; do \
 	    echo -n "checking for $$PROG... "; SAVED_IFS=$$IFS; IFS=: ; \
 	    for DIR in $$PATH; do \
 	        IFS=$$SAVED_IFS ; \
@@ -55,7 +55,7 @@ bin/gcc:
 
 bin/g++:
 	@CXX="" ; \
-	for PROG in g++-6 clang++-4.0 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++; do \
+	for PROG in g++-7 clang++-5.0 g++-6 clang++-4.0 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++; do \
 	    echo -n "checking for $$PROG... "; SAVED_IFS=$$IFS; IFS=: ; \
 	    for DIR in $$PATH; do \
 	        IFS=$$SAVED_IFS ; \

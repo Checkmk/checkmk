@@ -24,7 +24,7 @@
 
 
 SHELL         = /bin/bash
-VERSION       = 1.4.0p16
+VERSION       = 1.4.0p17
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
 GIT_REV       = $(shell git rev-parse --verify --short HEAD)

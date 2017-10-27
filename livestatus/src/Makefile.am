@@ -102,9 +102,10 @@ liblivestatus_a_SOURCES = \
         RendererPython.cc \
         RendererPython3.cc \
         ServiceContactsColumn.cc \
+        ServiceGroupMembersColumn.cc \
+        ServiceGroupMembersFilter.cc \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
-        ServiceListFilter.cc \
         ServiceListStateColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \

@@ -22,32 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ServiceListFilter_h
-#define ServiceListFilter_h
+#ifndef ServiceGroupMembersFilter_h
+#define ServiceGroupMembersFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <chrono>
 #include <string>
-#include "ColumnFilter.h"
-#include "contact_fwd.h"
+#include "ListFilter.h"
 #include "opids.h"
-class Row;
-class ServiceListColumn;
+class ServiceGroupMembersColumn;
 
-class ServiceListFilter : public ColumnFilter {
+class ServiceGroupMembersFilter : public ListFilter {
 public:
-    ServiceListFilter(const ServiceListColumn &column, bool hostname_required,
-                      RelationalOperator relOp, const std::string &value);
-    bool accepts(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) const override;
-    std::string columnName() const override;
-
-private:
-    const ServiceListColumn &_column;
-    const bool _hostname_required;
-    const RelationalOperator _relOp;
-    std::string _ref_host;
-    std::string _ref_service;
+    ServiceGroupMembersFilter(const ServiceGroupMembersColumn &column,
+                              RelationalOperator relOp,
+                              const std::string &value);
 };
 
-#endif  // ServiceListFilter_h
+#endif  // ServiceGroupMembersFilter_h

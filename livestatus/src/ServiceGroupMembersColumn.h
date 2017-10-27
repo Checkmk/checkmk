@@ -22,14 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ServiceListColumn_h
-#define ServiceListColumn_h
+#ifndef ServiceGroupMembersColumn_h
+#define ServiceGroupMembersColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
+#include "Column.h"
 #include "ListColumn.h"
+#include "opids.h"
+class Filter;
 class MonitoringCore;
 class Row;
 class RowRenderer;
@@ -41,55 +44,50 @@ enum class ServiceState;
 #include "nagios.h"
 #endif
 
-class ServiceListColumn : public ListColumn {
+class ServiceGroupMembersColumn : public ListColumn {
 public:
-    ServiceListColumn(const std::string &name, const std::string &description,
-                      int indirect_offset, int extra_offset,
-                      int extra_extra_offset, int offset, MonitoringCore *mc,
-                      int info_depth)
+    ServiceGroupMembersColumn(const std::string &name,
+                              const std::string &description,
+                              int indirect_offset, int extra_offset,
+                              int extra_extra_offset, int offset,
+                              MonitoringCore *mc, bool show_state)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset)
         , _mc(mc)
-        , _info_depth(info_depth) {}
+        , _show_state(show_state) {}
+
+    ColumnType type() const override { return ColumnType::list; };
 
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
 
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
+
     std::vector<std::string> getValue(Row row,
                                       const contact *auth_user) const override;
 
+    static std::string separator() { return ""; }
+
 private:
     MonitoringCore *_mc;
-    int _info_depth;
+    bool _show_state;
 
-    struct Entry {
-        Entry(const std::string &d, ServiceState cs, bool hbc,
-              const std::string &po, ServiceState lhs, uint32_t ca,
-              uint32_t mca, uint32_t sdt, bool a, bool spa)
-            : description(d)
+    struct Member {
+        Member(const std::string &hn, const std::string &d, ServiceState cs,
+               bool hbc)
+            : host_name(hn)
+            , description(d)
             , current_state(cs)
-            , has_been_checked(hbc)
-            , plugin_output(po)
-            , last_hard_state(lhs)
-            , current_attempt(ca)
-            , max_check_attempts(mca)
-            , scheduled_downtime_depth(sdt)
-            , acknowledged(a)
-            , service_period_active(spa) {}
+            , has_been_checked(hbc) {}
 
+        std::string host_name;
         std::string description;
         ServiceState current_state;
         bool has_been_checked;
-        std::string plugin_output;
-        ServiceState last_hard_state;
-        uint32_t current_attempt;
-        uint32_t max_check_attempts;
-        uint32_t scheduled_downtime_depth;
-        bool acknowledged;
-        bool service_period_active;
     };
 
-    std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
+    std::vector<Member> getMembers(Row row, const contact *auth_user) const;
 };
 
-#endif  // ServiceListColumn_h
+#endif  // ServiceGroupMembersColumn_h

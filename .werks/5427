@@ -1,0 +1,12 @@
+Title: Fixed different XSS issues triggerd from BI aggregation/rule titles/descriptions
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.4.0p17
+Date: 1509112079
+Class: security
+
+Different fields in the BI configuration (titles, ...) could be used to inject JS code
+into the WATO dialogs and the BI status views. This could be triggered by users with
+permission to administrate WATO.

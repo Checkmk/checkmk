@@ -1,9 +1,9 @@
 Title: WATO-Snapshots should warn if data in local/ is too much
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2016-07-06 11:43:10
 Targetversion: 1.5.0
-Class: bug
 
 We had the case that a user pu approx 4GB of tmp data below local/.
 During "Activate Changes" WATO creates a snapshot of this. This
@@ -17,3 +17,6 @@ limit? Or positively check all directories?
 Solution: We are planning to create some "todo / config and performance hints" 
 page that shows a list of things to tune to have a good setup. This page could
 make such a local/ directory size check.
+
+2017-10-27 08:51:48: changed state open -> done
+This will be part of the upcoming best practices tests.

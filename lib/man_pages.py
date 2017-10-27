@@ -285,7 +285,7 @@ def load_man_page_catalog():
                 raise
             parsed = _create_fallback_man_page(name, path, e)
 
-        if "catalog" in parsed:
+        if parsed.get("catalog"):
             cat = parsed["catalog"]
         else:
             cat = [ "unsorted" ]

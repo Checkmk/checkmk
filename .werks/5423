@@ -1,0 +1,11 @@
+Title: Fixed exception on "Catalog of check plugins page"
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p16
+Date: 1509090617
+
+The exception was caused by man pages having an empty "catalog:" header declaration.

@@ -1,0 +1,11 @@
+Title: Fixed broken bookmark list management for users with non ascii characters in User IDs
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1509091834
+
+

@@ -26,9 +26,12 @@
 #define NullColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "contact_fwd.h"
+#include "opids.h"
+class Filter;
 class Row;
 class RowRenderer;
 
@@ -39,9 +42,14 @@ public:
                int offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset) {}
+
     ColumnType type() const override { return ColumnType::null; }
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
+
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
 };
 
 #endif  // NullColumn_h

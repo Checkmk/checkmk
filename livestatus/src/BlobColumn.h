@@ -31,6 +31,8 @@
 #include <vector>
 #include "Column.h"
 #include "contact_fwd.h"
+#include "opids.h"
+class Filter;
 class Row;
 class RowRenderer;
 
@@ -41,10 +43,15 @@ public:
                int offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset) {}
-    virtual std::unique_ptr<std::vector<char>> getBlob(Row row) const = 0;
+    ColumnType type() const override { return ColumnType::blob; }
+
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
-    ColumnType type() const override { return ColumnType::blob; }
+
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
+
+    virtual std::unique_ptr<std::vector<char>> getBlob(Row row) const = 0;
 };
 
 #endif  // BlobColumn_h

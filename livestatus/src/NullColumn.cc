@@ -23,10 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "NullColumn.h"
+#include <stdexcept>
 #include "Renderer.h"
 #include "Row.h"
+class Filter;
 
 void NullColumn::output(Row /* row */, RowRenderer& r,
                         const contact* /* auth_user */) const {
     r.output(Null());
+}
+
+std::unique_ptr<Filter> NullColumn::createFilter(
+    RelationalOperator /*unused*/, const std::string& /*unused*/) const {
+    throw std::runtime_error("filtering on null column not supported");
 }

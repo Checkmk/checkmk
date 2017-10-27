@@ -40,9 +40,6 @@ def _change_liveproxyd_sites(site, sites):
     site.write_file("etc/check_mk/liveproxyd.mk",
         """sites.update(%r)""" % sites)
 
-    # Cleanup all existing socket files
-    site.execute(["rm", "tmp/run/liveproxy/*"])
-
     # Trigger config reload
     os.kill(int(site.read_file("tmp/run/liveproxyd.pid").strip()), signal.SIGUSR1)
 

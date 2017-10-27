@@ -23,76 +23,120 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceListColumn.h"
-#include <cstring>
-#include "Filter.h"
+#include <algorithm>
+#include <iterator>
 #include "Renderer.h"
 #include "Row.h"
-#include "ServiceListFilter.h"
+
+#ifdef CMC
+#include <cstdint>
+#include <memory>
+#include "Host.h"
+#include "LogEntry.h"
+#include "Service.h"
+#include "State.h"
+#include "Timeperiod.h"
+#else
+#include <cstring>
 #include "TimeperiodsCache.h"
 #include "auth.h"
-
-extern TimeperiodsCache *g_timeperiods_cache;
-
-ServiceListColumn::service_list ServiceListColumn::getMembers(Row row) const {
-    if (auto p = columnData<servicesmember *>(row)) {
-        return *p;
-    }
-    return nullptr;
-}
+#endif
 
 void ServiceListColumn::output(Row row, RowRenderer &r,
                                const contact *auth_user) const {
     ListRenderer l(r);
-    for (servicesmember *mem = getMembers(row); mem != nullptr;
-         mem = mem->next) {
-        service *svc = mem->service_ptr;
-        if ((auth_user == nullptr) ||
-            is_authorized_for(_mc, auth_user, svc->host_ptr, svc)) {
-            // show only service name => no sublist
-            if (!_hostname_required && _info_depth == 0) {
-                l.output(std::string(svc->description));
-            } else {
-                SublistRenderer s(l);
-                if (_hostname_required) {
-                    s.output(std::string(svc->host_name));
-                }
-                s.output(std::string(svc->description));
-                if (_info_depth >= 1) {
-                    s.output(svc->current_state);
-                    s.output(svc->has_been_checked);
-                }
-                if (_info_depth >= 2) {
-                    s.output(svc->plugin_output == nullptr
-                                 ? ""
-                                 : std::string(svc->plugin_output));
-                }
-                if (_info_depth >= 3) {
-                    s.output(svc->last_hard_state);
-                    s.output(svc->current_attempt);
-                    s.output(svc->max_attempts);
-                    s.output(svc->scheduled_downtime_depth);
-                    s.output(svc->problem_has_been_acknowledged);
-                    s.output(inCustomTimeperiod(svc, "SERVICE_PERIOD"));
-                }
+    for (const auto &entry : getEntries(row, auth_user)) {
+        if (_info_depth == 0) {
+            l.output(std::string(entry.description));
+        } else {
+            SublistRenderer s(l);
+            s.output(entry.description);
+            if (_info_depth >= 1) {
+                s.output(static_cast<int>(entry.current_state));
+                s.output(static_cast<int>(entry.has_been_checked));
+            }
+            if (_info_depth >= 2) {
+                s.output(entry.plugin_output);
+            }
+            if (_info_depth >= 3) {
+                s.output(static_cast<int>(entry.last_hard_state));
+                s.output(entry.current_attempt);
+                s.output(entry.max_check_attempts);
+                s.output(entry.scheduled_downtime_depth);
+                s.output(static_cast<int>(entry.acknowledged));
+                s.output(static_cast<int>(entry.service_period_active));
             }
         }
     }
 }
 
-std::unique_ptr<Filter> ServiceListColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<ServiceListFilter>(*this, _hostname_required, relOp,
-                                               value);
+std::vector<std::string> ServiceListColumn::getValue(
+    Row row, const contact *auth_user) const {
+    auto entries = getEntries(row, auth_user);
+    std::vector<std::string> descriptions;
+    std::transform(entries.begin(), entries.end(),
+                   std::back_inserter(descriptions),
+                   [](const auto &entry) { return entry.description; });
+    return descriptions;
 }
 
-int ServiceListColumn::inCustomTimeperiod(service *svc,
-                                          const char *varname) const {
+#ifndef CMC
+extern TimeperiodsCache *g_timeperiods_cache;
+
+namespace {
+bool inCustomTimeperiod(service *svc) {
     for (customvariablesmember *cvm = svc->custom_variables; cvm != nullptr;
          cvm = cvm->next) {
-        if (strcmp(cvm->variable_name, varname) == 0) {
-            return static_cast<int>(
-                g_timeperiods_cache->inTimeperiod(cvm->variable_value));
+        if (strcmp(cvm->variable_name, "SERVICE_PERIOD") == 0) {
+            return g_timeperiods_cache->inTimeperiod(cvm->variable_value);
         }
     }
-    return 1;  // assume 24X7
+    return true;  // assume 24X7
+}
+}  // namespace
+#endif
+
+std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
+    Row row, const contact *auth_user) const {
+    std::vector<Entry> entries;
+#ifdef CMC
+    if (auto mem = columnData<Host::services_t>(row)) {
+        for (auto &svc : *mem) {
+            if (auth_user == nullptr || svc->hasContact(_mc, auth_user)) {
+                entries.emplace_back(
+                    svc->name(),
+                    static_cast<ServiceState>(svc->state()->_current_state),
+                    svc->state()->_has_been_checked,
+                    svc->state()->_plugin_output,
+                    static_cast<ServiceState>(svc->state()->_last_hard_state),
+                    svc->state()->_current_attempt, svc->_max_check_attempts,
+                    svc->state()->_scheduled_downtime_depth,
+                    svc->state()->_acknowledged,
+                    svc->_service_period->isActive());
+            }
+        }
+    }
+#else
+    if (auto p = columnData<servicesmember *>(row)) {
+        for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
+            service *svc = mem->service_ptr;
+            if (auth_user == nullptr ||
+                is_authorized_for(_mc, auth_user, svc->host_ptr, svc)) {
+                entries.emplace_back(
+                    svc->description,
+                    static_cast<ServiceState>(svc->current_state),
+                    svc->has_been_checked != 0,
+                    svc->plugin_output == nullptr
+                        ? ""
+                        : std::string(svc->plugin_output),
+                    static_cast<ServiceState>(svc->last_hard_state),
+                    svc->current_attempt, svc->max_attempts,
+                    svc->scheduled_downtime_depth,
+                    svc->problem_has_been_acknowledged != 0,
+                    inCustomTimeperiod(svc));
+            }
+        }
+    }
+#endif
+    return entries;
 }

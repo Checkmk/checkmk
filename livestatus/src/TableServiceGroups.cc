@@ -28,7 +28,7 @@
 #include "MonitoringCore.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
-#include "ServiceListColumn.h"
+#include "ServiceGroupMembersColumn.h"
 #include "ServiceListStateColumn.h"
 #include "auth.h"
 #include "nagios.h"
@@ -66,16 +66,16 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, action_url)));
-    table->addColumn(std::make_unique<ServiceListColumn>(
+    table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
-        table->core(), true, 0));
-    table->addColumn(std::make_unique<ServiceListColumn>(
+        table->core(), false));
+    table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and has_been_checked",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
-        table->core(), true, 1));
+        table->core(), true));
 
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",

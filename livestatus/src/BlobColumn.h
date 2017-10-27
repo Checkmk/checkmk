@@ -43,6 +43,7 @@ public:
                int offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset) {}
+
     ColumnType type() const override { return ColumnType::blob; }
 
     void output(Row row, RowRenderer &r,
@@ -51,7 +52,7 @@ public:
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 
-    virtual std::unique_ptr<std::vector<char>> getBlob(Row row) const = 0;
+    virtual std::unique_ptr<std::vector<char>> getValue(Row row) const = 0;
 };
 
 #endif  // BlobColumn_h

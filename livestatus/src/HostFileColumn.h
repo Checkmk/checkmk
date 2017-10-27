@@ -39,7 +39,7 @@ public:
                    int extra_extra_offset, int offset, std::string base_dir,
                    std::string suffix);
 
-    std::unique_ptr<std::vector<char>> getBlob(Row row) const override;
+    std::unique_ptr<std::vector<char>> getValue(Row row) const override;
 
 private:
     std::string _base_dir;

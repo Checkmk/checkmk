@@ -29,7 +29,7 @@
 
 void BlobColumn::output(Row row, RowRenderer &r,
                         const contact * /* auth_user */) const {
-    if (std::unique_ptr<std::vector<char>> blob = getBlob(row)) {
+    if (std::unique_ptr<std::vector<char>> blob = getValue(row)) {
         r.output(*blob);
     } else {
         r.output(Null());

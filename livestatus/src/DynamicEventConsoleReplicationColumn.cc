@@ -61,7 +61,7 @@ public:
                      extra_extra_offset, offset)
         , _blob(std::move(blob)) {}
 
-    std::unique_ptr<std::vector<char>> getBlob(
+    std::unique_ptr<std::vector<char>> getValue(
         Row /* unused */) const override {
         return std::make_unique<std::vector<char>>(_blob.begin(), _blob.end());
     };

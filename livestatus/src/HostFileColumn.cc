@@ -49,7 +49,7 @@ HostFileColumn::HostFileColumn(const std::string& name,
     , _base_dir(std::move(base_dir))
     , _suffix(std::move(suffix)) {}
 
-std::unique_ptr<std::vector<char>> HostFileColumn::getBlob(Row row) const {
+std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
     if (_base_dir.empty()) {
         return nullptr;  // Path is not configured
     }

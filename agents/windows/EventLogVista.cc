@@ -338,7 +338,7 @@ std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
     return buffer;
 }
 
-uint64_t EventLogVista::seek(uint64_t record_id) {
+void EventLogVista::seek(uint64_t record_id) {
     {
         // The api to retrieve the oldest event log id is bugged. bloody hell...
         // to get the right offset if record_id is beyond the valid range, we
@@ -410,8 +410,6 @@ uint64_t EventLogVista::seek(uint64_t record_id) {
         throw win_exception(
             _winapi, std::string("failed to subscribe to ") + to_utf8(_path));
     }
-
-    return record_id;
 }
 
 std::unique_ptr<IEventLogRecord> EventLogVista::read() {
@@ -423,6 +421,25 @@ std::unique_ptr<IEventLogRecord> EventLogVista::read() {
     return std::make_unique<EventLogRecordVista>(
         _events[_next_event++], _evt.get(), _render_context->get_handle(),
         _winapi);
+}
+
+uint64_t EventLogVista::getLastRecordId() {
+    auto log = std::make_unique<EventLogWrapper>(
+        *_evt, EvtQueryReverseDirection, _path, _winapi);
+
+    EVT_HANDLE event_handle = nullptr;
+    DWORD num_events = 0;
+    if (evt().next &&
+        evt().next(log->get_handle(), 1, &event_handle, INFINITE, 0,
+                   &num_events)) {
+        auto event = std::make_unique<ManagedEventHandle>(*_evt, event_handle);
+
+        return EventLogRecordVista(event->get_handle(), _evt.get(),
+                                   _render_context->get_handle(), _winapi)
+            .recordId();
+    } else {
+        return 0;
+    }
 }
 
 bool EventLogVista::fillBuffer() {

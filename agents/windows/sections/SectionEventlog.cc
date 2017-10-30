@@ -166,6 +166,9 @@ std::pair<uint64_t, int> processEventLog(
         previouslyReadId + (uint64limits::max() == previouslyReadId ? 0 : 1);
     int worstState = 0;
     uint64_t lastRecordId = previouslyReadId;
+    // WARNING:
+    // seek implementations for pre-Vista and post-Vista are completely different.
+    // seek *must not* return any value as it is different between pre/post Vista.
     log.seek(seekPosition);
     while (auto record = std::move(log.read())) {
         lastRecordId = record->recordId();
@@ -210,8 +213,11 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
                 };
                 processEventLog(*log, previouslyReadId, level, outputRecord);
             }
-
-            return lastReadId;
+            // Return the last entry number. We need to fetch the last record ID
+            // separately if INT_MAX was used as seek offset and no new entries
+            // were read.
+            return (std::numeric_limits<uint64_t>::max() == lastReadId) ?
+              log->getLastRecordId() : lastReadId;
         }
     } catch (const std::exception &e) {
         Error(_logger) << "failed to read event log: " << e.what() << std::endl;

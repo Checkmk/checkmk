@@ -3421,61 +3421,62 @@ function bi_toggle_subtree(oImg, lazy)
         get_url(url);
 }
 
-function bi_update_tree(oImg, code)
+function bi_update_tree(container, code)
 {
     // Deactivate clicking - the update can last a couple
     // of seconds. In that time we must inhibit further clicking.
-    oImg.onclick = null;
+    container.onclick = null;
 
     // First find enclosding <div class=bi_tree_container>
-    var oDiv = oImg;
-    while (oDiv.className != "bi_tree_container") {
-        oDiv = oDiv.parentNode;
+    var bi_container = container;
+    while (bi_container && !has_class(bi_container, "bi_tree_container")) {
+        bi_container = bi_container.parentNode;
     }
 
-    post_url("bi_render_tree.py", oDiv.id, bi_update_tree_response, oDiv);
+    post_url("bi_render_tree.py", bi_container.id, bi_update_tree_response, bi_container);
 }
 
-function bi_update_tree_response(oDiv, code) {
-    oDiv.innerHTML = code;
-    executeJSbyObject(oDiv);
+function bi_update_tree_response(bi_container, code) {
+    bi_container.innerHTML = code;
+    executeJSbyObject(bi_container);
 }
 
-function bi_toggle_box(oDiv, lazy)
+function bi_toggle_box(container, lazy)
 {
-    var url = "bi_save_treestate.py?path=" + encodeURIComponent(oDiv.id);
+    var url = "bi_save_treestate.py?path=" + encodeURIComponent(container.id);
     var do_open;
 
-    if (oDiv.className.indexOf("open") >= 0) {
+    if (has_class(container, "open")) {
         if (lazy)
             return; // do not close in lazy mode
-        oDiv.className = oDiv.className.replace(/open/, "closed");
+        change_class(container, "open", "closed");
         url += "&state=closed";
         do_open = false;
     }
     else {
-        oDiv.className = oDiv.className.replace(/closed/, "open");
+        change_class(container, "closed", "open");
         url += "&state=open";
         do_open = true;
     }
 
+    // TODO: Make asynchronous
     if (lazy && do_open)
-        get_url(url, bi_update_tree, oDiv);
+        get_url(url, bi_update_tree, container);
     else {
         get_url(url);
         // find child nodes that belong to this node and
         // control visibility of those. Note: the BI child nodes
         // are *no* child nodes in HTML but siblings!
         var found = 0;
-        for (var i in oDiv.parentNode.children) {
-            var onode = oDiv.parentNode.children[i];
-            if (onode == oDiv)
+        for (var i in container.parentNode.children) {
+            var onode = container.parentNode.children[i];
+
+            if (onode == container)
                 found = 1;
-            else if (found == 1)
-                found ++;
+
             else if (found) {
-                if (onode.style.display)
-                    onode.style.display = "";
+                if (do_open)
+                    onode.style.display = "inline-block";
                 else
                     onode.style.display = "none";
                 return;
@@ -3484,14 +3485,16 @@ function bi_toggle_box(oDiv, lazy)
     }
 }
 
-function toggle_assumption(oImg, site, host, service)
+function toggle_assumption(link, site, host, service)
 {
+    var img = link.getElementsByTagName("img")[0];
+
     // get current state
-    var current = oImg.src;
+    var current = img.src;
     while (current.indexOf('/') > -1)
         current = current.substr(current.indexOf('/') + 1);
-    current = current.substr(7);
-    current = current.substr(0, current.length - 4);
+    current = current.replace(/button_assume_/, "").replace(/.png/, "");
+
     if (current == 'none')
         // Assume WARN when nothing assumed yet
         current = '1';
@@ -3511,7 +3514,7 @@ function toggle_assumption(oImg, site, host, service)
         url += '&service=' + encodeURIComponent(service);
     }
     url += '&state=' + current;
-    oImg.src = "images/assume_" + current + ".png";
+    img.src = "images/button_assume_" + current + ".png";
     get_url(url);
 }
 

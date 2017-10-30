@@ -138,6 +138,7 @@ td.aggrtree_box {
     border-style: solid;
     margin: 0px 0px 0px 0px;
     padding: 1px 3px;
+    margin-right: 3px;
     cursor: pointer;
 }
 .bibox_box.open.noleaf {

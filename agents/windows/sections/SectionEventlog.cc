@@ -165,12 +165,14 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
 
             out << "[[[" << to_utf8(logname) << "]]]\n";
             int worst_state = 0;
-            // record_number is the last event we read, so we want to seek past
+            uint64_t last_record = first_record;
+            // first_record is the last event we read, so we want to seek past
             // it
             bool record_maxxed = std::numeric_limits<uint64_t>::max() == first_record;
+            // WARNING:
+            // seek implementations for pre-Vista and post-Vista are completely different.
+            // seek *must not* return any value as it is different between pre/post Vista.
             log->seek(first_record + (record_maxxed ? 0 : 1));
-
-            uint64_t last_record = first_record;
 
             // first pass - determine if there are records above level
             std::shared_ptr<IEventLogRecord> record = log->read();
@@ -189,7 +191,6 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
             // second pass - if there were, print everything
             if (worst_state >= level) {
                 log->reset();
-                bool record_maxxed = std::numeric_limits<uint64_t>::max() == first_record;
                 log->seek(first_record + (record_maxxed ? 0 : 1));
 
                 std::shared_ptr<IEventLogRecord> record = log->read();
@@ -202,7 +203,11 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
                     record = log->read();
                 }
             }
-            first_record = last_record;
+            // Store the last entry number. We need to fetch the last record ID
+            // separately if INT_MAX was used as seek offset and no new entries
+            // were read.
+            first_record = (std::numeric_limits<uint64_t>::max() ==
+                            last_record) ? log->getLastRecordId() : last_record;
         }
     } catch (const std::exception &e) {
         crash_log("failed to read event log: %s\n", e.what());

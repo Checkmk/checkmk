@@ -142,7 +142,7 @@ public:
      * In this case this function will still work as expected but the next read
      * will be slow.
      */
-    virtual uint64_t seek(uint64_t record_id) override;
+    virtual void seek(uint64_t record_id) override;
 
     /**
      * read the next eventlog record
@@ -151,6 +151,11 @@ public:
      * longer
      */
     virtual std::shared_ptr<IEventLogRecord> read() override;
+
+    /**
+     * return the ID of the last record in eventlog
+     */
+    virtual uint64_t getLastRecordId() override;
 
     /**
      * get a list of dlls that contain eventid->message mappings for this

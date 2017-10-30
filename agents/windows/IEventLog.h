@@ -67,13 +67,17 @@ public:
      * seek to the specified record on the next read or, if the record_number is
      * older than the oldest existing record, seek to the beginning. If the
      * record_number is the highest representable uint32_t, seek to the end of
-     * the log such that only future events are retrieveda
+     * the log such that only future events are retrieved
      *
-     * returns the actual record_id we seeked to, which may differ from the
-     * input
-     * if it was outside the available range
+     * WARNING:
+     * The implementations for pre-Vista and post-Vista are completely
+     * different.
+     * We *must not* return any value as it is different between pre/post Vista.
+     * For obtaining the ID of the last record in eventlog, please use
+     * getLastRecordId instead. It has own implementations for pre/post Vista
+     * but return a uniformly correct value.
      */
-    virtual uint64_t seek(uint64_t record_id) = 0;
+    virtual void seek(uint64_t record_id) = 0;
 
     /**
      * read the next eventlog record
@@ -82,6 +86,11 @@ public:
      * longer
      */
     virtual std::shared_ptr<IEventLogRecord> read() = 0;
+
+    /**
+     * return the ID of the last record in eventlog
+     */
+    virtual uint64_t getLastRecordId() = 0;
 
     /**
      * get a list of dlls that contain eventid->message mappings for this

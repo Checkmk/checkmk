@@ -163,9 +163,11 @@ public:
 
     virtual void reset() override;
 
-    virtual uint64_t seek(uint64_t record_id) override;
+    virtual void seek(uint64_t record_id) override;
 
     virtual std::shared_ptr<IEventLogRecord> read() override;
+
+    virtual uint64_t getLastRecordId() override;
 
 private:
     static const int EVENT_BLOCK_SIZE = 16;

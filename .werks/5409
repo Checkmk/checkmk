@@ -1,0 +1,15 @@
+Title: Windows eventlog: wrong last state saved
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p17
+Date: 1509376514
+Class: fix
+
+The initial run of Windows agent after fresh installation caused an
+incorrect last state to be written in the state file eventstate.txt.
+As a result, no new entries were read from the eventlog. Broken since
+1.4.0p13 (commit 24be6456476f8768770eed0e5180026589a938bb).
+
+

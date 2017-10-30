@@ -264,23 +264,23 @@ void EventLog::reset() {
 
 std::wstring EventLog::getName() const { return _name; }
 
-uint64_t EventLog::seek(uint64_t record_number) {
+void EventLog::seek(uint64_t record_number) {
     DWORD oldest_record, record_count;
 
     if (_log.GetOldestEventLogRecord(&oldest_record) &&
         (record_number < oldest_record)) {
-        // can't seek to older record
+        // Beyond the oldest record:
         _record_offset = oldest_record;
     } else if (_log.GetNumberOfEventLogRecords(&record_count) &&
-               (record_number > oldest_record + record_count)) {
+               (record_number >= oldest_record + record_count)) {
+        // Beyond the newest record. Note: set offset intentionally to the next
+        // record after the currently last one!
         _record_offset = oldest_record + record_count;
     } else {
-        // not actually seeking but storing for the next actual read
+        // Within bounds, the offset for the next actual read:
         _record_offset = record_number;
     }
     _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
-
-    return _record_offset;
 }
 
 std::shared_ptr<IEventLogRecord> EventLog::read() {
@@ -316,6 +316,18 @@ std::shared_ptr<IEventLogRecord> EventLog::read() {
             new EventLogRecord(result, _resolver));
     } else {
         return std::shared_ptr<IEventLogRecord>();
+    }
+}
+
+uint64_t EventLog::getLastRecordId() {
+    DWORD oldestRecord = 0;
+    DWORD recordCount = 0;
+    if (_log.GetOldestEventLogRecord(&oldestRecord) &&
+        _log.GetNumberOfEventLogRecords(&recordCount) &&
+        oldestRecord + recordCount > 0) {
+        return oldestRecord + recordCount - 1;
+    } else {
+        return 0;
     }
 }
 

@@ -1,0 +1,13 @@
+Title: Improve agent bakery robustness when baking new agents
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1509360187
+Class: fix
+
+Depending on the complexity of the underlying configuration ruleset, some agents accidently could be marked as to be rebaked although there is no config change for them.
+This is now mitigated by applying a more robust hashing algorithm for the agent config hashes.
+
+After updating, no further action is required to apply the fix. Notably, no re-bake of existing agents is required.

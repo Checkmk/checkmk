@@ -34,6 +34,7 @@ from log import logger
 from cmk.regex import regex
 import cmk
 import multiprocessing
+from contextlib import contextmanager
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -2913,7 +2914,9 @@ class FoldableTreeRenderer(object):
 
 
     def render(self):
-        return self._render_tree()
+        with html.plugged():
+            self._render_tree()
+            return html.drain()
 
 
     def _render_tree(self):
@@ -2921,6 +2924,7 @@ class FoldableTreeRenderer(object):
         affected_hosts = self._row["aggr_hosts"]
         title = self._row["aggr_tree"]["title"]
         group = self._row["aggr_group"]
+
         url_id = html.urlencode_vars([
             ( "group", group ),
             ( "title", title ),
@@ -2930,9 +2934,9 @@ class FoldableTreeRenderer(object):
             ( "reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts) ),
         ])
 
-        return '<div id="%s" class=bi_tree_container>' % html.attrencode(url_id) + \
-               self._render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1) + \
-               '</div>'
+        html.open_div(id_=url_id, class_="bi_tree_container")
+        self._show_subtree(tree, path=[tree[2]["title"]], show_host=len(affected_hosts) > 1)
+        html.close_div()
 
 
     def _get_tree(self):
@@ -2942,14 +2946,11 @@ class FoldableTreeRenderer(object):
         return tree
 
 
-    def _render_subtree(self, tree, path, show_host):
+    def _show_subtree(self, tree, path, show_host):
         if self._boxes:
-            return self._render_bi_boxes(tree, path, show_host)
+            self._show_bi_boxes(tree, path, show_host)
         else:
-            if not self._is_leaf(tree):
-                return self._render_foldable_trees(tree, path, show_host)
-            else:
-                return self._aggr_render_leaf(tree, show_host, bare=self._boxes)
+            self._show_foldable_trees(tree, path, show_host)
 
 
     def _is_leaf(self, tree):
@@ -2977,135 +2978,157 @@ class FoldableTreeRenderer(object):
 
 
     def _get_mousecode(self, path):
-        return 'onclick="bi_toggle_%s(this, %d);" ' % ("box" if self._boxes else "subtree", self._omit_content(path))
+        return "bi_toggle_%s(this, %d);" % ("box" if self._boxes else "subtree", self._omit_content(path))
 
 
-    def _render_bi_boxes(self, tree, path, show_host):
+    def _show_bi_boxes(self, tree, path, show_host):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass = " " + _("assumed")
+            addclass = "assumed"
             effective_state = tree[1]
         else:
-            addclass = ""
+            addclass = None
             effective_state = tree[0]
 
         is_leaf = self._is_leaf(tree)
         if is_leaf:
             leaf = "leaf"
-            mc = ""
+            mc = None
         else:
             leaf = "noleaf"
             mc = self._get_mousecode(path)
 
+        classes = [
+            "bibox_box",
+            leaf,
+            "open" if self._is_open(path) else "closed",
+            "state",
+            "state%d" % effective_state["state"],
+            addclass,
+        ]
+
         omit = self._omit_root and len(path) == 1
-        h = ""
         if not omit:
-            h += '<span id="%d:%s" %s class="bibox_box %s %s state state%s%s">' % (
-                    self._expansion_level or 0, self._path_id(path), mc, leaf,"open" if self._is_open(path) else "closed", effective_state["state"], addclass)
+            html.open_span(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                           class_=classes, onclick=mc)
 
             if is_leaf:
-                h += self._aggr_render_leaf(tree, show_host, bare=True)
+                self._show_leaf(tree, show_host)
             else:
-                h += html.attrencode(tree[2]["title"].replace(" ", "&nbsp;"))
+                html.write_text(tree[2]["title"].replace(" ", "&nbsp;"))
 
-            h += '</span> '
+            html.close_span()
 
         if not is_leaf and not self._omit_content(path):
-            h += '<span class="bibox" style="%s">' % ("display: none;" if not self._is_open(path) and not omit else "")
-            parts = []
+            html.open_span(class_="bibox", style="display: none;" if not self._is_open(path) and not omit else "")
             for node in tree[3]:
                 new_path = path + [node[2]["title"]]
-                h += self._render_subtree(node, new_path, show_host)
-            h += '</span>'
-
-        return h
+                self._show_subtree(node, new_path, show_host)
+            html.close_span()
 
 
-    def _render_foldable_trees(self, tree, path, show_host):
-        h = ""
-        h += '<span class=title>'
+    def _show_foldable_trees(self, tree, path, show_host):
+        if self._is_leaf(tree):
+            self._show_leaf(tree, show_host)
+            return
+
+        html.open_span(class_="title")
 
         is_empty = len(tree[3]) == 0
         if is_empty:
-            mc = ''
+            mc = None
         else:
             mc = self._get_mousecode(path)
 
         css_class = "open" if self._is_open(path) else "closed"
 
-        h += self._aggr_render_node(tree, html.attrencode(tree[2]["title"]), show_host,
-                              mousecode=mc, img_class=css_class)
+        with self._aggr_show_node(tree, show_host, mousecode=mc, img_class=css_class):
+            html.write_text(tree[2]["title"])
+
         if not is_empty:
-            h += '<ul id="%d:%s" class="subtree %s">' % \
-                    (self._expansion_level or 0, self._path_id(path), css_class)
+            html.open_ul(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                         class_=["subtree", css_class])
 
             if not self._omit_content(path):
                 for node in tree[3]:
                     if not node[2].get("hidden"):
                         new_path = path + [node[2]["title"]]
-                        h += '<li>' + self._render_subtree(node, new_path, show_host) + '</li>\n'
-            h += '</ul>'
-        return h + '</span>\n'
+                        html.open_li()
+                        self._show_subtree(node, new_path, show_host)
+                        html.close_li()
+
+            html.close_ul()
+
+        html.close_span()
 
 
-    def _aggr_render_node(self, tree, title, show_host, mousecode=None, img_class=None):
+    @contextmanager
+    def _aggr_show_node(self, tree, show_host, mousecode=None, img_class=None):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
-            addclass = " " + _("assumed")
+            addclass = "assumed"
             effective_state = tree[1]
         else:
-            addclass = ""
+            addclass = None
             effective_state = tree[0]
 
-        if tree[0]["in_downtime"] == 2:
-            title = ('<img class="icon bi" src="images/icon_downtime.png" title="%s">' % \
-                _("This element is currently in a scheduled downtime.")) + title
-        elif tree[0]["in_downtime"] == 1:
-            # only display host downtime if the service has no own downtime
-            title = ('<img class="icon bi" src="images/icon_derived_downtime.png" title="%s">' % \
-                     _("One of the subelements is in a scheduled downtime.")) + title
-
-        if tree[0]["acknowledged"]:
-            title = ('<img class="icon bi" src="images/icon_ack.png" title="%s">' % \
-                _("This problem has been acknowledged.")) + title
-
-        if not tree[0]["in_service_period"]:
-            title = ('<img class="icon bi" src="images/icon_outof_serviceperiod.png" title="%s">' % \
-                _("This element is currently not in its service period.")) + title
-
-
-        h = '<span class="content state state%d%s">%s</span>\n' \
-             % (effective_state["state"] if effective_state["state"] != None else -1, addclass, render_bi_state(effective_state["state"]))
+        html.open_span(
+            class_=["content", "state", "state%d" % effective_state["state"] if effective_state["state"] != None else -1,
+                    addclass])
+        html.write_text(render_bi_state(effective_state["state"]))
+        html.close_span()
 
         if mousecode:
-            state_message = ""
-            if str(effective_state["state"]) in tree[2].get("state_messages", {}):
-                state_message = "<b class=bullet>&diams;</b>" + html.attrencode(tree[2]["state_messages"][str(effective_state["state"])])
-
             if img_class:
-                h += '<img src="images/tree_black_closed.png" class="treeangle %s"%s>' % \
-                                                                       (img_class, mousecode)
-            h += '<span class="content name" %s>%s%s</span>' % (mousecode, title, state_message)
+                html.img(src="images/tree_black_closed.png", class_=["treeangle", img_class],
+                         onclick=mousecode)
 
-        else:
-            h += title
+            html.open_span(class_=["content", "name"])
+
+        icon_name, icon_title = None, None
+        if tree[0]["in_downtime"] == 2:
+            icon_name = "downtime"
+            icon_title = _("This element is currently in a scheduled downtime.")
+
+        elif tree[0]["in_downtime"] == 1:
+            # only display host downtime if the service has no own downtime
+            icon_name = "derived_downtime"
+            icon_title = _("One of the subelements is in a scheduled downtime.")
+
+        if tree[0]["acknowledged"]:
+            icon_name = "ack"
+            icon_title = _("This problem has been acknowledged.")
+
+        if not tree[0]["in_service_period"]:
+            icon_name = "outof_serviceperiod"
+            icon_title = _("This element is currently not in its service period.")
+
+        if icon_name and icon_title:
+            html.icon(icon=icon_name, help=icon_title, class_=["icon", "bi"])
+
+        yield
+
+        if mousecode:
+            if str(effective_state["state"]) in tree[2].get("state_messages", {}):
+                html.b("&diams;", class_="bullet")
+                html.write_text(tree[2]["state_messages"][str(effective_state["state"])])
+
+            html.close_span()
 
         output = format_plugin_output(effective_state["output"])
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
             output = ""
-        h += '<span class="content output">%s</span>\n' % output
-        return h
+
+        html.span(output, class_=["content", "output"])
 
 
-    def _aggr_render_leaf(self, tree, show_host, bare=False):
+    def _show_leaf(self, tree, show_host):
         site, host = tree[2]["host"]
         service = tree[2].get("service")
-        if bare:
-            content = u""
-        else:
-            content = u"" + self._render_assume_icon(site, host, service)
+        if not self._boxes:
+            self._assume_icon(site, host, service)
 
         # Four cases:
         # (1) zbghora17 . Host status   (show_host == True, service == None)
@@ -3119,39 +3142,41 @@ class FoldableTreeRenderer(object):
         if service:
             service_url = html.makeuri_contextless([("view_name", "service"), ("site", site), ("host", host), ("service", service)], filename="view.py")
 
-        if show_host:
-            content += html.render_a(host.replace(" ", "&nbsp;"), href=host_url) \
-                     + html.render_b(HTML("&diams;"), class_="bullet")
+        @contextmanager
+        def dummy_context_manager(tree, show_host):
+            yield
 
-        if not service:
-            content += html.render_a(_("Host&nbsp;status"), href=host_url)
+        if self._boxes:
+            context_manager = dummy_context_manager
         else:
-            content += html.render_a(service.replace(" ", "&nbsp;"), href=service_url)
+            context_manager = self._aggr_show_node
 
-        if bare:
-            return content
-        else:
-            return self._aggr_render_node(tree, content, show_host)
+        with context_manager(tree, show_host):
+            if show_host:
+                html.render(host.replace(" ", "&nbsp;"), href=host_url)
+                html.b(HTML("&diams;"), class_="bullet")
+
+            if not service:
+                html.a(_("Host&nbsp;status"), href=host_url)
+            else:
+                html.a(service.replace(" ", "&nbsp;"), href=service_url)
 
 
-    def _render_assume_icon(self, site, host, service):
+    def _assume_icon(self, site, host, service):
         if service:
             key = (site, host, service)
         else:
             key = (site, host)
         ass = g_assumptions.get(key)
-        # TODO: Non-Ascii-Characters do not work yet!
-        mousecode = \
-           u'onmouseover="this.style.cursor=\'pointer\';" ' \
-           'onmouseout="this.style.cursor=\'auto\';" ' \
-           'title="%s" ' \
-           'onclick="toggle_assumption(this, \'%s\', \'%s\', \'%s\');" ' % \
-             (_("Assume another state for this item (reload page to activate)"),
-             # MIST: DAS HIER MUSS verfünftig für Javascript encodiert werden.
-             # Das Ausgangsmaterial sind UTF-8 kodierte str-Objekte.
-              site, host, service != None and service.replace('\\', '\\\\') or '')
-        current = str(ass).lower()
-        return u'<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
+        current_state = str(ass).lower()
+
+        html.icon_button(
+            url=None,
+            help=_("Assume another state for this item (reload page to activate)"),
+            icon="assume_%s" % current_state,
+            onclick="toggle_assumption(this, '%s', '%s', '%s');" % (site, host, service.replace('\\', '\\\\') if service else ''),
+            cssclass="assumption",
+        )
 
 
 

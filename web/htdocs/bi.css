@@ -82,7 +82,8 @@ tr.even0 .aggrtree ul.subtree {
     display:inline-block;
 }
 
-.aggrtree img.assumption, .aggrtree img.bi.icon {
+.aggrtree a.assumption img.icon,
+.aggrtree img.bi.icon {
     width: 13px;
     height: 13px;
     margin: 0;

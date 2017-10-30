@@ -229,18 +229,18 @@ multisite_painter_options["aggr_treetype"] = {
         title = _("Type of tree layout"),
         default_value = "foldable",
         choices = [
-            ("foldable",        _("foldable")),
-            ("boxes",           _("boxes")),
-            ("boxes-omit-root", _("boxes (omit root)")),
-            ("bottom-up",       _("bottom up")),
-            ("top-down",        _("top down")),
+            ("foldable",        _("Foldable tree")),
+            ("boxes",           _("Boxes")),
+            ("boxes-omit-root", _("Boxes (omit root)")),
+            ("bottom-up",       _("Table: bottom up")),
+            ("top-down",        _("Table: top down")),
         ],
     )
 }
 
 multisite_painter_options["aggr_wrap"] = {
     'valuespec' : DropdownChoice(
-         title = _("Handling of too long texts"),
+         title = _("Handling of too long texts (affects only table)"),
          default_value = "wrap",
          choices = [
             ("wrap",   _("wrap")),
@@ -249,84 +249,31 @@ multisite_painter_options["aggr_wrap"] = {
     )
 }
 
-# TODO: Cleanup this render mode to be handled equal to bi.FoldableTreeRenderer().
-#       The different render modes should be handled with subclasses.
-def paint_aggr_tree_ltr(row, mirror):
-    wrap = painter_options.get("aggr_wrap")
-
-    if wrap == "wrap":
-        td = '<td'
-    else:
-        td = '<td style="white-space: nowrap;"'
-
-    renderer = bi.FoldableTreeRenderer(row, boxes=False, omit_root=False,
-                                    expansion_level=999, only_problems=False, lazy=False)
-
-    def gen_table(tree, height, show_host):
-        if len(tree) == 3:
-            return gen_leaf(tree, height, show_host)
-        else:
-            return gen_node(tree, height, show_host)
-
-    def gen_leaf(tree, height, show_host):
-        return [(renderer._aggr_render_leaf(tree, show_host), height, [])]
-
-    def gen_node(tree, height, show_host):
-        leaves = []
-        for node in tree[3]:
-            if not node[2].get("hidden"):
-                leaves += gen_table(node, height - 1, show_host)
-        h = '<div class="aggr tree">' \
-            + renderer._aggr_render_node(tree, html.attrencode(tree[2]["title"]), show_host) + "</div>"
-        if leaves:
-            leaves[0][2].append((len(leaves), h))
-        return leaves
-
-    tree = row["aggr_treestate"]
-    if painter_options.get("aggr_onlyproblems") == "1":
-        tree = bi.filter_tree_only_problems(tree)
-    depth = bi.status_tree_depth(tree)
-    leaves = gen_table(tree, depth, row["aggr_hosts"] > 1)
-    h = '<table class="aggrtree ltr">'
-    odd = "odd"
-    for code, colspan, parents in leaves:
-        h += '<tr>\n'
-        leaf_td = td + ' class="leaf %s"' % odd
-        odd = "even" if odd == "odd" else "odd"
-        if colspan > 1:
-            leaf_td += ' colspan=%d' % colspan
-        leaf_td += '>%s</td>\n' % code
-
-        tds = [leaf_td]
-        for rowspan, c in parents:
-            tds.append(td + ' class=node rowspan=%d>%s</td>\n' % (rowspan, c))
-        if mirror:
-            tds.reverse()
-        h += "".join(tds)
-        h += '</tr>\n'
-
-    h += '</table>'
-    return "aggrtree", h
-
-
-def paint_aggregated_tree_state(row):
+def paint_aggregated_tree_state(row, force_renderer_cls=None):
     if html.is_api_call():
         return bi.render_tree_json(row)
 
     treetype        = painter_options.get("aggr_treetype")
     expansion_level = int(painter_options.get("aggr_expand"))
     only_problems   = painter_options.get("aggr_onlyproblems") == "1"
+    wrap_texts      = painter_options.get("aggr_wrap")
 
-    if treetype == "foldable":
-        return bi.render_tree_foldable(row,  False,  False, expansion_level, only_problems, lazy=True)
-    elif treetype == "boxes":
-        return bi.render_tree_foldable(row,  True, False, expansion_level, only_problems, lazy=True)
-    elif treetype == "boxes-omit-root":
-        return bi.render_tree_foldable(row,  True, True, expansion_level, only_problems, lazy=True)
+    if force_renderer_cls:
+        cls = force_renderer_cls
+    elif treetype == "foldable":
+        cls = bi.FoldableTreeRendererTree
+    elif treetype in [ "boxes", "boxes-omit-root" ]:
+        cls = bi.FoldableTreeRendererBoxes
     elif treetype == "bottom-up":
-        return paint_aggr_tree_ltr(row, False)
+        cls = bi.FoldableTreeRendererBottomUp
     elif treetype == "top-down":
-        return paint_aggr_tree_ltr(row, True)
+        cls = bi.FoldableTreeRendererTopDown
+    else:
+        raise NotImplementedError()
+
+    renderer = cls(row, omit_root=False, expansion_level=expansion_level, only_problems=only_problems,
+                   lazy=True, wrap_texts=wrap_texts)
+    return renderer.css_class(), renderer.render()
 
 
 multisite_painters["aggr_treestate"] = {
@@ -341,6 +288,5 @@ multisite_painters["aggr_treestate_boxed"] = {
     "title"   : _("Aggregation: simplistic boxed layout"),
     "short"   : _("Tree"),
     "columns" : [ "aggr_treestate", "aggr_hosts" ],
-    "paint"   : lambda row: bi.render_tree_foldable(row, boxes=True, omit_root=True,
-                expansion_level=bi.load_ex_level(), only_problems=False, lazy=True),
+    "paint"   : lambda row: paint_aggregated_tree_state(row, force_renderer_cls=bi.FoldableTreeRendererBoxes),
 }

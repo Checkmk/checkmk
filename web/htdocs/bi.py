@@ -2885,14 +2885,19 @@ def render_tree_json(row):
 
 
 def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
-    renderer = FoldableTreeRenderer(row, boxes, omit_root, expansion_level, only_problems, lazy)
+    if boxes:
+        cls = FoldableTreeRendererBoxes
+    else:
+        cls = FoldableTreeRendererTree
+
+    renderer = cls(row, omit_root, expansion_level, only_problems, lazy)
     return renderer.css_class(), renderer.render()
 
 
+
 class FoldableTreeRenderer(object):
-    def __init__(self, row, boxes, omit_root, expansion_level, only_problems, lazy):
+    def __init__(self, row, omit_root, expansion_level, only_problems, lazy):
         self._row             = row
-        self._boxes           = boxes
         self._omit_root       = omit_root
         self._expansion_level = expansion_level
         self._only_problems   = only_problems
@@ -2910,7 +2915,7 @@ class FoldableTreeRenderer(object):
 
 
     def css_class(self):
-        return "aggrtree" + ("_box" if self._boxes else "")
+        raise NotImplementedError()
 
 
     def render(self):
@@ -2929,7 +2934,7 @@ class FoldableTreeRenderer(object):
             ( "group", group ),
             ( "title", title ),
             ( "omit_root", "yes" if self._omit_root else ""),
-            ( "boxes", "yes" if self._boxes else ""),
+            ( "renderer", self.__class__.__name__),
             ( "only_problems", "yes" if self._only_problems else ""),
             ( "reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts) ),
         ])
@@ -2939,18 +2944,31 @@ class FoldableTreeRenderer(object):
         html.close_div()
 
 
+    def _show_subtree(self, tree, path, show_host):
+        raise NotImplementedError()
+
+
     def _get_tree(self):
         tree = self._row["aggr_treestate"]
         if self._only_problems:
-            tree = filter_tree_only_problems(tree)
+            tree = self._filter_tree_only_problems(tree)
         return tree
 
 
-    def _show_subtree(self, tree, path, show_host):
-        if self._boxes:
-            self._show_bi_boxes(tree, path, show_host)
-        else:
-            self._show_foldable_trees(tree, path, show_host)
+    # Convert tree to tree contain only node in non-OK state
+    def _filter_tree_only_problems(self, tree):
+        state, assumed_state, node, subtrees = tree
+        # remove subtrees in state OK
+        new_subtrees = []
+        for subtree in subtrees:
+            effective_state = subtree[1] if subtree[1] is not None else subtree[0]
+            if effective_state["state"] not in [ OK, PENDING ]:
+                if len(subtree) == 3:
+                    new_subtrees.append(subtree)
+                else:
+                    new_subtrees.append(self._filter_tree_only_problems(subtree))
+
+        return state, assumed_state, node, new_subtrees
 
 
     def _is_leaf(self, tree):
@@ -2978,56 +2996,82 @@ class FoldableTreeRenderer(object):
 
 
     def _get_mousecode(self, path):
-        return "bi_toggle_%s(this, %d);" % ("box" if self._boxes else "subtree", self._omit_content(path))
+        return "%s(this, %d);" % (self._toggle_js_function(), self._omit_content(path))
 
 
-    def _show_bi_boxes(self, tree, path, show_host):
-        # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
-        if tree[1] and tree[0] != tree[1]:
-            addclass = "assumed"
-            effective_state = tree[1]
-        else:
-            addclass = None
-            effective_state = tree[0]
+    def _toggle_js_function(self):
+        raise NotImplementedError()
 
-        is_leaf = self._is_leaf(tree)
-        if is_leaf:
-            leaf = "leaf"
-            mc = None
-        else:
-            leaf = "noleaf"
-            mc = self._get_mousecode(path)
 
-        classes = [
-            "bibox_box",
-            leaf,
-            "open" if self._is_open(path) else "closed",
-            "state",
-            "state%d" % effective_state["state"],
-            addclass,
-        ]
+    def _show_leaf(self, tree, show_host):
+        site, host = tree[2]["host"]
+        service = tree[2].get("service")
+        self._assume_icon(site, host, service)
 
-        omit = self._omit_root and len(path) == 1
-        if not omit:
-            html.open_span(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                           class_=classes, onclick=mc)
+        # Four cases:
+        # (1) zbghora17 . Host status   (show_host == True, service == None)
+        # (2) zbghora17 . CPU load      (show_host == True, service != None)
+        # (3) Host Status               (show_host == False, service == None)
+        # (4) CPU load                  (show_host == False, service != None)
 
-            if is_leaf:
-                self._show_leaf(tree, show_host)
+        if show_host or not service:
+            host_url = html.makeuri_contextless([("view_name", "hoststatus"), ("site", site), ("host", host)], filename="view.py")
+
+        if service:
+            service_url = html.makeuri_contextless([("view_name", "service"), ("site", site), ("host", host), ("service", service)], filename="view.py")
+
+        with self._show_node(tree, show_host):
+            if show_host:
+                html.render(host.replace(" ", "&nbsp;"), href=host_url)
+                html.b(HTML("&diams;"), class_="bullet")
+
+            if not service:
+                html.a(_("Host&nbsp;status"), href=host_url)
             else:
-                html.write_text(tree[2]["title"].replace(" ", "&nbsp;"))
-
-            html.close_span()
-
-        if not is_leaf and not self._omit_content(path):
-            html.open_span(class_="bibox", style="display: none;" if not self._is_open(path) and not omit else "")
-            for node in tree[3]:
-                new_path = path + [node[2]["title"]]
-                self._show_subtree(node, new_path, show_host)
-            html.close_span()
+                html.a(service.replace(" ", "&nbsp;"), href=service_url)
 
 
-    def _show_foldable_trees(self, tree, path, show_host):
+    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
+        raise NotImplementedError()
+
+
+    def _assume_icon(self, site, host, service):
+        if service:
+            key = (site, host, service)
+        else:
+            key = (site, host)
+        ass = g_assumptions.get(key)
+        current_state = str(ass).lower()
+
+        html.icon_button(
+            url=None,
+            help=_("Assume another state for this item (reload page to activate)"),
+            icon="assume_%s" % current_state,
+            onclick="toggle_assumption(this, '%s', '%s', '%s');" % (site, host, service.replace('\\', '\\\\') if service else ''),
+            cssclass="assumption",
+        )
+
+
+    def _render_bi_state(self, state):
+        return { PENDING: _("PD"),
+                 OK:      _("OK"),
+                 WARN:    _("WA"),
+                 CRIT:    _("CR"),
+                 UNKNOWN: _("UN"),
+                 MISSING: _("MI"),
+                 UNAVAIL: _("NA"),
+        }.get(state, _("??"))
+
+
+
+class FoldableTreeRendererTree(FoldableTreeRenderer):
+    def css_class(self):
+        return "aggrtree"
+
+    def _toggle_js_function(self):
+        return "bi_toggle_subtree"
+
+    def _show_subtree(self, tree, path, show_host):
         if self._is_leaf(tree):
             self._show_leaf(tree, show_host)
             return
@@ -3042,7 +3086,7 @@ class FoldableTreeRenderer(object):
 
         css_class = "open" if self._is_open(path) else "closed"
 
-        with self._aggr_show_node(tree, show_host, mousecode=mc, img_class=css_class):
+        with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
             html.write_text(tree[2]["title"])
 
         if not is_empty:
@@ -3063,7 +3107,7 @@ class FoldableTreeRenderer(object):
 
 
     @contextmanager
-    def _aggr_show_node(self, tree, show_host, mousecode=None, img_class=None):
+    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
             addclass = "assumed"
@@ -3075,7 +3119,7 @@ class FoldableTreeRenderer(object):
         html.open_span(
             class_=["content", "state", "state%d" % effective_state["state"] if effective_state["state"] != None else -1,
                     addclass])
-        html.write_text(render_bi_state(effective_state["state"]))
+        html.write_text(self._render_bi_state(effective_state["state"]))
         html.close_span()
 
         if mousecode:
@@ -3124,87 +3168,70 @@ class FoldableTreeRenderer(object):
         html.span(output, class_=["content", "output"])
 
 
-    def _show_leaf(self, tree, show_host):
-        site, host = tree[2]["host"]
-        service = tree[2].get("service")
-        if not self._boxes:
-            self._assume_icon(site, host, service)
 
-        # Four cases:
-        # (1) zbghora17 . Host status   (show_host == True, service == None)
-        # (2) zbghora17 . CPU load      (show_host == True, service != None)
-        # (3) Host Status               (show_host == False, service == None)
-        # (4) CPU load                  (show_host == False, service != None)
 
-        if show_host or not service:
-            host_url = html.makeuri_contextless([("view_name", "hoststatus"), ("site", site), ("host", host)], filename="view.py")
+class FoldableTreeRendererBoxes(FoldableTreeRenderer):
+    def css_class(self):
+        return "aggrtree_box"
 
-        if service:
-            service_url = html.makeuri_contextless([("view_name", "service"), ("site", site), ("host", host), ("service", service)], filename="view.py")
 
-        @contextmanager
-        def dummy_context_manager(tree, show_host):
-            yield
+    def _toggle_js_function(self):
+        return "bi_toggle_box"
 
-        if self._boxes:
-            context_manager = dummy_context_manager
+
+    def _show_subtree(self, tree, path, show_host):
+        # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+        if tree[1] and tree[0] != tree[1]:
+            addclass = "assumed"
+            effective_state = tree[1]
         else:
-            context_manager = self._aggr_show_node
+            addclass = None
+            effective_state = tree[0]
 
-        with context_manager(tree, show_host):
-            if show_host:
-                html.render(host.replace(" ", "&nbsp;"), href=host_url)
-                html.b(HTML("&diams;"), class_="bullet")
+        is_leaf = self._is_leaf(tree)
+        if is_leaf:
+            leaf = "leaf"
+            mc = None
+        else:
+            leaf = "noleaf"
+            mc = self._get_mousecode(path)
 
-            if not service:
-                html.a(_("Host&nbsp;status"), href=host_url)
+        classes = [
+            "bibox_box",
+            leaf,
+            "open" if self._is_open(path) else "closed",
+            "state",
+            "state%d" % effective_state["state"],
+            addclass,
+        ]
+
+        omit = self._omit_root and len(path) == 1
+        if not omit:
+            html.open_span(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                           class_=classes, onclick=mc)
+
+            if is_leaf:
+                self._show_leaf(tree, show_host)
             else:
-                html.a(service.replace(" ", "&nbsp;"), href=service_url)
+                html.write_text(tree[2]["title"].replace(" ", "&nbsp;"))
+
+            html.close_span()
+
+        if not is_leaf and not self._omit_content(path):
+            html.open_span(class_="bibox", style="display: none;" if not self._is_open(path) and not omit else "")
+            for node in tree[3]:
+                new_path = path + [node[2]["title"]]
+                self._show_subtree(node, new_path, show_host)
+            html.close_span()
+
+
+    @contextmanager
+    def _show_node(tree, show_host, mousecode=None, img_class=None):
+        yield
 
 
     def _assume_icon(self, site, host, service):
-        if service:
-            key = (site, host, service)
-        else:
-            key = (site, host)
-        ass = g_assumptions.get(key)
-        current_state = str(ass).lower()
-
-        html.icon_button(
-            url=None,
-            help=_("Assume another state for this item (reload page to activate)"),
-            icon="assume_%s" % current_state,
-            onclick="toggle_assumption(this, '%s', '%s', '%s');" % (site, host, service.replace('\\', '\\\\') if service else ''),
-            cssclass="assumption",
-        )
-
-
-
-def render_bi_state(state):
-    return { PENDING: _("PD"),
-             OK:      _("OK"),
-             WARN:    _("WA"),
-             CRIT:    _("CR"),
-             UNKNOWN: _("UN"),
-             MISSING: _("MI"),
-             UNAVAIL: _("NA"),
-    }.get(state, _("??"))
-
-
-# Convert tree to tree contain only node in non-OK state
-def filter_tree_only_problems(tree):
-    state, assumed_state, node, subtrees = tree
-    # remove subtrees in state OK
-    new_subtrees = []
-    for subtree in subtrees:
-        effective_state = subtree[1] if subtree[1] is not None else subtree[0]
-        if effective_state["state"] not in [ OK, PENDING ]:
-            if len(subtree) == 3:
-                new_subtrees.append(subtree)
-            else:
-                new_subtrees.append(filter_tree_only_problems(subtree))
-
-    return state, assumed_state, node, new_subtrees
+        return # No assume icon with boxes
 
 
 

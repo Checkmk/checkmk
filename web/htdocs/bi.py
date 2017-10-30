@@ -2799,10 +2799,16 @@ def ajax_render_tree():
             if row["aggr_state"]["state"] == None:
                 continue # Not yet monitored, aggregation is not displayed
             row["aggr_group"] = aggr_group
+
+            if boxes:
+                renderer_cls = FoldableTreeRendererBoxes
+            else:
+                renderer_cls = FoldableTreeRendererTree
+
             # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
-            tdclass, htmlcode = render_tree_foldable(row, boxes=boxes, omit_root=omit_root,
-                                             expansion_level=load_ex_level(), only_problems=only_problems, lazy=False)
-            html.write(htmlcode)
+            renderer = renderer_cls(row, omit_root=omit_root, expansion_level=load_ex_level(),
+                                    only_problems=only_problems, lazy=False)
+            html.write(renderer.render())
             return
 
     raise MKGeneralException(_("Unknown BI Aggregation %s") % aggr_title)
@@ -2884,24 +2890,15 @@ def render_tree_json(row):
     return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
-    if boxes:
-        cls = FoldableTreeRendererBoxes
-    else:
-        cls = FoldableTreeRendererTree
-
-    renderer = cls(row, omit_root, expansion_level, only_problems, lazy)
-    return renderer.css_class(), renderer.render()
-
-
 
 class FoldableTreeRenderer(object):
-    def __init__(self, row, omit_root, expansion_level, only_problems, lazy):
+    def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
         self._row             = row
         self._omit_root       = omit_root
         self._expansion_level = expansion_level
         self._only_problems   = only_problems
         self._lazy            = lazy
+        self._wrap_texts      = wrap_texts
         self._load_tree_state()
 
 
@@ -2920,11 +2917,11 @@ class FoldableTreeRenderer(object):
 
     def render(self):
         with html.plugged():
-            self._render_tree()
+            self._show_tree()
             return html.drain()
 
 
-    def _render_tree(self):
+    def _show_tree(self):
         tree = self._get_tree()
         affected_hosts = self._row["aggr_hosts"]
         title = self._row["aggr_tree"]["title"]
@@ -3006,7 +3003,6 @@ class FoldableTreeRenderer(object):
     def _show_leaf(self, tree, show_host):
         site, host = tree[2]["host"]
         service = tree[2].get("service")
-        self._assume_icon(site, host, service)
 
         # Four cases:
         # (1) zbghora17 . Host status   (show_host == True, service == None)
@@ -3021,8 +3017,10 @@ class FoldableTreeRenderer(object):
             service_url = html.makeuri_contextless([("view_name", "service"), ("site", site), ("host", host), ("service", service)], filename="view.py")
 
         with self._show_node(tree, show_host):
+            self._assume_icon(site, host, service)
+
             if show_host:
-                html.render(host.replace(" ", "&nbsp;"), href=host_url)
+                html.a(host.replace(" ", "&nbsp;"), href=host_url)
                 html.b(HTML("&diams;"), class_="bullet")
 
             if not service:
@@ -3169,7 +3167,6 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
 
 
-
 class FoldableTreeRendererBoxes(FoldableTreeRenderer):
     def css_class(self):
         return "aggrtree_box"
@@ -3226,12 +3223,95 @@ class FoldableTreeRendererBoxes(FoldableTreeRenderer):
 
 
     @contextmanager
-    def _show_node(tree, show_host, mousecode=None, img_class=None):
+    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         yield
 
 
     def _assume_icon(self, site, host, service):
         return # No assume icon with boxes
+
+
+
+class FoldableTreeRendererTable(FoldableTreeRendererTree):
+    _mirror = False
+
+
+    def css_class(self):
+        return "aggrtree"
+
+
+    def _toggle_js_function(self):
+        return "bi_toggle_subtree"
+
+
+    def _show_tree(self):
+        td_style = None if self._wrap_texts == "wrap" else "white-space: nowrap;"
+
+        tree = self._get_tree()
+        depth = status_tree_depth(tree)
+        leaves = self._gen_table(tree, depth, self._row["aggr_hosts"] > 1)
+
+        html.open_table(class_=["aggrtree", "ltr"])
+        odd = "odd"
+        for code, colspan, parents in leaves:
+            html.open_tr()
+
+            leaf_td = html.render_td(code, class_=["leaf", odd], style=td_style, colspan=colspan)
+
+            tds = [leaf_td]
+            for rowspan, c in parents:
+                tds.append(html.render_td(c, class_=["node"], style=td_style, rowspan=rowspan))
+
+            if self._mirror:
+                tds.reverse()
+
+            html.write_html(HTML("").join(tds))
+            html.close_tr()
+
+        html.close_table()
+
+
+    def _gen_table(self, tree, height, show_host):
+        if self._is_leaf(tree):
+            return self._gen_leaf(tree, height, show_host)
+        else:
+            return self._gen_node(tree, height, show_host)
+
+
+    def _gen_leaf(self, tree, height, show_host):
+        with html.plugged():
+            self._show_leaf(tree, show_host)
+            content = HTML(html.drain())
+        return [(content, height, [])]
+
+
+    def _gen_node(self, tree, height, show_host):
+        leaves = []
+        for node in tree[3]:
+            if not node[2].get("hidden"):
+                leaves += self._gen_table(node, height - 1, show_host)
+
+        with html.plugged():
+            html.open_div(class_="aggr_tree")
+            with self._show_node(tree, show_host):
+                html.write_text(tree[2]["title"])
+            html.close_div()
+            content = HTML(html.drain())
+
+        if leaves:
+            leaves[0][2].append((len(leaves), content))
+
+        return leaves
+
+
+
+class FoldableTreeRendererBottomUp(FoldableTreeRendererTable):
+    pass
+
+
+
+class FoldableTreeRendererTopDown(FoldableTreeRendererTable):
+    _mirror = True
 
 
 

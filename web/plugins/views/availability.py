@@ -576,8 +576,10 @@ def render_bi_availability(title, aggr_rows):
                         "aggr_function"        : node["func"],
                         "aggr_group"           : html.var("aggr_group"),
                 }
-                tdclass, htmlcode = bi.render_tree_foldable(row, boxes=False, omit_root=False,
-                                         expansion_level=bi.load_ex_level(), only_problems=False, lazy=False)
+
+                renderer = bi.FoldableTreeRendererTree(row, omit_root=False,
+                                                   expansion_level=bi.load_ex_level(), only_problems=False, lazy=False)
+                tdclass, htmlcode = renderer.css_class(), renderer.render()
 
                 with html.plugged():
                     # TODO: SOMETHING IS WRONG IN HERE (used to be the same situation in original code!)

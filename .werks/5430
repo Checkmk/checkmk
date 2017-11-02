@@ -1,0 +1,10 @@
+Title: Pause page reloads when selecting timerange by using the graph previews
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.4.0p17
+Date: 1509623611
+Class: fix
+
+

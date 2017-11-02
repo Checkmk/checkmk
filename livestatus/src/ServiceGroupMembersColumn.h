@@ -56,8 +56,6 @@ public:
         , _mc(mc)
         , _show_state(show_state) {}
 
-    ColumnType type() const override { return ColumnType::list; };
-
     void output(Row row, RowRenderer &r,
                 const contact *auth_user) const override;
 

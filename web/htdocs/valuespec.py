@@ -4607,7 +4607,8 @@ class SiteChoice(DropdownChoice):
         authorized_site_ids = map(lambda x: x[0], config.user.authorized_sites(unfiltered_sites=config.configured_sites()))
         if default_site and default_site in authorized_site_ids:
             return default_site
-        raise
+
+        return canonical_value()
 
 
     def _site_choices(self):

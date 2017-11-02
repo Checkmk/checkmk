@@ -41,7 +41,7 @@ struct servicebyhostgroup {
 
 TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
-    TableServices::addColumns(this, mc, "", -1, true);
+    TableServices::addColumns(this, "", -1, true);
     TableHostGroups::addColumns(
         this, "hostgroup_", DANGEROUS_OFFSETOF(servicebyhostgroup, _hostgroup));
 }

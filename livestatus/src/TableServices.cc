@@ -57,7 +57,7 @@
 extern service *service_list;
 
 TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, mc, "", -1, true);
+    addColumns(this, "", -1, true);
 }
 
 std::string TableServices::name() const { return "services"; }
@@ -65,9 +65,8 @@ std::string TableServices::name() const { return "services"; }
 std::string TableServices::namePrefix() const { return "service_"; }
 
 // static
-void TableServices::addColumns(Table *table, MonitoringCore *mc,
-                               const std::string &prefix, int indirect_offset,
-                               bool add_hosts) {
+void TableServices::addColumns(Table *table, const std::string &prefix,
+                               int indirect_offset, bool add_hosts) {
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(std::make_unique<OffsetStringColumn>(
@@ -336,7 +335,7 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        indirect_offset, -1, -1, 0, mc,
+        indirect_offset, -1, -1, 0, table->core(),
         ServiceSpecialIntColumn::Type::pnp_graph_present));
     table->addColumn(std::make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
@@ -402,25 +401,25 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
         indirect_offset, -1, -1, 0));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        indirect_offset, -1, -1, 0, mc, true, false));
+        indirect_offset, -1, -1, 0, table->core(), true, false));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        indirect_offset, -1, -1, 0, mc, true, true));
+        indirect_offset, -1, -1, 0, table->core(), true, true));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of all comment ids of the service",
-        indirect_offset, -1, -1, 0, mc, true, false, false));
+        indirect_offset, -1, -1, 0, table->core(), true, false, false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment",
-        indirect_offset, -1, -1, 0, mc, true, true, false));
+        indirect_offset, -1, -1, 0, table->core(), true, true, false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        indirect_offset, -1, -1, 0, mc, true, true, true));
+        indirect_offset, -1, -1, 0, table->core(), true, true, true));
 
     if (add_hosts) {
-        TableHosts::addColumns(table, mc, "host_",
+        TableHosts::addColumns(table, "host_",
                                DANGEROUS_OFFSETOF(service, host_ptr), -1);
     }
 
@@ -451,7 +450,7 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(std::make_unique<MetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset, -1, -1, 0, mc));
+        indirect_offset, -1, -1, 0, table->core()));
     table->addColumn(std::make_unique<FixedIntColumn>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite", 0));

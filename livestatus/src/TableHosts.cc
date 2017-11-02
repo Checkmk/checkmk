@@ -62,7 +62,7 @@
 extern host *host_list;
 
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, mc, "", -1, -1);
+    addColumns(this, "", -1, -1);
 }
 
 std::string TableHosts::name() const { return "hosts"; }
@@ -70,9 +70,8 @@ std::string TableHosts::name() const { return "hosts"; }
 std::string TableHosts::namePrefix() const { return "host_"; }
 
 // static
-void TableHosts::addColumns(Table *table, MonitoringCore *mc,
-                            const std::string &prefix, int indirect_offset,
-                            int extra_offset) {
+void TableHosts::addColumns(Table *table, const std::string &prefix,
+                            int indirect_offset, int extra_offset) {
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "name", "Host name", indirect_offset, extra_offset, -1,
         DANGEROUS_OFFSETOF(host, name)));
@@ -454,22 +453,25 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host",
-        indirect_offset, extra_offset, -1, 0, mc, false, false));
+        indirect_offset, extra_offset, -1, 0, table->core(), false, false));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of the all scheduled downtimes of the host with id, author and comment",
-        indirect_offset, extra_offset, -1, 0, mc, false, true));
+        indirect_offset, extra_offset, -1, 0, table->core(), false, true));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        indirect_offset, extra_offset, -1, 0, mc, false, false, false));
+        indirect_offset, extra_offset, -1, 0, table->core(), false, false,
+        false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        indirect_offset, extra_offset, -1, 0, mc, false, true, false));
+        indirect_offset, extra_offset, -1, 0, table->core(), false, true,
+        false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        indirect_offset, extra_offset, -1, 0, mc, false, true, true));
+        indirect_offset, extra_offset, -1, 0, table->core(), false, true,
+        true));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
@@ -565,36 +567,38 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
-        indirect_offset, extra_offset, -1, 0, mc,
+        indirect_offset, extra_offset, -1, 0, table->core(),
         HostSpecialIntColumn::Type::real_hard_state));
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
-        indirect_offset, extra_offset, -1, 0, mc,
+        indirect_offset, extra_offset, -1, 0, table->core(),
         HostSpecialIntColumn::Type::pnp_graph_present));
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
-        indirect_offset, extra_offset, -1, 0, mc,
+        indirect_offset, extra_offset, -1, 0, table->core(),
         HostSpecialIntColumn::Type::mk_inventory_last));
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "mk_inventory",
         "The file content content of the Check_MK HW/SW-Inventory",
-        indirect_offset, extra_offset, -1, 0, mc->mkInventoryPath(), ""));
+        indirect_offset, extra_offset, -1, 0, table->core()->mkInventoryPath(),
+        ""));
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "mk_inventory_gz",
         "The gzipped file content content of the Check_MK HW/SW-Inventory",
-        indirect_offset, extra_offset, -1, 0, mc->mkInventoryPath(), ".gz"));
+        indirect_offset, extra_offset, -1, 0, table->core()->mkInventoryPath(),
+        ".gz"));
 
     table->addColumn(std::make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch",
-        indirect_offset, extra_offset, -1, 0, mc));
+        indirect_offset, extra_offset, -1, 0, table->core()));
 
     table->addDynamicColumn(std::make_unique<DynamicLogwatchFileColumn>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", table->logger(),
-        mc, indirect_offset, extra_offset, -1));
+        table->core(), indirect_offset, extra_offset, -1));
 
     table->addColumn(std::make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",
@@ -633,7 +637,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(std::make_unique<MetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset, extra_offset, -1, 0, mc));
+        indirect_offset, extra_offset, -1, 0, table->core()));
 }
 
 void TableHosts::answerQuery(Query *query) {

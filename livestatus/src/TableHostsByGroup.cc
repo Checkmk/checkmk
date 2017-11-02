@@ -41,7 +41,7 @@ struct hostbygroup {
 }  // namespace
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
-    TableHosts::addColumns(this, mc, "", -1, -1);
+    TableHosts::addColumns(this, "", -1, -1);
     TableHostGroups::addColumns(this, "hostgroup_",
                                 DANGEROUS_OFFSETOF(hostbygroup, _hostgroup));
 }

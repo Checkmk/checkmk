@@ -55,66 +55,69 @@ int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
         host *hst = mem->host_ptr;
         if (auth_user == nullptr ||
             is_authorized_for(_mc, auth_user, hst, nullptr)) {
-            switch (_logictype) {
-                case Type::num_svc_pending:
-                case Type::num_svc_ok:
-                case Type::num_svc_warn:
-                case Type::num_svc_crit:
-                case Type::num_svc_unknown:
-                case Type::num_svc:
-                    result += ServiceListStateColumn::getValue(
-                        _mc,
-                        static_cast<ServiceListStateColumn::Type>(_logictype),
-                        hst->services, auth_user);
-                    break;
-
-                case Type::worst_svc_state: {
-                    int state = ServiceListStateColumn::getValue(
-                        _mc,
-                        static_cast<ServiceListStateColumn::Type>(_logictype),
-                        hst->services, auth_user);
-                    if (ServiceListStateColumn::svcStateIsWorse(state,
-                                                                result)) {
-                        result = state;
-                    }
-                    break;
-                }
-
-                case Type::num_hst_up:
-                case Type::num_hst_down:
-                case Type::num_hst_unreach:
-                    if (hst->has_been_checked != 0 &&
-                        hst->current_state ==
-                            static_cast<int>(_logictype) -
-                                static_cast<int>(Type::num_hst_up)) {
-                        result++;
-                    }
-                    break;
-
-                case Type::num_hst_pending:
-                    if (hst->has_been_checked == 0) {
-                        result++;
-                    }
-                    break;
-
-                case Type::num_hst:
-                    result++;
-                    break;
-
-                case Type::worst_hst_state:
-                    if (hst_state_is_worse(hst->current_state, result)) {
-                        result = hst->current_state;
-                    }
-                    break;
-                case Type::num_svc_hard_ok:
-                case Type::num_svc_hard_warn:
-                case Type::num_svc_hard_crit:
-                case Type::num_svc_hard_unknown:
-                case Type::worst_svc_hard_state:
-                    // TODO(sp) Why are these not handled?
-                    break;
-            }
+            update(hst, auth_user, result);
         }
     }
     return result;
+}
+
+// static
+void HostListStateColumn::update(host *hst, const contact *auth_user,
+                                 int32_t &result) const {
+    switch (_logictype) {
+        case Type::num_svc_pending:
+        case Type::num_svc_ok:
+        case Type::num_svc_warn:
+        case Type::num_svc_crit:
+        case Type::num_svc_unknown:
+        case Type::num_svc:
+            result += ServiceListStateColumn::getValue(
+                _mc, static_cast<ServiceListStateColumn::Type>(_logictype),
+                hst->services, auth_user);
+            break;
+
+        case Type::worst_svc_state: {
+            int state = ServiceListStateColumn::getValue(
+                _mc, static_cast<ServiceListStateColumn::Type>(_logictype),
+                hst->services, auth_user);
+            if (ServiceListStateColumn::svcStateIsWorse(state, result)) {
+                result = state;
+            }
+            break;
+        }
+
+        case Type::num_hst_up:
+        case Type::num_hst_down:
+        case Type::num_hst_unreach:
+            if (hst->has_been_checked != 0 &&
+                hst->current_state ==
+                    static_cast<int>(_logictype) -
+                        static_cast<int>(Type::num_hst_up)) {
+                result++;
+            }
+            break;
+
+        case Type::num_hst_pending:
+            if (hst->has_been_checked == 0) {
+                result++;
+            }
+            break;
+
+        case Type::num_hst:
+            result++;
+            break;
+
+        case Type::worst_hst_state:
+            if (hst_state_is_worse(hst->current_state, result)) {
+                result = hst->current_state;
+            }
+            break;
+        case Type::num_svc_hard_ok:
+        case Type::num_svc_hard_warn:
+        case Type::num_svc_hard_crit:
+        case Type::num_svc_hard_unknown:
+        case Type::worst_svc_hard_state:
+            // TODO(sp) Why are these not handled?
+            break;
+    }
 }

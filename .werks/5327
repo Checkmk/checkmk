@@ -1,0 +1,10 @@
+Title: cisco_temperature.dom: New check which monitors digital optical monitoring sensors of CISCO devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1508917829
+Class: feature
+
+

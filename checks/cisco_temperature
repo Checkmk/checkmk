@@ -51,28 +51,26 @@ cisco_entity_exponents = {
     "17" : 24,   #     17:yotta
 }
 
-# CISCO-ENTITY-SENSOR-MIB::entSensorStatus
-#     1:ok
-#     2:unavailable
-#     3:nonoperational
-
 
 def parse_cisco_temperature(info):
-    def merge_dict(dest, src):
-        # recursively merge two dicts and don't overwrite
-        # if the source-field contains None
-        for k, v in src.iteritems():
-            if k not in dest:
-                dest[k] = v
-            elif isinstance(dest[k], dict) and isinstance(v, dict):
-                merge_dict(dest[k], v)
-            elif v is not None:
-                dest[k] = v
+    # CISCO-ENTITY-SENSOR-MIB::entSensorStatus
+    map_states = {
+        "1": (0, "OK"),
+        "2": (3, "unavailable"),
+        "3": (3, "non-operational"),
+    }
+
+    # CISCO-ENVMON-MIB
+    map_envmon_states = {
+        '1': (0, "normal"),
+        '2': (1, "warning"),
+        '3': (2, "critical"),
+        '4': (2, "shutdown"),
+        '5': (3, "not present"),
+        '6': (3, "not functioning"),
+    }
 
     description_info, state_info, levels_info, perfstuff = info
-
-    # Parse OIDs described by CISCO-ENTITY-SENSOR-MIB
-    entity_parsed = {}
 
     # Create dict of sensor descriptions
     descriptions = dict(description_info)
@@ -87,109 +85,105 @@ def parse_cisco_temperature(info):
         sensor_id, subid = endoid.split('.')
         thresholds.setdefault(sensor_id, []).append(level)
 
+    # Parse OIDs described by CISCO-ENTITY-SENSOR-MIB
+    entity_parsed = {}
     for sensor_id, sensortype, scalecode, magnitude, value, sensorstate in state_info:
         if sensor_id in descriptions:
             descr = descriptions[sensor_id]
         else:
             descr = sensor_id
-        if descr and sensortype == '8': # only care about temperature sensors
 
-            if sensorstate == '2':
-                entity_parsed[descr] = (3, "Data from sensor currently not available")
-            elif sensorstate == '3':
-                entity_parsed[descr] = (3, "Sensor is broken")
-            elif sensorstate == '1':
-                entity_parsed[descr] = {}
-                scale = 10**int(magnitude)
+        if not descr:
+            continue
 
-                scale *= 10 ** (-1 * cisco_entity_exponents[scalecode])
+        entity_parsed.setdefault(sensortype, {})
+        sensor_attrs = {
+            'descr': descr,
+            'raw_dev_state': sensorstate, # used in discovery function
+            'dev_state': map_states.get(sensorstate, (3, 'unknown[%s]' % sensorstate))
+        }
 
-                entity_parsed[descr]['temp'] = float(value) / scale
-
-                if len(thresholds[sensor_id]) in [ 2, 4 ]:
-                    warnraw, critraw = thresholds[sensor_id][0:2]
-                    # Some devices deliver these values in the wrong order
-                    dev_levels = ( min(float(warnraw)/scale, float(critraw)/scale),
-                                   max(float(warnraw)/scale, float(critraw)/scale) )
-                else:
-                    dev_levels = None
-                entity_parsed[descr]['dev_levels'] = dev_levels
-
-                entity_parsed[descr]['dev_status'] = None
-
-    # Now parse OIDs described by CISCO-ENVMON-MIB
-    envmon_states = {
-     '1': "normal",
-     '2': "warning",
-     '3': "critical",
-     '4': "shutdown",
-     '5': "not present",
-     '6': "not functioning"
-    }
+        if sensorstate == '1':
+            scale = 10**int(magnitude)
+            scale *= 10 ** (-1 * cisco_entity_exponents[scalecode])
+            sensor_attrs['reading'] = float(value) / scale
+            if len(thresholds[sensor_id]) in [ 2, 4 ]:
+                warnraw, critraw = thresholds[sensor_id][0:2]
+                # Some devices deliver these values in the wrong order
+                dev_levels = ( min(float(warnraw)/scale, float(critraw)/scale),
+                               max(float(warnraw)/scale, float(critraw)/scale) )
+            else:
+                dev_levels = None
+            sensor_attrs['dev_levels'] = dev_levels
+            entity_parsed[sensortype].setdefault(sensor_id, sensor_attrs)
 
     parsed = {}
-
-    for statustext, temp, max_temp, state, sensor_id in perfstuff:
-        if sensor_id in descriptions and descriptions[sensor_id] in entity_parsed:
+    for sensor_id, statustext, temp, max_temp, state in perfstuff:
+        parsed.setdefault('8', {})
+        if sensor_id in descriptions and sensor_id in entity_parsed.get('8', {}):
             # if this sensor is already in the dictionary, ensure we use the same name
             item = descriptions[sensor_id]
             prev_description = cisco_sensor_item(statustext, sensor_id)
             # also register the name we would have used up to 1.2.8b4, so we can give
             # the user a proper info message.
             # It's the little things that show you care
-            parsed[prev_description] = {"obsolete": True}
+            parsed['8'][prev_description] = {"obsolete": True}
         else:
             item = cisco_sensor_item(statustext, sensor_id)
 
-        if state in ['5', '6']:
-            parsed[item] = (3, "Sensor %s" % envmon_states[state])
-        elif int(temp) == 0:
-            if state in ('123'):
-                parsed[item] = ( int(state) - 1, "Sensor reports %s state" % envmon_states[state] )
-            else:
-                parsed[item] = (3, "Sensor defect")
-        else:
-            parsed[item] = {}
-            parsed[item]['temp'] = int(temp)
+        temp_sensor_attrs = {
+            'raw_dev_state': state,
+            'dev_state': map_envmon_states.get(state, (3, 'unknown[%s]' % state)),
+        }
 
-            if state == '1':
-                parsed[item]['dev_status'] = 0
-            elif state == '2':
-                parsed[item]['dev_status'] = 1
-            elif state in ['3', '4']:
-                parsed[item]['dev_status'] = 2
-            else:
-                parsed[item]['dev_status'] = None
-
-            # TODO using max_temp as a crit level is not really practical as, according
-            # to the mib, the device will be shut down at this temperature!
+        try:
+            temp_sensor_attrs['reading'] = int(temp)
             if max_temp and int(max_temp):
-                parsed[item]['dev_levels'] = (int(max_temp), int(max_temp))
+                temp_sensor_attrs['dev_levels'] = (int(max_temp), int(max_temp))
             else:
-                parsed[item]['dev_levels'] = None
+                temp_sensor_attrs['dev_levels'] = None
+        except:
+            temp_sensor_attrs['dev_state'] = (3, 'sensor defect')
 
-    # Merge the two dicts, preferring keys generated from ENTITY data
-    merge_dict(parsed, entity_parsed)
+        parsed['8'].setdefault(item, temp_sensor_attrs)
+
+    for sensor_type, sensors in entity_parsed.iteritems():
+        for sensor_attrs in sensors.values():
+            # Do not overwrite found sensors from perfstuff loop
+            parsed.setdefault(sensor_type, {}).setdefault(sensor_attrs['descr'], sensor_attrs)
 
     return parsed
 
 
+#   .--temperature---------------------------------------------------------.
+#   |      _                                      _                        |
+#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 def inventory_cisco_temperature(parsed):
-    for item, value in parsed.iteritems():
-        if type(parsed[item]) == tuple or not value.get("obsolete", False):
+    for item, value in parsed.get('8', {}).iteritems():
+        if not value.get("obsolete", False):
             yield item, {}
 
 
 def check_cisco_temperature(item, params, parsed):
-    if item in parsed:
-        if type(parsed[item]) == tuple:
-            return parsed[item]
-        elif parsed[item].get("obsolete", False):
+    temp_parsed = parsed.get('8', {})
+    if item in temp_parsed:
+        data = temp_parsed[item]
+        if data.get("obsolete", False):
             return 3, "This sensor is obsolete, please rediscover"
         else:
-            return check_temperature(parsed[item]['temp'], params, "cisco_temperature_%s" % item,
-                        dev_levels = parsed[item]['dev_levels'],
-                        dev_status = parsed[item]['dev_status'])
+            state, state_readable = data['dev_state']
+            return check_temperature(data['reading'], params, "cisco_temperature_%s" % item,
+                        dev_levels=data['dev_levels'],
+                        dev_status=state, dev_status_name=state_readable)
 
 
 check_info['cisco_temperature'] = {
@@ -227,12 +221,65 @@ check_info['cisco_temperature'] = {
 
                                # cisco_temp_perf data
                                ( ".1.3.6.1.4.1.9.9.13.1.3.1", [ # CISCO-SMI
-                                                               2, # ciscoEnvMonTemperatureStatusDescr
-                                                               3, # ciscoEnvMonTemperatureStatusValue
-                                                               4, # ciscoEnvMonTemperatureThreshold
-                                                               6, # ciscoEnvMonTemperatureState
-                                                               OID_END
+                                 OID_END,
+                                 2, # ciscoEnvMonTemperatureStatusDescr
+                                 3, # ciscoEnvMonTemperatureStatusValue
+                                 4, # ciscoEnvMonTemperatureThreshold
+                                 6, # ciscoEnvMonTemperatureState
                                ]),
                             ],
     "includes"          : [ "temperature.include", 'cisco_sensor_item.include' ],
+}
+
+
+#.
+#   .--dom-----------------------------------------------------------------.
+#   |                            _                                         |
+#   |                         __| | ___  _ __ ___                          |
+#   |                        / _` |/ _ \| '_ ` _ \                         |
+#   |                       | (_| | (_) | | | | | |                        |
+#   |                        \__,_|\___/|_| |_| |_|                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | digital optical monitoring                                           |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_cisco_temperature_dom(parsed):
+    parsed_dom = parsed.get('14', {})
+    for item, attrs in parsed_dom.iteritems():
+        if attrs.get('raw_dev_state') == '1':
+            yield item, {}
+
+
+def check_cisco_temperature_dom(item, params, parsed):
+    # TODO perf, precision, severity, etc.
+    parsed_dom = parsed.get('14', {})
+    if item in parsed_dom:
+        data = parsed_dom[item]
+        reading = data['reading']
+        state, state_readable = data['dev_state']
+        yield state, 'Status: %s' % state_readable
+
+        infotext = "%s dBm" % reading
+        perfdata = ['power_level', reading]
+        state = 0
+        if data.get('dev_levels'):
+            warn, crit = data['dev_levels']
+            perfdata += [warn, crit]
+            if reading >= crit:
+                state = 2
+            elif reading >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %s/%s dBm)" % (warn, crit)
+        yield state, infotext, [perfdata]
+
+
+check_info['cisco_temperature.dom'] = {
+    "inventory_function" : inventory_cisco_temperature_dom,
+    "check_function"     : check_cisco_temperature_dom,
+    "service_description": "DOM %s",
+    "has_perfdata"       : True,
+    "includes"           : ['cisco_sensor_item.include'],
 }

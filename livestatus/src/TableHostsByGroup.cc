@@ -64,7 +64,7 @@ void TableHostsByGroup::answerQuery(Query *query) {
         for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
             hostbygroup hbg = {*m->host_ptr, hg};
             if (!query->processDataset(Row(&hbg))) {
-                break;
+                return;
             }
         }
     }

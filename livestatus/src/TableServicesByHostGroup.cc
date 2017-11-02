@@ -59,7 +59,7 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
                  smem != nullptr; smem = smem->next) {
                 servicebyhostgroup sbhg = {*smem->service_ptr, hg};
                 if (!query->processDataset(Row(&sbhg))) {
-                    break;
+                    return;
                 }
             }
         }

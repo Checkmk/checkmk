@@ -65,7 +65,7 @@ void TableServicesByGroup::answerQuery(Query *query) {
         for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
             servicebygroup sbg = {*m->service_ptr, sg};
             if (!query->processDataset(Row(&sbg))) {
-                break;
+                return;
             }
         }
     }

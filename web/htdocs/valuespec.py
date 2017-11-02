@@ -34,7 +34,7 @@
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
 
-import math, os, time, re, sre_constants, urlparse, forms, tempfile
+import math, os, time, re, sre_constants, urlparse, forms, tempfile, types
 import base64
 import hashlib
 import socket
@@ -99,7 +99,7 @@ class ValueSpec(object):
     # for same cases where the default value is known.
     def default_value(self):
         try:
-            if type(self._default_value) == type(lambda:True):
+            if type(self._default_value) in [types.FunctionType, types.MethodType]:
                 return self._default_value()
             else:
                 return self._default_value
@@ -4583,19 +4583,38 @@ def ListOfCAs(**args):
 
 class SiteChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        import config
         kwargs.setdefault("title", _("Site"))
         kwargs.setdefault("help", _("Specify the site of your choice"))
-        kwargs.setdefault("default_value", config.default_site())
+        kwargs.setdefault("default_value", self._site_default_value)
         kwargs.setdefault("invalid_choice_error", _("The configured site is not known to this site."))
 
         kwargs.update({
-            "choices":              config.site_choices,
+            "choices":              self._site_choices,
             "invalid_choice":       "complain",
             "invalid_choice_title": _("Unknown site (%s)"),
         })
 
         super(SiteChoice, self).__init__(**kwargs)
+
+
+    def _site_default_value(self):
+        import watolib
+        if watolib.is_wato_slave_site():
+            return False
+
+        import config
+        default_site = config.default_site()
+        authorized_site_ids = map(lambda x: x[0], config.user.authorized_sites(unfiltered_sites=config.configured_sites()))
+        if default_site and default_site in authorized_site_ids:
+            return default_site
+        raise
+
+
+    def _site_choices(self):
+        import config
+        authorized_site_ids = map(lambda x: x[0], config.user.authorized_sites(unfiltered_sites=config.configured_sites()))
+        return config.site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
+
 
 
 

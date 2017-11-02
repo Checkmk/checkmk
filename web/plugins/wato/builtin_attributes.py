@@ -490,7 +490,6 @@ class SiteAttribute(ValueSpecAttribute):
         ValueSpecAttribute.__init__(self, "site", SiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
-            default_value = default_site,
             invalid_choice_error = _("The configured site is not known to this site. In case you "
                                      "are configuring in a distributed slave, this may be a host "
                                      "monitored by another site. If you want to modify this "

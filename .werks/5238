@@ -1,0 +1,12 @@
+Title: WATO users now only see their configured sites in the Site-DropdownChoice
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1509627717
+Class: fix
+
+A user can be configured only to see/configure a subset of the available sites.
+The site dropdown choice, however, always showed all available sites. This has been fixed.
+

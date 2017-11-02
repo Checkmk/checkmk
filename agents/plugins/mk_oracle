@@ -749,7 +749,6 @@ function set_osenv () {
         GREP=$(which grep)
         STATCX='stat -c %X'
         STATCY='stat -c %Y'
-        AWK=$(which nawk)
 
     elif [ ${ostype} = 'SunOS' ] ; then
 
@@ -766,6 +765,8 @@ function set_osenv () {
 
         STATCX='file_mtime'
         STATCY='file_mtime'
+
+        AWK=$(which nawk)
 
     else
         ostype="unknown OS: "${ostype}

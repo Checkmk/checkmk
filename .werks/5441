@@ -1,0 +1,11 @@
+Title: mk_oracle: Werk 5321 introduced usage of nawk for SunOS but was implemented incorrectly for Linux
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1509613020
+
+

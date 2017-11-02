@@ -24,16 +24,20 @@
 
 #include "ServiceGroupsColumn.h"
 #include "Row.h"
+#include "auth.h"
 #include "nagios.h"
 
 std::vector<std::string> ServiceGroupsColumn::getValue(
-    Row row, const contact * /*auth_user*/,
+    Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> group_names;
     if (auto p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
             auto sg = static_cast<servicegroup *>(list->object_ptr);
-            group_names.emplace_back(sg->group_name);
+            if (auth_user == nullptr ||
+                is_authorized_for_service_group(_mc, sg, auth_user)) {
+                group_names.emplace_back(sg->group_name);
+            }
         }
     }
     return group_names;

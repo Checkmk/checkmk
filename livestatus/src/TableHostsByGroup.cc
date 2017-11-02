@@ -51,40 +51,30 @@ std::string TableHostsByGroup::name() const { return "hostsbygroup"; }
 std::string TableHostsByGroup::namePrefix() const { return "host_"; }
 
 void TableHostsByGroup::answerQuery(Query *query) {
-    // When groupAuthorization() is set to AuthorizationKind::strict we need to
-    // pre-check if every host of this group is visible to the _auth_user
-    bool requires_precheck =
+    bool requires_authcheck =
         query->authUser() != nullptr &&
         core()->groupAuthorization() == AuthorizationKind::strict;
 
     for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        bool show_host_group = true;
-        if (requires_precheck) {
-            for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
-                if (!is_authorized_for(core(), query->authUser(), m->host_ptr,
-                                       nullptr)) {
-                    show_host_group = false;
-                    break;
-                }
-            }
+        if (requires_authcheck &&
+            !is_authorized_for_host_group(core(), hg, query->authUser())) {
+            continue;
         }
 
-        if (show_host_group) {
-            for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
-                hostbygroup hbg = {*m->host_ptr, hg};
-                if (!query->processDataset(Row(&hbg))) {
-                    break;
-                }
+        for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
+            hostbygroup hbg = {*m->host_ptr, hg};
+            if (!query->processDataset(Row(&hbg))) {
+                break;
             }
         }
     }
 }
 
+Row TableHostsByGroup::findObject(const std::string &objectspec) const {
+    return Row(find_host(const_cast<char *>(objectspec.c_str())));
+}
+
 bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for(core(), ctc, &rowData<hostbygroup>(row)->_host,
                              nullptr);
-}
-
-Row TableHostsByGroup::findObject(const std::string &objectspec) const {
-    return Row(find_host(const_cast<char *>(objectspec.c_str())));
 }

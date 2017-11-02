@@ -27,7 +27,6 @@
 #include "Column.h"
 #include "HostListColumn.h"
 #include "HostListStateColumn.h"
-#include "MonitoringCore.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "auth.h"
@@ -185,29 +184,5 @@ Row TableHostGroups::findObject(const std::string &objectspec) const {
 }
 
 bool TableHostGroups::isAuthorized(Row row, const contact *ctc) const {
-    if (ctc == unknown_auth_user()) {
-        return false;
-    }
-
-    auto has_contact = [=](hostsmember *mem) {
-        return is_authorized_for(core(), ctc, mem->host_ptr, nullptr);
-    };
-    if (core()->groupAuthorization() == AuthorizationKind::loose) {
-        // TODO(sp) Need an iterator here, "loose" means "any_of"
-        for (hostsmember *mem = rowData<hostgroup>(row)->members;
-             mem != nullptr; mem = mem->next) {
-            if (has_contact(mem)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    // TODO(sp) Need an iterator here, "strict" means "all_of"
-    for (hostsmember *mem = rowData<hostgroup>(row)->members; mem != nullptr;
-         mem = mem->next) {
-        if (!has_contact(mem)) {
-            return false;
-        }
-    }
-    return true;
+    return is_authorized_for_host_group(core(), rowData<hostgroup>(row), ctc);
 }

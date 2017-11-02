@@ -24,16 +24,20 @@
 
 #include "HostGroupsColumn.h"
 #include "Row.h"
+#include "auth.h"
 #include "nagios.h"
 
 std::vector<std::string> HostGroupsColumn::getValue(
-    Row row, const contact * /*auth_user*/,
+    Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> group_names;
     if (auto p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
             auto hg = static_cast<hostgroup *>(list->object_ptr);
-            group_names.emplace_back(hg->group_name);
+            if (auth_user == nullptr ||
+                is_authorized_for_host_group(_mc, hg, auth_user)) {
+                group_names.emplace_back(hg->group_name);
+            }
         }
     }
     return group_names;

@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostListStateColumn.h"
+#include "LogEntry.h"
 #include "Row.h"
 #include "auth.h"
 
@@ -39,24 +40,6 @@ int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
     }
     return result;
 }
-
-namespace {
-bool hst_state_is_worse(int32_t state1, int32_t state2) {
-    if (state1 == 0) {
-        return false;  // UP is worse than nothing
-    }
-    if (state2 == 0) {
-        return true;  // everything else is worse then UP
-    }
-    if (state2 == 1) {
-        return false;  // nothing is worse than DOWN
-    }
-    if (state1 == 1) {
-        return true;  // state1 is DOWN, state2 not
-    }
-    return false;  // both are UNREACHABLE
-}
-}  // namespace
 
 void HostListStateColumn::update(host *hst, const contact *auth_user,
                                  int32_t &result) const {
@@ -76,7 +59,8 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
             int state = ServiceListStateColumn::getValueFromServices(
                 _mc, static_cast<ServiceListStateColumn::Type>(_logictype),
                 hst->services, auth_user);
-            if (ServiceListStateColumn::svcStateIsWorse(state, result)) {
+            if (worse(static_cast<ServiceState>(state),
+                      static_cast<ServiceState>(result))) {
                 result = state;
             }
             break;
@@ -104,7 +88,8 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
             break;
 
         case Type::worst_hst_state:
-            if (hst_state_is_worse(hst->current_state, result)) {
+            if (worse(static_cast<HostState>(hst->current_state),
+                      static_cast<HostState>(result))) {
                 result = hst->current_state;
             }
             break;

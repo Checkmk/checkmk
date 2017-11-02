@@ -441,8 +441,8 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
 
     table->addColumn(std::make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, servicegroups_ptr)));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, servicegroups_ptr),
+        table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in", indirect_offset, -1,

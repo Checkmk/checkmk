@@ -44,6 +44,10 @@ contact *unknown_auth_user();
 class MonitoringCore;
 bool is_authorized_for(MonitoringCore *mc, const contact *ctc, const host *hst,
                        const service *svc);
+bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
+                                  const contact *ctc);
+bool is_authorized_for_service_group(MonitoringCore *mc, const servicegroup *sg,
+                                     const contact *ctc);
 #endif
 
 #endif  // auth_h

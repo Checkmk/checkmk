@@ -52,31 +52,20 @@ std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
 std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByGroup::answerQuery(Query *query) {
-    // When groupAuthorization() is set to AuthorizationKind::strict we need to
-    // pre-check if every service of this group is visible to the _auth_user
-    bool requires_precheck =
+    bool requires_authcheck =
         query->authUser() != nullptr &&
         core()->groupAuthorization() == AuthorizationKind::strict;
 
     for (servicegroup *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        bool show_service_group = true;
-        if (requires_precheck) {
-            for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
-                if (!is_authorized_for(core(), query->authUser(),
-                                       m->service_ptr->host_ptr,
-                                       m->service_ptr)) {
-                    show_service_group = false;
-                    break;
-                }
-            }
+        if (requires_authcheck &&
+            !is_authorized_for_service_group(core(), sg, query->authUser())) {
+            continue;
         }
 
-        if (show_service_group) {
-            for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
-                servicebygroup sbg = {*m->service_ptr, sg};
-                if (!query->processDataset(Row(&sbg))) {
-                    break;
-                }
+        for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
+            servicebygroup sbg = {*m->service_ptr, sg};
+            if (!query->processDataset(Row(&sbg))) {
+                break;
             }
         }
     }

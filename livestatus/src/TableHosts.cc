@@ -604,7 +604,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",
         indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, hostgroups_ptr)));
+        DANGEROUS_OFFSETOF(host, hostgroups_ptr), table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in", indirect_offset,

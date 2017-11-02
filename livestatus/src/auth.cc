@@ -54,3 +54,59 @@ bool is_authorized_for(MonitoringCore *mc, const contact *ctc, const host *hst,
            (svc == nullptr ? host_has_contact(hst, ctc)
                            : service_has_contact(mc, hst, svc, ctc));
 }
+
+bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
+                                  const contact *ctc) {
+    if (ctc == unknown_auth_user()) {
+        return false;
+    }
+
+    auto has_contact = [=](hostsmember *mem) {
+        return is_authorized_for(mc, ctc, mem->host_ptr, nullptr);
+    };
+    if (mc->groupAuthorization() == AuthorizationKind::loose) {
+        // TODO(sp) Need an iterator here, "loose" means "any_of"
+        for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
+            if (has_contact(mem)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // TODO(sp) Need an iterator here, "strict" means "all_of"
+    for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
+        if (!has_contact(mem)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool is_authorized_for_service_group(MonitoringCore *mc, const servicegroup *sg,
+                                     const contact *ctc) {
+    if (ctc == unknown_auth_user()) {
+        return false;
+    }
+
+    auto has_contact = [=](servicesmember *mem) {
+        service *svc = mem->service_ptr;
+        return is_authorized_for(mc, ctc, svc->host_ptr, svc);
+    };
+    if (mc->groupAuthorization() == AuthorizationKind::loose) {
+        // TODO(sp) Need an iterator here, "loose" means "any_of"
+        for (servicesmember *mem = sg->members; mem != nullptr;
+             mem = mem->next) {
+            if (has_contact(mem)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // TODO(sp) Need an iterator here, "strict" means "all_of"
+    for (servicesmember *mem = sg->members; mem != nullptr; mem = mem->next) {
+        if (!has_contact(mem)) {
+            return false;
+        }
+    }
+    return true;
+}

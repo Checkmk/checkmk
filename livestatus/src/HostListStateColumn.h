@@ -34,9 +34,7 @@ class MonitoringCore;
 class Row;
 
 #ifdef CMC
-#include <unordered_set>
 #include "cmc.h"
-class Host;
 #else
 #include "nagios.h"
 #endif
@@ -81,12 +79,8 @@ public:
                     extra_extra_offset, offset)
         , _mc(mc)
         , _logictype(logictype) {}
+
     int32_t getValue(Row row, const contact *auth_user) const override;
-#ifdef CMC
-    const std::unordered_set<Host *> *getMembers(Row row) const;
-#else
-    hostsmember *getMembers(Row row) const;
-#endif
 
 private:
     MonitoringCore *_mc;

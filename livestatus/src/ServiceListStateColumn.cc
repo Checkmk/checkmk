@@ -26,7 +26,34 @@
 #include "Row.h"
 #include "auth.h"
 
+int32_t ServiceListStateColumn::getValue(Row row,
+                                         const contact *auth_user) const {
+    servicesmember *mem = nullptr;
+    if (auto p = columnData<servicesmember *>(row)) {
+        mem = *p;
+    }
+    return getValueFromServices(_mc, _logictype, mem, auth_user);
+}
+
+// static
+int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
+                                                     Type logictype,
+                                                     servicesmember *mem,
+                                                     const contact *auth_user) {
+    int32_t result = 0;
+    for (; mem != nullptr; mem = mem->next) {
+        service *svc = mem->service_ptr;
+        if (auth_user == nullptr ||
+            is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {
+            update(logictype, svc, result);
+        }
+    }
+    return result;
+}
+
 // return true if state1 is worse than state2
+
+// static
 bool ServiceListStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
     if (state1 == 0) {
         return false;  // OK is worse than nothing
@@ -41,33 +68,6 @@ bool ServiceListStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
         return true;  // state1 is CRIT, state2 not
     }
     return (state1 > state2);  // both or WARN or UNKNOWN
-}
-
-servicesmember *ServiceListStateColumn::getMembers(Row row) const {
-    if (auto p = columnData<servicesmember *>(row)) {
-        return *p;
-    }
-    return nullptr;
-}
-
-// static
-int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
-                                         servicesmember *mem,
-                                         const contact *auth_user) {
-    int32_t result = 0;
-    for (; mem != nullptr; mem = mem->next) {
-        service *svc = mem->service_ptr;
-        if (auth_user == nullptr ||
-            is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {
-            update(logictype, svc, result);
-        }
-    }
-    return result;
-}
-
-int32_t ServiceListStateColumn::getValue(Row row,
-                                         const contact *auth_user) const {
-    return getValue(_mc, _logictype, getMembers(row), auth_user);
 }
 
 // static

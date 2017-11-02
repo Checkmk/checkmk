@@ -65,16 +65,19 @@ public:
                     extra_extra_offset, offset)
         , _mc(mc)
         , _logictype(logictype) {}
+
     int32_t getValue(Row row, const contact *auth_user) const override;
+
 #ifdef CMC
-    static int32_t getValue(MonitoringCore *mc, Type logictype,
-                            const Host::services_t *mem,
-                            const contact *auth_user);
+    using service_list = const Host::services_t *;
 #else
-    static int32_t getValue(MonitoringCore *mc, Type logictype,
-                            servicesmember *mem, const contact *auth_user);
-    servicesmember *getMembers(Row row) const;
+    using service_list = servicesmember *;
 #endif
+
+    static int32_t getValueFromServices(MonitoringCore *mc, Type logictype,
+                                        service_list mem,
+                                        const contact *auth_user);
+
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
 
 private:

@@ -26,7 +26,22 @@
 #include "Row.h"
 #include "auth.h"
 
-static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
+int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
+    int32_t result = 0;
+    if (auto p = columnData<hostsmember *>(row)) {
+        for (hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
+            host *hst = mem->host_ptr;
+            if (auth_user == nullptr ||
+                is_authorized_for(_mc, auth_user, hst, nullptr)) {
+                update(hst, auth_user, result);
+            }
+        }
+    }
+    return result;
+}
+
+namespace {
+bool hst_state_is_worse(int32_t state1, int32_t state2) {
     if (state1 == 0) {
         return false;  // UP is worse than nothing
     }
@@ -41,27 +56,8 @@ static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
     }
     return false;  // both are UNREACHABLE
 }
+}  // namespace
 
-hostsmember *HostListStateColumn::getMembers(Row row) const {
-    if (auto p = columnData<hostsmember *>(row)) {
-        return *p;
-    }
-    return nullptr;
-}
-
-int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
-    int32_t result = 0;
-    for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
-        host *hst = mem->host_ptr;
-        if (auth_user == nullptr ||
-            is_authorized_for(_mc, auth_user, hst, nullptr)) {
-            update(hst, auth_user, result);
-        }
-    }
-    return result;
-}
-
-// static
 void HostListStateColumn::update(host *hst, const contact *auth_user,
                                  int32_t &result) const {
     switch (_logictype) {
@@ -71,13 +67,13 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
         case Type::num_svc_crit:
         case Type::num_svc_unknown:
         case Type::num_svc:
-            result += ServiceListStateColumn::getValue(
+            result += ServiceListStateColumn::getValueFromServices(
                 _mc, static_cast<ServiceListStateColumn::Type>(_logictype),
                 hst->services, auth_user);
             break;
 
         case Type::worst_svc_state: {
-            int state = ServiceListStateColumn::getValue(
+            int state = ServiceListStateColumn::getValueFromServices(
                 _mc, static_cast<ServiceListStateColumn::Type>(_logictype),
                 hst->services, auth_user);
             if (ServiceListStateColumn::svcStateIsWorse(state, result)) {

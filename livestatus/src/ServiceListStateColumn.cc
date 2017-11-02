@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceListStateColumn.h"
+#include "LogEntry.h"
 #include "Row.h"
 #include "auth.h"
 
@@ -51,25 +52,6 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
     return result;
 }
 
-// return true if state1 is worse than state2
-
-// static
-bool ServiceListStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
-    if (state1 == 0) {
-        return false;  // OK is worse than nothing
-    }
-    if (state2 == 0) {
-        return true;  // everything else is worse then OK
-    }
-    if (state2 == 2) {
-        return false;  // nothing is worse than CRIT
-    }
-    if (state1 == 2) {
-        return true;  // state1 is CRIT, state2 not
-    }
-    return (state1 > state2);  // both or WARN or UNKNOWN
-}
-
 // static
 void ServiceListStateColumn::update(Type logictype, service *svc,
                                     int32_t &result) {
@@ -84,7 +66,8 @@ void ServiceListStateColumn::update(Type logictype, service *svc,
     }
     switch (lt) {
         case Type::worst_state:
-            if (svcStateIsWorse(service_state, result)) {
+            if (worse(static_cast<ServiceState>(service_state),
+                      static_cast<ServiceState>(result))) {
                 result = service_state;
             }
             break;

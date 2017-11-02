@@ -35,7 +35,33 @@
 
 enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
 
+inline double badness(ServiceState state) {
+    // unknown is effectively between warning and critical
+    return state == ServiceState::unknown
+               ? (static_cast<double>(ServiceState::warning) +
+                  static_cast<double>(ServiceState::critical)) /
+                     2.0
+               : static_cast<double>(state);
+}
+
+inline bool worse(ServiceState state1, ServiceState state2) {
+    return badness(state1) > badness(state2);
+}
+
 enum class HostState { up = 0, down = 1, unreachable = 2 };
+
+inline double badness(HostState state) {
+    // unreachable is effectively between up and down
+    return state == HostState::unreachable
+               ? (static_cast<double>(HostState::up) +
+                  static_cast<double>(HostState::down)) /
+                     2.0
+               : static_cast<double>(state);
+}
+
+inline bool worse(HostState state1, HostState state2) {
+    return badness(state1) > badness(state2);
+}
 
 enum class LogEntryType {
     none,

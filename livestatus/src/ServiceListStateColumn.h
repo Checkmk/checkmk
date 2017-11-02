@@ -78,8 +78,6 @@ public:
                                         service_list mem,
                                         const contact *auth_user);
 
-    static bool svcStateIsWorse(int32_t state1, int32_t state2);
-
 private:
     MonitoringCore *_mc;
     const Type _logictype;

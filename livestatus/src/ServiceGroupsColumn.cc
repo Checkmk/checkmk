@@ -34,8 +34,7 @@ std::vector<std::string> ServiceGroupsColumn::getValue(
     if (auto p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
             auto sg = static_cast<servicegroup *>(list->object_ptr);
-            if (auth_user == nullptr ||
-                is_authorized_for_service_group(_mc, sg, auth_user)) {
+            if (is_authorized_for_service_group(_mc, sg, auth_user)) {
                 group_names.emplace_back(sg->group_name);
             }
         }

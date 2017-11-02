@@ -57,6 +57,9 @@ bool is_authorized_for(MonitoringCore *mc, const contact *ctc, const host *hst,
 
 bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
                                   const contact *ctc) {
+    if (ctc == nullptr) {
+        return true;
+    }
     if (ctc == unknown_auth_user()) {
         return false;
     }
@@ -84,6 +87,9 @@ bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
 
 bool is_authorized_for_service_group(MonitoringCore *mc, const servicegroup *sg,
                                      const contact *ctc) {
+    if (ctc == nullptr) {
+        return true;
+    }
     if (ctc == unknown_auth_user()) {
         return false;
     }

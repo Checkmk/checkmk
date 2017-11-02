@@ -34,8 +34,7 @@ std::vector<std::string> HostGroupsColumn::getValue(
     if (auto p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
             auto hg = static_cast<hostgroup *>(list->object_ptr);
-            if (auth_user == nullptr ||
-                is_authorized_for_host_group(_mc, hg, auth_user)) {
+            if (is_authorized_for_host_group(_mc, hg, auth_user)) {
                 group_names.emplace_back(hg->group_name);
             }
         }

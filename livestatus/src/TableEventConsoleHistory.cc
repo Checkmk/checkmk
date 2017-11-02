@@ -43,7 +43,7 @@ TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     addColumn(std::make_unique<StringEventConsoleColumn>(
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID"));
-    TableEventConsoleEvents::addColumns(this, mc);
+    TableEventConsoleEvents::addColumns(this);
 }
 
 std::string TableEventConsoleHistory::name() const {

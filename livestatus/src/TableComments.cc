@@ -80,9 +80,9 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         -1, -1, -1, DANGEROUS_OFFSETOF(Comment, _expire_time)));
 
-    TableHosts::addColumns(this, mc, "host_",
-                           DANGEROUS_OFFSETOF(Comment, _host), -1);
-    TableServices::addColumns(this, mc, "service_",
+    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Comment, _host),
+                           -1);
+    TableServices::addColumns(this, "service_",
                               DANGEROUS_OFFSETOF(Comment, _service),
                               false /* no hosts table */);
 }

@@ -81,9 +81,9 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
         -1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _triggered_by)));
 
-    TableHosts::addColumns(this, mc, "host_",
-                           DANGEROUS_OFFSETOF(Downtime, _host), -1);
-    TableServices::addColumns(this, mc, "service_",
+    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Downtime, _host),
+                           -1);
+    TableServices::addColumns(this, "service_",
                               DANGEROUS_OFFSETOF(Downtime, _service),
                               false /* no hosts table */);
 }

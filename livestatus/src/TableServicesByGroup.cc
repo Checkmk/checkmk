@@ -41,7 +41,7 @@ struct servicebygroup {
 }  // namespace
 
 TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
-    TableServices::addColumns(this, mc, "", -1, true);
+    TableServices::addColumns(this, "", -1, true);
     TableServiceGroups::addColumns(
         this, "servicegroup_",
         DANGEROUS_OFFSETOF(servicebygroup, _servicegroup));

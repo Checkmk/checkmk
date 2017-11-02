@@ -31,11 +31,11 @@
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    addColumns(this, mc);
+    addColumns(this);
 }
 
 // static
-void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc) {
+void TableEventConsoleEvents::addColumns(Table *table) {
     table->addColumn(std::make_unique<IntEventConsoleColumn>(
         "event_id", "The unique ID for this event"));
     table->addColumn(std::make_unique<IntEventConsoleColumn>(
@@ -87,7 +87,7 @@ void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc) {
         "event_host_in_downtime",
         "Whether or not the host (if found in core) was in downtime during event creation (0/1)"));
 
-    TableHosts::addColumns(table, mc, "host_", DANGEROUS_OFFSETOF(ECRow, _host),
+    TableHosts::addColumns(table, "host_", DANGEROUS_OFFSETOF(ECRow, _host),
                            -1);
 }
 

@@ -36,9 +36,8 @@ class Query;
 class TableServices : public Table {
 public:
     explicit TableServices(MonitoringCore *mc);
-    static void addColumns(Table *, MonitoringCore *mc,
-                           const std::string &prefix, int indirect_offset,
-                           bool add_hosts);
+    static void addColumns(Table *table, const std::string &prefix,
+                           int indirect_offset, bool add_hosts);
 
     std::string name() const override;
     std::string namePrefix() const override;

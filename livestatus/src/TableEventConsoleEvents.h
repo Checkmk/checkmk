@@ -38,7 +38,7 @@ public:
     explicit TableEventConsoleEvents(MonitoringCore *mc);
     std::string name() const override;
     std::string namePrefix() const override;
-    static void addColumns(Table *table, MonitoringCore *mc);
+    static void addColumns(Table *table);
     bool isAuthorized(Row row, const contact *ctc) const override;
 };
 

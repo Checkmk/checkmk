@@ -43,8 +43,9 @@ std::string OffsetStringMacroColumn::getValue(Row row) const {
     return "";
 }
 
-void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
-                                     const contact * /*unused*/) const {
+void OffsetStringMacroColumn::output(
+    Row row, RowRenderer &r, const contact * /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     std::string raw = getValue(row);
     const host *hst = getHost(row);
     const service *svc = getService(row);

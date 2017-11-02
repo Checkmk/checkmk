@@ -26,6 +26,7 @@
 #define IntColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -50,8 +51,8 @@ public:
     // questionable purposes...
     virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
 
-    void output(Row row, RowRenderer &r,
-                const contact *auth_user) const override;
+    void output(Row row, RowRenderer &r, const contact *auth_user,
+                std::chrono::seconds timezone_offset) const override;
     ColumnType type() const override { return ColumnType::int_; }
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;

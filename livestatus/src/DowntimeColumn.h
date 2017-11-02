@@ -26,6 +26,7 @@
 #define DowntimeColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <string>
 #include <vector>
 #include "ListColumn.h"
@@ -47,11 +48,12 @@ public:
         , _is_service(is_service)
         , _with_info(with_info) {}
 
-    void output(Row row, RowRenderer &r,
-                const contact *auth_user) const override;
+    void output(Row row, RowRenderer &r, const contact *auth_user,
+                std::chrono::seconds timezone_offset) const override;
 
-    std::vector<std::string> getValue(Row row,
-                                      const contact *auth_user) const override;
+    std::vector<std::string> getValue(
+        Row row, const contact *auth_user,
+        std::chrono::seconds timezone_offset) const override;
 
 private:
     MonitoringCore *_mc;

@@ -26,10 +26,10 @@
 #define ServiceGroupMembersColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
-#include "Column.h"
 #include "ListColumn.h"
 #include "opids.h"
 class Filter;
@@ -56,14 +56,15 @@ public:
         , _mc(mc)
         , _show_state(show_state) {}
 
-    void output(Row row, RowRenderer &r,
-                const contact *auth_user) const override;
+    void output(Row row, RowRenderer &r, const contact *auth_user,
+                std::chrono::seconds timezone_offset) const override;
 
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 
-    std::vector<std::string> getValue(Row row,
-                                      const contact *auth_user) const override;
+    std::vector<std::string> getValue(
+        Row row, const contact *auth_user,
+        std::chrono::seconds timezone_offset) const override;
 
     static std::string separator() { return ""; }
 

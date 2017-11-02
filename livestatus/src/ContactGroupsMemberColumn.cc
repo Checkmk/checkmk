@@ -27,7 +27,8 @@
 #include "nagios.h"
 
 std::vector<std::string> ContactGroupsMemberColumn::getValue(
-    Row row, const contact* /*auth_user*/) const {
+    Row row, const contact* /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> names;
     if (auto cg = columnData<contactgroup>(row)) {
         for (auto cm = cg->members; cm != nullptr; cm = cm->next) {

@@ -32,7 +32,8 @@
 #endif
 
 void DowntimeColumn::output(Row row, RowRenderer &r,
-                            const contact * /* auth_user */) const {
+                            const contact * /*auth_user*/,
+                            std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &downtime : downtimes_for_row(row)) {
         if (_with_info) {
@@ -47,7 +48,8 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
 }
 
 std::vector<std::string> DowntimeColumn::getValue(
-    Row row, const contact * /*auth_user*/) const {
+    Row row, const contact * /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> ids;
     for (const auto &downtime : downtimes_for_row(row)) {
         ids.push_back(std::to_string(downtime._id));

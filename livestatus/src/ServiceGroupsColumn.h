@@ -26,6 +26,7 @@
 #define ServiceGroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <string>
 #include <vector>
 #include "ListColumn.h"
@@ -40,8 +41,9 @@ public:
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset) {}
 
-    std::vector<std::string> getValue(Row row,
-                                      const contact *auth_user) const override;
+    std::vector<std::string> getValue(
+        Row row, const contact *auth_user,
+        std::chrono::seconds /*timezone_offset*/) const override;
 };
 
 #endif  // ServiceGroupsColumn_h

@@ -26,6 +26,7 @@
 #define BlobColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
@@ -46,8 +47,8 @@ public:
 
     ColumnType type() const override { return ColumnType::blob; }
 
-    void output(Row row, RowRenderer &r,
-                const contact *auth_user) const override;
+    void output(Row row, RowRenderer &r, const contact *auth_user,
+                std::chrono::seconds timezone_offset) const override;
 
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;

@@ -43,7 +43,8 @@
 #endif
 
 void ServiceListColumn::output(Row row, RowRenderer &r,
-                               const contact *auth_user) const {
+                               const contact *auth_user,
+                               std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &entry : getEntries(row, auth_user)) {
         if (_info_depth == 0) {
@@ -71,7 +72,8 @@ void ServiceListColumn::output(Row row, RowRenderer &r,
 }
 
 std::vector<std::string> ServiceListColumn::getValue(
-    Row row, const contact *auth_user) const {
+    Row row, const contact *auth_user,
+    std::chrono::seconds /*timezone_offset*/) const {
     auto entries = getEntries(row, auth_user);
     std::vector<std::string> descriptions;
     std::transform(entries.begin(), entries.end(),

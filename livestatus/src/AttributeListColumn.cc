@@ -61,8 +61,9 @@ int32_t AttributeListColumn::getValue(Row row,
     return 0;
 }
 
-void AttributeListColumn::output(Row row, RowRenderer &r,
-                                 const contact * /* auth_user */) const {
+void AttributeListColumn::output(
+    Row row, RowRenderer &r, const contact * /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     modified_atttibutes values(getValue(row, nullptr));
     for (const auto &entry : known_attributes) {

@@ -26,6 +26,7 @@
 #define LogwatchListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <string>
 #include <vector>
 #include "ListColumn.h"
@@ -42,8 +43,9 @@ public:
                      extra_extra_offset, offset)
         , _mc(mc) {}
 
-    std::vector<std::string> getValue(Row row,
-                                      const contact *auth_user) const override;
+    std::vector<std::string> getValue(
+        Row row, const contact *auth_user,
+        std::chrono::seconds timezone_offset) const override;
 
 private:
     MonitoringCore *_mc;

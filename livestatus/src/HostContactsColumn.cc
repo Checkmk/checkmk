@@ -28,7 +28,8 @@
 #include "nagios.h"
 
 std::vector<std::string> HostContactsColumn::getValue(
-    Row row, const contact* /*auth_user*/) const {
+    Row row, const contact* /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     std::unordered_set<std::string> names;
     if (auto hst = columnData<host>(row)) {
         for (auto cm = hst->contacts; cm != nullptr; cm = cm->next) {

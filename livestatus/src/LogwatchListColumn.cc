@@ -40,7 +40,8 @@
 #endif
 
 std::vector<std::string> LogwatchListColumn::getValue(
-    Row row, const contact * /*auth_user*/) const {
+    Row row, const contact * /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     auto dir = getDirectory(row);
     if (dir.empty()) {
         return {};

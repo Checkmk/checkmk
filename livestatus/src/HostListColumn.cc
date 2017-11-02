@@ -39,8 +39,8 @@
 #include "nagios.h"
 #endif
 
-void HostListColumn::output(Row row, RowRenderer &r,
-                            const contact *auth_user) const {
+void HostListColumn::output(Row row, RowRenderer &r, const contact *auth_user,
+                            std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &member : getMembers(row, auth_user)) {
         if (_show_state) {
@@ -55,7 +55,8 @@ void HostListColumn::output(Row row, RowRenderer &r,
 }
 
 std::vector<std::string> HostListColumn::getValue(
-    Row row, const contact *auth_user) const {
+    Row row, const contact *auth_user,
+    std::chrono::seconds /*timezone_offset*/) const {
     auto members = getMembers(row, auth_user);
     std::vector<std::string> host_names;
     std::transform(members.begin(), members.end(),

@@ -29,8 +29,8 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void IntColumn::output(Row row, RowRenderer &r,
-                       const contact *auth_user) const {
+void IntColumn::output(Row row, RowRenderer &r, const contact *auth_user,
+                       std::chrono::seconds /*timezone_offset*/) const {
     r.output(getValue(row, auth_user));
 }
 

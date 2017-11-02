@@ -50,6 +50,7 @@ servicesmember *ServiceListStateColumn::getMembers(Row row) const {
     return nullptr;
 }
 
+// static
 int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
                                          servicesmember *mem,
                                          const contact *auth_user) {
@@ -58,36 +59,7 @@ int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
         service *svc = mem->service_ptr;
         if (auth_user == nullptr ||
             is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {
-            int service_state;
-            Type lt;
-            if (static_cast<int>(logictype) >= 60) {
-                service_state = svc->last_hard_state;
-                lt = static_cast<Type>(static_cast<int>(logictype) - 64);
-            } else {
-                service_state = svc->current_state;
-                lt = logictype;
-            }
-            switch (lt) {
-                case Type::worst_state:
-                    if (svcStateIsWorse(service_state, result)) {
-                        result = service_state;
-                    }
-                    break;
-                case Type::num:
-                    result++;
-                    break;
-                case Type::num_pending:
-                    if (svc->has_been_checked == 0) {
-                        result++;
-                    }
-                    break;
-                default:
-                    if (svc->has_been_checked != 0 &&
-                        service_state == static_cast<int>(lt)) {
-                        result++;
-                    }
-                    break;
-            }
+            update(logictype, svc, result);
         }
     }
     return result;
@@ -96,4 +68,39 @@ int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
 int32_t ServiceListStateColumn::getValue(Row row,
                                          const contact *auth_user) const {
     return getValue(_mc, _logictype, getMembers(row), auth_user);
+}
+
+// static
+void ServiceListStateColumn::update(Type logictype, service *svc,
+                                    int32_t &result) {
+    int service_state;
+    Type lt;
+    if (static_cast<int>(logictype) >= 60) {
+        service_state = svc->last_hard_state;
+        lt = static_cast<Type>(static_cast<int>(logictype) - 64);
+    } else {
+        service_state = svc->current_state;
+        lt = logictype;
+    }
+    switch (lt) {
+        case Type::worst_state:
+            if (svcStateIsWorse(service_state, result)) {
+                result = service_state;
+            }
+            break;
+        case Type::num:
+            result++;
+            break;
+        case Type::num_pending:
+            if (svc->has_been_checked == 0) {
+                result++;
+            }
+            break;
+        default:
+            if (svc->has_been_checked != 0 &&
+                service_state == static_cast<int>(lt)) {
+                result++;
+            }
+            break;
+    }
 }

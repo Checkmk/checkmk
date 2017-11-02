@@ -80,6 +80,8 @@ public:
 private:
     MonitoringCore *_mc;
     const Type _logictype;
+
+    static void update(Type logictype, service *svc, int32_t &result);
 };
 
 #endif  // ServiceListStateColumn_h

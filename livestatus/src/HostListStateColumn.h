@@ -91,6 +91,8 @@ public:
 private:
     MonitoringCore *_mc;
     const Type _logictype;
+
+    void update(host *hst, const contact *auth_user, int32_t &result) const;
 };
 
 #endif  // HostListStateColumn_h

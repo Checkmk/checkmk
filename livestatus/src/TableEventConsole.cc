@@ -82,7 +82,9 @@ private:
                 row._host = it == row._map.end()
                                 ? nullptr
                                 : _mc->getHostByDesignation(it->second);
-                _query->processDataset(Row(&row));
+                if (!_query->processDataset(Row(&row))) {
+                    return;
+                }
             }
         } while (true);
     }

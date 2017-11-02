@@ -494,7 +494,7 @@ void TableServices::answerQuery(Query *query) {
                 for (servicesmember *smem = m->host_ptr->services;
                      smem != nullptr; smem = smem->next) {
                     if (!query->processDataset(Row(smem->service_ptr))) {
-                        break;
+                        return;
                     }
                 }
             }

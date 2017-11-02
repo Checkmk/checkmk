@@ -4608,7 +4608,7 @@ class SiteChoice(DropdownChoice):
         if default_site and default_site in authorized_site_ids:
             return default_site
 
-        return canonical_value()
+        return self.canonical_value()
 
 
     def _site_choices(self):

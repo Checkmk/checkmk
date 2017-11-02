@@ -155,7 +155,8 @@ protected:
             }) {}
 
         std::vector<std::string> getValue(
-            Row row, const contact * /*auth_user*/) const override {
+            Row row, const contact * /*auth_user*/,
+            std::chrono::seconds /*timezone_offset*/) const override {
             return _ecc.getValue(row);
         }
 

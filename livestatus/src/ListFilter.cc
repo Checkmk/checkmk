@@ -58,7 +58,7 @@ ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
 }
 
 bool ListFilter::accepts(Row row, const contact *auth_user,
-                         std::chrono::seconds /* timezone_offset */) const {
+                         std::chrono::seconds timezone_offset) const {
     switch (_relOp) {
         case RelationalOperator::equal:
             if (!_ref_string.empty()) {
@@ -66,7 +66,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                     << "Sorry, equality for lists implemented only for emptiness";
                 return false;
             }
-            return !any(row, auth_user,
+            return !any(row, auth_user, timezone_offset,
                         [](const std::string &) { return true; });
         case RelationalOperator::not_equal:
             if (!_ref_string.empty()) {
@@ -74,34 +74,38 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                     << "Sorry, inequality for lists implemented only for emptiness";
                 return false;
             }
-            return any(row, auth_user,
+            return any(row, auth_user, timezone_offset,
                        [](const std::string &) { return true; });
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
-            return any(row, auth_user, [&](const std::string &elem) {
-                return regex_search(elem, _regex);
-            });
+            return any(row, auth_user, timezone_offset,
+                       [&](const std::string &elem) {
+                           return regex_search(elem, _regex);
+                       });
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
-            return !any(row, auth_user, [&](const std::string &elem) {
-                return regex_search(elem, _regex);
-            });
+            return !any(row, auth_user, timezone_offset,
+                        [&](const std::string &elem) {
+                            return regex_search(elem, _regex);
+                        });
         case RelationalOperator::less:
-            return !any(row, auth_user, [&](const std::string &elem) {
-                return _ref_string == elem;
-            });
+            return !any(
+                row, auth_user, timezone_offset,
+                [&](const std::string &elem) { return _ref_string == elem; });
         case RelationalOperator::greater_or_equal:
-            return any(row, auth_user, [&](const std::string &elem) {
-                return _ref_string == elem;
-            });
+            return any(
+                row, auth_user, timezone_offset,
+                [&](const std::string &elem) { return _ref_string == elem; });
         case RelationalOperator::greater:
-            return !any(row, auth_user, [&](const std::string &elem) {
-                return strcasecmp(_ref_string.c_str(), elem.c_str()) == 0;
-            });
+            return !any(
+                row, auth_user, timezone_offset, [&](const std::string &elem) {
+                    return strcasecmp(_ref_string.c_str(), elem.c_str()) == 0;
+                });
         case RelationalOperator::less_or_equal:
-            return any(row, auth_user, [&](const std::string &elem) {
-                return strcasecmp(_ref_string.c_str(), elem.c_str()) == 0;
-            });
+            return any(
+                row, auth_user, timezone_offset, [&](const std::string &elem) {
+                    return strcasecmp(_ref_string.c_str(), elem.c_str()) == 0;
+                });
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
             Informational(_column.logger())

@@ -27,7 +27,8 @@
 #include "nagios.h"
 
 std::vector<std::string> HostGroupsColumn::getValue(
-    Row row, const contact * /*auth_user*/) const {
+    Row row, const contact * /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> group_names;
     if (auto p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {

@@ -39,8 +39,9 @@
 #include "auth.h"
 #endif
 
-void ServiceGroupMembersColumn::output(Row row, RowRenderer &r,
-                                       const contact *auth_user) const {
+void ServiceGroupMembersColumn::output(
+    Row row, RowRenderer &r, const contact *auth_user,
+    std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &member : getMembers(row, auth_user)) {
         SublistRenderer s(l);
@@ -59,7 +60,8 @@ std::unique_ptr<Filter> ServiceGroupMembersColumn::createFilter(
 }
 
 std::vector<std::string> ServiceGroupMembersColumn::getValue(
-    Row row, const contact *auth_user) const {
+    Row row, const contact *auth_user,
+    std::chrono::seconds /*timezone_offset*/) const {
     auto members = getMembers(row, auth_user);
     std::vector<std::string> specnames;
     std::transform(members.begin(), members.end(),

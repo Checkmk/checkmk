@@ -61,8 +61,8 @@ public:
 
     virtual ColumnType type() const = 0;
 
-    virtual void output(Row row, RowRenderer &r,
-                        const contact *auth_user) const = 0;
+    virtual void output(Row row, RowRenderer &r, const contact *auth_user,
+                        std::chrono::seconds timezone_offset) const = 0;
 
     virtual std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const = 0;

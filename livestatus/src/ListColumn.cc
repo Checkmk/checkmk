@@ -28,10 +28,10 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void ListColumn::output(Row row, RowRenderer &r,
-                        const contact *auth_user) const {
+void ListColumn::output(Row row, RowRenderer &r, const contact *auth_user,
+                        std::chrono::seconds timezone_offset) const {
     ListRenderer l(r);
-    for (const auto &val : getValue(row, auth_user)) {
+    for (const auto &val : getValue(row, auth_user, timezone_offset)) {
         l.output(val);
     }
 }

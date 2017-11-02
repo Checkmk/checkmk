@@ -29,7 +29,8 @@
 class Filter;
 
 void NullColumn::output(Row /* row */, RowRenderer& r,
-                        const contact* /* auth_user */) const {
+                        const contact* /* auth_user */,
+                        std::chrono::seconds /*timezone_offset*/) const {
     r.output(Null());
 }
 

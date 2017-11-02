@@ -36,7 +36,8 @@
 #endif
 
 std::vector<std::string> CustomVarsNamesColumn::getValue(
-    Row row, const contact * /*auth_user*/) const {
+    Row row, const contact * /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> names;
 #ifdef CMC
     if (auto *object = columnData<Object>(row)) {

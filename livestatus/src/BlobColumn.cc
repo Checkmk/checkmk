@@ -27,8 +27,8 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void BlobColumn::output(Row row, RowRenderer &r,
-                        const contact * /* auth_user */) const {
+void BlobColumn::output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+                        std::chrono::seconds /*timezone_offset*/) const {
     if (std::unique_ptr<std::vector<char>> blob = getValue(row)) {
         r.output(*blob);
     } else {

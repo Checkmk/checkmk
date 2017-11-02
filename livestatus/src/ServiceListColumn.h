@@ -26,6 +26,7 @@
 #define ServiceListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -52,11 +53,12 @@ public:
         , _mc(mc)
         , _info_depth(info_depth) {}
 
-    void output(Row row, RowRenderer &r,
-                const contact *auth_user) const override;
+    void output(Row row, RowRenderer &r, const contact *auth_user,
+                std::chrono::seconds timezone_offset) const override;
 
-    std::vector<std::string> getValue(Row row,
-                                      const contact *auth_user) const override;
+    std::vector<std::string> getValue(
+        Row row, const contact *auth_user,
+        std::chrono::seconds timezone_offset) const override;
 
 private:
     MonitoringCore *_mc;

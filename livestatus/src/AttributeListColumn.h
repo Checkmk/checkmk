@@ -26,6 +26,7 @@
 #define AttributeListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -48,8 +49,8 @@ public:
 
     // API of Column
     ColumnType type() const override { return ColumnType::list; }
-    void output(Row row, RowRenderer &r,
-                const contact *auth_user) const override;
+    void output(Row row, RowRenderer &r, const contact *auth_user,
+                std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 

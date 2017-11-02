@@ -30,8 +30,8 @@
 #include "Row.h"
 #include "TimeFilter.h"
 
-void TimeColumn::output(Row row, RowRenderer &r,
-                        const contact *auth_user) const {
+void TimeColumn::output(Row row, RowRenderer &r, const contact *auth_user,
+                        std::chrono::seconds /*timezone_offset*/) const {
     r.output(std::chrono::system_clock::from_time_t(getValue(row, auth_user)));
 }
 

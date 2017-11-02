@@ -751,7 +751,7 @@ bool Query::processDataset(Row row) {
                 QueryRenderer q(*renderer, EmitBeginEnd::off);
                 RowRenderer r(q);
                 for (const auto &column : _columns) {
-                    column->output(row, r, _auth_user);
+                    column->output(row, r, _auth_user, _timezone_offset);
                 }
             }
             for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
@@ -760,7 +760,7 @@ bool Query::processDataset(Row row) {
         } else {
             RowRenderer r(*_renderer_query);
             for (const auto &column : _columns) {
-                column->output(row, r, _auth_user);
+                column->output(row, r, _auth_user, _timezone_offset);
             }
         }
     }

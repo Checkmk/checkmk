@@ -33,7 +33,8 @@
 #include "nagios.h"
 
 void CommentColumn::output(Row row, RowRenderer &r,
-                           const contact * /* auth_user */) const {
+                           const contact * /*auth_user*/,
+                           std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &comment : comments_for_row(row)) {
         if (_with_info) {
@@ -52,7 +53,8 @@ void CommentColumn::output(Row row, RowRenderer &r,
 }
 
 std::vector<std::string> CommentColumn::getValue(
-    Row row, const contact * /*auth_user*/) const {
+    Row row, const contact * /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> ids;
     auto comments = comments_for_row(row);
     std::transform(

@@ -54,8 +54,9 @@ private:
     std::regex _regex;
 
     template <typename UnaryPredicate>
-    bool any(Row row, const contact *auth_user, UnaryPredicate pred) const {
-        auto val = _column.getValue(row, auth_user);
+    bool any(Row row, const contact *auth_user,
+             std::chrono::seconds timezone_offset, UnaryPredicate pred) const {
+        auto val = _column.getValue(row, auth_user, timezone_offset);
         return std::any_of(val.begin(), val.end(), pred);
     }
 };

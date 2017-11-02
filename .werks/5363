@@ -1,6 +1,6 @@
 Title: Exporting graph data in JSON format via GUI is now possible
 Level: 2
-Component: multisite
+Component: metrics
 Compatible: compat
 Edition: cee
 Version: 1.5.0i1

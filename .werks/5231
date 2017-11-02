@@ -1,5 +1,5 @@
 Title: Distributed WATO: Improved site snapshot generation speed, reduces "Activate changes" duration
-Level: 1
+Level: 2
 Component: wato
 Class: feature
 Compatible: compat

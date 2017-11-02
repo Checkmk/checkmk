@@ -39,6 +39,7 @@ import traceback
 from cmk.regex import regex, is_regex
 import cmk.defines as defines
 import cmk.daemon
+import cmk.render
 import livestatus
 
 try:
@@ -646,7 +647,7 @@ def update_mongodb_history_lifetime():
     if not g_mongo_conn:
         connect_mongodb()
 
-    if get_mongodb_max_history_age() == g_config['history_lifetime']:
+    if get_mongodb_max_history_age() == g_config['history_lifetime'] * 86400:
         return # do not update already correct index
 
     try:
@@ -656,7 +657,7 @@ def update_mongodb_history_lifetime():
 
     # Delete messages after x days
     g_mongo_db.ec_archive.ensure_index([('dt', DESCENDING)],
-        expireAfterSeconds = g_config['history_lifetime'],
+        expireAfterSeconds = g_config['history_lifetime'] * 86400,
         unique = False
     )
 
@@ -868,16 +869,25 @@ def expire_logfiles(flush = False):
     try:
         now = time.time()
         min_mtime = now - g_config["history_lifetime"] * 86400
+        verbose("Expiring logfiles (Horizon: %d days -> %s)" %
+                    (g_config["history_lifetime"], cmk.render.date_and_time(min_mtime)))
+
         for fn in os.listdir(log_dir):
             if fn.endswith(".log"):
                 path = log_dir + "/" + fn
+
                 if flush:
                     log("Flushed log file %s" % path)
                     os.remove(path)
-                elif os.stat(path).st_mtime < min_mtime:
-                    log("Deleting log file %s (lifetime expired after %d days)" %
-                        (path, g_config["history_lifetime"]))
-                    os.remove(path)
+
+                else:
+                    file_mtime = os.stat(path).st_mtime
+
+                    if file_mtime < min_mtime:
+                        log("Deleting log file %s (age %s)" %
+                            (path, cmk.render.date_and_time(file_mtime)))
+                        os.remove(path)
+
     except Exception, e:
         if opt_debug:
             raise
@@ -4589,7 +4599,7 @@ def default_config():
         "retention_interval"    : 60,
         "housekeeping_interval" : 60,
         "statistics_interval"   : 5,
-        "history_lifetime"      : 365 * 24 * 3600,
+        "history_lifetime"      : 365, # days -.-
         "history_rotation"      : "daily",
         "remote_status"         : None,
         "socket_queue_len"      : 10,

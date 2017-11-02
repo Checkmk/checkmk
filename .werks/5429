@@ -1,0 +1,28 @@
+Title: Fixed broken event history expiration (when using default settings)
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.4.0p17
+Date: 1509618033
+Class: fix
+
+The Event Console was not deleting outdated entries from the event history.
+With the default settings it is intended to delete entries older than 365
+days from the EC archive. This did not work.
+
+A message like this can be found each "Housekeeping interval", normaly 1 minute:
+
+[1509618281.352829] Error expiring log files: year out of range
+
+This time window can be configured with the setting "Event history lifetime".
+As a workaround you can simply open this setting and save it with the default
+value. This will make the event deletion work as expected.
+
+When you are affected, this may result in a way too huge Event Console archive
+directory (<tt>~/var/mkeventd/history</tt>) which may result in slow
+"Event Console History" views (depends on your filtering). You could clean up
+the archive directory by hand to improve the situation.
+
+After applying the update, the next housekeeping run will clean up all your old
+archived events.

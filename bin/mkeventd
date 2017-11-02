@@ -55,6 +55,7 @@ import cmk.paths
 import cmk.defines as defines
 import cmk.daemon
 import cmk.event_console
+import cmk.render
 import cmk.profile
 from cmk.regex import regex, is_regex
 
@@ -744,7 +745,7 @@ def update_mongodb_history_lifetime():
     if not g_mongo_conn:
         connect_mongodb()
 
-    if get_mongodb_max_history_age() == g_config['history_lifetime']:
+    if get_mongodb_max_history_age() == g_config['history_lifetime'] * 86400:
         return # do not update already correct index
 
     try:
@@ -754,7 +755,7 @@ def update_mongodb_history_lifetime():
 
     # Delete messages after x days
     g_mongo_db.ec_archive.ensure_index([('dt', DESCENDING)],
-        expireAfterSeconds = g_config['history_lifetime'],
+        expireAfterSeconds = g_config['history_lifetime'] * 86400,
         unique = False
     )
 
@@ -970,16 +971,26 @@ def expire_logfiles(flush = False):
     try:
         now = time.time()
         min_mtime = now - g_config["history_lifetime"] * 86400
+
+        logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
+                    (g_config["history_lifetime"], cmk.render.date_and_time(min_mtime)))
+
         for fn in os.listdir(log_dir):
             if fn.endswith(".log"):
                 path = log_dir + "/" + fn
+
                 if flush:
                     logger.info("Flushed log file %s" % path)
                     os.remove(path)
-                elif os.stat(path).st_mtime < min_mtime:
-                    logger.info("Deleting log file %s (lifetime expired after %d days)" %
-                        (path, g_config["history_lifetime"]))
-                    os.remove(path)
+
+                else:
+                    file_mtime = os.stat(path).st_mtime
+
+                    if file_mtime < min_mtime:
+                        logger.info("Deleting log file %s (age %s)" %
+                            (path, cmk.render.date_and_time(file_mtime)))
+                        os.remove(path)
+
     except Exception as e:
         if opt_debug:
             raise

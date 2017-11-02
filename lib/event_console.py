@@ -48,7 +48,7 @@ def default_config():
         "retention_interval":    60,
         "housekeeping_interval": 60,
         "statistics_interval":   5,
-        "history_lifetime":      365 * 24 * 3600,
+        "history_lifetime":      365, # days
         "history_rotation":      "daily",
         "replication":           None,
         "remote_status":         None,

@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 #include "IntColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
@@ -44,12 +45,13 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset, offset) {}
 
-    /// API of Column
     std::unique_ptr<Filter> createFilter(RelationalOperator,
                                          const std::string &) const override;
 
-    // API of IntColumn
     int32_t getValue(Row row, const contact *auth_user) const override;
+
+    std::vector<std::string> getAttributes(Row row,
+                                           const contact *auth_user) const;
 };
 
 #endif  // AttributeListAsIntColumn_h

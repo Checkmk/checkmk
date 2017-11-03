@@ -20,7 +20,7 @@ def test_03_python_interpreter_version(site):
     p = site.execute(["python", "-V"],
                      stderr=subprocess.PIPE)
     version = p.stderr.read()
-    assert version.startswith("Python 2.7.13")
+    assert version.startswith("Python 2.7.14")
 
 
 def test_03_python_path(site):

@@ -88,6 +88,7 @@ mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
     }
 
     if (command_line.empty()) {
+        delete result;
         throw StringConversionError(
             "Invalid command specification for mrpe:\r\n"
             "Format: SERVICEDESC COMMANDLINE");
@@ -96,6 +97,7 @@ mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
     if (winapi.PathIsRelative(command_line.c_str())) {
         Environment *env = Environment::instance();
         if (env == nullptr) {
+            delete result;
             throw StringConversionError("No environment");
         }
         snprintf(result->command_line, sizeof(result->command_line), "%s\\%s",
@@ -146,6 +148,7 @@ winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
         result->id =
             PerfCounterObject::resolve_counter_name(winapi, base_id.c_str());
         if (result->id == -1) {
+            delete result;
             throw StringConversionError(
                 "No matching performance counter id found for " + value);
         }

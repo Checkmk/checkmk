@@ -138,6 +138,7 @@ liblivestatus_a_SOURCES = \
         TableStateHistory.cc \
         TableStatus.cc \
         TableTimeperiods.cc \
+        TimeAggregator.cc \
         TimeColumn.cc \
         TimeFilter.cc \
         TimeperiodColumn.cc \

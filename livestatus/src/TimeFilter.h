@@ -26,19 +26,38 @@
 #define TimeFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
+#include <cstdint>
 #include <string>
-#include "IntFilter.h"
+#include "ColumnFilter.h"
+#include "contact_fwd.h"
 #include "opids.h"
-class IntColumn;
+class Row;
+class TimeColumn;
 
-class TimeFilter : public IntFilter {
+class TimeFilter : public ColumnFilter {
 public:
-    TimeFilter(const IntColumn &column, RelationalOperator relOp,
-               const std::string &value)
-        : IntFilter(column, relOp, value) {}
+    TimeFilter(const TimeColumn &column, RelationalOperator relOp,
+               std::string value);
+
+    bool accepts(Row row, const contact *auth_user,
+                 std::chrono::seconds timezone_offset) const override;
+
+    void findIntLimits(const std::string &column_name, int *lower, int *upper,
+                       std::chrono::seconds timezone_offset) const override;
+
+    bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
+                         std::chrono::seconds timezone_offset) const override;
+
+    std::string columnName() const override;
 
 private:
-    bool adjustWithTimezoneOffset() const override;
+    const TimeColumn &_column;
+    const RelationalOperator _relOp;
+    const std::string _ref_string;
+
+    bool adjustWithTimezoneOffset() const;
+    int32_t convertRefValue(std::chrono::seconds timezone_offset) const;
 };
 
 #endif  // TimeFilter_h

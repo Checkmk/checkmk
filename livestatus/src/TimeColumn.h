@@ -27,34 +27,37 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include "Aggregator.h"
 #include "Column.h"
-#include "IntColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
 class Row;
 class RowRenderer;
 
-class TimeColumn : public IntColumn {
+class TimeColumn : public Column {
 public:
     TimeColumn(const std::string &name, const std::string &description,
                int indirect_offset, int extra_offset, int extra_extra_offset,
                int offset)
-        : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, offset) {}
+        : Column(name, description, indirect_offset, extra_offset,
+                 extra_extra_offset, offset) {}
+
+    ColumnType type() const override { return ColumnType::time; }
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
-    ColumnType type() const override { return ColumnType::time; }
-
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
+
     std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const override;
+
+    virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
 };
 
 #endif  // TimeColumn_h

@@ -10,7 +10,8 @@ MIRROR=http://de.archive.ubuntu.com/ubuntu
 export HOSTNAME=cmk-windows-agent-chroot
 export LC_ALL=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LANG=en_US.UTF-8
 
-BASE="$(realpath ../..)"
+SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+BASE="$(realpath $SCRIPT_DIR/../..)"
 
 if [ -z $CHROOT_PATH ]; then
     echo "ERROR: CHROOT_PATH not set"
@@ -55,7 +56,9 @@ package_names=(
     autoconf
     automake
     build-essential
+    cabextract
     ca-certificates
+    curl
     gcc
     gettext
     language-pack-en
@@ -152,10 +155,10 @@ fi
 sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
 
 # We need to enable 32bit Wine
-./do-chroot "dpkg --add-architecture i386 && apt-get update && apt-get -y install wine32"
+$SCRIPT_DIR/do-chroot "dpkg --add-architecture i386 && apt-get update && apt-get -y install wine32"
 
 # Build Google Test and Google Mock
-./do-chroot "$CHROOT_BUILD_DIR/agents/windows/test/build-googletest"
+$SCRIPT_DIR/do-chroot "$CHROOT_BUILD_DIR/agents/windows/test/build-googletest"
 
 cp "$BASE/agents/windows/$VERSIONFILE" "$CHROOT_PATH/"
 

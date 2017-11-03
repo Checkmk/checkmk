@@ -1432,8 +1432,6 @@ class BookmarkList(pagetypes.Overridable):
         if parsed.scheme != "" and parsed.scheme not in [ "http", "https" ]:
             raise MKUserError(varprefix, _("This URL ist not allowed to be used as bookmark"))
 
-        html.debug(parsed)
-
 
     @classmethod
     def _load(self):

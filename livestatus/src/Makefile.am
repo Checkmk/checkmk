@@ -103,7 +103,6 @@ liblivestatus_a_SOURCES = \
         RendererPython3.cc \
         ServiceContactsColumn.cc \
         ServiceGroupMembersColumn.cc \
-        ServiceGroupMembersFilter.cc \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListStateColumn.cc \

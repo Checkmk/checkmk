@@ -25,10 +25,12 @@
 #include "ServiceGroupMembersColumn.h"
 #include <algorithm>
 #include <iterator>
+#include <ostream>
 #include "Filter.h"
+#include "ListFilter.h"
+#include "Logger.h"
 #include "Renderer.h"
 #include "Row.h"
-#include "ServiceGroupMembersFilter.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -54,9 +56,27 @@ void ServiceGroupMembersColumn::output(
     }
 }
 
+namespace {
+// value must be of the form
+//    hostname hostservice_separator service_description
+std::string checkValue(Logger *logger, RelationalOperator relOp,
+                       const std::string &value) {
+    auto pos = value.find(ServiceGroupMembersColumn::separator());
+    bool equality = relOp == RelationalOperator::equal ||
+                    relOp == RelationalOperator::not_equal;
+    if (pos == std::string::npos && !(equality && value.empty())) {
+        Informational(logger)
+            << "Invalid reference value for service list membership. Must be 'hostname"
+            << ServiceGroupMembersColumn::separator() << "servicename'";
+    }
+    return value;
+}
+}  // namespace
+
 std::unique_ptr<Filter> ServiceGroupMembersColumn::createFilter(
     RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<ServiceGroupMembersFilter>(*this, relOp, value);
+    return std::make_unique<ListFilter>(*this, relOp,
+                                        checkValue(logger(), relOp, value));
 }
 
 std::vector<std::string> ServiceGroupMembersColumn::getValue(

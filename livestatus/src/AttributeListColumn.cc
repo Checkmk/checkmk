@@ -31,9 +31,7 @@
 #include <utility>
 #include <vector>
 #include "Filter.h"
-#include "IntFilter.h"
 #include "Logger.h"
-#include "Renderer.h"
 #include "Row.h"
 #include "strutil.h"
 
@@ -53,30 +51,22 @@ std::map<std::string, unsigned long> known_attributes = {
 using modified_atttibutes = std::bitset<32>;
 }  // namespace
 
-int32_t AttributeListColumn::getValue(Row row,
-                                      const contact * /*unused*/) const {
-    if (auto p = columnData<unsigned long>(row)) {
-        return static_cast<int32_t>(*p);
-    }
-    return 0;
-}
-
-void AttributeListColumn::output(
-    Row row, RowRenderer &r, const contact * /*auth_user*/,
+std::vector<std::string> AttributeListColumn::getValue(
+    Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
-    ListRenderer l(r);
-    modified_atttibutes values(getValue(row, nullptr));
+    modified_atttibutes values(_int_view_column.getValue(row, auth_user));
+    std::vector<std::string> attributes;
     for (const auto &entry : known_attributes) {
         if (values[entry.second]) {
-            l.output(entry.first);
+            attributes.push_back(entry.first);
         }
     }
+    return attributes;
 }
 
 std::unique_ptr<Filter> AttributeListColumn::createFilter(
     RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<IntFilter>(*this, relOp,
-                                       refValueFor(value, logger()));
+    return _int_view_column.createFilter(relOp, value);
 }
 
 // static

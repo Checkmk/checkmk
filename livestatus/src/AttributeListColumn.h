@@ -27,37 +27,38 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <cstdint>
 #include <memory>
 #include <string>
-#include "Column.h"
-#include "IntColumn.h"
+#include <vector>
+#include "AttributeListAsIntColumn.h"
+#include "ListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
 class Logger;
 class Row;
-class RowRenderer;
 
-class AttributeListColumn : public IntColumn {
+class AttributeListColumn : public ListColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
                         int indirect_offset, int extra_offset,
                         int extra_extra_offset, int offset)
-        : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, offset) {}
+        : ListColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset, offset)
+        , _int_view_column(name, description, indirect_offset, extra_offset,
+                           extra_extra_offset, offset) {}
 
-    // API of Column
-    ColumnType type() const override { return ColumnType::list; }
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 
-    // API of IntColumn
-    int32_t getValue(Row row, const contact *auth_user) const override;
+    std::vector<std::string> getValue(
+        Row row, const contact *auth_user,
+        std::chrono::seconds timezone_offset) const override;
 
     static std::string refValueFor(const std::string &value, Logger *logger);
+
+private:
+    AttributeListAsIntColumn _int_view_column;
 };
 
 #endif  // AttributeListColumn_h

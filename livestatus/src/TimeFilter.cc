@@ -25,23 +25,19 @@
 #include "TimeFilter.h"
 #include <cstdlib>
 #include <ostream>
-#include <utility>
 #include "Logger.h"
 #include "Row.h"
 #include "TimeColumn.h"
 
 TimeFilter::TimeFilter(const TimeColumn &column, RelationalOperator relOp,
-                       std::string value)
-    : _column(column), _relOp(relOp), _ref_string(std::move(value)) {}
+                       const std::string &value)
+    : _column(column), _relOp(relOp), _ref_value(atoi(value.c_str())) {}
 
 std::string TimeFilter::columnName() const { return _column.name(); }
 
-bool TimeFilter::adjustWithTimezoneOffset() const { return true; }
-
 int32_t TimeFilter::convertRefValue(
     std::chrono::seconds timezone_offset) const {
-    return atoi(_ref_string.c_str()) -
-           (adjustWithTimezoneOffset() ? timezone_offset.count() : 0);
+    return _ref_value - timezone_offset.count();
 }
 
 bool TimeFilter::accepts(Row row, const contact *auth_user,

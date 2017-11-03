@@ -35,7 +35,6 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
-class Logger;
 class Row;
 
 class AttributeListColumn : public ListColumn {
@@ -54,8 +53,6 @@ public:
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
-
-    static std::string refValueFor(const std::string &value, Logger *logger);
 
 private:
     AttributeListAsIntColumn _int_view_column;

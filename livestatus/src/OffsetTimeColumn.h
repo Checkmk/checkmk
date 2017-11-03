@@ -26,7 +26,7 @@
 #define OffsetTimeColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <cstdint>
+#include <chrono>
 #include <string>
 #include "TimeColumn.h"
 #include "contact_fwd.h"
@@ -40,7 +40,8 @@ public:
         : TimeColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset) {}
 
-    int32_t getValue(Row row, const contact* auth_user) const override;
+    std::chrono::system_clock::time_point getValue(
+        Row row, const contact* auth_user) const override;
 };
 
 #endif  // OffsetTimeColumn_h

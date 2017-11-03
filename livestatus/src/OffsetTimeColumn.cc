@@ -26,10 +26,10 @@
 #include <ctime>
 #include "Row.h"
 
-int32_t OffsetTimeColumn::getValue(Row row,
-                                   const contact* /* auth_user */) const {
+std::chrono::system_clock::time_point OffsetTimeColumn::getValue(
+    Row row, const contact* /* auth_user */) const {
     if (auto p = columnData<time_t>(row)) {
-        return static_cast<int32_t>(*p);
+        return std::chrono::system_clock::from_time_t(*p);
     }
-    return 0;
+    return std::chrono::system_clock::time_point();
 }

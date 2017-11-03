@@ -39,9 +39,9 @@ public:
                       const time_t *number)
         : TimeColumn(name, description, -1, -1, -1, 0), _number(number) {}
 
-    int32_t getValue(Row /* row */,
-                     const contact * /* auth_user */) const override {
-        return static_cast<int32_t>(*_number);
+    std::chrono::system_clock::time_point getValue(
+        Row /* row */, const contact * /* auth_user */) const override {
+        return std::chrono::system_clock::from_time_t(*_number);
     }
 
 private:

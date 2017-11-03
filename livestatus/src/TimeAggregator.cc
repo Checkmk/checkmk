@@ -33,7 +33,8 @@ void TimeAggregator::consume(Row row, const contact *auth_user,
                              std::chrono::seconds /* timezone_offset */) {
     _count++;
     // NOTE: TimeColumn::getValue() call site
-    int32_t value = _column->getValue(row, auth_user);
+    int32_t value =
+        std::chrono::system_clock::to_time_t(_column->getValue(row, auth_user));
     switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::avg:

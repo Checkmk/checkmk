@@ -43,7 +43,8 @@ int32_t TimeFilter::convertRefValue(
 bool TimeFilter::accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const {
     // NOTE: TimeColumn::getValue() call site
-    int32_t act_value = _column.getValue(row, auth_user);
+    int32_t act_value =
+        std::chrono::system_clock::to_time_t(_column.getValue(row, auth_user));
     int32_t ref_value = convertRefValue(timezone_offset);
     switch (_relOp) {
         case RelationalOperator::equal:

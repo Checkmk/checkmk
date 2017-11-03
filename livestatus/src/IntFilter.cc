@@ -25,63 +25,52 @@
 #include "IntFilter.h"
 #include <cstdlib>
 #include <ostream>
-#include <utility>
 #include "IntColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 IntFilter::IntFilter(const IntColumn &column, RelationalOperator relOp,
-                     std::string value)
-    : _column(column), _relOp(relOp), _ref_string(std::move(value)) {}
+                     const std::string &value)
+    : _column(column), _relOp(relOp), _ref_value(atoi(value.c_str())) {}
 
 std::string IntFilter::columnName() const { return _column.name(); }
 
-// overridden by TimeFilter in order to apply timezone offset from Localtime:
-// header
-bool IntFilter::adjustWithTimezoneOffset() const { return false; }
-
-int32_t IntFilter::convertRefValue(std::chrono::seconds timezone_offset) const {
-    return atoi(_ref_string.c_str()) -
-           (adjustWithTimezoneOffset() ? timezone_offset.count() : 0);
-}
-
 bool IntFilter::accepts(Row row, const contact *auth_user,
-                        std::chrono::seconds timezone_offset) const {
+                        std::chrono::seconds /*timezone_offset*/) const {
     // NOTE: IntColumn::getValue() call site
     int32_t act_value = _column.getValue(row, auth_user);
-    int32_t ref_value = convertRefValue(timezone_offset);
     switch (_relOp) {
         case RelationalOperator::equal:
-            return act_value == ref_value;
+            return act_value == _ref_value;
         case RelationalOperator::not_equal:
-            return act_value != ref_value;
+            return act_value != _ref_value;
         case RelationalOperator::matches:  // superset
-            return (act_value & ref_value) == ref_value;
+            return (act_value & _ref_value) == _ref_value;
         case RelationalOperator::doesnt_match:  // not superset
-            return (act_value & ref_value) != ref_value;
+            return (act_value & _ref_value) != _ref_value;
         case RelationalOperator::equal_icase:  // subset
-            return (act_value & ref_value) == act_value;
+            return (act_value & _ref_value) == act_value;
         case RelationalOperator::not_equal_icase:  // not subset
-            return (act_value & ref_value) != act_value;
+            return (act_value & _ref_value) != act_value;
         case RelationalOperator::matches_icase:  // contains any
-            return (act_value & ref_value) != 0;
+            return (act_value & _ref_value) != 0;
         case RelationalOperator::doesnt_match_icase:  // contains none of
-            return (act_value & ref_value) == 0;
+            return (act_value & _ref_value) == 0;
         case RelationalOperator::less:
-            return act_value < ref_value;
+            return act_value < _ref_value;
         case RelationalOperator::greater_or_equal:
-            return act_value >= ref_value;
+            return act_value >= _ref_value;
         case RelationalOperator::greater:
-            return act_value > ref_value;
+            return act_value > _ref_value;
         case RelationalOperator::less_or_equal:
-            return act_value <= ref_value;
+            return act_value <= _ref_value;
     }
     return false;  // unreachable
 }
 
 void IntFilter::findIntLimits(const std::string &column_name, int *lower,
                               int *upper,
-                              std::chrono::seconds timezone_offset) const {
+                              std::chrono::seconds /*timezone_offset*/) const {
     if (column_name != columnName()) {
         return;  // wrong column
     }
@@ -89,45 +78,43 @@ void IntFilter::findIntLimits(const std::string &column_name, int *lower,
         return;  // already empty interval
     }
 
-    int32_t ref_value = convertRefValue(timezone_offset);
-
     /* [lower, upper[ is some interval. This filter might restrict that interval
        to a smaller interval.
      */
     switch (_relOp) {
         case RelationalOperator::equal:
-            if (ref_value >= *lower && ref_value < *upper) {
-                *lower = ref_value;
-                *upper = ref_value + 1;
+            if (_ref_value >= *lower && _ref_value < *upper) {
+                *lower = _ref_value;
+                *upper = _ref_value + 1;
             } else {
                 *lower = *upper;
             }
             return;
         case RelationalOperator::not_equal:
-            if (ref_value == *lower) {
+            if (_ref_value == *lower) {
                 *lower = *lower + 1;
-            } else if (ref_value == *upper - 1) {
+            } else if (_ref_value == *upper - 1) {
                 *upper = *upper - 1;
             }
             return;
         case RelationalOperator::less:
-            if (ref_value < *upper) {
-                *upper = ref_value;
+            if (_ref_value < *upper) {
+                *upper = _ref_value;
             }
             return;
         case RelationalOperator::greater_or_equal:
-            if (ref_value > *lower) {
-                *lower = ref_value;
+            if (_ref_value > *lower) {
+                *lower = _ref_value;
             }
             return;
         case RelationalOperator::greater:
-            if (ref_value >= *lower) {
-                *lower = ref_value + 1;
+            if (_ref_value >= *lower) {
+                *lower = _ref_value + 1;
             }
             return;
         case RelationalOperator::less_or_equal:
-            if (ref_value < *upper - 1) {
-                *upper = ref_value + 1;
+            if (_ref_value < *upper - 1) {
+                *upper = _ref_value + 1;
             }
             return;
         case RelationalOperator::matches:
@@ -143,21 +130,20 @@ void IntFilter::findIntLimits(const std::string &column_name, int *lower,
     }
 }
 
-bool IntFilter::optimizeBitmask(const std::string &column_name, uint32_t *mask,
-                                std::chrono::seconds timezone_offset) const {
-    int32_t ref_value = convertRefValue(timezone_offset);
-
+bool IntFilter::optimizeBitmask(
+    const std::string &column_name, uint32_t *mask,
+    std::chrono::seconds /*timezone_offset*/) const {
     if (column_name != columnName()) {
         return false;  // wrong column
     }
 
-    if (ref_value < 0 || ref_value > 31) {
+    if (_ref_value < 0 || _ref_value > 31) {
         return true;  // not optimizable by 32bit bit mask
     }
 
     // Our task is to remove those bits from mask that are deselected by the
     // filter.
-    uint32_t bit = 1 << ref_value;
+    uint32_t bit = 1 << _ref_value;
 
     switch (_relOp) {
         case RelationalOperator::equal:
@@ -176,7 +162,7 @@ bool IntFilter::optimizeBitmask(const std::string &column_name, uint32_t *mask,
             }
             return true;
         case RelationalOperator::less_or_equal:
-            if (ref_value == 31) {
+            if (_ref_value == 31) {
                 return true;
             }
             bit <<= 1;

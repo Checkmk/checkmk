@@ -38,7 +38,7 @@ class Row;
 class IntFilter : public ColumnFilter {
 public:
     IntFilter(const IntColumn &column, RelationalOperator relOp,
-              std::string value);
+              const std::string &value);
 
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
@@ -54,10 +54,7 @@ public:
 private:
     const IntColumn &_column;
     const RelationalOperator _relOp;
-    const std::string _ref_string;
-
-    bool adjustWithTimezoneOffset() const;
-    int32_t convertRefValue(std::chrono::seconds timezone_offset) const;
+    const int32_t _ref_value;
 };
 
 #endif  // IntFilter_h

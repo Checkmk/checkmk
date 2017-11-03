@@ -1495,6 +1495,7 @@ class BookmarkList(pagetypes.Overridable):
                                 title = _("URL"),
                                 size = 50,
                                 allow_empty = False,
+                                validate = self.validate_url,
                             )),
                             (IconSelector(
                                 title = _("Icon"),
@@ -1527,9 +1528,18 @@ class BookmarkList(pagetypes.Overridable):
         return parameters
 
 
+    def validate_url(cls, value, varprefix):
+        parsed = urlparse.urlparse(value)
+
+        # Absolute URLs are allowed, but limit it to http/https
+        if parsed.scheme != "" and parsed.scheme not in [ "http", "https" ]:
+            raise MKUserError(varprefix, _("This URL ist not allowed to be used as bookmark"))
+
+
     @classmethod
     def _load(cls):
         cls.load_legacy_bookmarks()
+        self.load_legacy_bookmarks()
 
 
     @classmethod
@@ -1694,6 +1704,7 @@ def ajax_add_bookmark():
     title = html.var("title")
     url   = html.var("url")
     if title and url:
+        BookmarkList.validate_url(url, "url")
         add_bookmark(title, url)
     render_bookmarks()
 

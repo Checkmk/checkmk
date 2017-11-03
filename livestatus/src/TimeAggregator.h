@@ -22,26 +22,35 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "TimeColumn.h"
+#ifndef TimeAggregator_h
+#define TimeAggregator_h
+
+#include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include "Filter.h"
-#include "Renderer.h"
-#include "Row.h"
-#include "TimeAggregator.h"
-#include "TimeFilter.h"
+#include <cstdint>
+#include "Aggregator.h"
+#include "contact_fwd.h"
+class TimeColumn;
+class Row;
+class RowRenderer;
 
-void TimeColumn::output(Row row, RowRenderer &r, const contact *auth_user,
-                        std::chrono::seconds /*timezone_offset*/) const {
-    // NOTE: TimeColumn::getValue() call site
-    r.output(std::chrono::system_clock::from_time_t(getValue(row, auth_user)));
-}
+class TimeAggregator : public Aggregator {
+public:
+    TimeAggregator(StatsOperation operation, const TimeColumn *column)
+        : Aggregator(operation)
+        , _column(column)
+        , _count(0)
+        , _aggr(0)
+        , _sumq(0) {}
+    void consume(Row row, const contact *auth_user,
+                 std::chrono::seconds timezone_offset) override;
+    void output(RowRenderer &r) const override;
 
-std::unique_ptr<Filter> TimeColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<TimeFilter>(*this, relOp, value);
-}
+private:
+    const TimeColumn *const _column;
+    std::uint32_t _count;
+    int64_t _aggr;
+    double _sumq;
+};
 
-std::unique_ptr<Aggregator> TimeColumn::createAggregator(
-    StatsOperation operation) const {
-    return std::make_unique<TimeAggregator>(operation, this);
-}
+#endif  // TimeAggregator_h

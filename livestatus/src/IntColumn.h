@@ -46,18 +46,18 @@ public:
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset) {}
 
-    // TODO(sp) Get rid of the contact* parameter, it doesn't really belong here
-    // and is only used in ServiceListStateColumn and HostListStateColumn for
-    // questionable purposes...
-    virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
+    ColumnType type() const override { return ColumnType::int_; }
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
-    ColumnType type() const override { return ColumnType::int_; }
+
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
+
     std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const override;
+
+    virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
 };
 
 #endif  // IntColumn_h

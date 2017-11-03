@@ -39,12 +39,16 @@ class IntFilter : public ColumnFilter {
 public:
     IntFilter(const IntColumn &column, RelationalOperator relOp,
               std::string value);
+
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
+
     void findIntLimits(const std::string &column_name, int *lower, int *upper,
                        std::chrono::seconds timezone_offset) const override;
+
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          std::chrono::seconds timezone_offset) const override;
+
     std::string columnName() const override;
 
 private:
@@ -52,7 +56,7 @@ private:
     const RelationalOperator _relOp;
     const std::string _ref_string;
 
-    virtual bool adjustWithTimezoneOffset() const;
+    bool adjustWithTimezoneOffset() const;
     int32_t convertRefValue(std::chrono::seconds timezone_offset) const;
 };
 

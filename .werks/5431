@@ -1,0 +1,20 @@
+Title: Fixed possible reflected XSS using custom bookmarks
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1509701263
+
+It was possible to create custom bookmarks by making the user open a
+crafted URL. This created a bookmark in the users default bookmark list
+which could be used to execute custom javascript code when the user
+clicks on the just created link.
+
+For example the user session cookies can be read and reported to the 
+attackers, who could then hijack the users sessions with the application.
+
+This issue has been fixed by limiting absolute URLs in bookmarks to the
+URL schemes <tt>https</tt> and <tt>http</tt>.

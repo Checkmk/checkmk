@@ -135,9 +135,9 @@ protected:
                 return static_cast<int32_t>(atof(x.c_str()));
             }) {}
 
-        int32_t getValue(Row row,
-                         const contact * /* auth_user */) const override {
-            return _ecc.getValue(row);
+        std::chrono::system_clock::time_point getValue(
+            Row row, const contact * /* auth_user */) const override {
+            return std::chrono::system_clock::from_time_t(_ecc.getValue(row));
         }
     };
 

@@ -27,7 +27,6 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <cstdint>
 #include <memory>
 #include <string>
 #include "Aggregator.h"
@@ -57,7 +56,8 @@ public:
     std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const override;
 
-    virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
+    virtual std::chrono::system_clock::time_point getValue(
+        Row row, const contact *auth_user) const = 0;
 };
 
 #endif  // TimeColumn_h

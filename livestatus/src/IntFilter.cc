@@ -47,6 +47,7 @@ int32_t IntFilter::convertRefValue(std::chrono::seconds timezone_offset) const {
 
 bool IntFilter::accepts(Row row, const contact *auth_user,
                         std::chrono::seconds timezone_offset) const {
+    // NOTE: IntColumn::getValue() call site
     int32_t act_value = _column.getValue(row, auth_user);
     int32_t ref_value = convertRefValue(timezone_offset);
     switch (_relOp) {

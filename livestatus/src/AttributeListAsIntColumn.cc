@@ -88,12 +88,14 @@ int32_t AttributeListAsIntColumn::getValue(
 }
 
 std::vector<std::string> AttributeListAsIntColumn::getAttributes(
-    Row row, const contact *auth_user) const {
-    modified_atttibutes values(getValue(row, auth_user));
+    Row row) const {
     std::vector<std::string> attributes;
-    for (const auto &entry : known_attributes) {
-        if (values[entry.second]) {
-            attributes.push_back(entry.first);
+    if (auto p = columnData<unsigned long>(row)) {
+        modified_atttibutes values(*p);
+        for (const auto &entry : known_attributes) {
+            if (values[entry.second]) {
+                attributes.push_back(entry.first);
+            }
         }
     }
     return attributes;

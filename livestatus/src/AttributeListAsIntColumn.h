@@ -50,8 +50,7 @@ public:
 
     int32_t getValue(Row row, const contact *auth_user) const override;
 
-    std::vector<std::string> getAttributes(Row row,
-                                           const contact *auth_user) const;
+    std::vector<std::string> getAttributes(Row row) const;
 };
 
 #endif  // AttributeListAsIntColumn_h

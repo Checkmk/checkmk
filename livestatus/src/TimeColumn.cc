@@ -32,6 +32,7 @@
 
 void TimeColumn::output(Row row, RowRenderer &r, const contact *auth_user,
                         std::chrono::seconds /*timezone_offset*/) const {
+    // NOTE: IntColumn::getValue() call site
     r.output(std::chrono::system_clock::from_time_t(getValue(row, auth_user)));
 }
 

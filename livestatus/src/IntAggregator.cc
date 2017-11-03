@@ -32,6 +32,7 @@
 void IntAggregator::consume(Row row, const contact *auth_user,
                             std::chrono::seconds /* timezone_offset */) {
     _count++;
+    // NOTE: IntColumn::getValue() call site
     int32_t value = _column->getValue(row, auth_user);
     switch (getOperation()) {
         case StatsOperation::sum:

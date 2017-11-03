@@ -34,7 +34,7 @@ std::unique_ptr<Filter> AttributeListColumn::createFilter(
 }
 
 std::vector<std::string> AttributeListColumn::getValue(
-    Row row, const contact *auth_user,
+    Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
-    return _int_view_column.getAttributes(row, auth_user);
+    return _int_view_column.getAttributes(row);
 }

@@ -1495,7 +1495,7 @@ class BookmarkList(pagetypes.Overridable):
                                 title = _("URL"),
                                 size = 50,
                                 allow_empty = False,
-                                validate = self.validate_url,
+                                validate = cls.validate_url,
                             )),
                             (IconSelector(
                                 title = _("Icon"),
@@ -1528,6 +1528,7 @@ class BookmarkList(pagetypes.Overridable):
         return parameters
 
 
+    @classmethod
     def validate_url(cls, value, varprefix):
         parsed = urlparse.urlparse(value)
 
@@ -1539,7 +1540,6 @@ class BookmarkList(pagetypes.Overridable):
     @classmethod
     def _load(cls):
         cls.load_legacy_bookmarks()
-        self.load_legacy_bookmarks()
 
 
     @classmethod

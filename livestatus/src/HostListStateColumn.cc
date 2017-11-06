@@ -25,10 +25,26 @@
 #include "HostListStateColumn.h"
 #include "LogEntry.h"
 #include "Row.h"
+
+#ifdef CMC
+#include <unordered_set>
+#include "Host.h"
+#include "State.h"
+#else
 #include "auth.h"
+#endif
 
 int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
     int32_t result = 0;
+#ifdef CMC
+    if (auto p = columnData<std::unordered_set<Host *>>(row)) {
+        for (auto hst : *p) {
+            if (auth_user == nullptr || hst->hasContact(_mc, auth_user)) {
+                update(hst, auth_user, result);
+            }
+        }
+    }
+#else
     if (auto p = columnData<hostsmember *>(row)) {
         for (hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
             host *hst = mem->host_ptr;
@@ -38,11 +54,21 @@ int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
             }
         }
     }
+#endif
     return result;
 }
 
 void HostListStateColumn::update(host *hst, const contact *auth_user,
                                  int32_t &result) const {
+#ifdef CMC
+    ServiceListStateColumn::service_list services = &hst->_services;
+    bool has_been_checked = hst->state()->_has_been_checked;
+    int current_state = static_cast<int>(hst->state()->_current_state);
+#else
+    ServiceListStateColumn::service_list services = hst->services;
+    bool has_been_checked = hst->has_been_checked != 0;
+    int current_state = hst->current_state;
+#endif
     switch (_logictype) {
         case Type::num_svc_pending:
         case Type::num_svc_ok:
@@ -52,13 +78,13 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
         case Type::num_svc:
             result += ServiceListStateColumn::getValueFromServices(
                 _mc, static_cast<ServiceListStateColumn::Type>(_logictype),
-                hst->services, auth_user);
+                services, auth_user);
             break;
 
         case Type::worst_svc_state: {
             int state = ServiceListStateColumn::getValueFromServices(
                 _mc, static_cast<ServiceListStateColumn::Type>(_logictype),
-                hst->services, auth_user);
+                services, auth_user);
             if (worse(static_cast<ServiceState>(state),
                       static_cast<ServiceState>(result))) {
                 result = state;
@@ -69,8 +95,8 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
         case Type::num_hst_up:
         case Type::num_hst_down:
         case Type::num_hst_unreach:
-            if (hst->has_been_checked != 0 &&
-                hst->current_state ==
+            if (has_been_checked &&
+                current_state ==
                     static_cast<int>(_logictype) -
                         static_cast<int>(Type::num_hst_up)) {
                 result++;
@@ -78,7 +104,7 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
             break;
 
         case Type::num_hst_pending:
-            if (hst->has_been_checked == 0) {
+            if (!has_been_checked) {
                 result++;
             }
             break;
@@ -88,9 +114,9 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
             break;
 
         case Type::worst_hst_state:
-            if (worse(static_cast<HostState>(hst->current_state),
+            if (worse(static_cast<HostState>(current_state),
                       static_cast<HostState>(result))) {
-                result = hst->current_state;
+                result = current_state;
             }
             break;
         case Type::num_svc_hard_ok:

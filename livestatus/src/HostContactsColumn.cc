@@ -23,13 +23,26 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostContactsColumn.h"
-#include <unordered_set>
 #include "Row.h"
+
+#ifdef CMC
+#include "ContactList.h"
+#include "Object.h"
+#include "cmc.h"
+#else
+#include <unordered_set>
 #include "nagios.h"
+#endif
 
 std::vector<std::string> HostContactsColumn::getValue(
     Row row, const contact* /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
+#ifdef CMC
+    if (auto object = columnData<Object>(row)) {
+        return object->_contact_list->contactNames();
+    }
+    return {};
+#else
     std::unordered_set<std::string> names;
     if (auto hst = columnData<host>(row)) {
         for (auto cm = hst->contacts; cm != nullptr; cm = cm->next) {
@@ -43,4 +56,5 @@ std::vector<std::string> HostContactsColumn::getValue(
         }
     }
     return std::vector<std::string>(names.begin(), names.end());
+#endif
 }

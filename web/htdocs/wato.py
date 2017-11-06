@@ -97,6 +97,7 @@ import modules as multisite_modules
 import watolib
 
 import cmk.paths
+import cmk.translations
 import cmk.store as store
 import cmk.man_pages as man_pages
 from cmk.regex import escape_regex_chars, regex

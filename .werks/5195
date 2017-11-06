@@ -1,0 +1,13 @@
+Title: Fixed an obscure BI bug related to hard states when using the Nagios core.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1509976923
+Class: fix
+
+Previously, the "service" table was missing a "hard_state" columnm, which
+led to a rather obscure bug in BI: When the Nagios core was used and BI was
+configured to use hard states and a service was in a non-OK soft state, the
+service was effectively ignored by BI. This has been fixed.

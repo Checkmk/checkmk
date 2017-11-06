@@ -3520,7 +3520,7 @@ def declare_host_tag_attributes(force=False):
     global currently_configured_host_tags
     global g_host_attributes
 
-    if force or currently_configured_host_tags != configured_host_tags():
+    if force or currently_configured_host_tags != config.host_tag_groups():
         # Remove host tag attributes from list, if existing
         g_host_attributes = [ (attr, topic)
                for (attr, topic)
@@ -3532,7 +3532,7 @@ def declare_host_tag_attributes(force=False):
             if attr.name().startswith("tag_"):
                 del g_host_attribute[attr.name()]
 
-        for topic, grouped_tags in group_hosttags_by_topic(configured_host_tags()):
+        for topic, grouped_tags in group_hosttags_by_topic(config.host_tag_groups()):
             for entry in grouped_tags:
                 # if the entry has o fourth component, then its
                 # the tag dependency defintion.
@@ -3558,7 +3558,7 @@ def declare_host_tag_attributes(force=False):
                         depends_on_roles = depends_on_roles,
                         topic = topic)
 
-        currently_configured_host_tags = configured_host_tags()
+        currently_configured_host_tags = config.host_tag_groups()
 
 
 def undeclare_host_tag_attribute(tag_id):
@@ -5984,12 +5984,21 @@ def register_builtin_host_tags():
     global builtin_host_tags, builtin_aux_tags
     del builtin_host_tags[:]
     builtin_host_tags += [
+        ('agent', u'Agent type',
+            [
+                ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+                ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+                ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
+                ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+                ('ping',      u'No Agent', []),
+            ],
+        ),
         ('address_family', u'/IP Address Family',
             [
                 ('ip-v4-only', u'IPv4 only', ['ip-v4']),
                 ('ip-v6-only', u'IPv6 only', ['ip-v6']),
-                ('ip-v4v6', u'IPv4/IPv6 dual-stack', ['ip-v4', 'ip-v6'])
-            ]
+                ('ip-v4v6', u'IPv4/IPv6 dual-stack', ['ip-v4', 'ip-v6']),
+            ],
         ),
     ]
 
@@ -6000,51 +6009,48 @@ def register_builtin_host_tags():
     ]
 
 
-def configured_host_tags():
-    return config.wato_host_tags + builtin_host_tags
+# Extend the given tag group definitions with the builtin tag groups
+# and return the extended list
+def get_effective_tag_groups(tag_groups):
+    tag_groups = tag_groups[:]
+    tag_group_ids = set([ tg[0] for tg in tag_groups ])
+
+    for tag_group in builtin_host_tags:
+        if tag_group[0] not in tag_group_ids:
+            tag_groups.append(tag_group)
+
+    return tag_groups
+
+
+def get_effective_aux_tags(aux_tag_list):
+    aux_tags = aux_tag_list[:]
+    aux_tag_ids = set([ at[0] for at in aux_tag_list ])
+
+    for aux_tag in builtin_aux_tags:
+        if aux_tag[0] not in aux_tag_ids:
+            aux_tags.append(aux_tag)
+
+    return aux_tags
 
 
 def configured_aux_tags():
-    return config.wato_aux_tags + builtin_aux_tags
+    return get_effective_aux_tags(config.wato_aux_tags)
 
 
-# Construct lists of builtin host tags. Users might already have the
-# tag groups defined. Skip these builtin groups.
-def load_builtin_hosttags():
-    hosttags, auxtags = [], []
-    # First add the regular tag groups
-    for builtin_taggroup in builtin_host_tags:
-        tag_id = builtin_taggroup[0]
-
-        has_customized = bool([ g[0] for g in hosttags
-                                if g[0] == tag_id ])
-        if not has_customized:
-            hosttags.append(builtin_taggroup)
-
-    # then add the aux tags
-    for builtin_auxtag in builtin_aux_tags:
-        tag_id = builtin_auxtag[0]
-
-        has_customized = bool([ g[0] for g in auxtags
-                                if g[0] == tag_id ])
-        if not has_customized:
-            auxtags.append(builtin_auxtag)
-
-    return hosttags, auxtags
-
-
-def is_builtin_host_tag(taggroup_id):
-    for builtin_taggroup in builtin_host_tags:
-        if builtin_taggroup[0] == taggroup_id:
-            return True
-    return False
+# When a tag group is not defined in the users tag groups,
+# it must be a builtin tag group
+def is_builtin_host_tag_group(tag_group_id):
+    for tag_group in config.wato_host_tags:
+        if tag_group[0] == tag_group_id:
+            return False
+    return True
 
 
 def is_builtin_aux_tag(taggroup_id):
-    for builtin_taggroup in builtin_aux_tags:
+    for builtin_taggroup in config.wato_aux_tags:
         if builtin_taggroup[0] == taggroup_id:
-            return True
-    return False
+            return False
+    return True
 
 
 def save_hosttags(hosttags, auxtags):
@@ -6182,29 +6188,20 @@ def format_php(data, lvl = 1):
     return s
 
 
-# Current specification for hosttag entries: One tag definition is stored
-# as tuple of at least three elements. The elements are used as follows:
-# taggroup_id, group_title, list_of_choices, depends_on_tags, depends_on_roles, editable
-def load_hosttags():
-    default_config = {
-        "wato_host_tags" : [],
-        "wato_aux_tags"  : [],
-    }
-
-    config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
-
-    _convert_manual_host_tags(config["wato_host_tags"])
-
-    return config["wato_host_tags"], config["wato_aux_tags"]
-
-
-# Convert manually crafted host tags tags WATO-style. This
-# makes the migration easier
-def _convert_manual_host_tags(host_tags):
-    for taggroup in host_tags:
-        for nr, entry in enumerate(taggroup[2]):
-            if len(entry) <= 2:
-                taggroup[2][nr] = entry + ([],)
+def remove_unmodified_agent_tag_group(host_tags):
+    legacy_tag_group_default = ('agent', u'Agent type',
+        [
+            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
+            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+            ('ping',      u'No Agent', []),
+        ],
+    )
+    try:
+        host_tags.remove(legacy_tag_group_default)
+    except ValueError:
+        pass # Not there or modified
 
 
 def validate_tag_id(tag_id, varname):
@@ -6212,6 +6209,7 @@ def validate_tag_id(tag_id, varname):
         raise MKUserError(varname,
             _("Invalid tag ID. Only the characters a-z, A-Z, "
               "0-9, _ and - are allowed."))
+
 
 class Hosttag(object):
     def __init__(self):
@@ -6297,6 +6295,9 @@ class AuxtagList(object):
 
 
     def append(self, aux_tag):
+        if is_builtin_aux_tag(aux_tag.id):
+            raise MKUserError("tag_id", _("You can not override a builtin auxiliary tag."))
+
         if self.has_aux_tag(aux_tag):
             raise MKUserError("tag_id", _("This tag id does already exist in the list "
                                           "of auxiliary tags."))
@@ -6533,6 +6534,9 @@ class HosttagsConfiguration(object):
 
 
     def insert_tag_group(self, tag_group):
+        if is_builtin_host_tag_group(tag_group.id):
+            raise MKUserError("tag_id", _("You can not override a builtin tag group."))
+
         self.tag_groups.append(tag_group)
         self._validate_group(tag_group)
 
@@ -6613,8 +6617,34 @@ class HosttagsConfiguration(object):
 
 
     def load(self):
-        hosttags, auxtags = load_hosttags()
+        hosttags, auxtags = self._load_hosttags()
         self._parse_legacy_format(hosttags, auxtags)
+
+
+    # Current specification for hosttag entries: One tag definition is stored
+    # as tuple of at least three elements. The elements are used as follows:
+    # taggroup_id, group_title, list_of_choices, depends_on_tags, depends_on_roles, editable
+    def _load_hosttags(self):
+        default_config = {
+            "wato_host_tags" : [],
+            "wato_aux_tags"  : [],
+        }
+
+        config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
+
+        self._convert_manual_host_tags(config["wato_host_tags"])
+        remove_unmodified_agent_tag_group(config["wato_host_tags"])
+
+        return config["wato_host_tags"], config["wato_aux_tags"]
+
+
+    # Convert manually crafted host tags tags WATO-style. This
+    # makes the migration easier
+    def _convert_manual_host_tags(self, host_tags):
+        for taggroup in host_tags:
+            for nr, entry in enumerate(taggroup[2]):
+                if len(entry) <= 2:
+                    taggroup[2][nr] = entry + ([],)
 
 
     def save(self):
@@ -6900,7 +6930,7 @@ def render_condition_editor(tag_specs, varprefix=""):
     if varprefix:
         varprefix += "_"
 
-    if not configured_aux_tags() + configured_host_tags():
+    if not configured_aux_tags() + config.host_tag_groups():
         html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
         return
 
@@ -6948,7 +6978,7 @@ def render_condition_editor(tag_specs, varprefix=""):
 
 
     auxtags = group_hosttags_by_topic(configured_aux_tags())
-    hosttags = group_hosttags_by_topic(configured_host_tags())
+    hosttags = group_hosttags_by_topic(config.host_tag_groups())
     all_topics = set([])
     for topic, taggroups in auxtags + hosttags:
         all_topics.add(topic)
@@ -7008,7 +7038,7 @@ def get_tag_conditions(varprefix=""):
         varprefix += "_"
     # Main tags
     tag_list = []
-    for entry in configured_host_tags():
+    for entry in config.host_tag_groups():
         id, title, tags = entry[:3]
         mode = html.var(varprefix + "tag_" + id)
         if len(tags) == 1:

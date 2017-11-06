@@ -35,21 +35,22 @@ class Row;
 
 class ServiceSpecialIntColumn : public IntColumn {
 public:
-    enum class Type { pnp_graph_present };
+    enum class Type { real_hard_state, pnp_graph_present };
 
-    ServiceSpecialIntColumn(const std::string& name,
-                            const std::string& description, int indirect_offset,
+    ServiceSpecialIntColumn(const std::string &name,
+                            const std::string &description, int indirect_offset,
                             int extra_offset, int extra_extra_offset,
-                            int offset, MonitoringCore* mc, Type ssic_type)
+                            int offset, MonitoringCore *mc, Type ssic_type)
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset, offset)
         , _mc(mc)
         , _type(ssic_type) {}
-    int32_t getValue(Row row, const contact* auth_user) const override;
+
+    int32_t getValue(Row row, const contact *auth_user) const override;
 
 private:
-    MonitoringCore* _mc;
-    Type _type;
+    MonitoringCore *_mc;
+    const Type _type;
 };
 
 #endif  // ServiceSpecialIntColumn_h

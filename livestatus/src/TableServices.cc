@@ -333,6 +333,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         "A list of all modified attributes", indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(service, modified_attributes)));
     table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
+        prefix + "hard_state",
+        "The effective hard state of the service (eliminates a problem in hard_state)",
+        indirect_offset, -1, -1, 0, table->core(),
+        ServiceSpecialIntColumn::Type::real_hard_state));
+    table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
         indirect_offset, -1, -1, 0, table->core(),

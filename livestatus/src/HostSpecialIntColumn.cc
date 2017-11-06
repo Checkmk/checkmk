@@ -26,21 +26,57 @@
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "mk_inventory.h"
+
+#ifdef CMC
+#include "Core.h"
+#include "Host.h"
+#include "Object.h"
+#include "RRDBackend.h"
+#include "RRDInfoCache.h"
+#include "State.h"
+#include "cmc.h"
+#else
 #include "nagios.h"
 #include "pnp4nagios.h"
+#endif
 
 int32_t HostSpecialIntColumn::getValue(Row row,
                                        const contact* /* auth_user */) const {
+#ifdef CMC
+    if (auto object = columnData<Object>(row)) {
+        switch (_type) {
+            case Type::real_hard_state: {
+                auto state = object->state();
+                if (state->_current_state == 0) {
+                    return 0;
+                }
+                if (state->_state_type == StateType::hard) {
+                    return state->_current_state;
+                }
+                return state->_last_hard_state;
+            }
+            case Type::pnp_graph_present:
+                return _mc->impl<Core>()
+                               ->_rrd_backend.infoFor(object)
+                               ._names.empty()
+                           ? 0
+                           : 1;
+            case Type::mk_inventory_last:
+                return static_cast<int32_t>(mk_inventory_last(
+                    _mc->mkInventoryPath() + "/" + object->host()->name()));
+        }
+    }
+#else
     if (auto hst = columnData<host>(row)) {
         switch (_type) {
             case Type::real_hard_state:
                 if (hst->current_state == 0) {
                     return 0;
-                } else if (hst->state_type == 1) {
-                    return hst->current_state;  // we have reached a hard state
-                } else {
-                    return hst->last_hard_state;
                 }
+                if (hst->state_type == HARD_STATE) {
+                    return hst->current_state;
+                }
+                return hst->last_hard_state;
 
             case Type::pnp_graph_present:
                 return pnpgraph_present(_mc, hst->name,
@@ -52,5 +88,6 @@ int32_t HostSpecialIntColumn::getValue(Row row,
             }
         }
     }
+#endif
     return 0;
 }

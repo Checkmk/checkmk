@@ -24,10 +24,13 @@
 
 #include "TimeperiodColumn.h"
 #include "Row.h"
+
+#ifdef CMC
+#include "Timeperiod.h"
+#else
 #include "TimeperiodsCache.h"
 #include "nagios.h"
-
-extern TimeperiodsCache* g_timeperiods_cache;
+#endif
 
 TimeperiodColumn::TimeperiodColumn(const std::string& name,
                                    const std::string& description,
@@ -38,9 +41,16 @@ TimeperiodColumn::TimeperiodColumn(const std::string& name,
 
 int32_t TimeperiodColumn::getValue(Row row,
                                    const contact* /* auth_user */) const {
+#ifdef CMC
+    if (auto tp = columnData<Timeperiod>(row)) {
+        return tp->isActive() ? 1 : 0;
+    }
+#else
+    extern TimeperiodsCache* g_timeperiods_cache;
     if (auto tp = columnData<timeperiod>(row)) {
         return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
     }
-    // no timeperiod set -> Nagios assumes 24X7
+#endif
+    // no timeperiod set -> assume 24X7
     return 0;
 }

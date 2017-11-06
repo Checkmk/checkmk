@@ -41,10 +41,11 @@ public:
         : DoubleColumn(name, description, indirect, extra_offset,
                        extra_extra_offset, offset)
         , _type(ssdc_type) {}
+
     double getValue(Row row) const override;
 
 private:
-    Type _type;
+    const Type _type;
 };
 
 #endif  // ServiceSpecialDoubleColumn_h

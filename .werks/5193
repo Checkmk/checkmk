@@ -1,0 +1,12 @@
+Title: Fixed authorization handling for Livestatus queries.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1509958056
+Class: fix
+
+Depending on the monitoring core used, several columns did not respect the
+AuthUser: header, so more hosts/services/groups were returned than
+requested.  This has been fixed.

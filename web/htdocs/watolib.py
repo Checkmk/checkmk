@@ -6186,27 +6186,25 @@ def format_php(data, lvl = 1):
 # as tuple of at least three elements. The elements are used as follows:
 # taggroup_id, group_title, list_of_choices, depends_on_tags, depends_on_roles, editable
 def load_hosttags():
-    filename = multisite_dir + "hosttags.mk"
-    if not os.path.exists(filename):
-        return [], []
-    try:
-        vars = {
-            "wato_host_tags" : [],
-            "wato_aux_tags" : []}
-        execfile(filename, vars, vars)
-        # Convert manually crafted host tags tags WATO-style. This
-        # makes the migration easier
-        for taggroup in vars["wato_host_tags"]:
-            for nr, entry in enumerate(taggroup[2]):
-                if len(entry) <= 2:
-                    taggroup[2][nr] = entry + ([],)
-        return vars["wato_host_tags"], vars["wato_aux_tags"]
+    default_config = {
+        "wato_host_tags" : [],
+        "wato_aux_tags"  : [],
+    }
 
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        return [], []
+    config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
+
+    _convert_manual_host_tags(config["wato_host_tags"])
+
+    return config["wato_host_tags"], config["wato_aux_tags"]
+
+
+# Convert manually crafted host tags tags WATO-style. This
+# makes the migration easier
+def _convert_manual_host_tags(host_tags):
+    for taggroup in host_tags:
+        for nr, entry in enumerate(taggroup[2]):
+            if len(entry) <= 2:
+                taggroup[2][nr] = entry + ([],)
 
 
 def validate_tag_id(tag_id, varname):

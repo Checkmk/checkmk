@@ -16496,7 +16496,9 @@ def find_folder_to_scan():
 
 
 def add_scanned_hosts_to_folder(folder, found):
-    translation = folder.attribute("network_scan").get("translate_names", {})
+    network_scan_properties = folder.attribute("network_scan")
+
+    translation = network_scan_properties.get("translate_names", {})
 
     entries = []
     for host_name, ipaddress in found:
@@ -16504,7 +16506,7 @@ def add_scanned_hosts_to_folder(folder, found):
 
         attrs = {
             "ipaddress"       : ipaddress,
-            "tag_criticality" : "offline",
+            "tag_criticality" : network_scan_properties.get("tag_criticality", "offline"),
         }
         if not watolib.Host.host_exists(host_name):
             entries.append((host_name, attrs, None))

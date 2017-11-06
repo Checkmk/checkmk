@@ -6395,6 +6395,13 @@ class HosttagGroup(object):
         return response
 
 
+    def get_tag_choices(self):
+        choices = []
+        for tag in self.tags:
+            choices.append((tag.id, tag.title))
+        return choices
+
+
 class HosttagsConfiguration(object):
     def __init__(self):
         super(HosttagsConfiguration, self).__init__()

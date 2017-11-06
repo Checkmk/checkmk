@@ -56,8 +56,12 @@ public:
     std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const override;
 
-    virtual std::chrono::system_clock::time_point getValue(
-        Row row, const contact *auth_user) const = 0;
+    std::chrono::system_clock::time_point getValue(
+        Row row, std::chrono::seconds timezone_offset) const;
+
+private:
+    virtual std::chrono::system_clock::time_point getRawValue(
+        Row row) const = 0;
 };
 
 #endif  // TimeColumn_h

@@ -60,11 +60,8 @@ private:
 class RendererBrokenCSV : public Renderer {
 public:
     RendererBrokenCSV(std::ostream& os, Logger* logger,
-                      const CSVSeparators& separators,
-                      std::chrono::seconds timezone_offset,
-                      Encoding data_encoding)
-        : Renderer(os, logger, timezone_offset, data_encoding)
-        , _separators(separators) {}
+                      const CSVSeparators& separators, Encoding data_encoding)
+        : Renderer(os, logger, data_encoding), _separators(separators) {}
 
     void outputNull() override;
     void outputBlob(const std::vector<char>& value) override;

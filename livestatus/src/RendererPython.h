@@ -26,7 +26,6 @@
 #define RendererPython_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <chrono>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -36,9 +35,7 @@ class Logger;
 
 class RendererPython : public Renderer {
 public:
-    RendererPython(std::ostream &os, Logger *logger,
-                   std::chrono::seconds timezone_offset,
-                   Encoding data_encoding);
+    RendererPython(std::ostream &os, Logger *logger, Encoding data_encoding);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

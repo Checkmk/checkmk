@@ -24,16 +24,16 @@
 
 #include "TimeColumn.h"
 #include <chrono>
+#include <ratio>
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
 #include "TimeAggregator.h"
 #include "TimeFilter.h"
 
-void TimeColumn::output(Row row, RowRenderer &r, const contact *auth_user,
-                        std::chrono::seconds /*timezone_offset*/) const {
-    // NOTE: TimeColumn::getValue() call site
-    r.output(getValue(row, auth_user));
+void TimeColumn::output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+                        std::chrono::seconds timezone_offset) const {
+    r.output(getValue(row, timezone_offset));
 }
 
 std::unique_ptr<Filter> TimeColumn::createFilter(
@@ -44,4 +44,9 @@ std::unique_ptr<Filter> TimeColumn::createFilter(
 std::unique_ptr<Aggregator> TimeColumn::createAggregator(
     StatsOperation operation) const {
     return std::make_unique<TimeAggregator>(operation, this);
+}
+
+std::chrono::system_clock::time_point TimeColumn::getValue(
+    Row row, std::chrono::seconds timezone_offset) const {
+    return getRawValue(row) + timezone_offset;
 }

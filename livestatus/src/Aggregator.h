@@ -39,8 +39,6 @@ public:
     virtual ~Aggregator() = default;
     StatsOperation getOperation() const { return _operation; }
 
-    // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
-    // fixed, it is just an artifact.
     virtual void consume(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) = 0;
 

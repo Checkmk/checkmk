@@ -24,17 +24,62 @@
 
 #include "ServiceSpecialIntColumn.h"
 #include "Row.h"
+
+#ifdef CMC
+#include "Core.h"
+#include "Host.h"
+#include "MonitoringCore.h"
+#include "Object.h"
+#include "RRDBackend.h"
+#include "RRDInfoCache.h"
+#include "State.h"
+#include "cmc.h"
+#include "mk_inventory.h"
+#else
 #include "nagios.h"
 #include "pnp4nagios.h"
+#endif
 
 int32_t ServiceSpecialIntColumn::getValue(
     Row row, const contact* /* auth_user */) const {
+#ifdef CMC
+    if (auto object = columnData<Object>(row)) {
+        switch (_type) {
+            case Type::real_hard_state: {
+                auto state = object->state();
+                if (state->_current_state == 0) {
+                    return 0;
+                }
+                if (state->_state_type == StateType::hard) {
+                    return state->_current_state;
+                }
+                return state->_last_hard_state;
+            }
+            case Type::pnp_graph_present:
+                return _mc->impl<Core>()
+                               ->_rrd_backend.infoFor(object)
+                               ._names.empty()
+                           ? 0
+                           : 1;
+        }
+    }
+#else
     if (auto svc = columnData<service>(row)) {
         switch (_type) {
+            case Type::real_hard_state:
+                if (svc->current_state == 0) {
+                    return 0;
+                }
+                if (svc->state_type == HARD_STATE) {
+                    return svc->current_state;
+                }
+                return svc->last_hard_state;
+
             case Type::pnp_graph_present:
                 return pnpgraph_present(_mc, svc->host_ptr->name,
                                         svc->description);
         }
     }
+#endif
     return 0;
 }

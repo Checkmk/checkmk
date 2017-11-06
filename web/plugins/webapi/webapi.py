@@ -88,7 +88,7 @@ def validate_general_host_attributes(host_attributes):
 # Check if the tag group exists and the tag value is valid
 def validate_host_tags(host_tags):
     for key, value in host_tags.items():
-        for group_entry in watolib.configured_host_tags():
+        for group_entry in config.host_tag_groups():
             if group_entry[0] == key:
                 for value_entry in group_entry[2]:
                     if value_entry[0] == value:
@@ -838,12 +838,12 @@ class APICallHosttags(APICallCollection):
         new_tags.update(changed_hosttags_config.get_tag_ids_with_group_prefix())
 
         # Remove the builtin hoststags from the list of used_tags
-        builtin_hosttags, builtin_auxtags = watolib.load_builtin_hosttags()
-        for tag_group_id, tag_group__title, tags in builtin_hosttags:
+        for tag_group_id, tag_group__title, tags in watolib.builtin_hosttags:
             for tag_id, tag_title, aux_tags in tags:
                 used_tags.discard("%s/%s" % (tag_group_id, tag_id))
                 used_tags.discard(tag_id)
-        for tag_id, tag_title in builtin_auxtags:
+
+        for tag_id, tag_title in watolib.builtin_auxtags:
             used_tags.discard(tag_id)
 
         missing_tags = used_tags - new_tags

@@ -3861,7 +3861,7 @@ class ModeBulkImport(WatoMode):
         ]
 
         # Add tag groups
-        for entry in watolib.configured_host_tags():
+        for entry in config.host_tag_groups():
             attributes.append(("tag_" + entry[0], _("Tag: %s") % entry[1]))
 
         # Add custom attributes
@@ -11657,11 +11657,10 @@ class ModeRoleMatrix(WatoMode):
 #   | assigned to hosts and that is the basis of the rules.                |
 #   '----------------------------------------------------------------------'
 
-class ModeHostTags(WatoMode):
+class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
     def __init__(self):
         super(ModeHostTags, self).__init__()
-        self._hosttags, self._auxtags = watolib.load_hosttags()
-        self._builtin_hosttags, self._builtin_auxtags = watolib.load_builtin_hosttags()
+        self._hosttags, self._auxtags = self._load_hosttags()
 
 
     def title(self):
@@ -11679,7 +11678,7 @@ class ModeHostTags(WatoMode):
         del_id = html.var("_delete")
         if del_id:
             operations = None
-            for e in self._hosttags:
+            for e in self.tag_groups:
                 if e[0] == del_id:
                     # In case of tag group deletion, the operations is a pair of tag_id
                     # and list of choice-ids.
@@ -11790,44 +11789,44 @@ class ModeHostTags(WatoMode):
                     empty_text = _("You haven't defined any tag groups yet."),
                     searchable = False, sortable = False)
 
-        if not self._hosttags + self._builtin_hosttags:
+        tag_groups = watolib.get_effective_tag_groups(self._hosttags)
+
+        if not tag_groups:
             table.end()
             return
 
-        for tag_type, tag_list in [ ('custom', self._hosttags),
-                                    ('builtin', self._builtin_hosttags), ]:
-            for nr, entry in enumerate(tag_list):
-                tag_id, title, choices = entry[:3] # fourth: tag dependency information
-                topic, title = map(_u, watolib.parse_hosttag_title(title))
-                table.row()
-                table.cell(_("Actions"), css="buttons")
-                if tag_type == "builtin":
-                    html.i("(builtin)")
+        for nr, entry in enumerate(tag_groups):
+            tag_id, title, choices = entry[:3] # fourth: tag dependency information
+            topic, title = map(_u, watolib.parse_hosttag_title(title))
+            table.row()
+            table.cell(_("Actions"), css="buttons")
+            if watolib.is_builtin_host_tag_group(tag_id):
+                html.i("(%s)" % _("builtin"))
+            else:
+                edit_url     = watolib.folder_preserving_link([("mode", "edit_hosttag"), ("edit", tag_id)])
+                delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
+                if nr == 0:
+                    html.empty_icon_button()
                 else:
-                    edit_url     = watolib.folder_preserving_link([("mode", "edit_hosttag"), ("edit", tag_id)])
-                    delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
-                    if nr == 0:
-                        html.empty_icon_button()
-                    else:
-                        html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
-                                    _("Move this tag group one position up"), "up")
-                    if nr == len(tag_list) - 1:
-                        html.empty_icon_button()
-                    else:
-                        html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
-                                    _("Move this tag group one position down"), "down")
-                    html.icon_button(edit_url,   _("Edit this tag group"), "edit")
-                    html.icon_button(delete_url, _("Delete this tag group"), "delete")
+                    html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
+                                _("Move this tag group one position up"), "up")
+                if nr == len(tag_groups) - 1:
+                    html.empty_icon_button()
+                else:
+                    html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
+                                _("Move this tag group one position down"), "down")
+                html.icon_button(edit_url,   _("Edit this tag group"), "edit")
+                html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
-                table.cell(_("ID"), tag_id)
-                table.cell(_("Title"), title)
-                table.cell(_("Topic"), topic or '')
-                table.cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
-                table.cell(_("Choices"), str(len(choices)))
-                table.cell(_("Demonstration"), sortable=False)
-                html.begin_form("tag_%s" % tag_id)
-                watolib.host_attribute("tag_%s" % tag_id).render_input("", None)
-                html.end_form()
+            table.text_cell(_("ID"), tag_id)
+            table.text_cell(_("Title"), title)
+            table.text_cell(_("Topic"), topic or '')
+            table.text_cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
+            table.text_cell(_("Choices"), str(len(choices)))
+            table.cell(_("Demonstration"), sortable=False)
+            html.begin_form("tag_%s" % tag_id)
+            watolib.host_attribute("tag_%s" % tag_id).render_input("", None)
+            html.end_form()
         table.end()
 
 
@@ -11840,27 +11839,27 @@ class ModeHostTags(WatoMode):
                     empty_text = _("You haven't defined any auxiliary tags."),
                     searchable = False)
 
-        if not self._auxtags:
+        aux_tags = watolib.get_effective_aux_tags(self._auxtags)
+
+        if not aux_tags:
             table.end()
             return
 
-        for tag_type, tag_list in [ ('custom', self._auxtags),
-                                    ('builtin', self._builtin_auxtags), ]:
-            for nr, (tag_id, title) in enumerate(tag_list):
-                table.row()
-                topic, title = watolib.parse_hosttag_title(title)
-                table.cell(_("Actions"), css="buttons")
-                if tag_type == "builtin":
-                    html.i("(builtin)")
-                else:
-                    edit_url     = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", nr)])
-                    delete_url   = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
-                    html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
-                    html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
-                table.cell(_("ID"), tag_id)
+        for nr, (tag_id, title) in enumerate(aux_tags):
+            table.row()
+            topic, title = watolib.parse_hosttag_title(title)
+            table.cell(_("Actions"), css="buttons")
+            if watolib.is_builtin_aux_tag(tag_id):
+                html.i("(%s)" % _("builtin"))
+            else:
+                edit_url     = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", nr)])
+                delete_url   = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
+                html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
+                html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
+            table.text_cell(_("ID"), tag_id)
 
-                table.cell(_("Title"), _u(title))
-                table.cell(_("Topic"), _u(topic) or '')
+            table.text_cell(_("Title"), _u(title))
+            table.text_cell(_("Topic"), _u(topic) or '')
         table.end()
 
 
@@ -11890,6 +11889,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
             return _("Create new auxiliary tag")
         else:
             return _("Edit auxiliary tag")
+
 
     def _is_new_aux_tag(self):
         return html.var("edit") == None
@@ -14829,14 +14829,7 @@ def create_sample_config():
 
     # Basic setting of host tags
     wato_host_tags = \
-    [('agent',
-      u'Agent type',
-      [('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-       ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-       ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
-       ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-       ('ping', u'No Agent', [])]),
-     ('criticality',
+    [('criticality',
       u'Criticality',
       [('prod', u'Productive system', []),
        ('critical', u'Business critical', []),
@@ -17188,7 +17181,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     # Make sure, that the topics "Basic settings" and host tags
     # are always show first.
     topics = [None]
-    if watolib.configured_host_tags():
+    if config.host_tag_groups():
         topics.append(_("Host tags"))
 
     # The remaining topics are shown in the order of the

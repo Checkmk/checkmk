@@ -77,40 +77,56 @@ function wato_fix_visibility() {
        They are in the same table as we are */
     var currentTags = [];
 
-    var oHostTags = document.getElementById("wato_host_tags");
-    // Skip this function when no tags defined
-    if (!oHostTags)
-        return;
+    var container_ids = [ "wato_host_tags", "data_sources", "address" ];
 
-    var oTable = oHostTags.childNodes[0]; /* tbody */
+    for (var a = 0; a < container_ids.length; a++) {
+        var container_id = container_ids[a];
 
-    for (var i = 0; i < oTable.childNodes.length; i++) {
-        var oTr = oTable.childNodes[i];
-        if (oTr.tagName == 'TR') {
-            var oTdLegend = oTr.childNodes[0];
-            if (oTdLegend.className != "legend") {
-                continue;
-            }
-            var oTdContent = oTr.childNodes[1];
-            /* If the Checkbox is unchecked try to get a value from the inherited_tags */
-            var oCheckbox = oTdLegend.getElementsByTagName("input")[0];
-            if (oCheckbox.checked == false ){
-                var attrname = 'attr_' + oCheckbox.name.replace(/.*_change_/, '');
-                if (attrname in inherited_tags && inherited_tags[attrname] !== null){
-                    currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
+        var oHostTags = document.getElementById(container_id);
+
+        if (!oHostTags)
+            continue;
+
+        var oTable = oHostTags.childNodes[0]; /* tbody */
+
+        for (var i = 0; i < oTable.childNodes.length; i++) {
+            var oTr = oTable.childNodes[i];
+            if (oTr.tagName == 'TR') {
+                var oTdLegend = oTr.childNodes[0];
+                if (oTdLegend.className != "legend") {
+                    continue;
                 }
-            } else {
-                /* Find the <select>/<checkbox> object in this tr */
-                /*                td.content    div           select/checkbox */
-                var oElement = oTdContent.childNodes[0].childNodes[0];
-                if( oElement.type == 'checkbox' && oElement.checked ){ // <checkbox>
-                    currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
-                } else if(oElement.tagName == 'SELECT') { // <select>
-                    currentTags = currentTags.concat(oElement.value.split("|"));
+                var oTdContent = oTr.childNodes[1];
+                /* If the Checkbox is unchecked try to get a value from the inherited_tags */
+                var oCheckbox = oTdLegend.getElementsByTagName("input")[0];
+                if (oCheckbox.checked == false ){
+                    var attrname = 'attr_' + oCheckbox.name.replace(/.*_change_/, '');
+                    if (attrname in inherited_tags && inherited_tags[attrname] !== null){
+                        currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
+                    }
+                } else {
+                    /* Find the <select>/<checkbox> object in this tr */
+                    var elements = oTdContent.getElementsByTagName("input");
+                    if (elements.length == 0)
+                        elements = oTdContent.getElementsByTagName("select");
+
+                    if (elements.lenght == 0)
+                        continue;
+
+                    var oElement = elements[0];
+                    if (oElement.type == 'checkbox' && oElement.checked) {
+                        currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
+                    } else if (oElement.tagName == 'SELECT') {
+                        currentTags = currentTags.concat(oElement.value.split("|"));
+                    }
                 }
             }
         }
     }
+
+    // Skip this function when no tags defined
+    if (!currentTags)
+        return;
 
     var hide_topics = volatile_topics.slice(0);
     /* Now loop over all attributes that have conditions. Those are

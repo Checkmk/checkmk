@@ -14842,9 +14842,7 @@ def create_sample_config():
        ('dmz', u'DMZ (low latency, secure access)', [])]),
     ]
 
-    wato_aux_tags = \
-    [('snmp', u'monitor via SNMP'),
-     ('tcp', u'monitor via Check_MK Agent')]
+    wato_aux_tags = []
 
     watolib.save_hosttags(wato_host_tags, wato_aux_tags)
 
@@ -17180,8 +17178,11 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     # appearance. If only one topic exists, do not show topics
     # Make sure, that the topics "Basic settings" and host tags
     # are always show first.
+    # TODO: Clean this up! Implement some explicit sorting
     topics = [None]
     if config.host_tag_groups():
+        topics.append(_("Address"))
+        topics.append(_("Data sources"))
         topics.append(_("Host tags"))
 
     # The remaining topics are shown in the order of the
@@ -17196,6 +17197,14 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     dependency_mapping_roles = {}
     inherited_tags     = {}
 
+    # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
+    # TODO: Clean this up by implementing some sort of explicit sorting
+    def sort_host_attributes(a, b):
+        if a[0].name() == "tag_address_family":
+            return -1
+        else:
+            return 0
+
     volatile_topics = []
     hide_attributes = []
     for topic in topics:
@@ -17208,13 +17217,19 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
 
             if topic == _("Host tags"):
                 topic_id = "wato_host_tags"
+            elif topic == _("Address"):
+                topic_id = "address"
+            elif topic == _("Data sources"):
+                topic_id = "data_sources"
             else:
                 topic_id = None
-            forms.header(title, isopen = topic == topics[0], table_id = topic_id)
 
-        for attr, atopic in watolib.all_host_attributes():
+            forms.header(title, isopen = topic in [ None, _("Address"), _("Data sources") ], table_id = topic_id)
+
+        for attr, atopic in sorted(watolib.all_host_attributes(), cmp=sort_host_attributes):
             if atopic != topic:
                 continue
+
             attrname = attr.name()
             if attrname in without_attributes:
                 continue # e.g. needed to skip ipaddress in CSV-Import

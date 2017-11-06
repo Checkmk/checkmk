@@ -54,7 +54,8 @@ declare_host_attribute(ValueSpecAttribute("ipaddress",
     )),
     show_in_table = True,
     show_in_folder = False,
-    depends_on_tags = ["ip-v4"]
+    depends_on_tags = ["ip-v4"],
+    topic = _("Address"),
 )
 
 declare_host_attribute(ValueSpecAttribute("ipv6address",
@@ -77,7 +78,8 @@ declare_host_attribute(ValueSpecAttribute("ipv6address",
     )),
     show_in_table = True,
     show_in_folder = False,
-    depends_on_tags = ["ip-v6"]
+    depends_on_tags = ["ip-v6"],
+    topic = _("Address"),
 )
 
 _snmpv3_auth_elements = [

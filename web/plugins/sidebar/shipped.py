@@ -2137,7 +2137,7 @@ class VirtualHostTree(SidebarSnapin):
         for nr, (level_spec, tag) in enumerate(zip(tag_tree_spec, tag_node_values)):
             if level_spec.startswith("topic:"):
                 # Find correct tag group for this tag
-                for entry in config.wato_host_tags:
+                for entry in config.host_tag_groups():
                     for tagentry in entry[2]:
                         if tagentry[0] == tag: # Found our tag
                             taggroup = entry[0]
@@ -2338,7 +2338,7 @@ function virtual_host_tree_enter(path)
     def _get_tag_config(self):
         tag_groups = {}
         topics = {}
-        for entry in config.wato_host_tags:
+        for entry in config.host_tag_groups():
             grouptitle           = entry[1]
             if '/' in grouptitle:
                 topic, grouptitle = grouptitle.split("/", 1)

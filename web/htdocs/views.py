@@ -2958,7 +2958,7 @@ g_taggroups_by_id = {}
 def get_tag_group(tgid):
     # Build a cache
     if not g_taggroups_by_id:
-        for entry in config.wato_host_tags:
+        for entry in config.host_tag_groups():
             g_taggroups_by_id[entry[0]] = (entry[1], entry[2])
 
     return g_taggroups_by_id.get(tgid, (_("N/A"), []))

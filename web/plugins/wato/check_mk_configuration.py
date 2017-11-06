@@ -349,7 +349,7 @@ def wato_host_tag_group_choices():
     #  - contain at least two entries
     choices = []
     by_topic = {}
-    for entry in config.wato_host_tags:
+    for entry in config.host_tag_groups():
         tgid = entry[0]
         topic, tit = watolib.parse_hosttag_title(entry[1])
         choices.append((tgid, tit))

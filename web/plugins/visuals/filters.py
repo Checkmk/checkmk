@@ -1076,7 +1076,7 @@ class FilterHostTags(Filter):
         )
 
     def display(self):
-        groups = [ (e[0], e[1].lstrip("/") ) for e in config.wato_host_tags ]
+        groups = [ (e[0], e[1].lstrip("/") ) for e in config.host_tag_groups() ]
         operators = [
             ("is", "="),
             ("isnot", u"≠"),
@@ -1084,7 +1084,7 @@ class FilterHostTags(Filter):
 
         # replace unicode strings, before writing out as "json"
         grouped = {}
-        for entry in config.wato_host_tags:
+        for entry in config.host_tag_groups():
             grouped.setdefault(entry[0], [["", ""]])
 
             for tag_entry in entry[2]:
@@ -1139,7 +1139,7 @@ class FilterHostTags(Filter):
                     # of the group
                     group = html.var(prefix + '_grp')
                     grouptags = None
-                    for entry in config.wato_host_tags:
+                    for entry in config.host_tag_groups():
                         if entry[0] == group:  # found our group
                             grouptags = [ x[0] for x in entry[2] if x[0] ]
                             break

@@ -398,7 +398,7 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
 
     def _get_hosttag_dict(self):
         lookup_dict = {}
-        for group, text, values in config.wato_host_tags:
+        for group, text, values in config.host_tag_groups():
             for value in values:
                 lookup_dict[value[0]] = group
         return lookup_dict

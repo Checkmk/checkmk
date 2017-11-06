@@ -2576,7 +2576,7 @@ def load_host_tag_painters():
         if key.startswith('host_tag_'):
             del multisite_painters[key]
 
-    for entry in config.wato_host_tags:
+    for entry in config.host_tag_groups():
         tgid = entry[0]
         tit  = entry[1]
         ch   = entry[2]

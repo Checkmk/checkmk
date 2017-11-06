@@ -650,6 +650,33 @@ def save_user_file(name, data, user, unlock=False):
 
 
 #.
+#   .--Host tags-----------------------------------------------------------.
+#   |              _   _           _     _                                 |
+#   |             | | | | ___  ___| |_  | |_ __ _  __ _ ___                |
+#   |             | |_| |/ _ \/ __| __| | __/ _` |/ _` / __|               |
+#   |             |  _  | (_) \__ \ |_  | || (_| | (_| \__ \               |
+#   |             |_| |_|\___/|___/\__|  \__\__,_|\__, |___/               |
+#   |                                             |___/                    |
+#   +----------------------------------------------------------------------+
+#   |  Helper functions for dealing with host tags                         |
+#   '----------------------------------------------------------------------'
+
+# Returns the effective set of tag groups defined by WATO. This includes
+# the implicitly declared builtin host tags. This function must be used by
+# the GUI code to get the tag group definitions.
+def host_tag_groups():
+    import watolib
+    tag_groups = wato_host_tags[:]
+    tag_group_ids = set([ tg[0] for tg in tag_groups ])
+
+    for tag_group in watolib.builtin_host_tags:
+        if tag_group[0] not in tag_group_ids:
+            tag_groups.append(tag_group)
+
+    return tag_groups
+
+
+#.
 #   .--Sites---------------------------------------------------------------.
 #   |                        ____  _ _                                     |
 #   |                       / ___|(_) |_ ___  ___                          |

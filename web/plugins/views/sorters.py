@@ -410,7 +410,7 @@ def cmp_host_tag(r1, r2, tgid):
 
     return cmp(val1, val2)
 
-for entry in config.wato_host_tags:
+for entry in config.host_tag_groups():
     tgid = entry[0]
     tit  = entry[1]
 

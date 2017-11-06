@@ -25,23 +25,46 @@
 #include "ServiceListStateColumn.h"
 #include "LogEntry.h"
 #include "Row.h"
+
+#ifdef CMC
+#include <memory>
+#include "Service.h"
+#include "State.h"
+#else
 #include "auth.h"
+#endif
 
 int32_t ServiceListStateColumn::getValue(Row row,
                                          const contact *auth_user) const {
+#ifdef CMC
+    if (auto p = columnData<Host::services_t>(row)) {
+        return getValueFromServices(_mc, _logictype, p, auth_user);
+    }
+    return 0;
+#else
     servicesmember *mem = nullptr;
     if (auto p = columnData<servicesmember *>(row)) {
         mem = *p;
     }
     return getValueFromServices(_mc, _logictype, mem, auth_user);
+#endif
 }
 
 // static
 int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
                                                      Type logictype,
-                                                     servicesmember *mem,
+                                                     service_list mem,
                                                      const contact *auth_user) {
     int32_t result = 0;
+#ifdef CMC
+    if (mem != nullptr) {
+        for (const auto &svc : *mem) {
+            if (auth_user == nullptr || svc->hasContact(mc, auth_user)) {
+                update(logictype, svc.get(), result);
+            }
+        }
+    }
+#else
     for (; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         if (auth_user == nullptr ||
@@ -49,19 +72,29 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
             update(logictype, svc, result);
         }
     }
+#endif
     return result;
 }
 
 // static
 void ServiceListStateColumn::update(Type logictype, service *svc,
                                     int32_t &result) {
+#ifdef CMC
+    uint32_t last_hard_state = svc->state()->_last_hard_state;
+    uint32_t current_state = svc->state()->_current_state;
+    bool has_been_checked = svc->state()->_has_been_checked;
+#else
+    int last_hard_state = svc->last_hard_state;
+    int current_state = svc->current_state;
+    bool has_been_checked = svc->has_been_checked != 0;
+#endif
     int service_state;
     Type lt;
     if (static_cast<int>(logictype) >= 60) {
-        service_state = svc->last_hard_state;
+        service_state = last_hard_state;
         lt = static_cast<Type>(static_cast<int>(logictype) - 64);
     } else {
-        service_state = svc->current_state;
+        service_state = current_state;
         lt = logictype;
     }
     switch (lt) {
@@ -75,13 +108,12 @@ void ServiceListStateColumn::update(Type logictype, service *svc,
             result++;
             break;
         case Type::num_pending:
-            if (svc->has_been_checked == 0) {
+            if (!has_been_checked) {
                 result++;
             }
             break;
         default:
-            if (svc->has_been_checked != 0 &&
-                service_state == static_cast<int>(lt)) {
+            if (has_been_checked && service_state == static_cast<int>(lt)) {
                 result++;
             }
             break;

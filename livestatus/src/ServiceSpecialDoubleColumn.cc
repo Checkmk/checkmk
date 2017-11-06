@@ -23,17 +23,30 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceSpecialDoubleColumn.h"
+#include "Row.h"
+
+#ifdef CMC
+#include "HostSpecialDoubleColumn.h"
+class Object;
+#else
 #include <cstring>
 #include <ctime>
-#include "Row.h"
 #include "nagios.h"
-
-extern int interval_length;
+#endif
 
 double ServiceSpecialDoubleColumn::getValue(Row row) const {
+#ifdef CMC
+    if (auto object = columnData<Object>(row)) {
+        switch (_type) {
+            case Type::staleness:
+                return HostSpecialDoubleColumn::staleness(object);
+        }
+    }
+#else
     if (auto svc = columnData<service>(row)) {
         switch (_type) {
             case Type::staleness: {
+                extern int interval_length;
                 time_t check_result_age = time(nullptr) - svc->last_check;
                 if (svc->check_interval != 0) {
                     return check_result_age /
@@ -58,13 +71,15 @@ double ServiceSpecialDoubleColumn::getValue(Row row) const {
                                     interval_length);
                         }
                     }
-                    return 1;  // Shouldnt happen! We always expect a check-mk
-                               // service
-                }  // Other non-cmk passive and active checks without
-                   // check_interval
+                    // Shouldn't happen! We always expect a check-mk service
+                    return 1;
+                }
+                // Other non-cmk passive and active checks without
+                // check_interval
                 return check_result_age / interval_length;
             }
         }
     }
+#endif
     return 0;
 }

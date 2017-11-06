@@ -30,6 +30,10 @@
 #include "DoubleColumn.h"
 class Row;
 
+#ifdef CMC
+class Object;
+#endif
+
 class HostSpecialDoubleColumn : public DoubleColumn {
 public:
     enum class Type { staleness };
@@ -41,10 +45,15 @@ public:
         : DoubleColumn(name, description, indirect, extra_offset,
                        extra_extra_offset, offset)
         , _type(hsdc_type) {}
+
     double getValue(Row row) const override;
 
+#ifdef CMC
+    static double staleness(const Object* object);
+#endif
+
 private:
-    Type _type;
+    const Type _type;
 };
 
 #endif  // HostSpecialDoubleColumn_h

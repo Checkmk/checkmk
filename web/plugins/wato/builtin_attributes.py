@@ -254,6 +254,13 @@ class NetworkScanAttribute(ValueSpecAttribute):
             return [ (user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))
                      for user_id, user in userdb.load_users(lock = False).items() ]
 
+        def tag_criticality_choices():
+            tags = watolib.HosttagsConfiguration()
+            tags.load()
+
+            criticality = tags.get_tag_group("criticality")
+            return criticality.get_tag_choices()
+
         ValueSpecAttribute.__init__(self, "network_scan",
             Dictionary(
                 elements = [
@@ -277,6 +284,14 @@ class NetworkScanAttribute(ValueSpecAttribute):
                         title = _("Time allowed"),
                         help = _("Limit the execution of the scan to this time range."),
                         allow_empty=False,
+                    )),
+                    ("tag_criticality", DropdownChoice(
+                        title = _("Set criticality host tag"),
+                        help = _("Added hosts will be created as \"offline\" host by default. You "
+                                 "can change this option to activate monitoring of new hosts after "
+                                 "next activation of the configuration after the scan."),
+                        choices = tag_criticality_choices,
+                        default_value = "offline",
                     )),
                     ("max_parallel_pings", Integer(
                         title = _("Parallel pings to send"),

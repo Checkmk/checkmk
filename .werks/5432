@@ -1,0 +1,12 @@
+Title: Network scan: The tag for the "criticality" host tag group can now be configured
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1509955833
+Class: feature
+
+Before this change all new hosts found by the network scan were added as offline hosts
+(Criticality: Do not monitor this host). It is now possible to configure this value
+in the properties of the network scan.

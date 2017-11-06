@@ -25,9 +25,35 @@
 #include "MetricsColumn.h"
 #include "Row.h"
 
+#ifdef CMC
+#include <algorithm>
+#include <iterator>
+#include "Core.h"
+#include "Metric.h"
+#include "MonitoringCore.h"
+#include "Object.h"
+#include "RRDBackend.h"
+#include "RRDInfoCache.h"
+#include "State.h"
+#include "cmc.h"
+#endif
+
 std::vector<std::string> MetricsColumn::getValue(
-    Row /*row*/, const contact* /*auth_user*/,
+    Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
+    std::vector<std::string> metrics;
+#ifdef CMC
+    if (auto object = columnData<Object>(row)) {
+        if (object->isEnabled(State::Enable::performance_data)) {
+            auto names = _mc->impl<Core>()->_rrd_backend.infoFor(object)._names;
+            std::transform(
+                names.begin(), names.end(), std::back_inserter(metrics),
+                [](const Metric::MangledName &name) { return name.string(); });
+        }
+    }
+#else
     (void)_mc;
-    return {};
+    (void)row;
+#endif
+    return metrics;
 }

@@ -45,7 +45,7 @@ public:
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
-        std::chrono::seconds /*timezone_offset*/) const override;
+        std::chrono::seconds timezone_offset) const override;
 
 private:
     MonitoringCore *const _mc;

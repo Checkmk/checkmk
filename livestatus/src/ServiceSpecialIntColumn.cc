@@ -27,14 +27,12 @@
 
 #ifdef CMC
 #include "Core.h"
-#include "Host.h"
 #include "MonitoringCore.h"
 #include "Object.h"
 #include "RRDBackend.h"
 #include "RRDInfoCache.h"
 #include "State.h"
 #include "cmc.h"
-#include "mk_inventory.h"
 #else
 #include "nagios.h"
 #include "pnp4nagios.h"

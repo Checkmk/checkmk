@@ -126,6 +126,7 @@ local_cfg = {
     'trace':    '3',
     'loglevel': 'warn',
     #'lang':     'EN',
+    #'host_prefix': 'FOOBAR_',
 }
 
 # A list of strings, while the string must match the full path to one or
@@ -366,21 +367,21 @@ def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
 
 
 
-def check(cfg):
+def check(cfg_entry):
     global conn
-    conn = sapnwrfc.base.rfc_connect(cfg)
+    conn = sapnwrfc.base.rfc_connect(cfg_entry)
     login()
 
     logs     = {}
     sap_data = {}
 
     # This loop is used to collect all information from SAP
-    for ms_name, mon_name in mon_list(cfg):
+    for ms_name, mon_name in mon_list(cfg_entry):
         path = ms_name + SEPARATOR + mon_name
         if not to_be_monitored(path, True):
             continue
 
-        tree = mon_tree(cfg, ms_name, mon_name)
+        tree = mon_tree(cfg_entry, ms_name, mon_name)
         for node in tree:
             if not to_be_monitored(node['PATH']):
                 continue
@@ -409,20 +410,20 @@ def check(cfg):
                 continue # Skip unwanted classes if class filtering is enabled
 
             if node['MTCLASS'] == MTE_PERFORMANCE:
-                perfvalue, this_uom = mon_perfdata(cfg, node)
+                perfvalue, this_uom = mon_perfdata(cfg_entry, node)
                 uom = this_uom and this_uom or uom
 
             elif node['MTCLASS'] == MTE_SINGLE_MSG:
-                status_details = "%s: %s" % mon_msg(cfg, node)
+                status_details = "%s: %s" % mon_msg(cfg_entry, node)
 
             elif node['MTCLASS'] == MTE_MSG_CONTAINER:
 
-                alerts = mon_alerts(cfg, node)
-                logs = process_alerts(cfg, logs, ms_name, mon_name, node, alerts)
+                alerts = mon_alerts(cfg_entry, node)
+                logs = process_alerts(cfg_entry, logs, ms_name, mon_name, node, alerts)
                 if len(alerts) > 0:
                     last_alert = alerts[-1]
                     dt = parse_dt(last_alert["ALERTDATE"], last_alert["ALERTTIME"])
-                    alert_state, alert_msg = alert_details(cfg, last_alert)
+                    alert_state, alert_msg = alert_details(cfg_entry, last_alert)
                     last_msg = '%s: %s - %s' % (dt, STATE_VALUE_MAP[alert_state['VALUE']][1], alert_msg)
 
                     status_details = '%d Messages, Last: %s' % (len(alerts), last_msg)
@@ -444,7 +445,7 @@ def check(cfg):
 
 
     for host, host_sap in sap_data.items():
-        sys.stdout.write('<<<<%s>>>>\n' % host)
+        sys.stdout.write('<<<<%s%s>>>>\n' % (cfg_entry.get("host_prefix", ""), host))
         sys.stdout.write('<<<sap:sep(9)>>>\n')
         sys.stdout.write('%s\n' % '\n'.join(host_sap))
     sys.stdout.write('<<<<>>>>\n')

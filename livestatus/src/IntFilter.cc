@@ -37,7 +37,6 @@ std::string IntFilter::columnName() const { return _column.name(); }
 
 bool IntFilter::accepts(Row row, const contact *auth_user,
                         std::chrono::seconds /*timezone_offset*/) const {
-    // NOTE: IntColumn::getValue() call site
     int32_t act_value = _column.getValue(row, auth_user);
     switch (_relOp) {
         case RelationalOperator::equal:

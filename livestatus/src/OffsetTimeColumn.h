@@ -29,7 +29,6 @@
 #include <chrono>
 #include <string>
 #include "TimeColumn.h"
-#include "contact_fwd.h"
 class Row;
 
 class OffsetTimeColumn : public TimeColumn {
@@ -40,8 +39,8 @@ public:
         : TimeColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset) {}
 
-    std::chrono::system_clock::time_point getValue(
-        Row row, const contact* auth_user) const override;
+private:
+    std::chrono::system_clock::time_point getRawValue(Row row) const override;
 };
 
 #endif  // OffsetTimeColumn_h

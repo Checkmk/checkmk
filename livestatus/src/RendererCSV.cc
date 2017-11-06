@@ -27,9 +27,8 @@
 class Logger;
 
 RendererCSV::RendererCSV(std::ostream &os, Logger *logger,
-                         std::chrono::seconds timezone_offset,
                          Encoding data_encoding)
-    : Renderer(os, logger, timezone_offset, data_encoding) {}
+    : Renderer(os, logger, data_encoding) {}
 
 // --------------------------------------------------------------------------
 

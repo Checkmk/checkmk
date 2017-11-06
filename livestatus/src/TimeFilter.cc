@@ -35,42 +35,35 @@ TimeFilter::TimeFilter(const TimeColumn &column, RelationalOperator relOp,
 
 std::string TimeFilter::columnName() const { return _column.name(); }
 
-int32_t TimeFilter::convertRefValue(
-    std::chrono::seconds timezone_offset) const {
-    return _ref_value - timezone_offset.count();
-}
-
-bool TimeFilter::accepts(Row row, const contact *auth_user,
+bool TimeFilter::accepts(Row row, const contact * /*auth_user*/,
                          std::chrono::seconds timezone_offset) const {
-    // NOTE: TimeColumn::getValue() call site
-    int32_t act_value =
-        std::chrono::system_clock::to_time_t(_column.getValue(row, auth_user));
-    int32_t ref_value = convertRefValue(timezone_offset);
+    int32_t act_value = std::chrono::system_clock::to_time_t(
+        _column.getValue(row, timezone_offset));
     switch (_relOp) {
         case RelationalOperator::equal:
-            return act_value == ref_value;
+            return act_value == _ref_value;
         case RelationalOperator::not_equal:
-            return act_value != ref_value;
+            return act_value != _ref_value;
         case RelationalOperator::matches:  // superset
-            return (act_value & ref_value) == ref_value;
+            return (act_value & _ref_value) == _ref_value;
         case RelationalOperator::doesnt_match:  // not superset
-            return (act_value & ref_value) != ref_value;
+            return (act_value & _ref_value) != _ref_value;
         case RelationalOperator::equal_icase:  // subset
-            return (act_value & ref_value) == act_value;
+            return (act_value & _ref_value) == act_value;
         case RelationalOperator::not_equal_icase:  // not subset
-            return (act_value & ref_value) != act_value;
+            return (act_value & _ref_value) != act_value;
         case RelationalOperator::matches_icase:  // contains any
-            return (act_value & ref_value) != 0;
+            return (act_value & _ref_value) != 0;
         case RelationalOperator::doesnt_match_icase:  // contains none of
-            return (act_value & ref_value) == 0;
+            return (act_value & _ref_value) == 0;
         case RelationalOperator::less:
-            return act_value < ref_value;
+            return act_value < _ref_value;
         case RelationalOperator::greater_or_equal:
-            return act_value >= ref_value;
+            return act_value >= _ref_value;
         case RelationalOperator::greater:
-            return act_value > ref_value;
+            return act_value > _ref_value;
         case RelationalOperator::less_or_equal:
-            return act_value <= ref_value;
+            return act_value <= _ref_value;
     }
     return false;  // unreachable
 }
@@ -85,11 +78,10 @@ void TimeFilter::findIntLimits(const std::string &column_name, int *lower,
         return;  // already empty interval
     }
 
-    int32_t ref_value = convertRefValue(timezone_offset);
+    int32_t ref_value = _ref_value - timezone_offset.count();
 
     /* [lower, upper[ is some interval. This filter might restrict that interval
-       to a smaller interval.
-     */
+       to a smaller interval. */
     switch (_relOp) {
         case RelationalOperator::equal:
             if (ref_value >= *lower && ref_value < *upper) {
@@ -141,12 +133,11 @@ void TimeFilter::findIntLimits(const std::string &column_name, int *lower,
 
 bool TimeFilter::optimizeBitmask(const std::string &column_name, uint32_t *mask,
                                  std::chrono::seconds timezone_offset) const {
-    int32_t ref_value = convertRefValue(timezone_offset);
-
     if (column_name != columnName()) {
         return false;  // wrong column
     }
 
+    int32_t ref_value = _ref_value - timezone_offset.count();
     if (ref_value < 0 || ref_value > 31) {
         return true;  // not optimizable by 32bit bit mask
     }

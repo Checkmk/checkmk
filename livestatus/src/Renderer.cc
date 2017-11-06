@@ -35,12 +35,8 @@
 #include "RendererPython.h"
 #include "RendererPython3.h"
 
-Renderer::Renderer(std::ostream &os, Logger *logger,
-                   std::chrono::seconds timezone_offset, Encoding data_encoding)
-    : _os(os)
-    , _data_encoding(data_encoding)
-    , _timezone_offset(timezone_offset)
-    , _logger(logger) {}
+Renderer::Renderer(std::ostream &os, Logger *logger, Encoding data_encoding)
+    : _os(os), _data_encoding(data_encoding), _logger(logger) {}
 
 Renderer::~Renderer() = default;
 
@@ -48,24 +44,19 @@ Renderer::~Renderer() = default;
 std::unique_ptr<Renderer> Renderer::make(OutputFormat format, std::ostream &os,
                                          Logger *logger,
                                          const CSVSeparators &separators,
-                                         std::chrono::seconds timezone_offset,
                                          Encoding data_encoding) {
     switch (format) {
         case OutputFormat::csv:
-            return std::make_unique<RendererCSV>(os, logger, timezone_offset,
-                                                 data_encoding);
+            return std::make_unique<RendererCSV>(os, logger, data_encoding);
         case OutputFormat::broken_csv:
-            return std::make_unique<RendererBrokenCSV>(
-                os, logger, separators, timezone_offset, data_encoding);
+            return std::make_unique<RendererBrokenCSV>(os, logger, separators,
+                                                       data_encoding);
         case OutputFormat::json:
-            return std::make_unique<RendererJSON>(os, logger, timezone_offset,
-                                                  data_encoding);
+            return std::make_unique<RendererJSON>(os, logger, data_encoding);
         case OutputFormat::python:
-            return std::make_unique<RendererPython>(os, logger, timezone_offset,
-                                                    data_encoding);
+            return std::make_unique<RendererPython>(os, logger, data_encoding);
         case OutputFormat::python3:
-            return std::make_unique<RendererPython3>(
-                os, logger, timezone_offset, data_encoding);
+            return std::make_unique<RendererPython3>(os, logger, data_encoding);
     }
     return nullptr;  // unreachable
 }
@@ -112,7 +103,7 @@ void Renderer::output(const std::vector<char> &value) { outputBlob(value); }
 void Renderer::output(const std::string &value) { outputString(value); }
 
 void Renderer::output(std::chrono::system_clock::time_point value) {
-    output(std::chrono::system_clock::to_time_t(value + _timezone_offset));
+    output(std::chrono::system_clock::to_time_t(value));
 }
 
 namespace {

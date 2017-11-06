@@ -31,7 +31,6 @@
 
 void IntColumn::output(Row row, RowRenderer &r, const contact *auth_user,
                        std::chrono::seconds /*timezone_offset*/) const {
-    // NOTE: IntColumn::getValue() call site
     r.output(getValue(row, auth_user));
 }
 

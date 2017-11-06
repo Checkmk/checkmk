@@ -670,7 +670,7 @@ bool Query::process() {
     auto start_time = std::chrono::system_clock::now();
     auto renderer =
         Renderer::make(_output_format, _output.os(), _output.getLogger(),
-                       _separators, _timezone_offset, _data_encoding);
+                       _separators, _data_encoding);
     doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     _renderer_query = &q;
@@ -745,9 +745,9 @@ bool Query::processDataset(Row row) {
             // output it later in a verbatim manner.
             std::ostringstream os;
             {
-                auto renderer = Renderer::make(
-                    _output_format, os, _output.getLogger(), _separators,
-                    timezoneOffset(), _data_encoding);
+                auto renderer =
+                    Renderer::make(_output_format, os, _output.getLogger(),
+                                   _separators, _data_encoding);
                 QueryRenderer q(*renderer, EmitBeginEnd::off);
                 RowRenderer r(q);
                 for (const auto &column : _columns) {

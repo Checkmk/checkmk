@@ -55,8 +55,6 @@ private:
     const TimeColumn &_column;
     const RelationalOperator _relOp;
     const int32_t _ref_value;
-
-    int32_t convertRefValue(std::chrono::seconds timezone_offset) const;
 };
 
 #endif  // TimeFilter_h

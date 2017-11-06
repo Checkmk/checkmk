@@ -17274,7 +17274,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
 
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
-                        if topic == _("Host tags"):
+                        if isinstance(attr, watolib.HostTagAttribute):
                             inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
                         break
 
@@ -17285,7 +17285,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 inherited_from = _("Default value")
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
-                if topic == _("Host tags"):
+                if isinstance(attr, watolib.HostTagAttribute):
                     inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
 
             # Checkbox for activating this attribute

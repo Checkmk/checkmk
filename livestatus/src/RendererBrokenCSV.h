@@ -26,7 +26,6 @@
 #define RendererBrokenCSV_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <chrono>
 #include <iosfwd>
 #include <string>
 #include <vector>

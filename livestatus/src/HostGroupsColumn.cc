@@ -24,13 +24,29 @@
 
 #include "HostGroupsColumn.h"
 #include "Row.h"
+
+#ifdef CMC
+#include "Object.h"
+#include "ObjectGroup.h"
+#include "cmc.h"
+#else
 #include "auth.h"
 #include "nagios.h"
+#endif
 
 std::vector<std::string> HostGroupsColumn::getValue(
     Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> group_names;
+#ifdef CMC
+    if (auto object = columnData<Object>(row)) {
+        for (const auto &og : object->_groups) {
+            if (og->isContactAuthorized(_mc, auth_user)) {
+                group_names.push_back(og->name());
+            }
+        }
+    }
+#else
     if (auto p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
             auto hg = static_cast<hostgroup *>(list->object_ptr);
@@ -39,5 +55,6 @@ std::vector<std::string> HostGroupsColumn::getValue(
             }
         }
     }
+#endif
     return group_names;
 }

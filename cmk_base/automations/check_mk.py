@@ -1105,7 +1105,7 @@ class AutomationActiveCheck(Automation):
                 if entries:
                     act_info = checks.active_check_info[plugin]
                     for params in entries:
-                        description = config.active_check_service_description(hostname, act_info, params)
+                        description = config.active_check_service_description(hostname, plugin, params)
                         if description == item:
                             args = core_config.active_check_arguments(hostname, description, act_info["argument_function"](params))
                             command_line = self._replace_core_macros(hostname, act_info["command_line"].replace("$ARG1$", args))

@@ -1,0 +1,12 @@
+Title: Fixed time zone handling for Stats: columns.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1509958241
+Class: fix
+
+The time zone specified via the Localtime: header was ignored for Stats:
+columns, so their returned value was wrong when it was a time-related
+column. This has been fixed.

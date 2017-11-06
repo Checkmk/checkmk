@@ -90,6 +90,7 @@
 # C:\Program Files\Vision Solutions\Double-Take\Service\MountDir\usauhtest0010_c061b170-ad3f-473f-92ce-088c97fce98e_C\ NTFS 41835516 11895180 29940336 29% C:\Program Files\Vision Solutions\Double-Take\Service\MountDir\usauhtest0010_c061b170-ad3f-473f-92ce-088c97fce98e_C\
 
 inventory_df_rules = []
+inventory_df_exclude_fs = [ 'tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 
 def parse_df(info):
 

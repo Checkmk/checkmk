@@ -41,7 +41,6 @@ filesystem_levels         = [] # obsolete. Just here to check config and warn if
 filesystem_default_levels = {} # can also be dropped some day in future
 
 # Filesystems to ignore (shouldn't be sent by agent anyway)
-inventory_df_exclude_fs            = [ 'tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 inventory_df_exclude_mountpoints   = [ '/dev' ]
 
 # Grouping of filesystems into groups that are monitored as one entity

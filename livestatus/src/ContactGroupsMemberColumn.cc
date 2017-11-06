@@ -24,11 +24,22 @@
 
 #include "ContactGroupsMemberColumn.h"
 #include "Row.h"
+
+#ifdef CMC
+#include "ContactGroup.h"
+#else
 #include "nagios.h"
+#endif
 
 std::vector<std::string> ContactGroupsMemberColumn::getValue(
     Row row, const contact* /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
+#ifdef CMC
+    if (auto cg = columnData<ContactGroup>(row)) {
+        return cg->contactNames();
+    }
+    return {};
+#else
     std::vector<std::string> names;
     if (auto cg = columnData<contactgroup>(row)) {
         for (auto cm = cg->members; cm != nullptr; cm = cm->next) {
@@ -36,4 +47,5 @@ std::vector<std::string> ContactGroupsMemberColumn::getValue(
         }
     }
     return names;
+#endif
 }

@@ -1273,11 +1273,15 @@ class CREFolder(BaseFolder):
         if host_name in variables["host_attributes"]:
             attributes = variables["host_attributes"][host_name]
 
+            attributes = self._transform_old_agent_type_in_attributes(attributes)
+
             # Old WATO was saving "site" attribute with value of None. Skip this key.
             if "site" in attributes and attributes["site"] == None:
                 del attributes["site"]
 
         else:
+            host_tags = self._transform_old_agent_type_in_tag_list(host_tags)
+
             # Otherwise it is an import from some manual old version of from some
             # CMDB and we reconstruct the attributes. That way the folder inheritance
             # information is not available and all tags are set explicitely
@@ -1295,6 +1299,79 @@ class CREFolder(BaseFolder):
                     attributes[attribute_key] = variables[config_dict][host_name]
 
         return Host(self, host_name, attributes, cluster_nodes)
+
+
+    # Old tag group trans:
+    #('agent', u'Agent type',
+    #    [
+    #        ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+    #        ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+    #        ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
+    #        ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+    #        ('ping',      u'No Agent', []),
+    #    ],
+    #)
+    #
+    def _transform_old_agent_type_in_tag_list(self, host_tags):
+        if "snmp-only" in host_tags:
+            host_tags.remove("snmp-only")
+            host_tags.append("snmp-v2")
+            # snmp must be already in this list
+
+        if "snmp-tcp" in host_tags:
+            host_tags.remove("snmp-tcp")
+            host_tags.append("snmp-v2")
+            host_tags.append("cmk-agent")
+            # snmp and tcp must be already in this list
+
+        return host_tags
+
+
+    # Old tag group trans:
+    #('agent', u'Agent type',
+    #    [
+    #        ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+    #        ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+    #        ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
+    #        ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+    #        ('ping',      u'No Agent', []),
+    #    ],
+    #)
+    #
+    def _transform_old_agent_type_in_attributes(self, attributes):
+        if "tag_agent" not in attributes:
+            return attributes # Nothing set here, no transformation necessary
+
+        if "tag_snmp" in attributes or "tag_ping" in attributes:
+            return attributes # Already in new format, no transformation necessary
+
+        value = attributes["tag_agent"]
+
+        if value == "cmk-agent":
+            attributes["tag_snmp"] = "no-snmp"
+            attributes["tag_ping"] = None
+
+        elif value == "snmp-only":
+            attributes["tag_agent"] = "no-agent"
+            attributes["tag_snmp"]  = "snmp-v2"
+            attributes["tag_ping"]  = None
+
+        elif value == "snmp-v1":
+            attributes["tag_agent"] = "no-agent"
+            attributes["tag_snmp"]  = "snmp-v1"
+            attributes["tag_ping"]  = None
+
+        elif value == "snmp-tcp":
+            attributes["tag_agent"] = "cmk-agent"
+            attributes["tag_snmp"]  = "snmp-v2"
+            attributes["tag_ping"]  = None
+
+        elif value == "ping":
+            attributes["tag_agent"] = "no-agent"
+            attributes["tag_snmp"]  = "no-snmp"
+            attributes["tag_ping"]  = "ping"
+
+        return attributes
 
 
     def _load_hosts_file(self):
@@ -5982,30 +6059,41 @@ def group_hosttags_by_topic(hosttags):
 
 def register_builtin_host_tags():
     global builtin_host_tags, builtin_aux_tags
+
     del builtin_host_tags[:]
     builtin_host_tags += [
-        ('agent', u'Agent type',
-            [
-                ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-                ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-                ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
-                ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-                ('ping',      u'No Agent', []),
+        ("ping", "%s/%s" % (_("Data sources"), _("Ping only")), [
+            ("ping", _("only ping this device"), []),
+        ]),
+        ("agent", "%s/%s" % (_("Data sources"), _("Check_MK Agent")), [
+                ("cmk-agent",      _("Contact either Check_MK Agent or use special agent"), ["tcp"]),
+                ("all-agents",     _("Contact Check_MK agent and all enabled special agents"), ["tcp"]),
+                ("special-agents", _("Use all enabled special agents"), ["tcp"]),
+                ("no-agent",       _("No agent"), []),
             ],
+            ["!ping"],
         ),
-        ('address_family', u'/IP Address Family',
-            [
-                ('ip-v4-only', u'IPv4 only', ['ip-v4']),
-                ('ip-v6-only', u'IPv6 only', ['ip-v6']),
-                ('ip-v4v6', u'IPv4/IPv6 dual-stack', ['ip-v4', 'ip-v6']),
+        ("snmp", "%s/%s" % (_("Data sources"), _("SNMP")), [
+                ("no-snmp",        _("No SNMP"), []),
+                ("snmp-v2",        _("SNMP v2 or v3"), ["snmp"]),
+                ("snmp-v1",        _("SNMP v1"), ["snmp"]),
             ],
+            ["!ping"],
+        ),
+        ("address_family", "%s/%s " % (_("Address"), _("IP Address Family")), [
+                ("ip-v4-only", _("IPv4 only"), ["ip-v4"]),
+                ("ip-v6-only", _("IPv6 only"), ["ip-v6"]),
+                ("ip-v4v6",    _("IPv4/IPv6 dual-stack"), ["ip-v4", "ip-v6"]),
+            ]
         ),
     ]
 
     del builtin_aux_tags[:]
     builtin_aux_tags += [
-        ('ip-v4', u'IPv4'),
-        ('ip-v6', u'IPv6')
+        ("ip-v4", _("IPv4")),
+        ("ip-v6", _("IPv6")),
+        ("snmp",  _("Monitor via SNMP")),
+        ("tcp",   _("Monitor via Check_MK Agent")),
     ]
 
 
@@ -6188,7 +6276,7 @@ def format_php(data, lvl = 1):
     return s
 
 
-def remove_unmodified_agent_tag_group(host_tags):
+def remove_old_sample_config(host_tags, aux_tags):
     legacy_tag_group_default = ('agent', u'Agent type',
         [
             ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
@@ -6198,10 +6286,22 @@ def remove_unmodified_agent_tag_group(host_tags):
             ('ping',      u'No Agent', []),
         ],
     )
+
     try:
         host_tags.remove(legacy_tag_group_default)
     except ValueError:
         pass # Not there or modified
+
+    legacy_aux_tags = [
+        ('snmp', u'monitor via SNMP'),
+        ('tcp', u'monitor via Check_MK Agent'),
+    ]
+
+    for aux_tag in legacy_aux_tags:
+        try:
+            aux_tags.remove(aux_tag)
+        except ValueError:
+            pass # Not there or modified
 
 
 def validate_tag_id(tag_id, varname):
@@ -6633,7 +6733,7 @@ class HosttagsConfiguration(object):
         config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
 
         self._convert_manual_host_tags(config["wato_host_tags"])
-        remove_unmodified_agent_tag_group(config["wato_host_tags"])
+        remove_old_sample_config(config["wato_host_tags"], config["wato_aux_tags"])
 
         return config["wato_host_tags"], config["wato_aux_tags"]
 

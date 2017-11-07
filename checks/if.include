@@ -293,6 +293,8 @@ def inventory_if_common(info, has_nodeinfo = False):
                 return True
         return False
 
+    group_patterns = _prepare_if_group_patterns_from_conf()
+
     for settings in settings_sets:
         uses_description = settings.get('use_desc', if_inventory_uses_description)
         uses_alias       = settings.get('use_alias', if_inventory_uses_alias)
@@ -306,10 +308,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
         # Allow main check to set no port type (e.g. hitachi_hnas_fc_if)
         porttypes.append("")
-
         pre_inventory_groups = []
-        group_patterns = _prepare_if_group_patterns_from_conf()
-
         local_seen  = set()
         have_groups = {}
 

@@ -52,11 +52,11 @@ test-shellcheck:
 	shellcheck \
 		$(OUTPUT_ARGS) \
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
-		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler" | tee $$REDIRECT
+		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 
 test-shellcheck-ci:
-	OUTPUT_ARGS="-f checkstyle" \
+	OUTPUT_ARGS="-f gcc" \
 	REDIRECT="$$WORKDIR/results.xml" \
 	    $(MAKE) test-shellcheck || true
 

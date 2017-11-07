@@ -7578,7 +7578,8 @@ def vs_notification_bulkby():
         ( "sl",         _("Service level") ),
         ( "check_type", _("Check type") ),
         ( "state",      _("Host/Service state") ),
-        ( "ec_contact", _("Event console contact") ),
+        ( "ec_contact", _("Event Console contact") ),
+        ( "ec_comment", _("Event Console comment") ),
       ],
       default_value = [ "host" ],
     )

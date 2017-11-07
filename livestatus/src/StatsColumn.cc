@@ -33,14 +33,12 @@ StatsColumn::StatsColumn(Column *c, std::unique_ptr<Filter> f, StatsOperation o)
 
 std::unique_ptr<Filter> StatsColumn::stealFilter() { return move(_filter); }
 
-std::unique_ptr<Aggregator> StatsColumn::createAggregator() {
-    if (_operation == StatsOperation::count) {
-        return std::make_unique<CountAggregator>(_filter.get());
-    }
-    if (std::unique_ptr<Aggregator> aggr =
-            _column->createAggregator(_operation)) {
-        return aggr;
-    }
-    // unaggregateble column
+std::unique_ptr<Aggregator> StatsColumn::createAggregator() const {
+    return _operation == StatsOperation::count
+               ? createCountAggregator()
+               : _column->createAggregator(_operation);
+}
+
+std::unique_ptr<Aggregator> StatsColumn::createCountAggregator() const {
     return std::make_unique<CountAggregator>(_filter.get());
 }

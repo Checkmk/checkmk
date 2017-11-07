@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ListColumn.h"
+#include <stdexcept>
 #include "Filter.h"
 #include "ListFilter.h"
 #include "Renderer.h"
@@ -43,5 +44,6 @@ std::unique_ptr<Filter> ListColumn::createFilter(
 
 std::unique_ptr<Aggregator> ListColumn::createAggregator(
     StatsOperation /*operation*/) const {
-    return nullptr;
+    throw std::runtime_error("aggregating on list column '" + name() +
+                             "' not supported");
 }

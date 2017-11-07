@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringColumn.h"
+#include <stdexcept>
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -41,5 +42,6 @@ std::unique_ptr<Filter> StringColumn::createFilter(
 
 std::unique_ptr<Aggregator> StringColumn::createAggregator(
     StatsOperation /*operation*/) const {
-    return nullptr;
+    throw std::runtime_error("aggregating on string column '" + name() +
+                             "' not supported");
 }

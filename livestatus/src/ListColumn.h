@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "Aggregator.h"
 #include "Column.h"
 #include "contact_fwd.h"
 #include "opids.h"

@@ -47,14 +47,18 @@ import cmk_base.ip_lookup as ip_lookup
 import cmk_base.piggyback as piggyback
 import cmk_base.snmp as snmp
 import cmk_base.core_config as core_config
-from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKSNMPError, \
+from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKDataSourceError, MKSNMPError, \
                                 MKParseFunctionError, MKTimeout
 
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_cache_info           = {} # Information about agent caching
-g_agent_already_contacted    = {} # do we have agent data from this host?
+# Agent hosts: Whether or not the host has already been tried to get the agent data for.
+# It is not relevant whether or not an error occured during agent communication. Once it
+# is known that a host needs to be contacted, and entry is made for the host here.
+g_agent_already_contacted    = {}
 g_broken_snmp_hosts          = set()
 g_broken_agent_hosts         = set()
+g_data_source_errors         = {}
 
 _no_cache                    = False
 _no_tcp                      = False
@@ -148,6 +152,11 @@ def _get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignor
                     exception_texts.append(str(e))
                 g_broken_snmp_hosts.add(node)
                 is_snmp_error = True
+
+            for data_source, exceptions in get_data_source_errors_of_host(node, ipaddress).items():
+                for exc in exceptions:
+                    exception_texts.append("%s: %s\n" % (node, exc))
+
         if not at_least_one_without_exception:
             if is_snmp_error:
                 raise MKSNMPError(", ".join(exception_texts))
@@ -588,6 +597,114 @@ def write_cache_file(relpath, output):
         raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 
 #.
+#   .--Data Sources--------------------------------------------------------.
+#   |     ____        _          ____                                      |
+#   |    |  _ \  __ _| |_ __ _  / ___|  ___  _   _ _ __ ___ ___  ___       |
+#   |    | | | |/ _` | __/ _` | \___ \ / _ \| | | | '__/ __/ _ \/ __|      |
+#   |    | |_| | (_| | || (_| |  ___) | (_) | |_| | | | (_|  __/\__ \      |
+#   |    |____/ \__,_|\__\__,_| |____/ \___/ \__,_|_|  \___\___||___/      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Managing data sources for Check_MK agent based monitoring            |
+#   '----------------------------------------------------------------------'
+
+# Get information about a real host (not a cluster node) via TCP
+# or by executing an external program. ipaddress may be None.
+# In that case it will be looked up if needed. Also caching will
+# be handled here
+def get_agent_info(hostname, ipaddress, max_cache_age):
+    data_sources = DataSources(hostname)
+
+    # TODO: Move this to the data sources where an IP address is explicitly needed
+    if ipaddress in [ "0.0.0.0", "::" ]:
+        raise MKAgentError("Failed to lookup IP address and no explicit IP address configured")
+
+    output = read_cache_file(hostname, max_cache_age)
+    if not output:
+        # Try to contact every host only once (on general errors)
+        if hostname in g_broken_agent_hosts:
+            raise MKAgentError("")
+
+        output = ""
+        for data_source in data_sources.get_data_sources():
+            # Contact every host+data_source combination only once
+            if has_data_source_errors(hostname, ipaddress, data_source):
+                continue
+
+            try:
+                output += data_source.run(hostname, ipaddress)
+            except MKDataSourceError, e:
+                add_data_source_error(hostname, ipaddress, data_source, e)
+
+        # Got new data? Write to cache file
+        write_cache_file(hostname, output)
+
+    if config.agent_simulator:
+        output = cmk_base.agent_simulator.process(output)
+
+    return output
+
+
+
+class DataSources(object):
+    def __init__(self, hostname):
+        super(DataSources, self).__init__()
+        self._hostname = hostname
+
+
+    def get_data_sources(self):
+        if config.is_all_agents_host(self._hostname):
+            return \
+                [self._get_tcp_agent_data_source()] \
+                + self._get_special_agent_data_sources()
+
+        elif config.is_all_special_agents_host(self._hostname):
+            return self._get_special_agent_data_sources()
+
+        else:
+            return [self._get_datasource_program()]
+
+
+    def describe_data_sources(self):
+        if config.is_all_agents_host(self._hostname):
+            return "Contact Check_MK Agent and use all enabled special agents"
+
+        elif config.is_all_special_agents_host(self._hostname):
+            return "Use all enabled special agents"
+
+        else:
+            return "Contact either Check_MK Agent or use a single special agent"
+
+
+    def _get_datasource_program(self):
+        special_agents = self._get_special_agent_data_sources()
+        if special_agents:
+            return special_agents[0]
+
+        return self._get_tcp_agent_data_source()
+
+
+    def _get_tcp_agent_data_source(self):
+        programs = rulesets.host_extra_conf(self._hostname, config.datasource_programs)
+        if not programs:
+            return TCPDataSource()
+        else:
+            return DSProgramDataSource(programs[0])
+
+
+    def _get_special_agent_data_sources(self):
+        special_agents           = []
+
+        for agentname, ruleset in config.special_agents.items():
+            params = rulesets.host_extra_conf(self._hostname, ruleset)
+            if params:
+                special_agents.append(SpecialAgentDataSource(agentname, params[0]))
+
+        return special_agents
+
+
+
+#.
 #   .--Agent---------------------------------------------------------------.
 #   |                        _                    _                        |
 #   |                       / \   __ _  ___ _ __ | |_                      |
@@ -599,74 +716,79 @@ def write_cache_file(relpath, output):
 #   | Real communication with the target system.                           |
 #   '----------------------------------------------------------------------'
 
-# Get information about a real host (not a cluster node) via TCP
-# or by executing an external program. ipaddress may be None.
-# In that case it will be looked up if needed. Also caching will
-# be handled here
-def get_agent_info(hostname, ipaddress, max_cache_age):
-    if ipaddress in [ "0.0.0.0", "::" ]:
-        raise MKAgentError("Failed to lookup IP address and no explicit IP address configured")
 
-    output = read_cache_file(hostname, max_cache_age)
-    if not output:
-        # Try to contact every host only once
-        if hostname in g_broken_agent_hosts:
-            raise MKAgentError("")
+# Abstract base class for all data source classes
+class DataSource(object):
+    def _execute(self, hostname, ipaddress):
+        """Fetches the current agent data from the source specified with
+        hostname and ipaddress and returns the result as byte string."""
+        # TODO: Shouldn't we ensure decoding to unicode here?
+        raise NotImplementedError()
 
-        # If the host is listed in datasource_programs the data from
-        # that host is retrieved by calling an external program (such
-        # as ssh or rsh or agent_vsphere) instead of a TCP connect.
-        commandline = get_datasource_program(hostname, ipaddress)
-        if commandline:
-            cpu_tracking.push_phase("ds")
-            output = get_agent_info_program(commandline)
+
+    def _cpu_tracking_id(self):
+        raise NotImplementedError()
+
+
+    def run(self, hostname, ipaddress):
+        """Wrapper for self._execute() that unifies exception handling and
+        enables correct CPU tracking.
+
+        Exceptions: All exceptions except MKTimeout are wrapped into
+        MKDataSourceError exceptions."""
+        try:
+            cpu_tracking.push_phase(self._cpu_tracking_id())
+            output = self._execute(hostname, ipaddress)
+            assert type(output) == str
+            return output
+        except MKTimeout, e:
+            raise
+        except Exception, e:
+            raise MKDataSourceError(self.name(hostname, ipaddress), e)
+        finally:
+            cpu_tracking.pop_phase()
+
+
+    def name(self, hostname, ipaddress):
+        """Return a unique (per host) textual identification of the data source"""
+        raise NotImplementedError()
+
+
+    def describe(self, hostname, ipaddress):
+        """Return a short textual description of the datasource"""
+        raise NotImplementedError()
+
+
+
+class TCPDataSource(DataSource):
+    def __init__(self):
+        super(TCPDataSource, self).__init__()
+        self._port = None
+
+
+    def _cpu_tracking_id(self):
+        return "agent"
+
+
+    def set_port(self, port):
+        self._port = port
+
+
+    def _get_port(self, hostname):
+        if self._port is not None:
+            return self._port
         else:
-            cpu_tracking.push_phase("agent")
-            output = get_agent_info_tcp(hostname, ipaddress)
-        cpu_tracking.pop_phase()
-
-        # Got new data? Write to cache file
-        write_cache_file(hostname, output)
-
-    if config.agent_simulator:
-        output = cmk_base.agent_simulator.process(output)
-
-    return output
+            return config.agent_port_of(hostname)
 
 
-def decrypt_package(encrypted_pkg, encryption_key):
-    from Crypto.Cipher import AES
-    from hashlib import md5
+    def _execute(self, hostname, ipaddress):
+        if not ipaddress:
+            raise MKGeneralException("Cannot contact agent: host '%s' has no IP address." % hostname)
 
-    unpad = lambda s : s[0:-ord(s[-1])]
+        port = self._get_port(hostname)
 
-    # Adapt OpenSSL handling of key and iv
-    def derive_key_and_iv(password, key_length, iv_length):
-        d = d_i = ''
-        while len(d) < key_length + iv_length:
-            d_i = md5(d_i + password).digest()
-            d += d_i
-        return d[:key_length], d[key_length:key_length+iv_length]
+        encryption_settings = config.agent_encryption_of(hostname)
 
-    key, iv = derive_key_and_iv(encryption_key, 32, AES.block_size)
-    decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
-
-    # Strip of fill bytes of openssl
-    return unpad(decrypted_pkg)
-
-
-# Get data in case of TCP
-def get_agent_info_tcp(hostname, ipaddress, port = None):
-    if not ipaddress:
-        raise MKGeneralException("Cannot contact agent: host '%s' has no IP address." % hostname)
-
-    if port is None:
-        port = config.agent_port_of(hostname)
-
-    encryption_settings = config.agent_encryption_of(hostname)
-
-    try:
         s = socket.socket(config.is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
                           socket.SOCK_STREAM)
         s.settimeout(config.tcp_connect_timeout)
@@ -700,17 +822,17 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
 
         if encryption_settings["use_regular"] == "enforce" and \
            output.startswith("<<<check_mk>>>"):
-            raise MKGeneralException("Agent output is plaintext but encryption is enforced by configuration")
+            raise MKAgentError("Agent output is plaintext but encryption is enforced by configuration")
 
         if encryption_settings["use_regular"] != "disabled":
             try:
                 # currently ignoring version and timestamp
                 #protocol_version = int(output[0:2])
 
-                output = decrypt_package(output[2:], encryption_settings["passphrase"])
+                output = self._decrypt_package(output[2:], encryption_settings["passphrase"])
             except Exception, e:
                 if encryption_settings["use_regular"] == "enforce":
-                    raise MKGeneralException("Failed to decrypt agent output: %s" % e)
+                    raise MKAgentError("Failed to decrypt agent output: %s" % e)
                 else:
                     # of course the package might indeed have been encrypted but
                     # in an incorrect format, but how would we find that out?
@@ -718,13 +840,38 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
                     pass
 
         return output
-    except MKAgentError, e:
-        raise
-    except MKTimeout:
-        raise
-    except Exception, e:
-        raise MKAgentError("Cannot get data from TCP port %s:%d: %s" %
-                           (ipaddress, port, e))
+
+
+    def _decrypt_package(self, encrypted_pkg, encryption_key):
+        from Crypto.Cipher import AES
+        from hashlib import md5
+
+        unpad = lambda s : s[0:-ord(s[-1])]
+
+        # Adapt OpenSSL handling of key and iv
+        def derive_key_and_iv(password, key_length, iv_length):
+            d = d_i = ''
+            while len(d) < key_length + iv_length:
+                d_i = md5(d_i + password).digest()
+                d += d_i
+            return d[:key_length], d[key_length:key_length+iv_length]
+
+        key, iv = derive_key_and_iv(encryption_key, 32, AES.block_size)
+        decryption_suite = AES.new(key, AES.MODE_CBC, iv)
+        decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
+
+        # Strip of fill bytes of openssl
+        return unpad(decrypted_pkg)
+
+
+    def name(self, hostname, ipaddress):
+        """Return a unique (per host) textual identification of the data source"""
+        return "%s:%d" % (ipaddress, config.agent_port_of(hostname))
+
+
+    def describe(self, hostname, ipaddress):
+        """Return a short textual description of the agent"""
+        return "TCP: %s:%d" % (ipaddress, config.agent_port_of(hostname))
 
 
 #.
@@ -739,87 +886,137 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
 #   | Fetching agent data from program calls instead of an agent           |
 #   '----------------------------------------------------------------------'
 
-def get_datasource_program(hostname, ipaddress):
-    special_agents_dir       = cmk.paths.agents_dir + "/special"
-    local_special_agents_dir = cmk.paths.local_agents_dir + "/special"
 
-    # First check WATO-style special_agent rules
-    for agentname, ruleset in config.special_agents.items():
-        params = rulesets.host_extra_conf(hostname, ruleset)
-        if params: # rule match!
-            # Create command line using the special_agent_info
-            cmd_arguments = checks.special_agent_info[agentname](params[0], hostname, ipaddress)
-            if os.path.exists(local_special_agents_dir + "/agent_" + agentname):
-                path = local_special_agents_dir + "/agent_" + agentname
+# Abstract base class for all data source classes that execute external programs
+class ProgramDataSource(DataSource):
+    def _cpu_tracking_id(self):
+        return "ds"
+
+
+    def _execute(self, hostname, ipaddress):
+        command_line = self._get_command_line(hostname, ipaddress)
+        return self._get_agent_info_program(command_line)
+
+
+    def _get_agent_info_program(self, commandline):
+        exepath = commandline.split()[0] # for error message, hide options!
+
+        console.vverbose("Calling external program %s\n" % commandline)
+        p = None
+        try:
+            if config.monitoring_core == "cmc":
+                p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull), # nosec
+                                     stdout=subprocess.PIPE, stderr = subprocess.PIPE,
+                                     preexec_fn=os.setsid, close_fds=True)
             else:
-                path = special_agents_dir + "/agent_" + agentname
-            return _replace_datasource_program_macros(hostname, ipaddress,
-                                                     path + " " + cmd_arguments)
+                # We can not create a separate process group when running Nagios
+                # Upon reaching the service_check_timeout Nagios only kills the process
+                # group of the active check.
+                p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull), # nosec
+                                     stdout=subprocess.PIPE, stderr = subprocess.PIPE,
+                                     close_fds=True)
+            stdout, stderr = p.communicate()
+            exitstatus = p.returncode
+        except MKTimeout:
+            # On timeout exception try to stop the process to prevent child process "leakage"
+            if p:
+                os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+                p.wait()
+            raise
+        finally:
+            # The stdout and stderr pipe are not closed correctly on a MKTimeout
+            # Normally these pipes getting closed after p.communicate finishes
+            # Closing them a second time in a OK scenario won't hurt neither..
+            if p:
+                p.stdout.close()
+                p.stderr.close()
 
-    programs = rulesets.host_extra_conf(hostname, config.datasource_programs)
-    if not programs:
-        return None
-    else:
-        return _replace_datasource_program_macros(hostname, ipaddress, programs[0])
+        if exitstatus:
+            if exitstatus == 127:
+                raise MKAgentError("Program '%s' not found (exit code 127)" % exepath)
+            else:
+                raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
+
+        return stdout
 
 
-def _replace_datasource_program_macros(hostname, ipaddress, cmd):
-    # Make "legacy" translation. The users should use the $...$ macros in future
-    cmd = cmd.replace("<IP>", ipaddress).replace("<HOST>", hostname)
-
-    tags = config.tags_of_host(hostname)
-    attrs = core_config.get_host_attributes(hostname, tags)
-    if config.is_cluster(hostname):
-        parents_list = core_config.get_cluster_nodes_for_config(hostname)
-        attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
-        attrs.update(core_config.get_cluster_attributes(hostname, parents_list))
-
-    macros = core_config.get_host_macros_from_attributes(hostname, attrs)
-    return core_config.replace_macros(cmd, macros)
+    def _get_command_line(self, hostname, ipaddress):
+        """Returns the final command line to be executed"""
+        raise NotImplementedError()
 
 
-# Get data in case of external program
-def get_agent_info_program(commandline):
-    exepath = commandline.split()[0] # for error message, hide options!
+    def describe(self, hostname, ipaddress):
+        """Return a short textual description of the agent"""
+        return "Program: %s" % self._get_command_line(hostname, ipaddress)
 
-    console.vverbose("Calling external program %s\n" % commandline)
-    p = None
-    try:
-        if config.monitoring_core == "cmc":
-            p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull), # nosec
-                                 stdout=subprocess.PIPE, stderr = subprocess.PIPE,
-                                 preexec_fn=os.setsid, close_fds=True)
+
+
+
+class DSProgramDataSource(ProgramDataSource):
+    def __init__(self, command_template):
+        super(DSProgramDataSource, self).__init__()
+        self._command_template = command_template
+
+
+    def name(self, hostname, ipaddress):
+        """Return a unique (per host) textual identification of the data source"""
+        program = self._get_command_line(hostname, ipaddress).split(" ")[0]
+        return os.path.basename(program)
+
+
+    def _get_command_line(self, hostname, ipaddress):
+        cmd = self._command_template
+
+        cmd = self._translate_legacy_macros(cmd, hostname, ipaddress)
+        cmd = self._translate_host_macros(cmd, hostname)
+
+        return cmd
+
+
+    def _translate_legacy_macros(self, cmd, hostname, ipaddress):
+        # Make "legacy" translation. The users should use the $...$ macros in future
+        return cmd.replace("<IP>", ipaddress).replace("<HOST>", hostname)
+
+
+    def _translate_host_macros(self, cmd, hostname):
+        tags = config.tags_of_host(hostname)
+        attrs = core_config.get_host_attributes(hostname, tags)
+        if config.is_cluster(hostname):
+            parents_list = core_config.get_cluster_nodes_for_config(hostname)
+            attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
+            attrs.update(core_config.get_cluster_attributes(hostname, parents_list))
+
+        macros = core_config.get_host_macros_from_attributes(hostname, attrs)
+        return core_config.replace_macros(cmd, macros)
+
+
+
+class SpecialAgentDataSource(ProgramDataSource):
+    def __init__(self, special_agent_id, params):
+        super(SpecialAgentDataSource, self).__init__()
+        self._special_agent_id = special_agent_id
+        self._params = params
+
+
+    def name(self, hostname, ipaddress):
+        """Return a unique (per host) textual identification of the data source"""
+        return self._special_agent_id
+
+
+    def _get_command_line(self, hostname, ipaddress):
+        """Create command line using the special_agent_info"""
+        info_func = checks.special_agent_info[self._special_agent_id]
+        cmd_arguments = info_func(self._params, hostname, ipaddress)
+
+        special_agents_dir       = cmk.paths.agents_dir + "/special"
+        local_special_agents_dir = cmk.paths.local_agents_dir + "/special"
+
+        if os.path.exists(local_special_agents_dir + "/agent_" + self._special_agent_id):
+            path = local_special_agents_dir + "/agent_" + self._special_agent_id
         else:
-            # We can not create a separate process group when running Nagios
-            # Upon reaching the service_check_timeout Nagios only kills the process
-            # group of the active check.
-            p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull), # nosec
-                                 stdout=subprocess.PIPE, stderr = subprocess.PIPE,
-                                 close_fds=True)
-        stdout, stderr = p.communicate()
-        exitstatus = p.returncode
-    except MKTimeout:
-        # On timeout exception try to stop the process to prevent child process "leakage"
-        if p:
-            os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-            p.wait()
-        raise
-    except Exception, e:
-        raise MKAgentError("Could not execute '%s': %s" % (exepath, e))
-    finally:
-        # The stdout and stderr pipe are not closed correctly on a MKTimeout
-        # Normally these pipes getting closed after p.communicate finishes
-        # Closing them a second time in a OK scenario won't hurt neither..
-        if p:
-            p.stdout.close()
-            p.stderr.close()
+            path = special_agents_dir + "/agent_" + self._special_agent_id
 
-    if exitstatus:
-        if exitstatus == 127:
-            raise MKAgentError("Program '%s' not found (exit code 127)" % exepath)
-        else:
-            raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
-    return stdout
+        return path + " " + cmd_arguments
 
 #.
 #   .--Use cachefile-------------------------------------------------------.
@@ -905,16 +1102,30 @@ def get_agent_cache_info():
 
 
 def cleanup_host_caches():
-    global g_agent_already_contacted
-    g_agent_already_contacted = {}
-    global g_infocache
-    g_infocache = {}
-    global g_agent_cache_info
-    g_agent_cache_info = {}
-    global g_broken_agent_hosts
-    g_broken_agent_hosts = set()
-    global g_broken_snmp_hosts
-    g_broken_snmp_hosts = set()
+    for cache in [
+            g_agent_already_contacted,
+            g_infocache,
+            g_agent_cache_info,
+            g_broken_agent_hosts,
+            g_broken_snmp_hosts,
+            g_data_source_errors ]:
+        cache.clear()
+
+
+def add_data_source_error(hostname, ipaddress, data_source, e):
+    g_data_source_errors.setdefault(hostname, {}).setdefault(data_source.name(hostname, ipaddress), []).append(e)
+
+
+def has_data_source_errors(hostname, ipaddress, data_source):
+    return bool(get_data_source_errors(hostname, ipaddress, data_source))
+
+
+def get_data_source_errors(hostname, ipaddress, data_source):
+    return g_data_source_errors.get(hostname, {}).get(data_source.name(hostname, ipaddress))
+
+
+def get_data_source_errors_of_host(hostname, ipaddress):
+    return g_data_source_errors.get(hostname, {})
 
 
 def add_broken_agent_host(hostname):

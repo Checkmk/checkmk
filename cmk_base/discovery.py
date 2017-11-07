@@ -350,6 +350,11 @@ def check_discovery(hostname, ipaddress=None):
         if need_rediscovery:
             infotexts.append("rediscovery scheduled")
 
+        # Add data source errors to infotexts
+        for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+            for exc in exceptions:
+                infotexts.append("%s" % exc)
+
         output = ", ".join(infotexts)
         if long_infotexts:
             output += "\n" + "\n".join(long_infotexts)

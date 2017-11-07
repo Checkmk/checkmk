@@ -82,11 +82,9 @@ def dump_host(hostname):
 
     agenttypes = []
     if config.is_tcp_host(hostname):
-        dapg = agent_data.get_datasource_program(hostname, ipaddress)
-        if dapg:
-            agenttypes.append("Datasource program: %s" % dapg)
-        else:
-            agenttypes.append("TCP (port: %d)" % config.agent_port_of(hostname))
+        data_sources = agent_data.DataSources(hostname)
+        for data_source in agent_data.DataSources(hostname).get_data_sources():
+            agenttypes.append(data_source.describe(hostname, ipaddress))
 
     if config.is_snmp_host(hostname):
         if config.is_usewalk_host(hostname):
@@ -118,7 +116,16 @@ def dump_host(hostname):
     if config.is_ping_host(hostname):
         agenttypes.append('PING only')
 
-    console.output(tty.yellow + "Type of agent:          " + tty.normal + '\n                        '.join(agenttypes) + "\n")
+    console.output(tty.yellow + "Agent mode:             " + tty.normal)
+    console.output(agent_data.DataSources(hostname).describe_data_sources() + "\n")
+
+    console.output(tty.yellow + "Type of agent:          " + tty.normal)
+    if len(agenttypes) == 1:
+        console.output(agenttypes[0] + "\n")
+    else:
+        console.output("\n  ")
+        console.output("\n  ".join(agenttypes) + "\n")
+
 
     console.output(tty.yellow + "Services:" + tty.normal + "\n")
     check_items = check_table.get_sorted_check_table(hostname)

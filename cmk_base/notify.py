@@ -1428,6 +1428,10 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
         ec_contact = plugin_context.get("EC_CONTACT", "")
         bulk_path += ("ec_contact", ec_contact)
 
+    if "ec_comment" in bulkby:
+        ec_comment = plugin_context.get("EC_COMMENT", "")
+        bulk_path += ("ec_comment", ec_comment)
+
     if "bulk_subject" in bulk:
         plugin_context["PARAMETER_BULK_SUBJECT"] = bulk["bulk_subject"]
 

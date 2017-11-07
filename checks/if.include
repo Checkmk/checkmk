@@ -285,6 +285,14 @@ def inventory_if_common(info, has_nodeinfo = False):
         # if there are no settings, use defaults
         settings_sets.append({})
 
+    def port_match(name, what):
+        if what == None:
+            return True
+        for r in what:
+            if regex(r).match(name):
+                return True
+        return False
+
     for settings in settings_sets:
         uses_description = settings.get('use_desc', if_inventory_uses_description)
         uses_alias       = settings.get('use_alias', if_inventory_uses_alias)
@@ -295,14 +303,6 @@ def inventory_if_common(info, has_nodeinfo = False):
         match_alias      = settings.get('match_alias')
         match_desc       = settings.get('match_desc')
         pad_portnumbers  = settings.get('pad_portnumbers', if_inventory_pad_portnumbers)
-
-        def port_match(name, what):
-            if what == None:
-                return True
-            for r in what:
-                if regex(r).match(name):
-                    return True
-            return False
 
         # Allow main check to set no port type (e.g. hitachi_hnas_fc_if)
         porttypes.append("")

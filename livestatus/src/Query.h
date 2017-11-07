@@ -140,6 +140,8 @@ private:
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
 
+    std::unique_ptr<Aggregator> createAggregator(const StatsColumn &sc) const;
+
     // NOTE: We cannot make this 'const' right now, it adds entries into
     // _stats_groups.
     const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(

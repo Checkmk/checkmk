@@ -29,6 +29,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include "Aggregator.h"
 #include "Column.h"
 #include "contact_fwd.h"
 #include "opids.h"

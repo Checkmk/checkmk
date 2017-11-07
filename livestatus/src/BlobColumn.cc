@@ -38,11 +38,12 @@ void BlobColumn::output(Row row, RowRenderer &r, const contact * /*auth_user*/,
 
 std::unique_ptr<Filter> BlobColumn::createFilter(
     RelationalOperator /*unused*/, const std::string & /*unused*/) const {
-    throw std::runtime_error("filtering on blob column " + name() +
-                             " not supported");
+    throw std::runtime_error("filtering on blob column '" + name() +
+                             "' not supported");
 }
 
 std::unique_ptr<Aggregator> BlobColumn::createAggregator(
     StatsOperation /*operation*/) const {
-    return nullptr;
+    throw std::runtime_error("aggregating on blob column '" + name() +
+                             "' not supported");
 }

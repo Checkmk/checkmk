@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsDictColumn.h"
+#include <stdexcept>
 #include <utility>
 #include "CustomVarsDictFilter.h"
 #include "Filter.h"
@@ -52,7 +53,8 @@ std::unique_ptr<Filter> CustomVarsDictColumn::createFilter(
 
 std::unique_ptr<Aggregator> CustomVarsDictColumn::createAggregator(
     StatsOperation /*operation*/) const {
-    return nullptr;
+    throw std::runtime_error("aggregating on dictionary column '" + name() +
+                             "' not supported");
 }
 
 std::unordered_map<std::string, std::string> CustomVarsDictColumn::getValue(

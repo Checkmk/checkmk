@@ -38,3 +38,8 @@ std::unique_ptr<Filter> NullColumn::createFilter(
     RelationalOperator /*unused*/, const std::string& /*unused*/) const {
     throw std::runtime_error("filtering on null column not supported");
 }
+
+std::unique_ptr<Aggregator> NullColumn::createAggregator(
+    StatsOperation /*operation*/) const {
+    return nullptr;
+}

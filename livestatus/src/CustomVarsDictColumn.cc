@@ -50,6 +50,11 @@ std::unique_ptr<Filter> CustomVarsDictColumn::createFilter(
     return std::make_unique<CustomVarsDictFilter>(*this, relOp, value);
 }
 
+std::unique_ptr<Aggregator> CustomVarsDictColumn::createAggregator(
+    StatsOperation /*operation*/) const {
+    return nullptr;
+}
+
 std::unordered_map<std::string, std::string> CustomVarsDictColumn::getValue(
     Row row) const {
     std::unordered_map<std::string, std::string> dict;

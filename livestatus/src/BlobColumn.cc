@@ -41,3 +41,8 @@ std::unique_ptr<Filter> BlobColumn::createFilter(
     throw std::runtime_error("filtering on blob column " + name() +
                              " not supported");
 }
+
+std::unique_ptr<Aggregator> BlobColumn::createAggregator(
+    StatsOperation /*operation*/) const {
+    return nullptr;
+}

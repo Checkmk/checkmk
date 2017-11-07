@@ -53,6 +53,9 @@ public:
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 
+    std::unique_ptr<Aggregator> createAggregator(
+        StatsOperation operation) const override;
+
     std::unordered_map<std::string, std::string> getValue(Row row) const;
 };
 

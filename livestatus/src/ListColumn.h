@@ -53,6 +53,9 @@ public:
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 
+    std::unique_ptr<Aggregator> createAggregator(
+        StatsOperation operation) const override;
+
     // TODO(sp) What we actually want here is a stream of strings, not a
     // concrete container.
     virtual std::vector<std::string> getValue(

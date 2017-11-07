@@ -51,6 +51,9 @@ public:
 
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
+
+    std::unique_ptr<Aggregator> createAggregator(
+        StatsOperation operation) const override;
 };
 
 #endif  // NullColumn_h

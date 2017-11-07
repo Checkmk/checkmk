@@ -43,12 +43,19 @@ public:
                  int offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset) {}
-    virtual std::string getValue(Row row) const = 0;
+
+    ColumnType type() const override { return ColumnType::string; }
+
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
-    ColumnType type() const override { return ColumnType::string; }
+
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
+
+    std::unique_ptr<Aggregator> createAggregator(
+        StatsOperation operation) const override;
+
+    virtual std::string getValue(Row row) const = 0;
 };
 
 #endif  // StringColumn_h

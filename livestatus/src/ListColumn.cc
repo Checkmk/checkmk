@@ -40,3 +40,8 @@ std::unique_ptr<Filter> ListColumn::createFilter(
     RelationalOperator relOp, const std::string &value) const {
     return std::make_unique<ListFilter>(*this, relOp, value);
 }
+
+std::unique_ptr<Aggregator> ListColumn::createAggregator(
+    StatsOperation /*operation*/) const {
+    return nullptr;
+}

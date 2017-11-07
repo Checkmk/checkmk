@@ -55,8 +55,3 @@ const void *Column::shiftPointer(Row row) const {
                      _extra_extra_offset),
                _offset);
 }
-
-std::unique_ptr<Aggregator> Column::createAggregator(
-    StatsOperation /*unused*/) const {
-    return nullptr;
-}

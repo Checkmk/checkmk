@@ -69,7 +69,7 @@ public:
         RelationalOperator relOp, const std::string &value) const = 0;
 
     virtual std::unique_ptr<Aggregator> createAggregator(
-        StatsOperation operation) const;
+        StatsOperation operation) const = 0;
 
     Logger *logger() const { return _logger; }
 

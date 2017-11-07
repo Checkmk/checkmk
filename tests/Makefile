@@ -1,12 +1,14 @@
 SHELL=/bin/bash -e
 
 help:
-	@echo "test           - Run integration and git tests"
-	@echo "test-pylint    - Run pylint based tests"
-	@echo "test-pylint-ci - Run pylint based tests within Jenkins"
-	@echo "test-bandit    - Run bandit (security) tests"
-	@echo "test-bandit-ci - Run bandit (security) tests within Jenkins"
-	@echo "setup          - Install dependencies"
+	@echo "test               - Run integration and git tests"
+	@echo "test-pylint        - Run pylint based tests"
+	@echo "test-pylint-ci     - Run pylint based tests from Jenkins"
+	@echo "test-bandit        - Run bandit (security) tests"
+	@echo "test-bandit-ci     - Run bandit (security) tests from Jenkins"
+	@echo "test-shellcheck    - Run shellcheck tests"
+	@echo "test-shellcheck-ci - Run shellcheck tests from Jenkins"
+	@echo "setup              - Install dependencies"
 
 test:
 	py.test
@@ -44,10 +46,27 @@ test-bandit-ci:
 	    $(MAKE) test-bandit || true
 
 
+test-shellcheck:
+	@CMK_DIR="$(realpath ..)" ; \
+	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
+	shellcheck \
+		$(OUTPUT_ARGS) \
+		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
+		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler" | tee $$REDIRECT
+
+
+test-shellcheck-ci:
+	OUTPUT_ARGS="-f checkstyle" \
+	REDIRECT="$$WORKDIR/results.xml" \
+	    $(MAKE) test-shellcheck || true
+
+
+
 setup:
 	sudo apt-get install \
 	    python-pip \
 	    chrpath
+	    cabal-install
 	sudo pip install --upgrade pip
 	sudo pip install --upgrade --ignore-installed -r requirements.txt
 	$(MAKE) -C pylint setup

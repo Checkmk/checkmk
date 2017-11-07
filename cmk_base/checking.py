@@ -98,10 +98,16 @@ def do_check(hostname, ipaddress, only_check_types = None):
         if _submit_to_core:
             item_state.save(hostname)
 
-        if problems:
-            output = "%s, " % problems
+        # Add errors of problematic data sources to problems list
+        for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+            for exc in exceptions:
+                problems.append("%s" % exc)
 
-            if problems == "Empty output from agent":
+        if problems:
+            problems_txt = ", ".join(problems)
+            output = "%s, " % problems_txt
+
+            if problems_txt == "Empty output from agent":
                 status = exit_spec.get("empty_output", 2)
             else:
                 status = exit_spec.get("connection", 2)
@@ -418,7 +424,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
     error_section_list = sorted(list(error_sections))
 
-    return cmk_info, num_success, error_section_list, ", ".join(problems)
+    return cmk_info, num_success, error_section_list, problems
 
 
 def is_manual_check(hostname, check_type, item):

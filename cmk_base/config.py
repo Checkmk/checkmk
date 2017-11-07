@@ -610,6 +610,14 @@ def is_dual_host(hostname):
     return is_tcp_host(hostname) and is_snmp_host(hostname)
 
 
+def is_all_agents_host(hostname):
+    return "all-agents" in tags_of_host(hostname)
+
+
+def is_all_special_agents_host(hostname):
+    return "all-agents" in tags_of_host(hostname)
+
+
 #
 # IPv4/IPv6
 #

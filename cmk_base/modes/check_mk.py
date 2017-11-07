@@ -323,7 +323,15 @@ def mode_dump_agent(hostname):
 
         if config.is_tcp_host(hostname):
             ipaddress = ip_lookup.lookup_ip_address(hostname)
-            console.output(agent_data.get_agent_info(hostname, ipaddress, 999999999))
+            output = agent_data.get_agent_info(hostname, ipaddress, 999999999)
+
+            # Show errors of problematic data sources
+            for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+                for exc in exceptions:
+                    console.error("ERROR: %s" % exc)
+
+            console.output(output)
+
         console.output(piggyback.get_piggyback_info(hostname))
     except MKAgentError, e:
         raise MKBailOut("Problem contacting agent: %s" % e)

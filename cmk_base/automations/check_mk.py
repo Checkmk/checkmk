@@ -985,13 +985,18 @@ class AutomationDiagHost(Automation):
                 return (p.wait(), response)
 
             elif test == 'agent':
-                if not cmd:
-                    cmd = agent_data.get_datasource_program(hostname, ipaddress)
+                data_sources = agent_data.DataSources(hostname)
 
-                if cmd:
-                    return 0, agent_data.get_agent_info_program(cmd)
-                else:
-                    return 0, agent_data.get_agent_info_tcp(hostname, ipaddress, agent_port or None)
+                output = ""
+                for data_source in data_sources.get_data_sources():
+                    if isinstance(data_source, agent_data.DSProgramDataSource) and cmd:
+                        data_source = agent_data.DSProgramDataSource(cmd)
+                    elif isinstance(data_sources, agent_data.TCPDataSource):
+                        data_source.set_port(agent_port)
+
+                    output += data_source.run(hostname, ipaddress)
+
+                return 0, output
 
             elif test == 'traceroute':
                 family_flag = ipv6_primary and "-6" or "-4"
@@ -1194,6 +1199,16 @@ class AutomationGetAgentOutput(Automation):
             if ty == "agent":
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
                 info = agent_data.get_agent_info(hostname, ipaddress, 999999999)
+
+                # Optionally show errors of problematic data sources
+                errors = agent_data.get_data_source_errors_of_host(hostname, ipaddress)
+                if errors:
+                    success = False
+
+                    for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+                        for exc in exceptions:
+                            output += "%s\n" % exc
+
                 info += piggyback.get_piggyback_info(hostname)
             else:
                 path = cmk.paths.snmpwalks_dir + "/" + hostname

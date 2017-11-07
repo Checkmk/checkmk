@@ -29,10 +29,23 @@
 
 class MKAgentError(Exception):
     def __init__(self, reason):
-        self.reason = reason
         super(MKAgentError, self).__init__(reason)
+        self.reason = reason
+
+
     def __str__(self):
         return self.reason
+
+
+
+class MKDataSourceError(MKAgentError):
+    def __init__(self, data_source_id, reason):
+        super(MKDataSourceError, self).__init__(reason)
+        self.data_source_id = data_source_id
+
+
+    def __str__(self):
+        return "%s: %s" % (self.data_source_id, self.reason)
 
 
 

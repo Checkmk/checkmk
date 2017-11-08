@@ -1,0 +1,12 @@
+Title: Improved Event Console history performance
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510148949
+Class: fix
+
+Due to architectural changes in Check_MK 1.4.0, the performance of querying
+the event console history had suffered.  This has been fixed, now time
+ranges are used again to speed up common queries.

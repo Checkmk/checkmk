@@ -211,9 +211,9 @@ def inventory_df(parsed):
                 inventory.append((item, params))
             else:
                 inventory.append(entry)
-        return inventory
     else:
-        return df_inventory(mplist)
+        inventory = df_inventory(mplist)
+    return inventory
 
 
 def check_df(item, params, parsed):

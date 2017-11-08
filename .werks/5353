@@ -1,0 +1,13 @@
+Title: citrix_sessions: fixes a case where no session number was returned
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510130037
+Class: fix
+
+In some circumstances citrix_sessions did not return values for
+XenServers. This werk fixes this problem in the citrix_xenapp
+PowerShell script so that always a valid session number is
+returned.

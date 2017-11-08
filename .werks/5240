@@ -1,0 +1,13 @@
+Title: agent_netapp, environmental sensors monitoring. No longer fails if a node has no configured shelfes
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1510148440
+
+This fixes the error message <tt>"NoneType" object has no attribute 'children_get'</tt>, reported by the check <tt>NetApp filer connection</tt>.
+
+

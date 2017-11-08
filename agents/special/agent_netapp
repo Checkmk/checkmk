@@ -985,9 +985,9 @@ try:
 
         # Cluster info
         # TODO: check is missing
+        ha_partners = {} # Used later on by environmental sensors
         if "cf" not in licenses["v1_disabled"]:
             cluster_status = query_nodes("cf-status", node_attribute = "node")
-            ha_partners = {} # Used later on by environmental sensors
             if cluster_status:
                 print "<<<netapp_api_cm_cluster:sep(9)>>>"
                 for node, entry in cluster_status.items():
@@ -1137,9 +1137,19 @@ try:
             for node, values in environment_info.items():
                 if node in processed_nodes:
                     continue
+
+                # HA partners always report redundant environmental data.
+                # (Node1/Node2) <--Cluster--> (Node3/Node4)
+                # We skip data from Node2 and Node4.
+                processed_nodes.append(node)
+                if node in ha_partners:
+                    processed_nodes.append(ha_partners[node])
+
                 channel_list = values.child_get("shelf-environ-channel-list")
+                if not channel_list:
+                    continue
+
                 for channel in channel_list.children_get():                                    # cycle channel list
-                    shelf_list = channel.child_get("shelf-environ-shelf-list")
                     for shelf in channel.child_get("shelf-environ-shelf-list").children_get(): # cycle shelf list
                         shelf_id = shelf.child_get_string("shelf-id")
                         for what, section in [ ("power-supply-list",    "netapp_api_psu"),
@@ -1148,12 +1158,6 @@ try:
                             print "<<<%s:sep(9)>>>" % section
                             node = shelf.child_get(what)
                             print format_config(node, what, shelf_id)
-                # HA partners always report redundant environmental data.
-                # (Node1/Node2) <--Cluster--> (Node3/Node4)
-                # We skip data from Node2 and Node4.
-                processed_nodes.append(node)
-                if node in ha_partners:
-                    processed_nodes.append(ha_partners[node])
 
 
         # Controller Status

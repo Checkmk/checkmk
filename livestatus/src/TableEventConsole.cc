@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsole.h"
+#include <ctime>
 #include <iosfwd>
 #include <iostream>
 #include <memory>
@@ -52,6 +53,17 @@ private:
             if (!mk::starts_with(c->name(), "host_")) {
                 os << " " << c->name();
             }
+        }
+        // HACK: Reconstruct time range filter
+        auto end = time(nullptr) + 1;
+        int since = 0;
+        int until = end;
+        _query->findIntLimits("history_time", &since, &until);
+        if (since != 0) {
+            os << "\nFilter: history_time >= " << since;
+        }
+        if (until != end) {
+            os << "\nFilter: history_time <= " << until - 1;
         }
         os << std::endl;
     }

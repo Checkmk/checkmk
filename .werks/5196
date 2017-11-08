@@ -1,0 +1,18 @@
+Title: Bumped Livestatus stack size to give regex matching more breathing room.
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p17
+Date: 1510129352
+
+The current implementation of regular expression matching can use a
+non-trivial amount of memory (mainly stack), and our previous memory limit
+was a bit tight.  This has been improved, so regular expression matching
+should work more reliably.
+
+Note that this increases the overall amount of memory allocated for
+Check_MK, but for normal installations the increase should be negligible.
+

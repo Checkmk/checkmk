@@ -1,0 +1,7 @@
+Title: Monitoring core on a slave site needs to restart when a mkp update installs new files
+Component: core
+State: open
+Date: 2017-11-08 13:31:01
+Targetversion: 1.4.0
+Class: bug
+

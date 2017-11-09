@@ -202,10 +202,18 @@ else:
 
     class ErrorMessages():
         def __init__(self):
-            self.messages = set([])
+            self.messages = set()
 
         def add_message(self, message):
             self.messages.add(message)
+
+        def remove_messages(self, infix_text):
+            new_messages = set()
+            for message in self.messages:
+                if infix_text in message:
+                    continue
+                new_messages.add(message)
+            self.messages = new_messages
 
         def format_messages(self):
             return "\n".join(self.messages)
@@ -544,10 +552,13 @@ def debug_node(node):
 
 def output_error_section():
     if opt_legacy:
-        import pprint
-        pprint.pprint(section_errors)
+        print "<<<netapp_api_connection>>>"
+        sys.stdout.write("\n".join(section_errors))
     else:
         print "<<<netapp_api_connection>>>"
+        # Remove some messages which may appear on a Netapp Simulator
+        server.error_messages.remove_messages("storage-shelf-environment-list-info: Enclosure services scan not done")
+        server.error_messages.remove_messages("environment-sensors-get-iter: invalid operation")
         print server.error_messages.format_messages()
 
 nodes = []

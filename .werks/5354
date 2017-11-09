@@ -1,0 +1,18 @@
+Title: cmctc_lcp: Fixes an error leading to wrong inventory and check output
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.4.0p17
+Date: 1510217496
+
+This werk fixes an error which caused that the inventory for some sensors
+was not performed correctly. This resulted in a wrong amount of discovered
+services and a wrong output (numbers and units) for these services .
+Therefore, the services of the corresponding hosts have to be rediscovered.
+Temperature sensors are not affected by this error. One other type of
+sensor is not affected as well. Which sensor type it is might depend on the
+used Python version. In tests using Python version 2.7.14 Blower sensors
+were not affected.

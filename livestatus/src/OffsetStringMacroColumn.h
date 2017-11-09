@@ -41,10 +41,10 @@ public:
     OffsetStringMacroColumn(const std::string &name,
                             const std::string &description, int indirect_offset,
                             int extra_offset, int extra_extra_offset,
-                            int offset, int string_offset)
+                            int offset)
         : StringColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset, offset)
-        , _string_offset(string_offset) {}
+                       extra_extra_offset, 0)
+        , _string_offset(offset) {}
 
     std::string getValue(Row row) const override;
 

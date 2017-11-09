@@ -74,33 +74,6 @@ _g_snmp_cache_info_tables = {} # Information about SNMP caching
 
 #TODO CACHING
 
-def initialize_snmp_cache_info_tables(hostname):
-    global _g_snmp_cache_info_tables
-    _g_snmp_cache_info_tables = {}
-
-
-def write_snmp_cache_info_tables(hostname, do_submit=True):
-    # only write cache file in non interactive mode. Otherwise it would
-    # prevent the regular checking from getting status updates during
-    # interactive debugging, for example with cmk -nv.
-    # TODO: Why is SNMP different from TCP/Datasource handling?
-    if do_submit:
-        cache_dir = cmk.paths.snmp_cache_dir
-        if not os.path.exists(cache_dir):
-            os.makedirs(cache_dir)
-        cache_path = "%s/%s" % (cache_dir, hostname)
-        store.save_data_to_file(cache_path, _g_snmp_cache_info_tables, pretty=False)
-
-
-def set_snmp_cache_info_tables(check_type, table):
-    _g_snmp_cache_info_tables[check_type] = table
-
-
-def get_snmp_cache_info_tables(hostname):
-    cache_path = "%s/%s" % (cmk.paths.snmp_cache_dir, hostname)
-    return store.load_data_from_file(cache_path)
-
-
 def initialize_single_oid_cache(hostname):
     global _g_single_oid_cache
     _g_single_oid_cache = _get_single_oid_cache(hostname)

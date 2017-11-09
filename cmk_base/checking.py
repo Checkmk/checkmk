@@ -76,7 +76,7 @@ _show_perfdata  = False
 #   '----------------------------------------------------------------------'
 
 # This is the main check function - the central entry point
-def do_check(hostname, ipaddress, only_check_types = None):
+def do_check(hostname, ipaddress, only_check_types=None):
     cpu_tracking.start("busy")
     console.verbose("Check_MK version %s\n" % cmk.__version__)
 
@@ -87,18 +87,17 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     try:
         item_state.load(hostname)
-        cmk_info, num_success, error_sections, problems = \
+        cmk_info, num_success, missing_sections = \
             do_all_checks_on_host(hostname, ipaddress, only_check_types)
 
         agent_version = cmk_info["version"]
         agent_os = cmk_info.get("agentos")
 
-        num_errors = len(error_sections)
-
         if _submit_to_core:
             item_state.save(hostname)
 
         # Add errors of problematic data sources to problems list
+        problems = []
         for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
             for exc in exceptions:
                 problems.append("%s" % exc)
@@ -112,11 +111,11 @@ def do_check(hostname, ipaddress, only_check_types = None):
             else:
                 status = exit_spec.get("connection", 2)
 
-        elif num_errors > 0 and num_success > 0:
-            output = "Missing agent sections: %s - " % ", ".join(error_sections)
+        elif missing_sections and num_success > 0:
+            output = "Missing agent sections: %s - " % ", ".join(missing_sections)
             status = exit_spec.get("missing_sections", 1)
 
-        elif num_errors > 0:
+        elif missing_sections:
             output = "Got no information from host, "
             status = exit_spec.get("empty_output", 2)
 
@@ -234,197 +233,155 @@ def _is_expected_agent_version(agent_version, expected_version):
                 (agent_version, expected_version, e))
 
 
-# Loops over all checks for a host, gets the data, calls the check
+# Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_agent_version = True):
+def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agent_version=True):
+    cmk_info = { "version" : "(unknown)" }
+    num_success, missing_sections = 0, set()
+
+    data_sources = agent_data.DataSources(hostname)
+
+    host_infos = agent_data.get_host_infos(data_sources, hostname, ipaddress)
+
     checks.set_hostname(hostname)
-    error_sections = set([])
+
     table = check_table.get_precompiled_check_table(hostname, remove_duplicates=True,
                                     world="active" if _in_keepalive_mode() else "config")
-    problems = []
 
-    parsed_infos = {} # temporary cache for section infos, maybe parsed
+    for check_name, item, params, description in table:
+        if only_check_types != None and check_name not in only_check_types:
+            continue
 
-    def execute_check(checkname, item, params, description, ipaddress):
-        if only_check_types != None and checkname not in only_check_types:
-            return False
-
-        # Make a bit of context information globally available, so that functions
-        # called by checks now this context
-        checks.set_service(checkname, description)
-        item_state.set_item_state_prefix(checkname, item)
-
-        # Skip checks that are not in their check period
-        period = config.check_period_of(hostname, description)
-        if period and not core.check_timeperiod(period):
-            console.verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
-            return False
-
-        elif period:
-            console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
-
-        infotype = checkname.split('.')[0]
-        try:
-            if infotype in parsed_infos:
-                info = parsed_infos[infotype]
-            else:
-                info = agent_data.get_info_for_check(hostname, ipaddress, infotype)
-                parsed_infos[infotype] = info
-
-        except MKSkipCheck, e:
-            return False
-
-        except MKSNMPError, e:
-            if str(e):
-                problems.append(str(e))
-            error_sections.add(infotype)
-            agent_data.add_broken_snmp_host(hostname)
-            return False
-
-        except MKAgentError, e:
-            if str(e):
-                problems.append(str(e))
-            error_sections.add(infotype)
-            agent_data.add_broken_agent_host(hostname)
-            return False
-
-        except MKParseFunctionError, e:
-            info = e
-
-        # In case of SNMP checks but missing agent response, skip this check.
-        # Special checks which still need to be called even with empty data
-        # may declare this.
-        if info == [] and checks.is_snmp_check(checkname) \
-           and not checks.check_info[checkname]["handle_empty_info"]:
-            error_sections.add(infotype)
-            return False
-
-        if info or info in [ [], {} ]:
-            check_function = checks.check_info[checkname].get("check_function")
-            if check_function is None:
-                check_function = lambda item, params, info: (3, 'UNKNOWN - Check not implemented')
-
-            try:
-                dont_submit = False
-
-                # Call the actual check function
-                item_state.reset_wrapped_counters()
-
-                if isinstance(info, MKParseFunctionError):
-                    x = info.exc_info()
-                    raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
-
-
-                def determine_params(params):
-                    if isinstance(params, dict) and "tp_default_value" in params:
-                        for timeperiod, tp_params in params["tp_values"]:
-                            tp_result = core.timeperiod_active(timeperiod)
-                            if tp_result == True:
-                                return tp_params
-                            elif tp_result == False:
-                                continue
-                            elif tp_result == None:
-                                # Connection error
-                                return params["tp_default_value"]
-                        else:
-                            return params["tp_default_value"]
-                    else:
-                        return params
-
-
-                result = sanitize_check_result(
-                            check_function(item, determine_params(params), info),
-                            checks.is_snmp_check(checkname))
-
-                item_state.raise_counter_wrap()
-
-
-            # handle check implementations that do not yet support the
-            # handling of wrapped counters via exception. Do not submit
-            # any check result in that case:
-            except item_state.MKCounterWrapped, e:
-                console.verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
-                dont_submit = True
-
-            except MKTimeout:
-                raise
-
-            except Exception, e:
-                if cmk.debug.enabled():
-                    raise
-                result = 3, cmk_base.crash_reporting.create_crash_dump(hostname, checkname, item,
-                                            is_manual_check(hostname, checkname, item),
-                                            params, description, info), []
-
-            if not dont_submit:
-                # Now add information about the age of the data in the agent
-                # sections. This is in agent_data.g_agent_cache_info. For clusters we
-                # use the oldest of the timestamps, of course.
-                oldest_cached_at = None
-                largest_interval = None
-
-                def minn(a, b):
-                    if a == None:
-                        return b
-                    elif b == None:
-                        return a
-                    return min(a,b)
-
-                for section_entries in agent_data.get_agent_cache_info().values():
-                    if infotype in section_entries:
-                        cached_at, cache_interval = section_entries[infotype]
-                        oldest_cached_at = minn(oldest_cached_at, cached_at)
-                        largest_interval = max(largest_interval, cache_interval)
-
-                _submit_check_result(hostname, description, result,
-                                    cached_at=oldest_cached_at, cache_interval=largest_interval)
-            return True
-        else:
-            error_sections.add(infotype)
-            return False
-
-    num_success = 0
-
-    if config.has_management_board(hostname):
-        # this assumes all snmp checks belong to the management board if there is one with snmp
-        # protocol. If at some point we support having both host and management board queried
-        # through snmp we have to decide which check belongs where at discovery time and change
-        # all data structures, including in the nagios interface...
-        is_management_snmp = config.management_protocol(hostname) == "snmp"
-        management_addr = config.management_address(hostname)
-    else:
-        is_management_snmp = False
-
-    snmp.initialize_snmp_cache_info_tables(hostname)
-    for checkname, item, params, description in table:
-        if checks.is_snmp_check(checkname) and is_management_snmp:
-            address = management_addr
-        else:
-            address = ipaddress
-
-        res = execute_check(checkname, item, params, description, address)
-        if res:
+        success = execute_check(host_infos, hostname, ipaddress, check_name, item, params, description)
+        if success:
             num_success += 1
-    snmp.write_snmp_cache_info_tables(hostname)
+        else:
+            # TODO: Is there a generic check_name -> info_name/section_name function?
+            missing_sections.add(check_name.split('.')[0])
 
     if fetch_agent_version:
-        cmk_info = { "version" : "(unknown)" }
-        try:
-            if config.is_tcp_host(hostname):
-                for line in agent_data.get_info_for_check(hostname, ipaddress, 'check_mk'):
-                    value = " ".join(line[1:]) if len(line) > 1 else None
-                    cmk_info[line[0][:-1].lower()] = value
+        if config.is_tcp_host(hostname):
+            for line in agent_data.get_info_for_check(host_infos, hostname, ipaddress, "check_mk", for_discovery=False) or []:
+                value = " ".join(line[1:]) if len(line) > 1 else None
+                cmk_info[line[0][:-1].lower()] = value
 
-            else:
-                cmk_info["version"] = None
-        except MKAgentError:
-            agent_data.add_broken_agent_host(hostname)
+        else:
+            cmk_info["version"] = None
     else:
         cmk_info["version"] = None
 
-    error_section_list = sorted(list(error_sections))
+    missing_section_list = sorted(list(missing_sections))
 
-    return cmk_info, num_success, error_section_list, problems
+    return cmk_info, num_success, missing_section_list
+
+
+def execute_check(host_infos, hostname, ipaddress, check_name, item, params, description):
+    # Make a bit of context information globally available, so that functions
+    # called by checks now this context
+    checks.set_service(check_name, description)
+    item_state.set_item_state_prefix(check_name, item)
+
+    # Skip checks that are not in their check period
+    period = config.check_period_of(hostname, description)
+    if period and not core.check_timeperiod(period):
+        console.verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
+        return False
+
+    elif period:
+        console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
+
+    info_type = check_name.split('.')[0]
+
+    try:
+        info = agent_data.get_info_for_check(host_infos, hostname, ipaddress, info_type, for_discovery=False)
+    except MKParseFunctionError, e:
+        x = e.exc_info()
+        raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
+
+    if info is None: # No data for this check type
+        return False
+
+    # Can't do this here, because the parse functions can do anything with the data
+    #assert type(info) in [ list, dict ]
+
+    # In case of SNMP checks but missing agent response, skip this check.
+    # Special checks which still need to be called even with empty data
+    # may declare this.
+    if info == [] and checks.is_snmp_check(check_name) \
+       and not checks.check_info[check_name]["handle_empty_info"]:
+        return False
+
+    check_function = checks.check_info[check_name].get("check_function")
+    if check_function is None:
+        check_function = lambda item, params, info: (3, 'UNKNOWN - Check not implemented')
+
+    dont_submit = False
+    try:
+        # Call the actual check function
+        item_state.reset_wrapped_counters()
+
+        raw_result = check_function(item, _determine_check_params(params), info)
+        result = sanitize_check_result(raw_result, checks.is_snmp_check(check_name))
+
+        item_state.raise_counter_wrap()
+
+    except item_state.MKCounterWrapped, e:
+        # handle check implementations that do not yet support the
+        # handling of wrapped counters via exception on their own.
+        # Do not submit any check result in that case:
+        console.verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
+        dont_submit = True
+
+    except MKTimeout:
+        raise
+
+    except Exception, e:
+        if cmk.debug.enabled():
+            raise
+        result = 3, cmk_base.crash_reporting.create_crash_dump(hostname, check_name, item,
+                                    is_manual_check(hostname, check_name, item),
+                                    params, description, info), []
+
+    if not dont_submit:
+        # Now add information about the age of the data in the agent
+        # sections. This is in agent_data.g_agent_cache_info. For clusters we
+        # use the oldest of the timestamps, of course.
+        oldest_cached_at = None
+        largest_interval = None
+
+        def minn(a, b):
+            if a == None:
+                return b
+            elif b == None:
+                return a
+            return min(a,b)
+
+        for section_entries in agent_data.get_agent_cache_info().values():
+            if info_type in section_entries:
+                cached_at, cache_interval = section_entries[info_type]
+                oldest_cached_at = minn(oldest_cached_at, cached_at)
+                largest_interval = max(largest_interval, cache_interval)
+
+        _submit_check_result(hostname, description, result,
+                            cached_at=oldest_cached_at, cache_interval=largest_interval)
+    return True
+
+
+def _determine_check_params(params):
+    if isinstance(params, dict) and "tp_default_value" in params:
+        for timeperiod, tp_params in params["tp_values"]:
+            tp_result = core.timeperiod_active(timeperiod)
+            if tp_result == True:
+                return tp_params
+            elif tp_result == False:
+                continue
+            elif tp_result == None:
+                # Connection error
+                return params["tp_default_value"]
+        else:
+            return params["tp_default_value"]
+    else:
+        return params
 
 
 def is_manual_check(hostname, check_type, item):

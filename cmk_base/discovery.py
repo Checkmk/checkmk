@@ -129,7 +129,8 @@ def _do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
     # explicity hosts. But for host that have never been service-discovered
     # yet (do not have autochecks), we enable SNMP scan.
     do_snmp_scan = not use_caches or not _has_autochecks(hostname)
-    new_items = _discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error)
+    new_items = _discover_services(hostname, ipaddress=None, check_types=check_types,
+                    use_caches=use_caches, do_snmp_scan=do_snmp_scan, on_error=on_error)
     if not check_types and not only_new:
         old_items = [] # do not even read old file
     else:
@@ -584,59 +585,6 @@ def _discovery_filter_by_lists(hostname, check_type, item, whitelist, blacklist)
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
 
-def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
-    def add_nodeinfo_during_discovery(info, s):
-        if s in checks.check_info and checks.check_info[s]["node_info"]:
-            return agent_data.add_nodeinfo(info, None)
-        else:
-            return info
-
-    max_cachefile_age = use_caches and config.inventory_max_cachefile_age or 0
-    rh_info = agent_data.get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age,
-                                ignore_check_interval=True, use_snmpwalk_cache=False)
-
-    if rh_info != None:
-        with_node_info = add_nodeinfo_during_discovery(rh_info, section_name)
-        info = agent_data.apply_parse_function(with_node_info, section_name)
-    else:
-        info = None
-
-    if info != None and section_name in checks.check_info and checks.check_info[section_name]["extra_sections"]:
-        info = [ info ]
-        for es in checks.check_info[section_name]["extra_sections"]:
-            try:
-                bare_info = agent_data.get_realhost_info(hostname, ipaddress, es, max_cachefile_age,
-                                              ignore_check_interval=True, use_snmpwalk_cache=False)
-                with_node_info = add_nodeinfo_during_discovery(bare_info, es)
-                parsed = agent_data.apply_parse_function(with_node_info, es)
-                info.append(parsed)
-
-            except MKAgentError:
-                info.append(None)
-
-            except:
-                if cmk.debug.enabled():
-                    raise
-                info.append(None)
-
-    return info
-
-
-def _is_ipaddress(address):
-    try:
-        socket.inet_pton(socket.AF_INET, address)
-        return True
-    except socket.error:
-        # not a ipv4 address
-        pass
-
-    try:
-        socket.inet_pton(socket.AF_INET6, address)
-        return True
-    except socket.error:
-        # no ipv6 address either
-        return False
-
 
 # TODO: Move to livestatus module!
 def schedule_discovery_check(hostname):
@@ -677,24 +625,6 @@ def _in_keepalive_mode():
 #   |  Core code of actual service discovery                               |
 #   '----------------------------------------------------------------------'
 
-# gather auto_discovered check_types for this host
-def _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
-    check_types = set()
-    if config.is_snmp_host(hostname):
-        try:
-            check_types.update(snmp_scan(hostname, ipaddress, on_error=on_error,
-                                         do_snmp_scan=do_snmp_scan))
-        except Exception, e:
-            if on_error == "raise":
-                raise
-            elif on_error == "warn":
-                console.error("SNMP scan failed: %s" % e)
-
-    if config.is_tcp_host(hostname) or piggyback.has_piggyback_info(hostname):
-        check_types.update(checks.discoverable_tcp_checks())
-    return list(check_types)
-
-
 # Create a table of autodiscovered services of a host. Do not save
 # this table anywhere. Do not read any previously discovered
 # services. The table has the following columns:
@@ -719,51 +649,22 @@ def _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
 # "ignore" -> silently ignore any exception
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
-def _discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error, ipaddress=None):
-    services = []
-    if config.has_management_board(hostname):
-        protocol = config.management_protocol(hostname)
-        address = config.management_address(hostname)
-        if not _is_ipaddress(address):
-            address = ip_lookup.lookup_ip_address(address)
-
-        if protocol == "snmp":
-            management_check_types = []
-            try:
-                management_check_types = snmp_scan(hostname, address, on_error=on_error,
-                                                   do_snmp_scan=do_snmp_scan)
-            except Exception, e:
-                if on_error == "raise":
-                    raise
-                elif on_error == "warn":
-                    console.error("SNMP scan failed: %s" % e)
-
-            services = _discover_services_impl(hostname, management_check_types, use_caches,
-                                              on_error, address, True)
-
+def _discover_services(hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error):
     if ipaddress == None:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    # Check types not specified (via --checks=)? Determine automatically
-    if not check_types:
-        check_types = _gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan)
+    data_sources = agent_data.DataSources(hostname)
+    host_infos = _get_host_infos_for_discovery(data_sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error)
 
-    return services + _discover_services_impl(hostname, check_types, use_caches, on_error, ipaddress)
-
-
-def _discover_services_impl(hostname, check_types, use_caches, on_error,
-                           ipaddress, use_snmp=None):
     # Make hostname available as global variable in discovery functions
     # (used e.g. by ps-discovery)
     checks.set_hostname(hostname)
 
     discovered_services = []
     try:
-        snmp.initialize_snmp_cache_info_tables(hostname)
-        for check_type in check_types:
+        for check_type in data_sources.get_check_types(hostname, ipaddress):
             try:
-                for item, paramstring in _discover_check_type(hostname, ipaddress, check_type,
-                                                             use_caches, on_error, use_snmp):
+                for item, paramstring in _execute_discovery(host_infos, hostname, ipaddress, check_type, on_error):
                     discovered_services.append((check_type, item, paramstring))
             except (KeyboardInterrupt, MKAgentError, MKSNMPError, MKTimeout):
                 raise
@@ -772,11 +673,43 @@ def _discover_services_impl(hostname, check_types, use_caches, on_error,
                     raise
                 raise MKGeneralException("Exception in check plugin '%s': %s" % (check_type, e))
 
-        snmp.write_snmp_cache_info_tables(hostname, do_submit=agent_data.do_submit())
         return discovered_services
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
+
+
+def _get_host_infos_for_discovery(data_sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error):
+    for source_id, source in data_sources.get_data_sources():
+        if isinstance(source, agent_data.SNMPDataSource):
+            source.set_on_error(on_error)
+            source.set_do_snmp_scan(do_snmp_scan)
+            source.set_use_snmpwalk_cache(False)
+            source.set_ignore_check_interval(True)
+            source.set_check_type_filter(gather_snmp_check_types)
+
+    # When check types are specified via command line, enforce them and disable auto detection
+    if check_types:
+        data_sources.enforce_check_types(check_types)
+
+    max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
+    return agent_data.get_host_infos(data_sources, hostname, ipaddress, max_cachefile_age)
+
+
+# gather auto_discovered check_types for this host
+def gather_snmp_check_types(hostname, ipaddress, on_error, do_snmp_scan, for_inventory=False):
+    check_types = set()
+
+    try:
+        check_types.update(snmp_scan(hostname, ipaddress, on_error=on_error,
+                                     do_snmp_scan=do_snmp_scan, for_inv=for_inventory))
+    except Exception, e:
+        if on_error == "raise":
+            raise
+        elif on_error == "warn":
+            console.error("SNMP scan failed: %s" % e)
+
+    return list(check_types)
 
 
 def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_scan=True):
@@ -878,16 +811,9 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
     return sorted(found)
 
 
-def _discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, use_snmp=None):
+def _execute_discovery(host_infos, hostname, ipaddress, check_type, on_error):
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_type, None):
-        return []
-
-    if use_snmp is None:
-        use_snmp = config.is_snmp_host(hostname)
-
-    # Skip SNMP checks on non-SNMP hosts
-    if checks.is_snmp_check(check_type) and not use_snmp:
         return []
 
     try:
@@ -897,22 +823,9 @@ def _discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, 
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_type)
 
-    section_name = check_type.split('.')[0]    # make e.g. 'lsi' from 'lsi.arrays'
+    info = agent_data.get_info_for_check(host_infos, hostname, ipaddress, check_type, for_discovery=True)
 
-    try:
-        info = None # default in case of exception
-        info = get_info_for_discovery(hostname, ipaddress, section_name, use_caches)
-    except MKAgentError, e:
-        if str(e) and str(e) != "Cannot get information from agent, processing only piggyback data.":
-            raise
-    except MKSNMPError, e:
-        if str(e):
-            raise
-    except MKParseFunctionError, e:
-        if cmk.debug.enabled():
-            raise
-
-    if info == None: # No data for this check type
+    if info is None: # No data for this check type
         return []
 
     # In case of SNMP checks but missing agent response, skip this check.
@@ -922,7 +835,7 @@ def _discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, 
        and not checks.check_info[check_type]["handle_empty_info"]:
         return []
 
-    # Now do the actual inventory
+    # Now do the actual discovery
     try:
         # Check number of arguments of discovery function. Note: This
         # check for the legacy API will be removed after 1.2.6.
@@ -1036,7 +949,8 @@ def _get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan, on_e
     services = {}
 
     # Handle discovered services -> "new"
-    new_items = _discover_services(hostname, None, use_caches, do_snmp_scan, on_error, ipaddress)
+    new_items = _discover_services(hostname, ipaddress, check_types=None,
+                        use_caches=use_caches, do_snmp_scan=do_snmp_scan, on_error=on_error)
     for check_type, item, paramstring in new_items:
         services[(check_type, item)] = ("new", paramstring)
 
@@ -1132,20 +1046,29 @@ def resolve_paramstring(paramstring):
 
 # Get the list of service of a host or cluster and guess the current state of
 # all services if possible
+# TODO: Can't we reduce the duplicate code here? Check out the "checking" code
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     import cmk_base.checking as checking
 
     services = _get_host_services(hostname, use_caches, do_snmp_scan, on_error)
+
     if config.is_cluster(hostname):
         ipaddress = None
     else:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    table = []
-    parsed_infos = {} # temporary cache for parsed infos
+    # TODO: _get_host_services() also executes _get_host_infos_for_discovery().
+    # Can we reduce the duplicate call?
+    data_sources = agent_data.DataSources(hostname)
+    host_infos = _get_host_infos_for_discovery(data_sources, hostname, ipaddress,
+                                               check_types=None, use_caches=use_caches,
+                                               do_snmp_scan=do_snmp_scan, on_error=on_error)
 
+    table = []
     for (check_type, item), (check_source, paramstring) in services.items():
         params = None
+        exitcode = None
+        perfdata = []
         if check_source not in [ 'legacy', 'active', 'custom' ]:
             # apply check_parameters
             try:
@@ -1178,31 +1101,10 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 continue # Skip not existing check silently
 
             try:
-                exitcode = None
-                perfdata = []
-
-                if infotype in parsed_infos:
-                    info = parsed_infos[infotype]
-                else:
-                    info = agent_data.get_info_for_check(hostname, ipaddress, infotype)
-                    parsed_infos[infotype] = info
-
-            # Handle cases where agent does not output data
-            except MKAgentError, e:
+                info = host_infos[(hostname, ipaddress)][infotype]
+            except KeyError:
                 exitcode = 3
-                output = "Error getting data from agent"
-                if str(e):
-                    output += ": %s" % e
-
-            except MKSNMPError, e:
-                exitcode = 3
-                output = "Error getting data from agent for %s via SNMP" % infotype
-                if str(e):
-                    output += ": %s" % e
-
-            except Exception, e:
-                exitcode = 3
-                output = "Error getting data for %s: %s" % (infotype, e)
+                output = "Got no data for %s" % infotype
 
             agent_data.restore_use_cachefile()
 

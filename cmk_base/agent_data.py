@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import ast
 import os
 import signal
 import socket
@@ -50,14 +51,7 @@ import cmk_base.core_config as core_config
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKDataSourceError, MKSNMPError, \
                                 MKParseFunctionError, MKTimeout
 
-g_infocache                  = {} # In-memory cache of host info.
 g_agent_cache_info           = {} # Information about agent caching
-# Agent hosts: Whether or not the host has already been tried to get the agent data for.
-# It is not relevant whether or not an error occured during agent communication. Once it
-# is known that a host needs to be contacted, and entry is made for the host here.
-g_agent_already_contacted    = {}
-g_broken_snmp_hosts          = set()
-g_broken_agent_hosts         = set()
 g_data_source_errors         = {}
 
 _no_cache                    = False
@@ -66,37 +60,120 @@ _no_submit                   = False
 _enforce_persisting          = False
 
 
-def get_info_for_check(hostname, ipaddress, section_name,
-                       max_cachefile_age=None, ignore_check_interval=False):
-    info = apply_parse_function(_get_host_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval), section_name)
-    if info != None and section_name in checks.check_info and checks.check_info[section_name]["extra_sections"]:
-        info = [ info ]
-        for es in checks.check_info[section_name]["extra_sections"]:
-            try:
-                info.append(apply_parse_function(_get_host_info(hostname, ipaddress, es, max_cachefile_age, ignore_check_interval=False), es))
-            except:
-                info.append(None)
+def get_host_infos(data_sources, hostname, ipaddress, max_cachefile_age=None):
+    """Generic function to gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
+
+    Returns a dictionary of already parsed info constructs. The structure looks like this:
+
+    {
+        ("hostname", "ipaddress"): {
+            "section_name": [
+                [ "line1field1", ... ],
+                [ "line2field1", ... ],
+            ]
+        }
+    }
+
+    Communication errors are not raised through by this functions. All agent related errors are
+    stored in the g_data_source_errors construct which can be accessed by the caller to get
+    the errors of each data source. The caller should do this, e.g. using
+    agent_data.get_data_source_errors_of_host() and transparently display the errors to the users.
+    """
+
+    # First abstract clusters/nodes/hosts
+    hosts = []
+    nodes = config.nodes_of(hostname)
+    if nodes is not None:
+        for node_hostname in nodes:
+            node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
+            hosts.append((node_hostname, node_ipaddress, config.cluster_max_cachefile_age))
+    else:
+        hosts.append((hostname, ipaddress, config.check_max_cachefile_age))
+
+    if nodes:
+        set_use_cachefile()
+
+    # Special agents can produce data for the same check_type on the same host, in this case
+    # the section lines need to be extended
+    all_host_infos = {}
+    for this_hostname, this_ipaddress, this_max_cachfile_age in hosts:
+        data_sources.set_max_cachefile_age(this_max_cachfile_age)
+
+        for source_id, source in data_sources.get_data_sources():
+            for check_type, lines in source.run(this_hostname, this_ipaddress).items():
+                host_infos = all_host_infos.setdefault((this_hostname, this_ipaddress), {})
+                host_infos.setdefault(check_type, []).extend(lines)
+
+    return all_host_infos
+
+
+def get_info_for_check(host_infos, hostname, ipaddress, check_type, for_discovery):
+    """Prepares the info construct for a Check_MK check on ANY host
+
+    The info construct is then handed over to the check or discovery functions
+    for doing their work.
+
+    If the host is a cluster, the information from all its nodes is used.
+
+    It receives the whole host_infos data and cares about these aspects:
+
+    a) Extract the section for the given check_type
+    b) Adds node_info to the info (if check asks for this)
+    c) Applies the parse function (if check has some)
+    d) Adds extra_sections (if check asks for this)
+       and also applies node_info and extra_section handling to this
+
+    It can return an info construct or None when there is no info for this check
+    available.
+    """
+    section_name = check_type.split('.')[0] # make e.g. 'lsi' from 'lsi.arrays'
+
+    # First abstract cluster / non cluster hosts
+    host_entries = []
+    nodes = config.nodes_of(hostname)
+    if nodes != None:
+        for node_hostname in nodes:
+            # TODO: why is for_discovery handled differently?
+            node_name = node_hostname if not for_discovery else None
+            host_entries.append(((node_hostname, ip_lookup.lookup_ip_address(node_hostname)), node_name))
+    else:
+        node_name = hostname if config.clusters_of(hostname) and not for_discovery else None
+        host_entries.append(((hostname, ipaddress), node_name))
+
+    # Now extract the sections of the relevant hosts and optionally add the node info
+    info = None
+    for host_entry, is_node in host_entries:
+        try:
+            info = host_infos[host_entry][section_name]
+        except KeyError:
+            continue
+
+        info = _update_info_with_node_info(info, check_type, node_name)
+        info = _update_info_with_parse_function(info, check_type)
+
+    if info is None:
+        return None
+
+    # TODO: Is this correct? info!
+    info = _update_info_with_extra_sections(info, host_infos, hostname, ipaddress, check_type, for_discovery)
+
     return info
 
 
-# This is the main function for getting information needed by a
-# certain check. It is called once for each check type. For SNMP this
-# is needed since not all data for all checks is fetched at once. For
-# TCP based checks the first call to this function stores the
-# retrieved data in a global variable. Later calls to this function
-# get their data from there.
+# If the check want's the node info, we add an additional
+# column (as the first column) with the name of the node
+# or None (in case of non-clustered nodes). On problem arises,
+# if we deal with subchecks. We assume that all subchecks
+# have the same setting here. If not, let's raise an exception.
+# TODO: Why not use the check_type instead of section_name? Inconsistent with node_info!
+def _update_info_with_node_info(info, check_type, node_name):
+    if check_type not in checks.check_info or not checks.check_info[check_type]["node_info"]:
+        return info # unknown check_type or does not want node info -> do nothing
 
-# If the host is a cluster, the information is fetched from all its
-# nodes an then merged per-check-wise.
-
-# For cluster checks the monitoring core does not provide the IP addresses
-# of the node.  We need to do DNS-lookups in that case :-(. We could avoid
-# that at least in case of precompiled checks. On the other hand, cluster
-# checks usually use existing cache files, if check_mk is not misconfigured,
-# and thus do no network activity at all...
+    return _add_nodeinfo(info, node_name)
 
 
-def add_nodeinfo(info, nodename):
+def _add_nodeinfo(info, nodename):
     new_info = []
     for line in info:
         if len(line) > 0 and type(line[0]) == list:
@@ -109,560 +186,99 @@ def add_nodeinfo(info, nodename):
     return new_info
 
 
-def _get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore_check_interval=False):
-    # If the check want's the node info, we add an additional
-    # column (as the first column) with the name of the node
-    # or None (in case of non-clustered nodes). On problem arises,
-    # if we deal with subchecks. We assume that all subchecks
-    # have the same setting here. If not, let's raise an exception.
-    has_nodeinfo = checks.check_info.get(checkname, {}).get("node_info", False)
+# TODO: Why not use the check_type instead of section_name? Inconsistent with node_info!
+def _update_info_with_extra_sections(info, host_infos, hostname, ipaddress, section_name, for_discovery):
+    if section_name not in checks.check_info or not checks.check_info[section_name]["extra_sections"]:
+        return info
 
-    nodes = config.nodes_of(hostname)
-    if nodes != None:
-        info = []
-        at_least_one_without_exception = False
-        exception_texts = []
-        set_use_cachefile()
-        is_snmp_error = False
-        for node in nodes:
-            # If an error with the agent occurs, we still can (and must)
-            # try the other nodes.
-            try:
-                # We must ignore the SNMP check interval when dealing with SNMP
-                # checks on cluster nodes because the cluster is always reading
-                # the cache files of the nodes.
-                ipaddress = ip_lookup.lookup_ip_address(node)
-                new_info = get_realhost_info(node, ipaddress, checkname,
-                               max_cachefile_age == None and config.cluster_max_cachefile_age or max_cachefile_age,
-                               ignore_check_interval=True)
-                if new_info != None:
-                    if has_nodeinfo:
-                        new_info = add_nodeinfo(new_info, node)
-
-                    info += new_info
-                    at_least_one_without_exception = True
-            except MKSkipCheck:
-                at_least_one_without_exception = True
-            except MKAgentError, e:
-                if str(e) != "": # only first error contains text
-                    exception_texts.append(str(e))
-                g_broken_agent_hosts.add(node)
-            except MKSNMPError, e:
-                if str(e) != "": # only first error contains text
-                    exception_texts.append(str(e))
-                g_broken_snmp_hosts.add(node)
-                is_snmp_error = True
-
-            for data_source, exceptions in get_data_source_errors_of_host(node, ipaddress).items():
-                for exc in exceptions:
-                    exception_texts.append("%s: %s\n" % (node, exc))
-
-        if not at_least_one_without_exception:
-            if is_snmp_error:
-                raise MKSNMPError(", ".join(exception_texts))
-            else:
-                raise MKAgentError(", ".join(exception_texts))
-
-    else:
-        info = get_realhost_info(hostname, ipaddress, checkname,
-                      max_cachefile_age == None and config.check_max_cachefile_age or max_cachefile_age,
-                      ignore_check_interval)
-        if info != None and has_nodeinfo:
-            if config.clusters_of(hostname):
-                add_host = hostname
-            else:
-                add_host = None
-            info = add_nodeinfo(info, add_host)
+    # In case of extra_sections the existing info is wrapped into a new list to which all
+    # extra sections are appended
+    info = [ info ]
+    for extra_section_name in checks.check_info[section_name]["extra_sections"]:
+        info.append(get_info_for_check(host_infos, hostname, ipaddress, extra_section_name, for_discovery))
 
     return info
 
 
-def apply_parse_function(info, section_name):
-    # Now some check types define a parse function. In that case the
-    # info is automatically being parsed by that function - on the fly.
-    if info != None and section_name in checks.check_info:
-        parse_function = checks.check_info[section_name]["parse_function"]
-        if parse_function:
-            try:
-                item_state.set_item_state_prefix(section_name, None)
-                return parse_function(info)
-            except Exception:
-                if cmk.debug.enabled():
-                    raise
+def _update_info_with_parse_function(info, section_name):
+    """Some check types define a parse function that is used to transform the info
+    somehow. It is applied by this function.
 
-                # In case of a failed parse function return the exception instead of
-                # an empty result.
-                raise MKParseFunctionError(*sys.exc_info())
+    All exceptions raised by the parse function will be catched and re-raised as
+    MKParseFunctionError() exceptions."""
+
+    if section_name not in checks.check_info:
+        return info
+
+    parse_function = checks.check_info[section_name]["parse_function"]
+    if not parse_function:
+        return
+
+    try:
+        item_state.set_item_state_prefix(section_name, None)
+        return parse_function(info)
+    except Exception:
+        if cmk.debug.enabled():
+            raise
+        raise MKParseFunctionError(*sys.exc_info())
 
     return info
-
-
-# Gets info from a real host (not a cluster). There are three possible
-# ways: TCP, SNMP and external command.  This function raises
-# MKAgentError or MKSNMPError, if there could not retrieved any data. It returns [],
-# if the agent could be contacted but the data is empty (no items of
-# this check type).
-#
-# What makes the thing a bit tricky is the fact, that data
-# might have to be fetched via SNMP *and* TCP for one host
-# (even if this is unlikeyly)
-#
-# What makes the thing even more tricky is the new piggyback
-# function, that allows one host's agent to send data for another
-# host.
-#
-# This function assumes, that each check type is queried
-# only once for each host.
-def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
-                      ignore_check_interval=False, use_snmpwalk_cache=True):
-    import cmk_base.inventory_plugins as inventory_plugins
-
-    info = _get_cached_hostinfo(hostname)
-    if info and info.has_key(check_type):
-        return info[check_type]
-
-    # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
-    # Please note, that if the check_type is foo.bar then we lookup the
-    # snmp info for "foo", not for "foo.bar".
-    info_type = check_type.split(".")[0]
-    if info_type in checks.snmp_info:
-        oid_info = checks.snmp_info[info_type]
-    elif info_type in inventory_plugins.inv_info:
-        oid_info = inventory_plugins.inv_info[info_type].get("snmp_info")
-    else:
-        oid_info = None
-
-    if oid_info:
-        cache_path = "%s/%s" % (cmk.paths.snmp_cache_dir, hostname)
-
-        # Handle SNMP check interval. The idea: An SNMP check should only be
-        # executed every X seconds. Skip when called too often.
-        check_interval = config.check_interval_of(hostname, check_type)
-        if not ignore_check_interval \
-           and not _no_submit \
-           and check_interval is not None and os.path.exists(cache_path) \
-           and cmk_base.utils.cachefile_age(cache_path) < check_interval * 60:
-            # cache file is newer than check_interval, skip this check
-            raise MKSkipCheck()
-
-        try:
-            snmp_output = snmp.get_snmp_cache_info_tables(hostname)
-        except:
-            if config.simulation_mode and not _no_cache:
-                return # Simply ignore missing SNMP cache files
-            raise
-
-        if snmp_output and check_type in snmp_output:
-            return snmp_output[check_type]
-        # Not cached -> need to get info via SNMP
-
-        # Try to contact host only once
-        if hostname in g_broken_snmp_hosts:
-            raise MKSNMPError("")
-
-        # New in 1.1.3: oid_info can now be a list: Each element
-        # of that list is interpreted as one real oid_info, fetches
-        # a separate snmp table. The overall result is then the list
-        # of these results.
-        if type(oid_info) == list:
-            table = [ snmp.get_snmp_table(hostname, ipaddress, check_type, entry, use_snmpwalk_cache) for entry in oid_info ]
-            # if at least one query fails, we discard the hole table
-            if None in table:
-                table = None
-        else:
-            table = snmp.get_snmp_table(hostname, ipaddress, check_type, oid_info, use_snmpwalk_cache)
-
-        snmp.set_snmp_cache_info_tables(check_type, table)
-        _store_cached_checkinfo(hostname, check_type, table)
-        return table
-
-    # Note: even von SNMP-tagged hosts TCP based checks can be used, if
-    # the data comes piggyback!
-
-    # No SNMP check. Then we must contact the check_mk_agent. Have we already
-    # tried to get data from the agent? If yes we must not do that again! Even if
-    # no cache file is present.
-    if g_agent_already_contacted.has_key(hostname):
-        raise MKAgentError("")
-
-    g_agent_already_contacted[hostname] = True
-    store_cached_hostinfo(hostname, []) # leave emtpy info in case of error
-
-    # If we have piggyback data for that host from another host,
-    # then we prepend this data and also tolerate a failing
-    # normal Check_MK Agent access.
-    piggy_output = piggyback.get_piggyback_info(hostname) \
-                 + piggyback.get_piggyback_info(ipaddress)
-
-    output = ""
-    agent_failed_exc = None
-    if config.is_tcp_host(hostname):
-        try:
-            output = get_agent_info(hostname, ipaddress, max_cache_age)
-        except MKTimeout:
-            raise
-
-        except Exception, e:
-            agent_failed_exc = e
-            # Remove piggybacked information from the host (in the
-            # role of the pig here). Why? We definitely haven't
-            # reached that host so its data from the last time is
-            # not valid any more.
-            piggyback.remove_piggyback_info_from(hostname)
-
-            if not piggy_output:
-                raise
-            elif cmk.debug.enabled():
-                raise
-
-    output += piggy_output
-
-    if len(output) == 0 and config.is_tcp_host(hostname):
-        raise MKAgentError("Empty output from agent")
-    elif len(output) == 0:
-        return
-    elif len(output) < 16:
-        raise MKAgentError("Too short output from agent: '%s'" % output)
-
-    info, piggybacked, persisted, agent_cache_info = parse_info(output.split("\n"), hostname)
-    g_agent_cache_info.setdefault(hostname, {}).update(agent_cache_info)
-    piggyback.store_piggyback_info(hostname, piggybacked)
-    _store_persisted_info(hostname, persisted)
-    store_cached_hostinfo(hostname, info)
-
-    # Add information from previous persisted agent outputs, if those
-    # sections are not available in the current output
-    # TODO: In the persisted sections the agent_cache_info is missing
-    _add_persisted_info(hostname, info)
-
-    # If the agent has failed and the information we seek is
-    # not contained in the piggy data, raise an exception
-    if check_type not in info:
-        if agent_failed_exc:
-            raise MKAgentError("Cannot get information from agent (%s), processing only piggyback data." % agent_failed_exc)
-        else:
-            return []
-
-    return info[check_type] # return only data for specified check
-
-
-#.
-#   .--Parsing-------------------------------------------------------------.
-#   |                  ____                _                               |
-#   |                 |  _ \ __ _ _ __ ___(_)_ __   __ _                   |
-#   |                 | |_) / _` | '__/ __| | '_ \ / _` |                  |
-#   |                 |  __/ (_| | |  \__ \ | | | | (_| |                  |
-#   |                 |_|   \__,_|_|  |___/_|_| |_|\__, |                  |
-#   |                                              |___/                   |
-#   +----------------------------------------------------------------------+
-#   | Parsing of raw agent data bytes into data structures                 |
-#   '----------------------------------------------------------------------'
-
-# Split agent output in chunks, splits lines by whitespaces.
-# Returns a tuple of:
-# 1. A dictionary from "sectionname" to a list of rows
-# 2. piggy-backed data for other hosts
-# 3. Sections to be persisted for later usage
-# 4. Agent cache information (dict section name -> (cached_at, cache_interval))
-def parse_info(lines, hostname):
-    info = {}
-    piggybacked = {} # unparsed info for other hosts
-    persist = {} # handle sections with option persist(...)
-    host = None
-    section = []
-    section_options = {}
-    agent_cache_info = {}
-    separator = None
-    encoding  = None
-    for line in lines:
-        line = line.rstrip("\r")
-        stripped_line = line.strip()
-        if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
-            host = stripped_line[4:-4]
-            if not host:
-                host = None
-            else:
-                host = piggyback.translate_piggyback_host(hostname, host)
-                if host == hostname:
-                    host = None # unpiggybacked "normal" host
-
-                # Protect Check_MK against unallowed host names. Normally source scripts
-                # like agent plugins should care about cleaning their provided host names
-                # up, but we need to be sure here to prevent bugs in Check_MK code.
-                # a) Replace spaces by underscores
-                if host:
-                    host = host.replace(" ", "_")
-
-        elif host: # processing data for an other host
-            piggybacked.setdefault(host, []).append(line)
-
-        # Found normal section header
-        # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
-        elif stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
-            section_header = stripped_line[3:-3]
-            headerparts = section_header.split(":")
-            section_name = headerparts[0]
-            section_options = {}
-            for o in headerparts[1:]:
-                opt_parts = o.split("(")
-                opt_name = opt_parts[0]
-                if len(opt_parts) > 1:
-                    opt_args = opt_parts[1][:-1]
-                else:
-                    opt_args = None
-                section_options[opt_name] = opt_args
-
-            section = info.get(section_name, None)
-            if section == None: # section appears in output for the first time
-                section = []
-                info[section_name] = section
-            try:
-                separator = chr(int(section_options["sep"]))
-            except:
-                separator = None
-
-            # Split of persisted section for server-side caching
-            if "persist" in section_options:
-                until = int(section_options["persist"])
-                cached_at = int(time.time()) # Estimate age of the data
-                cache_interval = int(until - cached_at)
-                agent_cache_info[section_name] = (cached_at, cache_interval)
-                persist[section_name] = ( cached_at, until, section )
-
-            if "cached" in section_options:
-                agent_cache_info[section_name] = tuple(map(int, section_options["cached"].split(",")))
-
-            # The section data might have a different encoding
-            encoding = section_options.get("encoding")
-
-        elif stripped_line != '':
-            if "nostrip" not in section_options:
-                line = stripped_line
-
-            if encoding:
-                line = config.decode_incoming_string(line, encoding)
-            else:
-                line = config.decode_incoming_string(line)
-
-            section.append(line.split(separator))
-
-    return info, piggybacked, persist, agent_cache_info
-
-
-#.
-#   .--MemoryCache---------------------------------------------------------.
-#   |  __  __                                  ____           _            |
-#   | |  \/  | ___ _ __ ___   ___  _ __ _   _ / ___|__ _  ___| |__   ___   |
-#   | | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | | |   / _` |/ __| '_ \ / _ \  |
-#   | | |  | |  __/ | | | | | (_) | |  | |_| | |__| (_| | (__| | | |  __/  |
-#   | |_|  |_|\___|_| |_| |_|\___/|_|   \__, |\____\__,_|\___|_| |_|\___|  |
-#   |                                   |___/                              |
-#   +----------------------------------------------------------------------+
-#   | In memory caching of host info data during a single execution        |
-#   '----------------------------------------------------------------------'
-
-# Gets all information about one host so far cached.
-# Returns None if nothing has been stored so far
-def _get_cached_hostinfo(hostname):
-    return g_infocache.get(hostname, None)
-
-# store complete information about a host
-def store_cached_hostinfo(hostname, info):
-    oldinfo = _get_cached_hostinfo(hostname)
-    if oldinfo:
-        oldinfo.update(info)
-        g_infocache[hostname] = oldinfo
-    else:
-        g_infocache[hostname] = info
-
-# store information about one check type
-def _store_cached_checkinfo(hostname, checkname, table):
-    info = _get_cached_hostinfo(hostname)
-    if info:
-        info[checkname] = table
-    else:
-        g_infocache[hostname] = { checkname: table }
-
-
-#.
-#   .--PersistedCache------------------------------------------------------.
-#   |  ____               _     _           _  ____           _            |
-#   | |  _ \ ___ _ __ ___(_)___| |_ ___  __| |/ ___|__ _  ___| |__   ___   |
-#   | | |_) / _ \ '__/ __| / __| __/ _ \/ _` | |   / _` |/ __| '_ \ / _ \  |
-#   | |  __/  __/ |  \__ \ \__ \ ||  __/ (_| | |__| (_| | (__| | | |  __/  |
-#   | |_|   \___|_|  |___/_|___/\__\___|\__,_|\____\__,_|\___|_| |_|\___|  |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Caching of info for multiple executions of Check_MK. Mostly caching  |
-#   | of sections that are not provided on each query.                     |
-#   '----------------------------------------------------------------------'
-
-def _store_persisted_info(hostname, persisted):
-    dirname = cmk.paths.var_dir + "/persisted/"
-    if persisted:
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-
-        file_path = "%s/%s" % (dirname, hostname)
-        store.save_data_to_file(file_path, persisted, pretty=False)
-
-        console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
-
-
-def _add_persisted_info(hostname, info):
-    # TODO: Use store.load_data_from_file
-    file_path = cmk.paths.var_dir + "/persisted/" + hostname
-    try:
-        persisted = eval(file(file_path).read())
-    except:
-        return
-
-    now = time.time()
-    modified = False
-    for section, entry in persisted.items():
-        if len(entry) == 2:
-            persisted_from = None
-            persisted_until, persisted_section = entry
-        else:
-            persisted_from, persisted_until, persisted_section = entry
-            g_agent_cache_info[hostname][section] = (persisted_from, persisted_until - persisted_from)
-
-        if now < persisted_until or _enforce_persisting:
-            if section not in info:
-                info[section] = persisted_section
-                console.vverbose("Added persisted section %s.\n" % section)
-        else:
-            console.verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" % (
-                    section, now - persisted_until))
-            del persisted[section]
-            modified = True
-
-    if not persisted:
-        try:
-            os.remove(file_path)
-        except OSError:
-            pass
-    elif modified:
-        _store_persisted_info(hostname, persisted)
-
-#.
-#   .--AgentCache----------------------------------------------------------.
-#   |          _                    _    ____           _                  |
-#   |         / \   __ _  ___ _ __ | |_ / ___|__ _  ___| |__   ___         |
-#   |        / _ \ / _` |/ _ \ '_ \| __| |   / _` |/ __| '_ \ / _ \        |
-#   |       / ___ \ (_| |  __/ | | | |_| |__| (_| | (__| | | |  __/        |
-#   |      /_/   \_\__, |\___|_| |_|\__|\____\__,_|\___|_| |_|\___|        |
-#   |              |___/                                                   |
-#   +----------------------------------------------------------------------+
-#   | This cache is used to prevent contacting remote systems too often.   |
-#   | for example in cas of cluster monitoring.                            |
-#   '----------------------------------------------------------------------'
-
-def read_cache_file(relpath, max_cache_age):
-    # Cache file present, caching allowed? -> read from cache
-    # TODO: Use store.load_data_from_file
-    cachefile = "%s/%s" % (cmk.paths.tcp_cache_dir, relpath)
-    if os.path.exists(cachefile) and (
-        (opt_use_cachefile and ( not _no_cache ) )
-        or (config.simulation_mode and not _no_cache) ):
-        if cmk_base.utils.cachefile_age(cachefile) <= max_cache_age or config.simulation_mode:
-            result = open(cachefile).read()
-            if result:
-                console.verbose("Using data from cachefile %s.\n" % cachefile)
-                return result
-        else:
-            console.vverbose("Skipping cache file %s: Too old "
-                             "(age is %d sec, allowed is %s sec)\n" %
-                             (cachefile, cmk_base.utils.cachefile_age(cachefile), max_cache_age))
-
-    if config.simulation_mode and not _no_cache:
-        raise MKAgentError("Simulation mode and no cachefile present.")
-
-    if _no_tcp:
-        raise MKAgentError("Host is unreachable, no usable cache file present")
-
-
-def write_cache_file(relpath, output):
-    cachefile = "%s/%s" % (cmk.paths.tcp_cache_dir, relpath)
-    if not os.path.exists(cmk.paths.tcp_cache_dir):
-        try:
-            os.makedirs(cmk.paths.tcp_cache_dir)
-        except Exception, e:
-            raise MKGeneralException("Cannot create directory %s: %s" % (cmk.paths.tcp_cache_dir, e))
-    try:
-        f = open(cachefile, "w+")
-        f.write(output)
-        f.close()
-    except Exception, e:
-        raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
-
-#.
-#   .--Data Sources--------------------------------------------------------.
-#   |     ____        _          ____                                      |
-#   |    |  _ \  __ _| |_ __ _  / ___|  ___  _   _ _ __ ___ ___  ___       |
-#   |    | | | |/ _` | __/ _` | \___ \ / _ \| | | | '__/ __/ _ \/ __|      |
-#   |    | |_| | (_| | || (_| |  ___) | (_) | |_| | | | (_|  __/\__ \      |
-#   |    |____/ \__,_|\__\__,_| |____/ \___/ \__,_|_|  \___\___||___/      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Managing data sources for Check_MK agent based monitoring            |
-#   '----------------------------------------------------------------------'
-
-# Get information about a real host (not a cluster node) via TCP
-# or by executing an external program. ipaddress may be None.
-# In that case it will be looked up if needed. Also caching will
-# be handled here
-def get_agent_info(hostname, ipaddress, max_cache_age):
-    data_sources = DataSources(hostname)
-
-    # TODO: Move this to the data sources where an IP address is explicitly needed
-    if ipaddress in [ "0.0.0.0", "::" ]:
-        raise MKAgentError("Failed to lookup IP address and no explicit IP address configured")
-
-    output = read_cache_file(hostname, max_cache_age)
-    if not output:
-        # Try to contact every host only once (on general errors)
-        if hostname in g_broken_agent_hosts:
-            raise MKAgentError("")
-
-        output = ""
-        for data_source in data_sources.get_data_sources():
-            # Contact every host+data_source combination only once
-            if has_data_source_errors(hostname, ipaddress, data_source):
-                continue
-
-            try:
-                output += data_source.run(hostname, ipaddress)
-            except MKDataSourceError, e:
-                add_data_source_error(hostname, ipaddress, data_source, e)
-
-        # Got new data? Write to cache file
-        write_cache_file(hostname, output)
-
-    if config.agent_simulator:
-        output = cmk_base.agent_simulator.process(output)
-
-    return output
 
 
 
 class DataSources(object):
+    DS_AGENT     = "agent"
+    DS_PIGGY     = "piggyback"
+    DS_SNMP      = "snmp"
+    DS_MGMT_SNMP = "mgmt_snmp"
+    DS_SPECIAL   = "special_%s"
+
     def __init__(self, hostname):
         super(DataSources, self).__init__()
         self._hostname = hostname
+        self._enforced_check_types = None
+        self._initialize_data_sources()
 
 
-    def get_data_sources(self):
+    def _initialize_data_sources(self):
+        self._sources = {}
+
         if config.is_all_agents_host(self._hostname):
-            return \
-                [self._get_tcp_agent_data_source()] \
-                + self._get_special_agent_data_sources()
+            self._add_source(self._get_agent_data_source())
+            self._add_sources(self._get_special_agent_data_sources())
 
         elif config.is_all_special_agents_host(self._hostname):
-            return self._get_special_agent_data_sources()
+            self._add_sources(self._get_special_agent_data_sources())
 
         else:
-            return [self._get_datasource_program()]
+            self._add_source(self._get_agent_data_source())
+
+        self._initialize_management_board_data_sources()
+        # TODO: Piggyback datasource
+
+
+    def _initialize_management_board_data_sources(self):
+        if not config.has_management_board(self._hostname):
+            return
+
+        # this assumes all snmp checks belong to the management board if there is one with snmp
+        # protocol. If at some point we support having both host and management board queried
+        # through snmp we have to decide which check belongs where at discovery time and change
+        # all data structures, including in the nagios interface...
+        is_management_snmp = config.management_protocol(self._hostname) == "snmp"
+        if not is_management_snmp:
+            return
+
+        self._add_source(SNMPManagementBoardDataSource())
+
+
+    def _add_sources(self, sources):
+        for source in sources:
+            self._add_source(source)
+
+
+    def _add_source(self, source):
+        self._sources[source.id()] = source
 
 
     def describe_data_sources(self):
@@ -676,31 +292,418 @@ class DataSources(object):
             return "Contact either Check_MK Agent or use a single special agent"
 
 
-    def _get_datasource_program(self):
+    def _get_agent_data_source(self):
+        # TODO: It's not defined in which order the special agent rules overwrite eachother.
         special_agents = self._get_special_agent_data_sources()
         if special_agents:
-            return special_agents[0]
+            return special_agents[0][1]
 
-        return self._get_tcp_agent_data_source()
-
-
-    def _get_tcp_agent_data_source(self):
         programs = rulesets.host_extra_conf(self._hostname, config.datasource_programs)
-        if not programs:
-            return TCPDataSource()
-        else:
+        if programs:
             return DSProgramDataSource(programs[0])
+
+        return TCPDataSource()
 
 
     def _get_special_agent_data_sources(self):
-        special_agents           = []
+        special_agents = []
 
         for agentname, ruleset in config.special_agents.items():
             params = rulesets.host_extra_conf(self._hostname, ruleset)
             if params:
-                special_agents.append(SpecialAgentDataSource(agentname, params[0]))
+                special_agents[DataSources.DS_SPECIAL % agentname] = SpecialAgentDataSource(agentname, params[0])
 
         return special_agents
+
+
+    def get_check_types(self, hostname, ipaddress):
+        """Returns the list of check types the caller may execute on the host_infos produced
+        by these sources.
+
+        Either returns a list of enforced check types (if set before) or ask each individual
+        data source for it's supported check types and return a list of these types.
+        """
+        if self._enforced_check_types is not None:
+            return self._enforced_check_types
+
+        check_types = set()
+
+        for source in self._sources.values():
+            check_types.update(source.get_check_types(hostname, ipaddress))
+
+        return list(check_types)
+
+
+    def enforce_check_types(self, check_types):
+        self._enforced_check_types = list(set(check_types))
+
+
+    def get_data_sources(self):
+        # TODO: Ensure deterministic order
+        return sorted(self._sources.items())
+
+
+    def set_max_cachefile_age(self, max_cachefile_age):
+        for source_id, source in self.get_data_sources():
+            source.set_max_cachefile_age(max_cachefile_age)
+
+
+
+class DataSource(object):
+    """Abstract base class for all data source classes"""
+    def __init__(self):
+        super(DataSource, self).__init__()
+        self._max_cachefile_age = None
+
+
+    def run(self, hostname, ipaddress):
+        """Wrapper for self._execute() that unifies several things:
+
+        a) Exception handling
+        b) Caching of raw data
+        c) CPU tracking
+
+        Exceptions: All exceptions except MKTimeout are wrapped into
+        MKDataSourceError exceptions."""
+        try:
+            cpu_tracking.push_phase(self._cpu_tracking_id())
+
+            # The "raw data" is the raw byte string returned by the source for
+            # CheckMKAgentDataSource sources. The SNMPDataSource source already
+            # return the final info data structure.
+            if self._cache_raw_data():
+                raw_data = self._read_cache_file(hostname)
+                if not raw_data:
+                    raw_data = self._execute(hostname, ipaddress)
+                    self._write_cache_file(hostname, raw_data)
+
+            else:
+                raw_data = self._execute(hostname, ipaddress)
+
+            infos = self._convert_to_infos(raw_data, hostname)
+            assert type(infos) == dict
+            return infos
+        except MKTimeout, e:
+            raise
+        except Exception, e:
+            raise MKDataSourceError(self.name(hostname, ipaddress), e)
+        finally:
+            cpu_tracking.pop_phase()
+
+
+    def _execute(self, hostname, ipaddress):
+        """Fetches the current agent data from the source specified with
+        hostname and ipaddress and returns the result as "raw data" that is
+        later converted by self._convert_to_infos() to info data structures.
+
+        The "raw data" is the raw byte string returned by the source for
+        CheckMKAgentDataSource sources. The SNMPDataSource source already
+        return the final info data structure."""
+        # TODO: Shouldn't we ensure decoding to unicode here?
+        raise NotImplementedError()
+
+
+    def _read_cache_file(self, hostname):
+        # TODO: Use store.load_data_from_file
+        # TODO: Refactor this to be more readable
+        assert self._max_cachefile_age is not None
+
+        cachefile = self._cache_file_path(hostname)
+        if os.path.exists(cachefile) and (
+            (opt_use_cachefile and ( not _no_cache ) )
+            or (config.simulation_mode and not _no_cache) ):
+            if cmk_base.utils.cachefile_age(cachefile) <= self._max_cachefile_age or config.simulation_mode:
+                result = open(cachefile).read()
+                if result:
+                    console.verbose("Using data from cachefile %s.\n" % cachefile)
+                    return self._from_cache_file(result)
+            else:
+                console.vverbose("Skipping cache file %s: Too old "
+                                 "(age is %d sec, allowed is %s sec)\n" %
+                                 (cachefile, cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
+
+        if config.simulation_mode and not _no_cache:
+            raise MKAgentError("Simulation mode and no cachefile present.")
+
+
+    def _write_cache_file(self, hostname, output):
+        cachefile = self._cache_file_path(hostname)
+
+        try:
+            try:
+                os.makedirs(os.path.dirname(cachefile))
+            except OSError, e:
+                if e.errno == 17: # File exists
+                    pass
+                else:
+                    raise
+        except Exception, e:
+            raise MKGeneralException("Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
+
+        # TODO: Use cmk.store!
+        try:
+            f = open(cachefile, "w+")
+            f.write(self._to_cache_file(output))
+            f.close()
+        except Exception, e:
+            raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
+
+
+    def _from_cache_file(self, raw_data):
+        return raw_data
+
+
+    def _to_cache_file(self, raw_data):
+        return raw_data
+
+
+    def _cache_raw_data(self):
+        return True
+
+
+    def _convert_to_infos(self, raw_data, hostname):
+        """See _execute() for details"""
+        raise NotImplementedError()
+
+
+    def _cache_file_path(self, hostname):
+        return os.path.join(self._cache_dir(), hostname)
+
+
+    def _cache_dir(self):
+        return os.path.join(cmk.paths.data_source_cache_dir, self.id())
+
+
+    def get_check_types(self, hostname, ipaddress):
+        raise NotImplementedError()
+
+
+    def _cpu_tracking_id(self):
+        raise NotImplementedError()
+
+
+    def id(self):
+        """Return a unique identifier for this data source"""
+        raise NotImplementedError()
+
+
+    def name(self, hostname, ipaddress):
+        """Return a unique (per host) textual identification of the data source"""
+        raise NotImplementedError()
+
+
+    def describe(self, hostname, ipaddress):
+        """Return a short textual description of the datasource"""
+        raise NotImplementedError()
+
+
+    def _verify_ipaddress(self, ipaddress):
+        if not ipaddress:
+            raise MKGeneralException("Host as no IP address configured.")
+
+        if ipaddress in [ "0.0.0.0", "::" ]:
+            raise MKGeneralException("Failed to lookup IP address and no explicit IP address configured")
+
+
+    def set_max_cachefile_age(self, max_cachefile_age):
+        self._max_cachefile_age = max_cachefile_age
+
+
+
+class CheckMKAgentDataSource(DataSource):
+    """Abstract base class for all data sources that work with the Check_MK agent data format"""
+    def get_check_types(self, *args, **kwargs):
+        return checks.discoverable_tcp_checks()
+
+
+    def _cpu_tracking_id(self):
+        return "agent"
+
+
+    # The agent has another cache directory to be compatible with older Check_MK
+    def _cache_dir(self):
+        return cmk.paths.tcp_cache_dir
+
+
+    def _convert_to_infos(self, raw_data, hostname):
+        if config.agent_simulator:
+            raw_data = cmk_base.agent_simulator.process(raw_data)
+
+        info, piggybacked, persisted, agent_cache_info = self._parse_info(raw_data.split("\n"), hostname)
+
+        self._save_agent_cache_info(hostname, agent_cache_info)
+        piggyback.store_piggyback_info(hostname, piggybacked)
+        self._store_persisted_info(hostname, persisted)
+
+        # Add information from previous persisted agent outputs, if those
+        # sections are not available in the current output
+        # TODO: In the persisted sections the agent_cache_info is missing
+        info = self._update_info_with_persisted_infos(info, hostname)
+
+        return info
+
+
+    def _parse_info(self, lines, hostname):
+        """Split agent output in chunks, splits lines by whitespaces.
+
+        Returns a tuple of:
+
+            1. A dictionary from "sectionname" to a list of rows
+            2. piggy-backed data for other hosts
+            3. Sections to be persisted for later usage
+            4. Agent cache information (dict section name -> (cached_at, cache_interval))
+
+        """
+        info = {}
+        piggybacked = {} # unparsed info for other hosts
+        persist = {} # handle sections with option persist(...)
+        host = None
+        section = []
+        section_options = {}
+        agent_cache_info = {}
+        separator = None
+        encoding  = None
+        for line in lines:
+            line = line.rstrip("\r")
+            stripped_line = line.strip()
+            if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
+                host = stripped_line[4:-4]
+                if not host:
+                    host = None
+                else:
+                    host = piggyback.translate_piggyback_host(hostname, host)
+                    if host == hostname:
+                        host = None # unpiggybacked "normal" host
+
+                    # Protect Check_MK against unallowed host names. Normally source scripts
+                    # like agent plugins should care about cleaning their provided host names
+                    # up, but we need to be sure here to prevent bugs in Check_MK code.
+                    # a) Replace spaces by underscores
+                    if host:
+                        host = host.replace(" ", "_")
+
+            elif host: # processing data for an other host
+                piggybacked.setdefault(host, []).append(line)
+
+            # Found normal section header
+            # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
+            elif stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
+                section_header = stripped_line[3:-3]
+                headerparts = section_header.split(":")
+                section_name = headerparts[0]
+                section_options = {}
+                for o in headerparts[1:]:
+                    opt_parts = o.split("(")
+                    opt_name = opt_parts[0]
+                    if len(opt_parts) > 1:
+                        opt_args = opt_parts[1][:-1]
+                    else:
+                        opt_args = None
+                    section_options[opt_name] = opt_args
+
+                section = info.get(section_name, None)
+                if section == None: # section appears in output for the first time
+                    section = []
+                    info[section_name] = section
+                try:
+                    separator = chr(int(section_options["sep"]))
+                except:
+                    separator = None
+
+                # Split of persisted section for server-side caching
+                if "persist" in section_options:
+                    until = int(section_options["persist"])
+                    cached_at = int(time.time()) # Estimate age of the data
+                    cache_interval = int(until - cached_at)
+                    agent_cache_info[section_name] = (cached_at, cache_interval)
+                    persist[section_name] = ( cached_at, until, section )
+
+                if "cached" in section_options:
+                    agent_cache_info[section_name] = tuple(map(int, section_options["cached"].split(",")))
+
+                # The section data might have a different encoding
+                encoding = section_options.get("encoding")
+
+            elif stripped_line != '':
+                if "nostrip" not in section_options:
+                    line = stripped_line
+
+                if encoding:
+                    line = config.decode_incoming_string(line, encoding)
+                else:
+                    line = config.decode_incoming_string(line)
+
+                section.append(line.split(separator))
+
+        return info, piggybacked, persist, agent_cache_info
+
+
+    #.
+    #   .--PersistedCache------------------------------------------------------.
+    #   |  ____               _     _           _  ____           _            |
+    #   | |  _ \ ___ _ __ ___(_)___| |_ ___  __| |/ ___|__ _  ___| |__   ___   |
+    #   | | |_) / _ \ '__/ __| / __| __/ _ \/ _` | |   / _` |/ __| '_ \ / _ \  |
+    #   | |  __/  __/ |  \__ \ \__ \ ||  __/ (_| | |__| (_| | (__| | | |  __/  |
+    #   | |_|   \___|_|  |___/_|___/\__\___|\__,_|\____\__,_|\___|_| |_|\___|  |
+    #   |                                                                      |
+    #   +----------------------------------------------------------------------+
+    #   | Caching of info for multiple executions of Check_MK. Mostly caching  |
+    #   | of sections that are not provided on each query.                     |
+    #   '----------------------------------------------------------------------'
+
+    def _store_persisted_info(self, hostname, persisted):
+        dirname = cmk.paths.var_dir + "/persisted/"
+        if persisted:
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+
+            file_path = "%s/%s" % (dirname, hostname)
+            store.save_data_to_file(file_path, persisted, pretty=False)
+
+            console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
+
+
+    def _update_info_with_persisted_infos(self, info, hostname):
+        # TODO: Use store.load_data_from_file
+        file_path = cmk.paths.var_dir + "/persisted/" + hostname
+        try:
+            persisted = eval(file(file_path).read())
+        except:
+            return info
+
+        now = time.time()
+        modified = False
+        for section, entry in persisted.items():
+            if len(entry) == 2:
+                persisted_from = None
+                persisted_until, persisted_section = entry
+            else:
+                persisted_from, persisted_until, persisted_section = entry
+                self._save_agent_cache_info(hostname, {section: (persisted_from, persisted_until - persisted_from)})
+
+            if now < persisted_until or _enforce_persisting:
+                if section not in info:
+                    info[section] = persisted_section
+                    console.vverbose("Added persisted section %s.\n" % section)
+            else:
+                console.verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" % (
+                        section, now - persisted_until))
+                del persisted[section]
+                modified = True
+
+        if not persisted:
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
+        elif modified:
+            self._store_persisted_info(hostname, persisted)
+
+        return info
+
+
+    def _save_agent_cache_info(self, hostname, agent_cache_info):
+        g_agent_cache_info.setdefault(hostname, {}).update(agent_cache_info)
 
 
 
@@ -717,57 +720,154 @@ class DataSources(object):
 #   '----------------------------------------------------------------------'
 
 
-# Abstract base class for all data source classes
-class DataSource(object):
+# Handle SNMP check interval. The idea: An SNMP check should only be
+# executed every X seconds. Skip when called too often.
+# TODO: The time information was lost in the step we merged the SNMP cache files
+#       together. Can't we handle this equal to the persisted agent sections? The
+#       check would then be executed but with "old data". That would be nice!
+#check_interval = config.check_interval_of(hostname, check_type)
+#cache_path = "%s/%s" % (cmk.paths.snmp_cache_dir, hostname)
+#if not self._ignore_check_interval \
+#   and not _no_submit \
+#   and check_interval is not None and os.path.exists(cache_path) \
+#   and cmk_base.utils.cachefile_age(cache_path) < check_interval * 60:
+#    # cache file is newer than check_interval, skip this check
+#    raise MKSkipCheck()
+class SNMPDataSource(DataSource):
+    def __init__(self):
+        super(SNMPDataSource, self).__init__()
+        self._check_type_filter_func = None
+        self._do_snmp_scan = False
+        self._on_error = "raise"
+        self._use_snmpwalk_cache = True
+        self._ignore_check_interval = False
+
+
+    def id(self):
+        return DataSources.DS_SNMP
+
+
+    def _from_cache_file(self, raw_data):
+        return ast.literal_eval(raw_data)
+
+
+    def _to_cache_file(self, info):
+        return repr(info)
+
+
+    def set_ignore_check_interval(self, ignore_check_interval):
+        self._ignore_check_interval = ignore_check_interval
+
+
+    def set_use_snmpwalk_cache(self, use_snmpwalk_cache):
+        self._use_snmpwalk_cache = use_snmpwalk_cache
+
+
+    # TODO: Check if this can be dropped
+    def set_on_error(self, on_error):
+        self._on_error = on_error
+
+
+    # TODO: Check if this can be dropped
+    def set_do_snmp_scan(self, do_snmp_scan):
+        self._do_snmp_scan = do_snmp_scan
+
+
+    def set_check_type_filter(self, filter_func):
+        self._check_type_filter_func = filter_func
+
+
+    # TODO: Only do this once per source object
+    def get_check_types(self, hostname, ipaddress):
+        if self._check_type_filter_func is None:
+            raise MKGeneralException("The check type filter function has not been set")
+
+        return self._check_type_filter_func(hostname, ipaddress, on_error=self._on_error, do_snmp_scan=self._do_snmp_scan)
+
+
     def _execute(self, hostname, ipaddress):
-        """Fetches the current agent data from the source specified with
-        hostname and ipaddress and returns the result as byte string."""
-        # TODO: Shouldn't we ensure decoding to unicode here?
-        raise NotImplementedError()
+    	import cmk_base.inventory_plugins
+
+        self._verify_ipaddress(ipaddress)
+
+        info = {}
+        for check_type in self.get_check_types(hostname, ipaddress):
+            # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
+            # Please note, that if the check_type is foo.bar then we lookup the
+            # snmp info for "foo", not for "foo.bar".
+            info_type = check_type.split(".")[0]
+            if info_type in checks.snmp_info:
+                oid_info = checks.snmp_info[info_type]
+            elif info_type in cmk_base.inventory_plugins.inv_info:
+                oid_info = cmk_base.inventory_plugins.inv_info[info_type].get("snmp_info")
+            else:
+                oid_info = None
+
+            if oid_info is None:
+                continue
+
+            # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
+            # and fetches a separate snmp table.
+            if type(oid_info) == list:
+                check_info = []
+                for entry in oid_info:
+                    check_info_part = snmp.get_snmp_table(hostname, ipaddress, check_type, entry, self._use_snmpwalk_cache)
+
+                    # If at least one query fails, we discard the whole info table
+                    if check_info_part is None:
+                        check_info = None
+                        break
+                    else:
+                        check_info.append(check_info_part)
+            else:
+                check_info = snmp.get_snmp_table(hostname, ipaddress, check_type, oid_info, self._use_snmpwalk_cache)
+
+            info[check_type] = check_info
+
+        return info
 
 
-    def _cpu_tracking_id(self):
-        raise NotImplementedError()
+
+class SNMPManagementBoardDataSource(SNMPDataSource):
+    def id(self):
+        return DataSources.DS_MGMT_SNMP
 
 
-    def run(self, hostname, ipaddress):
-        """Wrapper for self._execute() that unifies exception handling and
-        enables correct CPU tracking.
+    def _execute(self, hostname, ipaddress):
+        # Do not use the (custom) ipaddress for the host. Use the management board
+        # address instead
+        mgmt_ipaddress = config.management_address(hostname)
+        if not self._is_ipaddress(mgmt_ipaddress):
+            mgmt_ipaddress = ip_lookup.lookup_ip_address(mgmt_ipaddress)
 
-        Exceptions: All exceptions except MKTimeout are wrapped into
-        MKDataSourceError exceptions."""
+        return super(SNMPManagementBoardDataSource, self)._execute(hostname, mgmt_ipaddress)
+
+
+    # TODO: Why is it used only here?
+    def _is_ipaddress(self, address):
         try:
-            cpu_tracking.push_phase(self._cpu_tracking_id())
-            output = self._execute(hostname, ipaddress)
-            assert type(output) == str
-            return output
-        except MKTimeout, e:
-            raise
-        except Exception, e:
-            raise MKDataSourceError(self.name(hostname, ipaddress), e)
-        finally:
-            cpu_tracking.pop_phase()
+            socket.inet_pton(socket.AF_INET, address)
+            return True
+        except socket.error:
+            # not a ipv4 address
+            pass
+
+        try:
+            socket.inet_pton(socket.AF_INET6, address)
+            return True
+        except socket.error:
+            # no ipv6 address either
+            return False
 
 
-    def name(self, hostname, ipaddress):
-        """Return a unique (per host) textual identification of the data source"""
-        raise NotImplementedError()
-
-
-    def describe(self, hostname, ipaddress):
-        """Return a short textual description of the datasource"""
-        raise NotImplementedError()
-
-
-
-class TCPDataSource(DataSource):
+class TCPDataSource(CheckMKAgentDataSource):
     def __init__(self):
         super(TCPDataSource, self).__init__()
         self._port = None
 
 
-    def _cpu_tracking_id(self):
-        return "agent"
+    def id(self):
+        return DataSources.DS_AGENT
 
 
     def set_port(self, port):
@@ -782,8 +882,10 @@ class TCPDataSource(DataSource):
 
 
     def _execute(self, hostname, ipaddress):
-        if not ipaddress:
-            raise MKGeneralException("Cannot contact agent: host '%s' has no IP address." % hostname)
+        if _no_tcp:
+            raise MKAgentError("Host is unreachable, no usable cache file present")
+
+        self._verify_ipaddress(ipaddress)
 
         port = self._get_port(hostname)
 
@@ -817,8 +919,12 @@ class TCPDataSource(DataSource):
             raise
 
         s.close()
+
         if len(output) == 0: # may be caused by xinetd not allowing our address
             raise MKAgentError("Empty output from agent at TCP port %d" % port)
+
+        elif len(output) < 16:
+            raise MKAgentError("Too short output from agent: %r" % output)
 
         if encryption_settings["use_regular"] == "enforce" and \
            output.startswith("<<<check_mk>>>"):
@@ -874,6 +980,21 @@ class TCPDataSource(DataSource):
         return "TCP: %s:%d" % (ipaddress, config.agent_port_of(hostname))
 
 
+
+class PiggyBackDataSource(CheckMKAgentDataSource):
+    def id(self):
+        return DataSources.DS_PIGGY
+
+    def _execute(self, hostname, ipaddress):
+        # TODO: Rename to get_piggyback_data()
+        return piggyback.get_piggyback_info(hostname) \
+               + piggyback.get_piggyback_info(ipaddress)
+
+
+    def _cache_raw_data(self):
+        return False
+
+
 #.
 #   .--Datasoure Programs--------------------------------------------------.
 #   |      ____        _                     ____                          |
@@ -888,7 +1009,7 @@ class TCPDataSource(DataSource):
 
 
 # Abstract base class for all data source classes that execute external programs
-class ProgramDataSource(DataSource):
+class ProgramDataSource(CheckMKAgentDataSource):
     def _cpu_tracking_id(self):
         return "ds"
 
@@ -958,6 +1079,10 @@ class DSProgramDataSource(ProgramDataSource):
         self._command_template = command_template
 
 
+    def id(self):
+        return DataSources.DS_AGENT
+
+
     def name(self, hostname, ipaddress):
         """Return a unique (per host) textual identification of the data source"""
         program = self._get_command_line(hostname, ipaddress).split(" ")[0]
@@ -975,7 +1100,7 @@ class DSProgramDataSource(ProgramDataSource):
 
     def _translate_legacy_macros(self, cmd, hostname, ipaddress):
         # Make "legacy" translation. The users should use the $...$ macros in future
-        return cmd.replace("<IP>", ipaddress).replace("<HOST>", hostname)
+        return cmd.replace("<IP>", ipaddress or "").replace("<HOST>", hostname)
 
 
     def _translate_host_macros(self, cmd, hostname):
@@ -996,6 +1121,15 @@ class SpecialAgentDataSource(ProgramDataSource):
         super(SpecialAgentDataSource, self).__init__()
         self._special_agent_id = special_agent_id
         self._params = params
+
+
+    def id(self):
+        return DataSources.DS_SPECIAL % self._special_agent_id
+
+
+    # TODO: Can't we make this more specific in case of special agents?
+    def get_check_types(self, hostname, ipaddress):
+        return checks.discoverable_tcp_checks()
 
 
     def name(self, hostname, ipaddress):
@@ -1103,11 +1237,7 @@ def get_agent_cache_info():
 
 def cleanup_host_caches():
     for cache in [
-            g_agent_already_contacted,
-            g_infocache,
             g_agent_cache_info,
-            g_broken_agent_hosts,
-            g_broken_snmp_hosts,
             g_data_source_errors ]:
         cache.clear()
 
@@ -1126,14 +1256,6 @@ def get_data_source_errors(hostname, ipaddress, data_source):
 
 def get_data_source_errors_of_host(hostname, ipaddress):
     return g_data_source_errors.get(hostname, {})
-
-
-def add_broken_agent_host(hostname):
-    g_broken_agent_hosts.add(hostname)
-
-
-def add_broken_snmp_host(hostname):
-    g_broken_snmp_hosts.add(hostname)
 
 
 def disable_agent_cache():

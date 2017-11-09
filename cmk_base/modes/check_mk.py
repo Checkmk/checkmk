@@ -321,16 +321,20 @@ def mode_dump_agent(hostname):
         if config.is_cluster(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
-        if config.is_tcp_host(hostname):
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
-            output = agent_data.get_agent_info(hostname, ipaddress, 999999999)
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            # Show errors of problematic data sources
-            for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
-                for exc in exceptions:
-                    console.error("ERROR: %s" % exc)
+        output = ""
+        data_sources = agent_data.DataSources(hostname)
+        for source in data_sources.get_data_sources():
+            if isinstance(source, agent_data.CheckMKAgentDataSource):
+                output += source.run(hostname, ipaddress)
 
-            console.output(output)
+        # Show errors of problematic data sources
+        for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+            for exc in exceptions:
+                console.error("ERROR: %s" % exc)
+
+        console.output(output)
 
         console.output(piggyback.get_piggyback_info(hostname))
     except MKAgentError, e:

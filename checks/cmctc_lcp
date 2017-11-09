@@ -174,15 +174,33 @@ snmp_info["cmctc_lcp"] = (
    ]
 )
 
+check_info['cmctc_lcp.blower'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'blower'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'blower'),
+    "has_perfdata"        : True,
+    "service_description" : "Blower %s",
+}
 
-for _s, _i in cmctc_lcp_sensortypes.items():
-    if _s != "temp":
-        check_info['cmctc_lcp.' + _s] = {
-            "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, _s),
-            "inventory_function"  : lambda info: inventory_cmctc_lcp(info, _s),
-            "has_perfdata"        : True,
-            "service_description" : _i[1] + " %s",
-        }
+check_info['cmctc_lcp.blowergrade'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'blowergrade'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'blowergrade'),
+    "has_perfdata"        : True,
+    "service_description" : "Blower Grade %s",
+}
+
+check_info['cmctc_lcp.flow'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'flow'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'flow'),
+    "has_perfdata"        : True,
+    "service_description" : "Waterflow %s",
+}
+
+check_info['cmctc_lcp.regulator'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'regulator'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'regulator'),
+    "has_perfdata"        : True,
+    "service_description" : "Regulator %s",
+}
 
 # temperature check is standardised
 check_info['cmctc_lcp.temp'] = {

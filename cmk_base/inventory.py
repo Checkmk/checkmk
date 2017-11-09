@@ -91,6 +91,7 @@ def do_inv(hostnames):
             do_inv_for(hostname)
             console.verbose("..OK\n")
         except Exception, e:
+            # TODO: handle agent_data.get_data_source_errors_of_host() here
             if cmk.debug.enabled():
                 raise
             console.verbose("Failed: %s\n" % e)
@@ -115,25 +116,28 @@ def do_inv_check(options, hostname):
             console.output("OK - Found no data\n")
             sys.exit(0)
 
-        infotext = "found %d entries" % num_entries
+        infotexts = []
+
+        infotexts.append("found %d entries" % num_entries)
         state = 0
         if not inv_tree.get("software") and _inv_sw_missing:
-            infotext += ", software information is missing"
+            infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
             state = _inv_sw_missing
-            infotext += check_api.state_markers[_inv_sw_missing]
 
         if old_timestamp:
+            # TODO: Use cmk.store
             path = inventory_archive_dir + "/" + hostname + "/%d" % old_timestamp
             old_tree = eval(file(path).read())
 
             if inv_tree.get("software") != old_tree.get("software"):
-                infotext += ", software changes"
+                infotext = "software changes"
                 if _inv_sw_changes:
                     state = _inv_sw_changes
                     infotext += check_api.state_markers[_inv_sw_changes]
+                infotexts.append(infotext)
 
             if inv_tree.get("hardware") != old_tree.get("hardware"):
-                infotext += ", hardware changes"
+                infotext = "hardware changes"
                 if state == 2 or _inv_hw_changes == 2:
                     state = 2
                 else:
@@ -141,7 +145,14 @@ def do_inv_check(options, hostname):
                 if _inv_hw_changes:
                     infotext += check_api.state_markers[_inv_hw_changes]
 
-        console.output(defines.short_service_state_name(state) + " - " + infotext + "\n")
+                infotexts.append(infotext)
+
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
+        for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+            for exc in exceptions:
+                infotexts.append("%s" % exc)
+
+        console.output("%s - %s\n" % (defines.short_service_state_name(state), ", ".join(infotexts)))
         sys.exit(state)
 
     except Exception, e:
@@ -189,30 +200,27 @@ def _do_inv_for_realhost(hostname):
     except:
         raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
 
-    # If this is an SNMP host then determine the SNMP sections
-    # that this device supports.
-    if config.is_snmp_host(hostname):
-        snmp_check_types = discovery.snmp_scan(hostname, ipaddress, for_inv=True)
-    else:
-        snmp_check_types = []
+    data_sources = agent_data.DataSources(hostname)
 
-    snmp.initialize_snmp_cache_info_tables(hostname)
+    for source_id, source in data_sources.get_data_sources():
+        if isinstance(source, agent_data.SNMPDataSource):
+            source.set_on_error("raise")
+            source.set_do_snmp_scan(True)
+            source.set_use_snmpwalk_cache(False)
+            source.set_ignore_check_interval(True)
+            source.set_check_type_filter(_gather_snmp_check_types_inventory)
+
+    host_infos = agent_data.get_host_infos(data_sources, hostname, ipaddress)
+
     import cmk_base.inventory_plugins
     for info_type, plugin in cmk_base.inventory_plugins.inv_info.items():
-        # Skip SNMP sections that are not supported by this device
-        use_caches = True
-        if checks.is_snmp_check(info_type) or cmk_base.inventory_plugins.is_snmp_plugin(info_type):
-            use_caches = False
-            if info_type not in snmp_check_types:
-                continue
+        info = agent_data.get_info_for_check(host_infos, hostname, ipaddress, info_type, for_discovery=False)
 
-        try:
-            info = discovery.get_info_for_discovery(hostname, ipaddress, info_type, use_caches=use_caches)
-        except Exception, e:
-            if str(e):
-                raise # Otherwise simply ignore missing agent section
+        if info is None: # No data for this check type
             continue
 
+        # TODO: Don't we need to take checks.check_info[check_name]["handle_empty_info"]:
+        #       like it is done in checking.execute_check()? Standardize this!
         if not info: # section not present (None or [])
             # Note: this also excludes existing sections without info..
             continue
@@ -227,7 +235,10 @@ def _do_inv_for_realhost(hostname):
             inv_function(info, params)
         else:
             inv_function(info)
-    snmp.write_snmp_cache_info_tables(hostname)
+
+
+def _gather_snmp_check_types_inventory(hostname, ipaddress, on_error, do_snmp_scan):
+    return discovery.gather_snmp_check_types(hostname, ipaddress, on_error, do_snmp_scan, for_inventory=True)
 
 
 def _get_inv_params(hostname, info_type):

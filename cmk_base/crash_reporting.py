@@ -50,6 +50,8 @@ def create_crash_dump(hostname, check_type, item, is_manual_check, params, descr
         _prepare_crash_dump_directory(crash_dir)
 
         _create_crash_dump_info_file(crash_dir, hostname, check_type, item, is_manual_check, params, description, info, text)
+
+        # TODO: Add caches of all data sources
         if checks.is_snmp_check(check_type):
             _write_crash_dump_snmp_info(crash_dir, hostname, check_type)
         else:
@@ -91,7 +93,7 @@ def _create_crash_dump_info_file(crash_dir, hostname, check_type, item, is_manua
 
 
 def _write_crash_dump_snmp_info(crash_dir, hostname, check_type):
-    cachefile = "%s/%s" % (cmk.paths.snmp_cache_dir, hostname)
+    cachefile = "%s/snmp/%s" % (cmk.paths.data_source_cache_dir, hostname)
     if os.path.exists(cachefile):
         file(crash_dir + "/snmp_info", "w").write(file(cachefile).read())
 

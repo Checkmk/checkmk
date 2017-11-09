@@ -59,7 +59,7 @@ precompiled_hostchecks_dir= None
 snmpwalks_dir             = None
 counters_dir              = None
 tcp_cache_dir             = None
-snmp_cache_dir            = None
+data_source_cache_dir     = None
 snmp_scan_cache_dir       = None
 tmp_dir                   = None
 logwatch_dir              = None
@@ -127,7 +127,7 @@ def _set_paths():
         "snmpwalks_dir"               : os.path.join(omd_root, "var/check_mk/snmpwalks"),
         "counters_dir"                : os.path.join(omd_root, "tmp/check_mk/counters"),
         "tcp_cache_dir"               : os.path.join(omd_root, "tmp/check_mk/cache"),
-        "snmp_cache_dir"              : os.path.join(omd_root, "tmp/check_mk/snmp_cache"),
+        "data_source_cache_dir"       : os.path.join(omd_root, "tmp/check_mk/data_source_cache"),
         "snmp_scan_cache_dir"         : os.path.join(omd_root, "tmp/check_mk/snmp_scan_cache"),
         "tmp_dir"                     : os.path.join(omd_root, "tmp/check_mk"),
         "logwatch_dir"                : os.path.join(omd_root, "var/check_mk/logwatch"),

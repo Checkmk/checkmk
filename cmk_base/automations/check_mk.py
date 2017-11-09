@@ -610,7 +610,6 @@ class AutomationDeleteHosts(Automation):
             "%s/%s.mk"               % (cmk.paths.autochecks_dir, hostname),
             "%s/%s"                  % (cmk.paths.counters_dir, hostname),
             "%s/%s"                  % (cmk.paths.tcp_cache_dir, hostname),
-            "%s/%s"                  % (cmk.paths.snmp_cache_dir, hostname),
             "%s/persisted/%s"        % (cmk.paths.var_dir, hostname),
             "%s/inventory/%s"        % (cmk.paths.var_dir, hostname),
             "%s/inventory/%s.gz"     % (cmk.paths.var_dir, hostname),
@@ -618,6 +617,24 @@ class AutomationDeleteHosts(Automation):
             ]:
             if os.path.exists(path):
                 os.unlink(path)
+
+        try:
+            ds_directories = os.listdir(cmk.paths.data_source_cache_dir)
+        except OSError, e:
+            if e.errno == 2:
+                ds_directories = []
+            else:
+                raise
+
+        for data_source_name in ds_directories:
+            filename = "%s/%s/%s" % (cmk.paths.data_source_cache_dir, data_source_name, hostname)
+            try:
+                os.unlink(filename)
+            except OSError, e:
+                if e.errno == 2:
+                    pass
+                else:
+                    raise
 
         # softlinks for baked agents. obsolete packages are removed upon next bake action
         # TODO: Move to bakery code
@@ -1187,7 +1204,6 @@ class AutomationGetAgentOutput(Automation):
     def execute(self, args):
         import cmk_base.ip_lookup as ip_lookup
         import cmk_base.agent_data as agent_data
-        import cmk_base.piggyback as piggyback
 
         hostname, ty = args
 
@@ -1198,7 +1214,13 @@ class AutomationGetAgentOutput(Automation):
         try:
             if ty == "agent":
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
-                info = agent_data.get_agent_info(hostname, ipaddress, 999999999)
+
+                agent_output = ""
+                data_sources = agent_data.DataSources(hostname)
+                for source in data_sources.get_data_sources():
+                    if isinstance(source, agent_data.CheckMKAgentDataSource):
+                        agent_output += source.run(hostname, ipaddress)
+                info = agent_output
 
                 # Optionally show errors of problematic data sources
                 errors = agent_data.get_data_source_errors_of_host(hostname, ipaddress)
@@ -1208,8 +1230,6 @@ class AutomationGetAgentOutput(Automation):
                     for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
                         for exc in exceptions:
                             output += "%s\n" % exc
-
-                info += piggyback.get_piggyback_info(hostname)
             else:
                 path = cmk.paths.snmpwalks_dir + "/" + hostname
                 snmp.do_snmpwalk_on({}, hostname, path)

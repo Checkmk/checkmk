@@ -1,0 +1,10 @@
+Title: netapp_api_connection: removed some invalid warning messages, which appear on virtual netapp systems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p17
+Date: 1510230603
+Class: fix
+
+A virtual netapp system has no sensor information (temp, fan, etc.) available..

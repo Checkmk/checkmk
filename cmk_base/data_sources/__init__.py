@@ -54,9 +54,8 @@ from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .tcp import TCPDataSource
 from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
+from .host_info import HostInfo
 
-
-g_agent_cache_info           = {} # Information about agent caching
 g_data_source_errors         = {}
 
 #.
@@ -114,14 +113,15 @@ def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
         sources.set_max_cachefile_age(this_max_cachfile_age)
 
         for source in sources.get_data_sources():
-            for check_type, lines in source.run(this_hostname, this_ipaddress).items():
-                host_infos = all_host_infos.setdefault((this_hostname, this_ipaddress), {})
-                host_infos.setdefault(check_type, []).extend(lines)
+            host_info_of_source = source.run(this_hostname, this_ipaddress)
+
+            host_info = all_host_infos.setdefault((this_hostname, this_ipaddress), HostInfo())
+            host_info.update(host_info_of_source)
 
     return all_host_infos
 
 
-def get_info_for_check(host_infos, hostname, ipaddress, check_type, for_discovery):
+def get_info_for_check(all_host_infos, hostname, ipaddress, check_type, for_discovery):
     """Prepares the info construct for a Check_MK check on ANY host
 
     The info construct is then handed over to the check or discovery functions
@@ -129,7 +129,7 @@ def get_info_for_check(host_infos, hostname, ipaddress, check_type, for_discover
 
     If the host is a cluster, the information from all its nodes is used.
 
-    It receives the whole host_infos data and cares about these aspects:
+    It receives the whole all_host_infos data and cares about these aspects:
 
     a) Extract the section for the given check_type
     b) Adds node_info to the info (if check asks for this)
@@ -158,18 +158,18 @@ def get_info_for_check(host_infos, hostname, ipaddress, check_type, for_discover
     info = None
     for host_entry, is_node in host_entries:
         try:
-            info = host_infos[host_entry][section_name]
+            info = all_host_infos[host_entry].info[section_name]
         except KeyError:
             continue
 
         info = _update_info_with_node_info(info, check_type, node_name)
-        info = _update_info_with_parse_function(info, check_type)
+        info = _update_info_with_parse_function(info, section_name)
 
     if info is None:
         return None
 
     # TODO: Is this correct? info!
-    info = _update_info_with_extra_sections(info, host_infos, hostname, ipaddress, check_type, for_discovery)
+    info = _update_info_with_extra_sections(info, all_host_infos, hostname, ipaddress, check_type, for_discovery)
 
     return info
 
@@ -201,7 +201,7 @@ def _add_nodeinfo(info, nodename):
 
 
 # TODO: Why not use the check_type instead of section_name? Inconsistent with node_info!
-def _update_info_with_extra_sections(info, host_infos, hostname, ipaddress, section_name, for_discovery):
+def _update_info_with_extra_sections(info, all_host_infos, hostname, ipaddress, section_name, for_discovery):
     if section_name not in checks.check_info or not checks.check_info[section_name]["extra_sections"]:
         return info
 
@@ -209,7 +209,7 @@ def _update_info_with_extra_sections(info, host_infos, hostname, ipaddress, sect
     # extra sections are appended
     info = [ info ]
     for extra_section_name in checks.check_info[section_name]["extra_sections"]:
-        info.append(get_info_for_check(host_infos, hostname, ipaddress, extra_section_name, for_discovery))
+        info.append(get_info_for_check(all_host_infos, hostname, ipaddress, extra_section_name, for_discovery))
 
     return info
 
@@ -226,7 +226,7 @@ def _update_info_with_parse_function(info, section_name):
 
     parse_function = checks.check_info[section_name]["parse_function"]
     if not parse_function:
-        return
+        return info
 
     try:
         item_state.set_item_state_prefix(section_name, None)
@@ -430,16 +430,8 @@ def restore_original_agent_caching_usage():
 #   | Different helper functions                                           |
 #   '----------------------------------------------------------------------'
 
-# TODO: Clean this up
-def get_agent_cache_info():
-    return g_agent_cache_info
-
-
 def cleanup_host_caches():
-    for cache in [
-            g_agent_cache_info,
-            g_data_source_errors ]:
-        cache.clear()
+    g_data_source_errors.clear()
 
 
 def add_data_source_error(hostname, ipaddress, data_source, e):

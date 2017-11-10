@@ -27,6 +27,7 @@
 import os
 import time
 
+import cmk.debug
 import cmk.paths
 import cmk.store as store
 import cmk.cpu_tracking as cpu_tracking
@@ -39,6 +40,8 @@ import cmk_base.piggyback as piggyback
 import cmk_base.checks as checks
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKDataSourceError, MKSNMPError, \
                                 MKParseFunctionError, MKTimeout
+
+from .host_info import HostInfo
 
 class DataSource(object):
     """Abstract base class for all data source classes"""
@@ -79,12 +82,14 @@ class DataSource(object):
             else:
                 raw_data = self._execute(hostname, ipaddress)
 
-            infos = self._convert_to_infos(raw_data, hostname)
-            assert type(infos) == dict
-            return infos
+            host_info = self._convert_to_infos(raw_data, hostname)
+            assert isinstance(host_info, HostInfo)
+            return host_info
         except MKTimeout, e:
             raise
         except Exception, e:
+            if cmk.debug.enabled():
+                raise
             raise MKDataSourceError(self.name(hostname, ipaddress), e)
         finally:
             cpu_tracking.pop_phase()
@@ -108,6 +113,7 @@ class DataSource(object):
         assert self._max_cachefile_age is not None
 
         cachefile = self._cache_file_path(hostname)
+
         if os.path.exists(cachefile) and (
             (self._use_cachefile and ( not self._no_cache ) )
             or (config.simulation_mode and not self._no_cache) ):
@@ -250,16 +256,16 @@ class CheckMKAgentDataSource(DataSource):
 
         info, piggybacked, persisted, agent_cache_info = self._parse_info(raw_data.split("\n"), hostname)
 
-        self._save_agent_cache_info(hostname, agent_cache_info)
+        host_info = HostInfo(info, agent_cache_info)
+
         piggyback.store_piggyback_info(hostname, piggybacked)
         self._store_persisted_info(hostname, persisted)
 
         # Add information from previous persisted agent outputs, if those
         # sections are not available in the current output
-        # TODO: In the persisted sections the agent_cache_info is missing
-        info = self._update_info_with_persisted_infos(info, hostname)
+        host_info = self._update_info_with_persisted_infos(host_info, hostname)
 
-        return info
+        return host_info
 
 
     def _parse_info(self, lines, hostname):
@@ -382,32 +388,34 @@ class CheckMKAgentDataSource(DataSource):
             console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 
 
-    def _update_info_with_persisted_infos(self, info, hostname):
+    # TODO: This is not race condition free when modifying the data. Either remove
+    # the possible write here and simply ignore the outdated sections or lock when
+    # reading and unlock after writing
+    def _update_info_with_persisted_infos(self, host_info, hostname):
         # TODO: Use store.load_data_from_file
         file_path = cmk.paths.var_dir + "/persisted/" + hostname
         try:
             persisted = eval(file(file_path).read())
         except:
-            return info
+            return host_info
 
         now = time.time()
         modified = False
-        for section, entry in persisted.items():
+        for section_name, entry in persisted.items():
             if len(entry) == 2:
                 persisted_from = None
-                persisted_until, persisted_section = entry
+                persisted_until, section = entry
             else:
-                persisted_from, persisted_until, persisted_section = entry
-                self._save_agent_cache_info(hostname, {section: (persisted_from, persisted_until - persisted_from)})
+                persisted_from, persisted_until, section = entry
 
             if now < persisted_until or self._use_outdated_persisted_sections:
-                if section not in info:
-                    info[section] = persisted_section
-                    console.vverbose("Using persisted section %s.\n" % section)
+                if section_name not in host_info.info:
+                    host_info.add_cached_section(section_name, section, persisted_from, persisted_until)
+                    console.vverbose("Using persisted section %s.\n" % section_name)
             else:
                 console.verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" % (
-                        section, now - persisted_until))
-                del persisted[section]
+                        section_name, now - persisted_until))
+                del persisted[section_name]
                 modified = True
 
         if not persisted:
@@ -415,14 +423,11 @@ class CheckMKAgentDataSource(DataSource):
                 os.remove(file_path)
             except OSError:
                 pass
+
         elif modified:
             self._store_persisted_info(hostname, persisted)
 
-        return info
-
-
-    def _save_agent_cache_info(self, hostname, agent_cache_info):
-        g_agent_cache_info.setdefault(hostname, {}).update(agent_cache_info)
+        return host_info
 
 
     @classmethod

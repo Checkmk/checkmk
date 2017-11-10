@@ -655,7 +655,7 @@ def _discover_services(hostname, ipaddress, check_types, use_caches, do_snmp_sca
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
     sources = data_sources.DataSources(hostname)
-    host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error)
+    all_host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error)
 
     # Make hostname available as global variable in discovery functions
     # (used e.g. by ps-discovery)
@@ -665,9 +665,9 @@ def _discover_services(hostname, ipaddress, check_types, use_caches, do_snmp_sca
     try:
         for check_type in sources.get_check_types(hostname, ipaddress):
             try:
-                for item, paramstring in _execute_discovery(host_infos, hostname, ipaddress, check_type, on_error):
+                for item, paramstring in _execute_discovery(all_host_infos, hostname, ipaddress, check_type, on_error):
                     discovered_services.append((check_type, item, paramstring))
-            except (KeyboardInterrupt, MKAgentError, MKSNMPError, MKTimeout):
+            except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception, e:
                 if cmk.debug.enabled():
@@ -682,7 +682,7 @@ def _discover_services(hostname, ipaddress, check_types, use_caches, do_snmp_sca
 
 def _get_host_infos_for_discovery(sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error):
     for source in sources.get_data_sources():
-        if isinstance(source, sources.SNMPDataSource):
+        if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error(on_error)
             source.set_do_snmp_scan(do_snmp_scan)
             source.set_use_snmpwalk_cache(False)
@@ -812,7 +812,7 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
     return sorted(found)
 
 
-def _execute_discovery(host_infos, hostname, ipaddress, check_type, on_error):
+def _execute_discovery(all_host_infos, hostname, ipaddress, check_type, on_error):
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_type, None):
         return []
@@ -824,7 +824,7 @@ def _execute_discovery(host_infos, hostname, ipaddress, check_type, on_error):
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_type)
 
-    info = data_sources.get_info_for_check(host_infos, hostname, ipaddress, check_type, for_discovery=True)
+    info = data_sources.get_info_for_check(all_host_infos, hostname, ipaddress, check_type, for_discovery=True)
 
     if info is None: # No data for this check type
         return []
@@ -1062,7 +1062,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     # Can we reduce the duplicate call?
     sources = data_sources.DataSources(hostname)
 
-    host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress,
+    all_host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress,
                                                check_types=None, use_caches=use_caches,
                                                do_snmp_scan=do_snmp_scan, on_error=on_error)
 
@@ -1098,7 +1098,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 continue # Skip not existing check silently
 
             try:
-                info = host_infos[(hostname, ipaddress)][infotype]
+                info = all_host_infos[(hostname, ipaddress)].info[infotype]
             except KeyError:
                 exitcode = 3
                 output = "Got no data for %s" % infotype

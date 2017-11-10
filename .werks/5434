@@ -1,0 +1,11 @@
+Title: Views: Fixed exception when trying to display downtime IDs in views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1510303145
+
+

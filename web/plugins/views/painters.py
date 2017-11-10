@@ -2121,7 +2121,7 @@ multisite_painters["downtime_id"] = {
     "title"   : _("Downtime id"),
     "short"   : _("ID"),
     "columns" : ["downtime_id"],
-    "paint"   : lambda row: (None, row["downtime_id"]),
+    "paint"   : lambda row: (None, "%d" % row["downtime_id"]),
 }
 
 multisite_painters["downtime_author"] = {

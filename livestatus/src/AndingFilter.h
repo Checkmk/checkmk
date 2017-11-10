@@ -53,6 +53,8 @@ public:
         const std::string &column_name) const;
     std::unique_ptr<Filter> stealLastSubFilter();
     size_t size() const { return _subfilters.size(); }
+    auto begin() const { return _subfilters.begin(); }
+    auto end() const { return _subfilters.end(); }
 };
 
 #endif  // AndingFilter_h

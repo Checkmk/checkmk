@@ -50,7 +50,8 @@
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-class VariadicFilter;
+class AndingFilter;
+class OringFilter;
 
 #ifdef CMC
 #include "Host.h"
@@ -250,7 +251,8 @@ public:
                      mk::starts_with(column_name, std::string("service_"));
         }
     }
-    void visit(const VariadicFilter & /*unused*/) override {}
+    void visit(const AndingFilter & /*unused*/) override {}
+    void visit(const OringFilter & /*unused*/) override {}
 
     bool _value = true;
 };
@@ -279,10 +281,9 @@ private:
 }  // namespace
 
 void TableStateHistory::answerQuery(Query *query) {
-    // Create a partial filter, that contains only such filters that
-    // check attributes of current hosts and services
+    // Create a partial filter, that contains only such filters that check
+    // attributes of current hosts and services
     std::deque<Filter *> object_filter;
-
     if (core()->stateHistoryFilteringEnabled()) {
         for (const auto &filter : *query->filter()) {
             IsObjectFilter is_obj;

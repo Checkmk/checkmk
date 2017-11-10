@@ -47,6 +47,8 @@ public:
                          std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;
+    auto begin() const { return _subfilters.begin(); }
+    auto end() const { return _subfilters.end(); }
 };
 
 #endif  // OringFilter_h

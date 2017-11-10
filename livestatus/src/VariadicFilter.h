@@ -35,8 +35,6 @@ public:
     void addSubfilter(std::unique_ptr<Filter> f) {
         _subfilters.push_back(std::move(f));
     }
-    auto begin() const { return _subfilters.begin(); }
-    auto end() const { return _subfilters.end(); }
 
 protected:
     std::vector<std::unique_ptr<Filter>> _subfilters;

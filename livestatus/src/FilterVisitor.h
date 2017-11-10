@@ -26,14 +26,16 @@
 #define FilterVisitor_h
 
 #include "config.h"  // IWYU pragma: keep
+class AndingFilter;
 class ColumnFilter;
-class VariadicFilter;
+class OringFilter;
 
 class FilterVisitor {
 public:
     virtual ~FilterVisitor() {}
     virtual void visit(const ColumnFilter &) = 0;
-    virtual void visit(const VariadicFilter &) = 0;
+    virtual void visit(const AndingFilter &) = 0;
+    virtual void visit(const OringFilter &) = 0;
 };
 
 #endif  // FilterVisitor_h

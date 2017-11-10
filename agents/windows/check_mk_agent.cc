@@ -968,6 +968,19 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     Logger *logger = Logger::getLogger("winagent");
     Environment env(use_cwd, logger, s_winapi);
 
+    const std::string logFilename = env.logDirectory() + "\\agent.log";
+
+    if (strcmp(mode, "debug")) {  // if not debugging, use log file
+        // TODO: Make logfile rotation parameters configurable
+        logger->setHandler(std::make_unique<RotatingFileHandler>(
+                               logFilename, std::make_unique<FileRotationApi>(),
+                               8388608 /* 8 MB */, 5));
+    }
+
+    if (Handler *handler = logger->getHandler()) {
+        handler->setFormatter(make_unique<MillisecondsFormatter>());
+    }
+
     s_config = new GlobalConfig(env);
     s_sections = new SectionManager(s_config->parser, logger, s_winapi);
 
@@ -987,19 +1000,6 @@ void RunImmediate(const char *mode, int argc, char **argv) {
 
     if (!*s_config->crash_debug) {  // default level already LogLevel::debug
         logger->setLevel(LogLevel::warning);
-    }
-
-    const std::string logFilename = env.logDirectory() + "\\agent.log";
-
-    if (strcmp(mode, "debug")) {  // if not debugging, use log file
-        // TODO: Make logfile rotation parameters configurable
-        logger->setHandler(std::make_unique<RotatingFileHandler>(
-            logFilename, std::make_unique<FileRotationApi>(),
-            8388608 /* 8 MB */, 5));
-    }
-
-    if (Handler *handler = logger->getHandler()) {
-        handler->setFormatter(make_unique<MillisecondsFormatter>());
     }
 
     postProcessOnlyFrom();

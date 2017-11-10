@@ -65,7 +65,6 @@ public:
      **/
     SectionGroup *withDependentSubSection(Section *section);
     SectionGroup *withToggleIfMissing();
-    SectionGroup *withFailIfMissing();
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;

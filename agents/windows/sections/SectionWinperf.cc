@@ -44,7 +44,7 @@ SectionWinperf *SectionWinperf::withBase(unsigned int base) {
 
 bool SectionWinperf::produceOutputInner(std::ostream &out) {
     try {
-        PerfCounterObject counterObject(_base, _winapi);
+        PerfCounterObject counterObject(_base, _winapi, _logger);
 
         if (!counterObject.isEmpty()) {
             LARGE_INTEGER Frequency;

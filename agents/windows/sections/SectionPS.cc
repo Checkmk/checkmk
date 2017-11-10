@@ -44,7 +44,8 @@ SectionPS::SectionPS(Configuration &config, Logger *logger,
 SectionPS::process_entry_t SectionPS::getProcessPerfdata() {
     process_entry_t process_info;
 
-    PerfCounterObject counterObject(230, _winapi);  // process base number
+    unsigned processBaseNumber = 230;
+    PerfCounterObject counterObject(processBaseNumber, _winapi, _logger);
 
     if (!counterObject.isEmpty()) {
         LARGE_INTEGER Frequency;

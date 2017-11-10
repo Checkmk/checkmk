@@ -6,7 +6,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include "Logger.h"
 #include "PerfCounterCommon.h"
+#include "stringutil.h"
 #include "win_error.h"
 // Helper functions to navigate the performance counter data
 
@@ -179,6 +181,10 @@ std::vector<BYTE> PerfCounterObject::retrieveCounterData(
     while ((ret = _winapi.RegQueryValueExW(HKEY_PERFORMANCE_DATA, counterList,
                                            nullptr, &type, &result[0],
                                            &buffer_size)) != ERROR_SUCCESS) {
+        if (_logger) {
+            Debug(_logger) << "PerfCounterObject::retrieveCounterData: "
+                           << "RegQueryValueExW returned " << ret;
+        }
         if (ret == ERROR_MORE_DATA) {
             // the size of performance counter blocks is varible and may change
             // concurrently, so there is no way to ensure the buffer is large
@@ -190,7 +196,9 @@ std::vector<BYTE> PerfCounterObject::retrieveCounterData(
             throw std::runtime_error(get_win_error_as_string(_winapi));
         }
     }
-
+    if (_logger) {
+        Debug(_logger) << "PerfCounterObject::retrieveCounterData: closing key";
+    }
     // apparently this handle is opened on demand by RegQueryValueEx but needs
     // to be closed manually, otherwise we may be blocking installation of apps
     // that create new performance counters.
@@ -201,15 +209,10 @@ std::vector<BYTE> PerfCounterObject::retrieveCounterData(
     return result;
 }
 
-PerfCounterObject::PerfCounterObject(const char *counter_name,
-                                     const WinApiAdaptor &winapi)
-    : PerfCounterObject(
-          PerfCounterObject::resolve_counter_name(winapi, counter_name),
-          winapi) {}
-
 PerfCounterObject::PerfCounterObject(unsigned int counter_base_number,
-                                     const WinApiAdaptor &winapi)
-    : _datablock(nullptr), _winapi(winapi) {
+                                     const WinApiAdaptor &winapi,
+                                     Logger *logger)
+    : _datablock(nullptr), _winapi(winapi), _logger(logger) {
     _buffer = retrieveCounterData(std::to_wstring(counter_base_number).c_str());
 
     _object = findObject(counter_base_number);
@@ -286,7 +289,7 @@ std::vector<PerfCounter> PerfCounterObject::counters() const {
 }
 
 std::vector<std::wstring> PerfCounterObject::counterNames() const {
-    std::map<DWORD, std::wstring> name_map = perf_id_map(_winapi, false);
+    std::unordered_map<DWORD, std::wstring> name_map = perf_id_map<wchar_t>(_winapi, false);
 
     std::vector<std::wstring> result;
     PERF_COUNTER_DEFINITION *counter = FirstCounter(_object);
@@ -300,164 +303,4 @@ std::vector<std::wstring> PerfCounterObject::counterNames() const {
         counter = NextCounter(counter);
     }
     return result;
-}
-
-template <typename CharT>
-static inline const CharT *getCurrentLanguage();
-
-template <>
-const wchar_t *getCurrentLanguage<wchar_t>() {
-    return L"CurrentLanguage";
-}
-
-template <>
-const char *getCurrentLanguage<char>() {
-    return "CurrentLanguage";
-}
-
-template <typename CharT>
-static inline const CharT *getEnglishCode();
-
-template <>
-const wchar_t *getEnglishCode<wchar_t>() {
-    return L"009";
-}
-
-template <>
-const char *getEnglishCode<char>() {
-    return "009";
-}
-
-template <typename CharT>
-using cmpFunc = int (*)(const CharT *, const CharT *);
-template <typename CharT>
-static inline cmpFunc<CharT> strCmpFunc();
-template <>
-cmpFunc<wchar_t> strCmpFunc() {
-    return &wcscmp;
-}
-template <>
-cmpFunc<char> strCmpFunc() {
-    return &strcmp;
-}
-
-template <typename CharT>
-using tolFunc = long (*)(const CharT *, CharT **, int);
-template <typename CharT>
-static inline tolFunc<CharT> strTolFunc();
-template <>
-tolFunc<wchar_t> strTolFunc() {
-    return &wcstol;
-}
-template <>
-tolFunc<char> strTolFunc() {
-    return &strtol;
-}
-
-template <typename CharT>
-static std::vector<CharT> readCounterValue(const WinApiAdaptor &winapi,
-                                           const CharT *language);
-
-template <>
-std::vector<wchar_t> readCounterValue<wchar_t>(const WinApiAdaptor &winapi,
-                                               const wchar_t *language) {
-    std::vector<wchar_t> szValueName;
-    HKEY hKey;
-    LONG result =
-        winapi.RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                             (std::wstring(L"SOFTWARE\\Microsoft\\Windows "
-                                           L"NT\\CurrentVersion\\Perflib\\") +
-                              language)
-                                 .c_str(),
-                             REG_MULTI_SZ, KEY_READ, &hKey);
-
-    if (result != ERROR_SUCCESS) {
-        // preflight
-        DWORD dwcbData = 0;
-        winapi.RegQueryValueExW(hKey, L"Counter", NULL, NULL,
-                                (LPBYTE)&szValueName[0], &dwcbData);
-        szValueName.resize(dwcbData);
-        // actual read op
-        winapi.RegQueryValueExW(hKey, L"Counter", NULL, NULL,
-                                (LPBYTE)&szValueName[0], &dwcbData);
-    }
-
-    winapi.RegCloseKey(hKey);
-
-    return szValueName;
-}
-
-template <>
-std::vector<char> readCounterValue<char>(const WinApiAdaptor &winapi,
-                                         const char *language) {
-    std::vector<char> szValueName;
-    HKEY hKey;
-    LONG result = winapi.RegOpenKeyEx(
-        HKEY_LOCAL_MACHINE,
-        (std::string(
-             "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\") +
-         language)
-            .c_str(),
-        REG_MULTI_SZ, KEY_READ, &hKey);
-
-    if (result != ERROR_SUCCESS) {
-        // preflight
-        DWORD dwcbData = 0;
-        winapi.RegQueryValueEx(hKey, "Counter", NULL, NULL,
-                               (LPBYTE)&szValueName[0], &dwcbData);
-        szValueName.resize(dwcbData);
-        // actual read op
-        winapi.RegQueryValueEx(hKey, "Counter", NULL, NULL,
-                               (LPBYTE)&szValueName[0], &dwcbData);
-    }
-
-    winapi.RegCloseKey(hKey);
-
-    return szValueName;
-}
-
-template <typename CharT>
-static int resolveCounterName(const WinApiAdaptor &winapi,
-                              const CharT *counter_name,
-                              const CharT *language) {
-    if (language == nullptr) {
-        // "autodetect", which means we try local language and english
-        int result = 0;
-        for (const auto &lang :
-             {getCurrentLanguage<CharT>(), getEnglishCode<CharT>()}) {
-            result = resolveCounterName(winapi, counter_name, lang);
-            if (result != -1) return result;
-        }
-        return result;
-    } else {
-        const auto szValueName = readCounterValue(winapi, language);
-
-        if (szValueName.empty()) return -1;
-
-        size_t offset = 0;
-        for (;;) {
-            const CharT *id = get_next_multi_sz(szValueName, offset);
-            const CharT *name = get_next_multi_sz(szValueName, offset);
-            if (!id || !name) {
-                return -1;
-            }
-            if ((*strCmpFunc<CharT>())(name, counter_name) == 0) {
-                return (*strTolFunc<CharT>())(id, nullptr, 10);
-            }
-        }
-
-        return -1;
-    }
-}
-
-int PerfCounterObject::resolve_counter_name(const WinApiAdaptor &winapi,
-                                            const wchar_t *counter_name,
-                                            const wchar_t *language) {
-    return resolveCounterName<wchar_t>(winapi, counter_name, language);
-}
-
-int PerfCounterObject::resolve_counter_name(const WinApiAdaptor &winapi,
-                                            const char *counter_name,
-                                            const char *language) {
-    return resolveCounterName<char>(winapi, counter_name, language);
 }

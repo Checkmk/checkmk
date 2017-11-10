@@ -23,9 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
-#include <algorithm>
 #include <memory>
-#include <vector>
 #include "Filter.h"
 #include "FilterVisitor.h"
 #include "OringFilter.h"
@@ -87,13 +85,4 @@ const std::string *AndingFilter::findValueForIndexing(
         }
     }
     return nullptr;
-}
-
-std::unique_ptr<Filter> AndingFilter::stealLastSubFilter() {
-    if (_subfilters.empty()) {
-        return nullptr;
-    }
-    std::unique_ptr<Filter> l = move(_subfilters.back());
-    _subfilters.pop_back();
-    return l;
 }

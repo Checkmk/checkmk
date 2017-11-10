@@ -210,11 +210,11 @@ def _do_inv_for_realhost(hostname):
             source.set_ignore_check_interval(True)
             source.set_check_type_filter(_gather_snmp_check_types_inventory)
 
-    host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
+    all_host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
 
     import cmk_base.inventory_plugins
     for info_type, plugin in cmk_base.inventory_plugins.inv_info.items():
-        info = data_sources.get_info_for_check(host_infos, hostname, ipaddress, info_type, for_discovery=False)
+        info = data_sources.get_info_for_check(all_host_infos, hostname, ipaddress, info_type, for_discovery=False)
 
         if info is None: # No data for this check type
             continue

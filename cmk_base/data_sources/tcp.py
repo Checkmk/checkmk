@@ -74,7 +74,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
     def _execute(self, hostname, ipaddress):
         if self._use_only_cache:
-            raise MKAgentError("Host is unreachable, no usable cache file present")
+            raise MKAgentError("Got no data: No usable cache file present at %s" % self._cache_file_path(hostname))
 
         self._verify_ipaddress(ipaddress)
 

@@ -241,7 +241,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
 
     sources = data_sources.DataSources(hostname)
 
-    host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
+    all_host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
 
     checks.set_hostname(hostname)
 
@@ -252,7 +252,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
         if only_check_types != None and check_name not in only_check_types:
             continue
 
-        success = execute_check(host_infos, hostname, ipaddress, check_name, item, params, description)
+        success = execute_check(all_host_infos, hostname, ipaddress, check_name, item, params, description)
         if success:
             num_success += 1
         else:
@@ -261,7 +261,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
 
     if fetch_agent_version:
         if config.is_tcp_host(hostname):
-            for line in data_sources.get_info_for_check(host_infos, hostname, ipaddress, "check_mk", for_discovery=False) or []:
+            for line in data_sources.get_info_for_check(all_host_infos, hostname, ipaddress, "check_mk", for_discovery=False) or []:
                 value = " ".join(line[1:]) if len(line) > 1 else None
                 cmk_info[line[0][:-1].lower()] = value
 
@@ -275,7 +275,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
     return cmk_info, num_success, missing_section_list
 
 
-def execute_check(host_infos, hostname, ipaddress, check_name, item, params, description):
+def execute_check(all_host_infos, hostname, ipaddress, check_name, item, params, description):
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
     checks.set_service(check_name, description)
@@ -293,7 +293,7 @@ def execute_check(host_infos, hostname, ipaddress, check_name, item, params, des
     info_type = check_name.split('.')[0]
 
     try:
-        info = data_sources.get_info_for_check(host_infos, hostname, ipaddress, info_type, for_discovery=False)
+        info = data_sources.get_info_for_check(all_host_infos, hostname, ipaddress, info_type, for_discovery=False)
     except MKParseFunctionError, e:
         x = e.exc_info()
         raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
@@ -356,7 +356,8 @@ def execute_check(host_infos, hostname, ipaddress, check_name, item, params, des
                 return a
             return min(a,b)
 
-        for section_entries in data_sources.get_agent_cache_info().values():
+        for host_info in all_host_infos.values():
+            section_entries = host_info.cache_info
             if info_type in section_entries:
                 cached_at, cache_interval = section_entries[info_type]
                 oldest_cached_at = minn(oldest_cached_at, cached_at)

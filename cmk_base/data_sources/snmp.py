@@ -35,6 +35,7 @@ import cmk_base.snmp as snmp
 import cmk_base.ip_lookup as ip_lookup
 
 from .abstract import DataSource
+from .host_info import HostInfo
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -153,6 +154,10 @@ class SNMPDataSource(DataSource):
             info[check_type] = check_info
 
         return info
+
+
+    def _convert_to_infos(self, raw_data, hostname):
+        return HostInfo(raw_data)
 
 
 #.

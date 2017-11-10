@@ -26,18 +26,19 @@
 #include <algorithm>
 #include <cstring>
 #include <sstream>
+#include "Filter.h"
 #include "Row.h"
 #include "StringColumn.h"
 
 StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
                            std::string value)
-    : _column(column), _relOp(relOp), _ref_string(std::move(value)) {
+    : _column(column), _relOp(relOp), _value(std::move(value)) {
     switch (_relOp) {
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            _regex.assign(_ref_string,
+            _regex.assign(_value,
                           (_relOp == RelationalOperator::matches_icase ||
                            _relOp == RelationalOperator::doesnt_match_icase)
                               ? std::regex::extended | std::regex::icase
@@ -60,9 +61,9 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
     std::string act_string = _column.getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:
-            return act_string == _ref_string;
+            return act_string == _value;
         case RelationalOperator::not_equal:
-            return act_string != _ref_string;
+            return act_string != _value;
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
             return regex_search(act_string, _regex);
@@ -70,17 +71,17 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
             return !regex_search(act_string, _regex);
         case RelationalOperator::equal_icase:
-            return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
+            return strcasecmp(_value.c_str(), act_string.c_str()) == 0;
         case RelationalOperator::not_equal_icase:
-            return strcasecmp(_ref_string.c_str(), act_string.c_str()) != 0;
+            return strcasecmp(_value.c_str(), act_string.c_str()) != 0;
         case RelationalOperator::less:
-            return act_string < _ref_string;
+            return act_string < _value;
         case RelationalOperator::greater_or_equal:
-            return act_string >= _ref_string;
+            return act_string >= _value;
         case RelationalOperator::greater:
-            return act_string > _ref_string;
+            return act_string > _value;
         case RelationalOperator::less_or_equal:
-            return act_string <= _ref_string;
+            return act_string <= _value;
     }
     return false;  // unreachable
 }
@@ -92,7 +93,7 @@ const std::string *StringFilter::valueForIndexing(
         case RelationalOperator::not_equal:
             // TODO(sp) The cast looks very dubious, but the whole void* story
             // is quite dangerous...
-            return column_name == columnName() ? &_ref_string : nullptr;
+            return column_name == columnName() ? &_value : nullptr;
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:
@@ -106,6 +107,15 @@ const std::string *StringFilter::valueForIndexing(
             return nullptr;
     }
     return nullptr;  // unreachable
+}
+
+std::unique_ptr<Filter> StringFilter::copy() const {
+    return std::make_unique<StringFilter>(*this);
+}
+
+std::unique_ptr<Filter> StringFilter::negate() const {
+    return std::make_unique<StringFilter>(
+        _column, negateRelationalOperator(_relOp), _value);
 }
 
 std::string StringFilter::columnName() const { return _column.name(); }

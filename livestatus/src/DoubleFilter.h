@@ -27,11 +27,13 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
+#include <memory>
 #include <string>
 #include "ColumnFilter.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class DoubleColumn;
+class Filter;
 class Row;
 
 class DoubleFilter : public ColumnFilter {
@@ -40,11 +42,14 @@ public:
                  const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
+    std::unique_ptr<Filter> copy() const override;
+    std::unique_ptr<Filter> negate() const override;
     std::string columnName() const override;
 
 private:
     const DoubleColumn &_column;
     const RelationalOperator _relOp;
+    const std::string _value;
     const double _ref_value;
 };
 

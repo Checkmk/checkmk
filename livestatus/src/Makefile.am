@@ -79,7 +79,6 @@ liblivestatus_a_SOURCES = \
         Logger.cc \
         LogwatchListColumn.cc \
         MetricsColumn.cc \
-        NegatingFilter.cc \
         NullColumn.cc \
         OffsetBoolColumn.cc \
         OffsetDoubleColumn.cc \

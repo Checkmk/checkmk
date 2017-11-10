@@ -27,19 +27,20 @@
 #include <cstring>
 #include <sstream>
 #include <string>
+#include "Filter.h"
 #include "ListColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
                        std::string value)
-    : _column(column), _relOp(relOp), _ref_string(std::move(value)) {
+    : _column(column), _relOp(relOp), _value(std::move(value)) {
     switch (_relOp) {
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            _regex.assign(_ref_string,
+            _regex.assign(_value,
                           (_relOp == RelationalOperator::matches_icase ||
                            _relOp == RelationalOperator::doesnt_match_icase)
                               ? std::regex::extended | std::regex::icase
@@ -61,7 +62,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const {
     switch (_relOp) {
         case RelationalOperator::equal:
-            if (!_ref_string.empty()) {
+            if (!_value.empty()) {
                 Informational(_column.logger())
                     << "Sorry, equality for lists implemented only for emptiness";
                 return false;
@@ -69,7 +70,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
             return !any(row, auth_user, timezone_offset,
                         [](const std::string &) { return true; });
         case RelationalOperator::not_equal:
-            if (!_ref_string.empty()) {
+            if (!_value.empty()) {
                 Informational(_column.logger())
                     << "Sorry, inequality for lists implemented only for emptiness";
                 return false;
@@ -91,21 +92,20 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
         case RelationalOperator::less:
             return !any(
                 row, auth_user, timezone_offset,
-                [&](const std::string &elem) { return _ref_string == elem; });
+                [&](const std::string &elem) { return _value == elem; });
         case RelationalOperator::greater_or_equal:
-            return any(
-                row, auth_user, timezone_offset,
-                [&](const std::string &elem) { return _ref_string == elem; });
+            return any(row, auth_user, timezone_offset,
+                       [&](const std::string &elem) { return _value == elem; });
         case RelationalOperator::greater:
             return !any(
                 row, auth_user, timezone_offset, [&](const std::string &elem) {
-                    return strcasecmp(_ref_string.c_str(), elem.c_str()) == 0;
+                    return strcasecmp(_value.c_str(), elem.c_str()) == 0;
                 });
         case RelationalOperator::less_or_equal:
-            return any(
-                row, auth_user, timezone_offset, [&](const std::string &elem) {
-                    return strcasecmp(_ref_string.c_str(), elem.c_str()) == 0;
-                });
+            return any(row, auth_user, timezone_offset,
+                       [&](const std::string &elem) {
+                           return strcasecmp(_value.c_str(), elem.c_str()) == 0;
+                       });
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
             Informational(_column.logger())
@@ -120,7 +120,7 @@ const std::string *ListFilter::valueForIndexing(
     const std::string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::greater_or_equal:
-            return column_name == columnName() ? &_ref_string : nullptr;
+            return column_name == columnName() ? &_value : nullptr;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:
@@ -135,6 +135,15 @@ const std::string *ListFilter::valueForIndexing(
             return nullptr;
     }
     return nullptr;  // unreachable
+}
+
+std::unique_ptr<Filter> ListFilter::copy() const {
+    return std::make_unique<ListFilter>(*this);
+}
+
+std::unique_ptr<Filter> ListFilter::negate() const {
+    return std::make_unique<ListFilter>(
+        _column, negateRelationalOperator(_relOp), _value);
 }
 
 std::string ListFilter::columnName() const { return _column.name(); }

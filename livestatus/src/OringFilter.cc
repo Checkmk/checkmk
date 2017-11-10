@@ -24,6 +24,7 @@
 
 #include "OringFilter.h"
 #include <memory>
+#include "AndingFilter.h"
 #include "Filter.h"
 #include "Row.h"
 
@@ -53,4 +54,20 @@ bool OringFilter::optimizeBitmask(const std::string &column_name,
     }
     *mask &= m;
     return true;
+}
+
+std::unique_ptr<Filter> OringFilter::copy() const {
+    auto af = std::make_unique<OringFilter>();
+    for (const auto &sf : _subfilters) {
+        af->addSubfilter(sf->copy());
+    }
+    return af;
+}
+
+std::unique_ptr<Filter> OringFilter::negate() const {
+    auto af = std::make_unique<AndingFilter>();
+    for (const auto &sf : _subfilters) {
+        af->addSubfilter(sf->negate());
+    }
+    return af;
 }

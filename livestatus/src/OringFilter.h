@@ -28,9 +28,11 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include "VariadicFilter.h"
 #include "contact_fwd.h"
+class Filter;
 class Row;
 
 class OringFilter : public VariadicFilter {
@@ -39,6 +41,8 @@ public:
                  std::chrono::seconds timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          std::chrono::seconds timezone_offset) const override;
+    std::unique_ptr<Filter> copy() const override;
+    std::unique_ptr<Filter> negate() const override;
 };
 
 #endif  // OringFilter_h

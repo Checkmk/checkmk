@@ -29,13 +29,14 @@
 #include <unordered_map>
 #include <utility>
 #include "CustomVarsDictColumn.h"
+#include "Filter.h"
 #include "Row.h"
 #include "StringUtils.h"
 
 CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsDictColumn &column,
                                            RelationalOperator relOp,
                                            const std::string &value)
-    : _column(column), _relOp(relOp) {
+    : _column(column), _relOp(relOp), _value(value) {
     // Filter for custom_variables:
     //    Filter: custom_variables = PATH /hirni.mk
     // The variable name is part of the value and separated with spaces
@@ -97,6 +98,15 @@ bool CustomVarsDictFilter::accepts(
             return act_string <= _ref_string;
     }
     return false;  // unreachable
+}
+
+std::unique_ptr<Filter> CustomVarsDictFilter::copy() const {
+    return std::make_unique<CustomVarsDictFilter>(*this);
+}
+
+std::unique_ptr<Filter> CustomVarsDictFilter::negate() const {
+    return std::make_unique<CustomVarsDictFilter>(
+        _column, negateRelationalOperator(_relOp), _value);
 }
 
 std::string CustomVarsDictFilter::columnName() const { return _column.name(); }

@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include "contact_fwd.h"
 class FilterVisitor;
@@ -47,6 +48,9 @@ public:
                                std::chrono::seconds timezone_offset) const;
     virtual bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                                  std::chrono::seconds timezone_offset) const;
+
+    virtual std::unique_ptr<Filter> copy() const = 0;
+    virtual std::unique_ptr<Filter> negate() const = 0;
 };
 
 #endif  // Filter_h

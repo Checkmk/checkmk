@@ -27,14 +27,12 @@
 
 #include "config.h"  // IWYU pragma: keep
 class ColumnFilter;
-class NegatingFilter;
 class VariadicFilter;
 
 class FilterVisitor {
 public:
     virtual ~FilterVisitor() {}
     virtual void visit(const ColumnFilter &) = 0;
-    virtual void visit(const NegatingFilter &) = 0;
     virtual void visit(const VariadicFilter &) = 0;
 };
 

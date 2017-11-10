@@ -69,3 +69,33 @@ bool relationalOperatorForName(const string &name, RelationalOperator &relOp) {
     relOp = it->second;
     return true;
 }
+
+RelationalOperator negateRelationalOperator(RelationalOperator relOp) {
+    switch (relOp) {
+        case RelationalOperator::equal:
+            return RelationalOperator::not_equal;
+        case RelationalOperator::not_equal:
+            return RelationalOperator::equal;
+        case RelationalOperator::matches:
+            return RelationalOperator::doesnt_match;
+        case RelationalOperator::doesnt_match:
+            return RelationalOperator::matches;
+        case RelationalOperator::equal_icase:
+            return RelationalOperator::not_equal_icase;
+        case RelationalOperator::not_equal_icase:
+            return RelationalOperator::equal_icase;
+        case RelationalOperator::matches_icase:
+            return RelationalOperator::doesnt_match_icase;
+        case RelationalOperator::doesnt_match_icase:
+            return RelationalOperator::matches_icase;
+        case RelationalOperator::less:
+            return RelationalOperator::greater_or_equal;
+        case RelationalOperator::greater_or_equal:
+            return RelationalOperator::less;
+        case RelationalOperator::greater:
+            return RelationalOperator::less_or_equal;
+        case RelationalOperator::less_or_equal:
+            return RelationalOperator::greater;
+    }
+    return RelationalOperator::equal;  // unreachable
+}

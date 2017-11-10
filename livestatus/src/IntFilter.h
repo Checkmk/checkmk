@@ -28,10 +28,12 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include "ColumnFilter.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Filter;
 class IntColumn;
 class Row;
 
@@ -49,11 +51,14 @@ public:
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          std::chrono::seconds timezone_offset) const override;
 
+    std::unique_ptr<Filter> copy() const override;
+    std::unique_ptr<Filter> negate() const override;
     std::string columnName() const override;
 
 private:
     const IntColumn &_column;
     const RelationalOperator _relOp;
+    const std::string _value;
     const int32_t _ref_value;
 };
 

@@ -27,9 +27,11 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 #include "VariadicFilter.h"
 #include "contact_fwd.h"
 class Filter;
@@ -50,7 +52,7 @@ public:
     const std::string *findValueForIndexing(
         const std::string &column_name) const;
     std::unique_ptr<Filter> stealLastSubFilter();
-    void combineFilters(int count, LogicalOperator andor);
+    size_t size() const { return _subfilters.size(); }
 };
 
 #endif  // AndingFilter_h

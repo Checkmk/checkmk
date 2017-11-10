@@ -26,18 +26,15 @@
 #define VariadicFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <cstddef>
 #include <memory>
 #include <vector>
 #include "Filter.h"
 
-enum class LogicalOperator { and_, or_ };
-
 class VariadicFilter : public Filter {
 public:
-    static std::unique_ptr<VariadicFilter> make(LogicalOperator logicOp);
-    void addSubfilter(std::unique_ptr<Filter> f);
-    size_t size() const { return _subfilters.size(); }
+    void addSubfilter(std::unique_ptr<Filter> f) {
+        _subfilters.push_back(std::move(f));
+    }
     auto begin() const { return _subfilters.begin(); }
     auto end() const { return _subfilters.end(); }
 

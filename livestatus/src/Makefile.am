@@ -142,7 +142,6 @@ liblivestatus_a_SOURCES = \
         TimeFilter.cc \
         TimeperiodColumn.cc \
         TimeperiodsCache.cc \
-        VariadicFilter.cc \
         WorldNagios.cc \
         auth.cc \
         global_counters.cc \

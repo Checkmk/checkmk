@@ -40,7 +40,6 @@
 #include "RendererBrokenCSV.h"
 #include "Row.h"
 #include "StatsColumn.h"
-#include "VariadicFilter.h"
 #include "contact_fwd.h"
 #include "data_encoding.h"
 #include "opids.h"
@@ -50,6 +49,7 @@ class Filter;
 class Logger;
 class OutputBuffer;
 class Table;
+class VariadicFilter;
 
 class Query {
 public:
@@ -118,11 +118,13 @@ private:
     void parseFilterLine(char *line, AndingFilter &filter);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, LogicalOperator andor, AndingFilter &filter,
-                        const std::string &header);
-    void parseNegateLine(char *line, AndingFilter &filter,
-                         const std::string &header);
-    void parseStatsAndOrLine(char *line, LogicalOperator andor);
+    void parseAndOrLine(const std::string &header, char *line,
+                        std::unique_ptr<VariadicFilter> variadic,
+                        AndingFilter &filter);
+    void parseNegateLine(const std::string &header, char *line,
+                         AndingFilter &filter);
+    void parseStatsAndOrLine(const std::string &header, char *line,
+                             std::unique_ptr<VariadicFilter> variadic);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);
     void parseColumnHeadersLine(char *line);

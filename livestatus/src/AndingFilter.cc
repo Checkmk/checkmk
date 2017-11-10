@@ -97,12 +97,3 @@ std::unique_ptr<Filter> AndingFilter::stealLastSubFilter() {
     _subfilters.pop_back();
     return l;
 }
-
-void AndingFilter::combineFilters(int count, LogicalOperator andor) {
-    auto variadic = VariadicFilter::make(andor);
-    for (auto i = 0; i < count; ++i) {
-        variadic->addSubfilter(std::move(_subfilters.back()));
-        _subfilters.pop_back();
-    }
-    addSubfilter(std::move(variadic));
-}

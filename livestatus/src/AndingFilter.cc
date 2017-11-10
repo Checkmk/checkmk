@@ -23,10 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
+#include <algorithm>
 #include <memory>
+#include <vector>
 #include "Filter.h"
+#include "FilterVisitor.h"
 #include "OringFilter.h"
 #include "Row.h"
+
+void AndingFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 
 bool AndingFilter::accepts(Row row, const contact *auth_user,
                            std::chrono::seconds timezone_offset) const {
@@ -36,6 +41,14 @@ bool AndingFilter::accepts(Row row, const contact *auth_user,
         }
     }
     return true;
+}
+
+void AndingFilter::findIntLimits(const std::string &colum_nname, int *lower,
+                                 int *upper,
+                                 std::chrono::seconds timezone_offset) const {
+    for (const auto &filter : _subfilters) {
+        filter->findIntLimits(colum_nname, lower, upper, timezone_offset);
+    }
 }
 
 bool AndingFilter::optimizeBitmask(const std::string &column_name,
@@ -74,4 +87,22 @@ const std::string *AndingFilter::findValueForIndexing(
         }
     }
     return nullptr;
+}
+
+std::unique_ptr<Filter> AndingFilter::stealLastSubFilter() {
+    if (_subfilters.empty()) {
+        return nullptr;
+    }
+    std::unique_ptr<Filter> l = move(_subfilters.back());
+    _subfilters.pop_back();
+    return l;
+}
+
+void AndingFilter::combineFilters(int count, LogicalOperator andor) {
+    auto variadic = VariadicFilter::make(andor);
+    for (auto i = 0; i < count; ++i) {
+        variadic->addSubfilter(std::move(_subfilters.back()));
+        _subfilters.pop_back();
+    }
+    addSubfilter(std::move(variadic));
 }

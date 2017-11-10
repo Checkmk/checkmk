@@ -33,12 +33,16 @@
 #include "VariadicFilter.h"
 #include "contact_fwd.h"
 class Filter;
+class FilterVisitor;
 class Row;
 
 class OringFilter : public VariadicFilter {
 public:
+    void accept(FilterVisitor &v) const override;
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
+    void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
+                       std::chrono::seconds timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;

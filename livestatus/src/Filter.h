@@ -38,7 +38,6 @@ class Filter {
 public:
     virtual ~Filter();
     virtual void accept(FilterVisitor &) const = 0;
-
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
     virtual const std::string *valueForIndexing(
@@ -48,7 +47,6 @@ public:
                                std::chrono::seconds timezone_offset) const;
     virtual bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                                  std::chrono::seconds timezone_offset) const;
-
     virtual std::unique_ptr<Filter> copy() const = 0;
     virtual std::unique_ptr<Filter> negate() const = 0;
 };

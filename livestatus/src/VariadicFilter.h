@@ -26,31 +26,23 @@
 #define VariadicFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <chrono>
 #include <cstddef>
-#include <deque>
 #include <memory>
-#include <string>
+#include <vector>
 #include "Filter.h"
-class FilterVisitor;
 
 enum class LogicalOperator { and_, or_ };
 
 class VariadicFilter : public Filter {
 public:
     static std::unique_ptr<VariadicFilter> make(LogicalOperator logicOp);
-    void accept(FilterVisitor &v) const override;
     void addSubfilter(std::unique_ptr<Filter> f);
-    std::unique_ptr<Filter> stealLastSubfiler();
-    void combineFilters(int count, LogicalOperator andor);
     size_t size() const { return _subfilters.size(); }
     auto begin() const { return _subfilters.begin(); }
     auto end() const { return _subfilters.end(); }
-    void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
-                       std::chrono::seconds timezone_offset) const override;
 
 protected:
-    std::deque<std::unique_ptr<Filter>> _subfilters;
+    std::vector<std::unique_ptr<Filter>> _subfilters;
 };
 
 #endif  // VariadicFilter_h

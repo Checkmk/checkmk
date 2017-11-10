@@ -29,6 +29,7 @@ pytestmark = pytest.mark.check
 ])
 def test_df_discovery_with_parse(check_manager, monkeypatch, info, result, include_volume_name):
     import cmk_base.checks
+    import cmk_base
 
 #   NOTE: This is the result of trying to mock the the ruleset variable itself instead of the
 #         host_extra_conf_merged function. It did not work. Maybe we can get it to work at a later stage.
@@ -39,3 +40,4 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, result, inclu
     check = check_manager.get_check("df")
     monkeypatch.setitem(cmk_base.checks._check_contexts["df"], "host_extra_conf_merged", lambda _, __: {"include_volume_name": include_volume_name})
     assert check.run_discovery(check.run_parse(info)) == result
+    cmk_base.config_cache.clear_all()

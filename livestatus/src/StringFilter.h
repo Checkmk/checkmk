@@ -27,11 +27,13 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
+#include <memory>
 #include <regex>
 #include <string>
 #include "ColumnFilter.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Filter;
 class Row;
 class StringColumn;
 
@@ -43,12 +45,14 @@ public:
                  std::chrono::seconds timezone_offset) const override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
+    std::unique_ptr<Filter> copy() const override;
+    std::unique_ptr<Filter> negate() const override;
     std::string columnName() const override;
 
 private:
     const StringColumn &_column;
     const RelationalOperator _relOp;
-    const std::string _ref_string;
+    const std::string _value;
     std::regex _regex;
 };
 

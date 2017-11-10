@@ -39,7 +39,6 @@
 #include "Column.h"
 #include "Filter.h"
 #include "Logger.h"
-#include "NegatingFilter.h"
 #include "NullColumn.h"
 #include "OutputBuffer.h"
 #include "StatsColumn.h"
@@ -247,7 +246,7 @@ void Query::parseNegateLine(char *line, VariadicFilter &filter,
         return;
     }
 
-    filter.addSubfilter(std::make_unique<NegatingFilter>(std::move(to_negate)));
+    filter.addSubfilter(to_negate->negate());
 }
 
 void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
@@ -303,10 +302,10 @@ void Query::parseStatsNegateLine(char *line) {
             "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
-    auto negated = std::make_unique<NegatingFilter>(col->stealFilter());
+    auto to_negate = col->stealFilter();
     _stats_columns.pop_back();
     _stats_columns.push_back(std::make_unique<StatsColumn>(
-        nullptr, move(negated), StatsOperation::count));
+        nullptr, to_negate->negate(), StatsOperation::count));
 }
 
 void Query::parseStatsLine(char *line) {

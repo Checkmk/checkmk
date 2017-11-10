@@ -27,12 +27,14 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
+#include <memory>
 #include <regex>
 #include <string>
 #include "ColumnFilter.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class CustomVarsDictColumn;
+class Filter;
 class Row;
 
 class CustomVarsDictFilter : public ColumnFilter {
@@ -41,11 +43,14 @@ public:
                          RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
+    std::unique_ptr<Filter> copy() const override;
+    std::unique_ptr<Filter> negate() const override;
     std::string columnName() const override;
 
 private:
     const CustomVarsDictColumn &_column;
     const RelationalOperator _relOp;
+    std::string _value;
     std::regex _regex;
     std::string _ref_string;
     std::string _ref_varname;

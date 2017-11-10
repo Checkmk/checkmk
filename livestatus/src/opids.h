@@ -50,4 +50,6 @@ std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp);
 bool relationalOperatorForName(const std::string &name,
                                RelationalOperator &relOp);
 
+RelationalOperator negateRelationalOperator(RelationalOperator relOp);
+
 #endif  // opids_h

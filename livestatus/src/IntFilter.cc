@@ -25,13 +25,17 @@
 #include "IntFilter.h"
 #include <cstdlib>
 #include <ostream>
+#include "Filter.h"
 #include "IntColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 IntFilter::IntFilter(const IntColumn &column, RelationalOperator relOp,
                      const std::string &value)
-    : _column(column), _relOp(relOp), _ref_value(atoi(value.c_str())) {}
+    : _column(column)
+    , _relOp(relOp)
+    , _value(value)
+    , _ref_value(atoi(value.c_str())) {}
 
 std::string IntFilter::columnName() const { return _column.name(); }
 
@@ -187,4 +191,13 @@ bool IntFilter::optimizeBitmask(
             return false;
     }
     return false;  // unreachable
+}
+
+std::unique_ptr<Filter> IntFilter::copy() const {
+    return std::make_unique<IntFilter>(*this);
+}
+
+std::unique_ptr<Filter> IntFilter::negate() const {
+    return std::make_unique<IntFilter>(
+        _column, negateRelationalOperator(_relOp), _value);
 }

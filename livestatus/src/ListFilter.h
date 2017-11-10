@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <algorithm>
 #include <chrono>
+#include <memory>
 #include <regex>
 #include <string>
 #include <vector>
@@ -36,6 +37,7 @@
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Filter;
 
 class ListFilter : public ColumnFilter {
 public:
@@ -45,12 +47,14 @@ public:
                  std::chrono::seconds timezone_offset) const override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
+    std::unique_ptr<Filter> copy() const override;
+    std::unique_ptr<Filter> negate() const override;
     std::string columnName() const override;
 
 private:
     const ListColumn &_column;
     const RelationalOperator _relOp;
-    const std::string _ref_string;
+    const std::string _value;
     std::regex _regex;
 
     template <typename UnaryPredicate>

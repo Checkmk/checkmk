@@ -25,6 +25,7 @@
 #include "AndingFilter.h"
 #include <memory>
 #include "Filter.h"
+#include "OringFilter.h"
 #include "Row.h"
 
 bool AndingFilter::accepts(Row row, const contact *auth_user,
@@ -47,6 +48,22 @@ bool AndingFilter::optimizeBitmask(const std::string &column_name,
         }
     }
     return optimized;
+}
+
+std::unique_ptr<Filter> AndingFilter::copy() const {
+    auto af = std::make_unique<AndingFilter>();
+    for (const auto &sf : _subfilters) {
+        af->addSubfilter(sf->copy());
+    }
+    return af;
+}
+
+std::unique_ptr<Filter> AndingFilter::negate() const {
+    auto af = std::make_unique<OringFilter>();
+    for (const auto &sf : _subfilters) {
+        af->addSubfilter(sf->negate());
+    }
+    return af;
 }
 
 const std::string *AndingFilter::findValueForIndexing(

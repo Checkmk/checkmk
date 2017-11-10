@@ -50,7 +50,6 @@
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-class NegatingFilter;
 class VariadicFilter;
 
 #ifdef CMC
@@ -251,7 +250,6 @@ public:
                      mk::starts_with(column_name, std::string("service_"));
         }
     }
-    void visit(const NegatingFilter & /*unused*/) override {}
     void visit(const VariadicFilter & /*unused*/) override {}
 
     bool _value = true;

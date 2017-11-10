@@ -26,12 +26,16 @@
 #include <cstdlib>
 #include <ostream>
 #include "DoubleColumn.h"
+#include "Filter.h"
 #include "Logger.h"
 #include "Row.h"
 
 DoubleFilter::DoubleFilter(const DoubleColumn &column, RelationalOperator relOp,
                            const std::string &value)
-    : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
+    : _column(column)
+    , _relOp(relOp)
+    , _value(value)
+    , _ref_value(atof(value.c_str())) {}
 
 bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
                            std::chrono::seconds /* timezone_offset */) const {
@@ -61,6 +65,15 @@ bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
             return false;
     }
     return false;  // unreachable
+}
+
+std::unique_ptr<Filter> DoubleFilter::copy() const {
+    return std::make_unique<DoubleFilter>(*this);
+}
+
+std::unique_ptr<Filter> DoubleFilter::negate() const {
+    return std::make_unique<DoubleFilter>(
+        _column, negateRelationalOperator(_relOp), _value);
 }
 
 std::string DoubleFilter::columnName() const { return _column.name(); }

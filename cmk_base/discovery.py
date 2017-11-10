@@ -47,7 +47,7 @@ import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 import cmk_base.item_state as item_state
 import cmk_base.snmp as snmp
-import cmk_base.agent_data as agent_data
+import cmk_base.data_sources as data_sources
 import cmk_base.check_table as check_table
 import cmk_base.core as core
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
@@ -77,7 +77,7 @@ _marked_host_discovery_timeout = 120
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(hostnames, check_types, only_new):
-    use_caches = agent_data.get_use_cachefile()
+    use_caches = data_sources.abstract.DataSource.get_use_cachefile()
     if not hostnames:
         console.verbose("Discovering services on all hosts:\n")
         hostnames = config.all_active_realhosts()
@@ -275,7 +275,8 @@ def check_discovery(hostname, ipaddress=None):
     try:
         # scan services, register changes
         try:
-            services = _get_host_services(hostname, use_caches=agent_data.get_use_cachefile(),
+            services = _get_host_services(hostname,
+                                        use_caches=data_sources.abstract.DataSource.get_use_cachefile(),
                                         do_snmp_scan=params["inventory_check_do_scan"],
                                         on_error="raise",
                                         ipaddress=ipaddress)
@@ -352,7 +353,7 @@ def check_discovery(hostname, ipaddress=None):
             infotexts.append("rediscovery scheduled")
 
         # Add data source errors to infotexts
-        for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+        for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
             for exc in exceptions:
                 infotexts.append("%s" % exc)
 
@@ -653,8 +654,8 @@ def _discover_services(hostname, ipaddress, check_types, use_caches, do_snmp_sca
     if ipaddress == None:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    data_sources = agent_data.DataSources(hostname)
-    host_infos = _get_host_infos_for_discovery(data_sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error)
+    sources = data_sources.DataSources(hostname)
+    host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error)
 
     # Make hostname available as global variable in discovery functions
     # (used e.g. by ps-discovery)
@@ -662,7 +663,7 @@ def _discover_services(hostname, ipaddress, check_types, use_caches, do_snmp_sca
 
     discovered_services = []
     try:
-        for check_type in data_sources.get_check_types(hostname, ipaddress):
+        for check_type in sources.get_check_types(hostname, ipaddress):
             try:
                 for item, paramstring in _execute_discovery(host_infos, hostname, ipaddress, check_type, on_error):
                     discovered_services.append((check_type, item, paramstring))
@@ -679,9 +680,9 @@ def _discover_services(hostname, ipaddress, check_types, use_caches, do_snmp_sca
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _get_host_infos_for_discovery(data_sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error):
-    for source_id, source in data_sources.get_data_sources():
-        if isinstance(source, agent_data.SNMPDataSource):
+def _get_host_infos_for_discovery(sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error):
+    for source in sources.get_data_sources():
+        if isinstance(source, sources.SNMPDataSource):
             source.set_on_error(on_error)
             source.set_do_snmp_scan(do_snmp_scan)
             source.set_use_snmpwalk_cache(False)
@@ -690,10 +691,10 @@ def _get_host_infos_for_discovery(data_sources, hostname, ipaddress, check_types
 
     # When check types are specified via command line, enforce them and disable auto detection
     if check_types:
-        data_sources.enforce_check_types(check_types)
+        sources.enforce_check_types(check_types)
 
     max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
-    return agent_data.get_host_infos(data_sources, hostname, ipaddress, max_cachefile_age)
+    return data_sources.get_host_infos(sources, hostname, ipaddress, max_cachefile_age)
 
 
 # gather auto_discovered check_types for this host
@@ -823,7 +824,7 @@ def _execute_discovery(host_infos, hostname, ipaddress, check_type, on_error):
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_type)
 
-    info = agent_data.get_info_for_check(host_infos, hostname, ipaddress, check_type, for_discovery=True)
+    info = data_sources.get_info_for_check(host_infos, hostname, ipaddress, check_type, for_discovery=True)
 
     if info is None: # No data for this check type
         return []
@@ -1059,8 +1060,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     # TODO: _get_host_services() also executes _get_host_infos_for_discovery().
     # Can we reduce the duplicate call?
-    data_sources = agent_data.DataSources(hostname)
-    host_infos = _get_host_infos_for_discovery(data_sources, hostname, ipaddress,
+    sources = data_sources.DataSources(hostname)
+
+    host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress,
                                                check_types=None, use_caches=use_caches,
                                                do_snmp_scan=do_snmp_scan, on_error=on_error)
 
@@ -1092,11 +1094,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             checks.set_service(check_type, descr)
             infotype = check_type.split('.')[0]
 
-            # Sorry. The whole caching stuff is the most horrible hack in
-            # whole Check_MK. Nobody dares to clean it up, YET. But that
-            # day is getting nearer...
-            agent_data.set_use_cachefile()
-
             if check_type not in checks.check_info:
                 continue # Skip not existing check silently
 
@@ -1105,8 +1102,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             except KeyError:
                 exitcode = 3
                 output = "Got no data for %s" % infotype
-
-            agent_data.restore_use_cachefile()
 
             item_state.set_item_state_prefix(check_type, item)
 

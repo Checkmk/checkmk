@@ -51,7 +51,7 @@ import cmk_base.check_api as check_api
 import cmk_base.snmp as snmp
 import cmk_base.discovery as discovery
 import cmk_base.ip_lookup as ip_lookup
-import cmk_base.agent_data as agent_data
+import cmk_base.data_sources as data_sources
 
 inventory_output_dir  = cmk.paths.var_dir + "/inventory"
 inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
@@ -82,7 +82,7 @@ def do_inv(hostnames):
     # No hosts specified: do all hosts and force caching
     if hostnames == None:
         hostnames = config.all_active_hosts()
-        agent_data.set_use_cachefile()
+        data_sources.abstract.DataSource.set_use_cachefile()
 
     errors = []
     for hostname in hostnames:
@@ -91,7 +91,7 @@ def do_inv(hostnames):
             do_inv_for(hostname)
             console.verbose("..OK\n")
         except Exception, e:
-            # TODO: handle agent_data.get_data_source_errors_of_host() here
+            # TODO: handle data_sources.get_data_source_errors_of_host() here
             if cmk.debug.enabled():
                 raise
             console.verbose("Failed: %s\n" % e)
@@ -148,7 +148,7 @@ def do_inv_check(options, hostname):
                 infotexts.append(infotext)
 
         ipaddress = ip_lookup.lookup_ip_address(hostname)
-        for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+        for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
             for exc in exceptions:
                 infotexts.append("%s" % exc)
 
@@ -200,21 +200,21 @@ def _do_inv_for_realhost(hostname):
     except:
         raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
 
-    data_sources = agent_data.DataSources(hostname)
+    sources = data_sources.DataSources(hostname)
 
-    for source_id, source in data_sources.get_data_sources():
-        if isinstance(source, agent_data.SNMPDataSource):
+    for source in sources.get_data_sources():
+        if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")
             source.set_do_snmp_scan(True)
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
             source.set_check_type_filter(_gather_snmp_check_types_inventory)
 
-    host_infos = agent_data.get_host_infos(data_sources, hostname, ipaddress)
+    host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
 
     import cmk_base.inventory_plugins
     for info_type, plugin in cmk_base.inventory_plugins.inv_info.items():
-        info = agent_data.get_info_for_check(host_infos, hostname, ipaddress, info_type, for_discovery=False)
+        info = data_sources.get_info_for_check(host_infos, hostname, ipaddress, info_type, for_discovery=False)
 
         if info is None: # No data for this check type
             continue

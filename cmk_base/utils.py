@@ -180,8 +180,8 @@ def cleanup_globals():
     cmk_base.core.cleanup_timeperiod_caches()
     import cmk_base.snmp
     cmk_base.snmp.cleanup_host_caches()
-    import cmk_base.agent_data
-    cmk_base.agent_data.cleanup_host_caches()
+    import cmk_base.data_sources
+    cmk_base.data_sources.cleanup_host_caches()
 
 
 def has_feature(name):

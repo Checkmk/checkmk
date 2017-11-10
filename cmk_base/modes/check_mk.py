@@ -74,9 +74,9 @@ _verbosity = 0
 
 
 def option_cache():
-    import cmk_base.agent_data as agent_data
-    agent_data.set_use_cachefile()
-    agent_data.enforce_using_agent_cache()
+    import cmk_base.data_sources as data_sources
+    data_sources.abstract.DataSource.set_use_cachefile()
+    data_sources.enforce_using_agent_cache()
 
 modes.register_general_option(Option(
     long_option="cache",
@@ -87,8 +87,8 @@ modes.register_general_option(Option(
 
 
 def option_no_cache():
-    import cmk_base.agent_data as agent_data
-    agent_data.disable_agent_cache()
+    import cmk_base.data_sources.abstract
+    cmk_base.data_sources.abstract.DataSource.disable_data_source_cache()
 
 modes.register_general_option(Option(
     long_option="no-cache",
@@ -98,8 +98,8 @@ modes.register_general_option(Option(
 
 
 def option_no_tcp():
-    import cmk_base.agent_data as agent_data
-    agent_data.disable_tcp()
+    import cmk_base.data_sources as data_sources
+    data_sources.tcp.TCPDataSource.use_only_cache()
 
 # TODO: Check whether or not this is used only for -I as written in the help.
 # Does it affect inventory/checking too?
@@ -314,7 +314,7 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_dump_agent(hostname):
-    import cmk_base.agent_data as agent_data
+    import cmk_base.data_sources as data_sources
     import cmk_base.piggyback as piggyback
     import cmk_base.ip_lookup as ip_lookup
     try:
@@ -324,13 +324,13 @@ def mode_dump_agent(hostname):
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
         output = ""
-        data_sources = agent_data.DataSources(hostname)
-        for source in data_sources.get_data_sources():
-            if isinstance(source, agent_data.CheckMKAgentDataSource):
+        sources = data_sources.DataSources(hostname)
+        for source in sources.get_data_sources():
+            if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
                 output += source.run(hostname, ipaddress)
 
         # Show errors of problematic data sources
-        for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+        for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
             for exc in exceptions:
                 console.error("ERROR: %s" % exc)
 
@@ -1156,7 +1156,7 @@ modes.register(Mode(
 
 def mode_inventory(options, args):
     import cmk_base.inventory as inventory
-    import cmk_base.agent_data as agent_data
+    import cmk_base.data_sources as data_sources
     import cmk_base.inventory_plugins as inventory_plugins
     inventory_plugins.load()
 
@@ -1166,7 +1166,7 @@ def mode_inventory(options, args):
         hostnames = None
 
     if "force" in options:
-        agent_data.enforce_persisting()
+        data_sources.abstract.CheckMKAgentDataSource.use_outdated_persisted_sections()
 
     inventory.do_inv(hostnames)
 
@@ -1187,7 +1187,7 @@ modes.register(Mode(
         Option(
             long_option="force",
             short_option="f",
-            short_help="Use agent data even if it's outdated.",
+            short_help="Use cached agent data even if it's outdated.",
         ),
     ]
 ))
@@ -1378,7 +1378,7 @@ modes.register(Mode(
 
 def mode_discover(options, args):
     import cmk_base.discovery as discovery
-    import cmk_base.agent_data as agent_data
+    import cmk_base.data_sources as data_sources
 
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
@@ -1386,7 +1386,7 @@ def mode_discover(options, args):
         # by default. Otherwise Check_MK would have to connect to ALL hosts.
         # This will make Check_MK only contact hosts in case the cache is not
         # new enough.
-        agent_data.set_use_cachefile(not agent_data.is_agent_cache_disabled())
+        data_sources.abstract.DataSource.set_use_cachefile(not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
     discovery.do_discovery(hostnames, options.get("checks"),
                            options["discover"] == 1)
@@ -1443,7 +1443,7 @@ modes.register(Mode(
 def mode_check(options, args):
     import cmk_base.ip_lookup as ip_lookup
     import cmk_base.checking as checking
-    import cmk_base.agent_data as agent_data
+    import cmk_base.data_sources as data_sources
     import cmk_base.item_state as item_state
     try:
         import cmk_base.cee.keepalive as keepalive
@@ -1464,7 +1464,6 @@ def mode_check(options, args):
 
     if "no-submit" in options:
         checking.disable_submit()
-        agent_data.disable_submit()
         item_state.continue_on_counter_wrap()
 
     # handle adhoc-check

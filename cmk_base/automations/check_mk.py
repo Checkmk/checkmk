@@ -117,7 +117,7 @@ class AutomationTryDiscovery(Automation):
     needs_checks = True # TODO: Can we change this?
 
     def execute(self, args):
-        import cmk_base.agent_data as agent_data
+        import cmk_base.data_sources as data_sources
 
         use_caches = False
         do_snmp_scan = False
@@ -139,7 +139,7 @@ class AutomationTryDiscovery(Automation):
         # TODO: Remove this unlucky option opt_use_cachefile. At least do not
         # handle this option so deep in the code. It should only be handled
         # by top-level functions.
-        agent_data.set_use_cachefile(use_caches)
+        data_sources.abstract.DataSource.set_use_cachefile(use_caches)
         if use_caches:
             config.check_max_cachefile_age = config.inventory_max_cachefile_age
         hostname = args[0]
@@ -962,7 +962,7 @@ class AutomationDiagHost(Automation):
 
     def execute(self, args):
         import cmk_base.ip_lookup as ip_lookup
-        import cmk_base.agent_data as agent_data
+        import cmk_base.data_sources as data_sources
 
         hostname, test, ipaddress, snmp_community = args[:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
@@ -1002,16 +1002,16 @@ class AutomationDiagHost(Automation):
                 return (p.wait(), response)
 
             elif test == 'agent':
-                data_sources = agent_data.DataSources(hostname)
+                sources = data_sources.DataSources(hostname)
 
                 output = ""
-                for data_source in data_sources.get_data_sources():
-                    if isinstance(data_source, agent_data.DSProgramDataSource) and cmd:
-                        data_source = agent_data.DSProgramDataSource(cmd)
-                    elif isinstance(data_sources, agent_data.TCPDataSource):
-                        data_source.set_port(agent_port)
+                for source in sources.get_data_sources():
+                    if isinstance(source, data_sources.DSProgramDataSource) and cmd:
+                        source = data_sources.DSProgramDataSource(cmd)
+                    elif isinstance(source, data_sources.TCPDataSource):
+                        source.set_port(agent_port)
 
-                    output += data_source.run(hostname, ipaddress)
+                    output += source.run(hostname, ipaddress)
 
                 return 0, output
 
@@ -1203,7 +1203,7 @@ class AutomationGetAgentOutput(Automation):
 
     def execute(self, args):
         import cmk_base.ip_lookup as ip_lookup
-        import cmk_base.agent_data as agent_data
+        import cmk_base.data_sources as data_sources
 
         hostname, ty = args
 
@@ -1216,18 +1216,18 @@ class AutomationGetAgentOutput(Automation):
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
                 agent_output = ""
-                data_sources = agent_data.DataSources(hostname)
-                for source in data_sources.get_data_sources():
-                    if isinstance(source, agent_data.CheckMKAgentDataSource):
+                sources = data_sources.DataSources(hostname)
+                for source in sources.get_data_sources():
+                    if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
                         agent_output += source.run(hostname, ipaddress)
                 info = agent_output
 
                 # Optionally show errors of problematic data sources
-                errors = agent_data.get_data_source_errors_of_host(hostname, ipaddress)
+                errors = data_sources.get_data_source_errors_of_host(hostname, ipaddress)
                 if errors:
                     success = False
 
-                    for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+                    for data_source, exceptions in errors.items():
                         for exc in exceptions:
                             output += "%s\n" % exc
             else:

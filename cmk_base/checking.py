@@ -42,7 +42,7 @@ import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
 import cmk_base.snmp as snmp
-import cmk_base.agent_data as agent_data
+import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
 import cmk_base.core as core
 import cmk_base.check_table as check_table
@@ -98,7 +98,7 @@ def do_check(hostname, ipaddress, only_check_types=None):
 
         # Add errors of problematic data sources to problems list
         problems = []
-        for data_source, exceptions in agent_data.get_data_source_errors_of_host(hostname, ipaddress).items():
+        for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
             for exc in exceptions:
                 problems.append("%s" % exc)
 
@@ -239,9 +239,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
     cmk_info = { "version" : "(unknown)" }
     num_success, missing_sections = 0, set()
 
-    data_sources = agent_data.DataSources(hostname)
+    sources = data_sources.DataSources(hostname)
 
-    host_infos = agent_data.get_host_infos(data_sources, hostname, ipaddress)
+    host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
 
     checks.set_hostname(hostname)
 
@@ -261,7 +261,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
 
     if fetch_agent_version:
         if config.is_tcp_host(hostname):
-            for line in agent_data.get_info_for_check(host_infos, hostname, ipaddress, "check_mk", for_discovery=False) or []:
+            for line in data_sources.get_info_for_check(host_infos, hostname, ipaddress, "check_mk", for_discovery=False) or []:
                 value = " ".join(line[1:]) if len(line) > 1 else None
                 cmk_info[line[0][:-1].lower()] = value
 
@@ -293,7 +293,7 @@ def execute_check(host_infos, hostname, ipaddress, check_name, item, params, des
     info_type = check_name.split('.')[0]
 
     try:
-        info = agent_data.get_info_for_check(host_infos, hostname, ipaddress, info_type, for_discovery=False)
+        info = data_sources.get_info_for_check(host_infos, hostname, ipaddress, info_type, for_discovery=False)
     except MKParseFunctionError, e:
         x = e.exc_info()
         raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
@@ -344,7 +344,7 @@ def execute_check(host_infos, hostname, ipaddress, check_name, item, params, des
 
     if not dont_submit:
         # Now add information about the age of the data in the agent
-        # sections. This is in agent_data.g_agent_cache_info. For clusters we
+        # sections. This is in data_sources.g_agent_cache_info. For clusters we
         # use the oldest of the timestamps, of course.
         oldest_cached_at = None
         largest_interval = None
@@ -356,7 +356,7 @@ def execute_check(host_infos, hostname, ipaddress, check_name, item, params, des
                 return a
             return min(a,b)
 
-        for section_entries in agent_data.get_agent_cache_info().values():
+        for section_entries in data_sources.get_agent_cache_info().values():
             if info_type in section_entries:
                 cached_at, cache_interval = section_entries[info_type]
                 oldest_cached_at = minn(oldest_cached_at, cached_at)

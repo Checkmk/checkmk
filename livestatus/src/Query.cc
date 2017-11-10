@@ -225,20 +225,21 @@ void Query::parseAndOrLine(const std::string &header, char *line,
         return;
     }
 
-    auto num_filters = filter.size();
-    if (number > static_cast<int>(num_filters)) {
-        invalidHeader("error combining filters for table " + _table->name() +
-                      " with '" + header + "': expected " +
-                      std::to_string(number) + " filters, but only " +
-                      std::to_string(num_filters) + " " +
-                      (num_filters == 1 ? "is" : "are") + " on stack");
-        return;
-    }
-
     for (auto i = 0; i < number; ++i) {
-        variadic->addSubfilter(filter.stealLastSubFilter());
+        if (filter.empty()) {
+            invalidHeader("error combining filters for table " +
+                          _table->name() + " with '" + header + "': expected " +
+                          std::to_string(number) + " filters, but only " +
+                          std::to_string(i) + " " + (i == 1 ? "is" : "are") +
+                          " on stack");
+            return;
+        }
+
+        auto top = filter.top();
+        filter.pop();
+        variadic->addSubfilter(std::move(top));
     }
-    filter.addSubfilter(std::move(variadic));
+    filter.push(std::move(variadic));
 }
 
 void Query::parseNegateLine(const std::string &header, char *line,
@@ -248,13 +249,16 @@ void Query::parseNegateLine(const std::string &header, char *line,
         return;
     }
 
-    auto to_negate = filter.stealLastSubFilter();
-    if (!to_negate) {
-        invalidHeader(header + " nothing to negate");
+    if (filter.empty()) {
+        invalidHeader("error combining filters for table " + _table->name() +
+                      " with '" + header +
+                      "': expected 1 filters, but only 0 are on stack");
         return;
     }
 
-    filter.addSubfilter(to_negate->negate());
+    auto top = filter.top();
+    filter.pop();
+    filter.push(top->negate());
 }
 
 void Query::parseStatsAndOrLine(const std::string &header, char *line,
@@ -429,7 +433,7 @@ void Query::parseFilterLine(char *line, AndingFilter &filter) {
     }
 
     if (auto sub_filter = createFilter(*column, relOp, value)) {
-        filter.addSubfilter(std::move(sub_filter));
+        filter.push(std::move(sub_filter));
         _all_columns.insert(column);
     }
 }
@@ -828,14 +832,13 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 void Query::doWait() {
     // If no wait condition and no trigger is set,
     // we do not wait at all.
-    auto num_filters = _wait_condition.size();
-    if (num_filters == 0 && _wait_trigger == nullptr) {
+    if (_wait_condition.empty() && _wait_trigger == nullptr) {
         return;
     }
 
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
-    if (num_filters > 0 &&
+    if (!_wait_condition.empty() &&
         _wait_condition.accepts(_wait_object, _auth_user, timezoneOffset())) {
         Debug(_logger) << "Wait condition true, no waiting neccessary";
         return;

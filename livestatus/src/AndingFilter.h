@@ -26,15 +26,15 @@
 #define AndingFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <algorithm>
 #include <chrono>
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+#include "Filter.h"
 #include "VariadicFilter.h"
 #include "contact_fwd.h"
-class Filter;
 class FilterVisitor;
 class Row;
 
@@ -51,8 +51,15 @@ public:
     std::unique_ptr<Filter> negate() const override;
     const std::string *findValueForIndexing(
         const std::string &column_name) const;
-    std::unique_ptr<Filter> stealLastSubFilter();
-    size_t size() const { return _subfilters.size(); }
+
+    // TODO(sp): stack-like interface, doesn't really belong here.
+    auto empty() const { return _subfilters.empty(); }
+    auto top() { return std::move(_subfilters.back()); }
+    void push(std::unique_ptr<Filter> f) {
+        _subfilters.push_back(std::move(f));
+    }
+    void pop() { return _subfilters.pop_back(); }
+
     auto begin() const { return _subfilters.begin(); }
     auto end() const { return _subfilters.end(); }
 };

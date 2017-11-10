@@ -1,0 +1,46 @@
+Title: Windows agent: handle section Skype correctly
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510321333
+Class: fix
+
+Windows agent was giving empty output for section Skype for a number of
+reasons for all agent versions since 1.4.0:
+
+ * Windows registry was queried with an illegal parameter REG_MULTI_SZ
+   passed to RegOpenKeyExW. Starting from Windows Server 2016, this
+   illegal parameter caused the query to fail with "access denied".
+
+ * Werk #4007 fix (commit b89af681c90) caused the entire Skype section
+   to fall out if querying any of the subsection queries to Windows
+   registry failed. Werk #4007 was fixed based on the incorrect
+   assumption that Skype performance counters were queried over WMI.
+   In fact, they query Windows registry PerfLib instead of WMI.
+
+ * The perf counter name "LS:JoinLauncher - Join Launcher Service
+   Failures" was misspelled in singular, causing also this query to
+   fail. This subsection had never been working correctly.
+
+ * On master branch, the refactoring done in
+   6946cb0b8e12b5a41c24a9e02c0f5fd472b214df broke the resolving of
+   counter base numbers based on their names.
+
+These causes of failure are now fixed in Windows agent. The spelling of
+LS:JoinLauncher is also corrected in Skype check code.
+
+The performance of Skype perf counter queries got awkward after
+reverting Werk #4007, that is, executing all of the subsection
+queries even if some of them failed due to missing perf counters.
+This is now fixed by mapping the perf counters names to their counter
+base numbers once and reusing this mapping for all desired perf
+counters. This avoids the unnecessary looping through Windows registry
+for each perf counter separately.
+
+New log entries are now being made for functionality related to perf
+counters in order to make debugging easier.
+
+
+

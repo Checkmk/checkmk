@@ -26,19 +26,17 @@
 #include "../Environment.h"
 #include "../Logger.h"
 #include "../PerfCounter.h"
+#include "../PerfCounterCommon.h"
 #include "../stringutil.h"
 
 SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
                                        const std::string &configName,
+                                       unsigned counterBaseNumber,
                                        const Environment &env, Logger *logger,
                                        const WinApiAdaptor &winapi)
-    : Section(outputName, configName, env, logger, winapi) {
+    : Section(outputName, configName, env, logger, winapi)
+    , _counter_base_number(counterBaseNumber) {
     withSeparator(',');
-}
-
-SectionPerfcounter *SectionPerfcounter::withCounter(const wchar_t *counter) {
-    _counter = counter;
-    return this;
 }
 
 SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
@@ -48,17 +46,14 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
 
 bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
     try {
-        int counter_id =
-            PerfCounterObject::resolve_counter_name(_winapi, _counter.c_str());
-        if (counter_id < 0) {
-            return false;
-        }
-        PerfCounterObject counter_object(counter_id, _winapi);
+        PerfCounterObject counter_object(_counter_base_number, _winapi, _logger);
         std::vector<std::wstring> instance_names =
             counter_object.instanceNames();
         std::vector<PERF_INSTANCE_DEFINITION *> instances =
             counter_object.instances();
-
+        Debug(_logger) << "SectionPerfcounter::produceOutputInner: got "
+                       << instance_names.size() << " instance names and "
+                       << instances.size() << " instances.";
         // we have to transpose the data coming from the perfcounter
         std::map<int, std::vector<std::wstring>> value_map;
 

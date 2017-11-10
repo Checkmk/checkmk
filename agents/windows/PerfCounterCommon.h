@@ -22,8 +22,10 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <map>
+#include <unordered_map>
 #include <vector>
+
+#include "WinApiAdaptor.h"
 
 class WinApiAdaptor;
 typedef unsigned long DWORD;
@@ -52,13 +54,109 @@ const CharT *get_next_multi_sz(const std::vector<CharT> &data, size_t &offset) {
     }
 }
 
-// returns a map of performance counter indices to the corresponding names.
-// This can be used to resolve fields like CounterNameTitleIndex
-// if local is set, localized names are used, otherwise the names are english
-std::map<DWORD, std::wstring> perf_id_map(const WinApiAdaptor &winapi,
-                                          bool local);
+template <typename CharT>
+inline const CharT *getCounterValueName();
 
-// returns the map inverse to perf_id_map. This is necessary
-// when one wants to translate between localized and english counter names
-std::map<std::wstring, DWORD> perf_name_map(const WinApiAdaptor &winapi,
-                                            bool local);
+template <>
+const wchar_t *getCounterValueName<wchar_t>();
+
+template <>
+const char *getCounterValueName<char>();
+
+template <typename CharT>
+inline long strTolFunc(const CharT *str, CharT **str_end, int base);
+
+template <>
+long strTolFunc<wchar_t>(const wchar_t *str, wchar_t **str_end, int base);
+
+template <>
+long strTolFunc<char>(const char *str, char **str_end, int base);
+
+template <typename CharT>
+long regQueryValueEx(const WinApiAdaptor &winapi, HKEY hkey, const CharT *name, LPBYTE result, DWORD *counters_size);
+
+template <>
+long regQueryValueEx<wchar_t>(const WinApiAdaptor &winapi, HKEY hkey, const wchar_t *name, LPBYTE result, DWORD *counters_size);
+
+template <>
+long regQueryValueEx<char>(const WinApiAdaptor &winapi, HKEY hkey, const char *name, LPBYTE result, DWORD *counters_size);
+
+template <typename CharT>
+inline std::vector<CharT> retrievePerfCounterNames(const WinApiAdaptor &winapi,
+                                            const CharT *name, bool local) {
+    std::vector<CharT> result;
+    DWORD counters_size = 0;
+
+    HKEY key = local ? HKEY_PERFORMANCE_NLSTEXT : HKEY_PERFORMANCE_TEXT;
+
+    // preflight
+    regQueryValueEx(winapi, key, name, (LPBYTE)&result[0], &counters_size);
+
+    result.resize(counters_size);
+    // actual read op
+    regQueryValueEx(winapi, key, name, (LPBYTE)&result[0], &counters_size);
+
+    return result;
+}
+
+// Returns a map of performance counter indices to the corresponding names.
+// If local is set, localized names are used, otherwise the names are english.
+template <typename CharT>
+inline std::unordered_map<DWORD, std::basic_string<CharT>> perf_id_map(const WinApiAdaptor &winapi,
+                                                                       bool local) {
+    std::vector<CharT> names = retrievePerfCounterNames<CharT>(winapi, getCounterValueName<CharT>(), local);
+
+    std::unordered_map<DWORD, std::basic_string<CharT>> result;
+
+    size_t offset = 0;
+    for (;;) {
+        const CharT *id = get_next_multi_sz(names, offset);
+        const CharT *name = get_next_multi_sz(names, offset);
+        if ((id == nullptr) || (name == nullptr)) {
+            break;
+        }
+
+        result[strTolFunc<CharT>(id, nullptr, 10)] = name;
+    }
+
+    return result;
+}
+
+// Returns a map of performance counter names to the corresponding indices.
+// If local is set, localized names are used, otherwise the names are english.
+template <typename CharT>
+inline std::unordered_map<std::basic_string<CharT>, DWORD> perf_name_map(const WinApiAdaptor &winapi,
+                                                                         bool local) {
+    std::vector<CharT> names = retrievePerfCounterNames<CharT>(winapi, getCounterValueName<CharT>(), local);
+
+    std::unordered_map<std::basic_string<CharT>, DWORD> result;
+
+    size_t offset = 0;
+    for (;;) {
+        const CharT *id = get_next_multi_sz(names, offset);
+        const CharT *name = get_next_multi_sz(names, offset);
+        if ((id == nullptr) || (name == nullptr)) {
+            break;
+        }
+
+        result[name] = strTolFunc<CharT>(id, nullptr, 10);
+    }
+
+    return result;
+}
+
+// Resolves the ID of the given performance counter entry based on its name.
+// The counter name can be either localized or in english.
+template <typename CharT>
+int resolveCounterName(const WinApiAdaptor &winapi, const std::basic_string<CharT> &counterName) {
+    for (bool local : {true, false}) {
+        const auto nameIdMap = perf_name_map<CharT>(winapi, local);
+        const auto it = nameIdMap.find(counterName);
+
+        if (it != nameIdMap.end()) {
+            return it->second;
+        }
+    }
+
+    return -1;
+}

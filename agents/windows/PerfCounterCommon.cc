@@ -38,61 +38,32 @@ size_t string_length<wchar_t>(const wchar_t *s) {
     return wcslen(s);
 }
 
-static std::vector<wchar_t> retrieve_perf_data(const WinApiAdaptor &winapi,
-                                               LPCWSTR name, bool local) {
-    std::vector<wchar_t> result;
-    DWORD counters_size = 0;
-
-    HKEY key = local ? HKEY_PERFORMANCE_NLSTEXT : HKEY_PERFORMANCE_TEXT;
-
-    // preflight
-    winapi.RegQueryValueExW(key, name, nullptr, nullptr, (LPBYTE)&result[0],
-                            &counters_size);
-
-    result.resize(counters_size);
-    // actual read op
-    winapi.RegQueryValueExW(key, name, nullptr, nullptr, (LPBYTE)&result[0],
-                            &counters_size);
-
-    return result;
+template <>
+const wchar_t *getCounterValueName<wchar_t>() {
+    return L"Counter";
 }
 
-std::map<DWORD, std::wstring> perf_id_map(const WinApiAdaptor &winapi,
-                                          bool local) {
-    std::vector<wchar_t> names = retrieve_perf_data(winapi, L"Counter", local);
-
-    std::map<DWORD, std::wstring> result;
-
-    size_t offset = 0;
-    for (;;) {
-        LPCWSTR id = get_next_multi_sz(names, offset);
-        LPCWSTR name = get_next_multi_sz(names, offset);
-        if ((id == nullptr) || (name == nullptr)) {
-            break;
-        }
-
-        result[wcstol(id, nullptr, 10)] = name;
-    }
-
-    return result;
+template <>
+const char *getCounterValueName<char>() {
+    return "Counter";
 }
 
-std::map<std::wstring, DWORD> perf_name_map(const WinApiAdaptor &winapi,
-                                            bool local) {
-    std::vector<wchar_t> names = retrieve_perf_data(winapi, L"Counter", local);
+template <>
+long strTolFunc<wchar_t>(const wchar_t *str, wchar_t **str_end, int base) {
+    return wcstol(str, str_end, base);
+}
 
-    std::map<std::wstring, DWORD> result;
+template <>
+long strTolFunc<char>(const char *str, char **str_end, int base) {
+    return strtol(str, str_end, base);
+}
 
-    size_t offset = 0;
-    for (;;) {
-        LPCWSTR id = get_next_multi_sz(names, offset);
-        LPCWSTR name = get_next_multi_sz(names, offset);
-        if ((id == nullptr) || (name == nullptr)) {
-            break;
-        }
+template <>
+long regQueryValueEx<wchar_t>(const WinApiAdaptor &winapi, HKEY hkey, const wchar_t *name, LPBYTE result, DWORD *counters_size) {
+    return winapi.RegQueryValueExW(hkey, name, nullptr, nullptr, result, counters_size);
+}
 
-        result[name] = wcstol(id, nullptr, 10);
-    }
-
-    return result;
+template <>
+long regQueryValueEx<char>(const WinApiAdaptor &winapi, HKEY hkey, const char *name, LPBYTE result, DWORD *counters_size) {
+    return winapi.RegQueryValueEx(hkey, name, nullptr, nullptr, result, counters_size);
 }

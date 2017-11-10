@@ -32,16 +32,15 @@
 #include "../Section.h"
 
 class SectionPerfcounter : public Section {
-    std::wstring _counter;
+    const unsigned _counter_base_number;
     bool _toggle_if_missing{false};
     time_t _disabled_until{0};
 
 public:
     SectionPerfcounter(const std::string &outputName,
-                       const std::string &configName, const Environment &env,
+                       const std::string &configName, unsigned counterBaseNumber, const Environment &env,
                        Logger *logger, const WinApiAdaptor &winapi);
 
-    SectionPerfcounter *withCounter(const wchar_t *counter);
     SectionPerfcounter *withToggleIfMissing();
 
 protected:

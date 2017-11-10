@@ -47,11 +47,6 @@ SectionGroup *SectionGroup::withToggleIfMissing() {
     return this;
 }
 
-SectionGroup *SectionGroup::withFailIfMissing() {
-    _fail_if_missing = true;
-    return this;
-}
-
 SectionGroup *SectionGroup::withNestedSubtables() {
     withHiddenHeader(false);
     _nested = true;
@@ -69,9 +64,6 @@ bool SectionGroup::produceOutputInner(std::ostream &out) {
     for (const auto &table : _subsections) {
         if (table->produceOutput(out, _nested)) {
             all_failed = false;
-        } else if (_fail_if_missing) {
-            all_failed = true;
-            break;
         }
     }
 

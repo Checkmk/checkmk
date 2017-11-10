@@ -36,6 +36,8 @@ typedef struct _PERF_INSTANCE_DEFINITION PERF_INSTANCE_DEFINITION;
 typedef struct _PERF_COUNTER_BLOCK PERF_COUNTER_BLOCK;
 typedef struct _PERF_OBJECT_TYPE PERF_OBJECT_TYPE;
 
+class Logger;
+
 // Wrapper for a single counter
 // Attention: objects of this type become invalid when
 //   the corresponding PerfCounterObject is destroyed
@@ -70,15 +72,14 @@ class PerfCounterObject {
     PERF_OBJECT_TYPE *_object;
     BYTE *_datablock;
     const WinApiAdaptor &_winapi;
+    Logger *_logger;
 
 public:
     typedef std::vector<std::pair<DWORD, std::wstring>> CounterList;
 
 public:
-    PerfCounterObject(const char *counter_name, const WinApiAdaptor &winapi);
-
     PerfCounterObject(unsigned counter_base_number,
-                      const WinApiAdaptor &winapi);
+                      const WinApiAdaptor &winapi, Logger *logger);
 
     bool isEmpty() const;
 
@@ -86,14 +87,6 @@ public:
     std::vector<std::wstring> instanceNames() const;
     std::vector<PerfCounter> counters() const;
     std::vector<std::wstring> counterNames() const;
-
-    static int resolve_counter_name(const WinApiAdaptor &winapi,
-                                    const wchar_t *name,
-                                    const wchar_t *language = NULL);
-
-    static int resolve_counter_name(const WinApiAdaptor &winapi,
-                                    const char *name,
-                                    const char *language = NULL);
 
 private:
     std::vector<BYTE> retrieveCounterData(const wchar_t *counterList);

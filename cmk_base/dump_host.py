@@ -31,7 +31,7 @@ import cmk_base.config as config
 import cmk_base.core_config as core_config
 import cmk_base.console as console
 import cmk_base.rulesets as rulesets
-import cmk_base.agent_data as agent_data
+import cmk_base.data_sources as data_sources
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.check_table as check_table
 
@@ -81,10 +81,9 @@ def dump_host(hostname):
     console.output(tty.yellow + "Contact groups:         " + tty.normal + cmk_base.utils.make_utf8(", ".join(config.contactgroups_of(hostname))) + "\n")
 
     agenttypes = []
-    if config.is_tcp_host(hostname):
-        data_sources = agent_data.DataSources(hostname)
-        for data_source in agent_data.DataSources(hostname).get_data_sources():
-            agenttypes.append(data_source.describe(hostname, ipaddress))
+    sources = data_sources.DataSources(hostname)
+    for source in sources.get_data_sources():
+        agenttypes.append(source.describe(hostname, ipaddress))
 
     if config.is_snmp_host(hostname):
         if config.is_usewalk_host(hostname):
@@ -117,7 +116,7 @@ def dump_host(hostname):
         agenttypes.append('PING only')
 
     console.output(tty.yellow + "Agent mode:             " + tty.normal)
-    console.output(agent_data.DataSources(hostname).describe_data_sources() + "\n")
+    console.output(data_sources.DataSources(hostname).describe_data_sources() + "\n")
 
     console.output(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:

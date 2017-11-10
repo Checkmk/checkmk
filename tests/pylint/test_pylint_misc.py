@@ -17,6 +17,7 @@ def test_pylint_misc():
         cmk_path() + "/cmk_base/modes",
         cmk_path() + "/cmk_base/automations",
         cmk_path() + "/cmk_base/default_config",
+        cmk_path() + "/cmk_base/data_sources",
 
         cmc_path() + "/cmk_base",
         cmc_path() + "/cmk_base/cee",

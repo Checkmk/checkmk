@@ -68,17 +68,17 @@ bool OringFilter::optimizeBitmask(const std::string &column_name,
 }
 
 std::unique_ptr<Filter> OringFilter::copy() const {
-    auto af = std::make_unique<OringFilter>();
-    for (const auto &sf : _subfilters) {
-        af->addSubfilter(sf->copy());
+    auto result = std::make_unique<OringFilter>();
+    for (const auto &filter : _subfilters) {
+        result->addSubfilter(filter->copy());
     }
-    return af;
+    return result;
 }
 
 std::unique_ptr<Filter> OringFilter::negate() const {
-    auto af = std::make_unique<AndingFilter>();
-    for (const auto &sf : _subfilters) {
-        af->addSubfilter(sf->negate());
+    auto result = std::make_unique<AndingFilter>();
+    for (const auto &filter : _subfilters) {
+        result->addSubfilter(filter->negate());
     }
-    return af;
+    return result;
 }

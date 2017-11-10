@@ -25,7 +25,6 @@
 #include "VariadicFilter.h"
 #include <algorithm>
 #include "AndingFilter.h"
-#include "FilterVisitor.h"
 #include "OringFilter.h"
 
 // static
@@ -39,34 +38,6 @@ std::unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
     return nullptr;  // unreachable
 }
 
-void VariadicFilter::accept(FilterVisitor &v) const { v.visit(*this); }
-
 void VariadicFilter::addSubfilter(std::unique_ptr<Filter> f) {
     _subfilters.push_back(std::move(f));
-}
-
-std::unique_ptr<Filter> VariadicFilter::stealLastSubfiler() {
-    if (_subfilters.empty()) {
-        return nullptr;
-    }
-    std::unique_ptr<Filter> l = move(_subfilters.back());
-    _subfilters.pop_back();
-    return l;
-}
-
-void VariadicFilter::findIntLimits(const std::string &colum_nname, int *lower,
-                                   int *upper,
-                                   std::chrono::seconds timezone_offset) const {
-    for (const auto &filter : _subfilters) {
-        filter->findIntLimits(colum_nname, lower, upper, timezone_offset);
-    }
-}
-
-void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
-    auto variadic = VariadicFilter::make(andor);
-    for (auto i = 0; i < count; ++i) {
-        variadic->addSubfilter(std::move(_subfilters.back()));
-        _subfilters.pop_back();
-    }
-    addSubfilter(std::move(variadic));
 }

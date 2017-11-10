@@ -26,7 +26,10 @@
 #include <memory>
 #include "AndingFilter.h"
 #include "Filter.h"
+#include "FilterVisitor.h"
 #include "Row.h"
+
+void OringFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 
 bool OringFilter::accepts(Row row, const contact *auth_user,
                           std::chrono::seconds timezone_offset) const {
@@ -36,6 +39,14 @@ bool OringFilter::accepts(Row row, const contact *auth_user,
         }
     }
     return false;
+}
+
+void OringFilter::findIntLimits(const std::string &colum_nname, int *lower,
+                                int *upper,
+                                std::chrono::seconds timezone_offset) const {
+    for (const auto &filter : _subfilters) {
+        filter->findIntLimits(colum_nname, lower, upper, timezone_offset);
+    }
 }
 
 bool OringFilter::optimizeBitmask(const std::string &column_name,

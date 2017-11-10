@@ -205,7 +205,7 @@ std::unique_ptr<Filter> Query::createFilter(const Column &column,
 }
 
 void Query::parseAndOrLine(char *line, LogicalOperator andor,
-                           VariadicFilter &filter, const std::string &header) {
+                           AndingFilter &filter, const std::string &header) {
     char *value = next_field(&line);
     if (value == nullptr) {
         invalidHeader("Missing value for " + header +
@@ -233,14 +233,14 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
     filter.combineFilters(number, andor);
 }
 
-void Query::parseNegateLine(char *line, VariadicFilter &filter,
+void Query::parseNegateLine(char *line, AndingFilter &filter,
                             const std::string &header) {
     if (next_field(&line) != nullptr) {
         invalidHeader(header + ": does not take any arguments");
         return;
     }
 
-    auto to_negate = filter.stealLastSubfiler();
+    auto to_negate = filter.stealLastSubFilter();
     if (!to_negate) {
         invalidHeader(header + " nothing to negate");
         return;
@@ -388,7 +388,7 @@ void Query::parseStatsLine(char *line) {
     _show_column_headers = false;
 }
 
-void Query::parseFilterLine(char *line, VariadicFilter &filter) {
+void Query::parseFilterLine(char *line, AndingFilter &filter) {
     char *column_name = next_field(&line);
     if (column_name == nullptr) {
         invalidHeader("empty filter line");

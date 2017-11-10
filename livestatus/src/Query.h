@@ -115,12 +115,12 @@ private:
     std::unique_ptr<Filter> createFilter(const Column &column,
                                          RelationalOperator relOp,
                                          const std::string &value);
-    void parseFilterLine(char *line, VariadicFilter &filter);
+    void parseFilterLine(char *line, AndingFilter &filter);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, LogicalOperator andor,
-                        VariadicFilter &filter, const std::string &header);
-    void parseNegateLine(char *line, VariadicFilter &filter,
+    void parseAndOrLine(char *line, LogicalOperator andor, AndingFilter &filter,
+                        const std::string &header);
+    void parseNegateLine(char *line, AndingFilter &filter,
                          const std::string &header);
     void parseStatsAndOrLine(char *line, LogicalOperator andor);
     void parseStatsNegateLine(char *line);

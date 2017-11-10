@@ -31,21 +31,20 @@
 #include "../Section.h"
 
 class SectionPerfcounter : public Section {
-    std::wstring _counter;
+    const unsigned _counter_base_number;
     bool _toggle_if_missing{false};
     time_t _disabled_until{0};
 
 public:
     SectionPerfcounter(const std::string &outputName,
-                       const std::string &configName);
+                       const std::string &configName,
+                       unsigned counterBaseNumber);
 
-    SectionPerfcounter *withCounter(const wchar_t *counter);
     SectionPerfcounter *withToggleIfMissing();
+
 protected:
     virtual bool produceOutputInner(std::ostream &out,
                                     const Environment &env) override;
-
 };
 
 #endif  // SectionPerfcounter_h
-

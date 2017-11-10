@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 #include "Environment.h"
-#include "PerfCounter.h"
+#include "PerfCounterCommon.h"
 #include "stringutil.h"
 
 template <>
@@ -142,7 +142,7 @@ winperf_counter *from_string<winperf_counter *>(const std::string &value) {
     if (non_digit == base_id.end()) {
         result->id = std::stoi(base_id);
     } else {
-        result->id = PerfCounterObject::resolve_counter_name(base_id.c_str());
+        result->id = resolveCounterName(base_id);
         if (result->id == -1) {
             delete result;
             throw StringConversionError(

@@ -30,32 +30,22 @@ SectionGroup::SectionGroup(const std::string &outputName,
     withHiddenHeader();
 }
 
-SectionGroup *SectionGroup::withSubSection(Section *section)
-{
+SectionGroup *SectionGroup::withSubSection(Section *section) {
     _subsections.push_back(std::unique_ptr<Section>(section));
     return this;
 }
 
-SectionGroup *SectionGroup::withDependentSubSection(Section *section)
-{
+SectionGroup *SectionGroup::withDependentSubSection(Section *section) {
     _dependent_subsections.push_back(std::unique_ptr<Section>(section));
     return this;
 }
 
-SectionGroup *SectionGroup::withToggleIfMissing()
-{
+SectionGroup *SectionGroup::withToggleIfMissing() {
     _toggle_if_missing = true;
     return this;
 }
 
-SectionGroup *SectionGroup::withFailIfMissing()
-{
-    _fail_if_missing = true;
-    return this;
-}
-
-SectionGroup *SectionGroup::withNestedSubtables()
-{
+SectionGroup *SectionGroup::withNestedSubtables() {
     withHiddenHeader(false);
     _nested = true;
     return this;
@@ -74,10 +64,6 @@ bool SectionGroup::produceOutputInner(std::ostream &out,
         if (table->produceOutput(out, env, _nested)) {
             all_failed = false;
         }
-        else if (_fail_if_missing) {
-            all_failed = true;
-            break;
-        }
     }
 
     if (!all_failed) {
@@ -94,4 +80,3 @@ bool SectionGroup::produceOutputInner(std::ostream &out,
 
     return !all_failed;
 }
-

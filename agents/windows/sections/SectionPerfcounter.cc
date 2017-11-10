@@ -24,23 +24,18 @@
 
 #include "SectionPerfcounter.h"
 #include "../PerfCounter.h"
-#include "../stringutil.h"
+#include "../PerfCounterCommon.h"
 #include "../logging.h"
+#include "../stringutil.h"
 
 SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
-                                       const std::string &configName)
-    : Section(outputName, configName) {
+                                       const std::string &configName,
+                                       unsigned counterBaseNumber)
+    : Section(outputName, configName), _counter_base_number(counterBaseNumber) {
     withSeparator(',');
 }
 
-SectionPerfcounter *SectionPerfcounter::withCounter(const wchar_t *counter)
-{
-    _counter = counter;
-    return this;
-}
-
-SectionPerfcounter *SectionPerfcounter::withToggleIfMissing()
-{
+SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
     _toggle_if_missing = true;
     return this;
 }
@@ -48,11 +43,7 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing()
 bool SectionPerfcounter::produceOutputInner(std::ostream &out,
                                             const Environment &) {
     try {
-        int counter_id = PerfCounterObject::resolve_counter_name(_counter.c_str());
-        if (counter_id < 0) {
-            return false;
-        }
-        PerfCounterObject counter_object(counter_id);
+        PerfCounterObject counter_object(_counter_base_number);
         std::vector<std::wstring> instance_names =
             counter_object.instanceNames();
         std::vector<PERF_INSTANCE_DEFINITION *> instances =
@@ -72,7 +63,8 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out,
             }
         }
 
-        out << "instance," << to_utf8(join(counter_object.counterNames(), L",").c_str())
+        out << "instance,"
+            << to_utf8(join(counter_object.counterNames(), L",").c_str())
             << "\n";
         for (const auto &instance_values : value_map) {
             std::wstring instance_name = L"\"\"";
@@ -89,4 +81,3 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out,
     }
     return true;
 }
-

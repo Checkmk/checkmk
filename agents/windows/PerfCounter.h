@@ -74,17 +74,9 @@ public:
     std::vector<PerfCounter> counters() const;
     std::vector<std::wstring> counterNames() const;
 
-    static std::vector<BYTE> retrieveCounterData(const wchar_t *counterList);
-
-    static CounterList object_list(const char *language);
-
-    static int resolve_counter_name(const wchar_t *name,
-                                    const wchar_t *language = NULL);
-
-    static int resolve_counter_name(const char *name,
-                                    const char *language = NULL);
-
 private:
+    std::vector<BYTE> retrieveCounterData(const wchar_t *counterList);
+
     PERF_OBJECT_TYPE *findObject(DWORD counter_index);
 };
 

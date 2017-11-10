@@ -99,7 +99,7 @@ def check_skype(item, params, parsed):
     # ASP.NET Apps v4.0.30319(*)\Requests Rejected
     #
     # LS:WEB - Address Book File Download\WEB – Failed File Requests/Second
-    # LS: JoinLauncher – Join Launcher Service Failure\JOINLAUNCHER – Join Failures
+    # LS: JoinLauncher – Join Launcher Service Failures\JOINLAUNCHER – Join Failures
     # LS:WEB – Auth Provider related calls\WEB – Failed validate cert calls to the cert auth provider
 
 
@@ -141,8 +141,8 @@ def check_skype(item, params, parsed):
                                 perfvar="failed_file_requests",
                                 levels=params['failed_file_requests'])
 
-    if "LS:JoinLauncher - Join Launcher Service Failure" in parsed:
-        yield wmi_yield_raw_counter(parsed["LS:JoinLauncher - Join Launcher Service Failure"],
+    if "LS:JoinLauncher - Join Launcher Service Failures" in parsed:
+        yield wmi_yield_raw_counter(parsed["LS:JoinLauncher - Join Launcher Service Failures"],
                                     item, "JOINLAUNCHER - Join failures",
                                     label=" join failures",
                                     perfvar="join_failures",

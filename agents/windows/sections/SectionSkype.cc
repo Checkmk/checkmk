@@ -23,58 +23,80 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionSkype.h"
+#include "../PerfCounterCommon.h"
 #include "SectionPerfcounter.h"
 
-SectionSkype::SectionSkype()
-    : SectionGroup("skype", "skype") {
+namespace {
+
+int getCounterName(
+    const std::array<std::unordered_map<std::string, DWORD>, 2> &nameIdMaps,
+    const std::string &counterName) {
+    for (const auto &nameIdMap : nameIdMaps) {
+        const auto it = nameIdMap.find(counterName);
+
+        if (it != nameIdMap.end()) {
+            return it->second;
+        }
+    }
+    return -1;
+}
+
+}  // namespace
+
+SectionSkype::SectionSkype() : SectionGroup("skype", "skype") {
     withToggleIfMissing();
-    withFailIfMissing();
     withNestedSubtables();
     withSeparator(',');
 
-    for (LPCWSTR data_source :
-         {L"LS:WEB - Address Book Web Query",
-          L"LS:WEB - Address Book File Download",
-          L"LS:WEB - Location Information Service",
-          L"LS:WEB - Distribution List Expansion",
-          L"LS:WEB - UCWA",
-          L"LS:WEB - Mobile Communication Service",
-          L"LS:WEB - Throttling and Authentication",
-          L"LS:WEB - Auth Provider related calls",
-          L"LS:SIP - Protocol",
-          L"LS:SIP - Responses",
-          L"LS:SIP - Peers",
-          L"LS:SIP - Load Management",
-          L"LS:SIP - Authentication",
-          L"LS:CAA - Operations",
-          L"LS:DATAMCU - MCU Health And Performance",
-          L"LS:AVMCU - MCU Health And Performance",
-          L"LS:AsMcu - MCU Health And Performance",
-          L"LS:ImMcu - MCU Health And Performance",
-          L"LS:USrv - DBStore",
-          L"LS:USrv - Conference Mcu Allocator",
-          L"LS:JoinLauncher - Join Launcher Service Failure",
-          L"LS:MediationServer - Health Indices",
-          L"LS:MediationServer - Global Counters",
-          L"LS:MediationServer - Global Per Gateway Counters",
-          L"LS:MediationServer - Media Relay",
-          L"LS:A/V Auth - Requests",
-          L"LS:DATAPROXY - Server Connections",
-          L"LS:XmppFederationProxy - Streams",
-          L"LS:A/V Edge - TCP Counters",
-          L"LS:A/V Edge - UDP Counters"}) {
-        const auto name = to_utf8(data_source);
-        withSubSection(
-            (new SectionPerfcounter(name, name))
-                ->withCounter(data_source));
+    const std::array<std::unordered_map<std::string, DWORD>, 2> nameIdMaps = {
+        perf_name_map<char>(false), perf_name_map<char>(true)};
+
+    for (const std::string &counterName :
+         {"LS:WEB - Address Book Web Query",
+          "LS:WEB - Address Book File Download",
+          "LS:WEB - Location Information Service",
+          "LS:WEB - Distribution List Expansion",
+          "LS:WEB - UCWA",
+          "LS:WEB - Mobile Communication Service",
+          "LS:WEB - Throttling and Authentication",
+          "LS:WEB - Auth Provider related calls",
+          "LS:SIP - Protocol",
+          "LS:SIP - Responses",
+          "LS:SIP - Peers",
+          "LS:SIP - Load Management",
+          "LS:SIP - Authentication",
+          "LS:CAA - Operations",
+          "LS:DATAMCU - MCU Health And Performance",
+          "LS:AVMCU - MCU Health And Performance",
+          "LS:AsMcu - MCU Health And Performance",
+          "LS:ImMcu - MCU Health And Performance",
+          "LS:USrv - DBStore",
+          "LS:USrv - Conference Mcu Allocator",
+          "LS:JoinLauncher - Join Launcher Service Failures",
+          "LS:MediationServer - Health Indices",
+          "LS:MediationServer - Global Counters",
+          "LS:MediationServer - Global Per Gateway Counters",
+          "LS:MediationServer - Media Relay",
+          "LS:A/V Auth - Requests",
+          "LS:DATAPROXY - Server Connections",
+          "LS:XmppFederationProxy - Streams",
+          "LS:A/V Edge - TCP Counters",
+          "LS:A/V Edge - UDP Counters"}) {
+        int counterId = getCounterName(nameIdMaps, counterName);
+        if (counterId >= 0) {
+            withSubSection(
+                new SectionPerfcounter(counterName, counterName, counterId));
+        }
     }
 
     // TODO the version number in the counter name isn't exactly inspiring
-    // trust,
-    // but there currently is no support for wildcards.
-    withDependentSubSection((new SectionPerfcounter("ASP.NET Apps v4.0.30319",
-                                                    "ASP.NET Apps v4.0.30319"))
-                                ->withCounter(L"ASP.NET Apps v4.0.30319"));
+    // trust, but there currently is no support for wildcards.
+    const std::string counterName = "ASP.NET Apps v4.0.30319";
+    int counterId = getCounterName(nameIdMaps, counterName);
+    if (counterId >= 0) {
+        withDependentSubSection(
+            new SectionPerfcounter(counterName, counterName, counterId));
+    }
 }
 
 bool SectionSkype::produceOutputInner(std::ostream &out,
@@ -88,4 +110,3 @@ bool SectionSkype::produceOutputInner(std::ostream &out,
 
     return SectionGroup::produceOutputInner(out, env);
 }
-

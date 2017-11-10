@@ -25,10 +25,9 @@
 #ifndef SectionGroup_h
 #define SectionGroup_h
 
-#include "../Section.h"
 #include <ctime>
 #include <memory>
-
+#include "../Section.h"
 
 /**
  * allows treating several sections as a group.
@@ -62,7 +61,6 @@ public:
      **/
     SectionGroup *withDependentSubSection(Section *section);
     SectionGroup *withToggleIfMissing();
-    SectionGroup *withFailIfMissing();
 
 protected:
     virtual bool produceOutputInner(std::ostream &out,
@@ -70,4 +68,3 @@ protected:
 };
 
 #endif  // SectionGroup_h
-

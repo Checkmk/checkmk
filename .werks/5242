@@ -1,0 +1,10 @@
+Title: Fixed display bug "Customer not found", shown in slave sites
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cme
+Version: 1.4.0p17
+Date: 1510569391
+Class: fix
+
+

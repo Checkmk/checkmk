@@ -640,16 +640,15 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                         current_socket = s_winapi.socket(
                             current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
                         if (current_socket == INVALID_SOCKET) {
-                            Emergency(logger)
-                                << "failed to establish socket: "
-                                << s_winapi.WSAGetLastError();
+                            Emergency(logger) << "failed to establish socket: "
+                                              << s_winapi.WSAGetLastError();
                             return 1;
                         }
                         if (s_winapi.connect(current_socket,
                                              (const sockaddr *)&current_address,
                                              sockaddr_size) == SOCKET_ERROR) {
                             Emergency(logger) << "failed to connect: "
-                                                << s_winapi.WSAGetLastError();
+                                              << s_winapi.WSAGetLastError();
                             s_winapi.closesocket(current_socket);
                             current_socket = INVALID_SOCKET;
                         }
@@ -718,8 +717,7 @@ void do_adhoc(const Environment &env) {
     foreach_enabled_section(
         false, [](Section *section) { section->waitForCompletion(); });
 
-    ThreadData thread_data{0,   false,          env, logger, false,
-                           {0}, Mutex{s_winapi}};
+    ThreadData thread_data{0, false, env, logger, false, {0}, Mutex{s_winapi}};
     Thread realtime_checker(realtime_check_func, thread_data, s_winapi);
 
     if (s_sections->useRealtimeMonitoring()) {
@@ -746,8 +744,7 @@ void do_adhoc(const Environment &env) {
             }
 
             std::string ip_hr = sock.readableIP(connection);
-            Debug(logger)
-                << "Accepted client connection from " << ip_hr << ".";
+            Debug(logger) << "Accepted client connection from " << ip_hr << ".";
             {  // limit lifetime of mutex lock
                 MutexLock guard(thread_data.mutex);
                 thread_data.new_request = true;
@@ -761,7 +758,8 @@ void do_adhoc(const Environment &env) {
             try {
                 output_data(*out, env, false, *s_config->section_flush);
             } catch (const std::exception &e) {
-                Alert(Logger::getLogger("winagent")) << "unhandled exception: " << e.what();
+                Alert(Logger::getLogger("winagent"))
+                    << "unhandled exception: " << e.what();
             }
             s_winapi.closesocket(connection);
         }
@@ -776,7 +774,7 @@ void do_adhoc(const Environment &env) {
     if (realtime_checker.wasStarted()) {
         int res = realtime_checker.join();
         Debug(logger) << "Realtime check thread ended with error code " << res
-                        << ".";
+                      << ".";
     }
 
     s_winapi.WSACleanup();
@@ -973,8 +971,8 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     if (strcmp(mode, "debug")) {  // if not debugging, use log file
         // TODO: Make logfile rotation parameters configurable
         logger->setHandler(std::make_unique<RotatingFileHandler>(
-                               logFilename, std::make_unique<FileRotationApi>(),
-                               8388608 /* 8 MB */, 5));
+            logFilename, std::make_unique<FileRotationApi>(),
+            8388608 /* 8 MB */, 5));
     }
 
     if (Handler *handler = logger->getHandler()) {
@@ -1040,7 +1038,8 @@ void RunImmediate(const char *mode, int argc, char **argv) {
 }
 
 inline LONG WINAPI exception_handler(LPEXCEPTION_POINTERS ptrs) {
-    return CrashHandler(Logger::getLogger("winagent"), s_winapi).handleCrash(ptrs);
+    return CrashHandler(Logger::getLogger("winagent"), s_winapi)
+        .handleCrash(ptrs);
 }
 
 int main(int argc, char **argv) {

@@ -62,6 +62,9 @@ def scenario(request, web, site):
         }
         web.set_ruleset("extra_host_conf:notification_options", rule_result)
 
+        # Make nagios check more often for incoming commands
+        site.write_file("etc/nagios/nagios.d/zzz_test_unreachable_notifications.cfg",
+            "command_check_interval=1s\n")
 
         web.activate_changes()
 
@@ -80,8 +83,12 @@ def scenario(request, web, site):
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-parent" % time.time())
 
+        site.delete_file("etc/nagios/nagios.d/zzz_test_unreachable_notifications.cfg")
+
         web.delete_host("notify-test-child")
         web.delete_host("notify-test-parent")
+
+        web.activate_changes()
 
 
 @pytest.fixture(scope="function")

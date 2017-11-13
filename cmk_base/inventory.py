@@ -83,15 +83,26 @@ def do_inv(hostnames):
     for hostname in hostnames:
         try:
             console.verbose("Doing HW/SW-Inventory for %s..." % hostname)
-            do_inv_for(hostname)
+
+            if config.is_cluster(hostname):
+                ipaddress = None
+            else:
+                ipaddress = ip_lookup.lookup_ip_address(hostname)
+
+            _do_inv_for(hostname, ipaddress)
             console.verbose("..OK\n")
         except Exception, e:
-            # TODO: handle data_sources.get_data_source_errors_of_host() here
             if cmk.debug.enabled():
                 raise
+
             console.verbose("Failed: %s\n" % e)
             errors.append("Failed to inventorize %s: %s" % (hostname, e))
-        cmk_base.utils.cleanup_globals()
+        finally:
+            for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
+                for exc in exceptions:
+                    errors.append("%s" % exc)
+
+            cmk_base.utils.cleanup_globals()
 
     if errors:
         raise MKGeneralException("\n".join(errors))
@@ -105,7 +116,12 @@ def do_inv_check(options, hostname):
     _inv_fail_status = options.get("inv-fail-status", _inv_fail_status)
 
     try:
-        inv_tree, old_timestamp = do_inv_for(hostname)
+        if config.is_cluster(hostname):
+            ipaddress = None
+        else:
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
+
+        inv_tree, old_timestamp = _do_inv_for(hostname, ipaddress)
         num_entries = _count_nodes(g_inv_tree)
         if not num_entries:
             console.output("OK - Found no data\n")
@@ -142,7 +158,6 @@ def do_inv_check(options, hostname):
 
                 infotexts.append(infotext)
 
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
         for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
             for exc in exceptions:
                 infotexts.append("%s" % exc)
@@ -158,7 +173,7 @@ def do_inv_check(options, hostname):
         sys.exit(_inv_fail_status)
 
 
-def do_inv_for(hostname):
+def _do_inv_for(hostname, ipaddress):
     _initialize_inventory_tree()
 
     node = inv_tree("software.applications.check_mk.cluster.")
@@ -168,7 +183,7 @@ def do_inv_for(hostname):
         _do_inv_for_cluster(hostname)
     else:
         node["is_cluster"] = False
-        _do_inv_for_realhost(hostname)
+        _do_inv_for_realhost(hostname, ipaddress)
 
     # Remove empty paths
     _cleanup_inventory_tree(g_inv_tree)
@@ -189,12 +204,7 @@ def _do_inv_for_cluster(hostname):
         })
 
 
-def _do_inv_for_realhost(hostname):
-    try:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
-    except:
-        raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
-
+def _do_inv_for_realhost(hostname, ipaddress):
     sources = data_sources.DataSources(hostname)
 
     for source in sources.get_data_sources():

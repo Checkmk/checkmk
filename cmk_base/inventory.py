@@ -79,11 +79,6 @@ def do_inv(hostnames):
     _ensure_directory(inventory_output_dir)
     _ensure_directory(inventory_archive_dir)
 
-    # No hosts specified: do all hosts and force caching
-    if hostnames == None:
-        hostnames = config.all_active_hosts()
-        data_sources.abstract.DataSource.set_use_cachefile()
-
     errors = []
     for hostname in hostnames:
         try:

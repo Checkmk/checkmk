@@ -68,7 +68,7 @@ def setup_site_and_switch_user():
     sys.stdout.write("Cleaning up after testing\n")
     sys.stdout.write("===============================================\n")
 
-    site.rm_if_not_reusing()
+    #site.rm_if_not_reusing()
     sys.exit(exit_code)
 
 

@@ -340,7 +340,7 @@ class ConfigDomainApache(watolib.ConfigDomain):
             self._write_config_file()
 
             p = subprocess.Popen(["omd", "reload", "apache"], shell=False, stdin=open(os.devnull),
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
 
             stdout = p.communicate()[0]
             if p.returncode != 0:
@@ -444,7 +444,7 @@ class ConfigDomainRRDCached(watolib.ConfigDomain):
             self._write_config_file()
 
             p = subprocess.Popen(["omd", "restart", "rrdcached"], shell=False, stdin=open(os.devnull),
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
 
             stdout = p.communicate()[0]
             if p.returncode != 0:

@@ -1,4 +1,4 @@
-Title: cisco_redundancy: Discover 'Redundancy Framework Status' service if devices supports that.
+Title: cisco_redundancy: Discover 'Redundancy Framework Status' service if device supports that.
 Level: 1
 Component: checks
 Compatible: compat

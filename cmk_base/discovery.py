@@ -534,7 +534,8 @@ def discover_marked_hosts():
             redisc_params = params["inventory_rediscovery"]
             console.verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
             result, error = discover_on_host(mode_table[redisc_params["mode"]], hostname,
-                                             params["inventory_check_do_scan"], True,
+                                             do_snmp_scan=params["inventory_check_do_scan"],
+                                             use_caches=True,
                                              service_filter=item_filters)
             if error is not None:
                 if error:

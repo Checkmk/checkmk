@@ -49,7 +49,6 @@ class Filter;
 class Logger;
 class OutputBuffer;
 class Table;
-class VariadicFilter;
 
 class Query {
 public:
@@ -74,10 +73,12 @@ public:
                        int *upper) const;
     void optimizeBitmask(const std::string &column_name,
                          uint32_t *bitmask) const;
-    const AndingFilter *filter() const { return &_filter; }
+    const AndingFilter *filter() const { return _filter.get(); }
     const std::unordered_set<std::shared_ptr<Column>> &allColumns() const {
         return _all_columns;
     }
+
+    enum class LogicalOperator { and_, or_ };
 
 private:
     const Encoding _data_encoding;
@@ -86,9 +87,11 @@ private:
     QueryRenderer *_renderer_query;
     Table *_table;
     bool _keepalive;
-    AndingFilter _filter;
+    using FilterStack = std::vector<std::unique_ptr<Filter>>;
+    std::unique_ptr<AndingFilter> _filter;
     contact *_auth_user;
-    AndingFilter _wait_condition;
+    bool _wait_conditions_empty;  // TODO(sp): HACK, remove me...
+    std::unique_ptr<AndingFilter> _wait_condition;
     unsigned _wait_timeout;
     struct trigger *_wait_trigger;
     Row _wait_object;
@@ -115,16 +118,15 @@ private:
     std::unique_ptr<Filter> createFilter(const Column &column,
                                          RelationalOperator relOp,
                                          const std::string &value);
-    void parseFilterLine(char *line, AndingFilter &filter);
+    void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(const std::string &header, char *line,
-                        std::unique_ptr<VariadicFilter> variadic,
-                        AndingFilter &filter);
+    void parseAndOrLine(const std::string &header, LogicalOperator op,
+                        char *line, FilterStack &filters);
     void parseNegateLine(const std::string &header, char *line,
-                         AndingFilter &filter);
-    void parseStatsAndOrLine(const std::string &header, char *line,
-                             std::unique_ptr<VariadicFilter> variadic);
+                         FilterStack &filters);
+    void parseStatsAndOrLine(const std::string &header, LogicalOperator op,
+                             char *line);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);
     void parseColumnHeadersLine(char *line);

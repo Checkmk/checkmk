@@ -1,0 +1,12 @@
+Title: dmraid: add timeouts to the linux agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510561310
+Class: fix
+
+Add timeouts to "dmraid -r" and "dmraid -s" to prevent the Check_MK
+agent from running into a timeout in special setups with a large
+amount of devices.

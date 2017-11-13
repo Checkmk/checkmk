@@ -466,12 +466,12 @@ echo '<<<md>>>'
 cat /proc/mdstat
 
 # RAID status of Linux RAID via device mapper
-if type dmraid >/dev/null && DMSTATUS=$(dmraid -r)
+if type dmraid >/dev/null && DMSTATUS=$(waitmax 3 dmraid -r)
 then
     echo '<<<dmraid>>>'
 
     # Output name and status
-    dmraid -s | grep -e ^name -e ^status
+    waitmax 20 dmraid -s | grep -e ^name -e ^status
 
     # Output disk names of the RAID disks
     DISKS=$(echo "$DMSTATUS" | cut -f1 -d\:)

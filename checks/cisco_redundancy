@@ -34,7 +34,14 @@
 
 
 def inventory_cisco_redundancy(info):
-    return [(None, {"init_states" : info[0][:5]})]
+    try:
+        swact_reason = info[0][5]
+    except IndexError:
+        pass
+    else:
+        if swact_reason != "1":
+            return [(None, {"init_states" : info[0][:5]})]
+    return []
 
 
 def check_cisco_redundancy(_no_item, params, info):

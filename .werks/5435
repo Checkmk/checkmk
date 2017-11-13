@@ -1,0 +1,31 @@
+Title: Fixed "omd update" problems when updating from 1.4.0p17 or older
+Level: 2
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510563044
+Class: fix
+
+When executing "omd update" as site user to update a site from 1.4.0p17
+or older an error could occur blocking the update. The message looks like
+this:
+
+<pre>
+Traceback (most recent call last):
+  File "/omd/versions/1.4.0p17.cee/bin/omd", line 52, in <module>
+    import tarfile, fnmatch
+  File "/omd/versions/1.4.0p17.cee/lib/python2.7/tarfile.py", line 52, in <module>
+    import copy
+  File "/omd/versions/1.4.0p17.cee/lib/python2.7/copy.py", line 52, in <module>
+    import weakref
+  File "/omd/versions/1.4.0p17.cee/lib/python2.7/weakref.py", line 14, in <module>
+    from _weakref import (
+ImportError: cannot import name _remove_dead_weakref
+</pre>
+
+This issue was caused by a mixup of python versions during the update which has
+been fixed now by using the correct libraries during the update.
+
+To workaround this issue, you could run the "omd update" command as root user instead
+of the site user.

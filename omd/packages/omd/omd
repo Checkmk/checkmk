@@ -24,6 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# This hack here is needed to prevent "omd update" problems when updating
+# as site user from 1.4 versions older than 1.4.0p17.
+# Previous versios did not unset PYTHONPATH/LD_LIBRARY_PATH before execv()
+# to the newer version "omd" command which made the newer OMD load the old
+# python libraries. Newer versions unset these variables before, so this
+# additional execv() is only needed when updating from older versions.
+import os, sys
+if sys.argv[1] == "update" and sys.version_info[2] != 14:
+    # Prevent inheriting environment variables from this versions/site environment
+    # into the execed omd call. The OMD call must import the python version related
+    # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
+    # not already set when calling "omd update"
+    try:
+        del os.environ["PYTHONPATH"]
+    except KeyError:
+        pass
+
+    try:
+        del os.environ["LD_LIBRARY_PATH"]
+    except KeyError:
+        pass
+    os.execv(sys.argv[0], sys.argv)
+    bail_out("Cannot run execv() %s" % sys.argv[0])
+
+
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
 import string
 import random
@@ -4021,6 +4046,21 @@ def exec_other_omd(version):
     # Rerun with omd of other version
     omd_path = "/omd/versions/%s/bin/omd" % version
     if os.path.exists(omd_path):
+        if command == "update":
+            # Prevent inheriting environment variables from this versions/site environment
+            # into the execed omd call. The OMD call must import the python version related
+            # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
+            # not already set when calling "omd update"
+            try:
+                del os.environ["PYTHONPATH"]
+            except KeyError:
+                pass
+
+            try:
+                del os.environ["LD_LIBRARY_PATH"]
+            except KeyError:
+                pass
+
         os.execv(omd_path, sys.argv)
         bail_out("Cannot run bin/omd of version %s." % version)
     else:

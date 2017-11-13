@@ -1163,7 +1163,9 @@ def mode_inventory(options, args):
     if args:
         hostnames = modes.parse_hostname_list(args, with_clusters=True)
     else:
-        hostnames = None
+        # No hosts specified: do all hosts and force caching
+        hostnames = config.all_active_hosts()
+        data_sources.abstract.DataSource.set_use_cachefile()
 
     if "force" in options:
         data_sources.abstract.CheckMKAgentDataSource.use_outdated_persisted_sections()

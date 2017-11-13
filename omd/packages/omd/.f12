@@ -8,7 +8,6 @@ ROOT=/omd/sites/$SITE
 # Little install helper used during development and test
 sudo cp -v index.py $ROOT/share/omd/htdocs/index.py 
 sudo cp -v logout.php $ROOT/share/omd/htdocs/logout.php
-sudo cp -v img/* $ROOT/share/omd/htdocs/img/
 sudo rm -vf $ROOT/share/man/man8/omd.8.gz
 sudo cp -v omd.8 $ROOT/share/man/man8/omd.8
 sudo gzip $ROOT/share/man/man8/omd.8

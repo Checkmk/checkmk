@@ -9,6 +9,7 @@ from testlib import web, repo_path
 
 import cmk_base.config as config
 import cmk_base.modes
+import cmk_base.automations
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
@@ -34,7 +35,11 @@ def test_cfg(web, site):
     import cmk.debug
     cmk.debug.enable()
 
+    import cmk_base.checks as checks
+    checks.load()
+
     config.load()
+
     yield None
 
     #
@@ -51,46 +56,301 @@ def test_cfg(web, site):
     web.activate_changes()
 
 
+@pytest.fixture(scope="function", autouse=True)
+def restore_default_caching_config():
+    cmk_base.data_sources.abstract.DataSource._use_cachefile = False
+    cmk_base.data_sources.abstract.DataSource._no_cache = False
+    cmk_base.data_sources.abstract.CheckMKAgentDataSource._use_outdated_persisted_sections = False
+
+
+def _patch_data_source_run(monkeypatch, **kwargs):
+    global _counter_run
+    _counter_run = 0
+
+    defaults = {
+        "_use_cachefile"                   : False,
+        "_no_cache"                        : False,
+        "_max_cachefile_age"               : 0, # check_max_cachefile_age
+        "_use_outdated_persisted_sections" : False,
+        "_do_snmp_scan"                    : False,
+        "_on_error"                        : "raise",
+        "_use_snmpwalk_cache"              : True,
+        "_ignore_check_interval"           : True,
+    }
+    defaults.update(kwargs)
+
+    def run(self, hostname, ipaddress, get_raw_data=False):
+        assert self._use_cachefile == defaults["_use_cachefile"]
+        assert self._no_cache == defaults["_no_cache"]
+        assert self._max_cachefile_age == defaults["_max_cachefile_age"]
+
+        if isinstance(self, cmk_base.data_sources.abstract.CheckMKAgentDataSource):
+            assert self._use_outdated_persisted_sections == defaults["_use_outdated_persisted_sections"]
+
+        elif isinstance(self, cmk_base.data_sources.SNMPDataSource):
+            assert self._do_snmp_scan == defaults["_do_snmp_scan"]
+            assert self._on_error == defaults["_on_error"]
+            assert self._use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
+            assert self._ignore_check_interval == defaults["_ignore_check_interval"]
+
+        result = self._run(hostname, ipaddress, get_raw_data)
+
+        global _counter_run
+        _counter_run += 1
+
+        return result
+
+    monkeypatch.setattr(cmk_base.data_sources.abstract.DataSource, "_run", cmk_base.data_sources.abstract.DataSource.run, raising=False)
+    monkeypatch.setattr(cmk_base.data_sources.abstract.DataSource, "run", run)
+
+
+# When called without hosts, it uses all hosts and defaults to using the data source cache
+# When called with an explicit list of hosts the cache is not used by default, the option
+# --cache enables it and --no-cache enforce never to use it
+@pytest.mark.parametrize(("hosts"), [
+    (["ds-test-host1"], {}),
+    ([], {}),
+])
+@pytest.mark.parametrize(("cache"), [
+    (None, {}),
+    (True, {"_use_cachefile": True, "_max_cachefile_age": 1000000000}),
+    (False, {"_use_cachefile": False, "_no_cache": True, "_max_cachefile_age": 0}),
+])
+@pytest.mark.parametrize(("force"), [
+    (True, {"_use_outdated_persisted_sections": True}),
+    (False, {}),
+])
+def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
+    kwargs = {}
+    kwargs.update(hosts[1])
+    kwargs.update(cache[1])
+    kwargs.update(force[1])
+
+    if cache[0] is None:
+        if not hosts[0]:
+            kwargs["_use_cachefile"] = True
+        else:
+            kwargs["_use_cachefile"] = False
+
+    _patch_data_source_run(monkeypatch, **kwargs)
+
+    try:
+        if cache[0] == True:
+            cmk_base.modes.check_mk.option_cache()
+        elif cache[0] == False:
+            cmk_base.modes.check_mk.option_no_cache() # --no-cache
+
+        options = {}
+        if force[0]:
+            options["force"] = True
+
+        assert _counter_run == 0
+        cmk_base.modes.check_mk.mode_inventory(options, hosts[0])
+
+        # run() has to be called once for each requested host
+        if hosts[0] == []:
+            valid_hosts = config.all_active_realhosts()
+            valid_hosts = valid_hosts.union(config.all_active_clusters())
+        else:
+            valid_hosts = hosts[0]
+        assert _counter_run == len(valid_hosts)*2
+    finally:
+        # TODO: Can't the mode clean this up on it's own?
+        cmk_base.data_sources.restore_original_agent_caching_usage()
+
+
+def test_mode_inventory_as_check(test_cfg, monkeypatch, mock):
+    _patch_data_source_run(monkeypatch)
+
+    sys_exit = mock.patch("sys.exit", autospec=True)
+    cmk_base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1")
+    sys_exit.assert_called_once_with(0)
+    assert _counter_run == 2
+
+
+def test_mode_discover_marked_hosts(test_cfg, monkeypatch):
+    _patch_data_source_run(monkeypatch, _max_cachefile_age=120) # inventory_max_cachefile_age
+    # TODO: First configure auto discovery to make this test really work
+    cmk_base.modes.check_mk.mode_discover_marked_hosts()
+    #assert _counter_run == 2
+
+
+def test_mode_check_discovery_default(test_cfg, monkeypatch, mock):
+    _patch_data_source_run(monkeypatch, _max_cachefile_age=0)
+
+    sys_exit = mock.patch("sys.exit", autospec=True)
+    cmk_base.modes.check_mk.mode_check_discovery("ds-test-host1")
+    sys_exit.assert_called_once()
+    assert _counter_run == 2
+
+
+def test_mode_check_discovery_cached(test_cfg, monkeypatch, mock):
+    _patch_data_source_run(monkeypatch, _max_cachefile_age=1000000000, _use_cachefile=True)
+
+    try:
+        cmk_base.modes.check_mk.option_cache()
+
+        sys_exit = mock.patch("sys.exit", autospec=True)
+        cmk_base.modes.check_mk.mode_check_discovery("ds-test-host1")
+        sys_exit.assert_called_once()
+        assert _counter_run == 2
+    finally:
+        # TODO: Can't the mode clean this up on it's own?
+        cmk_base.data_sources.restore_original_agent_caching_usage()
+
+
+def test_mode_discover_all_hosts(test_cfg, monkeypatch, mock):
+    _patch_data_source_run(monkeypatch, _use_cachefile=True, _max_cachefile_age=120)
+    cmk_base.modes.check_mk.mode_discover({"discover": 1}, [])
+    assert _counter_run == len(config.all_active_realhosts())*2
+
+
+def test_mode_discover_explicit_hosts(test_cfg, monkeypatch):
+    # TODO: Is it correct that no cache is used here?
+    _patch_data_source_run(monkeypatch, _max_cachefile_age=0)
+    cmk_base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
+    assert _counter_run == 2
+
+
+def test_mode_discover_explicit_hosts_cache(test_cfg, monkeypatch):
+    try:
+        _patch_data_source_run(monkeypatch, _use_cachefile=True, _max_cachefile_age=1000000000)
+        cmk_base.modes.check_mk.option_cache()
+        cmk_base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
+        assert _counter_run == 2
+    finally:
+        # TODO: Can't the mode clean this up on it's own?
+        cmk_base.data_sources.restore_original_agent_caching_usage()
+
+
+def test_mode_discover_explicit_hosts_no_cache(test_cfg, monkeypatch):
+    _patch_data_source_run(monkeypatch, _no_cache=True, _max_cachefile_age=0)
+    cmk_base.modes.check_mk.option_no_cache() # --no-cache
+    cmk_base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
+    assert _counter_run == 2
+
+
+def test_mode_check_explicit_host(test_cfg, monkeypatch):
+    _patch_data_source_run(monkeypatch)
+    cmk_base.modes.check_mk.mode_check({}, ["ds-test-host1"])
+    assert _counter_run == 2
+
+
+def test_mode_check_explicit_host_cache(test_cfg, monkeypatch):
+    try:
+        _patch_data_source_run(monkeypatch, _use_cachefile=True, _max_cachefile_age=1000000000)
+        cmk_base.modes.check_mk.option_cache()
+        cmk_base.modes.check_mk.mode_check({}, ["ds-test-host1"])
+        assert _counter_run == 2
+    finally:
+        # TODO: Can't the mode clean this up on it's own?
+        cmk_base.data_sources.restore_original_agent_caching_usage()
+
+
+def test_mode_check_explicit_host_no_cache(test_cfg, monkeypatch):
+    _patch_data_source_run(monkeypatch, _no_cache=True, _max_cachefile_age=0)
+    cmk_base.modes.check_mk.option_no_cache() # --no-cache
+    cmk_base.modes.check_mk.mode_check({}, ["ds-test-host1"])
+    assert _counter_run == 2
+
+
+def test_mode_dump_agent_explicit_host(test_cfg, monkeypatch):
+    _patch_data_source_run(monkeypatch)
+    cmk_base.modes.check_mk.mode_dump_agent("ds-test-host1")
+    assert _counter_run == 2
+
+
+def test_mode_dump_agent_explicit_host_cache(test_cfg, monkeypatch):
+    try:
+        _patch_data_source_run(monkeypatch, _use_cachefile=True, _max_cachefile_age=1000000000)
+        cmk_base.modes.check_mk.option_cache()
+        cmk_base.modes.check_mk.mode_dump_agent("ds-test-host1")
+        assert _counter_run == 2
+    finally:
+        # TODO: Can't the mode clean this up on it's own?
+        cmk_base.data_sources.restore_original_agent_caching_usage()
+
+
+def test_mode_dump_agent_explicit_host_no_cache(test_cfg, monkeypatch):
+    _patch_data_source_run(monkeypatch, _no_cache=True, _max_cachefile_age=0)
+    cmk_base.modes.check_mk.option_no_cache() # --no-cache
+    cmk_base.modes.check_mk.mode_dump_agent("ds-test-host1")
+    assert _counter_run == 2
+
+
+@pytest.mark.parametrize(("scan"), [
+    ("@noscan", {"_do_snmp_scan": False, "_use_cachefile": True, "_max_cachefile_age": 120}),
+    ("@scan", {"_do_snmp_scan": True, "_use_cachefile": False, "_max_cachefile_age": 0}),
+])
+@pytest.mark.parametrize(("raise_errors"), [
+    ("@raiseerrors", {"_on_error": "raise"}),
+    (None, {"_on_error": "ignore"}),
+])
+def test_automation_try_discovery_caching(test_cfg, scan, raise_errors, monkeypatch):
+    kwargs = {}
+    kwargs.update(scan[1])
+    kwargs.update(raise_errors[1])
+
+    args = [scan[0]]
+    if raise_errors[0] is not None:
+        args.append(raise_errors[0])
+    args.append("ds-test-host1")
+
+    _patch_data_source_run(monkeypatch, **kwargs)
+
+    cmk_base.automations.check_mk.AutomationTryDiscovery().execute(args)
+    assert _counter_run == 4
+
+
+@pytest.mark.parametrize(("raise_errors"), [
+    ("@raiseerrors", {"_on_error": "raise"}),
+    (None, {"_on_error": "ignore"}),
+])
+@pytest.mark.parametrize(("scan"), [
+    (None, {"_do_snmp_scan": False}),
+    ("@scan", {"_do_snmp_scan": True}),
+])
+@pytest.mark.parametrize(("cache"), [
+    ("@cache", {"_max_cachefile_age": 120}), # TODO: Why not _use_cachefile=True? like try-discovery
+    (None, {"_max_cachefile_age": 0}),
+])
+def test_automation_discovery_caching(test_cfg, scan, cache, raise_errors, monkeypatch):
+    kwargs = {}
+    kwargs.update(raise_errors[1])
+    kwargs.update(scan[1])
+    kwargs.update(cache[1])
+
+    args = []
+    if raise_errors[0] is not None:
+        args.append(raise_errors[0])
+    if scan[0] is not None:
+        args.append(scan[0])
+    if cache[0] is not None:
+        args.append(cache[0])
+
+    args += [ "fixall", "ds-test-host1" ]
+
+    _patch_data_source_run(monkeypatch, **kwargs)
+
+    cmk_base.automations.check_mk.AutomationDiscovery().execute(args)
+    assert _counter_run == 2
+
+
+def test_automation_diag_host_caching(test_cfg, monkeypatch):
+    _patch_data_source_run(monkeypatch)
+
+    args = ["ds-test-host1", "agent", "127.0.0.1", None, 6557, 10, 5, None ]
+    cmk_base.automations.check_mk.AutomationDiagHost().execute(args)
+    assert _counter_run == 2
+
+
 # Globale Optionen:
-# --cache
-# --no-cache
-# --no-tcp
-# --usewalk
-# --force
+# --cache    ->
+# --no-cache ->
+# --no-tcp   ->
+# --usewalk  ->
+# --force    ->
 
-# TODO: Use force
-# TODO: With hostnames and without
-def test_mode_inventory_set_caching(test_cfg, mocker):
-    use_cachefile_patcher = mocker.patch("cmk_base.data_sources.abstract.DataSource.set_use_cachefile")
-    use_persisted_sections_patcher = mocker.patch("cmk_base.data_sources.abstract.CheckMKAgentDataSource.use_outdated_persisted_sections")
-
-    # When called without hosts, it uses all hosts and defaults to using the data source cache
-    cmk_base.modes.check_mk.mode_inventory([], [])
-    use_cachefile_patcher.assert_called_once_with()
-    use_persisted_sections_patcher.assert_not_called()
-
-    # When called with an explicit list of hosts the cache is not used by default
-    cmk_base.modes.check_mk.mode_inventory([], ["ds-test-host1"])
-    use_cachefile_patcher.assert_not_called()
-    use_persisted_sections_patcher.assert_not_called()
-
-    cmk_base.modes.check_mk.mode_inventory(["force"], ["ds-test-host1"])
-    use_cachefile_patcher.assert_not_called()
-    use_persisted_sections_patcher.assert_called()
-
-# mode_inventory()
-# mode_inventory_as_check(options, hostname):
-# mode_discover_marked_hosts():
-# mode_check_discovery(*args):
-# mode_discover(options, args):
-# mode_check(options, args):
-# dump host
-#
-# automation:
-# AutomationTryDiscovery
-# AutomationDiscovery
-# AutomationDiagHost
-#
 # Keepalive check
 # Keepalive discovery
-
+# TODO: Check the caching age for cluster hosts

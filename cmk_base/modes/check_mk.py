@@ -315,7 +315,6 @@ modes.register(Mode(
 
 def mode_dump_agent(hostname):
     import cmk_base.data_sources as data_sources
-    import cmk_base.piggyback as piggyback
     import cmk_base.ip_lookup as ip_lookup
     try:
         if config.is_cluster(hostname):
@@ -324,10 +323,13 @@ def mode_dump_agent(hostname):
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
         output = ""
+
         sources = data_sources.DataSources(hostname)
+        sources.set_max_cachefile_age(config.check_max_cachefile_age)
+
         for source in sources.get_data_sources():
             if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
-                output += source.run(hostname, ipaddress)
+                output += source.run_raw(hostname, ipaddress)
 
         # Show errors of problematic data sources
         for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
@@ -335,8 +337,6 @@ def mode_dump_agent(hostname):
                 console.error("ERROR: %s" % exc)
 
         console.output(output)
-
-        console.output(piggyback.get_piggyback_info(hostname))
     except MKAgentError, e:
         raise MKBailOut("Problem contacting agent: %s" % e)
     except MKGeneralException, e:
@@ -1165,7 +1165,7 @@ def mode_inventory(options, args):
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = config.all_active_hosts()
-        data_sources.abstract.DataSource.set_use_cachefile()
+        data_sources.abstract.DataSource.set_use_cachefile(not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
     if "force" in options:
         data_sources.abstract.CheckMKAgentDataSource.use_outdated_persisted_sections()

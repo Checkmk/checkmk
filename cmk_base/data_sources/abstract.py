@@ -58,7 +58,7 @@ class DataSource(object):
         self._max_cachefile_age = None
 
 
-    def run(self, hostname, ipaddress):
+    def run(self, hostname, ipaddress, get_raw_data=False):
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling
@@ -82,6 +82,9 @@ class DataSource(object):
             else:
                 raw_data = self._execute(hostname, ipaddress)
 
+            if get_raw_data:
+                return raw_data
+
             host_info = self._convert_to_infos(raw_data, hostname)
             assert isinstance(host_info, HostInfo)
             return host_info
@@ -93,6 +96,11 @@ class DataSource(object):
             raise MKDataSourceError(self.name(hostname, ipaddress), e)
         finally:
             cpu_tracking.pop_phase()
+
+
+    def run_raw(self, hostname, ipaddress):
+        """Small wrapper for self.run() which always returns raw data source data"""
+        return self.run(hostname, ipaddress, get_raw_data=True)
 
 
     def _execute(self, hostname, ipaddress):

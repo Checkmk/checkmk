@@ -82,6 +82,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             do_snmp_scan = False
 
         # use cache files if present?
+        # TODO: Why is this handling inconsistent with try-inventory?
         if args[0] == "@cache":
             args = args[1:]
             use_caches = True
@@ -140,8 +141,6 @@ class AutomationTryDiscovery(Automation):
         # handle this option so deep in the code. It should only be handled
         # by top-level functions.
         data_sources.abstract.DataSource.set_use_cachefile(use_caches)
-        if use_caches:
-            config.check_max_cachefile_age = config.inventory_max_cachefile_age
         hostname = args[0]
         table = discovery.get_check_preview(hostname, use_caches=use_caches,
                                   do_snmp_scan=do_snmp_scan, on_error=on_error)
@@ -1003,6 +1002,7 @@ class AutomationDiagHost(Automation):
 
             elif test == 'agent':
                 sources = data_sources.DataSources(hostname)
+                sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
                 output = ""
                 for source in sources.get_data_sources():
@@ -1011,7 +1011,7 @@ class AutomationDiagHost(Automation):
                     elif isinstance(source, data_sources.TCPDataSource):
                         source.set_port(agent_port)
 
-                    output += source.run(hostname, ipaddress)
+                    output += source.run_raw(hostname, ipaddress)
 
                 return 0, output
 

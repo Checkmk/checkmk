@@ -110,7 +110,12 @@ def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
     # the section lines need to be extended
     all_host_infos = {}
     for this_hostname, this_ipaddress, this_max_cachfile_age in hosts:
-        sources.set_max_cachefile_age(this_max_cachfile_age)
+        # In case a max_cachefile_age is given with the function call, always use this one
+        # instead of the host individual one. This is only used in discovery mode.
+        if max_cachefile_age is not None:
+            sources.set_max_cachefile_age(max_cachefile_age)
+        else:
+            sources.set_max_cachefile_age(this_max_cachfile_age)
 
         for source in sources.get_data_sources():
             host_info_of_source = source.run(this_hostname, this_ipaddress)

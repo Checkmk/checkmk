@@ -46,7 +46,8 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
 
 bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
     try {
-        PerfCounterObject counter_object(_counter_base_number, _winapi, _logger);
+        PerfCounterObject counter_object(_counter_base_number, _winapi,
+                                         _logger);
         std::vector<std::wstring> instance_names =
             counter_object.instanceNames();
         std::vector<PERF_INSTANCE_DEFINITION *> instances =

@@ -289,7 +289,8 @@ std::vector<PerfCounter> PerfCounterObject::counters() const {
 }
 
 std::vector<std::wstring> PerfCounterObject::counterNames() const {
-    std::unordered_map<DWORD, std::wstring> name_map = perf_id_map<wchar_t>(_winapi, false);
+    std::unordered_map<DWORD, std::wstring> name_map =
+        perf_id_map<wchar_t>(_winapi, false);
 
     std::vector<std::wstring> result;
     PERF_COUNTER_DEFINITION *counter = FirstCounter(_object);

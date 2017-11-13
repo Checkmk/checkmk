@@ -38,7 +38,8 @@ class SectionPerfcounter : public Section {
 
 public:
     SectionPerfcounter(const std::string &outputName,
-                       const std::string &configName, unsigned counterBaseNumber, const Environment &env,
+                       const std::string &configName,
+                       unsigned counterBaseNumber, const Environment &env,
                        Logger *logger, const WinApiAdaptor &winapi);
 
     SectionPerfcounter *withToggleIfMissing();

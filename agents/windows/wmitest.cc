@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <string>
-#include "stringutil.h"
 #include "WinApi.h"
+#include "stringutil.h"
 #include "wmiHelper.h"
 
 namespace {

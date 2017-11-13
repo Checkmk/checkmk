@@ -59,11 +59,17 @@ long strTolFunc<char>(const char *str, char **str_end, int base) {
 }
 
 template <>
-long regQueryValueEx<wchar_t>(const WinApiAdaptor &winapi, HKEY hkey, const wchar_t *name, LPBYTE result, DWORD *counters_size) {
-    return winapi.RegQueryValueExW(hkey, name, nullptr, nullptr, result, counters_size);
+long regQueryValueEx<wchar_t>(const WinApiAdaptor &winapi, HKEY hkey,
+                              const wchar_t *name, LPBYTE result,
+                              DWORD *counters_size) {
+    return winapi.RegQueryValueExW(hkey, name, nullptr, nullptr, result,
+                                   counters_size);
 }
 
 template <>
-long regQueryValueEx<char>(const WinApiAdaptor &winapi, HKEY hkey, const char *name, LPBYTE result, DWORD *counters_size) {
-    return winapi.RegQueryValueEx(hkey, name, nullptr, nullptr, result, counters_size);
+long regQueryValueEx<char>(const WinApiAdaptor &winapi, HKEY hkey,
+                           const char *name, LPBYTE result,
+                           DWORD *counters_size) {
+    return winapi.RegQueryValueEx(hkey, name, nullptr, nullptr, result,
+                                  counters_size);
 }

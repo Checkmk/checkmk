@@ -31,7 +31,10 @@
 
 namespace {
 
-int getCounterName(const WinApiAdaptor &winapi, const std::array<std::unordered_map<std::string, DWORD>, 2> &nameIdMaps, const std::string &counterName, Logger *logger) {
+int getCounterName(
+    const WinApiAdaptor &winapi,
+    const std::array<std::unordered_map<std::string, DWORD>, 2> &nameIdMaps,
+    const std::string &counterName, Logger *logger) {
     for (const auto &nameIdMap : nameIdMaps) {
         const auto it = nameIdMap.find(counterName);
 
@@ -44,7 +47,7 @@ int getCounterName(const WinApiAdaptor &winapi, const std::array<std::unordered_
     return -1;
 }
 
-} // namespace
+}  // namespace
 
 SectionSkype::SectionSkype(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
@@ -55,8 +58,7 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
 
     const std::array<std::unordered_map<std::string, DWORD>, 2> nameIdMaps = {
         perf_name_map<char>(_winapi, false),
-        perf_name_map<char>(_winapi, true)
-    };
+        perf_name_map<char>(_winapi, true)};
 
     for (const std::string &counterName :
          {"LS:WEB - Address Book Web Query",
@@ -89,9 +91,11 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
           "LS:XmppFederationProxy - Streams",
           "LS:A/V Edge - TCP Counters",
           "LS:A/V Edge - UDP Counters"}) {
-        int counterId = getCounterName(_winapi, nameIdMaps, counterName, _logger);
+        int counterId =
+            getCounterName(_winapi, nameIdMaps, counterName, _logger);
         if (counterId >= 0) {
-            withSubSection(new SectionPerfcounter(counterName, counterName, counterId, _env, _logger, _winapi));
+            withSubSection(new SectionPerfcounter(
+                counterName, counterName, counterId, _env, _logger, _winapi));
         }
     }
 
@@ -100,7 +104,8 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
     const std::string counterName = "ASP.NET Apps v4.0.30319";
     int counterId = getCounterName(_winapi, nameIdMaps, counterName, _logger);
     if (counterId >= 0) {
-        withDependentSubSection(new SectionPerfcounter(counterName, counterName, counterId, _env, _logger, _winapi));
+        withDependentSubSection(new SectionPerfcounter(
+            counterName, counterName, counterId, _env, _logger, _winapi));
     }
 }
 

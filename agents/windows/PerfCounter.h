@@ -78,8 +78,8 @@ public:
     typedef std::vector<std::pair<DWORD, std::wstring>> CounterList;
 
 public:
-    PerfCounterObject(unsigned counter_base_number,
-                      const WinApiAdaptor &winapi, Logger *logger);
+    PerfCounterObject(unsigned counter_base_number, const WinApiAdaptor &winapi,
+                      Logger *logger);
 
     bool isEmpty() const;
 

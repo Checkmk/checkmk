@@ -69,13 +69,13 @@ src/python-$(PYTHON_VERSION).msi:
 	cd src && \
 	curl -O https://www.python.org/ftp/python/$(PYTHON_VERSION)/python-$(PYTHON_VERSION).msi
 
-$(BUILD_DIR)/drive_c/python.exe: src/python-$(PYTHON_VERSION).msi
+$(BUILD_DIR)/drive_c/Python27/python.exe: src/python-$(PYTHON_VERSION).msi
 	mkdir -p $(BUILD_DIR) && \
 	export WINEPREFIX=$(BUILD_DIR) && \
 	cd $(BUILD_DIR) && \
 	cp $(CURDIR)/src/python-$(PYTHON_VERSION).msi . && \
 	wine msiexec /qn /i python-$(PYTHON_VERSION).msi && \
-	cd $(CURDIR)
+	touch $(BUILD_DIR)/drive_c/Python27/python.exe
 
 $(PYTHON_PACKAGES): $(BUILD_DIR)/drive_c/Python27/python.exe
 	# Download needed python packages including depencencies. This has to be done

@@ -45,7 +45,6 @@
 #include "StatsColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
-#include "VariadicFilter.h"
 #include "auth.h"
 #include "strutil.h"
 #include "waittriggers.h"
@@ -78,32 +77,34 @@ Query::Query(const std::list<std::string> &lines, Table *table,
     , _current_line(0)
     , _timezone_offset(0)
     , _logger(table->logger()) {
+    FilterStack filters;
+    FilterStack wait_conditions;
     for (auto &line : lines) {
         std::vector<char> line_copy(line.begin(), line.end());
         line_copy.push_back('\0');
         char *buffer = &line_copy[0];
         rstrip(buffer);
         if (strncmp(buffer, "Filter:", 7) == 0) {
-            parseFilterLine(lstrip(buffer + 7), _filter);
+            parseFilterLine(lstrip(buffer + 7), filters);
 
         } else if (strncmp(buffer, "Or:", 3) == 0) {
-            parseAndOrLine("Or", lstrip(buffer + 3),
-                           std::make_unique<OringFilter>(), _filter);
+            parseAndOrLine("Or", LogicalOperator::or_, lstrip(buffer + 3),
+                           filters);
 
         } else if (strncmp(buffer, "And:", 4) == 0) {
-            parseAndOrLine("And", lstrip(buffer + 4),
-                           std::make_unique<AndingFilter>(), _filter);
+            parseAndOrLine("And", LogicalOperator::and_, lstrip(buffer + 4),
+                           filters);
 
         } else if (strncmp(buffer, "Negate:", 7) == 0) {
-            parseNegateLine("Negate", lstrip(buffer + 7), _filter);
+            parseNegateLine("Negate", lstrip(buffer + 7), filters);
 
         } else if (strncmp(buffer, "StatsOr:", 8) == 0) {
-            parseStatsAndOrLine("StatsOr", lstrip(buffer + 8),
-                                std::make_unique<OringFilter>());
+            parseStatsAndOrLine("StatsOr", LogicalOperator::or_,
+                                lstrip(buffer + 8));
 
         } else if (strncmp(buffer, "StatsAnd:", 9) == 0) {
-            parseStatsAndOrLine("StatsAnd", lstrip(buffer + 9),
-                                std::make_unique<AndingFilter>());
+            parseStatsAndOrLine("StatsAnd", LogicalOperator::and_,
+                                lstrip(buffer + 9));
 
         } else if (strncmp(buffer, "StatsNegate:", 12) == 0) {
             parseStatsNegateLine(lstrip(buffer + 12));
@@ -142,19 +143,18 @@ Query::Query(const std::list<std::string> &lines, Table *table,
             parseKeepAliveLine(lstrip(buffer + 10));
 
         } else if (strncmp(buffer, "WaitCondition:", 14) == 0) {
-            parseFilterLine(lstrip(buffer + 14), _wait_condition);
+            parseFilterLine(lstrip(buffer + 14), wait_conditions);
 
         } else if (strncmp(buffer, "WaitConditionAnd:", 17) == 0) {
-            parseAndOrLine("WaitConditionAnd", lstrip(buffer + 17),
-                           std::make_unique<AndingFilter>(), _wait_condition);
-
+            parseAndOrLine("WaitConditionAnd", LogicalOperator::and_,
+                           lstrip(buffer + 17), wait_conditions);
         } else if (strncmp(buffer, "WaitConditionOr:", 16) == 0) {
-            parseAndOrLine("WaitConditionOr", lstrip(buffer + 16),
-                           std::make_unique<OringFilter>(), _wait_condition);
+            parseAndOrLine("WaitConditionOr", LogicalOperator::or_,
+                           lstrip(buffer + 16), wait_conditions);
 
         } else if (strncmp(buffer, "WaitConditionNegate:", 20) == 0) {
             parseNegateLine("WaitConditionNegate", lstrip(buffer + 20),
-                            _wait_condition);
+                            wait_conditions);
 
         } else if (strncmp(buffer, "WaitTrigger:", 12) == 0) {
             parseWaitTriggerLine(lstrip(buffer + 12));
@@ -186,6 +186,11 @@ Query::Query(const std::list<std::string> &lines, Table *table,
         // here, is that really what we want?
         _show_column_headers = true;
     }
+
+    _filter = std::make_unique<AndingFilter>(std::move(filters));
+    _wait_conditions_empty = wait_conditions.empty();
+    _wait_condition =
+        std::make_unique<AndingFilter>(std::move(wait_conditions));
 }
 
 void Query::invalidHeader(const std::string &message) {
@@ -208,9 +213,23 @@ std::unique_ptr<Filter> Query::createFilter(const Column &column,
     }
 }
 
-void Query::parseAndOrLine(const std::string &header, char *line,
-                           std::unique_ptr<VariadicFilter> variadic,
-                           AndingFilter &filter) {
+namespace {
+std::unique_ptr<Filter> makeFilter(
+    Query::LogicalOperator op,
+    std::vector<std::unique_ptr<Filter>> subfilters) {
+    switch (op) {
+        case Query::LogicalOperator::and_:
+            return std::make_unique<AndingFilter>(std::move(subfilters));
+            break;
+        case Query::LogicalOperator::or_:
+            return std::make_unique<OringFilter>(std::move(subfilters));
+    }
+    return nullptr;  // unreachable
+}
+}  // namespace
+
+void Query::parseAndOrLine(const std::string &header, LogicalOperator op,
+                           char *line, FilterStack &filters) {
     char *value = next_field(&line);
     if (value == nullptr) {
         invalidHeader("Missing value for " + header +
@@ -225,8 +244,9 @@ void Query::parseAndOrLine(const std::string &header, char *line,
         return;
     }
 
+    std::vector<std::unique_ptr<Filter>> subfilters;
     for (auto i = 0; i < number; ++i) {
-        if (filter.empty()) {
+        if (filters.empty()) {
             invalidHeader("error combining filters for table " +
                           _table->name() + " with '" + header + "': expected " +
                           std::to_string(number) + " filters, but only " +
@@ -235,34 +255,33 @@ void Query::parseAndOrLine(const std::string &header, char *line,
             return;
         }
 
-        auto top = filter.top();
-        filter.pop();
-        variadic->addSubfilter(std::move(top));
+        subfilters.push_back(std::move(filters.back()));
+        filters.pop_back();
     }
-    filter.push(std::move(variadic));
+    filters.push_back(makeFilter(op, std::move(subfilters)));
 }
 
 void Query::parseNegateLine(const std::string &header, char *line,
-                            AndingFilter &filter) {
+                            FilterStack &filters) {
     if (next_field(&line) != nullptr) {
         invalidHeader(header + ": does not take any arguments");
         return;
     }
 
-    if (filter.empty()) {
+    if (filters.empty()) {
         invalidHeader("error combining filters for table " + _table->name() +
                       " with '" + header +
                       "': expected 1 filters, but only 0 are on stack");
         return;
     }
 
-    auto top = filter.top();
-    filter.pop();
-    filter.push(top->negate());
+    auto top = std::move(filters.back());
+    filters.pop_back();
+    filters.push_back(top->negate());
 }
 
-void Query::parseStatsAndOrLine(const std::string &header, char *line,
-                                std::unique_ptr<VariadicFilter> variadic) {
+void Query::parseStatsAndOrLine(const std::string &header, LogicalOperator op,
+                                char *line) {
     char *value = next_field(&line);
     if (value == nullptr) {
         invalidHeader("Missing value for " + header +
@@ -278,6 +297,7 @@ void Query::parseStatsAndOrLine(const std::string &header, char *line,
     }
 
     // The last 'number' StatsColumns must be of type StatsOperation::count
+    std::vector<std::unique_ptr<Filter>> subfilters;
     for (; number > 0; --number) {
         if (_stats_columns.empty()) {
             invalidHeader("Invalid count for " + header +
@@ -291,11 +311,11 @@ void Query::parseStatsAndOrLine(const std::string &header, char *line,
                           " only on Stats: headers of filter type");
             return;
         }
-        variadic->addSubfilter(col->stealFilter());
+        subfilters.push_back(col->stealFilter());
         _stats_columns.pop_back();
     }
     _stats_columns.push_back(std::make_unique<StatsColumn>(
-        nullptr, move(variadic), StatsOperation::count));
+        nullptr, makeFilter(op, std::move(subfilters)), StatsOperation::count));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -399,7 +419,7 @@ void Query::parseStatsLine(char *line) {
     _show_column_headers = false;
 }
 
-void Query::parseFilterLine(char *line, AndingFilter &filter) {
+void Query::parseFilterLine(char *line, FilterStack &filters) {
     char *column_name = next_field(&line);
     if (column_name == nullptr) {
         invalidHeader("empty filter line");
@@ -433,7 +453,7 @@ void Query::parseFilterLine(char *line, AndingFilter &filter) {
     }
 
     if (auto sub_filter = createFilter(*column, relOp, value)) {
-        filter.push(std::move(sub_filter));
+        filters.push_back(std::move(sub_filter));
         _all_columns.insert(column);
     }
 }
@@ -732,7 +752,7 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
-    if (_filter.accepts(row, _auth_user, _timezone_offset) &&
+    if (_filter->accepts(row, _auth_user, _timezone_offset) &&
         ((_auth_user == nullptr) || _table->isAuthorized(row, _auth_user))) {
         _current_line++;
         if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
@@ -793,17 +813,17 @@ void Query::finish(QueryRenderer &q) {
 
 const std::string *Query::findValueForIndexing(
     const std::string &column_name) const {
-    return _filter.findValueForIndexing(column_name);
+    return _filter->findValueForIndexing(column_name);
 }
 
 void Query::findIntLimits(const std::string &column_name, int *lower,
                           int *upper) const {
-    return _filter.findIntLimits(column_name, lower, upper, timezoneOffset());
+    return _filter->findIntLimits(column_name, lower, upper, timezoneOffset());
 }
 
 void Query::optimizeBitmask(const std::string &column_name,
                             uint32_t *bitmask) const {
-    _filter.optimizeBitmask(column_name, bitmask, timezoneOffset());
+    _filter->optimizeBitmask(column_name, bitmask, timezoneOffset());
 }
 
 std::unique_ptr<Aggregator> Query::createAggregator(
@@ -832,14 +852,14 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 void Query::doWait() {
     // If no wait condition and no trigger is set,
     // we do not wait at all.
-    if (_wait_condition.empty() && _wait_trigger == nullptr) {
+    if (_wait_conditions_empty && _wait_trigger == nullptr) {
         return;
     }
 
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
-    if (!_wait_condition.empty() &&
-        _wait_condition.accepts(_wait_object, _auth_user, timezoneOffset())) {
+    if (!_wait_conditions_empty &&
+        _wait_condition->accepts(_wait_object, _auth_user, timezoneOffset())) {
         Debug(_logger) << "Wait condition true, no waiting neccessary";
         return;
     }
@@ -863,5 +883,5 @@ void Query::doWait() {
             }
         }
     } while (
-        !_wait_condition.accepts(_wait_object, _auth_user, timezoneOffset()));
+        !_wait_condition->accepts(_wait_object, _auth_user, timezoneOffset()));
 }

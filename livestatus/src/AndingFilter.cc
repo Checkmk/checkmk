@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
+#include <iterator>
 #include <memory>
 #include "Filter.h"
 #include "FilterVisitor.h"
@@ -62,19 +63,19 @@ bool AndingFilter::optimizeBitmask(const std::string &column_name,
 }
 
 std::unique_ptr<Filter> AndingFilter::copy() const {
-    auto result = std::make_unique<AndingFilter>();
-    for (const auto &filter : _subfilters) {
-        result->addSubfilter(filter->copy());
-    }
-    return result;
+    std::vector<std::unique_ptr<Filter>> filters;
+    std::transform(_subfilters.begin(), _subfilters.end(),
+                   std::back_inserter(filters),
+                   [](const auto &filter) { return filter->copy(); });
+    return std::make_unique<AndingFilter>(std::move(filters));
 }
 
 std::unique_ptr<Filter> AndingFilter::negate() const {
-    auto result = std::make_unique<OringFilter>();
-    for (const auto &filter : _subfilters) {
-        result->addSubfilter(filter->negate());
-    }
-    return result;
+    std::vector<std::unique_ptr<Filter>> filters;
+    std::transform(_subfilters.begin(), _subfilters.end(),
+                   std::back_inserter(filters),
+                   [](const auto &filter) { return filter->negate(); });
+    return std::make_unique<OringFilter>(std::move(filters));
 }
 
 const std::string *AndingFilter::findValueForIndexing(

@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <vector>
 #include "AndingFilter.h"
 #include "Column.h"
 #include "Filter.h"
@@ -84,7 +85,8 @@ std::unique_ptr<Filter> OffsetStringMacroColumn::createFilter(
     RelationalOperator /*unused */, const std::string & /*unused*/) const {
     Informational(logger())
         << "Sorry. No filtering on macro columns implemented yet";
-    return std::make_unique<AndingFilter>();
+    return std::make_unique<AndingFilter>(
+        std::vector<std::unique_ptr<Filter>>());
 }
 
 const char *OffsetStringMacroColumn::expandMacro(const char *macroname,

@@ -26,19 +26,21 @@
 #define OringFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
-#include "VariadicFilter.h"
+#include "Filter.h"
 #include "contact_fwd.h"
-class Filter;
 class FilterVisitor;
 class Row;
 
-class OringFilter : public VariadicFilter {
+class OringFilter : public Filter {
 public:
+    explicit OringFilter(std::vector<std::unique_ptr<Filter>> subfilters)
+        : _subfilters(std::move(subfilters)) {}
     void accept(FilterVisitor &v) const override;
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
@@ -50,6 +52,9 @@ public:
     std::unique_ptr<Filter> negate() const override;
     auto begin() const { return _subfilters.begin(); }
     auto end() const { return _subfilters.end(); }
+
+private:
+    std::vector<std::unique_ptr<Filter>> _subfilters;
 };
 
 #endif  // OringFilter_h

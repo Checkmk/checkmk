@@ -1,0 +1,10 @@
+Title: cisco_redundancy: Discover 'Redundancy Framework Status' service if devices supports that.
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p19
+Date: 1510572474
+Class: fix
+
+

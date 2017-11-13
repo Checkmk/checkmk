@@ -38,12 +38,17 @@ factory_settings["apc_symmetra_output_default_levels"] = {
 def parse_apc_symmetra_output(info):
     if not info:
         return {}
-    voltage, current, load = map(float, info[0])
-    return { "Output" : {
-        "voltage"     : voltage,
-        "current"     : current,
-        "output_load" : load,
-    }}
+
+    data = {}
+    for key, value_str in zip(["voltage", "current", "output_load"], info[0]):
+        try:
+            value = float(value_str)
+        except ValueError:
+            continue
+        else:
+            data.setdefault("Output", {})
+            data["Output"].setdefault(key, value)
+    return data
 
 
 check_info['apc_symmetra_output'] = {

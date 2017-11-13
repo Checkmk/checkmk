@@ -216,13 +216,17 @@ def save_file(path, content, mode=0660):
 
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(path, key, value):
+def save_to_mk_file(path, key, value, pprint_value = False):
+    format_func = pprint.pformat if pprint_value else repr
+
     if type(value) == dict:
-        formated = "%s.update(%s)" % (key, pprint.pformat(value))
+        formated = "%s.update(%s)" % (key, format_func(value))
     else:
-        formated = "%s += %s" % (key, pprint.pformat(value))
+        formated = "%s += %s" % (key, format_func(value))
 
     save_mk_file(path, formated)
+
+
 
 
 #.

@@ -1,0 +1,13 @@
+Title: WATO: improved "Activate Changes" performance. Config files are no longer written with pprint
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510584607
+Class: feature
+
+Per default, most of the config files are now no longer written in pretty printed format.
+You can switch back to the old format with the configuration option <tt>Pretty-Print configuration files</tt>.
+Keep in mind that pretty printing configuration files may cost some cpu time, especially on larger installations
+with hundreds of hosts, contactgroups or hosttags.

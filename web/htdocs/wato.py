@@ -11283,7 +11283,7 @@ class RoleManagement(object):
         config.roles.update(self._roles)
 
         make_nagios_directory(multisite_dir)
-        store.save_to_mk_file(multisite_dir + "roles.mk", "roles", self._roles)
+        store.save_to_mk_file(multisite_dir + "roles.mk", "roles", self._roles, pprint_value = config.wato_pprint_config)
 
         watolib.call_hook_roles_saved(self._roles)
 
@@ -16010,7 +16010,7 @@ class PasswordStore(object):
 
     def _save(self, value):
         return store.save_to_mk_file(wato_root_dir + "/passwords.mk",
-                                     key="stored_passwords", value=value)
+                                     key="stored_passwords", value=value, pprint_value = config.wato_pprint_config)
 
 
 
@@ -16569,7 +16569,7 @@ class ModeManageReadOnly(WatoMode):
 
     def _save(self):
         store.save_to_mk_file(multisite_dir + "read_only.mk",
-                          "wato_read_only", self._settings)
+                          "wato_read_only", self._settings, pprint_value = config.wato_pprint_config)
 
 
     def page(self):

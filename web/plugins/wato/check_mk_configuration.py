@@ -1012,9 +1012,22 @@ register_configvar(group,
                       "version control system GIT. You need to make sure that git is installed "
                       "on your monitoring server. The version history currently cannot be viewed "
                       "via the web GUI. Please use git command line tools within your Check_MK "
-                      "configuration directory."),
+                      "configuration directory. If you want easier tracking of configuration file changes "
+                      "simply enable the global settings option <tt>Pretty print configuration files</tt>"),
     ),
     domain = "multisite")
+
+
+register_configvar(group,
+    "wato_pprint_config",
+    Checkbox(title = _("Pretty-Print configuration files"),
+             label = _("pretty-print configuration files"),
+             help = _("When enabled, most of the configuration files are pretty printed and easier to read. "
+                      "On the downside, however, pretty printing bigger configurations can be quite slow - "
+                      "so the overall WATO GUI performance will decrease."),
+    ),
+    domain = "multisite")
+
 
 register_configvar(group,
     "wato_hide_folders_without_read_permissions",

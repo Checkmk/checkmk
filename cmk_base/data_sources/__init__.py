@@ -332,11 +332,16 @@ class DataSources(object):
         return TCPDataSource()
 
 
-    # TODO: It's not defined in which order the special agent rules overwrite eachother.
     def _get_special_agent_data_sources(self):
         special_agents = []
 
-        for agentname, ruleset in config.special_agents.items():
+        # Previous to 1.5.0 it was not defined in which order the special agent
+        # rules overwrite eachother. When multiple special agents were configured
+        # for a single host a "random" one was picked (depending on the iteration
+        # over config.special_agents.
+        # We now sort the matching special agents by their name to at least get
+        # a deterministic order of the special agents.
+        for agentname, ruleset in sorted(config.special_agents.items()):
             params = rulesets.host_extra_conf(self._hostname, ruleset)
             if params:
                 source = SpecialAgentDataSource(agentname, params[0])

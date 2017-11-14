@@ -30,7 +30,6 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
-#include <cstring>
 #include <ostream>
 #include <ratio>
 #include <stdexcept>
@@ -46,6 +45,7 @@
 #include "StringUtils.h"
 #include "Table.h"
 #include "auth.h"
+#include "opids.h"
 #include "strutil.h"
 #include "waittriggers.h"
 
@@ -55,6 +55,30 @@
 #else
 #include "nagios.h"
 #endif
+
+namespace {
+std::string nextStringArgument(char **line) {
+    if (auto value = next_field(line)) {
+        return value;
+    }
+    throw std::runtime_error("missing argument");
+}
+
+int nextNonNegativeIntegerArgument(char **line) {
+    auto value = nextStringArgument(line);
+    int number = atoi(value.c_str());
+    if (isdigit(value[0]) == 0 || number < 0) {
+        throw std::runtime_error("expected non-negative integer");
+    }
+    return number;
+}
+
+void checkNoArguments(const char *line) {
+    if (line[0] != 0) {
+        throw std::runtime_error("superfluous argument(s)");
+    }
+}
+}  // namespace
 
 Query::Query(const std::list<std::string> &lines, Table *table,
              Encoding data_encoding, size_t max_response_size,
@@ -80,101 +104,83 @@ Query::Query(const std::list<std::string> &lines, Table *table,
     FilterStack filters;
     FilterStack wait_conditions;
     for (auto &line : lines) {
-        std::vector<char> line_copy(line.begin(), line.end());
-        line_copy.push_back('\0');
-        char *buffer = &line_copy[0];
-        rstrip(buffer);
-        if (strncmp(buffer, "Filter:", 7) == 0) {
-            parseFilterLine(lstrip(buffer + 7), filters);
-
-        } else if (strncmp(buffer, "Or:", 3) == 0) {
-            parseAndOrLine("Or", LogicalOperator::or_, lstrip(buffer + 3),
-                           filters);
-
-        } else if (strncmp(buffer, "And:", 4) == 0) {
-            parseAndOrLine("And", LogicalOperator::and_, lstrip(buffer + 4),
-                           filters);
-
-        } else if (strncmp(buffer, "Negate:", 7) == 0) {
-            parseNegateLine("Negate", lstrip(buffer + 7), filters);
-
-        } else if (strncmp(buffer, "StatsOr:", 8) == 0) {
-            parseStatsAndOrLine("StatsOr", LogicalOperator::or_,
-                                lstrip(buffer + 8));
-
-        } else if (strncmp(buffer, "StatsAnd:", 9) == 0) {
-            parseStatsAndOrLine("StatsAnd", LogicalOperator::and_,
-                                lstrip(buffer + 9));
-
-        } else if (strncmp(buffer, "StatsNegate:", 12) == 0) {
-            parseStatsNegateLine(lstrip(buffer + 12));
-
-        } else if (strncmp(buffer, "Stats:", 6) == 0) {
-            parseStatsLine(lstrip(buffer + 6));
-
-        } else if (strncmp(buffer, "StatsGroupBy:", 13) == 0) {
-            parseStatsGroupLine(lstrip(buffer + 13));
-
-        } else if (strncmp(buffer, "Columns:", 8) == 0) {
-            parseColumnsLine(lstrip(buffer + 8));
-
-        } else if (strncmp(buffer, "ColumnHeaders:", 14) == 0) {
-            parseColumnHeadersLine(lstrip(buffer + 14));
-
-        } else if (strncmp(buffer, "Limit:", 6) == 0) {
-            parseLimitLine(lstrip(buffer + 6));
-
-        } else if (strncmp(buffer, "Timelimit:", 10) == 0) {
-            parseTimelimitLine(lstrip(buffer + 10));
-
-        } else if (strncmp(buffer, "AuthUser:", 9) == 0) {
-            parseAuthUserHeader(lstrip(buffer + 9));
-
-        } else if (strncmp(buffer, "Separators:", 11) == 0) {
-            parseSeparatorsLine(lstrip(buffer + 11));
-
-        } else if (strncmp(buffer, "OutputFormat:", 13) == 0) {
-            parseOutputFormatLine(lstrip(buffer + 13));
-
-        } else if (strncmp(buffer, "ResponseHeader:", 15) == 0) {
-            parseResponseHeaderLine(lstrip(buffer + 15));
-
-        } else if (strncmp(buffer, "KeepAlive:", 10) == 0) {
-            parseKeepAliveLine(lstrip(buffer + 10));
-
-        } else if (strncmp(buffer, "WaitCondition:", 14) == 0) {
-            parseFilterLine(lstrip(buffer + 14), wait_conditions);
-
-        } else if (strncmp(buffer, "WaitConditionAnd:", 17) == 0) {
-            parseAndOrLine("WaitConditionAnd", LogicalOperator::and_,
-                           lstrip(buffer + 17), wait_conditions);
-        } else if (strncmp(buffer, "WaitConditionOr:", 16) == 0) {
-            parseAndOrLine("WaitConditionOr", LogicalOperator::or_,
-                           lstrip(buffer + 16), wait_conditions);
-
-        } else if (strncmp(buffer, "WaitConditionNegate:", 20) == 0) {
-            parseNegateLine("WaitConditionNegate", lstrip(buffer + 20),
-                            wait_conditions);
-
-        } else if (strncmp(buffer, "WaitTrigger:", 12) == 0) {
-            parseWaitTriggerLine(lstrip(buffer + 12));
-
-        } else if (strncmp(buffer, "WaitObject:", 11) == 0) {
-            parseWaitObjectLine(lstrip(buffer + 11));
-
-        } else if (strncmp(buffer, "WaitTimeout:", 12) == 0) {
-            parseWaitTimeoutLine(lstrip(buffer + 12));
-
-        } else if (strncmp(buffer, "Localtime:", 10) == 0) {
-            parseLocaltimeLine(lstrip(buffer + 10));
-
-        } else if (buffer[0] == 0) {
+        auto stripped_line = mk::rstrip(line);
+        if (stripped_line.empty()) {
             break;
-
+        }
+        auto pos = stripped_line.find(':');
+        std::string header;
+        std::string rest;
+        if (pos == std::string::npos) {
+            header = stripped_line;
         } else {
-            invalidHeader("Undefined request header '" + std::string(buffer) +
-                          "'");
-            break;
+            header = stripped_line.substr(0, pos);
+            rest = mk::lstrip(stripped_line.substr(pos + 1));
+        }
+        std::vector<char> rest_copy(rest.begin(), rest.end());
+        rest_copy.push_back('\0');
+        char *arguments = &rest_copy[0];
+        try {
+            if (header == "Filter") {
+                parseFilterLine(arguments, filters);
+            } else if (header == "Or") {
+                parseAndOrLine(arguments, LogicalOperator::or_, filters);
+            } else if (header == "And") {
+                parseAndOrLine(arguments, LogicalOperator::and_, filters);
+            } else if (header == "Negate") {
+                parseNegateLine(arguments, filters);
+            } else if (header == "StatsOr") {
+                parseStatsAndOrLine(arguments, LogicalOperator::or_);
+            } else if (header == "StatsAnd") {
+                parseStatsAndOrLine(arguments, LogicalOperator::and_);
+            } else if (header == "StatsNegate") {
+                parseStatsNegateLine(arguments);
+            } else if (header == "Stats") {
+                parseStatsLine(arguments);
+            } else if (header == "StatsGroupBy") {
+                parseStatsGroupLine(arguments);
+            } else if (header == "Columns") {
+                parseColumnsLine(arguments);
+            } else if (header == "ColumnHeaders") {
+                parseColumnHeadersLine(arguments);
+            } else if (header == "Limit") {
+                parseLimitLine(arguments);
+            } else if (header == "Timelimit") {
+                parseTimelimitLine(arguments);
+            } else if (header == "AuthUser") {
+                parseAuthUserHeader(arguments);
+            } else if (header == "Separators") {
+                parseSeparatorsLine(arguments);
+            } else if (header == "OutputFormat") {
+                parseOutputFormatLine(arguments);
+            } else if (header == "ResponseHeader") {
+                parseResponseHeaderLine(arguments);
+            } else if (header == "KeepAlive") {
+                parseKeepAliveLine(arguments);
+            } else if (header == "WaitCondition") {
+                parseFilterLine(arguments, wait_conditions);
+            } else if (header == "WaitConditionAnd") {
+                parseAndOrLine(arguments, LogicalOperator::and_,
+                               wait_conditions);
+            } else if (header == "WaitConditionOr") {
+                parseAndOrLine(arguments, LogicalOperator::or_,
+                               wait_conditions);
+            } else if (header == "WaitConditionNegate") {
+                parseNegateLine(arguments, wait_conditions);
+            } else if (header == "WaitTrigger") {
+                parseWaitTriggerLine(arguments);
+            } else if (header == "WaitObject") {
+                parseWaitObjectLine(arguments);
+            } else if (header == "WaitTimeout") {
+                parseWaitTimeoutLine(arguments);
+            } else if (header == "Localtime") {
+                parseLocaltimeLine(arguments);
+            } else {
+                throw std::runtime_error("undefined request header");
+            }
+        } catch (const std::runtime_error &e) {
+            _output.setError(OutputBuffer::ResponseCode::invalid_header,
+                             header + ": " + e.what());
         }
     }
 
@@ -193,24 +199,8 @@ Query::Query(const std::list<std::string> &lines, Table *table,
         std::make_unique<AndingFilter>(std::move(wait_conditions));
 }
 
-void Query::invalidHeader(const std::string &message) {
-    _output.setError(OutputBuffer::ResponseCode::invalid_header, message);
-}
-
 void Query::invalidRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
-}
-
-std::unique_ptr<Filter> Query::createFilter(const Column &column,
-                                            RelationalOperator relOp,
-                                            const std::string &value) {
-    try {
-        return column.createFilter(relOp, value);
-    } catch (const std::runtime_error &e) {
-        invalidHeader("error creating filter on table " + _table->name() +
-                      ": " + e.what());
-        return nullptr;
-    }
 }
 
 namespace {
@@ -228,31 +218,17 @@ std::unique_ptr<Filter> makeFilter(
 }
 }  // namespace
 
-void Query::parseAndOrLine(const std::string &header, LogicalOperator op,
-                           char *line, FilterStack &filters) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("Missing value for " + header +
-                      ": need positive integer number");
-        return;
-    }
-
-    int number = atoi(value);
-    if (isdigit(value[0]) == 0 || number <= 0) {
-        invalidHeader("Invalid value for " + header +
-                      ": need positive integer number");
-        return;
-    }
-
+void Query::parseAndOrLine(char *line, LogicalOperator op,
+                           FilterStack &filters) {
+    auto number = nextNonNegativeIntegerArgument(&line);
     std::vector<std::unique_ptr<Filter>> subfilters;
     for (auto i = 0; i < number; ++i) {
         if (filters.empty()) {
-            invalidHeader("error combining filters for table " +
-                          _table->name() + " with '" + header + "': expected " +
-                          std::to_string(number) + " filters, but only " +
-                          std::to_string(i) + " " + (i == 1 ? "is" : "are") +
-                          " on stack");
-            return;
+            throw std::runtime_error(
+                "error combining filters for table '" + _table->name() +
+                "': expected " + std::to_string(number) +
+                " filters, but only " + std::to_string(i) + " " +
+                (i == 1 ? "is" : "are") + " on stack");
         }
 
         subfilters.push_back(std::move(filters.back()));
@@ -261,18 +237,11 @@ void Query::parseAndOrLine(const std::string &header, LogicalOperator op,
     filters.push_back(makeFilter(op, std::move(subfilters)));
 }
 
-void Query::parseNegateLine(const std::string &header, char *line,
-                            FilterStack &filters) {
-    if (next_field(&line) != nullptr) {
-        invalidHeader(header + ": does not take any arguments");
-        return;
-    }
-
+void Query::parseNegateLine(char *line, FilterStack &filters) {
+    checkNoArguments(line);
     if (filters.empty()) {
-        invalidHeader("error combining filters for table " + _table->name() +
-                      " with '" + header +
-                      "': expected 1 filters, but only 0 are on stack");
-        return;
+        throw("error combining filters for table '" + _table->name() +
+              "': expected 1 filters, but only 0 are on stack");
     }
 
     auto top = std::move(filters.back());
@@ -280,36 +249,19 @@ void Query::parseNegateLine(const std::string &header, char *line,
     filters.push_back(top->negate());
 }
 
-void Query::parseStatsAndOrLine(const std::string &header, LogicalOperator op,
-                                char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("Missing value for " + header +
-                      ": need non-zero integer number");
-        return;
-    }
-
-    int number = atoi(value);
-    if (isdigit(value[0]) == 0 || number <= 0) {
-        invalidHeader("Invalid value for " + header +
-                      " : need non-zero integer number");
-        return;
-    }
-
+void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
+    auto number = nextNonNegativeIntegerArgument(&line);
     // The last 'number' StatsColumns must be of type StatsOperation::count
     std::vector<std::unique_ptr<Filter>> subfilters;
     for (; number > 0; --number) {
         if (_stats_columns.empty()) {
-            invalidHeader("Invalid count for " + header +
-                          ": too few Stats: headers available");
-            return;
+            throw std::runtime_error("too few Stats: headers available");
         }
 
         auto &col = _stats_columns.back();
         if (col->operation() != StatsOperation::count) {
-            invalidHeader("Can use " + header +
-                          " only on Stats: headers of filter type");
-            return;
+            throw std::runtime_error(
+                "only valid on Stats: headers of filter type");
         }
         subfilters.push_back(col->stealFilter());
         _stats_columns.pop_back();
@@ -319,19 +271,13 @@ void Query::parseStatsAndOrLine(const std::string &header, LogicalOperator op,
 }
 
 void Query::parseStatsNegateLine(char *line) {
-    if (next_field(&line) != nullptr) {
-        invalidHeader("StatsNegate: does not take any arguments");
-        return;
-    }
+    checkNoArguments(line);
     if (_stats_columns.empty()) {
-        invalidHeader("StatsNegate: no Stats: headers available");
-        return;
+        throw std::runtime_error("no Stats: headers available");
     }
     auto &col = _stats_columns.back();
     if (col->operation() != StatsOperation::count) {
-        invalidHeader(
-            "Can use StatsNegate only on Stats: headers of filter type");
-        return;
+        throw std::runtime_error("only valid on Stats: headers of filter type");
     }
     auto to_negate = col->stealFilter();
     _stats_columns.pop_back();
@@ -341,121 +287,87 @@ void Query::parseStatsNegateLine(char *line) {
 
 void Query::parseStatsLine(char *line) {
     // first token is either aggregation operator or column name
-    char *col_or_op = next_field(&line);
-    if (col_or_op == nullptr) {
-        invalidHeader("empty stats line");
-        return;
-    }
-
-    StatsOperation operation = StatsOperation::count;
-    if (strcmp(col_or_op, "sum") == 0) {
+    auto col_or_op = nextStringArgument(&line);
+    StatsOperation operation;
+    std::string column_name;
+    if (col_or_op == "sum") {
         operation = StatsOperation::sum;
-    } else if (strcmp(col_or_op, "min") == 0) {
+        column_name = nextStringArgument(&line);
+    } else if (col_or_op == "min") {
         operation = StatsOperation::min;
-    } else if (strcmp(col_or_op, "max") == 0) {
+        column_name = nextStringArgument(&line);
+    } else if (col_or_op == "max") {
         operation = StatsOperation::max;
-    } else if (strcmp(col_or_op, "avg") == 0) {
+        column_name = nextStringArgument(&line);
+    } else if (col_or_op == "avg") {
         operation = StatsOperation::avg;
-    } else if (strcmp(col_or_op, "std") == 0) {
+        column_name = nextStringArgument(&line);
+    } else if (col_or_op == "std") {
         operation = StatsOperation::std;
-    } else if (strcmp(col_or_op, "suminv") == 0) {
+        column_name = nextStringArgument(&line);
+    } else if (col_or_op == "suminv") {
         operation = StatsOperation::suminv;
-    } else if (strcmp(col_or_op, "avginv") == 0) {
+        column_name = nextStringArgument(&line);
+    } else if (col_or_op == "avginv") {
         operation = StatsOperation::avginv;
-    }
-
-    char *column_name;
-    if (operation == StatsOperation::count) {
-        column_name = col_or_op;
+        column_name = nextStringArgument(&line);
     } else {
-        // aggregation operator is followed by column name
-        column_name = next_field(&line);
-        if (column_name == nullptr) {
-            invalidHeader("missing column name in stats header");
-            return;
-        }
+        operation = StatsOperation::count;
+        column_name = col_or_op;
     }
 
     auto column = _table->column(column_name);
     if (!column) {
-        invalidHeader("invalid stats header: table '" + _table->name() +
-                      "' has no column '" + std::string(column_name) + "'");
-        return;
+        throw std::runtime_error("table '" + _table->name() +
+                                 "' has no column '" + column_name + "'");
     }
 
     std::unique_ptr<Filter> filter;
     if (operation == StatsOperation::count) {
-        char *operator_name = next_field(&line);
-        if (operator_name == nullptr) {
-            invalidHeader(
-                "invalid stats header: missing operator after table '" +
-                std::string(column_name) + "'");
-            return;
-        }
+        auto operator_name = nextStringArgument(&line);
         RelationalOperator relOp;
         if (!relationalOperatorForName(operator_name, relOp)) {
-            invalidHeader("invalid stats operator '" +
-                          std::string(operator_name) + "'");
-            return;
+            throw std::runtime_error("invalid operator '" + operator_name +
+                                     "'");
         }
         char *value = lstrip(line);
         if (value == nullptr) {
-            invalidHeader("invalid stats: missing value after operator '" +
-                          std::string(operator_name) + "'");
-            return;
+            throw std::runtime_error("missing value after operator '" +
+                                     operator_name + "'");
         }
-
-        filter = createFilter(*column, relOp, value);
-        if (!filter) {
-            return;
-        }
+        filter = column->createFilter(relOp, value);
     }
     _stats_columns.push_back(
         std::make_unique<StatsColumn>(column.get(), move(filter), operation));
     _all_columns.insert(column);
 
-    /* Default to old behaviour: do not output column headers if we
-       do Stats queries */
+    // Default to old behaviour: do not output column headers if we do Stats
+    // queries
     _show_column_headers = false;
 }
 
 void Query::parseFilterLine(char *line, FilterStack &filters) {
-    char *column_name = next_field(&line);
-    if (column_name == nullptr) {
-        invalidHeader("empty filter line");
-        return;
-    }
-
+    auto column_name = nextStringArgument(&line);
     auto column = _table->column(column_name);
     if (!column) {
-        invalidHeader("invalid filter: table '" + _table->name() +
-                      "' has no column '" + std::string(column_name) + "'");
-        return;
+        throw std::runtime_error("table '" + _table->name() +
+                                 "' has no column '" + column_name + "'");
     }
 
-    char *operator_name = next_field(&line);
-    if (operator_name == nullptr) {
-        invalidHeader("invalid filter header: missing operator after table '" +
-                      std::string(column_name) + "'");
-        return;
-    }
+    auto operator_name = nextStringArgument(&line);
     RelationalOperator relOp;
     if (!relationalOperatorForName(operator_name, relOp)) {
-        invalidHeader("invalid filter operator '" + std::string(operator_name) +
-                      "'");
-        return;
+        throw std::runtime_error("invalid operator '" + operator_name + "'");
     }
     char *value = lstrip(line);
     if (value == nullptr) {
-        invalidHeader("invalid filter: missing value after operator '" +
-                      std::string(operator_name) + "'");
-        return;
+        throw std::runtime_error("missing value after operator '" +
+                                 operator_name + "'");
     }
 
-    if (auto sub_filter = createFilter(*column, relOp, value)) {
-        filters.push_back(std::move(sub_filter));
-        _all_columns.insert(column);
-    }
+    auto sub_filter = column->createFilter(relOp, value);
+    filters.push_back(std::move(sub_filter));
+    _all_columns.insert(column);
 }
 
 void Query::parseAuthUserHeader(char *line) {
@@ -474,7 +386,14 @@ void Query::parseStatsGroupLine(char *line) {
 }
 
 void Query::parseColumnsLine(char *line) {
-    while (char *column_name = next_field(&line)) {
+    std::string str = line;
+    const std::string sep = " \t\n\v\f\r";
+    for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
+        auto space = str.find_first_of(sep, pos);
+        auto column_name =
+            str.substr(pos, space - (space == std::string::npos ? 0 : pos));
+        pos = str.find_first_not_of(sep, space);
+
         auto column = _table->column(column_name);
         if (!column) {
             // Do not fail any longer. We might want to make this configurable.
@@ -493,21 +412,14 @@ void Query::parseColumnsLine(char *line) {
 }
 
 void Query::parseSeparatorsLine(char *line) {
-    char *token = next_field(&line);
-    std::string dsep = token == nullptr ? _separators.dataset()
-                                        : std::string(1, char(atoi(token)));
-    token = next_field(&line);
-    std::string fsep = token == nullptr ? _separators.field()
-                                        : std::string(1, char(atoi(token)));
-
-    token = next_field(&line);
-    std::string lsep = token == nullptr ? _separators.list()
-                                        : std::string(1, char(atoi(token)));
-
-    token = next_field(&line);
-    std::string hsep = token == nullptr ? _separators.hostService()
-                                        : std::string(1, char(atoi(token)));
-
+    std::string dsep =
+        std::string(1, char(nextNonNegativeIntegerArgument(&line)));
+    std::string fsep =
+        std::string(1, char(nextNonNegativeIntegerArgument(&line)));
+    std::string lsep =
+        std::string(1, char(nextNonNegativeIntegerArgument(&line)));
+    std::string hsep =
+        std::string(1, char(nextNonNegativeIntegerArgument(&line)));
     _separators = CSVSeparators(dsep, fsep, lsep, hsep);
 }
 
@@ -528,123 +440,68 @@ void Query::parseOutputFormatLine(char *line) {
             msg +=
                 std::string(msg.empty() ? "" : ", ") + "'" + entry.first + "'";
         }
-        invalidHeader("Missing/invalid output format, use one of " + msg + ".");
-        return;
+        throw std::runtime_error("missing/invalid output format, use one of " +
+                                 msg);
     }
     if (!mk::strip(format_and_rest.second).empty()) {
-        invalidHeader("OutputFormat: expects only 1 argument");
-        return;
+        throw std::runtime_error("only 1 argument expected");
     }
     _output_format = it->second;
 }
 
 void Query::parseColumnHeadersLine(char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("Missing value for ColumnHeaders: must be 'on' or 'off'");
-        return;
-    }
-
-    if (strcmp(value, "on") == 0) {
+    auto value = nextStringArgument(&line);
+    if (value == "on") {
         _show_column_headers = true;
-    } else if (strcmp(value, "off") == 0) {
+    } else if (value == "off") {
         _show_column_headers = false;
     } else {
-        invalidHeader("Invalid value for ColumnHeaders: must be 'on' or 'off'");
+        throw std::runtime_error("expected 'on' or 'off'");
     }
 }
 
 void Query::parseKeepAliveLine(char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("Missing value for KeepAlive: must be 'on' or 'off'");
-        return;
-    }
-
-    if (strcmp(value, "on") == 0) {
+    auto value = nextStringArgument(&line);
+    if (value == "on") {
         _keepalive = true;
-    } else if (strcmp(value, "off") == 0) {
+    } else if (value == "off") {
         _keepalive = false;
     } else {
-        invalidHeader("Invalid value for KeepAlive: must be 'on' or 'off'");
+        throw std::runtime_error("expected 'on' or 'off'");
     }
 }
 
 void Query::parseResponseHeaderLine(char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader(
-            "Missing value for ResponseHeader: must be 'off' or 'fixed16'");
-        return;
-    }
-
-    if (strcmp(value, "off") == 0) {
+    auto value = nextStringArgument(&line);
+    if (value == "off") {
         _output.setResponseHeader(OutputBuffer::ResponseHeader::off);
-    } else if (strcmp(value, "fixed16") == 0) {
+    } else if (value == "fixed16") {
         _output.setResponseHeader(OutputBuffer::ResponseHeader::fixed16);
     } else {
-        invalidHeader("Invalid value '" + std::string(value) +
-                      "' for ResponseHeader: must be 'off' or 'fixed16'");
+        throw std::runtime_error("expected 'off' or 'fixed16'");
     }
 }
 
 void Query::parseLimitLine(char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("Header Limit: missing value");
-    } else {
-        int limit = atoi(value);
-        if ((isdigit(value[0]) == 0) || limit < 0) {
-            invalidHeader(
-                "Invalid value for Limit: must be non-negative integer");
-        } else {
-            _limit = limit;
-        }
-    }
+    _limit = nextNonNegativeIntegerArgument(&line);
 }
 
 void Query::parseTimelimitLine(char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("Header Timelimit: missing value");
-    } else {
-        int timelimit = atoi(value);
-        if (isdigit(value[0]) == 0 || timelimit < 0) {
-            invalidHeader(
-                "Invalid value for Timelimit: must be non-negative integer (seconds)");
-        } else {
-            _time_limit = timelimit;
-            _time_limit_timeout = time(nullptr) + _time_limit;
-        }
-    }
+    _time_limit = nextNonNegativeIntegerArgument(&line);
+    _time_limit_timeout = time(nullptr) + _time_limit;
 }
 
 void Query::parseWaitTimeoutLine(char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("WaitTimeout: missing value");
-    } else {
-        int timeout = atoi(value);
-        if ((isdigit(value[0]) == 0) || timeout < 0) {
-            invalidHeader(
-                "Invalid value for WaitTimeout: must be non-negative integer");
-        } else {
-            _wait_timeout = std::chrono::milliseconds(timeout);
-        }
-    }
+    _wait_timeout =
+        std::chrono::milliseconds(nextNonNegativeIntegerArgument(&line));
 }
 
 void Query::parseWaitTriggerLine(char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("WaitTrigger: missing keyword");
-        return;
-    }
+    auto value = nextStringArgument(&line);
     struct trigger *t = trigger_find(value);
     if (t == nullptr) {
-        invalidHeader("WaitTrigger: invalid trigger '" + std::string(value) +
-                      "'. Allowed are " + trigger_all_names() + ".");
-        return;
+        throw std::runtime_error("invalid trigger '" + value +
+                                 "', allowed: " + trigger_all_names());
     }
     _wait_trigger = t;
 }
@@ -653,21 +510,16 @@ void Query::parseWaitObjectLine(char *line) {
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (_wait_object.isNull()) {
-        invalidHeader("WaitObject: object '" + std::string(objectspec) +
-                      "' not found or not supported by this table");
+        throw std::runtime_error("object '" + std::string(objectspec) +
+                                 "' not found or not supported by this table");
     }
 }
 
 void Query::parseLocaltimeLine(char *line) {
-    char *value = next_field(&line);
-    if (value == nullptr) {
-        invalidHeader("Header Localtime: missing value");
-        return;
-    }
-
+    auto value = nextNonNegativeIntegerArgument(&line);
     // Compute offset to be *added* each time we output our time and
     // *subtracted* from reference value by filter headers
-    auto diff = std::chrono::system_clock::from_time_t(atoi(value)) -
+    auto diff = std::chrono::system_clock::from_time_t(value) -
                 std::chrono::system_clock::now();
 
     // Round difference to half hour. We assume, that both clocks are more or
@@ -679,9 +531,8 @@ void Query::parseLocaltimeLine(char *line) {
     auto rounded = half_an_hour(round(hah.count()));
     auto offset = std::chrono::duration_cast<std::chrono::seconds>(rounded);
     if (offset <= std::chrono::hours(-24) || offset >= std::chrono::hours(24)) {
-        invalidHeader(
-            "Invalid Localtime header: timezone difference greater than or equal to 24 hours");
-        return;
+        throw std::runtime_error(
+            "timezone difference greater than or equal to 24 hours");
     }
 
     if (offset != std::chrono::seconds(0)) {

@@ -26,15 +26,10 @@
 #define OffsetStringMacroColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <chrono>
-#include <memory>
 #include <string>
 #include "StringColumn.h"
 #include "nagios.h"
-#include "opids.h"
-class Filter;
 class Row;
-class RowRenderer;
 
 class OffsetStringMacroColumn : public StringColumn {
 public:
@@ -48,22 +43,18 @@ public:
 
     std::string getValue(Row row) const override;
 
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
-    std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const override;
-
-    // overriden by host and service macro columns
     virtual const host *getHost(Row) const = 0;
     virtual const service *getService(Row) const = 0;
 
 private:
     const int _string_offset;
 
-    const char *expandMacro(const char *macroname, const host *hst,
-                            const service *svc) const;
-    const char *expandCustomVariables(
-        const char *varname, const customvariablesmember *custvars) const;
+    static std::string expandMacros(const std::string &raw, const host *hst,
+                                    const service *svc);
+    static const char *expandMacro(const char *macroname, const host *hst,
+                                   const service *svc);
+    static const char *expandCustomVariables(
+        const char *varname, const customvariablesmember *custvars);
 };
 
 #endif  // OffsetStringMacroColumn_h

@@ -1,0 +1,14 @@
+Title: Enable filtering on columns with macros when the Nagios core is used
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510645640
+Class: fix
+
+Some host/service columns (check_command, notes, notes_url, action_url,
+icon_image) can contain macros, and they have a corresponding "..._expanded"
+column with those macros already expanded.  Previously, it was not possible
+to use filters on those expanded columns when the Nagios core was used.
+This has been fixed.

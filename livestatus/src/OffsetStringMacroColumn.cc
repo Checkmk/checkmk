@@ -25,36 +25,25 @@
 #include "OffsetStringMacroColumn.h"
 #include <cstdlib>
 #include <cstring>
-#include <memory>
-#include <vector>
-#include "AndingFilter.h"
 #include "Column.h"
-#include "Filter.h"
-#include "Logger.h"
-#include "Renderer.h"
 #include "Row.h"
-
-extern char *macro_user[MAX_USER_MACROS];
 
 std::string OffsetStringMacroColumn::getValue(Row row) const {
     if (auto p = columnData<void>(row)) {
         auto s = offset_cast<const char *>(p, _string_offset);
-        return *s == nullptr ? "" : *s;
+        return *s == nullptr ? ""
+                             : expandMacros(*s, getHost(row), getService(row));
     }
     return "";
 }
 
-void OffsetStringMacroColumn::output(
-    Row row, RowRenderer &r, const contact * /*auth_user*/,
-    std::chrono::seconds /*timezone_offset*/) const {
-    std::string raw = getValue(row);
-    const host *hst = getHost(row);
-    const service *svc = getService(row);
-
+// static
+std::string OffsetStringMacroColumn::expandMacros(const std::string &raw,
+                                                  const host *hst,
+                                                  const service *svc) {
     // search for macro names, beginning with $
     std::string result;
     const char *scan = raw.c_str();
-
     while (*scan != 0) {
         const char *dollar = strchr(scan, '$');
         if (dollar == nullptr) {
@@ -78,20 +67,13 @@ void OffsetStringMacroColumn::output(
         }
         scan = otherdollar + 1;
     }
-    r.output(result);
+    return result;
 }
 
-std::unique_ptr<Filter> OffsetStringMacroColumn::createFilter(
-    RelationalOperator /*unused */, const std::string & /*unused*/) const {
-    Informational(logger())
-        << "Sorry. No filtering on macro columns implemented yet";
-    return std::make_unique<AndingFilter>(
-        std::vector<std::unique_ptr<Filter>>());
-}
-
+// static
 const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
                                                  const host *hst,
-                                                 const service *svc) const {
+                                                 const service *svc) {
     // host macros
     if (strcmp(macroname, "HOSTNAME") == 0) {
         return hst->name;
@@ -158,6 +140,7 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
     if (strncmp(macroname, "USER", 4) == 0) {
         int n = atoi(macroname + 4);
         if (n > 0 && n <= MAX_USER_MACROS) {
+            extern char *macro_user[MAX_USER_MACROS];
             return macro_user[n - 1];
         }
     }
@@ -165,8 +148,9 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
     return nullptr;
 }
 
+// static
 const char *OffsetStringMacroColumn::expandCustomVariables(
-    const char *varname, const customvariablesmember *custvars) const {
+    const char *varname, const customvariablesmember *custvars) {
     for (; custvars != nullptr; custvars = custvars->next) {
         if (strcasecmp(varname, custvars->variable_name) == 0) {
             return custvars->variable_value;

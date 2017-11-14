@@ -23,38 +23,29 @@
 // Boston, MA 02110-1301 USA.
 
 #include "waittriggers.h"
-#include <chrono>
-#include <condition_variable>
 #include <cstring>
 #include <mutex>
 #include <ratio>
 
-using std::chrono::milliseconds;
-using std::condition_variable;
-using std::cv_status;
-using std::mutex;
-using std::unique_lock;
-
 namespace {
-
-struct trigger *to_trigger(condition_variable *c) {
+struct trigger *to_trigger(std::condition_variable *c) {
     return reinterpret_cast<struct trigger *>(c);
 }
 
-condition_variable *from_trigger(struct trigger *c) {
-    return reinterpret_cast<condition_variable *>(c);
+std::condition_variable *from_trigger(struct trigger *c) {
+    return reinterpret_cast<std::condition_variable *>(c);
 }
 
-mutex wait_mutex;
+std::mutex wait_mutex;
 
-condition_variable cond_all;
-condition_variable cond_check;
-condition_variable cond_state;
-condition_variable cond_log;
-condition_variable cond_downtime;
-condition_variable cond_comment;
-condition_variable cond_command;
-condition_variable cond_program;
+std::condition_variable cond_all;
+std::condition_variable cond_check;
+std::condition_variable cond_state;
+std::condition_variable cond_log;
+std::condition_variable cond_downtime;
+std::condition_variable cond_comment;
+std::condition_variable cond_command;
+std::condition_variable cond_program;
 }  // namespace
 
 struct trigger *trigger_all() {
@@ -127,12 +118,12 @@ void trigger_notify_all(struct trigger *which) {
 }
 
 void trigger_wait(struct trigger *which) {
-    unique_lock<mutex> ul(wait_mutex);
+    std::unique_lock<std::mutex> ul(wait_mutex);
     from_trigger(which)->wait(ul);
 }
 
-int trigger_wait_for(struct trigger *which, unsigned ms) {
-    unique_lock<mutex> ul(wait_mutex);
-    return static_cast<int>(from_trigger(which)->wait_for(
-                                ul, milliseconds(ms)) == cv_status::no_timeout);
+std::cv_status trigger_wait_for(struct trigger *which,
+                                std::chrono::milliseconds ms) {
+    std::unique_lock<std::mutex> ul(wait_mutex);
+    return from_trigger(which)->wait_for(ul, ms);
 }

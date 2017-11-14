@@ -43,7 +43,6 @@
 #include "StatsColumn.h"
 #include "contact_fwd.h"
 #include "data_encoding.h"
-#include "opids.h"
 class Aggregator;
 class Column;
 class Filter;
@@ -111,24 +110,15 @@ private:
         _stats_groups;
     std::unordered_set<std::shared_ptr<Column>> _all_columns;
 
-    // invalidHeader can be called during header parsing
-    void invalidHeader(const std::string &message);
-
     bool doStats() const;
     void doWait();
     std::cv_status waitForTrigger() const;
-    std::unique_ptr<Filter> createFilter(const Column &column,
-                                         RelationalOperator relOp,
-                                         const std::string &value);
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(const std::string &header, LogicalOperator op,
-                        char *line, FilterStack &filters);
-    void parseNegateLine(const std::string &header, char *line,
-                         FilterStack &filters);
-    void parseStatsAndOrLine(const std::string &header, LogicalOperator op,
-                             char *line);
+    void parseAndOrLine(char *line, LogicalOperator op, FilterStack &filters);
+    void parseNegateLine(char *line, FilterStack &filters);
+    void parseStatsAndOrLine(char *line, LogicalOperator op);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);
     void parseColumnHeadersLine(char *line);

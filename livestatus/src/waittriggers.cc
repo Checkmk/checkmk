@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "waittriggers.h"
-#include <cstring>
 #include <mutex>
 #include <ratio>
 
@@ -80,29 +79,29 @@ struct trigger *trigger_program() {
     return to_trigger(&cond_program);
 }
 
-struct trigger *trigger_find(const char *name) {
-    if (strcmp(name, "all") == 0) {
+struct trigger *trigger_find(const std::string &name) {
+    if (name == "all") {
         return trigger_all();
     }
-    if (strcmp(name, "check") == 0) {
+    if (name == "check") {
         return trigger_check();
     }
-    if (strcmp(name, "state") == 0) {
+    if (name == "state") {
         return trigger_state();
     }
-    if (strcmp(name, "log") == 0) {
+    if (name == "log") {
         return trigger_log();
     }
-    if (strcmp(name, "downtime") == 0) {
+    if (name == "downtime") {
         return trigger_downtime();
     }
-    if (strcmp(name, "comment") == 0) {
+    if (name == "comment") {
         return trigger_comment();
     }
-    if (strcmp(name, "command") == 0) {
+    if (name == "command") {
         return trigger_command();
     }
-    if (strcmp(name, "program") == 0) {
+    if (name == "program") {
         return trigger_program();
     }
     return nullptr;

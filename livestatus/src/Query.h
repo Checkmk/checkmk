@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <ctime>
 #include <list>
@@ -92,7 +93,7 @@ private:
     contact *_auth_user;
     bool _wait_conditions_empty;  // TODO(sp): HACK, remove me...
     std::unique_ptr<AndingFilter> _wait_condition;
-    unsigned _wait_timeout;
+    std::chrono::milliseconds _wait_timeout;
     struct trigger *_wait_trigger;
     Row _wait_object;
     CSVSeparators _separators;
@@ -115,6 +116,7 @@ private:
 
     bool doStats() const;
     void doWait();
+    std::cv_status waitForTrigger() const;
     std::unique_ptr<Filter> createFilter(const Column &column,
                                          RelationalOperator relOp,
                                          const std::string &value);

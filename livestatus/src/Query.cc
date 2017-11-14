@@ -629,7 +629,7 @@ void Query::parseWaitTimeoutLine(char *line) {
             invalidHeader(
                 "Invalid value for WaitTimeout: must be non-negative integer");
         } else {
-            _wait_timeout = timeout;
+            _wait_timeout = std::chrono::milliseconds(timeout);
         }
     }
 }
@@ -850,38 +850,34 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
-    // If no wait condition and no trigger is set,
-    // we do not wait at all.
-    if (_wait_conditions_empty && _wait_trigger == nullptr) {
+    // TODO(sp): Funny special case, do we really want/need this?
+    if (_wait_conditions_empty && _wait_trigger != nullptr) {
+        waitForTrigger();
         return;
     }
 
-    // If a condition is set, we check the condition. If it
-    // is already true, we do not need to way
-    if (!_wait_conditions_empty &&
-        _wait_condition->accepts(_wait_object, _auth_user, timezoneOffset())) {
-        Debug(_logger) << "Wait condition true, no waiting neccessary";
-        return;
-    }
-
-    // No wait on specified trigger. If no trigger was specified
-    // we use WT_ALL as default trigger.
-    if (_wait_trigger == nullptr) {
-        _wait_trigger = trigger_all();
-    }
-
-    do {
-        if (_wait_timeout == 0) {
-            Debug(_logger) << "Waiting unlimited until condition becomes true";
-            trigger_wait(_wait_trigger);
-        } else {
-            Debug(_logger) << "Waiting " << _wait_timeout
-                           << "ms or until condition becomes true";
-            if (trigger_wait_for(_wait_trigger, _wait_timeout) == 0) {
-                Debug(_logger) << "WaitTimeout after " << _wait_timeout << "ms";
-                return;  // timeout occurred. do not wait any longer
-            }
+    // Starting from here, it's basically a standard condition variable.
+    while (
+        !_wait_condition->accepts(_wait_object, _auth_user, timezoneOffset())) {
+        if (waitForTrigger() == std::cv_status::timeout) {
+            return;
         }
-    } while (
-        !_wait_condition->accepts(_wait_object, _auth_user, timezoneOffset()));
+    }
+}
+
+std::cv_status Query::waitForTrigger() const {
+    auto trigger = _wait_trigger == nullptr ? trigger_all() : _wait_trigger;
+    if (_wait_timeout == std::chrono::milliseconds(0)) {
+        Debug(_logger) << "waiting until condition becomes true";
+        trigger_wait(trigger);
+        return std::cv_status::no_timeout;
+    }
+    Debug(_logger) << "waiting " << _wait_timeout.count()
+                   << "ms or until condition becomes true";
+    auto status = trigger_wait_for(trigger, _wait_timeout);
+    if (status == std::cv_status::timeout) {
+        Debug(_logger) << "wait timeout after " << _wait_timeout.count()
+                       << "ms";
+    }
+    return status;
 }

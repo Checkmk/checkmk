@@ -278,7 +278,7 @@ class DataSources(object):
             self._add_source(self._get_agent_data_source())
 
         self._initialize_management_board_data_sources()
-        # TODO: Piggyback datasource
+        self._initialize_piggyback_data_source()
 
 
     def _initialize_management_board_data_sources(self):
@@ -294,6 +294,10 @@ class DataSources(object):
             return
 
         self._add_source(SNMPManagementBoardDataSource())
+
+
+    def _initialize_management_board_data_sources(self):
+        self._add_source(PiggyBackDataSource())
 
 
     def _add_sources(self, sources):
@@ -317,7 +321,6 @@ class DataSources(object):
 
 
     def _get_agent_data_source(self):
-        # TODO: It's not defined in which order the special agent rules overwrite eachother.
         special_agents = self._get_special_agent_data_sources()
         if special_agents:
             return special_agents[0][1]
@@ -329,6 +332,7 @@ class DataSources(object):
         return TCPDataSource()
 
 
+    # TODO: It's not defined in which order the special agent rules overwrite eachother.
     def _get_special_agent_data_sources(self):
         special_agents = []
 
@@ -364,7 +368,6 @@ class DataSources(object):
 
 
     def get_data_sources(self):
-        # TODO: Ensure deterministic order
         return sorted(self._sources.values(), key=lambda s: s.id())
 
 

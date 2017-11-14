@@ -58,5 +58,7 @@ void TableContactGroups::answerQuery(Query *query) {
 }
 
 Row TableContactGroups::findObject(const std::string &objectspec) const {
-    return Row(core()->find_contactgroup(objectspec));
+    // TODO(sp): Remove ugly cast.
+    return Row(reinterpret_cast<contactgroup *>(
+        core()->find_contactgroup(objectspec)));
 }

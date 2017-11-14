@@ -27,11 +27,11 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "Row.h"
 #include "Table.h"
 #include "contact_fwd.h"
 class MonitoringCore;
 class Query;
+class Row;
 
 class TableServicesByGroup : public Table {
 public:
@@ -40,7 +40,9 @@ public:
     std::string namePrefix() const override;
     void answerQuery(Query *) override;
     bool isAuthorized(Row, const contact *) const override;
-    Row findObject(const std::string &objectspec) const override;
+    // NOTE: We do *not* implement findObject() here, because we don't know
+    // which service group we should refer to: Every service can be part of many
+    // service groups.
 };
 
 #endif  // TableServicesByGroup_h

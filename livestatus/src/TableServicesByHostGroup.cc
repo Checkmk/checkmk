@@ -24,9 +24,9 @@
 
 #include "TableServicesByHostGroup.h"
 #include "Query.h"
+#include "Row.h"
 #include "TableHostGroups.h"
 #include "TableServices.h"
-#include "WorldNagios.h"
 #include "auth.h"
 #include "nagios.h"
 
@@ -69,8 +69,4 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
 bool TableServicesByHostGroup::isAuthorized(Row row, const contact *ctc) const {
     auto svc = &rowData<servicebyhostgroup>(row)->_service;
     return is_authorized_for(core(), ctc, svc->host_ptr, svc);
-}
-
-Row TableServicesByHostGroup::findObject(const std::string &objectspec) const {
-    return Row(getServiceBySpec(objectspec));
 }

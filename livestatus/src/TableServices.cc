@@ -24,6 +24,7 @@
 
 #include "TableServices.h"
 #include <memory>
+#include <utility>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "Column.h"
@@ -48,9 +49,9 @@
 #include "ServiceGroupsColumn.h"
 #include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
+#include "StringUtils.h"
 #include "TableHosts.h"
 #include "TimeperiodColumn.h"
-#include "WorldNagios.h"
 #include "auth.h"
 #include "nagios.h"
 
@@ -520,5 +521,18 @@ bool TableServices::isAuthorized(Row row, const contact *ctc) const {
 }
 
 Row TableServices::findObject(const std::string &objectspec) const {
-    return Row(getServiceBySpec(objectspec));
+    // The protocol proposes spaces as a separator between the host name and the
+    // service description. That introduces the problem that host name
+    // containing spaces will not work. For that reason we alternatively allow a
+    // semicolon as a separator.
+    auto semicolon = objectspec.find(';');
+    auto host_and_desc =
+        semicolon == std::string::npos
+            ? mk::nextField(objectspec)
+            : make_pair(mk::rstrip(objectspec.substr(0, semicolon)),
+                        mk::rstrip(objectspec.substr(semicolon + 1)));
+    auto foo = find_service(const_cast<char *>(host_and_desc.first.c_str()),
+                            const_cast<char *>(host_and_desc.second.c_str()));
+
+    return Row(foo);
 }

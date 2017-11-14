@@ -1,0 +1,15 @@
+Title: Disallow group-related wait objects, avoiding crashes
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510655533
+Class: fix
+
+Using wait objects on some tables (hostsbygroup, servicesbygroup,
+servicesbyhostgroup) doesn't really make sense: Hosts and services can be
+part of many groups, so we would have to conjure up a random group out of
+thin air.  Consequently, we forbid wait objects on these tables now. 
+Previously, the monitoring core crashed when we would try to wait on such an
+object, anyway.

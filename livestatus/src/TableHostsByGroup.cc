@@ -25,6 +25,7 @@
 #include "TableHostsByGroup.h"
 #include "MonitoringCore.h"
 #include "Query.h"
+#include "Row.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
 #include "auth.h"
@@ -68,10 +69,6 @@ void TableHostsByGroup::answerQuery(Query *query) {
             }
         }
     }
-}
-
-Row TableHostsByGroup::findObject(const std::string &objectspec) const {
-    return Row(find_host(const_cast<char *>(objectspec.c_str())));
 }
 
 bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {

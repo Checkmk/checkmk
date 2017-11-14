@@ -27,9 +27,10 @@
 class HostInfo(object):
     """A wrapper class for the host information read by the data sources"""
 
-    def __init__(self, info=None, cache_info=None):
+    def __init__(self, info=None, cache_info=None, piggybacked_lines=None):
         self.info = info if info is not None else {}
         self.cache_info = cache_info if cache_info is not None else {}
+        self.piggybacked_lines = piggybacked_lines if piggybacked_lines is not None else {}
 
 
     # TODO: It should be supported that different sources produce equal sections.
@@ -41,6 +42,9 @@ class HostInfo(object):
         """Update this host info object with the contents of another one"""
         for check_type, lines in host_info.info.items():
             self.info.setdefault(check_type, []).extend(lines)
+
+        for hostname, lines in host_info.piggybacked_lines.items():
+            self.piggybacked_lines.setdefault(hostname, []).extend(lines)
 
         if host_info.cache_info:
             self.cache_info.update(host_info.cache_info)

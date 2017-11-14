@@ -66,6 +66,7 @@ class SNMPDataSource(DataSource):
     def __init__(self):
         super(SNMPDataSource, self).__init__()
         self._check_type_filter_func = None
+        self._check_types = {}
         self._do_snmp_scan = False
         self._on_error = "raise"
         self._use_snmpwalk_cache = True
@@ -106,12 +107,23 @@ class SNMPDataSource(DataSource):
         self._check_type_filter_func = filter_func
 
 
-    # TODO: Only do this once per source object
     def get_check_types(self, hostname, ipaddress):
+        """Returns a list of check types that shal be executed with this source.
+
+        The logic is only processed once per hostname+ipaddress combination. Once processed
+        check types are cached to answer subsequent calls to this function.
+        """
         if self._check_type_filter_func is None:
             raise MKGeneralException("The check type filter function has not been set")
 
-        return self._check_type_filter_func(hostname, ipaddress, on_error=self._on_error, do_snmp_scan=self._do_snmp_scan)
+        try:
+            return self._check_types[(hostname, ipaddress)]
+        except KeyError:
+            check_types = self._check_type_filter_func(hostname, ipaddress,
+                                                       on_error=self._on_error,
+                                                       do_snmp_scan=self._do_snmp_scan)
+            self._check_types[(hostname, ipaddres)] = check_types
+            return check_types
 
 
     def _execute(self, hostname, ipaddress):

@@ -1,0 +1,15 @@
+Title: Windows: allow whitespace in eventlog event source
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p27
+Date: 1513674478
+Class: fix
+
+In version 1.2.8, whitespace in event source name produced the error
+message "The system cannot find the path specified." The reason was
+premature formatting of the event source name for output by replacing
+spaces with underscore, which led to failure when trying to find the
+DLL for translating the eventlog message. The bug is no longer present
+in version 1.4.0.
+

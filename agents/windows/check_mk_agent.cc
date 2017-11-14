@@ -820,7 +820,6 @@ void process_eventlog_entry(OutputProxy &out, EventLog &event_log,
 
     // source is the application that produced the event
     std::string source_name = to_utf8((WCHAR *)(event + 1));
-    std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
     // prepare array of zero terminated strings to be inserted
     // into message template.
@@ -845,6 +844,8 @@ void process_eventlog_entry(OutputProxy &out, EventLog &event_log,
     // the one that caused the error.
     std::vector<std::string> message_files =
         event_log.getMessageFiles(source_name.c_str());
+    // Note: replacing spaces in src name must be done *after* getting msg files
+    std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
     bool success = false;
     for (const std::string &message_file : message_files) {

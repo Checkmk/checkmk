@@ -45,7 +45,8 @@ from .host_info import HostInfo
 
 class DataSource(object):
     """Abstract base class for all data source classes"""
-    # TODO: Clean these options up!
+    # TODO: Clean these options up! We need to change all call sites to use
+    #       a single DataSources() object during processing first.
     # Set by the user via command line to prevent using cached information
     _no_cache = False
     # Set by the code in different situations where we recommend,
@@ -111,7 +112,6 @@ class DataSource(object):
         The "raw data" is the raw byte string returned by the source for
         CheckMKAgentDataSource sources. The SNMPDataSource source already
         return the final info data structure."""
-        # TODO: Shouldn't we ensure decoding to unicode here?
         raise NotImplementedError()
 
 
@@ -153,11 +153,8 @@ class DataSource(object):
         except Exception, e:
             raise MKGeneralException("Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
 
-        # TODO: Use cmk.store!
         try:
-            f = open(cachefile, "w+")
-            f.write(self._to_cache_file(output))
-            f.close()
+            store.save_file(cachefile, self._to_cache_file(output))
         except Exception, e:
             raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 
@@ -262,16 +259,16 @@ class CheckMKAgentDataSource(DataSource):
         if config.agent_simulator:
             raw_data = cmk_base.agent_simulator.process(raw_data)
 
-        info, piggybacked, persisted, agent_cache_info = self._parse_info(raw_data.split("\n"), hostname)
+        info, piggybacked_lines, persisted_info, agent_cache_info = \
+                self._parse_info(raw_data.split("\n"), hostname)
 
-        host_info = HostInfo(info, agent_cache_info)
+        host_info = HostInfo(info, agent_cache_info, piggybacked_lines)
 
-        piggyback.store_piggyback_info(hostname, piggybacked)
-        self._store_persisted_info(hostname, persisted)
+        self._store_persisted_info(hostname, persisted_info)
 
         # Add information from previous persisted agent outputs, if those
         # sections are not available in the current output
-        host_info = self._update_info_with_persisted_infos(host_info, hostname)
+        host_info = self._update_info_with_persisted_info(host_info, hostname)
 
         return host_info
 
@@ -384,22 +381,34 @@ class CheckMKAgentDataSource(DataSource):
     #   | of sections that are not provided on each query.                     |
     #   '----------------------------------------------------------------------'
 
+    # TODO: This has to take the data source type into account. Otherwise the
+    #       data source types would overwrite their persisted sections. Or move
+    #       the handling to "data_sources" just like the piggyback handling?
+    #       But this still needs to be connected to the data source that produced
+    #       the persisted info, because it should be skipped in case there is new
+    #       info available.
     def _store_persisted_info(self, hostname, persisted):
-        dirname = cmk.paths.var_dir + "/persisted/"
-        if persisted:
-            if not os.path.exists(dirname):
-                os.makedirs(dirname)
+        if not persisted:
+            return
 
-            file_path = "%s/%s" % (dirname, hostname)
-            store.save_data_to_file(file_path, persisted, pretty=False)
+        file_path = "%s/persisted/%s" % (cmk.paths.var_dir, hostname)
 
-            console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
+        try:
+            os.makedirs(os.path.dirname(file_path))
+        except OSError, e:
+            if e.errno == 17: # File exists
+                pass
+            else:
+                raise
+
+        store.save_data_to_file(file_path, persisted, pretty=False)
+        console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 
 
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
     # reading and unlock after writing
-    def _update_info_with_persisted_infos(self, host_info, hostname):
+    def _update_info_with_persisted_info(self, host_info, hostname):
         # TODO: Use store.load_data_from_file
         file_path = cmk.paths.var_dir + "/persisted/" + hostname
         try:

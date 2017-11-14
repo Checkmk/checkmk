@@ -1099,10 +1099,12 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 continue # Skip not existing check silently
 
             try:
-                info = all_host_infos[(hostname, ipaddress)].info[infotype]
-            except KeyError:
+                info = data_sources.get_info_for_check(all_host_infos, hostname, ipaddress, infotype, for_discovery=True)
+            except Exception, e:
+                if cmk.debug.enabled():
+                    raise
                 exitcode = 3
-                output = "Got no data for %s" % infotype
+                output = "Error: %s" % e
 
             item_state.set_item_state_prefix(check_type, item)
 

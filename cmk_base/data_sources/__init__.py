@@ -57,7 +57,7 @@ import cmk_base.console as console
 import cmk_base.checks as checks
 import cmk_base.item_state as item_state
 import cmk_base.ip_lookup as ip_lookup
-import cmk_base.piggyback as piggyback
+import cmk_base.piggyback
 import cmk_base.snmp as snmp
 import cmk_base.core_config as core_config
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKDataSourceError, MKSNMPError, \
@@ -69,7 +69,10 @@ from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
 from .host_info import HostInfo
 
-g_data_source_errors         = {}
+# TODO: Refactor this to the DataSources() object. To be able to do this we need to refactor
+# several call sites first to work only with a single DataSources() object during processing
+# of a call.
+g_data_source_errors = {}
 
 #.
 #   .--Host infos----------------------------------------------------------.
@@ -83,7 +86,8 @@ g_data_source_errors         = {}
 #   | Processing of host infos. This is the standard mechanism of Check_MK |
 #   | to gather data for the monitoring (checking, inventory, discovery).  |
 #   '----------------------------------------------------------------------'
-# TODO: Move this to the sources? Or is it another layer on top of the sources?
+# TODO: Move this to the sources? Or is it another layer on top of the sources? Refactor this to
+#       a dedicated object HostInfos().
 
 def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
     """Generic function to gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
@@ -129,7 +133,7 @@ def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
-        piggyback.store_piggyback_raw_data(this_hostname, host_info.piggybacked_lines)
+        cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_info.piggybacked_lines)
 
     return all_host_infos
 
@@ -160,42 +164,50 @@ def get_info_for_check(all_host_infos, hostname, ipaddress, check_type, for_disc
     nodes = config.nodes_of(hostname)
     if nodes != None:
         for node_hostname in nodes:
-            # TODO: why is for_discovery handled differently?
-            node_name = node_hostname if not for_discovery else None
-            host_entries.append(((node_hostname, ip_lookup.lookup_ip_address(node_hostname)), node_name))
+            host_entries.append((node_hostname, ip_lookup.lookup_ip_address(node_hostname)))
     else:
-        node_name = hostname if config.clusters_of(hostname) and not for_discovery else None
-        host_entries.append(((hostname, ipaddress), node_name))
+        host_entries.append((hostname, ipaddress))
 
     # Now extract the sections of the relevant hosts and optionally add the node info
     info = None
-    for host_entry, is_node in host_entries:
+    for host_entry in host_entries:
         try:
             info = all_host_infos[host_entry].info[section_name]
         except KeyError:
             continue
 
-        info = _update_info_with_node_info(info, check_type, node_name)
+        info = _update_info_with_node_info(info, check_type, host_entry[0], for_discovery)
         info = _update_info_with_parse_function(info, section_name)
 
     if info is None:
         return None
 
-    # TODO: Is this correct? info!
-    info = _update_info_with_extra_sections(info, all_host_infos, hostname, ipaddress, check_type, for_discovery)
+    info = _update_info_with_extra_sections(info, all_host_infos, hostname, ipaddress, section_name, for_discovery)
 
     return info
 
 
-# If the check want's the node info, we add an additional
-# column (as the first column) with the name of the node
-# or None (in case of non-clustered nodes). On problem arises,
-# if we deal with subchecks. We assume that all subchecks
-# have the same setting here. If not, let's raise an exception.
-# TODO: Why not use the check_type instead of section_name? Inconsistent with node_info!
-def _update_info_with_node_info(info, check_type, node_name):
+def _update_info_with_node_info(info, check_type, hostname, for_discovery):
+    """Add cluster node information to the host info
+
+    If the check want's the node info, we add an additional column (as the first column) with the
+    name of the node or None in case of non-clustered nodes.
+
+    Whether or not a node info is requested by a check is not a property of the agent section. Each
+    check/subcheck can define the requirement on it's own.
+
+    When called for the discovery, the node name is always set to "None". During the discovery of
+    services we behave like a non-cluster because we don't know whether or not the service will
+    be added to the cluster or the node. This decision is made later during creation of the
+    configuation. This means that the discovery function must work independent from the node info.
+    """
     if check_type not in checks.check_info or not checks.check_info[check_type]["node_info"]:
         return info # unknown check_type or does not want node info -> do nothing
+
+    if for_discovery:
+        node_name = None
+    else:
+        node_name = hostname
 
     return _add_nodeinfo(info, node_name)
 
@@ -213,8 +225,12 @@ def _add_nodeinfo(info, nodename):
     return new_info
 
 
-# TODO: Why not use the check_type instead of section_name? Inconsistent with node_info!
 def _update_info_with_extra_sections(info, all_host_infos, hostname, ipaddress, section_name, for_discovery):
+    """Adds additional agent sections to the info the check receives.
+
+    Please note that this is not a check/subcheck individual setting. This option is related
+    to the agent section.
+    """
     if section_name not in checks.check_info or not checks.check_info[section_name]["extra_sections"]:
         return info
 
@@ -228,8 +244,13 @@ def _update_info_with_extra_sections(info, all_host_infos, hostname, ipaddress, 
 
 
 def _update_info_with_parse_function(info, section_name):
-    """Some check types define a parse function that is used to transform the info
+    """Transform the info using the defined parse functions.
+
+    Some check types define a parse function that is used to transform the info
     somehow. It is applied by this function.
+
+    Please note that this is not a check/subcheck individual setting. This option is related
+    to the agent section.
 
     All exceptions raised by the parse function will be catched and re-raised as
     MKParseFunctionError() exceptions."""
@@ -285,8 +306,8 @@ class DataSources(object):
         else:
             self._add_source(self._get_agent_data_source())
 
+        self._add_source(PiggyBackDataSource())
         self._initialize_management_board_data_sources()
-        self._initialize_piggyback_data_source()
 
 
     def _initialize_management_board_data_sources(self):
@@ -302,10 +323,6 @@ class DataSources(object):
             return
 
         self._add_source(SNMPManagementBoardDataSource())
-
-
-    def _initialize_management_board_data_sources(self):
-        self._add_source(PiggyBackDataSource())
 
 
     def _add_sources(self, sources):

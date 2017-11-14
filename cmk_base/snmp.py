@@ -59,7 +59,6 @@ _enforce_stored_walks = False
 _g_single_oid_hostname    = None
 _g_single_oid_cache       = None
 _g_walk_cache             = {}
-_g_snmp_cache_info_tables = {} # Information about SNMP caching
 
 
 #.

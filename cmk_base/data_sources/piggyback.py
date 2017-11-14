@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
+
+import cmk.paths
+
 import cmk_base.piggyback as piggyback
 
 from .abstract import CheckMKAgentDataSource
@@ -31,6 +35,12 @@ from .abstract import CheckMKAgentDataSource
 class PiggyBackDataSource(CheckMKAgentDataSource):
     def id(self):
         return "piggyback"
+
+
+    def describe(self, hostname, ipaddress):
+        path = os.path.join(cmk.paths.tmp_dir, "piggyback", hostname)
+        return "Process piggyback data from %s" % path
+
 
     def _execute(self, hostname, ipaddress):
         return piggyback.get_piggyback_raw_data(hostname) \

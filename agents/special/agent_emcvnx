@@ -210,13 +210,14 @@ print "Version: %s" % emcvnx_version
 # other commandline argument
 #print "AgentOS: %s " % emcvnx_model
 
-print "<<<emcvnx_info>>>"
+print "<<<emcvnx_info:sep(58)>>>"
 for line in cmdout:
     print line
 
 # if module "agent" was requested, fetch additional information about the
 # agent, e. g. Model and Revision
 if fetch_agent_info:
+    print "<<<emcvnx_agent:sep(58)>>>"
     cmd=basecmd + "getagent"
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)

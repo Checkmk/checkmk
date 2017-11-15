@@ -34,37 +34,39 @@ def check_humidity(humidity, params):
         }
     elif type(params) in [ list, tuple ]:
         params = {
-            "levels_lower" : (params[0], params[1]),
+            "levels_lower" : (params[1], params[0]),
             "levels"       : (params[2], params[3]),
         }
 
-    crit_lower, warn_lower = params["levels_lower"]
-    warn_upper, crit_upper = params["levels"]
+    warn_lower, crit_lower = params.get("levels_lower", (None, None))
+    warn_upper, crit_upper = params.get("levels", (None, None))
     perfdata = [ ("humidity", humidity, warn_upper, crit_upper, 0, 100) ]
     infotext = get_percent_human_readable(humidity)
 
-    levelstext_lower = " (warn/crit below %s/%s)" % (
-                        get_percent_human_readable(warn_lower),
-                        get_percent_human_readable(crit_lower))
-    levelstext_upper = " (warn/crit at %s/%s)" % (
-                        get_percent_human_readable(warn_upper),
-                        get_percent_human_readable(crit_upper))
+    if warn_lower and crit_lower:
+        levelstext_lower = " (warn/crit below %s/%s)" % (
+                            get_percent_human_readable(warn_lower),
+                            get_percent_human_readable(crit_lower))
+    if warn_upper and crit_upper:
+        levelstext_upper = " (warn/crit at %s/%s)" % (
+                            get_percent_human_readable(warn_upper),
+                            get_percent_human_readable(crit_upper))
 
     status = 0
     levelstext = ""
-    if humidity < crit_lower:
+    if crit_lower and humidity < crit_lower:
         status = 2
         levelstext = levelstext_lower
 
-    elif humidity >= crit_upper:
+    elif crit_upper and humidity >= crit_upper:
         status = 2
         levelstext = levelstext_upper
 
-    elif humidity < warn_lower:
+    elif warn_lower and humidity < warn_lower:
         status = 1
         levelstext = levelstext_lower
 
-    elif humidity >= warn_upper:
+    elif warn_upper and humidity >= warn_upper:
         status = 1
         levelstext = levelstext_upper
 

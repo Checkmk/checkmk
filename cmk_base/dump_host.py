@@ -85,33 +85,6 @@ def dump_host(hostname):
     for source in sources.get_data_sources():
         agenttypes.append(source.describe(hostname, ipaddress))
 
-    if config.is_snmp_host(hostname):
-        if config.is_usewalk_host(hostname):
-            agenttypes.append("SNMP (use stored walk)")
-        else:
-            if config.is_inline_snmp_host(hostname):
-                inline = "yes"
-            else:
-                inline = "no"
-
-            credentials = config.snmp_credentials_of(hostname)
-            if type(credentials) in [ str, unicode ]:
-                cred = "community: \'%s\'" % credentials
-            else:
-                cred = "credentials: '%s'" % ", ".join(credentials)
-
-            if config.is_snmpv3_host(hostname) or config.is_bulkwalk_host(hostname):
-                bulk = "yes"
-            else:
-                bulk = "no"
-
-            portinfo = config.snmp_port_of(hostname)
-            if portinfo == None:
-                portinfo = 'default'
-
-            agenttypes.append("SNMP (%s, bulk walk: %s, port: %s, inline: %s)" %
-                (cred, bulk, portinfo, inline))
-
     if config.is_ping_host(hostname):
         agenttypes.append('PING only')
 

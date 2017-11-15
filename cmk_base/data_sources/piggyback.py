@@ -33,9 +33,8 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         return "piggyback"
 
     def _execute(self, hostname, ipaddress):
-        # TODO: Rename to get_piggyback_data()
-        return piggyback.get_piggyback_info(hostname) \
-               + piggyback.get_piggyback_info(ipaddress)
+        return piggyback.get_piggyback_raw_data(hostname) \
+               + piggyback.get_piggyback_raw_data(ipaddress)
 
 
     def _cache_raw_data(self):

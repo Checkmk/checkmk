@@ -873,7 +873,7 @@ def mode_flush(hosts):
                 console.output(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
-        d = piggyback.remove_piggyback_info_from(host)
+        d = piggyback.remove_piggyback_raw_data_from(host)
         if d:
             console.output(tty.bold + tty.magenta  + " piggyback(%d)" % d)
 

@@ -73,7 +73,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         if not config.is_snmp_host(hostname) and checks.is_snmp_check(checkname) and \
            (not config.has_management_board(hostname) or config.management_protocol(hostname) != "snmp"):
                 passed = False
-        if not config.is_tcp_host(hostname) and not piggyback.has_piggyback_info(hostname) \
+        if not config.is_tcp_host(hostname) and not piggyback.has_piggyback_raw_data(hostname) \
            and checks.is_tcp_check(checkname):
             passed = False
         is_checkname_valid_cache[the_id] = passed

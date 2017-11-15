@@ -602,7 +602,7 @@ def is_ping_host(hostname):
     import cmk_base.piggyback as piggyback
     return not is_snmp_host(hostname) \
        and not is_tcp_host(hostname) \
-       and not piggyback.has_piggyback_info(hostname) \
+       and not piggyback.has_piggyback_raw_data(hostname) \
        and not has_management_board(hostname)
 
 

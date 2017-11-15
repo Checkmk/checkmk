@@ -1,0 +1,13 @@
+Title: Checkgroup humidity: Fix swapped lower levels and definition of only one kind of levels
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1510751624
+
+Previously, all checks of the checkgroup humidity would crash if only lower or only upper levels
+were configured. Lower levels configured in the GUI would be swapped in the check, ie the
+warn level would be interpreted as the crit level and vice versa. This has been fixed.

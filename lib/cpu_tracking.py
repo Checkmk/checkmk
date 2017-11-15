@@ -61,7 +61,11 @@ def push_phase(phase):
 
 def pop_phase():
     if current_phase != None:
-        set_phase(phase_stack[-1])
+        if len(phase_stack) == 1:
+            set_phase(None)
+        else:
+            set_phase(phase_stack[-1])
+
         del phase_stack[-1]
 
 

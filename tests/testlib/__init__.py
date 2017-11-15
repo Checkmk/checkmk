@@ -646,17 +646,15 @@ class Site(object):
     # These things are needed to make the site basically being setup. So this
     # is checked during site initialization instead of a dedicated test.
     def verify_cmk(self):
-        # First test whether or not the Check_MK is working at all
         p = self.execute(["cmk", "--help"], stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, close_fds=True)
         stdout = p.communicate()[0]
         assert p.returncode == 0, "Failed to execute 'cmk': %s" % stdout
 
-        # Then ensure the core configuration is up-to-date
-        #p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE,
-        #                 stderr=subprocess.STDOUT, close_fds=True)
-        #stdout = p.communicate()[0]
-        #assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % stdout
+        p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, close_fds=True)
+        stdout = p.communicate()[0]
+        assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % stdout
 
 
     def prepare_for_tests(self):

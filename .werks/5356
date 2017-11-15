@@ -1,0 +1,21 @@
+Title: emcvnx_info,emcvnx_agent: move information from emcvnx_info into subchecks and a agent check
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1510750001
+Class: feature
+
+This werk moves information from the existing emcvnx_info check into new subchecks
+for configuration settings, IO statistics, management port information, and storage
+processor information. Additionally, the check emcvnx_agent is added. It contains
+information about the devices that the destination Unisphere agent controls.
+This information was included in in emcvnx_info as well.
+
+Furthermore the info check now returns {CRIT} if the System Fault LED is on, the
+management port subcheck returns {CRIT} if the link is down, and the IO check
+returns {CRIT} if there are any hard errors.
+
+To use these new checks a service rediscovery on the affected hosts will be
+necessary.

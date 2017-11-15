@@ -62,8 +62,10 @@ def scenario(request, web, site):
         }
         web.set_ruleset("extra_host_conf:notification_options", rule_result)
 
-        # Make nagios check more often for incoming commands
+        # Make nagios check more often for incoming commands and add more
+        # details to the log
         site.write_file("etc/nagios/nagios.d/zzz_test_unreachable_notifications.cfg",
+            "log_passive_checks=1\n"
             "command_check_interval=1s\n")
 
         web.activate_changes()

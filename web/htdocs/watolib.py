@@ -4612,16 +4612,11 @@ class ActivateChanges(object):
         return any([ c["need_restart"] for c in self._changes_of_site(site_id) ])
 
 
+    # This function returns the last known persisted activation state
     def _last_activation_state(self, site_id):
-        last_activation_id = self._repstatus.get(site_id, {}).get("last_activation")
         manager = ActivateChangesManager()
-        manager.load()
-        try:
-            manager.load_activation(last_activation_id)
-        except MKUserError:
-            return {}
-
-        return manager.get_site_state(site_id)
+        site_state_path = os.path.join(manager.activation_persisted_dir, manager.site_filename(site_id))
+        return store.load_data_from_file(site_state_path, {})
 
 
     def _get_last_change_id(self):
@@ -4725,7 +4720,10 @@ class ActivateChangesWriter(ActivateChanges):
 
 
 class ActivateChangesManager(ActivateChanges):
-    activation_base_dir = cmk.paths.tmp_dir + "/wato/activation"
+    # Temporary data
+    activation_tmp_base_dir  = cmk.paths.tmp_dir + "/wato/activation"
+    # Persisted data
+    activation_persisted_dir = cmk.paths.var_dir + "/wato/activation"
 
     def __init__(self):
         self._sites            = []
@@ -4734,6 +4732,8 @@ class ActivateChangesManager(ActivateChanges):
         self._activate_foreign = False
         self._activation_id    = None
         self._snapshot_id      = None
+        if not os.path.exists(self.activation_persisted_dir):
+            os.makedirs(self.activation_persisted_dir)
         super(ActivateChangesManager, self).__init__()
 
 
@@ -4846,11 +4846,11 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _info_path(self):
-        return "%s/%s/info.mk" % (self.activation_base_dir, self._activation_id)
+        return "%s/%s/info.mk" % (self.activation_tmp_base_dir, self._activation_id)
 
 
     def _site_snapshot_file(self, site_id):
-        return "%s/%s/site_%s_sync.tar.gz" % (self.activation_base_dir, self._activation_id, site_id)
+        return "%s/%s/site_%s_sync.tar.gz" % (self.activation_tmp_base_dir, self._activation_id, site_id)
 
 
     def _load_activation(self):
@@ -4910,7 +4910,7 @@ class ActivateChangesManager(ActivateChanges):
         #       This single function is responsible for the slow activate changes (python tar packaging..)
         create_snapshot(self._comment)
 
-        work_dir = os.path.join(self.activation_base_dir, self._activation_id)
+        work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
         if cmk.is_managed_edition():
             import managed_snapshots
             managed_snapshots.CMESnapshotManager(work_dir, self._get_site_configurations()).generate_snapshots()
@@ -4980,7 +4980,7 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _get_site_tmp_dir(self, site_id):
-        return os.path.join(self.activation_base_dir, self._activation_id, "sync-%s-specific-%.4f" % (site_id, time.time()))
+        return os.path.join(self.activation_tmp_base_dir, self._activation_id, "sync-%s-specific-%.4f" % (site_id, time.time()))
 
 
     def _check_snapshot_creation_permissions(self, site_id):
@@ -5093,12 +5093,16 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _load_site_state(self, site_id):
-        return store.load_data_from_file(self._site_state_path(site_id), {})
+        return store.load_data_from_file(self.site_state_path(site_id), {})
 
 
-    def _site_state_path(self, site_id):
-        return "%s/%s/site_%s.mk" % \
-            (self.activation_base_dir, self._activation_id, site_id)
+    def site_state_path(self, site_id):
+        return os.path.join(self.activation_tmp_base_dir, self._activation_id, self.site_filename(site_id))
+
+
+    @classmethod
+    def site_filename(cls, site_id):
+        return "site_%s.mk" % site_id
 
 
     # Cleanup stale activations?
@@ -5126,7 +5130,7 @@ class ActivateChangesManager(ActivateChanges):
                 finally:
                     if delete:
                         shutil.rmtree("%s/%s" %
-                            (ActivateChangesManager.activation_base_dir, activation_id))
+                            (ActivateChangesManager.activation_tmp_base_dir, activation_id))
         finally:
             unlock_exclusive()
 
@@ -5134,7 +5138,7 @@ class ActivateChangesManager(ActivateChanges):
     def _existing_activation_ids(self):
         ids = []
 
-        for activation_id in os.listdir(ActivateChangesManager.activation_base_dir):
+        for activation_id in os.listdir(ActivateChangesManager.activation_tmp_base_dir):
             if len(activation_id) == 36 and activation_id[8] == "-" and activation_id[13] == "-":
                 ids.append(activation_id)
 
@@ -5265,6 +5269,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         finally:
             self._unlock_activation()
+
+            # Create a copy of last result in the persisted dir
+            manager = ActivateChangesManager()
+            manager.load()
+            manager.load_activation(self._activation_id)
+            source_path = manager.site_state_path(self._site_id)
+            shutil.copy(source_path, manager.activation_persisted_dir)
 
 
     def _activate_until_change_id(self):
@@ -5534,7 +5545,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
     def _save_state(self):
-        return store.save_data_to_file(self._state_path(), {
+        state_path = os.path.join(ActivateChangesManager.activation_tmp_base_dir,
+                                  self._activation_id,
+                                  ActivateChangesManager.site_filename(self._site_id))
+
+        return store.save_data_to_file(state_path, {
             "_site_id"          : self._site_id,
             "_phase"            : self._phase,
             "_state"            : self._state,
@@ -5547,11 +5562,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             "_expected_duration": self._expected_duration,
             "_pid"              : self._pid,
         })
-
-
-    def _state_path(self):
-        return "%s/%s/site_%s.mk" % \
-            (ActivateChangesManager.activation_base_dir, self._activation_id, self._site_id)
 
 
     def _load_expected_duration(self):

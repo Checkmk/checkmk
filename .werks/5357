@@ -1,0 +1,10 @@
+Title: cmctc_state, cmctc_config, cmctc_ports, cmctc_output, cmctc_lcp.current, cmctc_lcp.humidity, cmctc_lcp.position, cmctc_lcp.status, cmctc_lcp.user cmctc_lcp.leakage: make output for CMC-TC devices more consistent and add additional sensors
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510760004
+Class: feature
+
+

@@ -26,6 +26,20 @@
 
 
 cmctc_lcp_sensors = {
+        4 : (None, "access"),
+       12 : (None, "humidity"),
+
+       # User Sensors
+       13 : ("normally open",   "user"),
+       14 : ("normally closed", "user"),
+
+       # Leakage
+       23 : (None, "flow"),
+
+       30 : (None, "current"),
+       31 : (None, "status"),
+       32 : (None, "position"),
+
        # Blower
        40 : ("1", "blower", ),
        41 : ("2", "blower", ),
@@ -33,6 +47,8 @@ cmctc_lcp_sensors = {
        43 : ("4", "blower", ),
        44 : ("5", "blower", ),
        45 : ("6", "blower", ),
+       46 : ("7", "blower", ),
+       47 : ("8", "blower", ),
 
        # Server in/out
        48 : ("Server in 1",           "temp", ),
@@ -41,6 +57,8 @@ cmctc_lcp_sensors = {
        51 : ("Server out 2",          "temp", ),
        52 : ("Server in 3",           "temp", ),
        53 : ("Server out 3",          "temp", ),
+       54 : ("Server in 4",           "temp", ),
+       55 : ("Server out 4",          "temp", ),
 
        # Overview Server
        56 : ("Overview Server in",    "temp", ),
@@ -54,14 +72,6 @@ cmctc_lcp_sensors = {
        # Other stuff
        61 : (None, "blowergrade" ),
        62 : (None, "regulator" ),
-}
-
-cmctc_lcp_sensortypes = {
-    "temp" :        ( u" °C",    "Temperature" ),
-    "blower" :      ( " RPM",   "Blower" ),
-    "blowergrade" : ( "",      "Blower Grade" ),
-    "flow" :        ( " l/min", "Waterflow" ),
-    "regulator" :   ( "%",     "Regulator" ),
 }
 
 def inventory_cmctc_lcp(info, sensortype):
@@ -89,11 +99,27 @@ def check_cmctc_lcp(item, params, info, sensortype):
         "7" : (1, "warning"),
         "8" : (2, "too low"),
         "9" : (2, "too high"),
+        "10": (2, "error"),
     }
+
+    map_unit = {
+        "access":       "",
+        "current":      " A",
+        "status":       "",
+        "position":     "",
+        "temp" :        u" °C",
+        "blower" :      " RPM",
+        "blowergrade" : "",
+        "humidity" :    "%",
+        "flow" :        " l/min",
+        "regulator" :   "%",
+        "user" :        "",
+    }
+
     itemindex = item.split(" - ")[-1]
     for index, typeid, statuscode, value, high, low, warn, description in info:
         if itemindex == index:
-            unit = cmctc_lcp_sensortypes[sensortype][0]
+            unit = map_unit[sensortype]
             value = int(value)
             infotext = ""
             if description:
@@ -156,12 +182,16 @@ def check_cmctc_lcp_temp(item, params, info):
 
 
 
-snmp_scan_functions["cmctc_lcp"] = \
-    lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0")
+snmp_scan_functions["cmctc_lcp"] = cmctc_snmp_scan_function
 
 snmp_info["cmctc_lcp"] = (
    ".1.3.6.1.4.1.2606.4.2",
-   ["3", "4", "5", "6"],
+   [
+       "3",  # cmcTcUnit1OutputTable
+       "4",  # cmcTcUnit2OutputTable
+       "5",  # cmcTcUnit3OutputTable
+       "6"   # cmcTcUnit4OutputTable
+   ],
    [
      "5.2.1.1", # Index
      "5.2.1.2", # Sensor Type
@@ -173,6 +203,13 @@ snmp_info["cmctc_lcp"] = (
      "7.2.1.2", # Description
    ]
 )
+
+check_info['cmctc_lcp.access'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'access'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'access'),
+    "has_perfdata"        : True,
+    "service_description" : "Access %s",
+}
 
 check_info['cmctc_lcp.blower'] = {
     "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'blower'),
@@ -188,11 +225,32 @@ check_info['cmctc_lcp.blowergrade'] = {
     "service_description" : "Blower Grade %s",
 }
 
+check_info['cmctc_lcp.current'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'current'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'current'),
+    "has_perfdata"        : True,
+    "service_description" : "Current %s",
+}
+
 check_info['cmctc_lcp.flow'] = {
     "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'flow'),
     "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'flow'),
     "has_perfdata"        : True,
     "service_description" : "Waterflow %s",
+}
+
+check_info['cmctc_lcp.humidity'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'humidity'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'humidity'),
+    "has_perfdata"        : True,
+    "service_description" : "Humidity %s",
+}
+
+check_info['cmctc_lcp.position'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'position'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'position'),
+    "has_perfdata"        : True,
+    "service_description" : "Position %s",
 }
 
 check_info['cmctc_lcp.regulator'] = {
@@ -201,6 +259,21 @@ check_info['cmctc_lcp.regulator'] = {
     "has_perfdata"        : True,
     "service_description" : "Regulator %s",
 }
+
+check_info['cmctc_lcp.status'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'status'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'status'),
+    "has_perfdata"        : True,
+    "service_description" : "Status %s",
+}
+
+check_info['cmctc_lcp.user'] = {
+    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'user'),
+    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'user'),
+    "has_perfdata"        : True,
+    "service_description" : "User Sensor %s",
+}
+
 
 # temperature check is standardised
 check_info['cmctc_lcp.temp'] = {

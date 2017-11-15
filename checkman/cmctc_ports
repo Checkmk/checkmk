@@ -1,15 +1,15 @@
-title: Rittal CMC-II Units: Ports
+title: Rittal CMC-TC: Ports
 agents: snmp
 catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:
- This check monitors the status of the ports of Rittal CMC-II devices.
+ This check monitors the status of the ports of Rittal CMC-TC devices.
  Additionally, the device type and serial number of attached devices
  are shown.
 
 item:
- The description of the attached device.
+ The port number and description of the attached device.
 
 inventory:
  One item per detected device.

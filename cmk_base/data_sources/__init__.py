@@ -24,6 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Naming:
+#
+# raw data: The raw unparsed data produced by the data source (_execute()).
+#           For the agent this is the whole byte string received from the
+#           agent. For SNMP this is a python data structure containing
+#           all OID/values received from SNMP.
+# info:     The parsed raw data recevied from the data source (run()).
+#           The transformation from the raw data is done by the
+#           _convert_to_infos() method of the source.
+# host_info A wrapper object for the "info" and other information like
+#           cache info and piggyback lines that is used to process the
+#           data within Check_MK.
+
 import ast
 import os
 import signal
@@ -75,16 +88,7 @@ g_data_source_errors         = {}
 def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
     """Generic function to gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
-    Returns a dictionary of already parsed info constructs. The structure looks like this:
-
-    {
-        ("hostname", "ipaddress"): {
-            "section_name": [
-                [ "line1field1", ... ],
-                [ "line2field1", ... ],
-            ]
-        }
-    }
+    Returns a HostInfo() object of already parsed info constructs.
 
     Communication errors are not raised through by this functions. All agent related errors are
     stored in the g_data_source_errors construct which can be accessed by the caller to get
@@ -122,6 +126,10 @@ def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
 
             host_info = all_host_infos.setdefault((this_hostname, this_ipaddress), HostInfo())
             host_info.update(host_info_of_source)
+
+        # Store piggyback information received from all sources of this host. This
+        # also implies a removal of piggyback files received during previous calls.
+        piggyback.store_piggyback_raw_data(this_hostname, host_info.piggybacked_lines)
 
     return all_host_infos
 

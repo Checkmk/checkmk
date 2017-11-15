@@ -36,25 +36,25 @@ import cmk_base.console as console
 import cmk_base.config as config
 
 
-def get_piggyback_info(hostname):
+def get_piggyback_raw_data(hostname):
     output = ""
     if not hostname:
         return output
-    for sourcehost, file_path in get_piggyback_files(hostname):
+    for sourcehost, file_path in _get_piggyback_files(hostname):
         console.verbose("Using piggyback information from host %s.\n" % sourcehost)
         output += file(file_path).read()
     return output
 
 
-def has_piggyback_info(hostname):
-    return get_piggyback_files(hostname) != []
+def has_piggyback_raw_data(hostname):
+    return _get_piggyback_files(hostname) != []
 
 
-def get_piggyback_files(hostname):
+def _get_piggyback_files(hostname):
     files = []
     dir = cmk.paths.tmp_dir + "/piggyback/" + hostname
 
-    # remove_piggyback_info_from() may remove stale piggyback files of one source
+    # remove_piggyback_raw_data_from() may remove stale piggyback files of one source
     # host and also the directory "hostname" when the last piggyback file for the
     # current host was removed. This may cause the os.listdir() to fail. We treat
     # this as regular case: No piggyback files for the current host.
@@ -97,7 +97,7 @@ def get_piggyback_files(hostname):
     return files
 
 
-def store_piggyback_info(sourcehost, piggybacked):
+def store_piggyback_raw_data(sourcehost, piggybacked):
     for backedhost, lines in piggybacked.items():
         console.verbose("Storing piggyback data for %s.\n" % backedhost)
         content = "\n".join(lines) + "\n"
@@ -105,10 +105,10 @@ def store_piggyback_info(sourcehost, piggybacked):
 
     # Remove piggybacked information that is not
     # being sent this turn
-    remove_piggyback_info_from(sourcehost, keep=piggybacked.keys())
+    remove_piggyback_raw_data_from(sourcehost, keep=piggybacked.keys())
 
 
-def remove_piggyback_info_from(sourcehost, keep=None):
+def remove_piggyback_raw_data_from(sourcehost, keep=None):
     if keep is None:
         keep = []
 

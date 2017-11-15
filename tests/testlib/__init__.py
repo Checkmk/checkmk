@@ -256,6 +256,8 @@ class Site(object):
             schedule_ts = time.time()
             time.sleep(0.1)
 
+        print "last_check_before", last_check_before, "schedule_ts", schedule_ts
+
         self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (schedule_ts, hostname, state, output))
 
         last_check, host_state = self.live.query_row(
@@ -271,8 +273,9 @@ class Site(object):
         print "processing host check result took %0.2f seconds" % (time.time() - schedule_ts)
 
         assert last_check > last_check_before, \
-            "Check result not processed within %d seconds (%d, %d)" % \
-                (wait_timeout, last_check, last_check_before)
+                "Check result not processed within %d seconds (last check before reschedule: %d, " \
+                "scheduled at: %d, last check: %d)" % \
+                (wait_timeout, last_check_before, schedule_ts, last_check)
 
         assert host_state == expected_state, \
             "Expected %d state, got %d state" % (expected_state, host_state)

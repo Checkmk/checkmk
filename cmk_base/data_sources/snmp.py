@@ -77,6 +77,34 @@ class SNMPDataSource(DataSource):
         return "snmp"
 
 
+    def describe(self, hostname, ipaddress):
+        if config.is_usewalk_host(hostname):
+            return "SNMP (use stored walk)"
+
+        if config.is_inline_snmp_host(hostname):
+            inline = "yes"
+        else:
+            inline = "no"
+
+        credentials = config.snmp_credentials_of(hostname)
+        if type(credentials) in [ str, unicode ]:
+            cred = "Community: %r" % credentials
+        else:
+            cred = "Credentials: '%s'" % ", ".join(credentials)
+
+        if config.is_snmpv3_host(hostname) or config.is_bulkwalk_host(hostname):
+            bulk = "yes"
+        else:
+            bulk = "no"
+
+        portinfo = config.snmp_port_of(hostname)
+        if portinfo == None:
+            portinfo = 'default'
+
+        return "SNMP (%s, Bulk walk: %s, Port: %s, Inline: %s)" % \
+                                   (cred, bulk, portinfo, inline)
+
+
     def _from_cache_file(self, raw_data):
         return ast.literal_eval(raw_data)
 

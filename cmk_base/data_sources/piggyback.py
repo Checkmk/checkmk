@@ -47,5 +47,10 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
                + piggyback.get_piggyback_raw_data(ipaddress)
 
 
-    def _cache_raw_data(self):
-        return False
+    def _get_raw_data(self, hostname, ipaddress):
+        """Returns the current raw data of this data source
+
+        Special for piggyback: No caching of raw data
+        """
+        self._logger.verbose("[%s] Execute data source" % self.id())
+        return self._execute(hostname, ipaddress)

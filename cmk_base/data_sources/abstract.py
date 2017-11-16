@@ -46,16 +46,22 @@ from .host_info import HostInfo
 class DataSource(object):
     """Abstract base class for all data source classes"""
     # TODO: Clean these options up! We need to change all call sites to use
-    #       a single DataSources() object during processing first.
-    # Set by the user via command line to prevent using cached information
+    #       a single DataSources() object during processing first. Then we
+    #       can change these class attributes to object attributes.
+    #
+    # Set by the user via command line to prevent using cached information at all
     _no_cache = False
-    # Set by the code in different situations where we recommend,
-    # but not enforce, to use the cache
-    _use_cachefile = False
+    # Set by the code in different situations where we recommend, but not enforce,
+    # to use the cache. The user can always use "--cache" to override this.
+    _may_use_cache_file = False
+    # Is set by the "--cache" command line. This makes the caching logic use
+    # cache files that are even older than the max_cachefile_age of the host/mode.
+    _use_outdated_cache_file = False
     _use_outdated_persisted_sections = False
 
     def __init__(self):
         super(DataSource, self).__init__()
+        self._logger = console.logger
         self._max_cachefile_age = None
         self._enforced_check_types = None
 
@@ -72,19 +78,7 @@ class DataSource(object):
         try:
             cpu_tracking.push_phase(self._cpu_tracking_id())
 
-            # The "raw data" is the raw byte string returned by the source for
-            # CheckMKAgentDataSource sources. The SNMPDataSource source already
-            # return the final info data structure.
-            if self._cache_raw_data():
-                raw_data = self._read_cache_file(hostname)
-                if not raw_data:
-                    raw_data = self._execute(hostname, ipaddress)
-                    self._write_cache_file(hostname, raw_data)
-
-            else:
-                console.verbose("[%s] Get data from data source\n" % self.id())
-                raw_data = self._execute(hostname, ipaddress)
-
+            raw_data = self._get_raw_data(hostname, ipaddress)
             if get_raw_data:
                 return raw_data
 
@@ -108,6 +102,32 @@ class DataSource(object):
             cpu_tracking.pop_phase()
 
 
+    def _get_raw_data(self, hostname, ipaddress):
+        """Returns the current raw data of this data source
+
+        It either uses previously cached raw data of this data source or
+        executes the data source to get new data.
+
+        The "raw data" is the raw byte string returned by the source for
+        CheckMKAgentDataSource sources. The SNMPDataSource source already
+        return the final info data structure.
+        """
+        raw_data = self._read_cache_file(hostname)
+        if raw_data:
+            self._logger.verbose("[%s] Use cached data" % self.id())
+            return raw_data
+
+        elif raw_data is None and config.simulation_mode:
+            raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
+
+        self._logger.verbose("[%s] Execute data source" % self.id())
+        raw_data = self._execute(hostname, ipaddress)
+
+        self._write_cache_file(hostname, raw_data)
+
+        return raw_data
+
+
     def run_raw(self, hostname, ipaddress):
         """Small wrapper for self.run() which always returns raw data source data"""
         return self.run(hostname, ipaddress, get_raw_data=True)
@@ -125,27 +145,37 @@ class DataSource(object):
 
 
     def _read_cache_file(self, hostname):
-        # TODO: Use store.load_data_from_file
-        # TODO: Refactor this to be more readable
         assert self._max_cachefile_age is not None
 
         cachefile = self._cache_file_path(hostname)
 
-        if os.path.exists(cachefile) and (
-            (self._use_cachefile and ( not self._no_cache ) )
-            or (config.simulation_mode and not self._no_cache) ):
-            if cmk_base.utils.cachefile_age(cachefile) <= self._max_cachefile_age or config.simulation_mode:
-                result = open(cachefile).read()
-                if result:
-                    console.verbose("Using data from cachefile %s.\n" % cachefile)
-                    return self._from_cache_file(result)
-            else:
-                console.vverbose("Skipping cache file %s: Too old "
-                                 "(age is %d sec, allowed is %s sec)\n" %
-                                 (cachefile, cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
+        if not os.path.exists(cachefile):
+            self._logger.debug("[%s] Not using cache (Does not exist)" % self.id())
+            return
 
-        if config.simulation_mode and not self._no_cache:
-            raise MKAgentError("Simulation mode and no cachefile present.")
+        if self._no_cache:
+            self._logger.debug("[%s] Not using cache (Cache usage disabled)" % self.id())
+            return
+
+        if not self._may_use_cache_file and not config.simulation_mode:
+            self._logger.debug("[%s] Not using cache (Don't try it)" % self.id())
+            return
+
+        may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
+        if not may_use_outdated and cmk_base.utils.cachefile_age(cachefile) > self._max_cachefile_age:
+            self._logger.debug("[%s] Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
+                             (cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
+            return
+
+        # TODO: Use some generic store file read function to generalize error handling,
+        # but there is currently no function that simply reads data from the file
+        result = open(cachefile).read()
+        if not result:
+            self._logger.debug("[%s] Not using cache (Empty)" % self.id())
+            return
+
+        self._logger.verbose("[%s] Using data from cache file %s" % (self.id(), cachefile))
+        return self._from_cache_file(result)
 
 
     def _write_cache_file(self, hostname, output):
@@ -174,10 +204,6 @@ class DataSource(object):
 
     def _to_cache_file(self, raw_data):
         return raw_data
-
-
-    def _cache_raw_data(self):
-        return True
 
 
     def _convert_to_infos(self, raw_data, hostname):
@@ -267,13 +293,13 @@ class DataSource(object):
 
 
     @classmethod
-    def get_use_cachefile(cls):
-        return cls._use_cachefile
+    def get_may_use_cache_file(cls):
+        return cls._may_use_cache_file
 
 
     @classmethod
-    def set_use_cachefile(cls, state=True):
-        cls._use_cachefile = state
+    def set_may_use_cache_file(cls, state=True):
+        cls._may_use_cache_file = state
 
 
     #.
@@ -304,41 +330,44 @@ class DataSource(object):
                 raise
 
         store.save_data_to_file(file_path, persisted_info, pretty=False)
-        console.verbose("Persisted sections %s.\n" % ", ".join(persisted_info.keys()))
+        self._logger.debug("[%s] Stored persisted sections: %s" % (self.id(), ", ".join(persisted_info.keys())))
 
 
     def _load_persisted_info(self, hostname):
         file_path = self._persisted_info_file_path(hostname)
 
         persisted_info = store.load_data_from_file(file_path, {})
-        return self._filter_outdated_persisted_info(persisted_info)
+        persisted_info = self._filter_outdated_persisted_info(persisted_info, hostname)
+        self._logger.debug("[%s] Loaded persisted sections: %s" % (self.id(), ", ".join(persisted_info.keys())))
+        return persisted_info
 
 
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
     # reading and unlock after writing
-    def _filter_outdated_persisted_info(persisted_info):
+    def _filter_outdated_persisted_info(self, persisted_info, hostname):
         now = time.time()
         modified = False
         for section_name, entry in persisted_info.items():
             if len(entry) == 2:
-                persisted_until, section = entry
+                persisted_until = entry[0]
             else:
-                persisted_until, section = entry[1:]
+                persisted_until = entry[1]
 
             if not self._use_outdated_persisted_sections and now > persisted_until:
-                console.verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" %
-                                                       (section_name, now - persisted_until))
+                self._logger.debug("[%s] Persisted section %s is outdated by %d seconds. Deleting it." %
+                                                       (self.id(), section_name, now - persisted_until))
                 del persisted_info[section_name]
                 modified = True
 
         if not persisted_info:
             try:
-                os.remove(file_path)
+                os.remove(self._persisted_info_file_path(hostname))
             except OSError:
                 pass
 
         elif modified:
+            print "XXXXXX"
             self._store_persisted_info(hostname, persisted_info)
 
         return persisted_info
@@ -347,14 +376,19 @@ class DataSource(object):
     def _update_info_with_persisted_info(self, host_info, hostname):
         persisted_info = self._load_persisted_info(hostname)
         if persisted_info:
-            host_info.update_with_persisted_info(hostname, persisted_info,
-                         use_outdated_sections=self._use_outdated_persisted_sections)
+            host_info.update_with_persisted_info(persisted_info,
+                                       use_outdated_sections=self._use_outdated_persisted_sections)
         return host_info
 
 
     @classmethod
     def use_outdated_persisted_sections(cls):
         cls._use_outdated_persisted_sections = True
+
+
+    @classmethod
+    def set_use_outdated_cache_file(cls, state=True):
+        cls._use_outdated_cache_file = state
 
 
 

@@ -112,7 +112,7 @@ def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
 
     if nodes:
         import abstract
-        abstract.DataSource.set_use_cachefile()
+        abstract.DataSource.set_may_use_cache_file()
 
     # Special agents can produce data for the same check_type on the same host, in this case
     # the section lines need to be extended
@@ -417,56 +417,6 @@ class DataSources(object):
     def set_max_cachefile_age(self, max_cachefile_age):
         for source in self.get_data_sources():
             source.set_max_cachefile_age(max_cachefile_age)
-
-
-
-#.
-#   .--Use cachefile-------------------------------------------------------.
-#   |       _   _                           _           __ _ _             |
-#   |      | | | |___  ___    ___ __ _  ___| |__   ___ / _(_) | ___        |
-#   |      | | | / __|/ _ \  / __/ _` |/ __| '_ \ / _ \ |_| | |/ _ \       |
-#   |      | |_| \__ \  __/ | (_| (_| | (__| | | |  __/  _| | |  __/       |
-#   |       \___/|___/\___|  \___\__,_|\___|_| |_|\___|_| |_|_|\___|       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-# FIXME TODO: Cleanup the whole caching crap
-
-orig_check_max_cachefile_age     = None
-orig_cluster_max_cachefile_age   = None
-orig_inventory_max_cachefile_age = None
-
-# TODO: Why 1000000000? Can't we really clean this up to a global variable which can
-# be toggled to enforce the cache usage (if available). This way we would not need
-# to store the original values of the different caches and modify them etc.
-def enforce_using_agent_cache():
-    global orig_check_max_cachefile_age, orig_cluster_max_cachefile_age, \
-           orig_inventory_max_cachefile_age
-
-    if config.check_max_cachefile_age != 1000000000:
-        orig_check_max_cachefile_age     = config.check_max_cachefile_age
-        orig_cluster_max_cachefile_age   = config.cluster_max_cachefile_age
-        orig_inventory_max_cachefile_age = config.inventory_max_cachefile_age
-
-    config.check_max_cachefile_age     = 1000000000
-    config.cluster_max_cachefile_age   = 1000000000
-    config.inventory_max_cachefile_age = 1000000000
-
-
-def restore_original_agent_caching_usage():
-    global orig_check_max_cachefile_age, orig_cluster_max_cachefile_age, \
-           orig_inventory_max_cachefile_age
-
-    if orig_check_max_cachefile_age != None:
-        config.check_max_cachefile_age     = orig_check_max_cachefile_age
-        config.cluster_max_cachefile_age   = orig_cluster_max_cachefile_age
-        config.inventory_max_cachefile_age = orig_inventory_max_cachefile_age
-
-        orig_check_max_cachefile_age     = None
-        orig_cluster_max_cachefile_age   = None
-        orig_inventory_max_cachefile_age = None
-
 
 
 #.

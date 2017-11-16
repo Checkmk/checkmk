@@ -26,6 +26,7 @@
 
 import ast
 import socket
+import time
 
 from cmk.exceptions import MKGeneralException
 
@@ -150,6 +151,8 @@ class SNMPDataSource(DataSource):
 
         self._verify_ipaddress(ipaddress)
 
+        persisted_info = self._load_persisted_info(hostname)
+
         info = {}
         for check_type in self.get_check_types(hostname, ipaddress):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
@@ -165,6 +168,14 @@ class SNMPDataSource(DataSource):
 
             if oid_info is None:
                 continue
+
+            # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
+            # Skip gathering new data here. The persisted data will be added latera
+            if info_type in persisted_info:
+                self._logger.debug("[%s] %s: Skip fetching data (persisted info exists)" % (self.id(), check_type))
+                continue
+
+            self._logger.debug("[%s] %s: Fetching data" % (self.id(), check_type))
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
@@ -210,7 +221,7 @@ class SNMPDataSource(DataSource):
 
             cached_at = int(time.time())
             until = cached_at + (check_interval * 60)
-            persisted_info[section_name] = (cached_at, until, section)
+            persisted_info[section_name] = (cached_at, until, section_info)
 
         return persisted_info
 

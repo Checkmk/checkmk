@@ -75,13 +75,14 @@ _verbosity = 0
 
 def option_cache():
     import cmk_base.data_sources as data_sources
-    data_sources.abstract.DataSource.set_use_cachefile()
-    data_sources.enforce_using_agent_cache()
+    data_sources.abstract.DataSource.set_may_use_cache_file()
+    data_sources.abstract.DataSource.set_use_outdated_cache_file()
 
 modes.register_general_option(Option(
     long_option="cache",
-    short_help="Read info from cache file is present and fresh, use TCP "
-               "only, if cache file is absent or too old",
+    short_help="Read info from data source cache files when existant, even when it "
+               "is outdated. Only contact the data sources when the cache file "
+               "is absent",
     handler_function=option_cache,
 ))
 
@@ -1165,7 +1166,7 @@ def mode_inventory(options, args):
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = config.all_active_hosts()
-        data_sources.abstract.DataSource.set_use_cachefile(not data_sources.abstract.DataSource.is_agent_cache_disabled())
+        data_sources.abstract.DataSource.set_may_use_cache_file(not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
     if "force" in options:
         data_sources.abstract.CheckMKAgentDataSource.use_outdated_persisted_sections()
@@ -1388,7 +1389,7 @@ def mode_discover(options, args):
         # by default. Otherwise Check_MK would have to connect to ALL hosts.
         # This will make Check_MK only contact hosts in case the cache is not
         # new enough.
-        data_sources.abstract.DataSource.set_use_cachefile(not data_sources.abstract.DataSource.is_agent_cache_disabled())
+        data_sources.abstract.DataSource.set_may_use_cache_file(not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
     discovery.do_discovery(hostnames, options.get("checks"),
                            options["discover"] == 1)

@@ -189,7 +189,7 @@ def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
         assert _counter_run == num_runs
     finally:
         # TODO: Can't the mode clean this up on it's own?
-        cmk_base.data_sources.restore_original_agent_caching_usage()
+        cmk_base.data_sources.abstract.DataSource.set_use_outdated_cache_file(False)
 
 
 def test_mode_inventory_as_check(test_cfg, monkeypatch, mock):
@@ -229,7 +229,7 @@ def test_mode_check_discovery_cached(test_cfg, monkeypatch, mock):
         assert _counter_run == 2
     finally:
         # TODO: Can't the mode clean this up on it's own?
-        cmk_base.data_sources.restore_original_agent_caching_usage()
+        cmk_base.data_sources.abstract.DataSource.set_use_outdated_cache_file(False)
 
 
 def test_mode_discover_all_hosts(test_cfg, monkeypatch, mock):
@@ -253,7 +253,7 @@ def test_mode_discover_explicit_hosts_cache(test_cfg, monkeypatch):
         assert _counter_run == 2
     finally:
         # TODO: Can't the mode clean this up on it's own?
-        cmk_base.data_sources.restore_original_agent_caching_usage()
+        cmk_base.data_sources.abstract.DataSource.set_use_outdated_cache_file(False)
 
 
 def test_mode_discover_explicit_hosts_no_cache(test_cfg, monkeypatch):
@@ -277,7 +277,7 @@ def test_mode_check_explicit_host_cache(test_cfg, monkeypatch):
         assert _counter_run == 2
     finally:
         # TODO: Can't the mode clean this up on it's own?
-        cmk_base.data_sources.restore_original_agent_caching_usage()
+        cmk_base.data_sources.abstract.DataSource.set_use_outdated_cache_file(False)
 
 
 def test_mode_check_explicit_host_no_cache(test_cfg, monkeypatch):
@@ -301,7 +301,7 @@ def test_mode_dump_agent_explicit_host_cache(test_cfg, monkeypatch):
         assert _counter_run == 2
     finally:
         # TODO: Can't the mode clean this up on it's own?
-        cmk_base.data_sources.restore_original_agent_caching_usage()
+        cmk_base.data_sources.abstract.DataSource.set_use_outdated_cache_file(False)
 
 
 def test_mode_dump_agent_explicit_host_no_cache(test_cfg, monkeypatch):

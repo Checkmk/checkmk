@@ -6821,6 +6821,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
+        logger.error("Error running %r (exit code %d)" % (" ".join(cmd), exitcode))
         if config.debug:
             raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
                   (" ".join(cmd), exitcode, hilite_errors(outdata)))

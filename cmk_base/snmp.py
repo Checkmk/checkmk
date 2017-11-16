@@ -57,7 +57,7 @@ _enforce_stored_walks = False
 
 # TODO: Replace this by generic caching
 _g_single_oid_hostname    = None
-_g_single_oid_cache       = {}
+_g_single_oid_cache       = None
 _g_walk_cache             = {}
 _g_snmp_cache_info_tables = {} # Information about SNMP caching
 
@@ -74,12 +74,20 @@ _g_snmp_cache_info_tables = {} # Information about SNMP caching
 
 #TODO CACHING
 
-def initialize_single_oid_cache(hostname):
-    global _g_single_oid_cache
-    _g_single_oid_cache = _get_single_oid_cache(hostname)
+def initialize_single_oid_cache(hostname, from_disk=False):
+    global _g_single_oid_cache, _g_single_oid_hostname
+    if _g_single_oid_hostname != hostname or _g_single_oid_cache is None:
+        _g_single_oid_hostname = hostname
+        if from_disk:
+            _g_single_oid_cache = _load_single_oid_cache(hostname)
+        else:
+            _g_single_oid_cache = {}
 
 
 def write_single_oid_cache(hostname):
+    if not _g_single_oid_cache:
+        return
+
     cache_dir = cmk.paths.snmp_scan_cache_dir
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
@@ -88,16 +96,20 @@ def write_single_oid_cache(hostname):
 
 
 def set_single_oid_cache(hostname, oid, value):
-    _clear_other_hosts_oid_cache(hostname)
     _g_single_oid_cache[oid] = value
 
 
-def _get_single_oid_cache(hostname):
+def _is_in_single_oid_cache(hostname, oid):
+    return oid in _g_single_oid_cache
+
+
+def _get_oid_from_single_oid_cache(hostname, oid):
+    return _g_single_oid_cache.get(oid)
+
+
+def _load_single_oid_cache(hostname):
     cache_path = "%s/%s" % (cmk.paths.snmp_scan_cache_dir, hostname)
-    cached_single_oids = store.load_data_from_file(cache_path)
-    if cached_single_oids is None:
-        return {}
-    return cached_single_oids
+    return store.load_data_from_file(cache_path, {})
 
 
 def cleanup_host_caches():
@@ -109,9 +121,9 @@ def cleanup_host_caches():
 
 
 def _clear_other_hosts_oid_cache(hostname):
-    global _g_single_oid_hostname
+    global _g_single_oid_hostname, _g_single_oid_cache
     if _g_single_oid_hostname != hostname:
-        _g_single_oid_cache.clear()
+        _g_single_oid_cache = None
         _g_single_oid_hostname = hostname
 
 
@@ -274,11 +286,12 @@ def get_single_oid(hostname, ipaddress, oid, check_type=None, do_snmp_scan=True)
         else:
             oid = '.' + oid
 
-    _clear_other_hosts_oid_cache(hostname)
-
     # TODO: Use generic cache mechanism
-    if not do_snmp_scan or oid in _g_single_oid_cache:
-        return _g_single_oid_cache.get(oid)
+    if _is_in_single_oid_cache(hostname, oid):
+        console.vverbose("       Using cached OID %s: " % oid)
+        value = _get_oid_from_single_oid_cache(hostname, oid)
+        console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
+        return value
 
     console.vverbose("       Getting OID %s: " % oid)
     if _enforce_stored_walks or config.is_usewalk_host(hostname):

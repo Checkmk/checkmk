@@ -1,0 +1,32 @@
+Title: Event console: Introduced syslog application placeholder which can be used in rewriting events
+Level: 1
+Component: ec
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1513176912
+
+When rewriting text, hostname or application for an event you can now use the new placeholders
+
+
+Message text regex match groups
+<ul>
+<li>$MATCH_GROUPS_MESSAGE_1$</li>
+<li>$MATCH_GROUPS_MESSAGE_2$</li>
+<li>$MATCH_GROUPS_MESSAGE_n$</li>
+</ul>
+
+
+
+Syslog application regex match groups
+<ul>
+<li>$MATCH_GROUPS_SYSLOG_APPLICATION_1$</li>
+<li>$MATCH_GROUPS_SYSLOG_APPLICATION_2$</li>
+<li>$MATCH_GROUPS_SYSLOG_APPLICATION_n$</li>
+</ul>
+
+Note:
+The syslog application match groups are now also considered when canceling events.
+The previous version did only check for identical create/canceling match groups in the event message text.

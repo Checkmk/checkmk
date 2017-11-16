@@ -786,7 +786,9 @@ def vs_mkeventd_rule(rule_pack):
                        "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
                        "etc matching group.") +
                      _("The placeholder <tt>\\0</tt> will be replaced by the original text. "
-                       "This allows you to add new information in front or at the end."),
+                       "This allows you to add new information in front or at the end. ") +
+                     _("You can also use the placeholders $MATCH_GROUPS_MESSAGE_1$ for message match groups and "
+                       "$MATCH_GROUPS_SYSLOG_APPLICATION_1$</tt> for the syslog application match groups."),
               size = 64,
               allow_empty = False,
               attrencode = True,
@@ -802,7 +804,9 @@ def vs_mkeventd_rule(rule_pack):
                      _("The placeholder <tt>\\0</tt> will be replaced by the original text "
                        "to match. Note that as an alternative, you may also use the rule "
                        "Hostname translation for Incoming Messages in the Global Settings "
-                       "of the EC to accomplish your task."),
+                       "of the EC to accomplish your task.") +
+                     _("You can also use the placeholders $MATCH_GROUPS_MESSAGE_1$ for message match groups and "
+                       "$MATCH_GROUPS_SYSLOG_APPLICATION_1$</tt> for the syslog application match groups."),
               allow_empty = False,
               attrencode = True,
           )
@@ -815,7 +819,9 @@ def vs_mkeventd_rule(rule_pack):
                        "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
                        "etc matching group.") +
                      _("The placeholder <tt>\\0</tt> will be replaced by the original text. "
-                       "This allows you to add new information in front or at the end."),
+                       "This allows you to add new information in front or at the end.") +
+                     _("You can also use the placeholders $MATCH_GROUPS_MESSAGE_1$ for message match groups and "
+                       "$MATCH_GROUPS_SYSLOG_APPLICATION_1$</tt> for the syslog application match groups."),
               allow_empty = False,
               attrencode = True,
           )

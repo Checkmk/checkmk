@@ -239,14 +239,21 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
     cmk_info = { "version" : "(unknown)" }
     num_success, missing_sections = 0, set()
 
-    sources = data_sources.DataSources(hostname)
-
-    all_host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
-
     checks.set_hostname(hostname)
 
     table = check_table.get_precompiled_check_table(hostname, remove_duplicates=True,
                                     world="active" if _in_keepalive_mode() else "config")
+
+    sources = data_sources.DataSources(hostname)
+
+    # When check types are specified via command line, enforce them. Otherwise use the
+    # list of checks defined by the check table.
+    if only_check_types is None:
+        only_check_types = list(set([ e[0] for e in table ]))
+    sources.enforce_check_types(only_check_types)
+
+    # Gather the data from the sources
+    all_host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
 
     for check_name, item, params, description in table:
         if only_check_types != None and check_name not in only_check_types:

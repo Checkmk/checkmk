@@ -57,6 +57,7 @@ class DataSource(object):
     def __init__(self):
         super(DataSource, self).__init__()
         self._max_cachefile_age = None
+        self._enforced_check_types = None
 
 
     def run(self, hostname, ipaddress, get_raw_data=False):
@@ -81,6 +82,7 @@ class DataSource(object):
                     self._write_cache_file(hostname, raw_data)
 
             else:
+                console.verbose("[%s] Get data from data source\n" % self.id())
                 raw_data = self._execute(hostname, ipaddress)
 
             if get_raw_data:
@@ -88,6 +90,13 @@ class DataSource(object):
 
             host_info = self._convert_to_infos(raw_data, hostname)
             assert isinstance(host_info, HostInfo)
+
+            if host_info.persisted_info:
+                self._store_persisted_info(hostname, host_info.persisted_info)
+
+            # Add information from previous persisted infos
+            host_info = self._update_info_with_persisted_info(host_info, hostname)
+
             return host_info
         except MKTimeout, e:
             raise
@@ -184,7 +193,22 @@ class DataSource(object):
         return os.path.join(cmk.paths.data_source_cache_dir, self.id())
 
 
+    def _persisted_info_file_path(self, hostname):
+        return os.path.join(self._persisted_info_dir(), hostname)
+
+
+    def _persisted_info_dir(self):
+        return os.path.join(cmk.paths.var_dir, "persisted_info", self.id())
+
+
     def get_check_types(self, hostname, ipaddress):
+        if self._enforced_check_types is not None:
+            return self._enforced_check_types
+
+        return self._gather_check_types(hostname, ipaddress)
+
+
+    def _gather_check_types(self, hostname, ipaddress):
         raise NotImplementedError()
 
 
@@ -193,13 +217,22 @@ class DataSource(object):
 
 
     def id(self):
-        """Return a unique identifier for this data source"""
+        """Return a unique identifier for this data source type
+        It is used to identify the different data source types."""
         raise NotImplementedError()
 
 
     def name(self, hostname, ipaddress):
-        """Return a unique (per host) textual identification of the data source"""
-        raise NotImplementedError()
+        """Return a unique (per host) textual identification of the data source
+
+        This name is used to identify this data source instance compared to other
+        instances of this data source type and also to instances of other data source
+        types.
+
+        It is only used during execution of Check_MK and not persisted. This means
+        the algorithm can be changed at any time.
+        """
+        return ":".join([self.id(), hostname, ipaddress])
 
 
     def describe(self, hostname, ipaddress):
@@ -217,6 +250,10 @@ class DataSource(object):
 
     def set_max_cachefile_age(self, max_cachefile_age):
         self._max_cachefile_age = max_cachefile_age
+
+
+    def enforce_check_types(self, check_types):
+        self._enforced_check_types = list(set(check_types))
 
 
     @classmethod
@@ -239,10 +276,108 @@ class DataSource(object):
         cls._use_cachefile = state
 
 
+    #.
+    #   .--PersistedCache------------------------------------------------------.
+    #   |  ____               _     _           _  ____           _            |
+    #   | |  _ \ ___ _ __ ___(_)___| |_ ___  __| |/ ___|__ _  ___| |__   ___   |
+    #   | | |_) / _ \ '__/ __| / __| __/ _ \/ _` | |   / _` |/ __| '_ \ / _ \  |
+    #   | |  __/  __/ |  \__ \ \__ \ ||  __/ (_| | |__| (_| | (__| | | |  __/  |
+    #   | |_|   \___|_|  |___/_|___/\__\___|\__,_|\____\__,_|\___|_| |_|\___|  |
+    #   |                                                                      |
+    #   +----------------------------------------------------------------------+
+    #   | Caching of info for multiple executions of Check_MK. Mostly caching  |
+    #   | of sections that are not provided on each query.                     |
+    #   '----------------------------------------------------------------------'
+
+    def _store_persisted_info(self, hostname, persisted_info):
+        if not persisted_info:
+            return
+
+        file_path = self._persisted_info_file_path(hostname)
+
+        try:
+            os.makedirs(os.path.dirname(file_path))
+        except OSError, e:
+            if e.errno == 17: # File exists
+                pass
+            else:
+                raise
+
+        store.save_data_to_file(file_path, persisted_info, pretty=False)
+        console.verbose("Persisted sections %s.\n" % ", ".join(persisted_info.keys()))
+
+
+    def _load_persisted_info(self, hostname):
+        file_path = self._persisted_info_file_path(hostname)
+
+        persisted_info = store.load_data_from_file(file_path, {})
+        return self._filter_outdated_persisted_info(persisted_info)
+
+
+    # TODO: This is not race condition free when modifying the data. Either remove
+    # the possible write here and simply ignore the outdated sections or lock when
+    # reading and unlock after writing
+    def _filter_outdated_persisted_info(persisted_info):
+        now = time.time()
+        modified = False
+        for section_name, entry in persisted_info.items():
+            if len(entry) == 2:
+                persisted_until, section = entry
+            else:
+                persisted_until, section = entry[1:]
+
+            if not self._use_outdated_persisted_sections and now > persisted_until:
+                console.verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" %
+                                                       (section_name, now - persisted_until))
+                del persisted_info[section_name]
+                modified = True
+
+        if not persisted_info:
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
+
+        elif modified:
+            self._store_persisted_info(hostname, persisted_info)
+
+        return persisted_info
+
+
+    def _update_info_with_persisted_info(self, host_info, hostname):
+        persisted_info = self._load_persisted_info(hostname)
+        if persisted_info:
+            host_info.update_with_persisted_info(hostname, persisted_info,
+                         use_outdated_sections=self._use_outdated_persisted_sections)
+        return host_info
+
+
+    @classmethod
+    def use_outdated_persisted_sections(cls):
+        cls._use_outdated_persisted_sections = True
+
+
 
 class CheckMKAgentDataSource(DataSource):
     """Abstract base class for all data sources that work with the Check_MK agent data format"""
-    def get_check_types(self, *args, **kwargs):
+    def __init__(self):
+        super(CheckMKAgentDataSource, self).__init__()
+        self._is_main_agent_data_source = False
+
+
+    # TODO: We should cleanup these old directories one day. Then we can remove this special case
+    def set_main_agent_data_source(self):
+        """Tell the data source that it's the main agent based data source
+
+        The data source that is the "main" agent based data source uses the
+        cache and persisted directories that existed before the data source
+        concept has been added where each data source has it's own set of
+        directories.
+        """
+        self._is_main_agent_data_source = True
+
+
+    def _gather_check_types(self, *args, **kwargs):
         return checks.discoverable_tcp_checks()
 
 
@@ -250,43 +385,37 @@ class CheckMKAgentDataSource(DataSource):
         return "agent"
 
 
-    # The agent has another cache directory to be compatible with older Check_MK
     def _cache_dir(self):
-        return cmk.paths.tcp_cache_dir
+        # The main agent has another cache directory to be compatible with older Check_MK
+        if self._is_main_agent_data_source:
+            return cmk.paths.tcp_cache_dir
+        else:
+            return super(CheckMKAgentDataSource, self)._cache_dir()
+
+
+    def _persisted_info_dir(self):
+        # The main agent has another cache directory to be compatible with older Check_MK
+        if self._is_main_agent_data_source:
+            return os.path.join(cmk.paths.var_dir, "persisted")
+        else:
+            return super(CheckMKAgentDataSource, self)._persisted_info_dir()
 
 
     def _convert_to_infos(self, raw_data, hostname):
         if config.agent_simulator:
             raw_data = cmk_base.agent_simulator.process(raw_data)
 
-        info, piggybacked_lines, persisted_info, agent_cache_info = \
-                self._parse_info(raw_data.split("\n"), hostname)
-
-        host_info = HostInfo(info, agent_cache_info, piggybacked_lines)
-
-        self._store_persisted_info(hostname, persisted_info)
-
-        # Add information from previous persisted agent outputs, if those
-        # sections are not available in the current output
-        host_info = self._update_info_with_persisted_info(host_info, hostname)
-
-        return host_info
+        return self._parse_info(raw_data.split("\n"), hostname)
 
 
     def _parse_info(self, lines, hostname):
         """Split agent output in chunks, splits lines by whitespaces.
 
-        Returns a tuple of:
-
-            1. A dictionary from "sectionname" to a list of rows
-            2. piggy-backed data for other hosts
-            3. Sections to be persisted for later usage
-            4. Agent cache information (dict section name -> (cached_at, cache_interval))
-
+        Returns a HostInfo() object.
         """
         info = {}
-        piggybacked = {} # unparsed info for other hosts
-        persist = {} # handle sections with option persist(...)
+        piggybacked_lines = {} # unparsed info for other hosts
+        persisted_info = {} # handle sections with option persist(...)
         host = None
         section = []
         section_options = {}
@@ -313,7 +442,7 @@ class CheckMKAgentDataSource(DataSource):
                         host = host.replace(" ", "_")
 
             elif host: # processing data for an other host
-                piggybacked.setdefault(host, []).append(line)
+                piggybacked_lines.setdefault(host, []).append(line)
 
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
@@ -346,7 +475,7 @@ class CheckMKAgentDataSource(DataSource):
                     cached_at = int(time.time()) # Estimate age of the data
                     cache_interval = int(until - cached_at)
                     agent_cache_info[section_name] = (cached_at, cache_interval)
-                    persist[section_name] = ( cached_at, until, section )
+                    persisted_info[section_name] = ( cached_at, until, section )
 
                 if "cached" in section_options:
                     agent_cache_info[section_name] = tuple(map(int, section_options["cached"].split(",")))
@@ -365,88 +494,4 @@ class CheckMKAgentDataSource(DataSource):
 
                 section.append(line.split(separator))
 
-        return info, piggybacked, persist, agent_cache_info
-
-
-    #.
-    #   .--PersistedCache------------------------------------------------------.
-    #   |  ____               _     _           _  ____           _            |
-    #   | |  _ \ ___ _ __ ___(_)___| |_ ___  __| |/ ___|__ _  ___| |__   ___   |
-    #   | | |_) / _ \ '__/ __| / __| __/ _ \/ _` | |   / _` |/ __| '_ \ / _ \  |
-    #   | |  __/  __/ |  \__ \ \__ \ ||  __/ (_| | |__| (_| | (__| | | |  __/  |
-    #   | |_|   \___|_|  |___/_|___/\__\___|\__,_|\____\__,_|\___|_| |_|\___|  |
-    #   |                                                                      |
-    #   +----------------------------------------------------------------------+
-    #   | Caching of info for multiple executions of Check_MK. Mostly caching  |
-    #   | of sections that are not provided on each query.                     |
-    #   '----------------------------------------------------------------------'
-
-    # TODO: This has to take the data source type into account. Otherwise the
-    #       data source types would overwrite their persisted sections. Or move
-    #       the handling to "data_sources" just like the piggyback handling?
-    #       But this still needs to be connected to the data source that produced
-    #       the persisted info, because it should be skipped in case there is new
-    #       info available.
-    def _store_persisted_info(self, hostname, persisted):
-        if not persisted:
-            return
-
-        file_path = "%s/persisted/%s" % (cmk.paths.var_dir, hostname)
-
-        try:
-            os.makedirs(os.path.dirname(file_path))
-        except OSError, e:
-            if e.errno == 17: # File exists
-                pass
-            else:
-                raise
-
-        store.save_data_to_file(file_path, persisted, pretty=False)
-        console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
-
-
-    # TODO: This is not race condition free when modifying the data. Either remove
-    # the possible write here and simply ignore the outdated sections or lock when
-    # reading and unlock after writing
-    def _update_info_with_persisted_info(self, host_info, hostname):
-        # TODO: Use store.load_data_from_file
-        file_path = cmk.paths.var_dir + "/persisted/" + hostname
-        try:
-            persisted = eval(file(file_path).read())
-        except:
-            return host_info
-
-        now = time.time()
-        modified = False
-        for section_name, entry in persisted.items():
-            if len(entry) == 2:
-                persisted_from = None
-                persisted_until, section = entry
-            else:
-                persisted_from, persisted_until, section = entry
-
-            if now < persisted_until or self._use_outdated_persisted_sections:
-                if section_name not in host_info.info:
-                    host_info.add_cached_section(section_name, section, persisted_from, persisted_until)
-                    console.vverbose("Using persisted section %s.\n" % section_name)
-            else:
-                console.verbose("Persisted section %s is outdated by %d seconds. Deleting it.\n" % (
-                        section_name, now - persisted_until))
-                del persisted[section_name]
-                modified = True
-
-        if not persisted:
-            try:
-                os.remove(file_path)
-            except OSError:
-                pass
-
-        elif modified:
-            self._store_persisted_info(hostname, persisted)
-
-        return host_info
-
-
-    @classmethod
-    def use_outdated_persisted_sections(cls):
-        cls._use_outdated_persisted_sections = True
+        return HostInfo(info, agent_cache_info, piggybacked_lines, persisted_info)

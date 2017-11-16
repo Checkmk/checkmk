@@ -24,13 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-class HostInfo(object):
-    """A wrapper class for the host information read by the data sources"""
+import time
 
-    def __init__(self, info=None, cache_info=None, piggybacked_lines=None):
+import cmk_base.console as console
+
+class HostInfo(object):
+    """A wrapper class for the host information read by the data sources
+
+    It contains the following information:
+
+        1. info:              A dictionary from "sectionname" to a list of rows
+        2. piggybacked_lines: piggy-backed data for other hosts
+        3. persisted_info:    Sections to be persisted for later usage
+        4. cache_info:        Agent cache information
+                              (dict section name -> (cached_at, cache_interval))
+    """
+
+
+    def __init__(self, info=None, cache_info=None, piggybacked_lines=None, persisted_info=None):
         self.info = info if info is not None else {}
         self.cache_info = cache_info if cache_info is not None else {}
         self.piggybacked_lines = piggybacked_lines if piggybacked_lines is not None else {}
+        self.persisted_info = persisted_info if persisted_info is not None else {}
 
 
     # TODO: It should be supported that different sources produce equal sections.
@@ -50,6 +65,14 @@ class HostInfo(object):
             self.cache_info.update(host_info.cache_info)
 
 
-    def add_cached_section(self, section_name, section, persisted_from, persisted_until):
+    def _add_cached_section(self, section_name, section, persisted_from, persisted_until):
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         self.info[section_name] = section
+
+
+    def update_with_persisted_info(persisted_info, use_outdated_sections):
+        for section_name, entry in persisted_info.items():
+            # Don't overwrite sections that have been received with this call
+            if section_name not in self.info:
+                self._add_cached_section(section_name, section, persisted_from, persisted_until)
+                console.vverbose("Using persisted section %s.\n" % section_name)

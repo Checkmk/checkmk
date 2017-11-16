@@ -64,15 +64,25 @@ class HostInfo(object):
         if host_info.cache_info:
             self.cache_info.update(host_info.cache_info)
 
+        if host_info.persisted_info:
+            self.persisted_info.update(host_info.persisted_info)
+
 
     def _add_cached_section(self, section_name, section, persisted_from, persisted_until):
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         self.info[section_name] = section
 
 
-    def update_with_persisted_info(persisted_info, use_outdated_sections):
+    def update_with_persisted_info(self, persisted_info, use_outdated_sections):
         for section_name, entry in persisted_info.items():
-            # Don't overwrite sections that have been received with this call
+            if len(entry) == 2:
+                continue # Skip entries of "old" format
+
+            persisted_from, persisted_until, section_info = entry
+
+            # Don't overwrite sections that have been received from the source with this call
             if section_name not in self.info:
-                self._add_cached_section(section_name, section, persisted_from, persisted_until)
-                console.vverbose("Using persisted section %s.\n" % section_name)
+                console.vverbose("Using persisted section %r\n" % section_name)
+                self._add_cached_section(section_name, section_info, persisted_from, persisted_until)
+            else:
+                console.vverbose("Skipping persisted section %r\n" % section_name)

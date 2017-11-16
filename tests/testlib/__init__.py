@@ -1075,7 +1075,7 @@ class CMKWebSession(WebSession):
         return response["result"]
 
 
-    def add_host(self, hostname, folder="", attributes=None, create_folders=True, expect_error=False):
+    def add_host(self, hostname, folder="", attributes=None, cluster_nodes=None, create_folders=True, expect_error=False):
         if attributes == None:
             attributes = {}
 
@@ -1085,6 +1085,7 @@ class CMKWebSession(WebSession):
                 "folder"         : folder,
                 "attributes"     : attributes or {},
                 "create_folders" : create_folders,
+                "nodes"          : cluster_nodes,
             }),
         }, expect_error=expect_error)
 

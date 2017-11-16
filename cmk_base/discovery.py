@@ -77,7 +77,7 @@ _marked_host_discovery_timeout = 120
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(hostnames, check_types, only_new):
-    use_caches = data_sources.abstract.DataSource.get_use_cachefile()
+    use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
     if not hostnames:
         console.verbose("Discovering services on all hosts:\n")
         hostnames = config.all_active_realhosts()
@@ -276,7 +276,7 @@ def check_discovery(hostname, ipaddress=None):
         # scan services, register changes
         try:
             services = _get_host_services(hostname,
-                                        use_caches=data_sources.abstract.DataSource.get_use_cachefile(),
+                                        use_caches=data_sources.abstract.DataSource.get_may_use_cache_file(),
                                         do_snmp_scan=params["inventory_check_do_scan"],
                                         on_error="raise",
                                         ipaddress=ipaddress)

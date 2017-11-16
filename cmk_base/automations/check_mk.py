@@ -137,10 +137,7 @@ class AutomationTryDiscovery(Automation):
         else:
             on_error = "ignore"
 
-        # TODO: Remove this unlucky option opt_use_cachefile. At least do not
-        # handle this option so deep in the code. It should only be handled
-        # by top-level functions.
-        data_sources.abstract.DataSource.set_use_cachefile(use_caches)
+        data_sources.abstract.DataSource.set_may_use_cache_file(use_caches)
         hostname = args[0]
         table = discovery.get_check_preview(hostname, use_caches=use_caches,
                                   do_snmp_scan=do_snmp_scan, on_error=on_error)

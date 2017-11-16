@@ -78,14 +78,14 @@ class DataSource(object):
         try:
             cpu_tracking.push_phase(self._cpu_tracking_id())
 
-            raw_data = self._get_raw_data(hostname, ipaddress)
+            raw_data, is_cached_data = self._get_raw_data(hostname, ipaddress)
             if get_raw_data:
                 return raw_data
 
             host_info = self._convert_to_infos(raw_data, hostname)
             assert isinstance(host_info, HostInfo)
 
-            if host_info.persisted_info:
+            if host_info.persisted_info and not is_cached_data:
                 self._store_persisted_info(hostname, host_info.persisted_info)
 
             # Add information from previous persisted infos
@@ -115,7 +115,7 @@ class DataSource(object):
         raw_data = self._read_cache_file(hostname)
         if raw_data:
             self._logger.verbose("[%s] Use cached data" % self.id())
-            return raw_data
+            return raw_data, True
 
         elif raw_data is None and config.simulation_mode:
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
@@ -125,7 +125,7 @@ class DataSource(object):
 
         self._write_cache_file(hostname, raw_data)
 
-        return raw_data
+        return raw_data, False
 
 
     def run_raw(self, hostname, ipaddress):
@@ -164,7 +164,7 @@ class DataSource(object):
         may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
         if not may_use_outdated and cmk_base.utils.cachefile_age(cachefile) > self._max_cachefile_age:
             self._logger.debug("[%s] Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
-                             (cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
+                             (self.id(), cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
             return
 
         # TODO: Use some generic store file read function to generalize error handling,
@@ -338,7 +338,12 @@ class DataSource(object):
 
         persisted_info = store.load_data_from_file(file_path, {})
         persisted_info = self._filter_outdated_persisted_info(persisted_info, hostname)
-        self._logger.debug("[%s] Loaded persisted sections: %s" % (self.id(), ", ".join(persisted_info.keys())))
+
+        if not persisted_info:
+            self._logger.debug("[%s] No persisted sections loaded" % (self.id()))
+        else:
+            self._logger.debug("[%s] Loaded persisted sections: %s" % (self.id(), ", ".join(persisted_info.keys())))
+
         return persisted_info
 
 
@@ -367,7 +372,6 @@ class DataSource(object):
                 pass
 
         elif modified:
-            print "XXXXXX"
             self._store_persisted_info(hostname, persisted_info)
 
         return persisted_info

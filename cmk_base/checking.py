@@ -305,6 +305,7 @@ def execute_check(all_host_infos, hostname, ipaddress, check_name, item, params,
         x = e.exc_info()
         raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
 
+    # TODO: Move this to a helper function
     if info is None: # No data for this check type
         return False
 
@@ -314,7 +315,7 @@ def execute_check(all_host_infos, hostname, ipaddress, check_name, item, params,
     # In case of SNMP checks but missing agent response, skip this check.
     # Special checks which still need to be called even with empty data
     # may declare this.
-    if info == [] and checks.is_snmp_check(check_name) \
+    if not info and checks.is_snmp_check(check_name) \
        and not checks.check_info[check_name]["handle_empty_info"]:
         return False
 

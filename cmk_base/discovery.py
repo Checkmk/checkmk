@@ -1106,6 +1106,16 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 exitcode = 3
                 output = "Error: %s" % e
 
+            # TODO: Move this to a helper function
+            if info is None: # No data for this check type
+                exitcode = 3
+                output = "Received no data"
+
+            if not info and checks.is_snmp_check(check_type) \
+               and not checks.check_info[check_type]["handle_empty_info"]:
+                exitcode = 0
+                output = "Received no data"
+
             item_state.set_item_state_prefix(check_type, item)
 
             if exitcode == None:

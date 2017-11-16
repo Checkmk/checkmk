@@ -49,19 +49,6 @@ from .host_info import HostInfo
 #   | Realize the data source for dealing with SNMP data                   |
 #   '----------------------------------------------------------------------'
 
-# Handle SNMP check interval. The idea: An SNMP check should only be
-# executed every X seconds. Skip when called too often.
-# TODO: The time information was lost in the step we merged the SNMP cache files
-#       together. Can't we handle this equal to the persisted agent sections? The
-#       check would then be executed but with "old data". That would be nice!
-#check_interval = config.check_interval_of(hostname, check_type)
-#cache_path = "%s/%s" % (cmk.paths.snmp_cache_dir, hostname)
-#if not self._ignore_check_interval \
-#   and not _no_submit \
-#   and check_interval is not None and os.path.exists(cache_path) \
-#   and cmk_base.utils.cachefile_age(cache_path) < check_interval * 60:
-#    # cache file is newer than check_interval, skip this check
-#    raise MKSkipCheck()
 class SNMPDataSource(DataSource):
     def __init__(self):
         super(SNMPDataSource, self).__init__()
@@ -74,6 +61,10 @@ class SNMPDataSource(DataSource):
 
 
     def id(self):
+        return "snmp"
+
+
+    def _cpu_tracking_id(self):
         return "snmp"
 
 
@@ -135,7 +126,7 @@ class SNMPDataSource(DataSource):
         self._check_type_filter_func = filter_func
 
 
-    def get_check_types(self, hostname, ipaddress):
+    def _gather_check_types(self, hostname, ipaddress):
         """Returns a list of check types that shal be executed with this source.
 
         The logic is only processed once per hostname+ipaddress combination. Once processed
@@ -150,7 +141,7 @@ class SNMPDataSource(DataSource):
             check_types = self._check_type_filter_func(hostname, ipaddress,
                                                        on_error=self._on_error,
                                                        do_snmp_scan=self._do_snmp_scan)
-            self._check_types[(hostname, ipaddres)] = check_types
+            self._check_types[(hostname, ipaddress)] = check_types
             return check_types
 
 
@@ -197,7 +188,31 @@ class SNMPDataSource(DataSource):
 
 
     def _convert_to_infos(self, raw_data, hostname):
-        return HostInfo(raw_data)
+        persisted_info = self._extract_persisted_info(hostname, raw_data)
+        return HostInfo(raw_data, persisted_info=persisted_info)
+
+
+    def _extract_persisted_info(self, hostname, raw_data):
+        """Extract the persisted info from the raw_data and return it
+
+        Gather the check types to be persisted, extract the related data from
+        the raw data, calculate the times and store the persisted info for
+        later use.
+        """
+        persisted_info = {}
+
+        for section_name, section_info in raw_data.items():
+            # TODO: check_type/section_name? Previously check_type was used
+            # for this kind of call. Possibly we need to redefine this!
+            check_interval = config.check_interval_of(hostname, section_name)
+            if check_interval is None:
+                continue
+
+            cached_at = int(time.time())
+            until = cached_at + (check_interval * 60)
+            persisted_info[section_name] = (cached_at, until, section)
+
+        return persisted_info
 
 
 #.

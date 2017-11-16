@@ -170,13 +170,8 @@ class SpecialAgentDataSource(ProgramDataSource):
 
 
     # TODO: Can't we make this more specific in case of special agents?
-    def get_check_types(self, hostname, ipaddress):
+    def _gather_check_types(self, hostname, ipaddress):
         return checks.discoverable_tcp_checks()
-
-
-    def name(self, hostname, ipaddress):
-        """Return a unique (per host) textual identification of the data source"""
-        return self._special_agent_id
 
 
     def _get_command_line(self, hostname, ipaddress):

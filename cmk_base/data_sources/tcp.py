@@ -161,11 +161,6 @@ class TCPDataSource(CheckMKAgentDataSource):
         return unpad(decrypted_pkg)
 
 
-    def name(self, hostname, ipaddress):
-        """Return a unique (per host) textual identification of the data source"""
-        return "%s:%d" % (ipaddress, config.agent_port_of(hostname))
-
-
     def describe(self, hostname, ipaddress):
         """Return a short textual description of the agent"""
         return "TCP: %s:%d" % (ipaddress, config.agent_port_of(hostname))

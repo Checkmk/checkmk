@@ -289,25 +289,39 @@ class DataSources(object):
     def __init__(self, hostname):
         super(DataSources, self).__init__()
         self._hostname = hostname
-        self._enforced_check_types = None
         self._initialize_data_sources()
 
 
     def _initialize_data_sources(self):
         self._sources = {}
 
+        self._initialize_agent_based_data_sources()
+        self._initialize_snmp_data_sources()
+        self._initialize_management_board_data_sources()
+
+
+    def _initialize_agent_based_data_sources(self):
         if config.is_all_agents_host(self._hostname):
-            self._add_source(self._get_agent_data_source())
+            source = self._get_agent_data_source(ignore_special_agents=True)
+            source.set_main_agent_data_source()
+            self._add_source(source)
+
             self._add_sources(self._get_special_agent_data_sources())
 
         elif config.is_all_special_agents_host(self._hostname):
             self._add_sources(self._get_special_agent_data_sources())
 
-        else:
-            self._add_source(self._get_agent_data_source())
+        elif config.is_tcp_host(self._hostname):
+            source = self._get_agent_data_source()
+            source.set_main_agent_data_source()
+            self._add_source(source)
 
         self._add_source(PiggyBackDataSource())
-        self._initialize_management_board_data_sources()
+
+
+    def _initialize_snmp_data_sources(self):
+        if config.is_snmp_host(self._hostname):
+            self._add_source(SNMPDataSource())
 
 
     def _initialize_management_board_data_sources(self):
@@ -345,10 +359,11 @@ class DataSources(object):
             return "Contact either Check_MK Agent or use a single special agent"
 
 
-    def _get_agent_data_source(self):
-        special_agents = self._get_special_agent_data_sources()
-        if special_agents:
-            return special_agents[0][1]
+    def _get_agent_data_source(self, ignore_special_agents=False):
+        if not ignore_special_agents:
+            special_agents = self._get_special_agent_data_sources()
+            if special_agents:
+                return special_agents[0][1]
 
         programs = rulesets.host_extra_conf(self._hostname, config.datasource_programs)
         if programs:
@@ -382,9 +397,6 @@ class DataSources(object):
         Either returns a list of enforced check types (if set before) or ask each individual
         data source for it's supported check types and return a list of these types.
         """
-        if self._enforced_check_types is not None:
-            return self._enforced_check_types
-
         check_types = set()
 
         for source in self._sources.values():
@@ -394,7 +406,8 @@ class DataSources(object):
 
 
     def enforce_check_types(self, check_types):
-        self._enforced_check_types = list(set(check_types))
+        for source in self.get_data_sources():
+            source.enforce_check_types(check_types)
 
 
     def get_data_sources(self):

@@ -1,0 +1,11 @@
+Title: Activate Changes: Fixed "Has never been activated" status message
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p19
+Date: 1510760308
+
+This message was shown, because some state files were only stored temporarily.

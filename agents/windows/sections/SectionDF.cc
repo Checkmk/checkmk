@@ -71,7 +71,7 @@ void SectionDF::output_filesystem(std::ostream &out, char *volid) {
             << (total.QuadPart / KiloByte) << "\t"
             << (total.QuadPart - free_avail.QuadPart) / KiloByte << "\t"
             << (free_avail.QuadPart / KiloByte) << "\t"
-            << std::fixed << std::setprecision(0) << perc_used << "\t"
+            << std::fixed << std::setprecision(0) << perc_used << "%\t"
             << volid
             << "\n";
     }

@@ -64,7 +64,7 @@ class ProgramDataSource(CheckMKAgentDataSource):
     def _get_agent_info_program(self, commandline):
         exepath = commandline.split()[0] # for error message, hide options!
 
-        console.vverbose("Calling external program %s\n" % commandline)
+        self._logger.debug("[%s] Calling external program %r" % (self.id(), commandline))
         p = None
         try:
             if config.monitoring_core == "cmc":

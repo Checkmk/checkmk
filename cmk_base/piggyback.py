@@ -99,7 +99,7 @@ def _get_piggyback_files(hostname):
 
 def store_piggyback_raw_data(sourcehost, piggybacked):
     for backedhost, lines in piggybacked.items():
-        console.verbose("Storing piggyback data for %s.\n" % backedhost)
+        console.verbose("Storing piggyback data for: %s\n" % backedhost)
         content = "\n".join(lines) + "\n"
         store.save_file(os.path.join(cmk.paths.tmp_dir, "piggyback", backedhost, sourcehost), content)
 

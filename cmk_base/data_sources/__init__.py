@@ -355,8 +355,11 @@ class DataSources(object):
         elif config.is_all_special_agents_host(self._hostname):
             return "Use all enabled special agents"
 
-        else:
+        elif config.is_tcp_host(self._hostname):
             return "Contact either Check_MK Agent or use a single special agent"
+
+        else:
+            return "No agent"
 
 
     def _get_agent_data_source(self, ignore_special_agents=False):

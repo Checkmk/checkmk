@@ -766,7 +766,7 @@ function replace_datevariable()
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     echo '<<<fileinfo:sep(124)>>>'
     date +%s
-    while read line
+    for line in $(cat "$MK_CONFDIR/fileinfo.cfg")
     do
         # only work on lines containing files, skip e.g. comments and blank lines
         if [ "${line:0:1}" = "/" ]; then
@@ -777,7 +777,7 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
                 echo "$line|missing|$(date +%s)"
             fi
         fi
-    done < "$MK_CONFDIR/fileinfo.cfg"
+    done
 fi
 
 # Get stats about OMD monitoring cores running on this machine.

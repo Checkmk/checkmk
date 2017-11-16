@@ -1,0 +1,12 @@
+Title: fileinfo: fix globbing pattern expansion
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1510837983
+
+Fixes the issue that globbing patterns were not expanded
+after the introduction of werk 5344.

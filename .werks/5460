@@ -1,0 +1,23 @@
+Title: Waiting without a wait condition immediately returns now
+Level: 1
+Component: livestatus
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1510912156
+Class: fix
+
+Note: This change only affects users writing their own tools for the
+Livestatus interface, and only those tools which rely on an edge case.
+
+Up to now, Livestatus had a special obscure case: Using a WaitTrigger header
+in a query without a WaitCondition header resulted in waiting for the
+trigger exactly once.  This is a misfeature, because it is effectively
+useless and doesn't do what one might expect: Due to spurious wakeups
+(https://en.wikipedia.org/wiki/Spurious_wakeup), waiting might return
+earlier basically at any time.
+
+To fix this behaviour, the special case has been removed, and a missing
+WaitCondition always has its expected semantics (always true) now.  Note
+that this is consistent with a missing Filter header, which means "no
+filtering".

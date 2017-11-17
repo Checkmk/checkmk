@@ -194,7 +194,6 @@ Query::Query(const std::list<std::string> &lines, Table *table,
     }
 
     _filter = std::make_unique<AndingFilter>(std::move(filters));
-    _wait_conditions_empty = wait_conditions.empty();
     _wait_condition =
         std::make_unique<AndingFilter>(std::move(wait_conditions));
 }
@@ -695,13 +694,6 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
-    // TODO(sp): Funny special case, do we really want/need this?
-    if (_wait_conditions_empty && _wait_trigger != nullptr) {
-        waitForTrigger();
-        return;
-    }
-
-    // Starting from here, it's basically a standard condition variable.
     while (
         !_wait_condition->accepts(_wait_object, _auth_user, timezoneOffset())) {
         if (waitForTrigger() == std::cv_status::timeout) {

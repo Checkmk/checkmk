@@ -1,0 +1,17 @@
+Title: Fix bug in agent bakery (regression #5261, since 1.4.0p17)
+Level: 2
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1510910513
+Class: fix
+
+Werk #5261 introduced a bug that made it impossible to bake new agents for some specific rulesets.
+This would result in error messages like the following:
+
+<pre>
+"TypeError: key ('custom', 'win_certificates/lib/local/win_certificates.ps1') is not a string"
+</pre>
+
+After an update, no further action is required.

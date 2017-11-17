@@ -86,7 +86,7 @@ class TCPDataSource(CheckMKAgentDataSource):
                           socket.SOCK_STREAM)
         s.settimeout(config.tcp_connect_timeout)
 
-        console.vverbose("Connecting via TCP to %s:%d.\n" % (ipaddress, port))
+        self._logger.debug("[%s] Connecting via TCP to %s:%d" % (self.id(), ipaddress, port))
         s.connect((ipaddress, port))
         # Immediately close sending direction. We do not send any data
         # s.shutdown(socket.SHUT_WR)

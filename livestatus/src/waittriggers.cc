@@ -25,16 +25,9 @@
 #include "waittriggers.h"
 #include <mutex>
 #include <ratio>
+#include <stdexcept>
 
 namespace {
-struct trigger *to_trigger(std::condition_variable *c) {
-    return reinterpret_cast<struct trigger *>(c);
-}
-
-std::condition_variable *from_trigger(struct trigger *c) {
-    return reinterpret_cast<std::condition_variable *>(c);
-}
-
 std::mutex wait_mutex;
 
 std::condition_variable cond_all;
@@ -47,39 +40,23 @@ std::condition_variable cond_command;
 std::condition_variable cond_program;
 }  // namespace
 
-struct trigger *trigger_all() {
-    return to_trigger(&cond_all);
-}
+std::condition_variable &trigger_all() { return cond_all; }
 
-struct trigger *trigger_check() {
-    return to_trigger(&cond_check);
-}
+std::condition_variable &trigger_check() { return cond_check; }
 
-struct trigger *trigger_state() {
-    return to_trigger(&cond_state);
-}
+std::condition_variable &trigger_state() { return cond_state; }
 
-struct trigger *trigger_log() {
-    return to_trigger(&cond_log);
-}
+std::condition_variable &trigger_log() { return cond_log; }
 
-struct trigger *trigger_downtime() {
-    return to_trigger(&cond_downtime);
-}
+std::condition_variable &trigger_downtime() { return cond_downtime; }
 
-struct trigger *trigger_comment() {
-    return to_trigger(&cond_comment);
-}
+std::condition_variable &trigger_comment() { return cond_comment; }
 
-struct trigger *trigger_command() {
-    return to_trigger(&cond_command);
-}
+std::condition_variable &trigger_command() { return cond_command; }
 
-struct trigger *trigger_program() {
-    return to_trigger(&cond_program);
-}
+std::condition_variable &trigger_program() { return cond_program; }
 
-struct trigger *trigger_find(const std::string &name) {
+std::condition_variable &trigger_find(const std::string &name) {
     if (name == "all") {
         return trigger_all();
     }
@@ -104,25 +81,23 @@ struct trigger *trigger_find(const std::string &name) {
     if (name == "program") {
         return trigger_program();
     }
-    return nullptr;
+    throw std::runtime_error(
+        "invalid trigger '" + name +
+        "', allowed: all, check, state, log, downtime, comment, command and program");
 }
 
-const char *trigger_all_names() {
-    return "all, check, state, log, downtime, comment, command and program";
+void trigger_notify_all(std::condition_variable &cond) {
+    trigger_all().notify_all();
+    cond.notify_all();
 }
 
-void trigger_notify_all(struct trigger *which) {
-    from_trigger(trigger_all())->notify_all();
-    from_trigger(which)->notify_all();
-}
-
-void trigger_wait(struct trigger *which) {
+void trigger_wait(std::condition_variable &cond) {
     std::unique_lock<std::mutex> ul(wait_mutex);
-    from_trigger(which)->wait(ul);
+    cond.wait(ul);
 }
 
-std::cv_status trigger_wait_for(struct trigger *which,
+std::cv_status trigger_wait_for(std::condition_variable &cond,
                                 std::chrono::milliseconds ms) {
     std::unique_lock<std::mutex> ul(wait_mutex);
-    return from_trigger(which)->wait_for(ul, ms);
+    return cond.wait_for(ul, ms);
 }

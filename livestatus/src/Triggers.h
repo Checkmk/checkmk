@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef waittriggers_h
-#define waittriggers_h
+#ifndef Triggers_h
+#define Triggers_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
@@ -31,22 +31,48 @@
 #include <mutex>
 #include <string>
 
-std::mutex &trigger_mutex();
-std::condition_variable &trigger_all();
-std::condition_variable &trigger_check();
-std::condition_variable &trigger_state();
-std::condition_variable &trigger_log();
-std::condition_variable &trigger_downtime();
-std::condition_variable &trigger_comment();
-std::condition_variable &trigger_command();
-std::condition_variable &trigger_program();
+class Triggers {
+public:
+    enum class Kind {
+        all,
+        check,
+        state,
+        log,
+        downtime,
+        comment,
+        command,
+        program
+    };
 
-std::condition_variable &trigger_find(const std::string &name);
+    Kind find(const std::string &name);
 
-void trigger_notify_all(std::condition_variable &cond);
+    void notify_all(Kind trigger);
 
-void trigger_wait(std::condition_variable &cond);
-std::cv_status trigger_wait_for(std::condition_variable &cond,
-                                std::chrono::milliseconds ms);
+    template <class Rep, class Period, class Predicate>
+    void wait_for(Kind trigger,
+                  const std::chrono::duration<Rep, Period> &rel_time,
+                  Predicate pred) {
+        std::unique_lock<std::mutex> ul(_mutex);
+        auto &cond = condition_variable_for(trigger);
+        if (rel_time == rel_time.zero()) {
+            cond.wait(ul, pred);
+        } else {
+            cond.wait_for(ul, rel_time, pred);
+        }
+    }
 
-#endif  // waittriggers_h
+private:
+    std::mutex _mutex;
+    std::condition_variable _cond_all;
+    std::condition_variable _cond_check;
+    std::condition_variable _cond_state;
+    std::condition_variable _cond_log;
+    std::condition_variable _cond_downtime;
+    std::condition_variable _cond_comment;
+    std::condition_variable _cond_command;
+    std::condition_variable _cond_program;
+
+    std::condition_variable &condition_variable_for(Kind trigger);
+};
+
+#endif  // Triggers_h

@@ -22,84 +22,62 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "waittriggers.h"
-#include <mutex>
-#include <ratio>
+#include "Triggers.h"
 #include <stdexcept>
 
-namespace {
-std::mutex wait_mutex;
-
-std::condition_variable cond_all;
-std::condition_variable cond_check;
-std::condition_variable cond_state;
-std::condition_variable cond_log;
-std::condition_variable cond_downtime;
-std::condition_variable cond_comment;
-std::condition_variable cond_command;
-std::condition_variable cond_program;
-}  // namespace
-
-std::mutex &trigger_mutex() { return wait_mutex; }
-
-std::condition_variable &trigger_all() { return cond_all; }
-
-std::condition_variable &trigger_check() { return cond_check; }
-
-std::condition_variable &trigger_state() { return cond_state; }
-
-std::condition_variable &trigger_log() { return cond_log; }
-
-std::condition_variable &trigger_downtime() { return cond_downtime; }
-
-std::condition_variable &trigger_comment() { return cond_comment; }
-
-std::condition_variable &trigger_command() { return cond_command; }
-
-std::condition_variable &trigger_program() { return cond_program; }
-
-std::condition_variable &trigger_find(const std::string &name) {
+Triggers::Kind Triggers::find(const std::string &name) {
     if (name == "all") {
-        return trigger_all();
+        return Kind::all;
     }
     if (name == "check") {
-        return trigger_check();
+        return Kind::check;
     }
     if (name == "state") {
-        return trigger_state();
+        return Kind::state;
     }
     if (name == "log") {
-        return trigger_log();
+        return Kind::log;
     }
     if (name == "downtime") {
-        return trigger_downtime();
+        return Kind::downtime;
     }
     if (name == "comment") {
-        return trigger_comment();
+        return Kind::comment;
     }
     if (name == "command") {
-        return trigger_command();
+        return Kind::command;
     }
     if (name == "program") {
-        return trigger_program();
+        return Kind::program;
     }
     throw std::runtime_error(
         "invalid trigger '" + name +
         "', allowed: all, check, state, log, downtime, comment, command and program");
 }
 
-void trigger_notify_all(std::condition_variable &cond) {
-    trigger_all().notify_all();
-    cond.notify_all();
+void Triggers::notify_all(Kind trigger) {
+    condition_variable_for(Kind::all).notify_all();
+    condition_variable_for(trigger).notify_all();
 }
 
-void trigger_wait(std::condition_variable &cond) {
-    std::unique_lock<std::mutex> ul(wait_mutex);
-    cond.wait(ul);
-}
-
-std::cv_status trigger_wait_for(std::condition_variable &cond,
-                                std::chrono::milliseconds ms) {
-    std::unique_lock<std::mutex> ul(wait_mutex);
-    return cond.wait_for(ul, ms);
+std::condition_variable &Triggers::condition_variable_for(Kind trigger) {
+    switch (trigger) {
+        case Kind::all:
+            return _cond_all;
+        case Kind::check:
+            return _cond_check;
+        case Kind::state:
+            return _cond_state;
+        case Kind::log:
+            return _cond_log;
+        case Kind::downtime:
+            return _cond_downtime;
+        case Kind::comment:
+            return _cond_comment;
+        case Kind::command:
+            return _cond_command;
+        case Kind::program:
+            return _cond_program;
+    }
+    return _cond_all;  // unreachable
 }

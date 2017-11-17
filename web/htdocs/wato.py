@@ -2818,7 +2818,7 @@ class ModeDiscovery(WatoMode):
                                                     ("mode", "object_parameters"),
                                                     ("host", self._host_name)]), "rulesets")
             if self._host.is_cluster():
-                html.context_button(_("Clustered Services"),
+                html.context_button(_("Clustered services"),
                      watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                              ("varname", "clustered_services")]), "rulesets")
 
@@ -2915,6 +2915,15 @@ class ModeDiscovery(WatoMode):
             )
             html.show_warning("<b>%s</b>: %s<br><br>%s" %
                               (_("Service discovery failed for this host"), e, retry_link))
+            return
+
+        if not check_table and self._host.is_cluster():
+            url = watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                  ("varname", "clustered_services")])
+            html.show_info(_("Could not find any service for your cluster. You first need to "
+                             "specify which services of your nodes shal be added to the "
+                             "cluster. This is done using the <a href=\"%s\">%s</a> ruleset.") %
+                                (url, _("Clustered services")))
             return
 
         map_icons = {self.SERVICE_UNDECIDED: "undecided",

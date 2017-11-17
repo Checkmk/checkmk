@@ -111,7 +111,6 @@ private:
 
     bool doStats() const;
     void doWait();
-    std::cv_status waitForTrigger() const;
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);

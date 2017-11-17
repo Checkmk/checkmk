@@ -1351,9 +1351,16 @@ modes.register(Mode(
 #   |                                                             |___/    |
 #   '----------------------------------------------------------------------'
 
-def mode_check_discovery(*args):
+def mode_check_discovery(hostname):
     import cmk_base.discovery as discovery
-    discovery.check_discovery(*args)
+    import cmk_base.ip_lookup as ip_lookup
+
+    if config.is_cluster(hostname):
+        ipaddress = None
+    else:
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
+
+    discovery.check_discovery(hostname, ipaddress)
 
 modes.register(Mode(
     long_option="check-discovery",

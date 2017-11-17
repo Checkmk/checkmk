@@ -253,11 +253,14 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
     auto number = nextNonNegativeIntegerArgument(&line);
     // The last 'number' StatsColumns must be of type StatsOperation::count
     std::vector<std::unique_ptr<Filter>> subfilters;
-    for (; number > 0; --number) {
+    for (auto i = 0; i < number; ++i) {
         if (_stats_columns.empty()) {
-            throw std::runtime_error("too few Stats: headers available");
+            throw std::runtime_error(
+                "error combining filters for table '" + _table->name() +
+                "': expected " + std::to_string(number) +
+                " filters, but only " + std::to_string(i) + " " +
+                (i == 1 ? "is" : "are") + " on stack");
         }
-
         auto &col = _stats_columns.back();
         if (col->operation() != StatsOperation::count) {
             throw std::runtime_error(
@@ -273,7 +276,8 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
 void Query::parseStatsNegateLine(char *line) {
     checkNoArguments(line);
     if (_stats_columns.empty()) {
-        throw std::runtime_error("no Stats: headers available");
+        throw("error combining filters for table '" + _table->name() +
+              "': expected 1 filters, but only 0 are on stack");
     }
     auto &col = _stats_columns.back();
     if (col->operation() != StatsOperation::count) {

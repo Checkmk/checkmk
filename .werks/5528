@@ -1,0 +1,12 @@
+Title: Fixed showing help when executing "omd" without mode argument (1.4.0p18 regression)
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510923599
+Class: fix
+
+With 1.4.0p18 the output of the help text when executing the "omd" command without argument
+broke. It printed an exception instead of the help text. As workaround you can execute
+"omd help" to get the help text.

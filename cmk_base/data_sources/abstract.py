@@ -333,6 +333,27 @@ class DataSource(object):
         self._logger.debug("[%s] Stored persisted sections: %s" % (self.id(), ", ".join(persisted_info.keys())))
 
 
+    def _update_info_with_persisted_info(self, host_info, hostname):
+        persisted_info = self._load_persisted_info(hostname)
+        if not persisted_info:
+            return host_info
+
+        for section_name, entry in persisted_info.items():
+            if len(entry) == 2:
+                continue # Skip entries of "old" format
+
+            persisted_from, persisted_until, section_info = entry
+
+            # Don't overwrite sections that have been received from the source with this call
+            if section_name not in host_info.info:
+                self._logger.debug("[%s] Using persisted section %r" % (self.id(), section_name))
+                host_info.add_cached_section(section_name, section_info, persisted_from, persisted_until)
+            else:
+                self._logger.debug("[%s] Skipping persisted section %r" % (self.id(), section_name))
+
+        return host_info
+
+
     def _load_persisted_info(self, hostname):
         file_path = self._persisted_info_file_path(hostname)
 
@@ -375,14 +396,6 @@ class DataSource(object):
             self._store_persisted_info(hostname, persisted_info)
 
         return persisted_info
-
-
-    def _update_info_with_persisted_info(self, host_info, hostname):
-        persisted_info = self._load_persisted_info(hostname)
-        if persisted_info:
-            host_info.update_with_persisted_info(persisted_info,
-                                       use_outdated_sections=self._use_outdated_persisted_sections)
-        return host_info
 
 
     @classmethod

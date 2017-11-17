@@ -102,7 +102,7 @@ class SNMPDataSource(DataSource):
 
 
     def _to_cache_file(self, info):
-        return repr(info)
+        return repr(info) + "\n"
 
 
     def set_ignore_check_interval(self, ignore_check_interval):

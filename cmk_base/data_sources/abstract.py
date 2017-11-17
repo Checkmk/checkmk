@@ -178,7 +178,7 @@ class DataSource(object):
         return self._from_cache_file(result)
 
 
-    def _write_cache_file(self, hostname, output):
+    def _write_cache_file(self, hostname, raw_data):
         cachefile = self._cache_file_path(hostname)
 
         try:
@@ -192,8 +192,9 @@ class DataSource(object):
         except Exception, e:
             raise MKGeneralException("Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
 
+        self._logger.verbose("[%s] Write data to cache file %s" % (self.id(), cachefile))
         try:
-            store.save_file(cachefile, self._to_cache_file(output))
+            store.save_file(cachefile, self._to_cache_file(raw_data))
         except Exception, e:
             raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 

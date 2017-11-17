@@ -30,26 +30,21 @@
 #include <condition_variable>
 #include <string>
 
-// This is basically a C++ class for triggers done the "C way" via an opaque
-// struct, explicit passing of 'this' and using a prefix for names.
-struct trigger;
+std::condition_variable &trigger_all();
+std::condition_variable &trigger_check();
+std::condition_variable &trigger_state();
+std::condition_variable &trigger_log();
+std::condition_variable &trigger_downtime();
+std::condition_variable &trigger_comment();
+std::condition_variable &trigger_command();
+std::condition_variable &trigger_program();
 
-trigger *trigger_all();
-trigger *trigger_check();
-trigger *trigger_state();
-trigger *trigger_log();
-trigger *trigger_downtime();
-trigger *trigger_comment();
-trigger *trigger_command();
-trigger *trigger_program();
+std::condition_variable &trigger_find(const std::string &name);
 
-trigger *trigger_find(const std::string &name);
-const char *trigger_all_names();
+void trigger_notify_all(std::condition_variable &cond);
 
-void trigger_notify_all(struct trigger *which);
-
-void trigger_wait(struct trigger *which);
-std::cv_status trigger_wait_for(struct trigger *which,
+void trigger_wait(std::condition_variable &cond);
+std::cv_status trigger_wait_for(std::condition_variable &cond,
                                 std::chrono::milliseconds ms);
 
 #endif  // waittriggers_h

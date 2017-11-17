@@ -497,13 +497,7 @@ void Query::parseWaitTimeoutLine(char *line) {
 }
 
 void Query::parseWaitTriggerLine(char *line) {
-    auto value = nextStringArgument(&line);
-    struct trigger *t = trigger_find(value);
-    if (t == nullptr) {
-        throw std::runtime_error("invalid trigger '" + value +
-                                 "', allowed: " + trigger_all_names());
-    }
-    _wait_trigger = t;
+    _wait_trigger = &trigger_find(nextStringArgument(&line));
 }
 
 void Query::parseWaitObjectLine(char *line) {
@@ -717,15 +711,15 @@ void Query::doWait() {
 }
 
 std::cv_status Query::waitForTrigger() const {
-    auto trigger = _wait_trigger == nullptr ? trigger_all() : _wait_trigger;
+    auto trigger = _wait_trigger == nullptr ? &trigger_all() : _wait_trigger;
     if (_wait_timeout == std::chrono::milliseconds(0)) {
         Debug(_logger) << "waiting until condition becomes true";
-        trigger_wait(trigger);
+        trigger_wait(*trigger);
         return std::cv_status::no_timeout;
     }
     Debug(_logger) << "waiting " << _wait_timeout.count()
                    << "ms or until condition becomes true";
-    auto status = trigger_wait_for(trigger, _wait_timeout);
+    auto status = trigger_wait_for(*trigger, _wait_timeout);
     if (status == std::cv_status::timeout) {
         Debug(_logger) << "wait timeout after " << _wait_timeout.count()
                        << "ms";

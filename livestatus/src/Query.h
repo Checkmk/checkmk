@@ -93,7 +93,7 @@ private:
     bool _wait_conditions_empty;  // TODO(sp): HACK, remove me...
     std::unique_ptr<AndingFilter> _wait_condition;
     std::chrono::milliseconds _wait_timeout;
-    struct trigger *_wait_trigger;
+    std::condition_variable *_wait_trigger;
     Row _wait_object;
     CSVSeparators _separators;
     bool _show_column_headers;

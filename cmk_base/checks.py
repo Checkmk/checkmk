@@ -449,6 +449,10 @@ def initialize_check_type_caches():
 #   | Misc check related helper functions                                  |
 #   '----------------------------------------------------------------------'
 
+def section_name_of(check_name):
+    return check_name.split(".")[0]
+
+
 def set_hostname(hostname):
     check_api._hostname = hostname
 
@@ -466,7 +470,7 @@ def is_snmp_check(check_name):
     except KeyError:
         snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
 
-        result = check_name.split(".")[0] in snmp_checks
+        result = section_name_of(check_name) in snmp_checks
         cache[check_name] = result
         return result
 
@@ -479,7 +483,7 @@ def is_tcp_check(check_name):
     except KeyError:
         tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
 
-        result = check_name.split(".")[0] in tcp_checks
+        result = section_name_of(check_name) in tcp_checks
         cache[check_name] = result
         return result
 

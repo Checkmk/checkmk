@@ -308,7 +308,7 @@ define servicedependency {
                 check_interval = int(values[0])
             except:
                 check_interval = float(values[0])
-        value = config.check_interval_of(hostname, checkname)
+        value = config.check_interval_of(hostname, checks.section_name_of(checkname))
         if value is not None:
             check_interval = value
 

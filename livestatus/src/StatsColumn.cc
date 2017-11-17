@@ -24,21 +24,26 @@
 
 #include "StatsColumn.h"
 #include <algorithm>
+#include <ostream>
+#include <stdexcept>
 #include "Column.h"
 #include "CountAggregator.h"
 #include "Filter.h"
+#include "Logger.h"
 
 StatsColumn::StatsColumn(Column *c, std::unique_ptr<Filter> f, StatsOperation o)
     : _column(c), _filter(std::move(f)), _operation(o) {}
 
 std::unique_ptr<Filter> StatsColumn::stealFilter() { return move(_filter); }
 
-std::unique_ptr<Aggregator> StatsColumn::createAggregator() const {
-    return _operation == StatsOperation::count
-               ? createCountAggregator()
-               : _column->createAggregator(_operation);
-}
-
-std::unique_ptr<Aggregator> StatsColumn::createCountAggregator() const {
+std::unique_ptr<Aggregator> StatsColumn::createAggregator(
+    Logger *logger) const {
+    if (_operation != StatsOperation::count) {
+        try {
+            return _column->createAggregator(_operation);
+        } catch (const std::runtime_error &e) {
+            Informational(logger) << e.what() << ", falling back to counting";
+        }
+    }
     return std::make_unique<CountAggregator>(_filter.get());
 }

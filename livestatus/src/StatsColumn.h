@@ -30,15 +30,14 @@
 #include "Aggregator.h"
 #include "Filter.h"
 class Column;
+class Logger;
 
 class StatsColumn {
 public:
     StatsColumn(Column *c, std::unique_ptr<Filter> f, StatsOperation o);
-    Column *column() const { return _column; }
     StatsOperation operation() const { return _operation; }
     std::unique_ptr<Filter> stealFilter();
-    std::unique_ptr<Aggregator> createAggregator() const;
-    std::unique_ptr<Aggregator> createCountAggregator() const;
+    std::unique_ptr<Aggregator> createAggregator(Logger *logger) const;
 
 private:
     Column *_column;

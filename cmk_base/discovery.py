@@ -108,7 +108,22 @@ def do_discovery(hostnames, check_types, only_new):
                 on_error = "raise"
             else:
                 on_error = "warn"
-            _do_discovery_for(hostname, check_types, only_new, use_caches, on_error)
+
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
+
+            sources = data_sources.DataSources(hostname)
+
+            # Usually we disable SNMP scan if cmk -I is used without a list of
+            # explicity hosts. But for host that have never been service-discovered
+            # yet (do not have autochecks), we enable SNMP scan.
+            do_snmp_scan = not use_caches or not _has_autochecks(hostname)
+
+            all_host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress, check_types=None,
+                                                           use_caches=use_caches,
+                                                           do_snmp_scan=do_snmp_scan,
+                                                           on_error=on_error)
+
+            _do_discovery_for(hostname, ipaddress, sources, all_host_infos, check_types, only_new, on_error)
             console.verbose("\n")
         except Exception, e:
             if cmk.debug.enabled():
@@ -124,13 +139,8 @@ def do_discovery(hostnames, check_types, only_new):
         _remove_autochecks_file(hostname)
 
 
-def _do_discovery_for(hostname, check_types, only_new, use_caches, on_error):
-    # Usually we disable SNMP scan if cmk -I is used without a list of
-    # explicity hosts. But for host that have never been service-discovered
-    # yet (do not have autochecks), we enable SNMP scan.
-    do_snmp_scan = not use_caches or not _has_autochecks(hostname)
-    new_items = _discover_services(hostname, ipaddress=None, check_types=check_types,
-                    use_caches=use_caches, do_snmp_scan=do_snmp_scan, on_error=on_error)
+def _do_discovery_for(hostname, ipaddress, sources, all_host_infos, check_types, only_new, on_error):
+    new_items = _discover_services(hostname, ipaddress, sources, all_host_infos, on_error=on_error)
     if not check_types and not only_new:
         old_items = [] # do not even read old file
     else:
@@ -207,9 +217,18 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
         if mode == "refresh":
             counts["removed"] += remove_autochecks_of(hostname) # this is cluster-aware!
 
+        sources = data_sources.DataSources(hostname)
+
+        if config.is_cluster(hostname):
+            ipaddress = None
+        else:
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
+
+        all_host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress, check_types=None,
+                                                use_caches=use_caches, do_snmp_scan=do_snmp_scan, on_error=on_error)
+
         # Compute current state of new and existing checks
-        services = _get_host_services(hostname, use_caches=use_caches,
-                                      do_snmp_scan=do_snmp_scan, on_error=on_error)
+        services = _get_host_services(hostname, ipaddress, sources, all_host_infos, on_error=on_error)
 
         # Create new list of checks
         new_items = {}
@@ -268,23 +287,27 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
 #   |  Active check for checking undiscovered services.                    |
 #   '----------------------------------------------------------------------'
 
-def check_discovery(hostname, ipaddress=None):
+def check_discovery(hostname, ipaddress):
     params = discovery_check_parameters(hostname) or \
              default_discovery_check_parameters()
 
     try:
-        # scan services, register changes
+        sources = data_sources.DataSources(hostname)
+
         try:
-            services = _get_host_services(hostname,
-                                        use_caches=data_sources.abstract.DataSource.get_may_use_cache_file(),
-                                        do_snmp_scan=params["inventory_check_do_scan"],
-                                        on_error="raise",
-                                        ipaddress=ipaddress)
+            all_host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress,
+                                    check_types=None,
+                                    use_caches=data_sources.abstract.DataSource.get_may_use_cache_file(),
+                                    do_snmp_scan=params["inventory_check_do_scan"],
+                                    on_error="raise")
         except socket.gaierror, e:
+            # TODO: Seems to be the wrong place for this execption handling
             if e[0] == -2 and cmk.debug.disabled():
                 # Don't crash on unknown host name, it may be provided by the user
                 raise MKAgentError(e[1])
             raise
+
+        services = _get_host_services(hostname, ipaddress, sources, all_host_infos, on_error="raise")
 
         # generate status and infotext
         status = 0
@@ -633,12 +656,6 @@ def _in_keepalive_mode():
 # 1. Check type
 # 2. Item
 # 3. Parameter string (not evaluated)
-# Arguments:
-#   check_types: None -> try all check types, list -> omit scan in any case
-#   use_caches: True is cached agent data is being used (for -I without hostnames)
-#   do_snmp_scan: True if SNMP scan should be done (WATO: Full scan)
-# Error situation (unclear what to do):
-# - IP address cannot be looked up
 #
 # This function does not handle:
 # - clusters
@@ -651,13 +668,7 @@ def _in_keepalive_mode():
 # "ignore" -> silently ignore any exception
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
-def _discover_services(hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error):
-    if ipaddress == None:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
-
-    sources = data_sources.DataSources(hostname)
-    all_host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress, check_types, use_caches, do_snmp_scan, on_error)
-
+def _discover_services(hostname, ipaddress, sources, all_host_infos, on_error):
     # Make hostname available as global variable in discovery functions
     # (used e.g. by ps-discovery)
     checks.set_hostname(hostname)
@@ -912,16 +923,16 @@ def _execute_discovery(all_host_infos, hostname, ipaddress, check_type, on_error
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
-def _get_host_services(hostname, use_caches, do_snmp_scan, on_error, ipaddress=None):
+def _get_host_services(hostname, ipaddress, sources, all_host_infos, on_error):
     if config.is_cluster(hostname):
-        return _get_cluster_services(hostname, use_caches, do_snmp_scan, on_error)
+        return _get_cluster_services(hostname, ipaddress, all_host_infos, on_error)
     else:
-        return _get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error)
+        return _get_node_services(hostname, ipaddress, sources, all_host_infos, on_error)
 
 
 # Do the actual work for a non-cluster host or node
-def _get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
-    services = _get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error)
+def _get_node_services(hostname, ipaddress, sources, all_host_infos, on_error):
+    services = _get_discovered_services(hostname, ipaddress, sources, all_host_infos, on_error)
 
     # Identify clustered services
     for (check_type, item), (check_source, paramstring) in services.items():
@@ -946,13 +957,12 @@ def _get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
 
 
 # Part of _get_node_services that deals with discovered services
-def _get_discovered_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
+def _get_discovered_services(hostname, ipaddress, sources, all_host_infos, on_error):
     # Create a dict from check_type/item to check_source/paramstring
     services = {}
 
     # Handle discovered services -> "new"
-    new_items = _discover_services(hostname, ipaddress, check_types=None,
-                        use_caches=use_caches, do_snmp_scan=do_snmp_scan, on_error=on_error)
+    new_items = _discover_services(hostname, ipaddress, sources, all_host_infos, on_error)
     for check_type, item, paramstring in new_items:
         services[(check_type, item)] = ("new", paramstring)
 
@@ -1010,14 +1020,16 @@ def _merge_manual_services(services, hostname, on_error):
     return services
 
 # Do the work for a cluster
-def _get_cluster_services(hostname, use_caches, with_snmp_scan, on_error):
+def _get_cluster_services(hostname, ipaddress, all_host_infos, on_error):
     nodes = config.nodes_of(hostname)
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     cluster_items = {}
     for node in nodes:
-        services = _get_discovered_services(node, None, use_caches, with_snmp_scan, on_error)
+        sources = data_sources.DataSources(node)
+        node_ipaddress = ip_lookup.lookup_ip_address(node)
+        services = _get_discovered_services(node, node_ipaddress, sources, all_host_infos, on_error)
         for (check_type, item), (check_source, paramstring) in services.items():
             descr = config.service_description(hostname, check_type, item)
             if hostname == config.host_of_clustered_service(node, descr):
@@ -1052,20 +1064,18 @@ def resolve_paramstring(paramstring):
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     import cmk_base.checking as checking
 
-    services = _get_host_services(hostname, use_caches, do_snmp_scan, on_error)
+    sources = data_sources.DataSources(hostname)
 
     if config.is_cluster(hostname):
         ipaddress = None
     else:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    # TODO: _get_host_services() also executes _get_host_infos_for_discovery().
-    # Can we reduce the duplicate call?
-    sources = data_sources.DataSources(hostname)
-
     all_host_infos = _get_host_infos_for_discovery(sources, hostname, ipaddress,
                                                check_types=None, use_caches=use_caches,
                                                do_snmp_scan=do_snmp_scan, on_error=on_error)
+
+    services = _get_host_services(hostname, ipaddress, sources, all_host_infos, on_error)
 
     table = []
     for (check_type, item), (check_source, paramstring) in services.items():

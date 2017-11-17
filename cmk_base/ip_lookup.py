@@ -139,7 +139,7 @@ def cached_dns_lookup(hostname, family):
         else:
             cache[cache_id] = None
             raise MKGeneralException(
-                "Failed to lookup IPv%d address of %s via DNS: %s\n" %
+                "Failed to lookup IPv%d address of %s via DNS: %s" %
                 (family, hostname, e))
 
 

@@ -1,0 +1,20 @@
+Title: Clicking on "Edit dashboard" accidentially copied dashboards with "publish to others"
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1510927527
+
+When one clicks on "Edit dashboard" to edit the currently visible dashboard and the dashboard
+is not owned by this user, the dashboard is cloned in the context of the current user. This
+is intended and equal to, for example, the views.
+
+What was unintended is the fact that the "public" flag of the cloned dashboards was not forced
+to be forced. This way all users (with enough permissions) were publishing their cloned views
+leading to strang situations where from time to time a user could see different dashboards.
+
+The "Make this dashboard available for other users" is forced to be unchecked. This way a user
+clones the dashboard for himself in the first place.

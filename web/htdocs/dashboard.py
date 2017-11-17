@@ -314,6 +314,7 @@ def load_dashboard_with_cloning(name, edit = True):
         # cloned now!
         board = copy.deepcopy(board)
         board['owner'] = config.user.id
+        board['public'] = False
 
         dashboards[(config.user.id, name)] = board
         available_dashboards[name] = board

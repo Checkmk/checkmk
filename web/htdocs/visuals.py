@@ -583,7 +583,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     mode     = html.var('mode', 'edit')
     if visualname:
         cloneuser = html.var("load_user")
-        if cloneuser:
+        if cloneuser is not None:
             mode  = 'clone'
             visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
             if not visual:

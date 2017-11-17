@@ -1,0 +1,14 @@
+Title: Fixed accidentially cloning own visuals instead of builtin visuals
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p20
+Date: 1510927292
+Class: fix
+
+It could happen that one wanted to clone a builtin visual (e.g. dashboard)
+but was cloning his own visual instead.
+
+This could happen if the user already has a visual with the exact name like
+the visual he tried to clone.

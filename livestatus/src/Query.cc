@@ -675,23 +675,13 @@ void Query::optimizeBitmask(const std::string &column_name,
     _filter->optimizeBitmask(column_name, bitmask, timezoneOffset());
 }
 
-std::unique_ptr<Aggregator> Query::createAggregator(
-    const StatsColumn &sc) const {
-    try {
-        return sc.createAggregator();
-    } catch (const std::runtime_error &e) {
-        Informational(_logger) << e.what() << ", falling back to counting";
-        return sc.createCountAggregator();
-    }
-}
-
 const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     const RowFragment &groupspec) {
     auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
         std::vector<std::unique_ptr<Aggregator>> aggrs;
         for (const auto &sc : _stats_columns) {
-            aggrs.push_back(createAggregator(*sc));
+            aggrs.push_back(sc->createAggregator(_logger));
         }
         it = _stats_groups.emplace(groupspec, move(aggrs)).first;
     }

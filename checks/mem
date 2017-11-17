@@ -470,11 +470,11 @@ def check_mem_windows(item, params, info):
             else:
                 crit_kb = crit * 1024
 
-            perfdata = [(paramname, used_kb / 1024.0, warn_kb, crit_kb, 0, total_kb / 1024.0)]
+            perfdata = [(paramname, used_kb/1024.0, warn_kb/1024.0, crit_kb/1024.0, 0, total_kb/1024.0)]
 
         # Predictive levels have no level information in the performance data
         else:
-            perfdata = [(paramname, used_kb / 1024.0, None, None, 0, total_kb / 1024.0)]
+            perfdata = [(paramname, used_kb/1024.0, None, None, 0, total_kb/1024.0)]
 
         # Do averaging, if configured, just for matching the levels
         if "average" in params:

@@ -852,13 +852,16 @@ def check_period_of(hostname, service):
         return None
 
 
-def check_interval_of(hostname, checkname):
+def check_interval_of(hostname, section_name):
     import cmk_base.checks
-    if not cmk_base.checks.is_snmp_check(checkname):
+    if not cmk_base.checks.is_snmp_check(section_name):
         return # no values at all for non snmp checks
 
+    # Previous to 1.5 "match" could be a check name (including subchecks) instead of
+    # only main check names -> section names. This has been cleaned up, but we still
+    # need to be compatible. Strip of the sub check part of "match".
     for match, minutes in rulesets.host_extra_conf(hostname, snmp_check_interval):
-        if match is None or match == checkname:
+        if match is None or match.split(".")[0] == section_name:
             return minutes # use first match
 
 #.

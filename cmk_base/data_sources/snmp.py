@@ -213,8 +213,6 @@ class SNMPDataSource(DataSource):
         persisted_info = {}
 
         for section_name, section_info in raw_data.items():
-            # TODO: check_type/section_name? Previously check_type was used
-            # for this kind of call. Possibly we need to redefine this!
             check_interval = config.check_interval_of(hostname, section_name)
             if check_interval is None:
                 continue

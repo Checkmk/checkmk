@@ -1,0 +1,16 @@
+Title: Fixed logical problem with SNMP check interval rule
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510910528
+Class: fix
+
+The rule was previously configured for each individual check. This was not really
+correct, because the SNMP data is fetched for main checks and their sub checks
+together. This means that you can not define inidividual SNMP checks intervals for
+these checks.
+
+The ruleset "Check intervals for SNMP checks" has now been changed to work with the
+"section names" instead of inidividual checks.

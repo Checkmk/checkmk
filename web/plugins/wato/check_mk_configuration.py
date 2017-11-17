@@ -2585,12 +2585,20 @@ register_rule(group,
     ),
     match_type="all")
 
+
 def get_snmp_checktypes():
-   checks = watolib.check_mk_local_automation("get-check-information")
-   types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
-             for (cn, c) in checks.items() if c['snmp'] ]
-   types.sort()
-   return [ (None, _('All SNMP Checks')) ] + types
+    checks = watolib.check_mk_local_automation("get-check-information")
+    types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
+              for (cn, c) in checks.items() if c['snmp'] ]
+    types.sort()
+    return [ (None, _('All SNMP Checks')) ] + types
+
+
+def get_snmp_section_names():
+    checks = watolib.check_mk_local_automation("get-check-information")
+    return [ (None, _('All SNMP Checks')) ] \
+         + sorted([ (cn, cn) for (cn, c) in checks.items() if c['snmp'] ])
+
 
 register_rule(group,
     "snmp_check_interval",
@@ -2600,9 +2608,20 @@ register_rule(group,
                  'With this option it is possible to configure a longer check interval for specific '
                  'checks, than then normal check interval.'),
         elements = [
-            DropdownChoice(
-                title = _("Checktype"),
-                choices = get_snmp_checktypes,
+            Transform(
+                DropdownChoice(
+                    title = _("Check"),
+                    help = _("You can only configure \"section names\" here and not choose all "
+                             "individual SNMP based checks here. It is only possible to define "
+                             "SNMP check intervals for main checks and all the related sub "
+                             "checks together. The reason for this is that the data of the "
+                             "main check and it's sub checks is defined for the whole group "
+                             "of checks in the main check and also fetched for all these "
+                             "checks together."),
+                    choices = get_snmp_section_names,
+                ),
+                # Transform check types to section names
+                forth = lambda e: e.split(".")[0] if e is not None else None,
             ),
             Integer(
                 title = _("Do check every"),

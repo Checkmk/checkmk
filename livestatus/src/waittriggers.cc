@@ -40,6 +40,8 @@ std::condition_variable cond_command;
 std::condition_variable cond_program;
 }  // namespace
 
+std::mutex &trigger_mutex() { return wait_mutex; }
+
 std::condition_variable &trigger_all() { return cond_all; }
 
 std::condition_variable &trigger_check() { return cond_check; }

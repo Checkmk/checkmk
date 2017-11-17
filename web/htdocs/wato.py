@@ -96,6 +96,9 @@ import backup
 import modules as multisite_modules
 import watolib
 
+import multiprocessing
+import Queue
+
 import cmk.paths
 import cmk.translations
 import cmk.store as store
@@ -16404,6 +16407,273 @@ class ModeDownloadAgents(WatoMode):
         return file_titles
 
 #.
+#   .--Best Practices------------------------------------------------------.
+#   |   ____            _     ____                 _   _                   |
+#   |  | __ )  ___  ___| |_  |  _ \ _ __ __ _  ___| |_(_) ___ ___  ___     |
+#   |  |  _ \ / _ \/ __| __| | |_) | '__/ _` |/ __| __| |/ __/ _ \/ __|    |
+#   |  | |_) |  __/\__ \ |_  |  __/| | | (_| | (__| |_| | (_|  __/\__ \    |
+#   |  |____/ \___||___/\__| |_|   |_|  \__,_|\___|\__|_|\___\___||___/    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Provides the user with hints about his setup. Performs different     |
+#   | checks and tells the user what could be improved.                    |
+#   '----------------------------------------------------------------------'
+
+class ModeBestPractices(WatoMode):
+    _ack_path = cmk.paths.var_dir + "/acknowledged_bp_tests.mk"
+
+    def __init__(self):
+        super(ModeBestPractices, self).__init__()
+        self._acks = self._load_acknowledgements()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        self._show_ok  = html.has_var("show_ok")
+        self._show_ack = html.has_var("show_ack")
+
+
+    def title(self):
+       return _("Best practices")
+
+
+    def action(self):
+        if not html.check_transaction():
+            return
+
+        test_id   = html.var("_test_id")
+        site_id   = html.var("_site_id")
+        status_id = html.get_integer_input("_status_id")
+
+        if not test_id:
+            raise MKUserError("_ack_test_id", _("Needed variable missing"))
+
+        if html.var("_do") in [ "ack", "unack" ]:
+            if not site_id:
+                raise MKUserError("_ack_site_id", _("Needed variable missing"))
+
+            if site_id not in ActivateChanges().activation_site_ids():
+                raise MKUserError("_ack_site_id", _("Invalid site given"))
+
+
+        if html.var("_do") == "ack":
+            self._acknowledge_test(test_id, site_id, status_id)
+
+        elif html.var("_do") == "unack":
+            self._unacknowledge_test(test_id, site_id, status_id)
+
+        elif html.var("_do") == "ack_all":
+            self._acknowledge_test(test_id, site_id=None, status_id=status_id)
+
+        elif html.var("_do") == "unack_all":
+            self._unacknowledge_test(test_id, site_id=None, status_id=status_id)
+
+        else:
+            raise NotImplementedError()
+
+
+    def page(self):
+        results_by_category = self._perform_tests()
+        results_by_category = self._filter_test_results(results_by_category)
+
+        if self._show_ok:
+            html.buttonlink(html.makeuri([], delvars=["show_ok"]), _("Hide succeeded tests"))
+        else:
+            html.buttonlink(html.makeuri([("show_ok", "1")]), _("Show succeeded tests"))
+
+        if self._show_ack:
+            html.buttonlink(html.makeuri([], delvars=["show_ack"]), _("Hide acknowledged tests"))
+        else:
+            html.buttonlink(html.makeuri([("show_ack", "1")]), _("Show acknowledged tests"))
+
+        for category_name, results in sorted(results_by_category.items(),
+                                             key=lambda x: watolib.BPTestCategories.title(x[0])):
+            table.begin(title=watolib.BPTestCategories.title(category_name), css="data best_practices",
+                        sortable=False, searchable=False)
+
+            for result in sorted(results, key=lambda x: x.title):
+                table.row()
+
+                table.cell(_("Status"), css=["state", "state%d" % result.status])
+                html.write_text(html.attrencode(result.status_name()))
+
+                table.cell(_("Site"), css=["site"])
+                html.write_text(html.attrencode(result.site_id))
+
+                table.cell(_("Title"), css=["title"])
+                html.write_text(result.title)
+                html.open_p()
+                html.write_text(result.help)
+                html.close_p()
+
+                table.cell(_("Output"), css=["result"])
+                html.write_text(result.text,)
+
+                table.cell(_("Actions"), css=["buttons"], sortable=False)
+
+                if self._is_whole_test_acknowledged(result):
+                    html.empty_icon_button()
+                    html.icon_button(
+                        html.makeactionuri(
+                            [("_do",        "unack_all"),
+                             ("_status_id", result.status),
+                             ("_test_id",   result.test_id)]),
+                        _("Unacknowledge this test for all sites"),
+                        "unacknowledge_test_all",
+                    )
+                elif self._is_explicilty_acknowledged(result):
+                    html.icon_button(
+                        html.makeactionuri(
+                            [("_do",        "unack"),
+                             ("_site_id",   result.site_id),
+                             ("_status_id", result.status),
+                             ("_test_id",   result.test_id)]),
+                        _("Unaknowledge this test result"),
+                        "unacknowledge_test",
+                    )
+                    html.empty_icon_button()
+                else:
+                    html.icon_button(
+                        html.makeactionuri(
+                            [("_do",        "ack"),
+                             ("_site_id",   result.site_id),
+                             ("_status_id", result.status),
+                             ("_test_id",   result.test_id)]),
+                        _("Acknowledge this test result"),
+                        "acknowledge_test",
+                    )
+                    html.icon_button(
+                        html.makeactionuri(
+                            [("_do",        "ack_all"),
+                             ("_status_id", result.status),
+                             ("_test_id",   result.test_id)]),
+                        _("Acknowledge this test for all sites"),
+                        "acknowledge_test_all",
+                    )
+            table.end()
+
+
+    def _perform_tests(self):
+        results_by_site = {}
+
+        # Results are fetched simultaneously from the remote sites
+        result_queue = multiprocessing.Queue()
+
+        processes = []
+        for site_id in watolib.ActivateChanges().activation_site_ids():
+            process = multiprocessing.Process(target=self._perform_tests_for_site,
+                                              args=(site_id, result_queue))
+            process.start()
+            processes.append((site_id, process))
+
+        # Wait for termination of all processes
+        for site_id, process in processes:
+            process.join()
+
+        # Now collect the results from the queue
+        while True:
+            try:
+                site_id, results_data = result_queue.get_nowait()
+
+                if isinstance(results_data, Exception):
+                    raise results_data
+
+                elif isinstance(results_data, list):
+                    test_results = []
+                    for result_data in results_data:
+                        result = watolib.BPResult.from_repr(ast.literal_eval(result_data))
+                        test_results.append(result)
+
+                    results_by_site[site_id] = test_results
+            except Queue.Empty:
+                break
+            except Exception, e:
+                log_exception()
+                html.show_error("%s: %s" % (site_id, e))
+
+        results_by_category = {}
+        for site_id, results in results_by_site.items():
+            for result in results:
+                result_list = results_by_category.setdefault(result.category, [])
+                result_list.append(result)
+
+        return results_by_category
+
+
+    def _perform_tests_for_site(self, site_id, result_queue):
+        try:
+            if config.site_is_local(site_id):
+                results = watolib.check_best_practices()
+                results_data = [ repr(result) for result in results ]
+
+            else:
+                results_data = watolib.do_remote_automation(
+                    config.site(site_id), "check-best-practices", [])
+
+            result_queue.put((site_id, results_data))
+
+        except Exception, e:
+            log_exception()
+            result_queue.put((site_id, e))
+
+
+    def _filter_test_results(self, results_by_category):
+        for category_name, results in results_by_category.items():
+            if not self._show_ok:
+                results = filter(lambda result: type(result) != BPResultOK, results)
+
+            if not self._show_ack:
+                results = filter(lambda result: not self._is_acknowledged(result), results)
+
+            if not results:
+                del results_by_category[category_name]
+            else:
+                results_by_category[category_name] = results
+
+        return results_by_category
+
+
+    def _is_acknowledged(self, result):
+        return self._is_whole_test_acknowledged(result) \
+               or self._is_explicilty_acknowledged(result)
+
+
+    def _is_explicilty_acknowledged(self, result):
+        return (result.test_id, result.site_id, result.status) in self._acks
+
+
+    def _is_whole_test_acknowledged(self, result):
+        return (result.test_id, None, result.status) in self._acks
+
+
+    def _unacknowledge_test(self, test_id, site_id, status_id):
+        self._acks = self._load_acknowledgements(lock=True)
+        try:
+            del self._acks[(test_id, site_id, status_id)]
+            self._save_acknowledgements(self._acks)
+        except KeyError:
+            pass
+
+
+    def _acknowledge_test(self, test_id, site_id, status_id):
+        self._acks = self._load_acknowledgements(lock=True)
+        self._acks[(test_id, site_id, status_id)] = {
+            "user_id" : config.user.id,
+            "time"    : time.time(),
+        }
+        self._save_acknowledgements(self._acks)
+
+
+    def _save_acknowledgements(self, acknowledged_werks):
+        store.save_data_to_file(self._ack_path, acknowledged_werks)
+
+
+    def _load_acknowledgements(self, lock=False):
+        return store.load_data_from_file(self._ack_path, {}, lock=lock)
+
+
+
+#.
 #   .--Network Scan--------------------------------------------------------.
 #   |   _   _      _                      _      ____                      |
 #   |  | \ | | ___| |___      _____  _ __| | __ / ___|  ___ __ _ _ __      |
@@ -16678,7 +16948,12 @@ from watolib import \
     Attribute, \
     ContactGroupsAttribute, \
     NagiosTextAttribute, \
-    ValueSpecAttribute
+    ValueSpecAttribute, \
+    BPTestCategories, \
+    BPTest, \
+    BPResultCRIT, \
+    BPResultWARN, \
+    BPResultOK
 
 
 def make_action_link(vars):
@@ -17308,6 +17583,7 @@ modes = {
    "passwords"          : (["passwords"], ModePasswords),
    "edit_password"      : (["passwords"], ModeEditPassword),
    "read_only"          : (["set_read_only"], ModeManageReadOnly),
+   "best_practices"     : ([], ModeBestPractices),
 }
 
 extra_buttons = []
@@ -17590,6 +17866,11 @@ def load_plugins(force):
     config.declare_permission("wato.set_read_only",
         _("Set WATO to read only mode for other users"),
         _("Prevent other users from making modifications to WATO."),
+        [ "admin" ])
+
+    config.declare_permission("wato.best_practices",
+        _("Access the best practice hints provided by WATO"),
+        _("WATO has a module that gives you hints on how to tune your Check_MK installation."),
         [ "admin" ])
 
     config.declare_permission("wato.add_or_modify_executables",

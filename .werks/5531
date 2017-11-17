@@ -1,0 +1,27 @@
+Title: New WATO page "Best practices" can be used to find things to improve in your Check_MK
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1510931760
+Class: feature
+
+The new WATO page "Best practices" is meant to give you hints about your Check_MK installation
+and the things you could improve in terms of performance, reliabilty and security.
+
+In the moment you open the page, it starts analyzing your Check_MK installation and executes
+different tests. Test may detect that a thing is OK and report the test to be OK. Other
+tests may result in WARN state in case you could be interested in changing something.
+Other tests may report a CRIT state in case we think that you have a critical situation which
+should be fixed for a completely working Check_MK setup.
+
+Please note that this feature and the implemented tests are still in an early phase of
+development. Understand the test results as pointer on things you should check.
+
+Each of the tests can be acknowledged just for a single site or all your sites. In case you
+came to the decision that a reported problem is not really a problem for you, you can
+acknowledge the test results.
+
+In case you fix a problem, you won't need to acknowledge it. Just open up the page again,
+which should then turn your test into OK.

@@ -250,7 +250,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def format_ldap_uri(self, server):
-        if 'use_ssl' in self._config:
+        if self.use_ssl():
             uri = 'ldaps://'
         else:
             uri = 'ldap://'
@@ -371,6 +371,10 @@ class LDAPUserConnector(UserConnector):
             servers = [ connect_params['server'] ] + connect_params.get('failover_servers', [])
 
         return servers
+
+
+    def use_ssl(self):
+        return 'use_ssl' in self._config
 
 
     def active_plugins(self):

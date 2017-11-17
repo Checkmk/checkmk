@@ -314,6 +314,10 @@ class Job(MKBackupJob, BackupEntity):
         return self._config["encrypt"]
 
 
+    def is_encrypted(self):
+        return self._config["encrypt"] != None
+
+
     # TODO: Duplicated code with mkbackup (globalize_job_id())
     def global_ident(self):
         parts = []

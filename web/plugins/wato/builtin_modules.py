@@ -85,6 +85,9 @@ modules += [
 
       ( "icons", _("Custom Icons"), "icons", "icons",
         _("Upload your own icons that can be used in views or custom actions")),
+
+      ( "best_practices", _("Best practices"), "best_practices", "best_practices",
+        _("See hints how to improve your Check_MK installation")),
 ]
 
 # Register the builtin agent download page on the top level of WATO only when the agent bakery

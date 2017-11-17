@@ -353,7 +353,7 @@ class ConfigDomainApache(watolib.ConfigDomain):
 
 
     def _write_config_file(self):
-        config = self._get_effective_config()
+        config = self.get_effective_config()
 
         output = watolib.wato_fileheader()
 
@@ -366,7 +366,7 @@ class ConfigDomainApache(watolib.ConfigDomain):
 
 
 
-    def _get_effective_config(self):
+    def get_effective_config(self):
         config = self.load(site_specific=False)
         config.update(self.load(site_specific=True))
         return config

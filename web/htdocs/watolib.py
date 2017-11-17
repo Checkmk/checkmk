@@ -58,8 +58,10 @@ from hashlib import sha256
 import config, hooks, userdb, multitar
 import sites
 import mkeventd
+import backup
 
 import cmk.paths
+import cmk.defines
 import cmk.store as store
 import cmk.render as render
 
@@ -9289,6 +9291,221 @@ def _ping(address):
                             stderr=subprocess.STDOUT,
                             close_fds=True).wait() == 0
 
+
+#.
+#   .--Best Practices------------------------------------------------------.
+#   |   ____            _     ____                 _   _                   |
+#   |  | __ )  ___  ___| |_  |  _ \ _ __ __ _  ___| |_(_) ___ ___  ___     |
+#   |  |  _ \ / _ \/ __| __| | |_) | '__/ _` |/ __| __| |/ __/ _ \/ __|    |
+#   |  | |_) |  __/\__ \ |_  |  __/| | | (_| | (__| |_| | (_|  __/\__ \    |
+#   |  |____/ \___||___/\__| |_|   |_|  \__,_|\___|\__|_|\___\___||___/    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Provides the user with hints about his setup. Performs different     |
+#   | checks and tells the user what could be improved.                    |
+#   '----------------------------------------------------------------------'
+
+class BPResult(object):
+    status = None
+    def __init__(self, text):
+        super(BPResult, self).__init__()
+        self.text = text
+
+
+    def from_test(self, test):
+        self.test_id  = test.id()
+        self.category = test.category()
+        self.title    = test.title()
+        self.help     = test.help()
+        self.site_id  = config.omd_site()
+
+
+    def status_name(self):
+        return cmk.defines.short_service_state_name(self.status)
+
+
+    @classmethod
+    def from_repr(cls, repr_data):
+        result_class_name = repr_data.pop("class_name")
+        result = globals()[result_class_name](repr_data["text"])
+
+        for key, val in repr_data.items():
+            setattr(result, key, val)
+
+        return result
+
+
+    def __repr__(self):
+        return repr({
+            "class_name" : self.__class__.__name__,
+            "site_id"    : self.site_id,
+            "test_id"    : self.test_id,
+            "text"       : self.text,
+            "category"   : self.category,
+            "title"      : self.title,
+            "help"       : self.help,
+        })
+
+
+
+class BPResultCRIT(BPResult):
+    status = 2
+
+
+
+class BPResultWARN(BPResult):
+    status = 1
+
+
+
+class BPResultOK(BPResult):
+    status = 0
+
+
+
+class BPTestCategories(object):
+    usability   = "usability"
+    performance = "performance"
+    security    = "security"
+    reliability = "reliability"
+
+
+    @classmethod
+    def title(self, ident):
+        return {
+            "usability"   : _("Usability"),
+            "performance" : _("Performance"),
+            "security"    : _("Security"),
+            "reliability" : _("Reliability"),
+        }[ident]
+
+
+
+class BPTest(object):
+    def __init__(self):
+        self._executed = False
+        self._results  = []
+
+
+    def id(self):
+        return self.__class__.__name__
+
+
+    def category(self):
+        """Return the internal name of the category the BP test is associated with"""
+        raise NotImplementedError()
+
+
+    def title(self):
+        raise NotImplementedError()
+
+
+    def help(self):
+        raise NotImplementedError()
+
+
+    def is_relevant(self):
+        """A test can check whether or not is relevant for the current evnironment.
+        In case this method returns False, the check will not be executed and not
+        be shown to the user."""
+        raise NotImplementedError()
+
+
+    def execute(self):
+        """Implement the test logic here. The method needs to add one or more test
+        results like this:
+
+        yield BPResultOK(_("it's fine"))
+        """
+        raise NotImplementedError()
+
+
+    def run(self):
+        self._executed = True
+        try:
+            for result in self.execute():
+                result.from_test(self)
+                yield result
+        except Exception, e:
+            log_exception()
+            result = BPResultCRIT("<pre>%s</pre>" %
+                _("Failed to execute the test %s: %s") % (html.attrencode(self.__class__.__name__),
+                                                          html.attrencode(traceback.format_exc())))
+            result.from_test(self)
+            yield result
+
+
+    def status(self):
+        return max([ 0 ] + [ r.status for r in self.results ])
+
+
+    def status_name(self):
+        return short_service_state_name(self.status())
+
+
+    @property
+    def results(self):
+        if not self._executed:
+            raise MKGeneralException(_("The test has not been executed yet"))
+        return self._results
+
+
+
+class BPTestLiveproxyd(BPTest):
+    def category(self):
+        return "performance"
+
+
+    def title(self):
+        return _("Use Livestatus Proxy Daemon")
+
+
+    def help(self):
+        return _("The Livestatus Proxy Daemon is available with the Check_MK Enterprise Edition "
+                 "and improves the management of the inter site connections using livestatus. Using "
+                 "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
+                 "GUI and will decrease ressource usage.")
+
+
+    def is_relevant(self):
+        return True
+
+
+    def execute(self):
+        site_id = config.omd_site()
+        if site_is_using_livestatus_proxy(site_id):
+            yield BPResultOK(_("Site is using the Livestatus Proxy Daemon"))
+
+        elif not is_wato_slave_site():
+            yield BPResultWARN(_("The Livestatus Proxy is not only good for slave sites, "
+                                 "enable it for your master site"))
+
+        else:
+            yield BPResultWARN(_("Use the Livestatus Proxy Daemon for your site"))
+
+
+
+def check_best_practices():
+    results = []
+    for test_cls in BPTest.__subclasses__(): # pylint: disable=no-member
+        test = test_cls()
+
+        if not test.is_relevant():
+            continue
+
+        for result in test.run():
+            results.append(result)
+
+    return results
+
+
+automation_commands["check-best-practices"] = check_best_practices
+
+
+def site_is_using_livestatus_proxy(site_id):
+    site   = config.site(site_id)
+    socket = site["socket"]
+    return type(socket) == tuple and socket[0] == "proxy"
 
 #.
 #   .--MIXED STUFF---------------------------------------------------------.

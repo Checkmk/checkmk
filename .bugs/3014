@@ -1,0 +1,16 @@
+Title: Check cache usage of the HW/SW inventory check
+Component: core
+State: open
+Date: 2017-11-17 12:23:20
+Targetversion: 1.5.0
+Class: bug
+
+We should check why the inventory check is handled differently than
+the discovery check regarding it's cache usage.
+
+The HW/SW inventory check is always trying to fetch fresh SNMP data.
+While the inventory check makes use of the existing data source caches.
+
+There are SNMP HW/SW inventory plugins that do not exist as checks and
+vice versa. We need to care about this when writing the cache in case
+we mix these both.

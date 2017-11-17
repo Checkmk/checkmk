@@ -1,0 +1,12 @@
+Title: Improve compatibility of baked agents regarding xinetd installation
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p19
+Date: 1510919832
+Class: fix
+
+This werk addresses one issue that occurs with baked agents:
+
+On some rpm based systems, the Agent installation script was not able to restart the xinetd service. Notably this occured when there is no executable available at "/etc/init.d/xinetd"

@@ -1,0 +1,14 @@
+Title: win.mem: Fix incorrect representation of absolute memory levels in graphs
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1510923049
+
+Previously, a warn or crit level of eg. 20 GB would be displayed in the graph as 20 TB
+due to the levels not being set to the same unit as the performance value itself.
+The problem only affected the levels passed to the metrics system for representation,
+not the actual levels used for evaluation.

@@ -27,7 +27,6 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <condition_variable>
 #include <cstdint>
 #include <ctime>
 #include <list>
@@ -41,6 +40,7 @@
 #include "RendererBrokenCSV.h"
 #include "Row.h"
 #include "StatsColumn.h"
+#include "Triggers.h"
 #include "contact_fwd.h"
 #include "data_encoding.h"
 class Aggregator;
@@ -92,7 +92,7 @@ private:
     contact *_auth_user;
     std::unique_ptr<AndingFilter> _wait_condition;
     std::chrono::milliseconds _wait_timeout;
-    std::condition_variable *_wait_trigger;
+    Triggers::Kind _wait_trigger;
     Row _wait_object;
     CSVSeparators _separators;
     bool _show_column_headers;

@@ -30,7 +30,6 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
-#include <mutex>
 #include <ostream>
 #include <ratio>
 #include <stdexcept>
@@ -39,16 +38,17 @@
 #include "Column.h"
 #include "Filter.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "NullColumn.h"
 #include "OringFilter.h"
 #include "OutputBuffer.h"
 #include "StatsColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
+#include "Triggers.h"
 #include "auth.h"
 #include "opids.h"
 #include "strutil.h"
-#include "waittriggers.h"
 
 // for find_contact, ugly...
 #ifdef CMC
@@ -91,7 +91,7 @@ Query::Query(const std::list<std::string> &lines, Table *table,
     , _keepalive(false)
     , _auth_user(nullptr)
     , _wait_timeout(0)
-    , _wait_trigger(&trigger_all())
+    , _wait_trigger(Triggers::Kind::all)
     , _wait_object(nullptr)
     , _separators("\n", ";", ",", "|")
     , _show_column_headers(true)
@@ -497,7 +497,7 @@ void Query::parseWaitTimeoutLine(char *line) {
 }
 
 void Query::parseWaitTriggerLine(char *line) {
-    _wait_trigger = &trigger_find(nextStringArgument(&line));
+    _wait_trigger = _table->core()->triggers().find(nextStringArgument(&line));
 }
 
 void Query::parseWaitObjectLine(char *line) {
@@ -695,20 +695,8 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
-    auto pred = [this] {
+    _table->core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
         return _wait_condition->accepts(_wait_object, _auth_user,
                                         timezoneOffset());
-    };
-    std::unique_lock<std::mutex> lock(trigger_mutex());
-    if (_wait_timeout == std::chrono::milliseconds(0)) {
-        Debug(_logger) << "waiting until condition becomes true";
-        _wait_trigger->wait(lock, pred);
-    } else {
-        Debug(_logger) << "waiting "
-                       << std::chrono::duration_cast<std::chrono::milliseconds>(
-                              _wait_timeout)
-                              .count()
-                       << "ms or until condition becomes true";
-        _wait_trigger->wait_for(lock, _wait_timeout, pred);
-    }
+    });
 }

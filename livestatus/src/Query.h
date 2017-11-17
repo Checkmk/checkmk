@@ -90,7 +90,6 @@ private:
     using FilterStack = std::vector<std::unique_ptr<Filter>>;
     std::unique_ptr<AndingFilter> _filter;
     contact *_auth_user;
-    bool _wait_conditions_empty;  // TODO(sp): HACK, remove me...
     std::unique_ptr<AndingFilter> _wait_condition;
     std::chrono::milliseconds _wait_timeout;
     std::condition_variable *_wait_trigger;

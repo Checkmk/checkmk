@@ -16452,7 +16452,7 @@ class ModeBestPractices(WatoMode):
             if not site_id:
                 raise MKUserError("_ack_site_id", _("Needed variable missing"))
 
-            if site_id not in ActivateChanges().activation_site_ids():
+            if site_id not in watolib.ActivateChanges().activation_site_ids():
                 raise MKUserError("_ack_site_id", _("Invalid site given"))
 
 

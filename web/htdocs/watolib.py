@@ -9440,7 +9440,7 @@ class BPTest(object):
 
 
     def status_name(self):
-        return short_service_state_name(self.status())
+        return cmk.defines.short_service_state_name(self.status())
 
 
     @property

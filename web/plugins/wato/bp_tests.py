@@ -57,7 +57,7 @@ class BPTestPersistentConnections(BPTest):
         site_config = config.site(site_id)
         persist = site_config.get("persist", False)
 
-        if persist and site_is_using_livestatus_proxy(site_id):
+        if persist and watolib.site_is_using_livestatus_proxy(site_id):
             yield BPResultWARN(
                 _("Persistent connections are nearly useless "
                   "with Livestatus Proxy Daemon. Better disable it."))
@@ -85,9 +85,15 @@ class BPTestLivestatusUsage(BPTest):
 
 
     def help(self):
-        return _("You should never reach a livestatus usage of 100% for a longer time. "
-            "consider increasing number of parallel livestatus connections or track down "
-            "the clients to check whether or not you can reduce the usage somehow.")
+        return _("<p>Livestatus is used by several components, for example the GUI, to gather "
+                 "information about the monitored objects from the monitoring core. It is "
+                 "very important for the overall performance of the monitoring system that "
+                 "livestatus is a reliable and performant.</p>"
+                 "<p>There should always be enough free livestatus slots to serve new "
+                 "incoming queries.</p>"
+                 "<p>You should never reach a livestatus usage of 100% for a longer time. "
+                 "Consider increasing number of parallel livestatus connections or track down "
+                 "the clients to check whether or not you can reduce the usage somehow.</p>")
 
 
     def is_relevant(self):
@@ -95,25 +101,26 @@ class BPTestLivestatusUsage(BPTest):
 
 
     def execute(self):
-        sites.live().set_only_sites([config.omd_site()])
-        try:
-            site_status = sites.live().query_row(
-                "GET status\n"
-                "Columns: livestatus_usage livestatus_threads livestatus_active_connections livestatus_overflows_rate"
-            )
-        finally:
-            sites.live().set_only_sites()
+        local_connection = sites.livestatus.LocalConnection()
+        site_status = local_connection.query_row(
+            "GET status\n"
+            "Columns: livestatus_usage livestatus_threads livestatus_active_connections livestatus_overflows_rate"
+        )
 
         usage, threads, active_connections, overflows_rate = site_status
+        usage_perc = 100 * usage
 
-        number_txt = "(%d of %d connections used)" % (active_connections, threads)
-        if usage > 90:
-            yield BPResultWARN(_("The usage is %0.2f%% (above %0.2f%%), check "
-                "the usage over time and possibly adapt configuration%s") % number_txt)
+        usage_warn, usage_crit = 80, 95
+        if usage_perc >= usage_crit:
+            cls = BPResultCRIT
+        elif usage_perc >= usage_warn:
+            cls = BPResultWARN
+        else:
+            cls = BPResultOK
 
-        if overflows_rate > 1:
-            yield BPResultCRIT(_("%0.2f/s overflows occured. "
-                "Clients need to wait for connections%s") % number_txt)
+        yield cls(_("The current livestatus usage is %.2f%%. You have a connection overflow "
+                    "rate of %.2f/s. %d of %d connections used") %
+                    (usage_perc, overflows_rate, active_connections, threads))
 
 
 
@@ -407,50 +414,6 @@ class BPTestApacheProcessUsage(BPTest, BPApacheTest):
 
 
 
-class BPTestLivestatusUsage(BPTest, BPApacheTest):
-    def category(self):
-        return BPTestCategories.performance
-
-
-    def title(self):
-        return _("Livestatus usage")
-
-
-    def help(self):
-        return _("<p>Livestatus is used by several components, for example the GUI, to gather "
-                 "information about the monitored objects from the monitoring core. It is "
-                 "very important for the overall performance of the monitoring system that "
-                 "livestatus is a reliable and performant.</p>"
-                 "<p>There should always be enough free livestatus slots to serve new "
-                 "incoming queries.</p>")
-
-
-    def is_relevant(self):
-        return True
-
-
-    def execute(self):
-        local_connection = sites.livestatus.LocalConnection()
-        row = local_connection.query_row(
-            "GET status\nColumns: livestatus_usage livestatus_overflows_rate\n"
-        )
-
-        livestatus_usage_perc        = 100 * row[0]
-        livestatus_overflows_per_sec = row[1]
-
-        usage_warn, usage_crit = 80, 95
-        if livestatus_usage_perc >= usage_crit:
-            cls = BPResultCRIT
-        elif livestatus_usage_perc >= usage_warn:
-            cls = BPResultWARN
-        else:
-            cls = BPResultOK
-
-        yield cls(_("The current livestatus usage is %.2f%%. You have a connection overflow "
-                    "rate of %.2f/s.") % (livestatus_usage_perc, livestatus_overflows_per_sec))
-
-
-
 class BPTestCheckMKHelperUsage(BPTest):
     def category(self):
         return BPTestCategories.performance
@@ -508,60 +471,6 @@ class BPTestCheckMKHelperUsage(BPTest):
         if helper_usage_perc < 50:
             yield BPResultWARN(_("The helper usage is below 50%, you may decrease the number of "
                                  "Check_MK helpers to reduce the memory consumption."))
-
-
-
-class BPTestApacheNumberOfProcesses(BPTest, BPApacheTest):
-    def category(self):
-        return BPTestCategories.performance
-
-
-    def title(self):
-        return _("Apache number of processes")
-
-
-    def help(self):
-        return _("<p>The apache has a number maximum processes it can start in case of high "
-                 "load situations. These apache processes may use a decent amount of memory, so "
-                 "you need to configure them in a way that you system can handle them without "
-                 "reaching out of memory situations.</p>"
-                 "<p>Please note that this value is only a rough estimation, because the memory "
-                 "usage of the apache processes may vary with the requests being processed.</p>")
-
-
-    def is_relevant(self):
-        return True
-
-
-    def execute(self):
-        process_limit = self._get_maximum_number_of_processes()
-        average_process_size = self._get_average_process_size()
-
-        estimated_memory_size = process_limit * (average_process_size * 1.2)
-
-        yield BPResultWARN(_("The apache may start up to %d processes while the current "
-                             "average process size is %s. With this numbers the apache may "
-                             "use up to %s RAM. Please ensure that your system is able to "
-                             "handle this.") % (process_limit, cmk.render.bytes(average_process_size),
-                                                cmk.render.bytes(estimated_memory_size)))
-
-
-    def _get_average_process_size(self):
-        try:
-            ppid = int(open("%s/tmp/apache/run/apache.pid" % cmk.paths.omd_root).read())
-        except IOError, ValueError:
-            raise MKGeneralException(_("Failed to read the apache process ID"))
-
-        sizes = []
-        for pid in os.popen("ps --ppid %s h o pid" % ppid):
-            summary_line = os.popen("pmap -d %d" % int(pid)).readlines()[-1]
-            sizes.append(int(summary_line.split()[3][:-1])*1024.0)
-
-        if not sizes:
-            raise MKGeneralException(_("Failed to estimate the apache process size"))
-
-        return sum(sizes) / float(len(sizes))
-
 
 
 
@@ -638,7 +547,6 @@ class BPTestSizeOfExtensions(BPTest):
 
 
     def is_relevant(self):
-        return True
         return config.has_wato_slave_sites() and self._replicates_mkps()
 
 

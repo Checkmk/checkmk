@@ -152,6 +152,10 @@ class CMKVersion(object):
 
 
     def version_directory(self):
+        return self.omd_version()
+
+
+    def omd_version(self):
         return "%s.%s" % (self.version, self.edition_short)
 
 

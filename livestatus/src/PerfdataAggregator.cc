@@ -77,7 +77,7 @@ void PerfdataAggregator::consumeVariable(const std::string &varname,
         _aggr.emplace(varname, new_entry);
     } else {
         it->second._count++;
-        switch (getOperation()) {
+        switch (_operation) {
             case StatsOperation::sum:
             case StatsOperation::avg:
                 it->second._aggr += value;
@@ -104,8 +104,6 @@ void PerfdataAggregator::consumeVariable(const std::string &varname,
                 it->second._aggr += value;
                 it->second._sumq += value * value;
                 break;
-            case StatsOperation::count:
-                break;
         }
     }
 }
@@ -115,7 +113,7 @@ void PerfdataAggregator::output(RowRenderer &r) const {
     bool first = true;
     for (const auto &entry : _aggr) {
         double value;
-        switch (getOperation()) {
+        switch (_operation) {
             case StatsOperation::sum:
             case StatsOperation::min:
             case StatsOperation::max:
@@ -141,10 +139,6 @@ void PerfdataAggregator::output(RowRenderer &r) const {
                                       entry.second._count) /
                                  (entry.second._count - 1));
                 }
-                break;
-            default:
-                value = 0;  // should never happen, but the real problem is that
-                // _operation should beetter be a scoped enumeration.
                 break;
         }
         if (first) {

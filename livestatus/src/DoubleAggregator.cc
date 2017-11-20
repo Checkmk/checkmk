@@ -38,7 +38,7 @@ void DoubleAggregator::consume(Row row, const contact* /* auth_user */,
                                std::chrono::seconds /* timezone_offset */) {
     _count++;
     double value = _column->getValue(row);
-    switch (getOperation()) {
+    switch (_operation) {
         case StatsOperation::sum:
         case StatsOperation::avg:
             _aggr += value;
@@ -69,13 +69,11 @@ void DoubleAggregator::consume(Row row, const contact* /* auth_user */,
         case StatsOperation::avginv:
             _aggr += 1.0 / value;
             break;
-        case StatsOperation::count:
-            break;
     }
 }
 
 void DoubleAggregator::output(RowRenderer& r) const {
-    switch (getOperation()) {
+    switch (_operation) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
@@ -99,8 +97,6 @@ void DoubleAggregator::output(RowRenderer& r) const {
                 r.output(
                     sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
             }
-            break;
-        case StatsOperation::count:
             break;
     }
 }

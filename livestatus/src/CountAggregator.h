@@ -37,7 +37,7 @@ class RowRenderer;
 class CountAggregator : public Aggregator {
 public:
     explicit CountAggregator(const Filter *filter)
-        : Aggregator(StatsOperation::count), _filter(filter), _count(0) {}
+        : _filter(filter), _count(0) {}
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;

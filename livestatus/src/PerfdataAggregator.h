@@ -38,7 +38,7 @@ class StringColumn;
 class PerfdataAggregator : public Aggregator {
 public:
     PerfdataAggregator(StatsOperation operation, const StringColumn *column)
-        : Aggregator(operation), _column(column) {}
+        : _operation(operation), _column(column) {}
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;
@@ -50,6 +50,7 @@ private:
         double _sumq;
     };
 
+    const StatsOperation _operation;
     const StringColumn *const _column;
     std::map<std::string, perf_aggr> _aggr;
 

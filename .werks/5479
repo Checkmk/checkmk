@@ -1,0 +1,12 @@
+Title: fileinfo: handle globbing pattern expansion and whitespace in fileinfo.cfg
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511197837
+Class: fix
+
+This werk fixes the issue that spaces and globbing patterns defined in
+fileinfo.cfg were not handled correctly. Now files containing spaces
+are recognized corretly and globbing patterns are expanded.

@@ -368,26 +368,30 @@ if [ -f "$MK_CONFDIR/fileinfo.cfg" ]
 then
     echo '<<<fileinfo:sep(124)>>>'
     /usr/bin/perl -e 'print time."\n"'
+
     # note: patterns in the fileinfo.cfg are resolved inside this loop
-    for file in $(cat "$MK_CONFDIR/fileinfo.cfg")
-    do
-        # only work on lines containing files, skip e.g. comments and blank lines
-        if [ "${file:0:1}" = "/" ]; then
-            file=$(replace_datevariable "$file")
-            ls "$file" > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
-                echo "$file" | \
-                /usr/bin/perl -e '
-                    while(my $file = <>) {
-                        $file =~ s/\n$//;
-                        ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
-                        print("$file|$size|$mtime\n");
-                    }'
-            else
-                echo "$file|missing|$(/usr/bin/perl -e 'print time')"
-            fi
-        fi
-    done
+    OLD_IFS=$IFS
+    IFS='
+'
+    while read -r pattern; do
+        case $pattern in
+            /*) pattern=`replace_datevariable "$pattern"`
+                for file in $pattern; do
+                    if [ -f "$file" ]; then
+                        echo "$file" | /usr/bin/perl -e '
+                            while(my $file = <>) {
+                                $file =~ s/\n$//;
+                                ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size,
+                                    $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
+                                print("$file|$size|$mtime\n");
+                            }'
+                    else
+                        echo "$file|missing|`/usr/bin/perl -e 'print time'`"
+                    fi
+                done ;;
+        esac
+    done < "$MK_CONFDIR/fileinfo.cfg"
+    IFS=$OLD_IFS
 fi
 
 # Libelle Business Shadow

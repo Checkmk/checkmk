@@ -1,0 +1,13 @@
+Title: zpool_status: Fixed crash if pool has been deleted or vanished
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p27
+Date: 1511163595
+
+The service would crash if a previously detected pool has been removed/deleted
+or vanished for some reasons. This is now fixed and the service output will
+reflect that no pool is available.

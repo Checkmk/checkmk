@@ -330,6 +330,10 @@ void Query::parseStatsLine(char *line) {
             throw std::runtime_error("missing value after operator");
         }
         filter = column->createFilter(relOp, value);
+    } else {
+        // create an "accept all" filter, just in case we fall back to counting
+        filter = std::make_unique<AndingFilter>(
+            std::vector<std::unique_ptr<Filter>>());
     }
     _stats_columns.push_back(
         std::make_unique<StatsColumn>(column.get(), move(filter), operation));

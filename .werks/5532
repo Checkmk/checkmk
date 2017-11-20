@@ -1,0 +1,24 @@
+Title: Host/Service states and outputs can now be translated
+Level: 2
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1511169817
+Class: feature
+
+The states and service status detail of hosts and services can now be translated. You can now
+use the rules {{Host state translation}} and {{Service state translation}} to configure the
+Check_MK core to translate either specific states to other states or the status detail to other
+texts.
+
+States: For each host/service you can configure a transformation of each possible monitoring state
+to another one.
+
+The state translation can, for example, be used to inverse a host check in case you want to get
+a notification in case a host becomes reachable.
+
+The translation of detail outputs is done using regular expressions. You can specify multiple
+regular expressions (infix match, case sensitive) per object which are applied to the current
+status detail. The matched text will be replaced by the specified replacement text. You can
+use match groups to extract parts of the original text using the regular expression.

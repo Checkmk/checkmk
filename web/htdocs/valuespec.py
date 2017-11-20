@@ -1733,12 +1733,24 @@ class DropdownChoice(ValueSpec):
 
 
 # Special conveniance variant for monitoring states
+# TODO: Rename to ServiceState() or something like this
 class MonitoringState(DropdownChoice):
     def __init__(self, **kwargs):
         choices = [ ( 0, _("OK")),
                     ( 1, _("WARN")),
                     ( 2, _("CRIT")),
                     ( 3, _("UNKNOWN")) ]
+        kwargs.setdefault("default_value", 0)
+        DropdownChoice.__init__(self, choices=choices, **kwargs)
+
+
+class HostState(DropdownChoice):
+    def __init__(self, **kwargs):
+        choices = [
+            ( 0, _("UP")),
+            ( 1, _("DOWN")),
+            ( 2, _("UNREACHABLE")),
+        ]
         kwargs.setdefault("default_value", 0)
         DropdownChoice.__init__(self, choices=choices, **kwargs)
 

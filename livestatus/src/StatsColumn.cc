@@ -34,7 +34,12 @@
 StatsColumn::StatsColumn(Column *c, std::unique_ptr<Filter> f, StatsOperation o)
     : _column(c), _filter(std::move(f)), _operation(o) {}
 
-std::unique_ptr<Filter> StatsColumn::stealFilter() { return move(_filter); }
+std::unique_ptr<Filter> StatsColumn::stealFilter() {
+    if (_operation != StatsOperation::count) {
+        throw std::runtime_error("not a counting aggregator");
+    }
+    return move(_filter);
+}
 
 std::unique_ptr<Aggregator> StatsColumn::createAggregator(
     Logger *logger) const {

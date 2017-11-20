@@ -892,7 +892,7 @@ def do_precompile_hostchecks():
 # subcheck *may* be implemented in a separate file.
 def _find_check_plugins(checktype):
     if '.' in checktype:
-        candidates = [ checktype.split('.')[0], checktype ]
+        candidates = [ checks.section_name_of(checktype), checktype ]
     else:
         candidates = [ checktype ]
 
@@ -1012,29 +1012,29 @@ if '-d' in sys.argv:
     # Do we need to load the SNMP module? This is the case, if the host
     # has at least one SNMP based check. Also collect the needed check
     # types and sections.
-    needed_check_types = set([])
+    needed_check_plugin_names = set([])
     needed_sections = set([])
-    for check_type, _unused_item, _unused_param, descr in check_table:
-        if check_type not in checks.check_info:
-            sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
+    for check_plugin_name, _unused_item, _unused_param, descr in check_table:
+        if check_plugin_name not in checks.check_info:
+            sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
             continue
-        if checks.check_info[check_type].get("extra_sections"):
-            for section in checks.check_info[check_type]["extra_sections"]:
-                if section in checks.check_info:
-                    needed_check_types.add(section)
-                needed_sections.add(section.split(".")[0])
+        if checks.check_info[check_plugin_name].get("extra_sections"):
+            for section_name in checks.check_info[check_plugin_name]["extra_sections"]:
+                if section_name in checks.check_info:
+                    needed_check_plugin_names.add(section_name)
+                needed_sections.add(section_name)
 
-        needed_sections.add(check_type.split(".")[0])
-        needed_check_types.add(check_type)
+        needed_sections.add(checks.section_name_of(check_plugin_name))
+        needed_check_plugin_names.add(check_plugin_name)
 
     # check info table
     # We need to include all those plugins that are referenced in the host's
     # check table
     filenames = []
-    for check_type in needed_check_types:
-        basename = check_type.split(".")[0]
+    for check_plugin_name in needed_check_plugin_names:
+        section_name = checks.section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)
-        for lib in set(checks.check_includes.get(basename, [])):
+        for lib in set(checks.check_includes.get(section_name, [])):
             if os.path.exists(cmk.paths.local_checks_dir + "/" + lib):
                 to_add = cmk.paths.local_checks_dir + "/" + lib
             else:
@@ -1044,10 +1044,10 @@ if '-d' in sys.argv:
                 filenames.append(to_add)
 
         # Now add check file(s) itself
-        paths = _find_check_plugins(check_type)
+        paths = _find_check_plugins(check_plugin_name)
         if not paths:
             raise MKGeneralException("Cannot find check file %s needed for check type %s" % \
-                                     (basename, check_type))
+                                     (section_name, check_plugin_name))
 
         for path in paths:
             if path not in filenames:

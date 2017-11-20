@@ -1013,31 +1013,31 @@ _old_service_descriptions = {
     "qmail_stats"                      : lambda item: (False, "Qmail Queue"),
 }
 
-def service_description(hostname, check_type, item):
+def service_description(hostname, check_plugin_name, item):
     import cmk_base.checks as checks
-    if check_type not in checks.check_info:
+    if check_plugin_name not in checks.check_info:
         if item:
-            return "Unimplemented check %s / %s" % (check_type, item)
+            return "Unimplemented check %s / %s" % (check_plugin_name, item)
         else:
-            return "Unimplemented check %s" % check_type
+            return "Unimplemented check %s" % check_plugin_name
 
     # use user-supplied service description, if available
     add_item = True
-    descr_format = service_descriptions.get(check_type)
+    descr_format = service_descriptions.get(check_plugin_name)
     if not descr_format:
         # handle renaming for backward compatibility
-        if check_type in _old_service_descriptions and \
-            check_type not in use_new_descriptions_for:
+        if check_plugin_name in _old_service_descriptions and \
+            check_plugin_name not in use_new_descriptions_for:
 
             # Can be a fucntion to generate the old description more flexible.
-            old_descr = _old_service_descriptions[check_type]
+            old_descr = _old_service_descriptions[check_plugin_name]
             if callable(old_descr):
                 add_item, descr_format = old_descr(item)
             else:
                 descr_format = old_descr
 
         else:
-            descr_format = checks.check_info[check_type]["service_description"]
+            descr_format = checks.check_info[check_plugin_name]["service_description"]
 
     if type(descr_format) == str:
         descr_format = descr_format.decode("utf-8")
@@ -1056,7 +1056,7 @@ def service_description(hostname, check_type, item):
     if "%s" in descr:
         raise MKGeneralException("Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
                                  "Please try to rediscover the service to fix this issue." % \
-                                 (hostname, check_type, item))
+                                 (hostname, check_plugin_name, item))
 
     return get_final_service_description(hostname, descr)
 
@@ -1067,16 +1067,16 @@ _old_active_check_service_descriptions = {
 }
 
 
-def active_check_service_description(hostname, active_check_type, params):
+def active_check_service_description(hostname, active_check_name, params):
     import cmk_base.checks as checks
-    if active_check_type not in checks.active_check_info:
-        return "Unimplemented check %s" % active_check_type
+    if active_check_name not in checks.active_check_info:
+        return "Unimplemented check %s" % active_check_name
 
-    if (active_check_type in _old_active_check_service_descriptions and
-            active_check_type not in use_new_descriptions_for):
-        description = _old_active_check_service_descriptions[active_check_type](params)
+    if (active_check_name in _old_active_check_service_descriptions and
+            active_check_name not in use_new_descriptions_for):
+        description = _old_active_check_service_descriptions[active_check_name](params)
     else:
-        act_info = checks.active_check_info[active_check_type]
+        act_info = checks.active_check_info[active_check_name]
         description = act_info["service_description"](params)
 
     description = description.replace('$HOSTNAME$', hostname)
@@ -1103,13 +1103,13 @@ def get_final_service_description(hostname, description):
     return new_description
 
 
-def service_ignored(hostname, check_type, service_description):
-    if check_type and check_type in ignored_checktypes:
+def service_ignored(hostname, check_plugin_name, service_description):
+    if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True
     if service_description != None \
        and rulesets.in_boolean_serviceconf_list(hostname, service_description, ignored_services):
         return True
-    if check_type and _checktype_ignored_for_host(hostname, check_type):
+    if check_plugin_name and _checktype_ignored_for_host(hostname, check_plugin_name):
         return True
     return False
 

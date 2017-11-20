@@ -270,13 +270,13 @@ def mode_list_checks():
     checks_sorted = checks.check_info.items() + \
        [ ("check_" + name, entry) for (name, entry) in checks.active_check_info.items() ]
     checks_sorted.sort()
-    for check_type, check in checks_sorted:
-        man_filename = all_check_manuals.get(check_type)
+    for check_plugin_name, check in checks_sorted:
+        man_filename = all_check_manuals.get(check_plugin_name)
         try:
             if 'command_line' in check:
                 what = 'active'
                 ty_color = tty.blue
-            elif checks.is_snmp_check(check_type):
+            elif checks.is_snmp_check(check_plugin_name):
                 what = 'snmp'
                 ty_color = tty.magenta
             else:
@@ -291,9 +291,9 @@ def mode_list_checks():
             console.output((tty.bold + "%-44s" + tty.normal
                    + ty_color + " %-6s " + tty.normal
                    + "%s\n") % \
-                  (check_type, what, title))
+                  (check_plugin_name, what, title))
         except Exception, e:
-            console.error("ERROR in check_type %s: %s\n" % (check_type, e))
+            console.error("ERROR in check %r: %s\n" % (check_plugin_name, e))
 
 
 modes.register(Mode(
@@ -301,7 +301,7 @@ modes.register(Mode(
     short_option="L",
     handler_function=mode_list_checks,
     needs_config=False,
-    short_help="List all available check types",
+    short_help="List all available Check_MK checks",
 ))
 
 #.

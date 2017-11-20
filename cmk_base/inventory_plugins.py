@@ -76,8 +76,8 @@ def load(): # pylint: disable=function-redefined
                 continue
 
         # Now store the check context for all plugins found in this file
-        for check_name in set(inv_info.keys()).difference(known_plugins):
-            _plugin_contexts[check_name] = plugin_context
+        for check_plugin_name in set(inv_info.keys()).difference(known_plugins):
+            _plugin_contexts[check_plugin_name] = plugin_context
 
 
 def _new_inv_context(plugin_file_path):
@@ -129,8 +129,8 @@ def load_plugin_includes(check_file_path, plugin_context):
 
 
 def is_snmp_plugin(plugin_type):
-    info_type = plugin_type.split(".")[0]
-    return "snmp_info" in inv_info.get(info_type, {})
+    section_name = checks.section_name_of(plugin_type)
+    return "snmp_info" in inv_info.get(section_name, {})
 
 
 #.

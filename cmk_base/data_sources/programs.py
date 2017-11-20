@@ -170,7 +170,7 @@ class SpecialAgentDataSource(ProgramDataSource):
 
 
     # TODO: Can't we make this more specific in case of special agents?
-    def _gather_check_types(self, hostname, ipaddress):
+    def _gather_check_plugin_names(self, hostname, ipaddress):
         return checks.discoverable_tcp_checks()
 
 

@@ -213,41 +213,42 @@ def _do_inv_for_realhost(hostname, ipaddress):
             source.set_do_snmp_scan(True)
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
-            source.set_check_type_filter(_gather_snmp_check_types_inventory)
+            source.set_check_plugin_name_filter(_gather_snmp_check_plugin_names_inventory)
 
-    all_host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
+    multi_host_sections = data_sources.get_host_sections(sources, hostname, ipaddress)
 
     import cmk_base.inventory_plugins
-    for info_type, plugin in cmk_base.inventory_plugins.inv_info.items():
-        info = data_sources.get_info_for_check(all_host_infos, hostname, ipaddress, info_type, for_discovery=False)
+    for section_name, plugin in cmk_base.inventory_plugins.inv_info.items():
+        section_content = data_sources.get_section_content_for_check(multi_host_sections, hostname, ipaddress,
+                                                                        section_name, for_discovery=False)
 
-        if info is None: # No data for this check type
+        if section_content is None: # No data for this check type
             continue
 
-        # TODO: Don't we need to take checks.check_info[check_name]["handle_empty_info"]:
+        # TODO: Don't we need to take checks.check_info[check_plugin_name]["handle_empty_info"]:
         #       like it is done in checking.execute_check()? Standardize this!
-        if not info: # section not present (None or [])
+        if not section_content: # section not present (None or [])
             # Note: this also excludes existing sections without info..
             continue
 
-        console.verbose(tty.green + tty.bold + info_type + " " + tty.normal)
+        console.verbose(tty.green + tty.bold + section_name + " " + tty.normal)
 
         # Inventory functions can optionally have a second argument: parameters.
         # These are configured via rule sets (much like check parameters).
         inv_function = plugin["inv_function"]
         if len(inspect.getargspec(inv_function).args) == 2:
-            params = _get_inv_params(hostname, info_type)
-            inv_function(info, params)
+            params = _get_inv_params(hostname, section_name)
+            inv_function(section_content, params)
         else:
-            inv_function(info)
+            inv_function(section_content)
 
 
-def _gather_snmp_check_types_inventory(hostname, ipaddress, on_error, do_snmp_scan):
-    return discovery.gather_snmp_check_types(hostname, ipaddress, on_error, do_snmp_scan, for_inventory=True)
+def _gather_snmp_check_plugin_names_inventory(hostname, ipaddress, on_error, do_snmp_scan):
+    return discovery.gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan, for_inventory=True)
 
 
-def _get_inv_params(hostname, info_type):
-    return rulesets.host_extra_conf_merged(hostname, config.inv_parameters.get(info_type, []))
+def _get_inv_params(hostname, section_name):
+    return rulesets.host_extra_conf_merged(hostname, config.inv_parameters.get(section_name, []))
 
 
 # Creates the directory at path if it does not exist.  If that path does exist

@@ -71,21 +71,15 @@ void PerfdataAggregator::consumeVariable(const std::string &varname,
     auto it = _aggr.find(varname);
     if (it == _aggr.end()) {  // first entry
         perf_aggr new_entry;
-        new_entry._aggr = value;
         new_entry._count = 1;
+        new_entry._aggr = value;
         new_entry._sumq = value * value;
         _aggr.emplace(varname, new_entry);
     } else {
         it->second._count++;
         switch (_operation) {
             case StatsOperation::sum:
-            case StatsOperation::avg:
                 it->second._aggr += value;
-                break;
-
-            case StatsOperation::suminv:
-            case StatsOperation::avginv:
-                it->second._aggr += 1.0 / value;
                 break;
 
             case StatsOperation::min:
@@ -100,9 +94,21 @@ void PerfdataAggregator::consumeVariable(const std::string &varname,
                 }
                 break;
 
+            case StatsOperation::avg:
+                it->second._aggr += value;
+                break;
+
             case StatsOperation::std:
                 it->second._aggr += value;
                 it->second._sumq += value * value;
+                break;
+
+            case StatsOperation::suminv:
+                it->second._aggr += 1.0 / value;
+                break;
+
+            case StatsOperation::avginv:
+                it->second._aggr += 1.0 / value;
                 break;
         }
     }
@@ -115,30 +121,40 @@ void PerfdataAggregator::output(RowRenderer &r) const {
         double value;
         switch (_operation) {
             case StatsOperation::sum:
+                value = entry.second._aggr;
+                break;
+
             case StatsOperation::min:
+                value = entry.second._aggr;
+                break;
+
             case StatsOperation::max:
-            case StatsOperation::suminv:
                 value = entry.second._aggr;
                 break;
 
             case StatsOperation::avg:
-            case StatsOperation::avginv:
-                if (entry.second._count == 0) {
-                    value = 0.00;
-                } else {
-                    value = entry.second._aggr / entry.second._count;
-                }
+                value = entry.second._count == 0
+                            ? 0.0
+                            : (entry.second._aggr / entry.second._count);
                 break;
 
             case StatsOperation::std:
-                if (entry.second._count <= 1) {
-                    value = 0.0;
-                } else {
-                    value = sqrt((entry.second._sumq -
-                                  (entry.second._aggr * entry.second._aggr) /
-                                      entry.second._count) /
-                                 (entry.second._count - 1));
-                }
+                value = entry.second._count <= 1
+                            ? 0.0
+                            : sqrt((entry.second._sumq -
+                                    (entry.second._aggr * entry.second._aggr) /
+                                        entry.second._count) /
+                                   (entry.second._count - 1));
+                break;
+
+            case StatsOperation::suminv:
+                value = entry.second._aggr;
+                break;
+
+            case StatsOperation::avginv:
+                value = entry.second._count == 0
+                            ? 0.00
+                            : (entry.second._aggr / entry.second._count);
                 break;
         }
         if (first) {

@@ -31,38 +31,40 @@
 
 void IntAggregator::consume(Row row, const contact *auth_user,
                             std::chrono::seconds /* timezone_offset */) {
+    auto value = static_cast<double>(_column->getValue(row, auth_user));
     _count++;
-    int32_t value = _column->getValue(row, auth_user);
     switch (_operation) {
         case StatsOperation::sum:
-        case StatsOperation::avg:
             _aggr += value;
             break;
 
-        case StatsOperation::suminv:
-        case StatsOperation::avginv:
-            _sumq += 1.0 / static_cast<double>(value);
-            break;
-
         case StatsOperation::min:
-            if (_count == 1) {
-                _aggr = value;
-            } else if (value < _aggr) {
+            if (_count == 1 || value < _aggr) {
                 _aggr = value;
             }
             break;
 
         case StatsOperation::max:
-            if (_count == 1) {
-                _aggr = value;
-            } else if (value > _aggr) {
+            if (_count == 1 || value > _aggr) {
                 _aggr = value;
             }
             break;
 
+        case StatsOperation::avg:
+            _aggr += value;
+            break;
+
         case StatsOperation::std:
             _aggr += value;
-            _sumq += static_cast<double>(value) * static_cast<double>(value);
+            _sumq += value * value;
+            break;
+
+        case StatsOperation::suminv:
+            _aggr += 1.0 / value;
+            break;
+
+        case StatsOperation::avginv:
+            _aggr += 1.0 / value;
             break;
     }
 }
@@ -70,48 +72,31 @@ void IntAggregator::consume(Row row, const contact *auth_user,
 void IntAggregator::output(RowRenderer &r) const {
     switch (_operation) {
         case StatsOperation::sum:
+            r.output(_aggr);
+            break;
+
         case StatsOperation::min:
+            r.output(_aggr);
+            break;
+
         case StatsOperation::max:
             r.output(_aggr);
             break;
 
-        case StatsOperation::suminv:
-            r.output(_sumq);
-            break;
-
         case StatsOperation::avg:
-            r.output(double(_aggr) / _count);
-            break;
-
-        case StatsOperation::avginv:
-            r.output(_sumq / _count);
+            r.output(_aggr / _count);
             break;
 
         case StatsOperation::std:
-            if (_count <= 1) {
-                r.output(0.0);
-            } else {
-                r.output(sqrt(
-                    (_sumq -
-                     (static_cast<double>(_aggr) * static_cast<double>(_aggr)) /
-                         _count) /
-                    (_count - 1)));
-            }
+            r.output(sqrt((_sumq - _aggr * _aggr / _count) / (_count - 1)));
+            break;
+
+        case StatsOperation::suminv:
+            r.output(_aggr);
+            break;
+
+        case StatsOperation::avginv:
+            r.output(_aggr / _count);
             break;
     }
 }
-
-/* Algorithmus fuer die Standardabweichung,
-   bei der man zuvor den Mittelwert nicht
-   wissen muss:
-
-   def std(l):
-   sum = 0.0
-   sumq = 0.0
-   for x in l:
-   sum += x
-   sumq += x*x
-   n = len(l)
-   return ((sumq - sum*sum/n)/(n-1)) ** 0.5
-
- */

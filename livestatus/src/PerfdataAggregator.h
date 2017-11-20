@@ -45,8 +45,8 @@ public:
 
 private:
     struct perf_aggr {
-        double _aggr;
         double _count;
+        double _aggr;
         double _sumq;
     };
 

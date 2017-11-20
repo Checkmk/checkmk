@@ -29,35 +29,29 @@
 #include "Row.h"
 #include "contact_fwd.h"
 
-/* SORRY: This file is copy&pasted from IntAggregator.
-   I hate copy & paste. But I also dislike complicating
-   stuff by using C++ templates and the like.
- */
-
 void DoubleAggregator::consume(Row row, const contact* /* auth_user */,
                                std::chrono::seconds /* timezone_offset */) {
+    auto value = static_cast<double>(_column->getValue(row));
     _count++;
-    double value = _column->getValue(row);
     switch (_operation) {
         case StatsOperation::sum:
-        case StatsOperation::avg:
             _aggr += value;
             break;
 
         case StatsOperation::min:
-            if (_count == 1) {
-                _aggr = value;
-            } else if (value < _aggr) {
+            if (_count == 1 || value < _aggr) {
                 _aggr = value;
             }
             break;
 
         case StatsOperation::max:
-            if (_count == 1) {
-                _aggr = value;
-            } else if (value > _aggr) {
+            if (_count == 1 || value > _aggr) {
                 _aggr = value;
             }
+            break;
+
+        case StatsOperation::avg:
+            _aggr += value;
             break;
 
         case StatsOperation::std:
@@ -66,6 +60,9 @@ void DoubleAggregator::consume(Row row, const contact* /* auth_user */,
             break;
 
         case StatsOperation::suminv:
+            _aggr += 1.0 / value;
+            break;
+
         case StatsOperation::avginv:
             _aggr += 1.0 / value;
             break;
@@ -75,28 +72,31 @@ void DoubleAggregator::consume(Row row, const contact* /* auth_user */,
 void DoubleAggregator::output(RowRenderer& r) const {
     switch (_operation) {
         case StatsOperation::sum:
+            r.output(_aggr);
+            break;
+
         case StatsOperation::min:
+            r.output(_aggr);
+            break;
+
         case StatsOperation::max:
-        case StatsOperation::suminv:
             r.output(_aggr);
             break;
 
         case StatsOperation::avg:
-        case StatsOperation::avginv:
-            if (_count == 0) {
-                r.output(0.0);
-            } else {
-                r.output(_aggr / _count);
-            }
+            r.output(_aggr / _count);
             break;
 
         case StatsOperation::std:
-            if (_count <= 1) {
-                r.output(0.0);
-            } else {
-                r.output(
-                    sqrt((_sumq - (_aggr * _aggr) / _count) / (_count - 1)));
-            }
+            r.output(sqrt((_sumq - _aggr * _aggr / _count) / (_count - 1)));
+            break;
+
+        case StatsOperation::suminv:
+            r.output(_aggr);
+            break;
+
+        case StatsOperation::avginv:
+            r.output(_aggr / _count);
             break;
     }
 }

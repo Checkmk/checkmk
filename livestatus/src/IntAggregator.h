@@ -50,7 +50,7 @@ private:
     const StatsOperation _operation;
     const IntColumn *const _column;
     std::uint32_t _count;
-    int64_t _aggr;
+    double _aggr;
     double _sumq;
 };
 

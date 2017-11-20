@@ -34,15 +34,32 @@ class Logger;
 
 class StatsColumn {
 public:
-    StatsColumn(Column *c, std::unique_ptr<Filter> f, StatsOperation o);
-    StatsOperation operation() const { return _operation; }
-    std::unique_ptr<Filter> stealFilter();
-    std::unique_ptr<Aggregator> createAggregator(Logger *logger) const;
+    virtual ~StatsColumn() = default;
+    virtual std::unique_ptr<Filter> stealFilter() = 0;
+    virtual std::unique_ptr<Aggregator> createAggregator(
+        Logger *logger) const = 0;
+};
+
+class StatsColumnCount : public StatsColumn {
+public:
+    explicit StatsColumnCount(std::unique_ptr<Filter> filter);
+    std::unique_ptr<Filter> stealFilter() override;
+    std::unique_ptr<Aggregator> createAggregator(Logger *logger) const override;
 
 private:
+    std::unique_ptr<Filter> _filter;
+};
+
+class StatsColumnOp : public StatsColumn {
+public:
+    StatsColumnOp(StatsOperation operation, Column *column);
+    std::unique_ptr<Filter> stealFilter() override;
+    std::unique_ptr<Aggregator> createAggregator(Logger *logger) const override;
+
+private:
+    StatsOperation _operation;
     Column *_column;
     std::unique_ptr<Filter> _filter;
-    StatsOperation _operation;
 };
 
 #endif  // StatsColumn_h

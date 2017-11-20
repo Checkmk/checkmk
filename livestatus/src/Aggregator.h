@@ -31,21 +31,14 @@
 #include "contact_fwd.h"
 class Query;
 
-enum class StatsOperation { count, sum, min, max, avg, std, suminv, avginv };
+enum class StatsOperation { sum, min, max, avg, std, suminv, avginv };
 
 class Aggregator {
 public:
-    explicit Aggregator(StatsOperation operation) : _operation(operation) {}
     virtual ~Aggregator() = default;
-    StatsOperation getOperation() const { return _operation; }
-
     virtual void consume(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) = 0;
-
     virtual void output(RowRenderer &r) const = 0;
-
-private:
-    const StatsOperation _operation;
 };
 
 #endif  // Aggregator_h

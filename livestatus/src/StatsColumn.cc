@@ -26,29 +26,43 @@
 #include <algorithm>
 #include <ostream>
 #include <stdexcept>
+#include <vector>
+#include "AndingFilter.h"
 #include "Column.h"
 #include "CountAggregator.h"
 #include "Filter.h"
 #include "Logger.h"
 
-StatsColumn::StatsColumn(Column *c, std::unique_ptr<Filter> f, StatsOperation o)
-    : _column(c), _filter(std::move(f)), _operation(o) {}
+StatsColumnCount::StatsColumnCount(std::unique_ptr<Filter> filter)
+    : _filter(std::move(filter)) {}
 
-std::unique_ptr<Filter> StatsColumn::stealFilter() {
-    if (_operation != StatsOperation::count) {
-        throw std::runtime_error("not a counting aggregator");
-    }
-    return move(_filter);
+std::unique_ptr<Filter> StatsColumnCount::stealFilter() {
+    return std::move(_filter);
 }
 
-std::unique_ptr<Aggregator> StatsColumn::createAggregator(
-    Logger *logger) const {
-    if (_operation != StatsOperation::count) {
-        try {
-            return _column->createAggregator(_operation);
-        } catch (const std::runtime_error &e) {
-            Informational(logger) << e.what() << ", falling back to counting";
-        }
-    }
+std::unique_ptr<Aggregator> StatsColumnCount::createAggregator(
+    Logger * /*logger*/) const {
     return std::make_unique<CountAggregator>(_filter.get());
+}
+
+// Note: We create an "accept all" filter, just in case we fall back to
+// counting.
+StatsColumnOp::StatsColumnOp(StatsOperation operation, Column *column)
+    : _operation(operation)
+    , _column(column)
+    , _filter(std::make_unique<AndingFilter>(
+          std::vector<std::unique_ptr<Filter>>())) {}
+
+std::unique_ptr<Filter> StatsColumnOp::stealFilter() {
+    throw std::runtime_error("not a counting aggregator");
+}
+
+std::unique_ptr<Aggregator> StatsColumnOp::createAggregator(
+    Logger *logger) const {
+    try {
+        return _column->createAggregator(_operation);
+    } catch (const std::runtime_error &e) {
+        Informational(logger) << e.what() << ", falling back to counting";
+        return std::make_unique<CountAggregator>(_filter.get());
+    }
 }

@@ -251,7 +251,6 @@ void Query::parseNegateLine(char *line, FilterStack &filters) {
 
 void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
     auto number = nextNonNegativeIntegerArgument(&line);
-    // The last 'number' StatsColumns must be of type StatsOperation::count
     std::vector<std::unique_ptr<Filter>> subfilters;
     for (auto i = 0; i < number; ++i) {
         if (_stats_columns.empty()) {
@@ -264,8 +263,8 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
         subfilters.push_back(_stats_columns.back()->stealFilter());
         _stats_columns.pop_back();
     }
-    _stats_columns.push_back(std::make_unique<StatsColumn>(
-        nullptr, makeFilter(op, std::move(subfilters)), StatsOperation::count));
+    _stats_columns.push_back(std::make_unique<StatsColumnCount>(
+        makeFilter(op, std::move(subfilters))));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -276,56 +275,36 @@ void Query::parseStatsNegateLine(char *line) {
     }
     auto to_negate = _stats_columns.back()->stealFilter();
     _stats_columns.pop_back();
-    _stats_columns.push_back(std::make_unique<StatsColumn>(
-        nullptr, to_negate->negate(), StatsOperation::count));
+    _stats_columns.push_back(
+        std::make_unique<StatsColumnCount>(to_negate->negate()));
 }
+
+namespace {
+std::map<std::string, StatsOperation> stats_ops{
+    {"sum", StatsOperation::sum},      {"min", StatsOperation::min},
+    {"max", StatsOperation::max},      {"avg", StatsOperation::avg},
+    {"std", StatsOperation::std},      {"suminv", StatsOperation::suminv},
+    {"avginv", StatsOperation::avginv}};
+}  // namespace
 
 void Query::parseStatsLine(char *line) {
     // first token is either aggregation operator or column name
+    std::shared_ptr<Column> column;
+    std::unique_ptr<StatsColumn> sc;
     auto col_or_op = nextStringArgument(&line);
-    StatsOperation operation;
-    std::string column_name;
-    if (col_or_op == "sum") {
-        operation = StatsOperation::sum;
-        column_name = nextStringArgument(&line);
-    } else if (col_or_op == "min") {
-        operation = StatsOperation::min;
-        column_name = nextStringArgument(&line);
-    } else if (col_or_op == "max") {
-        operation = StatsOperation::max;
-        column_name = nextStringArgument(&line);
-    } else if (col_or_op == "avg") {
-        operation = StatsOperation::avg;
-        column_name = nextStringArgument(&line);
-    } else if (col_or_op == "std") {
-        operation = StatsOperation::std;
-        column_name = nextStringArgument(&line);
-    } else if (col_or_op == "suminv") {
-        operation = StatsOperation::suminv;
-        column_name = nextStringArgument(&line);
-    } else if (col_or_op == "avginv") {
-        operation = StatsOperation::avginv;
-        column_name = nextStringArgument(&line);
-    } else {
-        operation = StatsOperation::count;
-        column_name = col_or_op;
-    }
-
-    auto column = _table->column(column_name);
-    std::unique_ptr<Filter> filter;
-    if (operation == StatsOperation::count) {
+    auto it = stats_ops.find(col_or_op);
+    if (it == stats_ops.end()) {
+        column = _table->column(col_or_op);
         auto relOp = relationalOperatorForName(nextStringArgument(&line));
         auto operand = mk::lstrip(line);
-        filter = column->createFilter(relOp, operand);
+        sc = std::make_unique<StatsColumnCount>(
+            column->createFilter(relOp, operand));
     } else {
-        // create an "accept all" filter, just in case we fall back to counting
-        filter = std::make_unique<AndingFilter>(
-            std::vector<std::unique_ptr<Filter>>());
+        column = _table->column(nextStringArgument(&line));
+        sc = std::make_unique<StatsColumnOp>(it->second, column.get());
     }
-    _stats_columns.push_back(
-        std::make_unique<StatsColumn>(column.get(), move(filter), operation));
+    _stats_columns.push_back(std::move(sc));
     _all_columns.insert(column);
-
     // Default to old behaviour: do not output column headers if we do Stats
     // queries
     _show_column_headers = false;

@@ -34,7 +34,7 @@ void TimeAggregator::consume(Row row, const contact * /*auth_user*/,
     _count++;
     int32_t value = std::chrono::system_clock::to_time_t(
         _column->getValue(row, timezone_offset));
-    switch (getOperation()) {
+    switch (_operation) {
         case StatsOperation::sum:
         case StatsOperation::avg:
             _aggr += value;
@@ -65,13 +65,11 @@ void TimeAggregator::consume(Row row, const contact * /*auth_user*/,
             _aggr += value;
             _sumq += static_cast<double>(value) * static_cast<double>(value);
             break;
-        case StatsOperation::count:
-            break;
     }
 }
 
 void TimeAggregator::output(RowRenderer &r) const {
-    switch (getOperation()) {
+    switch (_operation) {
         case StatsOperation::sum:
         case StatsOperation::min:
         case StatsOperation::max:
@@ -100,8 +98,6 @@ void TimeAggregator::output(RowRenderer &r) const {
                          _count) /
                     (_count - 1)));
             }
-            break;
-        case StatsOperation::count:
             break;
     }
 }

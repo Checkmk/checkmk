@@ -37,7 +37,7 @@ class RowRenderer;
 class DoubleAggregator : public Aggregator {
 public:
     DoubleAggregator(StatsOperation operation, const DoubleColumn *column)
-        : Aggregator(operation)
+        : _operation(operation)
         , _column(column)
         , _count(0)
         , _aggr(0)
@@ -47,6 +47,7 @@ public:
     void output(RowRenderer &r) const override;
 
 private:
+    const StatsOperation _operation;
     const DoubleColumn *const _column;
     std::uint32_t _count;
     double _aggr;

@@ -71,6 +71,8 @@ def inventory_zpool_status(info):
 def check_zpool_status(_no_item, _no_params, info):
     if " ".join(info[0]) == "all pools are healthy":
         return 0, "All pools are healthy"
+    elif " ".join(info[0]) == "no pools available":
+        return 3, "No pools available"
 
     start_pool    = False
     multiline     = False

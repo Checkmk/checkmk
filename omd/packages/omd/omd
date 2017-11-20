@@ -57,7 +57,7 @@ import socket
 import subprocess
 from subprocess import *
 
-OMD_VERSION = "1.5.0i1.cme"
+OMD_VERSION = "1.5.0i2.cme"
 
 # Some global variables
 opt_verbose     = False

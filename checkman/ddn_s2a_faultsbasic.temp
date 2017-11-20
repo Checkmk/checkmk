@@ -1,0 +1,13 @@
+title: DDN S2A: Temperature failures
+agents: ddn_s2a
+catalog: storage/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature warning and critical failure states.
+
+item:
+ None
+
+inventory:
+ One service per device is created.

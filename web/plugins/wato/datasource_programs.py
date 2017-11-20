@@ -44,6 +44,30 @@ register_rule(group,
         attrencode = True))
 
 register_rule(group,
+    "special_agents:ddn_s2a",
+    Dictionary(
+        elements = [
+            ( "username",
+              TextAscii(
+                title=_(u"Username"),
+                allow_empty=False,
+              )),
+            ( "password",
+              Password(
+                title=_(u"Password"),
+                allow_empty=False)),
+            ( "port",
+              Integer(
+                title=_(u"Port"),
+                default_value=8008)),
+        ],
+        optional_keys=[ "port" ],
+    ),
+    match="first",
+    title=_(u"DDN S2A"),
+)
+
+register_rule(group,
     "special_agents:vsphere",
      Transform(
          valuespec = Dictionary(

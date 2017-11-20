@@ -1,0 +1,26 @@
+title: DDN S2A: Error rates
+agents: ddn_s2a
+catalog: storage/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors various errors occuring on SAN ports of
+ DDN S2A storage devices. Levels can be configured against the total
+ number of error since the last reset. Default parameters are set during
+ discovery, interpreting one error since discovery as WARN and five
+ errors as CRIT. The monitored error types are:
+ - Link failure error
+ - Lost sync error
+ - Loss of signal error
+ - PrimSeq error
+ - CRC error
+ - Receive error
+ - CTIO timeout
+ - CTIO transmission error
+ - CTIO other error
+
+item:
+ The port number
+
+inventory:
+ One service per FC port is created.

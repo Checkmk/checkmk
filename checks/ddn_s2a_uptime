@@ -1,0 +1,56 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_ddn_s2a_uptime(info):
+    return { key : value[0] for key, value in parse_ddn_s2a_api_response(info).items() }
+
+
+def inventory_ddn_s2a_uptime(parsed):
+    return [ (None, {}) ]
+
+
+def check_ddn_s2a_uptime(_no_item, params, parsed):
+    uptime_years = int(parsed[u"uptime_years"])
+    uptime_days = int(parsed[u"uptime_days"])
+    uptime_hours = int(parsed[u"uptime_hours"])
+    uptime_minutes = int(parsed[u"uptime_minutes"])
+
+    uptime_sec = 60*(uptime_minutes + 60*(uptime_hours + 24*(uptime_days + 365*uptime_years)))
+    return check_uptime_seconds(params, uptime_sec)
+
+
+check_info["ddn_s2a_uptime"] = {
+    "parse_function"        : parse_ddn_s2a_uptime,
+    "inventory_function"    : inventory_ddn_s2a_uptime,
+    "check_function"        : check_ddn_s2a_uptime,
+    "service_description"   : "DDN S2A Power-On Time", # We don't use "Uptime" as a service description here,
+                                                       # because this value is different from the uptime value
+                                                       # supplied via SNMP.
+    "has_perfdata"          : True,
+    'includes'              : [ "ddn_s2a.include", "uptime.include" ],
+    "group"                 : "uptime",
+}

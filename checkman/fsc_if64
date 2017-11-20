@@ -5,13 +5,13 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the network interfaces
- on Fujitsu Siemens Servers which support the 
+ on Fujitsu Siemens Servers which support the
  FSC-SERVERCONTROL2-MIB.
 
  These devices use textual values for port types
  and states. This check converts them to numeric
  values and passes it on to the if64 check.
- 
+
 item:
  The network interface
 

@@ -8,7 +8,7 @@ description:
  If the command is availible, information about the registration status,
  subscription status, subscription type, registration code as well as the
  start and end date of the SLES license are shown. The information is
- also shown in the Hardware/Software Inventory. 
+ also shown in the Hardware/Software Inventory.
 
  As a preparation you need to install the agent plugin {SUSEConnect}
  into your agent's plugins directory (usually {/usr/lib/check_mk_agent/plugins}).

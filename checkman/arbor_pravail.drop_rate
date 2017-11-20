@@ -7,7 +7,7 @@ description:
  Monitors the packet drop rate of incoming packets on Arbor Pravail
  devices. This check can be configured using the "Generic rate"
  rule and will turn warn/crit if the drop rate is below or above
- the configured lower or upper limits, respectively. 
+ the configured lower or upper limits, respectively.
 
 inventory:
  Exactly one service is discovered.

@@ -1,4 +1,4 @@
-title: Stormshield HA Status
+title: Stormshield HA Member
 agents: snmp
 catalog: app/Stormshield
 license: GPL
@@ -14,4 +14,4 @@ item:
  the device.
 
 inventory:
- One check is created which holds information about the status of your HA.
+ One check is created which holds information about the other member

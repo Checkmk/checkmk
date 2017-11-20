@@ -1,0 +1,99 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['stormshield_cluster_node'] = {
+    'quality'   : ( 80, 50 ),
+    }
+
+online_mapping = {
+    '1' : 'online',
+    '0' : 'offline'
+    }
+
+active_mapping = {
+    '1' : 'passive',
+    '2' : 'active'
+    }
+
+forced_mapping = {
+    '0' : 'not forced',
+    '1' : 'forced'
+    }
+
+def inventory_stormshield_cluster_node(info):
+    for index, serial, online, model, version, license, quality, priority, \
+        statusforced, active, uptime in info:
+        yield index, {}
+
+
+def check_stormshield_cluster_node(item, params, info):
+    for index, serial, online, model, version, license, quality, priority, \
+        statusforced, active, uptime in info:
+        if item == index:
+            warn, crit = params['quality']
+            if online == '0':
+                yield 2, 'Member is %s' % online_mapping[online]
+            else:
+                yield 0, 'Member is %s' % online_mapping[online]
+            if statusforced == '1':
+                yield 1, 'HA-State: %s (%s)' % ( active_mapping[active], forced_mapping[statusforced] )
+            else:
+                yield 0, 'HA-State: %s (%s)' % ( active_mapping[active], forced_mapping[statusforced] )
+            if int(quality) < crit:
+                yield 2, 'Quality: %s' % quality
+            elif int(quality) < warn:
+                yield 1, 'Quality: %s' % quality
+            else:
+                yield 0, 'Quality: %s' % quality
+
+            infotext = 'Model: %s, Version: %s, Role: %s, Priority: %s, Serial: %s' \
+                    % ( model, version, license, priority, serial )
+            yield 0, infotext
+
+
+check_info['stormshield_cluster_node'] = {
+    'inventory_function'        : inventory_stormshield_cluster_node,
+    'check_function'            : check_stormshield_cluster_node,
+    'default_levels_variable'   : 'stormshield_cluster_node',
+    'service_description'       : 'HA Member %s',
+    'has_perfdata'              : False,
+    'snmp_info'                 : ('.1.3.6.1.4.1.11256.1.11.7.1', [
+                                  '1',    # Index
+                                  '2',    # Serial
+                                  '3',    # Online
+                                  '4',    # Model
+                                  '5',    # Version
+                                  '6',    # License
+                                  '7',    # Quality
+                                  '8',    # Priority
+                                  '9',    # StatusForced
+                                  '10',   # Active
+                                  '11'    # Uptime
+                                  ] ),
+    'group'                     : 'stormshield_quality',
+    'snmp_scan_function'        : stormshield_scan_function,
+    'includes'                  : [ 'stormshield.include' ],
+}

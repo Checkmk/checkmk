@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,33 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# example output
-
-
-def inventory_stormshield_sync(info):
-        return [ (None, None) ]
+def inventory_stormshield_info(info):
+    yield 'Stormshield Info', None
 
 
-def check_stormshield_sync(_no_item, _no_params, info):
-    sync_status = {
-        '1'  : (0, "Synced"),
-        '0'  : (2, "Not synced"),
-        '-1' : (3, "Unknown / error"),
-    }
-
-    state, state_readable = sync_status[info[0][0]]
-    return state, "%s" % state_readable
+def check_stormshield_info(item, params, info):
+    for model, version, serial, sysname, syslanguage in info:
+        yield 0, 'Model: %s, Version: %s, Serial: %s, SysName: %s, \
+            SysLanguage: %s' % ( model, version, serial, sysname, syslanguage )
 
 
-
-check_info['stormshield_sync'] = {
-    'inventory_function'    : inventory_stormshield_sync,
-    'check_function'        : check_stormshield_sync,
-    'service_description'   : 'Sync status',
-    'snmp_info'             : ('.1.3.6.1.4.1.11256.1.11', [
-                                    '8', # STORMSHIELD-POLICY-MIB::snsHASyncStatus
-                              ]),
-    'snmp_scan_function'    : stormshield_scan_function,
-    'includes'              : [ 'stormshield.include' ],
+check_info['stormshield_info'] = {
+    'inventory_function'        : inventory_stormshield_info,
+    'check_function'            : check_stormshield_info,
+    'service_description'       : '%s',
+    'snmp_info'                 : ('.1.3.6.1.4.1.11256.1.0', [
+                                  '1',    # Model
+                                  '2',    # Version
+                                  '3',    # Serial
+                                  '4',    # SysName
+                                  '5'     # SysLanguage
+                                  ] ),
+    'snmp_scan_function'        : stormshield_scan_function,
+    'includes'                  : [ 'stormshield.include' ],
 }

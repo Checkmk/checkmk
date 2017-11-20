@@ -1,0 +1,17 @@
+title: Stormshield: Disk Health
+agents: snmp
+catalog: app/Stormshield
+license: GPL
+distribution: check_mk
+description:
+ This check uses the {STORMSHIELD-SYSTEM-MONITOR-MIB} and
+ {STORMSHIELD-HA-MIB} to monitor the status of
+ disk(s).
+
+item:
+ The description of the service as provided by
+ the index of the device.
+
+inventory:
+ Each disk will be inventorized.
+ The services can be {ok} or {warn}, depending on the selftest.

@@ -1,0 +1,19 @@
+title: Stormshield Packages
+agents: snmp
+catalog: app/Stormshield
+license: GPL
+distribution: check_mk
+description:
+ This check uses the {STORMSHIELD-IF-MIB} for gathering more detailed
+ information about packages on each interfaces, such as blocked,
+ accepted and ICMP-Packages.
+
+ Additional to that you can the the active UDP and TCP Sessions.
+
+item:
+ The description of the service as provided by
+ the device.
+
+inventory:
+ The check creates a service for each interface, which is an ethernet
+ or ipsec interface.

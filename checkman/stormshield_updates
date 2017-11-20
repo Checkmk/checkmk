@@ -1,0 +1,19 @@
+title: Stormshield Updates
+agents: snmp
+catalog: app/Stormshield
+license: GPL
+distribution: check_mk
+description:
+ This check uses the {STORMSHIELD-AUTOUPDATE-MIB} for checking if the services update
+ on your Stormshield-firewall is working.
+
+ Depending on the state of the service the checks can
+ be {OK}, {WARN}, {CRIT} or {UNKNOWN}.
+
+item:
+ The description of the service as provided by
+ the device.
+
+inventory:
+ One check for each service is created by the inventory, if the
+ sensor is not in state (not available).

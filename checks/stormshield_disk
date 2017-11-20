@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def parse_stormshield_disk(info):
+    standalone, cluster = info
+    parsed = []
+    if not cluster and not standalone:
+        return []
+    if cluster != []:
+        for item in cluster:
+            new_info = []
+            index = item[0].split('.')[0]
+            new_info.append(index)
+            new_info.extend(item[1:])
+            parsed.append(new_info)
+        return parsed
+    else:
+        new_info = []
+        new_info.append('0')
+        new_info.extend(standalone[0])
+        parsed.append(new_info)
+        return parsed
+
+
+def inventory_stormshield_disk(parsed):
+    for disk in parsed:
+        clusterindex = disk[0]
+        yield clusterindex, {}
+
+
+def check_stormshield_disk(item, params, parsed):
+    for disk in parsed:
+        clusterindex, index, name, selftest, israid, raidstatus, position = disk
+        if item == clusterindex:
+            infotext = 'Device Index %s, Selftest: %s, Device Mount Point Name: %s' % (index, selftest, name)
+            if selftest != 'PASSED':
+                status = 1
+            else:
+                status = 0
+            if israid != '0':
+                infotext = infotext + ', Raid active, Raid Status %s, Disk Position %s' % ( raidstatus, position )
+            yield status, infotext
+
+
+check_info['stormshield_disk'] = {
+    'parse_function'            : parse_stormshield_disk,
+    'inventory_function'        : inventory_stormshield_disk,
+    'check_function'            : check_stormshield_disk,
+    'service_description'       : 'Disk %s',
+    'snmp_info'                 : [
+                                  ( '.1.3.6.1.4.1.11256.1.11.11.1', [
+                                      0,
+                                      '1', # snsNodeDiskIndex
+                                      '2', # snsDiskEntryDiskName
+                                      '3', # snsDiskEntrySmartResult
+                                      '4', # snsDiskEntryIsRaid
+                                      '5', # snsDiskEntryRaidStatus
+                                      '6', # snsDiskEntryPosition
+                                      ] ),
+                                  ( '.1.3.6.1.4.1.11256.1.10.5.1', [
+                                      0,
+                                      '1', # snsNodeDiskIndex
+                                      '2', # snsDiskEntryDiskName
+                                      '3', # snsDiskEntrySmartResult
+                                      '4', # snsDiskEntryIsRaid
+                                      '5', # snsDiskEntryRaidStatus
+                                      '6', # snsDiskEntryPosition
+                                      ] ),
+                                  ],
+    'snmp_scan_function'        : stormshield_scan_function,
+    'includes'                  : [ 'stormshield.include' ],
+}

@@ -3401,6 +3401,23 @@ metric_info["icmp_active_sessions"] = {
     "color" : "#008888"
 }
 
+metric_info["packages_accepted"] = {
+    "title" : _("Accepted Packages/s"),
+    "unit"  : "1/s",
+    "color" : "#80ff40",
+}
+metric_info["packages_blocked"] = {
+    "title" : _("Blocked Packages/s"),
+    "unit"  : "1/s",
+    "color" : "14/a",
+}
+
+metric_info["packages_icmp_total"] = {
+    "title" : _("ICMP Packages/s"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
 metric_info["sslproxy_active_sessions"] = {
     "title" : _("Active SSL Proxy sessions"),
     "unit"  : "count",
@@ -5126,6 +5143,21 @@ check_metrics["check_mk-fortigate_sessions_base"] = {
 # dual        -> two Perf-O-Meters next to each other, the first one from right to left
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
+
+perfometer_info.append(("dual", [
+    {
+        "type"          : "logarithmic",
+        "metric"        : "tcp_active_sessions",
+        "half_value"    : 4,
+        "exponent"      : 2,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "udp_active_sessions",
+        "half_value"    : 4,
+        "exponent"      : 2,
+    }
+]))
 
 perfometer_info.append({
     "type"       : "logarithmic",

@@ -1,0 +1,15 @@
+title: DDN S2A: Unit status
+agents: ddn_s2a
+catalog: storage/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the unit status, where a unit failure is
+ treated as WARN if the online status is "restarting" or "not installed"
+ and CRIT in all other failure cases.
+
+item:
+ The unit index.
+
+inventory:
+ One service per peer is created.

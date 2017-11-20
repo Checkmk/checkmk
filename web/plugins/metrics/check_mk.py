@@ -1675,13 +1675,39 @@ metric_info["disk_write_ios"] = {
 }
 
 metric_info["disk_average_read_wait"] = {
-    "title" : _("Read wait Time"),
+    "title" : _("Read wait time"),
     "unit"  : "s",
     "color" : "#20e8c0",
 }
 
+metric_info["disk_min_read_wait"] = {
+    "title" : _("Minimum read wait time"),
+    "unit"  : "s",
+    "color" : "#20e8a0",
+}
+
+metric_info["disk_max_read_wait"] = {
+    "title" : _("Maximum read wait time"),
+    "unit"  : "s",
+    "color" : "#20e8e0",
+}
+
 metric_info["disk_average_write_wait"] = {
-    "title" : _("Write wait time"), "unit" : "s", "color" : "#20c0e8",
+    "title" : _("Write wait time"),
+    "unit" : "s",
+    "color" : "#20c0e8",
+}
+
+metric_info["disk_min_write_wait"] = {
+    "title" : _("Minimum write wait time"),
+    "unit" : "s",
+    "color" : "#20a0e8",
+}
+
+metric_info["disk_max_write_wait"] = {
+    "title" : _("Maximum write wait time"),
+    "unit" : "s",
+    "color" : "#20e0e8",
 }
 
 metric_info["disk_average_wait"] = {
@@ -1718,6 +1744,12 @@ metric_info["read_latency"] = {
     "title" : _("Read latency"),
     "unit"  : "s",
     "color" : "35/a",
+}
+
+metric_info["read_hits"] = {
+    "title" : _("Read hits"),
+    "unit"  : "%",
+    "color" : "31/a",
 }
 
 metric_info["write_latency"] = {
@@ -6226,6 +6258,12 @@ perfometer_info.append({
     "metric"     : "emcvnx_move_completed",
     "half_value" : 250 * GB,
     "exponent"   : 3,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "read_hits" ],
+    "total"     : 100.0,
 })
 
 

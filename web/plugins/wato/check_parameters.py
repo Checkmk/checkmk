@@ -4312,6 +4312,21 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "fan_failures",
+    _("Number of fan failures"),
+    Tuple(
+        title=_("Number of fan failures"),
+        elements = [
+            Integer(title="Warning at", default_value=1),
+            Integer(title="Critical at", default_value=2),
+        ]
+    ),
+    None,
+    "first",
+)
+
+register_check_parameters(
+    subgroup_environment,
     "pll_lock_voltage",
     _("Lock Voltage for PLLs"),
     Dictionary(
@@ -4604,6 +4619,212 @@ register_check_parameters(
 #   |                |____/ \__\___/|_|  \__,_|\__, |\___|                 |
 #   |                                          |___/                       |
 #   '----------------------------------------------------------------------'
+
+register_check_parameters(
+    subgroup_storage,
+    "disk_failures",
+    _("Number of disk failures"),
+    Tuple(
+        title=_("Number of disk failures"),
+        elements = [
+            Integer(title="Warning at", default_value=1),
+            Integer(title="Critical at", default_value=2),
+        ]
+    ),
+    None,
+    "first",
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "ddn_s2a_port_errors",
+    _("Port errors of DDN S2A devices"),
+    Dictionary(
+        elements=[
+            ("link_failure_errs", Tuple(
+                title=_(u"Link failure errors"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+            ("lost_sync_errs", Tuple(
+                title=_(u"Lost synchronization errors"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+            ("loss_of_signal_errs", Tuple(
+                title=_(u"Loss of signal errors"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+            ("prim_seq_errs", Tuple(
+                title=_(u"PrimSeq erros"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+            ("crc_errs", Tuple(
+                title=_(u"CRC errors"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+            ("receive_errs", Tuple(
+                title=_(u"Receive errors"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+            ("ctio_timeouts", Tuple(
+                title=_(u"CTIO timeouts"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+            ("ctio_xmit_errs", Tuple(
+                title=_(u"CTIO transmission errors"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+            ("ctio_other_errs", Tuple(
+                title=_(u"other CTIO errors"),
+                elements=[
+                    Integer(title=_(u"Warning at")),
+                    Integer(title=_(u"Critical at")),
+                ])),
+        ],
+    ),
+    TextAscii(title="Port index"),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "read_hits",
+    _(u"Read prefetch hits for DDN S2A devices"),
+    Tuple(
+        title=_(u"Prefetch hits"),
+        elements=[
+            Float(title=_(u"Warning below"), default_value=95.0),
+            Float(title=_(u"Critical below"), default_value=90.0),
+        ]),
+    TextAscii(title=_(u"Port index or 'Total'")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "storage_iops",
+    _(u"I/O operations for DDN S2A devices"),
+    Dictionary(
+        elements=[
+            ("read", Tuple(
+                title=_(u"Read IO operations per second"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="1/s"),
+                    Float(title=_(u"Critical at"), unit="1/s"),
+                ])),
+            ("write", Tuple(
+                title=_(u"Write IO operations per second"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="1/s"),
+                    Float(title=_(u"Critical at"), unit="1/s"),
+                ])),
+            ("total", Tuple(
+                title=_(u"Total IO operations per second"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="1/s"),
+                    Float(title=_(u"Critical at"), unit="1/s"),
+                ])),
+            ]),
+    TextAscii(title=_(u"Port index or 'Total'")),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "storage_throughput",
+    _(u"Throughput for DDN S2A devices"),
+    Dictionary(
+        elements=[
+            ("read", Tuple(
+                title=_(u"Read throughput per second"),
+                elements=[
+                    Filesize(title=_(u"Warning at")),
+                    Filesize(title=_(u"Critical at")),
+                ])),
+            ("write", Tuple(
+                title=_(u"Write throughput per second"),
+                elements=[
+                    Filesize(title=_(u"Warning at")),
+                    Filesize(title=_(u"Critical at")),
+                ])),
+            ("total", Tuple(
+                title=_(u"Total throughput per second"),
+                elements=[
+                    Filesize(title=_(u"Warning at")),
+                    Filesize(title=_(u"Critical at")),
+                ])),
+            ]),
+    TextAscii(title=_(u"Port index or 'Total'")),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "ddn_s2a_wait",
+    _(u"Read/write wait for DDN S2A devices"),
+    Dictionary(
+        elements=[
+            ("read_avg", Tuple(
+                title=_(u"Read wait average"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="s"),
+                    Float(title=_(u"Critical at"), unit="s"),
+                ])),
+            ("read_min", Tuple(
+                title=_(u"Read wait minimum"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="s"),
+                    Float(title=_(u"Critical at"), unit="s"),
+                ])),
+            ("read_max", Tuple(
+                title=_(u"Read wait maximum"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="s"),
+                    Float(title=_(u"Critical at"), unit="s"),
+                ])),
+            ("write_avg", Tuple(
+                title=_(u"Write wait average"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="s"),
+                    Float(title=_(u"Critical at"), unit="s"),
+                ])),
+            ("write_min", Tuple(
+                title=_(u"Write wait minimum"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="s"),
+                    Float(title=_(u"Critical at"), unit="s"),
+                ])),
+            ("write_max", Tuple(
+                title=_(u"Write wait maximum"),
+                elements=[
+                    Float(title=_(u"Warning at"), unit="s"),
+                    Float(title=_(u"Critical at"), unit="s"),
+                ])),
+            ]),
+    DropdownChoice(
+        title=_(u"Host or Disk"),
+        choices=[
+            ("Disk", _(u"Disk")),
+            ("Host", _(u"Host")),
+        ]
+    ),
+    "dict"
+)
 
 register_check_parameters(
     subgroup_storage,

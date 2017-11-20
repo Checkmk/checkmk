@@ -1,0 +1,10 @@
+Title: ddn_s2a_errors, ddn_s2a_faultsbasic, ddn_s2a_faultsbasic.bootstatus, ddn_s2a_faultsbasic.cachecoh, ddn_s2a_faultsbasic.disks, ddn_s2a_faultsbasic.dualcomm, ddn_s2a_faultsbasic.ethernet, ddn_s2a_faultsbasic.fans, ddn_s2a_faultsbasic.pingfault, ddn_s2a_faultsbasic.ps, ddn_s2a_faultsbasic.temp, ddn_s2a_stats, ddn_s2a_stats.io, ddn_s2a_stats.readhits, ddn_s2a_statsdelay, ddn_s2a_uptime, ddn_s2a_version: Suite of checks to monitor DDN S2A storage devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511184725
+Class: feature
+
+These checks use the agent_ddn_s2a datasource program.

@@ -1,0 +1,14 @@
+title: DDN S2A: Read/write wait
+agents: ddn_s2a
+catalog: storage/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the read and write delay. The API provides a histogram representation
+ of delays for read and write, which the check condenses into min/max/avg values.
+
+item:
+ "Disk" or "Host"
+
+inventory:
+ Two services per device are created, one each for disk and host r/w-delay respectively.

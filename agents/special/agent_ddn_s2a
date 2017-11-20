@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import socket
+import argparse
+
+# This special agent uses the S2A RCM API. Please refer to the
+# official documentation.
+
+parser = argparse.ArgumentParser(description=\
+            'A datasource program for Data Direct'
+            'Networks Silicon Storage Appliances')
+
+parser.add_argument("ip_address")
+parser.add_argument("port", type=int)
+parser.add_argument("username")
+parser.add_argument("password")
+parser.add_argument("--debug", action="store_true")
+
+args = parser.parse_args()
+debug = args.debug
+ip_address = args.ip_address
+port = args.port
+username = args.username
+password = args.password
+
+def commandstring(command, username, password):
+    return "%s@%s@%s@0@0@$" % (command, username, password)
+
+def query(sock, commandstring):
+    sock.sendall(commandstring)
+    response = []
+    while True:
+        next_part = sock.recv(2048)
+        response.append(next_part)
+        if not next_part:
+            break
+    return "".join(response)
+
+
+sections = [
+    ("1600", "ddn_s2a_faultsbasic"),
+    ("1000", "ddn_s2a_version"),
+    ("2500", "ddn_s2a_uptime"),
+    ("2301", "ddn_s2a_statsdelay"),
+    ("0505", "ddn_s2a_errors"),
+    ("2300", "ddn_s2a_stats"),
+]
+
+for command, section in sections:
+    print "<<<%s>>>" % section
+    sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
+    sock.connect( (ip_address, port) )
+    print query(sock, commandstring(command, username, password))
+    sock.close()

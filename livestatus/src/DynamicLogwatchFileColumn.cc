@@ -23,10 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DynamicLogwatchFileColumn.h"
-#include <ostream>
+#include <stdexcept>
 #include "Column.h"
 #include "HostFileColumn.h"
-#include "Logger.h"
 #include "MonitoringCore.h"
 
 namespace {
@@ -56,17 +55,14 @@ std::unique_ptr<Column> DynamicLogwatchFileColumn::createColumn(
     const std::string &name, const std::string &arguments) {
     // arguments contains a file name
     if (arguments.empty()) {
-        Warning(_logger) << "Invalid arguments for column '" << _name
-                         << "': missing file name";
-        return nullptr;
+        throw std::runtime_error("invalid arguments for column '" + _name +
+                                 "': missing file name");
     }
-
     if (arguments.find('/') != std::string::npos) {
-        Warning(_logger) << "Invalid arguments for column '" << _name
-                         << "': file name '" << arguments << "' contains slash";
-        return nullptr;
+        throw std::runtime_error("invalid arguments for column '" + _name +
+                                 "': file name '" + arguments +
+                                 "' contains slash");
     }
-
     return std::make_unique<HostFileColumn>(
         name, "Contents of logwatch file", _indirect_offset, _extra_offset, -1,
         0, _mc->mkLogwatchPath(), "/" + unescape_filename(arguments));

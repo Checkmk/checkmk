@@ -168,23 +168,29 @@ def get_info_for_check(all_host_infos, hostname, ipaddress, check_type, for_disc
     else:
         host_entries.append((hostname, ipaddress))
 
-    # Now extract the sections of the relevant hosts and optionally add the node info
-    info = None
+    # Now get the section_content from the required hosts and merge them together to
+    # a single section_content. For each host optionally add the node info.
+    section_content = None
     for host_entry in host_entries:
         try:
-            info = all_host_infos[host_entry].info[section_name]
+            host_section_content = all_host_infos[host_entry].info[section_name]
         except KeyError:
             continue
 
-        info = _update_info_with_node_info(info, check_type, host_entry[0], for_discovery)
-        info = _update_info_with_parse_function(info, section_name)
+        host_section_content = _update_info_with_node_info(host_section_content, check_type, host_entry[0], for_discovery)
 
-    if info is None:
+        if section_content is None:
+            section_content = []
+
+        section_content += host_section_content
+
+    if section_content is None:
         return None
 
-    info = _update_info_with_extra_sections(info, all_host_infos, hostname, ipaddress, section_name, for_discovery)
+    section_content = _update_info_with_parse_function(section_content, section_name)
+    section_content = _update_info_with_extra_sections(section_content, all_host_infos, hostname, ipaddress, section_name, for_discovery)
 
-    return info
+    return section_content
 
 
 def _update_info_with_node_info(info, check_type, hostname, for_discovery):

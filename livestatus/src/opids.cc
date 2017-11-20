@@ -23,15 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "opids.h"
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
-using std::ostream;
-using std::string;
-using std::unordered_map;
-
 namespace {
-unordered_map<string, RelationalOperator> fromString = {
+std::unordered_map<std::string, RelationalOperator> fromString = {
     {"=", RelationalOperator::equal},
     {"!=", RelationalOperator::not_equal},
     {"~", RelationalOperator::matches},
@@ -50,7 +47,7 @@ unordered_map<string, RelationalOperator> fromString = {
     {"!<=", RelationalOperator::greater}};
 }  // namespace
 
-ostream &operator<<(ostream &os, const RelationalOperator &relOp) {
+std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp) {
     // Slightly inefficient, but this doesn't matter for our purposes. We could
     // use Boost.Bimap or use 2 maps if really necessary.
     for (const auto &strAndOp : fromString) {
@@ -61,13 +58,12 @@ ostream &operator<<(ostream &os, const RelationalOperator &relOp) {
     return os;
 }
 
-bool relationalOperatorForName(const string &name, RelationalOperator &relOp) {
+RelationalOperator relationalOperatorForName(const std::string &name) {
     auto it = fromString.find(name);
     if (it == fromString.end()) {
-        return false;
+        throw std::runtime_error("invalid operator '" + name + "'");
     }
-    relOp = it->second;
-    return true;
+    return it->second;
 }
 
 RelationalOperator negateRelationalOperator(RelationalOperator relOp) {

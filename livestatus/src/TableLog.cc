@@ -27,6 +27,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <utility>
 #include "Column.h"
 #include "LogCache.h"
@@ -194,15 +195,14 @@ bool TableLog::isAuthorized(Row row, const contact *ctc) const {
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {
-    // First try to find column in the usual way
-    if (auto col = Table::column(colname)) {
-        return col;
+    try {
+        // First try to find column in the usual way
+        return Table::column(colname);
+    } catch (const std::runtime_error &e) {
+        // Now try with prefix "current_", since our joined tables have this
+        // prefix in order to make clear that we access current and not historic
+        // data and in order to prevent mixing up historic and current fields
+        // with the same name.
+        return Table::column("current_" + colname);
     }
-
-    // Now try with prefix "current_", since our joined
-    // tables have this prefix in order to make clear that
-    // we access current and not historic data and in order
-    // to prevent mixing up historic and current fields with
-    // the same name.
-    return Table::column(std::string("current_") + colname);
 }

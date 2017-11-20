@@ -46,9 +46,7 @@ enum class RelationalOperator {
 
 std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp);
 
-// TODO(sp) Stream interface?
-bool relationalOperatorForName(const std::string &name,
-                               RelationalOperator &relOp);
+RelationalOperator relationalOperatorForName(const std::string &name);
 
 RelationalOperator negateRelationalOperator(RelationalOperator relOp);
 

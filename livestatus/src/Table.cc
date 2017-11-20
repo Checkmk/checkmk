@@ -25,11 +25,9 @@
 // IWYU pragma: no_include "cmc.h"
 // IWYU pragma: no_include "nagios.h"
 #include "Table.h"
-#include <cassert>
-#include <ostream>
+#include <stdexcept>
 #include "Column.h"
 #include "DynamicColumn.h"
-#include "Logger.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
 
@@ -38,14 +36,11 @@ Table::Table(MonitoringCore *mc) : _mc(mc) {}
 Table::~Table() = default;
 
 void Table::addColumn(std::unique_ptr<Column> col) {
-    std::string name = col->name();
-    assert(column(name) == nullptr);
-    _columns.emplace(name, move(col));
+    _columns.emplace(col->name(), std::move(col));
 }
 
 void Table::addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol) {
-    std::string name = dyncol->name();
-    _dynamic_columns.emplace(name, move(dyncol));
+    _dynamic_columns.emplace(dyncol->name(), std::move(dyncol));
 }
 
 std::shared_ptr<Column> Table::column(std::string colname) const {
@@ -72,32 +67,27 @@ std::shared_ptr<Column> Table::column(std::string colname) const {
         return it->second;
     }
 
-    // No luck.
-    return nullptr;
+    throw std::runtime_error("table '" + name() + "' has no column '" +
+                             colname + "'");
 }
 
 std::unique_ptr<Column> Table::dynamicColumn(const std::string &name,
                                              const std::string &rest) const {
     auto it = _dynamic_columns.find(name);
     if (it == _dynamic_columns.end()) {
-        Warning(logger()) << "Unknown dynamic column '" << name << "'";
-        return nullptr;
+        throw std::runtime_error("table '" + name +
+                                 "' has no dynamic column '" + name + "'");
     }
-
     auto sep_pos = rest.find(':');
     if (sep_pos == std::string::npos) {
-        Warning(logger()) << "Missing separator in dynamic column '" << name
-                          << "'";
-        return nullptr;
+        throw std::runtime_error("missing separator in dynamic column '" +
+                                 name + "'");
     }
-
     std::string name2 = rest.substr(0, sep_pos);
     if (name2.empty()) {
-        Warning(logger()) << "Empty column name for dynamic column '" << name
-                          << "'";
-        return nullptr;
+        throw std::runtime_error("empty column name for dynamic column '" +
+                                 name + "'");
     }
-
     return it->second->createColumn(name2, rest.substr(sep_pos + 1));
 }
 

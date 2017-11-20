@@ -321,23 +321,13 @@ void Query::parseStatsLine(char *line) {
     }
 
     auto column = _table->column(column_name);
-    if (!column) {
-        throw std::runtime_error("table '" + _table->name() +
-                                 "' has no column '" + column_name + "'");
-    }
-
     std::unique_ptr<Filter> filter;
     if (operation == StatsOperation::count) {
-        auto operator_name = nextStringArgument(&line);
-        RelationalOperator relOp;
-        if (!relationalOperatorForName(operator_name, relOp)) {
-            throw std::runtime_error("invalid operator '" + operator_name +
-                                     "'");
-        }
+        RelationalOperator relOp =
+            relationalOperatorForName(nextStringArgument(&line));
         char *value = lstrip(line);
         if (value == nullptr) {
-            throw std::runtime_error("missing value after operator '" +
-                                     operator_name + "'");
+            throw std::runtime_error("missing value after operator");
         }
         filter = column->createFilter(relOp, value);
     }
@@ -351,22 +341,12 @@ void Query::parseStatsLine(char *line) {
 }
 
 void Query::parseFilterLine(char *line, FilterStack &filters) {
-    auto column_name = nextStringArgument(&line);
-    auto column = _table->column(column_name);
-    if (!column) {
-        throw std::runtime_error("table '" + _table->name() +
-                                 "' has no column '" + column_name + "'");
-    }
-
-    auto operator_name = nextStringArgument(&line);
-    RelationalOperator relOp;
-    if (!relationalOperatorForName(operator_name, relOp)) {
-        throw std::runtime_error("invalid operator '" + operator_name + "'");
-    }
+    auto column = _table->column(nextStringArgument(&line));
+    RelationalOperator relOp =
+        relationalOperatorForName(nextStringArgument(&line));
     char *value = lstrip(line);
     if (value == nullptr) {
-        throw std::runtime_error("missing value after operator '" +
-                                 operator_name + "'");
+        throw std::runtime_error("missing value after operator");
     }
 
     auto sub_filter = column->createFilter(relOp, value);
@@ -397,9 +377,10 @@ void Query::parseColumnsLine(char *line) {
         auto column_name =
             str.substr(pos, space - (space == std::string::npos ? 0 : pos));
         pos = str.find_first_not_of(sep, space);
-
-        auto column = _table->column(column_name);
-        if (!column) {
+        std::shared_ptr<Column> column;
+        try {
+            column = _table->column(column_name);
+        } catch (const std::runtime_error &e) {
             // Do not fail any longer. We might want to make this configurable.
             // But not failing has the advantage that an updated GUI, that
             // expects new columns, will be able to keep compatibility with

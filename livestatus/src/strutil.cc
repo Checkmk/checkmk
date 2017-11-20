@@ -24,30 +24,17 @@
 
 #include "strutil.h"
 #include <cctype>
-#include <cstring>
 
-char *rstrip(char *c) {
-    char *w = c + strlen(c) - 1;
-    while (w >= c && (isspace(*w) != 0)) {
-        *w-- = '\0';
-    }
-    return c;
-}
-
-char *lstrip(char *c) {
-    while (isspace(*c) != 0) {
-        c++;
-    }
-    return c;
-}
-
-/* *c points to a string containing white space separated columns. This method
-   returns a pointer to the zero-terminated next field. That might be identical
-   with *c itself. The pointer c is then moved to the possible beginning of the
-   next field. */
+// *c points to a string containing white space separated columns. This method
+// returns a pointer to the zero-terminated next field. That might be identical
+// with *c itself. The pointer c is then moved to the possible beginning of the
+// next field.
 char *next_field(char **c) {
-    /* *c points to first character of field */
-    char *begin = lstrip(*c);  // skip leading spaces
+    // skip leading spaces
+    char *begin = *c;
+    while (isspace(*begin) != 0) {
+        begin++;
+    }
     if (*begin == 0) {
         *c = begin;
         return nullptr;  // found end of string -> no more field

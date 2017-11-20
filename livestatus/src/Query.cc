@@ -323,13 +323,9 @@ void Query::parseStatsLine(char *line) {
     auto column = _table->column(column_name);
     std::unique_ptr<Filter> filter;
     if (operation == StatsOperation::count) {
-        RelationalOperator relOp =
-            relationalOperatorForName(nextStringArgument(&line));
-        char *value = lstrip(line);
-        if (value == nullptr) {
-            throw std::runtime_error("missing value after operator");
-        }
-        filter = column->createFilter(relOp, value);
+        auto relOp = relationalOperatorForName(nextStringArgument(&line));
+        auto operand = mk::lstrip(line);
+        filter = column->createFilter(relOp, operand);
     } else {
         // create an "accept all" filter, just in case we fall back to counting
         filter = std::make_unique<AndingFilter>(
@@ -346,14 +342,9 @@ void Query::parseStatsLine(char *line) {
 
 void Query::parseFilterLine(char *line, FilterStack &filters) {
     auto column = _table->column(nextStringArgument(&line));
-    RelationalOperator relOp =
-        relationalOperatorForName(nextStringArgument(&line));
-    char *value = lstrip(line);
-    if (value == nullptr) {
-        throw std::runtime_error("missing value after operator");
-    }
-
-    auto sub_filter = column->createFilter(relOp, value);
+    auto relOp = relationalOperatorForName(nextStringArgument(&line));
+    auto operand = mk::lstrip(line);
+    auto sub_filter = column->createFilter(relOp, operand);
     filters.push_back(std::move(sub_filter));
     _all_columns.insert(column);
 }
@@ -490,10 +481,10 @@ void Query::parseWaitTriggerLine(char *line) {
 }
 
 void Query::parseWaitObjectLine(char *line) {
-    char *objectspec = lstrip(line);
+    auto objectspec = mk::lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (_wait_object.isNull()) {
-        throw std::runtime_error("object '" + std::string(objectspec) +
+        throw std::runtime_error("object '" + objectspec +
                                  "' not found or not supported by this table");
     }
 }

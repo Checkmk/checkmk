@@ -261,12 +261,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
                 " filters, but only " + std::to_string(i) + " " +
                 (i == 1 ? "is" : "are") + " on stack");
         }
-        auto &col = _stats_columns.back();
-        if (col->operation() != StatsOperation::count) {
-            throw std::runtime_error(
-                "only valid on Stats: headers of filter type");
-        }
-        subfilters.push_back(col->stealFilter());
+        subfilters.push_back(_stats_columns.back()->stealFilter());
         _stats_columns.pop_back();
     }
     _stats_columns.push_back(std::make_unique<StatsColumn>(
@@ -279,11 +274,7 @@ void Query::parseStatsNegateLine(char *line) {
         throw("error combining filters for table '" + _table->name() +
               "': expected 1 filters, but only 0 are on stack");
     }
-    auto &col = _stats_columns.back();
-    if (col->operation() != StatsOperation::count) {
-        throw std::runtime_error("only valid on Stats: headers of filter type");
-    }
-    auto to_negate = col->stealFilter();
+    auto to_negate = _stats_columns.back()->stealFilter();
     _stats_columns.pop_back();
     _stats_columns.push_back(std::make_unique<StatsColumn>(
         nullptr, to_negate->negate(), StatsOperation::count));

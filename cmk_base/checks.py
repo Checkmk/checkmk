@@ -135,8 +135,8 @@ def load_checks(filelist):
         new_checks = set(check_info.keys()).difference(known_checks)
 
         # Now store the check context for all checks found in this file
-        for check_name in new_checks:
-            _check_contexts[check_name] = check_context
+        for check_plugin_name in new_checks:
+            _check_contexts[check_plugin_name] = check_context
 
         # Collect all variables that the check file did introduce compared to the
         # default check context
@@ -146,13 +146,13 @@ def load_checks(filelist):
 
         # The default_levels_variable of check_info also declares use of a global
         # variable. Register it here for this context.
-        for check_name in new_checks:
+        for check_plugin_name in new_checks:
             # The check_info is not converted yet (convert_check_info()). This means we need
             # to deal with old style tuple configured checks
-            if type(check_info[check_name]) == tuple:
-                default_levels_varname = check_default_levels.get(check_name)
+            if type(check_info[check_plugin_name]) == tuple:
+                default_levels_varname = check_default_levels.get(check_plugin_name)
             else:
-                default_levels_varname = check_info[check_name].get("default_levels_variable")
+                default_levels_varname = check_info[check_plugin_name].get("default_levels_variable")
 
             if default_levels_varname:
                 new_check_vars[default_levels_varname] = \
@@ -320,8 +320,8 @@ def convert_check_info():
         "has_perfdata"            : False,
     }
 
-    for check_type, info in check_info.items():
-        basename = check_type.split(".")[0]
+    for check_plugin_name, info in check_info.items():
+        section_name = section_name_of(check_plugin_name)
 
         if type(info) != dict:
             # Convert check declaration from old style to new API
@@ -329,22 +329,22 @@ def convert_check_info():
             if inventory_function == check_api.no_discovery_possible:
                 inventory_function = None
 
-            check_info[check_type] = {
+            check_info[check_plugin_name] = {
                 "check_function"          : check_function,
                 "service_description"     : service_description,
                 "has_perfdata"            : not not has_perfdata,
                 "inventory_function"      : inventory_function,
                 # Insert check name as group if no group is being defined
-                "group"                   : check_type,
-                "snmp_info"               : snmp_info.get(check_type),
-                # Sometimes the scan function is assigned to the check_type
+                "group"                   : check_plugin_name,
+                "snmp_info"               : snmp_info.get(check_plugin_name),
+                # Sometimes the scan function is assigned to the check_plugin_name
                 # rather than to the base name.
                 "snmp_scan_function"      :
-                    snmp_scan_functions.get(check_type,
-                        snmp_scan_functions.get(basename)),
+                    snmp_scan_functions.get(check_plugin_name,
+                        snmp_scan_functions.get(section_name)),
                 "handle_empty_info"       : False,
                 "handle_real_time_checks" : False,
-                "default_levels_variable" : check_default_levels.get(check_type),
+                "default_levels_variable" : check_default_levels.get(check_plugin_name),
                 "node_info"               : False,
                 "parse_function"          : None,
                 "extra_sections"          : [],
@@ -354,40 +354,42 @@ def convert_check_info():
             for key in info.keys():
                 if key != "includes" and key not in check_info_defaults:
                     raise MKGeneralException("The check '%s' declares an unexpected key '%s' in 'check_info'." %
-                                                                                    (check_type, key))
+                                                                                    (check_plugin_name, key))
 
             # Check does already use new API. Make sure that all keys are present,
             # extra check-specific information into file-specific variables.
             for key, val in check_info_defaults.items():
                 info.setdefault(key, val)
 
-            # Include files are related to the check file (= the basename),
+            # Include files are related to the check file (= the section_name),
             # not to the (sub-)check. So we keep them in check_includes.
-            check_includes.setdefault(basename, [])
-            check_includes[basename] += info.get("includes", [])
+            check_includes.setdefault(section_name, [])
+            check_includes[section_name] += info.get("includes", [])
 
     # Make sure that setting for node_info of check and subcheck matches
-    for check_type, info in check_info.iteritems():
-        if "." in check_type:
-            base_check = check_type.split(".")[0]
-            if base_check not in check_info:
+    for check_plugin_name, info in check_info.iteritems():
+        if "." in check_plugin_name:
+            section_name = section_name_of(check_plugin_name)
+            if section_name not in check_info:
                 if info["node_info"]:
                     raise MKGeneralException("Invalid check implementation: node_info for %s is "
                                              "True, but base check %s not defined" %
-                                                (check_type, base_check))
-            elif check_info[base_check]["node_info"] != info["node_info"]:
+                                                (check_plugin_name, section_name))
+
+            elif check_info[section_name]["node_info"] != info["node_info"]:
                raise MKGeneralException("Invalid check implementation: node_info for %s "
-                                        "and %s are different." % ((base_check, check_type)))
+                                        "and %s are different." % ((section_name, check_plugin_name)))
 
     # Now gather snmp_info and snmp_scan_function back to the
     # original arrays. Note: these information is tied to a "agent section",
     # not to a check. Several checks may use the same SNMP info and scan function.
-    for check_type, info in check_info.iteritems():
-        basename = check_type.split(".")[0]
-        if info["snmp_info"] and basename not in snmp_info:
-            snmp_info[basename] = info["snmp_info"]
-        if info["snmp_scan_function"] and basename not in snmp_scan_functions:
-            snmp_scan_functions[basename] = info["snmp_scan_function"]
+    for check_plugin_name, info in check_info.iteritems():
+        section_name = section_name_of(check_plugin_name)
+        if info["snmp_info"] and section_name not in snmp_info:
+            snmp_info[section_name] = info["snmp_info"]
+
+        if info["snmp_scan_function"] and section_name not in snmp_scan_functions:
+            snmp_scan_functions[section_name] = info["snmp_scan_function"]
 
 
 # This function validates the checks which are members of checkgroups to have either
@@ -399,16 +401,16 @@ def verify_checkgroup_members():
 
     for group_name, checks in groups.items():
         with_item, without_item = [], []
-        for check_type, check in checks:
+        for check_plugin_name, check in checks:
             # Trying to detect whether or not the check has an item. But this mechanism is not
             # 100% reliable since Check_MK appends an item to the service_description when "%s"
             # is not in the checks service_description template.
             # Maybe we need to define a new rule which enforces the developer to use the %s in
             # the service_description. At least for grouped checks.
             if "%s" in check["service_description"]:
-                with_item.append(check_type)
+                with_item.append(check_plugin_name)
             else:
-                without_item.append(check_type)
+                without_item.append(check_plugin_name)
 
         if with_item and without_item:
             raise MKGeneralException("Checkgroup %s has checks with and without item! At least one of "
@@ -418,11 +420,11 @@ def verify_checkgroup_members():
 
 def checks_by_checkgroup():
     groups = {}
-    for check_type, check in check_info.items():
+    for check_plugin_name, check in check_info.items():
         group_name = check["group"]
         if group_name:
             groups.setdefault(group_name, [])
-            groups[group_name].append((check_type, check))
+            groups[group_name].append((check_plugin_name, check))
     return groups
 
 
@@ -432,10 +434,10 @@ def initialize_check_type_caches():
     snmp_cache.update(snmp_info.keys())
 
     tcp_cache = cmk_base.runtime_cache.get_set("check_type_tcp")
-    for check_type, check in check_info.items():
-        basename = check_type.split(".")[0]
-        if basename not in snmp_cache:
-            tcp_cache.add(basename)
+    for check_plugin_name, check in check_info.items():
+        section_name = section_name_of(check_plugin_name)
+        if section_name not in snmp_cache:
+            tcp_cache.add(section_name)
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -449,58 +451,58 @@ def initialize_check_type_caches():
 #   | Misc check related helper functions                                  |
 #   '----------------------------------------------------------------------'
 
-def section_name_of(check_name):
-    return check_name.split(".")[0]
+def section_name_of(check_plugin_name):
+    return check_plugin_name.split(".")[0]
 
 
 def set_hostname(hostname):
     check_api._hostname = hostname
 
 
-def set_service(check_type, descr):
-    check_api._check_type          = check_type
+def set_service(check_plugin_name, descr):
+    check_api._check_plugin_name   = check_plugin_name
     check_api._service_description = descr
 
 
-def is_snmp_check(check_name):
+def is_snmp_check(check_plugin_name):
     cache = cmk_base.runtime_cache.get_dict("is_snmp_check")
 
     try:
-        return cache[check_name]
+        return cache[check_plugin_name]
     except KeyError:
         snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
 
-        result = section_name_of(check_name) in snmp_checks
-        cache[check_name] = result
+        result = section_name_of(check_plugin_name) in snmp_checks
+        cache[check_plugin_name] = result
         return result
 
 
-def is_tcp_check(check_name):
+def is_tcp_check(check_plugin_name):
     cache = cmk_base.runtime_cache.get_dict("is_tcp_check")
 
     try:
-        return cache[check_name]
+        return cache[check_plugin_name]
     except KeyError:
         tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
 
-        result = section_name_of(check_name) in tcp_checks
-        cache[check_name] = result
+        result = section_name_of(check_plugin_name) in tcp_checks
+        cache[check_plugin_name] = result
         return result
 
 
 def discoverable_tcp_checks():
     types = []
-    for check_type, check in check_info.items():
-        if is_tcp_check(check_type) and check["inventory_function"]:
-            types.append(check_type)
+    for check_plugin_name, check in check_info.items():
+        if is_tcp_check(check_plugin_name) and check["inventory_function"]:
+            types.append(check_plugin_name)
     return sorted(types)
 
 
 def discoverable_snmp_checks():
     types = []
-    for check_type, check in check_info.items():
-        if is_snmp_check(check_type) and check["inventory_function"]:
-            types.append(check_type)
+    for check_plugin_name, check in check_info.items():
+        if is_snmp_check(check_plugin_name) and check["inventory_function"]:
+            types.append(check_plugin_name)
     return sorted(types)
 
 

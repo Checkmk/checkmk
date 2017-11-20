@@ -145,7 +145,7 @@ binstring_to_int     = _snmp.binstring_to_int
 _hostname            = "unknown" # Host currently being checked
 # Is set before check execution
 _service_description = None
-_check_type          = None
+_check_plugin_name          = None
 
 
 def host_name():
@@ -161,7 +161,7 @@ def service_description():
 
 def check_type():
     """Returns the name of the check type currently being checked."""
-    return _check_type
+    return _check_plugin_name
 
 
 def saveint(i):
@@ -197,11 +197,11 @@ def savefloat(f):
 # TODO: This seems to be an old part of the check API and not used for
 #       a long time. Deprecate this as part of the and move it to the
 #       cmk_base.checks module.
-def no_discovery_possible(check_type, info):
+def no_discovery_possible(check_plugin_name, info):
     """In old checks we used this to declare that a check did not support
     a service discovery. Please don't use this for new checks. Simply
     skip the "inventory_function" argument of the check_info declaration."""
-    _console.verbose("%s does not support discovery. Skipping it.\n", check_type)
+    _console.verbose("%s does not support discovery. Skipping it.\n", check_plugin_name)
     return []
 
 service_extra_conf       = _rulesets.service_extra_conf
@@ -468,14 +468,14 @@ def get_agent_data_time():
     return _agent_cache_file_age(host_name(), check_type())
 
 
-def _agent_cache_file_age(hostname, check_type):
+def _agent_cache_file_age(hostname, check_plugin_name):
     if _config.is_cluster(hostname):
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
     import cmk_base.checks as checks
-    if checks.is_snmp_check(check_type):
-        cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
-    elif checks.is_tcp_check(check_type):
+    if checks.is_snmp_check(check_plugin_name):
+        cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_plugin_name.split(".")[0]
+    elif checks.is_tcp_check(check_plugin_name):
         cachefile = _paths.tcp_cache_dir + "/" + hostname
     else:
         cachefile = None

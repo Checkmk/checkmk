@@ -175,7 +175,7 @@ def binstring_to_int(binstring):
 #   | Top level functions to realize SNMP functionality for Check_MK.      |
 #   '----------------------------------------------------------------------'
 
-def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
+def get_snmp_table(hostname, ip, check_plugin_name, oid_info, use_snmpwalk_cache):
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
     # suboids is a list if OID-infixes that are put between baseoid
@@ -221,7 +221,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
                 index_format = column
                 continue
 
-            rowinfo = _get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_cache)
+            rowinfo = _get_snmpwalk(hostname, ip, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache)
 
             columns.append((fetchoid, rowinfo, value_encoding))
             number_of_rows = len(rowinfo)
@@ -272,8 +272,8 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
     return info
 
 
-# Contextes can only be used when check_type is given.
-def get_single_oid(hostname, ipaddress, oid, check_type=None, do_snmp_scan=True):
+# Contextes can only be used when check_plugin_name is given.
+def get_single_oid(hostname, ipaddress, oid, check_plugin_name=None, do_snmp_scan=True):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
     # we do a snmpgetnext and try to find an OID with the prefix
     # in question. The *cache* is working including the X, however.
@@ -306,8 +306,8 @@ def get_single_oid(hostname, ipaddress, oid, check_type=None, do_snmp_scan=True)
     else:
         # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
         # SNMP contexts, all contextes will be queried until the first answer is received.
-        if check_type is not None and config.is_snmpv3_host(hostname):
-            snmp_contexts = _snmpv3_contexts_of(hostname, check_type)
+        if check_plugin_name is not None and config.is_snmpv3_host(hostname):
+            snmp_contexts = _snmpv3_contexts_of(hostname, check_plugin_name)
         else:
             snmp_contexts = [None]
 
@@ -380,13 +380,13 @@ def _cmp_oid_pairs(pair1, pair2):
     return cmp(_oid_to_intlist(pair1[0].lstrip('.')),
                _oid_to_intlist(pair2[0].lstrip('.')))
 
-def _snmpv3_contexts_of(hostname, check_type):
+def _snmpv3_contexts_of(hostname, check_plugin_name):
     for ty, rules in config.snmpv3_contexts_of(hostname):
-        if ty == None or ty == check_type:
+        if ty == None or ty == check_plugin_name:
             return rules
     return [None]
 
-def _get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_cache):
+def _get_snmpwalk(hostname, ip, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
     is_cachable = _is_snmpwalk_cachable(column)
     rowinfo = None
     if is_cachable and use_snmpwalk_cache:
@@ -397,7 +397,7 @@ def _get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_
         if _enforce_stored_walks or config.is_usewalk_host(hostname):
             rowinfo = _get_stored_snmpwalk(hostname, fetchoid)
         else:
-            rowinfo = _perform_snmpwalk(hostname, ip, check_type, oid, fetchoid)
+            rowinfo = _perform_snmpwalk(hostname, ip, check_plugin_name, oid, fetchoid)
 
         if is_cachable:
             _save_snmpwalk_cache(hostname, fetchoid, rowinfo)
@@ -405,17 +405,17 @@ def _get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_
     return rowinfo
 
 
-def _perform_snmpwalk(hostname, ip, check_type, base_oid, fetchoid):
+def _perform_snmpwalk(hostname, ip, check_plugin_name, base_oid, fetchoid):
     added_oids = set([])
     rowinfo = []
     if config.is_snmpv3_host(hostname):
-        snmp_contexts = _snmpv3_contexts_of(hostname, check_type)
+        snmp_contexts = _snmpv3_contexts_of(hostname, check_plugin_name)
     else:
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
         if config.is_inline_snmp_host(hostname):
-            rows = inline_snmp.walk(hostname, check_type, fetchoid, base_oid,
+            rows = inline_snmp.walk(hostname, check_plugin_name, fetchoid, base_oid,
                                                                   context_name=context_name,
                                                                   ipaddress=ip)
         else:

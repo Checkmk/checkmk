@@ -36,7 +36,7 @@ import cmk_base.snmp as snmp
 import cmk_base.ip_lookup as ip_lookup
 
 from .abstract import DataSource
-from .host_info import HostInfo
+from .host_sections import HostSections
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -53,8 +53,8 @@ from .host_info import HostInfo
 class SNMPDataSource(DataSource):
     def __init__(self):
         super(SNMPDataSource, self).__init__()
-        self._check_type_filter_func = None
-        self._check_types = {}
+        self._check_plugin_name_filter_func = None
+        self._check_plugin_names = {}
         self._do_snmp_scan = False
         self._on_error = "raise"
         self._use_snmpwalk_cache = True
@@ -123,27 +123,27 @@ class SNMPDataSource(DataSource):
         self._do_snmp_scan = do_snmp_scan
 
 
-    def set_check_type_filter(self, filter_func):
-        self._check_type_filter_func = filter_func
+    def set_check_plugin_name_filter(self, filter_func):
+        self._check_plugin_name_filter_func = filter_func
 
 
-    def _gather_check_types(self, hostname, ipaddress):
+    def _gather_check_plugin_names(self, hostname, ipaddress):
         """Returns a list of check types that shal be executed with this source.
 
         The logic is only processed once per hostname+ipaddress combination. Once processed
         check types are cached to answer subsequent calls to this function.
         """
-        if self._check_type_filter_func is None:
+        if self._check_plugin_name_filter_func is None:
             raise MKGeneralException("The check type filter function has not been set")
 
         try:
-            return self._check_types[(hostname, ipaddress)]
+            return self._check_plugin_names[(hostname, ipaddress)]
         except KeyError:
-            check_types = self._check_type_filter_func(hostname, ipaddress,
+            check_plugin_names = self._check_plugin_name_filter_func(hostname, ipaddress,
                                                        on_error=self._on_error,
                                                        do_snmp_scan=self._do_snmp_scan)
-            self._check_types[(hostname, ipaddress)] = check_types
-            return check_types
+            self._check_plugin_names[(hostname, ipaddress)] = check_plugin_names
+            return check_plugin_names
 
 
     def _execute(self, hostname, ipaddress):
@@ -151,18 +151,18 @@ class SNMPDataSource(DataSource):
 
         self._verify_ipaddress(ipaddress)
 
-        persisted_info = self._load_persisted_info(hostname)
+        persisted_sections = self._load_persisted_sections(hostname)
 
         info = {}
-        for check_type in self.get_check_types(hostname, ipaddress):
+        for check_plugin_name in self.get_check_plugin_names(hostname, ipaddress):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
-            # Please note, that if the check_type is foo.bar then we lookup the
+            # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
-            info_type = check_type.split(".")[0]
-            if info_type in checks.snmp_info:
-                oid_info = checks.snmp_info[info_type]
-            elif info_type in cmk_base.inventory_plugins.inv_info:
-                oid_info = cmk_base.inventory_plugins.inv_info[info_type].get("snmp_info")
+            section_name = checks.section_name_of(check_plugin_name)
+            if section_name in checks.snmp_info:
+                oid_info = checks.snmp_info[section_name]
+            elif section_name in cmk_base.inventory_plugins.inv_info:
+                oid_info = cmk_base.inventory_plugins.inv_info[section_name].get("snmp_info")
             else:
                 oid_info = None
 
@@ -171,18 +171,18 @@ class SNMPDataSource(DataSource):
 
             # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added latera
-            if info_type in persisted_info:
-                self._logger.debug("[%s] %s: Skip fetching data (persisted info exists)" % (self.id(), check_type))
+            if section_name in persisted_sections:
+                self._logger.debug("[%s] %s: Skip fetching data (persisted info exists)" % (self.id(), check_plugin_name))
                 continue
 
-            self._logger.debug("[%s] %s: Fetching data" % (self.id(), check_type))
+            self._logger.debug("[%s] %s: Fetching data" % (self.id(), check_plugin_name))
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
             if type(oid_info) == list:
                 check_info = []
                 for entry in oid_info:
-                    check_info_part = snmp.get_snmp_table(hostname, ipaddress, check_type, entry, self._use_snmpwalk_cache)
+                    check_info_part = snmp.get_snmp_table(hostname, ipaddress, check_plugin_name, entry, self._use_snmpwalk_cache)
 
                     # If at least one query fails, we discard the whole info table
                     if check_info_part is None:
@@ -191,37 +191,37 @@ class SNMPDataSource(DataSource):
                     else:
                         check_info.append(check_info_part)
             else:
-                check_info = snmp.get_snmp_table(hostname, ipaddress, check_type, oid_info, self._use_snmpwalk_cache)
+                check_info = snmp.get_snmp_table(hostname, ipaddress, check_plugin_name, oid_info, self._use_snmpwalk_cache)
 
-            info[check_type] = check_info
+            info[check_plugin_name] = check_info
 
         return info
 
 
-    def _convert_to_infos(self, raw_data, hostname):
-        persisted_info = self._extract_persisted_info(hostname, raw_data)
-        return HostInfo(raw_data, persisted_info=persisted_info)
+    def _convert_to_sections(self, raw_data, hostname):
+        persisted_sections = self._extract_persisted_sections(hostname, raw_data)
+        return HostSections(raw_data, persisted_sections=persisted_sections)
 
 
-    def _extract_persisted_info(self, hostname, raw_data):
-        """Extract the persisted info from the raw_data and return it
+    def _extract_persisted_sections(self, hostname, raw_data):
+        """Extract the sections to be persisted from the raw_data and return it
 
         Gather the check types to be persisted, extract the related data from
         the raw data, calculate the times and store the persisted info for
         later use.
         """
-        persisted_info = {}
+        persisted_sections = {}
 
-        for section_name, section_info in raw_data.items():
+        for section_name, section_content in raw_data.items():
             check_interval = config.check_interval_of(hostname, section_name)
             if check_interval is None:
                 continue
 
             cached_at = int(time.time())
             until = cached_at + (check_interval * 60)
-            persisted_info[section_name] = (cached_at, until, section_info)
+            persisted_sections[section_name] = (cached_at, until, section_content)
 
-        return persisted_info
+        return persisted_sections
 
 
 #.

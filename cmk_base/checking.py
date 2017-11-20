@@ -76,7 +76,7 @@ _show_perfdata  = False
 #   '----------------------------------------------------------------------'
 
 # This is the main check function - the central entry point
-def do_check(hostname, ipaddress, only_check_types=None):
+def do_check(hostname, ipaddress, only_check_plugin_names=None):
     cpu_tracking.start("busy")
     console.verbose("Check_MK version %s\n" % cmk.__version__)
 
@@ -88,7 +88,7 @@ def do_check(hostname, ipaddress, only_check_types=None):
     try:
         item_state.load(hostname)
         cmk_info, num_success, missing_sections = \
-            do_all_checks_on_host(hostname, ipaddress, only_check_types)
+            do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names)
 
         agent_version = cmk_info["version"]
         agent_os = cmk_info.get("agentos")
@@ -235,7 +235,7 @@ def _is_expected_agent_version(agent_version, expected_version):
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agent_version=True):
+def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fetch_agent_version=True):
     cmk_info = { "version" : "(unknown)" }
     num_success, missing_sections = 0, set()
 
@@ -248,27 +248,29 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
-    if only_check_types is None:
-        only_check_types = list(set([ e[0] for e in table ]))
-    sources.enforce_check_types(only_check_types)
+    if only_check_plugin_names is None:
+        only_check_plugin_names = list(set([ e[0] for e in table ]))
+    sources.enforce_check_plugin_names(only_check_plugin_names)
 
     # Gather the data from the sources
-    all_host_infos = data_sources.get_host_infos(sources, hostname, ipaddress)
+    multi_host_sections = data_sources.get_host_sections(sources, hostname, ipaddress)
 
-    for check_name, item, params, description in table:
-        if only_check_types != None and check_name not in only_check_types:
+    for check_plugin_name, item, params, description in table:
+        if only_check_plugin_names != None and check_plugin_name not in only_check_plugin_names:
             continue
 
-        success = execute_check(all_host_infos, hostname, ipaddress, check_name, item, params, description)
+        success = execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description)
         if success:
             num_success += 1
         else:
-            # TODO: Is there a generic check_name -> info_name/section_name function?
-            missing_sections.add(check_name.split('.')[0])
+            missing_sections.add(checks.section_name_of(check_plugin_name))
 
     if fetch_agent_version:
         if config.is_tcp_host(hostname):
-            for line in data_sources.get_info_for_check(all_host_infos, hostname, ipaddress, "check_mk", for_discovery=False) or []:
+            section_content = data_sources.get_section_content_for_check(multi_host_sections,
+                                    hostname, ipaddress, "check_mk", for_discovery=False) or []
+
+            for line in section_content:
                 value = " ".join(line[1:]) if len(line) > 1 else None
                 cmk_info[line[0][:-1].lower()] = value
 
@@ -282,11 +284,11 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types=None, fetch_agen
     return cmk_info, num_success, missing_section_list
 
 
-def execute_check(all_host_infos, hostname, ipaddress, check_name, item, params, description):
+def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description):
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
-    checks.set_service(check_name, description)
-    item_state.set_item_state_prefix(check_name, item)
+    checks.set_service(check_plugin_name, description)
+    item_state.set_item_state_prefix(check_plugin_name, item)
 
     # Skip checks that are not in their check period
     period = config.check_period_of(hostname, description)
@@ -297,39 +299,37 @@ def execute_check(all_host_infos, hostname, ipaddress, check_name, item, params,
     elif period:
         console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
 
-    info_type = check_name.split('.')[0]
+    section_name = checks.section_name_of(check_plugin_name)
 
     try:
-        info = data_sources.get_info_for_check(all_host_infos, hostname, ipaddress, info_type, for_discovery=False)
+        section_content = data_sources.get_section_content_for_check(multi_host_sections, hostname,
+                                                    ipaddress, section_name, for_discovery=False)
     except MKParseFunctionError, e:
         x = e.exc_info()
         raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
 
     # TODO: Move this to a helper function
-    if info is None: # No data for this check type
+    if section_content is None: # No data for this check type
         return False
-
-    # Can't do this here, because the parse functions can do anything with the data
-    #assert type(info) in [ list, dict ]
 
     # In case of SNMP checks but missing agent response, skip this check.
     # Special checks which still need to be called even with empty data
     # may declare this.
-    if not info and checks.is_snmp_check(check_name) \
-       and not checks.check_info[check_name]["handle_empty_info"]:
+    if not section_content and checks.is_snmp_check(check_plugin_name) \
+       and not checks.check_info[check_plugin_name]["handle_empty_info"]:
         return False
 
-    check_function = checks.check_info[check_name].get("check_function")
+    check_function = checks.check_info[check_plugin_name].get("check_function")
     if check_function is None:
-        check_function = lambda item, params, info: (3, 'UNKNOWN - Check not implemented')
+        check_function = lambda item, params, section_content: (3, 'UNKNOWN - Check not implemented')
 
     dont_submit = False
     try:
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        raw_result = check_function(item, _determine_check_params(params), info)
-        result = sanitize_check_result(raw_result, checks.is_snmp_check(check_name))
+        raw_result = check_function(item, _determine_check_params(params), section_content)
+        result = sanitize_check_result(raw_result, checks.is_snmp_check(check_plugin_name))
 
         item_state.raise_counter_wrap()
 
@@ -346,9 +346,9 @@ def execute_check(all_host_infos, hostname, ipaddress, check_name, item, params,
     except Exception, e:
         if cmk.debug.enabled():
             raise
-        result = 3, cmk_base.crash_reporting.create_crash_dump(hostname, check_name, item,
-                                    is_manual_check(hostname, check_name, item),
-                                    params, description, info), []
+        result = 3, cmk_base.crash_reporting.create_crash_dump(hostname, check_plugin_name, item,
+                                    is_manual_check(hostname, check_plugin_name, item),
+                                    params, description, section_content), []
 
     if not dont_submit:
         # Now add information about the age of the data in the agent
@@ -364,10 +364,10 @@ def execute_check(all_host_infos, hostname, ipaddress, check_name, item, params,
                 return a
             return min(a,b)
 
-        for host_info in all_host_infos.values():
-            section_entries = host_info.cache_info
-            if info_type in section_entries:
-                cached_at, cache_interval = section_entries[info_type]
+        for host_sections in multi_host_sections.values():
+            section_entries = host_sections.cache_info
+            if section_name in section_entries:
+                cached_at, cache_interval = section_entries[section_name]
                 oldest_cached_at = minn(oldest_cached_at, cached_at)
                 largest_interval = max(largest_interval, cache_interval)
 
@@ -393,11 +393,11 @@ def _determine_check_params(params):
         return params
 
 
-def is_manual_check(hostname, check_type, item):
+def is_manual_check(hostname, check_plugin_name, item):
     manual_checks = check_table.get_check_table(hostname, remove_duplicates=True,
                                     world="active" if _in_keepalive_mode() else "config",
                                     skip_autochecks=True)
-    return (check_type, item) in manual_checks
+    return (check_plugin_name, item) in manual_checks
 
 
 def sanitize_check_result(result, is_snmp):

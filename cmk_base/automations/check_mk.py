@@ -827,23 +827,23 @@ class AutomationGetCheckInformation(Automation):
         manuals = man_pages.all_man_pages()
 
         check_infos = {}
-        for check_type, check in checks.check_info.items():
+        for check_plugin_name, check in checks.check_info.items():
             try:
-                manfile = manuals.get(check_type)
+                manfile = manuals.get(check_plugin_name)
                 # TODO: Use cmk.man_pages module standard functions to read the title
                 if manfile:
                     title = file(manfile).readline().strip().split(":", 1)[1].strip()
                 else:
-                    title = check_type
-                check_infos[check_type] = { "title" : title.decode("utf-8") }
+                    title = check_plugin_name
+                check_infos[check_plugin_name] = { "title" : title.decode("utf-8") }
                 if check["group"]:
-                    check_infos[check_type]["group"] = check["group"]
-                check_infos[check_type]["service_description"] = check.get("service_description","%s")
-                check_infos[check_type]["snmp"] = checks.is_snmp_check(check_type)
+                    check_infos[check_plugin_name]["group"] = check["group"]
+                check_infos[check_plugin_name]["service_description"] = check.get("service_description","%s")
+                check_infos[check_plugin_name]["snmp"] = checks.is_snmp_check(check_plugin_name)
             except Exception, e:
                 if cmk.debug.enabled():
                     raise
-                raise MKAutomationError("Failed to parse man page '%s': %s" % (check_type, e))
+                raise MKAutomationError("Failed to parse man page '%s': %s" % (check_plugin_name, e))
         return check_infos
 
 
@@ -860,19 +860,19 @@ class AutomationGetRealTimeChecks(Automation):
         manuals = man_pages.all_man_pages()
 
         rt_checks = []
-        for check_type, check in checks.check_info.items():
+        for check_plugin_name, check in checks.check_info.items():
             if check["handle_real_time_checks"]:
                 # TODO: Use cmk.man_pages module standard functions to read the title
-                title = check_type
+                title = check_plugin_name
                 try:
-                    manfile = manuals.get(check_type)
+                    manfile = manuals.get(check_plugin_name)
                     if manfile:
                         title = file(manfile).readline().strip().split(":", 1)[1].strip()
                 except Exception:
                     if cmk.debug.enabled():
                         raise
 
-                rt_checks.append((check_type, "%s - %s" % (check_type, title.decode("utf-8"))))
+                rt_checks.append((check_plugin_name, "%s - %s" % (check_plugin_name, title.decode("utf-8"))))
 
         return rt_checks
 
@@ -890,31 +890,31 @@ class AutomationGetCheckManPage(Automation):
         if len(args) != 1:
             raise MKAutomationError("Need exactly one argument.")
 
-        check_type = args[0]
+        check_plugin_name = args[0]
         manpage = man_pages.load_man_page(args[0])
 
         # Add a few informations from check_info. Note: active checks do not
         # have an entry in check_info
-        if check_type in checks.check_info:
+        if check_plugin_name in checks.check_info:
             manpage["type"] = "check_mk"
-            info = checks.check_info[check_type]
+            info = checks.check_info[check_plugin_name]
             for key in [ "snmp_info", "has_perfdata", "service_description" ]:
                 if key in info:
                     manpage[key] = info[key]
-            if "." in check_type:
-                section = check_type.split(".")[0]
-                if section in checks.check_info and "snmp_info" in checks.check_info[section]:
-                    manpage["snmp_info"] = checks.check_info[section]["snmp_info"]
+            if "." in check_plugin_name:
+                section_name = checks.section_name_of(check_plugin_name)
+                if section_name in checks.check_info and "snmp_info" in checks.check_info[section_name]:
+                    manpage["snmp_info"] = checks.check_info[section_name]["snmp_info"]
 
             if "group" in info:
                 manpage["group"] = info["group"]
 
         # Assume active check
-        elif check_type.startswith("check_"):
+        elif check_plugin_name.startswith("check_"):
             manpage["type"] = "active"
         else:
             raise MKAutomationError("Could not detect type of manpage: %s. "
-                                    "Maybe the check is missing." % check_type)
+                                    "Maybe the check is missing." % check_plugin_name)
 
         return manpage
 

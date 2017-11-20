@@ -178,18 +178,18 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"):
     host_checks = get_sorted_check_table(hostname, remove_duplicates, world)
     precomp_table = []
-    for check_type, item, params, description, _unused_deps in host_checks:
+    for check_plugin_name, item, params, description, _unused_deps in host_checks:
         # make these globals available to the precompile function
-        checks.set_service(check_type, description)
-        item_state.set_item_state_prefix(check_type, item)
+        checks.set_service(check_plugin_name, description)
+        item_state.set_item_state_prefix(check_plugin_name, item)
 
-        params = get_precompiled_check_parameters(hostname, item, params, check_type)
-        precomp_table.append((check_type, item, params, description)) # deps not needed while checking
+        params = get_precompiled_check_parameters(hostname, item, params, check_plugin_name)
+        precomp_table.append((check_plugin_name, item, params, description)) # deps not needed while checking
     return precomp_table
 
 
-def get_precompiled_check_parameters(hostname, item, params, check_type):
-    precomp_func = checks.precompile_params.get(check_type)
+def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
+    precomp_func = checks.precompile_params.get(check_plugin_name)
     if precomp_func:
         return precomp_func(hostname, item, params)
     else:

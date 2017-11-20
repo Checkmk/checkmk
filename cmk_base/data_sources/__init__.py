@@ -26,16 +26,13 @@
 
 # Naming:
 #
-# raw data: The raw unparsed data produced by the data source (_execute()).
-#           For the agent this is the whole byte string received from the
-#           agent. For SNMP this is a python data structure containing
-#           all OID/values received from SNMP.
-# info:     The parsed raw data recevied from the data source (run()).
-#           The transformation from the raw data is done by the
-#           _convert_to_infos() method of the source.
-# host_info A wrapper object for the "info" and other information like
-#           cache info and piggyback lines that is used to process the
-#           data within Check_MK.
+# raw data:      The raw unparsed data produced by the data source (_execute()).
+#                For the agent this is the whole byte string received from the
+#                agent. For SNMP this is a python data structure containing
+#                all OID/values received from SNMP.
+# host_sections: A wrapper object for the "sections" and other information like
+#                cache info and piggyback lines that is used to process the
+#                data within Check_MK.
 
 import ast
 import os
@@ -67,7 +64,7 @@ from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .tcp import TCPDataSource
 from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
-from .host_info import HostInfo
+from .host_sections import HostSections
 
 # TODO: Refactor this to the DataSources() object. To be able to do this we need to refactor
 # several call sites first to work only with a single DataSources() object during processing
@@ -87,17 +84,21 @@ g_data_source_errors = {}
 #   | to gather data for the monitoring (checking, inventory, discovery).  |
 #   '----------------------------------------------------------------------'
 # TODO: Move this to the sources? Or is it another layer on top of the sources? Refactor this to
-#       a dedicated object HostInfos().
+#       a dedicated object HostSections().
 
-def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
-    """Generic function to gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
+def get_host_sections(sources, hostname, ipaddress, max_cachefile_age=None):
+    """Generic function to gather ALL host info data for any host (hosts, nodes, clusters) in
+    Check_MK.
 
-    Returns a HostInfo() object of already parsed info constructs.
+    Returns a dictionary object of already parsed HostSections() constructs for each related host.
+    For single hosts it's just a single entry in the dictionary. For cluster hosts it contains one
+    HostSections() entry for each related node.
 
     Communication errors are not raised through by this functions. All agent related errors are
     stored in the g_data_source_errors construct which can be accessed by the caller to get
     the errors of each data source. The caller should do this, e.g. using
-    data_sources.get_data_source_errors_of_host() and transparently display the errors to the users.
+    data_sources.get_data_source_errors_of_host() and transparently display the errors to the
+    users.
     """
 
     # First abstract clusters/nodes/hosts
@@ -114,9 +115,9 @@ def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
         import abstract
         abstract.DataSource.set_may_use_cache_file()
 
-    # Special agents can produce data for the same check_type on the same host, in this case
+    # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    all_host_infos = {}
+    multi_host_sections = {}
     for this_hostname, this_ipaddress, this_max_cachfile_age in hosts:
         # In case a max_cachefile_age is given with the function call, always use this one
         # instead of the host individual one. This is only used in discovery mode.
@@ -126,38 +127,39 @@ def get_host_infos(sources, hostname, ipaddress, max_cachefile_age=None):
             sources.set_max_cachefile_age(this_max_cachfile_age)
 
         for source in sources.get_data_sources():
-            host_info_of_source = source.run(this_hostname, this_ipaddress)
+            host_sections_from_source = source.run(this_hostname, this_ipaddress)
 
-            host_info = all_host_infos.setdefault((this_hostname, this_ipaddress), HostInfo())
-            host_info.update(host_info_of_source)
+            host_sections = multi_host_sections.setdefault((this_hostname, this_ipaddress), HostSections())
+            host_sections.update(host_sections_from_source)
 
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
-        cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_info.piggybacked_lines)
+        cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_lines)
 
-    return all_host_infos
+    return multi_host_sections
 
 
-def get_info_for_check(all_host_infos, hostname, ipaddress, check_type, for_discovery):
-    """Prepares the info construct for a Check_MK check on ANY host
+def get_section_content_for_check(multi_host_sections, hostname, ipaddress, check_plugin_name, for_discovery):
+    """Prepares the section_content construct for a Check_MK check on ANY host
 
-    The info construct is then handed over to the check or discovery functions
-    for doing their work.
+    The section_content construct is then handed over to the check, inventory or
+    discovery functions for doing their work.
 
-    If the host is a cluster, the information from all its nodes is used.
+    If the host is a cluster, the sections from all its nodes is merged together
+    here. Optionally the node info is added to the nodes section content.
 
-    It receives the whole all_host_infos data and cares about these aspects:
+    It receives the whole multi_host_sections data and cares about these aspects:
 
-    a) Extract the section for the given check_type
-    b) Adds node_info to the info (if check asks for this)
+    a) Extract the section_content for the given check_plugin_name
+    b) Adds node_info to the section_content (if check asks for this)
     c) Applies the parse function (if check has some)
     d) Adds extra_sections (if check asks for this)
        and also applies node_info and extra_section handling to this
 
-    It can return an info construct or None when there is no info for this check
-    available.
+    It can return an section_content construct or None when there is no section content
+    for this check available.
     """
-    section_name = check_type.split('.')[0] # make e.g. 'lsi' from 'lsi.arrays'
+    section_name = checks.section_name_of(check_plugin_name)
 
     # First abstract cluster / non cluster hosts
     host_entries = []
@@ -173,11 +175,12 @@ def get_info_for_check(all_host_infos, hostname, ipaddress, check_type, for_disc
     section_content = None
     for host_entry in host_entries:
         try:
-            host_section_content = all_host_infos[host_entry].info[section_name]
+            host_section_content = multi_host_sections[host_entry].sections[section_name]
         except KeyError:
             continue
 
-        host_section_content = _update_info_with_node_info(host_section_content, check_type, host_entry[0], for_discovery)
+        host_section_content = _update_with_node_column(host_section_content,
+                                      check_plugin_name, host_entry[0], for_discovery)
 
         if section_content is None:
             section_content = []
@@ -187,16 +190,19 @@ def get_info_for_check(all_host_infos, hostname, ipaddress, check_type, for_disc
     if section_content is None:
         return None
 
-    section_content = _update_info_with_parse_function(section_content, section_name)
-    section_content = _update_info_with_extra_sections(section_content, all_host_infos, hostname, ipaddress, section_name, for_discovery)
+    assert type(section_content) == list
+
+    section_content = _update_with_parse_function(section_content, section_name)
+    section_content = _update_with_extra_sections(section_content, multi_host_sections,
+                                    hostname, ipaddress, section_name, for_discovery)
 
     return section_content
 
 
-def _update_info_with_node_info(info, check_type, hostname, for_discovery):
-    """Add cluster node information to the host info
+def _update_with_node_column(section_content, check_plugin_name, hostname, for_discovery):
+    """Add cluster node information to the section content
 
-    If the check want's the node info, we add an additional column (as the first column) with the
+    If the check want's the node column, we add an additional column (as the first column) with the
     name of the node or None in case of non-clustered nodes.
 
     Whether or not a node info is requested by a check is not a property of the agent section. Each
@@ -207,52 +213,54 @@ def _update_info_with_node_info(info, check_type, hostname, for_discovery):
     be added to the cluster or the node. This decision is made later during creation of the
     configuation. This means that the discovery function must work independent from the node info.
     """
-    if check_type not in checks.check_info or not checks.check_info[check_type]["node_info"]:
-        return info # unknown check_type or does not want node info -> do nothing
+    if check_plugin_name not in checks.check_info or not checks.check_info[check_plugin_name]["node_info"]:
+        return section_content # unknown check_plugin_name or does not want node info -> do nothing
 
     if for_discovery:
         node_name = None
     else:
         node_name = hostname
 
-    return _add_nodeinfo(info, node_name)
+    return _add_node_column(section_content, node_name)
 
 
-def _add_nodeinfo(info, nodename):
-    new_info = []
-    for line in info:
+def _add_node_column(section_content, nodename):
+    new_section_content = []
+    for line in section_content:
         if len(line) > 0 and type(line[0]) == list:
             new_entry = []
             for entry in line:
                 new_entry.append([ nodename ] + entry)
-            new_info.append(new_entry)
+            new_section_content.append(new_entry)
         else:
-            new_info.append([ nodename ] + line)
-    return new_info
+            new_section_content.append([ nodename ] + line)
+    return new_section_content
 
 
-def _update_info_with_extra_sections(info, all_host_infos, hostname, ipaddress, section_name, for_discovery):
-    """Adds additional agent sections to the info the check receives.
+def _update_with_extra_sections(section_content, multi_host_sections, hostname, ipaddress,
+                                section_name, for_discovery):
+    """Adds additional agent sections to the section_content the check receives.
 
     Please note that this is not a check/subcheck individual setting. This option is related
     to the agent section.
     """
     if section_name not in checks.check_info or not checks.check_info[section_name]["extra_sections"]:
-        return info
+        return section_content
 
     # In case of extra_sections the existing info is wrapped into a new list to which all
     # extra sections are appended
-    info = [ info ]
+    section_content = [ section_content ]
     for extra_section_name in checks.check_info[section_name]["extra_sections"]:
-        info.append(get_info_for_check(all_host_infos, hostname, ipaddress, extra_section_name, for_discovery))
+        section_content.append(get_section_content_for_check(multi_host_sections, hostname, ipaddress,
+                                                             extra_section_name, for_discovery))
 
-    return info
+    return section_content
 
 
-def _update_info_with_parse_function(info, section_name):
-    """Transform the info using the defined parse functions.
+def _update_with_parse_function(section_content, section_name):
+    """Transform the section_content using the defined parse functions.
 
-    Some check types define a parse function that is used to transform the info
+    Some checks define a parse function that is used to transform the section_content
     somehow. It is applied by this function.
 
     Please note that this is not a check/subcheck individual setting. This option is related
@@ -262,21 +270,21 @@ def _update_info_with_parse_function(info, section_name):
     MKParseFunctionError() exceptions."""
 
     if section_name not in checks.check_info:
-        return info
+        return section_content
 
     parse_function = checks.check_info[section_name]["parse_function"]
     if not parse_function:
-        return info
+        return section_content
 
     try:
         item_state.set_item_state_prefix(section_name, None)
-        return parse_function(info)
+        return parse_function(section_content)
     except Exception:
         if cmk.debug.enabled():
             raise
         raise MKParseFunctionError(*sys.exc_info())
 
-    return info
+    return section_content
 
 
 #.
@@ -399,24 +407,24 @@ class DataSources(object):
         return special_agents
 
 
-    def get_check_types(self, hostname, ipaddress):
-        """Returns the list of check types the caller may execute on the host_infos produced
+    def get_check_plugin_names(self, hostname, ipaddress):
+        """Returns the list of check types the caller may execute on the sections produced
         by these sources.
 
         Either returns a list of enforced check types (if set before) or ask each individual
         data source for it's supported check types and return a list of these types.
         """
-        check_types = set()
+        check_plugin_names = set()
 
         for source in self._sources.values():
-            check_types.update(source.get_check_types(hostname, ipaddress))
+            check_plugin_names.update(source.get_check_plugin_names(hostname, ipaddress))
 
-        return list(check_types)
+        return list(check_plugin_names)
 
 
-    def enforce_check_types(self, check_types):
+    def enforce_check_plugin_names(self, check_plugin_names):
         for source in self.get_data_sources():
-            source.enforce_check_types(check_types)
+            source.enforce_check_plugin_names(check_plugin_names)
 
 
     def get_data_sources(self):

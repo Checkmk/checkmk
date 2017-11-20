@@ -122,7 +122,7 @@ def clear_item_states_by_full_keys(full_keys):
 
     The items are deleted by their full identifiers, not only the
     names specified with set_item_state(). For checks this is
-    normally (<check_name>, <item>, <user_key>).
+    normally (<check_plugin_name>, <item>, <user_key>).
     """
     for key in full_keys:
         try:

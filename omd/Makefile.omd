@@ -21,7 +21,7 @@ ifneq (,$(wildcard $(REPO_PATH)/managed))
     EDITION_SHORT  := cme
 endif
 
-CMK_VERSION        := 1.5.0i1
+CMK_VERSION        := 1.5.0i1p1
 OMD_SERIAL         := 38
 # Will be set to ".demo" by cmk build system when building a demo package
 DEMO_SUFFIX        :=

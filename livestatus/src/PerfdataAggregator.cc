@@ -23,46 +23,29 @@
 // Boston, MA 02110-1301 USA.
 
 #include "PerfdataAggregator.h"
-#include <cctype>
 #include <cmath>
-#include <cstdlib>
+#include <iterator>
+#include <sstream>
+#include <stdexcept>
 #include <utility>
-#include <vector>
 #include "Renderer.h"
 #include "Row.h"
 #include "StringColumn.h"
 #include "contact_fwd.h"
-#include "strutil.h"
 
 void PerfdataAggregator::consume(Row row, const contact * /* auth_user */,
                                  std::chrono::seconds /* timezone_offset */) {
-    std::string perf_data = _column->getValue(row);
-    std::vector<char> perf_data_vec(perf_data.begin(), perf_data.end());
-    perf_data_vec.push_back('\0');
-    char *scan = &perf_data_vec[0];
-
-    while (char *entry = next_field(&scan)) {
-        char *start_of_varname = entry;
-        char *place_of_equal = entry;
-        while ((*place_of_equal != 0) && *place_of_equal != '=') {
-            place_of_equal++;
+    std::istringstream iss(_column->getValue(row));
+    std::istream_iterator<std::string> end;
+    for (auto it = std::istream_iterator<std::string>(iss); it != end; ++it) {
+        auto pos = it->find('=');
+        if (pos != std::string::npos) {
+            try {
+                consumeVariable(it->substr(0, pos),
+                                std::stod(it->substr(pos + 1)));
+            } catch (const std::logic_error &e) {
+            }
         }
-        if (*place_of_equal == 0) {
-            continue;  // ignore invalid perfdata
-        }
-        *place_of_equal = 0;  // terminate varname
-        char *start_of_number = place_of_equal + 1;
-        char *end_of_number = start_of_number;
-        while ((*end_of_number != 0) &&
-               ((isdigit(*end_of_number) != 0) || *end_of_number == '.')) {
-            end_of_number++;
-        }
-        if (start_of_number == end_of_number) {
-            continue;  // empty number
-        }
-        *end_of_number = 0;  // terminate number
-        double value = strtod(start_of_number, nullptr);
-        consumeVariable(start_of_varname, value);
     }
 }
 

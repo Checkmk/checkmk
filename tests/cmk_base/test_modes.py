@@ -571,7 +571,7 @@ def test_inventory_as_check_unknown_host(test_cfg, site):
     stdout, stderr = p.communicate()
     assert p.wait() == 1
     assert stderr == ""
-    assert stdout.startswith("WARN - Inventory failed: Cannot resolve")
+    assert stdout.startswith("WARN - Inventory failed: Failed to lookup IPv4 address of")
 
 
 def test_inventory_as_check(test_cfg, site):
@@ -626,7 +626,7 @@ def test_inventory_as_check(test_cfg, site):
 #   |                                                             |___/    |
 #   '----------------------------------------------------------------------'
 
-def test_inventory_as_check_unknown_host(test_cfg, site):
+def test_check_discovery_host(test_cfg, site):
     p = site.execute(["cmk", "--check-discovery", "xyz."],
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
@@ -635,7 +635,7 @@ def test_inventory_as_check_unknown_host(test_cfg, site):
     assert stdout.startswith("WARN - Discovery failed: Failed to lookup IPv4 address")
 
 
-def test_inventory_as_check(test_cfg, site):
+def test_check_discovery(test_cfg, site):
     p = site.execute(["cmk", "--check-discovery", "modes-test-host"],
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()

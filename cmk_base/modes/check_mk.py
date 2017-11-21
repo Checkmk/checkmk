@@ -1210,7 +1210,7 @@ def mode_inventory_as_check(options, hostname):
     import cmk_base.inventory_plugins as inventory_plugins
     inventory_plugins.load()
 
-    inventory.do_inv_check(options, hostname)
+    return inventory.do_inv_check(options, hostname)
 
 modes.register(Mode(
     long_option="inventory-as-check",
@@ -1353,14 +1353,7 @@ modes.register(Mode(
 
 def mode_check_discovery(hostname):
     import cmk_base.discovery as discovery
-    import cmk_base.ip_lookup as ip_lookup
-
-    if config.is_cluster(hostname):
-        ipaddress = None
-    else:
-        ipaddress = ip_lookup.lookup_ip_address(hostname)
-
-    discovery.check_discovery(hostname, ipaddress)
+    return discovery.check_discovery(hostname, ipaddress=None)
 
 modes.register(Mode(
     long_option="check-discovery",

@@ -194,10 +194,7 @@ def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
 
 def test_mode_inventory_as_check(test_cfg, monkeypatch, mock):
     _patch_data_source_run(monkeypatch)
-
-    sys_exit = mock.patch("sys.exit", autospec=True)
-    cmk_base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1")
-    sys_exit.assert_called_once_with(0)
+    assert cmk_base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1") == 0
     assert _counter_run == 2
 
 
@@ -210,22 +207,16 @@ def test_mode_discover_marked_hosts(test_cfg, monkeypatch):
 
 def test_mode_check_discovery_default(test_cfg, monkeypatch, mock):
     _patch_data_source_run(monkeypatch, _max_cachefile_age=0)
-
-    sys_exit = mock.patch("sys.exit", autospec=True)
-    cmk_base.modes.check_mk.mode_check_discovery("ds-test-host1")
-    sys_exit.assert_called_once()
+    assert cmk_base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
     assert _counter_run == 2
 
 
 def test_mode_check_discovery_cached(test_cfg, monkeypatch, mock):
-    _patch_data_source_run(monkeypatch, _use_outdated_cache_file=True, _may_use_cache_file=True)
+    _patch_data_source_run(monkeypatch, _max_cachefile_age=120, _use_outdated_cache_file=True, _may_use_cache_file=True)
 
     try:
         cmk_base.modes.check_mk.option_cache()
-
-        sys_exit = mock.patch("sys.exit", autospec=True)
-        cmk_base.modes.check_mk.mode_check_discovery("ds-test-host1")
-        sys_exit.assert_called_once()
+        assert cmk_base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
         assert _counter_run == 2
     finally:
         # TODO: Can't the mode clean this up on it's own?
@@ -247,7 +238,7 @@ def test_mode_discover_explicit_hosts(test_cfg, monkeypatch):
 
 def test_mode_discover_explicit_hosts_cache(test_cfg, monkeypatch):
     try:
-        _patch_data_source_run(monkeypatch, _may_use_cache_file=True, _use_outdated_cache_file=True)
+        _patch_data_source_run(monkeypatch, _max_cachefile_age=120, _may_use_cache_file=True, _use_outdated_cache_file=True)
         cmk_base.modes.check_mk.option_cache()
         cmk_base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
         assert _counter_run == 2
@@ -332,7 +323,7 @@ def test_automation_try_discovery_caching(test_cfg, scan, raise_errors, monkeypa
     _patch_data_source_run(monkeypatch, **kwargs)
 
     cmk_base.automations.check_mk.AutomationTryDiscovery().execute(args)
-    assert _counter_run == 4
+    assert _counter_run == 2
 
 
 @pytest.mark.parametrize(("raise_errors"), [

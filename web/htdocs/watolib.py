@@ -3279,7 +3279,7 @@ class HostTagAttribute(Attribute):
             if value:
                 return "", title
             else:
-                return "", "%s %s" % (_("not"), title)
+                return "", "%s %s" % (_("Not"), title)
         for entry in self._taglist:
             if value == entry[0]:
                 return "", entry[1] and _u(entry[1]) or ''
@@ -6066,9 +6066,9 @@ def register_builtin_host_tags():
             ("ping", _("only ping this device"), []),
         ]),
         ("agent", "%s/%s" % (_("Data sources"), _("Check_MK Agent")), [
-                ("cmk-agent",      _("Contact either Check_MK Agent or use special agent"), ["tcp"]),
-                ("all-agents",     _("Contact Check_MK agent and all enabled special agents"), ["tcp"]),
-                ("special-agents", _("Use all enabled special agents"), ["tcp"]),
+                ("cmk-agent",      _("Contact either Check_MK Agent or use datasource program"), ["tcp"]),
+                ("all-agents",     _("Contact Check_MK agent and all enabled datasource programs"), ["tcp"]),
+                ("special-agents", _("Use all enabled datasource programs"), ["tcp"]),
                 ("no-agent",       _("No agent"), []),
             ],
             ["!ping"],

@@ -1,0 +1,11 @@
+Title: MSSQL plugin: fixed backup detection for always-on and FOC systems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511264202
+Class: fix
+
+Database backups where not dtected on always-on and FOC systems the right way.
+This has been fixed.

@@ -1,4 +1,4 @@
-Title: New WATO page "Best practices" can be used to find things to improve in your Check_MK
+Title: New WATO page "Analyze configuration" can be used to find things to improve in your Check_MK
 Level: 2
 Component: wato
 Compatible: compat
@@ -7,7 +7,7 @@ Version: 1.5.0i1
 Date: 1510931760
 Class: feature
 
-The new WATO page "Best practices" is meant to give you hints about your Check_MK installation
+The new WATO page "Analzye configuration" is meant to give you hints about your Check_MK installation
 and the things you could improve in terms of performance, reliabilty and security.
 
 In the moment you open the page, it starts analyzing your Check_MK installation and executes

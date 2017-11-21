@@ -9434,10 +9434,10 @@ def _ping(address):
 #   | checks and tells the user what could be improved.                    |
 #   '----------------------------------------------------------------------'
 
-class BPResult(object):
+class ACResult(object):
     status = None
     def __init__(self, text):
-        super(BPResult, self).__init__()
+        super(ACResult, self).__init__()
         self.text = text
 
 
@@ -9477,22 +9477,22 @@ class BPResult(object):
 
 
 
-class BPResultCRIT(BPResult):
+class ACResultCRIT(ACResult):
     status = 2
 
 
 
-class BPResultWARN(BPResult):
+class ACResultWARN(ACResult):
     status = 1
 
 
 
-class BPResultOK(BPResult):
+class ACResultOK(ACResult):
     status = 0
 
 
 
-class BPTestCategories(object):
+class ACTestCategories(object):
     usability   = "usability"
     performance = "performance"
     security    = "security"
@@ -9510,7 +9510,7 @@ class BPTestCategories(object):
 
 
 
-class BPTest(object):
+class ACTest(object):
     def __init__(self):
         self._executed = False
         self._results  = []
@@ -9544,7 +9544,7 @@ class BPTest(object):
         """Implement the test logic here. The method needs to add one or more test
         results like this:
 
-        yield BPResultOK(_("it's fine"))
+        yield ACResultOK(_("it's fine"))
         """
         raise NotImplementedError()
 
@@ -9557,7 +9557,7 @@ class BPTest(object):
                 yield result
         except Exception, e:
             log_exception()
-            result = BPResultCRIT("<pre>%s</pre>" %
+            result = ACResultCRIT("<pre>%s</pre>" %
                 _("Failed to execute the test %s: %s") % (html.attrencode(self.__class__.__name__),
                                                           html.attrencode(traceback.format_exc())))
             result.from_test(self)
@@ -9580,43 +9580,9 @@ class BPTest(object):
 
 
 
-class BPTestLiveproxyd(BPTest):
-    def category(self):
-        return "performance"
-
-
-    def title(self):
-        return _("Use Livestatus Proxy Daemon")
-
-
-    def help(self):
-        return _("The Livestatus Proxy Daemon is available with the Check_MK Enterprise Edition "
-                 "and improves the management of the inter site connections using livestatus. Using "
-                 "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
-                 "GUI and will decrease ressource usage.")
-
-
-    def is_relevant(self):
-        return True
-
-
-    def execute(self):
-        site_id = config.omd_site()
-        if site_is_using_livestatus_proxy(site_id):
-            yield BPResultOK(_("Site is using the Livestatus Proxy Daemon"))
-
-        elif not is_wato_slave_site():
-            yield BPResultWARN(_("The Livestatus Proxy is not only good for slave sites, "
-                                 "enable it for your master site"))
-
-        else:
-            yield BPResultWARN(_("Use the Livestatus Proxy Daemon for your site"))
-
-
-
-def check_best_practices():
+def check_analyze_config():
     results = []
-    for test_cls in BPTest.__subclasses__(): # pylint: disable=no-member
+    for test_cls in ACTest.__subclasses__(): # pylint: disable=no-member
         test = test_cls()
 
         if not test.is_relevant():
@@ -9628,7 +9594,7 @@ def check_best_practices():
     return results
 
 
-automation_commands["check-best-practices"] = check_best_practices
+automation_commands["check-analyze-config"] = check_analyze_config
 
 
 def site_is_using_livestatus_proxy(site_id):

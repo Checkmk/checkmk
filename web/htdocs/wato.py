@@ -16419,11 +16419,11 @@ class ModeDownloadAgents(WatoMode):
 #   | checks and tells the user what could be improved.                    |
 #   '----------------------------------------------------------------------'
 
-class ModeBestPractices(WatoMode):
+class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.paths.var_dir + "/acknowledged_bp_tests.mk"
 
     def __init__(self):
-        super(ModeBestPractices, self).__init__()
+        super(ModeAnalyzeConfig, self).__init__()
         self._acks = self._load_acknowledgements()
         self._from_vars()
 
@@ -16434,7 +16434,7 @@ class ModeBestPractices(WatoMode):
 
 
     def title(self):
-       return _("Best practices")
+       return _("Analyze configuration")
 
 
     def action(self):
@@ -16487,29 +16487,29 @@ class ModeBestPractices(WatoMode):
             html.buttonlink(html.makeuri([("show_ack", "1")]), _("Show acknowledged tests"))
 
         for category_name, results in sorted(results_by_category.items(),
-                                             key=lambda x: watolib.BPTestCategories.title(x[0])):
-            table.begin(title=watolib.BPTestCategories.title(category_name), css="data best_practices",
+                                             key=lambda x: watolib.ACTestCategories.title(x[0])):
+            table.begin(title=watolib.ACTestCategories.title(category_name), css="data analyze_config",
                         sortable=False, searchable=False)
 
             for result in sorted(results, key=lambda x: x.title):
                 table.row()
 
-                table.cell(_("Status"), css=["state", "state%d" % result.status])
+                table.cell(_("Status"), css="state state%d" % result.status)
                 html.write_text(html.attrencode(result.status_name()))
 
-                table.cell(_("Site"), css=["site"])
+                table.cell(_("Site"), css="site")
                 html.write_text(html.attrencode(result.site_id))
 
-                table.cell(_("Title"), css=["title"])
+                table.cell(_("Title"), css="title")
                 html.write_text(result.title)
                 html.open_p()
                 html.write_text(result.help)
                 html.close_p()
 
-                table.cell(_("Output"), css=["result"])
+                table.cell(_("Output"), css="result")
                 html.write_text(result.text,)
 
-                table.cell(_("Actions"), css=["buttons"], sortable=False)
+                table.cell(_("Actions"), css="buttons", sortable=False)
 
                 if self._is_whole_test_acknowledged(result):
                     html.empty_icon_button()
@@ -16581,7 +16581,7 @@ class ModeBestPractices(WatoMode):
                 elif isinstance(results_data, list):
                     test_results = []
                     for result_data in results_data:
-                        result = watolib.BPResult.from_repr(ast.literal_eval(result_data))
+                        result = watolib.ACResult.from_repr(ast.literal_eval(result_data))
                         test_results.append(result)
 
                     results_by_site[site_id] = test_results
@@ -16603,12 +16603,12 @@ class ModeBestPractices(WatoMode):
     def _perform_tests_for_site(self, site_id, result_queue):
         try:
             if config.site_is_local(site_id):
-                results = watolib.check_best_practices()
+                results = watolib.check_analyze_config()
                 results_data = [ repr(result) for result in results ]
 
             else:
                 results_data = watolib.do_remote_automation(
-                    config.site(site_id), "check-best-practices", [])
+                    config.site(site_id), "check-analyze-config", [])
 
             result_queue.put((site_id, results_data))
 
@@ -16620,7 +16620,7 @@ class ModeBestPractices(WatoMode):
     def _filter_test_results(self, results_by_category):
         for category_name, results in results_by_category.items():
             if not self._show_ok:
-                results = filter(lambda result: type(result) != BPResultOK, results)
+                results = filter(lambda result: type(result) != ACResultOK, results)
 
             if not self._show_ack:
                 results = filter(lambda result: not self._is_acknowledged(result), results)
@@ -16949,11 +16949,11 @@ from watolib import \
     ContactGroupsAttribute, \
     NagiosTextAttribute, \
     ValueSpecAttribute, \
-    BPTestCategories, \
-    BPTest, \
-    BPResultCRIT, \
-    BPResultWARN, \
-    BPResultOK
+    ACTestCategories, \
+    ACTest, \
+    ACResultCRIT, \
+    ACResultWARN, \
+    ACResultOK
 
 
 def make_action_link(vars):
@@ -17600,7 +17600,7 @@ modes = {
    "passwords"          : (["passwords"], ModePasswords),
    "edit_password"      : (["passwords"], ModeEditPassword),
    "read_only"          : (["set_read_only"], ModeManageReadOnly),
-   "best_practices"     : ([], ModeBestPractices),
+   "analyze_config"     : ([], ModeAnalyzeConfig),
 }
 
 extra_buttons = []
@@ -17885,8 +17885,8 @@ def load_plugins(force):
         _("Prevent other users from making modifications to WATO."),
         [ "admin" ])
 
-    config.declare_permission("wato.best_practices",
-        _("Access the best practice hints provided by WATO"),
+    config.declare_permission("wato.analyze_config",
+        _("Access the best analyze configuration functionality provided by WATO"),
         _("WATO has a module that gives you hints on how to tune your Check_MK installation."),
         [ "admin" ])
 

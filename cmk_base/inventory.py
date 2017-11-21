@@ -125,7 +125,7 @@ def do_inv_check(options, hostname):
         num_entries = _count_nodes(g_inv_tree)
         if not num_entries:
             console.output("OK - Found no data\n")
-            sys.exit(0)
+            return 0
 
         infotexts = []
 
@@ -163,14 +163,14 @@ def do_inv_check(options, hostname):
                 infotexts.append("%s" % exc)
 
         console.output("%s - %s\n" % (defines.short_service_state_name(state), ", ".join(infotexts)))
-        sys.exit(state)
+        return state
 
     except Exception, e:
         if cmk.debug.enabled():
             raise
         console.output("%s - Inventory failed: %s\n" %
             (defines.short_service_state_name(_inv_fail_status), e))
-        sys.exit(_inv_fail_status)
+        return _inv_fail_status
 
 
 def _do_inv_for(hostname, ipaddress):

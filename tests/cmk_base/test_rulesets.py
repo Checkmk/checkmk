@@ -9,11 +9,21 @@ import cmk
 def fake_version(monkeypatch):
     monkeypatch.setattr(cmk, "omd_version", lambda: "1.4.0i1.cee")
 
+
+@pytest.fixture(autouse=True, scope="function")
+def clear_config_caches(monkeypatch):
+    import cmk_base
+    import cmk_base.caching
+    monkeypatch.setattr(cmk_base, "config_cache", cmk_base.caching.CacheManager())
+    monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
+
+
 # TODO: Test the negations
 def test_service_extra_conf():
     # TODO: monkeypatch this!
     import cmk_base.config as config
     config.all_hosts = ["host1|tag1|tag2", "host2|tag1"]
+    config.clusters = {}
     config.collect_hosttags()
     ruleset = [
         ("1", [], rulesets.ALL_HOSTS, rulesets.ALL_SERVICES, {}),
@@ -52,13 +62,14 @@ def test_service_extra_conf():
 def test_all_matching_hosts():
     # TODO: monkeypatch this!
     import cmk_base
-    reload(cmk_base)
+    #reload(cmk_base)
 
     import cmk_base.config as config
-    reload(config)
+    #reload(config)
 
     config.distributed_wato_site = "site1"
     config.all_hosts = ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"]
+    config.clusters = {}
     config.collect_hosttags()
 
     assert rulesets.all_matching_hosts(["tag1"], rulesets.ALL_HOSTS, with_foreign_hosts=False) == \

@@ -292,6 +292,14 @@ def check_discovery(hostname, ipaddress):
              default_discovery_check_parameters()
 
     try:
+        # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
+        # ipaddress is always None
+        if ipaddress is None:
+            if config.is_cluster(hostname):
+                ipaddress = None
+            else:
+                ipaddress = ip_lookup.lookup_ip_address(hostname)
+
         sources = data_sources.DataSources(hostname)
 
         try:
@@ -427,7 +435,7 @@ def check_discovery(hostname, ipaddress):
         return status
     else:
         console.output(defines.short_service_state_name(status) + " - " + output)
-        sys.exit(status)
+        return status
 
 
 # Compute the parameters for the discovery check for a host. Note:

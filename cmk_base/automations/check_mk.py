@@ -1212,11 +1212,15 @@ class AutomationGetAgentOutput(Automation):
             if ty == "agent":
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-                agent_output = ""
+                data_sources.abstract.DataSource.set_may_use_cache_file(not data_sources.abstract.DataSource.is_agent_cache_disabled())
+
                 sources = data_sources.DataSources(hostname)
+                sources.set_max_cachefile_age(config.check_max_cachefile_age)
+
+                agent_output = ""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
-                        agent_output += source.run(hostname, ipaddress)
+                        agent_output += source.run(hostname, ipaddress, get_raw_data=True)
                 info = agent_output
 
                 # Optionally show errors of problematic data sources

@@ -55,237 +55,17 @@ import cmk_base.checks as checks
 import cmk_base.item_state as item_state
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.piggyback
-import cmk_base.snmp as snmp
-import cmk_base.core_config as core_config
-from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKDataSourceError, MKSNMPError, \
-                                MKParseFunctionError, MKTimeout
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .tcp import TCPDataSource
 from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
-from .host_sections import HostSections
+from .host_sections import HostSections, MultiHostSections
 
 # TODO: Refactor this to the DataSources() object. To be able to do this we need to refactor
 # several call sites first to work only with a single DataSources() object during processing
 # of a call.
 g_data_source_errors = {}
-
-#.
-#   .--Host infos----------------------------------------------------------.
-#   |             _   _           _     _        __                        |
-#   |            | | | | ___  ___| |_  (_)_ __  / _| ___  ___              |
-#   |            | |_| |/ _ \/ __| __| | | '_ \| |_ / _ \/ __|             |
-#   |            |  _  | (_) \__ \ |_  | | | | |  _| (_) \__ \             |
-#   |            |_| |_|\___/|___/\__| |_|_| |_|_|  \___/|___/             |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Processing of host infos. This is the standard mechanism of Check_MK |
-#   | to gather data for the monitoring (checking, inventory, discovery).  |
-#   '----------------------------------------------------------------------'
-# TODO: Move this to the sources? Or is it another layer on top of the sources? Refactor this to
-#       a dedicated object HostSections().
-
-def get_host_sections(sources, hostname, ipaddress, max_cachefile_age=None):
-    """Generic function to gather ALL host info data for any host (hosts, nodes, clusters) in
-    Check_MK.
-
-    Returns a dictionary object of already parsed HostSections() constructs for each related host.
-    For single hosts it's just a single entry in the dictionary. For cluster hosts it contains one
-    HostSections() entry for each related node.
-
-    Communication errors are not raised through by this functions. All agent related errors are
-    stored in the g_data_source_errors construct which can be accessed by the caller to get
-    the errors of each data source. The caller should do this, e.g. using
-    data_sources.get_data_source_errors_of_host() and transparently display the errors to the
-    users.
-    """
-
-    # First abstract clusters/nodes/hosts
-    hosts = []
-    nodes = config.nodes_of(hostname)
-    if nodes is not None:
-        for node_hostname in nodes:
-            node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
-            hosts.append((node_hostname, node_ipaddress, config.cluster_max_cachefile_age))
-    else:
-        hosts.append((hostname, ipaddress, config.check_max_cachefile_age))
-
-    if nodes:
-        import abstract
-        abstract.DataSource.set_may_use_cache_file()
-
-    # Special agents can produce data for the same check_plugin_name on the same host, in this case
-    # the section lines need to be extended
-    multi_host_sections = {}
-    for this_hostname, this_ipaddress, this_max_cachfile_age in hosts:
-        # In case a max_cachefile_age is given with the function call, always use this one
-        # instead of the host individual one. This is only used in discovery mode.
-        if max_cachefile_age is not None:
-            sources.set_max_cachefile_age(max_cachefile_age)
-        else:
-            sources.set_max_cachefile_age(this_max_cachfile_age)
-
-        for source in sources.get_data_sources():
-            host_sections_from_source = source.run(this_hostname, this_ipaddress)
-
-            host_sections = multi_host_sections.setdefault((this_hostname, this_ipaddress), HostSections())
-            host_sections.update(host_sections_from_source)
-
-        # Store piggyback information received from all sources of this host. This
-        # also implies a removal of piggyback files received during previous calls.
-        cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_lines)
-
-    return multi_host_sections
-
-
-def get_section_content_for_check(multi_host_sections, hostname, ipaddress, check_plugin_name, for_discovery):
-    """Prepares the section_content construct for a Check_MK check on ANY host
-
-    The section_content construct is then handed over to the check, inventory or
-    discovery functions for doing their work.
-
-    If the host is a cluster, the sections from all its nodes is merged together
-    here. Optionally the node info is added to the nodes section content.
-
-    It receives the whole multi_host_sections data and cares about these aspects:
-
-    a) Extract the section_content for the given check_plugin_name
-    b) Adds node_info to the section_content (if check asks for this)
-    c) Applies the parse function (if check has some)
-    d) Adds extra_sections (if check asks for this)
-       and also applies node_info and extra_section handling to this
-
-    It can return an section_content construct or None when there is no section content
-    for this check available.
-    """
-    section_name = checks.section_name_of(check_plugin_name)
-
-    # First abstract cluster / non cluster hosts
-    host_entries = []
-    nodes = config.nodes_of(hostname)
-    if nodes != None:
-        for node_hostname in nodes:
-            host_entries.append((node_hostname, ip_lookup.lookup_ip_address(node_hostname)))
-    else:
-        host_entries.append((hostname, ipaddress))
-
-    # Now get the section_content from the required hosts and merge them together to
-    # a single section_content. For each host optionally add the node info.
-    section_content = None
-    for host_entry in host_entries:
-        try:
-            host_section_content = multi_host_sections[host_entry].sections[section_name]
-        except KeyError:
-            continue
-
-        host_section_content = _update_with_node_column(host_section_content,
-                                      check_plugin_name, host_entry[0], for_discovery)
-
-        if section_content is None:
-            section_content = []
-
-        section_content += host_section_content
-
-    if section_content is None:
-        return None
-
-    assert type(section_content) == list
-
-    section_content = _update_with_parse_function(section_content, section_name)
-    section_content = _update_with_extra_sections(section_content, multi_host_sections,
-                                    hostname, ipaddress, section_name, for_discovery)
-
-    return section_content
-
-
-def _update_with_node_column(section_content, check_plugin_name, hostname, for_discovery):
-    """Add cluster node information to the section content
-
-    If the check want's the node column, we add an additional column (as the first column) with the
-    name of the node or None in case of non-clustered nodes.
-
-    Whether or not a node info is requested by a check is not a property of the agent section. Each
-    check/subcheck can define the requirement on it's own.
-
-    When called for the discovery, the node name is always set to "None". During the discovery of
-    services we behave like a non-cluster because we don't know whether or not the service will
-    be added to the cluster or the node. This decision is made later during creation of the
-    configuation. This means that the discovery function must work independent from the node info.
-    """
-    if check_plugin_name not in checks.check_info or not checks.check_info[check_plugin_name]["node_info"]:
-        return section_content # unknown check_plugin_name or does not want node info -> do nothing
-
-    if for_discovery:
-        node_name = None
-    else:
-        node_name = hostname
-
-    return _add_node_column(section_content, node_name)
-
-
-def _add_node_column(section_content, nodename):
-    new_section_content = []
-    for line in section_content:
-        if len(line) > 0 and type(line[0]) == list:
-            new_entry = []
-            for entry in line:
-                new_entry.append([ nodename ] + entry)
-            new_section_content.append(new_entry)
-        else:
-            new_section_content.append([ nodename ] + line)
-    return new_section_content
-
-
-def _update_with_extra_sections(section_content, multi_host_sections, hostname, ipaddress,
-                                section_name, for_discovery):
-    """Adds additional agent sections to the section_content the check receives.
-
-    Please note that this is not a check/subcheck individual setting. This option is related
-    to the agent section.
-    """
-    if section_name not in checks.check_info or not checks.check_info[section_name]["extra_sections"]:
-        return section_content
-
-    # In case of extra_sections the existing info is wrapped into a new list to which all
-    # extra sections are appended
-    section_content = [ section_content ]
-    for extra_section_name in checks.check_info[section_name]["extra_sections"]:
-        section_content.append(get_section_content_for_check(multi_host_sections, hostname, ipaddress,
-                                                             extra_section_name, for_discovery))
-
-    return section_content
-
-
-def _update_with_parse_function(section_content, section_name):
-    """Transform the section_content using the defined parse functions.
-
-    Some checks define a parse function that is used to transform the section_content
-    somehow. It is applied by this function.
-
-    Please note that this is not a check/subcheck individual setting. This option is related
-    to the agent section.
-
-    All exceptions raised by the parse function will be catched and re-raised as
-    MKParseFunctionError() exceptions."""
-
-    if section_name not in checks.check_info:
-        return section_content
-
-    parse_function = checks.check_info[section_name]["parse_function"]
-    if not parse_function:
-        return section_content
-
-    try:
-        item_state.set_item_state_prefix(section_name, None)
-        return parse_function(section_content)
-    except Exception:
-        if cmk.debug.enabled():
-            raise
-        raise MKParseFunctionError(*sys.exc_info())
-
-    return section_content
-
 
 #.
 #   .--Data Sources--------------------------------------------------------.
@@ -434,6 +214,59 @@ class DataSources(object):
     def set_max_cachefile_age(self, max_cachefile_age):
         for source in self.get_data_sources():
             source.set_max_cachefile_age(max_cachefile_age)
+
+
+    def get_host_sections(self, hostname, ipaddress, max_cachefile_age=None):
+        """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
+
+        Returns a dictionary object of already parsed HostSections() constructs for each related host.
+        For single hosts it's just a single entry in the dictionary. For cluster hosts it contains one
+        HostSections() entry for each related node.
+
+        Communication errors are not raised through by this functions. All agent related errors are
+        stored in the g_data_source_errors construct which can be accessed by the caller to get
+        the errors of each data source. The caller should do this, e.g. using
+        data_sources.get_data_source_errors_of_host() and transparently display the errors to the
+        users.
+        """
+
+        # First abstract clusters/nodes/hosts
+        hosts = []
+        nodes = config.nodes_of(hostname)
+        if nodes is not None:
+            for node_hostname in nodes:
+                node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
+                hosts.append((node_hostname, node_ipaddress, config.cluster_max_cachefile_age))
+        else:
+            hosts.append((hostname, ipaddress, config.check_max_cachefile_age))
+
+        if nodes:
+            import abstract
+            abstract.DataSource.set_may_use_cache_file()
+
+        # Special agents can produce data for the same check_plugin_name on the same host, in this case
+        # the section lines need to be extended
+        multi_host_sections = MultiHostSections()
+        for this_hostname, this_ipaddress, this_max_cachfile_age in hosts:
+            # In case a max_cachefile_age is given with the function call, always use this one
+            # instead of the host individual one. This is only used in discovery mode.
+            if max_cachefile_age is not None:
+                self.set_max_cachefile_age(max_cachefile_age)
+            else:
+                self.set_max_cachefile_age(this_max_cachfile_age)
+
+            for source in self.get_data_sources():
+                host_sections_from_source = source.run(this_hostname, this_ipaddress)
+                host_sections = multi_host_sections.add_or_get_host_sections(this_hostname, this_ipaddress)
+                host_sections.update(host_sections_from_source)
+
+            # Store piggyback information received from all sources of this host. This
+            # also implies a removal of piggyback files received during previous calls.
+            cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_lines)
+
+        return multi_host_sections
+
+
 
 
 #.

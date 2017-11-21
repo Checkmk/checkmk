@@ -253,7 +253,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fet
     sources.enforce_check_plugin_names(only_check_plugin_names)
 
     # Gather the data from the sources
-    multi_host_sections = data_sources.get_host_sections(sources, hostname, ipaddress)
+    multi_host_sections = sources.get_host_sections(hostname, ipaddress)
 
     for check_plugin_name, item, params, description in table:
         if only_check_plugin_names != None and check_plugin_name not in only_check_plugin_names:
@@ -267,8 +267,8 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fet
 
     if fetch_agent_version:
         if config.is_tcp_host(hostname):
-            section_content = data_sources.get_section_content_for_check(multi_host_sections,
-                                    hostname, ipaddress, "check_mk", for_discovery=False) or []
+            section_content = multi_host_sections.get_section_content(hostname, ipaddress,
+                                                        "check_mk", for_discovery=False) or []
 
             for line in section_content:
                 value = " ".join(line[1:]) if len(line) > 1 else None
@@ -302,7 +302,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     section_name = checks.section_name_of(check_plugin_name)
 
     try:
-        section_content = data_sources.get_section_content_for_check(multi_host_sections, hostname,
+        section_content = multi_host_sections.get_section_content(hostname,
                                                     ipaddress, section_name, for_discovery=False)
     except MKParseFunctionError, e:
         x = e.exc_info()
@@ -364,7 +364,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
                 return a
             return min(a,b)
 
-        for host_sections in multi_host_sections.values():
+        for host_sections in multi_host_sections.get_host_sections().values():
             section_entries = host_sections.cache_info
             if section_name in section_entries:
                 cached_at, cache_interval = section_entries[section_name]

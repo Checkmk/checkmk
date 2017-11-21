@@ -1,0 +1,48 @@
+Title: Check_MK hosts can now use multiple agents
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511273074
+Class: feature
+
+It is now possible to configure multiple Check_MK agents for a single host.
+
+With this change, you can now configure e.g. a ESX VCenter to use the ESX special agent
+together with the regular Check_MK agent installed on the monitored host.
+
+All existing hosts remain using their existing configuration after an update. Also
+new hosts only use a single Check_MK agent using the already existing logic where
+a) The Check_MK agent was contacted via TCP or b) a configured data source program
+(special agent or other program invocation) was used.
+
+The new feature can be enabled by changing the host attribute (on hosts or folders)
+"Check_MK Agent" to e.g. "Contact Check_MK agent and all datasource programs". This
+will make Check_MK use all data sources matching on this host instead of just picking
+the first matching one. There is also an alternative option "Use all enabled datasources"
+available which can be used to execute only the data sources matching the host.
+
+On the way to this change we have changed server previously existing things:
+
+<ul>
+    <li>The host tag group <tt>agent</tt> has been split into multiple tag groups to be
+    more flexible.</li>
+    <li>The tag group <tt>ping</tt> and <tt>snmp</tt> have been added and provide the options
+    which were previously available in the single <tt>agent</tt> attribute.</li>
+    <li>All these tag groups are treated as <i>builtin</i> tag groups defined by Check_MK
+    (can not be modified anymore).</li>
+    <li>Existing configurations of hosts/folders will be translated seamlessly into the new
+    format.</li>
+    <li>During updates your site will only apply the changes above in case you have an unmodified
+    <tt>agent</tt> tag group. In case you have modified it in any way, these changes will not
+    be applied and you won't be able to use the changes introduced with this werk. You will then
+    have to clean up your local changes. Once you delete your local tag group "agent", the
+    builtin one will be used automatically.</li>
+    <li>The <i>Edit host</i> dialog has split up into more independent sections, the new ones
+    are <i>Address</i> and <i>Data sources</i> to better visualize the relation of the different
+    attributes.</li>
+</ul>
+
+<i>Please note:</i> In case you are using the Web-API calls to create or modify hosts or folders
+while setting attributes we changed with this change, you may have to change your API calls.

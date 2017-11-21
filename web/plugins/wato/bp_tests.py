@@ -27,9 +27,9 @@
 import requests
 
 
-class BPTestPersistentConnections(BPTest):
+class ACTestPersistentConnections(ACTest):
     def category(self):
-        return BPTestCategories.performance
+        return ACTestCategories.performance
 
 
     def title(self):
@@ -58,26 +58,59 @@ class BPTestPersistentConnections(BPTest):
         persist = site_config.get("persist", False)
 
         if persist and watolib.site_is_using_livestatus_proxy(site_id):
-            yield BPResultWARN(
+            yield ACResultWARN(
                 _("Persistent connections are nearly useless "
                   "with Livestatus Proxy Daemon. Better disable it."))
 
         elif persist:
             # TODO: At least for the local site we could calculate this.
             #       Or should we get the apache config from the remote site via automation?
-            yield BPResultWARN(
+            yield ACResultWARN(
                 _("Either disable persistent connections or "
                   "carefully review maximum number of apache processes and "
                   "possible livestatus connections."))
 
         else:
-            yield BPResultOK(_("Is not using persistent connections."))
+            yield ACResultOK(_("Is not using persistent connections."))
 
 
-
-class BPTestLivestatusUsage(BPTest):
+class ACTestLiveproxyd(ACTest):
     def category(self):
-        return BPTestCategories.performance
+        return "performance"
+
+
+    def title(self):
+        return _("Use Livestatus Proxy Daemon")
+
+
+    def help(self):
+        return _("The Livestatus Proxy Daemon is available with the Check_MK Enterprise Edition "
+                 "and improves the management of the inter site connections using livestatus. Using "
+                 "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
+                 "GUI and will decrease ressource usage.")
+
+
+    def is_relevant(self):
+        return True
+
+
+    def execute(self):
+        site_id = config.omd_site()
+        if site_is_using_livestatus_proxy(site_id):
+            yield ACResultOK(_("Site is using the Livestatus Proxy Daemon"))
+
+        elif not is_wato_slave_site():
+            yield ACResultWARN(_("The Livestatus Proxy is not only good for slave sites, "
+                                 "enable it for your master site"))
+
+        else:
+            yield ACResultWARN(_("Use the Livestatus Proxy Daemon for your site"))
+
+
+
+class ACTestLivestatusUsage(ACTest):
+    def category(self):
+        return ACTestCategories.performance
 
 
     def title(self):
@@ -112,11 +145,11 @@ class BPTestLivestatusUsage(BPTest):
 
         usage_warn, usage_crit = 80, 95
         if usage_perc >= usage_crit:
-            cls = BPResultCRIT
+            cls = ACResultCRIT
         elif usage_perc >= usage_warn:
-            cls = BPResultWARN
+            cls = ACResultWARN
         else:
-            cls = BPResultOK
+            cls = ACResultOK
 
         yield cls(_("The current livestatus usage is %.2f%%. You have a connection overflow "
                     "rate of %.2f/s. %d of %d connections used") %
@@ -124,9 +157,9 @@ class BPTestLivestatusUsage(BPTest):
 
 
 
-class BPTestLDAPSecured(BPTest):
+class ACTestLDAPSecured(ACTest):
     def category(self):
-        return BPTestCategories.security
+        return ACTestCategories.security
 
 
     def title(self):
@@ -151,17 +184,17 @@ class BPTestLDAPSecured(BPTest):
                 continue
 
             if connection.use_ssl():
-                yield BPResultOK(_("%s: Uses SSL") % connection_id)
+                yield ACResultOK(_("%s: Uses SSL") % connection_id)
 
             else:
-                yield BPResultWARN(_("%s: Not using SSL. Consider enabling it in the "
+                yield ACResultWARN(_("%s: Not using SSL. Consider enabling it in the "
                     "connection settings.") % connection_id)
 
 
 
-class BPTestNumberOfUsers(BPTest):
+class ACTestNumberOfUsers(ACTest):
     def category(self):
-        return BPTestCategories.performance
+        return ACTestCategories.performance
 
 
     def title(self):
@@ -186,16 +219,16 @@ class BPTestNumberOfUsers(BPTest):
         user_warn_threshold = 500
 
         if num_users <= user_warn_threshold:
-            yield BPResultOK(_("You have %d users configured") % num_users)
+            yield ACResultOK(_("You have %d users configured") % num_users)
         else:
-            yield BPResultWARN(_("You have %d users configured. Please review the number of "
+            yield ACResultWARN(_("You have %d users configured. Please review the number of "
                                  "users you have configured in Check_MK.") % num_users)
 
 
 
-class BPTestHTTPSecured(BPTest):
+class ACTestHTTPSecured(ACTest):
     def category(self):
-        return BPTestCategories.security
+        return ACTestCategories.security
 
 
     def title(self):
@@ -216,15 +249,15 @@ class BPTestHTTPSecured(BPTest):
 
     def execute(self):
         if html.is_ssl_request():
-            yield BPResultOK(_("Site is using HTTPS"))
+            yield ACResultOK(_("Site is using HTTPS"))
         else:
-            yield BPResultWARN(_("Site is using plain HTTP. Consider enabling HTTPS."))
+            yield ACResultWARN(_("Site is using plain HTTP. Consider enabling HTTPS."))
 
 
 
-class BPTestBackupConfigured(BPTest):
+class ACTestBackupConfigured(ACTest):
     def category(self):
-        return BPTestCategories.reliability
+        return ACTestCategories.reliability
 
 
     def title(self):
@@ -250,15 +283,15 @@ class BPTestBackupConfigured(BPTest):
     def execute(self):
         jobs = SiteBackupJobs()
         if jobs.choices():
-            yield BPResultOK(_("You have configured %d backup jobs") % len(jobs.choices()))
+            yield ACResultOK(_("You have configured %d backup jobs") % len(jobs.choices()))
         else:
-            yield BPResultWARN(_("There is no backup job configured"))
+            yield ACResultWARN(_("There is no backup job configured"))
 
 
 
-class BPTestBackupNotEncryptedConfigured(BPTest):
+class ACTestBackupNotEncryptedConfigured(ACTest):
     def category(self):
-        return BPTestCategories.security
+        return ACTestCategories.security
 
 
     def title(self):
@@ -280,9 +313,9 @@ class BPTestBackupNotEncryptedConfigured(BPTest):
         jobs = SiteBackupJobs()
         for job_ident, job in jobs.objects.items():
             if job.is_encrypted():
-                yield BPResultOK(_("The job \"%s\" is encrypted") % job.title())
+                yield ACResultOK(_("The job \"%s\" is encrypted") % job.title())
             else:
-                yield BPResultWARN(_("There job \"%s\" is not encrypted") % job.title())
+                yield ACResultWARN(_("There job \"%s\" is not encrypted") % job.title())
 
 
 
@@ -319,9 +352,9 @@ class BPApacheTest(object):
 
 
 
-class BPTestApacheNumberOfProcesses(BPTest, BPApacheTest):
+class ACTestApacheNumberOfProcesses(ACTest, BPApacheTest):
     def category(self):
-        return BPTestCategories.performance
+        return ACTestCategories.performance
 
 
     def title(self):
@@ -347,7 +380,7 @@ class BPTestApacheNumberOfProcesses(BPTest, BPApacheTest):
 
         estimated_memory_size = process_limit * (average_process_size * 1.2)
 
-        yield BPResultWARN(_("The apache may start up to %d processes while the current "
+        yield ACResultWARN(_("The apache may start up to %d processes while the current "
                              "average process size is %s. With this numbers the apache may "
                              "use up to %s RAM. Please ensure that your system is able to "
                              "handle this.") % (process_limit, cmk.render.bytes(average_process_size),
@@ -372,9 +405,9 @@ class BPTestApacheNumberOfProcesses(BPTest, BPApacheTest):
 
 
 
-class BPTestApacheProcessUsage(BPTest, BPApacheTest):
+class ACTestApacheProcessUsage(ACTest, BPApacheTest):
     def category(self):
-        return BPTestCategories.performance
+        return ACTestCategories.performance
 
 
     def title(self):
@@ -402,11 +435,11 @@ class BPTestApacheProcessUsage(BPTest, BPApacheTest):
 
         usage_warn, usage_crit = 60, 90
         if usage >= usage_crit:
-            cls = BPResultCRIT
+            cls = ACResultCRIT
         elif usage >= usage_warn:
-            cls = BPResultWARN
+            cls = ACResultWARN
         else:
-            cls = BPResultOK
+            cls = ACResultOK
 
 
         yield cls(_("%d of %d the configured maximum of processes are started. This is a usage of %0.2f %%.") %
@@ -414,9 +447,9 @@ class BPTestApacheProcessUsage(BPTest, BPApacheTest):
 
 
 
-class BPTestCheckMKHelperUsage(BPTest):
+class ACTestCheckMKHelperUsage(ACTest):
     def category(self):
-        return BPTestCategories.performance
+        return ACTestCategories.performance
 
 
     def title(self):
@@ -459,24 +492,24 @@ class BPTestCheckMKHelperUsage(BPTest):
 
         usage_warn, usage_crit = 85, 95
         if helper_usage_perc >= usage_crit:
-            cls = BPResultCRIT
+            cls = ACResultCRIT
         elif helper_usage_perc >= usage_warn:
-            cls = BPResultWARN
+            cls = ACResultWARN
         else:
-            cls = BPResultOK
+            cls = ACResultOK
 
         yield cls(_("The current Check_MK helper usage is %.2f%%. The Check_MK services have an "
                     "average check latency of %.3fs.") % (helper_usage_perc, check_latecy_cmk))
 
         if helper_usage_perc < 50:
-            yield BPResultWARN(_("The helper usage is below 50%, you may decrease the number of "
+            yield ACResultWARN(_("The helper usage is below 50%, you may decrease the number of "
                                  "Check_MK helpers to reduce the memory consumption."))
 
 
 
-class BPTestGenericCheckHelperUsage(BPTest):
+class ACTestGenericCheckHelperUsage(ACTest):
     def category(self):
-        return BPTestCategories.performance
+        return ACTestCategories.performance
 
 
     def title(self):
@@ -512,25 +545,25 @@ class BPTestGenericCheckHelperUsage(BPTest):
 
         usage_warn, usage_crit = 85, 95
         if helper_usage_perc >= usage_crit:
-            cls = BPResultCRIT
+            cls = ACResultCRIT
         elif helper_usage_perc >= usage_warn:
-            cls = BPResultWARN
+            cls = ACResultWARN
         else:
-            cls = BPResultOK
+            cls = ACResultOK
         yield cls(_("The current check helper usage is %.2f%%") % helper_usage_perc)
 
         if check_latency_generic > 1:
-            cls = BPResultCRIT
+            cls = ACResultCRIT
         else:
-            cls = BPResultOK
+            cls = ACResultOK
         yield cls(_("The active check services have an average check latency of %.3fs.") %
                                                                     (check_latency_generic))
 
 
 
-class BPTestSizeOfExtensions(BPTest):
+class ACTestSizeOfExtensions(ACTest):
     def category(self):
-        return BPTestCategories.performance
+        return ACTestCategories.performance
 
 
     def title(self):
@@ -564,9 +597,9 @@ class BPTestSizeOfExtensions(BPTest):
     def execute(self):
         size = self._size_of_extensions()
         if size > 100*1024*1024:
-            cls = BPResultCRIT
+            cls = ACResultCRIT
         else:
-            cls = BPResultOK
+            cls = ACResultOK
 
         yield cls(_("Your extensions have a size of %s.") % cmk.render.bytes(size))
 

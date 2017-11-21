@@ -86,7 +86,7 @@ modules += [
       ( "icons", _("Custom Icons"), "icons", "icons",
         _("Upload your own icons that can be used in views or custom actions")),
 
-      ( "best_practices", _("Best practices"), "best_practices", "best_practices",
+      ( "analyze_config", _("Analyze configuration"), "analyze_config", "analyze_config",
         _("See hints how to improve your Check_MK installation")),
 ]
 

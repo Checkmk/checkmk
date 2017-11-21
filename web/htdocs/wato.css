@@ -1385,34 +1385,34 @@ table.nform.rulesettings td.legend div.title {
  |                        |_|                                               |
  '-------------------------------------------------------------------------*/
 
-.wato table.data.best_practices {
+.wato table.data.analyze_config {
     width: 100%;
 }
 
-.wato table.data.best_practices td.title {
+.wato table.data.analyze_config td.title {
     vertical-align: top;
     width: 400px;
 }
 
-.wato table.data.best_practices td.site {
+.wato table.data.analyze_config td.site {
     vertical-align: top;
     width: 100px;
 }
 
-.wato table.data.best_practices td.title p,
-.wato table.data.best_practices td.title a,
-.wato table.data.best_practices td.title li {
+.wato table.data.analyze_config td.title p,
+.wato table.data.analyze_config td.title a,
+.wato table.data.analyze_config td.title li {
     color: #666;
 }
 
-.wato table.data.best_practices td.title a {
+.wato table.data.analyze_config td.title a {
     text-decoration: underline;
 }
 
-.wato table.data.best_practices td.title a:hover {
+.wato table.data.analyze_config td.title a:hover {
     text-decoration: none;
 }
 
-.wato table.data.best_practices td.result {
+.wato table.data.analyze_config td.result {
     vertical-align: top;
 }

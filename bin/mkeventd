@@ -5192,7 +5192,7 @@ if __name__ == "__main__":
         os.remove(g_pid_file)
         sys.exit(0)
 
-    except Exception as e:
+    except:
         if opt_debug:
             raise
         bail_out(traceback.format_exc())

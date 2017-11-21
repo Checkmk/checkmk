@@ -71,6 +71,10 @@ def parse_rstcli_sections(info):
             if current_section is not None:
                 yield current_section
             current_section = (":".join(line).strip("-").strip(), [])
+        elif len(line) < 2:
+            # On some systems, there are lines that only consist of
+            # a contextless 0. Skip those to avoid parsing errors later.
+            continue
         else:
             if current_section is None:
                 raise MKGeneralException("error: %s" % " ".join(line))

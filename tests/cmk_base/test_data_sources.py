@@ -60,6 +60,8 @@ def test_cfg(web, site):
     #
     print "Cleaning up test config"
 
+    cmk.debug.disable()
+
     site.delete_dir("var/check_mk/agent_output")
     site.delete_file("etc/check_mk/conf.d/ds-test-host.mk")
 

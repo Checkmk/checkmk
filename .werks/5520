@@ -1,0 +1,13 @@
+Title: rstcli, rstcli.pdisks: Fix broken parse function
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1511275342
+
+Some unexpected lines in the corresponding agent section could lead to
+neither check nor discovery working (ie crashing). This has been fixed
+for all known cases.

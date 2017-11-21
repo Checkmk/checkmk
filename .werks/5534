@@ -1,0 +1,14 @@
+Title: Fixed wrong host graph scaling when using DNS names as IPv4 address
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i2
+Date: 1511269458
+
+When configuring a host to use a DNS name as IPv4 address, the host is not
+being pinged anymore via Smart Ping. Instead of this the active check
+check_icmp is used. This check produces host graphs, which were scaled wrong
+by factor 1000 in previous versions.

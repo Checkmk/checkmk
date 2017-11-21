@@ -1773,7 +1773,7 @@ class EventServer(ECServerThread):
             if line:
                 try:
                     self.process_raw_data(self.process_line, (line, address))
-                except Exception:
+                except Exception as e:
                     self.logger.exception('Exception handling a log line (skipping this one): %s' % e)
 
 
@@ -2230,7 +2230,7 @@ class EventServer(ECServerThread):
             try:
                 result = self.event_rule_matches(rule, event)
 
-            except Exception:
+            except Exception as e:
                 self.logger.exception('  Exception during matching:\n%s' % e)
                 result = False
 

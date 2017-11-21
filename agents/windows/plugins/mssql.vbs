@@ -365,32 +365,31 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name
     addOutput(sections("backup"))
     For Each dbName in dbNames.Keys
-        RS.Open "USE [" & dbName & "]", CONN
-        RS.open "IF EXISTS (select 1 from sys.sysobjects where name = 'dm_hadr_database_replica_states') " & _
-                "BEGIN " & _
-                  "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(b.backup_finish_date)), '19700101'), 120) AS last_backup_date, " & _
-                  "b.type, b.machine_name, " & _
-                  "isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '') AS replica_id " & _
-                  "FROM msdb.dbo.backupset b " & _
-                  "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name " & _
-                  "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id " & _
-                  "WHERE database_name = '" & dbName & "' " & _
-				  "AND b.machine_name = '" & hostname & "' " & _
-				  "AND (rep.is_local is null or rep.is_local = 1) " & _
-				  "AND (rep.is_primary_replica is null or rep.is_primary_replica = 1) " & _
-                  "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health " & _
-                "END " & _
-                "ELSE " & _
-                 "BEGIN " & _
-                  "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date," & _
-                  "type, machine_name, " & _
-                                                 "'1' as is_primary_replica, " &_
-                                                 "'1' as is_local, " & _
-                                                 "'' as replica_id " & _
-                  "FROM msdb.dbo.backupset " & _
-                  "WHERE database_name = '" & dbName & "' " & _
-                  "GROUP BY type, machine_name " & _
-                "END", CONN
+        RS.Open "USE [master]", CONN
+        RS.Open "select 1 from sys.sysobjects where name = 'dm_hadr_database_replica_states'", CONN
+        If RS.EOF Then
+            RS.Close
+            RS.Open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date," & _
+                       "type, machine_name, " & _
+                       "'True' as is_primary_replica, " &_
+                       "'1' as is_local, " & _
+                       "'' as replica_id " & _
+                    "FROM msdb.dbo.backupset " & _
+                    "WHERE database_name = '" & dbName & "' " & _
+                    "GROUP BY type, machine_name ", CONN
+        Else
+            RS.Close
+            RS.Open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(b.backup_finish_date)), '19700101'), 120) AS last_backup_date, " & _
+                        "b.type, b.machine_name, " & _
+                        "isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '') AS replica_id " & _
+                    "FROM msdb.dbo.backupset b " & _
+                    "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name " & _
+                    "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id " & _
+                    "WHERE database_name = '" & dbName & "' " & _
+                        "AND (rep.is_local is null or rep.is_local = 1) " & _
+                        "AND (rep.is_primary_replica is null or rep.is_primary_replica = 'True') " & _
+                    "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health ", CONN
+        End If
 
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
@@ -404,10 +403,11 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             is_primary_replica = Trim(RS("is_primary_replica"))
             backup_machine_name = Trim(RS("machine_name"))
 
-            If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "1") AND hostname = backup_machine_name Then
+            If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
                 addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & _
                           " " & lastBackupDate & " " & backup_type)
             End If
+
             RS.MoveNext
         Loop
         RS.Close

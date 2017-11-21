@@ -706,7 +706,7 @@ def _get_host_sections_for_discovery(sources, hostname, ipaddress, check_plugin_
         sources.enforce_check_plugin_names(check_plugin_names)
 
     max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
-    return data_sources.get_host_sections(sources, hostname, ipaddress, max_cachefile_age)
+    return sources.get_host_sections(hostname, ipaddress, max_cachefile_age)
 
 
 # gather auto_discovered check_plugin_names for this host
@@ -836,8 +836,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_plugin_name)
 
-    section_content = data_sources.get_section_content_for_check(multi_host_sections, hostname, ipaddress,
-                                                                 check_plugin_name, for_discovery=True)
+    section_content = multi_host_sections.get_section_content(hostname, ipaddress, check_plugin_name, for_discovery=True)
 
     if section_content is None: # No data for this check type
         return []
@@ -1110,8 +1109,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 continue # Skip not existing check silently
 
             try:
-                section_content = data_sources.get_section_content_for_check(multi_host_sections, hostname, ipaddress,
-                                                                                  section_name, for_discovery=True)
+                section_content = multi_host_sections.get_section_content(hostname, ipaddress, section_name, for_discovery=True)
             except Exception, e:
                 if cmk.debug.enabled():
                     raise

@@ -215,12 +215,12 @@ def _do_inv_for_realhost(hostname, ipaddress):
             source.set_ignore_check_interval(True)
             source.set_check_plugin_name_filter(_gather_snmp_check_plugin_names_inventory)
 
-    multi_host_sections = data_sources.get_host_sections(sources, hostname, ipaddress)
+    multi_host_sections = sources.get_host_sections(hostname, ipaddress)
 
     import cmk_base.inventory_plugins
     for section_name, plugin in cmk_base.inventory_plugins.inv_info.items():
-        section_content = data_sources.get_section_content_for_check(multi_host_sections, hostname, ipaddress,
-                                                                        section_name, for_discovery=False)
+        section_content = multi_host_sections.get_section_content(hostname, ipaddress,
+                                                                  section_name, for_discovery=False)
 
         if section_content is None: # No data for this check type
             continue

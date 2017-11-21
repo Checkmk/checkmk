@@ -6814,7 +6814,7 @@ register_check_parameters(
               Tuple(
                   title = _("FIN_WAIT1"),
                   help = _("our socket has closed; we are in the process of "
-                           "tiering down the connection"),
+                           "tearing down the connection"),
                   elements = [
                       Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))

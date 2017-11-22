@@ -74,6 +74,7 @@ class ACTestPersistentConnections(ACTest):
             yield ACResultOK(_("Is not using persistent connections."))
 
 
+
 class ACTestLiveproxyd(ACTest):
     def category(self):
         return "performance"
@@ -96,10 +97,10 @@ class ACTestLiveproxyd(ACTest):
 
     def execute(self):
         site_id = config.omd_site()
-        if site_is_using_livestatus_proxy(site_id):
+        if watolib.site_is_using_livestatus_proxy(site_id):
             yield ACResultOK(_("Site is using the Livestatus Proxy Daemon"))
 
-        elif not is_wato_slave_site():
+        elif not watolib.is_wato_slave_site():
             yield ACResultWARN(_("The Livestatus Proxy is not only good for slave sites, "
                                  "enable it for your master site"))
 

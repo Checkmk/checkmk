@@ -49,6 +49,11 @@ struct ComTypeException : public std::runtime_error {
     ComTypeException(const std::string &message);
 };
 
+class Timeout : public std::runtime_error {
+public:
+    explicit Timeout(const std::string &msg) : std::runtime_error(msg) {}
+};
+
 class Variant {
     VARIANT _value;
 

@@ -65,7 +65,10 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
     if (!data.valid()) {
         return;
     }
-    out << Utf8(join(data.names(), L",")) << "\n";
+
+    // First use a local stream buffer...
+    std::stringstream localStream;
+    localStream << Utf8(join(data.names(), L",")) << "\n";
 
     // output data
     bool more = true;
@@ -76,13 +79,17 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
                        [&data](const std::wstring &name) {
                            return data.get<std::wstring>(name.c_str());
                        });
-        out << Utf8(join(values, L","));
+        localStream << Utf8(join(values, L","));
 
         more = data.next();
+
         if (more) {
-            out << "\n";
+            localStream << "\n";
         }
     }
+
+    // ...and output local stream buffer only when no WMI timeout was thrown.
+    out << localStream.rdbuf();
 }
 
 void SectionWMI::suspend(int duration) {
@@ -94,31 +101,40 @@ bool SectionWMI::produceOutputInner(std::ostream &out) {
         return false;
     }
 
-    if (_helper.get() == nullptr) {
-        _helper.reset(new wmi::Helper(_winapi, _namespace.c_str()));
-    }
+    bool success = true;
+
+    try {
+        if (_helper.get() == nullptr) {
+            _helper.reset(new wmi::Helper(_winapi, _namespace.c_str()));
+        }
 
     wmi::Result result(_winapi);
 
-    if (_columns.empty()) {
-        // no columns set, return everything
-        result = _helper->getClass(_object.c_str());
-    } else {
-        std::wstringstream query;
-        query << L"SELECT " << join(_columns, L",") << L" FROM " << _object;
-        result = _helper->query(query.str().c_str());
+        if (_columns.empty()) {
+            // no columns set, return everything
+            result = _helper->getClass(_object.c_str());
+        } else {
+            std::wstringstream query;
+            query << L"SELECT " << join(_columns, L",") << L" FROM " << _object;
+            result = _helper->query(query.str().c_str());
+        }
+
+        success = result.valid() || SUCCEEDED(result.last_error());
+
+        if (_toggle_if_missing && !success) {
+            // in the past, wmi tables were toggled permanently if they were
+            // missing,
+            // but testing occasionally shouldn't hurt.
+            suspend(3600);
+        }
+
+        outputTable(out, result);
+    } catch (const wmi::Timeout &t) {
+        // Output WMI timeout so that the check in question knows to handle it.
+        out << t.what() << std::endl;
+        Debug(_logger) << "SectionWMI::produceOutputInner caught " << t.what();
+        success = true;
     }
-
-    bool success = result.valid() || SUCCEEDED(result.last_error());
-
-    if (_toggle_if_missing && !success) {
-        // in the past, wmi tables were toggled permanently if they were
-        // missing,
-        // but testing occasionally shouldn't hurt.
-        suspend(3600);
-    }
-
-    outputTable(out, result);
 
     return success;
 }

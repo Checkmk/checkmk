@@ -16787,9 +16787,12 @@ def add_scanned_hosts_to_folder(folder, found):
         host_name = cmk.translations.translate_hostname(translation, host_name)
 
         attrs = {
-            "ipaddress"       : ipaddress,
             "tag_criticality" : network_scan_properties.get("tag_criticality", "offline"),
         }
+
+        if network_scan_properties.get("set_ipaddress", True):
+            attrs["ipaddress"] = ipaddress
+
         if not watolib.Host.host_exists(host_name):
             entries.append((host_name, attrs, None))
 

@@ -253,7 +253,7 @@ class Site(object):
             "Columns: last_check\n" \
             "Filter: host_name = %s\n" % (hostname))
 
-        schedule_ts, wait_timeout = time.time(), 10
+        schedule_ts, wait_timeout = time.time(), 20
 
         # Ensure the next check result is not in same second as the previous check
         while int(last_check_before) == int(schedule_ts):

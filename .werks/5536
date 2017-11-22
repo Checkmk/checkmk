@@ -1,0 +1,10 @@
+Title: Network scan: New option to disable configuring "IPv4 Address" attribute
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511340038
+Class: feature
+
+

@@ -287,6 +287,12 @@ class NetworkScanAttribute(ValueSpecAttribute):
                         help = _("Limit the execution of the scan to this time range."),
                         allow_empty=False,
                     )),
+                    ("set_ipaddress", Checkbox(
+                        title = _("Set IPv4 address"),
+                        help = _("Whether or not to configure the found IP address as the IPv4 "
+                                 "address of the found hosts."),
+                        default_value = True,
+                    )),
                     ("tag_criticality", DropdownChoice(
                         title = _("Set criticality host tag"),
                         help = _("Added hosts will be created as \"offline\" host by default. You "

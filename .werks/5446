@@ -1,0 +1,10 @@
+Title: ceph_status, ceph_status.pgs, ceph_status.osds, ceph_status.mgrs, ceph_df: new checks for Ceph Storage
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511351063
+Class: feature
+
+

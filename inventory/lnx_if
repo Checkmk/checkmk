@@ -37,7 +37,7 @@ def inv_lnx_if(parsed, params):
 
     total_ethernet_ports = 0
     available_ethernet_ports = 0
-    for if_index, if_descr, if_type, if_speed, if_oper_status, \
+    for node_info, if_index, if_descr, if_type, if_speed, if_oper_status, \
         if_in_octets, inucast, inmcast, inbcast, if_in_discards, \
         if_in_errors, if_out_octets, outucast, outmcast, outbcast, \
         if_out_discards, if_out_errors, if_out_qlen, if_alias, if_phys_address in parsed:

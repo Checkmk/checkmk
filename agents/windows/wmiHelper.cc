@@ -193,27 +193,30 @@ bool Result::next() {
         return false;
     }
 
-    IWbemClassObject *obj;
-    ULONG numReturned;
+    IWbemClassObject *obj = nullptr;
+    ULONG numReturned = 0;
     // always retrieve only one element
-    HRESULT res = _enumerator->Next(10000, 1, &obj, &numReturned);
+    HRESULT res = _enumerator->Next(2500, 1, &obj, &numReturned);
 
-    if (FAILED(res)) {
-        // in this case the "current" object isn't changed to guarantee that the
-        // Result remains valid
-        // throw ComException("Failed to retrieve element", res, _winapi);
-        _last_error = res;
-        return false;
+    switch (res) {
+        case WBEM_NO_ERROR:
+            _current.reset(obj, releaseInterface);
+            return true;
+        case WBEM_S_FALSE:
+            // No more values. The current object remains at the last element so
+            // that a call to get continues to work.
+            return false;
+        case WBEM_S_TIMEDOUT:
+            // A timeout occurred before getting the object.
+            throw Timeout("WMItimeout");
+        default:
+            // Any of the four possible errors: WBEM_E_INVALID_PARAMETER,
+            // WBEM_E_OUT_OF_MEMORY, WBEM_E_UNEXPECTED or
+            // WBEM_E_TRANSPORT_FAILURE. In this case the "current" object isn't
+            // changed to guarantee that the Result remains valid.
+            _last_error = res;
+            return false;
     }
-
-    if (numReturned == 0) {
-        // no more values. the current object remains at the last element so
-        // that a call to get continues to work
-        return false;
-    }
-
-    _current.reset(obj, releaseInterface);
-    return true;
 }
 
 template <>

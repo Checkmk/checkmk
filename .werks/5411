@@ -1,0 +1,41 @@
+Title: Windows agent: handle WMI timeouts
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511347136
+Class: fix
+
+All sections depending on WMI (Windows Management Instrumentation)
+queries have been suffering from periodic freezing, the time interval
+between subsequent freezes being typically 18...20 minutes. At those
+moments, the Windows agent has not been delivering any output for some
+of its WMI-dependent sections (e. g., ps, uptime, dotnet_clrmemory,
+wmi_cpuload, msexch and wmi_webservices). The corresponding checks have
+issued error messages of type "Missing agent sections...". Various
+strategies have been previously used attempting to cope with the
+periodic problems with WMI. Werk #4008 introduced a timeout of 10s in
+order to prevent the agent from completely blocking if a WMI query
+freezes. However, this led to the described problem of missing agent
+output totally when no response was given to a WMI query within 10s.
+Moreover, multiple WMI queries waiting for 10s after another led to
+periodic long execution times of the Windows agent.
+
+This Werk introduces a new strategy for coping with the periodic
+freezing of WMI queries. The timeout of the queries is reduced to 2.5s
+instead of 10s per query, reducing the total execution time of the
+Windows agent by approximately 75% when the problem occurs. Upon a WMI
+timeout, the Windows agent issues it in its output so, that the affected
+checks can tolerate it by setting their state to UNKNOWN. In normal
+cases, the check should get back to OK when the agent is contacted the
+next time and the WMI freeze is most likely gone.
+
+There seems to be a connection of the WMI freezes to the Windows service
+WMI Performance Adapter. https://lokna.no/?p=1430 suggests that the
+startup type of this service be set to automatic, ensuring the service
+is running. Without this, the WMI Performance Adapter seems to get
+started periodically when WMI is queried. Testing with WMI Performance
+Adapter service running has showed clear signs of improvement, reducing
+the frequency of freezing WMI queries even if not completely ending
+them.

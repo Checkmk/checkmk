@@ -45,6 +45,11 @@ wato_legacy_eval                           = False
 wato_read_only                             = {}
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config                         = False
+wato_icon_categories                       = [
+    ("logos", "Logos"),
+    ("parts", "Parts"),
+    ("misc",  "Misc"),
+]
 
 def tag_alias(tag):
     for entry in wato_host_tags:

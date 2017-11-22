@@ -15884,7 +15884,7 @@ class ModeIcons(WatoMode):
                 )),
                 ('category', DropdownChoice(
                     title = _('Category'),
-                    choices = IconSelector._categories,
+                    choices = config.wato_icon_categories,
                     no_preselect = True,
                 ))
             ]

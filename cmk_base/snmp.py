@@ -558,26 +558,29 @@ def _is_snmpwalk_cachable(column):
 
 
 def _get_cached_snmpwalk(hostname, fetchoid):
-    path = "%s/snmp_cache/%s/%s" % (cmk.paths.var_dir, hostname, fetchoid)
+    path = _snmpwalk_cache_path(hostname, fetchoid)
     try:
         console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
-        # TODO: Use store.load_data_from_file()
-        return eval(file(path).read())
-    except IOError:
-        return None # don't print error when not cached yet
+        return store.load_data_from_file(path)
     except:
         if cmk.debug.enabled():
             raise
-        console.verbose("Failed to read cached SNMP walk from %s, ignoring.\n" % path)
+        console.verbose("  Failed loading walk cache. Continue without it.\n" % path)
         return None
 
 
 def _save_snmpwalk_cache(hostname, fetchoid, rowinfo):
-    base_dir = "%s/snmp_cache/%s/" % (cmk.paths.var_dir, hostname)
-    if not os.path.exists(base_dir):
-        os.makedirs(base_dir)
-    console.vverbose("  Caching walk of %s\n" % fetchoid)
-    file(base_dir + fetchoid, "w").write("%r\n" % rowinfo)
+    path = _snmpwalk_cache_path(hostname, fetchoid)
+
+    if not os.path.exists(os.path.dirname(path)):
+        os.makedirs(os.path.dirname(path))
+
+    console.vverbose("  Saving walk of %s to walk cache %s\n" % (fetchoid, path))
+    store.save_data_to_file(path, rowinfo, pretty=False)
+
+
+def _snmpwalk_cache_path(hostname, fetchoid):
+    return os.path.join(cmk.paths.var_dir, hostname, fetchoid)
 
 
 def _get_stored_snmpwalk(hostname, oid):

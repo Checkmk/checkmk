@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import ast
 import glob
 import os
 import subprocess
@@ -159,7 +160,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # from python source code to actual values.
     def execute(self, args):
         hostname = args[0]
-        new_items = eval(sys.stdin.read())
+        new_items = ast.literal_eval(sys.stdin.read())
         discovery.set_autochecks_of(hostname, new_items)
         self._trigger_discovery_check(hostname)
         return None
@@ -196,7 +197,7 @@ class AutomationRenameHosts(Automation):
     # Python pair-list from stdin:
     # [("old1", "new1"), ("old2", "new2")])
     def execute(self, args):
-        renamings = eval(sys.stdin.read())
+        renamings = ast.literal_eval(sys.stdin.read())
 
         actions = []
 
@@ -813,7 +814,7 @@ class AutomationGetConfiguration(Automation):
 
         # We read the list of variable names from stdin since
         # that could be too much for the command line
-        variable_names = eval(sys.stdin.read())
+        variable_names = ast.literal_eval(sys.stdin.read())
 
         missing_variables = [ v for v in variable_names
                               if not hasattr(config, v) ]

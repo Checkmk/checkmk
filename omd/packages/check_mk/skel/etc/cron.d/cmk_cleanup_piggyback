@@ -1,0 +1,2 @@
+# Once a day, at 00:10, cleanup outdated piggyback files
+10 0 * * * cmk --cleanup-piggyback

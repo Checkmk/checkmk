@@ -262,7 +262,7 @@ class DataSources(object):
 
             # Store piggyback information received from all sources of this host. This
             # also implies a removal of piggyback files received during previous calls.
-            cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_lines)
+            cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_raw_data)
 
         return multi_host_sections
 

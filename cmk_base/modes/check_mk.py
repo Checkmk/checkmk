@@ -670,6 +670,26 @@ modes.register(Mode(
 ))
 
 #.
+#   .--clean.-piggyb.------------------------------------------------------.
+#   |        _                               _                   _         |
+#   |    ___| | ___  __ _ _ __         _ __ (_) __ _  __ _ _   _| |__      |
+#   |   / __| |/ _ \/ _` | '_ \  _____| '_ \| |/ _` |/ _` | | | | '_ \     |
+#   |  | (__| |  __/ (_| | | | ||_____| |_) | | (_| | (_| | |_| | |_) |    |
+#   |   \___|_|\___|\__,_|_| |_(_)    | .__/|_|\__, |\__, |\__, |_.__(_)   |
+#   |                                 |_|      |___/ |___/ |___/           |
+#   '----------------------------------------------------------------------'
+
+def mode_cleanup_piggyback():
+    import cmk_base.piggyback
+    cmk_base.piggyback.cleanup_piggyback_files()
+
+modes.register(Mode(
+    long_option="cleanup-piggyback",
+    handler_function=mode_cleanup_piggyback,
+    short_help="Cleanup outdated piggyback files",
+))
+
+#.
 #   .--scan-parents--------------------------------------------------------.
 #   |                                                         _            |
 #   |    ___  ___ __ _ _ __        _ __   __ _ _ __ ___ _ __ | |_ ___      |
@@ -874,9 +894,9 @@ def mode_flush(hosts):
                 console.output(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
-        d = piggyback.remove_piggyback_raw_data_from(host)
+        d = piggyback.remove_source_status_file(host)
         if d:
-            console.output(tty.bold + tty.magenta  + " piggyback(%d)" % d)
+            console.output(tty.bold + tty.magenta  + " piggyback(1)")
 
         # logfiles
         dir = cmk.paths.logwatch_dir + "/" + host

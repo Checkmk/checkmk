@@ -466,7 +466,9 @@ class CheckMKAgentDataSource(DataSource):
         Returns a HostSections() object.
         """
         sections = {}
-        piggybacked_lines = {} # unparsed info for other hosts
+        # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
+        # The value is a list of lines which were received for this host.
+        piggybacked_raw_data = {}
         persisted_sections = {} # handle sections with option persist(...)
         host = None
         section_content = []
@@ -494,7 +496,7 @@ class CheckMKAgentDataSource(DataSource):
                         host = host.replace(" ", "_")
 
             elif host: # processing data for an other host
-                piggybacked_lines.setdefault(host, []).append(line)
+                piggybacked_raw_data.setdefault(host, []).append(line)
 
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
@@ -546,4 +548,4 @@ class CheckMKAgentDataSource(DataSource):
 
                 section_content.append(line.split(separator))
 
-        return HostSections(sections, agent_cache_info, piggybacked_lines, persisted_sections)
+        return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)

@@ -1,0 +1,25 @@
+Title: Improved performance when processing a large amount of piggyback data
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511359937
+Class: feature
+
+When Check_MK needs to handle a large amount of piggyback data (a lot of piggbacked
+hosts from a lot of piggyback source hosts, several hundreds to thousands),
+the performance of Check_MK could decrease during regular monitoring. This was caused
+by some too expensive house keeping logic that was executed too often.
+
+The mechanism has now been changed to work like this:
+
+<ul>
+<li>During regular monitoring now piggyback data is removed anymore from the disk.</li>
+<li>New piggyback data is written to disk when communicating with the source host.</li>
+<li>When monitoring piggybacked hosts, the outdated piggyback data available on the
+disk is filtered.</li>
+<li>There is a dedicated housekeeping cron job executed sites crontab daily at 00:10
+which removes outdated piggyback data. This job is mostly used to free up some tmpfs
+space, the outated stored data is not read by monitoring anymore.</li>
+</ul>

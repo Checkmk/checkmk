@@ -42,20 +42,20 @@ class HostSections(object):
 
     It contains the following information:
 
-        1. sections:           A dictionary from section_name to a list of rows,
-                               the section content
-        2. piggybacked_lines:  piggy-backed data for other hosts
-        3. persisted_sections: Sections to be persisted for later usage
-        4. cache_info:         Agent cache information
-                               (dict section name -> (cached_at, cache_interval))
+        1. sections:                A dictionary from section_name to a list of rows,
+                                    the section content
+        2. piggybacked_raw_data:  piggy-backed data for other hosts
+        3. persisted_sections:      Sections to be persisted for later usage
+        4. cache_info:              Agent cache information
+                                    (dict section name -> (cached_at, cache_interval))
     """
 
 
-    def __init__(self, sections=None, cache_info=None, piggybacked_lines=None, persisted_sections=None):
+    def __init__(self, sections=None, cache_info=None, piggybacked_raw_data=None, persisted_sections=None):
         super(HostSections, self).__init__()
         self.sections = sections if sections is not None else {}
         self.cache_info = cache_info if cache_info is not None else {}
-        self.piggybacked_lines = piggybacked_lines if piggybacked_lines is not None else {}
+        self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data is not None else {}
         self.persisted_sections = persisted_sections if persisted_sections is not None else {}
 
 
@@ -69,8 +69,8 @@ class HostSections(object):
         for section_name, lines in host_sections.sections.items():
             self.sections.setdefault(section_name, []).extend(lines)
 
-        for hostname, lines in host_sections.piggybacked_lines.items():
-            self.piggybacked_lines.setdefault(hostname, []).extend(lines)
+        for hostname, lines in host_sections.piggybacked_raw_data.items():
+            self.piggybacked_raw_data.setdefault(hostname, []).extend(lines)
 
         if host_sections.cache_info:
             self.cache_info.update(host_sections.cache_info)

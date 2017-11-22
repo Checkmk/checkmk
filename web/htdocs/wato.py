@@ -16581,7 +16581,7 @@ class ModeAnalyzeConfig(WatoMode):
                 elif isinstance(results_data, list):
                     test_results = []
                     for result_data in results_data:
-                        result = watolib.ACResult.from_repr(ast.literal_eval(result_data))
+                        result = watolib.ACResult.from_repr(result_data)
                         test_results.append(result)
 
                     results_by_site[site_id] = test_results
@@ -16603,8 +16603,7 @@ class ModeAnalyzeConfig(WatoMode):
     def _perform_tests_for_site(self, site_id, result_queue):
         try:
             if config.site_is_local(site_id):
-                results = watolib.check_analyze_config()
-                results_data = [ repr(result) for result in results ]
+                results_data = watolib.check_analyze_config()
 
             else:
                 results_data = watolib.do_remote_automation(
@@ -16615,6 +16614,9 @@ class ModeAnalyzeConfig(WatoMode):
         except Exception, e:
             log_exception()
             result_queue.put((site_id, e))
+        finally:
+            result_queue.close()
+            result_queue.join_thread()
 
 
     def _filter_test_results(self, results_by_category):

@@ -4167,12 +4167,12 @@ class IconSelector(ValueSpec):
     @classmethod
     def categories(cls):
         import config# FIXME: Clean this up. But how?
-        return (config.wato_icon_categories)
+        return config.wato_icon_categories
 
 
     @classmethod
     def category_alias(cls, category_name):
-        return cls.categories().get(category_name, category_name)
+        return dict(cls.categories()).get(category_name, category_name)
 
 
     # All icons within the images/icons directory have the ident of a category
@@ -4185,7 +4185,7 @@ class IconSelector(ValueSpec):
         if not only_local:
             dirs.append(os.path.join(cmk.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
 
-        valid_categories = self.categories().keys()
+        valid_categories = dict(self.categories()).keys()
 
         from PIL import Image
 
@@ -4235,7 +4235,7 @@ class IconSelector(ValueSpec):
             by_cat[category_name].append(icon_name)
 
         icon_categories = []
-        for category_name, category_alias in self.categories().items():
+        for category_name, category_alias in self.categories():
             if category_name in by_cat:
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories

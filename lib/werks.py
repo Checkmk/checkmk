@@ -204,7 +204,7 @@ def write_as_text(werks, f, write_version=True):
             component = werk["component"]
 
             f.write("    %s:\n" % \
-                werk_components().get(component, component))
+                werk_components().get(component, component).encode("utf-8"))
 
         write_werk_as_text(f, werk)
 

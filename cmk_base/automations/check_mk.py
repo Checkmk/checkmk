@@ -797,7 +797,16 @@ automations.register(AutomationReload())
 class AutomationGetConfiguration(Automation):
     cmd          = "get-configuration"
     needs_config = False
-    needs_checks = True
+    # This needed the checks in the past. This was necessary to get the
+    # default values of check related global settings. This kind of
+    # global settings have been removed from the global settings page
+    # of WATO. We can now disable this (by default).
+    # We need to be careful here, because users may have added their own
+    # global settings related to checks. To deal with this, we check
+    # for requested but missing global variables and load the checks in
+    # case one is missing. When it's still missing then, we silenlty skip
+    # this option (like before).
+    needs_checks = False
 
     def execute(self, args):
         config.load(with_conf_d=False)
@@ -805,6 +814,14 @@ class AutomationGetConfiguration(Automation):
         # We read the list of variable names from stdin since
         # that could be too much for the command line
         variable_names = eval(sys.stdin.read())
+
+        missing_variables = [ v for v in variable_names
+                              if not hasattr(config, v) ]
+
+        if missing_variables:
+            checks.load()
+            config.load(with_conf_d=False)
+
         result = {}
         for varname in variable_names:
             if hasattr(config, varname):

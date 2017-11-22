@@ -9449,6 +9449,26 @@ class ACResult(object):
         self.site_id  = config.omd_site()
 
 
+    @classmethod
+    def merge(cls, *results):
+        """Create a new result object from the given result objects.
+
+        a) use the worst state
+        b) concatenate the texts
+        """
+        texts, worst_cls = [], ACResultOK
+        for result in results:
+            text = result.text
+            if result.status != 0:
+                text += " (%s)" % ("!"*result.status)
+            texts.append(text)
+
+            if result.status > worst_cls.status:
+                worst_cls = result.__class__
+
+        return worst_cls(", ".join(texts))
+
+
     def status_name(self):
         return cmk.defines.short_service_state_name(self.status)
 
@@ -9552,9 +9572,9 @@ class ACTest(object):
     def run(self):
         self._executed = True
         try:
-            for result in self.execute():
-                result.from_test(self)
-                yield result
+            total_result = ACResult.merge(*list(self.execute()))
+            total_result.from_test(self)
+            yield total_result
         except Exception, e:
             log_exception()
             result = ACResultCRIT("<pre>%s</pre>" %

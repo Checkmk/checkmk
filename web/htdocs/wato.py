@@ -16429,8 +16429,9 @@ class ModeAnalyzeConfig(WatoMode):
 
 
     def _from_vars(self):
-        self._show_ok  = html.has_var("show_ok")
-        self._show_ack = html.has_var("show_ack")
+        self._show_ok     = html.has_var("show_ok")
+        self._show_failed = not html.has_var("hide_failed")
+        self._show_ack    = html.has_var("show_ack")
 
 
     def title(self):
@@ -16480,6 +16481,11 @@ class ModeAnalyzeConfig(WatoMode):
             html.buttonlink(html.makeuri([], delvars=["show_ok"]), _("Hide succeeded tests"))
         else:
             html.buttonlink(html.makeuri([("show_ok", "1")]), _("Show succeeded tests"))
+
+        if self._show_failed:
+            html.buttonlink(html.makeuri([("hide_failed", "1")]), _("Hide failed tests"))
+        else:
+            html.buttonlink(html.makeuri([], delvars=["hide_failed"]), _("Show failed tests"))
 
         if self._show_ack:
             html.buttonlink(html.makeuri([], delvars=["show_ack"]), _("Hide acknowledged tests"))
@@ -16623,6 +16629,9 @@ class ModeAnalyzeConfig(WatoMode):
         for category_name, results in results_by_category.items():
             if not self._show_ok:
                 results = filter(lambda result: type(result) != ACResultOK, results)
+
+            if not self._show_failed:
+                results = filter(lambda result: type(result) == ACResultOK, results)
 
             if not self._show_ack:
                 results = filter(lambda result: not self._is_acknowledged(result), results)

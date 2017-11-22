@@ -1039,6 +1039,28 @@ register_configvar(group,
     ),
     domain = "multisite")
 
+register_configvar(group,
+    "wato_icon_categories",
+    ListOf(
+        Tuple(
+            elements = [
+                ID(
+                    title = _("ID"),
+                ),
+                TextUnicode(
+                    title = _("Title"),
+                ),
+            ],
+            orientation = "horizontal",
+        ),
+        title = _("Icon categories"),
+        help = _("You can customize the list of icon categories to be able to assign "
+                 "your <a href=\"?mode=icons\">custom icons</a> to these categories. "
+                 "They will then be shown under this category in the icon selector."),
+    ),
+    domain = "multisite"
+)
+
 #.
 #   .--User Management-----------------------------------------------------.
 #   |          _   _                 __  __                 _              |

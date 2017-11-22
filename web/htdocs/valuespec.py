@@ -4153,12 +4153,6 @@ class TextOrRegExpUnicode(TextOrRegExp):
 
 
 class IconSelector(ValueSpec):
-    _categories = [
-        ('logos',   _('Logos')),
-        ('parts',   _('Parts')),
-        ('misc',    _('Misc')),
-    ]
-
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._allow_empty = kwargs.get('allow_empty', True)
@@ -4169,10 +4163,17 @@ class IconSelector(ValueSpec):
             'empty',
         ]
 
+
+    @classmethod
+    def categories(cls):
+        import config# FIXME: Clean this up. But how?
+        return (config.wato_icon_categories)
+
+
     @classmethod
     def category_alias(cls, category_name):
-        categories = dict(cls._categories)
-        return dict(cls._categories).get(category_name, category_name)
+        return cls.categories().get(category_name, category_name)
+
 
     # All icons within the images/icons directory have the ident of a category
     # witten in the PNG meta data. For the default images we have done this scripted.
@@ -4184,7 +4185,7 @@ class IconSelector(ValueSpec):
         if not only_local:
             dirs.append(os.path.join(cmk.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
 
-        valid_categories = dict(self._categories).keys()
+        valid_categories = self.categories().keys()
 
         from PIL import Image
 
@@ -4226,6 +4227,7 @@ class IconSelector(ValueSpec):
 
         return icons
 
+
     def available_icons_by_category(self, icons):
         by_cat = {}
         for icon_name, category_name in icons.items():
@@ -4233,10 +4235,11 @@ class IconSelector(ValueSpec):
             by_cat[category_name].append(icon_name)
 
         icon_categories = []
-        for category_name, category_alias in self._categories:
+        for category_name, category_alias in self.categories().items():
             if category_name in by_cat:
                 icon_categories.append((category_name, category_alias, by_cat[category_name]))
         return icon_categories
+
 
     def render_icon(self, icon_name, onclick = '', title = '', id = ''):
         if not icon_name:
@@ -4247,6 +4250,7 @@ class IconSelector(ValueSpec):
             icon = html.render_a(icon, href="javascript:void(0)", onclick=onclick)
 
         return icon
+
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -4326,6 +4330,7 @@ class IconSelector(ValueSpec):
 
         html.close_div()
 
+
     def from_html_vars(self, varprefix):
         icon = html.var(varprefix + '_value')
         if icon == 'empty':
@@ -4337,9 +4342,11 @@ class IconSelector(ValueSpec):
         # TODO: This is a workaround for a bug. This function needs to return str objects right now.
         return "%s" % self.render_icon(value)
 
+
     def validate_datatype(self, value, varprefix):
         if value is not None and type(value) != str:
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
+
 
     def validate_value(self, value, varprefix):
         if not self._allow_empty and not value:
@@ -4347,6 +4354,7 @@ class IconSelector(ValueSpec):
 
         if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
+
 
 
 class TimeofdayRanges(Transform):

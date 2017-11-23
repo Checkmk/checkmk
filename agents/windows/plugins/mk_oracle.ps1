@@ -1108,7 +1108,7 @@ select upper(i.instance_name)
                   || '|' || logswitches
            from v$instance i ,
                 (select count(1) logswitches
-                 from v\$loghist h , v\$instance i
+                 from v$loghist h , v$instance i
                  where h.first_time > sysdate - 1/24
                  and h.thread# = i.instance_number)
                 ;
@@ -1145,15 +1145,15 @@ Function sql_locks {
                      || '|' || bs.process
                      || '|' || bs.osuser
                      || '|' || bs.username
-              from v\$session b
-              join v\$instance i on 1=1
-              join gv\$session bs on bs.inst_id = b.BLOCKING_INSTANCE
+              from v$session b
+              join v$instance i on 1=1
+              join gv$session bs on bs.inst_id = b.BLOCKING_INSTANCE
                                  and bs.sid = b.BLOCKING_SESSION
               where b.BLOCKING_SESSION is not null
               ;
               select upper(i.instance_name)
                      || '|||||||||||||||||'
-              from v\$instance i
+              from v$instance i
               ;
         '@
         echo $query_locks

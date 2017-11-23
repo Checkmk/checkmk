@@ -667,8 +667,8 @@ def test_check_discovery(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 def test_check(test_cfg, site):
-    for opt in [ "--check", "" ]:
-        p = site.execute(["cmk", opt, "modes-test-host"], stdout=subprocess.PIPE)
+    for opt in [ ["--check"], [] ]:
+        p = site.execute(["cmk" ] + opt + [ "modes-test-host"], stdout=subprocess.PIPE)
         assert p.wait() == 0
         output = p.stdout.read()
         assert output.startswith("OK - Agent version")

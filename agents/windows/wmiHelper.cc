@@ -390,8 +390,7 @@ private:
             RPC_C_IMP_LEVEL_IMPERSONATE,  // impersonation level
             nullptr,                      // authentication info
             EOAC_NONE,                    // additional capabilities
-            nullptr                       // reserved
-            );
+            nullptr);                     // reserved
         if (FAILED(res)) {
             throw ComException("Failed to initialize COM security", res,
                                _winapi);
@@ -443,8 +442,7 @@ IWbemServices *Helper::connectServer(IWbemLocator *locator) {
                                          0,                    // security flags
                                          0,                    // authority
                                          0,                    // context object
-                                         &services             // services proxy
-                                         );
+                                         &services);           // services proxy
 
     if (FAILED(res)) {
         throw ComException("Failed to connect", res, _winapi);
@@ -461,8 +459,7 @@ void Helper::setProxyBlanket(IWbemServices *services) {
         RPC_C_AUTHN_LEVEL_CALL,       // authentication level
         RPC_C_IMP_LEVEL_IMPERSONATE,  // impersonation level
         nullptr,                      // client identity
-        EOAC_NONE                     // proxy capabilities
-        );
+        EOAC_NONE);                   // proxy capabilities
 
     if (FAILED(res)) {
         throw ComException("Failed to set proxy blanket", res, _winapi);

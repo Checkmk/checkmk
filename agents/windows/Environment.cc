@@ -116,9 +116,9 @@ string Environment::determineAgentDirectory(bool use_cwd) const {
         vector<unsigned char> buffer(MAX_PATH_UNICODE, '\0');
         DWORD dsize = MAX_PATH_UNICODE;
 
-        if (ERROR_SUCCESS ==
-            _winapi.RegQueryValueEx(key, "ImagePath", NULL, NULL, buffer.data(),
-                                    &dsize)) {
+        if (ERROR_SUCCESS == _winapi.RegQueryValueEx(key, "ImagePath", NULL,
+                                                     NULL, buffer.data(),
+                                                     &dsize)) {
             buffer.resize(dsize);
             string directory{buffer.begin(), buffer.end()};
             // search backwards for backslash

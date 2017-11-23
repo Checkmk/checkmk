@@ -96,9 +96,8 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
         case Type::num_hst_down:
         case Type::num_hst_unreach:
             if (has_been_checked &&
-                current_state ==
-                    static_cast<int>(_logictype) -
-                        static_cast<int>(Type::num_hst_up)) {
+                current_state == static_cast<int>(_logictype) -
+                                     static_cast<int>(Type::num_hst_up)) {
                 result++;
             }
             break;

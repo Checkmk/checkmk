@@ -197,9 +197,8 @@ public:
         std::wstring result;
         result.resize(128);
         auto publisher_meta = std::make_unique<ManagedEventHandle>(
-            *_evt,
-            _evt->openPublisherMetadata(nullptr, source().c_str(), nullptr, 0,
-                                        0));
+            *_evt, _evt->openPublisherMetadata(nullptr, source().c_str(),
+                                               nullptr, 0, 0));
         if (publisher_meta->get_handle() != nullptr) {
             for (;;) {
                 DWORD required;
@@ -401,10 +400,9 @@ void EventLogVista::seek(uint64_t record_id) {
             *_evt, evt().createBookmark(bookmarkXml.c_str()));
 
     _handle = std::make_unique<ManagedEventHandle>(
-        *_evt,
-        evt().subscribe(nullptr, _signal->get_handle(), _path.c_str(), L"*",
-                        bookmark->get_handle(), nullptr, nullptr,
-                        EvtSubscribeStartAfterBookmark));
+        *_evt, evt().subscribe(nullptr, _signal->get_handle(), _path.c_str(),
+                               L"*", bookmark->get_handle(), nullptr, nullptr,
+                               EvtSubscribeStartAfterBookmark));
 
     if (_handle->get_handle() == nullptr) {
         throw win_exception(
@@ -429,9 +427,8 @@ uint64_t EventLogVista::getLastRecordId() {
 
     EVT_HANDLE event_handle = nullptr;
     DWORD num_events = 0;
-    if (evt().next &&
-        evt().next(log->get_handle(), 1, &event_handle, INFINITE, 0,
-                   &num_events)) {
+    if (evt().next && evt().next(log->get_handle(), 1, &event_handle, INFINITE,
+                                 0, &num_events)) {
         auto event = std::make_unique<ManagedEventHandle>(*_evt, event_handle);
 
         return EventLogRecordVista(event->get_handle(), _evt.get(),

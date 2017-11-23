@@ -49,8 +49,8 @@ std::string get_win_error_as_string(const WinApiAdaptor &winapi,
 win_exception::win_exception(const WinApiAdaptor &winapi,
                              const std::string &msg,
                              DWORD error_code /* = GET_LAST_ERROR */)
-    : std::runtime_error(msg + "; " +
-                         get_win_error_as_string(winapi,
-                                                 error_code == GET_LAST_ERROR
-                                                     ? winapi.GetLastError()
-                                                     : error_code)) {}
+    : std::runtime_error(
+          msg + "; " +
+          get_win_error_as_string(winapi, error_code == GET_LAST_ERROR
+                                              ? winapi.GetLastError()
+                                              : error_code)) {}

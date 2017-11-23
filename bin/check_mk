@@ -103,7 +103,7 @@ try:
             exit_status = modes.call("--check", None, opts, args)
         else:
             modes.get("help").handler_function()
-            exit_status = 1
+            exit_status = 0
 
     profiling.output_profile()
     sys.exit(exit_status)

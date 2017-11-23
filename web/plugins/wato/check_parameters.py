@@ -1588,6 +1588,29 @@ register_rule(group + '/' + subgroup_inventory,
     match = "dict",
 )
 
+register_rule(
+    "%s/%s" % (group, subgroup_inventory),
+    varname="inventory_fujitsu_ca_ports",
+    title=_("Discovery of Fujtsu storage CA ports"),
+    valuespec=Dictionary(
+        elements=[
+            ("indices", ListOfStrings(title=_("CA port indices"))),
+            ("modes", DualListChoice(
+                title=_("CA port modes"),
+                choices=[
+                    ("CA", _("CA")),
+                    ("RA", _("RA")),
+                    ("CARA", _("CARA")),
+                    ("Initiator", _("Initiator")),
+                ],
+                row=4,
+                size=30,
+            )),
+        ],
+    ),
+    match="dict",
+)
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |

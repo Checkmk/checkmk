@@ -1,0 +1,18 @@
+title: Fujitsu storage systems: CA ports
+agents: snmp
+catalog: hw/storagehw/fujitsu
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the CA ports of Fujitsu storage systems
+ which support the FJDARY-E150-SNMPV2.MIB like the ETERNUS DX500 S3.
+
+ In the discovery rule 'Discovery of Fujtsu storage CA ports'
+ port indices and port modes are configurable.
+ By default CA ports in mode 'CA' and 'CARA' are discovered.
+
+item:
+ The CA port index.
+
+inventory:
+ One service per port is created.

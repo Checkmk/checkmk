@@ -1,0 +1,14 @@
+Title: fjdarye500_ca_ports: New checks monitor IO and throughput of Fujitsu storage CA ports
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511458802
+Class: feature
+
+By default CA ports in mode 'CA' and 'CARA' are discovered.
+Moreover port indices can be configured in the related
+discovery rule 'Discovery of Fujtsu storage CA ports'.
+There are no hints in the SNMP data which ports are active
+thus the above rule may be useful.

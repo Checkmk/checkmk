@@ -53,7 +53,7 @@ class Table;
 class Query {
 public:
     Query(const std::list<std::string> &lines, Table *, Encoding data_encoding,
-          size_t max_response_size, OutputBuffer &output);
+          size_t max_response_size, OutputBuffer &output, Logger *logger);
 
     bool process();
 

@@ -67,7 +67,7 @@ using std::unique_ptr;
 using std::vector;
 
 Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
-             size_t max_response_size, OutputBuffer &output)
+             size_t max_response_size, OutputBuffer &output, Logger *logger)
     : _data_encoding(data_encoding)
     , _max_response_size(max_response_size)
     , _output(output)
@@ -85,12 +85,17 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
     , _time_limit_timeout(0)
     , _current_line(0)
     , _timezone_offset(0)
-    , _logger(table->logger()) {
+    , _logger(logger) {
     for (auto &line : lines) {
         vector<char> line_copy(line.begin(), line.end());
         line_copy.push_back('\0');
         char *buffer = &line_copy[0];
         rstrip(buffer);
+        // In case of an invalid table name, we just want to parse enough to
+        // determine the kind of response header.
+        if (table == nullptr && strncmp(buffer, "ResponseHeader:", 15) != 0) {
+            continue;
+        }
         if (strncmp(buffer, "Filter:", 7) == 0) {
             parseFilterLine(lstrip(buffer + 7), _filter);
 
@@ -183,7 +188,7 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
         }
     }
 
-    if (_columns.empty() && !doStats()) {
+    if (table != nullptr && _columns.empty() && !doStats()) {
         table->any_column([this](shared_ptr<Column> c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
@@ -672,6 +677,9 @@ void Query::parseLocaltimeLine(char *line) {
 bool Query::doStats() { return !_stats_columns.empty(); }
 
 bool Query::process() {
+    if (_table == nullptr) {
+        return false;
+    }
     // Precondition: output has been reset
     auto start_time = system_clock::now();
     auto renderer =

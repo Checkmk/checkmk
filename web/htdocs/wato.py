@@ -13838,8 +13838,6 @@ class ModeEditRule(WatoMode):
             orientation = "horizontal",
             valuespec = TextAscii(size = 30)).render_input("hostlist", explicit_hosts)
 
-        html.br()
-        html.br()
         html.checkbox("negate_hosts", negate_hosts, label =
                      _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
         html.close_div()

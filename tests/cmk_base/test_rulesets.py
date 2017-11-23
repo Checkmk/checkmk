@@ -10,6 +10,7 @@ def fake_version(monkeypatch):
     monkeypatch.setattr(cmk, "omd_version", lambda: "1.4.0i1.cee")
 
 
+# Automatically refresh caches for each test
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches(monkeypatch):
     import cmk_base
@@ -19,12 +20,12 @@ def clear_config_caches(monkeypatch):
 
 
 # TODO: Test the negations
-def test_service_extra_conf():
-    # TODO: monkeypatch this!
+def test_service_extra_conf(monkeypatch):
     import cmk_base.config as config
-    config.all_hosts = ["host1|tag1|tag2", "host2|tag1"]
-    config.clusters = {}
+    monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
+    monkeypatch.setattr(config, "clusters", {})
     config.collect_hosttags()
+
     ruleset = [
         ("1", [], rulesets.ALL_HOSTS, rulesets.ALL_SERVICES, {}),
         ("2", [], rulesets.ALL_HOSTS, rulesets.ALL_SERVICES, {}),
@@ -59,17 +60,13 @@ def test_service_extra_conf():
 # TODO: host_extra_conf_merged
 
 
-def test_all_matching_hosts():
-    # TODO: monkeypatch this!
-    import cmk_base
-    #reload(cmk_base)
-
+def test_all_matching_hosts(monkeypatch):
     import cmk_base.config as config
-    #reload(config)
 
-    config.distributed_wato_site = "site1"
-    config.all_hosts = ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"]
-    config.clusters = {}
+    monkeypatch.setattr(config, "distributed_wato_site", "site1")
+    monkeypatch.setattr(config, "all_hosts",
+        ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"])
+    monkeypatch.setattr(config, "clusters", {})
     config.collect_hosttags()
 
     assert rulesets.all_matching_hosts(["tag1"], rulesets.ALL_HOSTS, with_foreign_hosts=False) == \

@@ -1,0 +1,13 @@
+Title: mk_oracle.ps1: Fixed scattered information for configuration
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p20
+Date: 1511433928
+
+Information about the correct configuration of the oracle plugin for windows
+has been scattered around serveral places in Check_MK. As for now all needed
+information is available in the script itself.

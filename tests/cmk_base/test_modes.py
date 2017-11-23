@@ -366,6 +366,8 @@ def test_restore(request, test_cfg, site):
 #   '----------------------------------------------------------------------'
 # TODO
 
+# TODO: --cleanup-piggyback
+
 
 #.
 #   .--scan-parents--------------------------------------------------------.
@@ -663,7 +665,31 @@ def test_check_discovery(test_cfg, site):
 #   |                      \___|_| |_|\___|\___|_|\_\                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-# TODO
+
+def test_check(test_cfg, site):
+    for opt in [ "--check", "" ]:
+        p = site.execute(["cmk", opt, "modes-test-host"], stdout=subprocess.PIPE)
+        assert p.wait() == 0
+        output = p.stdout.read()
+        assert output.startswith("OK - Agent version")
+
+
+def test_check_verbose_perfdata(test_cfg, site):
+    p = site.execute(["cmk", "-v", "-p", "modes-test-host"], stdout=subprocess.PIPE)
+    assert p.wait() == 0
+    output = p.stdout.read()
+    assert "Temperature Zone 0" in output
+    assert "temp=32.4;" in output
+    assert "OK - Agent version" in output
+
+
+def test_check_verbose_only_check(test_cfg, site):
+    p = site.execute(["cmk", "-v", "--checks=lnx_if", "modes-test-host"], stdout=subprocess.PIPE)
+    assert p.wait() == 0
+    output = p.stdout.read()
+    assert "Temperature Zone 0" not in output
+    assert "Interface 2" in output
+    assert "OK - Agent version" in output
 
 #.
 #   .--version-------------------------------------------------------------.
@@ -674,7 +700,15 @@ def test_check_discovery(test_cfg, site):
 #   |                   \_/ \___|_|  |___/_|\___/|_| |_|                   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-# TODO
+
+def test_version(test_cfg, site):
+    import cmk
+    p = site.execute(["cmk", "--version"],
+                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    assert p.wait() == 0
+    assert stderr == ""
+    assert "This is Check_MK" in stdout
 
 #.
 #   .--help----------------------------------------------------------------.
@@ -685,5 +719,21 @@ def test_check_discovery(test_cfg, site):
 #   |                        |_| |_|\___|_| .__/                           |
 #   |                                     |_|                              |
 #   '----------------------------------------------------------------------'
-# TODO
 
+def test_help(test_cfg, site):
+    p = site.execute(["cmk", "--help"],
+                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    assert p.wait() == 0
+    assert stderr == ""
+    assert stdout.startswith("WAYS TO CALL:")
+    assert "--snmpwalk" in stdout
+
+
+def test_help_without_args(test_cfg, site):
+    p = site.execute(["cmk"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    assert p.wait() == 0
+    assert stderr == ""
+    assert stdout.startswith("WAYS TO CALL:")
+    assert "--snmpwalk" in stdout

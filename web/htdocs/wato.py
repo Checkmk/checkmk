@@ -17411,7 +17411,8 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 attr.render_input(varprefix, defvalue)
                 html.close_div()
 
-                html.open_div(class_="inherited", id_="attr_default_%s" % attrname, style="display: none;" if active else None)
+                html.open_div(class_="inherited", id_="attr_default_%s" % attrname,
+                              style="display: none;" if active else None)
 
             #
             # DIV with actual / inherited / default value

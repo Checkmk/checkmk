@@ -32,8 +32,8 @@ using std::lock_guard;
 using std::mutex;
 using std::ofstream;
 using std::ostringstream;
-using std::stringstream;
 using std::string;
+using std::stringstream;
 
 // TODO: replace this old C based implementation with
 // std(::experimental)::filesystem as soon as we upgrade to a MinGW version

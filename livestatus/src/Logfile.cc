@@ -40,8 +40,8 @@
 #include <new>
 #include "cmc.h"
 using std::bad_alloc;
-using std::unique_ptr;
 using std::to_string;
+using std::unique_ptr;
 #else
 #include <memory>
 #include <vector>

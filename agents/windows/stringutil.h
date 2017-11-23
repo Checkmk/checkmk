@@ -122,7 +122,7 @@ std::string to_string(const T &source) {
     str << source;
     return str.str();
 }
-}
+}  // namespace std
 
 #endif  // _cplusplus < 201103L
 

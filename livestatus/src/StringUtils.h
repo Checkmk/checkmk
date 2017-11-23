@@ -60,6 +60,6 @@ std::pair<std::string, std::string> nextField(
 std::string ipv4ToString(in_addr_t ipv4_address);
 std::string portToString(in_port_t port);
 #endif
-}  // namespace
+}  // namespace mk
 
 #endif  // StringUtils_h

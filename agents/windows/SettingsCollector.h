@@ -61,7 +61,7 @@ public:
 private:
     bool m_ClearPending;
 };
-}
+}  // namespace BlockMode
 
 namespace AddMode {
 
@@ -142,6 +142,6 @@ private:
     GroupFunction _function;
     typename ContainerT::iterator _insert_pos;
 };
-}
+}  // namespace AddMode
 
 #endif  // SETTINGS_COLLECTOR_H

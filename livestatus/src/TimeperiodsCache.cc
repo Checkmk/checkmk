@@ -29,11 +29,11 @@
 #include <utility>
 #include "Logger.h"
 
+using std::chrono::minutes;
+using std::chrono::system_clock;
 using std::lock_guard;
 using std::mutex;
 using std::string;
-using std::chrono::system_clock;
-using std::chrono::minutes;
 
 extern timeperiod *timeperiod_list;
 

@@ -30,9 +30,9 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 
+using std::chrono::system_clock;
 using std::make_unique;
 using std::string;
-using std::chrono::system_clock;
 
 namespace {
 // Check memory every N'th new message

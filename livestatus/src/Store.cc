@@ -291,22 +291,22 @@ void Store::answerCommandNagios(const ExternalCommand &command) {
 bool Store::answerGetRequest(const std::list<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
+    // NOTE: Even with an invalid table name we continue, so we can parse
+    // headers, especially ResponseHeader.
     if (tablename.empty()) {
         output.setError(OutputBuffer::ResponseCode::invalid_request,
                         "Invalid GET request, missing tablename");
-        return false;
     }
 
     Table *table = findTable(tablename);
     if (table == nullptr) {
-        output.setError(OutputBuffer::ResponseCode::not_found,
-                        "Invalid GET request, no such table '" +
-                            std::string(tablename) + "'");
-        return false;
+        output.setError(
+            OutputBuffer::ResponseCode::not_found,
+            "Invalid GET request, no such table '" + tablename + "'");
     }
 
     return Query(lines, table, _mc->dataEncoding(), _mc->maxResponseSize(),
-                 output)
+                 output, logger())
         .process();
 }
 

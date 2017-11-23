@@ -87,6 +87,7 @@ Query::Query(const std::list<std::string> &lines, Table *table,
     : _data_encoding(data_encoding)
     , _max_response_size(max_response_size)
     , _output(output)
+    , _renderer_query(nullptr)
     , _table(table)
     , _keepalive(false)
     , _auth_user(nullptr)

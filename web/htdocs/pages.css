@@ -871,6 +871,7 @@ input.date, input.time {
 
 span.checkbox {
     white-space: nowrap;
+    line-height: 14px;
 }
 
 
@@ -921,8 +922,7 @@ table.nform > tbody > tr > td {
 }
 
 table.nform > tbody > tr > td.simple {
-   vertical-align: top;
-   height: 18px;
+    line-height: 20px;
 }
 
 table.nform td.legend {
@@ -930,8 +930,8 @@ table.nform td.legend {
     width: 240px;
     padding-right: 8px;
     vertical-align: top;
-    padding-top: 8px;
     padding-left: 10px;
+    line-height: 28px;
 }
 table.nform td.legend.simple {
     padding-top: 5px;
@@ -967,7 +967,6 @@ table.nform td.legend div.checkbox {
 table.nform td.content {
     padding-left: 10px;
     padding-right: 10px;
-    padding-bottom: 10px;
 }
 table.nform td.content.simple {
     padding-bottom: 0px;

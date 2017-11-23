@@ -54,7 +54,7 @@ struct is_bit_mask {
 // A helper template to make template definitions a bit shorter
 template <typename T>
 constexpr bool is_bit_mask_v = is_bit_mask<T>::value;
-}  // namespace
+}  // namespace mk
 
 template <typename Enum, typename = std::enable_if_t<mk::is_bit_mask_v<Enum>>>
 inline constexpr Enum operator&(Enum x, Enum y) {

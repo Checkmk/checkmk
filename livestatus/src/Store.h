@@ -64,7 +64,7 @@ class Table;
 #ifdef CMC
 #include <cstdint>
 #include "TableCachedStatehist.h"
-class Config;
+class GlobalConfig;
 class Object;
 #else
 #include <mutex>
@@ -147,7 +147,7 @@ private:
     void addTable(Table *table);
     Table *findTable(const std::string &name);
 #ifdef CMC
-    const Config *config() const;
+    const GlobalConfig *config() const;
     uint32_t horizon() const;
 #else
     void logRequest(const std::string &line,

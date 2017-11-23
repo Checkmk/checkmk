@@ -1,0 +1,13 @@
+Title: mk_oracle.ps1: Fixed exceptions because of useless backslashes
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p27
+Date: 1511435209
+
+There has been a bug introduced as part of a feature enhancement which
+caused an exception of the plugin and prevented the execution. This bug has
+been introduced in June 16th and is solved now.

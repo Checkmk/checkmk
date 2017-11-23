@@ -1596,6 +1596,7 @@ modes.register(Mode(
     handler_function=mode_version,
     short_help="Print the version of Check_MK",
     needs_config=False,
+    needs_checks=False,
 ))
 
 

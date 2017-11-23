@@ -83,7 +83,7 @@ void checkNoArguments(const char *line) {
 
 Query::Query(const std::list<std::string> &lines, Table *table,
              Encoding data_encoding, size_t max_response_size,
-             OutputBuffer &output)
+             OutputBuffer &output, Logger *logger)
     : _data_encoding(data_encoding)
     , _max_response_size(max_response_size)
     , _output(output)
@@ -101,7 +101,7 @@ Query::Query(const std::list<std::string> &lines, Table *table,
     , _time_limit_timeout(0)
     , _current_line(0)
     , _timezone_offset(0)
-    , _logger(table->logger()) {
+    , _logger(logger) {
     FilterStack filters;
     FilterStack wait_conditions;
     for (auto &line : lines) {
@@ -117,6 +117,11 @@ Query::Query(const std::list<std::string> &lines, Table *table,
         } else {
             header = stripped_line.substr(0, pos);
             rest = mk::lstrip(stripped_line.substr(pos + 1));
+        }
+        // In case of an invalid table name, we just want to parse enough to
+        // determine the kind of response header.
+        if (table == nullptr && header != "ResponseHeader") {
+            continue;
         }
         std::vector<char> rest_copy(rest.begin(), rest.end());
         rest_copy.push_back('\0');
@@ -185,7 +190,7 @@ Query::Query(const std::list<std::string> &lines, Table *table,
         }
     }
 
-    if (_columns.empty() && !doStats()) {
+    if (table != nullptr && _columns.empty() && !doStats()) {
         table->any_column([this](std::shared_ptr<Column> c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
@@ -491,6 +496,9 @@ void Query::parseLocaltimeLine(char *line) {
 bool Query::doStats() const { return !_stats_columns.empty(); }
 
 bool Query::process() {
+    if (_table == nullptr) {
+        return false;
+    }
     // Precondition: output has been reset
     auto start_time = std::chrono::system_clock::now();
     auto renderer =

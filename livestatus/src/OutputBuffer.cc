@@ -44,8 +44,8 @@ OutputBuffer::OutputBuffer(int fd, const bool &termination_flag, Logger *logger)
     , _termination_flag(termination_flag)
     , _logger(logger)
     // TODO(sp) This is really the wrong default because it hides some early
-    // errors, e.g. an unknown table name. But we can't change this easily
-    // because of legacy reasons... :-/
+    // errors, e.g. an unknown command. But we can't change this easily because
+    // of legacy reasons... :-/
     , _response_header(ResponseHeader::off)
     , _response_code(ResponseCode::ok) {}
 

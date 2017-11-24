@@ -53,11 +53,7 @@ void PerfdataAggregator::consumeVariable(const std::string &varname,
                                          double value) {
     auto it = _aggr.find(varname);
     if (it == _aggr.end()) {  // first entry
-        perf_aggr new_entry;
-        new_entry._count = 1;
-        new_entry._aggr = value;
-        new_entry._sumq = value * value;
-        _aggr.emplace(varname, new_entry);
+        _aggr.emplace(varname, perf_aggr{1, value, value * value});
     } else {
         it->second._count++;
         switch (_operation) {
@@ -122,12 +118,13 @@ void PerfdataAggregator::output(RowRenderer &r) const {
                 break;
 
             case StatsOperation::std:
-                value = entry.second._count <= 1
-                            ? 0.0
-                            : sqrt((entry.second._sumq -
-                                    (entry.second._aggr * entry.second._aggr) /
-                                        entry.second._count) /
-                                   (entry.second._count - 1));
+                if (entry.second._count == 0) {
+                    value = 0.0;
+                } else {
+                    auto mean = entry.second._aggr / entry.second._count;
+                    value = sqrt(entry.second._sumq / entry.second._count -
+                                 mean * mean);
+                }
                 break;
 
             case StatsOperation::suminv:

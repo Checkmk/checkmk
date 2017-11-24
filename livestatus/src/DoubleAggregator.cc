@@ -87,9 +87,11 @@ void DoubleAggregator::output(RowRenderer& r) const {
             r.output(_aggr / _count);
             break;
 
-        case StatsOperation::std:
-            r.output(sqrt((_sumq - _aggr * _aggr / _count) / (_count - 1)));
+        case StatsOperation::std: {
+            auto mean = _aggr / _count;
+            r.output(sqrt(_sumq / _count - mean * mean));
             break;
+        }
 
         case StatsOperation::suminv:
             r.output(_aggr);

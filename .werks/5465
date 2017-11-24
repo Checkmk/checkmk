@@ -1,0 +1,18 @@
+Title: Fixed calculation of standard deviation.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511517478
+Class: fix
+
+Note: This fixes only a slightly esoteric feature, namely "Stats: std ..."
+headers.  Normal users are not affected, only those using this header via
+self-written scripts.
+
+Livestatus incorrectly used a bias correction when calculating the standard
+deviation. For more mathematical background see:
+
+   https://en.wikipedia.org/wiki/Bessel%27s_correction
+   http://mathworld.wolfram.com/StandardDeviation.html

@@ -30,10 +30,11 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "Aggregator.h"
 #include "Column.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Aggregation;
+class Aggregator;
 class Filter;
 class Row;
 class RowRenderer;
@@ -55,7 +56,7 @@ public:
         RelationalOperator relOp, const std::string &value) const override;
 
     std::unique_ptr<Aggregator> createAggregator(
-        StatsOperation operation) const override;
+        const Aggregation &aggregation) const override;
 
     virtual std::unique_ptr<std::vector<char>> getValue(Row row) const = 0;
 };

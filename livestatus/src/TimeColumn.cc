@@ -24,7 +24,7 @@
 
 #include "TimeColumn.h"
 #include <chrono>
-#include <ratio>
+#include "Aggregator.h"
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -42,8 +42,8 @@ std::unique_ptr<Filter> TimeColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> TimeColumn::createAggregator(
-    StatsOperation operation) const {
-    return std::make_unique<TimeAggregator>(operation, this);
+    const Aggregation &aggregation) const {
+    return std::make_unique<TimeAggregator>(aggregation, this);
 }
 
 std::chrono::system_clock::time_point TimeColumn::getValue(

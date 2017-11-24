@@ -29,6 +29,8 @@
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
+class Aggregation;
+class Aggregator;
 
 #ifdef CMC
 #include "Object.h"
@@ -52,7 +54,7 @@ std::unique_ptr<Filter> CustomVarsDictColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> CustomVarsDictColumn::createAggregator(
-    StatsOperation /*operation*/) const {
+    const Aggregation & /*aggregation*/) const {
     throw std::runtime_error("aggregating on dictionary column '" + name() +
                              "' not supported");
 }

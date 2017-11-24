@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DoubleColumn.h"
+#include "Aggregator.h"
 #include "DoubleAggregator.h"
 #include "DoubleFilter.h"
 #include "Filter.h"
@@ -41,6 +42,6 @@ std::unique_ptr<Filter> DoubleColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> DoubleColumn::createAggregator(
-    StatsOperation operation) const {
-    return std::make_unique<DoubleAggregator>(operation, this);
+    const Aggregation &aggregation) const {
+    return std::make_unique<DoubleAggregator>(aggregation, this);
 }

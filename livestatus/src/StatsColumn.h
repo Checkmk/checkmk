@@ -52,12 +52,12 @@ private:
 
 class StatsColumnOp : public StatsColumn {
 public:
-    StatsColumnOp(StatsOperation operation, Column *column);
+    StatsColumnOp(Aggregation::operation operation, Column *column);
     std::unique_ptr<Filter> stealFilter() override;
     std::unique_ptr<Aggregator> createAggregator(Logger *logger) const override;
 
 private:
-    StatsOperation _operation;
+    Aggregation::operation _operation;
     Column *_column;
     std::unique_ptr<Filter> _filter;
 };

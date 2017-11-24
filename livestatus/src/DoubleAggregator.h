@@ -27,31 +27,29 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <cstdint>
 #include "Aggregator.h"
+#include "DoubleColumn.h"
 #include "contact_fwd.h"
-class DoubleColumn;
 class Row;
 class RowRenderer;
 
 class DoubleAggregator : public Aggregator {
 public:
-    DoubleAggregator(StatsOperation operation, const DoubleColumn *column)
-        : _operation(operation)
-        , _column(column)
-        , _count(0)
-        , _aggr(0)
-        , _sumq(0) {}
-    void consume(Row row, const contact *contact,
-                 std::chrono::seconds timezone_offset) override;
-    void output(RowRenderer &r) const override;
+    DoubleAggregator(const Aggregation &aggregation, const DoubleColumn *column)
+        : _aggregation(aggregation), _column(column) {}
+
+    void consume(Row row, const contact * /*contact*/,
+                 std::chrono::seconds /*timezone_offset*/) override {
+        _aggregation.update(_column->getValue(row));
+    }
+
+    void output(RowRenderer &r) const override {
+        r.output(_aggregation.value());
+    }
 
 private:
-    const StatsOperation _operation;
+    Aggregation _aggregation;
     const DoubleColumn *const _column;
-    std::uint32_t _count;
-    double _aggr;
-    double _sumq;
 };
 
 #endif  // DoubleAggregator_h

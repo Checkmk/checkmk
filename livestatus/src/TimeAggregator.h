@@ -27,31 +27,30 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <cstdint>
 #include "Aggregator.h"
+#include "TimeColumn.h"
 #include "contact_fwd.h"
-class TimeColumn;
 class Row;
 class RowRenderer;
 
 class TimeAggregator : public Aggregator {
 public:
-    TimeAggregator(StatsOperation operation, const TimeColumn *column)
-        : _operation(operation)
-        , _column(column)
-        , _count(0)
-        , _aggr(0)
-        , _sumq(0) {}
-    void consume(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) override;
-    void output(RowRenderer &r) const override;
+    TimeAggregator(const Aggregation &aggregation, const TimeColumn *column)
+        : _aggregation(aggregation), _column(column) {}
+
+    void consume(Row row, const contact * /*auth_user*/,
+                 std::chrono::seconds timezone_offset) override {
+        _aggregation.update(std::chrono::system_clock::to_time_t(
+            _column->getValue(row, timezone_offset)));
+    }
+
+    void output(RowRenderer &r) const override {
+        r.output(_aggregation.value());
+    }
 
 private:
-    const StatsOperation _operation;
+    Aggregation _aggregation;
     const TimeColumn *const _column;
-    std::uint32_t _count;
-    double _aggr;
-    double _sumq;
 };
 
 #endif  // TimeAggregator_h

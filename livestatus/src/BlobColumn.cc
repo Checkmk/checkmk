@@ -27,7 +27,7 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void BlobColumn::output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+void BlobColumn::output(Row row, RowRenderer& r, const contact* /*auth_user*/,
                         std::chrono::seconds /*timezone_offset*/) const {
     if (std::unique_ptr<std::vector<char>> blob = getValue(row)) {
         r.output(*blob);
@@ -37,13 +37,13 @@ void BlobColumn::output(Row row, RowRenderer &r, const contact * /*auth_user*/,
 }
 
 std::unique_ptr<Filter> BlobColumn::createFilter(
-    RelationalOperator /*unused*/, const std::string & /*unused*/) const {
+    RelationalOperator /*unused*/, const std::string& /*unused*/) const {
     throw std::runtime_error("filtering on blob column '" + name() +
                              "' not supported");
 }
 
 std::unique_ptr<Aggregator> BlobColumn::createAggregator(
-    StatsOperation /*operation*/) const {
+    const Aggregation& /*aggregation*/) const {
     throw std::runtime_error("aggregating on blob column '" + name() +
                              "' not supported");
 }

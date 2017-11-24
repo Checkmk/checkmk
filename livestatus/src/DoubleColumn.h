@@ -29,10 +29,11 @@
 #include <chrono>
 #include <memory>
 #include <string>
-#include "Aggregator.h"
 #include "Column.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Aggregation;
+class Aggregator;
 class Filter;
 class Row;
 class RowRenderer;
@@ -51,7 +52,7 @@ public:
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
     std::unique_ptr<Aggregator> createAggregator(
-        StatsOperation operation) const override;
+        const Aggregation &aggregation) const override;
 };
 
 #endif  // DoubleColumn_h

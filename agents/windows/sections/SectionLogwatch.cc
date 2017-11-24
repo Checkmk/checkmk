@@ -311,7 +311,8 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
         }
 
         // Output line
-        if (write_output && !lineString.empty()) {
+        if (write_output && !lineString.empty() &&
+            !(textfile->nocontext && (state == 'I' || state == '.'))) {
             out << state << " " << lineString << "\n";
         }
 

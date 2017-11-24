@@ -1,0 +1,17 @@
+Title: Windows agent: nocontext tag did not work for multibyte encoded logfiles
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p20
+Date: 1511530638
+
+If a Windows logfile was encoded with a multibyte character encoding
+the nocontext flag had no effect, always outputting the full context.
+
+The nocontext tag now works correctly, in a way similar to single-byte
+encoded logfiles.
+
+

@@ -27,38 +27,14 @@
 #include "../PerfCounterCommon.h"
 #include "../WinApiAdaptor.h"
 #include "../stringutil.h"
-#include "SectionPerfcounter.h"
-
-namespace {
-
-int getCounterName(
-    const WinApiAdaptor &winapi,
-    const std::array<std::unordered_map<std::string, DWORD>, 2> &nameIdMaps,
-    const std::string &counterName, Logger *logger) {
-    for (const auto &nameIdMap : nameIdMaps) {
-        const auto it = nameIdMap.find(counterName);
-
-        if (it != nameIdMap.end()) {
-            return it->second;
-        }
-    }
-    Debug(logger) << "SectionSkype::SectionSkype "
-                  << "could not resolve counter name " << counterName;
-    return -1;
-}
-
-}  // namespace
 
 SectionSkype::SectionSkype(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
-    : SectionGroup("skype", "skype", env, logger, winapi) {
+    : SectionGroup("skype", "skype", env, logger, winapi)
+    , _nameNumberMap(_logger, _winapi) {
     withToggleIfMissing();
     withNestedSubtables();
     withSeparator(',');
-
-    const std::array<std::unordered_map<std::string, DWORD>, 2> nameIdMaps = {
-        perf_name_map<char>(_winapi, false),
-        perf_name_map<char>(_winapi, true)};
 
     for (const std::string &counterName :
          {"LS:WEB - Address Book Web Query",
@@ -91,22 +67,15 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
           "LS:XmppFederationProxy - Streams",
           "LS:A/V Edge - TCP Counters",
           "LS:A/V Edge - UDP Counters"}) {
-        int counterId =
-            getCounterName(_winapi, nameIdMaps, counterName, _logger);
-        if (counterId >= 0) {
-            withSubSection(new SectionPerfcounter(
-                counterName, counterName, counterId, _env, _logger, _winapi));
-        }
+        withSubSection(new SectionPerfcounter(counterName, counterName, _env,
+                                              _nameNumberMap, _logger, _winapi));
     }
 
     // TODO the version number in the counter name isn't exactly inspiring
     // trust, but there currently is no support for wildcards.
     const std::string counterName = "ASP.NET Apps v4.0.30319";
-    int counterId = getCounterName(_winapi, nameIdMaps, counterName, _logger);
-    if (counterId >= 0) {
-        withDependentSubSection(new SectionPerfcounter(
-            counterName, counterName, counterId, _env, _logger, _winapi));
-    }
+    withDependentSubSection(new SectionPerfcounter(
+        counterName, counterName, _env, _nameNumberMap, _logger, _winapi));
 }
 
 bool SectionSkype::produceOutputInner(std::ostream &out) {

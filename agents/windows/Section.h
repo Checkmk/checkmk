@@ -36,18 +36,17 @@
 
 class Environment;
 class Logger;
-class WinApiAdaptor;
 
 class Section {
     friend class SectionGroup;
 
-    const std::string _outputName;
-    const std::string _configName;
     bool _show_header{true};
     char _separator{' '};
     bool _realtime_support{false};
 
 protected:
+    const std::string _outputName;
+    const std::string _configName;
     const Environment &_env;
     Logger *_logger;
     const WinApiAdaptor &_winapi;

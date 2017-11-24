@@ -29,13 +29,33 @@
 #include "../PerfCounterCommon.h"
 #include "../stringutil.h"
 
+int NameBaseNumberMap::getCounterBaseNumber(const std::string &counterName) {
+    // Fill name -> counter ID maps lazily when first needed.
+    if (_nameIdMaps.empty()) {
+        _nameIdMaps = {perf_name_map<char>(_winapi, false),
+                       perf_name_map<char>(_winapi, true)};
+    }
+
+    for (const auto &nameIdMap : _nameIdMaps) {
+        const auto it = nameIdMap.find(counterName);
+
+        if (it != nameIdMap.end()) {
+            return it->second;
+        }
+    }
+    Debug(_logger) << "NameBaseNumberMap::getCounterBaseNumber "
+                   << "could not resolve counter name " << counterName;
+    return -1;
+}
+
 SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
                                        const std::string &configName,
-                                       unsigned counterBaseNumber,
-                                       const Environment &env, Logger *logger,
+                                       const Environment &env,
+                                       NameBaseNumberMap &nameNumberMap,
+                                       Logger *logger,
                                        const WinApiAdaptor &winapi)
     : Section(outputName, configName, env, logger, winapi)
-    , _counter_base_number(counterBaseNumber) {
+    , _nameNumberMap(nameNumberMap) {
     withSeparator(',');
 }
 
@@ -47,8 +67,14 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
 bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
     Debug(_logger) << "SectionPerfcounter::produceOutputInner";
     try {
-        PerfCounterObject counter_object(_counter_base_number, _winapi,
-                                         _logger);
+        const int counterBaseNumber =
+            _nameNumberMap.getCounterBaseNumber(_outputName);
+
+        if (counterBaseNumber < 0) {
+            return false;
+        }
+
+        PerfCounterObject counter_object(counterBaseNumber, _winapi, _logger);
         std::vector<std::wstring> instance_names =
             counter_object.instanceNames();
         std::vector<PERF_INSTANCE_DEFINITION *> instances =

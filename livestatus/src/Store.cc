@@ -66,7 +66,8 @@ Store::Store(MonitoringCore *mc)
     , _table_servicesbyhostgroup(mc)
     , _table_statehistory(mc, &_log_cache)
     , _table_status(mc)
-    , _table_timeperiods(mc) {
+    , _table_timeperiods(mc)
+    , _table_dummy(mc) {
     addTable(_table_columns);
     addTable(_table_commands);
     addTable(_table_comments);
@@ -96,12 +97,21 @@ void Store::addTable(Table &table) {
     _table_columns.addTable(table);
 }
 
-Table *Store::findTable(const std::string &name) {
+Table &Store::findTable(OutputBuffer &output, const std::string &name) {
+    // NOTE: Even with an invalid table name we continue, so we can parse
+    // headers, especially ResponseHeader.
+    if (name.empty()) {
+        output.setError(OutputBuffer::ResponseCode::invalid_request,
+                        "Invalid GET request, missing table name");
+        return _table_dummy;
+    }
     auto it = _tables.find(name);
     if (it == _tables.end()) {
-        return nullptr;
+        output.setError(OutputBuffer::ResponseCode::not_found,
+                        "Invalid GET request, no such table '" + name + "'");
+        return _table_dummy;
     }
-    return it->second;
+    return *it->second;
 }
 
 void Store::registerDowntime(nebstruct_downtime_data *data) {
@@ -291,22 +301,8 @@ void Store::answerCommandNagios(const ExternalCommand &command) {
 bool Store::answerGetRequest(const std::list<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
-    // NOTE: Even with an invalid table name we continue, so we can parse
-    // headers, especially ResponseHeader.
-    if (tablename.empty()) {
-        output.setError(OutputBuffer::ResponseCode::invalid_request,
-                        "Invalid GET request, missing tablename");
-    }
-
-    Table *table = findTable(tablename);
-    if (table == nullptr) {
-        output.setError(
-            OutputBuffer::ResponseCode::not_found,
-            "Invalid GET request, no such table '" + tablename + "'");
-    }
-
-    return Query(lines, table, _mc->dataEncoding(), _mc->maxResponseSize(),
-                 output, logger())
+    return Query(lines, findTable(output, tablename), _mc->dataEncoding(),
+                 _mc->maxResponseSize(), output, logger())
         .process();
 }
 

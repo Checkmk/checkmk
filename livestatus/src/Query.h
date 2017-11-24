@@ -52,7 +52,7 @@ class Table;
 
 class Query {
 public:
-    Query(const std::list<std::string> &lines, Table *, Encoding data_encoding,
+    Query(const std::list<std::string> &lines, Table &, Encoding data_encoding,
           size_t max_response_size, OutputBuffer &output, Logger *logger);
 
     bool process();
@@ -85,7 +85,7 @@ private:
     const size_t _max_response_size;
     OutputBuffer &_output;
     QueryRenderer *_renderer_query;
-    Table *_table;
+    Table &_table;
     bool _keepalive;
     using FilterStack = std::vector<std::unique_ptr<Filter>>;
     std::unique_ptr<AndingFilter> _filter;

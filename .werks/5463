@@ -1,0 +1,13 @@
+Title: Report invalid table names via response header.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511510734
+Class: fix
+
+Even when "ResponseHeader: fixed16" was used, an invalid table name in a GET
+request was not reported via Livestatus (only in the log file of the
+monitoring core).  This was a regression compared to 1.2.8 and has been
+fixed.

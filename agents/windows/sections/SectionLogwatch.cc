@@ -216,17 +216,19 @@ void SectionLogwatch::saveOffsets(const std::string &logwatch_statefile) {
     }
 }
 
+namespace {
+
 // Process content of the given textfile
 // Can be called in dry-run mode (write_output = false). This tries to detect
 // CRIT or WARN patterns
 // If write_output is set to true any data found is written to the out socket
-int fill_unicode_bytebuffer(FILE *file, char *buffer, int offset) {
+inline int fill_unicode_bytebuffer(FILE *file, char *buffer, int offset) {
     int bytes_to_read = UNICODE_BUFFER_SIZE - offset;
     int read_bytes = fread(buffer + offset, 1, bytes_to_read, file);
     return read_bytes + offset;
 }
 
-int find_crnl_end(char *buffer) {
+inline int find_crnl_end(char *buffer) {
     for (size_t index = 0; index < UNICODE_BUFFER_SIZE; index += 2) {
         if (buffer[index] == 0x0d && index < UNICODE_BUFFER_SIZE - 2 &&
             buffer[index + 2] == 0x0a)
@@ -234,6 +236,14 @@ int find_crnl_end(char *buffer) {
     }
     return -1;
 }
+
+inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+                return !std::isspace(ch);
+            }).base(), s.end());
+}
+
+} //namespace
 
 SectionLogwatch::ProcessTextfileResponse
 SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
@@ -276,6 +286,7 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
         // Argh! The wstring needs to be cut at CRLF as it may go on beyond that
         unicode_wstr.resize(buffer_size);
         std::string output_buffer = to_utf8(unicode_wstr);
+        rtrim(output_buffer);
         Debug(_logger)
             << "SectionLogwatch::processTextfileUnicode, output_buffer: "
             << output_buffer;
@@ -344,12 +355,12 @@ SectionLogwatch::processTextfileDefault(FILE *file, logwatch_textfile *textfile,
 
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file)) break;
-
-        if (line[strlen(line) - 1] == '\n') line[strlen(line) - 1] = 0;
+        std::string lineString(line);
+        rtrim(lineString);
 
         char state = '.';
         for (condition_pattern *pattern : *textfile->patterns) {
-            if (globmatch(pattern->glob_pattern, line)) {
+            if (globmatch(pattern->glob_pattern, lineString.c_str())) {
                 if (!write_output &&
                     (pattern->state == 'C' || pattern->state == 'W' ||
                      pattern->state == 'O')) {
@@ -364,7 +375,7 @@ SectionLogwatch::processTextfileDefault(FILE *file, logwatch_textfile *textfile,
 
         if (write_output && strlen(line) > 0 &&
             !(textfile->nocontext && (state == 'I' || state == '.')))
-            out << state << " " << line << "\n";
+            out << state << " " << lineString << "\n";
     }
 
     response.found_match = false;

@@ -213,18 +213,20 @@ void SectionLogwatch::saveOffsets(const std::string &logwatch_statefile) {
     }
 }
 
+namespace {
+
 // Process content of the given textfile
 // Can be called in dry-run mode (write_output = false). This tries to detect
 // CRIT or WARN patterns
 // If write_output is set to true any data found is written to the out socket
 #define UNICODE_BUFFER_SIZE 8192
-int fill_unicode_bytebuffer(FILE *file, char *buffer, int offset) {
+inline int fill_unicode_bytebuffer(FILE *file, char *buffer, int offset) {
     int bytes_to_read = UNICODE_BUFFER_SIZE - offset;
     int read_bytes = fread(buffer + offset, 1, bytes_to_read, file);
     return read_bytes + offset;
 }
 
-int find_crnl_end(char *buffer) {
+inline int find_crnl_end(char *buffer) {
     int index = 0;
     while (true) {
         if (index >= UNICODE_BUFFER_SIZE) return -1;
@@ -235,6 +237,14 @@ int find_crnl_end(char *buffer) {
     }
     return -1;
 }
+
+inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+                return !std::isspace(ch);
+            }).base(), s.end());
+}
+
+} //namespace
 
 SectionLogwatch::ProcessTextfileResponse
 SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
@@ -279,14 +289,15 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
                             cut_line ? (UNICODE_BUFFER_SIZE - 2) / 2
                                      : (crnl_end_offset - 4) / 2,
                             output_buffer, sizeof(output_buffer), NULL, NULL);
-
+        std::string lineString(output_buffer);
+        rtrim(lineString);
         // Check line
         char state = '.';
         for (condition_patterns_t::iterator it_patt =
                  textfile->patterns->begin();
              it_patt != textfile->patterns->end(); it_patt++) {
             pattern = *it_patt;
-            if (globmatch(pattern->glob_pattern, output_buffer)) {
+            if (globmatch(pattern->glob_pattern, lineString.c_str())) {
                 if (!write_output &&
                     (pattern->state == 'C' || pattern->state == 'W' ||
                      pattern->state == 'O')) {
@@ -300,8 +311,8 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
         }
 
         // Output line
-        if (write_output && strlen(output_buffer) > 0) {
-            out << state << " " << output_buffer << "\n";
+        if (write_output && !lineString.empty()) {
+            out << state << " " << lineString << "\n";
         }
 
         if (cut_line) {
@@ -343,12 +354,12 @@ SectionLogwatch::processTextfileDefault(FILE *file, logwatch_textfile *textfile,
 
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file)) break;
-
-        if (line[strlen(line) - 1] == '\n') line[strlen(line) - 1] = 0;
+        std::string lineString(line);
+        rtrim(lineString);
 
         char state = '.';
         for (condition_pattern *pattern : *textfile->patterns) {
-            if (globmatch(pattern->glob_pattern, line)) {
+            if (globmatch(pattern->glob_pattern, lineString.c_str())) {
                 if (!write_output &&
                     (pattern->state == 'C' || pattern->state == 'W' ||
                      pattern->state == 'O')) {
@@ -363,7 +374,7 @@ SectionLogwatch::processTextfileDefault(FILE *file, logwatch_textfile *textfile,
 
         if (write_output && strlen(line) > 0 &&
             !(textfile->nocontext && (state == 'I' || state == '.')))
-            out << state << " " << line << "\n";
+            out << state << " " << lineString << "\n";
     }
 
     response.found_match = false;

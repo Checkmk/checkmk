@@ -1,0 +1,17 @@
+Title: Windows agent: fix logfile glob patterns without '*' at the end
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.4.0p20
+Date: 1511530237
+
+Windows logfile patterns have required a wildcard '*' at the end in
+order to work correctly. It was not possible to require an exact match
+to the end of a line without wildcard '*' at the end. The reason was a
+carriage-return (CR) character at the end of each read line that
+prevented a match unless a '*' was present at the end of the pattern.
+
+Now also patterns without a wildcard '*' at the end work correctly.

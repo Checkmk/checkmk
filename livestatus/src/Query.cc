@@ -81,7 +81,7 @@ void checkNoArguments(const char *line) {
 }
 }  // namespace
 
-Query::Query(const std::list<std::string> &lines, Table *table,
+Query::Query(const std::list<std::string> &lines, Table &table,
              Encoding data_encoding, size_t max_response_size,
              OutputBuffer &output, Logger *logger)
     : _data_encoding(data_encoding)
@@ -118,11 +118,6 @@ Query::Query(const std::list<std::string> &lines, Table *table,
         } else {
             header = stripped_line.substr(0, pos);
             rest = mk::lstrip(stripped_line.substr(pos + 1));
-        }
-        // In case of an invalid table name, we just want to parse enough to
-        // determine the kind of response header.
-        if (table == nullptr && header != "ResponseHeader") {
-            continue;
         }
         std::vector<char> rest_copy(rest.begin(), rest.end());
         rest_copy.push_back('\0');
@@ -191,8 +186,8 @@ Query::Query(const std::list<std::string> &lines, Table *table,
         }
     }
 
-    if (table != nullptr && _columns.empty() && !doStats()) {
-        table->any_column([this](std::shared_ptr<Column> c) {
+    if (_columns.empty() && !doStats()) {
+        table.any_column([this](std::shared_ptr<Column> c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
@@ -231,7 +226,7 @@ void Query::parseAndOrLine(char *line, LogicalOperator op,
     for (auto i = 0; i < number; ++i) {
         if (filters.empty()) {
             throw std::runtime_error(
-                "error combining filters for table '" + _table->name() +
+                "error combining filters for table '" + _table.name() +
                 "': expected " + std::to_string(number) +
                 " filters, but only " + std::to_string(i) + " " +
                 (i == 1 ? "is" : "are") + " on stack");
@@ -246,7 +241,7 @@ void Query::parseAndOrLine(char *line, LogicalOperator op,
 void Query::parseNegateLine(char *line, FilterStack &filters) {
     checkNoArguments(line);
     if (filters.empty()) {
-        throw("error combining filters for table '" + _table->name() +
+        throw("error combining filters for table '" + _table.name() +
               "': expected 1 filters, but only 0 are on stack");
     }
 
@@ -261,7 +256,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
     for (auto i = 0; i < number; ++i) {
         if (_stats_columns.empty()) {
             throw std::runtime_error(
-                "error combining filters for table '" + _table->name() +
+                "error combining filters for table '" + _table.name() +
                 "': expected " + std::to_string(number) +
                 " filters, but only " + std::to_string(i) + " " +
                 (i == 1 ? "is" : "are") + " on stack");
@@ -276,7 +271,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
 void Query::parseStatsNegateLine(char *line) {
     checkNoArguments(line);
     if (_stats_columns.empty()) {
-        throw("error combining filters for table '" + _table->name() +
+        throw("error combining filters for table '" + _table.name() +
               "': expected 1 filters, but only 0 are on stack");
     }
     auto to_negate = _stats_columns.back()->stealFilter();
@@ -300,13 +295,13 @@ void Query::parseStatsLine(char *line) {
     auto col_or_op = nextStringArgument(&line);
     auto it = stats_ops.find(col_or_op);
     if (it == stats_ops.end()) {
-        column = _table->column(col_or_op);
+        column = _table.column(col_or_op);
         auto relOp = relationalOperatorForName(nextStringArgument(&line));
         auto operand = mk::lstrip(line);
         sc = std::make_unique<StatsColumnCount>(
             column->createFilter(relOp, operand));
     } else {
-        column = _table->column(nextStringArgument(&line));
+        column = _table.column(nextStringArgument(&line));
         sc = std::make_unique<StatsColumnOp>(it->second, column.get());
     }
     _stats_columns.push_back(std::move(sc));
@@ -317,7 +312,7 @@ void Query::parseStatsLine(char *line) {
 }
 
 void Query::parseFilterLine(char *line, FilterStack &filters) {
-    auto column = _table->column(nextStringArgument(&line));
+    auto column = _table.column(nextStringArgument(&line));
     auto relOp = relationalOperatorForName(nextStringArgument(&line));
     auto operand = mk::lstrip(line);
     auto sub_filter = column->createFilter(relOp, operand);
@@ -350,7 +345,7 @@ void Query::parseColumnsLine(char *line) {
         pos = str.find_first_not_of(sep, space);
         std::shared_ptr<Column> column;
         try {
-            column = _table->column(column_name);
+            column = _table.column(column_name);
         } catch (const std::runtime_error &e) {
             // Do not fail any longer. We might want to make this configurable.
             // But not failing has the advantage that an updated GUI, that
@@ -453,12 +448,12 @@ void Query::parseWaitTimeoutLine(char *line) {
 }
 
 void Query::parseWaitTriggerLine(char *line) {
-    _wait_trigger = _table->core()->triggers().find(nextStringArgument(&line));
+    _wait_trigger = _table.core()->triggers().find(nextStringArgument(&line));
 }
 
 void Query::parseWaitObjectLine(char *line) {
     auto objectspec = mk::lstrip(line);
-    _wait_object = _table->findObject(objectspec);
+    _wait_object = _table.findObject(objectspec);
     if (_wait_object.isNull()) {
         throw std::runtime_error("object '" + objectspec +
                                  "' not found or not supported by this table");
@@ -497,9 +492,6 @@ void Query::parseLocaltimeLine(char *line) {
 bool Query::doStats() const { return !_stats_columns.empty(); }
 
 bool Query::process() {
-    if (_table == nullptr) {
-        return false;
-    }
     // Precondition: output has been reset
     auto start_time = std::chrono::system_clock::now();
     auto renderer =
@@ -509,7 +501,7 @@ bool Query::process() {
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     _renderer_query = &q;
     start(q);
-    _table->answerQuery(this);
+    _table.answerQuery(this);
     finish(q);
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
@@ -557,7 +549,7 @@ bool Query::processDataset(Row row) {
     }
 
     if (_filter->accepts(row, _auth_user, _timezone_offset) &&
-        ((_auth_user == nullptr) || _table->isAuthorized(row, _auth_user))) {
+        (_auth_user == nullptr || _table.isAuthorized(row, _auth_user))) {
         _current_line++;
         if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
             return false;
@@ -644,7 +636,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
-    _table->core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
+    _table.core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
         return _wait_condition->accepts(_wait_object, _auth_user,
                                         timezoneOffset());
     });

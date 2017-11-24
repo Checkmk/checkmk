@@ -33,6 +33,7 @@
 #include <vector>
 #endif
 #include "LogCache.h"
+#include "Table.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
 #include "TableComments.h"
@@ -55,11 +56,11 @@
 #include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
+class Query;
 class InputBuffer;
 class Logger;
 class MonitoringCore;
 class OutputBuffer;
-class Table;
 
 #ifdef CMC
 #include <cstdint>
@@ -99,6 +100,13 @@ public:
     Logger *logger() const;
 
 private:
+    struct TableDummy : public Table {
+        explicit TableDummy(MonitoringCore *mc) : Table(mc) {}
+        std::string name() const override { return "dummy"; }
+        std::string namePrefix() const override { return "dummy_"; }
+        void answerQuery(Query * /*query*/) override {}
+    };
+
     MonitoringCore *_mc;
 #ifndef CMC
     // TODO(sp) These fields should better be somewhere else, e.g. module.cc
@@ -135,6 +143,7 @@ private:
     TableStateHistory _table_statehistory;
     TableStatus _table_status;
     TableTimeperiods _table_timeperiods;
+    TableDummy _table_dummy;
 
     std::map<std::string, Table *> _tables;
 
@@ -145,7 +154,7 @@ private:
 #endif
 
     void addTable(Table &table);
-    Table *findTable(const std::string &name);
+    Table &findTable(OutputBuffer &output, const std::string &name);
 #ifdef CMC
     const GlobalConfig *config() const;
     uint32_t horizon() const;

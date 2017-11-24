@@ -1,0 +1,19 @@
+Title: Improved performance of pages showing many graphs
+Level: 2
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1511506236
+Class: feature
+
+Previously the GUI was loading all graphs in the progress of
+rendering a view. The view was rendered to the user once the
+information for all graphs is known. This mechanism made pages
+that show a lot of graphs load slowly.
+
+With this change the views are now rendered with a place holder
+for each graph which is a lot faster. After the view has been
+loaded for the user, the browser starts to render the graphs
+asynchronously and simultaneously which will also reduce the
+total time needed for loading.

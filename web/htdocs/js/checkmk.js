@@ -612,6 +612,7 @@ function executeJSbyObject(obj)
                 eval(aScripts[i].text);
                 g_current_script = null;
             } catch(e) {
+                console.log(e)
                 alert(aScripts[i].text + "\nError:" + e.message);
             }
         }

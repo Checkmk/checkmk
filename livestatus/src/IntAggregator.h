@@ -27,31 +27,29 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <cstdint>
 #include "Aggregator.h"
+#include "IntColumn.h"
 #include "contact_fwd.h"
-class IntColumn;
 class Row;
 class RowRenderer;
 
 class IntAggregator : public Aggregator {
 public:
-    IntAggregator(StatsOperation operation, const IntColumn *column)
-        : _operation(operation)
-        , _column(column)
-        , _count(0)
-        , _aggr(0)
-        , _sumq(0) {}
+    IntAggregator(const Aggregation &aggregation, const IntColumn *column)
+        : _aggregation(aggregation), _column(column) {}
+
     void consume(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) override;
-    void output(RowRenderer &r) const override;
+                 std::chrono::seconds /* timezone_offset*/) override {
+        _aggregation.update(_column->getValue(row, auth_user));
+    }
+
+    void output(RowRenderer &r) const override {
+        r.output(_aggregation.value());
+    }
 
 private:
-    const StatsOperation _operation;
+    Aggregation _aggregation;
     const IntColumn *const _column;
-    std::uint32_t _count;
-    double _aggr;
-    double _sumq;
 };
 
 #endif  // IntAggregator_h

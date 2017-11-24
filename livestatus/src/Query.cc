@@ -281,11 +281,14 @@ void Query::parseStatsNegateLine(char *line) {
 }
 
 namespace {
-std::map<std::string, StatsOperation> stats_ops{
-    {"sum", StatsOperation::sum},      {"min", StatsOperation::min},
-    {"max", StatsOperation::max},      {"avg", StatsOperation::avg},
-    {"std", StatsOperation::std},      {"suminv", StatsOperation::suminv},
-    {"avginv", StatsOperation::avginv}};
+std::map<std::string, Aggregation::operation> stats_ops{
+    {"sum", Aggregation::operation::sum},
+    {"min", Aggregation::operation::min},
+    {"max", Aggregation::operation::max},
+    {"avg", Aggregation::operation::avg},
+    {"std", Aggregation::operation::std},
+    {"suminv", Aggregation::operation::suminv},
+    {"avginv", Aggregation::operation::avginv}};
 }  // namespace
 
 void Query::parseStatsLine(char *line) {

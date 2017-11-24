@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "IntColumn.h"
+#include "Aggregator.h"
 #include "Filter.h"
 #include "IntAggregator.h"
 #include "IntFilter.h"
@@ -40,6 +41,6 @@ std::unique_ptr<Filter> IntColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> IntColumn::createAggregator(
-    StatsOperation operation) const {
-    return std::make_unique<IntAggregator>(operation, this);
+    const Aggregation &aggregation) const {
+    return std::make_unique<IntAggregator>(aggregation, this);
 }

@@ -22,6 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// https://github.com/include-what-you-use/include-what-you-use/issues/434
+// IWYU pragma: no_include <type_traits>
 #include "PerfdataAggregator.h"
 #include <cmath>
 #include <iterator>
@@ -41,54 +43,12 @@ void PerfdataAggregator::consume(Row row, const contact * /* auth_user */,
         auto pos = it->find('=');
         if (pos != std::string::npos) {
             try {
-                consumeVariable(it->substr(0, pos),
-                                std::stod(it->substr(pos + 1)));
+                auto varname = it->substr(0, pos);
+                auto value = std::stod(it->substr(pos + 1));
+                _aggregations.insert(std::make_pair(varname, _aggregation))
+                    .first->second.update(value);
             } catch (const std::logic_error &e) {
             }
-        }
-    }
-}
-
-void PerfdataAggregator::consumeVariable(const std::string &varname,
-                                         double value) {
-    auto it = _aggr.find(varname);
-    if (it == _aggr.end()) {  // first entry
-        _aggr.emplace(varname, perf_aggr{1, value, value * value});
-    } else {
-        it->second._count++;
-        switch (_operation) {
-            case StatsOperation::sum:
-                it->second._aggr += value;
-                break;
-
-            case StatsOperation::min:
-                if (value < it->second._aggr) {
-                    it->second._aggr = value;
-                }
-                break;
-
-            case StatsOperation::max:
-                if (value > it->second._aggr) {
-                    it->second._aggr = value;
-                }
-                break;
-
-            case StatsOperation::avg:
-                it->second._aggr += value;
-                break;
-
-            case StatsOperation::std:
-                it->second._aggr += value;
-                it->second._sumq += value * value;
-                break;
-
-            case StatsOperation::suminv:
-                it->second._aggr += 1.0 / value;
-                break;
-
-            case StatsOperation::avginv:
-                it->second._aggr += 1.0 / value;
-                break;
         }
     }
 }
@@ -96,53 +56,16 @@ void PerfdataAggregator::consumeVariable(const std::string &varname,
 void PerfdataAggregator::output(RowRenderer &r) const {
     std::string perf_data;
     bool first = true;
-    for (const auto &entry : _aggr) {
-        double value;
-        switch (_operation) {
-            case StatsOperation::sum:
-                value = entry.second._aggr;
-                break;
-
-            case StatsOperation::min:
-                value = entry.second._aggr;
-                break;
-
-            case StatsOperation::max:
-                value = entry.second._aggr;
-                break;
-
-            case StatsOperation::avg:
-                value = entry.second._count == 0
-                            ? 0.0
-                            : (entry.second._aggr / entry.second._count);
-                break;
-
-            case StatsOperation::std:
-                if (entry.second._count == 0) {
-                    value = 0.0;
-                } else {
-                    auto mean = entry.second._aggr / entry.second._count;
-                    value = sqrt(entry.second._sumq / entry.second._count -
-                                 mean * mean);
-                }
-                break;
-
-            case StatsOperation::suminv:
-                value = entry.second._aggr;
-                break;
-
-            case StatsOperation::avginv:
-                value = entry.second._count == 0
-                            ? 0.00
-                            : (entry.second._aggr / entry.second._count);
-                break;
+    for (const auto &entry : _aggregations) {
+        double value = entry.second.value();
+        if (std::isfinite(value)) {
+            if (first) {
+                first = false;
+            } else {
+                perf_data += " ";
+            }
+            perf_data += entry.first + "=" + std::to_string(value);
         }
-        if (first) {
-            first = false;
-        } else {
-            perf_data += " ";
-        }
-        perf_data += entry.first + "=" + std::to_string(value);
     }
     r.output(perf_data);
 }

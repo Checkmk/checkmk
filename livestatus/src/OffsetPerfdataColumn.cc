@@ -23,9 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetPerfdataColumn.h"
+#include "Aggregator.h"
 #include "PerfdataAggregator.h"
 
 std::unique_ptr<Aggregator> OffsetPerfdataColumn::createAggregator(
-    StatsOperation operation) const {
-    return std::make_unique<PerfdataAggregator>(operation, this);
+    const Aggregation &aggregation) const {
+    return std::make_unique<PerfdataAggregator>(aggregation, this);
 }

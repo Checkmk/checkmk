@@ -27,6 +27,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <vector>
+#include "Aggregator.h"
 #include "AndingFilter.h"
 #include "Column.h"
 #include "CountAggregator.h"
@@ -47,7 +48,7 @@ std::unique_ptr<Aggregator> StatsColumnCount::createAggregator(
 
 // Note: We create an "accept all" filter, just in case we fall back to
 // counting.
-StatsColumnOp::StatsColumnOp(StatsOperation operation, Column *column)
+StatsColumnOp::StatsColumnOp(Aggregation::operation operation, Column *column)
     : _operation(operation)
     , _column(column)
     , _filter(std::make_unique<AndingFilter>(
@@ -60,7 +61,7 @@ std::unique_ptr<Filter> StatsColumnOp::stealFilter() {
 std::unique_ptr<Aggregator> StatsColumnOp::createAggregator(
     Logger *logger) const {
     try {
-        return _column->createAggregator(_operation);
+        return _column->createAggregator(Aggregation(_operation));
     } catch (const std::runtime_error &e) {
         Informational(logger) << e.what() << ", falling back to counting";
         return std::make_unique<CountAggregator>(_filter.get());

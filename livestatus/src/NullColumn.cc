@@ -40,6 +40,6 @@ std::unique_ptr<Filter> NullColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> NullColumn::createAggregator(
-    StatsOperation /*operation*/) const {
+    const Aggregation& /*aggregation*/) const {
     throw std::runtime_error("aggregating on null column not supported");
 }

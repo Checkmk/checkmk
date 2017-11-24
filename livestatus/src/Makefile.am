@@ -48,7 +48,6 @@ liblivestatus_a_SOURCES = \
         CustomVarsExplicitColumn.cc \
         CustomVarsNamesColumn.cc \
         CustomVarsValuesColumn.cc \
-        DoubleAggregator.cc \
         DoubleColumn.cc \
         DoubleFilter.cc \
         DowntimeColumn.cc \
@@ -68,7 +67,6 @@ liblivestatus_a_SOURCES = \
         HostSpecialDoubleColumn.cc \
         HostSpecialIntColumn.cc \
         InputBuffer.cc \
-        IntAggregator.cc \
         IntColumn.cc \
         IntFilter.cc \
         ListColumn.cc \
@@ -137,7 +135,6 @@ liblivestatus_a_SOURCES = \
         TableStateHistory.cc \
         TableStatus.cc \
         TableTimeperiods.cc \
-        TimeAggregator.cc \
         TimeColumn.cc \
         TimeFilter.cc \
         TimeperiodColumn.cc \

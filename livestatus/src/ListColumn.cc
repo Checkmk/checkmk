@@ -43,7 +43,7 @@ std::unique_ptr<Filter> ListColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> ListColumn::createAggregator(
-    StatsOperation /*operation*/) const {
+    const Aggregation & /*aggregation*/) const {
     throw std::runtime_error("aggregating on list column '" + name() +
                              "' not supported");
 }

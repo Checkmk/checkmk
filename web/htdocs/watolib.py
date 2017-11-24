@@ -1342,34 +1342,29 @@ class CREFolder(BaseFolder):
         if "tag_agent" not in attributes:
             return attributes # Nothing set here, no transformation necessary
 
-        if "tag_snmp" in attributes or "tag_ping" in attributes:
+        if "tag_snmp" in attributes:
             return attributes # Already in new format, no transformation necessary
 
         value = attributes["tag_agent"]
 
         if value == "cmk-agent":
             attributes["tag_snmp"] = "no-snmp"
-            attributes["tag_ping"] = None
 
         elif value == "snmp-only":
             attributes["tag_agent"] = "no-agent"
             attributes["tag_snmp"]  = "snmp-v2"
-            attributes["tag_ping"]  = None
 
         elif value == "snmp-v1":
             attributes["tag_agent"] = "no-agent"
             attributes["tag_snmp"]  = "snmp-v1"
-            attributes["tag_ping"]  = None
 
         elif value == "snmp-tcp":
             attributes["tag_agent"] = "cmk-agent"
             attributes["tag_snmp"]  = "snmp-v2"
-            attributes["tag_ping"]  = None
 
         elif value == "ping":
             attributes["tag_agent"] = "no-agent"
             attributes["tag_snmp"]  = "no-snmp"
-            attributes["tag_ping"]  = "ping"
 
         return attributes
 
@@ -2752,6 +2747,14 @@ class CREHost(WithPermissionsAndAttributes):
         for attr, topic in all_host_attributes():
             value = effective.get(attr.name())
             tags.update(attr.get_tag_list(value))
+
+        # When a host as been configured not to use the agent and not to use
+        # SNMP, it needs to get the ping tag assigned.
+        # Because we need information from multiple attributes to get this
+        # information, we need to add this decision here.
+        if "no-snmp" in tags and "no-agent" in tags:
+            tags.add("ping")
+
         return tags
 
 
@@ -6062,9 +6065,6 @@ def register_builtin_host_tags():
 
     del builtin_host_tags[:]
     builtin_host_tags += [
-        ("ping", "%s/%s" % (_("Data sources"), _("Ping only")), [
-            ("ping", _("only ping this device"), []),
-        ]),
         ("agent", "%s/%s" % (_("Data sources"), _("Check_MK Agent")), [
                 ("cmk-agent",      _("Contact either Check_MK Agent or use datasource program"), ["tcp"]),
                 ("all-agents",     _("Contact Check_MK agent and all enabled datasource programs"), ["tcp"]),
@@ -6090,10 +6090,11 @@ def register_builtin_host_tags():
 
     del builtin_aux_tags[:]
     builtin_aux_tags += [
-        ("ip-v4", _("IPv4")),
-        ("ip-v6", _("IPv6")),
-        ("snmp",  _("Monitor via SNMP")),
-        ("tcp",   _("Monitor via Check_MK Agent")),
+        ("ip-v4", "%s/%s" % (_("Address"), _("IPv4"))),
+        ("ip-v6", "%s/%s" % (_("Address"), _("IPv6"))),
+        ("snmp",  "%s/%s" % (_("Data sources"), _("Monitor via SNMP"))),
+        ("tcp",   "%s/%s" % (_("Data sources"), _("Monitor via Check_MK Agent"))),
+        ("ping",  "%s/%s" % (_("Data sources"), _("Only ping this device"))),
     ]
 
 

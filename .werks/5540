@@ -1,0 +1,12 @@
+Title: "Graph time range" display option had no effect on Check_MK graphs
+Level: 1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i2
+Date: 1511534729
+
+The graph time range configured in the view is the "default" time range and
+the display option is meant to override this view default.

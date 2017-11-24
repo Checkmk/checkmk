@@ -30,10 +30,11 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include "Aggregator.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Aggregation;
+class Aggregator;
 class Filter;
 class Logger;
 class RowRenderer;

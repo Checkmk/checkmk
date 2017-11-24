@@ -27,20 +27,38 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #undef CreateMutex
 #include "../Section.h"
 
+class NameBaseNumberMap {
+public:
+    NameBaseNumberMap(Logger *logger, const WinApiAdaptor &winapi)
+        : _logger(logger), _winapi(winapi) {}
+    NameBaseNumberMap(const NameBaseNumberMap &) = delete;
+    NameBaseNumberMap &operator=(const NameBaseNumberMap &) = delete;
+
+    int getCounterBaseNumber(const std::string &counterName);
+
+private:
+    // Fill name -> counter ID maps lazily when first needed.
+    std::vector<std::unordered_map<std::string, DWORD>> _nameIdMaps;
+
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
+};
+
 class SectionPerfcounter : public Section {
-    const unsigned _counter_base_number;
     bool _toggle_if_missing{false};
     time_t _disabled_until{0};
+    NameBaseNumberMap &_nameNumberMap;
 
 public:
     SectionPerfcounter(const std::string &outputName,
-                       const std::string &configName,
-                       unsigned counterBaseNumber, const Environment &env,
-                       Logger *logger, const WinApiAdaptor &winapi);
+                       const std::string &configName, const Environment &env,
+                       NameBaseNumberMap &nameNumberMap, Logger *logger,
+                       const WinApiAdaptor &winapi);
 
     SectionPerfcounter *withToggleIfMissing();
 

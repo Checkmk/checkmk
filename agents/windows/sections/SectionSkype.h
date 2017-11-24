@@ -28,6 +28,7 @@
 #undef CreateMutex
 #include "../Section.h"
 #include "SectionGroup.h"
+#include "SectionPerfcounter.h"
 
 class SectionSkype : public SectionGroup {
 public:
@@ -36,6 +37,10 @@ public:
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
+
+private:
+    // Use a single counter name -> base no. map. Fill lazily when first needed.
+    NameBaseNumberMap _nameNumberMap;
 };
 
 #endif  // SectionSkype_h

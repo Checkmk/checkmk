@@ -1,0 +1,12 @@
+Title: Report invalid GET headers even when they appear before ResponseHeader.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.4.0p20
+Date: 1511511872
+Class: fix
+
+Up to now the header was simply ignored without complaint, this has been
+fixed.  Note that this only affected 1.2.8 and 1.4.0.  1.5.0 was not
+affected by this bug.

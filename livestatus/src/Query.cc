@@ -184,7 +184,6 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
 
         } else {
             invalidHeader("Undefined request header '" + string(buffer) + "'");
-            break;
         }
     }
 

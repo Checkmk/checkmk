@@ -16578,6 +16578,7 @@ class ModeAnalyzeConfig(WatoMode):
         while True:
             try:
                 site_id, results_data = result_queue.get_nowait()
+                results_data = ast.literal_eval(results_data)
 
                 if isinstance(results_data, Exception):
                     raise results_data
@@ -16613,11 +16614,11 @@ class ModeAnalyzeConfig(WatoMode):
                 results_data = watolib.do_remote_automation(
                     config.site(site_id), "check-analyze-config", [])
 
-            result_queue.put((site_id, results_data))
+            result_queue.put((site_id, repr(results_data)))
 
         except Exception, e:
             log_exception()
-            result_queue.put((site_id, e))
+            result_queue.put((site_id, repr(e)))
         finally:
             result_queue.close()
             result_queue.join_thread()

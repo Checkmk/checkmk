@@ -1007,17 +1007,28 @@ def paint_time_graph_cmk(row, cell, show_timeranges=False):
             "host_name"           : row["host_name"],
             "service_description" : row.get("service_description", "_HOST_"),
     })
-    graph_data_range = { "time_range" : get_graph_timerange_from_painter_options() }
 
     # Load the graph render options from
     # a) the painter parameters configured in the view
     # b) the painter options set per user and view
     graph_render_options = cell.painter_parameters().copy()
+    graph_data_range = {}
 
     options = painter_options.get_without_default("graph_render_options")
     if options != None:
         graph_render_options.update(options)
+        # Do not load this setting form the painter options
         del graph_render_options["set_default_time_range"]
+
+    if "set_default_time_range" in graph_render_options:
+        duration = graph_render_options["set_default_time_range"]
+        now      = time.time()
+        graph_data_range["time_range"] = now - duration, now
+
+    # Load timerange from painter option (overrides the defaults, if set by the user)
+    painter_option_pnp_timerange = painter_options.get_without_default("pnp_timerange")
+    if painter_option_pnp_timerange is not None:
+        graph_data_range["time_range"] = get_graph_timerange_from_painter_options()
 
     if html.is_mobile():
         graph_render_options.update({

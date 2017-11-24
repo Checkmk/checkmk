@@ -29,7 +29,7 @@ class Column;
 
 std::string ColumnsColumn::getValue(Row row) const {
     if (auto p = columnData<Column>(row)) {
-        return _table_columns->getValue(p, _colcol);
+        return _table_columns.getValue(p, _colcol);
     }
     return "";
 }

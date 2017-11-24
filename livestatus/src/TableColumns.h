@@ -35,8 +35,6 @@ class MonitoringCore;
 class Query;
 
 class TableColumns : public Table {
-    std::vector<Table *> _tables;
-
 public:
     explicit TableColumns(MonitoringCore *mc);
 
@@ -44,10 +42,13 @@ public:
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
-    void addTable(Table *);
+    void addTable(const Table &table);
     std::string getValue(const Column *column,
                          ColumnsColumn::Type colcol) const;
     std::string tableNameOf(const Column *column) const;
+
+private:
+    std::vector<const Table *> _tables;
 };
 
 #endif  // TableColumns_h

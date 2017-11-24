@@ -67,32 +67,32 @@ Store::Store(MonitoringCore *mc)
     , _table_statehistory(mc, &_log_cache)
     , _table_status(mc)
     , _table_timeperiods(mc) {
-    addTable(&_table_columns);
-    addTable(&_table_commands);
-    addTable(&_table_comments);
-    addTable(&_table_contactgroups);
-    addTable(&_table_contacts);
-    addTable(&_table_downtimes);
-    addTable(&_table_hostgroups);
-    addTable(&_table_hostsbygroup);
-    addTable(&_table_hosts);
-    addTable(&_table_log);
-    addTable(&_table_servicegroups);
-    addTable(&_table_servicesbygroup);
-    addTable(&_table_servicesbyhostgroup);
-    addTable(&_table_services);
-    addTable(&_table_statehistory);
-    addTable(&_table_status);
-    addTable(&_table_timeperiods);
-    addTable(&_table_eventconsoleevents);
-    addTable(&_table_eventconsolehistory);
-    addTable(&_table_eventconsolestatus);
-    addTable(&_table_eventconsolereplication);
-    addTable(&_table_eventconsolerules);
+    addTable(_table_columns);
+    addTable(_table_commands);
+    addTable(_table_comments);
+    addTable(_table_contactgroups);
+    addTable(_table_contacts);
+    addTable(_table_downtimes);
+    addTable(_table_hostgroups);
+    addTable(_table_hostsbygroup);
+    addTable(_table_hosts);
+    addTable(_table_log);
+    addTable(_table_servicegroups);
+    addTable(_table_servicesbygroup);
+    addTable(_table_servicesbyhostgroup);
+    addTable(_table_services);
+    addTable(_table_statehistory);
+    addTable(_table_status);
+    addTable(_table_timeperiods);
+    addTable(_table_eventconsoleevents);
+    addTable(_table_eventconsolehistory);
+    addTable(_table_eventconsolestatus);
+    addTable(_table_eventconsolereplication);
+    addTable(_table_eventconsolerules);
 }
 
-void Store::addTable(Table *table) {
-    _tables.emplace(table->name(), table);
+void Store::addTable(Table &table) {
+    _tables.emplace(table.name(), &table);
     _table_columns.addTable(table);
 }
 

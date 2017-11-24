@@ -144,7 +144,7 @@ private:
     std::mutex _command_mutex;
 #endif
 
-    void addTable(Table *table);
+    void addTable(Table &table);
     Table *findTable(const std::string &name);
 #ifdef CMC
     const GlobalConfig *config() const;

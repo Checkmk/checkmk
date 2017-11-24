@@ -167,7 +167,6 @@ Query::Query(const list<string> &lines, OutputBuffer *output, Table *table)
         } else {
             output->setError(RESPONSE_CODE_INVALID_HEADER,
                              "Undefined request header '%s'", buffer);
-            break;
         }
     }
 }

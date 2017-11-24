@@ -37,7 +37,7 @@ public:
 
     ColumnsColumn(const std::string &name, const std::string &description,
                   int indirect_offset, int extra_offset, int extra_extra_offset,
-                  int offset, Type colcol, TableColumns *tablecols)
+                  int offset, Type colcol, const TableColumns &tablecols)
         : StringColumn(name, description, indirect_offset, extra_offset,
                        extra_extra_offset, offset)
         , _colcol(colcol)
@@ -46,7 +46,7 @@ public:
 
 private:
     const Type _colcol;
-    TableColumns *_table_columns;
+    const TableColumns &_table_columns;
 };
 
 #endif  // ColumnsColumn_h

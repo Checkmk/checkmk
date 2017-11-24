@@ -1473,7 +1473,7 @@ def action_edit_host(mode, hostname, is_cluster):
 
 
     if mode != "edit": # new/clone
-        if host.tag('agent') != 'ping':
+        if "ping" not in host.tags():
             create_msg = _('Successfully created the host. Now you should do a '
                            '<a href="%s">service discovery</a> in order to auto-configure '
                            'all services to be checked on this host.') % \

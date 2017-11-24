@@ -153,19 +153,24 @@ def logwatch_level_worst(worst, level):
 
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
-def logwatch_precompile(hostname, item, params):
-    params = {"reclassify_patterns": [], "reclassify_states": {}}
+def logwatch_precompile(hostname, item, _unused):
+    # Initialize the patterns list with the logwatch_rules
+    params = {"reclassify_patterns": []}
 
     # This is the new (-> WATO controlled) variable
     rules = service_extra_conf(hostname, item, logwatch_rules)
 
     for rule in rules:
         if isinstance(rule, dict):
-            params["reclassify_patterns"].extend(x[:2] for x in rule.get("reclassify_patterns"))
+            params["reclassify_patterns"].extend(x for x in rule.get("reclassify_patterns"))
             if "reclassify_states" in rule:
+                # NOTE: This key cannot be set unless it contains a valid entry.
+                #       The check does not care either way, but the GUI's validation fails
+                #       if it is passed to it with an empty dict.
+                params.setdefault("reclassify_states", {})
                 params["reclassify_states"] = rule["reclassify_states"]
         else:
-            params["reclassify_patterns"].extend(x[:2] for x in rule)
+            params["reclassify_patterns"].extend(x for x in rule)
 
     # Now load the old logwatch_patterns var
     patterns = logwatch_patterns.get(item)
@@ -187,7 +192,10 @@ def logwatch_precompile(hostname, item, params):
                     in_extraconf_hostlist(hostlist, hostname)):
                 continue
 
-            params["reclassify_patterns"].append((level, pattern))
+            # All entries need to be 3-Tuples to be compatible with the wato rule.
+            # The third entry is a comment not used in the check anyway, so we just
+            # fill it with None here.
+            params["reclassify_patterns"].append((level, pattern, None))
 
     return params
 
@@ -203,7 +211,7 @@ def logwatch_reclassify(counts, patterns, text, old_level):
 
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
-    for level, pattern in patterns.get("reclassify_patterns", []):
+    for level, pattern, _ in patterns.get("reclassify_patterns", []):
         reg = regex(pattern)
         if reg.search(text):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),

@@ -1,0 +1,13 @@
+Title: logwatch: Fix exception in WATO's check parameter display
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1511534791
+
+Previously, WATO's check parameter display would complain about invalid check parameters,
+due to logwatch's parameter precompilation working well with the check itself, but
+breaking the GUI's validation. This was a purely cosmetic issue.

@@ -36,11 +36,13 @@
 class Section {
     friend class SectionGroup;
 
-    const std::string _outputName;
-    const std::string _configName;
     bool _show_header{true};
     char _separator{' '};
     bool _realtime_support{false};
+
+protected:
+    const std::string _outputName;
+    const std::string _configName;
 
 public:
     Section(const std::string &outputName, const std::string &configName);

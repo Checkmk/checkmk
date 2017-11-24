@@ -27,6 +27,7 @@
 
 #include "../Section.h"
 #include "SectionGroup.h"
+#include "SectionPerfcounter.h"
 
 class SectionSkype : public SectionGroup {
 
@@ -37,6 +38,9 @@ protected:
     virtual bool produceOutputInner(std::ostream &out,
                                     const Environment &env) override;
 
+private:
+    // Use a single counter name -> base no. map. Fill lazily when first needed.
+    NameBaseNumberMap _nameNumberMap;
 };
 
 #endif  // SectionSkype_h

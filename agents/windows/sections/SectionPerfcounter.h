@@ -27,18 +27,32 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "../Section.h"
 
+class NameBaseNumberMap {
+public:
+    NameBaseNumberMap() {}
+    NameBaseNumberMap(const NameBaseNumberMap &) = delete;
+    NameBaseNumberMap &operator=(const NameBaseNumberMap &) = delete;
+
+    int getCounterBaseNumber(const std::string &counterName);
+
+private:
+    // Fill name -> counter ID maps lazily when first needed.
+    std::vector<std::unordered_map<std::string, DWORD>> _nameIdMaps;
+};
+
 class SectionPerfcounter : public Section {
-    const unsigned _counter_base_number;
     bool _toggle_if_missing{false};
     time_t _disabled_until{0};
+    NameBaseNumberMap &_nameNumberMap;
 
 public:
     SectionPerfcounter(const std::string &outputName,
                        const std::string &configName,
-                       unsigned counterBaseNumber);
+                       NameBaseNumberMap &nameNumberMap);
 
     SectionPerfcounter *withToggleIfMissing();
 

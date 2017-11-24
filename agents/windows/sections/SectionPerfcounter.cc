@@ -28,10 +28,30 @@
 #include "../logging.h"
 #include "../stringutil.h"
 
+int NameBaseNumberMap::getCounterBaseNumber(const std::string &counterName) {
+    // Fill name -> counter ID maps lazily when first needed.
+    if (_nameIdMaps.empty()) {
+        _nameIdMaps = {perf_name_map<char>(false),
+                       perf_name_map<char>(true)};
+    }
+
+    for (const auto &nameIdMap : _nameIdMaps) {
+        const auto it = nameIdMap.find(counterName);
+
+        if (it != nameIdMap.end()) {
+            return it->second;
+        }
+    }
+    crash_log("NameBaseNumberMap::getCounterBaseNumber "
+              "could not resolve counter name %s", counterName.c_str());
+    return -1;
+}
+
 SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
                                        const std::string &configName,
-                                       unsigned counterBaseNumber)
-    : Section(outputName, configName), _counter_base_number(counterBaseNumber) {
+                                       NameBaseNumberMap &nameNumberMap)
+    : Section(outputName, configName)
+    , _nameNumberMap(nameNumberMap) {
     withSeparator(',');
 }
 
@@ -43,7 +63,14 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
 bool SectionPerfcounter::produceOutputInner(std::ostream &out,
                                             const Environment &) {
     try {
-        PerfCounterObject counter_object(_counter_base_number);
+        const int counterBaseNumber =
+            _nameNumberMap.getCounterBaseNumber(_outputName);
+
+        if (counterBaseNumber < 0) {
+            return false;
+        }
+
+        PerfCounterObject counter_object(counterBaseNumber);
         std::vector<std::wstring> instance_names =
             counter_object.instanceNames();
         std::vector<PERF_INSTANCE_DEFINITION *> instances =

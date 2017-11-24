@@ -24,32 +24,11 @@
 
 #include "SectionSkype.h"
 #include "../PerfCounterCommon.h"
-#include "SectionPerfcounter.h"
-
-namespace {
-
-int getCounterName(
-    const std::array<std::unordered_map<std::string, DWORD>, 2> &nameIdMaps,
-    const std::string &counterName) {
-    for (const auto &nameIdMap : nameIdMaps) {
-        const auto it = nameIdMap.find(counterName);
-
-        if (it != nameIdMap.end()) {
-            return it->second;
-        }
-    }
-    return -1;
-}
-
-}  // namespace
 
 SectionSkype::SectionSkype() : SectionGroup("skype", "skype") {
     withToggleIfMissing();
     withNestedSubtables();
     withSeparator(',');
-
-    const std::array<std::unordered_map<std::string, DWORD>, 2> nameIdMaps = {
-        perf_name_map<char>(false), perf_name_map<char>(true)};
 
     for (const std::string &counterName :
          {"LS:WEB - Address Book Web Query",
@@ -82,21 +61,15 @@ SectionSkype::SectionSkype() : SectionGroup("skype", "skype") {
           "LS:XmppFederationProxy - Streams",
           "LS:A/V Edge - TCP Counters",
           "LS:A/V Edge - UDP Counters"}) {
-        int counterId = getCounterName(nameIdMaps, counterName);
-        if (counterId >= 0) {
-            withSubSection(
-                new SectionPerfcounter(counterName, counterName, counterId));
-        }
+        withSubSection(new SectionPerfcounter(counterName, counterName,
+                                              _nameNumberMap));
     }
 
     // TODO the version number in the counter name isn't exactly inspiring
     // trust, but there currently is no support for wildcards.
     const std::string counterName = "ASP.NET Apps v4.0.30319";
-    int counterId = getCounterName(nameIdMaps, counterName);
-    if (counterId >= 0) {
-        withDependentSubSection(
-            new SectionPerfcounter(counterName, counterName, counterId));
-    }
+    withDependentSubSection(new SectionPerfcounter(
+        counterName, counterName, _nameNumberMap));
 }
 
 bool SectionSkype::produceOutputInner(std::ostream &out,

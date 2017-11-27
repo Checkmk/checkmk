@@ -2126,14 +2126,18 @@ function vs_list_choice_toggle_all(varprefix) {
     }
 }
 
-function vs_textascii_button(img, text, how) {
-    var oInput = img.previousElementSibling;
-    while (oInput.tagName == "A")
-        oInput = oInput.previousElementSibling;
-    if (oInput.tagName != "INPUT" && oInput.tagName != "TEXTAREA")
-        oInput = oInput.firstChild; // complain mode
-    oInput.value = text + oInput.value; // TODO: how
-    oInput.focus();
+function vs_rule_comment_prefix_date_and_user(img, text) {
+    var container = img.parentNode.parentNode;
+    var textarea = container.getElementsByTagName("textarea")[0];
+
+    if (!textarea) {
+        console.log("Failed to find textarea object");
+        return;
+    }
+
+    textarea.value = text + "\n" + textarea.value;
+    textarea.focus();
+    textarea.setSelectionRange(text.length, text.length);
 }
 
 

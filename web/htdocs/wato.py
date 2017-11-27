@@ -16589,7 +16589,7 @@ class RuleComment(TextAreaUnicode):
         html.icon_button(None,
             help=_("Prefix date and your name to the comment"),
             icon="insertdate",
-            onclick="vs_textascii_button(this, '%s', 'prefix');" % date_and_user
+            onclick="vs_rule_comment_prefix_date_and_user(this, '%s');" % date_and_user
         )
         html.close_div()
 

@@ -29,11 +29,6 @@
 #include "../Section.h"
 
 class SectionMRPE : public Section {
-    ListConfigurable<mrpe_entries_t> _entries;
-    KeyedListConfigurable<std::string> _includes;
-
-    mrpe_entries_t _included_entries;
-
 public:
     SectionMRPE(Configuration &config, Logger *logger,
                 const WinApiAdaptor &winapi);
@@ -43,6 +38,10 @@ protected:
 
 private:
     void updateIncludes();
+
+    ListConfigurable<mrpe_entries_t> _entries;
+    KeyedListConfigurable<std::string> _includes;
+    mrpe_entries_t _included_entries;
 };
 
 #endif  // SectionMRPE_h

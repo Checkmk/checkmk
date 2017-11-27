@@ -46,6 +46,7 @@ public:
     EventlogConfigurable(Configuration &config, const char *section,
                          const char *key, const WinApiAdaptor &winapi)
         : SuperT(config, section, key, winapi) {}
+
     virtual void feed(const std::string &var,
                       const std::string &value) override {
         eventlog_config_entry entry =
@@ -60,16 +61,6 @@ public:
 };
 
 class SectionEventlog : public Section {
-    Configurable<bool> _send_initial;
-    Configurable<bool> _vista_api;
-
-    EventlogConfigurable _config;
-
-    eventlog_hints_t _hints;
-    eventlog_state_t _state;
-    bool _records_loaded = false;
-    bool _first_run = true;
-
 public:
     SectionEventlog(Configuration &config, Logger *logger,
                     const WinApiAdaptor &winapi);
@@ -89,6 +80,14 @@ private:
     void parseStateLine(char *line);
     void loadEventlogOffsets(const std::string &statefile);
     void saveEventlogOffsets(const std::string &statefile);
+
+    Configurable<bool> _send_initial;
+    Configurable<bool> _vista_api;
+    EventlogConfigurable _config;
+    eventlog_hints_t _hints;
+    eventlog_state_t _state;
+    bool _records_loaded = false;
+    bool _first_run = true;
 };
 
 #endif  // SectionEventlog_h

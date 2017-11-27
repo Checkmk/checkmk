@@ -38,7 +38,6 @@ class Result;
 
 class SectionWinperf : public Section {
     typedef unsigned long DWORD;
-    DWORD _base;
 
 public:
     SectionWinperf(const std::string &name, const Environment &env,
@@ -48,6 +47,9 @@ public:
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
+
+private:
+    DWORD _base;
 };
 
 #endif  // SectionWinperf_h

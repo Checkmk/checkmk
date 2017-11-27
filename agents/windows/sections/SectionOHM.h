@@ -32,9 +32,6 @@
 class Configuration;
 
 class SectionOHM : public SectionWMI {
-    std::unique_ptr<OHMMonitor> _ohm_monitor;
-    std::string _bin_path;
-
 public:
     SectionOHM(Configuration &config, Logger *logger,
                const WinApiAdaptor &winapi);
@@ -43,6 +40,10 @@ public:
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
+
+private:
+    std::unique_ptr<OHMMonitor> _ohm_monitor;
+    std::string _bin_path;
 };
 
 #endif  // SectionOHM_h

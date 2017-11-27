@@ -48,21 +48,14 @@ public:
     HModuleWrapper &operator=(const HModuleWrapper &) =
         delete;  // Delete assignment operator
 
+    // Move constructor
     HModuleWrapper(HModuleWrapper &&from)
-        : _hmodule(from._hmodule), _winapi(from._winapi) {  // Move constructor
+        : _hmodule(from._hmodule), _winapi(from._winapi) {
         from._hmodule = nullptr;
     }
 
-    HModuleWrapper &operator=(HModuleWrapper &&from) =
-        delete;  // Move assignment operator
-
-    //    HModuleWrapper &operator=(HModuleWrapper &&from) {              //
-    //    Move assignment operator
-    //        close();
-    //        _hmodule = from._hmodule;
-    //        from._hmodule = nullptr;
-    //        return *this;
-    //    }
+    // Move assignment operator
+    HModuleWrapper &operator=(HModuleWrapper &&from) = delete;
 
     HMODULE getHModule() { return _hmodule; };
 
@@ -95,10 +88,8 @@ public:
 
 private:
     HANDLE open() const;
-
     void close() const;
 
-private:
     std::wstring _name;
     const WinApiAdaptor &_winapi;
     HANDLE _handle;
@@ -125,6 +116,8 @@ private:
 };
 
 class EventLog : public IEventLog {
+    static const size_t INIT_BUFFER_SIZE = 64 * 1024;
+
 public:
     /**
      * Construct a reader for the named eventlog
@@ -173,9 +166,6 @@ public:
 private:
     bool fillBuffer();
 
-private:
-    static const size_t INIT_BUFFER_SIZE = 64 * 1024;
-
     std::wstring _name;
     EventlogHandle _log;
     DWORD _record_offset{0};
@@ -183,7 +173,6 @@ private:
     std::vector<BYTE> _buffer;
     DWORD _buffer_offset{0};
     DWORD _buffer_used{0};
-
     DWORD _last_record_read{0};
 
     const MessageResolver _resolver;

@@ -47,33 +47,30 @@ class Thread {
 public:
     typedef DWORD WINAPI (*ThreadFunc)(void *);
 
-private:
-    ThreadFunc _func;
-    HANDLE _thread_handle{INVALID_HANDLE_VALUE};
-    void *_data;
-    const WinApiAdaptor &_winapi;
-
-private:
-    Thread(const Thread &) = delete;
-    static void nop(void *) {}
-
 public:
     // the caller keeps ownership
     template <typename T>
     Thread(ThreadFunc func, T &data, const WinApiAdaptor &winapi)
         : _func(func), _data(static_cast<void *>(&data)), _winapi(winapi) {}
-
     ~Thread();
+    Thread(const Thread &) = delete;
 
     // wait for the thread to finish and return its exit code.
     // this will block if the thread hasn't finished already
     int join() const;
-
     void start();
 
     // return true if the thread was stated. If this is false,
     // a call to join would throw an exception
     bool wasStarted() const;
+
+private:
+    static void nop(void *) {}
+
+    ThreadFunc _func;
+    HANDLE _thread_handle{INVALID_HANDLE_VALUE};
+    void *_data;
+    const WinApiAdaptor &_winapi;
 };
 
 #endif  // Thread_h

@@ -40,13 +40,6 @@ class Environment;
  * perfcounter interfaces.
  **/
 class SectionGroup : public Section {
-    std::vector<std::unique_ptr<Section>> _subsections;
-    std::vector<std::unique_ptr<Section>> _dependent_subsections;
-    bool _toggle_if_missing{false};
-    bool _fail_if_missing{false};
-    bool _nested{false};
-    time_t _disabled_until{0};
-
 public:
     SectionGroup(const std::string &outputName, const std::string &configName,
                  const Environment &env, Logger *logger,
@@ -68,6 +61,14 @@ public:
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
+
+private:
+    std::vector<std::unique_ptr<Section>> _subsections;
+    std::vector<std::unique_ptr<Section>> _dependent_subsections;
+    bool _toggle_if_missing{false};
+    bool _fail_if_missing{false};
+    bool _nested{false};
+    time_t _disabled_until{0};
 };
 
 #endif  // SectionGroup_h

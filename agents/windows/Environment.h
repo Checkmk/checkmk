@@ -56,7 +56,6 @@ public:
     std::string logwatchStatefile() const { return _logwatch_statefile; }
     std::string eventlogStatefile() const { return _eventlog_statefile; }
 
-public:
     bool isWinNt() const;
 
     // return windows version as a combined value, with major version in the
@@ -70,7 +69,6 @@ private:
     std::string determineAgentDirectory(bool use_cwd) const;
     std::string assignDirectory(const char *name) const;
 
-private:
     static Environment *s_Instance;
 
     Logger *_logger;

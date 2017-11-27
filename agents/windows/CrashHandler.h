@@ -53,9 +53,6 @@ class Logger;
 class WinApiAdaptor;
 
 class CrashHandler {
-    Logger *_logger;
-    const WinApiAdaptor &_winapi;
-
 public:
     CrashHandler(Logger *logger, const WinApiAdaptor &winapi);
     CrashHandler(const CrashHandler &) = delete;
@@ -67,6 +64,9 @@ private:
 #ifdef __x86_64
     void logBacktrace(PVOID exc_address) const;
 #endif  // __x86_64
+
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
 };
 
 #endif  // CrashHandler_h

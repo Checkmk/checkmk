@@ -397,7 +397,6 @@ private:
         }
     }
 
-private:
     Logger *_logger;
     const WinApiAdaptor &_winapi;
 };

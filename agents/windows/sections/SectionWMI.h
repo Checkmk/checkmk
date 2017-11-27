@@ -33,14 +33,6 @@
 #include "../Section.h"
 
 class SectionWMI : public Section {
-    std::wstring _namespace{L"Root\\cimv2"};
-    std::wstring _object;
-    std::vector<std::wstring> _columns;
-    bool _toggle_if_missing{false};
-    time_t _disabled_until{0};
-
-    std::unique_ptr<wmi::Helper> _helper;
-
 public:
     SectionWMI(const std::string &outputName, const std::string &configName,
                const Environment &env, Logger *logger,
@@ -58,6 +50,13 @@ protected:
 
 private:
     void outputTable(std::ostream &out, wmi::Result &data);
+
+    std::wstring _namespace{L"Root\\cimv2"};
+    std::wstring _object;
+    std::vector<std::wstring> _columns;
+    bool _toggle_if_missing{false};
+    time_t _disabled_until{0};
+    std::unique_ptr<wmi::Helper> _helper;
 };
 
 #endif  // SectionWMI_h

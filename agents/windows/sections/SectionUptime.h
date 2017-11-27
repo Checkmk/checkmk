@@ -37,9 +37,6 @@ class Environment;
 
 class SectionUptime : public Section {
     typedef ULONGLONG WINAPI (*GetTickCount64_type)(void);
-    GetTickCount64_type GetTickCount64_dyn{nullptr};
-
-    std::unique_ptr<wmi::Helper> _wmi_helper;
 
 public:
     SectionUptime(const Environment &env, Logger *logger,
@@ -51,6 +48,9 @@ protected:
 private:
     std::string outputTickCount64();
     std::string outputWMI();
+
+    GetTickCount64_type GetTickCount64_dyn{nullptr};
+    std::unique_ptr<wmi::Helper> _wmi_helper;
 };
 
 #endif  // SectionUptime_h

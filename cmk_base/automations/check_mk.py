@@ -192,6 +192,10 @@ class AutomationRenameHosts(Automation):
     needs_config = True
     needs_checks = True
 
+    def __init__(self):
+        super(AutomationRenameHosts, self).__init__()
+        self._finished_history_files = {}
+
     # WATO calls this automation when hosts have been renamed. We need to change
     # several file and directory names. This function has no argument but reads
     # Python pair-list from stdin:
@@ -200,6 +204,17 @@ class AutomationRenameHosts(Automation):
         renamings = ast.literal_eval(sys.stdin.read())
 
         actions = []
+
+        # The history archive can be renamed with running core. We need to keep
+        # the list of already handled history archive files, because a new history
+        # file may be created by the core during this step. All unhandled files,
+        # including the current history files will be handled later when the core
+        # is stopped.
+        for oldname, newname in renamings:
+            self._finished_history_files[(oldname, newname)] = \
+                self._rename_host_in_core_history_archive(oldname, newname)
+            if self._finished_history_files[(oldname, newname)]:
+                actions.append("history")
 
         # At this place WATO already has changed it's configuration. All further
         # data might be changed by the still running core. So we need to stop
@@ -338,7 +353,7 @@ class AutomationRenameHosts(Automation):
 
     # This functions could be moved out of Check_MK.
     def _omd_rename_host(self, oldname, newname):
-        oldregex = oldname.replace(".", "[.]")
+        oldregex = self._escape_name_for_regex_matching(oldname)
         actions = []
 
         # Temporarily stop processing of performance data
@@ -386,34 +401,7 @@ class AutomationRenameHosts(Automation):
             if npcd_running:
                 os.system("omd start npcd >/dev/null 2>&1 </dev/null")
 
-        # Logfiles and history files of CMC and Nagios. Problem
-        # here: the exact place of the hostname varies between the
-        # various log entry lines
-        sed_commands = r'''
-s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: %(old)s;/\1 \2 STATE: %(new)s;/
-s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: %(old)s;/\1 \2ALERT: %(new)s;/
-s/PASSIVE (HOST|SERVICE) CHECK: %(old)s;/PASSIVE \1 CHECK: %(new)s;/
-s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
-'''     % { "old" : oldregex, "new" : newname }
-        path_patterns = [
-            "var/check_mk/core/history",
-            "var/check_mk/core/archive/*",
-            "var/nagios/nagios.log",
-            "var/nagios/archive/*",
-        ]
-        one_matched = False
-        for path_pattern in path_patterns:
-            command = ["sed", "-ri", "--file=/dev/fd/0"]
-            files = glob.glob("%s/%s" % (cmk.paths.omd_root, path_pattern))
-            p = subprocess.Popen(command + files, stdin=subprocess.PIPE,
-                                 stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT,
-                                 close_fds=True)
-            p.communicate(sed_commands)
-            if files:
-                one_matched = True
-
-        if one_matched:
-            actions.append("history")
+        self._rename_host_in_remaining_core_history_files(oldname, newname)
 
         # State retention (important for Downtimes, Acknowledgements, etc.)
         if config.monitoring_core == "nagios":
@@ -440,6 +428,65 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         return actions
 
 
+    def _rename_host_in_remaining_core_history_files(self, oldname, newname):
+        """Perform the rename operation in all history archive files that have not been handled yet"""
+        finished_file_paths = self._finished_history_files[(oldname, newname)]
+        all_file_paths = set(self._get_core_history_files(only_archive=True))
+        todo_file_paths = list(all_file_paths.difference(finished_file_paths))
+        return self._rename_host_in_core_history_files(todo_file_paths, oldname, newname)
+
+
+    def _rename_host_in_core_history_archive(self, oldname, newname):
+        """Perform the rename operation in all history archive files"""
+        file_paths = self._get_core_history_files(only_archive=True)
+        return self._rename_host_in_core_history_files(file_paths, oldname, newname)
+
+
+    def _get_core_history_files(self, only_archive):
+        path_patterns = [
+            "var/check_mk/core/archive/*",
+            "var/nagios/archive/*",
+        ]
+
+        if not only_archive:
+            path_patterns += [
+                "var/check_mk/core/history",
+                "var/nagios/nagios.log",
+            ]
+
+        file_paths = []
+        for path_pattern in path_patterns:
+            file_paths += glob.glob("%s/%s" % (cmk.paths.omd_root, path_pattern))
+        return file_paths
+
+
+    def _rename_host_in_core_history_files(self, file_paths, oldname, newname):
+        oldregex = self._escape_name_for_regex_matching(oldname)
+
+        # Logfiles and history files of CMC and Nagios. Problem
+        # here: the exact place of the hostname varies between the
+        # various log entry lines
+        sed_commands = r'''
+s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: %(old)s;/\1 \2 STATE: %(new)s;/
+s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: %(old)s;/\1 \2ALERT: %(new)s;/
+s/PASSIVE (HOST|SERVICE) CHECK: %(old)s;/PASSIVE \1 CHECK: %(new)s;/
+s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
+'''     % { "old" : oldregex, "new" : newname }
+
+        handled_files = []
+
+        command = ["sed", "-ri", "--file=/dev/fd/0"]
+        p = subprocess.Popen(command + file_paths, stdin=subprocess.PIPE,
+                             stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT,
+                             close_fds=True)
+        p.communicate(sed_commands)
+        # TODO: error handling?
+
+        handled_files += file_paths
+
+        return handled_files
+
+
     # Returns True in case files were found, otherwise False
     def rename_host_in_files(self, path_pattern, old, new, extended_regex=False):
         paths = glob.glob(path_pattern)
@@ -450,6 +497,11 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             return True
         else:
             return False
+
+
+    def _escape_name_for_regex_matching(self, name):
+        return name.replace(".", "[.]")
+
 
 
 automations.register(AutomationRenameHosts())

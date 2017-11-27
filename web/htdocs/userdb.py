@@ -1061,35 +1061,16 @@ def declare_custom_user_attrs():
 #   '----------------------------------------------------------------------'
 
 def load_connection_config(lock=False):
-    user_connections = []
-
-    filename = multisite_dir + "user_connections.mk"
-    if not os.path.exists(filename):
-        return user_connections
-
-    try:
-        context = {
-            "user_connections": user_connections,
-        }
-        execfile(filename, context, context)
-        return context["user_connections"]
-
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        return user_connections
+    filename = os.path.join(multisite_dir, "user_connections.mk")
+    return store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
 
 
 def save_connection_config(connections, base_dir=None):
     if not base_dir:
         base_dir = multisite_dir
-
-    output  = "# Written by Multisite UserDB\n# encoding: utf-8\n\n"
-    output += "user_connections = \\\n%s\n\n" % pprint.pformat(connections)
-
     make_nagios_directory(base_dir)
-    store.save_file(os.path.join(base_dir, "user_connections.mk"), output)
+    store.save_to_mk_file(os.path.join(base_dir, "user_connections.mk"),
+                          "user_connections", connections)
 
 #.
 #   .--ConnectorAPI--------------------------------------------------------.

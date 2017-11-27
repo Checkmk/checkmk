@@ -431,7 +431,7 @@ class AutomationRenameHosts(Automation):
     def _rename_host_in_remaining_core_history_files(self, oldname, newname):
         """Perform the rename operation in all history archive files that have not been handled yet"""
         finished_file_paths = self._finished_history_files[(oldname, newname)]
-        all_file_paths = set(self._get_core_history_files(only_archive=True))
+        all_file_paths = set(self._get_core_history_files(only_archive=False))
         todo_file_paths = list(all_file_paths.difference(finished_file_paths))
         return self._rename_host_in_core_history_files(todo_file_paths, oldname, newname)
 

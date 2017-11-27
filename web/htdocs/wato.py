@@ -6091,35 +6091,35 @@ class MainMenu(object):
 #   | LDAP configuration and diagnose page                                 |
 #   '----------------------------------------------------------------------'
 
-def add_ldap_change(action_name, text):
-    add_change(action_name, text, domains=[watolib.ConfigDomainGUI],
-        sites=config.get_login_sites())
+class LDAPMode(WatoMode):
+    def _add_change(self, action_name, text):
+        add_change(action_name, text, domains=[watolib.ConfigDomainGUI],
+            sites=config.get_login_sites())
 
 
-def mode_ldap_config(phase):
-    title = _("LDAP connections")
 
-    if phase == "title":
-        return title
+class ModeLDAPConfig(LDAPMode):
+    def title(self):
+        return _("LDAP connections")
 
-    elif phase == "buttons":
+    def buttons(self):
         global_buttons()
         html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "users")
         html.context_button(_("New Connection"), watolib.folder_preserving_link([("mode", "edit_ldap_connection")]), "new")
-        return
 
-    connections = userdb.load_connection_config()
-    if phase == "action":
+
+    def action(self):
+        connections = userdb.load_connection_config(lock=True)
         if html.has_var("_delete"):
-            nr = int(html.var("_delete"))
-            connection = connections[nr]
+            index = int(html.var("_delete"))
+            connection = connections[index]
             c = wato_confirm(_("Confirm deletion of LDAP connection"),
                              _("Do you really want to delete the LDAP connection <b>%s</b>?") %
                                (connection["id"]))
             if c:
-                add_ldap_change("delete-ldap-connection",
+                self._add_change("delete-ldap-connection",
                     _("Deleted LDAP connection %s") % (connection["id"]))
-                del connections[nr]
+                del connections[index]
                 userdb.save_connection_config(connections)
             elif c == False:
                 return ""
@@ -6127,56 +6127,60 @@ def mode_ldap_config(phase):
                 return
 
         elif html.has_var("_move"):
-            if html.check_transaction():
-                from_pos = html.get_integer_input("_move")
-                to_pos = html.get_integer_input("_index")
-                connection = connections[from_pos]
-                add_ldap_change("move-ldap-connection",
-                    _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos))
-                del connections[from_pos] # make to_pos now match!
-                connections[to_pos:to_pos] = [connection]
-                userdb.save_connection_config(connections)
-        return
+            if not html.check_transaction():
+                return
 
-    userdb.ldap_test_module()
-
-    table.begin()
-    for nr, connection in enumerate(connections):
-        table.row()
-
-        table.cell(_("Actions"), css="buttons")
-        edit_url   = watolib.folder_preserving_link([("mode", "edit_ldap_connection"), ("id", connection["id"])])
-        delete_url = make_action_link([("mode", "ldap_config"), ("_delete", nr)])
-        drag_url   = make_action_link([("mode", "ldap_config"), ("_move", nr)])
-        clone_url  = watolib.folder_preserving_link([("mode", "edit_ldap_connection"), ("clone", connection["id"])])
-
-        html.icon_button(edit_url, _("Edit this LDAP connection"), "edit")
-        html.icon_button(clone_url, _("Create a copy of this LDAP connection"), "clone")
-        html.element_dragger("tr", base_url=drag_url)
-        html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
-
-        table.cell("", css="narrow")
-        if connection.get("disabled"):
-            html.icon(_("This connection is currently not being used for synchronization."), "disabled")
-        else:
-            html.empty_icon_button()
-
-        table.cell(_("ID"), connection["id"])
-
-        if cmk.is_managed_edition():
-            table.cell(_("Customer"), managed.get_customer_name(connection))
-
-        table.cell(_("Description"))
-        url = connection.get("docu_url")
-        if url:
-            html.icon_button(url, _("Context information about this connection"), "url", target="_blank")
-            html.write("&nbsp;")
-        html.write_text(connection["description"])
-
-    table.end()
+            from_pos = html.get_integer_input("_move")
+            to_pos = html.get_integer_input("_index")
+            connection = connections[from_pos]
+            self._add_change("move-ldap-connection",
+                _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos))
+            del connections[from_pos] # make to_pos now match!
+            connections[to_pos:to_pos] = [connection]
+            userdb.save_connection_config(connections)
 
 
-class ModeEditLDAPConnection(WatoMode):
+    def page(self):
+        userdb.ldap_test_module()
+
+        table.begin()
+        for index, connection in enumerate(userdb.load_connection_config()):
+            table.row()
+
+            table.cell(_("Actions"), css="buttons")
+            edit_url   = watolib.folder_preserving_link([("mode", "edit_ldap_connection"), ("id", connection["id"])])
+            delete_url = make_action_link([("mode", "ldap_config"), ("_delete", index)])
+            drag_url   = make_action_link([("mode", "ldap_config"), ("_move", index)])
+            clone_url  = watolib.folder_preserving_link([("mode", "edit_ldap_connection"), ("clone", connection["id"])])
+
+            html.icon_button(edit_url, _("Edit this LDAP connection"), "edit")
+            html.icon_button(clone_url, _("Create a copy of this LDAP connection"), "clone")
+            html.element_dragger("tr", base_url=drag_url)
+            html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
+
+            table.cell("", css="narrow")
+            if connection.get("disabled"):
+                html.icon(_("This connection is currently not being used for synchronization."), "disabled")
+            else:
+                html.empty_icon_button()
+
+            table.cell(_("ID"), connection["id"])
+
+            if cmk.is_managed_edition():
+                table.cell(_("Customer"), managed.get_customer_name(connection))
+
+            table.cell(_("Description"))
+            url = connection.get("docu_url")
+            if url:
+                html.icon_button(url, _("Context information about this connection"), "url", target="_blank")
+                html.write("&nbsp;")
+            html.write_text(connection["description"])
+
+        table.end()
+
+
+
+class ModeEditLDAPConnection(LDAPMode):
     def __init__(self):
         super(ModeEditLDAPConnection, self).__init__()
         self._from_vars()
@@ -6240,7 +6244,7 @@ class ModeEditLDAPConnection(WatoMode):
         else:
             log_what = "edit-ldap-connection"
             log_text = _("Changed LDAP connection %s") % self._connection_id
-        add_ldap_change(log_what, log_text)
+        self._add_change(log_what, log_text)
 
         userdb.save_connection_config(self._connections)
         config.user_connections = self._connections # make directly available on current page
@@ -17582,7 +17586,7 @@ modes = {
    "globalvars"         : (["global"], ModeEditGlobals),
    "edit_configvar"     : (["global"], ModeEditGlobalSetting),
    "edit_site_configvar": (["global"], ModeEditSiteGlobalSetting),
-   "ldap_config"        : (["global"], mode_ldap_config),
+   "ldap_config"        : (["global"], ModeLDAPConfig),
    "edit_ldap_connection": (["global"], ModeEditLDAPConnection),
    "static_checks"      : (["rulesets"], ModeStaticChecksRulesets),
    "check_plugins"      : ([], ModeCheckPlugins),

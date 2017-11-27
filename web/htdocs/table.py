@@ -24,9 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# external imports
+import re
 from contextlib import contextmanager
-# internal imports
+
 import config
 from lib import num_split
 
@@ -483,13 +483,15 @@ class Table(object):
 
 def _filter_rows(rows, search_term):
     filtered_rows = []
+    match_regex = re.compile(search_term, re.IGNORECASE)
+
     for row, css, state, fixed, attrs in rows:
         if state == "header" or fixed:
             filtered_rows.append((row, css, state, fixed, attrs))
             continue # skip filtering of headers or fixed rows
 
         for cell_content, css_classes, colspan in row:
-            if search_term in cell_content.lower():
+            if match_regex.search(cell_content):
                 filtered_rows.append((row, css, state, fixed, attrs))
                 break # skip other cells when matched
     return filtered_rows

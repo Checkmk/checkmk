@@ -1,0 +1,11 @@
+Title: Table quick search: Is now using regex matching instead of substring search
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511771143
+Class: feature
+
+The quick search feature of tables is now treating the given search term as regular
+expression. A case insensitive infix search is being performed with the given string.

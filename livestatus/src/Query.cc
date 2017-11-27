@@ -281,14 +281,125 @@ void Query::parseStatsNegateLine(char *line) {
 }
 
 namespace {
-std::map<std::string, Aggregation::operation> stats_ops{
-    {"sum", Aggregation::operation::sum},
-    {"min", Aggregation::operation::min},
-    {"max", Aggregation::operation::max},
-    {"avg", Aggregation::operation::avg},
-    {"std", Aggregation::operation::std},
-    {"suminv", Aggregation::operation::suminv},
-    {"avginv", Aggregation::operation::avginv}};
+// NOTE: The suppressions below are necessary because cppcheck doesn't seem to
+// understand default member initialization yet. :-/
+
+// cppcheck-suppress noConstructor
+class SumAggregation : public Aggregation {
+public:
+    void update(double value) override { _sum += value; }
+    double value() const override { return _sum; }
+
+private:
+    double _sum{0};
+};
+
+// cppcheck-suppress noConstructor
+class MinAggregation : public Aggregation {
+public:
+    void update(double value) override {
+        if (_first || value < _sum) {
+            _sum = value;
+        }
+        _first = false;
+    }
+
+    double value() const override { return _sum; }
+
+private:
+    bool _first{true};
+    // NOTE: This default is wrong, the neutral element for min is +Inf. Apart
+    // from being more consistent, using it would remove the need for _first.
+    double _sum{0};
+};
+
+// cppcheck-suppress noConstructor
+class MaxAggregation : public Aggregation {
+public:
+    void update(double value) override {
+        if (_first || value > _sum) {
+            _sum = value;
+        }
+        _first = false;
+    }
+
+    double value() const override { return _sum; }
+
+private:
+    bool _first{true};
+    // NOTE: This default is wrong, the neutral element for max is -Inf. Apart
+    // from being more consistent, using it would remove the need for _first.
+    double _sum{0};
+};
+
+// cppcheck-suppress noConstructor
+class AvgAggregation : public Aggregation {
+public:
+    void update(double value) override {
+        _count++;
+        _sum += value;
+    }
+
+    double value() const override { return _sum / _count; }
+
+private:
+    std::uint32_t _count{0};
+    double _sum{0};
+};
+
+// cppcheck-suppress noConstructor
+class StdAggregation : public Aggregation {
+public:
+    void update(double value) override {
+        _count++;
+        _sum += value;
+        _sum_of_squares += value * value;
+    }
+
+    double value() const override {
+        auto mean = _sum / _count;
+        return sqrt(_sum_of_squares / _count - mean * mean);
+    }
+
+private:
+    std::uint32_t _count{0};
+    double _sum{0};
+    double _sum_of_squares{0};
+};
+
+// cppcheck-suppress noConstructor
+class SumInvAggregation : public Aggregation {
+public:
+    void update(double value) override { _sum += 1.0 / value; }
+    double value() const override { return _sum; }
+
+private:
+    double _sum{0};
+};
+
+// cppcheck-suppress noConstructor
+class AvgInvAggregation : public Aggregation {
+public:
+    void update(double value) override {
+        _count++;
+        _sum += 1.0 / value;
+    }
+
+    double value() const override { return _sum / _count; }
+
+private:
+    std::uint32_t _count{0};
+    double _sum{0};
+};
+
+std::map<std::string, AggregationFactory> stats_ops{
+    {"sum", []() { return std::make_unique<SumAggregation>(); }},
+    {"min", []() { return std::make_unique<MinAggregation>(); }},
+    {"max", []() { return std::make_unique<MaxAggregation>(); }},
+    {"avg", []() { return std::make_unique<AvgAggregation>(); }},
+    {"std", []() { return std::make_unique<StdAggregation>(); }},
+    {"suminv", []() { return std::make_unique<SumInvAggregation>(); }},
+    {"avginv", []() { return std::make_unique<AvgInvAggregation>(); }}};
 }  // namespace
 
 void Query::parseStatsLine(char *line) {

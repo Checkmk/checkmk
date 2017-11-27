@@ -41,6 +41,6 @@ std::unique_ptr<Filter> IntColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> IntColumn::createAggregator(
-    const Aggregation &aggregation) const {
-    return std::make_unique<IntAggregator>(aggregation, this);
+    AggregationFactory factory) const {
+    return std::make_unique<IntAggregator>(factory, this);
 }

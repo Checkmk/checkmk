@@ -27,6 +27,6 @@
 #include "PerfdataAggregator.h"
 
 std::unique_ptr<Aggregator> OffsetPerfdataColumn::createAggregator(
-    const Aggregation &aggregation) const {
-    return std::make_unique<PerfdataAggregator>(aggregation, this);
+    AggregationFactory factory) const {
+    return std::make_unique<PerfdataAggregator>(factory, this);
 }

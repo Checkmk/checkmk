@@ -43,7 +43,7 @@ std::unique_ptr<Filter> BlobColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> BlobColumn::createAggregator(
-    const Aggregation& /*aggregation*/) const {
+    AggregationFactory /*factory*/) const {
     throw std::runtime_error("aggregating on blob column '" + name() +
                              "' not supported");
 }

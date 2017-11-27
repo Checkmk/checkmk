@@ -28,13 +28,14 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
+#include "Aggregator.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Aggregation;
-class Aggregator;
 class Filter;
 class Logger;
 class RowRenderer;
@@ -46,6 +47,8 @@ const T *offset_cast(const void *ptr, size_t offset) {
 }
 
 enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
+
+using AggregationFactory = std::function<std::unique_ptr<Aggregation>()>;
 
 class Column {
 public:
@@ -70,7 +73,7 @@ public:
         RelationalOperator relOp, const std::string &value) const = 0;
 
     virtual std::unique_ptr<Aggregator> createAggregator(
-        const Aggregation &aggregation) const = 0;
+        AggregationFactory factory) const = 0;
 
     Logger *logger() const { return _logger; }
 

@@ -48,8 +48,8 @@ std::unique_ptr<Aggregator> StatsColumnCount::createAggregator(
 
 // Note: We create an "accept all" filter, just in case we fall back to
 // counting.
-StatsColumnOp::StatsColumnOp(Aggregation::operation operation, Column *column)
-    : _operation(operation)
+StatsColumnOp::StatsColumnOp(AggregationFactory factory, Column *column)
+    : _factory(std::move(factory))
     , _column(column)
     , _filter(std::make_unique<AndingFilter>(
           std::vector<std::unique_ptr<Filter>>())) {}
@@ -61,7 +61,7 @@ std::unique_ptr<Filter> StatsColumnOp::stealFilter() {
 std::unique_ptr<Aggregator> StatsColumnOp::createAggregator(
     Logger *logger) const {
     try {
-        return _column->createAggregator(Aggregation(_operation));
+        return _column->createAggregator(_factory);
     } catch (const std::runtime_error &e) {
         Informational(logger) << e.what() << ", falling back to counting";
         return std::make_unique<CountAggregator>(_filter.get());

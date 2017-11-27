@@ -44,8 +44,8 @@ std::unique_ptr<Filter> TimeColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> TimeColumn::createAggregator(
-    const Aggregation &aggregation) const {
-    return std::make_unique<TimeAggregator>(aggregation, this);
+    AggregationFactory factory) const {
+    return std::make_unique<TimeAggregator>(factory, this);
 }
 
 std::chrono::system_clock::time_point TimeColumn::getValue(

@@ -35,20 +35,20 @@ class RowRenderer;
 
 class DoubleAggregator : public Aggregator {
 public:
-    DoubleAggregator(const Aggregation &aggregation, const DoubleColumn *column)
-        : _aggregation(aggregation), _column(column) {}
+    DoubleAggregator(AggregationFactory factory, const DoubleColumn *column)
+        : _aggregation(factory()), _column(column) {}
 
     void consume(Row row, const contact * /*contact*/,
                  std::chrono::seconds /*timezone_offset*/) override {
-        _aggregation.update(_column->getValue(row));
+        _aggregation->update(_column->getValue(row));
     }
 
     void output(RowRenderer &r) const override {
-        r.output(_aggregation.value());
+        r.output(_aggregation->value());
     }
 
 private:
-    Aggregation _aggregation;
+    std::unique_ptr<Aggregation> _aggregation;
     const DoubleColumn *const _column;
 };
 

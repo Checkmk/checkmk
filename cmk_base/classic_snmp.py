@@ -26,10 +26,11 @@
 
 import os
 import subprocess
+import signal
 
 import cmk.debug
 import cmk.tty as tty
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.console as console
 import cmk_base.config as config

@@ -16569,10 +16569,40 @@ def vs_rule_options(disabling=True):
     )
 
 
-def rule_option_elements(disabling=True):
-    def date_and_user():
-        return time.strftime("%F", time.localtime()) + " " + config.user.id + ": "
+class RuleComment(TextAreaUnicode):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("title", _("Comment"))
+        kwargs.setdefault("help", _("An optional comment that explains the purpose of this rule."))
+        kwargs.setdefault("rows", 4)
+        kwargs.setdefault("cols", 80)
+        super(RuleComment, self).__init__(**kwargs)
 
+
+    def render_input(self, varprefix, value):
+        html.open_div(style="white-space: nowrap;")
+
+        super(RuleComment, self).render_input(varprefix, value)
+
+        date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), config.user.id)
+
+        html.nbsp()
+        html.icon_button(None,
+            help=_("Prefix date and your name to the comment"),
+            icon="insertdate",
+            onclick="vs_textascii_button(this, '%s', 'prefix');" % date_and_user
+        )
+        html.close_div()
+
+    def render_buttons(self):
+        for icon, textfunc, help in self._prefix_buttons:
+            try:
+                text = textfunc()
+            except:
+                text = textfunc
+
+
+
+def rule_option_elements(disabling=True):
     elements = [
         ( "description",
           TextUnicode(
@@ -16581,15 +16611,7 @@ def rule_option_elements(disabling=True):
             size = 80,
           )
         ),
-        ( "comment",
-          TextAreaUnicode(
-            title = _("Comment"),
-            help = _("An optional comment that explains the purpose of this rule."),
-            rows = 4,
-            cols = 80,
-            prefix_buttons = [ ("insertdate", date_and_user, _("Prefix date and your name to the comment")) ]
-          )
-        ),
+        ( "comment", RuleComment()),
         ( "docu_url",
           TextAscii(
             title = _("Documentation-URL"),

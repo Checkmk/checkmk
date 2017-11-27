@@ -193,7 +193,7 @@ class SNMPDataSource(DataSource):
             else:
                 check_info = snmp.get_snmp_table(hostname, ipaddress, check_plugin_name, oid_info, self._use_snmpwalk_cache)
 
-            info[check_plugin_name] = check_info
+            info[section_name] = check_info
 
         return info
 

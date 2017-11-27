@@ -1,0 +1,18 @@
+Title: Editing rules: Fixed adding date+user to rule comments
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1511787872
+
+When editing a rule in WATO, there is the comment field available, which can e.g.
+be used to write down information about the history of this rule. The icon on
+the right of the text area is meant to add a new history entry to the beginning
+of the comment. The way this text was added to existing comments was not really
+working as intended.
+
+It has now been changed to add a new line to the beginning, setting the cursor
+on this field and position it at the end of the just added line.

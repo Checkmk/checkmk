@@ -1,0 +1,16 @@
+title: BDTMS Tape Library: Modules
+agents: snmp
+catalog: hw/storagehw/bdt
+license: GPL
+distribution: check_mk
+description:
+ This check displays the status of the different modules
+ of the tape library. The check returns {OK} if the module,
+ board, and power supply status are OK. Otherwise the status
+ {CRIT} will be returned.
+ 
+inventory:
+ One service per host and module will be created.
+
+item:
+ The device ID of the module.

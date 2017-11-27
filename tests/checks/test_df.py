@@ -4,6 +4,22 @@ import sys
 
 pytestmark = pytest.mark.checks
 
+
+#   .--Test info sections--------------------------------------------------.
+#   |                _____         _     _        __                       |
+#   |               |_   _|__  ___| |_  (_)_ __  / _| ___                  |
+#   |                 | |/ _ \/ __| __| | | '_ \| |_ / _ \                 |
+#   |                 | |  __/\__ \ |_  | | | | |  _| (_) |                |
+#   |                 |_|\___||___/\__| |_|_| |_|_|  \___/                 |
+#   |                                                                      |
+#   |                               _   _                                  |
+#   |                 ___  ___  ___| |_(_) ___  _ __  ___                  |
+#   |                / __|/ _ \/ __| __| |/ _ \| '_ \/ __|                 |
+#   |                \__ \  __/ (__| |_| | (_) | | | \__ \                 |
+#   |                |___/\___|\___|\__|_|\___/|_| |_|___/                 |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 info_df_lnx = [[u'/dev/sda4',
       u'ext4',
       u'143786696',
@@ -25,12 +41,172 @@ info_df_win = [[u'C:\\', u'NTFS', u'8192620', u'7724268', u'468352', u'95%', u'C
      u'41%',
      u'F:\\']]
 
+# NOTE: This gargantuan test info section is uncritically used data from an archived agent output.
+#       I suspect that our handling of btrfs is not really adequate, test cases using this data
+#       serve the sole purpose of not inadvertenty breaking the status quo. Thus:
+# TODO: Replace this monstrosity with something more concise.
+info_df_btrfs = \
+[[u'/dev/sda1', u'btrfs', u'20970496', u'4169036', u'16539348', u'21%', u'/'],
+ [u'devtmpfs', u'devtmpfs', u'497396', u'0', u'497396', u'0%', u'/dev'],
+ [u'tmpfs', u'tmpfs', u'506312', u'0', u'506312', u'0%', u'/dev/shm'],
+ [u'tmpfs', u'tmpfs', u'506312', u'6980', u'499332', u'2%', u'/run'],
+ [u'tmpfs', u'tmpfs', u'506312', u'0', u'506312', u'0%', u'/sys/fs/cgroup'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/.snapshots'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/var/tmp'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/var/spool'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/var/opt'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/var/log'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/var/lib/pgsql'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/var/lib/named'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/var/lib/mailman'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/var/crash'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/usr/local'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/tmp'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/srv'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/opt'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/home'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/boot/grub2/x86_64-efi'],
+ [u'/dev/sda1',
+  u'btrfs',
+  u'20970496',
+  u'4169036',
+  u'16539348',
+  u'21%',
+  u'/boot/grub2/i386-pc'],
+ [u'[df_inodes_start]'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/'],
+ [u'devtmpfs', u'devtmpfs', u'124349', u'371', u'123978', u'1%', u'/dev'],
+ [u'tmpfs', u'tmpfs', u'126578', u'1', u'126577', u'1%', u'/dev/shm'],
+ [u'tmpfs', u'tmpfs', u'126578', u'481', u'126097', u'1%', u'/run'],
+ [u'tmpfs', u'tmpfs', u'126578', u'12', u'126566', u'1%', u'/sys/fs/cgroup'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/.snapshots'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/var/tmp'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/var/spool'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/var/opt'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/var/log'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/var/lib/pgsql'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/var/lib/named'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/var/lib/mailman'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/var/crash'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/usr/local'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/tmp'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/srv'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/opt'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/home'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/boot/grub2/x86_64-efi'],
+ [u'/dev/sda1', u'btrfs', u'0', u'0', u'0', u'-', u'/boot/grub2/i386-pc'],
+ [u'[df_inodes_end]']]
+
+
+
+#.
+#   .--Test functions------------------------------------------------------.
+#   |   _____         _      __                  _   _                     |
+#   |  |_   _|__  ___| |_   / _|_   _ _ __   ___| |_(_) ___  _ __  ___     |
+#   |    | |/ _ \/ __| __| | |_| | | | '_ \ / __| __| |/ _ \| '_ \/ __|    |
+#   |    | |  __/\__ \ |_  |  _| |_| | | | | (__| |_| | (_) | | | \__ \    |
+#   |    |_|\___||___/\__| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 @pytest.mark.parametrize("info,result,include_volume_name", [
     ([], [], False),
     (info_df_lnx, [(u'/', {})], False),
     (info_df_lnx, [(u'/dev/sda4 /', {})], True),
     (info_df_win, [(u'E:/', {}), (u'F:/', {}), (u'C:/', {})], False),
     (info_df_win, [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})], True),
+    (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], False),
+    (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})], True),
 ])
 def test_df_discovery_with_parse(check_manager, monkeypatch, info, result, include_volume_name):
     import cmk_base.checks

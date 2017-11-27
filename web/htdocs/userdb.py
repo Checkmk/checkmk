@@ -1060,7 +1060,7 @@ def declare_custom_user_attrs():
 #   | external sources like LDAP servers.                                  |
 #   '----------------------------------------------------------------------'
 
-def load_connection_config():
+def load_connection_config(lock=False):
     user_connections = []
 
     filename = multisite_dir + "user_connections.mk"

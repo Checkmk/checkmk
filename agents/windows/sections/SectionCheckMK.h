@@ -25,8 +25,8 @@
 #ifndef SectionCheckMK_h
 #define SectionCheckMK_h
 
-#include "../Configurable.h"
-#include "../Section.h"
+#include "Configurable.h"
+#include "Section.h"
 
 class Environment;
 typedef std::pair<std::string, std::string> KVPair;

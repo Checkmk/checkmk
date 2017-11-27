@@ -24,7 +24,7 @@
 
 #include "SectionSystemtime.h"
 #include <iomanip>
-#include "../Logger.h"
+#include "Logger.h"
 
 extern double current_time();
 

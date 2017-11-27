@@ -25,7 +25,7 @@
 #ifndef SectionServices_h
 #define SectionServices_h
 
-#include "../Section.h"
+#include "Section.h"
 
 #ifndef STRICT
 #define STRICT

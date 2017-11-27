@@ -25,11 +25,11 @@
 #ifndef SectionEventlog_h
 #define SectionEventlog_h
 
-#include "../Configurable.h"
-#include "../Configuration.h"
-#include "../EventLog.h"
-#include "../Section.h"
-#include "../types.h"
+#include "Configurable.h"
+#include "Configuration.h"
+#include "EventLog.h"
+#include "Section.h"
+#include "types.h"
 
 class WinApiAdaptor;
 

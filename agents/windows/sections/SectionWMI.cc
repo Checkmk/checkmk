@@ -25,9 +25,9 @@
 #include "SectionWMI.h"
 #include <algorithm>
 #include <ctime>
-#include "../Logger.h"
-#include "../stringutil.h"
-#include "../wmiHelper.h"
+#include "Logger.h"
+#include "stringutil.h"
+#include "wmiHelper.h"
 
 #define SUCCEEDED(hr) ((HRESULT)(hr) >= 0)
 

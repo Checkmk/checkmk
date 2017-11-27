@@ -24,9 +24,9 @@
 
 #include "SectionMRPE.h"
 #include <cstring>
-#include "../Environment.h"
-#include "../ExternalCmd.h"
-#include "../Logger.h"
+#include "Environment.h"
+#include "ExternalCmd.h"
+#include "Logger.h"
 
 SectionMRPE::SectionMRPE(Configuration &config, Logger *logger,
                          const WinApiAdaptor &winapi)

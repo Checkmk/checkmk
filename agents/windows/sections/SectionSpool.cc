@@ -24,10 +24,10 @@
 
 #include <dirent.h>
 #include <sys/types.h>
-#include "../Environment.h"
-#include "../Logger.h"
+#include "Environment.h"
+#include "Logger.h"
 typedef short SHORT;
-#include "../WinApiAdaptor.h"
+#include "WinApiAdaptor.h"
 #include "SectionSpool.h"
 
 extern double file_time(const FILETIME *filetime);

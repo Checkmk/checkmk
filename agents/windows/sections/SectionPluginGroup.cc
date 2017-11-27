@@ -25,10 +25,10 @@
 #include "SectionPluginGroup.h"
 #include <dirent.h>
 #include <sys/types.h>
-#include "../Environment.h"
-#include "../ExternalCmd.h"
-#include "../Logger.h"
-#include "../WinApiAdaptor.h"
+#include "Environment.h"
+#include "ExternalCmd.h"
+#include "Logger.h"
+#include "WinApiAdaptor.h"
 
 extern struct script_statistics_t {
     int pl_count;

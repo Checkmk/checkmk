@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 #undef CreateMutex
-#include "../Section.h"
+#include "Section.h"
 
 namespace wmi {
 class Helper;

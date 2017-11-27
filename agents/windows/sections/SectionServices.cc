@@ -24,9 +24,9 @@
 
 typedef short SHORT;
 #include "SectionServices.h"
-#include "../Logger.h"
-#include "../WinApiAdaptor.h"
-#include "../stringutil.h"
+#include "Logger.h"
+#include "WinApiAdaptor.h"
+#include "stringutil.h"
 
 SectionServices::SectionServices(const Environment &env, Logger *logger,
                                  const WinApiAdaptor &winapi)

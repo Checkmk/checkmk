@@ -29,9 +29,9 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "../Configurable.h"
-#include "../Section.h"
-#include "../wmiHelper.h"
+#include "Configurable.h"
+#include "Section.h"
+#include "wmiHelper.h"
 
 class SectionPS : public Section {
     struct process_entry {

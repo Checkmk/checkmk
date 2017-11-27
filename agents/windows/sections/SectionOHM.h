@@ -25,8 +25,8 @@
 #ifndef SectionOHM_h
 #define SectionOHM_h
 
-#include "../Configurable.h"
-#include "../OHMMonitor.h"
+#include "Configurable.h"
+#include "OHMMonitor.h"
 #include "SectionWMI.h"
 
 class Configuration;

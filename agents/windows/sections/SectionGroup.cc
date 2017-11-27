@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionGroup.h"
-#include "../Logger.h"
+#include "Logger.h"
 
 SectionGroup::SectionGroup(const std::string &outputName,
                            const std::string &configName,

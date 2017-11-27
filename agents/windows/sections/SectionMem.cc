@@ -24,8 +24,8 @@
 
 #include "SectionMem.h"
 #include <iomanip>
-#include "../Logger.h"
-#include "../WinApiAdaptor.h"
+#include "Logger.h"
+#include "WinApiAdaptor.h"
 
 SectionMem::SectionMem(const Environment &env, Logger *logger,
                        const WinApiAdaptor &winapi)

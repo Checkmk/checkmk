@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionSkype.h"
-#include "../Logger.h"
-#include "../PerfCounterCommon.h"
-#include "../WinApiAdaptor.h"
-#include "../stringutil.h"
+#include "Logger.h"
+#include "PerfCounterCommon.h"
+#include "WinApiAdaptor.h"
+#include "stringutil.h"
 
 SectionSkype::SectionSkype(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)

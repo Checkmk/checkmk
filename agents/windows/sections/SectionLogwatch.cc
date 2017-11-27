@@ -25,12 +25,12 @@
 #include "SectionLogwatch.h"
 #include <cassert>
 #include <regex>
-#include "../Environment.h"
-#include "../Logger.h"
-#include "../types.h"
+#include "Environment.h"
+#include "Logger.h"
+#include "types.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
-#include "../WinApiAdaptor.h"
+#include "WinApiAdaptor.h"
 
 static const size_t UNICODE_BUFFER_SIZE = 8192;
 

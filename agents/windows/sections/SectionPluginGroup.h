@@ -27,9 +27,9 @@
 
 #include <map>
 #include <string>
-#include "../Configurable.h"
-#include "../Section.h"
-#include "../types.h"
+#include "Configurable.h"
+#include "Section.h"
+#include "types.h"
 
 class Environment;
 class SectionPlugin;

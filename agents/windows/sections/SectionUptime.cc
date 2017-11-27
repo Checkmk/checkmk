@@ -25,9 +25,9 @@
 #define _WIN32_WINNT 0x0600
 
 #include "SectionUptime.h"
-#include "../Environment.h"
-#include "../Logger.h"
-#include "../dynamic_func.h"
+#include "Environment.h"
+#include "Logger.h"
+#include "dynamic_func.h"
 #define WIN32_LEAN_AND_MEAN
 
 SectionUptime::SectionUptime(const Environment &env, Logger *logger,

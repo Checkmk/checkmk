@@ -27,9 +27,9 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include "../Environment.h"
-#include "../Logger.h"
-#include "../stringutil.h"
+#include "Environment.h"
+#include "Logger.h"
+#include "stringutil.h"
 
 extern const char *check_mk_version;
 

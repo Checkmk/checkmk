@@ -118,7 +118,8 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not _has_autochecks(hostname)
 
-            multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress, check_plugin_names=None,
+            multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
+                                                           check_plugin_names=check_plugin_names,
                                                            use_caches=use_caches,
                                                            do_snmp_scan=do_snmp_scan,
                                                            on_error=on_error)

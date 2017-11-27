@@ -1,0 +1,13 @@
+Title: Host rename: Reduced duration of core downtime during host renamings
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511776151
+Class: feature
+
+The most time consuming action during renaming of hosts, the rewrite of the
+monitoring history, is now done while the core is running. After this is done,
+the core is being stopped and the remaining history files (current one) is
+updated.

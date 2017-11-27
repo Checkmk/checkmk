@@ -2134,44 +2134,195 @@ def render_renaming_actions(action_counts):
 #   | that can be modified via rules.                                      |
 #   '----------------------------------------------------------------------'
 
-def mode_object_parameters(phase):
-    hostname = html.var("host") # may be empty in new/clone mode
-    host = watolib.Folder.current().host(hostname)
-    if host is None:
-        raise MKGeneralException(_('The given host does not exist.'))
-    host.need_permission("read")
-    service = html.get_unicode_input("service")
+class ModeObjectParameters(WatoMode):
+    _PARAMETERS_UNKNOWN = []
+    _PARAMETERS_OMIT = []
 
-    if phase == "title":
-        title = _("Parameters of") + " " + hostname
-        if service:
-            title += " / " + service
+    def __init__(self):
+        super(ModeObjectParameters, self).__init__()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        self._hostname = html.var("host") # may be empty in new/clone mode
+        self._host = watolib.Folder.current().host(self._hostname)
+        if self._host is None:
+            raise MKGeneralException(_('The given host does not exist.'))
+        self._host.need_permission("read")
+
+        # TODO: Validate?
+        self._service = html.get_unicode_input("service")
+
+
+    def title(self):
+        title = _("Parameters of") + " " + self._hostname
+        if self._service:
+            title += " / " + self._service
         return title
 
-    elif phase == "buttons":
-        if service:
+
+    def buttons(self):
+        if self._service:
             prefix = _("Host-")
         else:
             prefix = ""
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-        if service:
-            service_status_button(hostname, service)
+        if self._service:
+            service_status_button(self._hostname, self._service)
         else:
-            host_status_button(hostname, "hoststatus")
-        html.context_button(prefix + _("Properties"), watolib.folder_preserving_link([("mode", "edit_host"), ("host", hostname)]), "edit")
-        html.context_button(_("Services"), watolib.folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
-        if not host.is_cluster():
+            host_status_button(self._hostname, "hoststatus")
+        html.context_button(prefix + _("Properties"), watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._hostname)]), "edit")
+        html.context_button(_("Services"), watolib.folder_preserving_link([("mode", "inventory"), ("host", self._hostname)]), "services")
+        if not self._host.is_cluster():
             html.context_button(prefix + _("Diagnostic"),
-              watolib.folder_preserving_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
-        return
+              watolib.folder_preserving_link([("mode", "diag_host"), ("host", self._hostname)]), "diagnose")
 
-    elif phase == "action":
-        return
 
-    all_rulesets = watolib.AllRulesets()
-    all_rulesets.load()
+    def page(self):
+        all_rulesets = watolib.AllRulesets()
+        all_rulesets.load()
 
-    def render_rule_reason(title, title_url, reason, reason_url, is_default, setting):
+        # For services we make a special handling the for origin and parameters
+        # of that service!
+        if self._service:
+            self._show_service_rules(all_rulesets)
+
+
+        last_maingroup = None
+        for groupname in sorted(watolib.g_rulespecs.get_host_groups()):
+            maingroup = groupname.split("/")[0]
+            for rulespec in sorted(watolib.g_rulespecs.get_by_group(groupname), key = lambda x: x.title):
+                if (rulespec.item_type == 'service') == (not self._service):
+                    continue # This rule is not for hosts/services
+
+                # Open form for that group here, if we know that we have at least one rule
+                if last_maingroup != maingroup:
+                    last_maingroup = maingroup
+                    rulegroup = watolib.get_rulegroup(maingroup)
+                    forms.header(rulegroup.title, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
+                    html.help(rulegroup.help)
+
+                self._output_analysed_ruleset(all_rulesets, rulespec, self._service)
+
+        forms.end()
+
+
+    def _show_service_rules(self, all_rulesets):
+        serviceinfo = watolib.check_mk_automation(self._host.site_id(), "analyse-service", [self._hostname, self._service])
+        if not serviceinfo:
+            return
+
+        forms.header(_("Check origin and parameters"), isopen = True, narrow=True, css="rulesettings")
+        origin = serviceinfo["origin"]
+        origin_txt = {
+            "active"  : _("Active check"),
+            "static"  : _("Manual check"),
+            "auto"    : _("Inventorized check"),
+            "classic" : _("Classical check"),
+        }[origin]
+        self._render_rule_reason(_("Type of check"), None, "", "", False, origin_txt)
+
+        # First case: discovered checks. They come from var/check_mk/autochecks/HOST.
+        if origin ==  "auto":
+            checkgroup = serviceinfo["checkgroup"]
+            checktype = serviceinfo["checktype"]
+            if not checkgroup:
+                self._render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
+
+            # Logwatch needs a special handling, since it is not configured
+            # via checkgroup_parameters but via "logwatch_rules" in a special
+            # WATO module.
+            elif checkgroup == "logwatch":
+                rulespec = watolib.g_rulespecs.get("logwatch_rules")
+                self._output_analysed_ruleset(all_rulesets, rulespec,
+                                        serviceinfo["item"], serviceinfo["parameters"])
+
+            else:
+                # Note: some discovered checks have a check group but
+                # *no* ruleset for discovered checks. One example is "ps".
+                # That can be configured as a manual check or created by
+                # inventory. But in the later case all parameters are set
+                # by the inventory. This will be changed in a later version,
+                # but we need to address it anyway.
+                grouprule = "checkgroup_parameters:" + checkgroup
+                if not watolib.g_rulespecs.exists(grouprule):
+                    try:
+                        rulespec = watolib.g_rulespecs.get("static_checks:" + checkgroup)
+                    except KeyError:
+                        rulespec = None
+
+                    if rulespec:
+                        url = watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', self._hostname)])
+                        self._render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
+                                   rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
+                    else:
+                        self._render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
+
+                else:
+                    rulespec = watolib.g_rulespecs.get(grouprule)
+                    self._output_analysed_ruleset(all_rulesets, rulespec,
+                                            serviceinfo["item"], serviceinfo["parameters"])
+
+        elif origin == "static":
+            checkgroup = serviceinfo["checkgroup"]
+            checktype = serviceinfo["checktype"]
+            if not group:
+                html.write_text(_("This check is not configurable via WATO"))
+            else:
+                rulespec = watolib.g_rulespecs.get("static_checks:" + checkgroup)
+                itemspec = rulespec.item_spec
+                if itemspec:
+                    item_text = itemspec.value_to_text(serviceinfo["item"])
+                    title = rulespec.item_spec.title()
+                else:
+                    item_text = serviceinfo["item"]
+                    title = _("Item")
+                self._render_rule_reason(title, None, "", "", False, item_text)
+                self._output_analysed_ruleset(all_rulesets, rulespec,
+                                        serviceinfo["item"], self._PARAMETERS_OMIT)
+                html.write(rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
+                html.close_td()
+                html.close_tr()
+                html.close_table()
+
+
+        elif origin == "active":
+            checktype = serviceinfo["checktype"]
+            rulespec = watolib.g_rulespecs.get("active_checks:" + checktype)
+            self._output_analysed_ruleset(all_rulesets, rulespec, None, serviceinfo["parameters"])
+
+        elif origin == "classic":
+            rule_nr  = serviceinfo["rule_nr"]
+            rules    = all_rulesets.get("custom_checks").get_rules()
+            rule_folder, rule_index, rule = rules[rule_nr]
+
+            url = watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', self._hostname)])
+            forms.section(html.render_a(_("Command Line"), href=url))
+            url = watolib.folder_preserving_link([
+                ('mode', 'edit_rule'),
+                ('varname', "custom_checks"),
+                ('rule_folder', rule_folder.path()),
+                ('rulenr', rule_index),
+                ('host', self._hostname)])
+
+            html.open_table(class_="setting")
+            html.open_tr()
+
+            html.open_td(class_="reason")
+            html.a("%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url)
+            html.close_td()
+            html.open_td(class_=["settingvalue", "used"])
+            if "command_line" in serviceinfo:
+                html.tt(serviceinfo["command_line"])
+            else:
+                html.write_text(_("(no command line, passive check)"))
+            html.close_td()
+
+            html.close_tr()
+            html.close_table()
+
+
+    def _render_rule_reason(self, title, title_url, reason, reason_url, is_default, setting):
         if title_url:
             title = html.render_a(title, href=title_url)
         forms.section(title)
@@ -2191,253 +2342,117 @@ def mode_object_parameters(phase):
         html.close_table()
 
 
-    # For services we make a special handling the for origin and parameters
-    # of that service!
-    if service:
-        serviceinfo = watolib.check_mk_automation(host.site_id(), "analyse-service", [hostname, service])
-        if serviceinfo:
-            forms.header(_("Check Origin and Parameters"), isopen = True, narrow=True, css="rulesettings")
-            origin = serviceinfo["origin"]
-            origin_txt = {
-                "active"  : _("Active check"),
-                "static"  : _("Manual check"),
-                "auto"    : _("Inventorized check"),
-                "classic" : _("Classical check"),
-            }[origin]
-            render_rule_reason(_("Type of check"), None, "", "", False, origin_txt)
+    def _output_analysed_ruleset(self, all_rulesets, rulespec, service, known_settings=None):
+        if known_settings is None:
+            known_settings = self._PARAMETERS_UNKNOWN
 
-            # First case: discovered checks. They come from var/check_mk/autochecks/HOST.
-            if origin ==  "auto":
-                checkgroup = serviceinfo["checkgroup"]
-                checktype = serviceinfo["checktype"]
-                if not checkgroup:
-                    render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
+        def rule_url(rule):
+            return watolib.folder_preserving_link([
+                ('mode',        'edit_rule'),
+                ('varname',     varname),
+                ('rule_folder', rule.folder.path()),
+                ('rulenr',      rule.index()),
+                ('host',        self._hostname),
+                ('item',        watolib.mk_repr(service) if service else ''),
+            ])
 
-                # Logwatch needs a special handling, since it is not configured
-                # via checkgroup_parameters but via "logwatch_rules" in a special
-                # WATO module.
-                elif checkgroup == "logwatch":
-                    rulespec = watolib.g_rulespecs.get("logwatch_rules")
-                    output_analysed_ruleset(all_rulesets, rulespec, hostname,
-                                            serviceinfo["item"], serviceinfo["parameters"])
+        varname = rulespec.name
+        valuespec = rulespec.valuespec
 
-                else:
-                    # Note: some discovered checks have a check group but
-                    # *no* ruleset for discovered checks. One example is "ps".
-                    # That can be configured as a manual check or created by
-                    # inventory. But in the later case all parameters are set
-                    # by the inventory. This will be changed in a later version,
-                    # but we need to address it anyway.
-                    grouprule = "checkgroup_parameters:" + checkgroup
-                    if not watolib.g_rulespecs.exists(grouprule):
-                        try:
-                            rulespec = watolib.g_rulespecs.get("static_checks:" + checkgroup)
-                        except KeyError:
-                            rulespec = None
-
-                        if rulespec:
-                            url = watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
-                            render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
-                                       rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
-                        else:
-                            render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
-
-                    else:
-                        rulespec = watolib.g_rulespecs.get(grouprule)
-                        output_analysed_ruleset(all_rulesets, rulespec, hostname,
-                                                serviceinfo["item"], serviceinfo["parameters"])
-
-            elif origin == "static":
-                checkgroup = serviceinfo["checkgroup"]
-                checktype = serviceinfo["checktype"]
-                if not group:
-                    html.write_text(_("This check is not configurable via WATO"))
-                else:
-                    rulespec = watolib.g_rulespecs.get("static_checks:" + checkgroup)
-                    itemspec = rulespec.item_spec
-                    if itemspec:
-                        item_text = itemspec.value_to_text(serviceinfo["item"])
-                        title = rulespec.item_spec.title()
-                    else:
-                        item_text = serviceinfo["item"]
-                        title = _("Item")
-                    render_rule_reason(title, None, "", "", False, item_text)
-                    output_analysed_ruleset(all_rulesets, rulespec, hostname,
-                                            serviceinfo["item"], PARAMETERS_OMIT)
-                    html.write(rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
-                    html.close_td()
-                    html.close_tr()
-                    html.close_table()
-
-
-            elif origin == "active":
-                checktype = serviceinfo["checktype"]
-                rulespec = watolib.g_rulespecs.get("active_checks:" + checktype)
-                output_analysed_ruleset(all_rulesets, rulespec, hostname, None, serviceinfo["parameters"])
-
-            elif origin == "classic":
-                rule_nr  = serviceinfo["rule_nr"]
-                rules    = all_rulesets.get("custom_checks").get_rules()
-                rule_folder, rule_index, rule = rules[rule_nr]
-
-                url = watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', hostname)])
-                forms.section(html.render_a(_("Command Line"), href=url))
-                url = watolib.folder_preserving_link([
-                    ('mode', 'edit_rule'),
-                    ('varname', "custom_checks"),
-                    ('rule_folder', rule_folder.path()),
-                    ('rulenr', rule_index),
-                    ('host', hostname)])
-
-                html.open_table(class_="setting")
-                html.open_tr()
-
-                html.open_td(class_="reason")
-                html.a("%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url)
-                html.close_td()
-                html.open_td(class_=["settingvalue", "used"])
-                if "command_line" in serviceinfo:
-                    html.tt(serviceinfo["command_line"])
-                else:
-                    html.write_text(_("(no command line, passive check)"))
-                html.close_td()
-
-                html.close_tr()
-                html.close_table()
-
-
-    last_maingroup = None
-    for groupname in sorted(watolib.g_rulespecs.get_host_groups()):
-        maingroup = groupname.split("/")[0]
-        for rulespec in sorted(watolib.g_rulespecs.get_by_group(groupname), key = lambda x: x.title):
-            if (rulespec.item_type == 'service') == (not service):
-                continue # This rule is not for hosts/services
-
-            # Open form for that group here, if we know that we have at least one rule
-            if last_maingroup != maingroup:
-                last_maingroup = maingroup
-                rulegroup = watolib.get_rulegroup(maingroup)
-                forms.header(rulegroup.title, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
-                html.help(rulegroup.help)
-
-            output_analysed_ruleset(all_rulesets, rulespec, hostname, service)
-
-    forms.end()
-
-
-PARAMETERS_UNKNOWN = []
-PARAMETERS_OMIT = []
-def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_settings=None):
-    if known_settings is None:
-        known_settings = PARAMETERS_UNKNOWN
-
-    def rule_url(rule):
-        return watolib.folder_preserving_link([
-            ('mode',        'edit_rule'),
-            ('varname',     varname),
-            ('rule_folder', rule.folder.path()),
-            ('rulenr',      rule.index()),
-            ('host',        hostname),
-            ('item',        watolib.mk_repr(service) if service else ''),
+        url = watolib.folder_preserving_link([
+            ('mode', 'edit_ruleset'),
+            ('varname', varname),
+            ('host', self._hostname),
+            ('item', watolib.mk_repr(service)),
         ])
 
-    varname = rulespec.name
-    valuespec = rulespec.valuespec
+        forms.section(html.render_a(rulespec.title, url))
 
-    url = watolib.folder_preserving_link([
-        ('mode', 'edit_ruleset'),
-        ('varname', varname),
-        ('host', hostname),
-        ('item', watolib.mk_repr(service)),
-    ])
+        ruleset = all_rulesets.get(varname)
+        setting, rules = ruleset.analyse_ruleset(self._hostname, service)
 
-    forms.section(html.render_a(rulespec.title, url))
+        html.open_table(class_="setting")
+        html.open_tr()
+        html.open_td(class_="reason")
 
-    ruleset = all_rulesets.get(varname)
-    setting, rules = ruleset.analyse_ruleset(hostname, service)
+        # Show reason for the determined value
+        if len(rules) == 1:
+            rule_folder, rule_index, rule = rules[0]
+            url = rule_url(rule)
+            html.a(_("Rule %d in %s") % (rule_index + 1, rule_folder.title()), href=rule_url(rule))
 
-    html.open_table(class_="setting")
-    html.open_tr()
-    html.open_td(class_="reason")
+        elif len(rules) > 1:
+            html.a("%d %s" % (len(rules), _("Rules")), href=url)
 
-    # Show reason for the determined value
-    if len(rules) == 1:
-        rule_folder, rule_index, rule = rules[0]
-        url = rule_url(rule)
-        html.a(_("Rule %d in %s") % (rule_index + 1, rule_folder.title()), href=rule_url(rule))
-
-    elif len(rules) > 1:
-        html.a("%d %s" % (len(rules), _("Rules")), href=url)
-
-    else:
-        html.i(_("Default Value"))
-    html.close_td()
-
-    # Show the resulting value or factory setting
-    html.open_td(class_=["settingvalue", "used" if len(rules) > 0 else "unused"])
-
-    # In some cases we now the settings from a check_mk automation
-    if known_settings is PARAMETERS_OMIT:
-        return
-
-    # Special handling for logwatch: The check parameter is always None. The actual
-    # patterns are configured in logwatch_rules. We do not have access to the actual
-    # patterns here but just to the useless "None". In order not to complicate things
-    # we simply display nothing here.
-    elif varname == "logwatch_rules":
-        pass
-
-    elif known_settings is not PARAMETERS_UNKNOWN:
-        try:
-            html.write(valuespec.value_to_text(known_settings))
-        except Exception, e:
-            if config.debug:
-                raise
-            html.write_text(_("Invalid parameter %r: %s") % (known_settings, e))
-
-    else:
-        # For match type "dict" it can be the case the rule define some of the keys
-        # while other keys are taken from the factory defaults. We need to show the
-        # complete outcoming value here.
-        if rules and ruleset.match_type() == "dict":
-            if rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT \
-                and rulespec.factory_default is not watolib.Rulespec.FACTORY_DEFAULT_UNUSED:
-                fd = rulespec.factory_default.copy()
-                fd.update(setting)
-                setting = fd
-
-        if valuespec and not rules: # show the default value
-            if rulespec.factory_default is watolib.Rulespec.FACTORY_DEFAULT_UNUSED:
-                # Some rulesets are ineffective if they are empty
-                html.write_text(_("(unused)"))
-
-            elif rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT:
-                # If there is a factory default then show that one
-                setting = rulespec.factory_default
-                html.write(valuespec.value_to_text(setting))
-
-            elif ruleset.match_type() in ("all", "list"):
-                # Rulesets that build lists are empty if no rule matches
-                html.write_text(_("(no entry)"))
-
-            else:
-                # Else we use the default value of the valuespec
-                html.write(valuespec.value_to_text(valuespec.default_value()))
-
-        # We have a setting
-        elif valuespec:
-            if ruleset.match_type() == "all":
-                html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
-            else:
-                html.write(valuespec.value_to_text(setting))
-
-        # Binary rule, no valuespec, outcome is True or False
         else:
-            html.img("images/rule_%s%s.png" % ("yes" if setting else "no", "_off" if not rules else ''),
-                     class_="icon", align="absmiddle", title=_("yes") if setting else _("no"))
-    html.close_td()
-    html.close_tr()
-    html.close_table()
+            html.i(_("Default Value"))
+        html.close_td()
+
+        # Show the resulting value or factory setting
+        html.open_td(class_=["settingvalue", "used" if len(rules) > 0 else "unused"])
+
+        # In some cases we now the settings from a check_mk automation
+        if known_settings is self._PARAMETERS_OMIT:
+            return
+
+        # Special handling for logwatch: The check parameter is always None. The actual
+        # patterns are configured in logwatch_rules. We do not have access to the actual
+        # patterns here but just to the useless "None". In order not to complicate things
+        # we simply display nothing here.
+        elif varname == "logwatch_rules":
+            pass
+
+        elif known_settings is not self._PARAMETERS_UNKNOWN:
+            try:
+                html.write(valuespec.value_to_text(known_settings))
+            except Exception, e:
+                if config.debug:
+                    raise
+                html.write_text(_("Invalid parameter %r: %s") % (known_settings, e))
+
+        else:
+            # For match type "dict" it can be the case the rule define some of the keys
+            # while other keys are taken from the factory defaults. We need to show the
+            # complete outcoming value here.
+            if rules and ruleset.match_type() == "dict":
+                if rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT \
+                    and rulespec.factory_default is not watolib.Rulespec.FACTORY_DEFAULT_UNUSED:
+                    fd = rulespec.factory_default.copy()
+                    fd.update(setting)
+                    setting = fd
+
+            if valuespec and not rules: # show the default value
+                if rulespec.factory_default is watolib.Rulespec.FACTORY_DEFAULT_UNUSED:
+                    # Some rulesets are ineffective if they are empty
+                    html.write_text(_("(unused)"))
+
+                elif rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT:
+                    # If there is a factory default then show that one
+                    setting = rulespec.factory_default
+                    html.write(valuespec.value_to_text(setting))
+
+                elif ruleset.match_type() in ("all", "list"):
+                    # Rulesets that build lists are empty if no rule matches
+                    html.write_text(_("(no entry)"))
+
+                else:
+                    # Else we use the default value of the valuespec
+                    html.write(valuespec.value_to_text(valuespec.default_value()))
+
+            # We have a setting
+            elif valuespec:
+                if ruleset.match_type() == "all":
+                    html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
+                else:
+                    html.write(valuespec.value_to_text(setting))
+
+            # Binary rule, no valuespec, outcome is True or False
+            else:
+                html.img("images/rule_%s%s.png" % ("yes" if setting else "no", "_off" if not rules else ''),
+                         class_="icon", align="absmiddle", title=_("yes") if setting else _("no"))
+        html.close_td()
+        html.close_tr()
+        html.close_table()
 
 
 #.
@@ -4795,67 +4810,71 @@ def configure_gateway(state, site_id, host, gateway):
 #   | This module allows the creation of large numbers of random hosts,    |
 #   | for test and development.                                            |
 #   '----------------------------------------------------------------------'
-def mode_random_hosts(phase):
-    if phase == "title":
+
+class ModeRandomHosts(WatoMode):
+    def title(self):
         return _("Random Hosts")
 
-    elif phase == "buttons":
-        html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
-        return
 
-    elif phase == "action":
-        if html.check_transaction():
-            count = int(html.var("count"))
-            folders = int(html.var("folders"))
-            levels = int(html.var("levels"))
-            created = create_random_hosts(watolib.Folder.current(), count, folders, levels)
-            return "folder", _("Created %d random hosts.") % created
-        else:
+    def buttons(self):
+        html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
+
+
+    def action(self):
+        if not html.check_transaction():
             return "folder"
 
-    html.begin_form("random")
-    forms.header(_("Create Random Hosts"))
-    forms.section(_("Number to create"))
-    html.write_text("%s: " % _("Hosts to create in each folder"))
-    html.number_input("count", 10)
-    html.set_focus("count")
-    html.br()
-    html.write_text("%s: " % _("Number of folders to create in each level"))
-    html.number_input("folders", 10)
-    html.br()
-    html.write_text("%s: " % _("Levels of folders to create"))
-    html.number_input("levels", 1)
-
-    forms.end()
-    html.button("start", _("Start!"), "submit")
-    html.hidden_fields()
-    html.end_form()
+        count = int(html.var("count"))
+        folders = int(html.var("folders"))
+        levels = int(html.var("levels"))
+        created = self._create_random_hosts(watolib.Folder.current(), count, folders, levels)
+        return "folder", _("Created %d random hosts.") % created
 
 
-def create_random_hosts(folder, count, folders, levels):
-    if levels == 0:
-        hosts_to_create = []
-        while len(hosts_to_create) < count:
-            host_name = "random_%010d" % int(random.random() * 10000000000)
-            hosts_to_create.append((host_name, {"ipaddress" : "127.0.0.1"}, None))
-        folder.create_hosts(hosts_to_create)
-        return count
+    def page(self):
+        html.begin_form("random")
+        forms.header(_("Create Random Hosts"))
+        forms.section(_("Number to create"))
+        html.write_text("%s: " % _("Hosts to create in each folder"))
+        html.number_input("count", 10)
+        html.set_focus("count")
+        html.br()
+        html.write_text("%s: " % _("Number of folders to create in each level"))
+        html.number_input("folders", 10)
+        html.br()
+        html.write_text("%s: " % _("Levels of folders to create"))
+        html.number_input("levels", 1)
 
-    else:
-        total_created = 0
-        created = 0
-        while created < folders:
-            created += 1
-            i = 1
-            while True:
-                folder_name = "folder_%02d" % i
-                if not folder.has_subfolder(folder_name):
-                    break
-                i += 1
+        forms.end()
+        html.button("start", _("Start!"), "submit")
+        html.hidden_fields()
+        html.end_form()
 
-            subfolder = folder.create_subfolder(folder_name, "Subfolder %02d" % i, {})
-            total_created += create_random_hosts(subfolder, count, folders, levels - 1)
-        return total_created
+
+    def _create_random_hosts(self, folder, count, folders, levels):
+        if levels == 0:
+            hosts_to_create = []
+            while len(hosts_to_create) < count:
+                host_name = "random_%010d" % int(random.random() * 10000000000)
+                hosts_to_create.append((host_name, {"ipaddress" : "127.0.0.1"}, None))
+            folder.create_hosts(hosts_to_create)
+            return count
+
+        else:
+            total_created = 0
+            created = 0
+            while created < folders:
+                created += 1
+                i = 1
+                while True:
+                    folder_name = "folder_%02d" % i
+                    if not folder.has_subfolder(folder_name):
+                        break
+                    i += 1
+
+                subfolder = folder.create_subfolder(folder_name, "Subfolder %02d" % i, {})
+                total_created += self._create_random_hosts(subfolder, count, folders, levels - 1)
+            return total_created
 
 #.
 #   .--Auditlog------------------------------------------------------------.
@@ -14980,36 +14999,44 @@ def create_sample_config():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def mode_pattern_editor(phase):
-    import logwatch
+class ModePatternEditor(WatoMode):
+    def __init__(self):
+        super(ModePatternEditor, self).__init__()
+        self._from_vars()
 
-    # 1. Variablen auslesen
-    hostname   = html.var('host', '')
-    item       = html.var('file', '')
-    match_txt  = html.var('match', '')
-    master_url = html.var('master_url', '')
 
-    host = watolib.Folder.current().host(hostname)
+    def _from_vars(self):
+        self._hostname   = html.var('host', '')
+        # TODO: validate all fields
+        self._item       = html.var('file', '')
+        self._match_txt  = html.var('match', '')
 
-    if phase == "title":
-        if not hostname and not item:
+        self._host = watolib.Folder.current().host(self._hostname)
+
+        if self._hostname and not self._host:
+            raise MKUserError(None, _("This host does not exist."))
+
+
+    def title(self):
+        if not self._hostname and not self._item:
             return _("Logfile Pattern Analyzer")
-        elif not hostname:
-            return _("Logfile Patterns of Logfile %s on all Hosts") % (item)
-        elif not item:
-            return _("Logfile Patterns of Host %s") % (hostname)
+        elif not self._hostname:
+            return _("Logfile Patterns of Logfile %s on all Hosts") % (self._item)
+        elif not self._item:
+            return _("Logfile Patterns of Host %s") % (self._hostname)
         else:
-            return _("Logfile Patterns of Logfile %s on Host %s") % (item, hostname)
+            return _("Logfile Patterns of Logfile %s on Host %s") % (self._item, self._hostname)
 
-    elif phase == "buttons":
+
+    def buttons(self):
         home_button()
-        if host:
-            if item:
+        if self._host:
+            if self._item:
                 title = _("Show Logfile")
             else:
                 title = _("Host Logfiles")
 
-            html.context_button(title, html.makeuri_contextless([("host", hostname), ("file", item)], filename="logwatch.py"), 'logwatch')
+            html.context_button(title, html.makeuri_contextless([("host", self._hostname), ("file", self._item)], filename="logwatch.py"), 'logwatch')
 
         html.context_button(_('Edit Logfile Rules'), watolib.folder_preserving_link([
                 ('mode', 'edit_ruleset'),
@@ -15018,151 +15045,149 @@ def mode_pattern_editor(phase):
             'edit'
         )
 
-        return
 
-    if phase == "action":
-        return
+    def page(self):
+        html.help(_('On this page you can test the defined logfile patterns against a custom text, '
+                    'for example a line from a logfile. Using this dialog it is possible to analyze '
+                    'and debug your whole set of logfile patterns.'))
 
-    html.help(_('On this page you can test the defined logfile patterns against a custom text, '
-                'for example a line from a logfile. Using this dialog it is possible to analyze '
-                'and debug your whole set of logfile patterns.'))
+        self._show_try_form()
+        self._show_patterns()
 
-    # Render the tryout form
-    html.begin_form('try')
-    forms.header(_('Try Pattern Match'))
-    forms.section(_('Hostname'))
-    html.text_input('host')
-    forms.section(_('Logfile'))
-    html.text_input('file')
-    forms.section(_('Text to match'))
-    html.help(_('You can insert some text (e.g. a line of the logfile) to test the patterns defined '
-          'for this logfile. All patterns for this logfile are listed below. Matching patterns '
-          'will be highlighted after clicking the "Try out" button.')
-    )
-    html.text_input('match', cssclass = 'match', size=100)
-    forms.end()
-    html.button('_try', _('Try out'))
-    html.del_var('folder') # Never hand over the folder here
-    html.hidden_fields()
-    html.end_form()
 
-    # Bail out if the given hostname does not exist
-    if hostname and not host:
-        html.add_user_error('host', _('The given host does not exist.'))
-        html.show_user_errors()
-        return
+    def _show_try_form(self):
+        html.begin_form('try')
+        forms.header(_('Try Pattern Match'))
+        forms.section(_('Hostname'))
+        html.text_input('host')
+        forms.section(_('Logfile'))
+        html.text_input('file')
+        forms.section(_('Text to match'))
+        html.help(_('You can insert some text (e.g. a line of the logfile) to test the patterns defined '
+              'for this logfile. All patterns for this logfile are listed below. Matching patterns '
+              'will be highlighted after clicking the "Try out" button.')
+        )
+        html.text_input('match', cssclass = 'match', size=100)
+        forms.end()
+        html.button('_try', _('Try out'))
+        html.del_var('folder') # Never hand over the folder here
+        html.hidden_fields()
+        html.end_form()
 
-    collection = watolib.SingleRulesetRecursively("logwatch_rules")
-    collection.load()
-    ruleset = collection.get("logwatch_rules")
 
-    html.h3(_('Logfile Patterns'))
-    if ruleset.is_empty():
-        html.open_div(class_="info")
-        html.write_text('There are no logfile patterns defined. You may create '
-                        'logfile patterns using the <a href="%s">Rule Editor</a>.' %
-                         watolib.folder_preserving_link([
-                             ('mode', 'edit_ruleset'),
-                             ('varname', 'logwatch_rules')
-                         ]))
-        html.close_div()
+    def _show_patterns(self):
+        import logwatch
+        collection = watolib.SingleRulesetRecursively("logwatch_rules")
+        collection.load()
+        ruleset = collection.get("logwatch_rules")
 
-    # Loop all rules for this ruleset
-    already_matched = False
-    last_folder = None
-    abs_rulenr = 0
-    for folder, rulenr, rule in ruleset.get_rules():
-        last_in_group = rulenr == ruleset.num_rules_in_folder(folder) - 1
+        html.h3(_('Logfile Patterns'))
+        if ruleset.is_empty():
+            html.open_div(class_="info")
+            html.write_text('There are no logfile patterns defined. You may create '
+                            'logfile patterns using the <a href="%s">Rule Editor</a>.' %
+                             watolib.folder_preserving_link([
+                                 ('mode', 'edit_ruleset'),
+                                 ('varname', 'logwatch_rules')
+                             ]))
+            html.close_div()
 
-        # Check if this rule applies to the given host/service
-        if hostname:
-            # If hostname (and maybe filename) try match it
-            reason = rule.matches_host_and_item(watolib.Folder.current(), hostname, item)
-        elif item:
-            # If only a filename is given
-            reason = rule.matches_item()
-        else:
-            # If no host/file given match all rules
-            reason = True
+        # Loop all rules for this ruleset
+        already_matched = False
+        last_folder = None
+        abs_rulenr = 0
+        for folder, rulenr, rule in ruleset.get_rules():
+            last_in_group = rulenr == ruleset.num_rules_in_folder(folder) - 1
 
-        match_img = ''
-        if reason == True:
-            # Applies to the given host/service
-            reason_class = 'reason'
-            # match_title/match_img are set below per pattern
-        else:
-            # not matching
-            reason_class = 'noreason'
-            match_img   = 'nmatch'
-            match_title = reason
+            # Check if this rule applies to the given host/service
+            if self._hostname:
+                # If hostname (and maybe filename) try match it
+                reason = rule.matches_host_and_item(watolib.Folder.current(), self._hostname, self._item)
+            elif self._item:
+                # If only a filename is given
+                reason = rule.matches_item()
+            else:
+                # If no host/file given match all rules
+                reason = True
 
-        html.begin_foldable_container("rule", "%s" % abs_rulenr, True,
-                    HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)), indent = False)
-        table.begin("pattern_editor_rule_%d" % abs_rulenr, sortable=False)
-        abs_rulenr += 1
-
-        # TODO: What's this?
-        pattern_list = rule.value
-        if type(pattern_list) == dict:
-            pattern_list = pattern_list["reclassify_patterns"]
-
-        # Each rule can hold no, one or several patterns. Loop them all here
-        odd = "odd"
-        for state, pattern, comment in pattern_list:
-            match_class = ''
-            disp_match_txt = ''
+            match_img = ''
             if reason == True:
-                matched = re.search(pattern, match_txt)
-                if matched:
+                # Applies to the given host/service
+                reason_class = 'reason'
+                # match_title/match_img are set below per pattern
+            else:
+                # not matching
+                reason_class = 'noreason'
+                match_img   = 'nmatch'
+                match_title = reason
 
-                    # Prepare highlighted search txt
-                    match_start = matched.start()
-                    match_end   = matched.end()
-                    disp_match_txt = html.render_text(match_txt[:match_start]) \
-                                     + html.render_span(match_txt[match_start:match_end], class_="match")\
-                                     + html.render_text(match_txt[match_end:])
+            html.begin_foldable_container("rule", "%s" % abs_rulenr, True,
+                        HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)), indent = False)
+            table.begin("pattern_editor_rule_%d" % abs_rulenr, sortable=False)
+            abs_rulenr += 1
 
-                    if already_matched == False:
-                        # First match
-                        match_class  = 'match first'
-                        match_img   = 'match'
-                        match_title = _('This logfile pattern matches first and will be used for '
-                                        'defining the state of the given line.')
-                        already_matched = True
+            # TODO: What's this?
+            pattern_list = rule.value
+            if type(pattern_list) == dict:
+                pattern_list = pattern_list["reclassify_patterns"]
+
+            # Each rule can hold no, one or several patterns. Loop them all here
+            odd = "odd"
+            for state, pattern, comment in pattern_list:
+                match_class = ''
+                disp_match_txt = ''
+                if reason == True:
+                    matched = re.search(pattern, self._match_txt)
+                    if matched:
+
+                        # Prepare highlighted search txt
+                        match_start = matched.start()
+                        match_end   = matched.end()
+                        disp_match_txt = html.render_text(self._match_txt[:match_start]) \
+                                         + html.render_span(self._match_txt[match_start:match_end], class_="match")\
+                                         + html.render_text(self._match_txt[match_end:])
+
+                        if already_matched == False:
+                            # First match
+                            match_class  = 'match first'
+                            match_img   = 'match'
+                            match_title = _('This logfile pattern matches first and will be used for '
+                                            'defining the state of the given line.')
+                            already_matched = True
+                        else:
+                            # subsequent match
+                            match_class = 'match'
+                            match_img  = 'imatch'
+                            match_title = _('This logfile pattern matches but another matched first.')
                     else:
-                        # subsequent match
-                        match_class = 'match'
-                        match_img  = 'imatch'
-                        match_title = _('This logfile pattern matches but another matched first.')
-                else:
-                    match_img   = 'nmatch'
-                    match_title = _('This logfile pattern does not match the given string.')
+                        match_img   = 'nmatch'
+                        match_title = _('This logfile pattern does not match the given string.')
 
-            table.row(css=reason_class)
-            table.cell(_('Match'))
-            html.icon(match_title, "rule%s" % match_img)
+                table.row(css=reason_class)
+                table.cell(_('Match'))
+                html.icon(match_title, "rule%s" % match_img)
 
-            cls = ''
-            if match_class == 'match first':
-                cls = 'svcstate state%d' % logwatch.level_state(state)
-            table.cell(_('State'), logwatch.level_name(state), css=cls)
-            table.cell(_('Pattern'), html.render_tt(pattern))
-            table.cell(_('Comment'), html.render_text(comment))
-            table.cell(_('Matched line'), disp_match_txt)
+                cls = ''
+                if match_class == 'match first':
+                    cls = 'svcstate state%d' % logwatch.level_state(state)
+                table.cell(_('State'), logwatch.level_name(state), css=cls)
+                table.cell(_('Pattern'), html.render_tt(pattern))
+                table.cell(_('Comment'), html.render_text(comment))
+                table.cell(_('Matched line'), disp_match_txt)
 
-        table.row(fixed=True)
-        table.cell(colspan=5)
-        edit_url = watolib.folder_preserving_link([
-            ("mode", "edit_rule"),
-            ("varname", "logwatch_rules"),
-            ("rulenr", rulenr),
-            ("host", hostname),
-            ("item", watolib.mk_repr(item)),
-            ("rule_folder", folder.path())])
-        html.icon_button(edit_url, _("Edit this rule"), "edit")
+            table.row(fixed=True)
+            table.cell(colspan=5)
+            edit_url = watolib.folder_preserving_link([
+                ("mode", "edit_rule"),
+                ("varname", "logwatch_rules"),
+                ("rulenr", rulenr),
+                ("host", self._hostname),
+                ("item", watolib.mk_repr(self._item)),
+                ("rule_folder", folder.path())])
+            html.icon_button(edit_url, _("Edit this rule"), "edit")
 
-        table.end()
-        html.end_foldable_container()
+            table.end()
+            html.end_foldable_container()
 
 
 #.
@@ -17590,12 +17615,12 @@ modes = {
    "parentscan"         : (["hosts"], mode_parentscan),
    "inventory"          : (["hosts"], ModeDiscovery),
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
-   "object_parameters"  : (["hosts", "rulesets"], mode_object_parameters),
+   "object_parameters"  : (["hosts", "rulesets"], ModeObjectParameters),
    "search"             : (["hosts"], ModeSearch),
    "bulkinventory"      : (["hosts", "services"], ModeBulkDiscovery),
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
-   "random_hosts"       : (["hosts", "random_hosts"], mode_random_hosts),
+   "random_hosts"       : (["hosts", "random_hosts"], ModeRandomHosts),
    "changelog"          : ([], ModeActivateChanges),
    "auditlog"           : (["auditlog"], ModeAuditLog),
    "globalvars"         : (["global"], ModeEditGlobals),
@@ -17642,7 +17667,7 @@ modes = {
    "hosttags"           : (["hosttags"], ModeHostTags),
    "edit_hosttag"       : (["hosttags"], ModeEditHosttagGroup),
    "edit_auxtag"        : (["hosttags"], ModeEditAuxtag),
-   "pattern_editor"     : (["pattern_editor"], mode_pattern_editor),
+   "pattern_editor"     : (["pattern_editor"], ModePatternEditor),
    "icons"              : (["icons"], ModeIcons),
    "download_agents"    : (["download_agents"], ModeDownloadAgents),
    "backup"             : (["backups"], ModeBackup),

@@ -31,7 +31,7 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, result, inclu
     import cmk_base.checks
     import cmk_base
 
-#   NOTE: This is the result of trying to mock the the ruleset variable itself instead of the
+#   NOTE: This commented-out code is the result of trying to mock the the ruleset variable itself instead of the
 #         host_extra_conf_merged function. It did not work. Maybe we can get it to work at a later stage.
 #    import cmk_base.rulesets
 #    monkeypatch.setitem(cmk_base.checks._check_contexts["df"], "inventory_df_rules",

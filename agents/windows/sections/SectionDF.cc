@@ -25,9 +25,9 @@
 #include "SectionDF.h"
 #include <cstring>
 #include <iomanip>
-#include "../Logger.h"
-#include "../WinApiAdaptor.h"
-#include "../stringutil.h"
+#include "Logger.h"
+#include "WinApiAdaptor.h"
+#include "stringutil.h"
 
 void char_replace(char what, char into, char *in) {
     while (*in) {

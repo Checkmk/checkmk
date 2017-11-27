@@ -25,7 +25,7 @@
 #ifndef SectionDF_h
 #define SectionDF_h
 
-#include "../Section.h"
+#include "Section.h"
 
 class Environment;
 

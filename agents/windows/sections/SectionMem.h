@@ -26,7 +26,7 @@
 #define SectionMem_h
 
 #undef CreateMutex
-#include "../Section.h"
+#include "Section.h"
 
 class SectionMem : public Section {
 public:

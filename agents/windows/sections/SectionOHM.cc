@@ -22,12 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "../Environment.h"
-#include "../Logger.h"
-#include "../OHMMonitor.h"
+#include "Environment.h"
+#include "Logger.h"
+#include "OHMMonitor.h"
 #include "SectionWMI.h"
 #undef CreateMutex
-#include "../Configuration.h"
+#include "Configuration.h"
 #include "SectionOHM.h"
 
 SectionOHM::SectionOHM(Configuration &config, Logger *logger,

@@ -25,10 +25,10 @@
 #include "SectionWinperf.h"
 #include <algorithm>
 #include <iomanip>
-#include "../Environment.h"
-#include "../Logger.h"
-#include "../PerfCounter.h"
-#include "../stringutil.h"
+#include "Environment.h"
+#include "Logger.h"
+#include "PerfCounter.h"
+#include "stringutil.h"
 
 extern double current_time();
 

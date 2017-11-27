@@ -27,10 +27,10 @@
 #include <inttypes.h>
 #include <cstring>
 #include <ctime>
-#include "../Environment.h"
-#include "../Logger.h"
-#include "../WinApiAdaptor.h"
-#include "../stringutil.h"
+#include "Environment.h"
+#include "Logger.h"
+#include "WinApiAdaptor.h"
+#include "stringutil.h"
 
 SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)

@@ -25,7 +25,7 @@
 #ifndef SectionSystemtime_h
 #define SectionSystemtime_h
 
-#include "../Section.h"
+#include "Section.h"
 
 class SectionSystemtime : public Section {
 public:

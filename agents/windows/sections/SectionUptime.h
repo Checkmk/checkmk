@@ -29,9 +29,9 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "../wmiHelper.h"
+#include "wmiHelper.h"
 #undef CreateMutex
-#include "../Section.h"
+#include "Section.h"
 
 class Environment;
 

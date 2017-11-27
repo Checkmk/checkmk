@@ -23,11 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionPerfcounter.h"
-#include "../Environment.h"
-#include "../Logger.h"
-#include "../PerfCounter.h"
-#include "../PerfCounterCommon.h"
-#include "../stringutil.h"
+#include "Environment.h"
+#include "Logger.h"
+#include "PerfCounter.h"
+#include "PerfCounterCommon.h"
+#include "stringutil.h"
 
 int NameBaseNumberMap::getCounterBaseNumber(const std::string &counterName) {
     // Fill name -> counter ID maps lazily when first needed.

@@ -25,8 +25,8 @@
 #ifndef SectionFileinfo_h
 #define SectionFileinfo_h
 
-#include "../Configurable.h"
-#include "../Section.h"
+#include "Configurable.h"
+#include "Section.h"
 
 class Configuration;
 

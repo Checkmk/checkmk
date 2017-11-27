@@ -25,9 +25,9 @@
 #ifndef SectionLogwatch_h
 #define SectionLogwatch_h
 
-#include "../Configurable.h"
-#include "../Section.h"
-#include "../types.h"
+#include "Configurable.h"
+#include "Section.h"
+#include "types.h"
 
 typedef struct _BY_HANDLE_FILE_INFORMATION BY_HANDLE_FILE_INFORMATION;
 

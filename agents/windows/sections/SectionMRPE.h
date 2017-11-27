@@ -25,8 +25,8 @@
 #ifndef SectionMRPE_h
 #define SectionMRPE_h
 
-#include "../Configurable.h"
-#include "../Section.h"
+#include "Configurable.h"
+#include "Section.h"
 
 class SectionMRPE : public Section {
 public:

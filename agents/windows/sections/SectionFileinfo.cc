@@ -26,7 +26,7 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
-#include "../Logger.h"
+#include "Logger.h"
 
 extern double current_time();
 extern double file_time(const FILETIME *filetime);

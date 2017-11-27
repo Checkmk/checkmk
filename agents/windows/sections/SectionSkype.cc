@@ -67,8 +67,8 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
           "LS:XmppFederationProxy - Streams",
           "LS:A/V Edge - TCP Counters",
           "LS:A/V Edge - UDP Counters"}) {
-        withSubSection(new SectionPerfcounter(counterName, counterName, _env,
-                                              _nameNumberMap, _logger, _winapi));
+        withSubSection(new SectionPerfcounter(
+            counterName, counterName, _env, _nameNumberMap, _logger, _winapi));
     }
 
     // TODO the version number in the counter name isn't exactly inspiring

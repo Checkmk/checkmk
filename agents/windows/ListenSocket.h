@@ -32,13 +32,6 @@ class Logger;
 class WinApiAdaptor;
 
 class ListenSocket {
-    Logger *_logger;
-    const WinApiAdaptor &_winapi;
-    SOCKET _socket;
-    only_from_t _source_whitelist;
-    bool _supports_ipv4;
-    bool _use_ipv6;
-
 public:
     ListenSocket(int port, const only_from_t &source_whitelist,
                  bool supportIPV6, Logger *logger, const WinApiAdaptor &winapi);
@@ -59,6 +52,13 @@ private:
     bool check_only_from(sockaddr *ip);
     sockaddr *create_sockaddr(int *addr_len);
     SOCKET RemoveSocketInheritance(SOCKET oldsocket) const;
+
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
+    SOCKET _socket;
+    only_from_t _source_whitelist;
+    bool _supports_ipv4;
+    bool _use_ipv6;
 };
 
 #endif  // ListenSocket_h

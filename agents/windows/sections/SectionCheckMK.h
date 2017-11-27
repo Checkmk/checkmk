@@ -32,14 +32,6 @@ class Environment;
 typedef std::pair<std::string, std::string> KVPair;
 
 class SectionCheckMK : public Section {
-    Configurable<bool> _crash_debug;
-    SplittingListConfigurable<only_from_t,
-                              BlockMode::FileExclusive<only_from_t>>
-        _only_from;
-
-    // static fields
-    const std::vector<KVPair> _info_fields;
-
 public:
     SectionCheckMK(Configuration &config, Logger *logger,
                    const WinApiAdaptor &winapi);
@@ -49,6 +41,14 @@ protected:
 
 private:
     std::vector<KVPair> createInfoFields() const;
+
+    Configurable<bool> _crash_debug;
+    SplittingListConfigurable<only_from_t,
+                              BlockMode::FileExclusive<only_from_t>>
+        _only_from;
+
+    // static fields
+    const std::vector<KVPair> _info_fields;
 };
 
 #endif  // SectionCheckMK_h

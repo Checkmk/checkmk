@@ -42,7 +42,6 @@ public:
         Success
     };
 
-public:
     virtual uint64_t recordId() const = 0;
     virtual uint16_t eventId() const = 0;
     virtual uint16_t eventQualifiers() const = 0;
@@ -94,13 +93,6 @@ public:
      * return the ID of the last record in eventlog
      */
     virtual uint64_t getLastRecordId() = 0;
-
-    /**
-     * get a list of dlls that contain eventid->message mappings for this
-     * eventlog and the specified source
-     */
-    //    virtual std::vector<std::string> getMessageFiles(
-    //        const char *source) const = 0;
 };
 
 std::unique_ptr<IEventLog> open_eventlog(const std::wstring &name_or_path,

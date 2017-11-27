@@ -10,21 +10,19 @@
 class WinApiAdaptor;
 
 class ConfigurableBase {
-protected:
-    const WinApiAdaptor &_winapi;
-
 public:
     explicit ConfigurableBase(const WinApiAdaptor &winapi) : _winapi(winapi) {}
     virtual void feed(const std::string &key, const std::string &value) = 0;
     virtual void output(const std::string &key, std::ostream &out) const = 0;
     virtual void startFile() = 0;
     virtual void startBlock() = 0;
+
+protected:
+    const WinApiAdaptor &_winapi;
 };
 
 template <typename ValueT>
 class Configurable : public ConfigurableBase {
-    ValueT _value;
-
 public:
     Configurable(Configuration &config, const char *section, const char *key,
                  const ValueT &def, const WinApiAdaptor &winapi)
@@ -54,6 +52,9 @@ public:
                         std::ostream &out) const override {
         out << key << " = " << _value << "\n";
     }
+
+private:
+    ValueT _value;
 };
 
 /**
@@ -110,11 +111,11 @@ public:
 
     virtual void clear() { _values.clear(); }
 
-public:  // only valid with a grouping adder. it's important to understand that
-         // due to how templates in C++ work, these functions are not compiled
-         // for template-instantiations where they aren't used so even though
-         // they wouldn't compile with non-grouping adders, this is not a
-         // problem. (google SFINAE)
+    // only valid with a grouping adder. it's important to understand that
+    // due to how templates in C++ work, these functions are not compiled
+    // for template-instantiations where they aren't used so even though
+    // they wouldn't compile with non-grouping adders, this is not a
+    // problem. (google SFINAE)
     void setGroupFunction(
         typename AddMode::PriorityAppendGrouped<ContainerT>::GroupFunction
             function) {
@@ -190,7 +191,6 @@ public:
 
     void clear() { _values.clear(); }
 
-public:
     void add(const DataT &data) { _add_mode.add(_values, data); }
 
 protected:

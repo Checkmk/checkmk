@@ -41,7 +41,8 @@ class WinApiAdaptor;
 
 namespace wmi {
 
-struct ComException : public std::runtime_error {
+class ComException : public std::runtime_error {
+public:
     ComException(const std::string &message, HRESULT result,
                  const WinApiAdaptor &winapi);
     static std::string resolveError(HRESULT result,
@@ -97,17 +98,13 @@ double Variant::get() const;
 class ObjectWrapper {
     friend class Helper;
 
-protected:
-    std::shared_ptr<IWbemClassObject> _current;
-    Logger *_logger;
-    const WinApiAdaptor &_winapi;
-
 public:
     ObjectWrapper(IWbemClassObject *object, Logger *logger,
                   const WinApiAdaptor &winapi);
 
     ObjectWrapper(const ObjectWrapper &reference);
     ~ObjectWrapper() noexcept;
+    ObjectWrapper &operator=(const ObjectWrapper &) = delete;
 
     bool contains(const wchar_t *key) const;
 
@@ -123,9 +120,12 @@ public:
     template <typename T>
     T get(const wchar_t *key) const;
 
-private:
-    ObjectWrapper &operator=(const ObjectWrapper &reference) = delete;
+protected:
+    std::shared_ptr<IWbemClassObject> _current;
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
 
+private:
     VARIANT getVarByKey(const wchar_t *key) const;
 };
 
@@ -141,9 +141,6 @@ T ObjectWrapper::get(const wchar_t *key) const {
 }
 
 class Result : public ObjectWrapper {
-    std::shared_ptr<IEnumWbemClassObject> _enumerator{NULL};
-    HRESULT _last_error{S_OK};
-
 public:
     Result(Logger *logger, const WinApiAdaptor &winapi);
     Result(IEnumWbemClassObject *enumerator, Logger *logger,
@@ -169,15 +166,13 @@ public:
     // once a result is valid it remains so, it doesn't become invalid
     // if an error during iteration happens or the last row has been reached.
     bool valid() const;
+
+private:
+    std::shared_ptr<IEnumWbemClassObject> _enumerator{NULL};
+    HRESULT _last_error{S_OK};
 };
 
 class Helper {
-    IWbemLocator *_locator;
-    IWbemServices *_services;
-    std::wstring _path;
-    Logger *_logger;
-    const WinApiAdaptor &_winapi;
-
 public:
     Helper(Logger *logger, const WinApiAdaptor &winapi,
            LPCWSTR path = L"Root\\Cimv2");
@@ -201,6 +196,12 @@ private:
 
     // sets authentication information on the services proxy
     void setProxyBlanket(IWbemServices *services);
+
+    IWbemLocator *_locator;
+    IWbemServices *_services;
+    std::wstring _path;
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
 };
 
 }  // namespace wmi

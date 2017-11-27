@@ -302,9 +302,6 @@ private:
 };
 
 class Mutex {
-    HANDLE _mutex;
-    const WinApiAdaptor &_winapi;
-
 public:
     explicit Mutex(const WinApiAdaptor &winapi) : _winapi(winapi) {
         _mutex = _winapi.CreateMutex(NULL, FALSE, NULL);
@@ -314,15 +311,19 @@ public:
     void lock() { _winapi.WaitForSingleObject(_mutex, INFINITE); }
 
     void unlock() { _winapi.ReleaseMutex(_mutex); }
+
+private:
+    HANDLE _mutex;
+    const WinApiAdaptor &_winapi;
 };
 
 class MutexLock {
-    Mutex &_mutex;
-
 public:
     MutexLock(Mutex &mutex) : _mutex(mutex) { _mutex.lock(); }
-
     ~MutexLock() { _mutex.unlock(); }
+
+private:
+    Mutex &_mutex;
 };
 
 // wrapper for windows handles that automatically closes the
@@ -334,15 +335,14 @@ public:
                        HANDLE hdl = INVALID_HANDLE_VALUE)
         : _handle(hdl), _winapi(winapi) {}
 
-    WinHandle(const WinHandle &reference) = delete;
-
+    WinHandle(const WinHandle &) = delete;
     ~WinHandle() {
         if (_handle != INVALID_HANDLE_VALUE) {
             _winapi.CloseHandle(_handle);
         }
     }
 
-    WinHandle &operator=(const WinHandle &reference) = delete;
+    WinHandle &operator=(const WinHandle &) = delete;
 
     WinHandle &operator=(HANDLE hdl) {
         if (_handle != INVALID_HANDLE_VALUE) {
@@ -362,11 +362,12 @@ private:
 };
 
 class OnScopeExit {
-    std::function<void()> _cleaner;
-
 public:
     OnScopeExit(const std::function<void()> &cleaner) : _cleaner(cleaner) {}
     ~OnScopeExit() { _cleaner(); }
+
+private:
+    std::function<void()> _cleaner;
 };
 
 inline uint64_t to_u64(DWORD low, DWORD high) {
@@ -397,14 +398,6 @@ public:
 
     ManagedHandle &operator=(ManagedHandle &&from) =
         delete;  // Move assignment operator
-
-    //    ManagedHandle &operator=(ManagedHandle &&from) {              //
-    //    Move assignment operator
-    //        close();
-    //        _handle = from._handle;
-    //        from._handle = nullptr;
-    //        return *this;
-    //    }
 
     HANDLE get_handle() { return _handle; };
 

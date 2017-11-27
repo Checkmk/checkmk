@@ -50,10 +50,6 @@ private:
 };
 
 class SectionPerfcounter : public Section {
-    bool _toggle_if_missing{false};
-    time_t _disabled_until{0};
-    NameBaseNumberMap &_nameNumberMap;
-
 public:
     SectionPerfcounter(const std::string &outputName,
                        const std::string &configName, const Environment &env,
@@ -64,6 +60,11 @@ public:
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
+
+private:
+    bool _toggle_if_missing{false};
+    time_t _disabled_until{0};
+    NameBaseNumberMap &_nameNumberMap;
 };
 
 #endif  // SectionPerfcounter_h

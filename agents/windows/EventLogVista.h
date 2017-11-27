@@ -98,14 +98,10 @@ private:
 
     // We own the handle, so don't allow any copies.
     ManagedEventHandle(const ManagedEventHandle &) = delete;
-    ManagedEventHandle(ManagedEventHandle &&from) = delete;
     ManagedEventHandle &operator=(const ManagedEventHandle &) = delete;
-    ManagedEventHandle &operator=(ManagedEventHandle &&from) = delete;
 };
 
 class EventLogWrapper : public ManagedEventHandle {
-    const WinApiAdaptor &_winapi;
-
 public:
     EventLogWrapper(const EvtFunctionMap &evt, EVT_QUERY_FLAGS flags,
                     const std::wstring &path, const WinApiAdaptor &winapi)
@@ -134,9 +130,13 @@ private:
         }
         return handle;
     }
+
+    const WinApiAdaptor &_winapi;
 };
 
 class EventLogVista : public IEventLog {
+    static const int EVENT_BLOCK_SIZE = 16;
+
 public:
     // constructor
     // This throws an UnsupportedException if the vista-api is not supported.
@@ -157,11 +157,8 @@ public:
     virtual uint64_t getLastRecordId() override;
 
 private:
-    static const int EVENT_BLOCK_SIZE = 16;
-
     EvtFunctionMap &evt() const;
     bool fillBuffer();
-
     std::wstring renderBookmark(HANDLE bookmark) const;
 
 private:
@@ -170,7 +167,6 @@ private:
     std::unique_ptr<ManagedEventHandle> _handle;
     std::unique_ptr<ManagedEventHandle> _render_context;
     std::unique_ptr<ManagedHandle> _signal;
-    // HANDLE _bookmark;
     std::vector<HANDLE> _events;
     size_t _next_event{0};
     const WinApiAdaptor &_winapi;

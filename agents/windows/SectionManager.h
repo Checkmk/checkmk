@@ -37,35 +37,6 @@ class WinApiAdaptor;
 std::ostream &operator<<(std::ostream &out,
                          const std::pair<std::string, std::string> &value);
 class SectionManager {
-    std::vector<std::unique_ptr<Section>> _sections;
-
-    Configurable<bool> _ps_use_wmi;
-    SplittingListConfigurable<std::set<std::string>,
-                              BlockMode::BlockExclusive<std::set<std::string>>,
-                              AddMode::SetInserter<std::set<std::string>>>
-        _enabled_sections;
-
-    SplittingListConfigurable<std::set<std::string>,
-                              BlockMode::BlockExclusive<std::set<std::string>>,
-                              AddMode::SetInserter<std::set<std::string>>>
-        _disabled_sections;
-
-    SplittingListConfigurable<std::set<std::string>,
-                              BlockMode::BlockExclusive<std::set<std::string>>,
-                              AddMode::SetInserter<std::set<std::string>>>
-        _realtime_sections;
-
-    KeyedListConfigurable<std::string> _script_local_includes;
-    KeyedListConfigurable<std::string> _script_plugin_includes;
-
-    ListConfigurable<std::vector<winperf_counter *>> _winperf_counters;
-    const Environment &_env;
-    Logger *_logger;
-    const WinApiAdaptor &_winapi;
-
-    void addSection(Section *section);
-    void loadStaticSections(Configuration &config);
-
 public:
     SectionManager(Configuration &config, Logger *logger,
                    const WinApiAdaptor &winapi);
@@ -80,6 +51,31 @@ public:
     bool sectionEnabled(const std::string &name) const;
     bool realtimeSectionEnabled(const std::string &name) const;
     bool useRealtimeMonitoring() const;
+
+private:
+    void addSection(Section *section);
+    void loadStaticSections(Configuration &config);
+
+    std::vector<std::unique_ptr<Section>> _sections;
+    Configurable<bool> _ps_use_wmi;
+    SplittingListConfigurable<std::set<std::string>,
+                              BlockMode::BlockExclusive<std::set<std::string>>,
+                              AddMode::SetInserter<std::set<std::string>>>
+        _enabled_sections;
+    SplittingListConfigurable<std::set<std::string>,
+                              BlockMode::BlockExclusive<std::set<std::string>>,
+                              AddMode::SetInserter<std::set<std::string>>>
+        _disabled_sections;
+    SplittingListConfigurable<std::set<std::string>,
+                              BlockMode::BlockExclusive<std::set<std::string>>,
+                              AddMode::SetInserter<std::set<std::string>>>
+        _realtime_sections;
+    KeyedListConfigurable<std::string> _script_local_includes;
+    KeyedListConfigurable<std::string> _script_plugin_includes;
+    ListConfigurable<std::vector<winperf_counter *>> _winperf_counters;
+    const Environment &_env;
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
 };
 
 #endif  // SectionManager_h

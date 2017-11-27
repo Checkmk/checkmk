@@ -10,15 +10,8 @@
 class WinApiAdaptor;
 
 class Crypto {
-    HCRYPTPROV _provider;
-    HCRYPTKEY _key;
-    ALG_ID _algorithm;
-    const WinApiAdaptor &_winapi;
-
-private:
     // algorithm can't currently be changed
     static const ALG_ID DEFAULT_ALGORITHM = CALG_AES_256;
-
     static const ALG_ID HASH_ALGORITHM = CALG_MD5;
 
     enum KeyLength {
@@ -68,6 +61,11 @@ private:
     void deriveOpenSSLKey(const std::string &password, KeyLength key_length,
                           int iterations);
     void releaseKey(HCRYPTKEY key);
+
+    HCRYPTPROV _provider;
+    HCRYPTKEY _key;
+    ALG_ID _algorithm;
+    const WinApiAdaptor &_winapi;
 };
 
 #endif  // Crypto_h

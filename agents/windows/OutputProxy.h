@@ -42,34 +42,25 @@ public:
 };
 
 class FileOutputProxy : public OutputProxy {
-    FILE *_file;
-
 public:
     FileOutputProxy(FILE *file);
 
     virtual void output(const char *format, ...) override;
     virtual void writeBinary(const char *buffer, size_t size) override;
     virtual void flush(bool last) override;
+
+private:
+    FILE *_file;
 };
 
 class BufferedSocketProxy : public OutputProxy {
-    SOCKET _socket;
-    std::vector<char> _buffer;
-    size_t _length{0};
-    size_t _collect_size;
-    Logger *_logger;
-    const WinApiAdaptor &_winapi;
-
-protected:
-    std::vector<char> &buffer() { return _buffer; }
-    size_t length() const { return _length; }
-
 public:
     static const size_t DEFAULT_BUFFER_SIZE = 16384L;
 
-public:
     BufferedSocketProxy(SOCKET socket, Logger *logger,
                         const WinApiAdaptor &winapi);
+    BufferedSocketProxy(const BufferedSocketProxy &) = delete;
+    BufferedSocketProxy &operator=(const BufferedSocketProxy &) = delete;
 
     void setSocket(SOCKET socket);
 
@@ -78,28 +69,33 @@ public:
     virtual void flush(bool last) override;
 
 protected:
+    std::vector<char> &buffer() { return _buffer; }
+    size_t length() const { return _length; }
     bool flushInt();
 
 private:
-    BufferedSocketProxy(const BufferedSocketProxy &reference) = delete;
-    BufferedSocketProxy &operator=(const BufferedSocketProxy &reference) =
-        delete;
+    SOCKET _socket;
+    std::vector<char> _buffer;
+    size_t _length{0};
+    size_t _collect_size;
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
 };
 
 // can you feel the java?
 class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
-    Crypto _crypto;
-
-    std::vector<char> _plain;
-    size_t _blockSize;
-    size_t _written;
-
 public:
     EncryptingBufferedSocketProxy(SOCKET socket, const std::string &passphrase,
                                   Logger *logger, const WinApiAdaptor &winapi);
     virtual void output(const char *format, ...) override;
     // writeBinary is NOT overridden so calls to it are not encrypted!
     virtual void flush(bool last) override;
+
+private:
+    Crypto _crypto;
+    std::vector<char> _plain;
+    size_t _blockSize;
+    size_t _written;
 };
 
 #endif  // OutputProxy_h

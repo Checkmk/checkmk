@@ -44,13 +44,6 @@ class Logger;
 class PerfCounter {
     friend class PerfCounterObject;
 
-    PERF_COUNTER_DEFINITION *_counter;
-    BYTE *_datablock;  // pointer to where the counter data is stored
-                       // If the counter has instances we don't need this
-                       // as the instance definition contains a pointer to
-                       // the instance-specific data
-    const WinApiAdaptor &_winapi;
-
 public:
     std::string typeName() const;
     std::vector<ULONGLONG> values(
@@ -62,22 +55,22 @@ private:
     PerfCounter(PERF_COUNTER_DEFINITION *counter, BYTE *datablock,
                 const WinApiAdaptor &winapi);
     ULONGLONG extractValue(PERF_COUNTER_BLOCK *block) const;
+
+    PERF_COUNTER_DEFINITION *_counter;
+    BYTE *_datablock;  // pointer to where the counter data is stored
+                       // If the counter has instances we don't need this
+                       // as the instance definition contains a pointer to
+                       // the instance-specific data
+    const WinApiAdaptor &_winapi;
 };
 
 // Wrapper to deal with performance counters.
 // Documentation is here:
 // http://msdn.microsoft.com/en-us/library/aa373178(VS.85).aspx
 class PerfCounterObject {
-    std::vector<BYTE> _buffer;
-    PERF_OBJECT_TYPE *_object;
-    BYTE *_datablock;
-    const WinApiAdaptor &_winapi;
-    Logger *_logger;
-
 public:
     typedef std::vector<std::pair<DWORD, std::wstring>> CounterList;
 
-public:
     PerfCounterObject(unsigned counter_base_number, const WinApiAdaptor &winapi,
                       Logger *logger);
 
@@ -90,8 +83,13 @@ public:
 
 private:
     std::vector<BYTE> retrieveCounterData(const wchar_t *counterList);
-
     PERF_OBJECT_TYPE *findObject(DWORD counter_index);
+
+    std::vector<BYTE> _buffer;
+    PERF_OBJECT_TYPE *_object;
+    BYTE *_datablock;
+    const WinApiAdaptor &_winapi;
+    Logger *_logger;
 };
 
 #endif  // PerfCounter_h

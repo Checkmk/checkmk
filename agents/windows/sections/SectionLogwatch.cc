@@ -238,12 +238,13 @@ inline int find_crnl_end(char *buffer) {
 }
 
 inline void rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-                return !std::isspace(ch);
-            }).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         [](int ch) { return !std::isspace(ch); })
+                .base(),
+            s.end());
 }
 
-} //namespace
+}  // namespace
 
 SectionLogwatch::ProcessTextfileResponse
 SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,

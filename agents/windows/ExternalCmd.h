@@ -55,7 +55,6 @@ public:
 private:
     DWORD readPipe(HANDLE pipe, char *buffer, size_t buffer_size, bool block);
 
-private:
     WinHandle _script_stderr;
     WinHandle _script_stdout;
     HANDLE _process;

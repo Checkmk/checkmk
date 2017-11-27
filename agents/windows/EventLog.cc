@@ -184,9 +184,6 @@ wstring MessageResolver::resolve(DWORD eventID, LPCWSTR source,
 }
 
 class EventLogRecord : public IEventLogRecord {
-    EVENTLOGRECORD *_record;
-    const MessageResolver &_resolver;
-
 public:
     EventLogRecord(EVENTLOGRECORD *record, const MessageResolver &resolver)
         : _record(record), _resolver(resolver) {}
@@ -249,6 +246,10 @@ public:
         return _resolver.resolve(_record->EventID, source().c_str(),
                                  &strings[0]);
     }
+
+private:
+    EVENTLOGRECORD *_record;
+    const MessageResolver &_resolver;
 };
 
 bool EventlogHandle::ReadEventLogW(DWORD dwReadFlags, DWORD dwRecordOffset,

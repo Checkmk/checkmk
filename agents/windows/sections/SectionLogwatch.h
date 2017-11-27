@@ -62,18 +62,9 @@ public:
             SuperT::feedInner(key, value);
         }
     }
-
-private:
 };
 
 class SectionLogwatch : public Section {
-    GlobListConfigurable _globlines;
-
-    std::vector<logwatch_textfile *> _textfiles;
-    std::vector<logwatch_textfile *> _hints;
-
-    bool _initialised{false};
-
     struct ProcessTextfileResponse {
         bool found_match;
         int unprocessed_bytes;
@@ -156,6 +147,11 @@ private:
 
     void processGlobExpression(glob_token *glob_token,
                                condition_patterns_t &patterns);
+
+    GlobListConfigurable _globlines;
+    std::vector<logwatch_textfile *> _textfiles;
+    std::vector<logwatch_textfile *> _hints;
+    bool _initialised{false};
 };
 
 #endif  // SectionLogwatch_h

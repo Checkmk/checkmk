@@ -34,10 +34,14 @@
 #include "../wmiHelper.h"
 
 class SectionPS : public Section {
-    Configurable<bool> _use_wmi;
-    Configurable<bool> _full_commandline;
+    struct process_entry {
+        unsigned long long process_id;
+        unsigned long long working_set_size;
+        unsigned long long pagefile_usage;
+        unsigned long long virtual_size;
+    };
 
-    std::unique_ptr<wmi::Helper> _helper;
+    typedef std::map<unsigned long long, process_entry> process_entry_t;
 
 public:
     SectionPS(Configuration &config, Logger *logger,
@@ -48,27 +52,19 @@ protected:
 
 private:
     bool ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o);
-
-    struct process_entry {
-        unsigned long long process_id;
-        unsigned long long working_set_size;
-        unsigned long long pagefile_usage;
-        unsigned long long virtual_size;
-    };
-
-    typedef std::map<unsigned long long, process_entry> process_entry_t;
-
     process_entry_t getProcessPerfdata();
-
     void outputProcess(std::ostream &out, ULONGLONG virtual_size,
                        ULONGLONG working_set_size, ULONGLONG pagefile_usage,
                        ULONGLONG uptime, ULONGLONG usermode_time,
                        ULONGLONG kernelmode_time, DWORD process_id,
                        DWORD process_handle_count, DWORD thread_count,
                        const std::string &user, const std::string &exe_file);
-
     bool outputWMI(std::ostream &out);
     bool outputNative(std::ostream &out);
+
+    Configurable<bool> _use_wmi;
+    Configurable<bool> _full_commandline;
+    std::unique_ptr<wmi::Helper> _helper;
 };
 
 #endif  // SectionPS_h

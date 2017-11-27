@@ -47,6 +47,10 @@ public:
     RotatingFileHandler &operator=(const RotatingFileHandler &) = delete;
 
 private:
+    void publish(const LogRecord &record) override;
+    void rollover();
+    bool shouldRollover(std::stringstream &buffer);
+
     Logger *_logger;
     // The mutex protects the _os.
     std::mutex _mutex;
@@ -55,10 +59,6 @@ private:
     const size_t _maxBytes;
     const size_t _backupCount;
     const std::unique_ptr<FileRotationApi> _fileapi;
-
-    void publish(const LogRecord &record) override;
-    void rollover();
-    bool shouldRollover(std::stringstream &buffer);
 };
 
 #endif  // RotatingFileHandler_h

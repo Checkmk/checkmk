@@ -40,17 +40,6 @@ class Logger;
 class Section {
     friend class SectionGroup;
 
-    bool _show_header{true};
-    char _separator{' '};
-    bool _realtime_support{false};
-
-protected:
-    const std::string _outputName;
-    const std::string _configName;
-    const Environment &_env;
-    Logger *_logger;
-    const WinApiAdaptor &_winapi;
-
 public:
     Section(const std::string &outputName, const std::string &configName,
             const Environment &env, Logger *logger,
@@ -66,9 +55,6 @@ public:
     Section *withHiddenHeader(bool hidden = true);
     Section *withRealtimeSupport();
 
-    std::string outputName() const { return _outputName; }
-    std::string configName() const { return _configName; }
-
     virtual void postprocessConfig() {}
 
     /// TODO please implement me
@@ -80,18 +66,31 @@ public:
      * to complete
      **/
     virtual std::vector<HANDLE> stopAsync() { return std::vector<HANDLE>(); }
-
-    bool produceOutput(std::ostream &out, bool nested = false);
-
     virtual bool isEnabled() const { return true; }
     virtual bool realtimeSupport() const { return _realtime_support; }
+
+    bool produceOutput(std::ostream &out, bool nested = false);
+    std::string outputName() const { return _outputName; }
+    std::string configName() const { return _configName; }
 
 protected:
     char separator() const { return _separator; }
 
 private:
-    bool generateOutput(std::string &buffer);
     virtual bool produceOutputInner(std::ostream &out) = 0;
+    bool generateOutput(std::string &buffer);
+
+protected:
+    const std::string _outputName;
+    const std::string _configName;
+    const Environment &_env;
+    Logger *_logger;
+    const WinApiAdaptor &_winapi;
+
+private:
+    bool _show_header{true};
+    char _separator{' '};
+    bool _realtime_support{false};
 };
 
 #endif  // Section_h

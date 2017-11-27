@@ -399,7 +399,6 @@ class TextAscii(ValueSpec):
         self._minlen        = kwargs.get('minlen', None)
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
-        self._prefix_buttons = kwargs.get("prefix_buttons", [])
         self._onkeyup        = kwargs.get("onkeyup")
         self._autocomplete   = kwargs.get("autocomplete", True)
 
@@ -416,9 +415,6 @@ class TextAscii(ValueSpec):
         if self._label:
             html.write(self._label)
             html.nbsp()
-
-        if self._prefix_buttons:
-            html.open_div(style="white-space: nowrap;")
 
         if hidden:
             type_ = "password"
@@ -438,19 +434,6 @@ class TextAscii(ValueSpec):
             attrs=attrs,
             autocomplete="off" if not self._autocomplete else None,
         )
-        if self._prefix_buttons:
-            self.render_buttons()
-            html.close_div()
-
-    def render_buttons(self):
-        html.nbsp()
-        for icon, textfunc, help in self._prefix_buttons:
-            try:
-                text = textfunc()
-            except:
-                text = textfunc
-            html.icon_button("#", help, icon, onclick="vs_textascii_button(this, '%s', 'prefix');" % text)
-
 
     def value_to_text(self, value):
         if not value:
@@ -1009,14 +992,8 @@ class TextAreaUnicode(TextUnicode):
         if self._monospaced:
             attrs["class"] = "tt"
 
-        if self._prefix_buttons:
-            html.open_div(style="white-space: nowrap;")
-
         html.text_area(varprefix, value, rows=rows, cols=self._cols,
                        attrs = attrs, try_max_width=self._try_max_width)
-        if self._prefix_buttons:
-            self.render_buttons()
-            html.close_div()
 
 
     # Overridded because we do not want to strip() here and remove '\r'

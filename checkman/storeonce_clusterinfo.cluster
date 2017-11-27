@@ -1,6 +1,6 @@
 title: HPE StoreOnce: Cluster Status
 agents: storeonce
-catalog: hw/storeagehw/hpe
+catalog: hw/storagehw/hpe
 license: GPL
 distribution: check_mk
 description:

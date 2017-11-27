@@ -2,7 +2,7 @@
 import pytest
 
 # Mark all tests in this file as check related tests
-pytestmark = pytest.mark.check
+pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize("info,result", [

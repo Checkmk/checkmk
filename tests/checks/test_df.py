@@ -2,7 +2,7 @@ import pytest
 import pprint
 import sys
 
-pytestmark = pytest.mark.check
+pytestmark = pytest.mark.checks
 
 info_df_1 = [[u'/dev/sda4',
        u'ext4',

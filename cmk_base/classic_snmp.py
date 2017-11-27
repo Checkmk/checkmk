@@ -57,9 +57,40 @@ def walk(hostname, ip, oid, hex_plain=False, context_name=None):
     debug_cmd = [ "''" if a == "" else a for a in command ]
     console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
 
-    snmp_process = subprocess.Popen(command, close_fds=True, stdin=open(os.devnull),
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    snmp_process = None
+    exitstatus = None
+    rowinfo = []
+    try:
+        snmp_process = subprocess.Popen(command, close_fds=True, stdin=open(os.devnull),
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        rowinfo = _get_rowinfo_from_snmp_process(snmp_process, hex_plain)
+
+    except MKTimeout:
+        # On timeout exception try to stop the process to prevent child process "leakage"
+        if snmp_process:
+            os.kill(snmp_process.pid, signal.SIGTERM)
+            snmp_process.wait()
+        raise
+
+    finally:
+        # The stdout and stderr pipe are not closed correctly on a MKTimeout
+        # Normally these pipes getting closed after p.communicate finishes
+        # Closing them a second time in a OK scenario won't hurt neither..
+        if snmp_process:
+            exitstatus = snmp_process.wait()
+            error = snmp_process.stderr.read()
+            snmp_process.stdout.close()
+            snmp_process.stderr.close()
+
+    if exitstatus:
+        console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip())
+        raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ip, error.strip(), exitstatus))
+    return rowinfo
+
+
+def _get_rowinfo_from_snmp_process(snmp_process, hex_plain):
+    line_iter = snmp_process.stdout.xreadlines()
     # Ugly(1): in some cases snmpwalk inserts line feed within one
     # dataset. This happens for example on hexdump outputs longer
     # than a few bytes. Those dumps are enclosed in double quotes.
@@ -67,36 +98,30 @@ def walk(hostname, ip, oid, hex_plain=False, context_name=None):
     # does not end with a double quote, we take the next line(s) as
     # a continuation line.
     rowinfo = []
-    try:
-        line_iter = snmp_process.stdout.xreadlines()
-        while True:
+    while True:
+        try:
             line = line_iter.next().strip()
-            parts = line.split('=', 1)
-            if len(parts) < 2:
-                continue # broken line, must contain =
-            oid = parts[0].strip()
-            value = parts[1].strip()
-            # Filter out silly error messages from snmpwalk >:-P
-            if value.startswith('No more variables') or value.startswith('End of MIB') \
-               or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
-                continue
+        except StopIteration:
+            break
 
-            if value == '"' or (len(value) > 1 and value[0] == '"' and (value[-1] != '"')): # to be continued
-                while True: # scan for end of this dataset
-                    nextline = line_iter.next().strip()
-                    value += " " + nextline
-                    if value[-1] == '"':
-                        break
-            rowinfo.append((oid, strip_snmp_value(value, hex_plain)))
+        parts = line.split('=', 1)
+        if len(parts) < 2:
+            continue # broken line, must contain =
+        oid = parts[0].strip()
+        value = parts[1].strip()
+        # Filter out silly error messages from snmpwalk >:-P
+        if value.startswith('No more variables') or value.startswith('End of MIB') \
+           or value.startswith('No Such Object available') \
+           or value.startswith('No Such Instance currently exists'):
+            continue
 
-    except StopIteration:
-        pass
-
-    error = snmp_process.stderr.read()
-    exitstatus = snmp_process.wait()
-    if exitstatus:
-        console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip())
-        raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ip, error.strip(), exitstatus))
+        if value == '"' or (len(value) > 1 and value[0] == '"' and (value[-1] != '"')): # to be continued
+            while True: # scan for end of this dataset
+                nextline = line_iter.next().strip()
+                value += " " + nextline
+                if value[-1] == '"':
+                    break
+        rowinfo.append((oid, strip_snmp_value(value, hex_plain)))
     return rowinfo
 
 

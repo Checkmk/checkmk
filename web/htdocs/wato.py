@@ -6174,613 +6174,630 @@ def mode_ldap_config(phase):
     table.end()
 
 
-def validate_ldap_connection_id(value, varprefix):
-    if value in [ c['id'] for c in config.user_connections ]:
-        raise MKUserError(varprefix, _("This ID is already user by another connection. Please choose another one."))
+class ModeEditLDAPConnection(WatoMode):
+    def __init__(self):
+        super(ModeEditLDAPConnection, self).__init__()
+        self._from_vars()
 
+    def _from_vars(self):
+        self._connection_id = html.var("id")
+        self._connection_cfg = {}
+        self._connections = userdb.load_connection_config(lock=html.is_transaction())
 
-def vs_ldap_connection(new, connection_id):
-    general_elements = []
+        if self._connection_id == None:
+            self._new = True
+            return
 
-    if new:
-        id_element = ("id", TextAscii(
-            title = _("ID"),
-            help = _("The ID of the connection must be a unique text. It will be used as an internal key "
-                     "when objects refer to the connection."),
-            allow_empty = False,
-            size = 12,
-            validate = validate_ldap_connection_id,
-        ))
-    else:
-        id_element = ("id", FixedValue(connection_id,
-            title = _("ID"),
-        ))
+        self._new = False
 
-    general_elements += [ id_element ]
+        for nr, c in enumerate(self._connections):
+            if c['id'] == self._connection_id:
+                self._connection_cfg = c
+                self._connection_nr = nr
 
-    if cmk.is_managed_edition():
-        general_elements += managed.customer_choice_element()
-
-    general_elements += rule_option_elements()
-
-    def vs_directory_options(ty):
-        connect_to_choices = [
-            ("fixed_list", _("Manually specify list of LDAP servers"), Dictionary(
-                elements = [
-                    ("server", TextAscii(
-                        title = _("LDAP Server"),
-                        help = _("Set the host address of the LDAP server. Might be an IP address or "
-                                 "resolvable hostname."),
-                        allow_empty = False,
-                    )),
-                    ("failover_servers", ListOfStrings(
-                        title = _('Failover Servers'),
-                        help = _('When the connection to the first server fails with connect specific errors '
-                                 'like timeouts or some other network related problems, the connect mechanism '
-                                 'will try to use this server instead of the server configured above. If you '
-                                 'use persistent connections (default), the connection is being used until the '
-                                 'LDAP is not reachable or the local webserver is restarted.'),
-                        allow_empty = False,
-                    )),
-                ],
-                optional_keys = ["failover_servers"],
-            )),
-        ]
-
-        if ty == "ad":
-            connect_to_choices.append(
-                ("discover", _("Automatically discover LDAP server"), Dictionary(
-                    elements = [
-                        ("domain", TextAscii(
-                            title = _("DNS domain name to discover LDAP servers of"),
-                            help = _("Configure the DNS domain name of your Active directory domain here, Check_MK "
-                                     "will then query this domain for it's closest domain controller to communicate "
-                                     "with."),
-                            allow_empty = False,
-                        )),
-                    ],
-                    optional_keys = [],
-                )),
-            )
-
-        return Dictionary(
-            elements = [
-                ("connect_to", CascadingDropdown(
-                    title = _("Connect to"),
-                    choices = connect_to_choices,
-                )),
-            ],
-            optional_keys = [],
-        )
-
-
-    connection_elements = [
-        ("directory_type", CascadingDropdown(
-            title = _("Directory Type"),
-            help  = _("Select the software the LDAP directory is based on. Depending on "
-                      "the selection e.g. the attribute names used in LDAP queries will "
-                      "be altered."),
-            choices = [
-                ("ad",                 _("Active Directory"),     vs_directory_options("ad")),
-                ("openldap",           _("OpenLDAP"),             vs_directory_options("openldap")),
-                ("389directoryserver", _("389 Directory Server"), vs_directory_options("389directoryserver")),
-            ],
-        )),
-        ("bind", Tuple(
-            title = _("Bind Credentials"),
-            help  = _("Set the credentials to be used to connect to the LDAP server. The "
-                      "used account must not be allowed to do any changes in the directory "
-                      "the whole connection is read only. "
-                      "In some environment an anonymous connect/bind is allowed, in this "
-                      "case you don't have to configure anything here."
-                      "It must be possible to list all needed user and group objects from the "
-                      "directory."),
-            elements = [
-                LDAPDistinguishedName(
-                    title = _("Bind DN"),
-                    help  = _("Specify the distinguished name to be used to bind to "
-                              "the LDAP directory, e. g. <tt>CN=ldap,OU=users,DC=example,DC=com</tt>"),
-                    size = 63,
-                ),
-                Password(
-                    title = _("Bind Password"),
-                    help  = _("Specify the password to be used to bind to "
-                              "the LDAP directory."),
-                ),
-            ],
-        )),
-        ("port", Integer(
-            title = _("TCP Port"),
-            help  = _("This variable allows to specify the TCP port to "
-                      "be used to connect to the LDAP server. "),
-            minvalue = 1,
-            maxvalue = 65535,
-            default_value = 389,
-        )),
-        ("use_ssl", FixedValue(
-            title  = _("Use SSL"),
-            help   = _("Connect to the LDAP server with a SSL encrypted connection. The "
-                       "<a href=\"wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities\">trusted "
-                       "certificates authorities</a> configured in Check_MK will be used to validate the "
-                       "certificate provided by the LDAP server."),
-            value  = True,
-            totext = _("Encrypt the network connection using SSL."),
-        )),
-        ("connect_timeout", Float(
-            title = _("Connect Timeout"),
-            help = _("Timeout for the initial connection to the LDAP server in seconds."),
-            unit = _("Seconds"),
-            minvalue = 1.0,
-            default_value = 2.0,
-        )),
-        ("version", DropdownChoice(
-            title = _("LDAP Version"),
-            help  = _("Select the LDAP version the LDAP server is serving. Most modern "
-                      "servers use LDAP version 3."),
-            choices = [ (2, "2"), (3, "3") ],
-            default_value = 3,
-        )),
-        ("page_size", Integer(
-            title = _("Page Size"),
-            help = _("LDAP searches can be performed in paginated mode, for example to improve "
-                     "the performance. This enables pagination and configures the size of the pages."),
-            minvalue = 1,
-            default_value = 1000,
-        )),
-        ("response_timeout", Integer(
-            title = _("Response Timeout"),
-            unit = _("Seconds"),
-            help = _("Timeout for LDAP query responses."),
-            minvalue = 0,
-            default_value = 5,
-        )),
-        ("suffix", TextUnicode(
-            allow_empty = False,
-            title = _("LDAP connection suffix"),
-            help = _("The LDAP connection suffix can be used to distinguish equal named objects "
-                     "(name conflicts), for example user accounts, from different LDAP connections.<br>"
-                     "It is used in the following situations:<br><br>"
-                     "During LDAP synchronization, the LDAP sync might discover that a user to be "
-                     "synchronized from from the current LDAP is already being synchronized from "
-                     "another LDAP connection. Without the suffix configured this results in a name "
-                     "conflict and the later user not being synchronized. If the connection has a "
-                     "suffix configured, this suffix is added to the later username in case of the name "
-                     "conflict to resolve it. The user will then be named <tt>[username]@[suffix]</tt> "
-                     "instead of just <tt>[username]</tt>.<br><br>"
-                     "In the case a user which users name is existing in multiple LDAP directories, "
-                     "but associated to different persons, your user can insert <tt>[username]@[suffix]</tt>"
-                     " during login instead of just the plain <tt>[username]</tt> to tell which LDAP "
-                     "directory he is assigned to. Users without name conflict just need to provide their "
-                     "regular username as usual."),
-            regex = re.compile('^[A-Z0-9.-]+(?:\.[A-Z]{2,24})?$', re.I),
-        )),
-    ]
-
-    user_elements = [
-        ("user_dn", LDAPDistinguishedName(
-            title = _("User Base DN"),
-            help  = _("Give a base distinguished name here, e. g. <tt>OU=users,DC=example,DC=com</tt><br> "
-                      "All user accounts to synchronize must be located below this one."),
-            size = 80,
-        )),
-        ("user_scope", DropdownChoice(
-            title = _("Search Scope"),
-            help  = _("Scope to be used in LDAP searches. In most cases <i>Search whole subtree below "
-                      "the base DN</i> is the best choice. "
-                      "It searches for matching objects recursively."),
-            choices = [
-                ("sub",  _("Search whole subtree below the base DN")),
-                ("base", _("Search only the entry at the base DN")),
-                ("one",  _("Search all entries one level below the base DN")),
-            ],
-            default_value = "sub",
-        )),
-        ("user_filter", TextAscii(
-            title = _("Search Filter"),
-            help = _("Using this option you can define an optional LDAP filter which is used during "
-                     "LDAP searches. It can be used to only handle a subset of the users below the given "
-                     "base DN.<br><br>Some common examples:<br><br> "
-                     "All user objects in LDAP:<br> "
-                     "<tt>(&(objectclass=user)(objectcategory=person))</tt><br> "
-                     "Members of a group:<br> "
-                     "<tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br> "
-                     "Members of a nested group:<br> "
-                     "<tt>(&(objectclass=user)(objectcategory=person)(memberof:1.2.840.113556.1.4.1941:=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"),
-            size = 80,
-            default_value = lambda: userdb.ldap_filter_of_connection(connection_id, 'users', False),
-            attrencode = True,
-        )),
-        ("user_filter_group", LDAPDistinguishedName(
-            title = _("Filter Group (Only use in special situations)"),
-            help = _("Using this option you can define the DN of a group object which is used to filter the users. "
-                     "Only members of this group will then be synchronized. This is a filter which can be "
-                     "used to extend capabilities of the regular \"Search Filter\". Using the search filter "
-                     "you can only define filters which directly apply to the user objects. To filter by "
-                     "group memberships, you can use the <tt>memberOf</tt> attribute of the user objects in some "
-                     "directories. But some directories do not have such attributes because the memberships "
-                     "are stored in the group objects as e.g. <tt>member</tt> attributes. You should use the "
-                     "regular search filter whenever possible and only use this filter when it is really "
-                     "neccessary. Finally you can say, you should not use this option when using Active Directory. "
-                     "This option is neccessary in OpenLDAP directories when you like to filter by group membership.<br><br>"
-                     "If using, give a plain distinguished name of a group here, e. g. "
-                     "<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>"),
-            size = 80,
-        )),
-        ("user_id", TextAscii(
-            title = _("User-ID Attribute"),
-            help  = _("The attribute used to identify the individual users. It must have "
-                      "unique values to make an user identifyable by the value of this "
-                      "attribute."),
-            default_value = lambda: userdb.ldap_attr_of_connection(connection_id, 'user_id'),
-            attrencode = True,
-        )),
-        ("lower_user_ids", FixedValue(
-            title  = _("Lower Case User-IDs"),
-            help   = _("Convert imported User-IDs to lower case during synchronization."),
-            value  = True,
-            totext = _("Enforce lower case User-IDs."),
-        )),
-        ("user_id_umlauts", Transform(
-            DropdownChoice(
-                title = _("Translate Umlauts in User-IDs (deprecated)"),
-                help  = _("Check_MK was not not supporting special characters (like Umlauts) in "
-                          "User-IDs. To deal with LDAP users having umlauts in their User-IDs "
-                          "you had the choice to replace umlauts with other characters. This option "
-                          "is still available for compatibility reasons, but you are adviced to use "
-                          "the \"keep\" option for new installations."),
-                choices = [
-                    ("keep",     _("Keep special characters")),
-                    ("replace",  _("Replace umlauts like \"&uuml;\" with \"ue\"")),
-                ],
-                default_value = "keep",
-            ),
-            forth = lambda x: "keep" if (x == "skip") else x
-        )),
-    ]
-
-    group_elements = [
-        ("group_dn", LDAPDistinguishedName(
-            title = _("Group Base DN"),
-            help  = _("Give a base distinguished name here, e. g. <tt>OU=groups,DC=example,DC=com</tt><br> "
-                      "All groups used must be located below this one."),
-            size = 80,
-        )),
-        ("group_scope", DropdownChoice(
-            title = _("Search Scope"),
-            help  = _("Scope to be used in group related LDAP searches. In most cases "
-                      "<i>Search whole subtree below the base DN</i> "
-                      "is the best choice. It searches for matching objects in the given base "
-                      "recursively."),
-            choices = [
-                ("sub",  _("Search whole subtree below the base DN")),
-                ("base", _("Search only the entry at the base DN")),
-                ("one",  _("Search all entries one level below the base DN")),
-            ],
-            default_value = "sub",
-        )),
-        ("group_filter", TextAscii(
-            title = _("Search Filter"),
-            help = _("Using this option you can define an optional LDAP filter which is used "
-                     "during group related LDAP searches. It can be used to only handle a "
-                     "subset of the groups below the given base DN.<br><br>"
-                     "e.g. <tt>(objectclass=group)</tt>"),
-            size = 80,
-            default_value = lambda: userdb.ldap_filter_of_connection(connection_id, 'groups', False),
-            attrencode = True,
-        )),
-        ("group_member", TextAscii(
-            title = _("Member Attribute"),
-            help  = _("The attribute used to identify users group memberships."),
-            default_value = lambda: userdb.ldap_attr_of_connection(connection_id, 'member'),
-            attrencode = True,
-        )),
-    ]
-
-    other_elements = [
-        ("active_plugins", Dictionary(
-            title = _('Attribute Sync Plugins'),
-            help  = _('It is possible to fetch several attributes of users, like Email or full names, '
-                      'from the LDAP directory. This is done by plugins which can individually enabled '
-                      'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
-                      'user accounts for gathering their attributes. The user options which get imported '
-                      'into Check_MK from LDAP will be locked in WATO.'),
-            elements = lambda: userdb.ldap_attribute_plugins_elements(connection_id),
-            default_keys = ['email', 'alias', 'auth_expire' ],
-        )),
-        ("cache_livetime", Age(
-            title = _('Sync Interval'),
-            help  = _('This option defines the interval of the LDAP synchronization. This setting is only '
-                      'used by sites which have the '
-                      '<a href="wato.py?mode=sites">Automatic User '
-                      'Synchronization</a> enabled.<br><br>'
-                      'Please note: Passwords of the users are never stored in WATO and therefor never cached!'),
-            minvalue = 60,
-            default_value = 300,
-            display = ["days", "hours", "minutes" ],
-        )),
-    ]
-
-    return Transform(Dictionary(
-            title = _('LDAP Connection'),
-            elements = general_elements
-                + connection_elements
-                + user_elements
-                + group_elements
-                + other_elements
-            ,
-            headers = [
-                (_("General Properties"), [ key for key, vs in general_elements ]),
-                (_("LDAP Connection"),    [ key for key, vs in connection_elements ]),
-                (_("Users"),              [ key for key, vs in user_elements ]),
-                (_("Groups"),             [ key for key, vs in group_elements ]),
-                (_("Attribute Sync Plugins"), [ "active_plugins" ]),
-                (_("Other"),              [ "cache_livetime" ]),
-            ],
-            render = "form",
-            form_narrow = True,
-            optional_keys = [
-                'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
-                'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
-                'group_filter', 'group_member', 'suffix',
-            ],
-            validate = validate_ldap_connection,
-        ),
-        forth = userdb.LDAPUserConnector.transform_config,
-    )
-
-
-def validate_ldap_connection(value, varprefix):
-    for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():
-        if role_id == "nested":
-            continue # This is the option to enabled/disable nested group handling, not a role to DN entry
-
-        for index, group_spec in enumerate(group_specs):
-            dn, connection_id = group_spec
-
-            if connection_id == None:
-                group_dn = value["group_dn"]
-
-            else:
-                connection = userdb.get_connection(connection_id)
-                if not connection:
-                    continue
-                group_dn = connection.get_group_dn()
-
-            if not group_dn:
-                raise MKUserError(varprefix, _("You need to configure the group base DN to be able to "
-                                               "use the roles synchronization plugin."))
-
-            if not dn.lower().endswith(group_dn.lower()):
-                varname = "connection_p_active_plugins_p_groups_to_roles_p_%s_1_%d" % (role_id, index)
-                raise MKUserError(varname, _("The configured DN does not match the group base DN."))
-
-
-def mode_edit_ldap_connection(phase):
-    connection_id = html.var("id")
-    connections = userdb.load_connection_config()
-    connection_cfg = {}
-    if connection_id == None:
-        new = True
-    else:
-        new = False
-        for nr, c in enumerate(connections):
-            if c['id'] == connection_id:
-                connection_cfg = c
-                connection_nr = nr
-        if not connection_cfg:
+        if not self._connection_cfg:
             raise MKUserError(None, _("The given connection does not exist."))
 
-    if phase == "title":
-        if new:
+
+    def title(self):
+        if self._new:
             return _("Create new LDAP Connection")
         else:
-            return _("Edit LDAP Connection: %s") % html.render_text(connection_id)
+            return _("Edit LDAP Connection: %s") % html.render_text(self._connection_id)
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
         html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "ldap_config")]), "back")
-        return
 
-    vs = vs_ldap_connection(new, connection_id)
 
-    if phase == 'action':
+    def action(self):
         if not html.check_transaction():
             return
 
-        connection_cfg = vs.from_html_vars("connection")
-        vs.validate_value(connection_cfg, "connection")
+        vs = self._valuespec()
+        self._connection_cfg = vs.from_html_vars("connection")
+        vs.validate_value(self._connection_cfg, "connection")
 
-        if new:
-            connections.insert(0, connection_cfg)
-            connection_id = connection_cfg["id"]
+        if self._new:
+            self._connections.insert(0, self._connection_cfg)
+            self._connection_id = self._connection_cfg["id"]
         else:
-            connection_cfg["id"] = connection_id
-            connections[connection_nr] = connection_cfg
+            self._connection_cfg["id"] = self._connection_id
+            self._connections[self._connection_nr] = self._connection_cfg
 
-        if new:
+        if self._new:
             log_what = "new-ldap-connection"
             log_text = _("Created new LDAP connection")
         else:
             log_what = "edit-ldap-connection"
-            log_text = _("Changed LDAP connection %s") % connection_id
+            log_text = _("Changed LDAP connection %s") % self._connection_id
         add_ldap_change(log_what, log_text)
 
-        userdb.save_connection_config(connections)
-        config.user_connections = connections # make directly available on current page
+        userdb.save_connection_config(self._connections)
+        config.user_connections = self._connections # make directly available on current page
         if html.var("_save"):
             return "ldap_config"
         else:
             # Fix the case where a user hit "Save & Test" during creation
-            html.set_var('id', connection_id)
-            return
+            html.set_var('id', self._connection_id)
 
-    #
-    # Regular page rendering
-    #
 
-    html.open_div(id_="ldap")
-    html.open_table()
-    html.open_tr()
+    def page(self):
+        html.open_div(id_="ldap")
+        html.open_table()
+        html.open_tr()
 
-    html.open_td()
-    html.begin_form("connection", method="POST")
-    html.prevent_password_auto_completion()
-    vs.render_input("connection", connection_cfg)
-    vs.set_focus("connection")
-    html.button("_save", _("Save"))
-    html.button("_test", _("Save & Test"))
-    html.hidden_fields()
-    html.end_form()
-    html.close_td()
+        html.open_td()
+        html.begin_form("connection", method="POST")
+        html.prevent_password_auto_completion()
+        vs = self._valuespec()
+        vs.render_input("connection", self._connection_cfg)
+        vs.set_focus("connection")
+        html.button("_save", _("Save"))
+        html.button("_test", _("Save & Test"))
+        html.hidden_fields()
+        html.end_form()
+        html.close_td()
 
-    html.open_td(style="padding-left:10px;")
-    html.h2(_('Diagnostics'))
-    if not html.var('_test') or not connection_id:
-        html.message(HTML('<p>%s</p><p>%s</p>' %
-                    (_('You can verify the single parts of your ldap configuration using this '
-                       'dialog. Simply make your configuration in the form on the left side and '
-                       'hit the "Save & Test" button to execute the tests. After '
-                       'the page reload, you should see the results of the test here.'),
-                     _('If you need help during configuration or experience problems, please refer '
-                       'to the Multisite <a target="_blank" '
-                       'href="https://mathias-kettner.com/checkmk_multisite_ldap_integration.html">'
-                       'LDAP Documentation</a>.'))))
-    else:
-        def test_connect(connection, address):
-            conn, msg = connection.connect_server(address)
-            if conn:
-                return (True, _('Connection established. The connection settings seem to be ok.'))
-            else:
-                return (False, msg)
+        html.open_td(style="padding-left:10px;")
+        html.h2(_('Diagnostics'))
+        if not html.var('_test') or not self._connection_id:
+            html.message(HTML('<p>%s</p><p>%s</p>' %
+                        (_('You can verify the single parts of your ldap configuration using this '
+                           'dialog. Simply make your configuration in the form on the left side and '
+                           'hit the "Save & Test" button to execute the tests. After '
+                           'the page reload, you should see the results of the test here.'),
+                         _('If you need help during configuration or experience problems, please refer '
+                           'to the Multisite <a target="_blank" '
+                           'href="https://mathias-kettner.com/checkmk_multisite_ldap_integration.html">'
+                           'LDAP Documentation</a>.'))))
+        else:
+            connection = userdb.get_connection(self._connection_id)
+            for address in connection.servers():
+                html.h3("%s: %s" % (_('Server'), address))
+                table.begin('test', searchable = False)
 
-        def test_user_base_dn(connection, address):
-            if not connection.has_user_base_dn_configured():
-                return (False, _('The User Base DN is not configured.'))
-            connection.connect(enforce_new = True, enforce_server = address)
-            if connection.user_base_dn_exists():
-                return (True, _('The User Base DN could be found.'))
-            elif connection.has_bind_credentials_configured():
-                return (False, _('The User Base DN could not be found. Maybe the provided '
-                                 'user (provided via bind credentials) has no permission to '
-                                 'access the Base DN or the credentials are wrong.'))
-            else:
-                return (False, _('The User Base DN could not be found. Seems you need '
-                                 'to configure proper bind credentials.'))
+                for title, test_func in self._tests():
+                    table.row()
+                    try:
+                        state, msg = test_func(connection, address)
+                    except Exception, e:
+                        state = False
+                        msg = _('Exception: %s') % html.render_text(e)
+                        log_exception()
 
-        def test_user_count(connection, address):
-            if not connection.has_user_base_dn_configured():
-                return (False, _('The User Base DN is not configured.'))
-            connection.connect(enforce_new = True, enforce_server = address)
-            try:
-                ldap_users = connection.get_users()
-                msg = _('Found no user object for synchronization. Please check your filter settings.')
-            except Exception, e:
-                ldap_users = None
-                msg = "%s" % e
-                if 'successful bind must be completed' in msg:
-                    if not connection.has_bind_credentials_configured():
-                        return (False, _('Please configure proper bind credentials.'))
+                    if state:
+                        img = html.render_icon("success", _('Success'))
                     else:
-                        return (False, _('Maybe the provided user (provided via bind credentials) has not '
-                                         'enough permissions or the credentials are wrong.'))
+                        img = html.render_icon("failed", _("Failed"))
 
-            if ldap_users and len(ldap_users) > 0:
-                return (True, _('Found %d users for synchronization.') % len(ldap_users))
-            else:
-                return (False, msg)
+                    table.cell(_("Test"),   title)
+                    table.cell(_("State"),   img)
+                    table.cell(_("Details"), msg)
 
-        def test_group_base_dn(connection, address):
-            if not connection.has_group_base_dn_configured():
-                return (False, _('The Group Base DN is not configured, not fetching any groups.'))
-            connection.connect(enforce_new = True, enforce_server = address)
-            if connection.group_base_dn_exists():
-                return (True, _('The Group Base DN could be found.'))
-            else:
-                return (False, _('The Group Base DN could not be found.'))
+                table.end()
 
-        def test_group_count(connection, address):
-            if not connection.has_group_base_dn_configured():
-                return (False, _('The Group Base DN is not configured, not fetching any groups.'))
-            connection.connect(enforce_new = True, enforce_server = address)
-            try:
-                ldap_groups = connection.get_groups()
-                msg = _('Found no group object for synchronization. Please check your filter settings.')
-            except Exception, e:
-                ldap_groups = None
-                msg = "%s" % e
-                if 'successful bind must be completed' in msg:
-                    if not connection.has_bind_credentials_configured():
-                        return (False, _('Please configure proper bind credentials.'))
-                    else:
-                        return (False, _('Maybe the provided user (provided via bind credentials) has not '
-                                         'enough permissions or the credentials are wrong.'))
-            if ldap_groups and len(ldap_groups) > 0:
-                return (True, _('Found %d groups for synchronization.') % len(ldap_groups))
-            else:
-                return (False, msg)
+            connection.disconnect()
 
-        def test_groups_to_roles(connection, address):
-            active_plugins = connection.active_plugins()
-            if 'groups_to_roles' not in active_plugins:
-                return True, _('Skipping this test (Plugin is not enabled)')
+        html.close_td()
+        html.close_tr()
+        html.close_table()
+        html.close_div()
 
-            connection.connect(enforce_new = True, enforce_server = address)
-            num = 0
-            for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
-                if type(group_distinguished_names) != list:
-                    group_distinguished_names = [group_distinguished_names]
 
-                for dn in group_distinguished_names:
-                    if type(dn) in [ str, unicode ]:
-                        num += 1
-                        try:
-                            ldap_groups = connection.get_groups(dn)
-                            if not ldap_groups:
-                                return False, _('Could not find the group specified for role %s') % role_id
-                        except Exception, e:
-                            return False, _('Error while fetching group for role %s: %s') % (role_id, e)
-            return True, _('Found all %d groups.') % num
-
-        tests = [
-            (_('Connection'),          test_connect),
-            (_('User Base-DN'),        test_user_base_dn),
-            (_('Count Users'),         test_user_count),
-            (_('Group Base-DN'),       test_group_base_dn),
-            (_('Count Groups'),        test_group_count),
-            (_('Sync-Plugin: Roles'),  test_groups_to_roles),
+    def _tests(self):
+        return [
+            (_('Connection'),          self._test_connect),
+            (_('User Base-DN'),        self._test_user_base_dn),
+            (_('Count Users'),         self._test_user_count),
+            (_('Group Base-DN'),       self._test_group_base_dn),
+            (_('Count Groups'),        self._test_group_count),
+            (_('Sync-Plugin: Roles'),  self._test_groups_to_roles),
         ]
 
-        connection = userdb.get_connection(connection_id)
-        for address in connection.servers():
-            html.h3("%s: %s" % (_('Server'), address))
-            table.begin('test', searchable = False)
 
-            for title, test_func in tests:
-                table.row()
-                try:
-                    state, msg = test_func(connection, address)
-                except Exception, e:
-                    state = False
-                    msg = _('Exception: %s') % html.render_text(e)
-                    log_exception()
+    def _test_connect(self, connection, address):
+        conn, msg = connection.connect_server(address)
+        if conn:
+            return (True, _('Connection established. The connection settings seem to be ok.'))
+        else:
+            return (False, msg)
 
-                if state:
-                    img = html.render_icon("success", _('Success'))
+
+    def _test_user_base_dn(self, connection, address):
+        if not connection.has_user_base_dn_configured():
+            return (False, _('The User Base DN is not configured.'))
+        connection.connect(enforce_new = True, enforce_server = address)
+        if connection.user_base_dn_exists():
+            return (True, _('The User Base DN could be found.'))
+        elif connection.has_bind_credentials_configured():
+            return (False, _('The User Base DN could not be found. Maybe the provided '
+                             'user (provided via bind credentials) has no permission to '
+                             'access the Base DN or the credentials are wrong.'))
+        else:
+            return (False, _('The User Base DN could not be found. Seems you need '
+                             'to configure proper bind credentials.'))
+
+
+    def _test_user_count(self, connection, address):
+        if not connection.has_user_base_dn_configured():
+            return (False, _('The User Base DN is not configured.'))
+        connection.connect(enforce_new = True, enforce_server = address)
+        try:
+            ldap_users = connection.get_users()
+            msg = _('Found no user object for synchronization. Please check your filter settings.')
+        except Exception, e:
+            ldap_users = None
+            msg = "%s" % e
+            if 'successful bind must be completed' in msg:
+                if not connection.has_bind_credentials_configured():
+                    return (False, _('Please configure proper bind credentials.'))
                 else:
-                    img = html.render_icon("failed", _("Failed"))
+                    return (False, _('Maybe the provided user (provided via bind credentials) has not '
+                                     'enough permissions or the credentials are wrong.'))
 
-                table.cell(_("Test"),   title)
-                table.cell(_("State"),   img)
-                table.cell(_("Details"), msg)
+        if ldap_users and len(ldap_users) > 0:
+            return (True, _('Found %d users for synchronization.') % len(ldap_users))
+        else:
+            return (False, msg)
 
-            table.end()
 
-        connection.disconnect()
+    def _test_group_base_dn(self, connection, address):
+        if not connection.has_group_base_dn_configured():
+            return (False, _('The Group Base DN is not configured, not fetching any groups.'))
+        connection.connect(enforce_new = True, enforce_server = address)
+        if connection.group_base_dn_exists():
+            return (True, _('The Group Base DN could be found.'))
+        else:
+            return (False, _('The Group Base DN could not be found.'))
 
-    html.close_td()
-    html.close_tr()
-    html.close_table()
-    html.close_div()
+
+    def _test_group_count(self, connection, address):
+        if not connection.has_group_base_dn_configured():
+            return (False, _('The Group Base DN is not configured, not fetching any groups.'))
+        connection.connect(enforce_new = True, enforce_server = address)
+        try:
+            ldap_groups = connection.get_groups()
+            msg = _('Found no group object for synchronization. Please check your filter settings.')
+        except Exception, e:
+            ldap_groups = None
+            msg = "%s" % e
+            if 'successful bind must be completed' in msg:
+                if not connection.has_bind_credentials_configured():
+                    return (False, _('Please configure proper bind credentials.'))
+                else:
+                    return (False, _('Maybe the provided user (provided via bind credentials) has not '
+                                     'enough permissions or the credentials are wrong.'))
+        if ldap_groups and len(ldap_groups) > 0:
+            return (True, _('Found %d groups for synchronization.') % len(ldap_groups))
+        else:
+            return (False, msg)
+
+
+    def _test_groups_to_roles(self, connection, address):
+        active_plugins = connection.active_plugins()
+        if 'groups_to_roles' not in active_plugins:
+            return True, _('Skipping this test (Plugin is not enabled)')
+
+        connection.connect(enforce_new = True, enforce_server = address)
+        num = 0
+        for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
+            if type(group_distinguished_names) != list:
+                group_distinguished_names = [group_distinguished_names]
+
+            for dn in group_distinguished_names:
+                if type(dn) in [ str, unicode ]:
+                    num += 1
+                    try:
+                        ldap_groups = connection.get_groups(dn)
+                        if not ldap_groups:
+                            return False, _('Could not find the group specified for role %s') % role_id
+                    except Exception, e:
+                        return False, _('Error while fetching group for role %s: %s') % (role_id, e)
+        return True, _('Found all %d groups.') % num
+
+
+    def _valuespec(self):
+        general_elements = []
+
+        if self._new:
+            id_element = ("id", TextAscii(
+                title = _("ID"),
+                help = _("The ID of the connection must be a unique text. It will be used as an internal key "
+                         "when objects refer to the connection."),
+                allow_empty = False,
+                size = 12,
+                validate = self._validate_ldap_connection_id,
+            ))
+        else:
+            id_element = ("id", FixedValue(self._connection_id,
+                title = _("ID"),
+            ))
+
+        general_elements += [ id_element ]
+
+        if cmk.is_managed_edition():
+            general_elements += managed.customer_choice_element()
+
+        general_elements += rule_option_elements()
+
+        def vs_directory_options(ty):
+            connect_to_choices = [
+                ("fixed_list", _("Manually specify list of LDAP servers"), Dictionary(
+                    elements = [
+                        ("server", TextAscii(
+                            title = _("LDAP Server"),
+                            help = _("Set the host address of the LDAP server. Might be an IP address or "
+                                     "resolvable hostname."),
+                            allow_empty = False,
+                        )),
+                        ("failover_servers", ListOfStrings(
+                            title = _('Failover Servers'),
+                            help = _('When the connection to the first server fails with connect specific errors '
+                                     'like timeouts or some other network related problems, the connect mechanism '
+                                     'will try to use this server instead of the server configured above. If you '
+                                     'use persistent connections (default), the connection is being used until the '
+                                     'LDAP is not reachable or the local webserver is restarted.'),
+                            allow_empty = False,
+                        )),
+                    ],
+                    optional_keys = ["failover_servers"],
+                )),
+            ]
+
+            if ty == "ad":
+                connect_to_choices.append(
+                    ("discover", _("Automatically discover LDAP server"), Dictionary(
+                        elements = [
+                            ("domain", TextAscii(
+                                title = _("DNS domain name to discover LDAP servers of"),
+                                help = _("Configure the DNS domain name of your Active directory domain here, Check_MK "
+                                         "will then query this domain for it's closest domain controller to communicate "
+                                         "with."),
+                                allow_empty = False,
+                            )),
+                        ],
+                        optional_keys = [],
+                    )),
+                )
+
+            return Dictionary(
+                elements = [
+                    ("connect_to", CascadingDropdown(
+                        title = _("Connect to"),
+                        choices = connect_to_choices,
+                    )),
+                ],
+                optional_keys = [],
+            )
+
+
+        connection_elements = [
+            ("directory_type", CascadingDropdown(
+                title = _("Directory Type"),
+                help  = _("Select the software the LDAP directory is based on. Depending on "
+                          "the selection e.g. the attribute names used in LDAP queries will "
+                          "be altered."),
+                choices = [
+                    ("ad",                 _("Active Directory"),     vs_directory_options("ad")),
+                    ("openldap",           _("OpenLDAP"),             vs_directory_options("openldap")),
+                    ("389directoryserver", _("389 Directory Server"), vs_directory_options("389directoryserver")),
+                ],
+            )),
+            ("bind", Tuple(
+                title = _("Bind Credentials"),
+                help  = _("Set the credentials to be used to connect to the LDAP server. The "
+                          "used account must not be allowed to do any changes in the directory "
+                          "the whole connection is read only. "
+                          "In some environment an anonymous connect/bind is allowed, in this "
+                          "case you don't have to configure anything here."
+                          "It must be possible to list all needed user and group objects from the "
+                          "directory."),
+                elements = [
+                    LDAPDistinguishedName(
+                        title = _("Bind DN"),
+                        help  = _("Specify the distinguished name to be used to bind to "
+                                  "the LDAP directory, e. g. <tt>CN=ldap,OU=users,DC=example,DC=com</tt>"),
+                        size = 63,
+                    ),
+                    Password(
+                        title = _("Bind Password"),
+                        help  = _("Specify the password to be used to bind to "
+                                  "the LDAP directory."),
+                    ),
+                ],
+            )),
+            ("port", Integer(
+                title = _("TCP Port"),
+                help  = _("This variable allows to specify the TCP port to "
+                          "be used to connect to the LDAP server. "),
+                minvalue = 1,
+                maxvalue = 65535,
+                default_value = 389,
+            )),
+            ("use_ssl", FixedValue(
+                title  = _("Use SSL"),
+                help   = _("Connect to the LDAP server with a SSL encrypted connection. The "
+                           "<a href=\"wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities\">trusted "
+                           "certificates authorities</a> configured in Check_MK will be used to validate the "
+                           "certificate provided by the LDAP server."),
+                value  = True,
+                totext = _("Encrypt the network connection using SSL."),
+            )),
+            ("connect_timeout", Float(
+                title = _("Connect Timeout"),
+                help = _("Timeout for the initial connection to the LDAP server in seconds."),
+                unit = _("Seconds"),
+                minvalue = 1.0,
+                default_value = 2.0,
+            )),
+            ("version", DropdownChoice(
+                title = _("LDAP Version"),
+                help  = _("Select the LDAP version the LDAP server is serving. Most modern "
+                          "servers use LDAP version 3."),
+                choices = [ (2, "2"), (3, "3") ],
+                default_value = 3,
+            )),
+            ("page_size", Integer(
+                title = _("Page Size"),
+                help = _("LDAP searches can be performed in paginated mode, for example to improve "
+                         "the performance. This enables pagination and configures the size of the pages."),
+                minvalue = 1,
+                default_value = 1000,
+            )),
+            ("response_timeout", Integer(
+                title = _("Response Timeout"),
+                unit = _("Seconds"),
+                help = _("Timeout for LDAP query responses."),
+                minvalue = 0,
+                default_value = 5,
+            )),
+            ("suffix", TextUnicode(
+                allow_empty = False,
+                title = _("LDAP connection suffix"),
+                help = _("The LDAP connection suffix can be used to distinguish equal named objects "
+                         "(name conflicts), for example user accounts, from different LDAP connections.<br>"
+                         "It is used in the following situations:<br><br>"
+                         "During LDAP synchronization, the LDAP sync might discover that a user to be "
+                         "synchronized from from the current LDAP is already being synchronized from "
+                         "another LDAP connection. Without the suffix configured this results in a name "
+                         "conflict and the later user not being synchronized. If the connection has a "
+                         "suffix configured, this suffix is added to the later username in case of the name "
+                         "conflict to resolve it. The user will then be named <tt>[username]@[suffix]</tt> "
+                         "instead of just <tt>[username]</tt>.<br><br>"
+                         "In the case a user which users name is existing in multiple LDAP directories, "
+                         "but associated to different persons, your user can insert <tt>[username]@[suffix]</tt>"
+                         " during login instead of just the plain <tt>[username]</tt> to tell which LDAP "
+                         "directory he is assigned to. Users without name conflict just need to provide their "
+                         "regular username as usual."),
+                regex = re.compile('^[A-Z0-9.-]+(?:\.[A-Z]{2,24})?$', re.I),
+            )),
+        ]
+
+        user_elements = [
+            ("user_dn", LDAPDistinguishedName(
+                title = _("User Base DN"),
+                help  = _("Give a base distinguished name here, e. g. <tt>OU=users,DC=example,DC=com</tt><br> "
+                          "All user accounts to synchronize must be located below this one."),
+                size = 80,
+            )),
+            ("user_scope", DropdownChoice(
+                title = _("Search Scope"),
+                help  = _("Scope to be used in LDAP searches. In most cases <i>Search whole subtree below "
+                          "the base DN</i> is the best choice. "
+                          "It searches for matching objects recursively."),
+                choices = [
+                    ("sub",  _("Search whole subtree below the base DN")),
+                    ("base", _("Search only the entry at the base DN")),
+                    ("one",  _("Search all entries one level below the base DN")),
+                ],
+                default_value = "sub",
+            )),
+            ("user_filter", TextAscii(
+                title = _("Search Filter"),
+                help = _("Using this option you can define an optional LDAP filter which is used during "
+                         "LDAP searches. It can be used to only handle a subset of the users below the given "
+                         "base DN.<br><br>Some common examples:<br><br> "
+                         "All user objects in LDAP:<br> "
+                         "<tt>(&(objectclass=user)(objectcategory=person))</tt><br> "
+                         "Members of a group:<br> "
+                         "<tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br> "
+                         "Members of a nested group:<br> "
+                         "<tt>(&(objectclass=user)(objectcategory=person)(memberof:1.2.840.113556.1.4.1941:=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"),
+                size = 80,
+                default_value = lambda: userdb.ldap_filter_of_connection(self._connection_id, 'users', False),
+                attrencode = True,
+            )),
+            ("user_filter_group", LDAPDistinguishedName(
+                title = _("Filter Group (Only use in special situations)"),
+                help = _("Using this option you can define the DN of a group object which is used to filter the users. "
+                         "Only members of this group will then be synchronized. This is a filter which can be "
+                         "used to extend capabilities of the regular \"Search Filter\". Using the search filter "
+                         "you can only define filters which directly apply to the user objects. To filter by "
+                         "group memberships, you can use the <tt>memberOf</tt> attribute of the user objects in some "
+                         "directories. But some directories do not have such attributes because the memberships "
+                         "are stored in the group objects as e.g. <tt>member</tt> attributes. You should use the "
+                         "regular search filter whenever possible and only use this filter when it is really "
+                         "neccessary. Finally you can say, you should not use this option when using Active Directory. "
+                         "This option is neccessary in OpenLDAP directories when you like to filter by group membership.<br><br>"
+                         "If using, give a plain distinguished name of a group here, e. g. "
+                         "<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>"),
+                size = 80,
+            )),
+            ("user_id", TextAscii(
+                title = _("User-ID Attribute"),
+                help  = _("The attribute used to identify the individual users. It must have "
+                          "unique values to make an user identifyable by the value of this "
+                          "attribute."),
+                default_value = lambda: userdb.ldap_attr_of_connection(self._connection_id, 'user_id'),
+                attrencode = True,
+            )),
+            ("lower_user_ids", FixedValue(
+                title  = _("Lower Case User-IDs"),
+                help   = _("Convert imported User-IDs to lower case during synchronization."),
+                value  = True,
+                totext = _("Enforce lower case User-IDs."),
+            )),
+            ("user_id_umlauts", Transform(
+                DropdownChoice(
+                    title = _("Translate Umlauts in User-IDs (deprecated)"),
+                    help  = _("Check_MK was not not supporting special characters (like Umlauts) in "
+                              "User-IDs. To deal with LDAP users having umlauts in their User-IDs "
+                              "you had the choice to replace umlauts with other characters. This option "
+                              "is still available for compatibility reasons, but you are adviced to use "
+                              "the \"keep\" option for new installations."),
+                    choices = [
+                        ("keep",     _("Keep special characters")),
+                        ("replace",  _("Replace umlauts like \"&uuml;\" with \"ue\"")),
+                    ],
+                    default_value = "keep",
+                ),
+                forth = lambda x: "keep" if (x == "skip") else x
+            )),
+        ]
+
+        group_elements = [
+            ("group_dn", LDAPDistinguishedName(
+                title = _("Group Base DN"),
+                help  = _("Give a base distinguished name here, e. g. <tt>OU=groups,DC=example,DC=com</tt><br> "
+                          "All groups used must be located below this one."),
+                size = 80,
+            )),
+            ("group_scope", DropdownChoice(
+                title = _("Search Scope"),
+                help  = _("Scope to be used in group related LDAP searches. In most cases "
+                          "<i>Search whole subtree below the base DN</i> "
+                          "is the best choice. It searches for matching objects in the given base "
+                          "recursively."),
+                choices = [
+                    ("sub",  _("Search whole subtree below the base DN")),
+                    ("base", _("Search only the entry at the base DN")),
+                    ("one",  _("Search all entries one level below the base DN")),
+                ],
+                default_value = "sub",
+            )),
+            ("group_filter", TextAscii(
+                title = _("Search Filter"),
+                help = _("Using this option you can define an optional LDAP filter which is used "
+                         "during group related LDAP searches. It can be used to only handle a "
+                         "subset of the groups below the given base DN.<br><br>"
+                         "e.g. <tt>(objectclass=group)</tt>"),
+                size = 80,
+                default_value = lambda: userdb.ldap_filter_of_connection(self._connection_id, 'groups', False),
+                attrencode = True,
+            )),
+            ("group_member", TextAscii(
+                title = _("Member Attribute"),
+                help  = _("The attribute used to identify users group memberships."),
+                default_value = lambda: userdb.ldap_attr_of_connection(self._connection_id, 'member'),
+                attrencode = True,
+            )),
+        ]
+
+        other_elements = [
+            ("active_plugins", Dictionary(
+                title = _('Attribute Sync Plugins'),
+                help  = _('It is possible to fetch several attributes of users, like Email or full names, '
+                          'from the LDAP directory. This is done by plugins which can individually enabled '
+                          'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
+                          'user accounts for gathering their attributes. The user options which get imported '
+                          'into Check_MK from LDAP will be locked in WATO.'),
+                elements = lambda: userdb.ldap_attribute_plugins_elements(self._connection_id),
+                default_keys = ['email', 'alias', 'auth_expire' ],
+            )),
+            ("cache_livetime", Age(
+                title = _('Sync Interval'),
+                help  = _('This option defines the interval of the LDAP synchronization. This setting is only '
+                          'used by sites which have the '
+                          '<a href="wato.py?mode=sites">Automatic User '
+                          'Synchronization</a> enabled.<br><br>'
+                          'Please note: Passwords of the users are never stored in WATO and therefor never cached!'),
+                minvalue = 60,
+                default_value = 300,
+                display = ["days", "hours", "minutes" ],
+            )),
+        ]
+
+        return Transform(Dictionary(
+                title = _('LDAP Connection'),
+                elements = general_elements
+                    + connection_elements
+                    + user_elements
+                    + group_elements
+                    + other_elements
+                ,
+                headers = [
+                    (_("General Properties"), [ key for key, vs in general_elements ]),
+                    (_("LDAP Connection"),    [ key for key, vs in connection_elements ]),
+                    (_("Users"),              [ key for key, vs in user_elements ]),
+                    (_("Groups"),             [ key for key, vs in group_elements ]),
+                    (_("Attribute Sync Plugins"), [ "active_plugins" ]),
+                    (_("Other"),              [ "cache_livetime" ]),
+                ],
+                render = "form",
+                form_narrow = True,
+                optional_keys = [
+                    'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
+                    'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
+                    'group_filter', 'group_member', 'suffix',
+                ],
+                validate = self._validate_ldap_connection,
+            ),
+            forth = userdb.LDAPUserConnector.transform_config,
+        )
+
+
+    def _validate_ldap_connection_id(self, value, varprefix):
+        if value in [ c['id'] for c in config.user_connections ]:
+            raise MKUserError(varprefix, _("This ID is already user by another connection. Please choose another one."))
+
+
+    def _validate_ldap_connection(self, value, varprefix):
+        for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():
+            if role_id == "nested":
+                continue # This is the option to enabled/disable nested group handling, not a role to DN entry
+
+            for index, group_spec in enumerate(group_specs):
+                dn, connection_id = group_spec
+
+                if connection_id == None:
+                    group_dn = value["group_dn"]
+
+                else:
+                    connection = userdb.get_connection(connection_id)
+                    if not connection:
+                        continue
+                    group_dn = connection.get_group_dn()
+
+                if not group_dn:
+                    raise MKUserError(varprefix, _("You need to configure the group base DN to be able to "
+                                                   "use the roles synchronization plugin."))
+
+                if not dn.lower().endswith(group_dn.lower()):
+                    varname = "connection_p_active_plugins_p_groups_to_roles_p_%s_1_%d" % (role_id, index)
+                    raise MKUserError(varname, _("The configured DN does not match the group base DN."))
+
 
 #.
 #   .--Global-Settings-----------------------------------------------------.
@@ -17558,7 +17575,7 @@ modes = {
    "edit_configvar"     : (["global"], ModeEditGlobalSetting),
    "edit_site_configvar": (["global"], ModeEditSiteGlobalSetting),
    "ldap_config"        : (["global"], mode_ldap_config),
-   "edit_ldap_connection": (["global"], mode_edit_ldap_connection),
+   "edit_ldap_connection": (["global"], ModeEditLDAPConnection),
    "static_checks"      : (["rulesets"], ModeStaticChecksRulesets),
    "check_plugins"      : ([], ModeCheckPlugins),
    "check_manpage"      : ([], ModeCheckManPage),

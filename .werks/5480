@@ -1,0 +1,12 @@
+Title: bdt_tape_info, bdt_tape_status, bdtms_tape_info, bdtms_tape_module, bdtms_tape_status: new checks to monitor tape libraries
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511792887
+Class: feature
+
+This werk adds new checks for tape libraries that can be monitored based on
+the BDTMIB and BDT-MS-MIB mibs. They are used for example in Fujitsu Eternus
+LT40 and Fujitsu Eternus LT260 devices, respectively.

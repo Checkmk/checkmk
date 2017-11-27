@@ -1,0 +1,15 @@
+title: BDT Tape Library: Information
+agents: snmp
+catalog: hw/storagehw/bdt
+license: GPL
+distribution: check_mk
+description:
+ This check shows information about the tape library like the
+ name and description of the device as well as the vendor and SNMP
+ agent version. The check always returns the status {OK}.
+
+inventory:
+ One service per host will be created.
+
+item:
+ No item.

@@ -4,28 +4,21 @@ import sys
 
 pytestmark = pytest.mark.check
 
+info_df_1 = [[u'/dev/sda4',
+       u'ext4',
+       u'143786696',
+       u'101645524',
+       u'34814148',
+       u'75%',
+       u'/'],
+      [u'[df_inodes_start]'],
+      [u'/dev/sda4', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/'],
+      [u'[df_inodes_end]']]
+
 @pytest.mark.parametrize("info,result,include_volume_name", [
     ([], [], False),
-    ([[u'/dev/sda4',
-       u'ext4',
-       u'143786696',
-       u'101645524',
-       u'34814148',
-       u'75%',
-       u'/'],
-      [u'[df_inodes_start]'],
-      [u'/dev/sda4', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/'],
-      [u'[df_inodes_end]']], [(u'/', {})], False),
-    ([[u'/dev/sda4',
-       u'ext4',
-       u'143786696',
-       u'101645524',
-       u'34814148',
-       u'75%',
-       u'/'],
-      [u'[df_inodes_start]'],
-      [u'/dev/sda4', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/'],
-      [u'[df_inodes_end]']], [(u'/dev/sda4 /', {})], True),
+    (info_df_1, [(u'/', {})], False),
+    (info_df_1, [(u'/dev/sda4 /', {})], True),
 ])
 def test_df_discovery_with_parse(check_manager, monkeypatch, info, result, include_volume_name):
     import cmk_base.checks

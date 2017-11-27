@@ -1,0 +1,10 @@
+Title: LDAP: It is now possible to clone LDAP connections
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511778771
+Class: feature
+
+

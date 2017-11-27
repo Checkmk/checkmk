@@ -6097,7 +6097,7 @@ def add_ldap_change(action_name, text):
 
 
 def mode_ldap_config(phase):
-    title = _("LDAP Connections")
+    title = _("LDAP connections")
 
     if phase == "title":
         return title
@@ -6148,8 +6148,10 @@ def mode_ldap_config(phase):
         edit_url   = watolib.folder_preserving_link([("mode", "edit_ldap_connection"), ("id", connection["id"])])
         delete_url = make_action_link([("mode", "ldap_config"), ("_delete", nr)])
         drag_url   = make_action_link([("mode", "ldap_config"), ("_move", nr)])
+        clone_url  = watolib.folder_preserving_link([("mode", "edit_ldap_connection"), ("clone", connection["id"])])
 
         html.icon_button(edit_url, _("Edit this LDAP connection"), "edit")
+        html.icon_button(clone_url, _("Create a copy of this LDAP connection"), "clone")
         html.element_dragger("tr", base_url=drag_url)
         html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
 
@@ -6185,18 +6187,24 @@ class ModeEditLDAPConnection(WatoMode):
         self._connections = userdb.load_connection_config(lock=html.is_transaction())
 
         if self._connection_id == None:
+            clone_id = html.var("clone")
+            if clone_id is not None:
+                self._connection_cfg = self._get_connection_cfg_and_index(clone_id)[0]
+
             self._new = True
             return
 
         self._new = False
+        self._connection_cfg, self._connection_nr = self._get_connection_cfg_and_index(self._connection_id)
 
-        for nr, c in enumerate(self._connections):
-            if c['id'] == self._connection_id:
-                self._connection_cfg = c
-                self._connection_nr = nr
+
+    def _get_connection_cfg_and_index(self, connection_id):
+        for index, cfg in enumerate(self._connections):
+            if cfg['id'] == connection_id:
+                return cfg, index
 
         if not self._connection_cfg:
-            raise MKUserError(None, _("The given connection does not exist."))
+            raise MKUserError(None, _("The requested connection does not exist."))
 
 
     def title(self):

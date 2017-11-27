@@ -51,6 +51,7 @@
 #     "success": true
 # }
 
+# TODO: Refactor this.
 def parse_mkbackup(info):
     try:
         import simplejson as json
@@ -78,6 +79,7 @@ def parse_mkbackup(info):
             json_data += line
             if line == "}":
                 job.update(json.loads(json_data))
+                json_data = ""
 
     return parsed
 

@@ -16593,13 +16593,6 @@ class RuleComment(TextAreaUnicode):
         )
         html.close_div()
 
-    def render_buttons(self):
-        for icon, textfunc, help in self._prefix_buttons:
-            try:
-                text = textfunc()
-            except:
-                text = textfunc
-
 
 
 def rule_option_elements(disabling=True):

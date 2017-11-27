@@ -1,0 +1,20 @@
+Title: SNMP commands: Prevent zombie processes in case of timeouts
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1510582108
+
+This concerns the RAW edition or users which use CEE/CME edition of Check_MK
+with deactivated inline SNMP.
+
+When executing SNMP commands like get, getnext, walk or bulkwalk to get agent data
+from hosts it may happen that these commands remain open as zombie processes.
+Check_MK has been extended to deal with this situation and clean up these processes.
+
+Details: When the command execution takes too long Check_MK sends a SIGTERM to the
+process group of the executed program. After sending the signal Check_MK is now
+waiting for the process to finish.

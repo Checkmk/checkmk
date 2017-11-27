@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <cmath>
+#include <functional>
 #include "Renderer.h"
 #include "Row.h"
 #include "contact_fwd.h"
@@ -34,70 +35,9 @@ class Query;
 
 class Aggregation {
 public:
-    enum class operation { sum, min, max, avg, std, suminv, avginv };
-
-    explicit Aggregation(operation op)
-        : _operation(op), _count(0), _aggr(0), _sumq(0) {}
-
-    void update(double value) {
-        _count++;
-        switch (_operation) {
-            case Aggregation::operation::sum:
-                _aggr += value;
-                break;
-            case Aggregation::operation::min:
-                if (_count == 1 || value < _aggr) {
-                    _aggr = value;
-                }
-                break;
-            case Aggregation::operation::max:
-                if (_count == 1 || value > _aggr) {
-                    _aggr = value;
-                }
-                break;
-            case Aggregation::operation::avg:
-                _aggr += value;
-                break;
-            case Aggregation::operation::std:
-                _aggr += value;
-                _sumq += value * value;
-                break;
-            case Aggregation::operation::suminv:
-                _aggr += 1.0 / value;
-                break;
-            case Aggregation::operation::avginv:
-                _aggr += 1.0 / value;
-                break;
-        }
-    }
-
-    double value() const {
-        switch (_operation) {
-            case Aggregation::operation::sum:
-                return _aggr;
-            case Aggregation::operation::min:
-                return _aggr;
-            case Aggregation::operation::max:
-                return _aggr;
-            case Aggregation::operation::avg:
-                return _aggr / _count;
-            case Aggregation::operation::std: {
-                auto mean = _aggr / _count;
-                return sqrt(_sumq / _count - mean * mean);
-            }
-            case Aggregation::operation::suminv:
-                return _aggr;
-            case Aggregation::operation::avginv:
-                return _aggr / _count;
-        }
-        return 0;  // unreachable
-    }
-
-private:
-    operation _operation;
-    std::uint32_t _count;
-    double _aggr;
-    double _sumq;
+    virtual ~Aggregation() = default;
+    virtual void update(double value) = 0;
+    virtual double value() const = 0;
 };
 
 class Aggregator {

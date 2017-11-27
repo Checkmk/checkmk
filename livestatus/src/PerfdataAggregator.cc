@@ -26,6 +26,7 @@
 // IWYU pragma: no_include <type_traits>
 #include "PerfdataAggregator.h"
 #include <cmath>
+#include <functional>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
@@ -45,8 +46,8 @@ void PerfdataAggregator::consume(Row row, const contact * /* auth_user */,
             try {
                 auto varname = it->substr(0, pos);
                 auto value = std::stod(it->substr(pos + 1));
-                _aggregations.insert(std::make_pair(varname, _aggregation))
-                    .first->second.update(value);
+                _aggregations.insert(std::make_pair(varname, _factory()))
+                    .first->second->update(value);
             } catch (const std::logic_error &e) {
             }
         }
@@ -57,7 +58,7 @@ void PerfdataAggregator::output(RowRenderer &r) const {
     std::string perf_data;
     bool first = true;
     for (const auto &entry : _aggregations) {
-        double value = entry.second.value();
+        double value = entry.second->value();
         if (std::isfinite(value)) {
             if (first) {
                 first = false;

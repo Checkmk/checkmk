@@ -41,7 +41,7 @@ std::unique_ptr<Filter> StringColumn::createFilter(
 }
 
 std::unique_ptr<Aggregator> StringColumn::createAggregator(
-    const Aggregation & /*aggregation*/) const {
+    AggregationFactory /*factory*/) const {
     throw std::runtime_error("aggregating on string column '" + name() +
                              "' not supported");
 }

@@ -27,9 +27,9 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
-#include "Aggregator.h"
+#include "Column.h"
 #include "Filter.h"
-class Column;
+class Aggregator;
 class Logger;
 
 class StatsColumn {
@@ -52,12 +52,12 @@ private:
 
 class StatsColumnOp : public StatsColumn {
 public:
-    StatsColumnOp(Aggregation::operation operation, Column *column);
+    StatsColumnOp(AggregationFactory factory, Column *column);
     std::unique_ptr<Filter> stealFilter() override;
     std::unique_ptr<Aggregator> createAggregator(Logger *logger) const override;
 
 private:
-    Aggregation::operation _operation;
+    AggregationFactory _factory;
     Column *_column;
     std::unique_ptr<Filter> _filter;
 };

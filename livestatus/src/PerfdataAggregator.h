@@ -28,8 +28,10 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <map>
+#include <memory>
 #include <string>
 #include "Aggregator.h"
+#include "Column.h"
 #include "contact_fwd.h"
 class Row;
 class RowRenderer;
@@ -37,17 +39,16 @@ class StringColumn;
 
 class PerfdataAggregator : public Aggregator {
 public:
-    PerfdataAggregator(const Aggregation &aggregation,
-                       const StringColumn *column)
-        : _aggregation(aggregation), _column(column) {}
+    PerfdataAggregator(AggregationFactory factory, const StringColumn *column)
+        : _factory(factory), _column(column) {}
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;
 
 private:
-    Aggregation _aggregation;
+    AggregationFactory _factory;
     const StringColumn *const _column;
-    std::map<std::string, Aggregation> _aggregations;
+    std::map<std::string, std::unique_ptr<Aggregation>> _aggregations;
 };
 
 #endif  // PerfdataAggregator_h

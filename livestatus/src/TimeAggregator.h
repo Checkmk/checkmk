@@ -35,21 +35,21 @@ class RowRenderer;
 
 class TimeAggregator : public Aggregator {
 public:
-    TimeAggregator(const Aggregation &aggregation, const TimeColumn *column)
-        : _aggregation(aggregation), _column(column) {}
+    TimeAggregator(AggregationFactory factory, const TimeColumn *column)
+        : _aggregation(factory()), _column(column) {}
 
     void consume(Row row, const contact * /*auth_user*/,
                  std::chrono::seconds timezone_offset) override {
-        _aggregation.update(std::chrono::system_clock::to_time_t(
+        _aggregation->update(std::chrono::system_clock::to_time_t(
             _column->getValue(row, timezone_offset)));
     }
 
     void output(RowRenderer &r) const override {
-        r.output(_aggregation.value());
+        r.output(_aggregation->value());
     }
 
 private:
-    Aggregation _aggregation;
+    std::unique_ptr<Aggregation> _aggregation;
     const TimeColumn *const _column;
 };
 

@@ -32,7 +32,6 @@
 #include "Column.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class Aggregation;
 class Aggregator;
 class Filter;
 class Row;
@@ -52,7 +51,7 @@ public:
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
     std::unique_ptr<Aggregator> createAggregator(
-        const Aggregation &aggregation) const override;
+        AggregationFactory factory) const override;
 };
 
 #endif  // DoubleColumn_h

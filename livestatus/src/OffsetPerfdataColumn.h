@@ -28,8 +28,8 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
+#include "Column.h"
 #include "OffsetStringColumn.h"
-class Aggregation;
 class Aggregator;
 
 class OffsetPerfdataColumn : public OffsetStringColumn {
@@ -41,7 +41,7 @@ public:
                              extra_extra_offset, offset) {}
 
     std::unique_ptr<Aggregator> createAggregator(
-        const Aggregation& aggregation) const override;
+        AggregationFactory factory) const override;
 };
 
 #endif  // OffsetPerfdataColumn_h

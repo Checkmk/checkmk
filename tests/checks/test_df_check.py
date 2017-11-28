@@ -216,7 +216,7 @@ info_df_btrfs = \
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-@pytest.mark.parametrize("info,result,include_volume_name", [
+@pytest.mark.parametrize("info,expected_result,include_volume_name", [
     ([], [], False),
     (info_df_lnx, [(u'/', {})], False),
     (info_df_lnx, [(u'/dev/sda4 /', {})], True),
@@ -227,8 +227,7 @@ info_df_btrfs = \
     (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], False),
     (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})], True),
 ])
-def test_df_discovery_with_parse(check_manager, monkeypatch, info, result, include_volume_name):
-    import cmk_base.checks
+def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, include_volume_name):
     import cmk_base
 
 #   NOTE: This commented-out code is the result of trying to mock the the ruleset variable itself instead of the
@@ -239,5 +238,5 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, result, inclu
 
     check = check_manager.get_check("df")
     monkeypatch.setitem(cmk_base.checks._check_contexts["df"], "host_extra_conf_merged", lambda _, __: {"include_volume_name": include_volume_name})
-    assert check.run_discovery(check.run_parse(info)) == result
+    assert check.run_discovery(check.run_parse(info)) == expected_result
     cmk_base.config_cache.clear_all()

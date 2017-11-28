@@ -11,6 +11,10 @@ import cmk_base.config as config
 import cmk_base.modes
 import cmk_base.automations
 
+#
+# INTEGRATION TESTS
+#
+
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
@@ -380,3 +384,100 @@ def test_automation_diag_host_caching(test_cfg, monkeypatch):
 # Keepalive check
 # Keepalive discovery
 # TODO: Check the caching age for cluster hosts
+
+#
+# UNIT TESTS
+#
+
+# Automatically refresh caches for each test
+@pytest.fixture(scope="function")
+def clear_config_caches(monkeypatch):
+    import cmk_base
+    import cmk_base.caching
+    monkeypatch.setattr(cmk_base, "config_cache", cmk_base.caching.CacheManager())
+    monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
+
+
+def test_data_sources_of_hosts(clear_config_caches, monkeypatch):
+    hosts = [
+        # Configs from 1.4
+        ("agent-host-14", {
+            "tags": "lan|cmk-agent|ip-v4|tcp|ip-v4-only|prod",
+            "sources": ['TCPDataSource', 'PiggyBackDataSource'],
+        }),
+        ("ds-host-14", {
+            "tags": "lan|cmk-agent|ip-v4|tcp|ip-v4-only|prod",
+            "sources": ['DSProgramDataSource', 'PiggyBackDataSource'],
+        }),
+        ("special-host-14", {
+            "tags": "lan|cmk-agent|ip-v4|tcp|ip-v4-only|prod",
+            "sources": ['SpecialAgentDataSource', 'PiggyBackDataSource'],
+        }),
+        ("ping-host-14", {
+            "tags": "lan|ip-v4|ping|ip-v4-only|prod",
+            "sources": ['PiggyBackDataSource'],
+        }),
+        ("snmp-host-14", {
+            "tags": "lan|ip-v4|snmp|snmp-only|ip-v4-only|prod",
+            "sources": ['SNMPDataSource', 'PiggyBackDataSource'],
+        }),
+        ("snmpv1-host-14", {
+            "tags": "lan|ip-v4|snmp|snmp-v1|ip-v4-only|prod",
+            "sources": ['SNMPDataSource', 'PiggyBackDataSource'],
+        }),
+        ("dual-host-14", {
+            "tags": "lan|ip-v4|snmp|tcp|ip-v4-only|prod|snmp-tcp",
+            "sources": ['TCPDataSource', 'SNMPDataSource', 'PiggyBackDataSource'],
+        }),
+        # From current WATO
+        ("agent-host", {
+            "tags": "lan|ip-v4|cmk-agent|no-snmp|tcp|ip-v4-only|prod",
+            "sources": ['TCPDataSource', 'PiggyBackDataSource'],
+        }),
+        ("ping-host", {
+            "tags": "lan|ip-v4|ping|no-snmp|ip-v4-only|no-agent|prod",
+            "sources": ['PiggyBackDataSource'],
+        }),
+        ("snmp-host", {
+            "tags": "lan|ip-v4|snmp|snmp-v2|ip-v4-only|no-agent|prod",
+            "sources": ['SNMPDataSource', 'PiggyBackDataSource'],
+        }),
+        ("snmpv1-host", {
+            "tags": "lan|ip-v4|snmp|snmp-v1|ip-v4-only|no-agent|prod",
+            "sources": ['SNMPDataSource', 'PiggyBackDataSource'],
+        }),
+        ("dual-host", {
+            "tags": "lan|ip-v4|cmk-agent|snmp|snmp-v2|ip-v4-only|tcp|prod",
+            "sources": ['TCPDataSource', 'SNMPDataSource', 'PiggyBackDataSource'],
+        }),
+        ("all-agents-host", {
+            "tags": "lan|all-agents|ip-v4|no-snmp|tcp|ip-v4-only|prod",
+            "sources": ['DSProgramDataSource', 'SpecialAgentDataSource', 'PiggyBackDataSource'],
+        }),
+        ("all-special-host", {
+            "tags": "lan|ip-v4|no-snmp|tcp|ip-v4-only|special-agents|prod",
+            "sources": ['SpecialAgentDataSource', 'PiggyBackDataSource'],
+        }),
+    ]
+
+    import cmk_base.data_sources
+    import cmk_base.config as config
+
+    all_hosts = [ ("%s|%s" % (name, h["tags"])) for name, h in hosts ]
+    monkeypatch.setattr(config, "all_hosts", all_hosts)
+
+    monkeypatch.setattr(config, "datasource_programs", [
+        ( 'echo 1', [], ['ds-host-14', 'all-agents-host', 'all-special-host' ], {} ),
+    ])
+
+    monkeypatch.setitem(config.special_agents, "jolokia", [
+        ( {}, [], ['special-host-14', 'all-agents-host', 'all-special-host', ], {} ),
+    ])
+
+    config.collect_hosttags()
+
+    for hostname, host_attrs in hosts:
+        sources = cmk_base.data_sources.DataSources(hostname)
+        source_names = [ s.__class__.__name__ for s in sources.get_data_sources() ]
+        assert host_attrs["sources"] == source_names, \
+            "Wrong sources for %s" % hostname

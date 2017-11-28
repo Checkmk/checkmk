@@ -1,0 +1,16 @@
+Title: Errors in pre-activate-changes hooks prevent configuration activation now (regression since 1.2.8)
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1511880767
+
+Exceptions in pre-activate-changes hooks, that one can register to extend the WATO functionality
+before loading changes into the monitoring core were suppressed and only shown to the user if
+the debug mode of the GUI is enabled.
+
+These issues are now shown to the user during activation of a site in form of a short exception
+message. The full trace is shown in the var/log/web.log of the site the error happens on.

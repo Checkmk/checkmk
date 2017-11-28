@@ -207,7 +207,8 @@ class DataSources(object):
 
 
     def get_data_sources(self):
-        return sorted(self._sources.values(), key=lambda s: s.id())
+        # Always execute piggyback at the end
+        return sorted(self._sources.values(), key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
 
 
     def set_max_cachefile_age(self, max_cachefile_age):

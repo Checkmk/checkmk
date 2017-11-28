@@ -41,6 +41,23 @@ info_df_win = [[u'C:\\', u'NTFS', u'8192620', u'7724268', u'468352', u'95%', u'C
      u'41%',
      u'F:\\']]
 
+info_df_lnx_tmpfs = [[u'tmpfs',
+     u'tmpfs',
+     u'8152820',
+     u'76',
+     u'8152744',
+     u'1%',
+     u'/opt/omd/sites/heute/tmp'],
+     [u'[df_inodes_start]'],
+     [u'tmpfs',
+     u'tmpfs',
+     u'2038205',
+     u'48',
+     u'2038157',
+     u'1%',
+     u'/opt/omd/sites/heute/tmp'],
+     [u'[df_inodes_end]']]
+
 # NOTE: This gargantuan test info section is uncritically used data from an archived agent output.
 #       I suspect that our handling of btrfs is not really adequate, test cases using this data
 #       serve the sole purpose of not inadvertenty breaking the status quo. Thus:
@@ -205,6 +222,8 @@ info_df_btrfs = \
     (info_df_lnx, [(u'/dev/sda4 /', {})], True),
     (info_df_win, [(u'E:/', {}), (u'F:/', {}), (u'C:/', {})], False),
     (info_df_win, [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})], True),
+    (info_df_lnx_tmpfs, [], False),
+    (info_df_lnx_tmpfs, [], True),
     (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], False),
     (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})], True),
 ])

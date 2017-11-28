@@ -160,7 +160,7 @@ class DataSources(object):
         if not ignore_special_agents:
             special_agents = self._get_special_agent_data_sources()
             if special_agents:
-                return special_agents[0][1]
+                return special_agents[0]
 
         programs = rulesets.host_extra_conf(self._hostname, config.datasource_programs)
         if programs:
@@ -181,8 +181,7 @@ class DataSources(object):
         for agentname, ruleset in sorted(config.special_agents.items()):
             params = rulesets.host_extra_conf(self._hostname, ruleset)
             if params:
-                source = SpecialAgentDataSource(agentname, params[0])
-                special_agents[source.id()] = source
+                special_agents.append(SpecialAgentDataSource(agentname, params[0]))
 
         return special_agents
 

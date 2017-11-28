@@ -1011,6 +1011,20 @@ _old_service_descriptions = {
     "nullmailer_mailq"                 : lambda item: (False, "Nullmailer Queue"),
     "barracuda_mailqueues"             : lambda item: (False, "Mail Queue"),
     "qmail_stats"                      : lambda item: (False, "Qmail Queue"),
+    "mssql_backup"                     : "%s Backup",
+    "mssql_counters.cache_hits"        : "%s",
+    "mssql_counters.transactions"      : "%s Transactions",
+    "mssql_counters.locks"             : "%s Locks",
+    "mssql_counters.sqlstats"          : "%s",
+    "mssql_counters.pageactivity"      : "%s Page Activity",
+    "mssql_counters.locks_per_batch"   : "%s Locks per Batch",
+    "mssql_counters.file_sizes"        : "%s File Sizes",
+    "mssql_databases"                  : "%s Database",
+    "mssql_datafiles"                  : "Datafile %s",
+    "mssql_tablespaces"                : "%s Sizes",
+    "mssql_transactionlogs"            : "Transactionlog %s",
+    "mssql_versions"                   : "%s Version",
+
 }
 
 def service_description(hostname, check_plugin_name, item):

@@ -67,5 +67,5 @@ def check_mssql_versions(item, _unused, info):
 check_info["mssql_versions"] = {
     'check_function':          check_mssql_versions,
     'inventory_function':      inventory_mssql_versions,
-    'service_description':     '%s Version',
+    'service_description':     'MSSQL %s Version',
 }

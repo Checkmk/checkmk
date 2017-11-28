@@ -92,10 +92,8 @@ bool StringFilter::accepts(Row row, contact * /* auth_user */,
 const string *StringFilter::valueForIndexing(const string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::equal:
-        case RelationalOperator::not_equal:
-            // TODO(sp) The cast looks very dubious, but the whole void* story
-            // is quite dangerous...
             return column_name == _column->name() ? &_ref_string : nullptr;
+        case RelationalOperator::not_equal:
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:

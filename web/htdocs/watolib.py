@@ -5939,13 +5939,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
 
     cmd = [ 'check_mk', '--automation',  command, '--' ] + args
     if command in [ 'restart', 'reload' ]:
-        try:
-            call_hook_pre_activate_changes()
-        except Exception, e:
-            if config.debug:
-                raise
-            html.show_error(_("<h1>Cannot activate changes</h1>%s") % e)
-            return
+        call_hook_pre_activate_changes()
 
     cmd = [ make_utf8(a) for a in cmd ]
     try:

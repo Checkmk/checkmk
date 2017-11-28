@@ -82,6 +82,6 @@ check_info['mssql_databases'] = {
     'parse_function'        : parse_mssql_databases,
     'inventory_function'    : inventory_mssql_databases,
     'check_function'        : check_mssql_databases,
-    'service_description'   : '%s Database',
+    'service_description'   : 'MSSQL %s Database',
     'group'                 : 'mssql_databases',
 }

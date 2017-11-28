@@ -1,0 +1,14 @@
+Title: mssql checks: Added prefix 'MSSQL' to each MSSQL service description
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511878307
+Class: feature
+
+In order to use these new service descriptions you have to enable them below
+{Global settings}, {Use new service descriptions}. Renaming of existing services
+has many implications - including existing rules, performance data and availability
+history - these renamings are disabled per default for existing installations.
+Here you can switch to the new descriptions for selected check types

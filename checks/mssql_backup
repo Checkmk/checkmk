@@ -168,7 +168,7 @@ check_info['mssql_backup'] = {
     'check_function':      check_mssql_backup,
     'inventory_function':  inventory_mssql_backup,
     'default_levels_variable': 'mssql_backup_default_levels',
-    'service_description': '%s Backup',
+    'service_description': 'MSSQL %s Backup',
     'has_perfdata':        True,
     'group':               'mssql_backup',
 }

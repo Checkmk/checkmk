@@ -108,7 +108,7 @@ def check_mssql_tablespaces(item, params, info):
 check_info['mssql_tablespaces'] = {
     'check_function':      check_mssql_tablespaces,
     'inventory_function':  inventory_mssql_tablespaces,
-    'service_description': '%s Sizes',
+    'service_description': 'MSSQL %s Sizes',
     'group':               "mssql_tablespaces",
     'has_perfdata':        True,
 }

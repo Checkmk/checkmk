@@ -35,7 +35,6 @@
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class Aggregation;
 class Filter;
 class Logger;
 class RowRenderer;

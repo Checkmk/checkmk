@@ -1,0 +1,11 @@
+Title: Fixed filtering of services table for host name
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511873723
+Class: fix
+
+Using a filter of the form 'host_name != ...' on the services table did not
+work, the result set was always empty. This has been fixed.

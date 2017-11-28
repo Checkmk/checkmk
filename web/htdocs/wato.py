@@ -4282,60 +4282,64 @@ def find_hosts_with_failed_agent():
 #   | values.                                                              |
 #   '----------------------------------------------------------------------'
 
-def mode_bulk_edit(phase):
-    if phase == "title":
+class ModeBulkEdit(WatoMode):
+    def title(self):
         return _("Bulk edit hosts")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-        return
 
-    elif phase == "action":
-        if html.check_transaction():
-            config.user.need_permission("wato.edit_hosts")
 
-            changed_attributes = watolib.collect_attributes("bulk")
-            host_names = get_hostnames_from_checkboxes()
-            for host_name in host_names:
-                host = watolib.Folder.current().host(host_name)
-                host.update_attributes(changed_attributes)
-                # call_hook_hosts_changed() is called too often.
-                # Either offer API in class Host for bulk change or
-                # delay saving until end somehow
+    def action(self):
+        if not html.check_transaction():
+            return
 
-            return "folder", _("Edited %d hosts") % len(host_names)
-        return
+        config.user.need_permission("wato.edit_hosts")
 
-    host_names = get_hostnames_from_checkboxes()
-    hosts = dict([(host_name, watolib.Folder.current().host(host_name)) for host_name in host_names])
-    current_host_hash = sha256(repr(hosts))
+        changed_attributes = watolib.collect_attributes("bulk")
+        host_names = get_hostnames_from_checkboxes()
+        for host_name in host_names:
+            host = watolib.Folder.current().host(host_name)
+            host.update_attributes(changed_attributes)
+            # call_hook_hosts_changed() is called too often.
+            # Either offer API in class Host for bulk change or
+            # delay saving until end somehow
 
-    # When bulk edit has been made with some hosts, then other hosts have been selected
-    # and then another bulk edit has made, the attributes need to be reset before
-    # rendering the form. Otherwise the second edit will have the attributes of the
-    # first set.
-    host_hash = html.var("host_hash")
-    if not host_hash or host_hash != current_host_hash:
-        html.del_all_vars(prefix="attr_")
-        html.del_all_vars(prefix="bulk_change_")
+        return "folder", _("Edited %d hosts") % len(host_names)
 
-    html.p("%s%s %s" % (
-        _("You have selected <b>%d</b> hosts for bulk edit. You can now change "
-          "host attributes for all selected hosts at once. ") % len(hosts),
-        _("If a select is set to <i>don't change</i> then currenty not all selected "
-          "hosts share the same setting for this attribute. "
-          "If you leave that selection, all hosts will keep their individual settings."),
-        _("In case you want to <i>unset</i> attributes on multiple hosts, you need to "
-          "use the <i>bulk cleanup</i> action instead of bulk edit.")))
 
-    html.begin_form("edit_host", method = "POST")
-    html.prevent_password_auto_completion()
-    html.hidden_field("host_hash", current_host_hash)
-    configure_attributes(False, hosts, "bulk", parent = watolib.Folder.current())
-    forms.end()
-    html.button("_save", _("Save & Finish"))
-    html.hidden_fields()
-    html.end_form()
+    def page(self):
+        host_names = get_hostnames_from_checkboxes()
+        hosts = dict([(host_name, watolib.Folder.current().host(host_name)) for host_name in host_names])
+        current_host_hash = sha256(repr(hosts))
+
+        # When bulk edit has been made with some hosts, then other hosts have been selected
+        # and then another bulk edit has made, the attributes need to be reset before
+        # rendering the form. Otherwise the second edit will have the attributes of the
+        # first set.
+        host_hash = html.var("host_hash")
+        if not host_hash or host_hash != current_host_hash:
+            html.del_all_vars(prefix="attr_")
+            html.del_all_vars(prefix="bulk_change_")
+
+        html.p("%s%s %s" % (
+            _("You have selected <b>%d</b> hosts for bulk edit. You can now change "
+              "host attributes for all selected hosts at once. ") % len(hosts),
+            _("If a select is set to <i>don't change</i> then currenty not all selected "
+              "hosts share the same setting for this attribute. "
+              "If you leave that selection, all hosts will keep their individual settings."),
+            _("In case you want to <i>unset</i> attributes on multiple hosts, you need to "
+              "use the <i>bulk cleanup</i> action instead of bulk edit.")))
+
+        html.begin_form("edit_host", method = "POST")
+        html.prevent_password_auto_completion()
+        html.hidden_field("host_hash", current_host_hash)
+        configure_attributes(False, hosts, "bulk", parent = watolib.Folder.current())
+        forms.end()
+        html.button("_save", _("Save & Finish"))
+        html.hidden_fields()
+        html.end_form()
 
 
 #.
@@ -4350,105 +4354,115 @@ def mode_bulk_edit(phase):
 #   | Mode for removing attributes from host in bulk mode.                 |
 #   '----------------------------------------------------------------------'
 
-def mode_bulk_cleanup(phase):
-    folder = watolib.Folder.current()
 
-    if phase == "title":
+class ModeBulkCleanup(WatoMode):
+    def __init__(self):
+        super(ModeBulkCleanup, self).__init__()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        self._folder = watolib.Folder.current()
+
+
+    def title(self):
         return _("Bulk removal of explicit attributes")
 
-    elif phase == "buttons":
-        html.context_button(_("Back"), folder.url(), "back")
-        return
 
-    elif phase == "action":
-        if html.check_transaction():
-            config.user.need_permission("wato.edit_hosts")
-            to_clean = bulk_collect_cleaned_attributes()
-            if "contactgroups" in to_clean:
-                folder.need_permission("write")
-
-            hosts = get_hosts_from_checkboxes()
-
-            # Check all permissions before doing any edit
-            for host in hosts:
-                host.need_permission("write")
-
-            for host in hosts:
-                host.clean_attributes(to_clean)
-
-            return "folder"
-        return
-
-    hosts = get_hosts_from_checkboxes()
-
-    html.p(_("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
-             "explicit attribute values from hosts. The hosts will then inherit attributes "
-             "configured at the host list or folders or simply fall back to the builtin "
-             "default values.") % len(hosts))
-
-    html.begin_form("bulkcleanup", method = "POST")
-    forms.header(_("Attributes to remove from hosts"))
-    if not select_attributes_for_bulk_cleanup(folder, hosts):
-        forms.end()
-        html.write_text(_("The selected hosts have no explicit attributes"))
-    else:
-        forms.end()
-        html.button("_save", _("Save & Finish"))
-    html.hidden_fields()
-    html.end_form()
+    def buttons(self):
+        html.context_button(_("Back"), self._folder.url(), "back")
 
 
-def bulk_collect_cleaned_attributes():
-    to_clean = []
-    for attr, topic in watolib.all_host_attributes():
-        attrname = attr.name()
-        if html.get_checkbox("_clean_" + attrname) == True:
-            to_clean.append(attrname)
-    return to_clean
+    def action(self):
+        if not html.check_transaction():
+            return
 
+        config.user.need_permission("wato.edit_hosts")
+        to_clean = self._bulk_collect_cleaned_attributes()
+        if "contactgroups" in to_clean:
+            self._folder.need_permission("write")
 
-def select_attributes_for_bulk_cleanup(folder, hosts):
-    num_shown = 0
-    for attr, topic in watolib.all_host_attributes():
-        attrname = attr.name()
+        hosts = get_hosts_from_checkboxes()
 
-        # only show attributes that at least on host have set
-        num_haveit = 0
+        # Check all permissions before doing any edit
         for host in hosts:
-            if host.has_explicit_attribute(attrname):
-                num_haveit += 1
+            host.need_permission("write")
 
-        if num_haveit == 0:
-            continue
+        for host in hosts:
+            host.clean_attributes(to_clean)
 
-        # If the attribute is mandatory and no value is inherited
-        # by file or folder, the attribute cannot be cleaned.
-        container = folder
-        is_inherited = False
-        while container:
-            if container.has_explicit_attribute(attrname):
-                is_inherited = True
-                inherited_value = container.attribute(attrname)
-                break
-            container = container.parent()
+        return "folder"
 
-        num_shown += 1
 
-        # Legend and Help
-        forms.section(attr.title())
+    def _bulk_collect_cleaned_attributes(self):
+        to_clean = []
+        for attr, topic in watolib.all_host_attributes():
+            attrname = attr.name()
+            if html.get_checkbox("_clean_" + attrname) == True:
+                to_clean.append(attrname)
+        return to_clean
 
-        if attr.is_mandatory() and not is_inherited:
-            html.write_text(_("This attribute is mandatory and there is no value "
-                              "defined in the host list or any parent folder."))
+
+    def page(self):
+        hosts = get_hosts_from_checkboxes()
+
+        html.p(_("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
+                 "explicit attribute values from hosts. The hosts will then inherit attributes "
+                 "configured at the host list or folders or simply fall back to the builtin "
+                 "default values.") % len(hosts))
+
+        html.begin_form("bulkcleanup", method = "POST")
+        forms.header(_("Attributes to remove from hosts"))
+        if not self._select_attributes_for_bulk_cleanup(hosts):
+            forms.end()
+            html.write_text(_("The selected hosts have no explicit attributes"))
         else:
-            label = "clean this attribute on <b>%s</b> hosts" % \
-                (num_haveit == len(hosts) and "all selected" or str(num_haveit))
-            html.checkbox("_clean_%s" % attrname, False, label=label)
-        html.help(attr.help())
-
-    return num_shown > 0
+            forms.end()
+            html.button("_save", _("Save & Finish"))
+        html.hidden_fields()
+        html.end_form()
 
 
+    def _select_attributes_for_bulk_cleanup(self, hosts):
+        num_shown = 0
+        for attr, topic in watolib.all_host_attributes():
+            attrname = attr.name()
+
+            # only show attributes that at least on host have set
+            num_haveit = 0
+            for host in hosts:
+                if host.has_explicit_attribute(attrname):
+                    num_haveit += 1
+
+            if num_haveit == 0:
+                continue
+
+            # If the attribute is mandatory and no value is inherited
+            # by file or folder, the attribute cannot be cleaned.
+            container = self._folder
+            is_inherited = False
+            while container:
+                if container.has_explicit_attribute(attrname):
+                    is_inherited = True
+                    inherited_value = container.attribute(attrname)
+                    break
+                container = container.parent()
+
+            num_shown += 1
+
+            # Legend and Help
+            forms.section(attr.title())
+
+            if attr.is_mandatory() and not is_inherited:
+                html.write_text(_("This attribute is mandatory and there is no value "
+                                  "defined in the host list or any parent folder."))
+            else:
+                label = "clean this attribute on <b>%s</b> hosts" % \
+                    (num_haveit == len(hosts) and "all selected" or str(num_haveit))
+                html.checkbox("_clean_%s" % attrname, False, label=label)
+            html.help(attr.help())
+
+        return num_shown > 0
 
 #.
 #   .--Parentscan----------------------------------------------------------.
@@ -17631,8 +17645,8 @@ modes = {
    "object_parameters"  : (["hosts", "rulesets"], ModeObjectParameters),
    "search"             : (["hosts"], ModeSearch),
    "bulkinventory"      : (["hosts", "services"], ModeBulkDiscovery),
-   "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
-   "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
+   "bulkedit"           : (["hosts", "edit_hosts"], ModeBulkEdit),
+   "bulkcleanup"        : (["hosts", "edit_hosts"], ModeBulkCleanup),
    "random_hosts"       : (["hosts", "random_hosts"], ModeRandomHosts),
    "changelog"          : ([], ModeActivateChanges),
    "auditlog"           : (["auditlog"], ModeAuditLog),

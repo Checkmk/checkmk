@@ -228,8 +228,6 @@ info_df_btrfs = \
     (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})], True),
 ])
 def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, include_volume_name):
-    import cmk_base
-
 #   NOTE: This commented-out code is the result of trying to mock the the ruleset variable itself instead of the
 #         host_extra_conf_merged function. It did not work. Maybe we can get it to work at a later stage.
 #    import cmk_base.rulesets
@@ -237,7 +235,7 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_resu
 #                [({"include_volume_name": include_volume_name}, [], cmk_base.rulesets.ALL_HOSTS, {})])
 
     check = check_manager.get_check("df")
-    monkeypatch.setitem(cmk_base.checks._check_contexts["df"], "host_extra_conf_merged", lambda _, __: {"include_volume_name": include_volume_name})
+    monkeypatch.setitem(check.context, "host_extra_conf_merged", lambda _, __: {"include_volume_name": include_volume_name})
     assert check.run_discovery(check.run_parse(info)) == expected_result
 
 

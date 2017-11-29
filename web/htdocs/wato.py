@@ -16644,7 +16644,7 @@ class ModeAnalyzeConfig(WatoMode):
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue = multiprocessing.Queue()
+        result_queue = multiprocessing.JoinableQueue()
 
         processes = []
         for site_id in watolib.ActivateChanges().activation_site_ids():
@@ -16653,28 +16653,30 @@ class ModeAnalyzeConfig(WatoMode):
             process.start()
             processes.append((site_id, process))
 
-        # Wait for termination of all processes
-        for site_id, process in processes:
-            process.join()
-
-        # Now collect the results from the queue
-        while True:
+        # Now collect the results from the queue until all processes are finished
+        while any([ p.is_alive() for site_id, p in processes ]):
             try:
                 site_id, results_data = result_queue.get_nowait()
-                results_data = ast.literal_eval(results_data)
+                result_queue.task_done()
+                result = ast.literal_eval(results_data)
 
-                if isinstance(results_data, Exception):
-                    raise results_data
+                if result["state"] == 1:
+                    raise MKGeneralException(result["response"])
 
-                elif isinstance(results_data, list):
+                elif result["state"] == 0:
                     test_results = []
-                    for result_data in results_data:
+                    for result_data in result["response"]:
                         result = watolib.ACResult.from_repr(result_data)
                         test_results.append(result)
 
                     results_by_site[site_id] = test_results
+
+                else:
+                    raise NotImplementedError()
+
             except Queue.Empty:
-                break
+                time.sleep(0.5) # wait some time to prevent CPU hogs
+
             except Exception, e:
                 log_exception()
                 html.show_error("%s: %s" % (site_id, e))
@@ -16688,8 +16690,26 @@ class ModeAnalyzeConfig(WatoMode):
         return results_by_category
 
 
+    # Executes the tests on the site. This method is executed in a dedicated
+    # subprocess (One per site)
     def _perform_tests_for_site(self, site_id, result_queue):
         try:
+            # Would be better to clean all open fds that are not needed, but we don't
+            # know the FDs of the result_queue pipe. Can we find it out somehow?
+            # Cleanup ressources of the apache
+            #for x in range(3, 256):
+            #    try:
+            #        os.close(x)
+            #    except OSError, e:
+            #        if e.errno == 9: # Bad file descriptor
+            #            pass
+            #        else:
+            #            raise
+
+            # Reinitialize logging targets
+            import log
+            log.init_logging()
+
             if config.site_is_local(site_id):
                 results_data = watolib.check_analyze_config()
 
@@ -16697,14 +16717,23 @@ class ModeAnalyzeConfig(WatoMode):
                 results_data = watolib.do_remote_automation(
                     config.site(site_id), "check-analyze-config", [])
 
-            result_queue.put((site_id, repr(results_data)))
+            result = {
+                "state"    : 0,
+                "response" : results_data,
+            }
 
         except Exception, e:
             log_exception()
-            result_queue.put((site_id, repr(e)))
+            result = {
+                "state"    : 1,
+                "response" : "Traceback:<br>%s" %
+                        (traceback.format_exc().replace("\n", "<br>\n")),
+            }
         finally:
+            result_queue.put((site_id, repr(result)))
             result_queue.close()
             result_queue.join_thread()
+            result_queue.join()
 
 
     def _filter_test_results(self, results_by_category):

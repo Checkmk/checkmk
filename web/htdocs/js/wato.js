@@ -240,6 +240,14 @@ function wato_randomize_secret(id, len)
     oInput.value = secret;
 }
 
+function toggle_container(id)
+{
+    var obj = document.getElementById(id);
+    if (has_class(obj, "hidden"))
+        remove_class(obj, "hidden");
+    else
+        add_class(obj, "hidden");
+}
 
 // ----------------------------------------------------------------------------
 // Interactive progress code

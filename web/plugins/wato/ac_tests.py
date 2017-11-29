@@ -274,7 +274,7 @@ class ACTestBackupConfigured(ACTest):
                  "reliably backed up or not up-to-date in the moment of the backup.</p>"
                  "<p>It is recommended to use the Check_MK backup to create a backup of the runnning "
                  "site to be sure that the data is consistent. If you need to, you can then use "
-                 "the 4rd party tool to archive the Check_MK backups.</p>"),
+                 "the 4rd party tool to archive the Check_MK backups.</p>")
 
 
     def is_relevant(self):

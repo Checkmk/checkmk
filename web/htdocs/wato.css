@@ -1006,7 +1006,7 @@ div.varname {
     width: 280px;
 }
 
-.wato table.data tr.notification_context.hidden {
+tr.hidden {
     display: none;
 }
 
@@ -1389,20 +1389,24 @@ table.nform.rulesettings td.legend div.title {
     width: 100%;
 }
 
-.wato table.data.analyze_config td.title {
-    vertical-align: top;
-    width: 400px;
+.wato table.data.analyze_config td.state div {
+    position: relative;
+    line-height: 20px;
 }
 
-.wato table.data.analyze_config td.site {
-    vertical-align: top;
+.wato table.data.analyze_config th.header_state {
     width: 100px;
 }
 
-.wato table.data.analyze_config td.title p,
-.wato table.data.analyze_config td.title a,
-.wato table.data.analyze_config td.title li {
-    color: #666;
+.wato table.data.analyze_config td.state a {
+    background: transparent;
+    position: absolute;
+    right: 0;
+}
+
+.wato table.data.analyze_config td.state.acknowledged {
+    background-image: url("images/white_60percent.png");
+    background-repeat: repeat;
 }
 
 .wato table.data.analyze_config td.title a {

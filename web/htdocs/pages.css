@@ -1345,6 +1345,7 @@ a.element_dragger:hover {
 
 td.invtree table,
 td.agent_config table.rulesets table,
+table.data tr.ac_test_details table,
 table.data tr.notification_context table {
    border-collapse: collapse;
    border: 0.5px solid black;
@@ -1358,6 +1359,7 @@ td.invtree table th,
 td.agent_config table.rulesets table td.title,
 table.data.single tr.data td.invtree table td,
 table.data.single tr.data td.invtree table th,
+table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 table.data tr.notification_context table th
 {
@@ -1374,6 +1376,7 @@ table.data tr.notification_context table th {
 
 td.invtree table td,
 td.agent_config table.rulesets table td,
+table.data tr.ac_test_details table td,
 table.data tr.notification_context table td {
     background-color: #fff;
 }

@@ -9481,14 +9481,22 @@ class ACResult(object):
 
     def __repr__(self):
         return repr({
-            "class_name" : self.__class__.__name__,
             "site_id"    : self.site_id,
-            "test_id"    : self.test_id,
+            "class_name" : self.__class__.__name__,
             "text"       : self.text,
+            # These fields are be static - at least for the current version, but
+            # we transfer them to the central system to be able to handle test
+            # results of tests not known to the central site.
+            "test_id"    : self.test_id,
             "category"   : self.category,
             "title"      : self.title,
             "help"       : self.help,
         })
+
+
+
+class ACResultNone(ACResult):
+    status = -1
 
 
 

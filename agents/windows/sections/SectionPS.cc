@@ -231,7 +231,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
 
 bool SectionPS::outputNative(std::ostream &out) {
     Debug(_logger) << "SectionPS::ouputNative";
-    PROCESSENTRY32 pe32;
+    PROCESSENTRY32 pe32{0};
 
     process_entry_t process_perfdata;
     try {

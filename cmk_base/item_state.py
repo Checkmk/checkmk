@@ -53,7 +53,7 @@ ZERO  = 0.0
 
 g_item_state        = {}   # storing counters of one host
 g_last_counter_wrap = None #
-g_item_state_prefix = []
+g_item_state_prefix = ()
 g_suppress_on_wrap  = True # Suppress check on wrap (raise an exception)
                            # e.g. do not suppress this check on check_mk -nv
 

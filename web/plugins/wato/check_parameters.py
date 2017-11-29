@@ -1549,14 +1549,30 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname     = "inventory_df_rules",
-    title       = _("Include Volume name in Filesystem Checks"),
+    title       = _("Discovery parameters for filesystem checks"),
     valuespec   = Dictionary(
         elements = [
             ("include_volume_name", Checkbox(
                 title = _("Include Volume name in item")
                 )),
+            ("ignore_fs_types", ListChoice(
+                title = _("Filesystem types to ignore"),
+                choices = [
+                    ("tmpfs", "tmpfs"),
+                    ("nfs", "nfs"),
+                    ("smbfs", "smbfs"),
+                    ("cifs", "cifs"),
+                    ("iso9660", "iso9660"),
+                ],
+                default_value = [ "tmpfs", "nfs", "smbfs", "cifs", "iso9660" ]
+                )),
+            ("never_ignore_mountpoints", ListOf(
+                TextUnicode(),
+                title = _(u"Mountpoints to never ignore"),
+                help =_(u"Regardless of filesystem type, these mountpoints will always be discovered."
+                        u"Globbing or regular expressions are currently not supported."),
+                )),
             ],
-        optional_keys = []
         ),
     match = "dict",
 )

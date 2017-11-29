@@ -47,6 +47,7 @@ info_df_lnx_tmpfs = [[u'tmpfs',
      u'8152744',
      u'1%',
      u'/opt/omd/sites/heute/tmp'],
+     [u'tmpfs', u'tmpfs', u'8152840', u'118732', u'8034108', u'2%', u'/dev/shm'],
      [u'[df_inodes_start]'],
      [u'tmpfs',
      u'tmpfs',
@@ -55,6 +56,7 @@ info_df_lnx_tmpfs = [[u'tmpfs',
      u'2038157',
      u'1%',
      u'/opt/omd/sites/heute/tmp'],
+     [u'tmpfs', u'tmpfs', u'2038210', u'57', u'2038153', u'1%', u'/dev/shm'],
      [u'[df_inodes_end]']]
 
 # NOTE: This gargantuan test info section is uncritically used data from an archived agent output.
@@ -224,6 +226,16 @@ info_df_btrfs = \
     (info_df_win, [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})],
                                                          { "include_volume_name" : True }),              # Windows w/ volume name option
     (info_df_lnx_tmpfs, [], {}),                                                                         # Ignoring tmpfs
+    (info_df_lnx_tmpfs, [], { "ignore_fs_types" : [ 'tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660' ] }),     # Ignoring tmpfs explicitly
+    (info_df_lnx_tmpfs, [(u'/opt/omd/sites/heute/tmp', {})],
+                            { "ignore_fs_types" : [ 'tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660' ],        # Ignoring tmpfs explicitly, but
+                              "never_ignore_mountpoints" : [ u'/opt/omd/sites/heute/tmp' ]}),            # including one mountpoint explicitly
+    (info_df_lnx_tmpfs, [(u'/opt/omd/sites/heute/tmp', {}), (u'/dev/shm', {})],
+                            { "ignore_fs_types" : [ 'nfs', 'smbfs', 'cifs', 'iso9660' ] }),              # Including tmpfs
+
+    (info_df_lnx_tmpfs, [(u'tmpfs /opt/omd/sites/heute/tmp', {}), (u'tmpfs /dev/shm', {})],
+                            { "ignore_fs_types" : [ 'nfs', 'smbfs', 'cifs', 'iso9660' ],
+                              "include_volume_name" : True}),                                            # Including tmpfs and volume name
     (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], {}),                            # btrfs
     (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})],
                                                          { "include_volume_name" : True }),              # btrfs w/ volume name option

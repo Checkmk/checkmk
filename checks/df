@@ -195,6 +195,9 @@ def inventory_df(parsed):
 
     inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
     include_volume_name = inventory_options.get("include_volume_name", False)
+    ignore_fs_types = inventory_options.get("ignore_fs_types", inventory_df_exclude_fs)
+    never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
+
     (df_blocks, volume_info), _ = parsed
 
     mplist = []
@@ -203,7 +206,7 @@ def inventory_df(parsed):
         mountpoint = line[0]
         if mountpoint in inventory_df_exclude_mountpoints:
             continue # exclude this mount point (/tmp, /proc, whatever user wants)
-        if volume_info[mountpoint]["fs_type"] in inventory_df_exclude_fs:
+        if volume_info[mountpoint]["fs_type"] in ignore_fs_types and mountpoint not in never_ignore_mountpoints:
             continue # ignore this filesystem type
         mplist.append(mountpoint)
 

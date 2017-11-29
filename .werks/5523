@@ -1,0 +1,14 @@
+Title: df: Make filesystem types ignored during discovery configurable via WATO
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1511961740
+Class: feature
+
+Previously, the only way to influence the filesystem types to be ignored was by
+setting a config variable manually in a file, which would affect the behaviour
+globally. Now, this can be configured by a rule, allowing to include e.g. tmpfs
+only for certain hosts. Individual mountpoints can also be configured to be
+discovered regardless of filesystem type.

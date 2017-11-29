@@ -6804,6 +6804,12 @@ graph_info["disk_throughput"] = {
         ( "disk_read_throughput",  "area" ),
         ( "disk_write_throughput", "-area" ),
     ],
+    "scalars" : [
+        ("disk_read_throughput:warn", "Warning read"),
+        ("disk_read_throughput:crit", "Critical read"),
+        ("disk_write_throughput:warn,-1,*", "Warning write"),
+        ("disk_write_throughput:crit,-1,*", "Critical write"),
+    ],
     "legend_scale" : MB,
 }
 

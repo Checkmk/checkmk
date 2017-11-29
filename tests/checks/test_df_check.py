@@ -216,17 +216,20 @@ info_df_btrfs = \
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-@pytest.mark.parametrize("info,expected_result,include_volume_name", [
-    ([], [], False),
-    (info_df_lnx, [(u'/', {})], False),                                                                 # Linux
-    (info_df_lnx, [(u'/dev/sda4 /', {})], True),                                                        # Linux w/ volume name option
-    (info_df_win, [(u'E:/', {}), (u'F:/', {}), (u'C:/', {})], False),                                   # Windows
-    (info_df_win, [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})], True),         # Windows w/ volume name option
-    (info_df_lnx_tmpfs, [], False),                                                                     # Ignoring tmpfs
-    (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], False),                        # btrfs
-    (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})], True),     # btrfs w/ volume name option
+@pytest.mark.parametrize("info,expected_result,inventory_df_rules", [
+    ([], [], {}),
+    (info_df_lnx, [(u'/', {})], {}),                                                                     # Linux
+    (info_df_lnx, [(u'/', {})], { "include_volume_name" : False }),                                      # Linux w/ volume name unset
+    (info_df_lnx, [(u'/dev/sda4 /', {})], { "include_volume_name" : True}),                              # Linux w/ volume name option
+    (info_df_win, [(u'E:/', {}), (u'F:/', {}), (u'C:/', {})], {}),                                       # Windows
+    (info_df_win, [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})],
+                                                         { "include_volume_name" : True }),              # Windows w/ volume name option
+    (info_df_lnx_tmpfs, [], {}),                                                                         # Ignoring tmpfs
+    (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], {}),                            # btrfs
+    (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})],
+                                                         { "include_volume_name" : True }),              # btrfs w/ volume name option
 ])
-def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, include_volume_name):
+def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, inventory_df_rules):
 #   NOTE: This commented-out code is the result of trying to mock the the ruleset variable itself instead of the
 #         host_extra_conf_merged function. It did not work. Maybe we can get it to work at a later stage.
 #    import cmk_base.rulesets
@@ -234,7 +237,7 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_resu
 #                [({"include_volume_name": include_volume_name}, [], cmk_base.rulesets.ALL_HOSTS, {})])
 
     check = check_manager.get_check("df")
-    monkeypatch.setitem(check.context, "host_extra_conf_merged", lambda _, __: {"include_volume_name": include_volume_name})
+    monkeypatch.setitem(check.context, "host_extra_conf_merged", lambda _, __: inventory_df_rules)
     assert check.run_discovery(check.run_parse(info)) == expected_result
 
 

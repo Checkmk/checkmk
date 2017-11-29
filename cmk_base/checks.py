@@ -513,6 +513,13 @@ def compute_check_parameters(host, checktype, item, params):
     if checktype not in check_info: # handle vanished checktype
         return None
 
+    params = _update_with_default_check_parameters(checktype, params)
+    params = _update_with_configured_check_parameters(host, checktype, item, params)
+
+    return params
+
+
+def _update_with_default_check_parameters(checktype, params):
     # Handle dictionary based checks
     def_levels_varname = check_info[checktype].get("default_levels_variable")
     # TODO: Can we skip this?
@@ -552,6 +559,10 @@ def compute_check_parameters(host, checktype, item, params):
         new_params.update(params)
         params = new_params
 
+    return params
+
+
+def _update_with_configured_check_parameters(host, checktype, item, params):
     descr = config.service_description(host, checktype, item)
 
     # Get parameters configured via checkgroup_parameters

@@ -218,14 +218,13 @@ info_df_btrfs = \
 
 @pytest.mark.parametrize("info,expected_result,include_volume_name", [
     ([], [], False),
-    (info_df_lnx, [(u'/', {})], False),
-    (info_df_lnx, [(u'/dev/sda4 /', {})], True),
-    (info_df_win, [(u'E:/', {}), (u'F:/', {}), (u'C:/', {})], False),
-    (info_df_win, [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})], True),
-    (info_df_lnx_tmpfs, [], False),
-    (info_df_lnx_tmpfs, [], True),
-    (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], False),
-    (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})], True),
+    (info_df_lnx, [(u'/', {})], False),                                                                 # Linux
+    (info_df_lnx, [(u'/dev/sda4 /', {})], True),                                                        # Linux w/ volume name option
+    (info_df_win, [(u'E:/', {}), (u'F:/', {}), (u'C:/', {})], False),                                   # Windows
+    (info_df_win, [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})], True),         # Windows w/ volume name option
+    (info_df_lnx_tmpfs, [], False),                                                                     # Ignoring tmpfs
+    (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], False),                        # btrfs
+    (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})], True),     # btrfs w/ volume name option
 ])
 def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, include_volume_name):
 #   NOTE: This commented-out code is the result of trying to mock the the ruleset variable itself instead of the

@@ -1,0 +1,15 @@
+Title: Rule list: Fixed visibility of rules in child folders for transitive folders
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p20
+Date: 1511950428
+Class: fix
+
+When viewing the list of rules in a ruleset via WATO, it shows the rules grouped by folder.
+When the user views a transitive folder the rules defined in child folders were not listed.
+
+It has now been changed to work like this: The list shows all rules of all parent and
+all child folders. Folders of other, not involved, branches in the folder hierarchy
+are not displayed.

@@ -13043,11 +13043,13 @@ class ModeEditRuleset(WatoMode):
         skip_this_folder = False
         for folder, rulenr, rule in ruleset.get_rules():
             if folder != last_folder:
-                if not watolib.Folder.current().is_root() and not folder.is_transitive_parent_of(watolib.Folder.current()):
+                # Only show folders related to the currently viewed folder hierarchy
+                if folder.is_transitive_parent_of(watolib.Folder.current()) \
+                   or watolib.Folder.current().is_transitive_parent_of(folder):
+                    skip_this_folder = False
+                else:
                     skip_this_folder = True
                     continue
-                else:
-                    skip_this_folder = False
 
                 if last_folder != None:
                     table.end()

@@ -1500,6 +1500,13 @@ class Check(object):
         import cmk_base.checks as checks
         self.name = name
         self.info = checks.check_info[name]
+        self.context = checks._check_contexts[name]
+
+
+    def default_parameters(self):
+        import cmk_base.checks as checks
+        params = {}
+        return checks._update_with_default_check_parameters(self.name, params)
 
 
     def run_parse(self, info):

@@ -159,9 +159,5 @@ info_3 = [[u'[[[system:test1]]]'],
     info_3,
     ])
 def test_mkbackup_parse(check_manager, monkeypatch, info):
-    import cmk_base.checks
-    import cmk_base
-
     check = check_manager.get_check("mkbackup")
     check.run_parse(info)
-    cmk_base.config_cache.clear_all()

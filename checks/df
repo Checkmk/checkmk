@@ -95,7 +95,7 @@ inventory_df_exclude_fs = [ 'tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 def parse_df(info):
 
     def parse_blocks_subsection(blocks_subsection):
-        mp_to_volume = {}
+        volume_info = {}
         df_blocks = []
         btrfs_devices = set()
         for line in blocks_subsection:
@@ -115,9 +115,10 @@ def parse_df(info):
             if line[2] == "File" and line[3] == "System":
                 line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
 
+            fs_type = line[1]
             # This particular bit of magic originated in Werk #2671 and has the purpose of avoiding duplicate checks,
             # as btrfs filesystems are often mounted at multiple mountpoints. We keep it for compatibility.
-            if line[1] == "btrfs":
+            if fs_type == "btrfs":
                 device = line[0]
                 if device not in btrfs_devices:
                     btrfs_devices.add(device)
@@ -126,11 +127,12 @@ def parse_df(info):
             else:
                 mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /
 
+            if fs_type in inventory_df_exclude_fs:
+                continue # ignore this filesystem type
+
             if line[2] == '-' or int(line[2]) == 0:
                 continue # exclude filesystems without size
 
-            if line[1] in inventory_df_exclude_fs:
-                continue # ignore this filesystem type
 
 
             # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
@@ -144,9 +146,13 @@ def parse_df(info):
             reserved_mb = size_mb - avail_mb - used_mb # reserved for root
             df_blocks.append((mountpoint, size_mb, avail_mb, reserved_mb))
 
-            mp_to_volume[mountpoint] = line[0]
+            volume_name = line[0]
+            volume_info[mountpoint] = {
+                "volume_name"   : volume_name,
+                "fs_type"       : fs_type,
+            }
 
-        return df_blocks, mp_to_volume
+        return df_blocks, volume_info
 
     def parse_inodes_subsection(inodes_subsection):
         df_inodes = []
@@ -191,7 +197,7 @@ def inventory_df(parsed):
 
     inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
     include_volume_name = inventory_options.get("include_volume_name", False)
-    (df_blocks, mp_to_volume), _ = parsed
+    (df_blocks, volume_info), _ = parsed
 
     mplist = []
     for line in df_blocks:
@@ -207,7 +213,7 @@ def inventory_df(parsed):
         for entry in df_inventory(mplist):
             if is_mountpoint(entry):
                 mountpoint, params = entry
-                item = "%s %s" % (mp_to_volume[mountpoint], mountpoint)
+                item = "%s %s" % (volume_info[mountpoint]["volume_name"], mountpoint)
                 inventory.append((item, params))
             else:
                 inventory.append(entry)
@@ -217,11 +223,11 @@ def inventory_df(parsed):
 
 
 def check_df(item, params, parsed):
-    (df_blocks, mp_to_volume), df_inodes = parsed
-    if "patterns" in params or item in mp_to_volume:
+    (df_blocks, volume_info), df_inodes = parsed
+    if "patterns" in params or item in volume_info:
         return df_check_filesystem_list(item, params, df_blocks, df_inodes)
     else:
-        mountpoint = { ("%s %s" % (mp_to_volume[mp], mp)) : mp for mp in mp_to_volume }[item]
+        mountpoint = { ("%s %s" % (volume_info[mp]["volume_name"], mp)) : mp for mp in volume_info }[item]
         return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
 
 

@@ -239,7 +239,6 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_resu
     check = check_manager.get_check("df")
     monkeypatch.setitem(cmk_base.checks._check_contexts["df"], "host_extra_conf_merged", lambda _, __: {"include_volume_name": include_volume_name})
     assert check.run_discovery(check.run_parse(info)) == expected_result
-    cmk_base.config_cache.clear_all()
 
 
 # TODO: Make this work by finding a way to get a check's default levels in this context.
@@ -247,7 +246,6 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_resu
     (u"/", "default", info_df_lnx, {})
 ])
 def test_df_check_with_parse(check_manager, monkeypatch, item, params, info, expected_result):
-    import cmk_base
     check = check_manager.get_check("df")
 
     if params == "default":
@@ -260,5 +258,3 @@ def test_df_check_with_parse(check_manager, monkeypatch, item, params, info, exp
         assert result[1] == expected_result["infotext"]
     if "perfdata" in expected_result:
         assert result[2] == expected_result["perfdata"]
-
-    cmk_base.config_cache.clear_all()

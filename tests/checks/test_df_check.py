@@ -241,7 +241,11 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_resu
 
 # TODO: Make this work by finding a way to get a check's default levels in this context.
 @pytest.mark.parametrize("item,params,info,expected_result", [
-    (u"/", "default", info_df_lnx, {})
+    (u"/", "default", info_df_lnx, {}),
+    (u'/dev/sda4 /', "default", info_df_lnx, {}),
+    (u'E:/', "default", info_df_win, {}),
+    (u'New_Volume E:/', "default", info_df_win, {}),
+    (u'btrfs /dev/sda1', "default", info_df_btrfs, {}),
 ])
 def test_df_check_with_parse(check_manager, monkeypatch, item, params, info, expected_result):
     check = check_manager.get_check("df")

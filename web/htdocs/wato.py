@@ -3894,6 +3894,7 @@ class ModeBulkImport(WatoMode):
             ("-",               _("Don't import")),
             ("host_name",       _("Hostname")),
             ("alias",           _("Alias")),
+            ("site",            _("Monitored on site")),
             ("ipaddress",       _("IPv4 Address")),
             ("ipv6address",     _("IPv6 Address")),
             ("snmp_community",  _("SNMP Community")),

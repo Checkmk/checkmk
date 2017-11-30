@@ -135,7 +135,7 @@ def check_cpu_util(util, params, this_time=None, cores=None):
 # - 8 - guest: time spent in guest OK
 # - 9 - guest_nice: time spent in niced guest OK
 def check_cpu_util_unix(values, params, cores = None):
-    this_time = int(time.time())
+    this_time = time.time()
     # Compute jiffi-differences of all relevant counters
     diff_values = []
     n = 0

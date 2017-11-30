@@ -3905,7 +3905,7 @@ class ModeBulkImport(WatoMode):
             attributes.append(("tag_" + entry[0], _("Tag: %s") % entry[1]))
 
         # Add custom attributes
-        for entry in load_custom_attrs()['host']:
+        for entry in ModeCustomHostAttrs().get_attributes():
             name = entry['name']
             attributes.append((name, _("Custom variable: %s") % name))
 
@@ -15575,6 +15575,10 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
     def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         html.context_button(_("New attribute"), watolib.folder_preserving_link([("mode", "edit_host_attr")]), "new")
+
+
+    def get_attributes(self):
+        return self._attrs
 
 
 

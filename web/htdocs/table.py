@@ -382,7 +382,7 @@ class Table(object):
                     self._render_headers(actions_enabled, actions_visible)
                 continue
 
-            oddeven_name = "even" if nr % 2 == 0 else "odd"
+            oddeven_name = "even" if (nr-1) % 2 == 0 else "odd"
 
             html.open_tr(class_=["data", "%s%d" % (oddeven_name, state), css if css else None], **attrs)
             for cell_content, css_classes, colspan in row:

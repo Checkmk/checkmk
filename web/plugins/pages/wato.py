@@ -38,7 +38,7 @@ register_handlers({
     "user_profile"              : wato.page_user_profile,
     "user_change_pw"            : lambda: wato.page_user_profile(change_pw=True),
     "ajax_set_foldertree"       : wato.ajax_set_foldertree,
-    "wato_ajax_diag_host"       : wato.ajax_diag_host,
+    "wato_ajax_diag_host"       : lambda: wato.ModeAjaxDiagHost().handle_page(),
     "wato_ajax_profile_repl"    : watolib.ajax_profile_repl,
     "wato_ajax_execute_check"   : lambda: wato.ModeAjaxExecuteCheck().handle_page(),
     "download_agent_output"     : wato.page_download_agent_output,

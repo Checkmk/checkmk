@@ -1007,22 +1007,32 @@ function wato_toggle_folder(event, oDiv, on) {
 // |                                                  |___/               |
 // +----------------------------------------------------------------------+
 
-function handle_host_diag_result(ident, response_text) {
+function handle_host_diag_result(ident, response_json) {
+    var response = JSON.parse(response_json);
+
     var img   = document.getElementById(ident + '_img');
     var log   = document.getElementById(ident + '_log');
     var retry = document.getElementById(ident + '_retry');
     remove_class(img, "reloading");
 
-    if (response_text[0] == "0") {
-        img.src = "images/icon_success.png";
-        log.className = "log diag_success";
-    }
-    else {
+    var text = "";
+    if (response.result_code == 1) {
         img.src = "images/icon_failed.png";
         log.className = "log diag_failed";
+        text = "API Error:" + response.result;
+
+    } else {
+        if (response.result[0] == 1) {
+            img.src = "images/icon_failed.png";
+            log.className = "log diag_failed";
+        } else {
+            img.src = "images/icon_success.png";
+            log.className = "log diag_success";
+        }
+        text = response.result[1];
     }
 
-    log.innerHTML = response_text.substr(1).replace(/\n/g, "<br>\n");
+    log.innerText = text;
 
     retry.src = "images/icon_reload.png";
     retry.style.display = 'inline';

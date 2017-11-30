@@ -2467,116 +2467,57 @@ class ModeObjectParameters(WatoMode):
 #   | Verify or find out a hosts agent related configuration.              |
 #   '----------------------------------------------------------------------'
 
-def diag_host_tests():
-    return [
-        ('ping',          _('Ping')),
-        ('agent',         _('Agent')),
-        ('snmpv1',        _('SNMPv1')),
-        ('snmpv2',        _('SNMPv2c')),
-        ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)')),
-        ('snmpv3',        _('SNMPv3')),
-        ('traceroute',    _('Traceroute')),
-    ]
+class ModeDiagHost(WatoMode):
+    @classmethod
+    def diag_host_tests(cls):
+        return [
+            ('ping',          _('Ping')),
+            ('agent',         _('Agent')),
+            ('snmpv1',        _('SNMPv1')),
+            ('snmpv2',        _('SNMPv2c')),
+            ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)')),
+            ('snmpv3',        _('SNMPv3')),
+            ('traceroute',    _('Traceroute')),
+        ]
 
 
-def mode_diag_host(phase):
-    hostname = html.var("host")
-    if not hostname:
-        raise MKGeneralException(_('The hostname is missing.'))
+    def __init__(self):
+        super(ModeDiagHost, self).__init__()
+        self._from_vars()
 
-    host = watolib.Folder.current().host(hostname)
-    host.need_permission("read")
 
-    if phase == 'title':
-        return _('Diagnostic of host') + " " + hostname
+    def _from_vars(self):
+        self._hostname = html.var("host")
+        if not self._hostname:
+            raise MKGeneralException(_('The hostname is missing.'))
 
-    elif phase == 'buttons':
+        self._host = watolib.Folder.current().host(self._hostname)
+        self._host.need_permission("read")
+
+        if self._host.is_cluster():
+            raise MKGeneralException(_('This page does not support cluster hosts.'))
+
+
+    def title(self):
+        return _('Diagnostic of host') + " " + self._hostname
+
+
+    def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-        host_status_button(hostname, "hoststatus")
-        html.context_button(_("Properties"), host.edit_url(), "edit")
+        host_status_button(self._hostname, "hoststatus")
+        html.context_button(_("Properties"), self._host.edit_url(), "edit")
         if config.user.may('wato.rulesets'):
-            html.context_button(_("Parameters"), host.params_url(), "rulesets")
-        html.context_button(_("Services"), host.services_url(), "services")
-        return
+            html.context_button(_("Parameters"), self._host.params_url(), "rulesets")
+        html.context_button(_("Services"), self._host.services_url(), "services")
 
-    vs_host = Dictionary(
-        required_keys = ['hostname'],
-        elements = [
-            ('hostname', FixedValue(hostname,
-                title = _('Hostname'),
-                allow_empty = False
-            )),
-            ('ipaddress', HostAddress(
-                title = _("IPv4 Address"),
-                allow_empty = False,
-                allow_ipv6_address = False,
-            )),
-            ('snmp_community', Password(
-                title = _("SNMPv1/2 community"),
-                allow_empty = False
-            )),
-            ('snmp_v3_credentials',
-                SNMPCredentials(default_value = None, only_v3 = True)
-            ),
-        ]
-    )
 
-    if config.user.may('wato.add_or_modify_executables'):
-        ds_option = [
-            ('datasource_program', TextAscii(
-                title = _("Datasource Program (<a href=\"%s\">Rules</a>)") % \
-                    watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'datasource_programs')]),
-                help = _("For agent based checks Check_MK allows you to specify an alternative "
-                         "program that should be called by Check_MK instead of connecting the agent "
-                         "via TCP. That program must output the agent's data on standard output in "
-                         "the same format the agent would do. This is for example useful for monitoring "
-                         "via SSH.") + monitoring_macro_help(),
-            ))
-        ]
-    else:
-        ds_option = []
-
-    vs_rules = Dictionary(
-        optional_keys = False,
-        elements = [
-            ('agent_port', Integer(
-                minvalue = 1,
-                maxvalue = 65535,
-                default_value = 6556,
-                title = _("Check_MK Agent Port (<a href=\"%s\">Rules</a>)") % \
-                    watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'agent_ports')]),
-                help = _("This variable allows to specify the TCP port to "
-                         "be used to connect to the agent on a per-host-basis.")
-            )),
-            ('snmp_timeout', Integer(
-                title = _("SNMP-Timeout (<a href=\"%s\">Rules</a>)") % \
-                    watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
-                help = _("After a request is sent to the remote SNMP agent we will wait up to this "
-                         "number of seconds until assuming the answer get lost and retrying."),
-                default_value = 1,
-                minvalue = 1,
-                maxvalue = 60,
-                unit = _("sec"),
-            )),
-            ('snmp_retries', Integer(
-                title = _("SNMP-Retries (<a href=\"%s\">Rules</a>)") % \
-                    watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
-                default_value = 5,
-                minvalue = 0,
-                maxvalue = 50,
-            )),
-        ] + ds_option,
-    )
-
-    if host.is_cluster():
-        raise MKGeneralException(_('This page does not support cluster hosts.'))
-
-    if phase == 'action':
+    def action(self):
         if not html.check_transaction():
             return
 
         if html.var('_save'):
             # Save the ipaddress and/or community
+            vs_host = self._vs_host()
             new = vs_host.from_html_vars('vs_host')
             vs_host.validate_value(new, 'vs_host')
 
@@ -2594,105 +2535,185 @@ def mode_diag_host(phase):
                 return_message.append(_("SNMP credentials"))
             return_message = _("Updated attributes: ") + ", ".join(return_message)
 
-            host.update_attributes(new)
+            self._host.update_attributes(new)
             html.del_all_vars()
-            html.set_var("host", hostname)
+            html.set_var("host", self._hostname)
             html.set_var("folder", watolib.Folder.current().path())
             return "edit_host", return_message
-        return
-
-    html.open_div(class_="diag_host")
-    html.open_table()
-    html.open_tr()
-    html.open_td()
-
-    html.begin_form('diag_host', method = "POST")
-    html.prevent_password_auto_completion()
-
-    forms.header(_('Host Properties'))
-
-    forms.section(legend = False)
-
-    # The diagnose page shows both snmp variants at the same time
-    # We need to analyse the preconfigured community and set either the
-    # snmp_community or the snmp_v3_credentials
-    vs_dict = {}
-    for key, value in host.attributes().items():
-        if key == "snmp_community" and type(value) == tuple:
-            vs_dict["snmp_v3_credentials"] = value
-            continue
-        vs_dict[key] = value
-
-    vs_host.render_input("vs_host", vs_dict)
-    html.help(vs_host.help())
-
-    forms.end()
-
-    html.open_div(style="margin-bottom:10px")
-    html.button("_save", _("Save & Exit"))
-    html.close_div()
-
-    forms.header(_('Options'))
-
-    value = {}
-    forms.section(legend = False)
-    vs_rules.render_input("vs_rules", value)
-    html.help(vs_rules.help())
-    forms.end()
-
-    html.button("_try",  _("Test"))
-
-    html.hidden_fields()
-    html.end_form()
-
-    html.close_td()
-    html.open_td(style="padding-left:10px;")
-
-    if not html.var('_try'):
-        html.message(_('You can diagnose the connection to a specific host using this dialog. '
-                       'You can either test whether your current configuration is still working '
-                       'or investigate in which ways a host can be reached. Simply configure the '
-                       'connection options you like to try on the right side of the screen and '
-                       'press the "Test" button. The results will be displayed here.'))
-    else:
-        # TODO: Insert any vs_host valuespec validation
-        #       These tests can be called with invalid valuespec settings...
-        for ident, title in diag_host_tests():
-            html.h3(title)
-            html.open_table(class_=["data", "test"])
-            html.open_tr(class_=["data", "odd0"])
-
-            html.open_td(class_="icons")
-            html.open_div()
-            html.img("images/icon_reload.png", class_="icon", id="%s_img" % ident)
-            html.open_a(href="javascript:start_host_diag_test(\'%s\', \'%s\');" % (ident, hostname))
-            html.img("images/icon_reload.png", class_=["icon", "retry"], id_="%s_retry" % ident, title=_('Retry this test'))
-            html.close_a()
-            html.close_div()
-            html.close_td()
-
-            html.open_td()
-            html.div('', class_="log", id_="%s_log" % ident)
-            html.close_td()
-
-            html.close_tr()
-            html.close_table()
-            html.javascript('start_host_diag_test("%s", "%s")' % (ident, hostname))
-
-    html.close_td()
-    html.close_tr()
-    html.close_table()
-    html.close_div()
 
 
-def ajax_diag_host():
-    try:
+    def page(self):
+        html.open_div(class_="diag_host")
+        html.open_table()
+        html.open_tr()
+        html.open_td()
+
+        html.begin_form('diag_host', method = "POST")
+        html.prevent_password_auto_completion()
+
+        forms.header(_('Host Properties'))
+
+        forms.section(legend = False)
+
+        # The diagnose page shows both snmp variants at the same time
+        # We need to analyse the preconfigured community and set either the
+        # snmp_community or the snmp_v3_credentials
+        vs_dict = {}
+        for key, value in self._host.attributes().items():
+            if key == "snmp_community" and type(value) == tuple:
+                vs_dict["snmp_v3_credentials"] = value
+                continue
+            vs_dict[key] = value
+
+        vs_host = self._vs_host()
+        vs_host.render_input("vs_host", vs_dict)
+        html.help(vs_host.help())
+
+        forms.end()
+
+        html.open_div(style="margin-bottom:10px")
+        html.button("_save", _("Save & Exit"))
+        html.close_div()
+
+        forms.header(_('Options'))
+
+        value = {}
+        forms.section(legend = False)
+        vs_rules = self._vs_rules()
+        vs_rules.render_input("vs_rules", value)
+        html.help(vs_rules.help())
+        forms.end()
+
+        html.button("_try",  _("Test"))
+
+        html.hidden_fields()
+        html.end_form()
+
+        html.close_td()
+        html.open_td(style="padding-left:10px;")
+
+        if not html.var('_try'):
+            html.message(_('You can diagnose the connection to a specific host using this dialog. '
+                           'You can either test whether your current configuration is still working '
+                           'or investigate in which ways a host can be reached. Simply configure the '
+                           'connection options you like to try on the right side of the screen and '
+                           'press the "Test" button. The results will be displayed here.'))
+        else:
+            # TODO: Insert any vs_host valuespec validation
+            #       These tests can be called with invalid valuespec settings...
+            for ident, title in ModeDiagHost.diag_host_tests():
+                html.h3(title)
+                html.open_table(class_=["data", "test"])
+                html.open_tr(class_=["data", "odd0"])
+
+                html.open_td(class_="icons")
+                html.open_div()
+                html.img("images/icon_reload.png", class_="icon", id="%s_img" % ident)
+                html.open_a(href="javascript:start_host_diag_test(\'%s\', \'%s\');" % (ident, self._hostname))
+                html.img("images/icon_reload.png", class_=["icon", "retry"], id_="%s_retry" % ident, title=_('Retry this test'))
+                html.close_a()
+                html.close_div()
+                html.close_td()
+
+                html.open_td()
+                html.div('', class_="log", id_="%s_log" % ident)
+                html.close_td()
+
+                html.close_tr()
+                html.close_table()
+                html.javascript('start_host_diag_test("%s", "%s")' % (ident, self._hostname))
+
+        html.close_td()
+        html.close_tr()
+        html.close_table()
+        html.close_div()
+
+
+    def _vs_host(self):
+        return Dictionary(
+            required_keys = ['hostname'],
+            elements = [
+                ('hostname', FixedValue(self._hostname,
+                    title = _('Hostname'),
+                    allow_empty = False
+                )),
+                ('ipaddress', HostAddress(
+                    title = _("IPv4 Address"),
+                    allow_empty = False,
+                    allow_ipv6_address = False,
+                )),
+                ('snmp_community', Password(
+                    title = _("SNMPv1/2 community"),
+                    allow_empty = False
+                )),
+                ('snmp_v3_credentials',
+                    SNMPCredentials(default_value = None, only_v3 = True)
+                ),
+            ]
+        )
+
+
+
+    def _vs_rules(self):
+        if config.user.may('wato.add_or_modify_executables'):
+            ds_option = [
+                ('datasource_program', TextAscii(
+                    title = _("Datasource Program (<a href=\"%s\">Rules</a>)") % \
+                        watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'datasource_programs')]),
+                    help = _("For agent based checks Check_MK allows you to specify an alternative "
+                             "program that should be called by Check_MK instead of connecting the agent "
+                             "via TCP. That program must output the agent's data on standard output in "
+                             "the same format the agent would do. This is for example useful for monitoring "
+                             "via SSH.") + monitoring_macro_help(),
+                ))
+            ]
+        else:
+            ds_option = []
+
+        return Dictionary(
+            optional_keys = False,
+            elements = [
+                ('agent_port', Integer(
+                    minvalue = 1,
+                    maxvalue = 65535,
+                    default_value = 6556,
+                    title = _("Check_MK Agent Port (<a href=\"%s\">Rules</a>)") % \
+                        watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'agent_ports')]),
+                    help = _("This variable allows to specify the TCP port to "
+                             "be used to connect to the agent on a per-host-basis.")
+                )),
+                ('snmp_timeout', Integer(
+                    title = _("SNMP-Timeout (<a href=\"%s\">Rules</a>)") % \
+                        watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
+                    help = _("After a request is sent to the remote SNMP agent we will wait up to this "
+                             "number of seconds until assuming the answer get lost and retrying."),
+                    default_value = 1,
+                    minvalue = 1,
+                    maxvalue = 60,
+                    unit = _("sec"),
+                )),
+                ('snmp_retries', Integer(
+                    title = _("SNMP-Retries (<a href=\"%s\">Rules</a>)") % \
+                        watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
+                    default_value = 5,
+                    minvalue = 0,
+                    maxvalue = 50,
+                )),
+            ] + ds_option,
+        )
+
+
+
+class ModeAjaxDiagHost(WatoWebApiMode):
+    def page(self):
         init_wato_datastructures(with_wato_lock=True)
 
         if not config.user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
 
-        hostname = html.var("host")
+        request = self.webapi_request()
+
+        hostname = request.get("host")
         if not hostname:
             raise MKGeneralException(_('The hostname is missing.'))
 
@@ -2705,14 +2726,15 @@ def ajax_diag_host():
 
         host.need_permission("read")
 
-        _test = html.var('_test')
+        _test = request.get('_test')
         if not _test:
             raise MKGeneralException(_('The test is missing.'))
 
         # Execute a specific test
-        if _test not in dict(diag_host_tests()).keys():
+        if _test not in dict(ModeDiagHost.diag_host_tests()).keys():
             raise MKGeneralException(_('Invalid test.'))
 
+        # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
         args = [""] * 12
         for idx, what in enumerate ([ 'ipaddress',
                                       'snmp_community',
@@ -2720,34 +2742,27 @@ def ajax_diag_host():
                                       'snmp_timeout',
                                       'snmp_retries',
                                       'datasource_program' ]):
-            args[idx] = html.var(what, "")
+            args[idx] = request.get(what, "")
 
-        if html.var("snmpv3_use"):
+        if request.get("snmpv3_use"):
             snmpv3_use = { "0": "noAuthNoPriv",
                            "1": "authNoPriv",
                            "2": "authPriv",
-                         }.get(html.var("snmpv3_use"))
+                         }.get(request.get("snmpv3_use"))
             args[6] = snmpv3_use
             if snmpv3_use != "noAuthNoPriv":
-                snmpv3_auth_proto = { "0": "md5", "1": "sha" }.get(html.var("snmpv3_auth_proto"))
+                snmpv3_auth_proto = { "0": "md5", "1": "sha" }.get(request.get("snmpv3_auth_proto"))
                 args[7] = snmpv3_auth_proto
-                args[8] = html.var("snmpv3_security_name")
-                args[9] = html.var("snmpv3_security_password")
+                args[8] = request.get("snmpv3_security_name")
+                args[9] = request.get("snmpv3_security_password")
                 if snmpv3_use == "authPriv":
-                    snmpv3_privacy_proto = { "0": "DES", "1": "AES" }.get(html.var("snmpv3_privacy_proto"))
+                    snmpv3_privacy_proto = { "0": "DES", "1": "AES" }.get(request.get("snmpv3_privacy_proto"))
                     args[10] = snmpv3_privacy_proto
-                    args[11] = html.var("snmpv3_privacy_password")
+                    args[11] = request.get("snmpv3_privacy_password")
             else:
-                args[8] = html.var("snmpv3_security_name")
+                args[8] = request.get("snmpv3_security_name")
 
-        result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
-        # API is defined as follows: Two data fields, separated by space.
-        # First is the state: 0 or 1, 0 means success, 1 means failed.
-        # Second is treated as text output
-        html.write_text("%s %s" % (result[0], result[1]))
-    except Exception, e:
-        html.write_text("1 %s" % _("Exception: %s") % traceback.format_exc())
-
+        return watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
 
 
 #.
@@ -15231,239 +15246,280 @@ class ModePatternEditor(WatoMode):
 #   | Mange custom attributes of users (in future hosts etc.)              |
 #   '----------------------------------------------------------------------'
 
-custom_attr_types = [
-    ('TextAscii', _('Simple Text')),
-]
-
-def load_custom_attrs():
-    try:
-        filename = multisite_dir + "custom_attrs.mk"
-        if not os.path.exists(filename):
-            return {}
-
-        vars = {
-            'wato_user_attrs': [],
-            'wato_host_attrs': [],
-        }
-        execfile(filename, vars, vars)
-
-        attrs = {}
-        for what in [ "user", "host" ]:
-            attrs[what] = vars.get("wato_%s_attrs" % what, [])
-        return attrs
-
-    except Exception, e:
-        if config.debug:
-            raise
-        raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                      (filename, e))
-
-
-
-def save_custom_attrs(attrs):
-    output = watolib.wato_fileheader()
-    for what in [ "user", "host" ]:
-        if what in attrs and len(attrs[what]) > 0:
-            output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
-            output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
-
-    make_nagios_directory(multisite_dir)
-    store.save_file(multisite_dir + "custom_attrs.mk", output)
-
-
-def mode_edit_custom_attr(phase, what):
-    name = html.var("edit") # missing -> new custom attr
-    new = name == None
-
-    if phase == "title":
-        if new:
-            if what == "user":
-                return _("Create User Attribute")
-            else:
-                return _("Create Host Attribute")
-        else:
-            if what == "user":
-                return _("Edit User Attribute")
-            else:
-                return _("Edit Host Attribute")
-
-    elif phase == "buttons":
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "%s_attrs" % what)]), "back")
-        return
-
-    all_attrs = load_custom_attrs()
-    attrs = all_attrs.setdefault(what, [])
-
-    if not new:
-        attr = [ a for a in attrs if a['name'] == name ]
-        if not attr:
-            raise MKUserError(None, _('The attribute does not exist.'))
-        else:
-            attr = attr[0]
-    else:
-        attr = {}
-
-    if phase == "action":
-        if html.check_transaction():
-            title = html.get_unicode_input("title").strip()
-            if not title:
-                raise MKUserError("title", _("Please specify a title."))
-            for this_attr in attrs:
-                if title == this_attr['title'] and name != this_attr['name']:
-                    raise MKUserError("alias", _("This alias is already used by the attribute %s.") % this_attr['name'])
-
-            topic = html.var('topic', '').strip()
-            help  = html.get_unicode_input('help').strip()
-            if what == "user":
-                user_editable = html.get_checkbox('user_editable')
-            show_in_table = html.get_checkbox('show_in_table')
-            add_custom_macro = html.get_checkbox('add_custom_macro')
-
-            if new:
-                name = html.var("name", '').strip()
-                if not name:
-                    raise MKUserError("name", _("Please specify a name for the new attribute."))
-                if ' ' in name:
-                    raise MKUserError("name", _("Sorry, spaces are not allowed in attribute names."))
-                if not re.match("^[-a-z0-9A-Z_]*$", name):
-                    raise MKUserError("name", _("Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-                if [ a for a in attrs if a['name'] == name ]:
-                    raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
-
-                ty = html.var('type', '').strip()
-                if ty not in [ t[0] for t in custom_attr_types ]:
-                    raise MKUserError('type', _('The choosen attribute type is invalid.'))
-
-                attr = {
-                    'name' : name,
-                    'type' : ty,
-                }
-                attrs.append(attr)
-
-                add_change("edit-%sattr" % what, _("Create new %s attribute %s") % (what, name))
-            else:
-                add_change("edit-%sattr" % what, _("Modified %s attribute %s") % (what, name))
-            attr.update({
-                'title'            : title,
-                'topic'            : topic,
-                'help'             : help,
-                'show_in_table'    : show_in_table,
-                'add_custom_macro' : add_custom_macro,
-            })
-
-            if what == "user":
-                attr['user_editable'] = user_editable
-
-            save_changed_custom_attrs(all_attrs, what)
-
-        return what + "_attrs"
-
-    html.begin_form("attr")
-    forms.header(_("Properties"))
-    forms.section(_("Name"), simple = not new)
-    html.help(_("The name of the attribute is used as an internal key. It cannot be "
-                 "changed later."))
-    if new:
-        html.text_input("name", attr.get('name'))
-        html.set_focus("name")
-    else:
-        html.write_text(name)
-        html.set_focus("title")
-
-    forms.section(_("Title") + "<sup>*</sup>")
-    html.help(_("The title is used to label this attribute."))
-    html.text_input("title", attr.get('title'))
-
-    forms.section(_('Topic'))
-    html.help(_('The attribute is added to this section in the edit dialog.'))
-
-    if what == "user":
-        topics = [
-            ('ident',    _('Identity')),
-            ('security', _('Security')),
-            ('notify',   _('Notifications')),
-            ('personal', _('Personal Settings')),
+class CustomAttrMode(WatoMode):
+    @classmethod
+    def custom_attr_types(cls):
+        return [
+            ('TextAscii', _('Simple Text')),
         ]
-        default_topic = "personal"
-    else:
-        topics = list(set([ (a[1], a[1]) for a in watolib.all_host_attributes() if a[1] != None ]))
-        topics.insert(0, (_("Custom attributes"), _("Custom attributes")))
-        default_topic = _("Custom attributes")
 
-    html.dropdown('topic', topics, deflt=attr.get('topic', 'personal'))
 
-    forms.section(_('Help Text') + "<sup>*</sup>")
-    html.help(_('You might want to add some helpful description for the attribute.'))
-    html.text_area('help', attr.get('help', ''))
+    def _load_attributes(self, lock=False):
+        self._all_attrs = self._load(lock=lock)
+        self._attrs = self._all_attrs.get(self._what, {})
 
-    forms.section(_('Data type'))
-    html.help(_('The type of information to be stored in this attribute.'))
-    if new:
-        html.dropdown('type', custom_attr_types, deflt=attr.get('type'))
-    else:
-        html.write(dict(custom_attr_types)[attr.get('type')])
 
-    if what == "user":
-        forms.section(_('Editable by Users'))
-        html.help(_('It is possible to let users edit their custom attributes.'))
-        html.checkbox('user_editable', attr.get('user_editable', True),
-                      label = _("Users can change this attribute in their personal settings"))
+    # TODO: Use lock!
+    def _load(self, lock):
+        try:
+            filename = multisite_dir + "custom_attrs.mk"
+            if not os.path.exists(filename):
+                return {}
 
-    forms.section(_('Show in Table'))
-    html.help(_('This attribute is only visibile on the detail pages by default, but '
-                'you can also make it visible in the overview tables.'))
-    html.checkbox('show_in_table', attr.get('show_in_table', False),
-                  label = _("Show the setting of the attribute in the list table"))
+            vars = {
+                'wato_user_attrs': [],
+                'wato_host_attrs': [],
+            }
+            execfile(filename, vars, vars)
 
-    forms.section(_('Add as custom macro'))
-    if what == "user":
-        html.help(_('The attribute can be added to the contact definiton in order '
-                    'to use it for notifications.'))
-        label = _("Make this variable available in notifications")
-    else:
-        html.help(_("The attribute can be added to the host definition in order to "
-                    "use it as monitoring macro in different places, for example "
-                    "as macro in check commands or notifications."))
-        label = _("Make this variable available as monitoring macro, "
-                  "e.g. in check commands or in notifications.")
+            attrs = {}
+            for self._what in [ "user", "host" ]:
+                attrs[self._what] = vars.get("wato_%s_attrs" % self._what, [])
+            return attrs
 
-    html.checkbox('add_custom_macro', attr.get('add_custom_macro', False),
-                  label=label)
+        except Exception, e:
+            if config.debug:
+                raise
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                          (filename, e))
 
-    forms.end()
-    html.show_localization_hint()
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
 
-def mode_custom_attrs(phase, what):
-    if what == "user":
-        title = _("Custom User Attributes")
-    else:
-        title = _("Custom Host Attributes")
-
-    if phase == "title":
-        return title
-
-    elif phase == "buttons":
-        if what == "user":
-            html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
+    def _save_attributes(self):
+        self._save(self._all_attrs)
+        if self._what == "user":
+            userdb.declare_custom_user_attrs()
+            userdb.rewrite_users()
         else:
-            html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-        html.context_button(_("New Attribute"), watolib.folder_preserving_link([("mode", "edit_%s_attr" % what)]), "new")
-        return
+            declare_custom_host_attrs()
+            watolib.Folder.invalidate_caches()
+            watolib.Folder.root_folder().rewrite_hosts_files()
 
-    all_attrs = load_custom_attrs()
-    attrs = all_attrs.get(what, {})
 
-    if phase == "action":
+    def _save(self, attrs):
+        output = watolib.wato_fileheader()
+        for self._what in [ "user", "host" ]:
+            if self._what in attrs and len(attrs[self._what]) > 0:
+                output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (self._what, self._what)
+                output += "wato_%s_attrs += %s\n\n" % (self._what, pprint.pformat(attrs[self._what]))
+
+        make_nagios_directory(multisite_dir)
+        store.save_file(multisite_dir + "custom_attrs.mk", output)
+
+
+
+
+class ModeEditCustomAttr(CustomAttrMode):
+    def __init__(self):
+        super(ModeEditCustomAttr, self).__init__()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        self._name = html.var("edit") # missing -> new custom attr
+        self._new = self._name == None
+
+        self._load_attributes(lock=html.is_transaction())
+
+        if not self._new:
+            self._attr = [ a for a in self._attrs if a['name'] == self._name ]
+            if not self._attr:
+                raise MKUserError(None, _('The attribute does not exist.'))
+            else:
+                self._attr = self._attr[0]
+        else:
+            self._attr = {}
+
+
+    def title(self):
+        raise NotImplementedError()
+
+
+    def action(self):
+        if not html.check_transaction():
+            return
+
+        title = html.get_unicode_input("title").strip()
+        if not title:
+            raise MKUserError("title", _("Please specify a title."))
+
+        for this_attr in self._attrs:
+            if title == this_attr['title'] and self._name != this_attr['name']:
+                raise MKUserError("alias", _("This alias is already used by the attribute %s.") % this_attr['name'])
+
+        topic = html.var('topic', '').strip()
+        help  = html.get_unicode_input('help').strip()
+        if self._what == "user":
+            user_editable = html.get_checkbox('user_editable')
+        show_in_table = html.get_checkbox('show_in_table')
+        add_custom_macro = html.get_checkbox('add_custom_macro')
+
+        if self._new:
+            self._name = html.var("name", '').strip()
+            if not self._name:
+                raise MKUserError("name", _("Please specify a name for the new attribute."))
+            if ' ' in self._name:
+                raise MKUserError("name", _("Sorry, spaces are not allowed in attribute names."))
+            if not re.match("^[-a-z0-9A-Z_]*$", self._name):
+                raise MKUserError("name", _("Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+            if [ a for a in self._attrs if a['name'] == self._name ]:
+                raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
+
+            ty = html.var('type', '').strip()
+            if ty not in [ t[0] for t in self.custom_attr_types() ]:
+                raise MKUserError('type', _('The choosen attribute type is invalid.'))
+
+            self._attr = {
+                'name' : self._name,
+                'type' : ty,
+            }
+            self._attrs.append(self._attr)
+
+            add_change("edit-%sattr" % self._what, _("Create new %s attribute %s") % (self._what, self._name))
+        else:
+            add_change("edit-%sattr" % self._what, _("Modified %s attribute %s") % (self._what, self._name))
+        self._attr.update({
+            'title'            : title,
+            'topic'            : topic,
+            'help'             : help,
+            'show_in_table'    : show_in_table,
+            'add_custom_macro' : add_custom_macro,
+        })
+
+        if self._what == "user":
+            self._attr['user_editable'] = user_editable
+
+        self._save_attributes()
+
+        return self._what + "_attrs"
+
+
+    def page(self):
+        html.begin_form("attr")
+        forms.header(_("Properties"))
+        forms.section(_("Name"), simple = not self._new)
+        html.help(_("The name of the attribute is used as an internal key. It cannot be "
+                     "changed later."))
+        if self._new:
+            html.text_input("name", self._attr.get('name'))
+            html.set_focus("name")
+        else:
+            html.write_text(self._name)
+            html.set_focus("title")
+
+        forms.section(_("Title") + "<sup>*</sup>")
+        html.help(_("The title is used to label this attribute."))
+        html.text_input("title", self._attr.get('title'))
+
+        forms.section(_('Topic'))
+        html.help(_('The attribute is added to this section in the edit dialog.'))
+
+        if self._what == "user":
+            topics = [
+                ('ident',    _('Identity')),
+                ('security', _('Security')),
+                ('notify',   _('Notifications')),
+                ('personal', _('Personal Settings')),
+            ]
+            default_topic = "personal"
+        else:
+            topics = list(set([ (a[1], a[1]) for a in watolib.all_host_attributes() if a[1] != None ]))
+            topics.insert(0, (_("Custom attributes"), _("Custom attributes")))
+            default_topic = _("Custom attributes")
+
+        html.dropdown('topic', topics, deflt=self._attr.get('topic', 'personal'))
+
+        forms.section(_('Help Text') + "<sup>*</sup>")
+        html.help(_('You might want to add some helpful description for the attribute.'))
+        html.text_area('help', self._attr.get('help', ''))
+
+        forms.section(_('Data type'))
+        html.help(_('The type of information to be stored in this attribute.'))
+        if self._new:
+            html.dropdown('type', self.custom_attr_types(), deflt=self._attr.get('type'))
+        else:
+            html.write(dict(self.custom_attr_types())[self._attr.get('type')])
+
+        if self._what == "user":
+            forms.section(_('Editable by Users'))
+            html.help(_('It is possible to let users edit their custom attributes.'))
+            html.checkbox('user_editable', self._attr.get('user_editable', True),
+                          label = _("Users can change this attribute in their personal settings"))
+
+        forms.section(_('Show in Table'))
+        html.help(_('This attribute is only visibile on the detail pages by default, but '
+                    'you can also make it visible in the overview tables.'))
+        html.checkbox('show_in_table', self._attr.get('show_in_table', False),
+                      label = _("Show the setting of the attribute in the list table"))
+
+        forms.section(_('Add as custom macro'))
+        if self._what == "user":
+            html.help(_('The attribute can be added to the contact definiton in order '
+                        'to use it for notifications.'))
+            label = _("Make this variable available in notifications")
+        else:
+            html.help(_("The attribute can be added to the host definition in order to "
+                        "use it as monitoring macro in different places, for example "
+                        "as macro in check commands or notifications."))
+            label = _("Make this variable available as monitoring macro, "
+                      "e.g. in check commands or in notifications.")
+
+        html.checkbox('add_custom_macro', self._attr.get('add_custom_macro', False),
+                      label=label)
+
+        forms.end()
+        html.show_localization_hint()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
+
+
+class ModeEditCustomUserAttr(ModeEditCustomAttr):
+    # TODO: Cleanup "what" variable
+    _what = "user"
+
+    def title(self):
+        if self._new:
+            return _("Create User Attribute")
+        else:
+            return _("Edit User Attribute")
+
+
+    def buttons(self):
+        html.context_button(_("Back"), watolib.folder_preserving_link([
+                                            ("mode", "user_attrs")]), "back")
+
+
+class ModeEditCustomHostAttr(ModeEditCustomAttr):
+    _what = "host"
+
+    def title(self):
+        if self._new:
+            return _("Create Host Attribute")
+        else:
+            return _("Edit Host Attribute")
+
+
+    def buttons(self):
+        html.context_button(_("Back"), watolib.folder_preserving_link([
+                                            ("mode", "host_attrs")]), "back")
+
+
+
+class ModeCustomAttrs(CustomAttrMode):
+    def __init__(self):
+        super(ModeCustomAttrs, self).__init__()
+        self._load_attributes(lock=html.is_transaction())
+
+
+    def action(self):
         if html.var('_delete'):
             delname = html.var("_delete")
 
             # FIXME: Find usages and warn
             #if usages:
             #    message = "<b>%s</b><br>%s:<ul>" % \
-            #                (_("You cannot delete this %s attribute.") % what,
+            #                (_("You cannot delete this %s attribute.") % self._what,
             #                 _("It is still in use by"))
             #    for title, link in usages:
             #        message += '<li><a href="%s">%s</a></li>\n' % (link, title)
@@ -15474,46 +15530,63 @@ def mode_custom_attrs(phase, what):
 
             c = wato_confirm(_("Confirm deletion of attribute \"%s\"") % delname, confirm_txt)
             if c:
-                for index, attr in enumerate(attrs):
+                for index, attr in enumerate(self._attrs):
                     if attr['name'] == delname:
-                        attrs.pop(index)
-                save_changed_custom_attrs(all_attrs, what)
-                add_change("edit-%sattrs" % what, _("Deleted attribute %s") % (delname))
+                        self._attrs.pop(index)
+                self._save_attributes()
+                add_change("edit-%sattrs" % self._what, _("Deleted attribute %s") % (delname))
             elif c == False:
                 return ""
 
-        return None
 
-    if not attrs:
-        html.div(_("No custom attributes are defined yet."), class_="info")
-        return
+    def page(self):
+        if not self._attrs:
+            html.div(_("No custom attributes are defined yet."), class_="info")
+            return
 
-    table.begin(what + "attrs")
-    for attr in sorted(attrs, key = lambda x: x['title']):
-        table.row()
+        table.begin(self._what + "attrs")
+        for custom_attr in sorted(self._attrs, key=lambda x: x['title']):
+            table.row()
 
-        table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % what), ("edit", attr['name'])])
-        delete_url = html.makeactionuri([("_delete", attr['name'])])
-        html.icon_button(edit_url, _("Properties"), "edit")
-        html.icon_button(delete_url, _("Delete"), "delete")
+            table.cell(_("Actions"), css="buttons")
+            edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % self._what),
+                                                       ("edit", custom_attr['name'])])
+            delete_url = html.makeactionuri([("_delete", custom_attr['name'])])
+            html.icon_button(edit_url, _("Properties"), "edit")
+            html.icon_button(delete_url, _("Delete"), "delete")
 
-        table.cell(_("Name"),  attr['name'])
-        table.cell(_("Title"), attr['title'])
-        table.cell(_("Type"),  dict(custom_attr_types)[attr['type']])
+            table.cell(_("Name"),  custom_attr['name'])
+            table.cell(_("Title"), custom_attr['title'])
+            table.cell(_("Type"),  dict(ModeEditCustomAttr.custom_attr_types())[custom_attr['type']])
 
-    table.end()
+        table.end()
 
 
-def save_changed_custom_attrs(all_attrs, what):
-    save_custom_attrs(all_attrs)
-    if what == "user":
-        userdb.declare_custom_user_attrs()
-        userdb.rewrite_users()
-    else:
-        declare_custom_host_attrs()
-        watolib.Folder.invalidate_caches()
-        watolib.Folder.root_folder().rewrite_hosts_files()
+
+class ModeCustomUserAttrs(ModeCustomAttrs):
+    _what = "user"
+
+    def title(self):
+        return _("Custom User Attributes")
+
+
+    def buttons(self):
+        html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
+        html.context_button(_("New attribute"), watolib.folder_preserving_link([("mode", "edit_user_attr")]), "new")
+
+
+
+class ModeCustomHostAttrs(ModeCustomAttrs):
+    _what = "host"
+
+    def title(self):
+        return _("Custom Host Attributes")
+
+
+    def buttons(self):
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("New attribute"), watolib.folder_preserving_link([("mode", "edit_host_attr")]), "new")
+
 
 
 def declare_custom_host_attrs():
@@ -15549,31 +15622,6 @@ def declare_custom_host_attrs():
 #   | Catalog of check plugins                                             |
 #   '----------------------------------------------------------------------'
 
-# topic, has_second_level, title, description
-def man_page_catalog_topics():
-   return [
-    ("hw", True, _("Appliances, other dedicated hardware"),
-        _("Switches, load balancers, storage, UPSes, "
-          "environmental sensors, etc. ")),
-
-    ("os", True, _("Operating systems"),
-        _("Plugins for operating systems, things "
-          "like memory, CPU, filesystems, etc.")),
-
-    ("app", False, _("Applications"),
-        _("Monitoring of applications such as "
-          "processes, services or databases")),
-
-    ("agentless", False, _("Networking checks without agent"),
-        _("Plugins that directly check networking "
-          "protocols like HTTP or IMAP")),
-
-    ("generic", False,  _("Generic check plugins"),
-       _("Plugins for local agent extensions or "
-         "communication with the agent in general")),
-]
-
-
 class ModeCheckPlugins(WatoMode):
     def __init__(self):
         super(ModeCheckPlugins, self).__init__()
@@ -15598,7 +15646,7 @@ class ModeCheckPlugins(WatoMode):
 
         self._has_second_level = None
         if self._topic and not self._search:
-            for t, has_second_level, title, helptext in man_page_catalog_topics():
+            for t, has_second_level, title, helptext in self._man_page_catalog_topics():
                 if t == self._path[0]:
                     self._has_second_level = has_second_level
                     self._topic_title = title
@@ -15650,7 +15698,7 @@ class ModeCheckPlugins(WatoMode):
 
         else:
             menu = MainMenu()
-            for topic, has_second_level, title, helptext in man_page_catalog_topics():
+            for topic, has_second_level, title, helptext in self._man_page_catalog_topics():
                 menu.add_item(
                     mode_or_url=html.makeuri([("topic", topic)]),
                     title=title,
@@ -15801,6 +15849,31 @@ class ModeCheckPlugins(WatoMode):
             table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
             table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
         table.end()
+
+
+    def _man_page_catalog_topics(self):
+        # topic, has_second_level, title, description
+        return [
+            ("hw", True, _("Appliances, other dedicated hardware"),
+                _("Switches, load balancers, storage, UPSes, "
+                  "environmental sensors, etc. ")),
+
+            ("os", True, _("Operating systems"),
+                _("Plugins for operating systems, things "
+                  "like memory, CPU, filesystems, etc.")),
+
+            ("app", False, _("Applications"),
+                _("Monitoring of applications such as "
+                  "processes, services or databases")),
+
+            ("agentless", False, _("Networking checks without agent"),
+                _("Plugins that directly check networking "
+                  "protocols like HTTP or IMAP")),
+
+            ("generic", False,  _("Generic check plugins"),
+               _("Plugins for local agent extensions or "
+                 "communication with the agent in general")),
+        ]
 
 
 
@@ -17737,12 +17810,12 @@ modes = {
    "rename_host"        : (["hosts", "manage_hosts"], mode_rename_host),
    "bulk_rename_host"   : (["hosts", "manage_hosts"], mode_bulk_rename_host),
    "bulk_import"        : (["hosts", "manage_hosts"], ModeBulkImport),
-   "host_attrs"         : (["hosts", "manage_hosts"], lambda phase: mode_custom_attrs(phase, "host")),
-   "edit_host_attr"     : (["hosts", "manage_hosts"], lambda phase: mode_edit_custom_attr(phase, "host")),
+   "host_attrs"         : (["hosts", "manage_hosts"], ModeCustomHostAttrs),
+   "edit_host_attr"     : (["hosts", "manage_hosts"], ModeEditCustomHostAttr),
    "edit_host"          : (["hosts"], lambda phase: mode_edit_host(phase, new=False, is_cluster=None)),
    "parentscan"         : (["hosts"], mode_parentscan),
    "inventory"          : (["hosts"], ModeDiscovery),
-   "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
+   "diag_host"          : (["hosts", "diag_host"], ModeDiagHost),
    "object_parameters"  : (["hosts", "rulesets"], ModeObjectParameters),
    "search"             : (["hosts"], ModeSearch),
    "bulkinventory"      : (["hosts", "services"], ModeBulkDiscovery),
@@ -17787,8 +17860,8 @@ modes = {
    "edit_site_globals"  : (["sites"], ModeEditSiteGlobals),
    "users"              : (["users"], ModeUsers),
    "edit_user"          : (["users"], mode_edit_user),
-   "user_attrs"         : (["users"], lambda phase: mode_custom_attrs(phase, "user")),
-   "edit_user_attr"     : (["users"], lambda phase: mode_edit_custom_attr(phase, "user")),
+   "user_attrs"         : (["users"], ModeCustomUserAttrs),
+   "edit_user_attr"     : (["users"], ModeEditCustomUserAttr),
    "roles"              : (["users"], ModeRoles),
    "role_matrix"        : (["users"], ModeRoleMatrix),
    "edit_role"          : (["users"], ModeEditRole),
@@ -18164,6 +18237,3 @@ def link_to_folder_by_path(path):
 def link_to_host_by_name(host_name):
     return "wato.py?" + html.urlencode_vars(
     [("mode", "edit_host"), ("host", host_name)])
-
-
-

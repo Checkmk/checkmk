@@ -1,0 +1,11 @@
+Title: Fixed "Events of Monitored Host" showing events of unrelated hosts
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1512050096
+
+

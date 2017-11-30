@@ -15259,29 +15259,17 @@ class CustomAttrMode(WatoMode):
         self._attrs = self._all_attrs.get(self._what, {})
 
 
-    # TODO: Use lock!
     def _load(self, lock):
-        try:
-            filename = multisite_dir + "custom_attrs.mk"
-            if not os.path.exists(filename):
-                return {}
+        filename = os.path.join(multisite_dir, "custom_attrs.mk")
+        vars = store.load_mk_file(filename, {
+            'wato_user_attrs': [],
+            'wato_host_attrs': [],
+        }, lock=lock)
 
-            vars = {
-                'wato_user_attrs': [],
-                'wato_host_attrs': [],
-            }
-            execfile(filename, vars, vars)
-
-            attrs = {}
-            for self._what in [ "user", "host" ]:
-                attrs[self._what] = vars.get("wato_%s_attrs" % self._what, [])
-            return attrs
-
-        except Exception, e:
-            if config.debug:
-                raise
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
+        attrs = {}
+        for self._what in [ "user", "host" ]:
+            attrs[self._what] = vars.get("wato_%s_attrs" % self._what, [])
+        return attrs
 
 
     def _save_attributes(self):

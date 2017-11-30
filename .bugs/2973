@@ -1,0 +1,8 @@
+Title: xinetd for livestatus: only_from not marked as handled by omd
+Component: livestatus
+State: open
+Date: 2017-11-30 12:20:51
+Targetversion: 1.5.0
+Class: nastiness
+
+The mentioned option is not marked as handled by omd even it cannot be manually modified anymore.

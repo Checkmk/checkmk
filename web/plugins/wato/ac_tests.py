@@ -368,7 +368,11 @@ class ACTestApacheNumberOfProcesses(ACTest, BPApacheTest):
                  "you need to configure them in a way that you system can handle them without "
                  "reaching out of memory situations.</p>"
                  "<p>Please note that this value is only a rough estimation, because the memory "
-                 "usage of the apache processes may vary with the requests being processed.</p>")
+                 "usage of the apache processes may vary with the requests being processed.</p>"
+                 "<p>Possible actions:<ul>"
+                 "<li>Change the <a href=\"wato.py?mode=edit_configvar&varname=process_tuning\">number of apache processes</a></li>"
+                 "</ul>"
+                 "</p>")
 
 
     def is_relevant(self):

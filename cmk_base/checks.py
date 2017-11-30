@@ -318,6 +318,7 @@ def convert_check_info():
         "extra_sections"          : [],
         "service_description"     : None,
         "has_perfdata"            : False,
+        "management_board"        : None,
     }
 
     for check_plugin_name, info in check_info.items():
@@ -348,6 +349,7 @@ def convert_check_info():
                 "node_info"               : False,
                 "parse_function"          : None,
                 "extra_sections"          : [],
+                "management_board"        : None,
             }
         else:
             # Ensure that there are only the known keys set. Is meant to detect typos etc.
@@ -602,3 +604,12 @@ def _get_checkgroup_parameters(host, checktype, item):
             return rulesets.service_extra_conf(host, item, rules)
     except MKGeneralException, e:
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
+
+
+def get_management_board_precedence(check_plugin_name):
+    mgmt_board = check_info[check_plugin_name]["management_board"]
+    if mgmt_board is None:
+        return check_api.HOST_PRECEDENCE
+    else:
+        return mgmt_board
+

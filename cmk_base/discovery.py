@@ -728,12 +728,13 @@ def _get_host_sections_for_discovery(sources, hostname, ipaddress, check_plugin_
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan, for_inventory=False):
+def gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan, for_inventory=False, for_mgmt_board=False):
     check_plugin_names = set()
 
     try:
         check_plugin_names.update(snmp_scan(hostname, ipaddress, on_error=on_error,
-                                     do_snmp_scan=do_snmp_scan, for_inv=for_inventory))
+                                     do_snmp_scan=do_snmp_scan, for_inv=for_inventory,
+                                     for_mgmt_board=for_mgmt_board))
     except Exception, e:
         if on_error == "raise":
             raise
@@ -743,7 +744,7 @@ def gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan, 
     return list(check_plugin_names)
 
 
-def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_scan=True):
+def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_scan=True, for_mgmt_board=False):
     import cmk_base.inventory_plugins as inventory_plugins
 
     # Make hostname globally available for scan functions.
@@ -834,12 +835,95 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
             found.append(check_plugin_name)
             default_found.append(check_plugin_name)
 
-    console.vverbose("   SNMP scan found:       %s%s%s%s\n" % (tty.bold, tty.yellow, " ".join(positive_found), tty.normal))
+    _output_snmp_check_plugins("SNMP scan found", positive_found)
     if default_found:
-        console.vverbose("   without scan function: %s%s%s%s\n" % (tty.bold, tty.blue, " ".join(default_found), tty.normal))
+        _output_snmp_check_plugins("SNMP without scan function", default_found)
 
+    filtered = _filter_by_management_board(hostname, found, for_mgmt_board)
     snmp.write_single_oid_cache(hostname)
-    return sorted(found)
+    return sorted(filtered)
+
+
+def _filter_by_management_board(hostname, found, for_mgmt_board):
+    # #1 SNMP host with MGMT board
+    #    MGMT board:
+    #        SNMP management board precedence: mgmt_prec_check
+    #        SNMP management board only:       mgmt_only_check
+    #        SNMP host precedence:             host_prec_check
+    #        SNMP host only:                   host_only_check
+    #        SNMP Finally found check plugins: mgmt_only_check mgmt_prec_check
+    #    HOST:
+    #        SNMP management board precedence: mgmt_prec_check
+    #        SNMP management board only:       mgmt_only_check
+    #        SNMP host precedence:             host_prec_check
+    #        SNMP host only:                   host_only_check
+    #        SNMP Finally found check plugins: host_prec_check
+    #    => Discovery:
+    #        1 host_prec_snmp_uptime
+    #        1 mgmt_only_snmp_uptime
+    #        1 mgmt_prec_snmp_uptime
+    #
+    # #2 SNMP host without MGMT board
+    #    HOST:
+    #        SNMP management board precedence: mgmt_prec_check
+    #        SNMP management board only:       mgmt_only_check
+    #        SNMP host precedence:             host_prec_check
+    #        SNMP host only:                   host_only_check
+    #        SNMP Finally found check plugins: host_only_check host_prec_check mgmt_prec_check
+    #    => Discovery:
+    #        1 host_only_snmp_uptime
+    #        1 host_prec_snmp_uptime
+    #        1 mgmt_prec_snmp_uptime
+
+    final_collection = set()
+    mgmt_precedence = set()
+    host_precedence = set()
+    mgmt_only = set()
+    host_only = set()
+    for check_plugin_name in found:
+        mgmt_board = checks.get_management_board_precedence(check_plugin_name)
+        if mgmt_board == check_api.MGMT_PRECEDENCE:
+            mgmt_precedence.add(check_plugin_name)
+
+        elif mgmt_board == check_api.HOST_PRECEDENCE:
+            host_precedence.add(check_plugin_name)
+
+        elif mgmt_board == check_api.MGMT_ONLY:
+            mgmt_only.add(check_plugin_name)
+
+        elif mgmt_board == check_api.HOST_ONLY:
+            host_only.add(check_plugin_name)
+
+    has_mgmt_board = config.has_management_board(hostname)
+    if for_mgmt_board:
+        final_collection.update(mgmt_precedence)
+        final_collection.update(mgmt_only)
+    else:
+        final_collection.update(host_precedence)
+        if not has_mgmt_board:
+            final_collection.update(mgmt_precedence)
+
+    if not (has_mgmt_board or for_mgmt_board):
+        final_collection.update(host_only)
+
+    for title, collection in [
+        ("SNMP management board precedence", mgmt_precedence),
+        ("SNMP management board only", mgmt_only),
+        ("SNMP host precedence", host_precedence),
+        ("SNMP host only", host_only),
+        ("SNMP Finally found check plugins", final_collection),
+    ]:
+        _output_snmp_check_plugins(title, collection)
+    return list(final_collection)
+
+
+def _output_snmp_check_plugins(title, collection):
+    if collection:
+        collection_out = " ".join(sorted(collection))
+    else:
+        collection_out = "-"
+    console.vverbose("   %-35s%s%s%s%s\n" % \
+                    (title, tty.bold, tty.yellow, collection_out, tty.normal))
 
 
 def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):

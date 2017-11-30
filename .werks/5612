@@ -1,0 +1,88 @@
+Title: Monitoring SNMP hosts with SNMP management boards is possible. New services for SNMP management boards are available.
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1515656480
+Class: feature
+
+For a single SNMP agent running on a device, each OID has a unique
+meaning defined in the relevant MIBs. Devices with SNMP management
+boards which can be configured in Check_MK, however, can have
+multiple SNMP agents relevant to the device. A Check_MK check plugin
+therefore needs to be able to distinguish between data sent by the
+management board and data sent by the host itself to avoid picking
+random data.
+
+Example: snmp_uptime.
+Both data sources provide data for this check plugin and it's not
+clear which one should be used.
+
+We address this problem as follows:
+In the case of multiple data sources which would use the same check
+plugin we implement new ones with the same functionality.
+Moreover a new check_info attribute 'management_board' is introduced
+which can have one of the following four values:
+
+- MGMT_PRECEDENCE
+  Use management board address/credentials eg. when it's a SNMP host.
+  Otherwise host's address/credentials are used.
+
+- MGMT_ONLY
+  Check is only executed for management boards.
+
+- HOST_PRECEDENCE
+  Use host address/credentials eg. when it's a SNMP HOST
+
+- HOST_ONLY
+  Check is only executed for real SNMP hosts.
+
+Furthermore these management board specific services have the
+prefix 'Management Interface: ' in their service description.
+
+Example: snmp_uptime and mgmt_snmp_uptime.
+snmp_uptime is used for SNMP host and mgmt_snmp_uptime is used
+for the related SNMP management board. Second one has the
+service description 'Management Interface: Uptime'.
+
+Notes for check plugin development:
+- Management board specific check types have the check_info
+  attribute 'management_board' set to 'MGMT_ONLY'. The service
+  descriptions of these plugins must start with
+  'Management Interface: '.
+
+- Convention: Prefix 'Management board'-ONLY check plugin names
+  with 'mgmt_'.
+
+- At the moment the check_info attribute 'management_board' is
+  only used for SNMP check types.
+
+- The default value of check_info attribute 'management_board'
+  is 'HOST_PRECEDENCE'.
+
+- MGMT_PRECEDENCE
+  Use this key if a host may have a management board. If yes
+  this check type uses the management board as data source,
+  otherwise the host's one.
+
+- MGMT_ONLY:
+  Use this key if a host and its SNMP management board provide
+  data for the same check plugin.
+  In order to avoid overlapping discoverable services, create
+  two check plugin types with same functionality. Make use of
+  include files.
+  One is used for the host itself, the other one has the additional
+  service description prefix 'Management Interface: ' and uses the
+  check_info attribute 'management_board' which is set to MGMT_ONLY.
+
+  Example: Have a look at the snmp_uptime and mgmt_snmp_uptime
+  checks which are a good example for this feature.
+
+- HOST_PRECEDENCE
+  Always use the SNMP host's credentials regardless whether this host
+  has a management board or not.
+
+- HOST_ONLY
+  This check plugin will be used if you want to contact a real
+  host and not a management board.

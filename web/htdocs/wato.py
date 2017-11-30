@@ -16873,7 +16873,7 @@ class ModeAnalyzeConfig(WatoMode):
                     if not self._show_failed and type(result) != ACResultOK:
                         remove = True
 
-                    if not self._show_ack and not self._is_acknowledged(result):
+                    if not self._show_ack and self._is_acknowledged(result):
                         remove = True
 
                     # Remove result of site if filtered by user call

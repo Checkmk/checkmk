@@ -178,6 +178,7 @@ class SNMPCredentials(Alternative):
         kwargs["orientation"] = "vertical"
         Alternative.__init__(self, **kwargs)
 
+
 declare_host_attribute(
     ValueSpecAttribute(
         "snmp_community",
@@ -195,6 +196,7 @@ declare_host_attribute(
     show_in_folder = True,
     depends_on_tags = ['snmp'],
 )
+
 
 # Attribute for configuring parents
 class ParentsAttribute(ValueSpecAttribute):
@@ -477,12 +479,6 @@ class ManagementTypeAttribute(Attribute):
     def from_html_vars(self, varprefix):
         return html.var(varprefix + "protocol")
 
-declare_host_attribute(ManagementTypeAttribute("management_protocol"),
-                       show_in_table = False,
-                       show_in_folder = False,
-                       topic = _("Management Board")
-                       )
-
 declare_host_attribute(ValueSpecAttribute("management_address",
     HostAddress(
         title = _("Address"),
@@ -496,12 +492,18 @@ declare_host_attribute(ValueSpecAttribute("management_address",
     topic = _("Management Board")
 )
 
+declare_host_attribute(ManagementTypeAttribute("management_protocol"),
+                       show_in_table = False,
+                       show_in_folder = False,
+                       topic = _("Management Board")
+                       )
+
 declare_host_attribute(ValueSpecAttribute("management_snmp_community",
     SNMPCredentials(
         default_value = None,
     )),
     show_in_table = False,
-    show_in_folder = False,
+    show_in_folder = True,
     topic = _("Management Board")
 )
 

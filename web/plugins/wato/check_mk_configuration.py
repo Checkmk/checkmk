@@ -2328,6 +2328,17 @@ register_rule(group,
 )
 
 register_rule(group,
+    "management_board_config",
+    CascadingDropdown(
+        title=_("Management board config"),
+        choices=[
+           (None, _("No protocol specified"), FixedValue(None, totext="")),
+           ("snmp", _("SNMP"), SNMPCredentials()),
+        ],
+    ),
+)
+
+register_rule(group,
     "snmp_character_encodings",
     DropdownChoice(
         title = _("Output text encoding settings for SNMP devices"),

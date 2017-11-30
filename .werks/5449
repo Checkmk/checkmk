@@ -1,0 +1,13 @@
+Title: Credentials of SNMP management boards are now configurable via WATO host rule
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1512053208
+Class: feature
+
+Previously SNMP management board credentials could only be
+stated wihtin the host object itself. Now this can be done
+with the host rule {Management board config} below
+{Host & Service parameters}, {Access to Agents}, {SNMP}.

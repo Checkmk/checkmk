@@ -652,25 +652,49 @@ def is_ipv4_host(hostname):
     # Either explicit IPv4 or implicit (when host is not an IPv6 host)
     return "ip-v4" in tags_of_host(hostname) or "ip-v6" not in tags_of_host(hostname)
 
-
 #
 # Management board
 #
 
 def has_management_board(hostname):
-    return "management_protocol" in host_attributes.get(hostname, {})
+    return _management_board_settings_of(hostname)["protocol"] is not None
 
 
 def management_address(hostname):
-    if 'management_address' in host_attributes.get(hostname, {}):
-        return host_attributes[hostname]['management_address']
-    else:
-        return ipaddresses.get(hostname)
+    return _management_board_settings_of(hostname)["address"]
 
 
 def management_protocol(hostname):
-    return host_attributes[hostname]['management_protocol']
+    return _management_board_settings_of(hostname)["protocol"]
 
+
+def _management_board_settings_of(hostname):
+    rule_settings = rulesets.host_extra_conf(hostname, management_board_config)
+    attributes_of_host = host_attributes.get(hostname, {})
+    management_board = {
+        "address": None,
+        "protocol": None,
+        "credentials": None,
+    }
+    if "management_protocol" not in attributes_of_host and not rule_settings:
+        return management_board
+
+    if rule_settings:
+        protocol, credentials = rule_settings[0]
+        management_board["protocol"] = protocol
+        management_board["credentials"] = credentials
+
+    if attributes_of_host.get("management_address"):
+        management_board["address"] = attributes_of_host["management_address"]
+    else:
+        management_board["address"] = ipaddresses.get(hostname)
+
+    if attributes_of_host.get("management_protocol"):
+        management_board["protocol"] = attributes_of_host["management_protocol"]
+    if attributes_of_host.get("management_snmp_community"):
+        management_board["credentials"] = attributes_of_host["management_snmp_community"]
+
+    return management_board
 
 #
 # Agent communication
@@ -731,9 +755,12 @@ def snmp_credentials_of(hostname):
     #  board and the host itself queried through snmp.
     #  The alternative is a lengthy and errorprone refactoring of the whole check-
     #  call hierarchy to get the credentials passed around.
-    if has_management_board(hostname)\
-            and management_protocol(hostname) == "snmp":
-        return host_attributes.get(hostname, {}).get("management_snmp_community", "public")
+    management_board = _management_board_settings_of(hostname)
+    if management_board["protocol"] == "snmp":
+        if management_board["credentials"]:
+            return management_board["credentials"]
+        else:
+            return "public"
 
     try:
         return explicit_snmp_communities[hostname]

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # This is like egrep, but hilites the exact positions
-# of *subexpressions*. This is e.g. usefull for testing
+# of *subexpressions*. This is e.g. useful for testing
 # inventory_processes...
 
 import re, sys

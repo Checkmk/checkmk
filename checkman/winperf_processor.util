@@ -9,7 +9,7 @@ description:
  This check replaces {winperf.cpuusage} which is outdated since version {1.1.11i1}
 
  Setting a level for warning or a critical state is possible, but might
- not be very usefull, since the computed value is an average over
+ not be very useful, since the computed value is an average over
  just one check cycle. Consider to set the {average} option for this purpose.
  A combination with a larger value of {max_check_attempts}
  or {notification_delay} might also be useful here.

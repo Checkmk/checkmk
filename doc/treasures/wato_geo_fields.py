@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # place this file to ~/local/share/check_mk/web/plugins/wato to get two new fields in the wato host properties.
-# this fields can be used to add Latiude and Longitude information. Usefull for the Nagvis Geomap
+# this fields can be used to add Latiude and Longitude information. Useful for the Nagvis Geomap
 
 declare_host_attribute(
    NagiosTextAttribute(

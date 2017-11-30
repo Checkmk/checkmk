@@ -75,6 +75,7 @@ record_inline_snmp_stats           = False
 snmp_default_community             = 'public'
 snmp_communities                   = []
 explicit_snmp_communities          = {} # override the rule based configuration
+management_board_config            = []
 snmp_timing                        = []
 snmp_character_encodings           = []
 

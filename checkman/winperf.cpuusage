@@ -9,7 +9,7 @@ description:
  In its current implementation this check is always OK.
 
  Setting a level for warning or a critical state is possible, but might
- not be very usefull, since the computed value is an average over just one
+ not be very useful, since the computed value is an average over just one
  check cycle. A combination with a larger value of {max_check_attempts}
  or {notification_delay} might be useful here.
 

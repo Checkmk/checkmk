@@ -151,7 +151,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
     for group in groups:
         columns[0].append(group)
 
-    # shift from src to dst, if usefull
+    # shift from src to dst, if useful
     def balance(src, dst):
         if len(src) == 0:
             return False

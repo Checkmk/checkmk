@@ -51,6 +51,9 @@ from .host_sections import HostSections
 #   '----------------------------------------------------------------------'
 
 class SNMPDataSource(DataSource):
+    _for_mgmt_board = False
+
+
     def __init__(self):
         super(SNMPDataSource, self).__init__()
         self._check_plugin_name_filter_func = None
@@ -141,7 +144,8 @@ class SNMPDataSource(DataSource):
         except KeyError:
             check_plugin_names = self._check_plugin_name_filter_func(hostname, ipaddress,
                                                        on_error=self._on_error,
-                                                       do_snmp_scan=self._do_snmp_scan)
+                                                       do_snmp_scan=self._do_snmp_scan,
+                                                       for_mgmt_board=self._for_mgmt_board)
             self._check_plugin_names[(hostname, ipaddress)] = check_plugin_names
             return check_plugin_names
 
@@ -237,6 +241,9 @@ class SNMPDataSource(DataSource):
 #   '----------------------------------------------------------------------'
 
 class SNMPManagementBoardDataSource(SNMPDataSource):
+    _for_mgmt_board = True
+
+
     def id(self):
         return "mgmt_snmp"
 

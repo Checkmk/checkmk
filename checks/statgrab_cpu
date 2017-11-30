@@ -31,7 +31,7 @@ def inventory_statgrab_cpu(info):
         return [(None, {})]
 
 
-def check_statgrab_cpu(item, params, info):
+def check_statgrab_cpu(_no_item, params, info):
     if not params:
         params = {}
     user = 0

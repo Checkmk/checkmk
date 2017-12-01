@@ -26,6 +26,7 @@ BUILD_PACKAGES   += libperl-dev
 BUILD_PACKAGES   += libreadline-dev
 BUILD_PACKAGES   += libxml2-dev
 BUILD_PACKAGES   += libsqlite3-dev # needed by Python (for sqlite3 module)
+BUILD_PACKAGES   += tk-dev # needed by Python (for Tkinter module)
 BUILD_PACKAGES   += patch
 BUILD_PACKAGES   += uuid-dev
 BUILD_PACKAGES   += snmp

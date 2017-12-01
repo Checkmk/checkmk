@@ -24,8 +24,14 @@ cd /$CHROOT_BUILD_DIR/agents/windows
 autoreconf --install
 
 build_archs=(32 64)
-if [[ "$targets" == unittest ]] ; then
-    # Only unittest
+
+if [[ " $targets " =~ " integrationtest " && "$targets" != integrationtest ]] ; then
+    echo "integrationtest cannot be combined with other targets"
+    exit 1
+fi
+
+if [[ "$targets" == unittest || "$targets" == integrationtest ]] ; then
+    # Only unittest or integrationtest
     build_archs=()
 elif [[ " $targets " =~ " unittest " ]] ; then
     # unittest together with other target(s)
@@ -54,8 +60,13 @@ if [[ -z "$targets" ]] ; then
     cd -
 fi
 
-if [[ ! "$targets" =~ clean ]] ; then
+if [[ ! "$targets" =~ clean && "$targets" != integrationtest ]] ; then
     # Run unittest only in 64 bit
     targets=unittest
+    build 64
+fi
+
+if [[ " $targets " =~ " integrationtest " ]] ; then
+    targets=integrationtest
     build 64
 fi

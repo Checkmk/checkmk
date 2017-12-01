@@ -1,0 +1,15 @@
+Title: Flap settings can now be configured individually for hosts/services
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1512138685
+Class: feature
+
+It is now possible to configure the flaping settings individuall for each
+host and service. This was previously only configurable globally via
+the global setting "Tuning of flap detection".
+
+No you can use the rulesets "Flap detection settings for hosts" and
+"Flap detection settings for services" to configure this using rules.

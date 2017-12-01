@@ -1,0 +1,14 @@
+Title: Renamed "Site Management" configuration options introduced with #5173
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1512141358
+Class: fix
+
+The configuration options introduced with #5173 (Set OMD config via WATO) had
+to be renamed. This is mostly an internal change, but you may have set one
+of these options in a site using a daily master snapshot or the 1.5.0i1
+version. Renaming the settings will reset your already configured settings
+to default.

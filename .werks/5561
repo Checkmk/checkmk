@@ -1,0 +1,10 @@
+Title: Add build support for SLES12SP3
+Level: 1
+Component: distros
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1512118998
+Class: feature
+
+

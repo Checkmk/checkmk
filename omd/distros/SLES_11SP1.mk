@@ -23,6 +23,7 @@ BUILD_PACKAGES += libpng-devel
 BUILD_PACKAGES += libuuid-devel
 BUILD_PACKAGES += libxml2-devel
 BUILD_PACKAGES += sqlite3-devel # needed by Python (for sqlite3 module)
+BUILD_PACKAGES   += tk-devel # needed by Python (for Tkinter module)
 BUILD_PACKAGES += make
 BUILD_PACKAGES += net-snmp
 BUILD_PACKAGES += openldap2-devel

@@ -18,6 +18,7 @@ BUILD_PACKAGES   += httpd-devel
 BUILD_PACKAGES   += libmcrypt-devel        # MISSING
 BUILD_PACKAGES   += libxml2-devel
 BUILD_PACKAGES   += sqlite-devel # needed by Python (for sqlite3 module)
+BUILD_PACKAGES   += tk-devel # needed by Python (for Tkinter module)
 BUILD_PACKAGES   += mariadb-devel
 BUILD_PACKAGES   += postgresql-devel
 BUILD_PACKAGES   += ncurses-devel

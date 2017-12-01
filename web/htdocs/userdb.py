@@ -674,7 +674,34 @@ def split_dict(d, keylist, positive):
     return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
 
 
-def determine_save_users_data(profiles):
+def save_users(profiles):
+    write_contacts_and_users_file(profiles)
+
+    # Execute user connector save hooks
+    hook_save(profiles)
+
+    updated_profiles = _add_custom_macro_attributes(profiles)
+
+    _save_auth_serials(updated_profiles)
+    _save_user_profiles(updated_profiles)
+    _cleanup_old_user_profiles(updated_profiles)
+
+    # Release the lock to make other threads access possible again asap
+    # This lock is set by load_users() only in the case something is expected
+    # to be written (like during user syncs, wato, ...)
+    release_lock(root_dir + "contacts.mk")
+
+    # populate the users cache
+    # TODO: Can we clean this up?
+    html.set_cache('users', updated_profiles)
+
+    # Call the users_saved hook
+    hooks.call("users-saved", updated_profiles)
+
+
+# TODO: Isn't this needed only while generating the contacts.mk?
+#       Check this and move it to the right place
+def _add_custom_macro_attributes(profiles):
     import copy
     updated_profiles = copy.deepcopy(profiles)
 
@@ -685,52 +712,14 @@ def determine_save_users_data(profiles):
             if macro in updated_profiles[user]:
                 updated_profiles[user]['_'+macro] = updated_profiles[user][macro]
 
-    multisite_custom_values = [ k for k,v in user_attributes.items() if v["domain"] == "multisite" ]
-
-    # Keys not to put into contact definitions for Check_MK
-    non_contact_keys = [
-        "roles",
-        "password",
-        "locked",
-        "automation_secret",
-        "language",
-        "serial",
-        "connector",
-        "num_failed_logins",
-        "enforce_pw_change",
-        "last_pw_change",
-        "last_seen",
-        "idle_timeout",
-    ] + multisite_custom_values
-
-    # Keys to put into multisite configuration
-    multisite_keys   = [
-        "roles",
-        "locked",
-        "automation_secret",
-        "alias",
-        "language",
-        "connector",
-    ] + multisite_custom_values
-
-    return non_contact_keys, multisite_keys, updated_profiles
+    return updated_profiles
 
 
-def save_users(profiles):
-    write_contacts_and_users_file(profiles)
+# Write user specific files
+def _save_user_profiles(updated_profiles):
+    non_contact_keys = _non_contact_keys()
+    multisite_keys = _multisite_keys()
 
-    # Execute user connector save hooks
-    hook_save(profiles)
-
-    non_contact_keys, multisite_keys, updated_profiles = determine_save_users_data(profiles)
-
-    # Write out the users serials
-    serials = ""
-    for user_id, user in updated_profiles.items():
-        serials += '%s:%d\n' % (make_utf8(user_id), user.get('serial', 0))
-    store.save_file('%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file), serials)
-
-    # Write user specific files
     for user_id, user in updated_profiles.items():
         user_dir = cmk.paths.var_dir + "/web/" + user_id.encode("utf-8")
         make_nagios_directory(user_dir)
@@ -761,12 +750,14 @@ def save_users(profiles):
 
         save_cached_profile(user_id, user, multisite_keys, non_contact_keys)
 
-    # During deletion of users we don't delete files which might contain user settings
-    # and e.g. customized views which are not easy to reproduce. We want to keep the
-    # files which are the result of a lot of work even when e.g. the LDAP sync deletes
-    # a user by accident. But for some internal files it is ok to delete them.
-    #
-    # Be aware: The user_exists() function relies on these files to be deleted.
+
+# During deletion of users we don't delete files which might contain user settings
+# and e.g. customized views which are not easy to reproduce. We want to keep the
+# files which are the result of a lot of work even when e.g. the LDAP sync deletes
+# a user by accident. But for some internal files it is ok to delete them.
+#
+# Be aware: The user_exists() function relies on these files to be deleted.
+def _cleanup_old_user_profiles(updated_profiles):
     profile_files_to_delete = [
         "automation.secret",
         "transids.mk",
@@ -783,20 +774,11 @@ def save_users(profiles):
                 if os.path.exists(entry + '/' + to_delete):
                     os.unlink(entry + '/' + to_delete)
 
-    # Release the lock to make other threads access possible again asap
-    # This lock is set by load_users() only in the case something is expected
-    # to be written (like during user syncs, wato, ...)
-    release_lock(root_dir + "contacts.mk")
-
-    # populate the users cache
-    html.set_cache('users', updated_profiles)
-
-    # Call the users_saved hook
-    hooks.call("users-saved", updated_profiles)
-
 
 def write_contacts_and_users_file(profiles, custom_default_config_dir = None):
-    non_contact_keys, multisite_keys, updated_profiles = determine_save_users_data(profiles)
+    non_contact_keys = _non_contact_keys()
+    multisite_keys = _multisite_keys()
+    updated_profiles = _add_custom_macro_attributes(profiles)
 
     if custom_default_config_dir:
         check_mk_config_dir  = "%s/conf.d/wato" %      custom_default_config_dir
@@ -837,6 +819,47 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir = None):
 
     # GUI specific user configuration
     store.save_to_mk_file("%s/%s" % (multisite_config_dir, "users.mk"), "multisite_users", users, pprint_value = config.wato_pprint_config)
+
+
+# User attributes not to put into contact definitions for Check_MK
+def _non_contact_keys():
+    return [
+        "roles",
+        "password",
+        "locked",
+        "automation_secret",
+        "language",
+        "serial",
+        "connector",
+        "num_failed_logins",
+        "enforce_pw_change",
+        "last_pw_change",
+        "last_seen",
+        "idle_timeout",
+    ] + _get_multisite_custom_variable_names()
+
+# User attributes to put into multisite configuration
+def _multisite_keys():
+    return [
+        "roles",
+        "locked",
+        "automation_secret",
+        "alias",
+        "language",
+        "connector",
+    ] + _get_multisite_custom_variable_names()
+
+
+def _get_multisite_custom_variable_names():
+    return [ k for k,v in user_attributes.items() if v["domain"] == "multisite" ]
+
+
+def _save_auth_serials(updated_profiles):
+    # Write out the users serials
+    serials = ""
+    for user_id, user in updated_profiles.items():
+        serials += '%s:%d\n' % (make_utf8(user_id), user.get('serial', 0))
+    store.save_file('%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file), serials)
 
 
 def rewrite_users():

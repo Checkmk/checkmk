@@ -3083,7 +3083,7 @@ class Query(object):
 
         if method not in cls._allowed_methods:
             raise MKClientError("Invalid method %s (allowed are %s) " %
-                                            ", ".join(cls._allowed_methods))
+                                (method, ", ".join(cls._allowed_methods)))
 
         return globals()["Query%s" % method]
 
@@ -3129,7 +3129,7 @@ class QueryGET(Query):
 
         if self.table_name not in self._allowed_tables:
             raise MKClientError("Invalid table: %s (allowed are: %s)" %
-                                        ", ".join(self._allowed_tables))
+                                (self.table_name, ", ".join(self._allowed_tables)))
 
         self.table = g_status_server.table(self.table_name)
 

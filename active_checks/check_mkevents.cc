@@ -123,11 +123,11 @@ int main(int argc, char **argv) {
 
     int argc_count = argc;
     for (int i = 1; i < argc; i++) {
-        if (strcmp("-H", argv[i]) == 0 && i < argc + 1) {
+        if (i < argc + 1 && strcmp("-H", argv[i]) == 0) {
             remote_host = argv[i + 1];
             i++;
             argc_count -= 2;
-        } else if (strcmp("-s", argv[i]) == 0 && i < argc + 1) {
+        } else if (i < argc + 1 && strcmp("-s", argv[i]) == 0) {
             unixsocket_path = argv[i + 1];
             i++;
             argc_count -= 2;

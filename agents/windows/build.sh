@@ -75,5 +75,5 @@ function build {
         # If special targets given, do just them.
         make -j${njobs} "$targets" || return 1
     fi
-    cd -
+    cd ..
 }

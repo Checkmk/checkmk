@@ -34,6 +34,11 @@ check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 unittest: WindowsAgentTest$(EXEEXT)
 	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
 
+integrationtest: install-strip
+	cd $(bindir)/it ; \
+	pytest --maxfail=10 ; \
+	cd -
+
 libcheck_mk_agent_a_SOURCES = \
         Configuration.cc \
         CrashHandler.cc \

@@ -15,6 +15,8 @@ if [ -z $SUDO_USER ]; then
     exit 1
 fi
 
+script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+
 . build.sh
 parse-args "$@"
 
@@ -40,7 +42,7 @@ fi
 # elements to make
 # a) different namespaces possible for (windows agent, agent updater)
 # b) parallel builds of different chroot versions possible
-CHROOT_VERSION=$(<$base/agents/windows/$versionfile)
+export CHROOT_VERSION=$(<$base/agents/windows/$versionfile)
 CHROOT_BASE_PATH=${CHROOT_BASE_PATH:-$base/$base_rel_dir/chroot}
 export CHROOT_PATH=$CHROOT_BASE_PATH/$CHROOT_NAME/$CHROOT_VERSION
 
@@ -79,9 +81,14 @@ echo "CHROOT_PATH is $CHROOT_PATH"
     # Check that user does not exist before since SUDO_USER may be root, as well.
     #
     # Do this not only during setup, because the setup is only executed once and
-    # the build may be started with different SUDO_USER users).
+    # the build may be started with different SUDO_USER users.
     if ! grep -q "\<${SUDO_USER}\>" "$CHROOT_PATH/etc/passwd" ; then
         ./do-chroot "useradd -lmo -u $(id -u $SUDO_USER) -s /bin/bash $SUDO_USER"
+    fi
+
+    # Copy windows test-specific ssh key pair from ~$SUDO_USER/.ssh to chroot.
+    if [[ ! -f "$CHROOT_PATH/home/$SUDO_USER/.ssh/id_rsa" ]] ; then
+        $script_dir/setup-ssh
     fi
 ) 200>/var/lock/cmk-make-agent_${CHROOT_PATH//\//-}.lock
 echo "[MAKE-CHROOT LOCK] released"
@@ -89,4 +96,4 @@ echo "[MAKE-CHROOT LOCK] released"
 # Build the Windows agent within chroot by calling the 'build-agent' script as
 # $SUDO_USER.
 ./do-chroot \
-        "/bin/su - $SUDO_USER -c bash -c 'CHROOT_NAME=$CHROOT_NAME CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR NEW_VERSION=$NEW_VERSION /$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"
+        "/bin/su - $SUDO_USER -c bash -c 'CHROOT_NAME=$CHROOT_NAME CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR NEW_VERSION=$NEW_VERSION SSH_AUTH_SOCK=$SSH_AUTH_SOCK /$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"

@@ -4,6 +4,7 @@ set -e
 SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
+VERSION_PATH=$(realpath $ROOT/version)
 
 make
-sudo make install
+sudo make OMD_ROOT=$VERSION_PATH install

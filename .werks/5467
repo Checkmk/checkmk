@@ -1,0 +1,11 @@
+Title: Fixed interaction between periodic notifications and acknowledgements.
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1512123843
+Class: fix
+
+When an acknowledgement was removed or expired, any periodic notifications
+would not be triggered again. This has been fixed.

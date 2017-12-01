@@ -626,6 +626,14 @@ def all_offline_hosts():
              if not in_binary_hostlist(hostname, only_hosts) ]
 
 
+
+def all_configured_offline_hosts():
+    hostlist = all_configured_realhosts().union(all_configured_clusters())
+
+    return set([ hostname for hostname in hostlist
+             if not in_binary_hostlist(hostname, only_hosts) ])
+
+
 def duplicate_hosts():
     # Sanity check for duplicate hostnames
     seen_hostnames = set([])
@@ -3099,9 +3107,21 @@ def replace_macros(s, macros):
 
 # Create a list of all hosts of a certain hostgroup. Needed only for
 # option --list-hosts
-def list_all_hosts(hostgroups):
+def list_all_hosts(hostgroups, opts):
+    options    = [x[0] for x in opts]
     hostlist = []
-    for hn in all_active_hosts():
+
+    hostnames = set()
+    if "--all-sites" in options:
+        hostnames.update(all_configured_hosts()) # Return all hosts, including offline
+        if not "--include-offline" in options:
+            hostnames -= all_configured_offline_hosts()
+    else:
+        hostnames.update(all_active_hosts())
+        if "--include-offline" in options:
+            hostnames.update(all_offline_hosts())
+
+    for hn in hostnames:
         if len(hostgroups) == 0:
             hostlist.append(hn)
         else:
@@ -3536,7 +3556,7 @@ def usage():
  cmk --check-discovery HOSTNAME       check for items not yet checked
  cmk --discover-marked-hosts          run discovery for hosts known to have changed services
  cmk --update-dns-cache               update IP address lookup cache
- cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts
+ cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts, additional options --all-sites --include-offline
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
  cmk -L, --list-checks                list all available check types
  cmk -M, --man [CHECKTYPE]            show manpage for check CHECKTYPE
@@ -4564,7 +4584,7 @@ opt_log_to_stdout = False
 # Do option parsing and execute main function -
 short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBilf'
 long_options = [ "help", "version", "verbose", "compile", "debug", "interactive",
-                 "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
+                 "list-checks", "list-hosts", "all-sites", "include-offline", "list-tag", "no-tcp", "cache",
                  "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
                  "snmptranslate", "bake-agents", "force", "show-snmp-stats",
                  "usewalk", "scan-parents", "procs=", "automation=", "handle-alerts", "notify",
@@ -4752,7 +4772,7 @@ try:
             man_pages.print_man_page_browser()
             done = True
         elif o in [ '-l', '--list-hosts' ]:
-            l = list_all_hosts(args)
+            l = list_all_hosts(args, opts)
             sys.stdout.write("\n".join(l))
             if l != []:
                 sys.stdout.write("\n")

@@ -38,17 +38,9 @@
 #include <string>
 #include <vector>
 
-using std::cout;
-using std::endl;
-using std::ostream;
-using std::string;
-using std::stringstream;
-using std::to_string;
-using std::vector;
-
 enum class State { ok = 0, warn = 1, crit = 2, unknown = 3 };
 
-ostream &operator<<(ostream &os, const State &state) {
+std::ostream &operator<<(std::ostream &os, const State &state) {
     switch (state) {
         case State::ok:
             return os << "OK";
@@ -62,31 +54,31 @@ ostream &operator<<(ostream &os, const State &state) {
     return os;  // make compilers happy
 }
 
-[[noreturn]] void reply(State state, const string &output) {
-    cout << state << " - ";
+[[noreturn]] void reply(State state, const std::string &output) {
+    std::cout << state << " - ";
     // Make sure that plugin output does not contain a vertical bar. If that is
     // the case then replace it with a Uniocode "Light vertical bar". Same as in
     // Check_MK.
     for (char i : output) {
         if (i == '|') {
             // \u2758 (utf-8 encoded light vertical bar)
-            cout << "\xe2\x94\x82";  // NOLINT
+            std::cout << "\xe2\x94\x82";  // NOLINT
         } else {
-            cout << i;
+            std::cout << i;
         }
     }
-    cout << endl;
+    std::cout << std::endl;
     exit(static_cast<int>(state));
 }
 
-[[noreturn]] void ioError(const string &message) {
+[[noreturn]] void ioError(const std::string &message) {
     reply(State::unknown, message + " (" + strerror(errno) + ")");
 }
 
-[[noreturn]] void tcpError(const string &message, const string &addr,
+[[noreturn]] void tcpError(const std::string &message, const std::string &addr,
                            int port) {
     ioError(message + " to event daemon via TCP " + addr + ":" +
-            to_string(port));
+            std::to_string(port));
 }
 
 void usage() {
@@ -97,9 +89,9 @@ void usage() {
         " HOST  may be a hostname, and IP address or hostname/IP-address.");
 }
 
-string prepare_host_match_list(const char *s) {
+std::string prepare_host_match_list(const char *s) {
     const char *scan = s;
-    string result;
+    std::string result;
     while (*scan != 0) {
         if (*scan == '/') {
             result += " ";
@@ -119,7 +111,7 @@ int main(int argc, char **argv) {
     int remote_port = 6558;
     char *application = nullptr;
     bool ignore_acknowledged = false;
-    string unixsocket_path;
+    std::string unixsocket_path;
 
     int argc_count = argc;
     for (int i = 1; i < argc; i++) {
@@ -155,7 +147,7 @@ int main(int argc, char **argv) {
             reply(State::unknown,
                   "OMD_ROOT is not set, no socket path is defined.");
         }
-        unixsocket_path = string(omd_path) + "/tmp/run/mkeventd/status";
+        unixsocket_path = std::string(omd_path) + "/tmp/run/mkeventd/status";
     }
 
     if (remote_host != nullptr) {
@@ -163,9 +155,8 @@ int main(int argc, char **argv) {
         struct in_addr **addr_list;
         char *remote_hostaddress = strtok(remote_host, ":");
         if ((he = gethostbyname(remote_hostaddress)) == nullptr) {
-            reply(State::unknown,
-                  "Unable to resolve remote host address: " +
-                      string(remote_hostaddress));
+            reply(State::unknown, "Unable to resolve remote host address: " +
+                                      std::string(remote_hostaddress));
         }
         addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
         for (int i = 0; addr_list[i] != nullptr; i++) {
@@ -222,7 +213,7 @@ int main(int argc, char **argv) {
     }
 
     // Create query message
-    string query_message;
+    std::string query_message;
     query_message += "GET events\n";
     query_message += "Columns: event_phase event_state event_text\n";
 
@@ -265,7 +256,7 @@ int main(int argc, char **argv) {
     // Get response
     char response_chunk[4096];
     memset(response_chunk, 0, sizeof(response_chunk));
-    stringstream response_stream;
+    std::stringstream response_stream;
     ssize_t read_length;
     while (0 <
            (read_length = read(sock, response_chunk, sizeof(response_chunk)))) {
@@ -275,25 +266,25 @@ int main(int argc, char **argv) {
                 response_chunk[i] = ' ';
             }
         }
-        response_stream << string(response_chunk, read_length);
+        response_stream << std::string(response_chunk, read_length);
         memset(response_chunk, 0, sizeof(response_chunk));
     }
     close(sock);
 
     // Start processing data
-    string line;
+    std::string line;
     getline(response_stream, line);
 
-    stringstream linestream;
+    std::stringstream linestream;
     linestream << line;
 
     // Get headers
-    string token;
+    std::string token;
     int idx_event_phase = -1;
     int idx_event_state = -1;
     int idx_event_text = -1;
     int current_index = 0;
-    vector<string> headers;
+    std::vector<std::string> headers;
     while (getline(linestream, token, '\t')) {
         if (strcmp(token.c_str(), "event_phase") == 0) {
             idx_event_phase = current_index;
@@ -309,13 +300,13 @@ int main(int argc, char **argv) {
     // Basic header validation
     if (idx_event_phase == -1 || idx_event_state == -1 ||
         idx_event_text == -1) {
-        reply(State::unknown,
-              "Invalid answer from event daemon\n" + response_stream.str() +
-                  "\nQuery was:\n" + query_message);
+        reply(State::unknown, "Invalid answer from event daemon\n" +
+                                  response_stream.str() + "\nQuery was:\n" +
+                                  query_message);
     }
 
     // Get data
-    vector<vector<string> > data;
+    std::vector<std::vector<std::string> > data;
     while (getline(response_stream, line)) {
         if (line.size() < headers.size()) {
             break;  // broken / empty line
@@ -323,7 +314,7 @@ int main(int argc, char **argv) {
         linestream.str("");
         linestream.clear();
         linestream << line;
-        vector<string> data_line;
+        std::vector<std::string> data_line;
         bool has_data = false;
         while (getline(linestream, token, '\t')) {
             has_data = true;
@@ -335,7 +326,7 @@ int main(int argc, char **argv) {
     }
 
     // Generate output
-    string worst_row_event_text;
+    std::string worst_row_event_text;
     State worst_state = State::ok;
     int count = 0;
     int unhandled = 0;
@@ -361,12 +352,12 @@ int main(int argc, char **argv) {
     }
 
     if (count == 0) {
-        string app =
-            application == nullptr ? "" : (string(application) + " on ");
+        std::string app =
+            application == nullptr ? "" : (std::string(application) + " on ");
         reply(State::ok, "no events for " + app + host);
     }
 
-    stringstream output;
+    std::stringstream output;
     output << count << " events (" << unhandled << " unacknowledged)";
     if (!worst_row_event_text.empty()) {
         output << ", worst state is " << worst_state

@@ -43,7 +43,7 @@ group = _('Site Management')
 #   '----------------------------------------------------------------------'
 
 register_configvar(group,
-    "AUTOSTART",
+    "site_autostart",
     Checkbox(
         title = _("Start during system boot"),
         help = _("Whether or not this site should be started during startup of "
@@ -67,7 +67,7 @@ def _monitoring_core_choices():
 
 
 register_configvar(group,
-    "CORE",
+    "site_core",
     DropdownChoice(
         title = _("Monitoring core"),
         help = _("Choose the monitoring core to run for monitoring. You can also "
@@ -81,7 +81,7 @@ register_configvar(group,
 
 
 register_configvar(group,
-    "LIVESTATUS_TCP",
+    "site_livestatus_tcp",
     Optional(
         Dictionary(
             elements = [
@@ -116,7 +116,7 @@ register_configvar(group,
 
 
 register_configvar(group,
-    "MKEVENTD",
+    "site_mkeventd",
     Optional(
         ListChoice(
             choices = [
@@ -142,7 +142,7 @@ register_configvar(group,
 
 
 register_configvar(group,
-    "NSCA",
+    "site_nsca",
     Optional(
         Integer(
             title = _("Port number"),
@@ -358,8 +358,8 @@ class ConfigDomainApache(watolib.ConfigDomain):
         output = watolib.wato_fileheader()
 
         if config:
-            output += "ServerLimit %d\n" % config["process_tuning"]["number_of_processes"]
-            output += "MaxClients %d\n" % config["process_tuning"]["number_of_processes"]
+            output += "ServerLimit %d\n" % config["apache_process_tuning"]["number_of_processes"]
+            output += "MaxClients %d\n" % config["apache_process_tuning"]["number_of_processes"]
 
         config_file_path = os.path.join(cmk.paths.omd_root, "etc/apache/conf.d", "zzz_check_mk.conf")
         store.save_file(config_file_path, output)
@@ -374,7 +374,7 @@ class ConfigDomainApache(watolib.ConfigDomain):
 
     def default_globals(self):
         return {
-            "process_tuning": {
+            "apache_process_tuning": {
                 "number_of_processes" : self._get_value_from_config("MaxClients", int, 64),
             }
         }
@@ -399,7 +399,7 @@ class ConfigDomainApache(watolib.ConfigDomain):
 
 
 register_configvar(group,
-    "process_tuning",
+    "apache_process_tuning",
     Dictionary(
         title = _("Apache process tuning"),
         elements = [
@@ -460,7 +460,7 @@ class ConfigDomainRRDCached(watolib.ConfigDomain):
         config = self._get_effective_config()
 
         output = watolib.wato_fileheader()
-        for key, val in sorted(config.get("tuning", {}).items()):
+        for key, val in sorted(config.get("rrdcached_tuning", {}).items()):
             output += "%s=%d\n" % (key, val)
 
         config_file_path = os.path.join(cmk.paths.omd_root, "etc/rrdcached.d", "zzz_check_mk.conf")
@@ -475,7 +475,7 @@ class ConfigDomainRRDCached(watolib.ConfigDomain):
 
     def default_globals(self):
         return {
-            "tuning": {
+            "rrdcached_tuning": {
                 "TIMEOUT"       : self._get_value_from_config("TIMEOUT", int, 3600),
                 "RANDOM_DELAY"  : self._get_value_from_config("RANDOM_DELAY", int, 1800),
                 "FLUSH_TIMEOUT" : self._get_value_from_config("FLUSH_TIMEOUT", int, 7200),
@@ -502,7 +502,7 @@ class ConfigDomainRRDCached(watolib.ConfigDomain):
 
 
 register_configvar(group,
-    "tuning",
+    "rrdcached_tuning",
     Dictionary(
         title = _("RRDCached tuning"),
         elements = [

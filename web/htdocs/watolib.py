@@ -689,6 +689,9 @@ class ConfigDomainOMD(ConfigDomain):
             else:
                 settings["MKEVENTD"] = None
 
+        # Convert from OMD key (to lower, add "site_" prefix)
+        settings = dict([ ("site_%s" % key.lower(), val) for key, val in settings.items() ])
+
         return settings
 
 
@@ -696,6 +699,9 @@ class ConfigDomainOMD(ConfigDomain):
     # Counterpart of the _from_omd_config() method.
     def _to_omd_config(self, config):
         settings = {}
+
+        # Convert to OMD key
+        config = dict([ (key.upper()[5:], val) for key, val in config.items() ])
 
         if "LIVESTATUS_TCP" in config:
             if config["LIVESTATUS_TCP"] is not None:

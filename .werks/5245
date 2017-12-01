@@ -1,0 +1,10 @@
+Title: netapp_api_status: Now also considers the status "ok_with_suppressed" as OK
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p20
+Date: 1512119765
+Class: fix
+
+Supported OK states are now "ok", "ok-with-suppressed" and "ok_with_suppressed".

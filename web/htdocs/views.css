@@ -596,6 +596,13 @@ table.timeline {
     border-collapse: collapse;
 }
 
+table.timeline.low {
+    height: 5px;
+    margin-top: -18px;
+    border-spacing: 0px;
+    border-collapse: collapse;
+}
+
 table.timeline.standalone {
     box-shadow: 0px 0px 1px #ccf;
     margin-bottom: 20px;
@@ -741,6 +748,7 @@ td.invtree ul.treeangle {
     margin-bottom: 3px;
 }
 
+td.sla_spec table,
 td.invtree table,
 td.agent_config table {
    border-collapse: collapse;
@@ -769,6 +777,7 @@ table.data.single td.invtree td.number {
 td.invtree table th {
     text-align: left;
 }
+
 td.invtree table td {
     background-color: #fff;
 }
@@ -820,4 +829,136 @@ td.if_state.if_available {
 td.if_state.if_not_available {
     color: black;
     background-color: #cccccc;
+}
+
+
+
+
+
+
+table.data.headerleft.sla th {
+    width: 130px;
+    text-align: left;
+    padding: 4px 5px;
+}
+
+table.data.headerleft.sla a {
+    color: white;
+    text-decoration: underline;
+}
+
+table.data.headerleft.sla th.sla_state {
+    width: 30px;
+}
+
+table.data.headerleft.sla th.sla_date,
+table.data.headerleft.sla td.sla_date{
+    width: 120px;
+    padding-right: 4px;
+}
+
+table.data.headerleft.sla th.sla_duration{
+    text-align: left;
+}
+
+table.data.headerleft.sla td.sla_duration{
+    text-align: right;
+    padding-right: 4px;
+}
+
+table.data.headerleft.sla td.sla_output{
+    width: 70%;
+    padding-left: 4px;
+}
+
+table.data.headerleft.sla td {
+    padding: 0px;
+}
+
+table.data.headerleft.sla {
+    margin-bottom: 20px;
+}
+
+table.timeline.standalone.sla td {
+    border: 0px solid #444;
+    padding: 0px;
+}
+
+table.timeline.standalone.sla  {
+    margin-bottom: 5px;
+}
+
+table.timeline.standalone.sla.period  {
+    margin-bottom: 5px;
+    height: 10px;
+}
+
+table.timeline td.state0.even{
+    background-color: #0b3;
+}
+
+table.timeline td.state0.odd{
+    background-color: #092;
+}
+
+table.timeline td.state2.even{
+    background-color: #f00;
+}
+
+table.timeline td.state2.odd{
+    background-color: #900;
+}
+
+div.sla_details{
+    background-color: #73a1b4;
+}
+
+td.sla > div.foldable > b{
+    color: black;
+}
+
+h2.sla {
+    margin-bottom: 3px;
+}
+
+h3.sla {
+    margin-top: 3px;
+}
+
+table.data tr.sla_horizontal_line > td.sla_horizontal_line {
+    height: 1px;
+}
+
+table.data tr.sla_horizontal_line > td.sla_horizontal_line.black {
+    height: 1px;
+    border-bottom: 1px solid black;
+}
+
+
+table.timeline.sla td.sla_hilite,
+table.data.oddeven > tbody > tr.sla_hilite {
+    padding: 0px;
+    border-style: none;
+    filter: brightness(70%);
+}
+
+table.timeline.sla td.sla_hilite.sla_error_hilite,
+table.data.oddeven > tbody > tr.sla_hilite.sla_error_hilite {
+    padding: 0px;
+    border-style: none;
+    filter: brightness(50%);
+}
+
+div.timelinerange.sla {
+    width: auto;
+    float: none;
+}
+
+
+div#avoptions td.dictleft {
+    width: 99%;
+}
+
+div#avoptions td.dictright {
+    padding-right: 4px;
 }

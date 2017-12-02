@@ -33,6 +33,9 @@ from lib import *
 
 import cmk.paths
 
+if cmk.is_enterprise_edition():
+    import sla
+
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 display_options      = None
@@ -633,7 +636,21 @@ class Cell(object):
     def title(self, use_short=True):
         painter = self.painter()
         if use_short:
-            return painter.get("short", painter["title"])
+            return self._get_short_title(painter)
+        else:
+            return self._get_long_title(painter)
+
+
+    def _get_short_title(self, painter):
+        if type(painter.get("short")) in [types.FunctionType, types.MethodType]:
+            return painter["short"](self.painter_parameters())
+        else:
+            return painter.get("short", self._get_long_title)
+
+
+    def _get_long_title(self, painter):
+        if type(painter.get("title")) in [types.FunctionType, types.MethodType]:
+            return painter["title"](self.painter_parameters())
         else:
             return painter["title"]
 
@@ -1644,6 +1661,15 @@ def show_view(view, show_heading = False, show_buttons = True,
                  if "host_name" in row:
                      row["host_inventory"] = inventory.load_tree(row["host_name"])
 
+        if cmk.is_enterprise_edition():
+            sla_params = []
+            for cell in cells:
+                if cell.painter_name() in ["sla_specific", "sla_fixed"]:
+                    sla_params.append(cell.painter_parameters())
+            if sla_params:
+                sla_configurations_container = sla.SLAConfigurationsContainerFactory.create_from_cells(sla_params, rows)
+                sla.SLAProcessor(sla_configurations_container).add_sla_data_to_rows(rows)
+
         sort_data(rows, sorters)
     else:
         rows = []
@@ -1655,6 +1681,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     if html.var("mode") == "availability":
         render_bi_availability(view_title(view), rows)
         return
+
 
     # TODO: Use livestatus Stats: instead of fetching rows!
     if only_count:
@@ -1770,6 +1797,9 @@ def get_needed_join_columns(join_cells, sorters, datasource):
 
     return list(join_columns)
 
+
+def is_sla_data_needed(group_cells, cells, sorters, all_active_filters):
+    pass
 
 def is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
     for cell in cells:
@@ -2485,7 +2515,9 @@ def get_painter_params_valuespec(painter):
     if "params" not in painter:
         return
 
-    if type(lambda: None) == type(painter["params"]):
+
+#    if type(lambda: None) == type(painter["params"]):
+    if isinstance(painter["params"], (types.FunctionType, types.MethodType)):
         return painter["params"]()
     else:
         return painter["params"]
@@ -2515,7 +2547,12 @@ def get_painter_title_for_choices(painter):
     if painter["columns"] == ["site"]:
         info_title = _("Site")
 
-    return "%s: %s" % (info_title, painter["title"])
+    if type(painter["title"]) in [types.FunctionType, types.MethodType]:
+        title = painter["title"]()
+    else:
+        title = painter["title"]
+
+    return "%s: %s" % (info_title, title)
 
 
 def painter_choices_with_params(painters):

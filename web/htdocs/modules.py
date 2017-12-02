@@ -37,6 +37,10 @@ internal_module_names = [
     'default_permissions',
 ]
 
+import cmk
+if cmk.is_enterprise_edition():
+    internal_module_names.append("sla")
+
 pagehandlers = {}
 
 # Modules to be loaded within the application by default. These

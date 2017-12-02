@@ -268,7 +268,7 @@ def do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avopti
         render_availability_tables(availability_tables, what, avoptions)
 
     annotations = availability.load_annotations()
-    render_annotations(annotations, av_rawdata, what, avoptions, omit_service = av_object != None)
+    show_annotations(annotations, av_rawdata, what, avoptions, omit_service = av_object != None)
 
 
 def render_availability_tables(availability_tables, what, avoptions):
@@ -306,7 +306,6 @@ def render_availability_timelines(what, av_data, avoptions):
 
 
 def render_availability_timeline(what, av_entry, avoptions):
-
     html.open_h3()
     html.write("%s %s" % (_("Timeline of"), availability.object_title(what, av_entry)))
     html.close_h3()
@@ -323,6 +322,7 @@ def render_availability_timeline(what, av_entry, avoptions):
     # TODO: Hier fehlt bei BI der Timewarpcode (also der Baum im Zauberzustand)
     # if what == "bi":
     #    render_timewarp(
+    # soso..
 
     # Table with detailed events
     table.begin("av_timeline", "", css="timelineevents", sortable=False, searchable=False)
@@ -705,9 +705,8 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
     return annos_to_render, render_date
 
 
-def render_annotations(annotations, av_rawdata, what, avoptions, omit_service):
+def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     annos_to_render, render_date = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
-
     table.begin(title = _("Annotations"), omit_if_empty = True)
     for (site_id, host, service), annotation in annos_to_render:
         table.row()

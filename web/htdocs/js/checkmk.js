@@ -2980,6 +2980,75 @@ function timetable_hover(row_nr, onoff)
 
 
 //#.
+//#   .--SLA-----------------------------------------------------------------.
+//#   |                         ____  _        _                             |
+//#   |                        / ___|| |      / \                            |
+//#   |                        \___ \| |     / _ \                           |
+//#   |                         ___) | |___ / ___ \                          |
+//#   |                        |____/|_____/_/   \_\                         |
+//#   |                                                                      |
+//#   +----------------------------------------------------------------------+
+//#   |                                                                      |
+//#   '----------------------------------------------------------------------'
+
+
+function sla_details_period_hover(td, sla_period, onoff)
+{
+    if (has_class(td, "lock_hilite")) {
+        return;
+    }
+
+    var sla_period_elements = document.getElementsByClassName(sla_period)
+    for(var i = 0; i < sla_period_elements.length; i++)
+    {
+        if (onoff) {
+            add_class(sla_period_elements[i], 'sla_hilite');
+        }
+        else {
+            remove_class(sla_period_elements[i], 'sla_hilite');
+        }
+    }
+}
+
+
+function sla_details_period_click(td, sla_period)
+{
+    var sla_period_elements = document.getElementsByClassName(sla_period);
+    var onoff = has_class(td, "lock_hilite")
+    for(var i = 0; i < sla_period_elements.length; i++)
+    {
+        if (onoff) {
+            remove_class(sla_period_elements[i], 'sla_hilite');
+            remove_class(sla_period_elements[i], 'lock_hilite');
+        }
+        else {
+            add_class(sla_period_elements[i], 'sla_hilite');
+            add_class(sla_period_elements[i], 'lock_hilite');
+        }
+    }
+}
+
+
+function sla_details_table_hover(tr, row_id, onoff) {
+    var sla_period_elements = tr.closest("table").closest("tbody").getElementsByClassName(row_id);
+    for(var i = 0; i < sla_period_elements.length; i++)
+    {
+
+        if (onoff) {
+            add_class(sla_period_elements[i], 'sla_hilite');
+            add_class(sla_period_elements[i], 'sla_error_hilite');
+        }
+        else {
+            remove_class(sla_period_elements[i], 'sla_error_hilite');
+            if (!has_class(sla_period_elements[i], "lock_hilite")) {
+                remove_class(sla_period_elements[i], 'sla_hilite');
+            }
+        }
+    }
+}
+
+
+//#.
 //#   .-Keybindings--------------------------------------------------------.
 //#   |        _  __          _     _           _ _                        |
 //#   |       | |/ /___ _   _| |__ (_)_ __   __| (_)_ __   __ _ ___        |

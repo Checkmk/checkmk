@@ -291,6 +291,7 @@ td.statex {  /* zero count */
 tr.odd0, tr.oddp        { background-color: #eee; }
 tr.even0, tr.evenp       { background-color: #ddd; }
 
+td.odd0.sla  { background-color: #aaa; }
 td.odd0  { background-color: #eee; }
 td.even0 { background-color: #ddd; }
 

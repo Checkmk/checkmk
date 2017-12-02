@@ -108,7 +108,11 @@ statistics_headers = {
 # 2. show in single or double height box
 # 3. use this in reporting
 # 4. the valuespec
+
 def get_avoption_entries(what):
+    return get_av_display_options(what) + get_av_computation_options()
+
+def get_av_display_options(what):
     if what == "bi":
         grouping_choices = [
           ( None,             _("Do not group") ),
@@ -121,9 +125,6 @@ def get_avoption_entries(what):
           ( "host_groups",    _("By Host group") ),
           ( "service_groups", _("By Service group") ),
         ]
-
-    def aligned_label(text):
-        return "<div style=\"width: 186px; display: inline-block;\">%s:</div>" % text
 
     return [
         # Time range selection
@@ -152,106 +153,6 @@ def get_avoption_entries(what):
               ]
         )),
 
-        # How to deal with downtimes
-        ( "downtimes",
-          "double",
-          True,
-          Dictionary(
-              title = _("Scheduled Downtimes"),
-              columns = 2,
-              elements = [
-                  ( "include",
-                    DropdownChoice(
-                        choices = [
-                          ( "honor", _("Honor scheduled downtimes") ),
-                          ( "ignore", _("Ignore scheduled downtimes") ),
-                          ( "exclude", _("Exclude scheduled downtimes" ) ),
-                       ],
-                       default_value = "honor",
-                    )
-                  ),
-                  ( "exclude_ok",
-                    Checkbox(label = _("Treat phases of UP/OK as non-downtime"))
-                  ),
-              ],
-              optional_keys = False,
-        )),
-
-        # How to deal with downtimes, etc.
-        ( "consider",
-          "double",
-          True,
-          Dictionary(
-             title = _("Status Classification"),
-             columns = 2,
-             elements = [
-                 ( "flapping",
-                    Checkbox(
-                        label = _("Consider periods of flapping states"),
-                        default_value = True),
-                 ),
-                 ( "host_down",
-                    Checkbox(
-                        label = _("Consider times where the host is down"),
-                        default_value = True),
-                 ),
-                 ( "unmonitored",
-                    Checkbox(
-                        label = _("Include unmonitored time"),
-                        default_value = True),
-                 ),
-             ],
-             optional_keys = False,
-        )),
-
-        ( "state_grouping",
-          "double",
-          True,
-          Dictionary(
-             title = _("Service Status Grouping"),
-             columns = 2,
-             elements = [
-                 ( "warn",
-                    DropdownChoice(
-                        label = aligned_label(_("Treat Warning as")),
-                        choices = [
-                          ( "ok",      _("OK") ),
-                          ( "warn",    _("WARN") ),
-                          ( "crit",    _("CRIT") ),
-                          ( "unknown", _("UNKNOWN") ),
-                        ],
-                        default_value = "warn",
-                      ),
-                 ),
-                 ( "unknown",
-                    DropdownChoice(
-                        label = aligned_label(_("Treat Unknown/Unreachable as")),
-                        choices = [
-                          ( "ok",      _("OK") ),
-                          ( "warn",    _("WARN") ),
-                          ( "crit",    _("CRIT") ),
-                          ( "unknown", _("UNKNOWN") ),
-                        ],
-                        default_value = "unknown",
-                      ),
-                 ),
-                 ( "host_down",
-                    DropdownChoice(
-                        label = aligned_label(_("Treat Host Down as")),
-                        choices = [
-                          ( "ok",        _("OK") ),
-                          ( "warn",      _("WARN") ),
-                          ( "crit",      _("CRIT") ),
-                          ( "unknown",   _("UNKNOWN") ),
-                          ( "host_down", _("Host Down") ),
-                        ],
-                        default_value = "host_down",
-                      ),
-                 ),
-             ],
-             optional_keys = False,
-        )),
-
         # Visual levels for the availability
         ( "av_levels",
           "double",
@@ -265,22 +166,6 @@ def get_avoption_entries(what):
               ),
               title = _("Visual levels for the availability (OK percentage)"),
         )),
-
-        # Filter rows according to actual availability
-        ( "av_filter_outages",
-          "double",
-          True,
-          Dictionary(
-              title = _("Only show objects with outages"),
-              columns = 2,
-              elements = [
-                 ( "warn",   Percentage(title = _("Show only rows with WARN of at least"), default_value = 0.0)),
-                 ( "crit",   Percentage(title = _("Show only rows with CRIT of at least"), default_value = 0.0)),
-                 ( "non-ok", Percentage(title = _("Show only rows with non-OK of at least"), default_value = 0.0)),
-              ],
-              optional_keys = False,
-        )),
-
 
         # Show colummns for min, max, avg duration and count
         ( "outage_statistics",
@@ -351,6 +236,184 @@ def get_avoption_entries(what):
               ],
         )),
 
+        # Omit all non-OK columns
+        ( "av_mode",
+          "single",
+          True,
+          Checkbox(
+              title = _("Availability"),
+              label = _("Just show the availability (i.e. OK/UP)"),
+        )),
+
+        # Group by Host, Hostgroup or Servicegroup?
+        ( "grouping",
+          "single",
+          True,
+          DropdownChoice(
+              title = _("Grouping"),
+              choices = grouping_choices,
+              default_value = None,
+        )),
+
+        # Format of numbers
+        ( "dateformat",
+          "single",
+          True,
+          DropdownChoice(
+              title = _("Format time stamps as"),
+              choices = [
+                  ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS") ),
+                  ("epoch",               _("Unix Timestamp (Epoch)") ),
+              ],
+              default_value = "yyyy-mm-dd hh:mm:ss",
+        )),
+
+        # Summary line
+        ( "summary",
+          "single",
+          True,
+          DropdownChoice(
+              title = _("Summary line"),
+              choices = [
+                  ( None,      _("Do not show a summary line") ),
+                  ( "sum",     _("Display total sum (for % the average)") ),
+                  ( "average", _("Display average") ),
+              ],
+              default_value = "sum",
+        )),
+
+        # Timeline
+        ( "show_timeline",
+          "single",
+          True,
+          Checkbox(
+              title = _("Timeline"),
+              label = _("Show timeline of each object directly in table"),
+        )),
+
+    ]
+
+
+def get_av_computation_options():
+    return [
+        # How to deal with downtimes
+        ( "downtimes",
+          "double",
+          True,
+          Dictionary(
+              title = _("Scheduled Downtimes"),
+              columns = 2,
+              elements = [
+                  ( "include",
+                    DropdownChoice(
+                        title = _("Handling"),
+                        choices = [
+                          ( "honor", _("Honor scheduled downtimes") ),
+                          ( "ignore", _("Ignore scheduled downtimes") ),
+                          ( "exclude", _("Exclude scheduled downtimes" ) ),
+                       ],
+                       default_value = "honor",
+                    )
+                  ),
+                  ( "exclude_ok",
+                    Checkbox(
+                        title = _("Phases"),
+                        label = _("Treat phases of UP/OK as non-downtime"))
+                  ),
+              ],
+              optional_keys = False,
+        )),
+
+        # How to deal with downtimes, etc.
+        ( "consider",
+          "double",
+          True,
+          Dictionary(
+             title = _("Status Classification"),
+             columns = 2,
+             elements = [
+                 ( "flapping",
+                    Checkbox(
+                        title = _("Consider periods of flapping states"),
+                        default_value = True),
+                 ),
+                 ( "host_down",
+                    Checkbox(
+                        title = _("Consider times where the host is down"),
+                        default_value = True),
+                 ),
+                 ( "unmonitored",
+                    Checkbox(
+                        title = _("Include unmonitored time"),
+                        default_value = True),
+                 ),
+             ],
+             optional_keys = False,
+        )),
+
+        ( "state_grouping",
+          "double",
+          True,
+          Dictionary(
+             title = _("Service Status Grouping"),
+             columns = 2,
+             elements = [
+                 ( "warn",
+                    DropdownChoice(
+                        title = _("Treat Warning as"),
+                        choices = [
+                          ( "ok",      _("OK") ),
+                          ( "warn",    _("WARN") ),
+                          ( "crit",    _("CRIT") ),
+                          ( "unknown", _("UNKNOWN") ),
+                        ],
+                        default_value = "warn",
+                      ),
+                 ),
+                 ( "unknown",
+                    DropdownChoice(
+                        title = _("Treat Unknown/Unreachable as"),
+                        choices = [
+                          ( "ok",      _("OK") ),
+                          ( "warn",    _("WARN") ),
+                          ( "crit",    _("CRIT") ),
+                          ( "unknown", _("UNKNOWN") ),
+                        ],
+                        default_value = "unknown",
+                      ),
+                 ),
+                 ( "host_down",
+                    DropdownChoice(
+                        title = _("Treat Host Down as"),
+                        choices = [
+                          ( "ok",        _("OK") ),
+                          ( "warn",      _("WARN") ),
+                          ( "crit",      _("CRIT") ),
+                          ( "unknown",   _("UNKNOWN") ),
+                          ( "host_down", _("Host Down") ),
+                        ],
+                        default_value = "host_down",
+                      ),
+                 ),
+             ],
+             optional_keys = False,
+        )),
+
+        # Filter rows according to actual availability
+        ( "av_filter_outages",
+          "double",
+          True,
+          Dictionary(
+              title = _("Only show objects with outages"),
+              columns = 2,
+              elements = [
+                 ( "warn",   Percentage(title = _("Show only rows with WARN of at least"), default_value = 0.0)),
+                 ( "crit",   Percentage(title = _("Show only rows with CRIT of at least"), default_value = 0.0)),
+                 ( "non-ok", Percentage(title = _("Show only rows with non-OK of at least"), default_value = 0.0)),
+              ],
+              optional_keys = False,
+        )),
+
         # Optionally group some states together
         ( "host_state_grouping",
           "single",
@@ -361,7 +424,8 @@ def get_avoption_entries(what):
              elements = [
                  ( "unreach",
                     DropdownChoice(
-                        label = aligned_label(_("Treat Unreachable as")),
+                        # TOOD: aligned
+                        title = _("Treat Unreachable as"),
                         choices = [
                           ( "up",        _("UP") ),
                           ( "down",      _("DOWN") ),
@@ -372,16 +436,6 @@ def get_avoption_entries(what):
                  ),
              ],
              optional_keys = False,
-        )),
-
-
-        # Omit all non-OK columns
-        ( "av_mode",
-          "single",
-          True,
-          Checkbox(
-              title = _("Availability"),
-              label = _("Just show the availability (i.e. OK/UP)"),
         )),
 
         # How to deal with the service periods
@@ -412,29 +466,6 @@ def get_avoption_entries(what):
                default_value = "ignore",
         )),
 
-        # Group by Host, Hostgroup or Servicegroup?
-        ( "grouping",
-          "single",
-          True,
-          DropdownChoice(
-              title = _("Grouping"),
-              choices = grouping_choices,
-              default_value = None,
-        )),
-
-        # Format of numbers
-        ( "dateformat",
-          "single",
-          True,
-          DropdownChoice(
-              title = _("Format time stamps as"),
-              choices = [
-                  ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS") ),
-                  ("epoch",               _("Unix Timestamp (Epoch)") ),
-              ],
-              default_value = "yyyy-mm-dd hh:mm:ss",
-        )),
-
         # Short time intervals
         ( "short_intervals",
           "single",
@@ -454,29 +485,6 @@ def get_avoption_entries(what):
           Checkbox(
               title = _("Phase Merging"),
               label = _("Do not merge consecutive phases with equal state"),
-        )),
-
-        # Summary line
-        ( "summary",
-          "single",
-          True,
-          DropdownChoice(
-              title = _("Summary line"),
-              choices = [
-                  ( None,      _("Do not show a summary line") ),
-                  ( "sum",     _("Display total sum (for % the average)") ),
-                  ( "average", _("Display average") ),
-              ],
-              default_value = "sum",
-        )),
-
-        # Timeline
-        ( "show_timeline",
-          "single",
-          True,
-          Checkbox(
-              title = _("Timeline"),
-              label = _("Show timeline of each object directly in table"),
         )),
 
         ( "timelimit",
@@ -553,7 +561,7 @@ def prepare_avo_timeformats(timeformat):
 
 def get_default_avoptions():
     return {
-        "range"               : (time.time() - 86400, time.time()),
+        "range"               : ((time.time() - 86400, time.time()), ""),
         "rangespec"           : "d0",
         "labelling"           : [],
         "av_levels"           : None,
@@ -683,6 +691,7 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     if avoptions["grouping"] not in [ None, "host" ]:
         filter_groups_of_entries(context, avoptions, spans)
 
+
     # Now we find out if the log row limit was exceeded or
     # if the log's length is the limit by accident.
     # If this limit was exceeded then we cut off the last element
@@ -810,6 +819,8 @@ def compute_availability(what, av_rawdata, avoptions):
             total_duration = 0
             considered_duration = 0
             for span in service_entry:
+
+
                 # Information about host/service groups are in the actual entries
                 if grouping and grouping != "host" and what != "bi":
                     group_ids.update(span[grouping]) # List of host/service groups
@@ -860,6 +871,7 @@ def compute_availability(what, av_rawdata, avoptions):
 
                     elif s in avoptions["host_state_grouping"]:
                         s = avoptions["host_state_grouping"][s]
+
 
                 total_duration += span["duration"]
                 if consider:

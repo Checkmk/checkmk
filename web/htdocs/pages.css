@@ -1343,6 +1343,7 @@ a.element_dragger:hover {
     transform: scale(1.005);
 }
 
+td.sla_spec table table,
 td.invtree table,
 td.agent_config table.rulesets table,
 table.data tr.ac_test_details table,
@@ -1353,6 +1354,7 @@ table.data tr.notification_context table {
    margin-top: 3px;
 }
 
+td.sla_spec table td,
 td.invtree table td,
 td.agent_config table.rulesets table td,
 td.invtree table th,
@@ -1368,12 +1370,14 @@ td.rule_conditions table td {
     height: 14px;
 }
 
+td.sla_spec table td.title,
 td.invtree table th,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th {
     text-align: left;
 }
 
+td.sla_spec table td,
 td.invtree table td,
 td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
@@ -1382,6 +1386,7 @@ td.rule_conditions table td {
     background-color: #fff;
 }
 
+td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,
 td.rule_conditions table td.title {

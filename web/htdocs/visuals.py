@@ -356,6 +356,8 @@ def page_list(what, title, visuals, custom_columns = None,
         html.context_button(_("Custom graphs"), "custom_graphs.py", "custom_graph")
     if pagetypes.has_page_type("graph_tuning"):
         html.context_button(_("Graph tunings"), "graph_tunings.py", "graph_tuning")
+    if pagetypes.has_page_type("sla_configuration"):
+        html.context_button(_("SLAs"), "sla_configurations.py", "sla_configuration")
     html.context_button(_("Bookmark lists"), "bookmark_lists.py", "bookmark_list")
 
     html.end_context_buttons()

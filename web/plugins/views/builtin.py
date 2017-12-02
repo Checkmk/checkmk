@@ -1311,6 +1311,14 @@ multisite_builtin_views.update({
 
                   # 2. State and metrics
                   ('service_state',             None),
+                  (('sla_specific', { 'layout_options': {'show_elements' : ['subresults', 'summary_period']},
+                                      'painter_options': {
+                                                        'service_outage_count_painter':     {'display_type': 'period'},
+                                                        'service_state_percentage_painter': {'display_type': 'period',
+                                                                                             'float_precision': 2}},
+                                                        'timerange_spec': ('sla_period_range', (0, 1))
+                                    }),
+                    None),
                   ('svc_plugin_output',         None),
                   ('svc_long_plugin_output',    None),
                   ('perfometer',                None),

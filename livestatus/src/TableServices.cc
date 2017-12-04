@@ -24,6 +24,7 @@
 
 #include "TableServices.h"
 #include <memory>
+#include <ostream>
 #include <utility>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
@@ -37,6 +38,7 @@
 #include "CustomVarsValuesColumn.h"
 #include "DowntimeColumn.h"
 #include "FixedIntColumn.h"
+#include "Logger.h"
 #include "MetricsColumn.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
@@ -468,6 +470,7 @@ void TableServices::answerQuery(Query *query) {
     // do we know the host?
     if (const std::string *value =
             query->stringValueRestrictionFor("host_name")) {
+        Debug(logger()) << "using host name index with '" << *value << "'";
         // Older Nagios headers are not const-correct... :-P
         if (host *host = find_host(const_cast<char *>(value->c_str()))) {
             for (servicesmember *m = host->services; m != nullptr;
@@ -481,9 +484,10 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // do we know the service group?
-    if (const std::string *name = query->stringValueRestrictionFor("groups")) {
+    if (const std::string *value = query->stringValueRestrictionFor("groups")) {
+        Debug(logger()) << "using service group index with '" << *value << "'";
         if (servicegroup *sg =
-                find_servicegroup(const_cast<char *>(name->c_str()))) {
+                find_servicegroup(const_cast<char *>(value->c_str()))) {
             for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
                 if (!query->processDataset(Row(m->service_ptr))) {
                     break;
@@ -494,9 +498,11 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // do we know the host group?
-    if (const std::string *name =
+    if (const std::string *value =
             query->stringValueRestrictionFor("host_groups")) {
-        if (hostgroup *hg = find_hostgroup(const_cast<char *>(name->c_str()))) {
+        Debug(logger()) << "using host group index with '" << *value << "'";
+        if (hostgroup *hg =
+                find_hostgroup(const_cast<char *>(value->c_str()))) {
             for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
                 for (servicesmember *smem = m->host_ptr->services;
                      smem != nullptr; smem = smem->next) {
@@ -510,6 +516,7 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // no index -> iterator over *all* services
+    Debug(logger()) << "using full table scan";
     for (service *svc = service_list; svc != nullptr; svc = svc->next) {
         if (!query->processDataset(Row(svc))) {
             break;

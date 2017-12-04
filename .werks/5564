@@ -1,0 +1,12 @@
+Title: Fixed site filter when using "analyse notification"
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1512376886
+Class: fix
+
+When analyzing notifications forwarded from remote sites, the site filter did not work as
+intended. The site filter was always using the local (central) site ID as value for OMD_SITE
+instead of the origin site.

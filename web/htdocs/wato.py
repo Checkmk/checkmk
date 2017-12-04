@@ -2682,6 +2682,18 @@ class ModeDiagHost(WatoMode):
                     help = _("This variable allows to specify the TCP port to "
                              "be used to connect to the agent on a per-host-basis.")
                 )),
+                ('tcp_connect_timeout', Float(
+                    minvalue = 1.0,
+                    default_value = 5.0,
+                    unit = _("sec"),
+                    display_format = "%.0f",  # show values consistent to
+                    size = 2,                 # SNMP-Timeout
+                    title = _("TCP Connection Timeout (<a href=\"%s\">Rules</a>)") % \
+                        watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'tcp_connect_timeouts')]),
+                    help = _("This variable allows to specify a timeout for the "
+                            "TCP connection to the Check_MK agent on a per-host-basis."
+                            "If the agent does not respond within this time, it is considered to be unreachable.")
+                )),
                 ('snmp_timeout', Integer(
                     title = _("SNMP-Timeout (<a href=\"%s\">Rules</a>)") % \
                         watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
@@ -2735,12 +2747,13 @@ class ModeAjaxDiagHost(WatoWebApiMode):
             raise MKGeneralException(_('Invalid test.'))
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
-        args = [""] * 12
+        args = [""] * 13
         for idx, what in enumerate ([ 'ipaddress',
                                       'snmp_community',
                                       'agent_port',
                                       'snmp_timeout',
                                       'snmp_retries',
+                                      'tcp_connect_timeout',
                                       'datasource_program' ]):
             args[idx] = request.get(what, "")
 
@@ -2749,18 +2762,18 @@ class ModeAjaxDiagHost(WatoWebApiMode):
                            "1": "authNoPriv",
                            "2": "authPriv",
                          }.get(request.get("snmpv3_use"))
-            args[6] = snmpv3_use
+            args[7] = snmpv3_use
             if snmpv3_use != "noAuthNoPriv":
                 snmpv3_auth_proto = { "0": "md5", "1": "sha" }.get(request.get("snmpv3_auth_proto"))
-                args[7] = snmpv3_auth_proto
-                args[8] = request.get("snmpv3_security_name")
-                args[9] = request.get("snmpv3_security_password")
+                args[8] = snmpv3_auth_proto
+                args[9] = request.get("snmpv3_security_name")
+                args[10] = request.get("snmpv3_security_password")
                 if snmpv3_use == "authPriv":
                     snmpv3_privacy_proto = { "0": "DES", "1": "AES" }.get(request.get("snmpv3_privacy_proto"))
-                    args[10] = snmpv3_privacy_proto
-                    args[11] = request.get("snmpv3_privacy_password")
+                    args[11] = snmpv3_privacy_proto
+                    args[12] = request.get("snmpv3_privacy_password")
             else:
-                args[8] = request.get("snmpv3_security_name")
+                args[9] = request.get("snmpv3_security_name")
 
         return watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
 

@@ -55,6 +55,7 @@ class TCPDataSource(CheckMKAgentDataSource):
     def __init__(self):
         super(TCPDataSource, self).__init__()
         self._port = None
+        self._timeout = None
 
 
     def id(self):
@@ -71,6 +72,14 @@ class TCPDataSource(CheckMKAgentDataSource):
         else:
             return config.agent_port_of(hostname)
 
+    def set_timeout(self, timeout):
+        self._timeout = timeout
+
+    def _get_timeout(self, hostname):
+        if self._timeout:
+            return self._timeout
+        else:
+            return config.tcp_connect_timeout_of(hostname)
 
     def _execute(self, hostname, ipaddress):
         if self._use_only_cache:
@@ -84,9 +93,11 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         s = socket.socket(config.is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
                           socket.SOCK_STREAM)
-        s.settimeout(config.tcp_connect_timeout)
 
-        self._logger.debug("[%s] Connecting via TCP to %s:%d" % (self.id(), ipaddress, port))
+        timeout = self._get_timeout(hostname)
+        s.settimeout(timeout)
+
+        self._logger.debug("[%s] Connecting via TCP to %s:%d (%ss timeout)" % (self.id(), ipaddress, port, s.gettimeout()))
         s.connect((ipaddress, port))
         # Immediately close sending direction. We do not send any data
         # s.shutdown(socket.SHUT_WR)

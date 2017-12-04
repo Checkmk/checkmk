@@ -2277,7 +2277,7 @@ size=1.0T features='1 queue_if_no_path' hwhandler='1 alua' wp=rw
   |- 2:0:0:2  sde  8:64   active undef running
   `- 4:0:1:2  sdce 69:32  active undef running
 <<<md>>>
-Personalities : [raid6] [raid5] [raid4] [raid1] [raid10] 
+Personalities : [raid6] [raid5] [raid4] [raid1] [raid10]
 unused devices: <none>
 <<<diskstat>>>
 1416329024
@@ -2451,66 +2451,66 @@ unused devices: <none>
   68      96 sdbs 59991 0 479928 319839 0 0 0 0 0 319792 319793
   70       0 sdcs 64756720 0 13552847368 323976097 17006889 0 2971624668 240668581 0 158802441 564637339
 [dmsetup_info]
-mpathr 253:18  
+mpathr 253:18
 dwhvg-lv_dingdata_rimage_0 253:39 dwhvg lv_dingdata_rimage_0
-mpathe 253:27  
+mpathe 253:27
 dwhvg-lv_backup_rimage_1 253:51 dwhvg lv_backup_rimage_1
 rootvg-lv_swap 253:1 rootvg lv_swap
 rootvg-lv_usr 253:60 rootvg lv_usr
 rootvg-lv_root 253:0 rootvg lv_root
 rootvg-lv_var 253:62 rootvg lv_var
-mpathq 253:13  
-mpathd 253:2  
+mpathq 253:13
+mpathd 253:2
 dwhvg-lv_backup_rimage_0 253:49 dwhvg lv_backup_rimage_0
 dwhvg-lv_conndir 253:47 dwhvg lv_conndir
-mpathp 253:26  
-mpathc 253:9  
-mpatho 253:21  
-mpathb 253:17  
+mpathp 253:26
+mpathc 253:9
+mpatho 253:21
+mpathb 253:17
 rootvg-lv_install 253:66 rootvg lv_install
 rootvg-lv_local 253:61 rootvg lv_local
-mpathn 253:8  
+mpathn 253:8
 dwhvg-lv_backup 253:52 dwhvg lv_backup
-mpathz 253:20  
-mpathm 253:10  
+mpathz 253:20
+mpathm 253:10
 dwhvg-lv_opt_uniserv 253:57 dwhvg lv_opt_uniserv
 rootvg-lv_opt 253:63 rootvg lv_opt
-mpathy 253:25  
-mpathl 253:11  
+mpathy 253:25
+mpathl 253:11
 rootvg-lv_oracle11 253:64 rootvg lv_oracle11
 dwhvg-lv_backup_rmeta_1 253:50 dwhvg lv_backup_rmeta_1
-mpathx 253:19  
-mpathk 253:5  
+mpathx 253:19
+mpathk 253:5
 dwhvg-lv_opt_uniserv_rmeta_1 253:55 dwhvg lv_opt_uniserv_rmeta_1
 dwhvg-lv_dingdata 253:42 dwhvg lv_dingdata
 dwhvg-lv_backup_rmeta_0 253:48 dwhvg lv_backup_rmeta_0
-mpathw 253:23  
-mpathj 253:6  
+mpathw 253:23
+mpathj 253:6
 dwhvg-lv_opt_uniserv_rmeta_0 253:53 dwhvg lv_opt_uniserv_rmeta_0
-mpathv 253:22  
+mpathv 253:22
 dwhvg-lv_conndir_rimage_1 253:46 dwhvg lv_conndir_rimage_1
-mpathi 253:12  
+mpathi 253:12
 dwhvg-lv_opt_uniserv_rimage_1 253:56 dwhvg lv_opt_uniserv_rimage_1
 dwhvg-lv_dingdata_rmeta_1 253:40 dwhvg lv_dingdata_rmeta_1
-mpathu 253:24  
-mpathaa 253:14  
+mpathu 253:24
+mpathaa 253:14
 dwhvg-lv_conndir_rimage_0 253:44 dwhvg lv_conndir_rimage_0
 rootvg-lv_home 253:59 rootvg lv_home
-mpathh 253:4  
+mpathh 253:4
 dwhvg-lv_opt_uniserv_rimage_0 253:54 dwhvg lv_opt_uniserv_rimage_0
 dwhvg-lv_conndir_rmeta_1 253:45 dwhvg lv_conndir_rmeta_1
 rootvg-lv_tmp 253:58 rootvg lv_tmp
 dwhvg-lv_dingdata_rmeta_0 253:38 dwhvg lv_dingdata_rmeta_0
 rootvg-lv_agent 253:68 rootvg lv_agent
-mpatht 253:16  
+mpatht 253:16
 rootvg-lv_oragrid 253:65 rootvg lv_oragrid
-mpathg 253:7  
+mpathg 253:7
 dwhvg-lv_conndir_rmeta_0 253:43 dwhvg lv_conndir_rmeta_0
-mpaths 253:15  
+mpaths 253:15
 dwhvg-lv_dingdata_rimage_1 253:41 dwhvg lv_dingdata_rimage_1
-mpathf 253:3  
+mpathf 253:3
 <<<md>>>
-Personalities : 
+Personalities :
 unused devices: <none>
 <<<ntp>>>
 * 172.33.44.49    29.244.104.45    2 u    2   64  377    0.302   -0.353   0.483
@@ -2522,8 +2522,8 @@ QUEUE_active 4 0
 /var/spool/mqueue is empty
 		Total requests: 0
 <<<lnx_thermal>>>
-thermal_zone0 - x86_pkg_temp 59000 0 passive 0 passive 
-thermal_zone1 - BAT0 35000 
+thermal_zone0 - x86_pkg_temp 59000 0 passive 0 passive
+thermal_zone1 - BAT0 35000
 <<<logwatch>>>
 [[[/var/log/messages:missing]]]
 [[[/var/log/kern.log]]]
@@ -2712,6 +2712,12 @@ class TestAgentBasedStandardHosts(TestCase):
                 "] + agent_ports\n"
             )
 
+            f.write(
+                "tcp_connect_timeouts = [\n"
+                "    ( 5.0, [], ALL_HOSTS, {} ),\n"
+                "] + tcp_connect_timeouts\n"
+            )
+
             # Ensure RRDs are created with Check_MK default config
             f.write(
                 "cmc_host_rrd_config = [\n"
@@ -2775,6 +2781,12 @@ class TestAgentBasedStandardHosts(TestCase):
                 "agent_ports = [\n"
                 "    ( 6559, [], ALL_HOSTS, {} ),\n"
                 "] + agent_ports\n"
+            )
+
+            f.write(
+                "tcp_connect_timeouts = [\n"
+                "    ( 5.0, [], ALL_HOSTS, {} ),\n"
+                "] + tcp_connect_timeouts\n"
             )
 
 

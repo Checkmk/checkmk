@@ -1,0 +1,12 @@
+Title: Host-specific Check_MK agent TCP connect timeouts
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1512403864
+Class: feature
+
+The time for TCP connect timeouts of the Check_MK agent
+can now be defined on a per-host-basis using the WATO
+ruleset "Agent TCP connect timeout".

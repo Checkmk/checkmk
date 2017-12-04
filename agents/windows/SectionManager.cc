@@ -129,7 +129,7 @@ void SectionManager::loadStaticSections(Configuration &config,
         ->withSubSection((new SectionWMI("msexch_activesync", "msexch_activesync"))
                                  ->withObject(L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"))
         ->withSubSection((new SectionWMI("msexch_availability", "msexch_availability"))
-                                 ->withObject(L"Win32_PerfRawData_MSExchangeAvailabilityService"))
+                                 ->withObject(L"Win32_PerfRawData_MSExchangeAvailabilityService_MSExchangeAvailabilityService"))
             ->withSubSection(
                 (new SectionWMI("msexch_owa", "msexch_owa"))->withObject(L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"))
             ->withSubSection((new SectionWMI("msexch_autodiscovery", "msexch_autodiscovery"))

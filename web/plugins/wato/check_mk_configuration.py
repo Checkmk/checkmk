@@ -1327,12 +1327,14 @@ register_configvar(group,
 
 register_configvar(group,
     "tcp_connect_timeout",
-    Float(title = _("Agent TCP connect timeout (sec)"),
-          help = _("Timeout for TCP connect to agent in seconds. If the agent does "
-                   "not respond within this time, it is considered to be unreachable. "
+    Float(title = _("Agent TCP connect timeout"),
+          help = _("Timeout for TCP connect to agent in seconds. If the connection "
+                   "to the agent cannot be established within this time, it is considered to be unreachable. "
                    "Note: This does <b>not</b> limit the time the agent needs to "
                    "generate its output."),
-          minvalue = 1.0),
+          minvalue = 1.0,
+          unit = "sec",
+          ),
 )
 
 
@@ -2462,6 +2464,21 @@ register_rule(group,
     title = _("TCP port for connection to Check_MK agent"),
     help = _("This variable allows to specify the TCP port to "
              "be used to connect to the agent on a per-host-basis. "),
+)
+
+register_rule(group,
+    "tcp_connect_timeouts",
+    Float(
+        minvalue = 1.0,
+        default_value = 5.0,
+        unit = "sec",
+    ),
+    title = _("Agent TCP connect timeout"),
+    help = _("Timeout for TCP connect to the Check_MK agent in seconds. If the connection "
+             "to the agent cannot be established within this time, it is considered to be unreachable. "
+             "Note: This does <b>not</b> limit the time the agent needs to "
+             "generate its output. "
+             "This rule can be used to specify a timeout on a per-host-basis."),
 )
 
 register_rule(group,

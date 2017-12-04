@@ -1073,6 +1073,7 @@ function start_host_diag_test(ident, hostname) {
     }
 
     vars += '&agent_port=' + encodeURIComponent(document.getElementsByName('vs_rules_p_agent_port')[0].value);
+    vars += '&tcp_connect_timeout=' + encodeURIComponent(document.getElementsByName('vs_rules_p_tcp_connect_timeout')[0].value);
     vars += '&snmp_timeout=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_timeout')[0].value);
     vars += '&snmp_retries=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_retries')[0].value);
     if (document.getElementsByName('vs_rules_p_datasource_program').length > 0) {

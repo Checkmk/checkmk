@@ -684,6 +684,14 @@ def agent_port_of(hostname):
         return ports[0]
 
 
+def tcp_connect_timeout_of(hostname):
+    timeouts = rulesets.host_extra_conf(hostname, tcp_connect_timeouts)
+    if len(timeouts) == 0:
+        return tcp_connect_timeout
+    else:
+        return timeouts[0]
+
+
 def agent_encryption_of(hostname):
     settings = rulesets.host_extra_conf(hostname, agent_encryption)
     if settings:

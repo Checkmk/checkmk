@@ -39,6 +39,7 @@ agent_ports                        = []
 agent_encryption                   = []
 snmp_ports                         = [] # UDP ports used for SNMP
 tcp_connect_timeout                = 5.0
+tcp_connect_timeouts               = []
 use_dns_cache                      = True # prevent DNS by using own cache file
 delay_precompile                   = False  # delay Python compilation to Nagios execution
 restart_locking                    = "abort" # also possible: "wait", None

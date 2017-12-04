@@ -1032,7 +1032,8 @@ class AutomationDiagHost(Automation):
 
         hostname, test, ipaddress, snmp_community = args[:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
-        cmd = args[7]
+        tcp_connect_timeout = float(args[7])
+        cmd = args[8]
 
         snmpv3_use               = None
         snmpv3_auth_proto        = None
@@ -1041,14 +1042,14 @@ class AutomationDiagHost(Automation):
         snmpv3_privacy_proto     = None
         snmpv3_privacy_password  = None
 
-        if len(args) > 8:
-            snmpv3_use = args[8]
+        if len(args) > 9:
+            snmpv3_use = args[9]
             if snmpv3_use in ["authNoPriv", "authPriv"]:
-                snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password = args[9:12]
+                snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password = args[10:13]
             else:
-                snmpv3_security_name = args[10]
+                snmpv3_security_name = args[11]
             if snmpv3_use == "authPriv":
-                snmpv3_privacy_proto, snmpv3_privacy_password = args[12:14]
+                snmpv3_privacy_proto, snmpv3_privacy_password = args[13:15]
 
         if not ipaddress:
             try:
@@ -1077,6 +1078,7 @@ class AutomationDiagHost(Automation):
                         source = data_sources.DSProgramDataSource(cmd)
                     elif isinstance(source, data_sources.TCPDataSource):
                         source.set_port(agent_port)
+                        source.set_timeout(tcp_connect_timeout)
 
                     output += source.run_raw(hostname, ipaddress)
 

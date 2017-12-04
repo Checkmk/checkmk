@@ -38,6 +38,23 @@ bool OringFilter::accepts(Row row, contact *auth_user, int timezone_offset) {
     return false;
 }
 
+const std::string *OringFilter::stringValueRestrictionFor(
+    const std::string &column_name) const {
+    const std::string *restriction = nullptr;
+    for (const auto &filter : _subfilters) {
+        if (auto current = filter->stringValueRestrictionFor(column_name)) {
+            if (restriction == nullptr) {
+                restriction = current;  // First restriction? Take it.
+            } else if (*restriction != *current) {
+                return nullptr;  // Different restrictions? Give up.
+            }
+        } else {
+            return nullptr;  // No restriction for subfilter? Give up.
+        }
+    }
+    return restriction;
+}
+
 bool OringFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
                                   int timezone_offset) const {
     // We can only optimize, if *all* subfilters are filters for the

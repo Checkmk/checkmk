@@ -1,0 +1,14 @@
+Title: Fixed indexing with disjunctions.
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p20
+Date: 1512393115
+
+To speed things up, livestatus tries to use an index when accessing the
+'hosts' and 'services' tables, but there was a bug when a disjunction
+('Or:') was used in filters, leading to too few results.  This has been
+fixed.

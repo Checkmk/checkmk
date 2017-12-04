@@ -721,9 +721,9 @@ void Query::finish(QueryRenderer &q) {
     }
 }
 
-const std::string *Query::findValueForIndexing(
+const std::string *Query::stringValueRestrictionFor(
     const std::string &column_name) const {
-    return _filter->findValueForIndexing(column_name);
+    return _filter->stringValueRestrictionFor(column_name);
 }
 
 void Query::findIntLimits(const std::string &column_name, int *lower,

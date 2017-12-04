@@ -44,6 +44,8 @@ public:
     void accept(FilterVisitor &v) const override;
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
+    const std::string *stringValueRestrictionFor(
+        const std::string &column_name) const override;
     void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
                        std::chrono::seconds timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,

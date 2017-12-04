@@ -38,17 +38,6 @@ bool AndingFilter::accepts(Row row, contact *auth_user, int timezone_offset) {
     return true;
 }
 
-bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
-                                   int timezone_offset) const {
-    bool optimized = false;
-    for (const auto &filter : _subfilters) {
-        if (filter->optimizeBitmask(column_name, mask, timezone_offset)) {
-            optimized = true;
-        }
-    }
-    return optimized;
-}
-
 const string *AndingFilter::stringValueRestrictionFor(
     const string &column_name) const {
     for (const auto &filter : _subfilters) {
@@ -58,4 +47,15 @@ const string *AndingFilter::stringValueRestrictionFor(
         }
     }
     return nullptr;
+}
+
+bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
+                                   int timezone_offset) const {
+    bool optimized = false;
+    for (const auto &filter : _subfilters) {
+        if (filter->optimizeBitmask(column_name, mask, timezone_offset)) {
+            optimized = true;
+        }
+    }
+    return optimized;
 }

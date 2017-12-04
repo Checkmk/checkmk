@@ -238,7 +238,7 @@ def do_cleanup_abandoned_host_files():
         return
 
     try:
-        site_hosts = get_site_hosts()
+        site_hosts = get_configured_hosts()
     except subprocess.CalledProcessError, e:
         verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
         return
@@ -304,10 +304,19 @@ def newest_modification_time_in_dir(dir_path):
     return mtime
 
 
-def get_site_hosts():
+def get_configured_hosts():
     host_names = set([])
-    host_names.update(subprocess.check_output(["check_mk", "--list-hosts"]).splitlines())
-    host_names.update(subprocess.check_output(["check_mk", "--list-tag", "offline"]).splitlines())
+
+    distr_wato_filepath = os.path.expanduser("~/etc/check_mk/conf.d/distributed_wato.mk")
+    file_vars = {}
+    if os.path.exists(distr_wato_filepath):
+        execfile(distr_wato_filepath, file_vars, file_vars)
+
+    if file_vars.get("is_wato_slave_site", False):
+        host_names.update(subprocess.check_output(["check_mk", "--list-hosts", "--include-offline"]).splitlines())
+    else:
+        host_names.update(subprocess.check_output(["check_mk", "--list-hosts", "--all-sites", "--include-offline"]).splitlines())
+
     return host_names
 
 

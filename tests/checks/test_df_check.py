@@ -240,7 +240,6 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_resu
     assert check.run_discovery(check.run_parse(info)) == expected_result
 
 
-# TODO: Make this work by finding a way to get a check's default levels in this context.
 @pytest.mark.parametrize("item,params,info,expected_result", [
     (u"/", "default", info_df_lnx, {}),
     (u'/dev/sda4 /', "default", info_df_lnx, {}),

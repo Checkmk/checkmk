@@ -548,10 +548,8 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     except Exception, e:
         raise MKGeneralException("User %s cannot open file for writing: %s" % (logwatch_username(), e))
 
-    pattern_hash = hash(tuple(patterns))
-
+    pattern_hash = hash(repr(patterns))
     net_lines = 0
-
     # parse cached log lines
     if log_exists:
         # new format contains hash of patterns on the first line so we only reclassify if they

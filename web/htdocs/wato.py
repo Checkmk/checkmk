@@ -12668,6 +12668,12 @@ class ModeRulesets(WatoMode):
             html.set_var("search_p_fulltext_USE", "on")
             html.del_var("search")
 
+        # Transform the folder argumen (from URL or bradcrumb) to the "rule search arguments
+        if html.var("folder"):
+            html.set_var("search_p_rule_folder_0", DropdownChoice.option_id(html.var("folder")))
+            html.set_var("search_p_rule_folder_1", DropdownChoice.option_id(True))
+            html.set_var("search_p_rule_folder_USE", "on")
+
         self._search_options = ModeRuleSearch().search_options
 
         self._only_host = html.var("host")
@@ -13009,7 +13015,7 @@ class ModeEditRuleset(WatoMode):
 
     def page(self):
         if not self._hostname:
-            watolib.Folder.current().show_breadcrump(keepvarnames = ["mode", "varname"])
+            watolib.Folder.current().show_breadcrump(keepvarnames=True) # = ["mode", "varname"])
 
         if not config.wato_hide_varnames:
             display_varname = '%s["%s"]' % tuple(self._name.split(":")) \

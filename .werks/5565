@@ -1,0 +1,12 @@
+Title: WATO rules: Breadcrumb navigation is now consistent with rule search
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1512383794
+Class: fix
+
+The interaction of the rule search and the folder breadcrumb was not working
+correctly. The breadcrumb navigation is now updating the search filters, just
+like it's done for the quick search filter.

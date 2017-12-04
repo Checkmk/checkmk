@@ -23,9 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringFilter.h"
+#include <strings.h>
 #include <algorithm>
-#include <cstring>
-#include <sstream>
 #include "Filter.h"
 #include "Row.h"
 #include "StringColumn.h"
@@ -86,7 +85,7 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-const std::string *StringFilter::valueForIndexing(
+const std::string *StringFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::equal:

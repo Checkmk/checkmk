@@ -50,8 +50,8 @@ public:
                          std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;
-    const std::string *findValueForIndexing(
-        const std::string &column_name) const;
+    const std::string *stringValueRestrictionFor(
+        const std::string &column_name) const override;
     auto begin() const { return _subfilters.begin(); }
     auto end() const { return _subfilters.end(); }
 

@@ -26,7 +26,7 @@
 
 Filter::~Filter() = default;
 
-const std::string *Filter::valueForIndexing(
+const std::string *Filter::stringValueRestrictionFor(
     const std::string & /* column_name */) const {
     return nullptr;
 }

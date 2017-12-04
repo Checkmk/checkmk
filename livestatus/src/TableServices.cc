@@ -466,7 +466,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
 
 void TableServices::answerQuery(Query *query) {
     // do we know the host?
-    if (const std::string *value = query->findValueForIndexing("host_name")) {
+    if (const std::string *value =
+            query->stringValueRestrictionFor("host_name")) {
         // Older Nagios headers are not const-correct... :-P
         if (host *host = find_host(const_cast<char *>(value->c_str()))) {
             for (servicesmember *m = host->services; m != nullptr;
@@ -480,7 +481,7 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // do we know the service group?
-    if (const std::string *name = query->findValueForIndexing("groups")) {
+    if (const std::string *name = query->stringValueRestrictionFor("groups")) {
         if (servicegroup *sg =
                 find_servicegroup(const_cast<char *>(name->c_str()))) {
             for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
@@ -493,7 +494,8 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // do we know the host group?
-    if (const std::string *name = query->findValueForIndexing("host_groups")) {
+    if (const std::string *name =
+            query->stringValueRestrictionFor("host_groups")) {
         if (hostgroup *hg = find_hostgroup(const_cast<char *>(name->c_str()))) {
             for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
                 for (servicesmember *smem = m->host_ptr->services;

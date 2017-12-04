@@ -370,7 +370,7 @@ class ACTestApacheNumberOfProcesses(ACTest, BPApacheTest):
                  "<p>Please note that this value is only a rough estimation, because the memory "
                  "usage of the apache processes may vary with the requests being processed.</p>"
                  "<p>Possible actions:<ul>"
-                 "<li>Change the <a href=\"wato.py?mode=edit_configvar&varname=process_tuning\">number of apache processes</a></li>"
+                 "<li>Change the <a href=\"wato.py?mode=edit_configvar&varname=apache_process_tuning\">number of apache processes</a></li>"
                  "</ul>"
                  "</p>")
 

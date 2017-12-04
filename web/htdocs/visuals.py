@@ -727,18 +727,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
         )),
     ]
     if config.user.may("general.publish_" + what):
-        visibility_elements.append(('public', CascadingDropdown(
-            choices = [
-                (True, _("Publish to all users")),
-                ("contact_groups", _("Publish to members of contact groups"), userdb.GroupChoice(
-                    "contact",
-                    title = _("Publish to members of contact groups"),
-                    rows = 5,
-                    size = 40,
-                )),
-            ],
-            title = _('Make this %s available for other users') % visual_type["title"]
-        )))
+        visibility_elements.append(('public', PublishTo(type_title=visual_type["title"])))
 
     vs_general = Dictionary(
         title = _("General Properties"),
@@ -884,6 +873,24 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     html.hidden_fields()
     html.end_form()
     html.footer()
+
+
+
+class PublishTo(CascadingDropdown):
+    def __init__(self, type_title=None, **kwargs):
+        super(PublishTo, self).__init__(
+            choices = [
+                (True, _("Publish to all users")),
+                ("contact_groups", _("Publish to members of contact groups"), userdb.GroupChoice(
+                    "contact",
+                    title = _("Publish to members of contact groups"),
+                    rows = 5,
+                    size = 40,
+                )),
+            ],
+            title = _('Make this %s available for other users') % type_title,
+            **kwargs
+        )
 
 #.
 #   .--Filters-------------------------------------------------------------.

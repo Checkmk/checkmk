@@ -42,6 +42,16 @@ bool AndingFilter::accepts(Row row, const contact *auth_user,
     return true;
 }
 
+const std::string *AndingFilter::stringValueRestrictionFor(
+    const std::string &column_name) const {
+    for (const auto &filter : _subfilters) {
+        if (auto value = filter->stringValueRestrictionFor(column_name)) {
+            return value;
+        }
+    }
+    return nullptr;
+}
+
 void AndingFilter::findIntLimits(const std::string &colum_nname, int *lower,
                                  int *upper,
                                  std::chrono::seconds timezone_offset) const {
@@ -76,14 +86,4 @@ std::unique_ptr<Filter> AndingFilter::negate() const {
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->negate(); });
     return std::make_unique<OringFilter>(std::move(filters));
-}
-
-const std::string *AndingFilter::stringValueRestrictionFor(
-    const std::string &column_name) const {
-    for (const auto &filter : _subfilters) {
-        if (auto value = filter->stringValueRestrictionFor(column_name)) {
-            return value;
-        }
-    }
-    return nullptr;
 }

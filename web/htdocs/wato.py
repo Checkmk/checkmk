@@ -13475,7 +13475,7 @@ class ModeRuleSearch(WatoMode):
 
 
     def page(self):
-        html.begin_form("search", method="GET")
+        html.begin_form("rule_search", method="GET")
         html.hidden_field("mode", self.back_mode, add_var=True)
 
         valuespec = self._valuespec()

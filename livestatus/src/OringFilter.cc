@@ -42,6 +42,23 @@ bool OringFilter::accepts(Row row, const contact *auth_user,
     return false;
 }
 
+const std::string *OringFilter::stringValueRestrictionFor(
+    const std::string &column_name) const {
+    const std::string *restriction = nullptr;
+    for (const auto &filter : _subfilters) {
+        if (auto current = filter->stringValueRestrictionFor(column_name)) {
+            if (restriction == nullptr) {
+                restriction = current;  // First restriction? Take it.
+            } else if (*restriction != *current) {
+                return nullptr;  // Different restrictions? Give up.
+            }
+        } else {
+            return nullptr;  // No restriction for subfilter? Give up.
+        }
+    }
+    return restriction;
+}
+
 void OringFilter::findIntLimits(const std::string &colum_nname, int *lower,
                                 int *upper,
                                 std::chrono::seconds timezone_offset) const {

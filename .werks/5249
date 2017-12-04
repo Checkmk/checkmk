@@ -1,0 +1,14 @@
+Title: Fixed tmpfs full issue: CME Activate Changes did not cleanup all temporary files
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.4.0p20
+Date: 1512398048
+Class: fix
+
+Over time, the ~/tmp/check_mk directory grew in size.
+
+If you have any tmpfs diskspace problems, you can delete the folders
+<tt>~/tmp/check_mk/sync-*</tt> and <tt>~/tmp/check_mk/wato/activation</tt>.
+

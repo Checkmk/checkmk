@@ -4522,7 +4522,7 @@ class ActivateChangesManager(ActivateChanges):
         work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
         if cmk.is_managed_edition():
             for site_id in self._sites:
-                site_configurations[site_id] = self._get_site_configuration(site_id)
+                site_configurations[site_id] = self._get_site_configuration(work_dir, site_id)
 
             import managed_snapshots
             managed_snapshots.CMESnapshotManager(work_dir, site_configurations).generate_snapshots()
@@ -4539,14 +4539,13 @@ class ActivateChangesManager(ActivateChanges):
         unlock_exclusive()
 
 
-    def _get_site_configuration(self, site_id):
+    def _get_site_configuration(self, work_dir, site_id):
         site_configuration = {}
         self._check_snapshot_creation_permissions(site_id)
 
 
         site_configuration["snapshot_path"] = self._site_snapshot_file(site_id)
-        # TODO: id(html) may reappear
-        site_configuration["work_dir"]      = cmk.paths.tmp_dir + "/sync-%s-specific-%s-%.4f" % (site_id, id(html), time.time())
+        site_configuration["work_dir"]      = os.path.join(work_dir, "sync-%s-specific" % (site_id))
 
 
         # Change all default replication paths to be in the site specific temporary directory

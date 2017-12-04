@@ -642,7 +642,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
 void TableHosts::answerQuery(Query *query) {
     // do we know the host group?
-    if (const std::string *value = query->findValueForIndexing("groups")) {
+    if (const std::string *value = query->stringValueRestrictionFor("groups")) {
         if (hostgroup *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {
             for (hostsmember *mem = hg->members; mem != nullptr;

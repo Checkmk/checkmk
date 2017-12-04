@@ -78,10 +78,10 @@ std::unique_ptr<Filter> AndingFilter::negate() const {
     return std::make_unique<OringFilter>(std::move(filters));
 }
 
-const std::string *AndingFilter::findValueForIndexing(
+const std::string *AndingFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
     for (const auto &filter : _subfilters) {
-        if (auto value = filter->valueForIndexing(column_name)) {
+        if (auto value = filter->stringValueRestrictionFor(column_name)) {
             return value;
         }
     }

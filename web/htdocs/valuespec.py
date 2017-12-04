@@ -3798,9 +3798,9 @@ class Transform(ValueSpec):
         else:
             return self._valuespec.help()
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix, value, **kwargs):
         self.classtype_info()
-        self._valuespec.render_input(varprefix, self.forth(value))
+        self._valuespec.render_input(varprefix, self.forth(value), **kwargs)
 
     def set_focus(self, *args):
         self._valuespec.set_focus(*args)

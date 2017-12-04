@@ -64,12 +64,18 @@ def page_run_cron():
     file(lock_file, "w") # touches the file
     aquire_lock(lock_file)
 
+    logger.debug("Starting cron jobs")
+
     for cron_job in multisite_cronjobs:
         try:
+            job_name = cron_job.__name__
+
+            logger.debug("Starting [%s]" % job_name)
             cron_job()
+            logger.debug("Finished [%s]" % job_name)
         except Exception:
             html.write("An exception occured. Take a look at the web.log.\n")
-            logger.error("Exception in cron_job [%s]:\n%s" %
-                             (cron_job.__name__, traceback.format_exc()))
+            logger.exception("Exception in cron job [%s]" % job_name)
 
+    logger.debug("Finished all cron jobs")
     html.write("OK\n")

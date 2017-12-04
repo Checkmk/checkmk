@@ -528,6 +528,15 @@ def all_offline_hosts():
              if not rulesets.in_binary_hostlist(hostname, only_hosts) ]
 
 
+
+def all_configured_offline_hosts():
+    hostlist = all_configured_realhosts().union(all_configured_clusters())
+
+    return set([ hostname for hostname in hostlist
+             if not rulesets.in_binary_hostlist(hostname, only_hosts) ])
+
+
+
 #.
 #   .--Hosts---------------------------------------------------------------.
 #   |                       _   _           _                              |

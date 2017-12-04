@@ -45,7 +45,7 @@ public:
                std::string value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
-    const std::string *valueForIndexing(
+    const std::string *stringValueRestrictionFor(
         const std::string &column_name) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;

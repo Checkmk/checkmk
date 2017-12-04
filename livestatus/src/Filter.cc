@@ -28,7 +28,8 @@ using std::string;
 
 Filter::~Filter() = default;
 
-const string *Filter::valueForIndexing(const string & /* column_name */) const {
+const string *Filter::stringValueRestrictionFor(
+    const string & /* column_name */) const {
     return nullptr;
 }
 

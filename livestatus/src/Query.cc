@@ -793,8 +793,8 @@ void Query::finish(QueryRenderer &q) {
     }
 }
 
-const string *Query::findValueForIndexing(const string &column_name) {
-    return _filter.findValueForIndexing(column_name);
+const string *Query::stringValueRestrictionFor(const string &column_name) {
+    return _filter.stringValueRestrictionFor(column_name);
 }
 
 void Query::findIntLimits(const string &column_name, int *lower, int *upper) {

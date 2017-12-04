@@ -43,7 +43,7 @@ public:
     virtual void accept(FilterVisitor &) = 0;
 
     virtual bool accepts(Row row, contact *auth_user, int timezone_offset) = 0;
-    virtual const std::string *valueForIndexing(
+    virtual const std::string *stringValueRestrictionFor(
         const std::string &column_name) const;
     virtual void findIntLimits(const std::string &column_name, int *lower,
                                int *upper, int timezone_offset) const;

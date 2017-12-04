@@ -49,10 +49,11 @@ bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
     return optimized;
 }
 
-const string *AndingFilter::findValueForIndexing(
+const string *AndingFilter::stringValueRestrictionFor(
     const string &column_name) const {
     for (const auto &filter : _subfilters) {
-        if (const string *value = filter->valueForIndexing(column_name)) {
+        if (const string *value =
+                filter->stringValueRestrictionFor(column_name)) {
             return value;
         }
     }

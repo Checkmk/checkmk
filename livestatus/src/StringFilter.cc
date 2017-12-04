@@ -89,7 +89,8 @@ bool StringFilter::accepts(Row row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-const string *StringFilter::valueForIndexing(const string &column_name) const {
+const string *StringFilter::stringValueRestrictionFor(
+    const string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::equal:
             return column_name == _column->name() ? &_ref_string : nullptr;

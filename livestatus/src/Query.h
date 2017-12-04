@@ -65,7 +65,8 @@ public:
     contact *authUser() { return _auth_user; }
     int timezoneOffset() { return _timezone_offset; }
 
-    const std::string *findValueForIndexing(const std::string &column_name);
+    const std::string *stringValueRestrictionFor(
+        const std::string &column_name);
     void findIntLimits(const std::string &column_name, int *lower, int *upper);
     void optimizeBitmask(const std::string &column_name, uint32_t *bitmask);
     AndingFilter *filter() { return &_filter; }

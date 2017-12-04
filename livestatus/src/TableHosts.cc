@@ -676,7 +676,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
 
 void TableHosts::answerQuery(Query *query) {
     // do we know the host group?
-    if (const string *value = query->findValueForIndexing("groups")) {
+    if (const string *value = query->stringValueRestrictionFor("groups")) {
         if (hostgroup *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {
             for (hostsmember *mem = hg->members; mem != nullptr;

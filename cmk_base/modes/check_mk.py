@@ -161,6 +161,7 @@ modes.register_general_option(Option(
 
 
 #.
+#.
 #   .--list-hosts----------------------------------------------------------.
 #   |              _ _     _        _               _                      |
 #   |             | (_)___| |_     | |__   ___  ___| |_ ___                |
@@ -170,25 +171,38 @@ modes.register_general_option(Option(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def mode_list_hosts(args):
-    hosts = _list_all_hosts(args)
+def mode_list_hosts(options, args):
+    hosts = _list_all_hosts(args, options)
     console.output("\n".join(hosts))
     if hosts:
         console.output("\n")
 
 
 # TODO: Does not care about internal group "check_mk"
-def _list_all_hosts(hostgroups):
-    hostlist = []
+def _list_all_hosts(hostgroups, options):
 
-    for hn in config.all_active_hosts():
-        if not hostgroups:
-            hostlist.append(hn)
-        else:
-            for hg in config.hostgroups_of(hn):
-                if hg in hostgroups:
-                    hostlist.append(hn)
-                    break
+    hostnames = set()
+
+    if options.get("all-sites"):
+        hostnames.update(config.all_configured_hosts()) # Return all hosts, including offline
+        if not "include-offline" in options:
+            hostnames -= config.all_configured_offline_hosts()
+    else:
+        hostnames.update(config.all_active_hosts())
+        if "include-offline" in options:
+            hostnames.update(config.all_offline_hosts())
+
+
+    if not hostgroups:
+        return sorted(hostnames)
+
+
+    hostlist = []
+    for hn in hostnames:
+        for hg in config.hostgroups_of(hn):
+            if hg in hostgroups:
+                hostlist.append(hn)
+                break
 
     return sorted(hostlist)
 
@@ -205,6 +219,16 @@ modes.register(Mode(
         "Called without argument lists all hosts. You may "
         "specify one or more host groups to restrict the output to hosts "
         "that are in at least one of those groups.",
+    ],
+    sub_options=[
+        Option(
+            long_option="all-sites",
+            short_help="Include hosts of foreign sites",
+        ),
+        Option(
+            long_option="include-offline",
+            short_help="Include offline hosts",
+        ),
     ]
 ))
 

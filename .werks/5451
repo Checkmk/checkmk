@@ -1,0 +1,9 @@
+Title: logwatch: Fixed reclassifying mechanism: Patterns did not apply correctly if they have changed
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p27
+Date: 1512379327
+Class: fix
+
+

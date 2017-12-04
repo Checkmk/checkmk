@@ -24,6 +24,7 @@
 
 #include "TableHosts.h"
 #include <memory>
+#include <ostream>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "Column.h"
@@ -43,6 +44,7 @@
 #include "HostListColumn.h"
 #include "HostSpecialDoubleColumn.h"
 #include "HostSpecialIntColumn.h"
+#include "Logger.h"
 #include "LogwatchListColumn.h"
 #include "MetricsColumn.h"
 #include "MonitoringCore.h"
@@ -677,6 +679,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
 void TableHosts::answerQuery(Query *query) {
     // do we know the host group?
     if (const string *value = query->stringValueRestrictionFor("groups")) {
+        Debug(logger()) << "using host group index with '" << *value << "'";
         if (hostgroup *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {
             for (hostsmember *mem = hg->members; mem != nullptr;
@@ -690,6 +693,7 @@ void TableHosts::answerQuery(Query *query) {
     }
 
     // no index -> linear search over all hosts
+    Debug(logger()) << "using full table scan";
     for (host *hst = host_list; hst != nullptr; hst = hst->next) {
         if (!query->processDataset(Row(hst))) {
             break;

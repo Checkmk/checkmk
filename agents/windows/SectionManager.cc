@@ -146,7 +146,7 @@ void SectionManager::loadStaticSections(Configuration &config) {
                 (new SectionWMI("msexch_availability", "msexch_availability",
                                 _env, _logger, _winapi))
                     ->withObject(
-                        L"Win32_PerfRawData_MSExchangeAvailabilityService"))
+                        L"Win32_PerfRawData_MSExchangeAvailabilityService_MSExchangeAvailabilityService"))
             ->withSubSection(
                 (new SectionWMI("msexch_owa", "msexch_owa", _env, _logger,
                                 _winapi))

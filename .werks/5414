@@ -1,0 +1,16 @@
+Title: Windows agent: Exchange Availability Service was broken
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1512371847
+Class: fix
+
+The name of the WMI class
+Win32_PerfRawData_MSExchangeAvailabilityService_MSExchangeAvailabilityService
+was misspelled. As a result, the Exchange Availability Service was broken in
+all versions since 1.4.0. The misspelled name was introduced by the
+refactoring done in commit c5ee818358e695b01c2f2dbc05ad0713723a37f8.
+
+

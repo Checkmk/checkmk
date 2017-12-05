@@ -62,6 +62,6 @@ def find_newest_source_file():
 def last_commit_time(path):
     # Use --format=%ct to get the CommitDate of a commit.
     line = os.popen('unset GIT_DIR ; cd "%s" ; '
-        'git log -n 1 --format=%ct -- "%s"' % (os.path.dirname(path), path)).read()
+        'git log -n 1 --format=%%ct -- "%s"' % (os.path.dirname(path), path)).read()
     timestamp = int(line)
     return timestamp

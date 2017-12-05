@@ -793,7 +793,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     html.begin_form("visual", method = "POST")
     html.hidden_field("back", back_url)
     html.hidden_field("mode", mode)
-    html.hidden_field("load_user", html.var("load_user", "")) # safe old name in case user changes it
+    if html.has_var("load_user"):
+        html.hidden_field("load_user", html.var("load_user")) # safe old name in case user changes it
     html.hidden_field("load_name", oldname) # safe old name in case user changes it
 
     # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,

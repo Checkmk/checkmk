@@ -1,0 +1,13 @@
+Title: Fixed tmpfs full issue: Activate Changes did not cleanup all temporary files
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1512476335
+
+The WATO work directory <tt>~/tmp/check_mk/wato</tt> could grow in size,
+whenever an unexpected exception happened during the activate changes process.
+

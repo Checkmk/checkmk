@@ -1,0 +1,11 @@
+Title: Check API: Fix set_item_state/get_rate/get_counter logic when called from check functions
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1512494383
+Class: fix
+
+In the 1.5.0 branch, the logic encoding the current item in the key for saved data between checks
+was broken for checks with item and parse function. This did not affect the 1.4.0 branch.

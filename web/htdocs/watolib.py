@@ -4901,6 +4901,13 @@ class ActivateChangesManager(ActivateChanges):
         for site_id in self._sites:
             site_state = state["sites"][site_id]
 
+
+            # The site_state file may be missing/empty, if the operation has started recently.
+            # However, if the file is still missing after a considerable amount
+            # of time, we consider this site activation as dead
+            if site_state == {} and time.time() - self._time_started > html.get_request_timeout() - 10:
+                continue
+
             if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:
                 # Just been initialized. Treat as running as it has not been
                 # started and could not lock the site stat file yet.

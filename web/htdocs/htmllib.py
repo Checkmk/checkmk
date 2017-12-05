@@ -1655,6 +1655,11 @@ class html(HTMLGenerator, RequestHandler):
         raise NotImplementedError()
 
 
+    def get_request_timeout(self):
+        return self._request_timeout
+
+
+
     #
     # Messages
     #

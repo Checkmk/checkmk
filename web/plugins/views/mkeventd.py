@@ -887,7 +887,7 @@ if mkeventd_enabled:
         ],
         'hide_filters': [
             'siteopt',
-            'event_host',
+            'host',
         ],
         'sorters': [
             ('event_last', False)

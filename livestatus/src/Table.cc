@@ -22,14 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// IWYU pragma: no_include "cmc.h"
-// IWYU pragma: no_include "nagios.h"
 #include "Table.h"
 #include <stdexcept>
 #include "Column.h"
 #include "DynamicColumn.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
+#include "nagios.h"
 
 Table::Table(MonitoringCore *mc) : _mc(mc) {}
 

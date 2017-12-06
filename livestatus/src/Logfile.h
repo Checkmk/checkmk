@@ -33,8 +33,8 @@
 #include <memory>
 #include <string>
 #include "FileSystem.h"
-#include "LogEntry.h"  // IWYU pragma: keep
 class LogCache;
+class LogEntry;
 class Logger;
 class MonitoringCore;
 class Query;

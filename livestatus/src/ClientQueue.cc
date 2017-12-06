@@ -25,7 +25,6 @@
 #include "ClientQueue.h"
 #include <unistd.h>
 #include <algorithm>
-#include <memory>
 
 using std::for_each;
 using std::lock_guard;

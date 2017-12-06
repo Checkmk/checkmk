@@ -22,14 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// https://github.com/include-what-you-use/include-what-you-use/issues/434
-// IWYU pragma: no_include <type_traits>
 #include "PerfdataAggregator.h"
 #include <cmath>
 #include <functional>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include "Renderer.h"
 #include "Row.h"

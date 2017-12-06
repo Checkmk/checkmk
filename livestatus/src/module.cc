@@ -41,8 +41,8 @@
 #include <cstring>
 #include <ctime>
 #include <memory>
-#include <ostream>
 #include <ratio>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -51,6 +51,7 @@
 #include "ClientQueue.h"
 #include "DowntimeOrComment.h"
 #include "InputBuffer.h"
+#include "LogEntry.h"  // IWYU pragma: keep
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"

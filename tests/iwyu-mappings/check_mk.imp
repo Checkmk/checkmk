@@ -22,5 +22,6 @@
   { include: ["<pcap/pcap.h>", private, "<pcap.h>", public ] },
   { symbol: ["std::ofstream", private, "<fstream>", public ] },
   { symbol: ["std::ostringstream", private, "<sstream>", public ] },
-  { symbol: ["std::stringstream", private, "<sstream>", public ] }
+  { symbol: ["std::stringstream", private, "<sstream>", public ] },
+  { symbol: ["timeval", private, "<sys/time.h>", public ] },
 ]

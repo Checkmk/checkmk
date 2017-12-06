@@ -539,7 +539,7 @@ tidy: compile_commands.json
 
 # Not really perfect rules, but better than nothing
 iwyu: compile_commands.json
-	@$(IWYU_TOOL) --output-format=clang -p . -- --mapping_file=$(realpath tests/check_mk.imp)
+	@$(IWYU_TOOL) --output-format=clang -p . -- --mapping_file=$(realpath tests/iwyu-mappings/check_mk.imp)
 
 # Not really perfect rules, but better than nothing
 analyze: config.h

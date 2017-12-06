@@ -361,7 +361,7 @@ optimize-images:
 	        echo "Optimizing $$F..." ; \
 	        pngcrush -q -rem alla -brute $$F $$F.opt ; \
 	        mv $$F.opt $$F; \
-	    done ; 
+	    done ; \
 	else \
 	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
 	fi
@@ -541,5 +541,5 @@ endif
 # top-level Makefile's dependencies must be updated.  It does not
 # need to depend on %MAKEFILE% because GNU make will always make sure
 # %MAKEFILE% is updated before considering the am--refresh target.
-am--refresh: 
+am--refresh:
 	@:

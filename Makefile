@@ -73,7 +73,7 @@ CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
-IWYU_TOOL          := tests/iwyu_tool_jenkins.py
+IWYU_TOOL          := iwyu_tool
 
 # The Bear versions have a slightly tragic history: Due to the clang bug
 # https://llvm.org/bugs/show_bug.cgi?id=24710 we need absolute paths in our

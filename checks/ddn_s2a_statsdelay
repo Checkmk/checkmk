@@ -140,19 +140,23 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         read_min = histogram_min(time_intervals, reads_since_last_check)
         read_max = histogram_max(time_intervals, reads_since_last_check)
         read_avg = histogram_avg(time_intervals, reads_since_last_check)
+    else:
+        read_min, read_max, read_avg = 0, 0, 0
 
-        yield check_levels("Average read wait: %.2f s", read_avg, params.get("read_avg"), "disk_average_read_wait")
-        yield check_levels("Min. read wait: %.2f s", read_min, params.get("read_min"), "disk_min_read_wait")
-        yield check_levels("Max. read wait: %.2f s", read_max, params.get("read_max"), "disk_max_read_wait")
+    yield check_levels("Average read wait: %.2f s", read_avg, params.get("read_avg"), "disk_average_read_wait")
+    yield check_levels("Min. read wait: %.2f s", read_min, params.get("read_min"), "disk_min_read_wait")
+    yield check_levels("Max. read wait: %.2f s", read_max, params.get("read_max"), "disk_max_read_wait")
 
     if not is_zero(writes_since_last_check):
         write_min = histogram_min(time_intervals, writes_since_last_check)
         write_max = histogram_max(time_intervals, writes_since_last_check)
         write_avg = histogram_avg(time_intervals, writes_since_last_check)
+    else:
+        read_min, read_max, read_avg = 0, 0, 0
 
-        yield check_levels("Average write wait: %.2f s", write_avg, params.get("write_avg"), "disk_average_write_wait")
-        yield check_levels("Min. write wait: %.2f s", write_min, params.get("write_min"), "disk_min_write_wait")
-        yield check_levels("Max. write wait: %.2f s", write_max, params.get("write_max"), "disk_max_write_wait")
+    yield check_levels("Average write wait: %.2f s", write_avg, params.get("write_avg"), "disk_average_write_wait")
+    yield check_levels("Min. write wait: %.2f s", write_min, params.get("write_min"), "disk_min_write_wait")
+    yield check_levels("Max. write wait: %.2f s", write_max, params.get("write_max"), "disk_max_write_wait")
 
 
 check_info['ddn_s2a_statsdelay'] = {

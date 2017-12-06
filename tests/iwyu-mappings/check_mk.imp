@@ -1,11 +1,23 @@
 # Default include mappings for Check_MK
 [
+  { ref: gcc.libc.imp },
+  { ref: gcc.symbols.imp },
+  { ref: gcc.stl.headers.imp },
+  { ref: stl.c.headers.imp },
   { ref: boost-all.imp },
   { ref: boost-all-private.imp },
+  { include: ["<bits/exception.h>", private, "<exception>", public ] },
+  { include: ["<bits/getopt_core.h>", private, "<getopt.h>", public ] },
+  { include: ["<bits/getopt_ext.h>", private, "<getopt.h>", public ] },
   { include: ["<bits/shared_ptr.h>", private, "<memory>", public ] },
-  { include: ["<bits/socket_type.h>", private, "<sys/socket.h>", public ] },
+  { include: ["<bits/std_abs.h>", private, "<cstdlib>", public ] },
+  { include: ["<bits/std_function.h>", private, "<functional>", public ] },
+  { include: ["<bits/stdint-intn.h>", private, "<cstdint>", public ] },
+  { include: ["<bits/stdint-uintn.h>", private, "<cstdint>", public ] },
+  { include: ["<bits/types/struct_timeval.h>", private, "<sys/time.h>", public ] },
+  { include: ["<bits/types/struct_tm.h>", private, "<ctime>", public ] },
+  { include: ["<bits/types/time_t.h>", private, "<ctime>", public ] },
   { include: ["<experimental/bits/fs_ops.h>", private, "<experimental/filesystem>", public ] },
-  { include: ["<experimental/fs_ops.h>", private, "<experimental/filesystem>", public ] },
   { include: ["<pcap/bpf.h>", private, "<pcap.h>", public ] },
   { include: ["<pcap/pcap.h>", private, "<pcap.h>", public ] }
 ]

@@ -27,7 +27,6 @@
 #include <condition_variable>
 #include <cstring>
 #include <mutex>
-#include <ratio>
 
 using std::chrono::milliseconds;
 using std::condition_variable;

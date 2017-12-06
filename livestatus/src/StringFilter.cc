@@ -23,9 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringFilter.h"
+#include <strings.h>
 #include <algorithm>
-#include <cstring>
-#include <sstream>
 #include "Row.h"
 
 using std::move;

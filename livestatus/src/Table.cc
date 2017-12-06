@@ -22,8 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// IWYU pragma: no_include "cmc.h"
-// IWYU pragma: no_include "nagios.h"
 #include "Table.h"
 #include <cassert>
 #include <ostream>
@@ -32,11 +30,12 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
+#include "nagios.h"
 
 using mk::starts_with;
 using std::move;
-using std::string;
 using std::shared_ptr;
+using std::string;
 using std::unique_ptr;
 
 Table::Table(MonitoringCore *mc) : _mc(mc) {}

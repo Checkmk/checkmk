@@ -26,7 +26,6 @@
 #define TableEventConsole_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <sys/types.h>
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>

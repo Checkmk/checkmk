@@ -26,7 +26,7 @@
 #define OffsetBoolColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <sys/types.h>
+#include <cstdint>
 #include <string>
 #include "OffsetIntColumn.h"
 #include "contact_fwd.h"

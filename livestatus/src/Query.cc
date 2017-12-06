@@ -27,7 +27,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
-#include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 #include "Aggregator.h"

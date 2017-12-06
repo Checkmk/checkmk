@@ -33,6 +33,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/un.h>
 #include <unistd.h>
 #include <chrono>
@@ -42,7 +43,7 @@
 #include <cstring>
 #include <ctime>
 #include <memory>
-#include <ostream>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>

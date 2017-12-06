@@ -25,7 +25,7 @@
 #include "Renderer.h"
 #include <cmath>
 #include <iomanip>
-#include <ostream>
+#include <sstream>
 #include "Logger.h"
 #include "OStreamStateSaver.h"
 #include "RendererBrokenCSV.h"

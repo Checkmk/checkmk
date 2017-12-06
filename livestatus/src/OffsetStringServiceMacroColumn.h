@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "OffsetStringMacroColumn.h"
-#include "nagios.h"  // IWYU pragma: keep
+#include "nagios.h"
 class Row;
 
 class OffsetStringServiceMacroColumn : public OffsetStringMacroColumn {

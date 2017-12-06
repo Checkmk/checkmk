@@ -22,11 +22,10 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// Some IWYU versions don't like it, some versions require it... :-P
-// IWYU pragma: no_include <memory>
 #include "Store.h"
 #include <cstring>
 #include <ctime>
+#include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <utility>

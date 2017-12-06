@@ -27,7 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <ctime>
-#include <memory>  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Table.h"
 #include "contact_fwd.h"

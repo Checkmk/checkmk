@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <ctime>
 #include <string>
-#include "nagios.h"  // IWYU pragma: keep
+#include "nagios.h"
 
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */

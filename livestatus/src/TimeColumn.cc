@@ -22,8 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// Different IWYU/header versions don't agree... :-/
-// IWYU pragma: no_include <ratio>
 #include "TimeColumn.h"
 #include <chrono>
 #include "Aggregator.h"

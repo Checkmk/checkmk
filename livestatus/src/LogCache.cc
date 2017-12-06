@@ -26,6 +26,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include "LogEntry.h"  // IWYU pragma: keep
 #include "Logfile.h"
 #include "Logger.h"
 #include "MonitoringCore.h"

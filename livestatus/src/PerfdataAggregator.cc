@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// IWYU pragma: no_include <type_traits.h>
+// IWYU pragma: no_include <type_traits>
 #include "PerfdataAggregator.h"
 #include <cmath>
 #include <functional>

@@ -15,9 +15,6 @@ class wa_EnvironmentTest : public Test {
 protected:
     NiceMock<MockLogger> _mocklogger;
     const NiceMock<MockWinApi> _mockwinapi;
-
-public:
-    virtual ~wa_EnvironmentTest() = default;
 };
 
 TEST_F(wa_EnvironmentTest, constructor_CurrentDirectory) {

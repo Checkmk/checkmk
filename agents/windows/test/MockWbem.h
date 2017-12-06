@@ -70,7 +70,7 @@ public:
     MOCK_METHOD0(Release, ULONG STDMETHODCALLTYPE());
 };
 
-class MockIEnumWbemClassObject : public IEnumWbemClassObject{
+class MockIEnumWbemClassObject : public IEnumWbemClassObject {
 public:
     MOCK_METHOD1(Clone,
                  HRESULT STDMETHODCALLTYPE(IEnumWbemClassObject **ppEnum));

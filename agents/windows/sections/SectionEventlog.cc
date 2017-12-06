@@ -207,7 +207,6 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
 
             // second pass - if there were, print everything
             if (worstState >= level) {
-                log->reset();
                 const auto outputRecord = [&out, hideContext](
                     const IEventLogRecord &record, int level) {
                     return outputEventlogRecord(out, record, level,

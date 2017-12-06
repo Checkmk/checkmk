@@ -22,7 +22,8 @@ TEST_F(wa_wmiHelperTest, Result_next_enumerator_null) {
 TEST_F(wa_wmiHelperTest, Result_next_failure) {
     StrictMock<MockIWbemClassObject> testObject;
     EXPECT_CALL(_mockenumerator, Next(2500, 1, _, _))
-        .WillOnce(DoAll(SetArgPointee<2>(&testObject), SetArgPointee<3>(1), Return(WBEM_NO_ERROR)))
+        .WillOnce(DoAll(SetArgPointee<2>(&testObject), SetArgPointee<3>(1),
+                        Return(WBEM_NO_ERROR)))
         .WillOnce(Return(WBEM_E_FAILED));
     EXPECT_CALL(testObject, Release());
     EXPECT_CALL(_mockenumerator, Release());
@@ -33,7 +34,8 @@ TEST_F(wa_wmiHelperTest, Result_next_failure) {
 TEST_F(wa_wmiHelperTest, Result_next_no_more_values) {
     StrictMock<MockIWbemClassObject> testObject;
     EXPECT_CALL(_mockenumerator, Next(2500, 1, _, _))
-        .WillOnce(DoAll(SetArgPointee<2>(&testObject), SetArgPointee<3>(1), Return(WBEM_NO_ERROR)))
+        .WillOnce(DoAll(SetArgPointee<2>(&testObject), SetArgPointee<3>(1),
+                        Return(WBEM_NO_ERROR)))
         .WillOnce(DoAll(SetArgPointee<3>(0), Return(WBEM_S_FALSE)));
     EXPECT_CALL(testObject, Release());
     EXPECT_CALL(_mockenumerator, Release());
@@ -45,7 +47,8 @@ TEST_F(wa_wmiHelperTest, Result_next_object_returned) {
     StrictMock<MockIWbemClassObject> testObject;
     EXPECT_CALL(_mockenumerator, Next(2500, 1, _, _))
         .Times(2)
-        .WillRepeatedly(DoAll(SetArgPointee<2>(&testObject), SetArgPointee<3>(1), Return(WBEM_NO_ERROR)));
+        .WillRepeatedly(DoAll(SetArgPointee<2>(&testObject),
+                              SetArgPointee<3>(1), Return(WBEM_NO_ERROR)));
     EXPECT_CALL(testObject, Release()).Times(2);
     EXPECT_CALL(_mockenumerator, Release());
     wmi::Result testResult(&_mockenumerator, &_mocklogger, _mockwinapi);
@@ -55,7 +58,8 @@ TEST_F(wa_wmiHelperTest, Result_next_object_returned) {
 TEST_F(wa_wmiHelperTest, Result_next_wmi_timeout) {
     StrictMock<MockIWbemClassObject> testObject;
     EXPECT_CALL(_mockenumerator, Next(2500, 1, _, _))
-        .WillOnce(DoAll(SetArgPointee<2>(&testObject), SetArgPointee<3>(1), Return(WBEM_NO_ERROR)))
+        .WillOnce(DoAll(SetArgPointee<2>(&testObject), SetArgPointee<3>(1),
+                        Return(WBEM_NO_ERROR)))
         .WillOnce(DoAll(SetArgPointee<3>(0), Return(WBEM_S_TIMEDOUT)));
     EXPECT_CALL(testObject, Release());
     EXPECT_CALL(_mockenumerator, Release());

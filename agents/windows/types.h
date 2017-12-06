@@ -374,36 +374,120 @@ inline uint64_t to_u64(DWORD low, DWORD high) {
     return static_cast<uint64_t>(low) + (static_cast<uint64_t>(high) << 32);
 }
 
-class ManagedHandle {
-public:
-    ManagedHandle(HANDLE handle, const WinApiAdaptor &winapi)
-        : _handle(handle), _winapi(winapi) {}
+template <typename HandleTraits, typename Api = WinApiAdaptor>
+class WrappedHandle {
+    using handle_t = typename HandleTraits::HandleT;
 
-    ~ManagedHandle() {
-        if (_handle != nullptr) {
-            _winapi.CloseHandle(_handle);
-            _handle = nullptr;
+public:
+    explicit WrappedHandle(const Api &api) noexcept
+        : WrappedHandle(HandleTraits::invalidValue(), api) {}
+
+    WrappedHandle(handle_t handle, const Api &api) noexcept
+        : _handle(handle), _api(std::ref(api)) {}
+
+    ~WrappedHandle() { reset(); }
+
+    WrappedHandle(const WrappedHandle &) = delete;
+    WrappedHandle &operator=(const WrappedHandle &) = delete;
+
+    WrappedHandle(WrappedHandle &&other)
+        : _handle(other._handle), _api(std::move(other._api)) {
+        other._handle = HandleTraits::invalidValue();
+    }
+
+    WrappedHandle &operator=(WrappedHandle &&rhs) noexcept {
+        reset(rhs.release());
+        _api = std::move(rhs._api);
+        return *this;
+    }
+
+    handle_t release() noexcept {
+        handle_t h = _handle;
+        _handle = HandleTraits::invalidValue();
+        return h;
+    }
+
+    void reset(handle_t handle = HandleTraits::invalidValue()) noexcept {
+        using std::swap;
+        swap(_handle, handle);
+        if (handle != HandleTraits::invalidValue()) {
+            HandleTraits::closeHandle(handle, _api.get());
         }
     }
 
-    ManagedHandle(const ManagedHandle &) = delete;  // Delete copy constructor
-
-    ManagedHandle &operator=(const ManagedHandle &) =
-        delete;  // Delete assignment operator
-
-    ManagedHandle(ManagedHandle &&from)
-        : _handle(from._handle), _winapi(from._winapi) {  // Move constructor
-        from._handle = nullptr;
+    void swap(WrappedHandle &other) {
+        using std::swap;
+        swap(_handle, other._handle);
+        swap(_api, other._api);
     }
 
-    ManagedHandle &operator=(ManagedHandle &&from) =
-        delete;  // Move assignment operator
+    operator bool() const { return _handle != HandleTraits::invalidValue(); }
 
-    HANDLE get_handle() { return _handle; };
+    handle_t get() const { return _handle; }
 
 private:
-    HANDLE _handle;
-    const WinApiAdaptor &_winapi;
+    handle_t _handle;
+    std::reference_wrapper<const Api> _api;
+};
+
+template <typename HandleTraits, typename Api>
+inline void swap(WrappedHandle<HandleTraits, Api> &x,
+                 WrappedHandle<HandleTraits, Api> &y) noexcept {
+    x.swap(y);
+}
+
+template <typename HandleTraits, typename Api>
+inline bool operator==(const WrappedHandle<HandleTraits, Api> &x,
+                       const WrappedHandle<HandleTraits, Api> &y) noexcept {
+    return x.get() == y.get();
+}
+
+template <typename HandleTraits, typename Api>
+inline bool operator!=(const WrappedHandle<HandleTraits, Api> &x,
+                       const WrappedHandle<HandleTraits, Api> &y) noexcept {
+    return !(x.get() == y.get());
+}
+
+template <typename HandleTraits, typename Api>
+inline bool operator<(const WrappedHandle<HandleTraits, Api> &x,
+                      const WrappedHandle<HandleTraits, Api> &y) noexcept {
+    return x.get() < y.get();
+}
+
+template <typename HandleTraits, typename Api>
+inline bool operator<=(const WrappedHandle<HandleTraits, Api> &x,
+                       const WrappedHandle<HandleTraits, Api> &y) noexcept {
+    return !(y.get() < x.get());
+}
+
+template <typename HandleTraits, typename Api>
+inline bool operator>(const WrappedHandle<HandleTraits, Api> &x,
+                      const WrappedHandle<HandleTraits, Api> &y) noexcept {
+    return y.get() < x.get();
+}
+
+template <typename HandleTraits, typename Api>
+inline bool operator>=(const WrappedHandle<HandleTraits, Api> &x,
+                       const WrappedHandle<HandleTraits, Api> &y) noexcept {
+    return !(x.get() < y.get());
+}
+
+struct InvalidHandleTraits {
+    using HandleT = HANDLE;
+    static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.CloseHandle(value);
+    }
+};
+
+struct NullHandleTraits {
+    using HandleT = HANDLE;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.CloseHandle(value);
+    }
 };
 
 #endif  // types_h

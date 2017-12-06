@@ -33,8 +33,10 @@
 using std::vector;
 using std::wstring;
 
+namespace {
+
 // loads a dll with support for environment variables in the path
-static HMODULE load_library_ext(LPCWSTR dllpath, const WinApiAdaptor &winapi) {
+HMODULE load_library_ext(LPCWSTR dllpath, const WinApiAdaptor &winapi) {
     // this should be sufficient most of the time
     static const size_t INIT_BUFFER_SIZE = 128;
 
@@ -62,12 +64,7 @@ static HMODULE load_library_ext(LPCWSTR dllpath, const WinApiAdaptor &winapi) {
         DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
 }
 
-void HModuleWrapper::close() {
-    if (_hmodule != nullptr) {
-        _winapi.FreeLibrary(_hmodule);
-        _hmodule = nullptr;
-    }
-}
+}  // namespace
 
 vector<wstring> MessageResolver::getMessageFiles(LPCWSTR source) const {
     static const wstring base =
@@ -122,9 +119,9 @@ wstring MessageResolver::resolveInt(DWORD eventID, LPCWSTR dllpath,
         if (iter == _cache.end()) {
             dll = load_library_ext(dllpath, _winapi);
             _cache.emplace(wstring(dllpath),
-                           std::move(HModuleWrapper(dll, _winapi)));
+                           std::move(HModuleHandle(dll, _winapi)));
         } else {
-            dll = iter->second.getHModule();
+            dll = iter->second.get();
         }
 
         if (!dll) {
@@ -252,64 +249,36 @@ private:
     const MessageResolver &_resolver;
 };
 
-bool EventlogHandle::ReadEventLogW(DWORD dwReadFlags, DWORD dwRecordOffset,
-                                   vector<BYTE> &buffer, DWORD *pnBytesRead,
-                                   DWORD *pnMinNumberOfBytesNeeded) const {
-    return _winapi.ReadEventLogW(_handle, dwReadFlags, dwRecordOffset,
-                                 &buffer[0], buffer.size(), pnBytesRead,
-                                 pnMinNumberOfBytesNeeded);
-}
-
-DWORD EventlogHandle::GetOldestEventLogRecord(PDWORD record) const {
-    return _winapi.GetOldestEventLogRecord(_handle, record);
-}
-
-DWORD EventlogHandle::GetNumberOfEventLogRecords(PDWORD record) const {
-    return _winapi.GetNumberOfEventLogRecords(_handle, record);
-}
-
-HANDLE EventlogHandle::open() const {
-    HANDLE handle = _winapi.OpenEventLogW(nullptr, _name.c_str());
-    if (handle == nullptr) {
-        throw win_exception(
-            _winapi, std::string("failed to open eventlog: ") + to_utf8(_name));
-    }
-    return handle;
-}
-
-void EventlogHandle::close() const { _winapi.CloseEventLog(_handle); }
-
 EventLog::EventLog(const std::wstring &name, Logger *logger,
                    const WinApiAdaptor &winapi)
     : _name(name)
-    , _log(name, winapi)
+    , _handle(winapi.OpenEventLogW(nullptr, _name.c_str()), winapi)
     , _resolver(name, logger, winapi)
     , _logger(logger)
     , _winapi(winapi) {
+    if (_handle.get() == nullptr) {
+        throw win_exception(
+            _winapi, std::string("failed to open eventlog: ") + to_utf8(_name));
+    }
     _buffer.resize(INIT_BUFFER_SIZE);
-}
-
-EventLog::~EventLog() {}
-
-void EventLog::reset() {
-    _log.reopen();
-    _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
 }
 
 wstring EventLog::getName() const { return _name; }
 
 void EventLog::seek(uint64_t record_number) {
-    DWORD oldest_record, record_count;
+    DWORD oldestRecord = 0;
+    DWORD recordCount = 0;
 
-    if (_log.GetOldestEventLogRecord(&oldest_record) &&
-        (record_number < oldest_record)) {
+    if (_winapi.GetOldestEventLogRecord(_handle.get(), &oldestRecord) &&
+        (record_number < oldestRecord)) {
         // Beyond the oldest record:
-        _record_offset = oldest_record;
-    } else if (_log.GetNumberOfEventLogRecords(&record_count) &&
-               (record_number >= oldest_record + record_count)) {
+        _record_offset = oldestRecord;
+    } else if (_winapi.GetNumberOfEventLogRecords(_handle.get(),
+                                                  &recordCount) &&
+               (record_number >= oldestRecord + recordCount)) {
         // Beyond the newest record. Note: set offset intentionally to the next
         // record after the currently last one!
-        _record_offset = oldest_record + record_count;
+        _record_offset = oldestRecord + recordCount;
     } else {
         // Within bounds, the offset for the next actual read:
         _record_offset = record_number;
@@ -355,8 +324,8 @@ std::unique_ptr<IEventLogRecord> EventLog::read() {
 uint64_t EventLog::getLastRecordId() {
     DWORD oldestRecord = 0;
     DWORD recordCount = 0;
-    if (_log.GetOldestEventLogRecord(&oldestRecord) &&
-        _log.GetNumberOfEventLogRecords(&recordCount) &&
+    if (_winapi.GetOldestEventLogRecord(_handle.get(), &oldestRecord) &&
+        _winapi.GetNumberOfEventLogRecords(_handle.get(), &recordCount) &&
         oldestRecord + recordCount > 0) {
         return oldestRecord + recordCount - 1;
     } else {
@@ -369,10 +338,12 @@ bool EventLog::fillBuffer() {
 
     // test if we're at the end of the log, as we don't get
     // a proper error message when reading beyond the last log record
-    DWORD oldest_record, record_count;
-    if (_log.GetOldestEventLogRecord(&oldest_record) &&
-        _log.GetNumberOfEventLogRecords(&record_count)) {
-        if (_record_offset >= oldest_record + record_count) {
+    DWORD oldestRecord = 0;
+    DWORD recordCount = 0;
+
+    if (_winapi.GetOldestEventLogRecord(_handle.get(), &oldestRecord) &&
+        _winapi.GetNumberOfEventLogRecords(_handle.get(), &recordCount)) {
+        if (_record_offset >= oldestRecord + recordCount) {
             return false;
         }
     }
@@ -386,10 +357,11 @@ bool EventLog::fillBuffer() {
 
     Debug(_logger) << "    . seek to " << _record_offset;
 
-    DWORD bytes_required;
+    DWORD bytes_required = 0;
 
-    if (_log.ReadEventLogW(flags, _record_offset, _buffer, &_buffer_used,
-                           &bytes_required)) {
+    if (_winapi.ReadEventLogW(_handle.get(), flags, _record_offset,
+                              _buffer.data(), _buffer.size(), &_buffer_used,
+                              &bytes_required)) {
         return true;
     } else {
         DWORD error = _winapi.GetLastError();

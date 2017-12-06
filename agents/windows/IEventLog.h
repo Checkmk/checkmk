@@ -42,6 +42,11 @@ public:
         Success
     };
 
+    IEventLogRecord() = default;
+    virtual ~IEventLogRecord() = default;
+    IEventLogRecord(const IEventLogRecord &) = delete;
+    IEventLogRecord &operator=(const IEventLogRecord &) = delete;
+
     virtual uint64_t recordId() const = 0;
     virtual uint16_t eventId() const = 0;
     virtual uint16_t eventQualifiers() const = 0;
@@ -53,12 +58,10 @@ public:
 
 class IEventLog {
 public:
-    virtual ~IEventLog() {}
-
-    /**
-     * return to reading from the beginning of the log
-     */
-    virtual void reset() = 0;
+    IEventLog() = default;
+    virtual ~IEventLog() = default;
+    IEventLog(const IEventLog &) = delete;
+    IEventLog &operator=(const IEventLog &) = delete;
 
     /**
      * return the name/path of the eventlog monitored

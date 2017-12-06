@@ -79,60 +79,18 @@ struct EvtFunctionMap {
     decltype(&EvtGetLogInfo) getLogInfo;
 };
 
-class ManagedEventHandle {
-public:
-    ManagedEventHandle(const EvtFunctionMap &evt, EVT_HANDLE handle)
-        : _evt(evt), _handle(handle) {}
+struct EventHandleTraitsVista {
+    using HandleT = EVT_HANDLE;
+    static HandleT invalidValue() { return nullptr; }
 
-    ~ManagedEventHandle() {
-        if (_handle && _evt.close) {
-            _evt.close(_handle);
+    static void closeHandle(HandleT value, const EvtFunctionMap &evt) {
+        if (evt.close) {
+            evt.close(value);
         }
     }
-
-    EVT_HANDLE get_handle() { return _handle; };
-
-private:
-    const EvtFunctionMap &_evt;
-    EVT_HANDLE _handle;
-
-    // We own the handle, so don't allow any copies.
-    ManagedEventHandle(const ManagedEventHandle &) = delete;
-    ManagedEventHandle &operator=(const ManagedEventHandle &) = delete;
 };
 
-class EventLogWrapper : public ManagedEventHandle {
-public:
-    EventLogWrapper(const EvtFunctionMap &evt, EVT_QUERY_FLAGS flags,
-                    const std::wstring &path, const WinApiAdaptor &winapi)
-        : ManagedEventHandle(evt, create_log_handle(evt, flags, path))
-        , _winapi(winapi) {}
-
-private:
-    EVT_HANDLE create_log_handle(const EvtFunctionMap &evt,
-                                 EVT_QUERY_FLAGS flags,
-                                 const std::wstring &path) {
-        if (evt.query == nullptr) {
-            throw win_exception(_winapi,
-                                "EvtQuery function not found in wevtapi.dll");
-        }
-
-        EVT_HANDLE handle =
-            evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryChannelPath);
-
-        if (handle == nullptr) {
-            handle = evt.query(nullptr, path.c_str(), L"*",
-                               flags | EvtQueryFilePath);
-        }
-
-        if (handle == nullptr) {
-            throw win_exception(_winapi, "failed to open log");
-        }
-        return handle;
-    }
-
-    const WinApiAdaptor &_winapi;
-};
+using EventHandleVista = WrappedHandle<EventHandleTraitsVista, EvtFunctionMap>;
 
 class EventLogVista : public IEventLog {
     static const int EVENT_BLOCK_SIZE = 16;
@@ -142,13 +100,7 @@ public:
     // This throws an UnsupportedException if the vista-api is not supported.
     EventLogVista(const std::wstring &path, const WinApiAdaptor &winapi);
 
-    EventLogVista(const EventLogVista &reference) = delete;
-
-    virtual ~EventLogVista() noexcept;
-
     virtual std::wstring getName() const override;
-
-    virtual void reset() override;
 
     virtual void seek(uint64_t record_id) override;
 
@@ -157,19 +109,17 @@ public:
     virtual uint64_t getLastRecordId() override;
 
 private:
-    EvtFunctionMap &evt() const;
     bool fillBuffer();
     std::wstring renderBookmark(HANDLE bookmark) const;
 
-private:
-    std::shared_ptr<EvtFunctionMap> _evt;
+    const EvtFunctionMap _evt;
     std::wstring _path;
-    std::unique_ptr<ManagedEventHandle> _handle;
-    std::unique_ptr<ManagedEventHandle> _render_context;
-    std::unique_ptr<ManagedHandle> _signal;
-    std::vector<HANDLE> _events;
-    size_t _next_event{0};
     const WinApiAdaptor &_winapi;
+    EventHandleVista _handle;
+    const EventHandleVista _render_context;
+    WrappedHandle<NullHandleTraits> _signal;
+    std::vector<EventHandleVista> _events;
+    size_t _next_event{0};
 };
 
 #endif  // EventLogVista_h

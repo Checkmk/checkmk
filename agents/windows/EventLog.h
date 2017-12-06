@@ -36,70 +36,24 @@ class WinApiAdaptor;
 
 typedef struct HINSTANCE__ *HMODULE;
 
-class HModuleWrapper {
-public:
-    HModuleWrapper(HMODULE &hmodule, const WinApiAdaptor &winapi)
-        : _hmodule(hmodule), _winapi(winapi) {}
+struct HModuleTraits {
+    using HandleT = HMODULE;
+    static HandleT invalidValue() { return nullptr; }
 
-    ~HModuleWrapper() { close(); }
-
-    HModuleWrapper(const HModuleWrapper &) = delete;  // Delete copy constructor
-
-    HModuleWrapper &operator=(const HModuleWrapper &) =
-        delete;  // Delete assignment operator
-
-    // Move constructor
-    HModuleWrapper(HModuleWrapper &&from)
-        : _hmodule(from._hmodule), _winapi(from._winapi) {
-        from._hmodule = nullptr;
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.FreeLibrary(value);
     }
-
-    // Move assignment operator
-    HModuleWrapper &operator=(HModuleWrapper &&from) = delete;
-
-    HMODULE getHModule() { return _hmodule; };
-
-private:
-    HMODULE _hmodule;
-    const WinApiAdaptor &_winapi;
-
-    void close();
 };
 
-class EventlogHandle {
-public:
-    EventlogHandle(const std::wstring &name, const WinApiAdaptor &winapi)
-        : _name(name), _winapi(winapi), _handle(open()) {}
-
-    ~EventlogHandle() { close(); }
-
-    EventlogHandle(const EventlogHandle &logHandle) = delete;
-
-    void reopen() {
-        close();
-        _handle = open();
-    }
-
-    bool ReadEventLogW(DWORD dwReadFlags, DWORD dwRecordOffset,
-                       std::vector<BYTE> &buffer, DWORD *pnBytesRead,
-                       DWORD *pnMinNumberOfBytesNeeded) const;
-    DWORD GetOldestEventLogRecord(PDWORD record) const;
-    DWORD GetNumberOfEventLogRecords(PDWORD record) const;
-
-private:
-    HANDLE open() const;
-    void close() const;
-
-    std::wstring _name;
-    const WinApiAdaptor &_winapi;
-    HANDLE _handle;
-};
+using HModuleHandle = WrappedHandle<HModuleTraits>;
 
 class MessageResolver {
 public:
     MessageResolver(const std::wstring &logName, Logger *logger,
                     const WinApiAdaptor &winapi)
         : _name(logName), _logger(logger), _winapi(winapi) {}
+    MessageResolver(const MessageResolver &) = delete;
+    MessageResolver &operator=(const MessageResolver &) = delete;
 
     std::wstring resolve(DWORD eventID, LPCWSTR source,
                          LPCWSTR *parameters) const;
@@ -110,10 +64,21 @@ private:
                             LPCWSTR *parameters) const;
 
     std::wstring _name;
-    mutable std::map<std::wstring, HModuleWrapper> _cache;
+    mutable std::map<std::wstring, HModuleHandle> _cache;
     Logger *_logger;
     const WinApiAdaptor &_winapi;
 };
+
+struct EventHandleTraits {
+    using HandleT = HANDLE;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.CloseEventLog(value);
+    }
+};
+
+using EventHandle = WrappedHandle<EventHandleTraits>;
 
 class EventLog : public IEventLog {
     static const size_t INIT_BUFFER_SIZE = 64 * 1024;
@@ -124,13 +89,6 @@ public:
      */
     EventLog(const std::wstring &name, Logger *logger,
              const WinApiAdaptor &winapi);
-
-    virtual ~EventLog();
-
-    /**
-     * return to reading from the beginning of the log
-     */
-    virtual void reset() override;
 
     virtual std::wstring getName() const override;
 
@@ -167,7 +125,7 @@ private:
     bool fillBuffer();
 
     std::wstring _name;
-    EventlogHandle _log;
+    EventHandle _handle;
     DWORD _record_offset{0};
     bool _seek_possible{true};
     std::vector<BYTE> _buffer;

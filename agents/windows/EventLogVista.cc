@@ -46,25 +46,25 @@ class EventLogRecordVista : public IEventLogRecord {
     };
 
 public:
-    EventLogRecordVista(EVT_HANDLE event, EvtFunctionMap *evt,
+    EventLogRecordVista(EVT_HANDLE event, const EvtFunctionMap &evt,
                         EVT_HANDLE renderContext, const WinApiAdaptor &winapi)
         : _event(event), _evt(evt), _winapi(winapi) {
         DWORD required = 0;
         DWORD property_count = 0;
 
-        if (_evt->render == nullptr)
+        if (_evt.render == nullptr)
             throw win_exception(_winapi,
                                 "EvtRender function not found in wevtapi.dll");
 
-        _evt->render(renderContext, _event, EvtRenderEventValues,
-                     _buffer.size(), &_buffer[0], &required, &property_count);
+        _evt.render(renderContext, _event, EvtRenderEventValues, _buffer.size(),
+                    &_buffer[0], &required, &property_count);
         _buffer.resize(required);
-        _evt->render(renderContext, _event, EvtRenderEventValues,
-                     _buffer.size(), &_buffer[0], &required, &property_count);
+        _evt.render(renderContext, _event, EvtRenderEventValues, _buffer.size(),
+                    &_buffer[0], &required, &property_count);
     }
 
     static EVT_HANDLE createRenderContext(const WinApiAdaptor &winapi,
-                                          EvtFunctionMap &evt) {
+                                          const EvtFunctionMap &evt) {
         if (evt.createRenderContext == nullptr)
             throw win_exception(
                 winapi,
@@ -152,27 +152,27 @@ public:
     }
 
     virtual std::wstring message() const override {
-        if (_evt->formatMessage == nullptr)
+        if (_evt.formatMessage == nullptr)
             throw win_exception(
                 _winapi, "EvtFormatMessage function not found in wevtapi.dll");
 
-        if (_evt->openPublisherMetadata == nullptr)
+        if (_evt.openPublisherMetadata == nullptr)
             throw win_exception(
                 _winapi,
                 "EvtOpenPublisherMetadata function not found in wevtapi.dll");
 
         std::wstring result;
         result.resize(128);
-        auto publisher_meta = std::make_unique<ManagedEventHandle>(
-            *_evt,
-            _evt->openPublisherMetadata(nullptr, source().c_str(), nullptr, 0,
-                                        0));
-        if (publisher_meta->get_handle() != nullptr) {
+        EventHandleVista publisher_meta(
+            _evt.openPublisherMetadata(nullptr, source().c_str(), nullptr, 0,
+                                       0),
+            _evt);
+        if (publisher_meta.get() != nullptr) {
             for (;;) {
                 DWORD required;
-                if (_evt->formatMessage(publisher_meta->get_handle(), _event, 0,
-                                        0, nullptr, EvtFormatMessageEvent,
-                                        result.size(), &result[0], &required)) {
+                if (_evt.formatMessage(publisher_meta.get(), _event, 0, 0,
+                                       nullptr, EvtFormatMessageEvent,
+                                       result.size(), &result[0], &required)) {
                     result.resize(required);
                     break;
                 } else if (_winapi.GetLastError() ==
@@ -234,7 +234,7 @@ private:
     }
 
     EVT_HANDLE _event;
-    EvtFunctionMap *_evt;
+    const EvtFunctionMap &_evt;
     std::vector<BYTE> _buffer;
     std::wstring _eventData;
     const WinApiAdaptor &_winapi;
@@ -275,44 +275,28 @@ EvtFunctionMap::EvtFunctionMap(const WinApiAdaptor &winapi)
 
 EventLogVista::EventLogVista(const std::wstring &path,
                              const WinApiAdaptor &winapi)
-    : _path(path), _handle(nullptr), _winapi(winapi) {
-    _evt = std::make_shared<EvtFunctionMap>(winapi);
-    if (_evt->openLog == nullptr) {
+    : _evt(winapi)
+    , _path(path)
+    , _winapi(winapi)
+    , _handle(nullptr, _evt)
+    , _render_context(EventLogRecordVista::createRenderContext(winapi, _evt),
+                      _evt)
+    , _signal(winapi.CreateEvent(nullptr, TRUE, TRUE, nullptr), winapi) {
+    if (_evt.openLog == nullptr) {
         throw UnsupportedException();
     }
 
-    _signal = std::make_unique<ManagedHandle>(
-        winapi.CreateEvent(nullptr, TRUE, TRUE, nullptr), winapi);
-
-    _render_context = std::make_unique<ManagedEventHandle>(
-        *_evt, EventLogRecordVista::createRenderContext(winapi, *_evt));
-
-    if (_render_context->get_handle() == nullptr) {
+    if (_render_context.get() == nullptr) {
         throw win_exception(_winapi, "failed to create render context");
     }
 
-    reset();
+    _events.reserve(EVENT_BLOCK_SIZE);
 }
-
-EventLogVista::~EventLogVista() noexcept { reset(); }
-
-EvtFunctionMap &EventLogVista::evt() const { return *_evt; }
 
 std::wstring EventLogVista::getName() const { return _path; }
 
-void EventLogVista::reset() {
-    if (evt().close) {
-        for (HANDLE event : _events) {
-            evt().close(event);
-        }
-    }
-    _next_event = 0;
-    _events.resize(0);
-    _events.resize(EVENT_BLOCK_SIZE, nullptr);
-}
-
 std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
-    if (evt().render == nullptr)
+    if (_evt.render == nullptr)
         throw win_exception(_winapi,
                             "EvtRender function not found in wevtapi.dll");
 
@@ -322,10 +306,10 @@ std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
     DWORD required, count;
 
     for (;;) {
-        if (evt().render(nullptr, bookmark, EvtRenderBookmark,
-                         buffer.size() * sizeof(wchar_t),
-                         reinterpret_cast<void *>(&buffer[0]), &required,
-                         &count)) {
+        if (_evt.render(nullptr, bookmark, EvtRenderBookmark,
+                        buffer.size() * sizeof(wchar_t),
+                        reinterpret_cast<void *>(&buffer[0]), &required,
+                        &count)) {
             buffer.resize(required);
             break;
         } else if (_winapi.GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
@@ -337,6 +321,31 @@ std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
 
     return buffer;
 }
+
+namespace {
+EVT_HANDLE create_log_handle(const EvtFunctionMap &evt, EVT_QUERY_FLAGS flags,
+                             const std::wstring &path,
+                             const WinApiAdaptor &winapi) {
+    if (evt.query == nullptr) {
+        throw win_exception(winapi,
+                            "EvtQuery function not found in wevtapi.dll");
+    }
+
+    EVT_HANDLE handle =
+        evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryChannelPath);
+
+    if (handle == nullptr) {
+        handle =
+            evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryFilePath);
+    }
+
+    if (handle == nullptr) {
+        throw win_exception(winapi, "failed to open log");
+    }
+    return handle;
+}
+
+}  // namespace
 
 void EventLogVista::seek(uint64_t record_id) {
     {
@@ -351,23 +360,22 @@ void EventLogVista::seek(uint64_t record_id) {
                 ? EvtQueryReverseDirection
                 : EvtQueryForwardDirection;
 
-        auto log =
-            std::make_unique<EventLogWrapper>(*_evt, flags, _path, _winapi);
+        EventHandleVista logHandle(
+            create_log_handle(_evt, flags, _path, _winapi), _evt);
 
         EVT_HANDLE event_handle;
         DWORD num_events = 0;
-        auto nextFunc = evt().next;
+        auto nextFunc = _evt.next;
         const BOOL success = nextFunc
-                                 ? nextFunc(log->get_handle(), 1, &event_handle,
+                                 ? nextFunc(logHandle.get(), 1, &event_handle,
                                             INFINITE, 0, &num_events)
                                  : false;
 
         if (success) {
-            auto event =
-                std::make_unique<ManagedEventHandle>(*_evt, event_handle);
+            auto event = std::make_unique<EventHandleVista>(event_handle, _evt);
 
-            EventLogRecordVista record(event->get_handle(), _evt.get(),
-                                       _render_context->get_handle(), _winapi);
+            EventLogRecordVista record(event->get(), _evt,
+                                       _render_context.get(), _winapi);
             if ((record_id < record.recordId()) ||
                 (record_id == std::numeric_limits<uint64_t>::max())) {
                 record_id = record.recordId();
@@ -377,7 +385,7 @@ void EventLogVista::seek(uint64_t record_id) {
             // We expect an ERROR_NO_MORE_ITEMS!
             // I've experienced a TIMEOUT_ERROR before, which totally broke the
             // record_id handling
-            // Fixed it by setting the evt().next(..) timeout above to INFINITE
+            // Fixed it by setting the _evt.next(..) timeout above to INFINITE
             // DWORD lastError = GetLastError();
             // std::cout << " GetLastError returned " << lastError << "." <<
             // std::endl;
@@ -390,52 +398,51 @@ void EventLogVista::seek(uint64_t record_id) {
         L"' RecordId='" + std::to_wstring(record_id) +
         L"' IsCurrent='true'/></BookmarkList>";
 
-    if (evt().createBookmark == nullptr)
+    if (_evt.createBookmark == nullptr)
         throw win_exception(
             _winapi, "EvtCreateBookmark function not found in wevtapi.dll");
-    if (evt().subscribe == nullptr)
+    if (_evt.subscribe == nullptr)
         throw win_exception(_winapi,
                             "EvtSubscribe function not found in wevtapi.dll");
-    std::unique_ptr<ManagedEventHandle> bookmark =
-        std::make_unique<ManagedEventHandle>(
-            *_evt, evt().createBookmark(bookmarkXml.c_str()));
+    EventHandleVista bookmark(_evt.createBookmark(bookmarkXml.c_str()), _evt);
 
-    _handle = std::make_unique<ManagedEventHandle>(
-        *_evt,
-        evt().subscribe(nullptr, _signal->get_handle(), _path.c_str(), L"*",
-                        bookmark->get_handle(), nullptr, nullptr,
-                        EvtSubscribeStartAfterBookmark));
+    _handle =
+        EventHandleVista(_evt.subscribe(nullptr, _signal.get(), _path.c_str(),
+                                        L"*", bookmark.get(), nullptr, nullptr,
+                                        EvtSubscribeStartAfterBookmark),
+                         _evt);
 
-    if (_handle->get_handle() == nullptr) {
+    if (_handle.get() == nullptr) {
         throw win_exception(
             _winapi, std::string("failed to subscribe to ") + to_utf8(_path));
     }
 }
 
 std::unique_ptr<IEventLogRecord> EventLogVista::read() {
-    if ((_next_event == _events.size()) || (_events[_next_event] == nullptr)) {
+    if ((_next_event == _events.size()) ||
+        (_events[_next_event].get() == nullptr)) {
         if (!fillBuffer()) {
             return std::unique_ptr<IEventLogRecord>();
         }
     }
     return std::make_unique<EventLogRecordVista>(
-        _events[_next_event++], _evt.get(), _render_context->get_handle(),
-        _winapi);
+        _events[_next_event++].get(), _evt, _render_context.get(), _winapi);
 }
 
 uint64_t EventLogVista::getLastRecordId() {
-    auto log = std::make_unique<EventLogWrapper>(
-        *_evt, EvtQueryReverseDirection, _path, _winapi);
+    EventHandleVista logHandle(
+        create_log_handle(_evt, EvtQueryReverseDirection, _path, _winapi),
+        _evt);
 
     EVT_HANDLE event_handle = nullptr;
     DWORD num_events = 0;
-    if (evt().next &&
-        evt().next(log->get_handle(), 1, &event_handle, INFINITE, 0,
-                   &num_events)) {
-        auto event = std::make_unique<ManagedEventHandle>(*_evt, event_handle);
+    if (_evt.next &&
+        _evt.next(logHandle.get(), 1, &event_handle, INFINITE, 0,
+                  &num_events)) {
+        EventHandleVista event(event_handle, _evt);
 
-        return EventLogRecordVista(event->get_handle(), _evt.get(),
-                                   _render_context->get_handle(), _winapi)
+        return EventLogRecordVista(event.get(), _evt, _render_context.get(),
+                                   _winapi)
             .recordId();
     } else {
         return 0;
@@ -443,14 +450,13 @@ uint64_t EventLogVista::getLastRecordId() {
 }
 
 bool EventLogVista::fillBuffer() {
-    // this ensures all previous event handles are closed and nulled
-    reset();
     // don't wait, just query the signal
-    DWORD res = _winapi.WaitForSingleObject(_signal->get_handle(), 0);
+    DWORD res = _winapi.WaitForSingleObject(_signal.get(), 0);
     if (res == WAIT_OBJECT_0) {
+        std::vector<EVT_HANDLE> rawEvents(EVENT_BLOCK_SIZE, nullptr);
         DWORD num_events = 0;
-        BOOL success = evt().next(_handle->get_handle(), _events.size(),
-                                  &_events[0], INFINITE, 0, &num_events);
+        BOOL success = _evt.next(_handle.get(), rawEvents.size(),
+                                 rawEvents.data(), INFINITE, 0, &num_events);
         if (!success) {
             if (_winapi.GetLastError() != ERROR_NO_MORE_ITEMS) {
                 throw win_exception(_winapi, "failed to enumerate events");
@@ -459,12 +465,18 @@ bool EventLogVista::fillBuffer() {
             }
         }
 
+        // clear() ensures all wrapped event handles are closed and nulled
+        _events.clear();
+        // Wrap event handles -> they get closed when wrapper is destructed.
+        std::transform(
+            rawEvents.cbegin(), rawEvents.cend(), std::back_inserter(_events),
+            [this](EVT_HANDLE e) { return EventHandleVista(e, _evt); });
         _next_event = 0;
         return true;
     }
 
     // we reach here if waiting for the signal would have blocked or
     // if the call to EvtNext reported no more errors
-    _winapi.ResetEvent(_signal->get_handle());
+    _winapi.ResetEvent(_signal.get());
     return false;
 }

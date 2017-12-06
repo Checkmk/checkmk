@@ -23,5 +23,6 @@
   { symbol: ["std::ofstream", private, "<fstream>", public ] },
   { symbol: ["std::ostringstream", private, "<sstream>", public ] },
   { symbol: ["std::stringstream", private, "<sstream>", public ] },
+  { symbol: ["strcasecmp", private, "<strings.h>", public ] },
   { symbol: ["timeval", private, "<sys/time.h>", public ] },
 ]

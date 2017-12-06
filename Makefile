@@ -124,7 +124,7 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
 
 
 .PHONY: all analyze build check check-binaries check-permissions check-spaces \
-        check-version clean cppcheck dist documentation format \
+        check-version clean compile-neb-cmc cppcheck dist documentation format \
         GTAGS headers healspaces help install iwyu mrproper \
         optimize-images packages setup setversion tidy version \
 	am--refresh skel
@@ -466,9 +466,11 @@ setup:
 	    slimit
 
 ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
-	  autoreconf --install --include=m4
+	autoreconf --install --include=m4
+	touch ar-lib compile config.guess config.sub install-sh missing depcomp
 
 config.status: ar-lib compile config.guess config.sub install-sh missing depcomp configure
+	@echo "Build $@ (newer targets: $?)"
 	@if test -f config.status; then \
 	  echo "update config.status by reconfiguring in the same conditions" ; \
 	  ./config.status --recheck; \
@@ -524,6 +526,12 @@ compile_commands.json: config.h $(FILES_TO_FORMAT)
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core clean
 	$(BEAR) --append $(MAKE) -C enterprise/core -j4
+endif
+
+compile-neb-cmc: config.status
+	$(MAKE) -C livestatus -j4
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core -j4
 endif
 
 tidy: compile_commands.json

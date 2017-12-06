@@ -736,7 +736,11 @@ class Overridable(Base):
                                                 (cls.type_name(), path, e))
 
         cls._load()
+        cls._declare_instance_permissions()
 
+
+    @classmethod
+    def _declare_instance_permissions(cls):
         # Declare permissions - one for each of the pages, if it is public
         config.declare_permission_section(cls.type_name(), cls.phrase("title_plural"),
                                           do_sort = True)
@@ -862,20 +866,7 @@ class Overridable(Base):
                 html.footer()
                 return
 
-        my_instances  = []
-        foreign_instances  = []
-        builtin_instances = []
-        for instance in cls.instances_sorted():
-            if instance.may_see():
-                if instance.is_builtin():
-                    builtin_instances.append(instance)
-                elif instance.is_mine():
-                    my_instances.append(instance)
-                elif instance.is_public() \
-                     or instance.may_delete() or instance.may_edit():
-                    foreign_instances.append(instance)
-
-
+        my_instances, foreign_instances, builtin_instances = cls.get_instances()
         for what, title, instances in [
             ("my",       _('Customized'),           my_instances),
             ("foreign",  _('Owned by other users'), foreign_instances),
@@ -956,6 +947,23 @@ class Overridable(Base):
 
         html.footer()
         return
+
+
+    @classmethod
+    def get_instances(cls):
+        my_instances, foreign_instances, builtin_instances = [], [], []
+
+        for instance in cls.instances_sorted():
+            if instance.may_see():
+                if instance.is_builtin():
+                    builtin_instances.append(instance)
+                elif instance.is_mine():
+                    my_instances.append(instance)
+                elif instance.is_public() \
+                     or instance.may_delete() or instance.may_edit():
+                    foreign_instances.append(instance)
+
+        return my_instances, foreign_instances, builtin_instances
 
 
     @classmethod

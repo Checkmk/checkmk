@@ -346,7 +346,7 @@ class BPApacheTest(object):
 
     def _get_apache_status(self):
         config = ConfigDomainOMD().default_globals()
-        url = "http://127.0.0.1:%s/server-status?auto" % config["APACHE_TCP_PORT"]
+        url = "http://127.0.0.1:%s/server-status?auto" % config["site_apache_tcp_port"]
 
         response = requests.get(url, headers={"Accept" : "text/plain"})
         return response.text

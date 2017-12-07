@@ -54,7 +54,7 @@ class Column {
 public:
     Column(std::string name, std::string description, int indirect_offset,
            int extra_offset, int extra_extra_offset, int offset);
-    virtual ~Column() {}
+    virtual ~Column() = default;
 
     std::string name() const { return _name; }
     std::string description() const { return _description; }

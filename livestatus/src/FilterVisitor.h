@@ -32,7 +32,7 @@ class OringFilter;
 
 class FilterVisitor {
 public:
-    virtual ~FilterVisitor() {}
+    virtual ~FilterVisitor() = default;
     virtual void visit(const ColumnFilter &) = 0;
     virtual void visit(const AndingFilter &) = 0;
     virtual void visit(const OringFilter &) = 0;

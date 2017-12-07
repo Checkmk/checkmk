@@ -369,7 +369,7 @@ def test_automation_discovery_caching(test_cfg, scan, cache, raise_errors, monke
 def test_automation_diag_host_caching(test_cfg, monkeypatch):
     _patch_data_source_run(monkeypatch)
 
-    args = ["ds-test-host1", "agent", "127.0.0.1", None, 6557, 10, 5, None ]
+    args = ["ds-test-host1", "agent", "127.0.0.1", None, 6557, 10, 5, 5, None ]
     cmk_base.automations.check_mk.AutomationDiagHost().execute(args)
     assert _counter_run == 2
 

@@ -471,6 +471,11 @@ class Overridable(Base):
     def is_mine(self):
         return self.owner() == config.user.id
 
+
+    def is_mine_and_may_have_own(self):
+        return self.is_mine() and config.user.may("general.edit_" + self.type_name())
+
+
     def owner(self):
         return self._["owner"]
 
@@ -633,7 +638,7 @@ class Overridable(Base):
 
         # My own pages
         for page in cls.instances():
-            if page.is_mine() and config.user.may("general.edit_" + cls.type_name()):
+            if page.is_mine_and_may_have_own():
                 pages[page.name()] = page
 
         return sorted(pages.values(), cmp = lambda a, b: cmp(a.title(), b.title()))
@@ -657,7 +662,7 @@ class Overridable(Base):
             if page.name() != name:
                 continue
 
-            if page.is_mine() and config.user.may("general.edit_" + cls.type_name()):
+            if page.is_mine_and_may_have_own():
                 mine = page
 
             elif page.is_public() and page.may_see():
@@ -833,10 +838,15 @@ class Overridable(Base):
         delname  = html.var("_delete")
         if delname and html.transaction_valid():
             owner = html.var('_owner', config.user.id)
-            if owner != config.user.id:
-                cls.need_overriding_permission("delete_foreign")
 
-            instance = cls.instance((owner, delname))
+            try:
+                instance = cls.instance((owner, delname))
+            except KeyError:
+                raise MKUserError("_delete", _("The %s you are trying to delete "
+                                               "does not exist.") % cls.phrase("title"))
+
+            if not instance.may_delete():
+                raise MKUserError("_delete", _("You are not permitted to perform this action."))
 
             try:
                 if owner != config.user.id:

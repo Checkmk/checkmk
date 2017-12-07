@@ -346,8 +346,8 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
 
     # TODO: In some future version use a fixed name as perf variable
     perf_var = mountpoint.replace(" ", "_")
-    perfdata = [(perf_var, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb),
-                ('fs_size', str(size_mb) + 'MB')]
+    perfdata = [(perf_var, used_mb, warn_mb, crit_mb, 0, size_mb),
+                ('fs_size', size_mb)]
 
     if type(params) == dict:
         show_levels = params.get("show_levels")

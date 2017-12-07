@@ -42,7 +42,7 @@ public:
         : DynamicColumn(name, description, logger, indirect_offset,
                         extra_offset, extra_extra_offset)
         , _mc(mc) {}
-    ~DynamicLogwatchFileColumn() override {}
+    ~DynamicLogwatchFileColumn() override = default;
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;
 

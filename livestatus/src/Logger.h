@@ -62,7 +62,7 @@ public:
         : _level(level)
         , _message(message)
         , _time_point(std::chrono::system_clock::now()) {}
-    virtual ~LogRecord() {}
+    virtual ~LogRecord() = default;
 
     LogLevel getLevel() const { return _level; }
     void setLevel(LogLevel level) { _level = level; }

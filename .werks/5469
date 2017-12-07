@@ -1,0 +1,13 @@
+Title: Fixed acknowledgement notifications when RBN is disabled
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p20
+Date: 1512659905
+
+When an ACKNOWLEDGE_{HOST,SVC}_PROBLEM command is issued to the core (via
+the GUI or via Livestatus) and rule-based notifications are disabled, the
+CMC segfaulted. This has been fixed.

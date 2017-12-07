@@ -16610,7 +16610,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         test_id   = html.var("_test_id")
         site_id   = html.var("_site_id")
-        status_id = html.get_integer_input("_status_id")
+        status_id = html.get_integer_input("_status_id", 0)
 
         if not test_id:
             raise MKUserError("_ack_test_id", _("Needed variable missing"))
@@ -16629,21 +16629,18 @@ class ModeAnalyzeConfig(WatoMode):
         elif html.var("_do") == "unack":
             self._unacknowledge_test(test_id, site_id, status_id)
 
-        elif html.var("_do") == "ack_all":
-            self._acknowledge_test(test_id, site_id=None, status_id=status_id)
+        elif html.var("_do") == "disable":
+            self._disable_test(test_id)
 
-        elif html.var("_do") == "unack_all":
-            self._unacknowledge_test(test_id, site_id=None, status_id=status_id)
+        elif html.var("_do") == "enable":
+            self._enable_test(test_id)
 
         else:
             raise NotImplementedError()
 
 
     def page(self):
-        self._show_filter_buttons()
-
         results_by_category = self._perform_tests()
-        results_by_category = self._filter_test_results(results_by_category)
 
         site_ids = sorted(self._analyze_site_ids())
 
@@ -16658,23 +16655,6 @@ class ModeAnalyzeConfig(WatoMode):
             table.end()
 
 
-    def _show_filter_buttons(self):
-        if self._show_ok:
-            html.buttonlink(html.makeuri([], delvars=["show_ok"]), _("Hide succeeded results"))
-        else:
-            html.buttonlink(html.makeuri([("show_ok", "1")]), _("Show succeeded results"))
-
-        if self._show_failed:
-            html.buttonlink(html.makeuri([("hide_failed", "1")]), _("Hide failed results"))
-        else:
-            html.buttonlink(html.makeuri([], delvars=["hide_failed"]), _("Show failed results"))
-
-        if self._show_ack:
-            html.buttonlink(html.makeuri([], delvars=["show_ack"]), _("Hide acknowledged results"))
-        else:
-            html.buttonlink(html.makeuri([("show_ack", "1")]), _("Show acknowledged results"))
-
-
     def _show_test_row(self, test_id, test_results_by_site, site_ids):
         table.row()
 
@@ -16685,57 +16665,66 @@ class ModeAnalyzeConfig(WatoMode):
 
         worst_result = sorted(test_results_by_site["site_results"].values(),
                               key=lambda result: result.status)[0]
-        if worst_result.status == 0:
-            html.empty_icon_button()
+
+        # Disabling of test in total
+        is_test_disabled = self._is_test_disabled(test_id)
+        if is_test_disabled:
+            html.icon_button(
+                html.makeactionuri(
+                    [("_do",        "enable"),
+                     ("_test_id",   worst_result.test_id)]),
+                _("Reenable this test"),
+                "enable_test",
+            )
         else:
-            if self._is_whole_test_acknowledged(worst_result):
-                html.icon_button(
-                    html.makeactionuri(
-                        [("_do",        "unack_all"),
-                         ("_status_id", worst_result.status),
-                         ("_test_id",   worst_result.test_id)]),
-                    _("Unacknowledge this test for all sites"),
-                    "unacknowledge_test_all",
-                )
-            else:
-                html.icon_button(
-                    html.makeactionuri(
-                        [("_do",        "ack_all"),
-                         ("_status_id", worst_result.status),
-                         ("_test_id",   worst_result.test_id)]),
-                    _("Acknowledge this test for all sites"),
-                    "acknowledge_test_all",
-                )
+            html.icon_button(
+                html.makeactionuri(
+                    [("_do",        "disable"),
+                     ("_test_id",   worst_result.test_id)]),
+                _("Disable this test"),
+                "disable_test",
+            )
 
         # assume all have the same test meta information (title, help, ...)
-        table.cell(_("Title"), css="title")
+        table.cell(_("Title"), css="title " + "stale" if is_test_disabled else "")
         html.write_text(test_results_by_site["test"]["title"])
-        html.help(test_results_by_site["test"]["help"])
 
         # Now loop all sites to display their results
         for site_id in site_ids:
+            if is_test_disabled:
+                table.cell(site_id, "")
+                table.cell("", "")
+                continue
+
             result = test_results_by_site["site_results"].get(site_id)
             if result is None:
                 table.cell(site_id, css="state state-1")
+                table.cell("", css="buttons")
                 continue
 
-            is_test_acknowleged    = self._is_whole_test_acknowledged(result)
-            is_result_acknowledged = self._is_explicilty_acknowledged(result)
+            is_acknowledged = self._is_acknowledged(result)
 
-            table.cell(site_id, css="state state%d%s" % (result.status,
-                 " acknowledged" if is_test_acknowleged or is_result_acknowledged else ""))
+            if is_acknowledged or result.status == -1:
+                css = "state stale"
+            else:
+                css = "state state%d" % result.status
+
+            table.cell(site_id, css=css)
             html.open_div(title=result.text)
             html.write_text(result.status_name())
+            html.close_div()
 
-            if result.status != 0 and not is_test_acknowleged:
-                if is_result_acknowledged:
+            table.cell("", css="buttons")
+
+            if result.status != 0:
+                if is_acknowledged:
                     html.icon_button(
                         html.makeactionuri(
                             [("_do",        "unack"),
                              ("_site_id",   result.site_id),
                              ("_status_id", result.status),
                              ("_test_id",   result.test_id)]),
-                        _("Unaknowledge this test result"),
+                        _("Unacknowledge this test result for site %s" % site_id),
                         "unacknowledge_test",
                     )
                 else:
@@ -16745,28 +16734,32 @@ class ModeAnalyzeConfig(WatoMode):
                              ("_site_id",   result.site_id),
                              ("_status_id", result.status),
                              ("_test_id",   result.test_id)]),
-                        _("Acknowledge this test result"),
+                        _("Acknowledge this test result for site %s" % site_id),
                         "acknowledge_test",
                     )
+            else:
+                html.write("")
 
-            html.close_div()
 
         # Add toggleable notitication context
         table.row(class_="ac_test_details hidden",
                   id_="test_result_details_%s" % test_id)
-        table.cell(colspan=2+len(site_ids))
+        table.cell(colspan = 2 + 2 * len(site_ids))
 
-        html.open_table()
-        for site_id in site_ids:
-            result = test_results_by_site["site_results"].get(site_id)
-            if result is None:
-                continue
+        html.write_text(test_results_by_site["test"]["help"])
 
-            html.open_tr()
-            html.td(html.attrencode(site_id))
-            html.td(html.permissive_attrencode("%s: %s" % (result.status_name(), result.text)))
-            html.close_tr()
-        html.close_table()
+        if not is_test_disabled:
+            html.open_table()
+            for site_id in site_ids:
+                result = test_results_by_site["site_results"].get(site_id)
+                if result is None:
+                    continue
+
+                html.open_tr()
+                html.td(html.attrencode(site_id))
+                html.td(html.permissive_attrencode("%s: %s" % (result.status_name(), result.text)))
+                html.close_tr()
+            html.close_table()
 
         # This dummy row is needed for not destroying the odd/even row highlighting
         table.row(class_="hidden")
@@ -16881,46 +16874,12 @@ class ModeAnalyzeConfig(WatoMode):
             result_queue.join()
 
 
-    def _filter_test_results(self, results_by_category):
-        for category_name, results_by_test in results_by_category.items():
-            for test_id, test_results_by_site in results_by_test.items():
-                for site_id, result in test_results_by_site["site_results"].items():
-                    remove = False
-                    if not self._show_ok and type(result) == ACResultOK:
-                        remove = True
-
-                    if not self._show_failed and type(result) != ACResultOK:
-                        remove = True
-
-                    if not self._show_ack and self._is_acknowledged(result):
-                        remove = True
-
-                    # Remove result of site if filtered by user call
-                    if remove:
-                        del test_results_by_site["site_results"][site_id]
-
-                # Remove whole test when no site result left
-                if not test_results_by_site["site_results"]:
-                    del results_by_test[test_id]
-
-            # Remove whole category when no test left
-            if not results_by_test:
-                del results_by_category[category_name]
-
-        return results_by_category
-
-
     def _is_acknowledged(self, result):
-        return self._is_whole_test_acknowledged(result) \
-               or self._is_explicilty_acknowledged(result)
-
-
-    def _is_explicilty_acknowledged(self, result):
         return (result.test_id, result.site_id, result.status) in self._acks
 
 
-    def _is_whole_test_acknowledged(self, result):
-        return (result.test_id, None, result.status) in self._acks
+    def _is_test_disabled(self, test_id):
+        return self._acks.get(test_id, True) == False
 
 
     def _unacknowledge_test(self, test_id, site_id, status_id):
@@ -16939,6 +16898,16 @@ class ModeAnalyzeConfig(WatoMode):
             "time"    : time.time(),
         }
         self._save_acknowledgements(self._acks)
+
+
+    def _enable_test(self, test_id, enabling=True):
+        self._acks = self._load_acknowledgements(lock=True)
+        self._acks[(test_id)] = enabling
+        self._save_acknowledgements(self._acks)
+
+
+    def _disable_test(self, test_id):
+        self._enable_test(test_id, False)
 
 
     def _save_acknowledgements(self, acknowledged_werks):

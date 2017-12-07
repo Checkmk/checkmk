@@ -638,7 +638,7 @@ register_rule(group,
         ],
         optional_keys = None,
     ),
-    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED,
+    factory_default = watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
     match = "first",
 )
 

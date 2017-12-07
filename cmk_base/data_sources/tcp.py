@@ -91,36 +91,27 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         encryption_settings = config.agent_encryption_of(hostname)
 
-        s = socket.socket(config.is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
-                          socket.SOCK_STREAM)
+        socktype = (socket.AF_INET6 if config.is_ipv6_primary(hostname)
+                    else socket.AF_INET)
+        s = socket.socket(socktype, socket.SOCK_STREAM)
 
         timeout = self._get_timeout(hostname)
         s.settimeout(timeout)
 
+        output = []
         self._logger.debug("[%s] Connecting via TCP to %s:%d (%ss timeout)" % (self.id(), ipaddress, port, s.gettimeout()))
-        s.connect((ipaddress, port))
-        # Immediately close sending direction. We do not send any data
-        # s.shutdown(socket.SHUT_WR)
         try:
-            s.setblocking(1)
-        except:
-            pass
-        output = ""
-        try:
+            s.connect((ipaddress, port))
             while True:
-                out = s.recv(4096, socket.MSG_WAITALL)
-                if out and len(out) > 0:
-                    output += out
+                data = s.recv(4096, socket.MSG_WAITALL)
+
+                if data and len(data) > 0:
+                    output.append(data)
                 else:
                     break
-        except Exception, e:
-            # Python seems to skip closing the socket under certain
-            # conditions, leaving open filedescriptors and sockets in
-            # CLOSE_WAIT. This happens one a timeout (ALERT signal)
+        finally:
             s.close()
-            raise
-
-        s.close()
+        output = ''.join(output)
 
         if len(output) == 0: # may be caused by xinetd not allowing our address
             raise MKAgentError("Empty output from agent at TCP port %d" % port)

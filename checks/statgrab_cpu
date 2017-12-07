@@ -51,7 +51,6 @@ def check_statgrab_cpu(_no_item, params, info):
     # user, nice, system, idle, iowait, hw-int, sw-int, steal
     values = [ user, nice, system, idle, wait, 0, 0, 0 ]
 
-    # No return cause of the use of yield
     return check_cpu_util_unix(values, params)
 
 

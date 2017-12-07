@@ -1,0 +1,33 @@
+Title: Scheduled reports can now be stored in the site
+Level: 2
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1512640854
+Class: feature
+
+Instead of sending an email with the created report in the scheduled
+interval it is now possible to store the just created reports locally
+in the site.
+
+This feature is configured in the configuration of the schedule. You
+can now choose the action <i>Store locally</i> instead of
+<i>Send via Email</i> and configure different action specific things
+after this.
+
+Each user allowed to use the report scheduler can open the page
+"Scheduler > Stored reports" to view and open all stored reports
+available to the user.
+
+All reports are stored below <tt>~/var/check_mk/reports/archive/</tt>.
+
+In the first directory below the base directory each user that creates
+such stored reports gets a directory. All stored reports of this user
+are saved below this directory. In case the user configures a schedule
+to publish the resulting PDFs to other users, the reports are stored
+in the <tt>public</tt> sub directory. A schedule can be configured
+to store the report either directly in these directories or in a
+hierarchy of subdirectories below these parent directories.
+
+You can configure stored reports to be deleted after a given time.

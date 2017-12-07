@@ -476,6 +476,11 @@ class Overridable(Base):
         return self.is_mine() and config.user.may("general.edit_" + self.type_name())
 
 
+    @classmethod
+    def _delete_permission(cls):
+        return "general.edit_" + cls.type_name()
+
+
     def owner(self):
         return self._["owner"]
 
@@ -514,7 +519,7 @@ class Overridable(Base):
     def may_delete(self):
         if self.is_builtin():
             return False
-        elif self.is_mine():
+        elif self.is_mine() and config.user.may(self._delete_permission()):
             return True
         else:
             return config.user.may('general.delete_foreign_%s' % self.type_name())
@@ -523,7 +528,7 @@ class Overridable(Base):
     def may_edit(self):
         if self.is_builtin():
             return False
-        elif self.is_mine():
+        elif self.is_mine() and config.user.may("general.edit_%s" % self.type_name()):
             return True
         else:
             return config.user.may('general.edit_foreign_%s' % self.type_name())
@@ -582,6 +587,7 @@ class Overridable(Base):
              _("Make %s visible and usable for other users.") % cls.phrase("title_plural"),
              [ "admin", "user" ])
 
+        # TODO: Bug: This permission does not seem to be used
         config.declare_permission("general.see_user_" + cls.type_name(),
              _("See user %s") % cls.phrase("title_plural"),
              _("Is needed for seeing %s that other users have created.") % cls.phrase("title_plural"),

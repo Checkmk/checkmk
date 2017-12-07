@@ -27,11 +27,11 @@
 
 #if defined(CMC)
 class Contact;
-typedef Contact contact;
+using contact = Contact;
 #elif defined(NAGIOS4)
 typedef struct contact contact;
 #else
-typedef struct contact_struct contact;
+using contact = struct contact_struct;
 #endif
 
 #endif  // contact_fwd_h

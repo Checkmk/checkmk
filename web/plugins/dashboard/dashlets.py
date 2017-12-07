@@ -364,6 +364,13 @@ def dashlet_graph(nr, dashlet):
 
 
 def dashlet_graph_reload_js(nr, dashlet):
+    # Be compatible to pre 1.5.0i2 format
+    if "graph_render_options" not in dashlet:
+        dashlet["graph_render_options"] = {
+            "show_legend"  : dashlet.pop("show_legend", False),
+            "show_service" : dashlet.pop("show_service", True),
+        }
+
     host = dashlet['context'].get('host', html.var("host"))
     if not host:
         raise MKUserError('host', _('Missing needed host parameter.'))
@@ -396,27 +403,16 @@ def dashlet_graph_reload_js(nr, dashlet):
         "service_description" : service,
         "graph_index"         : dashlet["source"] -1,
     })
-    graph_render_options = {
-        "show_legend": dashlet.get("show_legend", False),
-        "show_service" : dashlet.get("show_service", True),
-    }
+
+    graph_render_options = dashlet["graph_render_options"]
 
     return "dashboard_render_graph(%d, %s, %s, '%s')" % \
             (nr, json.dumps(graph_identification), json.dumps(graph_render_options), timerange)
 
 
-dashlet_types["pnpgraph"] = {
-    "title"        : _("Performance Graph"),
-    "sort_index"   : 20,
-    "description"  : _("Displays a performance graph of a host or service."),
-    "render"       : dashlet_graph,
-    "refresh"      : 60,
-    "size"         : (60, 21),
-    "allowed"      : config.builtin_role_ids,
-    "infos"        : ["service", "host"],
-    "single_infos" : ["service", "host"],
-    "parameters"   : [
-        # Cleanup: switch to generic Timerange() valuespec!
+def pnpgraph_parameters():
+    elements = [
+        # TODO: Cleanup: switch to generic Timerange() valuespec!
         ("timerange", DropdownChoice(
             title = _('Timerange'),
             default_value = '1',
@@ -431,20 +427,40 @@ dashlet_types["pnpgraph"] = {
             default_value = 1,
             minvalue = 1,
         )),
-        ("show_legend", Checkbox(
-            title = _("Show Legend"),
-            label = _("Show the legend area of the graph"),
-            help = _("This option controls whether or not the legend below the graph "
-                     "area should be shown. This option is only used by the new Check_MK "
-                     "graphs which are only available in the Check_MK Enterprise Edition."),
-            default_value = False,
-        )),
-        ("show_service", Checkbox(
-            title = _("Show host/service name in title"),
-            label = _("Add the host/service to the graph title"),
-            default_value = True,
-        )),
-    ],
+    ]
+
+    import metrics
+    if metrics.cmk_graphs_possible():
+        elements += [
+            ("graph_render_options", metrics.vs_graph_render_options(
+                default_values={
+                    "show_service": True,
+                },
+                exclude=[
+                    "show_time_range_previews",
+                ],
+            )),
+        ]
+
+    return elements
+
+
+dashlet_types["pnpgraph"] = {
+    "title"        : _("Performance Graph"),
+    "sort_index"   : 20,
+    "description"  : _("Displays a performance graph of a host or service."),
+    "render"       : dashlet_graph,
+    "refresh"      : 60,
+    "size"         : (60, 21),
+    "allowed"      : config.builtin_role_ids,
+    "infos"        : ["service", "host"],
+    "single_infos" : ["service", "host"],
+    "parameters"   : Dictionary(
+        title = _('Properties'),
+        render = 'form',
+        optional_keys = [],
+        elements = pnpgraph_parameters,
+    ),
     "styles": """
 .dashlet.pnpgraph .dashlet_inner {
     background-color: #f8f4f0;

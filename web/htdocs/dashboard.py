@@ -1101,6 +1101,10 @@ def page_edit_dashlet():
             validate = dashlet_type.get('validate_params'),
             elements = params,
         )
+
+    elif isinstance(params, Dictionary):
+        vs_type = params
+
     elif type(params) == type(lambda x: x):
         # It's a tuple of functions which should be used to render and parse the params
         render_input_func, handle_input_func = params()

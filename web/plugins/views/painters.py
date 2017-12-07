@@ -63,6 +63,7 @@
 # change in future.
 
 import traceback
+import copy
 
 import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
@@ -1000,13 +1001,39 @@ def paint_time_graph(row, cell):
 
 
 def time_graph_params():
-    try:
-        return metrics.vs_graph_render_options()
-    except AttributeError:
-        return None # The method is only available in CEE
+    if not metrics.cmk_graphs_possible():
+        return # The method is only available in CEE
+
+    elements = [
+        ("set_default_time_range", DropdownChoice(
+            title   = _("Set default time range"),
+            choices = [ (entry["duration"], entry["title"])
+                        for entry in config.graph_timeranges ],
+        )),
+        ("graph_render_options", metrics.vs_graph_render_options())
+    ]
+
+    return Transform(
+        Dictionary(
+            elements=elements,
+            optional_keys=[],
+        ),
+        forth=_transform_old_graph_render_options,
+    )
+
+def _transform_old_graph_render_options(value):
+    # Be compatible to pre 1.5.0i2 format
+    if "graph_render_options" not in value:
+        value = copy.deepcopy(value)
+        value["graph_render_options"] = {
+            "show_legend"              : value.pop("show_legend", True),
+            "show_controls"            : value.pop("show_controls", True),
+            "show_time_range_previews" : value.pop("show_time_range_previews", True),
+        }
+    return value
 
 
-def paint_time_graph_cmk(row, cell, show_timeranges=False):
+def paint_time_graph_cmk(row, cell):
     graph_identification = (
         "template", {
             "site"                : row["site"],
@@ -1017,19 +1044,20 @@ def paint_time_graph_cmk(row, cell, show_timeranges=False):
     # Load the graph render options from
     # a) the painter parameters configured in the view
     # b) the painter options set per user and view
-    graph_render_options = cell.painter_parameters().copy()
-    graph_data_range = {}
 
-    graph_render_options["show_time_range_previews"] = show_timeranges
+    painter_params = cell.painter_parameters()
+    painter_params = _transform_old_graph_render_options(painter_params)
+
+    graph_render_options = painter_params["graph_render_options"]
 
     options = painter_options.get_without_default("graph_render_options")
     if options != None:
         graph_render_options.update(options)
-        # Do not load this setting form the painter options
-        del graph_render_options["set_default_time_range"]
 
-    if "set_default_time_range" in graph_render_options:
-        duration = graph_render_options["set_default_time_range"]
+    graph_data_range = {}
+
+    if "set_default_time_range" in painter_params:
+        duration = painter_params["set_default_time_range"]
         now      = time.time()
         graph_data_range["time_range"] = now - duration, now
 

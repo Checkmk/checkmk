@@ -3388,7 +3388,7 @@ class Dictionary(ValueSpec):
             return value
 
     def _get_elements(self):
-        if type(self._elements) == type(lambda: None):
+        if type(self._elements) == type(lambda: None) or isinstance(self._elements, types.MethodType):
             return self._elements()
         elif type(self._elements) == list:
             return self._elements

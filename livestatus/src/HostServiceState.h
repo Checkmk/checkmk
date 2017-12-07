@@ -39,9 +39,9 @@ class HostServiceState;
 #include "nagios.h"
 #endif
 
-typedef std::vector<HostServiceState *> HostServices;
+using HostServices = std::vector<HostServiceState *>;
 
-typedef void *HostServiceKey;
+using HostServiceKey = void *;
 
 class HostServiceState {
 public:

@@ -142,7 +142,7 @@ protected:
     };
 
     class ListEventConsoleColumn : public ListColumn {
-        typedef std::vector<std::string> _column_t;
+        using _column_t = std::vector<std::string>;
         EventConsoleColumn<_column_t> _ecc;
 
     public:

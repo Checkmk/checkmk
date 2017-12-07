@@ -26,4 +26,4 @@
 
 import userdb
 
-multisite_cronjobs.append(userdb.execute_userdb_job)
+register_job(userdb.execute_userdb_job)

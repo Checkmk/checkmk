@@ -26,4 +26,4 @@
 
 import wato
 
-multisite_cronjobs.append(wato.execute_network_scan_job)
+register_job(wato.execute_network_scan_job)

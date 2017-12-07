@@ -506,7 +506,27 @@ class ACTestCheckMKHelperUsage(ACTest):
         yield cls(_("The current Check_MK helper usage is %.2f%%. The Check_MK services have an "
                     "average check latency of %.3fs.") % (helper_usage_perc, check_latecy_cmk))
 
-        if helper_usage_perc < 50:
+        default_values = watolib.ConfigDomain().get_all_default_globals()
+        def get_effective_global_setting(varname):
+            global_settings = watolib.load_configuration_settings()
+
+            if watolib.is_wato_slave_site():
+                current_settings = watolib.load_configuration_settings(site_specific=True)
+            else:
+                sites = watolib.SiteManagement.load_sites()
+                current_settings = sites[config.omd_site()].get("globals", {})
+
+            if varname in current_settings:
+                value = current_settings[varname]
+            elif varname in global_settings:
+                value = global_settings[varname]
+            else:
+                value = default_values[varname]
+
+            return value
+
+        # Only report this as warning in case the user increased the default helper configuration
+        if get_effective_global_setting("cmc_cmk_helpers") > default_values["cmc_cmk_helpers"] and helper_usage_perc < 50:
             yield ACResultWARN(_("The helper usage is below 50%, you may decrease the number of "
                                  "Check_MK helpers to reduce the memory consumption."))
 

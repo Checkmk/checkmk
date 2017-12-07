@@ -1,5 +1,6 @@
 import pytest
 import pprint
+import checktestlib
 
 pytestmark = pytest.mark.checks
 
@@ -265,10 +266,10 @@ def test_df_check_with_parse(check_manager, monkeypatch, item, params, info, exp
     if params == "default":
         params = check.default_parameters()
 
-    result = check.run_check(item, params, check.run_parse(info))
+    result = checktestlib.BasicCheckResult(*check.run_check(item, params, check.run_parse(info)))
     if "status" in expected_result:
-        assert result[0] == expected_result["status"]
+        assert result.status == expected_result["status"]
     if "infotext" in expected_result:
-        assert result[1] == expected_result["infotext"]
+        assert result.infotext == expected_result["infotext"]
     if "perfdata" in expected_result:
-        assert result[2] == expected_result["perfdata"]
+        assert result.perfdata == expected_result["perfdata"]

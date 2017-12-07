@@ -63,7 +63,7 @@ void HostListStateColumn::update(host *hst, const contact *auth_user,
 #ifdef CMC
     ServiceListStateColumn::service_list services = &hst->_services;
     bool has_been_checked = hst->state()->_has_been_checked;
-    int current_state = static_cast<int>(hst->state()->_current_state);
+    auto current_state = static_cast<int>(hst->state()->_current_state);
 #else
     ServiceListStateColumn::service_list services = hst->services;
     bool has_been_checked = hst->has_been_checked != 0;

@@ -16764,7 +16764,7 @@ class ModeAnalyzeConfig(WatoMode):
 
             html.open_tr()
             html.td(html.attrencode(site_id))
-            html.td(html.attrencode("%s: %s" % (result.status_name(), result.text)))
+            html.td(html.permissive_attrencode("%s: %s" % (result.status_name(), result.text)))
             html.close_tr()
         html.close_table()
 

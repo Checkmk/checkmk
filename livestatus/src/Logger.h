@@ -176,7 +176,7 @@ public:
 class ConcreteLogger : public Logger {
 public:
     ConcreteLogger(const std::string &name, Logger *parent);
-    ~ConcreteLogger();
+    ~ConcreteLogger() override;
 
     std::string getName() const override;
 

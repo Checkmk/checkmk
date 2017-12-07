@@ -48,6 +48,10 @@ def load_plugins(force):
     loaded_with_language = current_language
 
 
+def register_job(cron_job):
+    multisite_cronjobs.append(cron_job)
+
+
 # Page called by some external trigger (usually cron job in OMD site)
 # Note: this URL is being called *without* any login. We have no
 # user. Everyone can call this! We must not read any URL variables.

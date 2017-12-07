@@ -1,0 +1,15 @@
+Title: Fixed breaking report elements when reloading edit page
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i2
+Date: 1512660674
+
+When opening a report element for editing which e.g. has a context configured
+and reloading the page multiple times, the conditions may be modified which
+leads to issues when trying to save the element.
+
+e.g. a service could change from "Check_MK" to "{'service': u'Check_MK'}".

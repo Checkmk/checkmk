@@ -16724,7 +16724,7 @@ class ModeAnalyzeConfig(WatoMode):
                              ("_site_id",   result.site_id),
                              ("_status_id", result.status),
                              ("_test_id",   result.test_id)]),
-                        _("Unacknowledge this test result for site %s" % site_id),
+                        _("Unacknowledge this test result for site %s") % site_id,
                         "unacknowledge_test",
                     )
                 else:
@@ -16734,7 +16734,7 @@ class ModeAnalyzeConfig(WatoMode):
                              ("_site_id",   result.site_id),
                              ("_status_id", result.status),
                              ("_test_id",   result.test_id)]),
-                        _("Acknowledge this test result for site %s" % site_id),
+                        _("Acknowledge this test result for site %s") % site_id,
                         "acknowledge_test",
                     )
             else:

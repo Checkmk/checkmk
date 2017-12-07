@@ -1541,6 +1541,15 @@ def host_service_graph_popup_pnp(site, host_name, service_description):
 #   |  This page handler is called by graphs embedded in a dashboard.      |
 #   '----------------------------------------------------------------------'
 
+default_dashlet_graph_render_options = {
+    "font_size"                : 8,
+    "show_legend"              : False,
+    "show_service"             : True,
+    "show_controls"            : False,
+    "resizable"                : False,
+    "show_time_range_previews" : False,
+}
+
 def page_graph_dashlet():
     spec = html.var("spec")
     if not spec:
@@ -1564,14 +1573,8 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
     size = (int(((float(html.var("width")) - 25)/html_size_per_ex)),
             int((float(html.var("height")) - 18)/html_size_per_ex))
 
-    graph_render_options = {
-        "size"                     : size,
-        "font_size"                : 8,
-        "show_legend"              : False,
-        "show_controls"            : False,
-        "resizable"                : False,
-        "show_time_range_previews" : False,
-    }
+    graph_render_options = default_dashlet_graph_render_options.copy()
+    graph_render_options["size"] = size
     graph_render_options.update(custom_graph_render_options)
 
     # The timerange is specified in PNP like manner.

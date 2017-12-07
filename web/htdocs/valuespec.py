@@ -4350,6 +4350,17 @@ class TimeofdayRanges(Transform):
         )
 
 
+
+class Fontsize(Float):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("title", _("Font size"))
+        kwargs.setdefault("default_value", 10)
+        kwargs["size"] = 5
+        kwargs["unit"] = _("pt")
+        super(Fontsize, self).__init__(**kwargs)
+
+
+
 class Color(ValueSpec):
     def __init__(self, **kwargs):
         kwargs["regex"] = "#[0-9]{3,6}"

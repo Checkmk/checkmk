@@ -433,9 +433,7 @@ def pnpgraph_parameters():
     if metrics.cmk_graphs_possible():
         elements += [
             ("graph_render_options", metrics.vs_graph_render_options(
-                default_values={
-                    "show_service": True,
-                },
+                default_values=metrics.default_dashlet_graph_render_options,
                 exclude=[
                     "show_time_range_previews",
                 ],

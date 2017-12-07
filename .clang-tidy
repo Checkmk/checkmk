@@ -11,6 +11,7 @@
 #   * undesirable checks:
 #       * cppcoreguidelines-pro-type-static-cast-downcast ("do not use static_cast to downcast from a base to a derived class; use dynamic_cast instead")
 #       * google-runtime-references ("non-const reference parameter 'foo', make it const or use a pointer")
+#       * hicpp-no-assembler ("do not use inline assembler in safety-critical code") triggered by ntohs/htons
 #       * llvm-include-order ("#includes are not sorted properly")
 #
 #   * desirable checks, but hard to fix currently:
@@ -26,7 +27,7 @@
 #       * cppcoreguidelines-pro-type-union-access ("do not access members of unions; use (boost::)variant instead")
 #       * modernize-use-bool-literals ("converting integer literal to bool, use bool literal instead") Incorrectly triggered by e.g. FD_ZERO
 #
-Checks: '*,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-llvm-include-order,-modernize-use-bool-literals'
+Checks: '*,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-assembler,-llvm-include-order,-modernize-use-bool-literals'
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'

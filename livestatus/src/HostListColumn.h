@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <string>
+#include <utility>
 #include <vector>
 #include "ListColumn.h"
 #include "contact_fwd.h"
@@ -59,8 +60,10 @@ private:
     const bool _show_state;
 
     struct Member {
-        Member(const std::string &hn, HostState cs, bool hbc)
-            : host_name(hn), current_state(cs), has_been_checked(hbc) {}
+        Member(std::string hn, HostState cs, bool hbc)
+            : host_name(std::move(hn))
+            , current_state(cs)
+            , has_been_checked(hbc) {}
 
         std::string host_name;
         HostState current_state;

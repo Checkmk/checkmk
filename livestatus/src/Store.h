@@ -30,6 +30,7 @@
 #include <map>
 #include <string>
 #ifndef CMC
+#include <utility>
 #include <vector>
 #endif
 #include "LogCache.h"
@@ -179,9 +180,11 @@ private:
         std::string _name;
         std::string _arguments;
 
-        ExternalCommand(const std::string &prefix, const std::string &name,
-                        const std::string &arguments)
-            : _prefix(prefix), _name(name), _arguments(arguments) {}
+        ExternalCommand(std::string prefix, std::string name,
+                        std::string arguments)
+            : _prefix(std::move(prefix))
+            , _name(std::move(name))
+            , _arguments(std::move(arguments)) {}
     };
 
     void answerCommandRequest(const ExternalCommand &command);

@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include <string>
+#include <utility>
 #include "IntColumn.h"
 #include "nagios.h"
 class Row;
@@ -37,10 +38,10 @@ public:
     CustomTimeperiodColumn(const std::string &name,
                            const std::string &description, int indirect_offset,
                            int extra_offset, int extra_extra_offset, int offset,
-                           const std::string &varname)
+                           std::string varname)
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset, offset)
-        , _varname(varname) {}
+        , _varname(std::move(varname)) {}
     int32_t getValue(Row row, const contact *auth_user) const override;
 
 private:

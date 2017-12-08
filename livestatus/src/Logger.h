@@ -37,6 +37,7 @@
 #include <string>
 #include <system_error>
 #include <unordered_map>
+#include <utility>
 
 // -----------------------------------------------------------------------------
 
@@ -58,9 +59,9 @@ std::ostream &operator<<(std::ostream &os, const LogLevel &c);
 
 class LogRecord {
 public:
-    LogRecord(LogLevel level, const std::string &message)
+    LogRecord(LogLevel level, std::string message)
         : _level(level)
-        , _message(message)
+        , _message(std::move(message))
         , _time_point(std::chrono::system_clock::now()) {}
     virtual ~LogRecord() = default;
 
@@ -232,8 +233,8 @@ class ContextLogger : public LoggerDecorator {
 public:
     using ContextEmitter = std::function<void(std::ostream &)>;
 
-    ContextLogger(Logger *logger, const ContextEmitter &context)
-        : LoggerDecorator(logger), _context(context) {}
+    ContextLogger(Logger *logger, ContextEmitter context)
+        : LoggerDecorator(logger), _context(std::move(context)) {}
 
     void emitContext(std::ostream &os) const override;
 

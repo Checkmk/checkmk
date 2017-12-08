@@ -97,7 +97,7 @@ public:
         text = 7,             // specific text passages
         alert_handlers = 8,   // Started and stopped alert handlers
 
-        // TODO: This class sets different logclasses on match -> fix this
+        // TODO(sp): This class sets different logclasses on match -> fix this
         invalid = 0x7fffffff  // never stored
     };
     static constexpr uint32_t all_classes = 0xffffu;

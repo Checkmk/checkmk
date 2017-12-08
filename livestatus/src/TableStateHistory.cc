@@ -54,8 +54,10 @@ class AndingFilter;
 class OringFilter;
 
 #ifdef CMC
-#include "Host.h"
-#include "Service.h"
+// This seems to be an IWYU bug: If we remove the includes as suggested, we
+// would do a member access on an incomplete type.
+#include "Host.h"     // IWYU pragma: keep
+#include "Service.h"  // IWYU pragma: keep
 #include "Timeperiod.h"
 #include "cmc.h"
 #define STATE_OK 0

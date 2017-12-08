@@ -29,6 +29,7 @@
 #include <chrono>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 #include "ListColumn.h"
 class MonitoringCore;
@@ -65,13 +66,13 @@ private:
     int _info_depth;
 
     struct Entry {
-        Entry(const std::string &d, ServiceState cs, bool hbc,
-              const std::string &po, ServiceState lhs, uint32_t ca,
-              uint32_t mca, uint32_t sdt, bool a, bool spa)
-            : description(d)
+        Entry(std::string d, ServiceState cs, bool hbc, std::string po,
+              ServiceState lhs, uint32_t ca, uint32_t mca, uint32_t sdt, bool a,
+              bool spa)
+            : description(std::move(d))
             , current_state(cs)
             , has_been_checked(hbc)
-            , plugin_output(po)
+            , plugin_output(std::move(po))
             , last_hard_state(lhs)
             , current_attempt(ca)
             , max_check_attempts(mca)

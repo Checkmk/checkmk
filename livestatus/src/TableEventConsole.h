@@ -32,6 +32,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 #include "Column.h"
 #include "DoubleColumn.h"
@@ -66,8 +67,10 @@ protected:
 
     public:
         EventConsoleColumn(Column &column, T default_value,
-                           const std::function<T(std::string)> &f)
-            : _column(column), _default_value(default_value), _f(f) {}
+                           std::function<T(std::string)> f)
+            : _column(column)
+            , _default_value(std::move(default_value))
+            , _f(std::move(f)) {}
 
         std::string getRaw(const ECRow *row) const {
             return row == nullptr ? "" : row->_map.at(_column.name());

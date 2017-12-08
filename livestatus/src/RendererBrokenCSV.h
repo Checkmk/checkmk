@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <iosfwd>
 #include <string>
+#include <utility>
 #include <vector>
 #include "Renderer.h"
 #include "data_encoding.h"
@@ -35,12 +36,12 @@ class Logger;
 
 class CSVSeparators {
 public:
-    CSVSeparators(const std::string& dataset, const std::string& field,
-                  const std::string& list, const std::string& host_service)
-        : _dataset(dataset)
-        , _field(field)
-        , _list(list)
-        , _host_service(host_service) {}
+    CSVSeparators(std::string dataset, std::string field, std::string list,
+                  std::string host_service)
+        : _dataset(std::move(dataset))
+        , _field(std::move(field))
+        , _list(std::move(list))
+        , _host_service(std::move(host_service)) {}
 
     std::string dataset() const { return _dataset; }
     std::string field() const { return _field; }
@@ -59,8 +60,9 @@ private:
 class RendererBrokenCSV : public Renderer {
 public:
     RendererBrokenCSV(std::ostream& os, Logger* logger,
-                      const CSVSeparators& separators, Encoding data_encoding)
-        : Renderer(os, logger, data_encoding), _separators(separators) {}
+                      CSVSeparators separators, Encoding data_encoding)
+        : Renderer(os, logger, data_encoding)
+        , _separators(std::move(separators)) {}
 
     void outputNull() override;
     void outputBlob(const std::vector<char>& value) override;

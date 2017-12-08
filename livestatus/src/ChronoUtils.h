@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <ratio>
 #include <string>
+#include <utility>
 
 using minutes_d = std::chrono::duration<double, std::ratio<60>>;
 
@@ -114,11 +115,11 @@ typename Dur::rep time_point_part(std::chrono::system_clock::time_point &tp) {
 class FormattedTimePoint {
 public:
     explicit FormattedTimePoint(std::chrono::system_clock::time_point tp,
-                                const std::string &format = default_format)
-        : _tp(tp), _format(format) {}
-    explicit FormattedTimePoint(time_t t,
-                                const std::string &format = default_format)
-        : _tp(std::chrono::system_clock::from_time_t(t)), _format(format) {}
+                                std::string format = default_format)
+        : _tp(tp), _format(std::move(format)) {}
+    explicit FormattedTimePoint(time_t t, std::string format = default_format)
+        : _tp(std::chrono::system_clock::from_time_t(t))
+        , _format(std::move(format)) {}
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const FormattedTimePoint &f) {

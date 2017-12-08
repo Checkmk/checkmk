@@ -30,6 +30,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include "Aggregator.h"
 #include "Column.h"
 #include "contact_fwd.h"
@@ -40,7 +41,7 @@ class StringColumn;
 class PerfdataAggregator : public Aggregator {
 public:
     PerfdataAggregator(AggregationFactory factory, const StringColumn *column)
-        : _factory(factory), _column(column) {}
+        : _factory(std::move(factory)), _column(column) {}
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;

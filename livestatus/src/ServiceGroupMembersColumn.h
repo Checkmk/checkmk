@@ -29,6 +29,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include "ListColumn.h"
 #include "opids.h"
@@ -73,10 +74,9 @@ private:
     bool _show_state;
 
     struct Member {
-        Member(const std::string &hn, const std::string &d, ServiceState cs,
-               bool hbc)
-            : host_name(hn)
-            , description(d)
+        Member(std::string hn, std::string d, ServiceState cs, bool hbc)
+            : host_name(std::move(hn))
+            , description(std::move(d))
             , current_state(cs)
             , has_been_checked(hbc) {}
 

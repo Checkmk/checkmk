@@ -26,7 +26,6 @@
 #define ChronoUtils_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <time.h>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>

@@ -45,8 +45,8 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset, offset) {}
 
-    std::unique_ptr<Filter> createFilter(RelationalOperator,
-                                         const std::string &) const override;
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
 
     int32_t getValue(Row row, const contact *auth_user) const override;
 

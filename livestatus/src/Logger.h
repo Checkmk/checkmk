@@ -168,7 +168,7 @@ public:
     virtual bool getUseParentHandlers() const = 0;
     virtual void setUseParentHandlers(bool useParentHandlers) = 0;
 
-    virtual void emitContext(std::ostream &) const = 0;
+    virtual void emitContext(std::ostream &os) const = 0;
 
     virtual void log(const LogRecord &record) = 0;
 };
@@ -191,7 +191,7 @@ public:
     bool getUseParentHandlers() const override;
     void setUseParentHandlers(bool useParentHandlers) override;
 
-    void emitContext(std::ostream &) const override;
+    void emitContext(std::ostream &os) const override;
 
     void log(const LogRecord &record) override;
 

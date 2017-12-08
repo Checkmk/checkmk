@@ -41,9 +41,9 @@ public:
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     Row findObject(const std::string &objectspec) const override;
-    bool isAuthorized(Row, const contact *) const override;
+    bool isAuthorized(Row row, const contact *ctc) const override;
 
-    static void addColumns(Table *, const std::string &prefix,
+    static void addColumns(Table *table, const std::string &prefix,
                            int indirect_offset);
 };
 

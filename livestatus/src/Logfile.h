@@ -78,11 +78,11 @@ public:
     size_t size() { return _entries.size(); }
     logfile_entries_t *getEntriesFromQuery(const Query *query,
                                            LogCache *logcache, time_t since,
-                                           time_t until, unsigned);
+                                           time_t until, unsigned logclasses);
     bool answerQuery(Query *query, LogCache *logcache, time_t since,
-                     time_t until, unsigned);
+                     time_t until, unsigned logclasses);
     bool answerQueryReverse(Query *query, LogCache *logcache, time_t since,
-                            time_t until, unsigned);
+                            time_t until, unsigned logclasses);
 
     long freeMessages(unsigned logclasses);
     void updateReferences();
@@ -90,10 +90,10 @@ public:
     unsigned _logclasses_read;  // only these types have been read
 
 private:
-    void loadRange(FILE *file, unsigned missing_types, LogCache *, time_t since,
-                   time_t until, unsigned logclasses);
+    void loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
+                   time_t since, time_t until, unsigned logclasses);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
-    uint64_t makeKey(time_t, size_t);
+    uint64_t makeKey(time_t t, size_t lineno);
     Logger *logger() const;
 };
 

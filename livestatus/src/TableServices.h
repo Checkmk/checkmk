@@ -41,8 +41,8 @@ public:
 
     std::string name() const override;
     std::string namePrefix() const override;
-    void answerQuery(Query *) override;
-    bool isAuthorized(Row, const contact *) const override;
+    void answerQuery(Query *query) override;
+    bool isAuthorized(Row row, const contact *ctc) const override;
     Row findObject(const std::string &objectspec) const override;
 };
 

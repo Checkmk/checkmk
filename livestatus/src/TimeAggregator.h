@@ -35,7 +35,7 @@ class RowRenderer;
 
 class TimeAggregator : public Aggregator {
 public:
-    TimeAggregator(AggregationFactory factory, const TimeColumn *column)
+    TimeAggregator(const AggregationFactory &factory, const TimeColumn *column)
         : _aggregation(factory()), _column(column) {}
 
     void consume(Row row, const contact * /*auth_user*/,

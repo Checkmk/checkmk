@@ -35,7 +35,7 @@ class RowRenderer;
 
 class IntAggregator : public Aggregator {
 public:
-    IntAggregator(AggregationFactory factory, const IntColumn *column)
+    IntAggregator(const AggregationFactory &factory, const IntColumn *column)
         : _aggregation(factory()), _column(column) {}
 
     void consume(Row row, const contact *auth_user,

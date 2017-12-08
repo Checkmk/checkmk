@@ -35,7 +35,8 @@ class RowRenderer;
 
 class DoubleAggregator : public Aggregator {
 public:
-    DoubleAggregator(AggregationFactory factory, const DoubleColumn *column)
+    DoubleAggregator(const AggregationFactory &factory,
+                     const DoubleColumn *column)
         : _aggregation(factory()), _column(column) {}
 
     void consume(Row row, const contact * /*contact*/,

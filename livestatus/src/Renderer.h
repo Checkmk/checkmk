@@ -30,6 +30,7 @@
 #include <iosfwd>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include "data_encoding.h"
 class CSVSeparators;
@@ -202,7 +203,7 @@ public:
 
     void output(RowFragment value) {
         separate();
-        renderer().output(value);
+        renderer().output(std::move(value));
     }
 
     template <typename T>
@@ -324,7 +325,7 @@ public:
 
     Renderer &renderer() const { return _row.renderer(); }
 
-    void output(std::string key, std::string value) {
+    void output(const std::string &key, const std::string &value) {
         BeginEnd be(*this);
         renderer().output(key);
         renderer().separateDictKeyValue();

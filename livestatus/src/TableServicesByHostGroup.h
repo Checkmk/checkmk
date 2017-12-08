@@ -39,8 +39,8 @@ public:
 
     std::string name() const override;
     std::string namePrefix() const override;
-    void answerQuery(Query *) override;
-    bool isAuthorized(Row, const contact *) const override;
+    void answerQuery(Query *query) override;
+    bool isAuthorized(Row row, const contact *ctc) const override;
     // NOTE: We do *not* implement findObject() here, because we don't know
     // which host group we should refer to: Every service can be part of many
     // host groups.

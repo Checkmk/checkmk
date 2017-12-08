@@ -87,15 +87,16 @@ public:
     void buildStatehistCache();
     void flushStatehistCache();
     void tryFinishStatehistCache();
-    bool addObjectHistcache(Object *);
-    void addAlertToStatehistCache(Object *, int state, const char *output);
-    void addDowntimeToStatehistCache(Object *, bool started);
-    void addFlappingToStatehistCache(Object *, bool started);
+    bool addObjectHistcache(Object *object);
+    void addAlertToStatehistCache(Object *object, int state,
+                                  const char *output);
+    void addDowntimeToStatehistCache(Object *object, bool started);
+    void addFlappingToStatehistCache(Object *object, bool started);
 #else
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
 
-    void registerDowntime(nebstruct_downtime_data *);
-    void registerComment(nebstruct_comment_data *);
+    void registerDowntime(nebstruct_downtime_data *data);
+    void registerComment(nebstruct_comment_data *data);
 #endif
     Logger *logger() const;
 
@@ -104,7 +105,7 @@ private:
         explicit TableDummy(MonitoringCore *mc) : Table(mc) {}
         std::string name() const override { return "dummy"; }
         std::string namePrefix() const override { return "dummy_"; }
-        void answerQuery(Query * /*query*/) override {}
+        void answerQuery(Query * /*unused*/) override {}
     };
 
     MonitoringCore *_mc;

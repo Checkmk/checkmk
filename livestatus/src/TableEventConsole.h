@@ -50,7 +50,7 @@ class TableEventConsole : public Table {
 public:
     explicit TableEventConsole(MonitoringCore *mc);
 
-    void answerQuery(Query *) override;
+    void answerQuery(Query *query) override;
 
     struct ECRow {
         std::map<std::string, std::string> _map;

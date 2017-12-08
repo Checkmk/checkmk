@@ -34,7 +34,7 @@ class ClientQueue {
 public:
     ClientQueue();
     ~ClientQueue();
-    void addConnection(int);
+    void addConnection(int fd);
     int popConnection();
     void terminate();
 

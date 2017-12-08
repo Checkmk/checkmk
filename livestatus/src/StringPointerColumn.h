@@ -34,7 +34,7 @@ public:
                         const char *string)
         : StringColumn(name, description, -1, -1, -1, 0), _string(string) {}
 
-    std::string getValue(Row) const override { return _string; }
+    std::string getValue(Row /*unused*/) const override { return _string; }
 
 private:
     const char *const _string;

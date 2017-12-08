@@ -1,0 +1,16 @@
+Title: mknotifyd: improve error handling and logging
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1513152210
+Class: fix
+
+Connections in progress are now explicitely written to
+the mknotifyd.log. This makes it easier to spot ongoning,
+unsucessful connection attempts.
+
+Furthermore, in case of polling errors a timeout of 1s
+was added. This prevents the mknotifyd from using 100% CPU
+if an error appears and the polling returns immediately.

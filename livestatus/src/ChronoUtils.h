@@ -113,10 +113,11 @@ typename Dur::rep time_point_part(std::chrono::system_clock::time_point &tp) {
 
 class FormattedTimePoint {
 public:
-    FormattedTimePoint(std::chrono::system_clock::time_point tp,
-                       const std::string &format = default_format)
+    explicit FormattedTimePoint(std::chrono::system_clock::time_point tp,
+                                const std::string &format = default_format)
         : _tp(tp), _format(format) {}
-    FormattedTimePoint(time_t t, const std::string &format = default_format)
+    explicit FormattedTimePoint(time_t t,
+                                const std::string &format = default_format)
         : _tp(std::chrono::system_clock::from_time_t(t)), _format(format) {}
 
     friend std::ostream &operator<<(std::ostream &os,

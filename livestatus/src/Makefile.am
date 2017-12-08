@@ -22,6 +22,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+CLANG_VERSION ?= 5.0
+RUN_CLANG_TIDY ?= run-clang-tidy-$(CLANG_VERSION).py
+BEAR ?= bear
+
 bin_PROGRAMS = unixcat
 
 unixcat_SOURCES = unixcat.cc
@@ -149,6 +153,8 @@ liblivestatus_a_SOURCES = \
         pnp4nagios.cc \
         strutil.cc
 
+.PHONY: tidy
+
 liblivestatus_a_CPPFLAGS = -I.. @BOOST_CPPFLAGS@
 liblivestatus_a_CXXFLAGS = -fPIC
 
@@ -159,6 +165,13 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
 	$(RM) NagiosMockup
+
+compile_commands.json: Makefile $(wildcard *.cc *.h)
+	$(MAKE) clean
+	$(BEAR) $(MAKE) -j4
+
+tidy: compile_commands.json
+	$(RUN_CLANG_TIDY) -quiet -j6
 
 all-local: livestatus.o
 

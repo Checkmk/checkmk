@@ -70,6 +70,7 @@ CXX_FLAGS          += -std=c++14
 CLANG_VERSION      := 5.0
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
+export RUN_CLANG_TIDY := run-clang-tidy-$(CLANG_VERSION).py
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
@@ -91,7 +92,7 @@ IWYU_TOOL          := iwyu_tool
 #    git clone https://github.com/rizsotto/Bear.git && cd Bear && git checkout 2.2.0 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/local/Bear-2.2.0 && make install
 # and put $HOME/local/Bear-2.2.0/bin into your PATH or set the make variable
 # below accordingly.
-BEAR               := bear
+export BEAR        := bear
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -483,8 +484,11 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
 endif
 
-tidy: compile_commands.json
-	@scripts/compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__
+tidy:
+	$(MAKE) -C livestatus/src tidy
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src tidy
+endif
 
 # Not really perfect rules, but better than nothing
 iwyu: compile_commands.json

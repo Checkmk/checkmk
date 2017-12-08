@@ -26,7 +26,7 @@
 
 AC_PREREQ(2.61)
 AC_INIT([MK Livestatus], [1.5.0i2], [mk@mathias-kettner.de])
-AM_INIT_AUTOMAKE([-Wall foreign])
+AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])

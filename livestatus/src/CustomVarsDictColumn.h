@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include "Column.h"
 #include "contact_fwd.h"
 #include "opids.h"
@@ -43,8 +44,8 @@ public:
     CustomVarsDictColumn(std::string name, std::string description,
                          int indirect_offset, int extra_offset,
                          int extra_extra_offset, int offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset) {}
+        : Column(std::move(name), std::move(description), indirect_offset,
+                 extra_offset, extra_extra_offset, offset) {}
 
     ColumnType type() const override { return ColumnType::dict; };
 

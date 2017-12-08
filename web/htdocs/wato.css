@@ -1409,14 +1409,10 @@ table.nform.rulesettings td.legend div.title {
     background-repeat: repeat;
 }
 
-.wato table.data.analyze_config td.title a {
+.wato table.data.analyze_config tr.ac_test_details td a {
     text-decoration: underline;
 }
 
-.wato table.data.analyze_config td.title a:hover {
+.wato table.data.analyze_config tr.ac_test_details td a:hover {
     text-decoration: none;
-}
-
-.wato table.data.analyze_config td.result {
-    vertical-align: top;
 }

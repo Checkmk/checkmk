@@ -78,8 +78,7 @@ private:
     LogEntry *getNextLogentry();
     void process(Query *query, HostServiceState *hs_state);
     int updateHostServiceState(Query *query, const LogEntry *entry,
-                               HostServiceState *hs_state,
-                               const bool only_update);
+                               HostServiceState *hs_state, bool only_update);
 };
 
 #endif  // TableStateHistory_h

@@ -366,9 +366,15 @@ def dashlet_graph(nr, dashlet):
 def dashlet_graph_reload_js(nr, dashlet):
     # Be compatible to pre 1.5.0i2 format
     if "graph_render_options" not in dashlet:
+        if dashlet.pop("show_service", True):
+            title_format = ("add_title_infos", ["add_host_name",
+                                                "add_service_description"])
+        else:
+            title_format = ("plain", [])
+
         dashlet["graph_render_options"] = {
             "show_legend"  : dashlet.pop("show_legend", False),
-            "show_service" : dashlet.pop("show_service", True),
+            "title_format" : title_format,
         }
 
     host = dashlet['context'].get('host', html.var("host"))

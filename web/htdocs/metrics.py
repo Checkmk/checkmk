@@ -1544,7 +1544,8 @@ def host_service_graph_popup_pnp(site, host_name, service_description):
 default_dashlet_graph_render_options = {
     "font_size"                : 8,
     "show_legend"              : False,
-    "show_service"             : True,
+    "title_format"             : ("add_title_infos", [ "add_host_name",
+                                                       "add_service_description" ]),
     "show_controls"            : False,
     "resizable"                : False,
     "show_time_range_previews" : False,

@@ -9,10 +9,12 @@
 
 using namespace ::testing;
 
-class wa_WrappedHandleTest : public Test {
+class wa_typesTest : public Test {
 protected:
     StrictMock<MockWinApi> _mockwinapi;
 };
+
+class wa_WrappedHandleTest : public wa_typesTest {};
 
 TEST_F(wa_WrappedHandleTest, InvalidHandleTraits_invalid_handle) {
     // Note: StrictMock tests that CloseHandle is not called.
@@ -258,6 +260,18 @@ TEST_F(wa_WrappedHandleTest,
     }
 }
 
+TEST_F(wa_WrappedHandleTest, InvalidHandleTraits_stream_operator) {
+    HANDLE rawHandle = reinterpret_cast<HANDLE>(0xab);
+    EXPECT_CALL(_mockwinapi, CloseHandle(rawHandle));
+    {
+        WrappedHandle<InvalidHandleTraits> testHandle(rawHandle, _mockwinapi);
+        std::ostringstream oss;
+        oss << testHandle;
+        const std::string expectedOutput{"0xab"};
+        ASSERT_EQ(expectedOutput, oss.str());
+    }
+}
+
 TEST_F(wa_WrappedHandleTest, InvalidHandleTraits_vector) {
     HANDLE rawHandle = reinterpret_cast<HANDLE>(0x1);
     size_t count = 3;
@@ -291,5 +305,20 @@ TEST_F(wa_WrappedHandleTest, NullHandleTraits_valid_handle) {
     {
         WrappedHandle<NullHandleTraits> testHandle(rawHandle, _mockwinapi);
         ASSERT_EQ(rawHandle, testHandle.get());
+    }
+}
+
+class wa_MutexLockTest : public wa_typesTest {};
+
+TEST_F(wa_MutexLockTest, lock_unlock) {
+    HANDLE rawHandle = reinterpret_cast<HANDLE>(0x1);
+    EXPECT_CALL(_mockwinapi, CloseHandle(rawHandle));
+    EXPECT_CALL(_mockwinapi, ReleaseMutex(rawHandle));
+    {
+        EXPECT_CALL(_mockwinapi, CreateMutex(nullptr, 0, nullptr))
+            .WillOnce(Return(rawHandle));
+        EXPECT_CALL(_mockwinapi, WaitForSingleObject(rawHandle, INFINITE));
+        Mutex testMutex(_mockwinapi);
+        MutexLock testLock(testMutex);
     }
 }

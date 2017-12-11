@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <stdint.h>
 #include <functional>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -301,66 +302,6 @@ private:
     Function _func;
 };
 
-class Mutex {
-public:
-    explicit Mutex(const WinApiAdaptor &winapi) : _winapi(winapi) {
-        _mutex = _winapi.CreateMutex(NULL, FALSE, NULL);
-    }
-    ~Mutex() { _winapi.CloseHandle(_mutex); }
-
-    void lock() { _winapi.WaitForSingleObject(_mutex, INFINITE); }
-
-    void unlock() { _winapi.ReleaseMutex(_mutex); }
-
-private:
-    HANDLE _mutex;
-    const WinApiAdaptor &_winapi;
-};
-
-class MutexLock {
-public:
-    MutexLock(Mutex &mutex) : _mutex(mutex) { _mutex.lock(); }
-    ~MutexLock() { _mutex.unlock(); }
-
-private:
-    Mutex &_mutex;
-};
-
-// wrapper for windows handles that automatically closes the
-// handle on leaving scope
-// FIXME: duplicate of ManagedHandle?
-class WinHandle {
-public:
-    explicit WinHandle(const WinApiAdaptor &winapi,
-                       HANDLE hdl = INVALID_HANDLE_VALUE)
-        : _handle(hdl), _winapi(winapi) {}
-
-    WinHandle(const WinHandle &) = delete;
-    ~WinHandle() {
-        if (_handle != INVALID_HANDLE_VALUE) {
-            _winapi.CloseHandle(_handle);
-        }
-    }
-
-    WinHandle &operator=(const WinHandle &) = delete;
-
-    WinHandle &operator=(HANDLE hdl) {
-        if (_handle != INVALID_HANDLE_VALUE) {
-            _winapi.CloseHandle(_handle);
-        }
-        _handle = hdl;
-        return *this;
-    }
-
-    operator HANDLE() const { return _handle; }
-
-    HANDLE *ptr() { return &_handle; }
-
-private:
-    HANDLE _handle;
-    const WinApiAdaptor &_winapi;
-};
-
 class OnScopeExit {
 public:
     OnScopeExit(const std::function<void()> &cleaner) : _cleaner(cleaner) {}
@@ -385,7 +326,7 @@ public:
     WrappedHandle(handle_t handle, const Api &api) noexcept
         : _handle(handle), _api(std::ref(api)) {}
 
-    ~WrappedHandle() { reset(); }
+    virtual ~WrappedHandle() { reset(); }
 
     WrappedHandle(const WrappedHandle &) = delete;
     WrappedHandle &operator=(const WrappedHandle &) = delete;
@@ -425,7 +366,7 @@ public:
 
     handle_t get() const { return _handle; }
 
-private:
+protected:
     handle_t _handle;
     std::reference_wrapper<const Api> _api;
 };
@@ -472,6 +413,12 @@ inline bool operator>=(const WrappedHandle<HandleTraits, Api> &x,
     return !(x.get() < y.get());
 }
 
+template <typename HandleTraits, typename Api>
+inline std::ostream &operator<<(std::ostream &os,
+                                const WrappedHandle<HandleTraits, Api> &h) {
+    return os << std::hex << h.get();
+}
+
 struct InvalidHandleTraits {
     using HandleT = HANDLE;
     static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
@@ -488,6 +435,52 @@ struct NullHandleTraits {
     static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
         winapi.CloseHandle(value);
     }
+};
+
+struct HModuleTraits {
+    using HandleT = HMODULE;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.FreeLibrary(value);
+    }
+};
+
+template <int exitCode>
+struct JobHandleTraits {
+    using HandleT = HANDLE;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.TerminateJobObject(value, exitCode);
+        winapi.CloseHandle(value);
+    }
+};
+
+using HModuleHandle = WrappedHandle<HModuleTraits>;
+template <int exitCode>
+using JobHandle = WrappedHandle<JobHandleTraits<exitCode>>;
+
+class Mutex : public WrappedHandle<NullHandleTraits> {
+public:
+    explicit Mutex(const WinApiAdaptor &winapi)
+        : WrappedHandle<NullHandleTraits>{winapi.CreateMutex(nullptr, 0, nullptr),
+                                          winapi} {}
+
+    void lock() { _api.get().WaitForSingleObject(_handle, INFINITE); }
+
+    void unlock() { _api.get().ReleaseMutex(_handle); }
+};
+
+class MutexLock {
+public:
+    MutexLock(Mutex &mutex) : _mutex(mutex) { _mutex.lock(); }
+    ~MutexLock() { _mutex.unlock(); }
+    MutexLock(const MutexLock &) = delete;
+    MutexLock &operator=(const MutexLock &) = delete;
+
+private:
+    Mutex &_mutex;
 };
 
 #endif  // types_h

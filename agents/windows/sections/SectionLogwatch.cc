@@ -506,22 +506,22 @@ bool SectionLogwatch::produceOutputInner(std::ostream &out) {
 
 bool SectionLogwatch::getFileInformation(const char *filename,
                                          BY_HANDLE_FILE_INFORMATION *info) {
-    HANDLE hFile = _winapi.CreateFile(
-        filename,      // file to open
-        GENERIC_READ,  // open for reading
-        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-        nullptr,                // default security
-        OPEN_EXISTING,          // existing file only
-        FILE_ATTRIBUTE_NORMAL,  // normal file
-        nullptr);               // no attr. template
+    WrappedHandle<InvalidHandleTraits> hFile{
+        _winapi.CreateFile(
+            filename,              // file to open
+            GENERIC_READ,          // open for reading
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            nullptr,               // default security
+            OPEN_EXISTING,         // existing file only
+            FILE_ATTRIBUTE_NORMAL, // normal file
+            nullptr),              // no attr. template
+        _winapi};
 
-    if (hFile == INVALID_HANDLE_VALUE) {
+    if (!hFile) {
         return false;
     }
 
-    bool res = _winapi.GetFileInformationByHandle(hFile, info);
-    _winapi.CloseHandle(hFile);
-    return res;
+    return _winapi.GetFileInformationByHandle(hFile.get(), info);
 }
 
 std::vector<std::string> SectionLogwatch::sortedByTime(

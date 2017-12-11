@@ -34,6 +34,9 @@
 #include "wmiHelper.h"
 
 class SectionPS : public Section {
+    using NullHandle = WrappedHandle<NullHandleTraits>;
+    using WinHandle = WrappedHandle<InvalidHandleTraits>;
+
     struct process_entry {
         unsigned long long process_id;
         unsigned long long working_set_size;
@@ -41,7 +44,7 @@ class SectionPS : public Section {
         unsigned long long virtual_size;
     };
 
-    typedef std::map<unsigned long long, process_entry> process_entry_t;
+    using process_entry_t = std::map<unsigned long long, process_entry>;
 
 public:
     SectionPS(Configuration &config, Logger *logger,
@@ -51,7 +54,8 @@ protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 
 private:
-    bool ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o);
+    bool ExtractProcessOwner(const NullHandle &hProcess_i,
+                             std::string &csOwner_o);
     process_entry_t getProcessPerfdata();
     void outputProcess(std::ostream &out, ULONGLONG virtual_size,
                        ULONGLONG working_set_size, ULONGLONG pagefile_usage,

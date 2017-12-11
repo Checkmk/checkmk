@@ -1579,8 +1579,8 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
                      int(float(html.var("height"))/html_size_per_ex))
 
     height -= _graph_title_height_ex(graph_render_options)
-    height -= (_graph_top_margin_px(graph_render_options) + _graph_bottom_margin_px(graph_render_options)) / html_size_per_ex
-    width -= (_graph_left_margin_px(graph_render_options) + _graph_right_margin_px(graph_render_options)) / html_size_per_ex
+    height -= _graph_top_margin_ex(graph_render_options) + _graph_bottom_margin_ex(graph_render_options)
+    width -= _graph_left_margin_ex(graph_render_options) + _graph_right_margin_ex(graph_render_options)
 
     graph_render_options["size"] = (width, height)
 

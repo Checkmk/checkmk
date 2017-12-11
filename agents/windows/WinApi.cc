@@ -193,6 +193,11 @@ LONG WinApi::CompareFileTime(const FILETIME *lpFileTime1,
     return ::CompareFileTime(lpFileTime1, lpFileTime2);
 }
 
+WINBOOL WinApi::CopyFile(LPCSTR lpExistingFileName, LPCSTR lpNewFileName,
+                 WINBOOL bFailIfExists) const {
+    return ::CopyFileA(lpExistingFileName, lpNewFileName, bFailIfExists);
+}
+
 WINBOOL WinApi::CreateDirectory(
     LPCSTR lpPathName, LPSECURITY_ATTRIBUTES lpSecurityAttributes) const {
     return ::CreateDirectoryA(lpPathName, lpSecurityAttributes);
@@ -836,6 +841,11 @@ PEXCEPTION_ROUTINE WinApi::RtlVirtualUnwind(
 }
 
 #endif  // __x86_64
+
+// LWSTDAPI:
+LPSTR WinApi::PathCombine(LPSTR pszDest, LPCSTR pszDir, LPCSTR pszFile) const {
+    return ::PathCombineA(pszDest, pszDir, pszFile);
+}
 
 // MISC:
 LPWSTR *WinApi::CommandLineToArgvW(LPCWSTR lpCmdLine, int *pNumArgs) const {

@@ -1102,7 +1102,7 @@ def page_edit_dashlet():
             elements = params,
         )
 
-    elif isinstance(params, Dictionary):
+    elif isinstance(params, Dictionary) or isinstance(params, Transform):
         vs_type = params
 
     elif type(params) == type(lambda x: x):

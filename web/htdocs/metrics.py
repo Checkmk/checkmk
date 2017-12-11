@@ -1571,12 +1571,18 @@ def page_graph_dashlet():
 
 
 def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options):
-    size = (int(((float(html.var("width")) - 25)/html_size_per_ex)),
-            int((float(html.var("height")) - 18)/html_size_per_ex))
-
     graph_render_options = default_dashlet_graph_render_options.copy()
-    graph_render_options["size"] = size
+    graph_render_options = add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
+
+    width, height = (int((float(html.var("width"))/html_size_per_ex)),
+                     int(float(html.var("height"))/html_size_per_ex))
+
+    height -= _graph_title_height_ex(graph_render_options)
+    height -= (_graph_top_margin_px(graph_render_options) + _graph_bottom_margin_px(graph_render_options)) / html_size_per_ex
+    width -= (_graph_left_margin_px(graph_render_options) + _graph_right_margin_px(graph_render_options)) / html_size_per_ex
+
+    graph_render_options["size"] = (width, height)
 
     # The timerange is specified in PNP like manner.
     range_secs = {
@@ -1613,7 +1619,10 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
     if graph_render_options["show_legend"]:
         # TODO FIXME: This graph artwork is calulated twice. Once here and once in render_graphs_from_specification_html()
         graph_artwork = compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options)
-        graph_render_options["size"] = (size[0], size[1] - graph_legend_height_ex(graph_render_options, graph_artwork))
+        graph_render_options["size"] = (
+            graph_render_options["size"][0],
+            graph_render_options["size"][1] - graph_legend_height_ex(graph_render_options, graph_artwork)
+        )
 
     html_code = render_graphs_from_definitions([graph_recipe], graph_data_range, graph_render_options, render_async=False)
     html.write(html_code)

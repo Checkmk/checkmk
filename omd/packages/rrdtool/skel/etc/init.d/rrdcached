@@ -22,7 +22,7 @@ fi
 TIMEOUT=3600
 RANDOM_DELAY=1800
 FLUSH_TIMEOUT=7200
-
+WRITE_THREADS=4
 
 # Read in tuning configuration of admin
 CONFFILE=$OMD_ROOT/etc/rrdcached.conf
@@ -47,7 +47,7 @@ SOCKET="###ROOT###/tmp/run/rrdcached.sock"
 PIDFILE="###ROOT###/tmp/rrdcached.pid"
 USER="###SITE###"
 GROUP="###SITE###"
-OPTS="-w $TIMEOUT -z $RANDOM_DELAY -f $FLUSH_TIMEOUT -s $GROUP -m 660 -l unix:$SOCKET -p $PIDFILE -j $JOURNAL_DIR"
+OPTS="-t $WRITE_THREADS -w $TIMEOUT -z $RANDOM_DELAY -f $FLUSH_TIMEOUT -s $GROUP -m 660 -l unix:$SOCKET -p $PIDFILE -j $JOURNAL_DIR"
 DAEMON="###ROOT###/bin/rrdcached"
 
 case "$1" in

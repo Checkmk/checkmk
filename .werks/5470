@@ -1,0 +1,11 @@
+Title: Make the number of rrdcached write threads configurable.
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1512985932
+Class: feature
+
+
+Thanks to Matthias Hähnel for this patch!

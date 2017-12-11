@@ -135,26 +135,6 @@ void output_data(OutputProxy &out, const Environment &env, bool realtime,
 void RunImmediate(const char *mode, int argc, char **argv);
 
 //  .----------------------------------------------------------------------.
-//  |                    ____ _       _           _                        |
-//  |                   / ___| | ___ | |__   __ _| |___                    |
-//  |                  | |  _| |/ _ \| '_ \ / _` | / __|                   |
-//  |                  | |_| | | (_) | |_) | (_| | \__ \                   |
-//  |                   \____|_|\___/|_.__/ \__,_|_|___/                   |
-//  |                                                                      |
-//  +----------------------------------------------------------------------+
-//  | Global variables                                                     |
-//  '----------------------------------------------------------------------'
-
-// Thread relevant variables
-volatile bool g_should_terminate = false;
-
-// Job object for all worker threads
-// Gets terminated on shutdown
-HANDLE g_workers_job_object;
-
-bool with_stderr = false;
-
-//  .----------------------------------------------------------------------.
 //  |                   _        _                          _              |
 //  |                  | | _ __ | |_  ___  _ __ _ __   __ _| |___          |
 //  |                  | || '_ \| __|/ _ \| '__| '_ \ / _` | / __|         |
@@ -218,6 +198,26 @@ struct GlobalConfig {
 SectionManager *s_sections;
 
 }  // namespace
+
+//  .----------------------------------------------------------------------.
+//  |                    ____ _       _           _                        |
+//  |                   / ___| | ___ | |__   __ _| |___                    |
+//  |                  | |  _| |/ _ \| '_ \ / _` | / __|                   |
+//  |                  | |_| | | (_) | |_) | (_| | \__ \                   |
+//  |                   \____|_|\___/|_.__/ \__,_|_|___/                   |
+//  |                                                                      |
+//  +----------------------------------------------------------------------+
+//  | Global variables                                                     |
+//  '----------------------------------------------------------------------'
+
+// Thread relevant variables
+volatile bool g_should_terminate = false;
+
+// Job object for all worker threads
+// Gets terminated on shutdown
+JobHandle<0> g_workers_job_object{s_winapi};
+
+bool with_stderr = false;
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -480,8 +480,6 @@ void stop_threads() {
 
     s_winapi.WaitForMultipleObjects(thread_handles.size(), &thread_handles[0],
                                     TRUE, 5000);
-    s_winapi.TerminateJobObject(g_workers_job_object, 0);
-    s_winapi.CloseHandle(g_workers_job_object);
 }
 
 //   .----------------------------------------------------------------------.
@@ -705,7 +703,8 @@ void do_adhoc(const Environment &env) {
 
     // Job object for worker jobs. All worker are within this object
     // and receive a terminate when the agent ends
-    g_workers_job_object = s_winapi.CreateJobObject(nullptr, "workers_job");
+    g_workers_job_object = {s_winapi.CreateJobObject(nullptr, "workers_job"),
+                            s_winapi};
 
     // Run all ASYNC scripts on startup, so that their data is available on
     // the first query of a client. Obviously, this slows down the agent

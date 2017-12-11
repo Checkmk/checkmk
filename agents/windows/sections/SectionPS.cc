@@ -85,18 +85,25 @@ SectionPS::process_entry_t SectionPS::getProcessPerfdata() {
     return process_info;
 }
 
-bool SectionPS::ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o) {
+bool SectionPS::ExtractProcessOwner(const NullHandle &hProcess_i,
+                                    std::string &csOwner_o) {
     // Get process token
-    WinHandle hProcessToken(_winapi);
-    if (!_winapi.OpenProcessToken(hProcess_i, TOKEN_READ,
-                                  hProcessToken.ptr()) ||
-        !hProcessToken)
+    HANDLE rawHandle = INVALID_HANDLE_VALUE;
+
+    if (!_winapi.OpenProcessToken(hProcess_i.get(), TOKEN_READ, &rawHandle)) {
         return false;
+    }
+
+    WinHandle hProcessToken{rawHandle, _winapi};
+
+    if (!hProcessToken) {
+        return false;
+    }
 
     // First get size needed, TokenUser indicates we want user information from
     // given token
     DWORD dwProcessTokenInfoAllocSize = 0;
-    _winapi.GetTokenInformation(hProcessToken, TokenUser, NULL, 0,
+    _winapi.GetTokenInformation(hProcessToken.get(), TokenUser, NULL, 0,
                                 &dwProcessTokenInfoAllocSize);
 
     // Call should have failed due to zero-length buffer.
@@ -106,8 +113,8 @@ bool SectionPS::ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o) {
         PTOKEN_USER pUserToken =
             reinterpret_cast<PTOKEN_USER>(UserToken.data());
         // Now get user information in the allocated buffer
-        if (_winapi.GetTokenInformation(hProcessToken, TokenUser, pUserToken,
-                                        dwProcessTokenInfoAllocSize,
+        if (_winapi.GetTokenInformation(hProcessToken.get(), TokenUser,
+                                        pUserToken, dwProcessTokenInfoAllocSize,
                                         &dwProcessTokenInfoAllocSize)) {
             // Some vars that we may need
             SID_NAME_USE snuSIDNameUse;
@@ -166,10 +173,10 @@ bool SectionPS::outputWMI(std::ostream &out) {
         while (more) {
             int processId = result.get<int>(L"ProcessId");
 
-            WinHandle process(
-                _winapi,
+            NullHandle process(
                 _winapi.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-                                    FALSE, processId));
+                                    FALSE, processId),
+                _winapi);
             std::string user = "SYSTEM";
             ExtractProcessOwner(process, user);
             std::wstring process_name;
@@ -243,14 +250,14 @@ bool SectionPS::outputNative(std::ostream &out) {
                        << e.what();
     }
 
-    WinHandle hProcessSnap(
-        _winapi, _winapi.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
-    if (hProcessSnap == INVALID_HANDLE_VALUE) {
+    WinHandle hProcessSnap{
+        _winapi.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), _winapi};
+    if (!hProcessSnap) {
         return false;
     }
     pe32.dwSize = sizeof(PROCESSENTRY32);
 
-    bool more = _winapi.Process32First(hProcessSnap, &pe32);
+    bool more = _winapi.Process32First(hProcessSnap.get(), &pe32);
 
     // GetProcessHandleCount is only available winxp upwards
     using GetProcessHandleCount_type = BOOL WINAPI (*)(HANDLE, PDWORD);
@@ -262,17 +269,17 @@ bool SectionPS::outputNative(std::ostream &out) {
     while (more) {
         std::string user = "unknown";
         DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
-        WinHandle hProcess(
-            _winapi, _winapi.OpenProcess(dwAccess, FALSE, pe32.th32ProcessID));
+        NullHandle hProcess{
+            _winapi.OpenProcess(dwAccess, FALSE, pe32.th32ProcessID), _winapi};
 
         // TODO the following isn't really necessary. We need the process
         // handle only to determine process owner and handle count,
         // the process list could still be useful without that.
-        if (hProcess != nullptr) {
+        if (hProcess) {
             // Process times
             FILETIME createTime, exitTime, kernelTime, userTime;
             ULARGE_INTEGER kernelmodetime, usermodetime;
-            if (_winapi.GetProcessTimes(hProcess, &createTime, &exitTime,
+            if (_winapi.GetProcessTimes(hProcess.get(), &createTime, &exitTime,
                                         &kernelTime, &userTime) != -1) {
                 kernelmodetime.LowPart = kernelTime.dwLowDateTime;
                 kernelmodetime.HighPart = kernelTime.dwHighDateTime;
@@ -283,7 +290,7 @@ bool SectionPS::outputNative(std::ostream &out) {
             DWORD processHandleCount = 0;
 
             if (GetProcessHandleCount_dyn != nullptr) {
-                GetProcessHandleCount_dyn(hProcess, &processHandleCount);
+                GetProcessHandleCount_dyn(hProcess.get(), &processHandleCount);
             }
 
             // Process owner
@@ -315,7 +322,7 @@ bool SectionPS::outputNative(std::ostream &out) {
         } else {
             Error(_logger) << "SectionPS::outputNative: OpenProcess failed";
         }
-        more = _winapi.Process32Next(hProcessSnap, &pe32);
+        more = _winapi.Process32Next(hProcessSnap.get(), &pe32);
     }
     process_perfdata.clear();
 

@@ -74,8 +74,7 @@ struct script_container {
     script_status status{SCRIPT_IDLE};
     script_status last_problem{SCRIPT_NONE};
     volatile bool should_terminate{0};
-    HANDLE worker_thread{INVALID_HANDLE_VALUE};
-    HANDLE job_object{INVALID_HANDLE_VALUE};
+    WrappedHandle<NullHandleTraits> worker_thread;
     DWORD exit_code{0};
     const Environment &env;
     Logger *logger;
@@ -139,7 +138,7 @@ private:
     std::string _path;
     script_type _type;
     std::string _user;
-    HANDLE _collection_thread{INVALID_HANDLE_VALUE};
+    WrappedHandle<NullHandleTraits> _collection_thread;
     std::atomic<bool> _data_collection_retriggered{false};
     containers_t _containers;
     Configurable<script_execution_mode> _default_execution_mode;

@@ -36,17 +36,6 @@ class WinApiAdaptor;
 
 typedef struct HINSTANCE__ *HMODULE;
 
-struct HModuleTraits {
-    using HandleT = HMODULE;
-    static HandleT invalidValue() { return nullptr; }
-
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
-        winapi.FreeLibrary(value);
-    }
-};
-
-using HModuleHandle = WrappedHandle<HModuleTraits>;
-
 class MessageResolver {
 public:
     MessageResolver(const std::wstring &logName, Logger *logger,

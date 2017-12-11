@@ -231,14 +231,12 @@ script_container::script_container(
     , run_as_user(_user)
     , type(_type)
     , execution_mode(_execution_mode)
+    , worker_thread(_winapi)
     , env(_env)
     , logger(_logger)
     , winapi(_winapi) {}
 
 script_container::~script_container() {
-    if (worker_thread != INVALID_HANDLE_VALUE) {
-        winapi.CloseHandle(worker_thread);
-    }
     // allocated with HeapAlloc (may be null)
     winapi.HeapFree(winapi.GetProcessHeap(), 0, buffer);
     winapi.HeapFree(winapi.GetProcessHeap(), 0, buffer_work);
@@ -267,20 +265,18 @@ void SectionPluginGroup::runContainer(script_container *cont) {
         }
         cont->status = SCRIPT_COLLECT;
 
-        if (cont->worker_thread != INVALID_HANDLE_VALUE)
-            _winapi.CloseHandle(cont->worker_thread);
-
         Debug(_logger) << "invoke script " << cont->script_path;
-        cont->worker_thread =
+        cont->worker_thread = {
             _winapi.CreateThread(nullptr,  // default security attributes
                                  0,        // use default stack size
                                  ScriptWorkerThread,  // thread function name
                                  cont,      // argument to thread function
                                  0,         // use default creation flags
-                                 nullptr);  // returns the thread identifier
+                                 nullptr),  // returns the thread identifier
+            _winapi };
         if (cont->execution_mode == SYNC ||
             (cont->execution_mode == ASYNC && *_async_execution == SEQUENTIAL))
-            _winapi.WaitForSingleObject(cont->worker_thread, INFINITE);
+            _winapi.WaitForSingleObject(cont->worker_thread.get(), INFINITE);
 
         Debug(_logger) << "finished with status " << cont->status
                        << " (exit code " << cont->exit_code << ")";
@@ -400,14 +396,15 @@ SectionPluginGroup::SectionPluginGroup(Configuration &config,
     , _path(path)
     , _type(type)
     , _user(user)
-    , _default_execution_mode(config, "global", "caching_method", SYNC, winapi)
+    , _collection_thread(_winapi)
+    , _default_execution_mode(config, "global", "caching_method", SYNC, _winapi)
     , _async_execution(config, "global", "async_script_execution", SEQUENTIAL,
-                       winapi)
-    , _execute_suffixes(config, "global", "execute", winapi)
-    , _timeout(config, typeToSection(type), "timeout", winapi)
-    , _cache_age(config, typeToSection(type), "cache_age", winapi)
-    , _retry_count(config, typeToSection(type), "retry_count", winapi)
-    , _execution_mode(config, typeToSection(type), "execution", winapi) {
+                       _winapi)
+    , _execute_suffixes(config, "global", "execute", _winapi)
+    , _timeout(config, typeToSection(type), "timeout", _winapi)
+    , _cache_age(config, typeToSection(type), "cache_age", _winapi)
+    , _retry_count(config, typeToSection(type), "retry_count", _winapi)
+    , _execution_mode(config, typeToSection(type), "execution", _winapi) {
     if (type == PLUGIN) {
         // plugins don't have a "collective" header
         withHiddenHeader();
@@ -416,7 +413,6 @@ SectionPluginGroup::SectionPluginGroup(Configuration &config,
 
 SectionPluginGroup::~SectionPluginGroup() {
     _containers.clear();
-    _winapi.CloseHandle(_collection_thread);
 }
 
 void SectionPluginGroup::startIfAsync() {
@@ -427,7 +423,7 @@ void SectionPluginGroup::startIfAsync() {
 void SectionPluginGroup::waitForCompletion() {
     DWORD dwExitCode = 0;
     while (true) {
-        if (_winapi.GetExitCodeThread(_collection_thread, &dwExitCode)) {
+        if (_winapi.GetExitCodeThread(_collection_thread.get(), &dwExitCode)) {
             if (dwExitCode != STILL_ACTIVE) break;
             _winapi.Sleep(200);
         } else
@@ -439,7 +435,7 @@ std::vector<HANDLE> SectionPluginGroup::stopAsync() {
     std::vector<HANDLE> result;
     for (const auto &kv : _containers) {
         if (kv.second->status == SCRIPT_COLLECT) {
-            result.push_back(kv.second->worker_thread);
+            result.push_back(kv.second->worker_thread.get());
             kv.second->should_terminate = true;
         }
     }
@@ -668,23 +664,23 @@ void SectionPluginGroup::collectData(script_execution_mode mode) {
     } else if (mode == ASYNC) {
         // If the thread is still running, just tell it to do another cycle
         DWORD dwExitCode = 0;
-        if (_winapi.GetExitCodeThread(_collection_thread, &dwExitCode)) {
+        if (_winapi.GetExitCodeThread(_collection_thread.get(), &dwExitCode)) {
             if (dwExitCode == STILL_ACTIVE) {
                 _data_collection_retriggered = true;
                 return;
             }
         }
 
-        if (_collection_thread != INVALID_HANDLE_VALUE)
-            _winapi.CloseHandle(_collection_thread);
         Debug(_logger) << "Start async thread for collecting " << typeName
                        << " data";
-        _collection_thread =
+        _collection_thread = {
             _winapi.CreateThread(nullptr,  // default security attributes
                                  0,        // use default stack size
-                                 DataCollectionThread,  // thread function name
-                                 this,      // argument to thread function
-                                 0,         // use default creation flags
-                                 nullptr);  // returns the thread identifier
+                                 DataCollectionThread, // thread function name
+                                 this,     // argument to thread function
+                                 0,        // use default creation flags
+                                 nullptr), // returns the thread identifier
+            _winapi
+        };
     }
 }

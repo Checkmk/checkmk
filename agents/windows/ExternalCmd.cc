@@ -71,6 +71,16 @@ std::string handleAgentUpdater(Logger *logger, const WinApiAdaptor &winapi) {
     return target;
 }
 
+std::pair<PipeHandle, PipeHandle> createPipe(SECURITY_ATTRIBUTES &attr,
+                                             const WinApiAdaptor &winapi) {
+    HANDLE readPipe = INVALID_HANDLE_VALUE;
+    HANDLE writePipe = INVALID_HANDLE_VALUE;
+    if (!winapi.CreatePipe(&readPipe, &writePipe, &attr, 0)) {
+        throw win_exception(winapi, "failed to create pipe");
+    }
+    return {PipeHandle{readPipe, winapi}, PipeHandle{writePipe, winapi}};
+}
+
 }  // namespace
 
 std::string AgentUpdaterError::buildSectionCheckMK(
@@ -82,12 +92,12 @@ std::string AgentUpdaterError::buildSectionCheckMK(
 
 ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
                          Logger *logger, const WinApiAdaptor &winapi)
-    : _script_stderr{winapi, INVALID_HANDLE_VALUE}
-    , _script_stdout{winapi, INVALID_HANDLE_VALUE}
-    , _process{INVALID_HANDLE_VALUE}
-    , _job_object{INVALID_HANDLE_VALUE}
-    , _stdout{winapi, INVALID_HANDLE_VALUE}
-    , _stderr{winapi, INVALID_HANDLE_VALUE}
+    : _script_stderr{winapi}
+    , _script_stdout{winapi}
+    , _process{winapi}
+    , _job_object{winapi}
+    , _stdout{winapi}
+    , _stderr{winapi}
     , _logger(logger)
     , _winapi(winapi) {
     SECURITY_DESCRIPTOR security_descriptor;
@@ -107,16 +117,12 @@ ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
     // child process needs to be able to inherit the pipe handles
     security_attributes.bInheritHandle = true;
 
-    if (!_winapi.CreatePipe(_stdout.ptr(), _script_stdout.ptr(),
-                            &security_attributes, 0)) {
-        throw win_exception(_winapi, "failed to create pipe");
-    }
+    std::tie(_stdout, _script_stdout) =
+        createPipe(security_attributes, _winapi);
 
     if (with_stderr) {
-        if (!_winapi.CreatePipe(_stderr.ptr(), _script_stderr.ptr(),
-                                &security_attributes, 0)) {
-            throw win_exception(_winapi, "failed to create pipe");
-        }
+        std::tie(_stderr, _script_stderr) =
+            createPipe(security_attributes, _winapi);
     }
 
     // base new process statup info on current process
@@ -126,9 +132,8 @@ ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
     _winapi.GetStartupInfo(&si);
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
-    si.hStdOutput = (HANDLE)_script_stdout;
-    si.hStdError =
-        with_stderr ? (HANDLE)_script_stdout : (HANDLE)_script_stderr;
+    si.hStdOutput = _script_stdout.get();
+    si.hStdError = with_stderr ? _script_stdout.get() : _script_stderr.get();
 
     bool detach_process = false;
     std::string actualCmd(cmdline);
@@ -163,59 +168,47 @@ ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
         }
     }
 
-    _process = pi.hProcess;
-    _winapi.CloseHandle(pi.hThread);
+    _process = {pi.hProcess, _winapi};
+    ProcessHandle threadHandle{pi.hThread, _winapi};
 
     // Create a job object for this process
-    // Whenever the process ends all of its childs will terminate, too
-    _job_object = _winapi.CreateJobObject(nullptr, nullptr);
+    // Whenever the process ends all of its children will terminate, too
+    _job_object = {_winapi.CreateJobObject(nullptr, nullptr), _winapi};
     if (!detach_process) {
-        _winapi.AssignProcessToJobObject(_job_object, pi.hProcess);
+        _winapi.AssignProcessToJobObject(_job_object.get(), pi.hProcess);
         _winapi.AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
     }
 }
 
-ExternalCmd::~ExternalCmd() {
-    if (_job_object != INVALID_HANDLE_VALUE) {
-        _winapi.TerminateJobObject(_job_object, 1);
-        _winapi.CloseHandle(_job_object);
-    }
-    _winapi.CloseHandle(_process);
-}
-
-void ExternalCmd::terminateJob(DWORD exit_code) {
-    _winapi.TerminateJobObject(_job_object, exit_code);
-    _winapi.CloseHandle(_job_object);
-    _job_object = INVALID_HANDLE_VALUE;
-}
+ExternalCmd::~ExternalCmd() {}
 
 DWORD ExternalCmd::exitCode() {
     DWORD res;
-    _winapi.GetExitCodeProcess(_process, &res);
+    _winapi.GetExitCodeProcess(_process.get(), &res);
     return res;
 }
 
 DWORD ExternalCmd::stdoutAvailable() {
     DWORD available;
-    _winapi.PeekNamedPipe((HANDLE)_stdout, nullptr, 0, nullptr, &available,
+    _winapi.PeekNamedPipe(_stdout.get(), nullptr, 0, nullptr, &available,
                           nullptr);
     return available;
 }
 
 DWORD ExternalCmd::stderrAvailable() {
     DWORD available;
-    _winapi.PeekNamedPipe((HANDLE)_stderr, nullptr, 0, nullptr, &available,
+    _winapi.PeekNamedPipe(_stderr.get(), nullptr, 0, nullptr, &available,
                           nullptr);
     return available;
 }
 
 DWORD ExternalCmd::readStdout(char *buffer, size_t buffer_size, bool block) {
-    return readPipe((HANDLE)_stdout, buffer, buffer_size, block);
+    return readPipe(_stdout.get(), buffer, buffer_size, block);
 }
 
 DWORD ExternalCmd::readStderr(char *buffer, size_t buffer_size, bool block) {
     if (!with_stderr) {
-        return readPipe((HANDLE)_stderr, buffer, buffer_size, block);
+        return readPipe(_stderr.get(), buffer, buffer_size, block);
     } else {
         return 0;
     }

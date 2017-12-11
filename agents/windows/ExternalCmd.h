@@ -31,6 +31,8 @@ class Environment;
 class Logger;
 class WinApiAdaptor;
 
+using PipeHandle = WrappedHandle<InvalidHandleTraits>;
+
 class AgentUpdaterError : public std::runtime_error {
 public:
     explicit AgentUpdaterError(const std::string &what) : std::runtime_error(buildSectionCheckMK(what)) {}
@@ -40,13 +42,12 @@ private:
 };
 
 class ExternalCmd {
+    using ProcessHandle = WrappedHandle<NullHandleTraits>;
 public:
     ExternalCmd(const std::string &cmdline, const Environment &env, Logger *logger,
                 const WinApiAdaptor &winapi);
 
     ~ExternalCmd();
-
-    void terminateJob(DWORD exit_code);
 
     DWORD exitCode();
 
@@ -63,12 +64,12 @@ public:
 private:
     DWORD readPipe(HANDLE pipe, char *buffer, size_t buffer_size, bool block);
 
-    WinHandle _script_stderr;
-    WinHandle _script_stdout;
-    HANDLE _process;
-    HANDLE _job_object;
-    WinHandle _stdout;
-    WinHandle _stderr;
+    PipeHandle _script_stderr;
+    PipeHandle _script_stdout;
+    ProcessHandle _process;
+    JobHandle<1> _job_object;
+    PipeHandle _stdout;
+    PipeHandle _stderr;
     Logger *_logger;
     const WinApiAdaptor &_winapi;
 };

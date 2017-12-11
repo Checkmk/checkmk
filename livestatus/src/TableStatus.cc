@@ -23,8 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStatus.h"
+#include <atomic>
 #include <ctime>
 #include <memory>
+#include "AtomicInt32PointerColumn.h"
 #include "Column.h"
 #include "DoublePointerColumn.h"
 #include "IntPointerColumn.h"
@@ -66,7 +68,7 @@ extern int g_num_hosts;
 extern int g_num_services;
 extern int g_livestatus_threads;
 extern int g_num_queued_connections;
-extern int g_livestatus_active_connections;
+extern std::atomic_int32_t g_livestatus_active_connections;
 
 #ifndef NAGIOS4
 extern circular_buffer external_command_buffer;
@@ -222,7 +224,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<StringPointerColumn>(
         "livestatus_version", "The version of the MK Livestatus module",
         VERSION));
-    addColumn(make_unique<IntPointerColumn>(
+    addColumn(make_unique<AtomicInt32PointerColumn>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus",
         &g_livestatus_active_connections));

@@ -36,6 +36,7 @@
 #include <sys/time.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -98,7 +99,7 @@ size_t g_livestatus_threads = 10;
 // current number of queued connections (for statistics)
 int g_num_queued_connections = 0;
 // current number of active connections (for statistics)
-int g_livestatus_active_connections = 0;
+std::atomic_int32_t g_livestatus_active_connections{0};
 size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 static int fl_disable_statehist_filtering;
 

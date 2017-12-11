@@ -148,8 +148,11 @@ def check_cmk_agent_update(_no_item, _no_params, info):
 
             if parsed["error"] != "None":
                 yield 1, "error: %s" % parsed["error"]
+                if len(parsed.keys()) == 1:
+                    return
             else:
                 yield 0, "no errors"
+
 
             try:
                 last_check = float(parsed["last_check"])
@@ -168,10 +171,10 @@ def check_cmk_agent_update(_no_item, _no_params, info):
             except:
                 yield 1, "no successful connect to server yet"
 
-            if parsed["last_update"]:
+            if "last_update" in parsed:
                 yield 0, "last agent update: %s" % get_timestamp_human_readable(parsed["last_update"])
 
-            if parsed["aghash"]:
+            if "aghash" in parsed:
                 yield 0, "agent configuration: %s" % parsed["aghash"][:8]
 
             return

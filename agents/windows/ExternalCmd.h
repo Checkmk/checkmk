@@ -28,9 +28,17 @@
 #include <windows.h>
 #include "types.h"
 
+class AgentUpdaterError : public std::runtime_error {
+public:
+    explicit AgentUpdaterError(const std::string &what) : std::runtime_error(buildSectionCheckMK(what)) {}
+
+private:
+    std::string buildSectionCheckMK(const std::string &what) const;
+};
+
 class ExternalCmd {
 public:
-    ExternalCmd(const char *cmdline);
+    ExternalCmd(const std::string &cmdline);
 
     ~ExternalCmd();
 

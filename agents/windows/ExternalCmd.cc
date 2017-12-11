@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ExternalCmd.h"
-#include <memory>
+#include <shlwapi.h>
 #include "Environment.h"
 #include "logging.h"
 #include "types.h"
@@ -31,12 +31,30 @@
 extern bool with_stderr;
 extern HANDLE g_workers_job_object;
 
+namespace {
+
+const char *updater_exe = "cmk-update-agent.exe";
+
 bool ends_with(std::string const &value, std::string const &ending) {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-ExternalCmd::ExternalCmd(const char *cmdline) {
+std::string combinePaths(const std::string &path1, const std::string &path2) {
+    std::vector<char> combined(MAX_PATH, '\0');
+    return PathCombine(combined.data(), path1.c_str(), path2.c_str());
+}
+
+} // namespace
+
+std::string AgentUpdaterError::buildSectionCheckMK(
+    const std::string &what) const {
+    std::ostringstream oss("<<<check_mk>>>\nAgentUpdate: error ", std::ios_base::ate);
+    oss << what << std::endl;
+    return oss.str();
+}
+
+ExternalCmd::ExternalCmd(const std::string &cmdline) {
     SECURITY_DESCRIPTOR security_descriptor;
     SECURITY_ATTRIBUTES security_attributes;
     // initialize security descriptor (Windows NT)
@@ -76,23 +94,50 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     si.hStdError =
         with_stderr ? (HANDLE)_script_stdout : (HANDLE)_script_stderr;
 
-    PROCESS_INFORMATION pi;
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-    std::unique_ptr<char[], decltype(free) *> cmdline_buf(strdup(cmdline),
-                                                          free);
+    bool detach_process = false;
+    std::string actualCmd(cmdline);
 
-    bool detach_process =
-        ends_with(std::string(cmdline), std::string("cmk-update-agent.exe\""));
+    if (ends_with(cmdline, std::string(updater_exe) + "\"")) {
+        detach_process = true;
+        const auto *env = Environment::instance();
+        if (env == nullptr) {
+            const char *errorMsg = "No environment!";
+            crash_log("%s", errorMsg);
+            throw win_exception(errorMsg);
+        }
+        const auto source = combinePaths(env->pluginsDirectory(), updater_exe);
+        const auto target = combinePaths(env->tempDirectory(), updater_exe);
+
+        if (!CopyFile(source.c_str(), target.c_str(), false)) {
+            std::string errorMsg = "copying ";
+            errorMsg += source + " to " + target + " failed.";
+            throw AgentUpdaterError(errorMsg);
+        }
+
+        // Run cmk-update-agent.exe in temp dir
+        actualCmd = target;
+    }
+
+    std::vector<char> cmdline_buf(actualCmd.cbegin(), actualCmd.cend());
+    cmdline_buf.push_back('\0');
 
     DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
     if (detach_process) {
-        crash_log("Detaching process: %s, %d", cmdline, detach_process);
+        crash_log("Detaching process: %s, %d", actualCmd.c_str(), detach_process);
         dwCreationFlags = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
     }
 
-    if (!CreateProcess(nullptr, cmdline_buf.get(), nullptr, nullptr, TRUE,
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+
+    if (!CreateProcess(nullptr, cmdline_buf.data(), nullptr, nullptr, TRUE,
                        dwCreationFlags, nullptr, nullptr, &si, &pi)) {
-        throw win_exception(std::string("failed to spawn process ") + cmdline);
+        std::string errorMsg = "failed to spawn process " + actualCmd;
+        if (detach_process) {
+            throw AgentUpdaterError(errorMsg);
+        } else {
+            throw win_exception(errorMsg);
+        }
     }
 
     _process = pi.hProcess;
@@ -114,6 +159,7 @@ ExternalCmd::~ExternalCmd() {
     }
     ::CloseHandle(_process);
 }
+
 
 void ExternalCmd::terminateJob(DWORD exit_code) {
     ::TerminateJobObject(_job_object, exit_code);

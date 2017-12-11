@@ -145,7 +145,18 @@ static int launch_program(script_container *cont) {
                 (char *)HeapAlloc(GetProcessHeap(), 0, buffer_u8.size() + 1);
             memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
         }
-    } catch (const std::exception &e) {
+    } catch (const AgentUpdaterError &e) {
+        if (cont->buffer_work != NULL) {
+            HeapFree(GetProcessHeap(), 0, cont->buffer_work);
+        }
+        const std::string sectionCheckMKOutput = e.what();
+        const auto count = sectionCheckMKOutput.size();
+        cont->buffer_work = reinterpret_cast<char*>(
+            HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, count+1));
+        sectionCheckMKOutput.copy(cont->buffer_work, count);
+        cont->buffer_work[count] = '\0';
+        result = SUCCESS;
+    }   catch (const std::exception &e) {
         crash_log("%s", e.what());
         result = CANCELED;
     }

@@ -479,6 +479,7 @@ class ConfigDomainRRDCached(watolib.ConfigDomain):
                 "TIMEOUT"       : self._get_value_from_config("TIMEOUT", int, 3600),
                 "RANDOM_DELAY"  : self._get_value_from_config("RANDOM_DELAY", int, 1800),
                 "FLUSH_TIMEOUT" : self._get_value_from_config("FLUSH_TIMEOUT", int, 7200),
+                "WRITE_THREADS" : self._get_value_from_config("WRITE_THREADS", int, 4),
             }
         }
 
@@ -529,6 +530,13 @@ register_configvar(group,
                          "which updates have stopped, so setting this to a high value is "
                          "acceptable in most cases."),
                 minvalue = 0,
+            )),
+            ("WRITE_THREADS", Age(
+                title = _("Number of threads used for writing RRD files"),
+                help = _("Increasing this number will allow rrdcached to have more simultaneous "
+                         "I/O requests into the kernel. This may allow the kernel to re-order "
+                         "disk writes, resulting in better disk throughput."),
+                minvalue = 1,
             )),
         ],
         optional_keys = [],

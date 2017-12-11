@@ -582,6 +582,7 @@ class TestRunner(threading.Thread):
                 "TIMEOUT=300\n"
                 "RANDOM_DELAY=10\n"
                 "FLUSH_TIMEOUT=7200\n"
+                "WRITE_THREADS=4\n"
             )
 
         p = subprocess.Popen(["omd", "restart", "rrdcached"],

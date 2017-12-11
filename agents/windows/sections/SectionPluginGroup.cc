@@ -39,8 +39,10 @@ extern struct script_statistics_t {
     int lo_timeouts;
 } g_script_stat;
 
-static const size_t HEAP_BUFFER_MAX = 2097152L;
-static const size_t HEAP_BUFFER_DEFAULT = 16384L;
+namespace {
+
+const size_t HEAP_BUFFER_MAX = 2097152L;
+const size_t HEAP_BUFFER_DEFAULT = 16384L;
 
 const char *typeToSection(script_type type) {
     switch (type) {
@@ -55,11 +57,24 @@ const char *typeToSection(script_type type) {
     }
 }
 
-static int launch_program(script_container *cont) {
+void outputScript(const std::string &output, script_container *cont,
+                  const WinApiAdaptor &winapi) {
+    if (cont->buffer_work != nullptr) {
+        winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
+    }
+    const auto count = output.size();
+    cont->buffer_work = reinterpret_cast<char *>(
+        winapi.HeapAlloc(winapi.GetProcessHeap(), HEAP_ZERO_MEMORY, count + 1));
+    output.copy(cont->buffer_work, count);
+    cont->buffer_work[count] = '\0';
+}
+
+int launch_program(script_container *cont) {
     enum { SUCCESS = 0, CANCELED, BUFFER_FULL, WORKING } result = WORKING;
     const auto &logger = cont->logger;
+    const WinApiAdaptor &winapi = cont->winapi;
+
     try {
-        const WinApiAdaptor &winapi = cont->winapi;
         ExternalCmd command(cont->path.c_str(), cont->env, logger, winapi);
 
         static const size_t BUFFER_SIZE = 16635;
@@ -145,12 +160,11 @@ static int launch_program(script_container *cont) {
         if ((buf_u[0] == 0xFF) && (buf_u[1] == 0xFE)) {
             wchar_t *buffer_u16 =
                 reinterpret_cast<wchar_t *>(cont->buffer_work + 2);
-            std::string buffer_u8 = to_utf8(buffer_u16);
-            winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
-            cont->buffer_work = (char *)winapi.HeapAlloc(
-                winapi.GetProcessHeap(), 0, buffer_u8.size() + 1);
-            memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
+            outputScript(to_utf8(buffer_u16), cont, winapi);
         }
+    } catch (const AgentUpdaterError &e) {
+        outputScript(e.what(), cont, winapi);
+        result = SUCCESS;
     } catch (const std::exception &e) {
         Error(logger) << e.what();
         result = CANCELED;
@@ -200,6 +214,8 @@ ScriptWorkerThread(LPVOID lpParam) {
     }
     return 0;
 }
+
+}  // namespace
 
 script_container::script_container(
     const std::string &_path,  // full path with interpreter, cscript, etc.

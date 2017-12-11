@@ -111,6 +111,9 @@ public:
     MOCK_CONST_METHOD1(CloseHandle, WINBOOL(HANDLE hObject));
     MOCK_CONST_METHOD2(CompareFileTime, LONG(const FILETIME *lpFileTime1,
                                              const FILETIME *lpFileTime2));
+    MOCK_CONST_METHOD3(CopyFile,
+                       WINBOOL(LPCSTR lpExistingFileName, LPCSTR lpNewFileName,
+                               WINBOOL bFailIfExists));
     MOCK_CONST_METHOD2(CreateDirectory,
                        WINBOOL(LPCSTR lpPathName,
                                LPSECURITY_ATTRIBUTES lpSecurityAttributes));
@@ -441,6 +444,10 @@ public:
                            PDWORD64 EstablisherFrame,
                            PKNONVOLATILE_CONTEXT_POINTERS ContextPointers));
 #endif  // __x86_64
+
+    // LWSTDAPI:
+    MOCK_CONST_METHOD3(PathCombine,
+                       LPSTR(LPSTR pszDest, LPCSTR pszDir, LPCSTR pszFile));
 
     // MISC:
     MOCK_CONST_METHOD2(CommandLineToArgvW,

@@ -31,9 +31,17 @@ class Environment;
 class Logger;
 class WinApiAdaptor;
 
+class AgentUpdaterError : public std::runtime_error {
+public:
+    explicit AgentUpdaterError(const std::string &what) : std::runtime_error(buildSectionCheckMK(what)) {}
+
+private:
+    std::string buildSectionCheckMK(const std::string &what) const;
+};
+
 class ExternalCmd {
 public:
-    ExternalCmd(const char *cmdline, const Environment &env, Logger *logger,
+    ExternalCmd(const std::string &cmdline, const Environment &env, Logger *logger,
                 const WinApiAdaptor &winapi);
 
     ~ExternalCmd();

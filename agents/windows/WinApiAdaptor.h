@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstring>
 
+#undef CopyFile
 #undef CreateDirectory
 #undef CreateFile
 #undef CreateEvent
@@ -37,6 +38,7 @@
 #undef MoveFile
 #undef OpenSCManager
 #undef OpenService
+#undef PathCombine
 #undef PdhOpenQuery
 #undef QueryServiceConfig
 #undef RegEnumKeyEx
@@ -141,6 +143,8 @@ public:
     virtual WINBOOL CloseHandle(HANDLE hObject) const = 0;
     virtual LONG CompareFileTime(const FILETIME *lpFileTime1,
                                  const FILETIME *lpFileTime2) const = 0;
+    virtual WINBOOL CopyFile(LPCSTR lpExistingFileName, LPCSTR lpNewFileName,
+                             WINBOOL bFailIfExists) const = 0;
     virtual WINBOOL CreateDirectory(
         LPCSTR lpPathName,
         LPSECURITY_ATTRIBUTES lpSecurityAttributes) const = 0;
@@ -439,6 +443,10 @@ public:
         PVOID *HandlerData, PDWORD64 EstablisherFrame,
         PKNONVOLATILE_CONTEXT_POINTERS ContextPointers) const = 0;
 #endif  // __x86_64
+
+    // LWSTDAPI:
+    virtual LPSTR PathCombine(LPSTR pszDest, LPCSTR pszDir,
+                              LPCSTR pszFile) const = 0;
 
     // MISC:
     virtual LPWSTR *CommandLineToArgvW(LPCWSTR lpCmdLine,

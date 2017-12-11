@@ -96,6 +96,8 @@ public:
     virtual WINBOOL CloseHandle(HANDLE hObject) const override;
     virtual LONG CompareFileTime(const FILETIME *lpFileTime1,
                                  const FILETIME *lpFileTime2) const override;
+    virtual WINBOOL CopyFile(LPCSTR lpExistingFileName, LPCSTR lpNewFileName,
+                             WINBOOL bFailIfExists) const override;
     virtual WINBOOL CreateDirectory(
         LPCSTR lpPathName,
         LPSECURITY_ATTRIBUTES lpSecurityAttributes) const override;
@@ -408,6 +410,10 @@ public:
         PVOID *HandlerData, PDWORD64 EstablisherFrame,
         PKNONVOLATILE_CONTEXT_POINTERS ContextPointers) const override;
 #endif  // __x86_64
+
+    // LWSTDAPI:
+    virtual LPSTR PathCombine(LPSTR pszDest, LPCSTR pszDir,
+                              LPCSTR pszFile) const override;
 
     // MISC:
     virtual LPWSTR *CommandLineToArgvW(LPCWSTR lpCmdLine,

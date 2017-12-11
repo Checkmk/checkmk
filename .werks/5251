@@ -1,0 +1,18 @@
+Title: Windows Agent: Improved handling of cmk-update-agent.exe plugin
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1512992435
+
+
+The cmk-update-agent.exe plugin is now executed within the temp directory,
+to prevent some <tt>permission denied on file</tt> issues during the update process.
+
+
+Furthermore, the windows agent now generates additional agent out for the agent updater check,
+whenever the cmk-update-agent.exe script fails to start.
+

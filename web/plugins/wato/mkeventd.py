@@ -419,6 +419,20 @@ def vs_mkeventd_rule(rule_pack):
                      "will be no \"open event\" to be handled by the administrators."),
           )
         ),
+        ("event_limit", Alternative(
+            title = _("Custom rule event limit"),
+            help = _("Use this option to override the "
+                     "<a href=\"wato.py?mode=mkeventd_edit_configvar&site=&varname=event_limit\">"
+                     "global rule event limit</a>"),
+            style = "dropdown",
+            elements = [
+                FixedValue(None,
+                    title = _("Use global rule limit"),
+                    totext = "",
+                ),
+                vs_ec_rule_limit(),
+            ],
+        )),
         ( "count",
           Dictionary(
               title = _("Count messages in defined interval"),
@@ -848,7 +862,7 @@ def vs_mkeventd_rule(rule_pack):
             ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
                                         "match_sl", "match_ok", "cancel_priority", "cancel_application", "match_timeperiod", "invert_matching" ]),
             ( _("Outcome & Action"), [ "state", "sl", "contact_groups", "actions", "actions_in_downtime",
-                                       "cancel_actions", "cancel_action_phases", "drop", "autodelete" ]),
+                                       "cancel_actions", "cancel_action_phases", "drop", "autodelete", "event_limit" ]),
             ( _("Counting & Timing"), [ "count", "expect", "delay", "livetime", ]),
             ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
         ],
@@ -2543,6 +2557,30 @@ if mkeventd_enabled:
             default_value = "stop_overflow_notify",
         )
 
+    def vs_ec_rule_limit():
+        return Dictionary(
+            title = _("Rule limit"),
+            help = _("You can limit the number of current events created by a single "
+                     "rule here. This is meant to "
+                     "prevent you from too generous rules creating a lot of events.<br>"
+                     "Once the limit is reached, the Event Console will stop the rule "
+                     "creating new current events until the number of current "
+                     "events has been reduced to be below this limit. In the "
+                     "moment the limit is reached, the Event Console will notify "
+                     "the configured contacts of the rule or create a notification "
+                     "with empty contact information."),
+            elements = [
+                ("limit", Integer(
+                    title = _("Limit"),
+                    minvalue = 1,
+                    default_value = 1000,
+                    unit = _("current events"),
+                )),
+                ("action", vs_ec_event_limit_actions("notify contacts in rule or fallback contacts")),
+            ],
+            optional_keys = [],
+        )
+
     register_configvar(groups["ec"],
         "event_limit",
         Dictionary(
@@ -2573,28 +2611,7 @@ if mkeventd_enabled:
                     ],
                     optional_keys = [],
                 )),
-                ("by_rule", Dictionary(
-                    title = _("Rule limit"),
-                    help = _("You can limit the number of current events created by a single "
-                             "rule here. This is meant to "
-                             "prevent you from too generous rules creating a lot of events.<br>"
-                             "Once the limit is reached, the Event Console will stop the rule "
-                             "creating new current events until the number of current "
-                             "events has been reduced to be below this limit. In the "
-                             "moment the limit is reached, the Event Console will notify "
-                             "the configured contacts of the rule or create a notification "
-                             "with empty contact information."),
-                    elements = [
-                        ("limit", Integer(
-                            title = _("Limit"),
-                            minvalue = 1,
-                            default_value = 1000,
-                            unit = _("current events"),
-                        )),
-                        ("action", vs_ec_event_limit_actions("notify contacts in rule or fallback contacts")),
-                    ],
-                    optional_keys = [],
-                )),
+                ("by_rule", vs_ec_rule_limit()),
                 ("overall", Dictionary(
                     title = _("Overall current events"),
                     help = _("To protect you against a continously growing list of current "
@@ -2851,7 +2868,6 @@ if mkeventd_enabled:
         ),
         domain = ConfigDomainEventConsole,
     )
-
 
 # Settings that should also be avaiable on distributed Sites that
 # do not run an own eventd but want to query one or send notifications

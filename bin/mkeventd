@@ -2914,8 +2914,7 @@ class EventServer(ECServerThread):
         assert ty in [ "overall", "by_rule", "by_host" ]
 
         num_already_open = g_event_status.get_num_existing_events_by(ty, event)
-        limit  = g_config["event_limit"][ty]["limit"]
-        action = g_config["event_limit"][ty]["action"]
+        limit, action = self._get_event_limit(ty, event)
         self.logger.verbose("  Type: %s, already open events: %d, Limit: %d" % (ty, num_already_open, limit))
 
         # Limit not reached: add new event
@@ -2958,6 +2957,20 @@ class EventServer(ECServerThread):
             do_notify(overflow_event)
 
         return False
+
+
+    # protected by lock_eventstatus
+    def _get_event_limit(self, ty, event):
+        # Prefer the rule inidividual limit for by_rule limit (in case there is some)
+        if ty == "by_rule":
+            rule_limit = self._rule_by_id[event["rule_id"]].get("event_limit")
+            if rule_limit:
+                return rule_limit["limit"], rule_limit["action"]
+
+        limit  = g_config["event_limit"][ty]["limit"]
+        action = g_config["event_limit"][ty]["action"]
+
+        return limit, action
 
 
     def _create_overflow_event(self, ty, event):

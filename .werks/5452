@@ -1,0 +1,11 @@
+Title: Highly improved performance of rendering large tables of HW/SW inventory trees
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p22
+Date: 1512566453
+
+This may also concern other pages or views.

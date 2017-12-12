@@ -31,7 +31,7 @@ minimal changes."""
 import cProfile
 import contextlib
 import os
-
+import time
 import cmk.log
 
 
@@ -71,3 +71,26 @@ class Profile(object):
                 "stats.sort_stats('time').print_stats()\n" % self._profile_file)
             os.chmod(self._profile_file + ".py", 0o755)
             cmk.log.logger.info("Created profile dump script: %s.py" % self._profile_file)
+
+
+def profile_call(base_dir, enabled=True):
+    """
+This decorator can be used to profile single functions as a starting point.
+A directory where the file will be saved has to be stated as first argument.
+Enabling/disabling as second argument is optional. By default it's enabled.
+The name of the output file is composed of the function name itself,
+the timestamp when the function was called and the suffix '.profile'.
+Examples:
+  @cmk.profile.profile_call(base_dir="/PATH/TO/DIR")
+  @cmk.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=True)
+  @cmk.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=False)
+"""
+    def decorate(f):
+        def wrapper(*args, **kwargs):
+            filepath = "%s/%s_%s.profile" % \
+                (base_dir.rstip("/"), f.__name__, time.time())
+            with Profile(enabled=enabled,
+                         profile_file=filepath):
+               return f(*args, **kwargs)
+        return wrapper
+    return decorate

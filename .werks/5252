@@ -1,0 +1,10 @@
+Title: Agent Updater Check: increased robustness in handling incomplete agent data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1513068500
+Class: fix
+
+

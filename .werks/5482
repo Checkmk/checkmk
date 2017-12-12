@@ -1,0 +1,14 @@
+Title: Add option to specify a timeperiod for notification bulking
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1513094467
+Class: feature
+
+The option "Bulking period" can be used in notification rules to
+specify a time period for which notifications should always be
+bulked. After the timeperiod has ended the notifications of the
+bulk will be sent. This option is useful if e.g. after the
+working hours no notifications should be sent.

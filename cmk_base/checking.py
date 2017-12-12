@@ -385,7 +385,13 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
 def _determine_check_params(params):
     if isinstance(params, dict) and "tp_default_value" in params:
         for timeperiod, tp_params in params["tp_values"]:
-            tp_result = core.timeperiod_active(timeperiod)
+            try:
+                tp_result = core.timeperiod_active(timeperiod)
+            except:
+                if cmk.debug.enabled():
+                    raise
+                tp_result = None
+
             if tp_result == True:
                 return tp_params
             elif tp_result == False:

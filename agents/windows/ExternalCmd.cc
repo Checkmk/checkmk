@@ -75,10 +75,9 @@ std::string handleAgentUpdater(Logger *logger, const WinApiAdaptor &winapi) {
 
 std::string AgentUpdaterError::buildSectionCheckMK(
     const std::string &what) const {
-    std::ostringstream oss("<<<check_mk>>>\nAgentUpdate: error ",
-                           std::ios_base::ate);
-    oss << what << std::endl;
-    return oss.str();
+    return "<<<check_mk>>>\nAgentUpdate: last_check None "
+           "last_update None aghash None error " +
+           what + "\n";
 }
 
 ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,

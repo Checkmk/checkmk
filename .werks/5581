@@ -1,0 +1,11 @@
+Title: Fixed incompatibility when installing baked packages on systems with older python versions
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p21
+Date: 1513088826
+Class: fix
+
+When installing a package containing python agent plugins, the pre install script could fail
+on systems that are using older python versions than 2.7.

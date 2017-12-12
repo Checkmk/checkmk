@@ -56,7 +56,7 @@ import cmk_base.data_sources as data_sources
 inventory_output_dir  = cmk.paths.var_dir + "/inventory"
 inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
 # TODO: This is not configurable. Drop the flag?
-inventory_pprint_output = True
+inventory_pprint_output = False
 
 _inv_hw_changes  = 0
 _inv_sw_changes  = 0

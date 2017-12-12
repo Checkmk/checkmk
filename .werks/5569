@@ -1,0 +1,39 @@
+Title: Graph layout is now more customizable
+Level: 2
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1513062793
+Class: feature
+
+The styling of the Check_MK graphs has now been unified for the most
+places where the graphs are rendered:
+
+<ul>
+<li>Regular graph dashlets</li>
+<li>Custom graph dashlets</li>
+<li>Graphs in views</li>
+<li>Graphs in reports</li>
+</ul>
+
+These standard render options are now available:
+
+<ul>
+<li>Font size</li>
+<li>Title (Show, show inline, hide)</li>
+<li>Add host/service information to title</li>
+<li>Show time range of graph (top right)</li>
+<li>Show margin round the graph</li>
+<li>Show graph legend</li>
+<li>Show vertical axis</li>
+<li>Show time axis</li>
+<li>Show graph controls</li>
+<li>Show pin</li>
+<li>Show previews</li>
+<li>Colors (Background, foreground, canvas)</li>
+</ul>
+
+Some of these options are specific for the medium they are rendered
+on. For example the graph controls are not available in graphs rendered
+in reports. These options are hidden from the configuration.

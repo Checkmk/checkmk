@@ -1,0 +1,15 @@
+Title: cmk-update-agent: Enable Agent Updater to update itself on Windows
+Level: 2
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1512997920
+Class: fix
+
+When triggering an update under Windows, the agent updater could not be replaced by its new downloaded version because it was still running from the corresponding file.
+
+This situation is now mitigated by restarting the agent updater from within ../temp when running from plugins-dir.
+
+This is relevant only for a manual execution of cmk-update-agent.exe
+

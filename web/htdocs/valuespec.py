@@ -1864,7 +1864,10 @@ class CascadingDropdown(ValueSpec):
                 else: # form painted the first time
                     if value == val \
                        or (type(value) == self._encoding_type and value[0] == val):
-                        def_val_2 = value[1]
+                        if type(value) == self._encoding_type:
+                            def_val_2 = value[1]
+                        else:
+                            def_val_2 = vs.default_value()
                         disp = ""
                     else:
                         def_val_2 = vs.default_value()

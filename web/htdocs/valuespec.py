@@ -3609,10 +3609,9 @@ class Dictionary(ValueSpec):
 
 # Base class for selection of a Nagios element out
 # of a given list that must be loaded from a file.
-# Examples: GroupSelection, TimeperiodSelection. Child
-# class must define a function get_elements() that
-# returns a dictionary from element keys to element
-# titles.
+# Example: GroupSelection. Child class must define
+# a function get_elements() that returns a dictionary
+# from element keys to element titles.
 class ElementSelection(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -4608,7 +4607,8 @@ class SiteChoice(DropdownChoice):
 
 class TimeperiodSelection(DropdownChoice):
     def __init__(self, **kwargs):
-        kwargs.setdefault("default_value", "24X7")
+        kwargs.setdefault("no_preselect", True)
+        kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
         DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
 
     def _get_choices(self):

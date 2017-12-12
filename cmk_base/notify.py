@@ -482,7 +482,7 @@ def notify_rulebased(raw_context, analyse=False):
                     notify_log("   - modifying notification of %s via %s" % (contactstxt, plugintxt))
                 else:
                     notify_log("   - adding notification of %s via %s" % (contactstxt, plugintxt))
-                bulk   = rule.get("bulk")
+                bulk = rbn_get_bulk_params(rule)
                 final_parameters = rbn_finalize_plugin_parameters(raw_context["HOSTNAME"], plugin, plugin_parameters)
                 notifications[key] = ( not rule.get("allow_disable"), final_parameters, bulk )
 
@@ -667,6 +667,39 @@ def rbn_split_plugin_context(plugin_context):
         contexts.append(context)
 
     return contexts
+
+
+def rbn_get_bulk_params(rule):
+    bulk = rule.get("bulk")
+
+    if not bulk:
+        return None
+    elif isinstance(bulk, dict): # old format: treat as "Always Bulk"
+        method, params = "always", bulk
+    else:
+        method, params = bulk
+
+    if method == "always":
+        return params
+    elif method == "timeperiod":
+        try:
+            active = core.timeperiod_active(params["timeperiod"])
+        except:
+            if cmk.debug.enabled():
+                raise
+            # If a livestatus connection error appears we will bulk the
+            # notification in the first place. When the connection is available
+            # again and the period is not active the notifications will be sent.
+            notify_log("   - Error checking activity of timeperiod %s: assuming active" % params["timeperiod"])
+            active = True
+
+        if active:
+            return params
+        else:
+            return params.get("bulk_outside")
+    else:
+        notify_log("   - Unknown bulking method: assuming bulking is disabled")
+        return None
 
 
 def rbn_match_rule(rule, context):
@@ -1405,7 +1438,10 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
 
     what = plugin_context["WHAT"]
     contact = plugin_context["CONTACTNAME"]
-    bulk_path = (contact, plugin, str(bulk["interval"]), str(bulk["count"]))
+    if bulk.get("timeperiod"):
+        bulk_path = (contact, plugin, 'timeperiod:'+bulk["timeperiod"], str(bulk["count"]))
+    else:
+        bulk_path = (contact, plugin, str(bulk["interval"]), str(bulk["count"]))
     bulkby = bulk["groupby"]
 
     if "host" in bulkby:
@@ -1463,8 +1499,10 @@ def find_wato_folder(context):
 
 
 def create_bulk_dirname(bulk_path):
-    dirname = notification_bulkdir + "/" + bulk_path[0] + "/" + bulk_path[1] + "/"
-    dirname += ",".join([b.replace("/", "\\") for b in bulk_path[2:]])
+    dirname = os.path.join(
+        notification_bulkdir, bulk_path[0], bulk_path[1],
+        ",".join([b.replace("/", "\\") for b in bulk_path[2:]])
+    )
 
     # Remove non-Ascii-characters by special %02x-syntax
     try:
@@ -1484,68 +1522,124 @@ def create_bulk_dirname(bulk_path):
     return dirname
 
 
+def bulk_parts(method_dir, bulk):
+    parts = bulk.split(',')
+
+    try:
+        interval, timeperiod = int(parts[0]), None
+    except ValueError:
+        entry = parts[0].split(':')
+        if entry[0] == 'timeperiod' and len(entry) == 2:
+            interval, timeperiod = None, entry[1]
+        else:
+            notify_log("Skipping invalid bulk directory %s" % method_dir)
+            return None
+
+    try:
+        count = int(parts[1])
+    except ValueError:
+        notify_log("Skipping invalid bulk directory %s" % method_dir)
+        return None
+
+    return interval, timeperiod, count
+
+
+def bulk_uuids(bulk_dir):
+    uuids, oldest = [], time.time()
+    for uuid in os.listdir(bulk_dir): # 4ded0fa2-f0cd-4b6a-9812-54374a04069f
+        if uuid.endswith(".new"):
+            continue
+        if len(uuid) != 36:
+            notify_log("Skipping invalid notification file %s" % os.path.join(bulk_dir, uuid))
+            continue
+
+        mtime = os.stat(os.path.join(bulk_dir, uuid)).st_mtime
+        uuids.append((mtime, uuid))
+        oldest = min(oldest, mtime)
+    uuids.sort()
+    return uuids, oldest
+
+
+def remove_if_orphaned(bulk_dir, max_age, ref_time=None):
+    if not ref_time:
+        ref_time = time.time()
+
+    dirage = ref_time - os.stat(bulk_dir).st_mtime
+    if dirage > max_age:
+        notify_log("Warning: removing orphaned empty bulk directory %s" % bulk_dir)
+        try:
+            os.rmdir(bulk_dir)
+        except Exception, e:
+            notify_log("    -> Error removing it: %s" % e)
+
 def find_bulks(only_ripe):
     if not os.path.exists(notification_bulkdir):
         return []
 
-    now = time.time()
-    bulks = []
+    def listdir_visible(path):
+        return [x for x in os.listdir(path) if not x.startswith(".")]
 
-    dir_1 = notification_bulkdir
-    for contact in os.listdir(dir_1):
-        if contact.startswith("."):
-            continue
-        dir_2 = dir_1 + "/" + contact
-        for method in os.listdir(dir_2):
-            if method.startswith("."):
-                continue
-            dir_3 = dir_2 + "/" + method
-            for bulk in os.listdir(dir_3):
-                parts = bulk.split(',') # e.g. 60,10,host,localhost
-                try:
-                    interval = int(parts[0])
-                    count = int(parts[1])
-                except:
-                    notify_log("Skipping invalid bulk directory %s" % dir_3)
-                    continue
-                dir_4 = dir_3 + "/" + bulk
-                uuids = []
-                oldest = time.time()
-                for uuid in os.listdir(dir_4): # 4ded0fa2-f0cd-4b6a-9812-54374a04069f
-                    if uuid.startswith(".") or uuid.endswith(".new"):
-                        continue
-                    if len(uuid) != 36:
-                        notify_log("Skipping invalid notification file %s/%s" % (dir_4, uuid))
-                        continue
+    bulks, now = [], time.time()
+    for contact in listdir_visible(notification_bulkdir):
+        contact_dir = os.path.join(notification_bulkdir, contact)
+        for method in listdir_visible(contact_dir):
+            method_dir = os.path.join(contact_dir, method)
+            for bulk in listdir_visible(method_dir):
+                bulk_dir = os.path.join(method_dir, bulk)
 
-                    mtime = os.stat(dir_4 + "/" + uuid).st_mtime
-                    uuids.append((mtime, uuid))
-                    oldest = min(oldest, mtime)
-
-                uuids.sort()
+                uuids, oldest = bulk_uuids(bulk_dir)
                 if not uuids:
-                    dirage = now - os.stat(dir_4).st_mtime
-                    if dirage > 60:
-                        notify_log("Warning: removing orphaned empty bulk directory %s" % dir_4)
-                        try:
-                            os.rmdir(dir_4)
-                        except Exception, e:
-                            notify_log("    -> Error removing it: %s" % e)
+                    remove_if_orphaned(bulk_dir, max_age=60, ref_time=now)
                     continue
-
                 age = now - oldest
-                if age >= interval:
-                    notify_log("Bulk %s is ripe: age %d >= %d" % (dir_4, age, interval))
-                elif len(uuids) >= count:
-                    notify_log("Bulk %s is ripe: count %d >= %d" % (dir_4, len(uuids), count))
-                else:
-                    notify_log("Bulk %s is not ripe yet (age: %d, count: %d)!" % (dir_4, age, len(uuids)))
-                    if only_ripe:
-                        continue
 
-                bulks.append((dir_4, age, interval, count, uuids))
+                # e.g. 60,10,host,localhost OR timeperiod:late_night,1000,host,localhost
+                parts = bulk_parts(method_dir, bulk)
+                if not parts:
+                    continue
+                interval, timeperiod, count = parts
+
+                if interval is not None:
+                    if age >= interval:
+                        notify_log("Bulk %s is ripe: age %d >= %d" % (bulk_dir, age, interval))
+                    elif len(uuids) >= count:
+                        notify_log("Bulk %s is ripe: count %d >= %d" % (bulk_dir, len(uuids), count))
+                    else:
+                        notify_log("Bulk %s is not ripe yet (age: %d, count: %d)!" % (bulk_dir, age, len(uuids)))
+                        if only_ripe:
+                            continue
+
+                    bulks.append((bulk_dir, age, interval, 'n.a.', count, uuids))
+                else:
+                    try:
+                        active = core.timeperiod_active(timeperiod)
+                    except:
+                        # This prevents sending bulk notifications if a
+                        # livestatus connection error appears. It also implies
+                        # that an ongoing connection error will hold back bulk
+                        # notifications.
+                        notify_log("Error while checking activity of timeperiod %s: assuming active" % timeperiod)
+                        active = True
+
+                    if active == True and len(uuids) < count:
+                        # Only add a log entry every 10 minutes since timeperiods
+                        # can be very long (The default would be 10s).
+                        if now % 600 <= config.notification_bulk_interval:
+                            notify_log("Bulk %s is not ripe yet (timeperiod %s: active, count: %d)" % (bulk_dir, timeperiod, len(uuids)))
+
+                        if only_ripe:
+                            continue
+                    elif active == False:
+                        notify_log("Bulk %s is ripe: timeperiod %s has ended" % (bulk_dir, timeperiod))
+                    elif len(uuids) >= count:
+                        notify_log("Bulk %s is ripe: count %d >= %d" % (bulk_dir, len(uuids), count))
+                    else:
+                        notify_log("Bulk %s is ripe: timeperiod %s is not known anymore" % (bulk_dir, timeperiod))
+
+                    bulks.append((bulk_dir, age, 'n.a.', timeperiod, count, uuids))
 
     return bulks
+
 
 def send_ripe_bulks():
     ripe = find_bulks(True)
@@ -1619,7 +1713,7 @@ def notify_bulk(dirname, uuids):
     # Remove sent notifications
     for mtime, uuid in uuids:
         if (mtime, uuid) not in unhandled_uuids:
-            path = dirname + "/" + uuid
+            path = os.path.join(dirname, uuid)
             try:
                 os.remove(path)
             except Exception, e:

@@ -7778,101 +7778,116 @@ def vs_notification_rule(userid = None):
             ),
         ]
 
+    bulk_options = [
+                ("count", Integer(
+                    title = _("Maximum bulk size"),
+                    label = _("Bulk up to"),
+                    unit  = _("Notifications"),
+                    help = _("At most that many Notifications are kept back for bulking. A value of "
+                            "1 essentially turns off notification bulking."),
+                    default_value = 1000,
+                    minvalue = 1,
+                )),
+                ("groupby",
+                    vs_notification_bulkby(),
+                ),
+                ("groupby_custom", ListOfStrings(
+                    valuespec = ID(),
+                    orientation = "horizontal",
+                    title = _("Create separate notification bulks for different values of the following custom macros"),
+                    help = _("If you enter the names of host/service-custom macros here then for each different "
+                            "combination of values of those macros a separate bulk will be created. This can be used "
+                            "in combination with the grouping by folder, host etc. Omit any leading underscore. "
+                            "<b>Note</b>: If you are using "
+                            "Nagios as a core you need to make sure that the values of the required macros are "
+                            "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
+                            "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
+                            "<tt>NOTIFY_SERVICE_FOO</tt>."),
+                )),
+                ("bulk_subject", TextAscii(
+                    title = _("Subject for bulk notifications"),
+                    help = _("Customize the subject for bulk notifications and overwrite "
+                                "default subject <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for HOST</tt>"
+                                " resp. <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts</tt>. "
+                                "Both macros <tt>$COUNT_NOTIFICATIONS$</tt> and <tt>$COUNT_HOSTS$</tt> can be used in "
+                                "any customized subject. If <tt>$COUNT_NOTIFICATIONS$</tt> is used, the amount of "
+                                "notifications will be inserted and if you use <tt>$COUNT_HOSTS$</tt> then the "
+                                "amount of hosts will be applied."),
+                    size = 80,
+                    default_value = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
+                )),
+    ]
+
     return Dictionary(
         title = _("General Properties"),
         elements = rule_option_elements()
-        + section_override
-        + generic_rule_match_conditions()
-        + event_rule_match_conditions(flavour="notify")
-        + notification_rule_match_conditions()
-        + section_contacts
-        + [
-            # Notification
-            ( "notify_plugin",
-              watolib.get_vs_notification_methods(),
-            ),
-
-            # ( "notify_method",
-            #   Alternative(
-            #       title = _("Parameters / Cancelling"),
-            #       style = "dropdown",
-            #       elements = [
-            #           ListOfStrings(
-            #               title = _("Call the script with the following parameters"),
-            #               valuespec = TextUnicode(size = 24),
-            #               orientation = "horizontal",
-            #           ),
-            #           FixedValue(
-            #               value = None,
-            #               title = _("Cancel all previous notifications with this method"),
-            #               totext = "",
-            #           ),
-            #       ]
-            #   )
-            # ),
-
-            ( "bulk",
-              Dictionary(
-                  title = _("Notification Bulking"),
-                  help = _("Enabling the bulk notifications will collect several subsequent notifications "
-                           "for the same contact into one single notification, which lists of all the "
-                           "actual problems, e.g. in a single emails. This cuts down the number of notifications "
-                           "in cases where many (related) problems occur within a short time."),
-                  elements = [
-                    ( "interval",
-                      Age(
-                          title = _("Time horizon"),
-                          label = _("Bulk up to"),
-                          help = _("Notifications are kept back for bulking at most for this time."),
-                          default_value = 60,
-                      )
+            + section_override
+            + generic_rule_match_conditions()
+            + event_rule_match_conditions(flavour="notify")
+            + notification_rule_match_conditions()
+            + section_contacts
+            + [
+                # Notification
+                ( "notify_plugin",
+                watolib.get_vs_notification_methods(),
+                ),
+                ("bulk", Transform(
+                    CascadingDropdown(
+                        title = "Notification Bulking",
+                        orientation = "vertical",
+                        choices = [
+                            ("always", _("Always bulk"), Dictionary(
+                                help = _("Enabling the bulk notifications will collect several subsequent notifications "
+                                        "for the same contact into one single notification, which lists of all the "
+                                        "actual problems, e.g. in a single email. This cuts down the number of notifications "
+                                        "in cases where many (related) problems occur within a short time."),
+                                elements = [
+                                    ( "interval", Age(
+                                        title = _("Time horizon"),
+                                        label = _("Bulk up to"),
+                                        help = _("Notifications are kept back for bulking at most for this time."),
+                                        default_value = 60,
+                                    )),
+                                    ] + bulk_options,
+                                columns = 1,
+                                optional_keys = ["bulk_subject"],
+                            )),
+                            ("timeperiod", _("Bulk during timeperiod"), Dictionary(
+                                help = _("By enabling this option notifications will be bulked only if the "
+                                        "specified timeperiod is active. When the timeperiod ends a "
+                                        "bulk containing all notifications that appeared during that time "
+                                        "will be sent. "
+                                        "If bulking should be enabled outside of the timeperiod as well, "
+                                        "the option \"Also Bulk outside of timeperiod\" can be used."),
+                                elements = [
+                                    ("timeperiod",
+                                    TimeperiodSelection(
+                                        title = _("Only bulk notifications during the following timeperiod"),
+                                    )),
+                                ] + bulk_options + [
+                                    ("bulk_outside", Dictionary(
+                                        title = _("Also bulk outside of timeperiod"),
+                                        help = _("By enabling this option notifications will be bulked "
+                                                "outside of the defined timeperiod as well."),
+                                        elements = [
+                                            ( "interval", Age(
+                                                title = _("Time horizon"),
+                                                label = _("Bulk up to"),
+                                                help = _("Notifications are kept back for bulking at most for this time."),
+                                                default_value = 60,
+                                            )),
+                                            ] + bulk_options,
+                                        columns = 1,
+                                        optional_keys = ["bulk_subject"],
+                                    )),
+                                ],
+                                columns = 1,
+                                optional_keys = ["bulk_subject", "bulk_outside"],
+                            )),
+                        ],
                     ),
-                    ( "count",
-                      Integer(
-                          title = _("Maximum bulk size"),
-                          label = _("Bulk up to"),
-                          unit  = _("Notifications"),
-                          help = _("At most that many Notifications are kept back for bulking. A value of "
-                                   "1 essentially turns off notification bulking."),
-                          default_value = 1000,
-                          minvalue = 1,
-                      ),
-                    ),
-                    ( "groupby",
-                      vs_notification_bulkby(),
-                    ),
-                    ( "groupby_custom",
-                      ListOfStrings(
-                          valuespec = ID(),
-                          orientation = "horizontal",
-                          title = _("Create separate notification bulks for different values of the following custom macros"),
-                          help = _("If you enter the names of host/service-custom macros here then for each different "
-                                   "combination of values of those macros a separate bulk will be created. This can be used "
-                                   "in combination with the grouping by folder, host etc. Omit any leading underscore. "
-                                   "<b>Note</b>: If you are using "
-                                   "Nagios as a core you need to make sure that the values of the required macros are "
-                                   "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
-                                   "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
-                                   "<tt>NOTIFY_SERVICE_FOO</tt>."),
-                    )),
-                    ( "bulk_subject", TextAscii(
-                        title = _("Subject for bulk notifications"),
-                        help = _("Customize the subject for bulk notifications and overwrite "
-                                 "default subject <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for HOST</tt>"
-                                 " resp. <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts</tt>. "
-                                 "Both macros <tt>$COUNT_NOTIFICATIONS$</tt> and <tt>$COUNT_HOSTS$</tt> can be used in "
-                                 "any customized subject. If <tt>$COUNT_NOTIFICATIONS$</tt> is used, the amount of "
-                                 "notifications will be inserted and if you use <tt>$COUNT_HOSTS$</tt> then the "
-                                 "amount of hosts will be applied."),
-                        size = 80,
-                        default_value = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
-                    )),
-                  ],
-                  columns = 1,
-                  optional_keys = ["bulk_subject"],
-            ),
-          ),
-
+                    forth = lambda x: x if isinstance(x, tuple) else ("always", x)
+                )),
         ],
         optional_keys = [ "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
                           "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
@@ -8091,6 +8106,8 @@ def generic_rule_match_conditions():
               title = _("Match only during timeperiod"),
               help = _("Match this rule only during times where the selected timeperiod from the monitoring "
                        "system is active."),
+              no_preselect = True,
+              no_preselect_title = _("Select a timeperiod"),
           ),
         ),
     ]
@@ -8306,7 +8323,7 @@ def validate_notification_rule(rule, varprefix):
         raise MKUserError(varprefix + "_p_bulk_USE",
              _("It does not make sense to add a bulk configuration for cancelling rules."))
 
-    if "bulk" in rule:
+    if "bulk" in rule or "bulk_period" in rule:
         if rule["notify_plugin"][0]:
             info = load_notification_scripts()[rule["notify_plugin"][0]]
             if not info["bulk"]:
@@ -8399,7 +8416,7 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
 
             table.cell(_("Bulk"), css="narrow")
-            if "bulk" in rule:
+            if "bulk" in rule or "bulk_period" in rule:
                 html.icon(_("This rule configures bulk notifications."), "bulk")
 
             table.cell(_("Description"))
@@ -8710,7 +8727,7 @@ def render_bulks(only_ripe):
         else:
             table.begin(title = _("Open bulk notifications"))
 
-        for dir, age, interval, maxcount, uuids in bulks:
+        for dir, age, interval, timeperiod, maxcount, uuids in bulks:
             dirparts = dir.split("/")
             contact = dirparts[-3]
             method = dirparts[-2]
@@ -8719,10 +8736,11 @@ def render_bulks(only_ripe):
             table.cell(_("Contact"), contact)
             table.cell(_("Method"), method)
             table.cell(_("Bulk ID"), bulk_id)
-            table.cell(_("Max. Age"), "%d %s" % (interval, _("sec")), css="number")
-            table.cell(_("Age"), "%d %s" % (age, _("sec")), css="number")
-            if age >= interval:
+            table.cell(_("Max. Age (sec)"), "%s" % interval, css="number")
+            table.cell(_("Age (sec)"), "%d" % age, css="number")
+            if interval and age >= interval:
                 html.icon(_("Age of oldest notification is over maximum age"), "warning")
+            table.cell(_("Timeperiod"), "%s" % timeperiod)
             table.cell(_("Max. Count"), str(maxcount), css="number")
             table.cell(_("Count"), str(len(uuids)), css="number")
             if len(uuids) >= maxcount:

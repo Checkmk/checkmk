@@ -25,13 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 
-check_info["snmp_uptime"] = {
-    'check_function'        :  check_snmp_uptime,
-    'inventory_function'    :  inventory_snmp_uptime,
-    'service_description'   :  'Uptime',
-    'has_perfdata'          :  True,
+check_info["mgmt_snmp_uptime"] = {
+    'check_function'        : check_snmp_uptime,
+    'inventory_function'    : inventory_snmp_uptime,
+    'service_description'   : 'Management Interface: Uptime',
+    'has_perfdata'          : True,
     'snmp_info'             : snmp_uptime_info,
     'snmp_scan_function'    : snmp_scan_uptime,
     'group'                 : 'uptime',
-    'includes'              : [ 'uptime.include' ],
+    'includes'              : ['uptime.include'],
+    "management_board"      : MGMT_ONLY,
 }

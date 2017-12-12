@@ -1000,40 +1000,7 @@ def paint_time_graph(row, cell):
         return paint_time_graph_pnp(row)
 
 
-def time_graph_params():
-    if not metrics.cmk_graphs_possible():
-        return # The method is only available in CEE
-
-    elements = [
-        ("set_default_time_range", DropdownChoice(
-            title   = _("Set default time range"),
-            choices = [ (entry["duration"], entry["title"])
-                        for entry in config.graph_timeranges ],
-        )),
-        ("graph_render_options", metrics.vs_graph_render_options())
-    ]
-
-    return Transform(
-        Dictionary(
-            elements=elements,
-            optional_keys=[],
-        ),
-        forth=_transform_old_graph_render_options,
-    )
-
-def _transform_old_graph_render_options(value):
-    # Be compatible to pre 1.5.0i2 format
-    if "graph_render_options" not in value:
-        value = copy.deepcopy(value)
-        value["graph_render_options"] = {
-            "show_legend"              : value.pop("show_legend", True),
-            "show_controls"            : value.pop("show_controls", True),
-            "show_time_range_previews" : value.pop("show_time_range_previews", True),
-        }
-    return value
-
-
-def paint_time_graph_cmk(row, cell):
+def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
     graph_identification = (
         "template", {
             "site"                : row["site"],
@@ -1054,12 +1021,17 @@ def paint_time_graph_cmk(row, cell):
     if options != None:
         graph_render_options.update(options)
 
+    if override_graph_render_options != None:
+        graph_render_options.update(override_graph_render_options)
+
     graph_data_range = {}
 
+    now = time.time()
     if "set_default_time_range" in painter_params:
         duration = painter_params["set_default_time_range"]
-        now      = time.time()
         graph_data_range["time_range"] = now - duration, now
+    else:
+        graph_data_range["time_range"] = now - 3600*4, now
 
     # Load timerange from painter option (overrides the defaults, if set by the user)
     painter_option_pnp_timerange = painter_options.get_without_default("pnp_timerange")

@@ -2581,6 +2581,40 @@ if mkeventd_enabled:
             optional_keys = [],
         )
 
+    def vs_ec_host_limit(title):
+        return Dictionary(
+            title = title,
+            help = _("You can limit the number of current events created by a single "
+                     "host here. This is meant to "
+                     "prevent you from message storms created by one device.<br>"
+                     "Once the limit is reached, the Event Console will block "
+                     "all future incoming messages sent by this host until the "
+                     "number of current "
+                     "events has been reduced to be below this limit. In the "
+                     "moment the limit is reached, the Event Console will notify "
+                     "the configured contacts of the host."),
+            elements = [
+                ("limit", Integer(
+                    title = _("Limit"),
+                    minvalue = 1,
+                    default_value = 1000,
+                    unit = _("current events"),
+                )),
+                ("action", vs_ec_event_limit_actions("notify contacts of the host")),
+            ],
+            optional_keys = [],
+        )
+
+    register_rule(
+        "eventconsole",
+        "extra_host_conf:_ec_event_limit",
+        Transform(vs_ec_host_limit(title=_("Host event limit")),
+            forth = lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
+            back = lambda x: "%d:%s" % (x["limit"], x["action"]),
+        ),
+        match = "first",
+    )
+
     register_configvar(groups["ec"],
         "event_limit",
         Dictionary(
@@ -2589,28 +2623,7 @@ if mkeventd_enabled:
                      "problems which may occur in case of too many current events at the "
                      "same time."),
             elements = [
-                ("by_host", Dictionary(
-                    title = _("Host limit"),
-                    help = _("You can limit the number of current events created by a single "
-                             "host here. This is meant to "
-                             "prevent you from message storms created by one device.<br>"
-                             "Once the limit is reached, the Event Console will block "
-                             "all future incoming messages sent by this host until the "
-                             "number of current "
-                             "events has been reduced to be below this limit. In the "
-                             "moment the limit is reached, the Event Console will notify "
-                             "the configured contacts of the host."),
-                    elements = [
-                        ("limit", Integer(
-                            title = _("Limit"),
-                            minvalue = 1,
-                            default_value = 1000,
-                            unit = _("current events"),
-                        )),
-                        ("action", vs_ec_event_limit_actions("notify contacts of the host")),
-                    ],
-                    optional_keys = [],
-                )),
+                ("by_host", vs_ec_host_limit(title=_("Host limit"))),
                 ("by_rule", vs_ec_rule_limit()),
                 ("overall", Dictionary(
                     title = _("Overall current events"),
@@ -3129,6 +3142,7 @@ register_rule(
     itemtype = 'service',
     match = 'first',
 )
+
 #.
 #   .--Notifications-------------------------------------------------------.
 #   |       _   _       _   _  __ _           _   _                        |

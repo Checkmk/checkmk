@@ -2961,11 +2961,19 @@ class EventServer(ECServerThread):
 
     # protected by lock_eventstatus
     def _get_event_limit(self, ty, event):
-        # Prefer the rule inidividual limit for by_rule limit (in case there is some)
+        # Prefer the rule individual limit for by_rule limit (in case there is some)
         if ty == "by_rule":
             rule_limit = self._rule_by_id[event["rule_id"]].get("event_limit")
             if rule_limit:
                 return rule_limit["limit"], rule_limit["action"]
+
+        # Prefer the host individual limit for by_host limit (in case there is some)
+        if ty == "by_host":
+            host_config = g_event_server.host_config.get(event["core_host"], {})
+            host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
+            if host_limit:
+                limit, action = host_limit.split(":", 1)
+                return int(limit), action
 
         limit  = g_config["event_limit"][ty]["limit"]
         action = g_config["event_limit"][ty]["action"]

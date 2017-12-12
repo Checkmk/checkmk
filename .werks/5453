@@ -1,0 +1,12 @@
+Title: HW/SW inventory: Changed output format of raw inventory tree
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.4.0p21
+Date: 1513069962
+Class: fix
+
+The output format of raw inventory trees is now generated with
+simple pythons's repr command, instead of the CPU consuming
+pretty-print.

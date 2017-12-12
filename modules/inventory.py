@@ -33,7 +33,7 @@ import cmk_base.console as console
 
 inventory_output_dir = cmk.paths.var_dir + "/inventory"
 inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
-inventory_pprint_output = True
+inventory_pprint_output = False
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

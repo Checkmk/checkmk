@@ -1,0 +1,12 @@
+Title: cmk-update-agent: Improve logging under windows
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1512997046
+Class: fix
+
+With this werk, the Agent Updater ensures that there is a logging infrastructure (i.e. log-dir within agent-installation-dir) is available when running as plugin.
+
+Additionally, an MSI-Installation log will be written on update if there is a log-dir available.

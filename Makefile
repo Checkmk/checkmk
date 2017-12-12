@@ -490,9 +490,11 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
-# Not really perfect rules, but better than nothing
-iwyu: compile_commands.json
-	@$(IWYU_TOOL) --output-format=clang -p . -- --mapping_file=$(realpath tests/iwyu-mappings/check_mk.imp)
+iwyu: config.h
+	$(MAKE) -C livestatus/src iwyu
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src iwyu
+endif
 
 # Not really perfect rules, but better than nothing
 analyze: config.h

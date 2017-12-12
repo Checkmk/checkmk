@@ -24,6 +24,7 @@
 
 CLANG_VERSION ?= 5.0
 RUN_CLANG_TIDY ?= run-clang-tidy-$(CLANG_VERSION).py
+IWYU_TOOL ?= iwyu_tool
 BEAR ?= bear
 
 bin_PROGRAMS = unixcat
@@ -172,6 +173,9 @@ compile_commands.json: Makefile $(wildcard *.cc *.h)
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6
+
+iwyu: compile_commands.json
+	$(IWYU_TOOL) --output-format=clang -p . -- --mapping_file=$(abs_top_srcdir)/tests/iwyu-mappings/check_mk.imp
 
 all-local: livestatus.o
 

@@ -74,7 +74,7 @@ export RUN_CLANG_TIDY := run-clang-tidy-$(CLANG_VERSION).py
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
-IWYU_TOOL          := iwyu_tool
+export IWYU_TOOL   := iwyu_tool
 
 # The Bear versions have a slightly tragic history: Due to the clang bug
 # https://llvm.org/bugs/show_bug.cgi?id=24710 we need absolute paths in our

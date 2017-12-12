@@ -171,10 +171,10 @@ def check_cmk_agent_update(_no_item, _no_params, info):
             except:
                 yield 1, "no successful connect to server yet"
 
-            if "last_update" in parsed:
+            if parsed.get("last_update"):
                 yield 0, "last agent update: %s" % get_timestamp_human_readable(parsed["last_update"])
 
-            if "aghash" in parsed:
+            if parsed.get("aghash"):
                 yield 0, "agent configuration: %s" % parsed["aghash"][:8]
 
             return

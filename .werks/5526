@@ -1,0 +1,14 @@
+Title: check_dns: Do not pass off the host's IP address as a default DNS server address
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1513079892
+
+Previously, in case of the DNS server address not being specified, Check_MK would
+fill it in with the host's IP address, causing the check to time out. This has been fixed.
+
+Thanks to Björn Müller for the patch!

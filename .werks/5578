@@ -1,0 +1,17 @@
+Title: Fixed process locking (pid file handling)
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1513079448
+Class: fix
+
+The PID file handling of the Event Console had the following issues:
+
+  a) The locking was only done by the init script. Manual executions
+     could lead to multiple running EC processes. This has been fixed
+     by adding an additional file lock to the PID file.
+  b) The PID file was only removed in case the EC stopped without
+     exception. In case one happened, the PID file was left over
+     refering to the old PID.

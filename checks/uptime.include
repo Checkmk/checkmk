@@ -79,3 +79,37 @@ def check_uptime_seconds(params, uptime_sec):
 
     return (state,  infotext, [ ("uptime", uptime_sec) ])
 
+
+#   .--snmp----------------------------------------------------------------.
+#   |                                                                      |
+#   |                      ___ _ __  _ __ ___  _ __                        |
+#   |                     / __| '_ \| '_ ` _ \| '_ \                       |
+#   |                     \__ \ | | | | | | | | |_) |                      |
+#   |                     |___/_| |_|_| |_| |_| .__/                       |
+#   |                                         |_|                          |
+#   '----------------------------------------------------------------------'
+
+
+# On Linux appliances: .1.3.6.1.2.1.1.3.0    means uptime of snmpd
+#                      .1.3.6.1.2.1.25.1.1.0 means system uptime
+snmp_uptime_info = ('.1.3.6.1.2.1', [
+                    '1.3',      # DISMAN-EVENT-MIB::sysUpTime
+                    '25.1.1',   # HOST-RESOURCES-MIB::hrSystemUptime
+                   ])
+
+
+def snmp_scan_uptime(oid):
+    return oid(".1.3.6.1.2.1.1.1.0") not in [ None, "" ]
+
+
+def inventory_snmp_uptime(info):
+    if len(info) > 0 and len(info[0]) >= 1:
+        return [ (None, {}) ]
+
+
+def check_snmp_uptime(checktype, params, info):
+    if info[0][1]:
+        uptime = parse_snmp_uptime(info[0][1])
+    else:
+        uptime = parse_snmp_uptime(info[0][0])
+    return check_uptime_seconds(params, uptime)

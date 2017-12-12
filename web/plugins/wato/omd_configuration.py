@@ -531,12 +531,13 @@ register_configvar(group,
                          "acceptable in most cases."),
                 minvalue = 0,
             )),
-            ("WRITE_THREADS", Age(
+            ("WRITE_THREADS", Integer(
                 title = _("Number of threads used for writing RRD files"),
                 help = _("Increasing this number will allow rrdcached to have more simultaneous "
                          "I/O requests into the kernel. This may allow the kernel to re-order "
                          "disk writes, resulting in better disk throughput."),
                 minvalue = 1,
+                maxvalue = 100
             )),
         ],
         optional_keys = [],

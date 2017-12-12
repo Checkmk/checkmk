@@ -502,9 +502,9 @@ def get_avoption_entries(what):
                         "of data entries, the number of processed entries is limited. You can raise "
                         "this limit here if you really need to process a huge amount of data. Set this "
                         "to zero in order to disable the limit."),
-              label = _("process at most"),
+              label = _("Process at most"),
               unit = _("status entries"),
-              minvalue = 1,
+              minvalue = 0,
               default_value = 5000,
         )),
       ]

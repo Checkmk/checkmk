@@ -1,0 +1,12 @@
+Title: Handle malformed SEND_CUSTOM_{HOST,SERVICE}_NOTIFICATION commands more gracefully.
+Level: 1
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1513089836
+Class: fix
+
+The Check_MK Micro Core could segfault when it encountered a malformed
+SEND_CUSTOM_HOST_NOTIFICATION / SEND_CUSTOM_SERVICE_NOTIFICATION command,
+this has been fixed.

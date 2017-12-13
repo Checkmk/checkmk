@@ -1191,19 +1191,6 @@ class ListOf(ValueSpec):
         if not self._empty_text:
             self._empty_text = _("Please specify at least one entry")
 
-    def del_button(self, vp, nr):
-        js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
-        html.icon_button("#", self._del_label, "delete", onclick=js)
-
-    def move_button(self, vp, nr, where):
-        js = "valuespec_listof_move(this, '%s', '%s', '%s')" % (vp, nr, where)
-        where_name = {
-            "up" : _("up"),
-            "down" : _("down"),
-        }
-        html.empty_icon_button() # needed as placeholder
-        html.icon_button("#", _("Move this entry %s") % (where_name[where]),
-           where, onclick=js, style = "display:none" if not self._movable else '')
 
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
@@ -1222,7 +1209,7 @@ class ListOf(ValueSpec):
         # a wrong user input.
 
         # Render reference element for cloning
-        self._render_reference_entry(varprefix, self._magic, self._valuespec.default_value())
+        self._show_reference_entry(varprefix, self._magic, self._valuespec.default_value())
 
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
@@ -1241,7 +1228,7 @@ class ListOf(ValueSpec):
             add_var = True)
 
         # Actual table of currently existing entries
-        self._render_current_entries(varprefix, value)
+        self._show_current_entries(varprefix, value)
 
         html.br()
         html.jsbutton(varprefix + "_add", self._add_label,
@@ -1254,34 +1241,39 @@ class ListOf(ValueSpec):
         html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
 
 
-    def _render_reference_entry(self, varprefix, ident, value):
+    def del_button(self, vp, nr):
+        js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
+        html.icon_button("#", self._del_label, "delete", onclick=js)
+
+
+    def _show_reference_entry(self, varprefix, index, value):
         html.open_table(id_="%s_prototype" % varprefix, style="display:none;")
-        self._render_entry(varprefix, ident, value)
+        self._show_entry(varprefix, index, value)
         html.close_table()
 
 
-    def _render_current_entries(self, varprefix, value):
+    def _show_current_entries(self, varprefix, value):
         html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof"])
         for nr, v in enumerate(value):
-            self._render_entry(varprefix, "%d" % (nr + 1), v)
+            self._show_entry(varprefix, "%d" % (nr + 1), v)
         html.close_table()
 
 
-    def _render_entry(self, varprefix, ident, value):
+    def _show_entry(self, varprefix, index, value):
         html.open_tr()
         html.open_td(class_="vlof_buttons")
 
-        html.hidden_field(varprefix + "_indexof_" + ident, "",
+        html.hidden_field(varprefix + "_indexof_" + index, "",
                           add_var=True, class_="index") # reconstruct order after moving stuff
-        html.hidden_field(varprefix + "_orig_indexof_" + ident, "",
+        html.hidden_field(varprefix + "_orig_indexof_" + index, "",
                           add_var=True, class_="orig_index")
-        self.del_button(varprefix, ident)
         if self._movable:
-            self.move_button(varprefix, ident, "up")
-            self.move_button(varprefix, ident, "down")
+            html.element_dragger_js("tr", drop_handler="vs_listof_drop_handler",
+                           handler_args={"cur_index": index, "varprefix": varprefix})
+        self.del_button(varprefix, index)
         html.close_td()
         html.open_td(class_="vlof_content")
-        self._valuespec.render_input(varprefix + "_" + ident, value)
+        self._valuespec.render_input(varprefix + "_" + index, value)
         html.close_td()
         html.close_tr()
 
@@ -1316,6 +1308,7 @@ class ListOf(ValueSpec):
             n += 1
         return indexes
 
+
     def from_html_vars(self, varprefix):
         indexes = self.get_indexes(varprefix)
         value = []
@@ -1326,11 +1319,13 @@ class ListOf(ValueSpec):
             value.append(val)
         return value
 
+
     def validate_datatype(self, value, varprefix):
         if type(value) != list:
             raise MKUserError(varprefix, _("The type must be list, but is %s") % type_name(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n+1))
+
 
     def validate_value(self, value, varprefix):
         if not self._allow_empty and len(value) == 0:
@@ -1338,6 +1333,7 @@ class ListOf(ValueSpec):
         for n, v in enumerate(value):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n+1))
         ValueSpec.custom_validate(self, value, varprefix)
+
 
 
 # A generic valuespec where the user can choose from a list of sub-valuespecs.

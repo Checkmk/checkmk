@@ -1162,7 +1162,7 @@ def mode_mkeventd_rule_packs(phase):
             html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
             # Cloning does not work until we have unique IDs
             # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
-            html.element_dragger("tr", base_url=drag_url)
+            html.element_dragger_url("tr", base_url=drag_url)
             html.icon_button(delete_url, _("Delete this rule pack"), "delete")
             html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
 
@@ -1361,7 +1361,7 @@ def mode_mkeventd_rules(phase):
             table.cell(_("Actions"), css="buttons")
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
-            html.element_dragger("tr", base_url=drag_url)
+            html.element_dragger_url("tr", base_url=drag_url)
             html.icon_button(delete_url, _("Delete this rule"), "delete")
 
             table.cell("", css="buttons")

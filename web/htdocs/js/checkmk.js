@@ -1773,7 +1773,7 @@ function init_rowselect() {
 
 var g_element_dragging = null;
 
-function element_drag_start(event, dragger, dragging_tag, base_url)
+function element_drag_start(event, dragger, dragging_tag, drop_handler)
 {
     if (!event)
         event = window.event;
@@ -1795,9 +1795,9 @@ function element_drag_start(event, dragger, dragging_tag, base_url)
     add_class(dragging, "dragging");
 
     g_element_dragging = {
-        "dragging" : dragging,
-        "moved"    : false,
-        "base_url" : base_url,
+        "dragging"     : dragging,
+        "moved"        : false,
+        "drop_handler" : drop_handler,
     };
 
     return prevent_default_events(event);
@@ -1887,8 +1887,12 @@ function finalize_dragging()
     if (has_header)
         index -= 1;
 
-    var url = g_element_dragging.base_url + "&_index="+encodeURIComponent(index);
+    g_element_dragging.drop_handler(index);
+}
 
+function element_drag_url_drop_handler(base_url, index)
+{
+    var url = base_url + "&_index="+encodeURIComponent(index);
     location.href = url;
 
     //call_ajax(url, {
@@ -1899,12 +1903,14 @@ function finalize_dragging()
     //});
 }
 
-function handle_finalize_dragging(handler_data, response_text) {
+function handle_finalize_dragging(handler_data, response_text)
+{
     if (response_text != "")
         alert("Failed to persist drag result: " + response_text);
 }
 
-function handle_finalize_dragging_error(handler_data, status_code, error_msg) {
+function handle_finalize_dragging_error(handler_data, status_code, error_msg)
+{
     if (status_code != 0)
         alert("Failed to persist drag result: (" + status_code + "): " + error_msg);
 }
@@ -2122,27 +2128,26 @@ function valuespec_listof_delete(oA, varprefix, nr) {
     valuespec_listof_fixarrows(oTbody);
 }
 
-function valuespec_listof_move(oA, varprefix, nr, where) {
-    var oTr = oA.parentNode.parentNode; // TR to move
-    var oTbody = oTr.parentNode;
-    var oTable = oTbody.parentNode;
+function vs_listof_drop_handler(handler_args, new_index)
+{
+    var varprefix = handler_args.varprefix;
+    var cur_index = handler_args.cur_index;
 
-    if (where == "up")  {
-        var sib = oTr.previousElementSibling;
-        oTbody.removeChild(oTr);
-        oTbody.insertBefore(oTr, sib);
-    }
-    else /* down */ {
-        var sib = oTr.nextElementSibling;
-        oTbody.removeChild(oTr);
-        if (sib == oTbody.lastElementChild)
-            oTbody.appendChild(oTr);
-        else
-            oTbody.insertBefore(oTr, sib.nextElementSibling);
-    }
-    valuespec_listof_fixarrows(oTbody);
+    var indexof = document.getElementsByName(varprefix + "_indexof_" + cur_index);
+    if (indexof.length == 0)
+        throw "Failed to find the indexof_fied";
+    indexof = indexof[0];
+
+    // Find the tbody parent of the given tag type
+    var tbody = indexof;
+    while (tbody && tbody.tagName != "TBODY")
+        tbody = tbody.parentNode;
+
+    if (!tbody)
+        throw "Failed to find the tbody element of " + indexof;
+
+    valuespec_listof_fixarrows(tbody);
 }
-
 
 function valuespec_listof_sort(varprefix, magic, sort_by) {
     var table = document.getElementById(varprefix + "_table");

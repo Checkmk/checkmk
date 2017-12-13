@@ -6217,7 +6217,7 @@ class ModeLDAPConfig(LDAPMode):
 
             html.icon_button(edit_url, _("Edit this LDAP connection"), "edit")
             html.icon_button(clone_url, _("Create a copy of this LDAP connection"), "clone")
-            html.element_dragger("tr", base_url=drag_url)
+            html.element_dragger_url("tr", base_url=drag_url)
             html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
 
             table.cell("", css="narrow")
@@ -8394,7 +8394,7 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 table.cell(_("Actions"), css="buttons")
                 html.icon_button(edit_url, _("Edit this notification rule"), "edit")
                 html.icon_button(clone_url, _("Create a copy of this notification rule"), "clone")
-                html.element_dragger("tr", base_url=drag_url)
+                html.element_dragger_url("tr", base_url=drag_url)
                 html.icon_button(delete_url, _("Delete this notification rule"), "delete")
             else:
                 table.cell("", css="buttons")
@@ -13192,7 +13192,7 @@ class ModeEditRuleset(WatoMode):
             ])
             html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
-            html.element_dragger("tr", base_url=self._action_url("move_to", folder, rulenr))
+            html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rulenr))
             self._rule_button("delete", _("Delete this rule"), folder, rulenr)
 
             self._rule_cells(rule)

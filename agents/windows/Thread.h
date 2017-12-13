@@ -27,6 +27,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include "types.h"
 
 class Environment;
@@ -34,13 +35,18 @@ class Logger;
 class WinApiAdaptor;
 
 struct ThreadData {
-    time_t push_until;
-    bool terminate;
+    ThreadData(const Environment &env_, Logger *logger_)
+        : env(env_), logger(logger_) {}
+    ThreadData(const ThreadData &) = delete;
+    ThreadData &operator=(const ThreadData &) = delete;
+
+    time_t push_until{0};
+    bool terminate{false};
     const Environment &env;
     Logger *logger;
-    bool new_request;
-    sockaddr_storage last_address;
-    Mutex mutex;
+    bool new_request{false};
+    sockaddr_storage last_address{0};
+    std::mutex mutex;
 };
 
 class Thread {

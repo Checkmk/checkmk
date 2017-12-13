@@ -25,7 +25,6 @@
 #ifndef SectionSkype_h
 #define SectionSkype_h
 
-#undef CreateMutex
 #include "Section.h"
 #include "SectionGroup.h"
 #include "SectionPerfcounter.h"

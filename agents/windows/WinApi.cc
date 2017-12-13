@@ -231,16 +231,6 @@ HANDLE WinApi::CreateJobObject(LPSECURITY_ATTRIBUTES lpJobAttributes,
     return ::CreateJobObjectA(lpJobAttributes, lpName);
 }
 
-HANDLE WinApi::CreateMutex(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-                           WINBOOL bInitialOwner, LPCSTR lpName) const {
-    return ::CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
-}
-
-HANDLE WinApi::CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-                            WINBOOL bInitialOwner, LPCSTR lpName) const {
-    return ::CreateMutexA(lpMutexAttributes, bInitialOwner, lpName);
-}
-
 WINBOOL WinApi::CreatePipe(PHANDLE hReadPipe, PHANDLE hWritePipe,
                            LPSECURITY_ATTRIBUTES lpPipeAttributes,
                            DWORD nSize) const {
@@ -516,10 +506,6 @@ WINBOOL WinApi::ReadFile(HANDLE hFile, LPVOID lpBuffer,
                          LPOVERLAPPED lpOverlapped) const {
     return ::ReadFile(hFile, lpBuffer, nNumberOfBytesToRead,
                       lpNumberOfBytesRead, lpOverlapped);
-}
-
-WINBOOL WinApi::ReleaseMutex(HANDLE hMutex) const {
-    return ::ReleaseMutex(hMutex);
 }
 
 WINBOOL WinApi::ResetEvent(HANDLE hEvent) const { return ::ResetEvent(hEvent); }

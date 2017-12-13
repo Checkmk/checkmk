@@ -26,7 +26,6 @@
 #include "Logger.h"
 #include "OHMMonitor.h"
 #include "SectionWMI.h"
-#undef CreateMutex
 #include "Configuration.h"
 #include "SectionOHM.h"
 

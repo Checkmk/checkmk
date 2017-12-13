@@ -29,7 +29,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#undef CreateMutex
 #include "Section.h"
 
 class NameBaseNumberMap {

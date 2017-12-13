@@ -28,7 +28,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#undef CreateMutex
 #include "Section.h"
 
 namespace wmi {

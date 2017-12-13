@@ -27,7 +27,6 @@
 
 #include <map>
 #include "SettingsCollector.h"
-#undef CreateMutex
 #include "types.h"
 
 class ConfigurableBase;

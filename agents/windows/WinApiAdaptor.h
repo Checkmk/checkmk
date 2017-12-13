@@ -19,7 +19,6 @@
 #undef CreateFile
 #undef CreateEvent
 #undef CreateJobObject
-#undef CreateMutex
 #undef CreateService
 #undef CryptAcquireContext
 #undef DeleteFile
@@ -162,10 +161,6 @@ public:
                               HANDLE hTemplateFile) const = 0;
     virtual HANDLE CreateJobObject(LPSECURITY_ATTRIBUTES lpJobAttributes,
                                    LPCSTR lpName) const = 0;
-    virtual HANDLE CreateMutex(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-                               WINBOOL bInitialOwner, LPCSTR lpName) const = 0;
-    virtual HANDLE CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-                                WINBOOL bInitialOwner, LPCSTR lpName) const = 0;
     virtual WINBOOL CreatePipe(PHANDLE hReadPipe, PHANDLE hWritePipe,
                                LPSECURITY_ATTRIBUTES lpPipeAttributes,
                                DWORD nSize) const = 0;
@@ -289,7 +284,6 @@ public:
                              DWORD nNumberOfBytesToRead,
                              LPDWORD lpNumberOfBytesRead,
                              LPOVERLAPPED lpOverlapped) const = 0;
-    virtual WINBOOL ReleaseMutex(HANDLE hMutex) const = 0;
     virtual WINBOOL ResetEvent(HANDLE hEvent) const = 0;
     virtual DWORD SearchPathA(LPCSTR lpPath, LPCSTR lpFileName,
                               LPCSTR lpExtension, DWORD nBufferLength,

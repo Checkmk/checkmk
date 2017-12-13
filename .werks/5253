@@ -12,11 +12,11 @@ The file <tt>/etc/check_mk/real_time_checks.cfg</tt> now supports the parameter
 as real time checks.
 
 
-For example
-F:
-RTC_PLUGINS+="apache_status"
+For example<br>
+RTC_PLUGINS+="apache_status"<br>
 RTC_PLUGINS+="lvm"
 
-This executes both plugins as real time checks (1sec resolution) as well as standard check_mk check.
+
+This executes both plugins as real time checks (1sec resolution) in addition to the standard check.
 
 

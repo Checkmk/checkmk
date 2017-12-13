@@ -58,9 +58,14 @@ def check_db2_connections(item, params, parsed):
     yield 0, "Port: %s" % data["port"]
 
     if "latency" in data:
-        minutes, rest = data["latency"].split(":")
-        seconds, mseconds = rest.split(".")
-        ms = int(minutes) * 60 * 1000 + int(seconds) * 1000 + int(mseconds)
+        latency = data['latency']
+        if ':' not in latency:
+            ms = int(latency)
+        else:  # handle old time format: 'min:seconds.milliseconds'
+            minutes, rest = data["latency"].split(":")
+            seconds, mseconds = rest.split(".")
+            ms = int(minutes) * 60 * 1000 + int(seconds) * 1000 + int(mseconds)
+
         yield 0, "Latency: %.2f ms" % ms, [("latency", ms)]
 
 check_info['db2_connections'] = {

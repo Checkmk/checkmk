@@ -72,13 +72,11 @@ def parse_db2_counters(info):
             element_offset = {}
             node_infos     = []
             timestamp = int(line[1])
-            continue
-        if line[1] == "node":
+        elif line[1] == "node":
             node_infos.append(" ".join(line[2:]))
-
         # Some databases run in DPF mode. Means that the database is split over several nodes
         # The counter information also differs for each node. We create one service per DPF node
-        if line[1] in db2_counters_map.keys():
+        elif line[1] in db2_counters_map.keys():
             if node_infos:
                 element_offset.setdefault(line[1], 0)
                 offset = element_offset[line[1]]

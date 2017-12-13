@@ -1,0 +1,22 @@
+Title: Linux check_mk_agent: now able to execute plugins for real time checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1513173632
+Class: feature
+
+The file <tt>/etc/check_mk/real_time_checks.cfg</tt> now supports the parameter
+<tt>RTC_PLUGINS</tt> which allows the configuration of plugins to be also executed
+as real time checks.
+
+
+For example
+F:
+RTC_PLUGINS+="apache_status"
+RTC_PLUGINS+="lvm"
+
+This executes both plugins as real time checks (1sec resolution) as well as standard check_mk check.
+
+

@@ -85,6 +85,12 @@ if [ "$ENCRYPTED" == "yes" ] ; then
 fi
 
 
+RTC_PLUGINS=""
+if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
+    . $MK_CONFDIR/real_time_checks.cfg
+fi
+
+
 #
 # CHECK SECTIONS
 #
@@ -204,12 +210,18 @@ function run_real_time_checks()
     PIDFILE=$MK_VARDIR/real_time_checks.pid
     echo $$ > $PIDFILE
 
-    . $MK_CONFDIR/real_time_checks.cfg
 
     if [ "$PASSPHRASE" != "" ] ; then
         # new mechanism to set the passphrase has priority
         RTC_SECRET=$PASSPHRASE
     fi
+
+    if [ "$ENCRYPTED_RT" != "no" ] ; then
+        PROTOCOL=00
+    else
+        PROTOCOL=99
+    fi
+
 
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
@@ -218,11 +230,6 @@ function run_real_time_checks()
         fi
 
         for SECTION in $RTC_SECTIONS; do
-            if [ "$ENCRYPTED_RT" != "no" ] ; then
-                PROTOCOL=00
-            else
-                PROTOCOL=99
-            fi
             # Be aware of maximum packet size. Maybe we need to check the size of the section
             # output and do some kind of nicer error handling.
             # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
@@ -236,6 +243,29 @@ function run_real_time_checks()
               fi
             } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/$REMOTE/$RTC_PORT
         done
+
+
+        # Plugins
+        if cd $PLUGINSDIR ; then
+            for PLUGIN in $RTC_PLUGINS; do
+                if [ ! -f $PLUGIN ] ; then
+                    continue
+                fi
+
+                # Be aware of maximum packet size. Maybe we need to check the size of the section
+                # output and do some kind of nicer error handling.
+                # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
+                # dd is used to concatenate the output of all commands to a single write/block => udp packet
+                { echo -n $PROTOCOL ;
+                  date +%s | tr -d '\n' ;
+                  if [ "$ENCRYPTED_RT" != "no" ] ; then
+                      export RTC_SECRET=$RTC_SECRET ; ./$PLUGIN | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
+                  else
+                      ./$PLUGIN;
+                  fi
+                } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/$REMOTE/$RTC_PORT
+            done
+        fi
 
         sleep 1
         RTC_TIMEOUT=$((RTC_TIMEOUT-1))

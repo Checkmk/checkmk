@@ -2826,20 +2826,27 @@ class html(HTMLGenerator, RequestHandler):
                                      style = style)
 
 
-    def element_dragger(self, dragging_tag, base_url):
-        self.write_html(self.render_element_dragger(dragging_tag, base_url))
+    def element_dragger_url(self, dragging_tag, base_url):
+        self.write_html(self.render_element_dragger(dragging_tag,
+            drop_handler="function(index){return element_drag_url_drop_handler(%s, index);})" %
+                                                                        json.dumps(base_url)))
+
+
+    def element_dragger_js(self, dragging_tag, drop_handler, handler_args):
+        self.write_html(self.render_element_dragger(dragging_tag,
+            drop_handler="function(new_index){return %s(%s, new_index);})" %
+                                                (drop_handler, json.dumps(handler_args))))
 
 
     # Currently only tested with tables. But with some small changes it may work with other
     # structures too.
-    def render_element_dragger(self, dragging_tag, base_url):
+    def render_element_dragger(self, dragging_tag, drop_handler):
         return self.render_a(self.render_icon("drag", _("Move this entry")),
             href="javascript:void(0)",
             class_=["element_dragger"],
-            onmousedown="element_drag_start(event, this, %s, %s)" %
-                (json.dumps(dragging_tag.upper()), json.dumps(base_url)),
+            onmousedown="element_drag_start(event, this, %s, %s" %
+                        (json.dumps(dragging_tag.upper()), drop_handler)
         )
-
 
     #
     # HTML - All the common and more complex HTML rendering methods

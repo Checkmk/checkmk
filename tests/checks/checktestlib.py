@@ -30,3 +30,10 @@ class BasicCheckResult(object):
                 assert all(type(value) in [int, float, type(None)] for value in entry[2:])
         self.perfdata = perfdata
 
+    def assert_result(self, expected_result):
+        if "status" in expected_result:
+            assert result.status == expected_result["status"]
+        if "infotext" in expected_result:
+            assert result.infotext == expected_result["infotext"]
+        if "perfdata" in expected_result:
+            assert result.perfdata == expected_result["perfdata"]

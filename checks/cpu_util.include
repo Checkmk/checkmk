@@ -157,9 +157,9 @@ def check_cpu_util_unix(values, params, cores = None):
     system_perc = 100.0 * float(system) / float(sum_jiffies)
     wait_perc   = 100.0 * float(wait)   / float(sum_jiffies)
     perfdata = [
-          ( "user",   "%.3f" % user_perc ),
-          ( "system", "%.3f" % system_perc ),
-          ( "wait",   "%.3f" % wait_perc ) ]
+          ( "user",   user_perc ),
+          ( "system", system_perc ),
+          ( "wait",   wait_perc ) ]
 
     yield 0, "user: %.1f%%, system: %.1f%%" % (user_perc, system_perc), perfdata
 

@@ -150,3 +150,14 @@ register_rule(group,
     match = "dict",
 )
 
+#TODO
+register_rule(group,
+    "status_data_inventory",
+    title=_("Do status data inventory"),
+    help=_("All hosts configured via this ruleset will do a hardware and "
+         "software inventory after every check cycle if there's at least "
+         "one inventory plugin which processes status data. "
+         "<b>Note:</b> in order to get any useful "
+         "result for agent based hosts make sure that you have installed "
+         "the agent plugin <tt>mk_inventory</tt> on these hosts."),
+)

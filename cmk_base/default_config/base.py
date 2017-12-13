@@ -201,3 +201,4 @@ non_aggregated_hosts                 = []
 aggregate_check_mk                   = False
 aggregation_output_format            = "multiline" # new in 1.1.6. Possible also: "multiline"
 aggr_summary_hostname                = "%s-s"
+status_data_inventory                = []

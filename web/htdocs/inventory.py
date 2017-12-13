@@ -102,7 +102,7 @@ def sort_children(children):
     return sorted(children, key=lambda x: ordering[type(x)])
 
 
-def load_tree(hostname):
+def load_tree(hostname, merge_trees=True):
     # Load data of a host, cache it in the current HTTP request
     if not hostname:
         return None
@@ -120,6 +120,19 @@ def load_tree(hostname):
         cache_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
         inventory_tree = StructuredDataTree().load_from(cache_path)
         inventory_tree_cache[hostname] = inventory_tree
+
+    if merge_trees:
+        inventory_tree = _merge_with_status_data_tree(hostname, inventory_tree)
+    return inventory_tree
+
+
+def _merge_with_status_data_tree(hostname, inventory_tree):
+    filepath = "%s/status_data/%s" % (cmk.paths.tmp_dir, hostname)
+    if os.path.exists(filepath):
+        status_data_tree = StructuredDataTree().load_from(filepath)
+        inventory_tree.merge_with(status_data_tree)
+        return inventory_tree
+    else:
         return inventory_tree
 
 
@@ -142,7 +155,7 @@ def get_history(hostname):
     try:
         inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
         timestamp = int(os.stat(inventory_path).st_mtime)
-        inventory_tree = load_tree(hostname)
+        inventory_tree = load_tree(hostname, merge_trees=False)
     except:
         return [] # No inventory for this host
     else:

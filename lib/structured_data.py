@@ -848,7 +848,7 @@ class Numeration(Leaf):
 
 
     def _prepare_key(self, entry, keys):
-        return tuple(entry[key] for key in sorted(keys))
+        return tuple(entry[key] for key in sorted(keys) if key in entry)
 
 
     def copy(self):

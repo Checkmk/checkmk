@@ -56,6 +56,7 @@ import cmk_base.data_sources as data_sources
 
 inventory_output_dir  = cmk.paths.var_dir + "/inventory"
 inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
+status_data_dir       = cmk.paths.tmp_dir + "/status_data"
 # TODO: This is not configurable. Drop the flag?
 inventory_pprint_output = False
 
@@ -90,7 +91,7 @@ def do_inv(hostnames):
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            _do_inv_for(hostname, ipaddress)
+            do_inv_for(hostname, ipaddress)
             console.verbose("..OK\n")
         except Exception, e:
             if cmk.debug.enabled():
@@ -122,31 +123,30 @@ def do_inv_check(options, hostname):
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        old_timestamp = _do_inv_for(hostname, ipaddress)
-        if g_inv_tree.is_empty():
+        old_timestamp, inventory_tree = do_inv_for(hostname, ipaddress)
+        if inventory_tree.is_empty():
             console.output("OK - Found no data\n")
             return 0
 
         infotexts = []
-        infotexts.append("found %d entries" % g_inv_tree.count_entries())
+        infotexts.append("found %d entries" % inventory_tree.count_entries())
         state = 0
-        if not g_inv_tree.has_edge("software") and _inv_sw_missing:
+        if not inventory_tree.has_edge("software") and _inv_sw_missing:
             infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
             state = _inv_sw_missing
 
         if old_timestamp:
-            # TODO: Use cmk.store
             path = "%s/%s/%d" % (inventory_archive_dir, hostname, old_timestamp)
             old_tree = StructuredDataTree().load_from(path)
 
-            if not old_tree.is_equal(g_inv_tree, edges=["software"]):
+            if not old_tree.is_equal(inventory_tree, edges=["software"]):
                 infotext = "software changes"
                 if _inv_sw_changes:
                     state = _inv_sw_changes
                     infotext += check_api.state_markers[_inv_sw_changes]
                 infotexts.append(infotext)
 
-            if not old_tree.is_equal(g_inv_tree, edges=["hardware"]):
+            if not old_tree.is_equal(inventory_tree, edges=["hardware"]):
                 infotext = "hardware changes"
                 if state == 2 or _inv_hw_changes == 2:
                     state = 2
@@ -172,35 +172,41 @@ def do_inv_check(options, hostname):
         return _inv_fail_status
 
 
-def _do_inv_for(hostname, ipaddress):
+def do_inv_for(hostname, ipaddress):
     _initialize_inventory_tree()
+    inventory_tree = g_inv_tree
+    status_data_tree = StructuredDataTree()
 
-    node = inv_tree("software.applications.check_mk.cluster.")
+    node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
     if config.is_cluster(hostname):
         node["is_cluster"] = True
-        _do_inv_for_cluster(hostname)
+        _do_inv_for_cluster(hostname, inventory_tree)
     else:
         node["is_cluster"] = False
-        _do_inv_for_realhost(hostname, ipaddress)
+        _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree)
 
-    g_inv_tree.normalize_nodes()
-    old_timestamp = _save_inventory_tree(hostname)
+    if not status_data_tree.is_empty():
+        status_data_tree.normalize_nodes()
+        _save_status_data_tree(hostname, status_data_tree)
+
+    inventory_tree.normalize_nodes()
+    old_timestamp = _save_inventory_tree(hostname, inventory_tree)
     console.verbose("..%s%s%d%s entries" %
-            (tty.bold, tty.yellow, g_inv_tree.count_entries(), tty.normal))
+            (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
 
-    _run_inventory_export_hooks(hostname)
-    return old_timestamp
+    _run_inventory_export_hooks(hostname, inventory_tree)
+    return old_timestamp, inventory_tree
 
 
-def _do_inv_for_cluster(hostname):
-    inv_node = inv_tree_list("software.applications.check_mk.cluster.nodes:")
+def _do_inv_for_cluster(hostname, inventory_tree):
+    inv_node = inventory_tree.get_list("software.applications.check_mk.cluster.nodes:")
     for node_name in config.nodes_of(hostname):
         inv_node.append({
             "name" : node_name,
         })
 
 
-def _do_inv_for_realhost(hostname, ipaddress):
+def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
     sources = data_sources.DataSources(hostname)
 
     for source in sources.get_data_sources():
@@ -232,11 +238,22 @@ def _do_inv_for_realhost(hostname, ipaddress):
         # Inventory functions can optionally have a second argument: parameters.
         # These are configured via rule sets (much like check parameters).
         inv_function = plugin["inv_function"]
-        if len(inspect.getargspec(inv_function).args) == 2:
+        inv_function_args = inspect.getargspec(inv_function).args
+
+        kwargs = {}
+        if 'inventory_tree' in inv_function_args:
+            inv_function_args.remove('inventory_tree')
+            kwargs["inventory_tree"] = inventory_tree
+        if 'status_data_tree' in inv_function_args:
+            inv_function_args.remove('status_data_tree')
+            kwargs["status_data_tree"] = status_data_tree
+
+        if len(inv_function_args) == 2:
             params = _get_inv_params(hostname, section_name)
-            inv_function(section_content, params)
+            args = [section_content, params]
         else:
-            inv_function(section_content)
+            args = [section_content]
+        inv_function(*args, **kwargs)
 
 
 def _gather_snmp_check_plugin_names_inventory(hostname, ipaddress, on_error, do_snmp_scan):
@@ -275,33 +292,33 @@ def _ensure_directory(path):
 #   '----------------------------------------------------------------------'
 
 
-g_inv_tree = StructuredDataTree()
+g_inv_tree = StructuredDataTree() # TODO Remove one day. Deprecated with version 1.5.0i3??
 
 
-def _initialize_inventory_tree():
+def _initialize_inventory_tree(): # TODO Remove one day. Deprecated with version 1.5.0i3??
     global g_inv_tree
     g_inv_tree = StructuredDataTree()
 
 
 # Dict based
-def inv_tree(path):
+def inv_tree(path): # TODO Remove one day. Deprecated with version 1.5.0i3??
     return g_inv_tree.get_dict(path)
 
 
 # List based
-def inv_tree_list(path):
+def inv_tree_list(path): # TODO Remove one day. Deprecated with version 1.5.0i3??
     return g_inv_tree.get_list(path)
 
 
-def _save_inventory_tree(hostname):
+def _save_inventory_tree(hostname, inventory_tree):
     if not os.path.exists(inventory_output_dir):
         os.makedirs(inventory_output_dir)
 
     old_time = None
     filepath = inventory_output_dir + "/" + hostname
-    if g_inv_tree:
+    if inventory_tree:
         old_tree = StructuredDataTree().load_from(filepath)
-        if old_tree.is_equal(g_inv_tree):
+        if old_tree.is_equal(inventory_tree):
             console.verbose("..unchanged")
         else:
             if old_tree.is_empty():
@@ -313,7 +330,7 @@ def _save_inventory_tree(hostname):
                 if not os.path.exists(arcdir):
                     os.makedirs(arcdir)
                 os.rename(filepath, arcdir + ("/%d" % old_time))
-            g_inv_tree.save_to(inventory_output_dir, hostname, pretty=inventory_pprint_output)
+            inventory_tree.save_to(inventory_output_dir, hostname, pretty=inventory_pprint_output)
 
     else:
         if os.path.exists(filepath): # Remove empty inventory files. Important for host inventory icon
@@ -324,7 +341,22 @@ def _save_inventory_tree(hostname):
     return old_time
 
 
-def _run_inventory_export_hooks(hostname):
+def _save_status_data_tree(hostname, status_data_tree):
+    if not os.path.exists(status_data_dir):
+        os.makedirs(status_data_dir)
+
+    filepath = "%s/%s" % (status_data_dir, hostname)
+    if status_data_tree and not status_data_tree.is_empty():
+        status_data_tree.save_to(status_data_dir, hostname, pretty=inventory_pprint_output)
+
+    else:
+        if os.path.exists(filepath): # Remove empty status data files.
+            os.remove(filepath)
+        if os.path.exists(filepath + ".gz"):
+            os.remove(filepath + ".gz")
+
+
+def _run_inventory_export_hooks(hostname, inventory_tree):
     import cmk_base.inventory_plugins
     for hookname, ruleset in config.inv_exports.items():
         entries = rulesets.host_extra_conf(hostname, ruleset)
@@ -332,7 +364,7 @@ def _run_inventory_export_hooks(hostname):
             console.verbose(", running %s%s%s%s..." % (tty.blue, tty.bold, hookname, tty.normal))
             params = entries[0]
             try:
-                cmk_base.inventory_plugins.inv_export[hookname]["export_function"](hostname, params, g_inv_tree.get_raw_tree())
+                cmk_base.inventory_plugins.inv_export[hookname]["export_function"](hostname, params, inventory_tree.get_raw_tree())
             except Exception, e:
                 if cmk.debug.enabled():
                     raise

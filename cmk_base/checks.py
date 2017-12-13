@@ -613,3 +613,5 @@ def get_management_board_precedence(check_plugin_name):
     else:
         return mgmt_board
 
+def do_status_data_inventory_for(hostname):
+    return rulesets.in_binary_hostlist(hostname, config.status_data_inventory)

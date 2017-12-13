@@ -1,0 +1,19 @@
+Title: mk_db2.linux: major refactoring of the plugin to solve different issues
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i2
+Date: 1530088203
+Class: fix
+
+The refactoring solves the following known issues:
+
+1. Here documents are avoided which should resolve wrong output due to quoting problems.
+2. Fix the calculation of the number of database connections.
+3. Use a more accurate method to calculate the latency for a database connection.
+4. The structure of the plugin was improved for better maintainability.
+
+To use the new version of the plugin it has to be deployed to to the affected hosts.
+Futhermore, the script is now required to be accessible and executable by the
+instance users to work properly.

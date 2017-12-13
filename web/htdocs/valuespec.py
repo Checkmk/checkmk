@@ -30,6 +30,7 @@
 #   and rename to better name
 # - Consolidate RadioChoice and DropdownChoice to use same class
 #   and rename to better name
+# - Consolidate ListOf and ListOfStrings/ListOfIntegers
 # - Checkbox
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
@@ -1221,26 +1222,7 @@ class ListOf(ValueSpec):
         # a wrong user input.
 
         # Render reference element for cloning
-        html.open_table(id_="%s_prototype" % varprefix, style="display:none;")
-        html.open_tr()
-        html.open_td(class_="vlof_buttons")
-
-        html.hidden_field(varprefix + "_indexof_" + self._magic, "",
-                          add_var=True, class_="index") # reconstruct order after moving stuff
-        html.hidden_field(varprefix + "_orig_indexof_" + self._magic, "",
-                          add_var=True, class_="orig_index")
-        self.del_button(varprefix, self._magic)
-        if self._movable:
-            self.move_button(varprefix, self._magic, "up")
-            self.move_button(varprefix, self._magic, "down")
-        html.close_td()
-        html.open_td(class_="vlof_content")
-        self._valuespec.render_input(
-            varprefix + "_" + self._magic,
-            self._valuespec.default_value())
-        html.close_td()
-        html.close_tr()
-        html.close_table()
+        self._render_reference_entry(varprefix, self._magic, self._valuespec.default_value())
 
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
@@ -1259,25 +1241,8 @@ class ListOf(ValueSpec):
             add_var = True)
 
         # Actual table of currently existing entries
-        html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof"])
+        self._render_current_entries(varprefix, value)
 
-        for nr, v in enumerate(value):
-            html.open_tr()
-            html.open_td(class_="vlof_buttons")
-            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "",
-                              add_var=True, class_="index") # reconstruct order after moving stuff
-            html.hidden_field(varprefix + "_orig_indexof_%d" % (nr+1), "",
-                              add_var=True, class_="orig_index")
-            self.del_button(varprefix, nr+1)
-            if self._movable:
-                self.move_button(varprefix, nr+1, "up") # visibility fixed by javascript
-                self.move_button(varprefix, nr+1, "down")
-            html.close_td()
-            html.open_td(class_="vlof_content")
-            self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
-            html.close_td()
-            html.close_tr()
-        html.close_table()
         html.br()
         html.jsbutton(varprefix + "_add", self._add_label,
             "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic))
@@ -1287,6 +1252,38 @@ class ListOf(ValueSpec):
                 (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._sort_by)))
 
         html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
+
+
+    def _render_reference_entry(self, varprefix, ident, value):
+        html.open_table(id_="%s_prototype" % varprefix, style="display:none;")
+        self._render_entry(varprefix, ident, value)
+        html.close_table()
+
+
+    def _render_current_entries(self, varprefix, value):
+        html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof"])
+        for nr, v in enumerate(value):
+            self._render_entry(varprefix, "%d" % (nr + 1), v)
+        html.close_table()
+
+
+    def _render_entry(self, varprefix, ident, value):
+        html.open_tr()
+        html.open_td(class_="vlof_buttons")
+
+        html.hidden_field(varprefix + "_indexof_" + ident, "",
+                          add_var=True, class_="index") # reconstruct order after moving stuff
+        html.hidden_field(varprefix + "_orig_indexof_" + ident, "",
+                          add_var=True, class_="orig_index")
+        self.del_button(varprefix, ident)
+        if self._movable:
+            self.move_button(varprefix, ident, "up")
+            self.move_button(varprefix, ident, "down")
+        html.close_td()
+        html.open_td(class_="vlof_content")
+        self._valuespec.render_input(varprefix + "_" + ident, value)
+        html.close_td()
+        html.close_tr()
 
 
     def canonical_value(self):

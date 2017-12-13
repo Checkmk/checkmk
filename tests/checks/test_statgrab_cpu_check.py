@@ -1,6 +1,7 @@
 import pytest
 import pprint
 from cmk_base.check_api import MKCounterWrapped
+import checktestlib
 
 pytestmark = pytest.mark.checks
 
@@ -26,8 +27,8 @@ def test_statgrab_cpu_check(check_manager, monkeypatch, time_to_info, params, ex
     import time
     check = check_manager.get_check("statgrab_cpu")
     try:
-        result = list(check.run_check(None, params, time_to_info(0)))
+        list(check.run_check(None, params, time_to_info(0)))
     except MKCounterWrapped:
         pass
     monkeypatch.setattr("time.time", lambda: 60)
-    result = list(check.run_check(None, params, time_to_info(60)))
+    subresults = [ checktestlib.BasicCheckResult(*subresult) for subresult in check.run_check(None, params, time_to_info(60)) ]

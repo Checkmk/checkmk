@@ -15438,6 +15438,29 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "netscaler_sslcerts",
+    _("Citrix Netscaler SSL certificates"),
+    Dictionary(
+        elements = [
+            ('age_levels', 
+             Tuple(
+                 title = _("Remaining days of validity"),
+                 elements = [
+                     Integer(title = _("Warning below"), default_value = 30, min_value = 0 ),
+                     Integer(title = _("Critical below"), default_value = 10, min_value = 0 ),
+                     ],
+                 ),
+            ),
+        ],
+    ),
+    TextAscii(
+        title = _("Name of Certificate"),
+    ),
+    match_type = "dict"
+)
+
+register_check_parameters(
     subgroup_environment,
     "siemens_plc_flag",
     _("State of Siemens PLC Flags"),

@@ -279,6 +279,8 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fet
     else:
         cmk_info["version"] = None
 
+    _do_status_data_inventory(hostname, multi_host_sections, ipaddress)
+
     missing_section_list = sorted(list(missing_sections))
     return cmk_info, num_success, missing_section_list
 
@@ -402,6 +404,22 @@ def _determine_check_params(params):
             return params["tp_default_value"]
     else:
         return params
+
+
+def _do_status_data_inventory(hostname, multi_host_sections, ipaddress):
+    if checks.do_status_data_inventory_for(hostname):
+        import cmk_base.inventory as inventory
+        import cmk_base.inventory_plugins as inventory_plugins
+        do_inv = False
+        inventory_plugins.load()
+        for section_name, plugin in inventory_plugins.inv_info.items():
+            section_content = multi_host_sections.get_section_content(hostname, ipaddress,
+                                                                      section_name, for_discovery=False)
+            if section_content and plugin.get("has_status_data"):
+                do_inv = True
+                break
+        if do_inv:
+            inventory.do_inv_for(hostname, ipaddress)
 
 
 def is_manual_check(hostname, check_plugin_name, item):

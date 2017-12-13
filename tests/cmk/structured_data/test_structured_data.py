@@ -453,13 +453,18 @@ def test_structured_data_StructuredDataTree_merge_with_get_sub_children(tree_sta
             assert m(path) is not None
 
 
-tree_a = StructuredDataTree().load_from("%s/tree_a" % TEST_DIR)
-tree_b = StructuredDataTree().load_from("%s/tree_b" % TEST_DIR)
-@pytest.mark.parametrize("tree_a,tree_b", [
-    (tree_a, tree_b),
+tree_inv = StructuredDataTree().load_from("%s/tree_inv" % TEST_DIR)
+tree_status = StructuredDataTree().load_from("%s/tree_status" % TEST_DIR)
+@pytest.mark.parametrize("tree_inv,tree_status", [
+    (tree_inv, tree_status),
 ])
-def test_structured_data_StructuredDataTree_merge_with_numeration(tree_a, tree_b):
-    tree_a.merge_with(tree_b)
+def test_structured_data_StructuredDataTree_merge_with_numeration(tree_inv, tree_status):
+    tree_inv.merge_with(tree_status)
+    assert 'foobar' in tree_inv.get_raw_tree()
+    num = tree_inv.get_sub_numeration(['foobar'])
+    assert len(num.get_child_data()) == 5
+
+
 
 
 @pytest.mark.parametrize("tree", trees)

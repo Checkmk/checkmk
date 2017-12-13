@@ -1,0 +1,99 @@
+Title: HW/SW Inventory: Status data can be integrated into HW/SW Inventory tree
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1513851109
+Class: feature
+
+The HW/SW Inventory system collects static information about hardware and
+software of hosts which is displayed in the GUI as a tree below 'Inventory'
+of each host which has installed the mk_inventory plugin and enabled the
+rule 'Do hardware/software inventory'.
+If any data changes the HW/SW Inventory system detects that and calculates
+the differences which can be viewed below 'Inventory history'.
+
+Now status data like free space of tablespace can be intergated into the
+HW/SW Inventory tree. These kind of data may change after every check cycle
+thus we do not calculate any differences as for the static inventory data
+in order to avoid filling up inventory archive and therefore slowing down
+the monitoring system.
+
+We solve above problem by separating these two kind of data within the
+inventory plugins.
+- There's one tree which is filled up with inventory data and will be saved
+to var/check_mk/inventory as before.
+- A second tree for the status data will be created and saved to
+tmp/check_mk/structured_data
+
+Later in the web GUI both tree objects are merged and visible below 'Inventory'.
+Inventory history is only calculated for the inventory data, not for the
+status data.
+
+In order to use this feature you have to enable the rule
+'Do status data inventory' for a host. When it's enabled Check_MK does a
+HW/Sw inventory for this host after every check cycle if and only if there's
+a inventory plugin which fills up status data tree.
+
+Notes for inventory plugin development:
+Previously an inventory plugin used the functions inv_tree_list and inv_tree
+for filling up the inventory tree, eg.
+
+C+:
+def inv_oracle_tablespaces(info):
+    node = inf_tree_list("software.applications.oracle.tablespaces:")
+C-:
+
+This behaviour will be still supported, but it's recommended to use the
+new API, escpecially for new inventory plugins.
+
+In order to use this new feature the inventory plugin takes the optional
+arguments 'inventory_tree' or 'status_data_tree', eg.
+
+C+:
+def inv_oracle_tablespaces(info, inventory_tree, status_data_tree):
+C-:
+
+There are two methods for these tree objects 'get_dict' and 'get_list' which
+take a path as argument. This path defines where the data should be stored, eg.
+
+C+:
+    path = "software.applications.oracle.tablespaces:"
+    inv_node = inventory_tree.get_list(path)
+    status_node = status_data_tree.get_list(path)
+C-:
+
+Especially if lists are filled up with inventory and status data, there must
+be a so-called identifier in the entries of these lists in order to link the
+related elements, eg.:
+
+C+:
+    for sid, data in tablespaces:
+        inv_node.append({"sid": sid, "INV-KEY": data[INV-DATA]})
+        status_node.append({"sid": sid, "STATUS-KEY": data[STATUS-DATA]})
+C-:
+
+Both nodes, 'inv_node' and 'status_node', use 'sid' as an identifier. Thereby
+Check_MK knows which entries of both lists belong together.
+If one identifier is not sufficient you can add more, eg.:
+
+C+:
+    for sid, data in tablespaces:
+        inv_node.append({"sid": sid, "name" : name, "INV-KEY": data[INV-DATA]})
+        status_node.append({"sid": sid, "name": name, "STATUS-KEY": data[STATUS-DATA]})
+C-:
+
+Now Check_MK uses 'sid' and 'name' as identifier. These identifier have to exist in
+all entries of both lists. Otherwise there's no possibility to link these entries.
+
+To make Check_MK know which inventory plugins calculate status data an
+additional attribute 'has_status_data' must be added which has the
+value 'True'.
+
+C+:
+inv_info['oracle_tablespaces'] = {
+    "inv_function": inv_oracle_tablespaces,
+    "has_status_data": True,
+}
+C-:

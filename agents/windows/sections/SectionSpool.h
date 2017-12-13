@@ -25,7 +25,6 @@
 #ifndef SectionSpool_h
 #define SectionSpool_h
 
-#undef CreateMutex
 #include "Section.h"
 
 class SectionSpool : public Section {

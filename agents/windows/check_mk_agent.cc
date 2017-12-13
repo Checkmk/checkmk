@@ -87,8 +87,10 @@
 #include "wmiHelper.h"
 
 using std::chrono::milliseconds;
+using std::lock_guard;
 using std::make_unique;
 using std::map;
+using std::mutex;
 using std::ostream;
 using std::setfill;
 using std::setw;
@@ -573,7 +575,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
             }
             gettimeofday(&before, 0);
 
-            MutexLock guard(data->mutex);
+            lock_guard<mutex>(data->mutex);
             // adhere to the configured timeout
             if ((time(NULL) < data->push_until) && !data->terminate) {
                 // if a new request was made, reestablish the connection
@@ -716,7 +718,7 @@ void do_adhoc(const Environment &env) {
     foreach_enabled_section(
         false, [](Section *section) { section->waitForCompletion(); });
 
-    ThreadData thread_data{0, false, env, logger, false, {0}, Mutex{s_winapi}};
+    ThreadData thread_data{env, logger};
     Thread realtime_checker(realtime_check_func, thread_data, s_winapi);
 
     if (s_sections->useRealtimeMonitoring()) {
@@ -745,7 +747,7 @@ void do_adhoc(const Environment &env) {
             std::string ip_hr = sock.readableIP(connection);
             Debug(logger) << "Accepted client connection from " << ip_hr << ".";
             {  // limit lifetime of mutex lock
-                MutexLock guard(thread_data.mutex);
+                lock_guard<mutex>(thread_data.mutex);
                 thread_data.new_request = true;
                 thread_data.last_address = sock.address(connection);
                 thread_data.push_until =

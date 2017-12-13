@@ -115,12 +115,6 @@ public:
                               HANDLE hTemplateFile) const override;
     virtual HANDLE CreateJobObject(LPSECURITY_ATTRIBUTES lpJobAttributes,
                                    LPCSTR lpName) const override;
-    virtual HANDLE CreateMutex(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-                               WINBOOL bInitialOwner,
-                               LPCSTR lpName) const override;
-    virtual HANDLE CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-                                WINBOOL bInitialOwner,
-                                LPCSTR lpName) const override;
     virtual WINBOOL CreatePipe(PHANDLE hReadPipe, PHANDLE hWritePipe,
                                LPSECURITY_ATTRIBUTES lpPipeAttributes,
                                DWORD nSize) const override;
@@ -246,7 +240,6 @@ public:
                              DWORD nNumberOfBytesToRead,
                              LPDWORD lpNumberOfBytesRead,
                              LPOVERLAPPED lpOverlapped) const override;
-    virtual WINBOOL ReleaseMutex(HANDLE hMutex) const override;
     virtual WINBOOL ResetEvent(HANDLE hEvent) const override;
     virtual DWORD SearchPathA(LPCSTR lpPath, LPCSTR lpFileName,
                               LPCSTR lpExtension, DWORD nBufferLength,

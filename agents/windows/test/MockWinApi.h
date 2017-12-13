@@ -134,12 +134,6 @@ public:
     MOCK_CONST_METHOD2(CreateJobObject,
                        HANDLE(LPSECURITY_ATTRIBUTES lpJobAttributes,
                               LPCSTR lpName));
-    MOCK_CONST_METHOD3(CreateMutex,
-                       HANDLE(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-                              WINBOOL bInitialOwner, LPCSTR lpName));
-    MOCK_CONST_METHOD3(CreateMutexA,
-                       HANDLE(LPSECURITY_ATTRIBUTES lpMutexAttributes,
-                              WINBOOL bInitialOwner, LPCSTR lpName));
     MOCK_CONST_METHOD4(CreatePipe,
                        WINBOOL(PHANDLE hReadPipe, PHANDLE hWritePipe,
                                LPSECURITY_ATTRIBUTES lpPipeAttributes,
@@ -274,7 +268,6 @@ public:
                                          DWORD nNumberOfBytesToRead,
                                          LPDWORD lpNumberOfBytesRead,
                                          LPOVERLAPPED lpOverlapped));
-    MOCK_CONST_METHOD1(ReleaseMutex, WINBOOL(HANDLE hMutex));
     MOCK_CONST_METHOD1(ResetEvent, WINBOOL(HANDLE hEvent));
     MOCK_CONST_METHOD6(SearchPathA,
                        DWORD(LPCSTR lpPath, LPCSTR lpFileName,

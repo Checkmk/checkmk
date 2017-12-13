@@ -307,18 +307,3 @@ TEST_F(wa_WrappedHandleTest, NullHandleTraits_valid_handle) {
         ASSERT_EQ(rawHandle, testHandle.get());
     }
 }
-
-class wa_MutexLockTest : public wa_typesTest {};
-
-TEST_F(wa_MutexLockTest, lock_unlock) {
-    HANDLE rawHandle = reinterpret_cast<HANDLE>(0x1);
-    EXPECT_CALL(_mockwinapi, CloseHandle(rawHandle));
-    EXPECT_CALL(_mockwinapi, ReleaseMutex(rawHandle));
-    {
-        EXPECT_CALL(_mockwinapi, CreateMutex(nullptr, 0, nullptr))
-            .WillOnce(Return(rawHandle));
-        EXPECT_CALL(_mockwinapi, WaitForSingleObject(rawHandle, INFINITE));
-        Mutex testMutex(_mockwinapi);
-        MutexLock testLock(testMutex);
-    }
-}

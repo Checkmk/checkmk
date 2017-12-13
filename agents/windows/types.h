@@ -32,7 +32,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#undef CreateMutex
 #include "WinApiAdaptor.h"
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -460,27 +459,5 @@ struct JobHandleTraits {
 using HModuleHandle = WrappedHandle<HModuleTraits>;
 template <int exitCode>
 using JobHandle = WrappedHandle<JobHandleTraits<exitCode>>;
-
-class Mutex : public WrappedHandle<NullHandleTraits> {
-public:
-    explicit Mutex(const WinApiAdaptor &winapi)
-        : WrappedHandle<NullHandleTraits>{winapi.CreateMutex(nullptr, 0, nullptr),
-                                          winapi} {}
-
-    void lock() { _api.get().WaitForSingleObject(_handle, INFINITE); }
-
-    void unlock() { _api.get().ReleaseMutex(_handle); }
-};
-
-class MutexLock {
-public:
-    MutexLock(Mutex &mutex) : _mutex(mutex) { _mutex.lock(); }
-    ~MutexLock() { _mutex.unlock(); }
-    MutexLock(const MutexLock &) = delete;
-    MutexLock &operator=(const MutexLock &) = delete;
-
-private:
-    Mutex &_mutex;
-};
 
 #endif  // types_h

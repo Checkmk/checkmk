@@ -1,206 +1,147 @@
 #!/bin/bash
-# Monitor DB/2 databases on Linux
-# $HOME/sqllib/db2profile
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-# This script can be called in two ways
-# Without any arguments:
-#   Checks if cache is up to date and starts itself if its outdated.
-#   If its outdated the script calls itself with the argument 'query'
-# With 'query' as argument:
-#   Does the actual queries to the db2 and outputs it to stdout
+# Agent plugin to monitor DB/2 databases on Linux.
+#
+# Note: The script has to be accessible and executable by the DB/2
+#       instance users to function properly.
+#
+# The script is called in two different modes. Without arguments it:
+#
+#    - outputs the db2_version section,
+#    - collects all db2 instances and databases, and
+#    - runs the script for each database as an instance user
+#
+# With arguments the script queries the information for each database and
+# outputs the corresponding sections.
 
+if [ $# -eq 0 ]; then
+    if type timeout >/dev/null 2>&1 ; then
+        function waitmax () {
+            timeout "$@"
+        }
+    fi
 
-
-DB2_ENV='sqllib/db2profile'
-MK_CONFDIR='/etc/check_mk'
-if [ ! "$MK_CONFDIR" ] ; then
-    echo "MK_CONFDIR not set!" >&2
-    exit 1
-fi
-
-if [ ! "$MK_VARDIR" ] ; then
-    export MK_VARDIR=$MK_CONFDIR
-fi
-
-function waitmax
-{
-   TIMEOUT=${1}0
-   SIGNAL=9
-   shift
-
-   # Run command in background
-   if [ "${#}" -ge 1 ] ; then
-      ksh -c "$*" &
-   else
-      TEST=$(cat)
-      ksh -c "$TEST" &
-   fi
-
-   PID=$!
-
-   # Wait for termination within TIMOUT seconds
-   while [ $TIMEOUT -gt 0 ]
-   do
-       TIMEOUT=$((TIMEOUT - 1))
-       if [ ! -e /proc/$PID ] ; then
-           return 0
-       fi
-       perl -e "select(undef, undef, undef, 0.1);"
-   done
-
-   # Process did not terminate in time. Kill and
-   # return with an error
-   kill -9 $PID
-   return 255
-}
-
-# Someday we might run every instance in a single cache. Right now it doesn't work because of checks
-# db2_counters and db2_logsizes which rely on a common timestamp between all sections
-function query_instances {
-    INSTANCES=$(ps -ef | grep [d]b2sysc | awk '{print $1 }')
+    INSTANCES=$(ps -ef | grep "[d]b2sysc" | awk '{print $1 }')
 
     for INSTANCE in $INSTANCES; do
-        # find home directory
-        HOMEDIR=$(grep "^$INSTANCE" /etc/passwd | awk -F: '{print $6}' | grep "$INSTANCE$")
         NOW=$(perl -e "print time();")
-
-        waitmax 40 << WAITMAX
-        su $INSTANCE << EOF
-        . $HOMEDIR/$DB2_ENV 2>&1 > /dev/null;
-
-
-        function compare_version_greater_equal {
-            GREATER_ONE=\\\$(echo "\\\$1 \\\$2" | awk '{if (\\\$1 >= \\\$2) print \\\$1; else print \\\$2}')
-            if [ \\\$GREATER_ONE == \\\$1 ] ; then
-                return 0
-            else
-               return 1
-            fi
-        }
 
         echo ""
         echo '<<<db2_version:sep(1)>>>'
-        DBVERSION=\\\$(db2 get snapshot for dbm | grep -e 'Product name' -e 'Service level' | awk -v FS='=' '{print \\\$2}' | sed 'N;s/\n/,/g' | sed 's/ //g')
-        echo $INSTANCE \\\$DBVERSION
-        VERSION_NUMBER=\\\$(echo \\\$DBVERSION | sed  -e 's/DB2v\\\(.*\),.*/\\\1/' | awk -v FS="." '{print \\\$1"."\\\$2}')
+        DBVERSION=$(su - "${INSTANCE}" -c "db2 get snapshot for dbm" | grep -e 'Product name' -e 'Service level' | awk -v FS='=' '{print $2}' | sed 'N;s/\n/,/g' | sed 's/ //g')
+        echo "$INSTANCE" "$DBVERSION"
+        VERSION_NUMBER=$(echo "$DBVERSION" | sed  -e 's/DB2v\(.*\),.*/\1/' | awk -v FS="." '{print $1"."$2}')
 
-        DBDIR=\\\$(db2 get database manager configuration | grep 'Default database path' | awk '{ print \\\$NF }')
-        DBS=\\\$(db2 list database directory on \\\$DBDIR | grep 'Database name' | awk '{ print \\\$NF }')
+        DBS=$(su - "${INSTANCE}" -c "db2 list active databases" | grep 'Database name' | awk '{ print $NF }')
 
-        GET_PORT=1
         DB_PORT='port 0'
-        for DB in \\\$DBS; do
-                db2 connect to \\\$DB > /dev/null;
-                if [ 1 -eq \\\$GET_PORT ] ; then
-                    # Each database in an instance has the same port information
-                    db2_tcp_service=\\\$(db2 -x get dbm cfg | grep $INSTANCE | grep "TCP/IP Service" | awk -v FS='=' '{print \\\$2}'|tr -d ' ')
-                    if ( grep \\\$db2_tcp_service /etc/services | grep -q "^\\\$db2_tcp_service " ); then
-                        DB_PORT='port '\\\$(grep \\\$db2_tcp_service /etc/services | grep "^\\\$db2_tcp_service " | awk '{print \\\$2}' | awk -v FS="/" '{print \\\$1}')
-                    fi
-                    GET_PORT=0
+        GET_PORT=1
+        for DB in $DBS; do
+            if [ 1 -eq $GET_PORT ] ; then
+                # Each database in an instance has the same port information
+                db2_tcp_service=$(su - "${INSTANCE}" -c "db2 -x get dbm cfg" | grep "TCP/IP Service" | awk -v FS='=' '{print $2}' | tr -d ' ')
+                if ( grep "$db2_tcp_service" /etc/services | grep -q "^$db2_tcp_service " ); then
+                    DB_PORT='port '$(grep "$db2_tcp_service" /etc/services | grep "^$db2_tcp_service " | awk '{print $2}' | awk -v FS="/" '{print $1}')
                 fi
-
-                echo "<<<db2_tablespaces>>>"
-                echo "[[[$INSTANCE:\\\$DB]]]"
-                db2 "SELECT tbsp_name, tbsp_type, tbsp_state, tbsp_usable_size_kb, tbsp_total_size_kb, tbsp_used_size_kb, tbsp_free_size_kb FROM sysibmadm.tbsp_utilization WHERE tbsp_type = 'DMS' UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, 1 AS fs_total_size_kb, 0 AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NULL OR fs_used_size_kb IS NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id) UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, SUM(fs_total_size_kb) AS fs_total_size_kb, SUM(fs_used_size_kb) AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NOT NULL AND fs_used_size_kb IS NOT NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id)" | awk '{print \\\$1" "\\\$2" "\\\$3" "\\\$4" "\\\$5" "\\\$6" "\\\$7}' | sed -e '/^[ ]*$/d' -e '/^-/d' -e '/selected/d'
-
-                echo "<<<db2_counters>>>"
-                echo "TIMESTAMP $NOW"
-                echo "$INSTANCE:\\\$DB deadlocks " | tr -d '\n'
-                db2 -x "SELECT deadlocks from sysibmadm.snapdb" | tr -d ' '
-                echo "$INSTANCE:\\\$DB lockwaits " | tr -d '\n'
-                db2 -x "SELECT lock_waits from sysibmadm.snapdb" | tr -d ' '
-                echo "$INSTANCE:\\\$DB sortoverflows " | tr -d '\n'
-                db2 -x "SELECT sort_overflows from sysibmadm.snapdb" | tr -d ' '
-
-                echo "<<<db2_logsizes>>>"
-                echo "TIMESTAMP $NOW"
-                echo "[[[$INSTANCE:\\\$DB]]]"
-                echo "usedspace " | tr -d '\n'
-                db2 -x "SELECT total_log_used from sysibmadm.snapdb" | tr -d ' '
-                db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')"| awk '{print \\\$1" "\\\$2}'
-
-                echo "<<<db2_connections>>>"
-                echo "[[[$INSTANCE:\\\$DB]]]"
-                echo \\\$DB_PORT
-                echo "connections " | tr -d '\n'
-                db2 list applications | grep -v Auth | grep -v Name | sed -e '/^$/d' | wc -l | tr -d ' '
-                # TODO: the time command seems to be broken and outputs 1 second steps
-                ksh -c "time db2 connect to \\\$DB > /dev/null" 2>&1 | grep real | awk '{print "latency "\\\$2}'| sed -e 's/m/:/' -e 's/s//'
-
-                echo "<<<db2_bp_hitratios>>>"
-                echo "[[[$INSTANCE:\\\$DB]]]"
-                db2 "SELECT SUBSTR(BP_NAME,1,14) AS BP_NAME, TOTAL_HIT_RATIO_PERCENT, DATA_HIT_RATIO_PERCENT, INDEX_HIT_RATIO_PERCENT, XDA_HIT_RATIO_PERCENT FROM SYSIBMADM.BP_HITRATIO" | grep -v "selected." | sed -e '/^$/d' -e '/^-/d'
-
-                echo "<<<db2_sort_overflow>>>"
-                echo "[[[$INSTANCE:\\\$DB]]]"
-                db2 -x "get snapshot for database on \\\$DB" | grep -e "^Total sorts" -e "^Sort overflows" | tr -d '='
-
-                echo "<<<db2_backup>>>"
-                echo "[[[$INSTANCE:\\\$DB]]]"
-                if compare_version_greater_equal \\\$VERSION_NUMBER 10.5; then
-                    # MON_GET_DATBASE(-2) gets information of all active members
-                    db2 -x "select LAST_BACKUP from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
-                else
-                    db2 -x "select SQLM_ELM_LAST_BACKUP from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as int))) as ref" | grep -v "selected." | tail -n 1
-                fi
-
-                # disconnect from database
-                db2 connect reset > /dev/null
-            done
-EOF
-WAITMAX
+                GET_PORT=0
+            fi
+            SCRIPT=$(readlink -f "$0")
+            waitmax -s 9 10 su - "${INSTANCE}" -c "\"${SCRIPT}\" \"${INSTANCE}\" \"${DB}\" \"${VERSION_NUMBER}\" \"${NOW}\" \"${DB_PORT}\""
+        done
     done
-    return 0
-}
+else
+    INSTANCE=$1
+    DB=$2
+    VERSION_NUMBER=$3
+    NOW=$4
+    DB_PORT=$5
 
-#if [ "$1" = "query" ]; then
-    query_instances
-    exit 0
-#else
-#    #### RUN CACHED #####
-#    function file_age {
-#        /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
-#    }
-#
-#    if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
-#    CACHEFILE="$MK_VARDIR/cache/mk_db2.aix.cache"
-#    MAXAGE=1
-#
-#    # Check if the creation of the cache takes suspiciously long and return
-#    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
-#    if [ -e "$CACHEFILE.new" ] ; then
-#        AGE=$(file_age "$CACHEFILE.new")
-#        if [ $AGE -ge $((MAXAGE * 2)) ] ; then
-#            return
-#        fi
-#    fi
-#
-#    # Check if the creation of the cache takes way to long and delete this file
-#    # The process might have crashed...
-#    # Since the processes are called with waitmax it is very unlikely that
-#    # there are still unwanted processes soiling the system.
-#    if [ -e "$CACHEFILE.new" ] ; then
-#        AGE=$(file_age "$CACHEFILE.new")
-#        if [ $AGE -ge $((MAXAGE * 10)) ] ; then
-#            rm "$CACHEFILE.new"
-#        fi
-#    fi
-#
-#    # Check if cache file exists and is recent enough
-#    USE_CACHEFILE=""
-#    if [ -s "$CACHEFILE" ] ; then
-#        AGE=$(file_age "$CACHEFILE")
-#        if [ $AGE -le $MAXAGE ] ; then USE_CACHEFILE=1 ; fi
-#        # Output the file in any case, even if it is
-#        # outdated. The new file will not yet be available
-#        cat "$CACHEFILE"
-#    fi
-#
-#    # Cache file outdated and new job not yet running? Start it
-#    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-#        echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; ./$0 query && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup ksh 2>/dev/null &
-#    fi
-#fi
+    function compare_version_greater_equal {
+        GREATER_ONE=$(echo "$1 $2" | awk "{if ($1 >= $2) print $1; else print $2}")
+        if [ "$GREATER_ONE" == "$1" ] ; then
+            return 0
+        else
+            return 1
+        fi
+        return 0
+    }
+
+    millis_before=$(date +"%s%3N")
+    if db2 +o connect to "$DB"; then
+        millis_after=$(date +"%s%3N")
+        millis_diff=$(( millis_after - millis_before ))
+
+        echo "<<<db2_connections>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        echo "$DB_PORT"
+        echo "connections " | tr -d '\n'
+        db2 -x "SELECT count(*)-1 FROM TABLE(mon_get_connection(CAST(NULL AS BIGINT), -2)) AS t"
+        echo "latency ${millis_diff}"
+
+        echo "<<<db2_tablespaces>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        SQL="SELECT tbsp_name, tbsp_type, tbsp_state, tbsp_usable_size_kb, tbsp_total_size_kb, tbsp_used_size_kb, tbsp_free_size_kb FROM sysibmadm.tbsp_utilization WHERE tbsp_type = 'DMS' UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, 1 AS fs_total_size_kb, 0 AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NULL OR fs_used_size_kb IS NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id) UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, SUM(fs_total_size_kb) AS fs_total_size_kb, SUM(fs_used_size_kb) AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NOT NULL AND fs_used_size_kb IS NOT NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id)"
+        db2 "${SQL}" | awk '{print $1" "$2" "$3" "$4" "$5" "$6" "$7}' | sed -e '/^[ ]*$/d' -e '/^-/d' -e '/selected/d'
+
+        echo "<<<db2_counters>>>"
+        echo "TIMESTAMP $NOW"
+        echo "$INSTANCE:$DB deadlocks " | tr -d '\n'
+        db2 -x "SELECT deadlocks from sysibmadm.snapdb" | tr -d ' '
+        echo "$INSTANCE:$DB lockwaits " | tr -d '\n'
+        db2 -x "SELECT lock_waits from sysibmadm.snapdb" | tr -d ' '
+        echo "$INSTANCE:$DB sortoverflows " | tr -d '\n'
+        db2 -x "SELECT sort_overflows from sysibmadm.snapdb" | tr -d ' '
+
+        echo "<<<db2_logsizes>>>"
+        echo "TIMESTAMP $NOW"
+        echo "[[[$INSTANCE:$DB]]]"
+        echo "usedspace " | tr -d '\n'
+        db2 -x "SELECT total_log_used from sysibmadm.snapdb" | tr -d ' '
+        db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')"| awk '{print $1" "$2}'
+
+        echo "<<<db2_bp_hitratios>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        db2 "SELECT SUBSTR(BP_NAME,1,14) AS BP_NAME, TOTAL_HIT_RATIO_PERCENT, DATA_HIT_RATIO_PERCENT, INDEX_HIT_RATIO_PERCENT, XDA_HIT_RATIO_PERCENT FROM SYSIBMADM.BP_HITRATIO" | grep -v "selected." | sed -e '/^$/d' -e '/^-/d'
+
+        echo "<<<db2_sort_overflow>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        db2 -x "get snapshot for database on $DB" | grep -e "^Total sorts" -e "^Sort overflows" | tr -d '='
+
+        echo "<<<db2_backup>>>"
+        echo "[[[$INSTANCE:$DB]]]"
+        if compare_version_greater_equal "$VERSION_NUMBER" 10.5; then
+          # MON_GET_DATBASE(-2) gets information of all active members
+          db2 -x "select LAST_BACKUP from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
+        else
+          db2 -x "select SQLM_ELM_LAST_BACKUP from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as int))) as ref" | grep -v "selected." | tail -n 1
+        fi
+
+        # disconnect from database
+        db2 connect reset > /dev/null
+    fi
+fi
 
 exit 0

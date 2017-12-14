@@ -1,0 +1,17 @@
+Title: Make Windows section openhardwaremonitor backwards compatible
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1513263715
+Class: fix
+
+Version 1.4.0 'corrected' the naming of section openhardwaremonitor.
+Unfortunately, this broke the backwards compatibility of old ini files
+that still call this 'ohm'. The fix maps the old name to the new one
+so that both old and new ini files work. Moreover, the agent bakery
+was still writing ini files with the old name. Now the agent bakery
+is also fixed.
+
+

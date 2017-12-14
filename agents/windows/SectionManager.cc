@@ -26,7 +26,7 @@ namespace {
 // 'old' names to 'new' ones.
 std::string mapSectionName(const std::string &sectionName) {
     const std::unordered_map<std::string, std::string> mappedSectionNames = {
-        {"webservices", "wmi_webservices"}};
+        {"webservices", "wmi_webservices"}, {"ohm", "openhardwaremonitor"}};
     const auto it = mappedSectionNames.find(sectionName);
     return it == mappedSectionNames.end() ? sectionName : it->second;
 }

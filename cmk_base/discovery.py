@@ -476,7 +476,10 @@ def _set_rediscovery_flag(hostname, need_rediscovery):
         touch(discovery_filename)
     else:
         if os.path.exists(discovery_filename):
-            os.remove(discovery_filename)
+            try:
+                os.remove(discovery_filename)
+            except OSError:
+                pass
 
 
 def discover_marked_hosts():
@@ -540,7 +543,10 @@ def discover_marked_hosts():
         host_flag_path = autodiscovery_dir + "/" + hostname
 
         if hostname not in config.all_configured_hosts():
-            os.remove(host_flag_path)
+            try:
+                os.remove(host_flag_path)
+            except OSError:
+                pass
             console.verbose("  Skipped. Host does not exist in configuration. Removing mark.\n")
             continue
 
@@ -590,7 +596,10 @@ def discover_marked_hosts():
 
             # delete the file even in error case, otherwise we might be causing the same error
             # every time the cron job runs
-            os.remove(host_flag_path)
+            try:
+                os.remove(host_flag_path)
+            except OSError:
+                pass
         else:
             console.verbose("  skipped: %s\n" % why_not)
 

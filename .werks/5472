@@ -1,0 +1,13 @@
+Title: Ensure correct quoting of values in event contexts.
+Level: 1
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1513255154
+Class: fix
+
+The values of custom host/service variables and acknowledgement comments
+were not correctly quoted when being passed to the alert/notification
+helpers.  Therefore, some special characters could have been mishandled,
+this has been fixed.

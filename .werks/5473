@@ -1,0 +1,12 @@
+Title: Add correct host-related acknowledgement info to notifications.
+Level: 1
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1513256289
+Class: fix
+
+When a notification for a service was constructed, the HOSTACKAUTHOR and
+HOSTACKCOMMENT variables were incorrectly filled with service-related
+information.  This has been fixed.

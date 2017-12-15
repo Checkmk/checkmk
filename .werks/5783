@@ -1,0 +1,34 @@
+Title: Introduced background jobs for longer running task
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519899875
+Class: feature
+
+A new mechanism has been introduced allowing certain tasks to be run as background processes.
+Currently the following areas are included
+<ul>
+<li>Host rennaming</li>
+<li>Agent baking (Enterprise Edition)</li>
+<li>Report generation (Enterprise Edition)</li>
+</ul>
+
+Once a background job is triggered, an overview page provides additional information
+regarding the progress. You can also stop and delete background jobs, if applicable.
+Keep in mind that some jobs - in detail host renaming and agent baking - lock certain areas
+in WATO to prevent further configurations as long the background process is running.
+
+Each background has a working directory located in <tt>~/var/check_mk/background_jobs</tt> with
+a statusfile named <tt>jobstatus.mk</tt>. If the background job generates stdout data it will
+be shown in the job details page. Job Exceptions are also shown in the details page and, in addition,
+written to <tt>~/var/log/web.log</tt>.
+
+Keep in mind, old background jobs will be automatically removed after 30 days or if the maximum amount
+of jobs for a job type has been reached. These limits are currently not configurable and hardcoded
+<ul>
+<li>Reporting has a limit of 100</li>
+<li>Host renaming has a limit of 50</li>
+</ul>
+This cleanup routine is regularly called through a multisite cronjob.

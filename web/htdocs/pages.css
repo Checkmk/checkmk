@@ -1466,3 +1466,64 @@ tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
 div.popup_trigger img.iconbutton {
     padding: 0;
 }
+
+
+td.job_state{
+    color: white;
+    box-shadow: 0.5px 0.5px 2px #000 inset;
+    text-align: center;
+    font-weight: bold;
+}
+
+table.data > tbody > tr > td.job_state.job_finished {
+    background-color: #00c020;
+    box-shadow: 0px 0px 3px #ccffcc inset;
+}
+
+table.data > tbody > tr > td.job_state.job_exception{
+    background-color: #bc5b4e;
+    box-shadow: 0px 0px 2px #000 inset;
+}
+
+table.data > tbody > tr > td.job_state.job_running{
+    background-color: #c020c0;
+    box-shadow: 0px 0px 2px #000 inset;
+}
+
+table.data > tbody > tr > td.job_state.job_initialized{
+    color: black;
+    background-color: #cccccc;
+}
+
+table.data.job_details.headerleft {
+    width: 100%;
+}
+
+table.data.job_details > tbody > tr > th {
+    width: 150px;
+}
+
+table.data.job_details div.log_output > pre{
+    margin: 0;
+}
+
+/* Fixed job columns */
+table.data.job_table > tbody > tr > td.job_actions {
+    width: 50px;
+}
+
+table.data.job_table> tbody > tr > td.job_state {
+    width: 50px;
+}
+
+
+table.data.job_table> tbody > tr > td.job_started {
+    width: 160px;
+}
+
+table.data.job_table> tbody > tr > td.job_pid{
+    width: 40px;
+    text-align: right;
+}
+
+

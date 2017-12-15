@@ -139,7 +139,6 @@ def load_watolib_plugins():
     load_web_plugins("watolib", globals())
     return globals()
 
-
 def init_watolib_datastructures():
     if config.wato_use_git:
         prepare_git_commit()

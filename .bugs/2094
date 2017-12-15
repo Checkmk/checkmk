@@ -1,9 +1,9 @@
 Title: BI-Cache vs. Apache-Memory - make debugging easier
 Component: docu
-State: open
+Class: todo
+State: done
 Date: 2013-12-04 09:54:12
 Targetversion: 1.2.3i6
-Class: todo
 
 It is hard to diagnose memory problems caused by the BI-Cache which increases
 the memory of the sites apache processes dramatically. While building the cache,
@@ -21,3 +21,5 @@ all information.
 
 Another soultion would be to reduce the number of maximum allowed apache
 processes within OMD.
+
+2017-12-15 08:21:19: changed state open -> done

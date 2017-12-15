@@ -1,9 +1,9 @@
 Title: Rework "crashed checks" mechanism
 Component: core
-State: open
+Class: todo
+State: done
 Date: 2014-11-25 10:11:51
 Targetversion: 1.2.5i1
-Class: todo
 
 The optional crashed checks log should be replaced by a new mechanism
 where each exception is written to a dedicated folder hierarchy like
@@ -20,3 +20,5 @@ This file can be downloaded from the Web-GUI by clicking on an icon
 which is shown when there is some file for a service available.
 
 The files are removed using the diskspace cleanup mechanism regularly.
+
+2017-12-15 08:22:17: changed state open -> done

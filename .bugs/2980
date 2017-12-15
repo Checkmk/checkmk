@@ -1,9 +1,11 @@
 Title: Deprecated exe-Installer (NSIS)
 Component: checks
-State: open
+Class: todo
+State: done
 Date: 2017-09-19 16:14:42
 Targetversion: 1.5.0
-Class: todo
 
 Deprecate/Remove the NSIS based exe-Installer. The MSI based installer has
 all features we need. There is no need to maintain both types.
+
+2017-12-15 08:07:14: changed state open -> done

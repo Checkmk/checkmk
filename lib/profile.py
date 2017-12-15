@@ -88,7 +88,7 @@ Examples:
     def decorate(f):
         def wrapper(*args, **kwargs):
             filepath = "%s/%s_%s.profile" % \
-                (base_dir.rstip("/"), f.__name__, time.time())
+                (base_dir.rstrip("/"), f.__name__, time.time())
             with Profile(enabled=enabled,
                          profile_file=filepath):
                return f(*args, **kwargs)

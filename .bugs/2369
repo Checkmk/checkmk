@@ -1,10 +1,11 @@
 Title: SNMP scan functions: improvement
 Component: checks
-State: open
+Class: todo
+State: closed
 Date: 2015-10-02 07:42:54
 Targetversion: future
-Class: todo
 
 There are too many OIDs which are checked so we have to improve the SNMP scan functions in the checks.
 But there are some exceptions e.g. interfaces.
 This should be done before version 1.2.8
+2017-12-15 08:25:40: changed state open -> closed

@@ -1,9 +1,9 @@
 Title: Rework ps check
 Component: checks
-State: open
+Class: todo
+State: done
 Date: 2013-12-17 13:10:37
 Targetversion: 1.2.7i1
-Class: todo
 
 The ps check for Linux and Windows needs to be completely reworked.
 We need to write a real parse function using dicts that create a
@@ -25,3 +25,5 @@ current bracket code.
 
 In order not to break compatibility we could implement a new section
 and a new check and the deprecate the existing one.
+
+2017-12-15 08:21:38: changed state open -> done

@@ -1,8 +1,10 @@
 Title: Document Windows agent <<<fileinfo>>>
 Component: docu
-State: open
+Class: todo
+State: done
 Date: 2011-12-12 15:44:36
 Targetversion: 1.2.0
-Class: todo
 
 Document the new feature of the Windows agent
+
+2017-12-15 08:45:10: changed state open -> done

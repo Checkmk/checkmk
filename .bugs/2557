@@ -1,10 +1,12 @@
 Title: Need host alias as name for availibilty reports
 Component: multisite
-State: open
+Class: todo
+State: done
 Date: 2017-02-20 12:24:36
 Targetversion: 1.2.8
-Class: todo
 
 In the availibility table only the hostname can be used. The customer can
 not configure with column to show instead of it. It will be helpful
 to get the host alias available for the selection.
+
+2017-12-15 08:13:26: changed state open -> done

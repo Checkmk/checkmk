@@ -1,8 +1,10 @@
 Title: Document cmk --notify
 Component: docu
-State: open
+Class: todo
+State: done
 Date: 2011-11-21 08:56:13
 Targetversion: 1.2.0
-Class: todo
 
 The whole thing needs to be documented.
+
+2017-12-15 08:24:37: changed state open -> done

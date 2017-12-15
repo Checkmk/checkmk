@@ -1,9 +1,11 @@
 Title: WATO replication is not transaction safe
 Component: multisite
-State: open
+Class: todo
+State: done
 Date: 2012-01-13 11:05:09
 Targetversion: 1.2.0
-Class: todo
 
 If user A makes a change in WATO and simultaneously user b will change settings,
 the changes are not accepted from both users. There is missing a transaction condition.
+
+2017-12-15 08:19:47: changed state open -> done

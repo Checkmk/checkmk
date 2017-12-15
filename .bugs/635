@@ -1,9 +1,9 @@
 Title: Password changes are not replicated
 Component: wato
-State: open
+Class: todo
+State: done
 Date: 2012-02-22 19:32:35
 Targetversion: 1.2.0
-Class: todo
 
 When a user changes his password, then that change is not automatically
 replicated to the slave sites in replicated mode. I think we'd really
@@ -14,3 +14,5 @@ Solution: Create a new webservice that just replicates the password
 file. This mini-replication is then automatically done when the
 user changes his password.
 
+
+2017-12-15 08:20:08: changed state open -> done

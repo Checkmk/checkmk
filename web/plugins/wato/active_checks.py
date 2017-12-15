@@ -666,7 +666,7 @@ register_rule(group,
                          title = _("Service description"),
                          allow_empty = False,
                          help = _("Here you can specify a service description. "
-                                  "If this parameter is not set, the service is named <tt>TCP Port {Portnumber}</tt>"))),
+                                  "If this parameter is not set, the service is named <tt>TCP Port [PORT NUMBER]</tt>"))),
                    ( "hostname",
                      TextAscii(
                          title = _("DNS Hostname"),

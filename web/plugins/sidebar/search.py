@@ -35,8 +35,8 @@ def render_searchform():
 sidebar_snapins["search"] = {
     "title":       _("Quicksearch"),
     "description": _("Interactive search field for direct access to hosts, services, host- and "\
-                     "servicegroups.<br>You can use the following filters:<br> <i>h:</i> {host}, <i>s:</i> {service} <br> "\
-                     "<i>hg:</i> {hostgroup}, <i>sg:</i> {servicegroup}<br><i>ad:</i> {address}, <i>al:</i> {alias}, tg: {hosttag}"),
+                     "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "\
+                     "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"),
     "render":      render_searchform,
     "restart":     False,
     "allowed":     [ "user", "admin", "guest" ],

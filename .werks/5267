@@ -1,0 +1,22 @@
+Title: cmk-update-agent: New binary format of Agent Updater executable on Linux
+Level: 2
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1513344138
+Class: feature
+
+The cmk-update-agent executable is now implemented as a packaged binary executable.
+This werk consists of many changes that have partly already been applied to Check_MK 1.5.0i1.
+
+The new format addresses several problems and yields some improvements:
+
+* Better compatibility: All requirements regarding the installed Python Interpreter or other packages/programs were eliminated; the only requirements left are a x86_64 processor architecture and a glibc 2.5 or above.
+
+* More convenient communication to Check_MK Server: All GET-Requests have been replaced with according POST-Requests. This improves security as sensitive data is no longer sent within the URL of the HTTP(S) request.
+
+* Only one copy of cmk-update-agent: The copy of cmk-update-agent previously placed under /usr/bin/cmk-update-agent has been replaced by a shell script that executes the actual cmk-update-agent executable situated at the Check_MK Agent plugin directory. This eliminates the need to maintain two places when manually replacing cmk-update-agent for debugging reasons.
+However, it is still possible to execute a copy of the cmk-update-agent executable directly.
+
+* Notably, there will be no more problems with curl and because all communication is now done via python-requests, which is included within the cmk-update-agent executable as mentioned above.

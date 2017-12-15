@@ -33,16 +33,13 @@ SectionOHM::SectionOHM(Configuration &config, Logger *logger,
                        const WinApiAdaptor &winapi)
     : SectionWMI("openhardwaremonitor", "openhardwaremonitor",
                  config.getEnvironment(), logger, winapi)
-    , _bin_path(_env.binDirectory()) {
+    , _ohm_monitor(_env.binDirectory(), _logger, _winapi) {
     withNamespace(L"Root\\OpenHardwareMonitor");
     withObject(L"Sensor");
 }
 
 void SectionOHM::startIfAsync() {
-    if (_ohm_monitor.get() == nullptr) {
-        _ohm_monitor.reset(new OHMMonitor(_bin_path, _logger, _winapi));
-        _ohm_monitor->checkAvailabe();
-    }
+    _ohm_monitor.startProcess();
 }
 
 bool SectionOHM::produceOutputInner(std::ostream &out) {
@@ -54,7 +51,7 @@ bool SectionOHM::produceOutputInner(std::ostream &out) {
         Debug(_logger) << "ComException: " << e.what();
         res = false;
     }
-    if (!res && !_ohm_monitor->checkAvailabe()) {
+    if (!res && !_ohm_monitor.startProcess()) {
         Debug(_logger)
             << "ohm not installed or not runnable -> section disabled";
         suspend(3600);

@@ -1,0 +1,19 @@
+Title: Prevent MS Exchange checks from crashing upon WMI timeout
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1513609941
+Class: fix
+
+Werk #5411 introduced the identification and handling of WMI timeouts.
+Some of nested subsections, at least those of MS Exchange, may under
+certain circumstances produce an unprecedented order of output lines
+suddenly ending in a WMI timeout. This scenario was not expected when
+preparing #5411, causing the parsing of some MS Exchange subsections
+to fail and the corresponding check to crash.
+
+This fix ensures that a WMI timeout is properly parsed regardless of
+where it appears in a subsection output. The corresponding checks no
+longer crash but issue a PENDING/UNKNOWN result.

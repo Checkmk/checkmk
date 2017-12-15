@@ -4621,22 +4621,23 @@ class SiteChoice(DropdownChoice):
         return config.site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
-
-
-class TimeperiodSelection(ElementSelection):
+class TimeperiodSelection(DropdownChoice):
     def __init__(self, **kwargs):
-        ElementSelection.__init__(self, **kwargs)
+        kwargs.setdefault("default_value", "24X7")
+        DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
 
-    def get_elements(self):
+    def _get_choices(self):
         import watolib
         timeperiods = watolib.load_timeperiods()
-        elements = dict([ ("24X7", _("Always")) ] + \
-           [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
+        elements = [
+            (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()
+        ]
+
+        always = ("24X7", _("Always"))
+        if always not in elements:
+            elements.insert(0, always)
+
         return elements
-
-    def default_value(self):
-        return "24x7"
-
 
 
 class TimeperiodValuespec(ValueSpec):

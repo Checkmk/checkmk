@@ -1,0 +1,19 @@
+Title: cmk-update-agent: Python 2.4 compatibility fix
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p22
+Date: 1513337498
+Class: fix
+
+Due to a code statement that is not supported in Python 2.4, the Agent Updater could crash when running on a system with a Python interpreter 2.4 or older.
+
+An execution of cmk-update-agent would crash with an error message like:
+
+<pre>
+  File "cmk-update-agent", line 694
+    with open(get_all_certs_filepath(), "w") as acf:
+            ^
+SyntaxError: invalid syntax
+</pre>

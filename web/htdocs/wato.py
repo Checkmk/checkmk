@@ -107,6 +107,8 @@ from cmk.regex import escape_regex_chars, regex
 from cmk.defines import short_service_state_name
 import cmk.render as render
 
+import gui_background_job
+
 if cmk.is_managed_edition():
     import managed
 else:
@@ -136,6 +138,11 @@ multisite_dir = watolib.multisite_dir
 # robust way for doing something like this. If it is locked before, it can now happen
 # that this call unlocks the wider locking when calling this funktion in a wrong way.
 def init_wato_datastructures(with_wato_lock=False):
+    watolib.init_watolib_datastructures()
+    if os.path.exists(watolib.ConfigDomainCACertificates.trusted_cas_file) and\
+        not need_to_create_sample_config():
+        return
+
     if with_wato_lock:
         watolib.lock_exclusive()
 
@@ -143,10 +150,44 @@ def init_wato_datastructures(with_wato_lock=False):
         watolib.ConfigDomainCACertificates().activate()
 
     create_sample_config()
-    watolib.init_watolib_datastructures()
 
     if with_wato_lock:
         watolib.unlock_exclusive()
+
+
+class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
+    def initialize_environment(self):
+        super(WatoBackgroundProcess, self).initialize_environment()
+
+        if self._jobstatus.get_status().get("lock_wato"):
+            cmk.store.release_all_locks()
+            watolib.lock_exclusive()
+
+
+class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
+    _background_process_class = WatoBackgroundProcess
+
+
+
+class RenameHostsBackgroundJob(WatoBackgroundJob):
+    gui_title  = _("Host renaming")
+    job_prefix = "rename-hosts"
+    def __init__(self, title=None):
+        if not title:
+            title = _("Host renaming")
+
+        kwargs = {}
+        kwargs["title"]     = title
+        kwargs["lock_wato"] = True
+        kwargs["stoppable"] = False
+        last_job_status = WatoBackgroundJob(self.job_prefix).get_status()
+        if "duration" in last_job_status:
+            kwargs["estimated_duration"] = last_job_status["duration"]
+
+        super(RenameHostsBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+
+        if self.is_running():
+            raise MKGeneralException(_("Another renaming operation is currently in progress"))
 
 
 #.
@@ -173,6 +214,8 @@ def init_wato_datastructures(with_wato_lock=False):
 #   | ausgeführt, welche aber keinen HTML-Code ausgeben darf.              |
 #   `----------------------------------------------------------------------'
 
+
+
 def page_handler():
     global g_html_head_open
     g_html_head_open = False
@@ -193,8 +236,7 @@ def page_handler():
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")
 
-    # If we do an action, we aquire an exclusive lock on the complete
-    # WATO.
+    # If we do an action, we aquire an exclusive lock on the complete WATO.
     if html.is_transaction():
         watolib.lock_exclusive()
 
@@ -1539,7 +1581,6 @@ def check_new_host_name(varname, host_name):
 #   '----------------------------------------------------------------------'
 
 def mode_bulk_rename_host(phase):
-
     if not config.user.may("wato.rename_hosts"):
         raise MKGeneralException(_("You don't have the right to rename hosts"))
 
@@ -1571,15 +1612,14 @@ def mode_bulk_rename_host(phase):
 
         c = wato_confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
         if c:
-            actions, auth_problems = rename_hosts(renamings) # Already activates the changes!
-            watolib.confirm_all_local_changes() # All activated by the underlying rename automation
-            action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
-            message = _("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (len(renamings), action_txt)
-            if auth_problems:
-                message += _("The following hosts could not be renamed because of missing permissions: %s") % ", ".join([
-                    "%s (%s)" % (host_name, reason) for (host_name, reason) in auth_problems
-                ])
-            return "folder", HTML(message)
+            title = _("Renaming of %s") % ", ".join(map(lambda x: u"%s → %s" % x[1:], renamings))
+            host_renaming_job = RenameHostsBackgroundJob(title=title)
+            host_renaming_job.set_function(rename_hosts_background_job, renamings)
+            host_renaming_job.start()
+
+            job_id = host_renaming_job.get_job_id()
+            job_details_url = html.makeuri_contextless([("mode", "background_job_details"), ("job_id", job_id)], filename="wato.py")
+            html.http_redirect(job_details_url)
         elif c == False: # not yet confirmed
             return ""
         else:
@@ -1592,6 +1632,16 @@ def mode_bulk_rename_host(phase):
         html.hidden_fields()
         html.end_form()
 
+def rename_hosts_background_job(renamings, job_interface=None):
+    actions, auth_problems = rename_hosts(renamings, job_interface=job_interface) # Already activates the changes!
+    watolib.confirm_all_local_changes() # All activated by the underlying rename automation
+    action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
+    message = _("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (len(renamings), action_txt)
+    if auth_problems:
+        message += _("The following hosts could not be renamed because of missing permissions: %s") % ", ".join([
+            "%s (%s)" % (host_name, reason) for (host_name, reason) in auth_problems
+        ])
+    job_interface.send_result_message(message)
 
 def renaming_collision_error(renamings):
     name_collisions = set()
@@ -1809,12 +1859,15 @@ def mode_rename_host(phase):
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
             # the config to that site before the automation is being done.
-            actions, auth_problems = rename_hosts([(watolib.Folder.current(), host.name(), newname)])
-            watolib.confirm_all_local_changes() # All activated by the underlying rename automation
-            html.set_var("host", newname)
-            # TODO: TEST
-            action_list =  html.render_ul( HTML().join(map(html.render_li, actions)) )
-            return "edit_host", _("Renamed host <b>%s</b> into <b>%s</b> at the following places:") % (host_name, newname) + html.render_br() + action_list
+            host_renaming_job = RenameHostsBackgroundJob(title=_("Renaming of %s -> %s") % (host.name(), newname))
+            renamings = [(watolib.Folder.current(), host.name(), newname)]
+            host_renaming_job.set_function(rename_hosts_background_job, renamings)
+            host_renaming_job.start()
+            job_id = host_renaming_job.get_job_id()
+
+            job_details_url = html.makeuri_contextless([("mode", "background_job_details"), ("job_id", job_id)], filename="wato.py")
+            html.http_redirect(job_details_url)
+
         elif c == False: # not yet confirmed
             return ""
         return
@@ -2050,21 +2103,26 @@ def group_renamings_by_site(renamings):
 
 
 # renamings is a list of tuples of (folder, oldname, newname)
-def rename_hosts(renamings):
-
+def rename_hosts(renamings, job_interface=None):
     actions = []
     all_hosts = watolib.Host.all()
 
     # 1. Fix WATO configuration itself ----------------
     auth_problems = []
     successful_renamings = []
+    job_interface.send_progress_update(_("Renaming WATO configuration..."))
     for folder, oldname, newname in renamings:
         try:
             this_host_actions = []
+            job_interface.send_progress_update(_("Renaming host(s) in folders..."))
             this_host_actions += rename_host_in_folder(folder, oldname, newname)
+            job_interface.send_progress_update(_("Renaming host(s) in cluster nodes..."))
             this_host_actions += rename_host_as_cluster_node(all_hosts, oldname, newname)
+            job_interface.send_progress_update(_("Renaming host(s) in parents..."))
             this_host_actions += rename_host_in_parents(oldname, newname)
+            job_interface.send_progress_update(_("Renaming host(s) in rulesets..."))
             this_host_actions += rename_host_in_rulesets(folder, oldname, newname)
+            job_interface.send_progress_update(_("Renaming host(s) in BI aggregations..."))
             this_host_actions += rename_host_in_bi(oldname, newname)
             actions += this_host_actions
             successful_renamings.append((folder, oldname, newname))
@@ -2072,10 +2130,13 @@ def rename_hosts(renamings):
             auth_problems.append((oldname, e))
 
     # 2. Check_MK stuff ------------------------------------------------
+    job_interface.send_progress_update(_("Renaming host(s) in base configuration, rrd, history files, etc."))
+    job_interface.send_progress_update(_("This might take some time and involves a core restart..."))
     action_counts = rename_hosts_in_check_mk(successful_renamings)
 
     # 3. Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
+    job_interface.send_progress_update(_("Renaming host(s) in notification rules..."))
     for folder, oldname, newname in successful_renamings:
         actions += rename_host_in_event_rules(oldname, newname)
         actions += rename_host_in_multisite(oldname, newname)
@@ -2084,6 +2145,7 @@ def rename_hosts(renamings):
         action_counts.setdefault(action, 0)
         action_counts[action] += 1
 
+    job_interface.send_progress_update(_("Calling final hooks"))
     watolib.call_hook_hosts_changed(watolib.Folder.root_folder())
 
     action_texts = render_renaming_actions(action_counts)
@@ -14919,11 +14981,7 @@ def page_download_agent_output():
 # after an update from an older version where no sample config had
 # been created.
 def create_sample_config():
-    if os.path.exists(multisite_dir + "hosttags.mk") \
-        or os.path.exists(wato_root_dir + "rules.mk") \
-        or os.path.exists(wato_root_dir + "groups.mk") \
-        or os.path.exists(wato_root_dir + "notifications.mk") \
-        or os.path.exists(wato_root_dir + "global.mk"):
+    if not need_to_create_sample_config():
         return
 
     # Just in case. If any of the following functions try to write Git messages
@@ -15092,7 +15150,10 @@ def create_sample_config():
     # Initial baking of agents (when bakery is available)
     if watolib.has_agent_bakery():
         try:
-            bake_agents()
+            bake_job = BakeAgentsBackgroundJob()
+            if not bake_job.is_running():
+                bake_job.set_function(bake_agents_background_job)
+                bake_job.start()
         except:
             pass # silently ignore building errors here
 
@@ -15105,6 +15166,15 @@ def create_sample_config():
 
     userdb.create_cmk_automation_user()
 
+
+def need_to_create_sample_config():
+    if os.path.exists(multisite_dir + "hosttags.mk") \
+        or os.path.exists(wato_root_dir + "rules.mk") \
+        or os.path.exists(wato_root_dir + "groups.mk") \
+        or os.path.exists(wato_root_dir + "notifications.mk") \
+        or os.path.exists(wato_root_dir + "global.mk"):
+        return False
+    return True
 
 #.
 #   .--Pattern Editor------------------------------------------------------.

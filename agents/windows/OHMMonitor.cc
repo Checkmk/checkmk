@@ -27,83 +27,65 @@
 #include "WinApiAdaptor.h"
 #include "types.h"
 
-OHMMonitor::OHMMonitor(const std::string &bin_path, Logger *logger,
-                       const WinApiAdaptor &winapi)
-    : _exe_path(bin_path + "\\OpenHardwareMonitorCLI.exe")
-    , _logger(logger)
-    , _winapi(winapi) {
-    _available = (_winapi.GetFileAttributes(_exe_path.c_str()) !=
-                  INVALID_FILE_ATTRIBUTES);
-}
-
-OHMMonitor::~OHMMonitor() {
-    if (_current_process != INVALID_HANDLE_VALUE) {
-        DWORD exitCode = 0;
-        if (!_winapi.GetExitCodeProcess(_current_process, &exitCode)) {
-            // invalid handle
-            _winapi.CloseHandle(_current_process);
-        } else {
-            if (exitCode == STILL_ACTIVE) {
-                // shut down ohm process
-                _winapi.TerminateProcess(_current_process, 0);
-            }
-            _winapi.CloseHandle(_current_process);
-        }
-    }
-}
+namespace {
 
 HANDLE dev_null(const WinApiAdaptor &winapi) {
-    SECURITY_ATTRIBUTES secattr = {};
-    secattr.nLength = sizeof(SECURITY_ATTRIBUTES);
-    secattr.lpSecurityDescriptor = NULL;
-    secattr.bInheritHandle = TRUE;
+    SECURITY_ATTRIBUTES secattr{sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE};
     return winapi.CreateFile("nul:", GENERIC_READ | GENERIC_WRITE,
                              FILE_SHARE_READ | FILE_SHARE_WRITE, &secattr,
                              OPEN_EXISTING, 0, nullptr);
 }
 
-bool OHMMonitor::checkAvailabe() {
+}  // namespace
+
+OHMMonitor::OHMMonitor(const std::string &bin_path, Logger *logger,
+                       const WinApiAdaptor &winapi)
+    : _exe_path(bin_path + "\\OpenHardwareMonitorCLI.exe")
+    , _available(winapi.GetFileAttributes(_exe_path.c_str()) !=
+                 INVALID_FILE_ATTRIBUTES)
+    , _current_process(winapi)
+    , _logger(logger)
+    , _winapi(winapi) {}
+
+OHMMonitor::~OHMMonitor() {}
+
+bool OHMMonitor::startProcess() {
     if (!_available) {
         return false;
     }
 
-    if (_current_process != INVALID_HANDLE_VALUE) {
-        DWORD exitCode = 0;
-        if (!_winapi.GetExitCodeProcess(_current_process, &exitCode)) {
-            // handle invalid???
-            Debug(_logger) << "ohm process handle invalid";
-            _winapi.CloseHandle(_current_process);
-            _current_process = INVALID_HANDLE_VALUE;
-        } else {
+    if (_current_process) {
+        DWORD exitCode = STILL_ACTIVE;
+        if (!_winapi.GetExitCodeProcess(_current_process.get(), &exitCode) ||
+            exitCode != STILL_ACTIVE) {
             if (exitCode != STILL_ACTIVE) {
                 Debug(_logger)
                     << "OHM process ended with exit code " << exitCode;
-                _winapi.CloseHandle(_current_process);
-                _current_process = INVALID_HANDLE_VALUE;
             }
+            _current_process = {INVALID_HANDLE_VALUE, _winapi};
         }
     }
 
-    if (_current_process == INVALID_HANDLE_VALUE) {
-        STARTUPINFO si = {};
+    if (!_current_process) {
+        STARTUPINFO si{0};
         si.cb = sizeof(STARTUPINFO);
         si.dwFlags |= STARTF_USESTDHANDLES;
         si.hStdOutput = si.hStdError = dev_null(_winapi);
+        WrappedHandle<InvalidHandleTraits> fileHandle{si.hStdOutput, _winapi};
 
-        OnScopeExit close_stdout([&]() { _winapi.CloseHandle(si.hStdOutput); });
-
-        PROCESS_INFORMATION pi = {};
+        PROCESS_INFORMATION pi{0};
 
         if (!_winapi.CreateProcess(_exe_path.c_str(), nullptr, nullptr, nullptr,
                                    TRUE, 0, nullptr, nullptr, &si, &pi)) {
             Error(_logger) << "failed to run %s" << _exe_path;
             return false;
         } else {
-            _current_process = pi.hProcess;
+            _current_process = {pi.hProcess, _winapi};
             Debug(_logger) << "started " << _exe_path << " (pid "
                            << pi.dwProcessId << ")";
-            _winapi.CloseHandle(pi.hThread);
+            WrappedHandle<NullHandleTraits> threadHandle{pi.hThread, _winapi};
         }
     }
+
     return true;
 }

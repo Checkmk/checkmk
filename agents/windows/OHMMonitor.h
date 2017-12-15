@@ -27,17 +27,32 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <string>
+#include "types.h"
 
 class Logger;
 class WinApiAdaptor;
 
-/**
- * Ensure the Open Hardware Monitor is running (if it's available)
- **/
+struct OhmProcessHandleTraits {
+    using HandleT = HANDLE;
+    static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        DWORD exitCode = 0;
+        if (winapi.GetExitCodeProcess(value, &exitCode) &&
+            exitCode == STILL_ACTIVE) {
+            // shut down ohm process
+            winapi.TerminateProcess(value, 0);
+        }
+        winapi.CloseHandle(value);
+    }
+};
+
+using OhmProcessHandle = WrappedHandle<OhmProcessHandleTraits>;
+
 class OHMMonitor {
-    std::string _exe_path;
-    bool _available;
-    HANDLE _current_process{INVALID_HANDLE_VALUE};
+    const std::string _exe_path;
+    const bool _available;
+    OhmProcessHandle _current_process;
     Logger *_logger;
     const WinApiAdaptor &_winapi;
 
@@ -46,7 +61,9 @@ public:
                const WinApiAdaptor &winapi);
     ~OHMMonitor();
 
-    // this call actually starts OHM if necessary and returns
-    // true if it was already running or was successfully started
-    bool checkAvailabe();
+    /**
+     * Ensure the Open Hardware Monitor is running (if it's available).
+     * Return true if it was already running or was successfully started.
+    **/
+    bool startProcess();
 };

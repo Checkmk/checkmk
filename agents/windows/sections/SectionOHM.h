@@ -42,8 +42,7 @@ protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 
 private:
-    std::unique_ptr<OHMMonitor> _ohm_monitor;
-    std::string _bin_path;
+    OHMMonitor _ohm_monitor;
 };
 
 #endif  // SectionOHM_h

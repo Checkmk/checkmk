@@ -42,7 +42,7 @@ class BasicCheckResult(object):
         if "status" in expected_result:
             assert result.status == expected_result["status"]
         if "infotext" in expected_result:
-            assert result.infotext == expected_result["infotext"]
+            assert expected_result["infotext"] in result.infotext
         if "perfdata" in expected_result:
             assert result.perfdata == expected_result["perfdata"]
 

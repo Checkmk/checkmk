@@ -24,6 +24,7 @@
 
 #include "SectionLogwatch.h"
 #include <cassert>
+#include <fstream>
 #include <regex>
 #include "Environment.h"
 #include "Logger.h"
@@ -32,7 +33,95 @@
 #include <inttypes.h>
 #include "WinApiAdaptor.h"
 
-static const size_t UNICODE_BUFFER_SIZE = 8192;
+using std::ifstream;
+using std::ofstream;
+
+namespace {
+
+struct SearchHandleTraits {
+    using HandleT = HANDLE;
+    static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.FindClose(value);
+    }
+};
+
+const size_t UNICODE_BUFFER_SIZE = 8192;
+
+// Process content of the given textfile
+// Can be called in dry-run mode (write_output = false). This tries to detect
+// CRIT or WARN patterns
+// If write_output is set to true any data found is written to the out socket
+inline int fill_unicode_bytebuffer(ifstream &file, char *buffer, int offset) {
+    int bytes_to_read = UNICODE_BUFFER_SIZE - offset;
+    file.read(buffer + offset, bytes_to_read);
+    return file.gcount() + offset;
+}
+
+inline int find_crnl_end(char *buffer) {
+    for (size_t index = 0; index < UNICODE_BUFFER_SIZE; index += 2) {
+        if (buffer[index] == 0x0d && index < UNICODE_BUFFER_SIZE - 2 &&
+            buffer[index + 2] == 0x0a)
+            return index + 4;
+    }
+    return -1;
+}
+
+inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         [](int ch) { return !std::isspace(ch); })
+                .base(),
+            s.end());
+}
+
+file_encoding determine_encoding(logwatch_textfile *textfile) {
+    ifstream ifs(textfile->paths.front(), ifstream::in | ifstream::binary);
+
+    if (ifs.fail()) {
+        return UNDEF;
+    }
+
+    std::array<char, 2> bytes;
+
+    if (ifs.read(bytes.data(), bytes.size()) &&
+        static_cast<unsigned char>(bytes[0]) == 0xFF &&
+        static_cast<unsigned char>(bytes[1]) == 0xFE) {
+        return UNICODE;
+    } else {
+        return DEFAULT;
+    }
+}
+
+ifstream open_logfile(logwatch_textfile *textfile) {
+    ifstream result;
+
+    if ((textfile->encoding == UNDEF) || (textfile->offset == 0)) {
+        textfile->encoding = determine_encoding(textfile);
+    }
+
+    if (textfile->encoding == UNDEF) {
+        result.setstate(std::ios_base::badbit);
+    } else {
+        auto mode = ifstream::in;
+        if (textfile->encoding == UNICODE) {
+            mode |= ifstream::binary;
+        }
+        result.open(textfile->paths.front(), mode);
+    }
+
+    return result;
+}
+
+uint64_t logfile_offset(logwatch_textfile *textfile) {
+    uint64_t offset = textfile->offset;
+    if ((offset == 0) && (textfile->encoding == UNICODE)) {
+        offset = 2;
+    }
+    return offset;
+}
+
+}  // namespace
 
 SectionLogwatch::SectionLogwatch(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
@@ -117,19 +206,20 @@ std::vector<SectionLogwatch::FileEntryType> SectionLogwatch::globMatches(
     }
 
     WIN32_FIND_DATA data;
-    HANDLE h = _winapi.FindFirstFileEx(pattern, FindExInfoStandard, &data,
-                                       FindExSearchNameMatch, nullptr, 0);
+    WrappedHandle<SearchHandleTraits> searchHandle{
+        _winapi.FindFirstFileEx(pattern, FindExInfoStandard, &data,
+                                FindExSearchNameMatch, nullptr, 0),
+        _winapi};
 
-    bool more = h != INVALID_HANDLE_VALUE;
+    bool more = bool(searchHandle);
 
     while (more) {
         if (!(data.dwFileAttributes &
               FILE_ATTRIBUTE_DIRECTORY))  // Skip directories
             matches.push_back(
                 std::make_pair(path + data.cFileName, data.ftLastWriteTime));
-        more = _winapi.FindNextFile(h, &data);
+        more = _winapi.FindNextFile(searchHandle.get(), &data);
     }
-    _winapi.FindClose(h);
 
     return matches;
 }
@@ -195,8 +285,8 @@ void SectionLogwatch::processGlobExpression(glob_token *glob_token,
 }
 
 void SectionLogwatch::saveOffsets(const std::string &logwatch_statefile) {
-    FILE *file = fopen(logwatch_statefile.c_str(), "w");
-    if (!file) {
+    ofstream ofs(logwatch_statefile);
+    if (ofs.fail()) {
         const auto saveErrno = errno;
         Error(_logger) << "Cannot open " << logwatch_statefile
                        << " for writing: " << strerror(saveErrno) << " ("
@@ -207,47 +297,15 @@ void SectionLogwatch::saveOffsets(const std::string &logwatch_statefile) {
     }
     for (logwatch_textfile *tf : _textfiles) {
         if (!tf->missing) {
-            fprintf(file, "%s|%" PRIu64 "|%" PRIu64 "|%" PRIu64 "\r\n",
-                    tf->name.c_str(), tf->file_id, tf->file_size, tf->offset);
+            ofs << tf->name << "|" << tf->file_id << "|" << tf->file_size << "|"
+                << tf->offset << std::endl;
         }
     }
-    if (file != NULL) {
-        fclose(file);
-    }
 }
-
-namespace {
-
-// Process content of the given textfile
-// Can be called in dry-run mode (write_output = false). This tries to detect
-// CRIT or WARN patterns
-// If write_output is set to true any data found is written to the out socket
-inline int fill_unicode_bytebuffer(FILE *file, char *buffer, int offset) {
-    int bytes_to_read = UNICODE_BUFFER_SIZE - offset;
-    int read_bytes = fread(buffer + offset, 1, bytes_to_read, file);
-    return read_bytes + offset;
-}
-
-inline int find_crnl_end(char *buffer) {
-    for (size_t index = 0; index < UNICODE_BUFFER_SIZE; index += 2) {
-        if (buffer[index] == 0x0d && index < UNICODE_BUFFER_SIZE - 2 &&
-            buffer[index + 2] == 0x0a)
-            return index + 4;
-    }
-    return -1;
-}
-
-inline void rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-                         [](int ch) { return !std::isspace(ch); })
-                .base(),
-            s.end());
-}
-
-}  // namespace
 
 SectionLogwatch::ProcessTextfileResponse
-SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
+SectionLogwatch::processTextfileUnicode(ifstream &file,
+                                        logwatch_textfile *textfile,
                                         std::ostream &out, bool write_output) {
     Notice(_logger) << "Checking UNICODE file " << textfile->paths.front();
     ProcessTextfileResponse response;
@@ -349,14 +407,15 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
 }
 
 SectionLogwatch::ProcessTextfileResponse
-SectionLogwatch::processTextfileDefault(FILE *file, logwatch_textfile *textfile,
+SectionLogwatch::processTextfileDefault(ifstream &file,
+                                        logwatch_textfile *textfile,
                                         std::ostream &out, bool write_output) {
     char line[4096];
     ProcessTextfileResponse response;
     Notice(_logger) << "Checking file " << textfile->paths.front();
 
-    while (!feof(file)) {
-        if (!fgets(line, sizeof(line), file)) break;
+    while (!file.eof()) {
+        if (!file.getline(line, sizeof(line))) break;
         std::string lineString(line);
         rtrim(lineString);
 
@@ -385,55 +444,13 @@ SectionLogwatch::processTextfileDefault(FILE *file, logwatch_textfile *textfile,
     return response;
 }
 
-file_encoding determine_encoding(logwatch_textfile *textfile) {
-    // Determine Encoding
-    FILE *file = fopen(textfile->paths.front().c_str(), "rb");
-    if (!file) {
-        return UNDEF;
-    }
-
-    OnScopeExit auto_close([file]() { fclose(file); });
-
-    char bytes[2];
-    int read_bytes = fread(bytes, 1, sizeof(bytes), file);
-
-    if ((read_bytes == sizeof(bytes)) &&
-        static_cast<unsigned char>(bytes[0]) == 0xFF &&
-        static_cast<unsigned char>(bytes[1]) == 0xFE)
-        return UNICODE;
-    else
-        return DEFAULT;
-}
-
-FILE *open_logfile(logwatch_textfile *textfile) {
-    FILE *result = nullptr;
-
-    if ((textfile->encoding == UNDEF) || (textfile->offset == 0)) {
-        textfile->encoding = determine_encoding(textfile);
-    }
-
-    if (textfile->encoding != UNDEF) {
-        if (textfile->encoding == UNICODE)
-            result = fopen(textfile->paths.front().c_str(), "rb");
-        else
-            result = fopen(textfile->paths.front().c_str(), "r");
-    }
-
-    return result;
-}
-
-uint64_t logfile_offset(logwatch_textfile *textfile) {
-    uint64_t offset = textfile->offset;
-    if ((offset == 0) && (textfile->encoding == UNICODE)) {
-        offset = 2;
-    }
-    return offset;
-}
-
 SectionLogwatch::ProcessTextfileResponse SectionLogwatch::processTextfile(
-    FILE *file, logwatch_textfile *textfile, std::ostream &out,
+    ifstream &file, logwatch_textfile *textfile, std::ostream &out,
     bool write_output) {
-    fseek(file, logfile_offset(textfile), SEEK_SET);
+    // Reset stream state after previous read as we process the files twice.
+    // Necessary as reading UTF-16 file sets some fail bit(s) at the end.
+    file.clear();
+    file.seekg(logfile_offset(textfile));
     if (textfile->encoding == UNICODE)
         return processTextfileUnicode(file, textfile, out, write_output);
     else
@@ -448,13 +465,12 @@ void SectionLogwatch::processTextfile(std::ostream &out,
     }
 
     // Start processing file
-    FILE *file = open_logfile(textfile);
+    ifstream file = open_logfile(textfile);
 
-    if (!file) {
+    if (file.fail()) {
         out << "[[[" << textfile->name << ":cannotopen]]]\n";
         return;
     }
-    OnScopeExit auto_close([file]() { fclose(file); });
 
     out << "[[[" << replaceAll(textfile->name, "*", "__all__") << "]]]\n";
     if (textfile->offset == textfile->file_size) {  // no new data
@@ -508,13 +524,13 @@ bool SectionLogwatch::getFileInformation(const char *filename,
                                          BY_HANDLE_FILE_INFORMATION *info) {
     WrappedHandle<InvalidHandleTraits> hFile{
         _winapi.CreateFile(
-            filename,              // file to open
-            GENERIC_READ,          // open for reading
+            filename,      // file to open
+            GENERIC_READ,  // open for reading
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-            nullptr,               // default security
-            OPEN_EXISTING,         // existing file only
-            FILE_ATTRIBUTE_NORMAL, // normal file
-            nullptr),              // no attr. template
+            nullptr,                // default security
+            OPEN_EXISTING,          // existing file only
+            FILE_ATTRIBUTE_NORMAL,  // normal file
+            nullptr),               // no attr. template
         _winapi};
 
     if (!hFile) {
@@ -772,17 +788,15 @@ void SectionLogwatch::parseLogwatchStateLine(char *line) {
 }
 
 void SectionLogwatch::loadLogwatchOffsets() {
-    static bool offsets_loaded = false;
-    if (!offsets_loaded) {
-        FILE *file = fopen(_env.logwatchStatefile().c_str(), "r");
-        if (file) {
+    if (!_offsets_loaded) {
+        ifstream ifs(_env.logwatchStatefile());
+        if (ifs) {
             char line[256];
-            while (NULL != fgets(line, sizeof(line), file)) {
+            while (ifs.getline(line, sizeof(line))) {
                 parseLogwatchStateLine(line);
             }
-            fclose(file);
         }
-        offsets_loaded = true;
+        _offsets_loaded = true;
     }
 }
 

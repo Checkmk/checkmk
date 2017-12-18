@@ -1,0 +1,10 @@
+Title: mk_oracle, mk_oracle.aix: Fixed excluding all sections for any SID which contains invalid characters in the related variable name
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p22
+Date: 1513594845
+Class: fix
+
+

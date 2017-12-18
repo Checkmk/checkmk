@@ -1,3 +1,31 @@
+class PerfValue(object):
+    """Represents a single perf value"""
+
+    def __init__(self, key, value, warn=None, crit=None, minimum=None, maximum=None):
+        # TODO: This is very basic. There is more way more magic involved
+        #       in what kind of values are allowed as metric names.
+        #       I'm not too sure unicode should be allowed, either.
+        assert type(key) in [str, unicode]
+        self.key = key
+
+        # NOTE: The CMC as well as all other Nagios-compatible cores do accept a
+        #       string value that may contain a unit, which is in turn available
+        #       for use in PNP4Nagios templates. Check_MK defines its own semantic
+        #       context for performance values using Check_MK metrics. It is therefore
+        #       preferred to return a "naked" scalar.
+        assert type(value) in [int, float]
+        self.value = value
+
+        assert type(warn) in [int, float, type(None)]
+        self.warn = warn
+        assert type(crit) in [int, float, type(None)]
+        self.crit = crit
+        assert type(minimum) in [int, float, type(None)]
+        self.minimum = minimum
+        assert type(maximum) in [int, float, type(None)]
+        self.maximum = maximum
+
+
 class BasicCheckResult(object):
     """A basic check result
 
@@ -15,20 +43,13 @@ class BasicCheckResult(object):
         self.infotext = infotext
         if perfdata is not None:
             assert type(perfdata) == list
-            assert all([len(entry) >= 2 for entry in perfdata])
 
+            self.perfdata = []
             for entry in perfdata:
                 assert type(entry) == tuple
-                assert len(entry) >= 2
-
-                # TODO: This is very basic. There is more way more magic involved
-                #       in what kind of values are allowed as metric names.
-                #       I'm not too sure unicode should be allowed, either.
-                assert type(entry[0]) in [str, unicode]
-
-                assert type(entry[1]) in [int, float]
-                assert all(type(value) in [int, float, type(None)] for value in entry[2:])
-        self.perfdata = perfdata
+                self.perfdata.append(PerfValue(*entry))
+        else:
+            self.perfdata = None
 
     def match_status(self, expected_status):
         """Check if this result's status matches a given value. Exact match."""

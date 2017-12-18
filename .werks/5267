@@ -10,13 +10,28 @@ Class: feature
 The cmk-update-agent executable is now implemented as a packaged binary executable.
 This werk consists of many changes that have partly already been applied to Check_MK 1.5.0i1.
 
-The new format addresses several problems and yields some improvements:
+The new agent updater addresses several problems and yields some improvements:
 
-* Better compatibility: All requirements regarding the installed Python Interpreter or other packages/programs were eliminated; the only requirements left are a x86_64 processor architecture and a glibc 2.5 or above.
+* Better compatibility: All requirements regarding the installed Python
+  Interpreter or other packages/programs were eliminated; the only requirements
+  left are a x86_64 processor architecture and a glibc 2.5 or above.
 
-* More convenient communication to Check_MK Server: All GET-Requests have been replaced with according POST-Requests. This improves security as sensitive data is no longer sent within the URL of the HTTP(S) request.
+* Notably, there will be no more problems with curl and because all
+  communication is now done via python-requests, which is included within the
+  cmk-update-agent executable as mentioned above.
 
-* Only one copy of cmk-update-agent: The copy of cmk-update-agent previously placed under /usr/bin/cmk-update-agent has been replaced by a shell script that executes the actual cmk-update-agent executable situated at the Check_MK Agent plugin directory. This eliminates the need to maintain two places when manually replacing cmk-update-agent for debugging reasons.
-However, it is still possible to execute a copy of the cmk-update-agent executable directly.
+* The reduction of the requirements will also reduce compatibility problems on some systems
+  related to the encrypted SSL communication with the Check_MK server.
 
-* Notably, there will be no more problems with curl and because all communication is now done via python-requests, which is included within the cmk-update-agent executable as mentioned above.
+* More convenient communication with Check_MK Server: All HTTP-Requests have been
+  changed to POST-Requests. This improves confidentiality of the information transfered
+  to the Check_MK server. The data is no longer written to the apache log of
+  the Check_MK servers apache (system and site apache).
+
+* cmk-update-agent installed only once: The copy of cmk-update-agent previously
+  placed under <tt>/usr/bin/cmk-update-agent</tt> has been replaced by a shell script
+  that executes the actual cmk-update-agent executable situated at the Check_MK
+  Agent plugin directory. This eliminates the need to maintain two places when
+  manually replacing cmk-update-agent for debugging reasons.
+  However, it is still possible to execute a copy of the cmk-update-agent
+  executable directly.

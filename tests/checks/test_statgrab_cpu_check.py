@@ -31,4 +31,4 @@ def test_statgrab_cpu_check(check_manager, monkeypatch, time_to_info, params, ex
     except MKCounterWrapped:
         pass
     monkeypatch.setattr("time.time", lambda: 60)
-    subresults = [ checktestlib.BasicCheckResult(*subresult) for subresult in check.run_check(None, params, time_to_info(60)) ]
+    result = checktestlib.CompoundCheckResult(check.run_check(None, params, time_to_info(60)))

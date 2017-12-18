@@ -1093,12 +1093,16 @@ do
         if [ "$SKIP" ] ; then continue ; fi
     fi
 
-    # Handle explicit exclusion of instances
     EXCLUDE=EXCLUDE_$SID
-    EXCLUDE=${!EXCLUDE}
-    # SID filtered totally?
-    if [ "$EXCLUDE" = "ALL" ]; then
-        continue
+    if [[ "$EXCLUDE" =~ ^[a-zA-Z][a-zA-Z0-9_]*$ ]]
+    then
+        # Handle explicit exclusion of instances
+        # but not for +ASM
+        EXCLUDE=${!EXCLUDE}
+        # SID filtered totally?
+        if [ "$EXCLUDE" = "ALL" ]; then
+            continue
+        fi
     fi
 
     if [ ${SID:0:1} = '+' ] ; then

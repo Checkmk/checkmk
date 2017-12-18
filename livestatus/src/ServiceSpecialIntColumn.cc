@@ -44,14 +44,13 @@ int32_t ServiceSpecialIntColumn::getValue(
     if (auto object = columnData<Object>(row)) {
         switch (_type) {
             case Type::real_hard_state: {
-                auto state = object->state();
-                if (state->_current_state == 0) {
+                if (object->isCurrentStateOK()) {
                     return 0;
                 }
-                if (state->_state_type == StateType::hard) {
-                    return state->_current_state;
-                }
-                return state->_last_hard_state;
+                auto state = object->state();
+                return state->_state_type == StateType::hard
+                           ? state->_current_state
+                           : state->_last_hard_state;
             }
             case Type::pnp_graph_present:
                 return _mc->impl<Core>()

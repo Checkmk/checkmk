@@ -1,0 +1,11 @@
+Title: check_mk_agent.aix: Fixed crash in uptime if the output is day instead of days
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1513595012
+Class: fix
+
+This fix should prevent the uptime service of crashing not only if the output
+contains day instead of days, but also for other possible deviating output.

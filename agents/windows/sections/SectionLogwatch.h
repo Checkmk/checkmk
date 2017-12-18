@@ -128,17 +128,17 @@ private:
     static void addConditionPattern(globline_container *&globline,
                                     const char *state, const char *value);
 
-    ProcessTextfileResponse processTextfileDefault(FILE *file,
+    ProcessTextfileResponse processTextfileDefault(std::ifstream &file,
                                                    logwatch_textfile *textfile,
                                                    std::ostream &out,
                                                    bool write_output);
 
-    ProcessTextfileResponse processTextfileUnicode(FILE *file,
+    ProcessTextfileResponse processTextfileUnicode(std::ifstream &file,
                                                    logwatch_textfile *textfile,
                                                    std::ostream &out,
                                                    bool write_output);
 
-    ProcessTextfileResponse processTextfile(FILE *file,
+    ProcessTextfileResponse processTextfile(std::ifstream &file,
                                             logwatch_textfile *textfile,
                                             std::ostream &out,
                                             bool write_output);
@@ -151,6 +151,7 @@ private:
     GlobListConfigurable _globlines;
     std::vector<logwatch_textfile *> _textfiles;
     std::vector<logwatch_textfile *> _hints;
+    bool _offsets_loaded{false};
     bool _initialised{false};
 };
 

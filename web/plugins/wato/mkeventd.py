@@ -1059,6 +1059,7 @@ def save_mkeventd_sample_config():
 #   '----------------------------------------------------------------------'
 
 def mode_mkeventd_rule_packs(phase):
+    search_expression = get_search_expression()
     if phase == "title":
         return _("Event Console Rule Packages")
 
@@ -1145,99 +1146,117 @@ def mode_mkeventd_rule_packs(phase):
     elif rep_mode == "stopped":
         html.show_error(_("The Event Console is currently not running."))
 
+    search_form("%s: " % _("Search in packs"), "mkeventd_rule_packs")
+    if search_expression:
+        found_packs = filter_mkeventd_rule_packs(search_expression, rule_packs)
+        title = _("Found rule packs")
+    else:
+        found_packs = {}
+        title = _("Rule packs")
+
     # Simulator
     event = show_event_simulator()
-
     if not rule_packs:
         html.message(_("You have not created any rule packs yet. The Event Console is useless unless "
-                     "you have activated <i>Force message archiving</i> in the global settings."))
-    else:
-        have_match = False
+                       "you have activated <i>Force message archiving</i> in the global settings."))
+    elif search_expression and not found_packs:
+        html.message(_("Found no rules packs."))
+        return
 
-        table.begin(limit=None, sortable=False, title=_("Rule packs"))
-        for nr, rule_pack in enumerate(rule_packs):
-            table.row()
-            delete_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)])
-            drag_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
-            edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
-            # Cloning does not work. Rule IDs would not be unique. So drop it for a while
-            # clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
-            rules_url  = html.makeuri_contextless([("mode", "mkeventd_rules"), ("rule_pack", rule_pack["id"])])
+    have_match = False
+    table.begin(css="ruleset", limit=None, sortable=False, title=title)
+    for nr, rule_pack in enumerate(rule_packs):
+        if rule_pack["id"] in found_packs:
+            css_matches_search = "matches_search"
+        else:
+            css_matches_search = None
 
-            table.cell(_("Actions"), css="buttons")
-            html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
-            # Cloning does not work until we have unique IDs
-            # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
-            html.element_dragger_url("tr", base_url=drag_url)
-            html.icon_button(delete_url, _("Delete this rule pack"), "delete")
-            html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
+        table.row(css=css_matches_search)
+        delete_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)])
+        drag_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
+        edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
+        # Cloning does not work. Rule IDs would not be unique. So drop it for a while
+        # clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
+        rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", rule_pack["id"])]
+        if found_packs.get(rule_pack["id"]):
+            rules_url_vars.append(("search", search_expression))
+        rules_url  = html.makeuri_contextless(rules_url_vars)
 
-            # Icon for disabling
-            table.cell("", css="buttons")
-            if rule_pack["disabled"]:
-                html.icon(_("This rule pack is currently disabled. None of its rules will be applied."), "disabled")
+        table.cell(_("Actions"), css="buttons")
+        html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
+        # Cloning does not work until we have unique IDs
+        # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
+        html.element_dragger_url("tr", base_url=drag_url)
+        html.icon_button(delete_url, _("Delete this rule pack"), "delete")
+        html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
 
-            # Simulation of all rules in this pack
-            elif event:
-                matches = 0
-                match_groups = None
-                cancelling_matches = 0
-                skips = 0
+        # Icon for disabling
+        table.cell("", css="buttons")
+        if rule_pack["disabled"]:
+            html.icon(_("This rule pack is currently disabled. None of its rules will be applied."), "disabled")
 
-                for rule in rule_pack["rules"]:
-                    result = mkeventd.event_rule_matches(rule_pack, rule, event)
-                    if type(result) == tuple:
-                        cancelling, groups = result
+        # Simulation of all rules in this pack
+        elif event:
+            matches = 0
+            match_groups = None
+            cancelling_matches = 0
+            skips = 0
 
-                        if not cancelling and rule.get("drop") == "skip_pack":
-                            matches += 1
-                            skips = 1
-                            break
+            for rule in rule_pack["rules"]:
+                result = mkeventd.event_rule_matches(rule_pack, rule, event)
+                if type(result) == tuple:
+                    cancelling, groups = result
 
-                        if matches == 0:
-                            match_groups = groups # show groups of first (= decisive) match
-
-                        if cancelling and matches == 0:
-                            cancelling_matches += 1
-
+                    if not cancelling and rule.get("drop") == "skip_pack":
                         matches += 1
+                        skips = 1
+                        break
 
-                if matches == 0:
-                    msg = _("None of the rules in this pack matches")
+                    if matches == 0:
+                        match_groups = groups # show groups of first (= decisive) match
+
+                    if cancelling and matches == 0:
+                        cancelling_matches += 1
+
+                    matches += 1
+
+            if matches == 0:
+                msg = _("None of the rules in this pack matches")
+                icon = "rulenmatch"
+            else:
+                msg = _("Number of matching rules in this pack: %d") % matches
+                if skips:
+                    msg += _(", the first match skips this rule pack")
                     icon = "rulenmatch"
                 else:
-                    msg = _("Number of matching rules in this pack: %d") % matches
-                    if skips:
-                        msg += _(", the first match skips this rule pack")
-                        icon = "rulenmatch"
+                    if cancelling:
+                        msg += _(", first match is a cancelling match")
+                    if groups:
+                        msg += _(", match groups of decisive match: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
+                    if have_match:
+                        msg += _(", but it is overruled by a match in a previous rule pack.")
+                        icon = "rulepmatch"
                     else:
-                        if cancelling:
-                            msg += _(", first match is a cancelling match")
-                        if groups:
-                            msg += _(", match groups of decisive match: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
-                        if have_match:
-                            msg += _(", but it is overruled by a match in a previous rule pack.")
-                            icon = "rulepmatch"
-                        else:
-                            icon = "rulematch"
-                            have_match = True
-                html.icon(msg, icon)
+                        icon = "rulematch"
+                        have_match = True
+            html.icon(msg, icon)
 
-            table.cell(_("ID"), rule_pack["id"])
-            table.cell(_("Title"), html.render_text(rule_pack["title"]))
+        table.cell(_("ID"), rule_pack["id"])
+        table.cell(_("Title"), html.render_text(rule_pack["title"]))
 
-            if cmk.is_managed_edition():
-                table.cell(_("Customer"))
-                if "customer" in rule_pack:
-                    html.write_text(managed.get_customer_name(rule_pack))
+        if cmk.is_managed_edition():
+            table.cell(_("Customer"))
+            if "customer" in rule_pack:
+                html.write_text(managed.get_customer_name(rule_pack))
 
-            table.cell(_("Rules"),
-                html.render_a("%d" % len(rule_pack["rules"]), href=rules_url), css="number")
+        table.cell(_("Rules"),
+            html.render_a("%d" % len(rule_pack["rules"]), href=rules_url), css="number")
 
-            hits = rule_pack.get('hits')
-            table.cell(_("Hits"), hits != None and hits or '', css="number")
+        hits = rule_pack.get('hits')
+        table.cell(_("Hits"), hits != None and hits or '', css="number")
 
-        table.end()
+    table.end()
+
 
 
 def show_event_simulator():
@@ -1283,7 +1302,22 @@ def rule_pack_with_id(rule_packs, rule_pack_id):
     raise MKUserError(None, _("The requested rule pack does not exist."))
 
 
+def filter_mkeventd_rule_packs(search_expression, rule_packs):
+    found_packs = {}
+    for rule_pack in rule_packs:
+        if search_expression in rule_pack["id"] \
+           or search_expression in rule_pack["title"]:
+            found_packs.setdefault(rule_pack["id"], [])
+        for rule in rule_pack.get("rules", []):
+            if search_expression in rule["id"] \
+               or search_expression in rule.get("description"):
+                found_rules = found_packs.setdefault(rule_pack["id"], [])
+                found_rules.append(rule)
+    return found_packs
+
+
 def mode_mkeventd_rules(phase):
+    search_expression = get_search_expression()
     legacy_rules, rule_packs = load_mkeventd_rules()
     rule_pack_id = html.var("rule_pack")
     rule_pack_nr, rule_pack = rule_pack_with_id(rule_packs, rule_pack_id)
@@ -1343,141 +1377,153 @@ def mode_mkeventd_rules(phase):
                 add_ec_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return
 
+    search_form("%s: " % _("Search in rules"), "mkeventd_rules")
+    if search_expression:
+        found_rules = filter_mkeventd_rules(search_expression, rule_pack)
+    else:
+        found_rules = []
+
     # Simulator
     event = show_event_simulator()
-
     if not rules:
         html.message(_("This package does not yet contain any rules."))
+        return
+    elif search_expression and not found_rules:
+        html.message(_("No rules found."))
+        return
 
-    else:
-        if len(rule_packs) > 1:
-            html.begin_form("move_to", method="POST")
+    if len(rule_packs) > 1:
+        html.begin_form("move_to", method="POST")
 
-        # Show content of the rule package
-        table.begin(limit=None, sortable=False)
+    # Show content of the rule package
+    table.begin(css="ruleset", limit=None, sortable=False)
+    have_match = False
+    for nr, rule in enumerate(rules):
+        if rule in found_rules:
+            css_matches_search = "matches_search"
+        else:
+            css_matches_search = None
 
-        have_match = False
-        for nr, rule in enumerate(rules):
-            table.row()
-            delete_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_delete", nr)])
-            drag_url   = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr)])
-            edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("edit", nr)])
-            clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("clone", nr)])
+        table.row(css=css_matches_search)
+        delete_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_delete", nr)])
+        drag_url   = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr)])
+        edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("edit", nr)])
+        clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("clone", nr)])
 
-            table.cell(_("Actions"), css="buttons")
-            html.icon_button(edit_url, _("Edit this rule"), "edit")
-            html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
-            html.element_dragger_url("tr", base_url=drag_url)
-            html.icon_button(delete_url, _("Delete this rule"), "delete")
+        table.cell(_("Actions"), css="buttons")
+        html.icon_button(edit_url, _("Edit this rule"), "edit")
+        html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+        html.element_dragger_url("tr", base_url=drag_url)
+        html.icon_button(delete_url, _("Delete this rule"), "delete")
 
-            table.cell("", css="buttons")
-            if rule.get("disabled"):
-                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
-            elif event:
-                result = mkeventd.event_rule_matches(rule_pack, rule, event)
-                if type(result) != tuple:
-                    html.icon(_("Rule does not match: %s") % result, "rulenmatch")
+        table.cell("", css="buttons")
+        if rule.get("disabled"):
+            html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+        elif event:
+            result = mkeventd.event_rule_matches(rule_pack, rule, event)
+            if type(result) != tuple:
+                html.icon(_("Rule does not match: %s") % result, "rulenmatch")
+            else:
+                cancelling, groups = result
+                if have_match:
+                    msg = _("This rule matches, but is overruled by a previous match.")
+                    icon = "rulepmatch"
                 else:
-                    cancelling, groups = result
-                    if have_match:
-                        msg = _("This rule matches, but is overruled by a previous match.")
-                        icon = "rulepmatch"
+                    if cancelling:
+                        msg = _("This rule does a cancelling match.")
                     else:
-                        if cancelling:
-                            msg = _("This rule does a cancelling match.")
-                        else:
-                            msg = _("This rule matches.")
-                        icon = "rulematch"
-                        have_match = True
-                    if groups:
-                        msg += _(" Match groups: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
-                    html.icon(msg, icon)
+                        msg = _("This rule matches.")
+                    icon = "rulematch"
+                    have_match = True
+                if groups:
+                    msg += _(" Match groups: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
+                html.icon(msg, icon)
 
-            if rule.get("invert_matching"):
-                html.icon(_("Matching is inverted in this rule"), "inverted")
+        if rule.get("invert_matching"):
+            html.icon(_("Matching is inverted in this rule"), "inverted")
 
-            if rule.get("contact_groups") != None:
-                html.icon(_("This rule attaches contact group(s) to the events: %s") %
-                           (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
-                         "contactgroups")
+        if rule.get("contact_groups") != None:
+            html.icon(_("This rule attaches contact group(s) to the events: %s") %
+                       (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
+                     "contactgroups")
 
-            table.cell(_("ID"), html.render_a(rule["id"], edit_url))
+        table.cell(_("ID"), html.render_a(rule["id"], edit_url))
 
-            if cmk.is_managed_edition():
-                table.cell(_("Customer"))
-                if "customer" in rule_pack:
-                    html.write_text("%s (%s)" %
-                            (managed.get_customer_name(rule_pack), _("Set by rule pack")))
-                else:
-                    html.write_text(managed.get_customer_name(rule))
-
-
-            if rule.get("drop"):
-                table.cell(_("State"), css="state statep nowrap")
-                if rule["drop"] == "skip_pack":
-                    html.write_text(_("SKIP PACK"))
-                else:
-                    html.write_text(_("DROP"))
+        if cmk.is_managed_edition():
+            table.cell(_("Customer"))
+            if "customer" in rule_pack:
+                html.write_text("%s (%s)" %
+                        (managed.get_customer_name(rule_pack), _("Set by rule pack")))
             else:
-                if type(rule['state']) == tuple:
-                    stateval = rule["state"][0]
-                else:
-                    stateval = rule["state"]
-                txt = { 0: _("OK"),   1:_("WARN"),
-                        2: _("CRIT"), 3:_("UNKNOWN"),
-                       -1: _("(syslog)"),
-                       'text_pattern':_("(set by message text)") }[stateval]
-                table.cell(_("State"), txt,  css="state state%s" % stateval)
+                html.write_text(managed.get_customer_name(rule))
 
-            # Syslog priority
-            if "match_priority" in rule:
-                prio_from, prio_to = rule["match_priority"]
-                if prio_from == prio_to:
-                    prio_text = mkeventd.syslog_priorities[prio_from][1]
-                else:
-                    prio_text = mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
-                                mkeventd.syslog_priorities[prio_to][1][:2]
+
+        if rule.get("drop"):
+            table.cell(_("State"), css="state statep nowrap")
+            if rule["drop"] == "skip_pack":
+                html.write_text(_("SKIP PACK"))
             else:
-                prio_text = ""
-            table.cell(_("Priority"), prio_text)
+                html.write_text(_("DROP"))
+        else:
+            if type(rule['state']) == tuple:
+                stateval = rule["state"][0]
+            else:
+                stateval = rule["state"]
+            txt = { 0: _("OK"),   1:_("WARN"),
+                    2: _("CRIT"), 3:_("UNKNOWN"),
+                   -1: _("(syslog)"),
+                   'text_pattern':_("(set by message text)") }[stateval]
+            table.cell(_("State"), txt,  css="state state%s" % stateval)
 
-            # Syslog Facility
-            table.cell(_("Facility"))
-            if "match_facility" in rule:
-                facnr = rule["match_facility"]
-                html.write("%s" % dict(mkeventd.syslog_facilities)[facnr])
+        # Syslog priority
+        if "match_priority" in rule:
+            prio_from, prio_to = rule["match_priority"]
+            if prio_from == prio_to:
+                prio_text = mkeventd.syslog_priorities[prio_from][1]
+            else:
+                prio_text = mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
+                            mkeventd.syslog_priorities[prio_to][1][:2]
+        else:
+            prio_text = ""
+        table.cell(_("Priority"), prio_text)
 
-            table.cell(_("Service Level"),
-                      dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
-            hits = rule.get('hits')
-            table.cell(_("Hits"), hits != None and hits or '', css="number")
+        # Syslog Facility
+        table.cell(_("Facility"))
+        if "match_facility" in rule:
+            facnr = rule["match_facility"]
+            html.write("%s" % dict(mkeventd.syslog_facilities)[facnr])
 
-            # Text to match
-            table.cell(_("Text to match"), rule.get("match"))
+        table.cell(_("Service Level"),
+                  dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
+        hits = rule.get('hits')
+        table.cell(_("Hits"), hits != None and hits or '', css="number")
 
-            # Description
-            table.cell(_("Description"))
-            url = rule.get("docu_url")
-            if url:
-                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-                html.nbsp()
-            html.write_text(rule.get("description", ""))
+        # Text to match
+        table.cell(_("Text to match"), rule.get("match"))
 
-            # Move rule to other pack
-            if len(rule_packs) > 1:
-                table.cell(_("Move to pack..."))
-                choices = [ ("", "") ] + \
-                          [ (pack["id"], pack["title"])
-                            for pack in rule_packs
-                            if not pack is rule_pack]
-                html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
+        # Description
+        table.cell(_("Description"))
+        url = rule.get("docu_url")
+        if url:
+            html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+            html.nbsp()
+        html.write_text(rule.get("description", ""))
 
+        # Move rule to other pack
         if len(rule_packs) > 1:
-            html.hidden_field("_move_to", "yes")
-            html.hidden_fields()
-            html.end_form()
+            table.cell(_("Move to pack..."))
+            choices = [ ("", "") ] + \
+                      [ (pack["id"], pack["title"])
+                        for pack in rule_packs
+                        if not pack is rule_pack]
+            html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
-        table.end()
+    if len(rule_packs) > 1:
+        html.hidden_field("_move_to", "yes")
+        html.hidden_fields()
+        html.end_form()
+
+    table.end()
 
 
 def copy_rules_from_master():
@@ -1486,6 +1532,15 @@ def copy_rules_from_master():
         raise MKGeneralException(_("Cannot get rules from local event daemon."))
     rule_packs = answer["rules"]
     save_mkeventd_rules([], rule_packs)
+
+
+def filter_mkeventd_rules(search_expression, rule_pack):
+    found_rules = []
+    for rule in rule_pack.get("rules", []):
+        if search_expression in rule["id"] \
+           or search_expression in rule.get("description"):
+            found_rules.append(rule)
+    return found_rules
 
 
 def mode_mkeventd_edit_rule_pack(phase):

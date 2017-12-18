@@ -25,57 +25,173 @@
 # Boston, MA 02110-1301 USA.
 
 
+# OLD
 # <<<solaris_services>>>
-# STATE          STIME    FMRI
-# legacy_run     Jun_14   lrc:/etc/rcS_d/S99openconnect-clean
-# legacy_run     Jun_14   lrc:/etc/rc2_d/S47pppd
-# legacy_run     Jun_14   lrc:/etc/rc2_d/S81dodatadm_udaplt
-# legacy_run     Jun_14   lrc:/etc/rc2_d/S89PRESERVE
-# disabled       Jun_14   svc:/system/device/mpxio-upgrade:default
-# disabled       Jun_14   svc:/network/install:default
-# disabled       Jun_14   svc:/network/ipfilter:default
-# disabled       Jun_14   svc:/network/ipsec/ike:default
-# disabled       Jun_14   svc:/network/ipsec/manual-key:default
-# disabled       Jun_14   svc:/system/name-service-cache:default
-# disabled       Jun_14   svc:/network/ldap/client:default
-# disabled       Jun_14   svc:/network/nis/client:default
-# disabled       Jun_14   svc:/network/ibd-post-upgrade:default
-# disabled       Jun_14   svc:/network/inetd-upgrade:default
-# disabled       Jun_14   svc:/network/nfs/status:default
-# disabled       Jun_14   svc:/network/nfs/nlockmgr:default
-# online         Jun_14   svc:/system/zones:default
-# online         Jun_14   svc:/system/power:default
-# online         Jun_14   svc:/system/hal:default
-# online         Jun_14   svc:/application/texinfo-update:default
-# online         Jun_14   svc:/application/pkg/update:default
-# maintenance    Jul_09   svc:/network/smtp:sendmail
+# STATE    STIME    FMRI
+# $STATE   $STIME   $TYPE:${/CATEGORY/PATH/}$NAME:$INSTANCE
 
 
-def inventory_solaris_services_summary(info):
+inventory_solaris_services_rules = []
+
+
+def parse_solaris_services(info):
+    def get_parts_of_descr(descr):
+        svc_attrs = descr.split(":")
+        if len(svc_attrs) == 3:
+            svc_instance = svc_attrs[-1]
+        else:
+            svc_instance = None
+        svc_category, svc_name = svc_attrs[1].rsplit("/", 1)
+        return svc_attrs[0], svc_category, svc_name, svc_instance
+
+    parsed = {}
+    for line in info:
+        if len(line) < 3 or line == [u'STATE', u'STIME', u'FMRI']:
+            continue
+        svc_descr = line[2]
+        type_, category, name, instance = get_parts_of_descr(svc_descr)
+        parsed.setdefault(svc_descr, {
+            "state": line[0],
+            "stime": line[1],
+            "type": type_,
+            "category": category,
+            "name": name,
+            "instance": instance,
+        })
+    return parsed
+
+
+#   .--single--------------------------------------------------------------.
+#   |                          _             _                             |
+#   |                      ___(_)_ __   __ _| | ___                        |
+#   |                     / __| | '_ \ / _` | |/ _ \                       |
+#   |                     \__ \ | | | | (_| | |  __/                       |
+#   |                     |___/_|_| |_|\__, |_|\___|                       |
+#   |                                  |___/                               |
+#   '----------------------------------------------------------------------'
+
+
+factory_settings["solaris_services_default_levels"] = {
+    "states" : [("online", None, 0),
+                ("disabled", None, 2),
+                ("legacy_run", None, 0),
+                ("maintenance", None, 0)],
+    "else" : 2,
+    "additional_servicenames": [],
+}
+
+
+def inventory_solaris_services(parsed):
+    def regex_match(what, name):
+        if not what:
+            return True
+        for entry in what:
+            if entry.startswith("~") and regex(entry[1:]).match(name):
+                return True
+            elif entry == name:
+                return True
+        return False
+
+    def state_match(rule_state, state):
+        if rule_state is not None and rule_state != state:
+            return False
+        return True
+
+    def get_svc_name(svc_attrs):
+        return "%s/%s:%s" % (svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
+
+    services = {}
+    for rule in inventory_solaris_services_rules:
+        settings = rule[0]
+        descriptions = settings.get("descriptions", [])
+        categories = settings.get("categories", [])
+        names = settings.get("names", [])
+        instances = settings.get("instances", [])
+        state = settings.get("state")
+        for svc_descr, attrs in parsed.iteritems():
+            if regex_match(descriptions, svc_descr) \
+               and regex_match(categories, attrs["category"]) \
+               and regex_match(names, attrs["name"]) \
+               and regex_match(instances, attrs["instance"]) \
+               and state_match(state, attrs["state"]):
+                if settings.get('outcome') in [None, 'full_descr']:
+                    name = svc_descr
+                else:
+                    name = get_svc_name(attrs)
+                yield name, {}
+
+
+def check_solaris_services(item, params, parsed):
+    for svc_name, attrs in parsed.iteritems():
+        if item in svc_name or svc_name in params['additional_servicenames']:
+            svc_state = attrs["state"]
+            svc_stime = attrs["stime"]
+            if svc_stime.count(":") == 2:
+                has_changed = True
+                info_stime = "Restarted in the last 24h (client's localtime: %s)" % svc_stime
+            else:
+                has_changed = False
+                info_stime = "Started on %s" % svc_stime.replace("_", " ")
+
+            check_state = 0
+            for _, p_stime, p_state in filter(lambda x: x[0] == svc_state, params["states"]):
+                if p_stime is not None:
+                    if has_changed == p_stime:
+                        check_state = p_state
+                        break
+                else:
+                    check_state = p_state
+                    break
+            return check_state, "Status: %s, %s" % (svc_state, info_stime)
+
+    return params["else"], "Service not found"
+
+
+check_info['solaris_services'] = {
+    'parse_function'            : parse_solaris_services,
+    'inventory_function'        : inventory_solaris_services,
+    'check_function'            : check_solaris_services,
+    'service_description'       : 'SMF Service %s', # Service Management Facility
+    'group'                     : 'solaris_services',
+    'default_levels_variable'   : 'solaris_services_default_levels',
+}
+
+
+#.
+#   .--summary-------------------------------------------------------------.
+#   |                                                                      |
+#   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
+#   |          / __| | | | '_ ` _ \| '_ ` _ \ / _` | '__| | | |            |
+#   |          \__ \ |_| | | | | | | | | | | | (_| | |  | |_| |            |
+#   |          |___/\__,_|_| |_| |_|_| |_| |_|\__,_|_|   \__, |            |
+#   |                                                    |___/             |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_solaris_services_summary(parsed):
     return [ (None, {}) ]
 
 
-def check_solaris_services_summary(_no_item, params, info):
-    collected_services = {}
-    if len(info) >= 1:
-        for line in info[1:]:
-            collected_services.setdefault(line[0], [])
-            collected_services[line[0]].append(line[2])
+def check_solaris_services_summary(_no_item, params, parsed):
+    yield 0, "%d services" % len(parsed)
 
-        yield 0, "%d services" % (len(info) - 1)
+    services_by_state = {}
+    for svc_name, attrs in parsed.iteritems():
+        services = services_by_state.setdefault(attrs["state"], [])
+        services.append(svc_name)
 
-        for srv_type, srv_names in collected_services.items():
-            state = 0
-            extra_info = ""
-            if srv_type == "maintenance":
-                if params.get("maintenance_state", 0):
-                    extra_info += " (%s)" % ", ".join(srv_names)
-                    state = params["maintenance_state"]
+    for svc_state, svc_names in services_by_state.iteritems():
+        state = 0
+        extra_info = ""
+        if svc_state == "maintenance" and params.get("maintenance_state", 0):
+            extra_info += " (%s)" % ", ".join(svc_names)
+            state = params["maintenance_state"]
 
-            yield state, "%d %s%s" % (len(srv_names), srv_type.replace("_", " "), extra_info)
+        yield state, "%d %s%s" % (len(svc_names), svc_state.replace("_", " "), extra_info)
 
 
 check_info['solaris_services.summary'] = {
+    'parse_function'      : parse_solaris_services,
     'inventory_function'  : inventory_solaris_services_summary,
     'check_function'      : check_solaris_services_summary,
     'service_description' : 'SMF Services Summary', # Service Management Facility

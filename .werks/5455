@@ -1,0 +1,10 @@
+Title: solaris_services: New check which monitors single services of Solaris systems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1513594087
+Class: feature
+
+

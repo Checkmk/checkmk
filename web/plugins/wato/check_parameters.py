@@ -875,6 +875,42 @@ register_rule(group + '/' + subgroup_inventory,
 )
 
 register_rule(group + '/' + subgroup_inventory,
+    varname="inventory_solaris_services_rules",
+    title=_("Solaris Service Discovery"),
+    valuespec=Dictionary(
+        elements=[
+            ('descriptions', ListOfStrings(title=_("Descriptions"))),
+            ('categories', ListOfStrings(title=_("Categories"))),
+            ('names', ListOfStrings(title=_("Names"))),
+            ('instances', ListOfStrings(title=_("Instances"))),
+            ('states', ListOf(
+                DropdownChoice(
+                    choices=[
+                        ("online", _("online")),
+                        ("disabled", _("disabled")),
+                        ("maintenance", _("maintenance")),
+                        ("legacy_run", _("legacy run")),
+                    ],
+                ),
+                title=_("States"),
+            )),
+            ('outcome', Alternative(
+                title=_("Service name"),
+                style = "dropdown",
+                elements=[
+                    FixedValue("full_descr", title=_("Full Description"), totext=""),
+                    FixedValue("descr_without_prefix", title=_("Description without type prefix"), totext=""),
+                ],
+            )),
+        ],
+        help = _('This rule can be used to configure the inventory of the windows services check. '
+                 'You can configure specific windows services to be monitored by the windows check by '
+                 'selecting them by name, current state during the inventory, or start mode.'),
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
     varname   = "discovery_win_dhcp_pools",
     title     = _("Discovery of Windows DHCP Pools"),
     valuespec = Dictionary(
@@ -9066,7 +9102,6 @@ register_check_parameters(
     "solaris_services_summary",
     _("Solaris Services Summary"),
     Dictionary(
-        title = _('SMF Services'),
         elements = [
             ('maintenance_state',
                 MonitoringState(
@@ -12640,6 +12675,62 @@ register_check_parameters(
          "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
          "do not mix up the service name with the display name of the service."
          "The latter one is just being displayed as a further information."),
+        allow_empty = False),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "solaris_services",
+    _("Solaris Services"),
+    Dictionary(
+        elements=[
+            ("additional_servicenames",
+                ListOfStrings(
+                    title = _("Alternative names for the service"),
+                    help = _("Here you can specify alternative names that the service might have. "
+                             "This helps when the exact spelling of the services can changed from "
+                             "one version to another."),
+            )),
+            ("states", ListOf(
+                Tuple(
+                    orientation="horizontal",
+                    elements=[
+                        DropdownChoice(
+                            title=_("Expected state"),
+                            choices=[
+                                (None, _("Ignore the state")),
+                                ("online", _("Online")),
+                                ("disabled", _("Disabled")),
+                                ("maintenance", _("Maintenance")),
+                                ("legacy_run", _("Legacy run")),
+                        ]),
+                        DropdownChoice(
+                            title=_("STIME"),
+                            choices=[
+                                (None, _("Ignore")),
+                                (True, _("Has changed")),
+                                (False, _("Did not changed")),
+                        ]),
+                        MonitoringState(
+                            title=_("Resulting state"),
+                        ),
+                    ],
+                ),
+                title=_("Services states"),
+                help=_("You can specify a separate monitoring state for each possible "
+                       "combination of service state. If you do not use this parameter, "
+                       "then only online/legacy_run will be assumed to be OK."),
+            )),
+            ("else",
+               MonitoringState(
+                   title = _("State if no entry matches"),
+                   default_value = 2,
+            )),
+        ],
+    ),
+    TextAscii(
+        title = _("Name of the service"),
         allow_empty = False),
     match_type = "dict",
 )

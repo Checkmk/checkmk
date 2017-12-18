@@ -1,4 +1,4 @@
-title: SMF Solaris: Services Summary
+title: SMF Solaris: Single Services
 agents: solaris
 catalog: os/services
 license: GPL
@@ -7,10 +7,12 @@ description:
  This check gives a summary of the solaris services provided by
  the Service Management Facility command 'svcs -a'.
  The check reports the number of all services and for each service
- type, i.e. 'online', 'disabled', 'legacy_run', 'maintenance' and
+ type, ie. 'online', 'disabled', 'legacy_run', 'maintenance' and
  other ones.
- The check state is configurable.
+ The state is configurable.
 
 item:
- No item.
+ The service name.
 
+Inventory:
+ One service per service name is created.

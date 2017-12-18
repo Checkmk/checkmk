@@ -37,3 +37,12 @@ class BasicCheckResult(object):
             assert result.infotext == expected_result["infotext"]
         if "perfdata" in expected_result:
             assert result.perfdata == expected_result["perfdata"]
+
+
+class CompoundCheckResult(object):
+    """A check result consisting of multiple subresults, as returned by yield-style checks"""
+
+    def __init__(self, result):
+        self.subresults = []
+        for subresult in result:
+            self.subresults.append(BasicCheckResult(*subresult))

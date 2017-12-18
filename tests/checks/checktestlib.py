@@ -8,6 +8,7 @@ class BasicCheckResult(object):
 
     def __init__(self, status, infotext, perfdata=None):
         """We perform some basic consistency checks during initialization"""
+
         assert status in [0,1,2,3]
         assert type(infotext) == str
         assert "\n" not in infotext
@@ -31,6 +32,13 @@ class BasicCheckResult(object):
         self.perfdata = perfdata
 
     def assert_result(self, expected_result):
+        """Assert that a result matches certain criteria
+
+        expected_result is a Dictionary defining the criteria, allowing to not
+        rigidly define every detail about the check result, but only what we
+        really want to test.
+        """
+
         if "status" in expected_result:
             assert result.status == expected_result["status"]
         if "infotext" in expected_result:
@@ -43,6 +51,8 @@ class CompoundCheckResult(object):
     """A check result consisting of multiple subresults, as returned by yield-style checks"""
 
     def __init__(self, result):
+        """Initializes a list of subresults using BasicCheckResult"""
+
         self.subresults = []
         for subresult in result:
             self.subresults.append(BasicCheckResult(*subresult))

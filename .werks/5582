@@ -1,0 +1,10 @@
+Title: hr_cpu: Fixed displaying of "per core CPU utilization" in raw edition graphs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p23
+Date: 1513687681
+Class: fix
+
+

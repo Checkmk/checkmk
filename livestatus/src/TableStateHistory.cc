@@ -248,9 +248,9 @@ public:
     void visit(const ColumnFilter &f) override {
         if (_value) {
             auto column_name = f.columnName();
-            _value = mk::starts_with(column_name, std::string("current_")) ||
-                     mk::starts_with(column_name, std::string("host_")) ||
-                     mk::starts_with(column_name, std::string("service_"));
+            _value = mk::starts_with(column_name, "current_") ||
+                     mk::starts_with(column_name, "host_") ||
+                     mk::starts_with(column_name, "service_");
         }
     }
     void visit(const AndingFilter & /*unused*/) override {}

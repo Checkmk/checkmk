@@ -1,0 +1,27 @@
+Title: Fixed exception when "Export List of Software packages as CSV file" is enabled
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1513692003
+
+When having the export of the software packages list via CSV enabled while execution
+of the HW/SW inventory, an exception could happen in case the inventory data contained
+special characters. The exception looked like this on the command line:
+
+Traceback (most recent call last):
+  File "/omd/sites/stable/share/check_mk/modules/check_mk.py", line 4811, in <module>
+    do_inv(hostnames)
+  File "/omd/sites/stable/share/check_mk/modules/inventory.py", line 180, in do_inv
+    do_inv_for(hostname)
+  File "/omd/sites/stable/share/check_mk/modules/inventory.py", line 267, in do_inv_for
+    run_inv_export_hooks(hostname, g_inv_tree)
+  File "/omd/sites/stable/share/check_mk/modules/inventory.py", line 383, in run_inv_export_hooks
+    inv_export[hookname]["export_function"](hostname, params, tree)
+  File "/omd/sites/stable/share/check_mk/inventory/export_software_csv", line 67, in inv_export_software_csv
+    out.write("%s\n" % separator.join(line))
+UnicodeEncodeError: 'ascii' codec can't encode character u'\xf6' in position 1: ordinal not in range(128)
+

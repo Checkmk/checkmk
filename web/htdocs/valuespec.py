@@ -657,34 +657,47 @@ class EmailAddressUnicode(TextUnicode, EmailAddress):
         ValueSpec.custom_validate(self, value, varprefix)
 
 
-# Network as used in routing configuration, such as
-# "10.0.0.0/8" or "192.168.56.1"
-class IPv4Network(TextAscii):
+# Same as IPv4Network, but allowing both IPv4 and IPv6
+class IPNetwork(TextAscii):
     def __init__(self, **kwargs):
-        kwargs.setdefault("size", 18)
-        TextAscii.__init__(self, **kwargs)
+        kwargs.setdefault("size", 34)
+        super(IPNetwork, self).__init__(**kwargs)
+
+
+    def _ip_class(self):
+        return ipaddress.IPInterface
+
 
     def validate_value(self, value, varprefix):
-        super(IPv4Network, self).validate_value(value, varprefix)
+        super(IPNetwork, self).validate_value(value, varprefix)
 
         try:
-            ipaddress.IPv4Interface(value.decode("utf-8"))
+            self._ip_class()(value.decode("utf-8"))
         except ValueError, e:
-            raise MKUserError(varprefix, _("Invalid IP network address: %s") % e)
+            raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
 
 
-class IPv4Address(TextAscii):
+# Network as used in routing configuration, such as
+# "10.0.0.0/8" or "192.168.56.1"
+class IPv4Network(IPNetwork):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("size", 18)
+        super(IPv4Network, self).__init__(**kwargs)
+
+
+    def _ip_class(self):
+        return ipaddress.IPv4Interface
+
+
+
+class IPv4Address(IPNetwork):
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 16)
         super(IPv4Address, self).__init__(**kwargs)
 
-    def validate_value(self, value, varprefix):
-        super(IPv4Address, self).validate_value(value, varprefix)
-        try:
-            ipaddress.IPv4Address(value.decode("utf-8"))
-        except ValueError, e:
-            raise MKUserError(varprefix, _("Invalid IP address: %s") % e)
+    def _ip_class(self):
+        return ipaddress.IPv4Address
 
 
 

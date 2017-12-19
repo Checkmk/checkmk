@@ -815,77 +815,82 @@ def replace_expressions(text, translated_metrics):
 #   |  Implementation of Perf-O-Meters                                     |
 #   '----------------------------------------------------------------------'
 
-def get_perfometers(translated_metrics):
-    for perfometer in perfometer_info:
-        if perfometer_possible(perfometer, translated_metrics):
-            yield perfometer
+class Perfometers(object):
+    def get_matching_perfometers(self, translated_metrics):
+        perfometers = []
+        for perfometer in perfometer_info:
+            if self._perfometer_possible(perfometer, translated_metrics):
+                perfometers.append(perfometer)
+        return perfometers
 
 
-# TODO: We will run into a performance problem here when we
-# have more and more Perf-O-Meter definitions.
-def perfometer_possible(perfometer, translated_metrics):
-    for req in _get_perfometer_expressions(perfometer, translated_metrics):
-        try:
-            evaluate(req, translated_metrics)
-        except:
-            return False
-
-    if "condition" in perfometer:
-        try:
-            value, color, unit = evaluate(perfometer["condition"], translated_metrics)
-            if value == 0.0:
+    # TODO: We will run into a performance problem here when we
+    # have more and more Perf-O-Meter definitions.
+    def _perfometer_possible(self, perfometer, translated_metrics):
+        for req in self._get_perfometer_expressions(perfometer, translated_metrics):
+            try:
+                evaluate(req, translated_metrics)
+            except:
                 return False
-        except:
-            return False
 
-    return True
+        if "condition" in perfometer:
+            try:
+                value, color, unit = evaluate(perfometer["condition"], translated_metrics)
+                if value == 0.0:
+                    return False
+            except:
+                return False
+
+        return True
 
 
-def _get_perfometer_expressions(perfometer, translated_metrics):
-    required = []
+    def _get_perfometer_expressions(self, perfometer, translated_metrics):
+        required = []
 
-    if perfometer["type"] == "linear":
-        required = perfometer["segments"][:]
+        if perfometer["type"] == "linear":
+            required = perfometer["segments"][:]
 
-    elif perfometer["type"] == "logarithmic":
-        required = [ perfometer["metric"] ]
+        elif perfometer["type"] == "logarithmic":
+            required = [ perfometer["metric"] ]
 
-    elif perfometer["type"] in ("stacked", "dual"):
-        if "perfometers" not in perfometer:
-	    raise MKGeneralException(_("Perfometers of type 'stacked' and 'dual' need "
-                    "the element 'perfometers' (%r)") % perfometer)
+        elif perfometer["type"] in ("stacked", "dual"):
+            if "perfometers" not in perfometer:
+    	        raise MKGeneralException(_("Perfometers of type 'stacked' and 'dual' need "
+                            "the element 'perfometers' (%r)") % perfometer)
 
-        for sub_perfometer in perfometer["perfometers"]:
-            required += _get_perfometer_expressions(sub_perfometer, translated_metrics)
+            for sub_perfometer in perfometer["perfometers"]:
+                required += self._get_perfometer_expressions(sub_perfometer, translated_metrics)
 
-    else:
-        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
+        else:
+            raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
-    if "label" in perfometer and perfometer["label"] != None:
-        required.append(perfometer["label"][0])
 
-    if "total" in perfometer:
-        required.append(perfometer["total"])
+        if "label" in perfometer and perfometer["label"] != None:
+            required.append(perfometer["label"][0])
 
-    return required
+        if "total" in perfometer:
+            required.append(perfometer["total"])
+
+        return required
 
 
 
 class MetricometerRenderer(object):
+    """Abstract base class for all metricometer renderers"""
     @classmethod
     def type_name(cls):
         raise NotImplementedError()
 
 
     @classmethod
-    def get_renderer(cls, perfometer_type):
+    def get_renderer(cls, perfometer, translated_metrics):
         subclasses = cls.__subclasses__() # pylint: disable=no-member
 
         for subclass in subclasses:
-            if subclass.type_name() == perfometer_type:
-                return subclass
+            if subclass.type_name() == perfometer["type"]:
+                return subclass(perfometer, translated_metrics)
 
-        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer_type)
+        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
 
     def __init__(self, perfometer, translated_metrics):
@@ -929,6 +934,12 @@ class MetricometerRenderer(object):
         raise NotImplementedError()
 
 
+    def get_sort_number(self):
+        """Returns the number to sort this perfometer with compared to the other
+        performeters in the current performeter sort group"""
+        raise NotImplementedError()
+
+
 
 class MetricometerRendererLogarithmic(MetricometerRenderer):
     @classmethod
@@ -951,6 +962,13 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
     def _get_type_label(self):
         value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return unit["render"](value)
+
+
+    def get_sort_number(self):
+        """Returns the number to sort this perfometer with compared to the other
+        performeters in the current performeter sort group"""
+        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        return value
 
 
     def get_stack_from_values(self, value, half_value, base, color):
@@ -1008,6 +1026,12 @@ class MetricometerRendererLinear(MetricometerRenderer):
         return unit["render"](self._get_summed_values())
 
 
+    def get_sort_number(self):
+        """Use the first segment value for sorting"""
+        value, unit, color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
+        return value
+
+
     def _get_summed_values(self):
         summed = 0.0
         for ex in self._perfometer["segments"]:
@@ -1026,8 +1050,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def get_stack(self):
         stack = []
         for sub_perfometer in self._perfometer["perfometers"]:
-            renderer_cls = MetricometerRenderer.get_renderer(sub_perfometer["type"])
-            renderer = renderer_cls(sub_perfometer, self._translated_metrics)
+            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_stack = renderer.get_stack()
             stack.append(sub_stack[0])
@@ -1038,8 +1061,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def _get_type_label(self):
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
-            renderer_cls = MetricometerRenderer.get_renderer(sub_perfometer["type"])
-            renderer = renderer_cls(sub_perfometer, self._translated_metrics)
+            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_label = renderer.get_label()
             if sub_label:
@@ -1051,26 +1073,32 @@ class MetricometerRendererStacked(MetricometerRenderer):
         return " / ".join(sub_labels)
 
 
+    def get_sort_number(self):
+        """Use the number of the first stack element."""
+        sub_perfometer = self._perfometer["perfometers"][0]
+        renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+        return renderer.get_sort_number()
+
+
 
 class MetricometerRendererDual(MetricometerRenderer):
-    def __init__(self, perfometer, translated_metrics):
-        super(MetricometerRendererDual, self).__init__(perfometer, translated_metrics)
-
-        if len(perfometer["perfometers"]) != 2:
-            raise MKInternalError(_("Perf-O-Meter of type 'dual' must contain exactly "
-			            "two definitions, not %d") % len(perfometer["perfometers"]))
-
-
     @classmethod
     def type_name(cls):
         return "dual"
 
 
+    def __init__(self, perfometer, translated_metrics):
+        super(MetricometerRendererDual, self).__init__(perfometer, translated_metrics)
+
+        if len(perfometer["perfometers"]) != 2:
+            raise MKInternalError(_("Perf-O-Meter of type 'dual' must contain exactly "
+                                    "two definitions, not %d") % len(perfometer["perfometers"]))
+
+
     def get_stack(self):
         content = []
         for nr, sub_perfometer in enumerate(self._perfometer["perfometers"]):
-            renderer_cls = MetricometerRenderer.get_renderer(sub_perfometer["type"])
-            renderer = renderer_cls(sub_perfometer, self._translated_metrics)
+            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_stack = renderer.get_stack()
             if len(sub_stack) != 1:
@@ -1087,8 +1115,7 @@ class MetricometerRendererDual(MetricometerRenderer):
     def _get_type_label(self):
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
-            renderer_cls = MetricometerRenderer.get_renderer(sub_perfometer["type"])
-            renderer = renderer_cls(sub_perfometer, self._translated_metrics)
+            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_label = renderer.get_label()
             if sub_label:
@@ -1098,6 +1125,20 @@ class MetricometerRendererDual(MetricometerRenderer):
             return ""
 
         return " / ".join(sub_labels)
+
+
+    def get_sort_number(self):
+        """Sort by max(left, right)
+
+        E.g. for traffic graphs it seems to be useful to
+        make it sort by the maximum traffic independent of the direction.
+        """
+        sub_sort_numbers = []
+        for sub_perfometer in self._perfometer["perfometers"]:
+            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+            sub_sort_numbers.append(renderer.get_sort_number())
+
+        return max(*sub_sort_numbers)
 
 
 #.

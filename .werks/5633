@@ -1,0 +1,48 @@
+Title: It is now possible to sort by the perfometer column
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1515679674
+Class: feature
+
+The service list status views of Check_MK can now be sorted by the column "Perf-O-Meter".
+
+The sorting of the perfometers is sorted by these values:
+
+<ol>
+<li>First sort by the optional perfometer group or perfometer ID</li>
+<li>Second sort by the sort value of each perfometer</li>
+</ol>
+
+<strong>The Perfometer group / perfometer ID</strong>
+
+Each perfometer declaration can have an optional element <tt>sort_group</tt>. This element
+holds a string that can be used to group different perfometers (that visualize comparable values)
+together.
+
+In case no <tt>sort_group</tt> is defined, the internal ID of the perfometer definition is used.
+This means that all perfometers which are rendered by the same logical function are sorted together
+in a perfometer group.
+
+<strong>The sort value</strong>
+
+The sort value of a perfometer is calculated in different ways for each perfometer type based on
+the current metrics of this service.
+
+<ul>
+<li><i>Logarithmic</i>: The single logarithmic value displayed by this perfometer is used</li>
+<li><i>Linear</i>: The first segment of the displayed values is used</li>
+<li><i>Stacked</i>: The sort value of the first stacked perfometer is used</li>
+<li><i>Dual<i>: The maximum of both displayed value is used for sorting</li>
+<ul>
+
+The sorting only works for perfometers that are implemented as metric plugin
+(in <tt>plugins/metrics/</tt>). The legacy perfometers that are implemented as perfometer
+plugins can not be sorted.
+
+Dear check developers: All perfometers that visualize equal types of values have to be
+sorted together in a sort group. For example all checks that monitor fileystems should have
+equal perfometers that can be compared to each other and should therefor be sortable by their
+disk usage.

@@ -34,7 +34,6 @@
 # 3. The parsed performance data as a list of 7-tuples of
 #    (varname, value, unit, warn, crit, min, max)
 
-
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
     used_mb        = perf_data[0][1]
     maxx           = perf_data[0][-1]

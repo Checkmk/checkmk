@@ -1,0 +1,15 @@
+Title: ucd_mem, hr_mem: Prefer ucd_mem check for certain Cisco IronPort models
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0i2
+Date: 1513677694
+
+For certain Cisco IronPort devices, the OIDs defined in the Host Resources MIB
+provide bogus data. This can be avoided by using the ucd_mem check instead for
+these devices.
+
+To benefit from this fix, the affected devices need to be rediscovered.

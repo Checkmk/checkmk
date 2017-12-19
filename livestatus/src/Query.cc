@@ -635,7 +635,7 @@ void Query::start(QueryRenderer &q) {
 
         // Output dummy headers for stats columns
         for (size_t col = 1; col <= _stats_columns.size(); ++col) {
-            r.output(std::string("stats_") + std::to_string(col));
+            r.output("stats_" + std::to_string(col));
         }
     }
 }

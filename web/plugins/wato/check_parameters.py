@@ -4316,6 +4316,113 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "fireeye_active_vms",
+        _("Fireeye Active VMs"),
+        Dictionary(
+            elements = [
+                ( "vms",
+                    Tuple(
+                    title    = _("Levels for active VMs"),
+                        elements = [
+                            Integer( title = "Warning at", default_value=60, unit = "VMs"),
+                            Integer( title = "Critical at", default_value=70, unit = "VMs"),
+                        ]
+                ),
+            )]),
+        None,
+        match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "fireeye_lic",
+        _("Fireeye Licenses"),
+        Dictionary(
+            elements = [
+                ( "days",
+                    Tuple(
+                    title    = _("Levels for Fireeye License Expiration"),
+                        elements = [
+                            Integer( title = "Warning at", default_value=90, unit = "days"),
+                            Integer( title = "Critical at", default_value=120, unit = "days"),
+                        ]
+                ),
+            )]),
+        TextAscii(
+            title = _("License Feature")),
+        match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "fireeye_quarantine",
+        _("Fireeye Quarantine Usage"),
+        Dictionary(
+            elements = [
+                ( "usage",
+                    Tuple(
+                    title    = _("Levels for Quarantine Usage"),
+                        elements = [
+                            Integer( title = "Warning at", default_value=70, unit = "%"),
+                            Integer( title = "Critical at", default_value=80, unit = "%"),
+                        ]
+                ),
+            )]),
+        None,
+        match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "fireeye_mailq",
+        _("Fireeye Mail Queues"),
+        Dictionary(
+            elements = [
+                ( "deferred",
+                    Tuple(
+                    title    = _("Levels for Deferred Queue length"),
+                        elements = [
+                            Integer( title = "Warning at", default_value=10, unit = "Mails"),
+                            Integer( title = "Critical at", default_value=15, unit = "Mails"),
+                        ]
+                )),
+                ( "hold",
+                    Tuple(
+                    title    = _("Levels for Hold Queue length"),
+                        elements = [
+                            Integer( title = "Warning at", default_value=500, unit = "Mails"),
+                            Integer( title = "Critical at", default_value=700, unit = "Mails"),
+                        ]
+                )),
+                ( "drop",
+                    Tuple(
+                    title    = _("Levels for Drop Queue length"),
+                        elements = [
+                            Integer( title = "Warning at", default_value=10, unit = "Mails"),
+                            Integer( title = "Critical at", default_value=15, unit = "Mails"),
+                        ]
+                    )),
+            ]),
+        None,
+        match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "fireeye_mail",
+        _("Fireeye Mail Rate Average"),
+        Dictionary(
+            elements = [
+                ( "interval",
+                    Integer( title = "Timespan for mail rate computation", default_value=60, unit = "minutes"),
+                ),
+            ]),
+        None,
+        match_type = "dict",
+)
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

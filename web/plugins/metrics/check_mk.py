@@ -4145,6 +4145,68 @@ metric_info["emcvnx_dedupl_shared_capacity"] = {
     "color" : "31/a",
 }
 
+metric_info["active_vms"] = {
+    "title" : _("Active VMs"),
+    "unit"  : "count",
+    "color" : "14/a",
+}
+
+metric_info["quarantine"] = {
+    "title" : _("Quarantine Usage"),
+    "unit"  : "%",
+    "color" : "43/b",
+}
+
+metric_info["mail_queue_hold_length"] = {
+    "title" : _("Length of hold mail queue"),
+    "unit"  : "count",
+    "color" : "26/b",
+}
+
+metric_info["mail_queue_incoming_length"] = {
+    "title" : _("Length of incoming mail queue"),
+    "unit"  : "count",
+    "color" : "14/b",
+}
+
+metric_info["mail_queue_drop_length"] = {
+    "title" : _("Length of drop mail queue"),
+    "unit"  : "count",
+    "color" : "51/b",
+}
+
+metric_info["mail_received_rate"] = {
+    "title" : _("Mails received rate"),
+    "unit"  : "1/s",
+    "color" : "31/a",
+}
+
+for what, color in [
+        ('Total',       '14/b'),
+        ('Infected',    '53/b'),
+        ('Analyzed',    '23/a'),
+        ('Bypass',      '13/b'),
+    ]:
+    metric_info_key = '%s_rate' % what.lower()
+    metric_info[metric_info_key] = {
+        'title' : _('%s per Second') % what,
+        'unit'  : '1/sec',
+        'color' : color,
+    }
+
+for what, color in [
+        ('Attachment',          '14/b'),
+        ('URL',                 '13/b'),
+        ('Malicious Attachment','23/a'),
+        ('Malicious URL',       '53/b')
+    ]:
+    metric_info_key = 'fireeye_stat_%s' % what.replace(' ', '').lower()
+    metric_info[metric_info_key] = {
+        'title' : _('Emails containing %s per Second') % what,
+        'unit'  : '1/sec',
+        'color' : color,
+    }
+
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -6278,6 +6340,46 @@ perfometer_info.append({
     "total"     : 100.0,
 })
 
+perfometer_info.append({
+    'type'      : 'linear',
+    'segments'  : ['active_vms'],
+    'total'     : 200,
+})
+
+perfometer_info.append({
+    'type'      : 'logarithmic',
+    'metric'    : 'days',
+    'half_value': 100,
+    'exponent'  : 2,
+})
+
+perfometer_info.append({
+    'type'      : 'linear',
+    'segments'  : ['quarantine'],
+    'total'     : 100,
+})
+
+perfometer_info.append({
+    'type'      : 'logarithmic',
+    'metric'    : 'total_rate',
+    'half_value': 50.0,
+    'exponent'  : 2.0,
+})
+
+perfometer_info.append({
+    'type'      : 'logarithmic',
+    'metric'    : 'bypass_rate',
+    'half_value': 2.0,
+    'exponent'  : 2.0,
+})
+
+
+perfometer_info.append({
+    'type'      : 'logarithmic',
+    'metric'    : 'fireeye_stat_attachment',
+    'half_value': 50.0,
+    'exponent'  : 2.0,
+})
 
 #.
 #   .--Graphs--------------------------------------------------------------.
@@ -8063,4 +8165,12 @@ graph_info["emcvnx_storage_pools_targeted"] = {
     ]
 }
 
+graph_info['amount_of_mails_in_secondary_queues'] = {
+    'title'     : _('Amount of mails in queues'),
+    'metrics'   : [
+        ( 'mail_queue_hold_length', 'stack'),
+        ( 'mail_queue_incoming_length', 'stack'),
+        ( 'mail_queue_drop_length', 'stack'),
+    ],
+}
 

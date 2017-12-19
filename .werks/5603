@@ -1,0 +1,13 @@
+Title: fireeye: Some new checks for Fireeye appliances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1513771225
+Class: feature
+
+These checks are
+fireeye_active_vms, fireeye_bypass, fireeye_lic_active, fireeye_lic_expiration,
+fireeye_mail, fireeye_mail.attachment, fireeye_mail.received, fireeye_mail.statistics,
+fireeye_mail.url, fireeye_mailq, fireeye_quarantine, fireeye_smtp_conn

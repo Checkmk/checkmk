@@ -1,0 +1,18 @@
+title: FireEye Appliances: SMTP connections
+agents: snmp
+catalog: hw/network/fireeye
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the current number of open SMTP connections
+ on Fireeye Appliances which support the FE-FIREEYE-MIB.
+
+ The check goes WARN or CRIT if the number of
+ SMTP connections exceeds configurable values.
+
+item:
+ No item.
+
+inventory:
+ One service is created.
+

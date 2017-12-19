@@ -805,7 +805,7 @@ function create_pnp_graph(data, params) {
 
         var view   = data['view'] == '' ? 0 : data['view'];
         // needs to be extracted from "params", hack!
-        var source = parseInt(getUrlParam('source', params));
+        var source = parseInt(getUrlParam('source', params)) + 1;
 
         // Add the control for adding the graph to a visual
         var visualadd = document.createElement('a');

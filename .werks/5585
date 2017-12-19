@@ -1,0 +1,10 @@
+Title: Added missing icon "host is currently not being checked" to host views
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p23
+Date: 1513693650
+Class: fix
+
+

@@ -39,6 +39,7 @@ import math, os, time, re, sre_constants, urlparse, forms, tempfile, types
 import base64
 import hashlib
 import socket
+import ipaddress
 from lib import *
 import cmk.defines as defines
 from Crypto.PublicKey import RSA
@@ -664,56 +665,27 @@ class IPv4Network(TextAscii):
         TextAscii.__init__(self, **kwargs)
 
     def validate_value(self, value, varprefix):
-        if "/" in value:
-            try:
-                network, bits = value.split("/")
-                bits = int(bits)
-            except:
-                raise MKUserError(varprefix, _("Please use the syntax X.X.X.X/YY"))
-        else:
-            network = value
-            bits = 32
+        super(IPv4Network, self).validate_value(value, varprefix)
 
-        if bits < 0 or bits > 32:
-            raise MKUserError(varprefix, _("Invalid number of bits. Must be in range 1 ... 32"))
-
-        if value.count(".") != 3:
-            raise MKUserError(varprefix, _("The network must contain three dots"))
-
-        octets = self.validate_ipaddress(network, varprefix)
-
-        # Make sure that non-network bits are zero
-        l = (octets[0] << 24) + (octets[1] << 16) + (octets[2] << 8) + (octets[3])
-        for b in range(bits, 32):
-            if l & (2 ** (31-b)) != 0:
-                raise MKUserError(varprefix, _("Please make sure that only the %d non-network bits are non-zero") % bits)
-
-        ValueSpec.custom_validate(self, value, varprefix)
-
-
-    def validate_ipaddress(self, value, varprefix):
         try:
-            octets = map(int, value.split("."))
-            if len(octets) != 4:
-                raise MKUserError(varprefix, _("Please specify four octets (X.X.X.X/YY)"))
-            for o in octets:
-                if o < 0 or o > 255:
-                    raise MKUserError(varprefix, _("Invalid octet %d (must be in range 1 ... 255)") % o)
-            return octets
-        except MKUserError:
-            raise
-        except:
-            raise MKUserError(varprefix, _("Invalid IP address syntax"))
+            ipaddress.IPv4Interface(value.decode("utf-8"))
+        except ValueError, e:
+            raise MKUserError(varprefix, _("Invalid IP network address: %s") % e)
 
 
-class IPv4Address(IPv4Network):
+
+class IPv4Address(TextAscii):
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 16)
-        IPv4Network.__init__(self, **kwargs)
+        super(IPv4Address, self).__init__(**kwargs)
 
     def validate_value(self, value, varprefix):
-        self.validate_ipaddress(value, varprefix)
-        ValueSpec.custom_validate(self, value, varprefix)
+        super(IPv4Address, self).validate_value(value, varprefix)
+        try:
+            ipaddress.IPv4Address(value.decode("utf-8"))
+        except ValueError, e:
+            raise MKUserError(varprefix, _("Invalid IP address: %s") % e)
+
 
 
 class TextAsciiAutocomplete(TextAscii):

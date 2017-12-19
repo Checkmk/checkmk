@@ -1,0 +1,10 @@
+Title: Restrict agent access via IP address: IPv6 addresses/networks can now be configured
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i2
+Date: 1513691001
+Class: feature
+
+

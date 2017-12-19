@@ -665,7 +665,7 @@ class IPNetwork(TextAscii):
 
 
     def _ip_class(self):
-        return ipaddress.IPInterface
+        return ipaddress.ip_interface
 
 
     def validate_value(self, value, varprefix):

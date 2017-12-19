@@ -1300,10 +1300,13 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
         # Exceptions do not work here.
         return
 
-    if dashlet_type == "pnpgraph":
+    if dashlet_type == "pnpgraph" and context is None:
+        # Raw Edition graphs are added correctly by htdocs/js/checkmk.js create_pnp_graph().
+        # Enterprise Edition graphs:
+        #
         # Context will always be None here, but the specification (in params)
         # will contain it. Transform the data to the format needed by the dashlets.
-
+        #
         # Example:
         # params = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
         #                         'graph_index': 0, 'host_name': 'server123'}])

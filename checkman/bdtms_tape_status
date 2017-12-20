@@ -7,7 +7,7 @@ description:
  This check displays the status of the tape library.
  The status of the check corresponds 1:1 to the status
  returned by the device.
- 
+
 inventory:
  One service per host will be created.
 

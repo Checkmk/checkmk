@@ -433,6 +433,7 @@ class Site(object):
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
             self._enable_mod_python_debug()
+            self._enabled_liveproxyd_debug_logging()
 
         self._install_test_python_modules()
 
@@ -541,6 +542,12 @@ class Site(object):
                 sys.stdout.flush()
 
         self._add_version_path_to_index_py()
+
+
+    def _enabled_liveproxyd_debug_logging(self):
+        self.makedirs("etc/check_mk/liveproxyd.d/wato")
+        self.write_file("etc/check_mk/liveproxyd.d/wato/global.mk",
+            "liveproxyd_log_levels = {'cmk.liveproxyd': 10}")
 
 
     def _enable_mod_python_debug(self):

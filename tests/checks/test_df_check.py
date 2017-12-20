@@ -267,4 +267,3 @@ def test_df_check_with_parse(check_manager, monkeypatch, item, params, info, exp
         params = check.default_parameters()
 
     result = checktestlib.BasicCheckResult(*check.run_check(item, params, check.run_parse(info)))
-    result.assert_result(expected_result)

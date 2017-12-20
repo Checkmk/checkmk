@@ -51,47 +51,6 @@ class BasicCheckResult(object):
         else:
             self.perfdata = None
 
-    def match_status(self, expected_status):
-        """Check if this result's status matches a given value. Exact match."""
-        return self.status == expected_status
-
-    def match_infotext(self, expected_infotext):
-        """Check whether this result's infotext contains a given string. Case-sensitive."""
-        return expected_infotext in self.infotext
-
-    def match_perfdata(self, expected_perfdata):
-        """Check whether this result's perfdata matches a given value. Exact match."""
-        return expected_perfdata == self.perfdata
-
-    def match(self, expected_result):
-        """Check whether a result matches certain criteria
-
-        expected_result is a Dictionary defining the criteria, allowing to not
-        rigidly define every detail about the check result, but only what we
-        really want to test. Unset fields mean we don't care.
-        """
-
-        if "status" in expected_result and not match_status(expected_result["status"]):
-            return False
-        if "infotext" in expected_result and not match_infotext(expected_result["infotext"]):
-            return False
-        if "perfdata" in expected_result and not match_perfdata(expected_result["perfdata"]):
-            return False
-        return True
-
-    def assert_result(self, expected_result):
-        """Assert that a result matches certain criteria
-
-        expected_result works as in match_result
-        """
-
-        if "status" in expected_result:
-            assert match_status(expected_result["status"])
-        if "infotext" in expected_result:
-            assert match_infotext(expected_result["infotext"])
-        if "perfdata" in expected_result:
-            assert match_perfdata(expected_result["perfdata"])
-
 
 class CompoundCheckResult(object):
     """A check result consisting of multiple subresults, as returned by yield-style checks"""
@@ -102,16 +61,3 @@ class CompoundCheckResult(object):
         self.subresults = []
         for subresult in result:
             self.subresults.append(BasicCheckResult(*subresult))
-
-    def match_subresult(self, expected_result):
-        """Checks whether a subresult matching certain criteria is contained in this compound result"""
-
-        for subresult in self.subresults:
-            if subresult.match(expected_result):
-                return True
-        return False
-
-    def assert_result(self, expected_result):
-        """Assert that a subresult matching certain criteria is contained in this compound result"""
-
-        assert self.match_subresult(expected_result)

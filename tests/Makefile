@@ -38,7 +38,8 @@ test-bandit:
 		$$(grep -l python "$$CMK_DIR"/bin/*) \
 		"$$CMK_DIR"/{checks,inventory}/* \
 		$$(grep -l python "$$ENTERPRISE_DIR"/bin/*) \
-		"$$ENTERPRISE_DIR"/agents/{plugins,bakery}/*
+		"$$ENTERPRISE_DIR"/agents/plugins/*.py \
+		"$$ENTERPRISE_DIR"/agents/bakery/*
 
 
 test-bandit-ci:

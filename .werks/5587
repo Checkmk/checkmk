@@ -1,0 +1,13 @@
+Title: Agent updater: Display user name on password prompt during registration
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i2
+Date: 1513764777
+Class: feature
+
+When the agent updater asks the user for the password of the admin user to
+perform the registration with and the user has not just been inserted, the
+agent updater will print the user name the password is asked for on the
+command prompt.

@@ -1,0 +1,11 @@
+Title: logwatch.ec: Fix exception when reclassify patterns are specified
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1513779501
+
+

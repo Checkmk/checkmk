@@ -848,11 +848,11 @@ def check_logwatch_ec(item, params, info):
     logfile_reclassify_settings = {}
     def add_reclassify_settings(settings):
         if isinstance(settings, dict):
-            logfile_reclassify_settings["reclassify_patterns"].extend(x[:2] for x in settings.get("reclassify_patterns"))
+            logfile_reclassify_settings["reclassify_patterns"].extend(x for x in settings.get("reclassify_patterns"))
             if "reclassify_states" in settings:
                 logfile_reclassify_settings["reclassify_states"] = settings["reclassify_states"]
         else: # legacy configuration
-            logfile_reclassify_settings["reclassify_patterns"].extend(x[:2] for x in settings)
+            logfile_reclassify_settings["reclassify_patterns"].extend(x for x in settings)
 
     for logfile, lines in logs.items():
         logfile_reclassify_settings["reclassify_patterns"] = []

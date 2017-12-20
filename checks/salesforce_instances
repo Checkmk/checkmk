@@ -46,12 +46,12 @@ def inventory_salesforce_instances(parsed):
 def check_salesforce_instances(item, params, parsed):
     map_states = {
         "OK": (0, "OK"),
-        "MAJOR_INCIDENT_CORE": (0, "major incident core"),
-        "MINOR_INCIDENT_CORE": (0, "minor incident core"),
+        "MAJOR_INCIDENT_CORE": (2, "major incident core"),
+        "MINOR_INCIDENT_CORE": (1, "minor incident core"),
         "MAINTENANCE_CORE": (0, "maintenance core"),
         "INFORMATIONAL_CORE": (0, "informational core"),
-        "MAJOR_INCIDENT_NONCORE": (0, "major incident noncore"),
-        "MINOR_INCIDENT_NONCORE": (0, "minor incident noncore"),
+        "MAJOR_INCIDENT_NONCORE": (2, "major incident noncore"),
+        "MINOR_INCIDENT_NONCORE": (1, "minor incident noncore"),
         "MAINTENANCE_NONCORE": (0, "maintenance noncore"),
         "INFORMATIONAL_NONCORE": (0, "informational noncore"),
     }

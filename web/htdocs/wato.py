@@ -368,6 +368,13 @@ def ensure_mode_permissions(modeperms):
 class WatoMode(object):
     def __init__(self):
         super(WatoMode, self).__init__()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        """Override this method to set mode specific attributes based on the
+        given HTTP variables."""
+        pass
 
 
     @classmethod
@@ -2138,10 +2145,6 @@ class ModeObjectParameters(WatoMode):
     _PARAMETERS_UNKNOWN = []
     _PARAMETERS_OMIT = []
 
-    def __init__(self):
-        super(ModeObjectParameters, self).__init__()
-        self._from_vars()
-
 
     def _from_vars(self):
         self._hostname = html.var("host") # may be empty in new/clone mode
@@ -2481,11 +2484,6 @@ class ModeDiagHost(WatoMode):
         ]
 
 
-    def __init__(self):
-        super(ModeDiagHost, self).__init__()
-        self._from_vars()
-
-
     def _from_vars(self):
         self._hostname = html.var("host")
         if not self._hostname:
@@ -2799,11 +2797,6 @@ class ModeDiscovery(WatoMode):
     SERVICE_MONITORED = "old"
     SERVICE_IGNORED = "ignored"
     SERVICE_REMOVED = "removed"
-
-
-    def __init__(self):
-        super(ModeDiscovery, self).__init__()
-        self._from_vars()
 
 
     def _from_vars(self):
@@ -3470,11 +3463,6 @@ class ModeFirstDiscovery(ModeDiscovery):
 
 
 class ModeAjaxExecuteCheck(WatoWebApiMode):
-    def __init__(self):
-        super(ModeAjaxExecuteCheck, self).__init__()
-        self._from_vars()
-
-
     def _from_vars(self):
         # TODO: Validate the site
         self._site      = html.var("site")
@@ -4385,11 +4373,6 @@ class ModeBulkEdit(WatoMode):
 
 
 class ModeBulkCleanup(WatoMode):
-    def __init__(self):
-        super(ModeBulkCleanup, self).__init__()
-        self._from_vars()
-
-
     def _from_vars(self):
         self._folder = watolib.Folder.current()
 
@@ -6243,10 +6226,6 @@ class ModeLDAPConfig(LDAPMode):
 
 
 class ModeEditLDAPConnection(LDAPMode):
-    def __init__(self):
-        super(ModeEditLDAPConnection, self).__init__()
-        self._from_vars()
-
     def _from_vars(self):
         self._connection_id = html.var("id")
         self._connection_cfg = {}
@@ -6887,15 +6866,14 @@ class ModeEditLDAPConnection(LDAPMode):
 
 class ModeGlobalSettings(WatoMode):
     def __init__(self):
-        super(ModeGlobalSettings, self).__init__()
         self._search = None
         self._show_only_modified = False
+
+        super(ModeGlobalSettings, self).__init__()
 
         self._default_values   = watolib.ConfigDomain.get_all_default_globals()
         self._global_settings  = {}
         self._current_settings = {}
-
-        self._from_vars()
 
 
     def _from_vars(self):
@@ -7112,7 +7090,6 @@ class ModeEditGlobals(ModeGlobalSettings):
 class ModeEditGlobalSetting(WatoMode):
     def __init__(self):
         super(ModeEditGlobalSetting, self).__init__()
-        self._from_vars()
         self._back_mode = "globalvars"
 
 
@@ -7376,15 +7353,14 @@ class ModeEditGroup(WatoMode):
     type_name = None
 
     def __init__(self):
-        super(ModeEditGroup, self).__init__()
-
         self.name    = None
         self._new    = False
         self._groups = {}
         self.group   = {}
 
         self._load_groups()
-        self._from_vars()
+
+        super(ModeEditGroup, self).__init__()
 
 
     def _load_groups(self):
@@ -9386,11 +9362,6 @@ class ModeTimeperiodImportICal(WatoMode):
 
 
 class ModeEditTimeperiod(WatoMode):
-    def __init__(self):
-        super(ModeEditTimeperiod, self).__init__()
-        self._from_vars()
-
-
     def _from_vars(self):
         self._timeperiods = watolib.load_timeperiods()
         self._name = html.var("edit") # missing -> new group
@@ -11516,7 +11487,6 @@ class ModeEditRole(RoleManagement, WatoMode):
         # Make sure that all dynamic permissions are available (e.g. those for custom
         # views)
         config.load_dynamic_permissions()
-        self._from_vars()
 
 
     def _from_vars(self):
@@ -12651,7 +12621,6 @@ class ModeRulesets(WatoMode):
 
     def __init__(self):
         super(ModeRulesets, self).__init__()
-        self._from_vars()
         self._set_title_and_help()
 
 
@@ -12866,11 +12835,6 @@ def rule_search_button(search_options=None, mode="rulesets"):
 
 
 class ModeEditRuleset(WatoMode):
-    def __init__(self):
-        super(ModeEditRuleset, self).__init__()
-        self._from_vars()
-
-
     def _from_vars(self):
         self._name = html.var("varname")
         self._back_mode = html.var("back_mode", html.var("ruleset_back_mode", "rulesets"))
@@ -13476,9 +13440,8 @@ class ModeEditRuleset(WatoMode):
 
 class ModeRuleSearch(WatoMode):
     def __init__(self):
-        super(ModeRuleSearch, self).__init__()
         self.back_mode = html.var("back_mode", "rulesets")
-        self.search_options = self._from_vars()
+        super(ModeRuleSearch, self).__init__()
 
 
     def title(self):
@@ -13519,7 +13482,7 @@ class ModeRuleSearch(WatoMode):
         if not value:
             html.del_all_vars("search_")
 
-        return value
+        self.search_options = value
 
 
     def _valuespec(self):
@@ -13561,7 +13524,7 @@ class ModeRuleSearch(WatoMode):
 
                 ("ruleset_group", DropdownChoice(
                     title = _("Group"),
-                    choices = watolib.g_rulespecs.get_group_choices(self.back_mode),
+                    choices = lambda: watolib.g_rulespecs.get_group_choices(self.back_mode),
                 )),
                 ("ruleset_name", RegExpUnicode(
                     title = _("Name"),
@@ -13659,11 +13622,6 @@ class ModeRuleSearch(WatoMode):
 
 class ModeEditRule(WatoMode):
     _new = False
-
-    def __init__(self):
-        super(ModeEditRule, self).__init__()
-        self._from_vars()
-
 
     def _from_vars(self):
         self._name = html.var("varname")
@@ -15064,11 +15022,6 @@ def create_sample_config():
 #   '----------------------------------------------------------------------'
 
 class ModePatternEditor(WatoMode):
-    def __init__(self):
-        super(ModePatternEditor, self).__init__()
-        self._from_vars()
-
-
     def _from_vars(self):
         self._hostname   = html.var('host', '')
         # TODO: validate all fields
@@ -15317,11 +15270,6 @@ class CustomAttrMode(WatoMode):
 
 
 class ModeEditCustomAttr(CustomAttrMode):
-    def __init__(self):
-        super(ModeEditCustomAttr, self).__init__()
-        self._from_vars()
-
-
     def _from_vars(self):
         self._name = html.var("edit") # missing -> new custom attr
         self._new = self._name == None
@@ -15635,10 +15583,6 @@ def declare_custom_host_attrs():
 #   '----------------------------------------------------------------------'
 
 class ModeCheckPlugins(WatoMode):
-    def __init__(self):
-        super(ModeCheckPlugins, self).__init__()
-        self._from_vars()
-
     def _from_vars(self):
         self._search = get_search_expression()
         self._topic  = html.var("topic")
@@ -15890,11 +15834,6 @@ class ModeCheckPlugins(WatoMode):
 
 
 class ModeCheckManPage(WatoMode):
-    def __init__(self):
-        super(ModeCheckManPage, self).__init__()
-        self._from_vars()
-
-
     def _from_vars(self):
         self._check_type = html.var("check_type")
 
@@ -16591,7 +16530,6 @@ class ModeAnalyzeConfig(WatoMode):
     def __init__(self):
         super(ModeAnalyzeConfig, self).__init__()
         self._acks = self._load_acknowledgements()
-        self._from_vars()
 
 
     def _from_vars(self):

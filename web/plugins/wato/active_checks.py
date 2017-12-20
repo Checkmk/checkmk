@@ -2190,3 +2190,79 @@ register_rule(group,
     ),
     match = 'all'
 )
+
+register_rule(group,
+    "active_checks:by_ssh",
+    Tuple(
+        title = _("Check via SSH service"),
+        help = _("Checks via SSH. "),
+        elements = [
+            TextAscii(
+                title = _("Command"),
+                help = _("Command to execute on remote host."),
+                allow_empty = False,
+            ),
+            Dictionary(
+                title = _("Optional parameters"),
+                elements = [
+                    ( "description",
+                      TextAscii(
+                          title = _("Service Description"),
+                          help = _("Must be unique for every host. Defaults to command that is executed."),
+                          size = 30)
+                      ),
+                    ( "hostname",
+                      TextAscii(
+                          title = _("DNS Hostname or IP address"),
+                          default_value = "$HOSTADDRESS$",
+                          allow_empty = False,
+                          help = _("You can specify a hostname or IP address different from IP address "
+                                   "of the host as configured in your host properties."))),
+                    ( 'port',
+                      Integer(
+                          title = _("SSH Port"),
+                          help = _("Default is 22."),
+                          minvalue = 1,
+                          maxvalue = 65535,
+                          default_value = 22)),
+                    ( "ip_version",
+                      Alternative(
+                          title = _("IP-Version"),
+                          elements = [
+                              FixedValue(
+                                  "ipv4",
+                                  totext = "",
+                                  title = _("IPv4")
+                                  ),
+                              FixedValue(
+                                  "ipv6",
+                                  totext = "",
+                                  title = _("IPv6")
+                                  ),
+                              ],
+                          )),
+                    ( "timeout",
+                      Integer(
+                          title = _("Seconds before connection times out"),
+                          unit = _("sec"),
+                          default_value = 10,
+                          )
+                      ),
+                    ( "logname",
+                      TextAscii(
+                          title = _("Username"),
+                          help = _("SSH user name on remote host"),
+                          size = 30)
+                      ),
+                    ( "identity",
+                      TextAscii(
+                          title = _("Keyfile"),
+                          help = _("Identity of an authorized key"),
+                          size = 30)
+                      ),
+                    ]
+                )
+            ]
+        ),
+    match = 'all'
+)

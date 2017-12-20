@@ -8,7 +8,7 @@ description:
  of the tape library. The check returns {OK} if the module,
  board, and power supply status are OK. Otherwise the status
  {CRIT} will be returned.
- 
+
 inventory:
  One service per host and module will be created.
 

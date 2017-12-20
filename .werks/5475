@@ -1,0 +1,13 @@
+Title: Do not suppress recovery notifications via throttling.
+Level: 1
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1513782696
+Class: fix
+
+When notification throttling was enabled, recovery notifications were not
+handled specially, so they could be suppressed just like problem
+notifications.  This has been fixed, revovery notifications always pass
+through throttling now.

@@ -399,8 +399,8 @@ class ACTestApacheNumberOfProcesses(ACTest, BPApacheTest):
             raise MKGeneralException(_("Failed to read the apache process ID"))
 
         sizes = []
-        for pid in os.popen("ps --ppid %s h o pid" % ppid):
-            summary_line = os.popen("pmap -d %d" % int(pid)).readlines()[-1]
+        for pid in subprocess.check_output(["ps", "--ppid", "%d" % ppid, "h", "o", "pid"]).splitlines():
+            summary_line = subprocess.check_output(["pmap", "-d", "%d" % int(pid)]).splitlines()[-1]
             sizes.append(int(summary_line.split()[3][:-1])*1024.0)
 
         if not sizes:

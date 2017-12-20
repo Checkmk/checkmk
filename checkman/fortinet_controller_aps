@@ -1,0 +1,17 @@
+title: Fortinet WLAN Controller APs: Number of Wifi Access Points
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This checks displays the amount of connected access points on the controller.
+ Per default the check only displays the information for each Access Point.
+ Levels are fixed and the service goes CRIT if an inventorized Access Point is down
+ or not availible.
+
+item:
+ The name of the access point.
+
+inventory:
+ One check for each access point which is successfully connected.
+

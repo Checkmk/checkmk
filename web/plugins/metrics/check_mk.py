@@ -1093,6 +1093,18 @@ metric_info["threads_busy"] = {
     "color" : "34/a",
 }
 
+metric_info["5ghz_clients"] = {
+    "title" : _("Client connects for 5 Ghz Band"),
+    "unit"  : "count",
+    "color" : "13/a",
+}
+
+metric_info["24ghz_clients"] = {
+    "title" : _("Client connects for 2,4 Ghz Band"),
+    "unit"  : "count",
+    "color" : "14/a",
+}
+
 for what, color in [ ("msg", "12"), ("rollovers", "13"), ("regular", "14"),
                      ("warning", "15"), ("user", "16") ]:
     metric_info["assert_%s" % what] = {

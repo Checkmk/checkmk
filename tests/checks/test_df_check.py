@@ -266,4 +266,4 @@ def test_df_check_with_parse(check_manager, monkeypatch, item, params, info, exp
     if params == "default":
         params = check.default_parameters()
 
-    result = checktestlib.BasicCheckResult(*check.run_check(item, params, check.run_parse(info)))
+    result = checktestlib.CheckResult(check.run_check(item, params, check.run_parse(info)))

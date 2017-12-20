@@ -1,3 +1,5 @@
+import types
+
 class PerfValue(object):
     """Represents a single perf value"""
 
@@ -52,12 +54,19 @@ class BasicCheckResult(object):
             self.perfdata = None
 
 
-class CompoundCheckResult(object):
-    """A check result consisting of multiple subresults, as returned by yield-style checks"""
+class CheckResult(object):
+    """A check result potentially consisting of multiple subresults, as returned by yield-style checks"""
 
     def __init__(self, result):
-        """Initializes a list of subresults using BasicCheckResult"""
+        """Initializes a list of subresults using BasicCheckResult.
 
-        self.subresults = []
-        for subresult in result:
-            self.subresults.append(BasicCheckResult(*subresult))
+        If the result is already a plain check result in its tuple representation, we initialize
+        a list of length 1.
+        """
+
+        if type(result) == types.GeneratorType:
+            self.subresults = []
+            for subresult in result:
+                self.subresults.append(BasicCheckResult(*subresult))
+        else:
+            self.subresults = [ BasicCheckResult(*result) ]

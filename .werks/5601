@@ -1,0 +1,10 @@
+Title: fortinet_controller_aps: New check which monitors the number of WiFi access points for Fortinet WLAN controller
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1513762766
+Class: feature
+
+

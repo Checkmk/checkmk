@@ -695,6 +695,10 @@ def rbn_match_escalation(rule, context):
 
 def rbn_match_escalation_throtte(rule, context):
     if "match_escalation_throttle" in rule:
+        # We do not want to suppress recovery notifications.
+        if (context["WHAT"] == "HOST" and context.get("HOSTSTATE", "UP") == "UP") or \
+           (context["WHAT"] == "SERVICE" and context.get("SERVICESTATE", "OK") == "OK"):
+            return
         from_number, rate = rule["match_escalation_throttle"]
         if context["WHAT"] == "HOST":
             notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))

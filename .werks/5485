@@ -1,0 +1,13 @@
+Title: alcatel_power: improved detection of power supplies on newer devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1513869431
+Class: fix
+
+Previously, the power supplies were detected based on the module type id.
+Now the power supplies are detected through the more specifig power supply
+type. The module type is only used as a fallback when the power supply
+type is not available.

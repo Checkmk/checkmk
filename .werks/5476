@@ -1,0 +1,16 @@
+Title: Fixed notification numbering of periodic notifications
+Level: 2
+Component: cmc
+Compatible: incomp
+Edition: cee
+Version: 1.5.0i3
+Date: 1513852752
+Class: fix
+
+Previously, non-OK state changes during periodic notifications resetted the
+notification number back to 1, in effect restarting escalations.  This was
+inconsistent with Nagios and is not what one wants: If e.g. a service is in
+WARN state for quite some time, and then goes to CRIT, one surely wants to
+continue escalation, not reset it.
+
+This problem has been fixed, so problems correctly escalate now.

@@ -466,7 +466,7 @@ sub install_module {
     system("grep 'is installed, but we need version' $LOG | grep ' ! ' | $grepv"); # or die('dependency error');
     system("grep 'is not a known MakeMaker parameter' $LOG | grep INSTALL_BASE | $grepv") or die('build error');
     chdir($cwd);
-    if($duration > 60) {
+    if($duration > 1100) {
         chomp(my $pwd = `pwd`);
         print "installation took too long, see $pwd/$dir/$LOG for details\n";
     } else {
@@ -489,7 +489,7 @@ sub get_meta_for_dir {
     # create Makefile
     my $cwd = cwd();
     chdir($dir);
-    alarm(120);
+    alarm(1200);
     eval {
         cmd("yes n | perl Makefile.PL", 1) if -e 'Makefile.PL';
         cmd("yes n | perl Build.PL", 1)    if -e 'Build.PL';

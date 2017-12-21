@@ -2,10 +2,13 @@
 # encoding: utf-8
 
 import os
+import pytest
 import sys
 import subprocess
 from testlib import cmk_path
 
+# HACK: Mark all tests in this file to be pylint checks
+pytestmark = pytest.mark.pylint
 
 def test_manpage_files():
     os.chdir(cmk_path())

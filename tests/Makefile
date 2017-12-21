@@ -22,8 +22,7 @@ test-pylint:
 test-pylint-ci:
 	export TERM="linux" ; \
 	export PYLINT_ARGS="--output-format=cmk_parseable" ; \
-	$(MAKE) test-pylint ; \
-	py.test -m checkman
+	$(MAKE) test-pylint
 
 
 test-bandit:

@@ -18,10 +18,12 @@ test-pylint:
 	py.test -m pylint
 
 
+# HACK: We check the manual pages here, too...
 test-pylint-ci:
 	export TERM="linux" ; \
 	export PYLINT_ARGS="--output-format=cmk_parseable" ; \
-	$(MAKE) test-pylint
+	$(MAKE) test-pylint ; \
+	py.test -m checkman
 
 
 test-bandit:

@@ -8239,7 +8239,7 @@ def notification_rule_match_conditions():
                       "a certain number of notifications have been created by the monitoring "
                       "core. If you for example select 10 as the beginning and 5 as the rate "
                       "then you will receive the notification 1 through 10 and then 15, 20, "
-                      "25.. and so on."),
+                      "25... and so on. Note that recovery notifications are not affected by throttling."),
              orientation = "float",
              elements = [
                 Integer(

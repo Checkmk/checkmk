@@ -253,10 +253,10 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
     char regpath[128];
     snprintf(regpath, sizeof(regpath),
              "SYSTEM\\CurrentControlSet\\Services\\Eventlog");
-    HKEY key;
+    HKEY key = nullptr;
     DWORD ret = _winapi.RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath, 0,
                                      KEY_ENUMERATE_SUB_KEYS, &key);
-
+    HKeyHandle hKey{key, _winapi};
     bool success = true;
     if (ret == ERROR_SUCCESS) {
         DWORD i = 0;
@@ -264,8 +264,8 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
         DWORD len;
         while (true) {
             len = sizeof(buffer);
-            DWORD r = _winapi.RegEnumKeyEx(key, i, buffer, &len, NULL, NULL,
-                                           NULL, NULL);
+            DWORD r = _winapi.RegEnumKeyEx(hKey.get(), i, buffer, &len, NULL,
+                                           NULL, NULL, NULL);
             if (r == ERROR_SUCCESS)
                 registerEventlog(buffer);
             else if (r != ERROR_MORE_DATA) {
@@ -279,7 +279,6 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
             }
             i++;
         }
-        _winapi.RegCloseKey(key);
     } else {
         success = false;
         const auto lastError = _winapi.GetLastError();

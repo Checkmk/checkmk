@@ -307,3 +307,21 @@ TEST_F(wa_WrappedHandleTest, NullHandleTraits_valid_handle) {
         ASSERT_EQ(rawHandle, testHandle.get());
     }
 }
+
+class wa_HKeyHandleTest : public wa_typesTest {};
+
+TEST_F(wa_HKeyHandleTest, valid_key) {
+    HKEY rawKey = reinterpret_cast<HKEY>(0x1);
+    const char *testPath = "foo\\bar";
+    EXPECT_CALL(_mockwinapi, RegOpenKeyEx(HKEY_LOCAL_MACHINE, testPath, 0,
+                                          KEY_ENUMERATE_SUB_KEYS, _))
+        .WillOnce(DoAll(SetArgPointee<4>(rawKey), Return(ERROR_SUCCESS)));
+    EXPECT_CALL(_mockwinapi, RegCloseKey(rawKey));
+    {
+        HKEY key = nullptr;
+        auto result = _mockwinapi.RegOpenKeyEx(HKEY_LOCAL_MACHINE, testPath, 0,
+                                               KEY_ENUMERATE_SUB_KEYS, &key);
+        ASSERT_EQ(ERROR_SUCCESS, result);
+        HKeyHandle testKey{key, _mockwinapi};
+    }
+}

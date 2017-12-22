@@ -9,6 +9,7 @@
 #include "Logger.h"
 #include "PerfCounterCommon.h"
 #include "stringutil.h"
+#include "types.h"
 #include "win_error.h"
 // Helper functions to navigate the performance counter data
 
@@ -203,7 +204,7 @@ std::vector<BYTE> PerfCounterObject::retrieveCounterData(
     // to be closed manually, otherwise we may be blocking installation of apps
     // that create new performance counters.
     // say WHAT???
-    _winapi.RegCloseKey(HKEY_PERFORMANCE_DATA);
+    HKeyHandle hKey{HKEY_PERFORMANCE_DATA, _winapi};
 
     result.resize(buffer_size);
     return result;

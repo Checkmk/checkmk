@@ -109,16 +109,15 @@ string Environment::determineAgentDirectory(bool use_cwd) const {
             &key);
     }
 
-    // TODO: wrap registry handling properly
-    OnScopeExit close_key([&]() { _winapi.RegCloseKey(key); });
+    HKeyHandle hKey{key, _winapi};
 
     if (ret == ERROR_SUCCESS) {
         vector<unsigned char> buffer(MAX_PATH_UNICODE, '\0');
         DWORD dsize = MAX_PATH_UNICODE;
 
         if (ERROR_SUCCESS ==
-            _winapi.RegQueryValueEx(key, "ImagePath", NULL, NULL, buffer.data(),
-                                    &dsize)) {
+            _winapi.RegQueryValueEx(hKey.get(), "ImagePath", NULL, NULL,
+                                    buffer.data(), &dsize)) {
             buffer.resize(dsize);
             string directory{buffer.begin(), buffer.end()};
             // search backwards for backslash

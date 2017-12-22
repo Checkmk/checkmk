@@ -71,7 +71,7 @@ vector<wstring> MessageResolver::getMessageFiles(LPCWSTR source) const {
         wstring(L"SYSTEM\\CurrentControlSet\\Services\\EventLog");
     wstring regpath = base + L"\\" + _name + L"\\" + source;
 
-    HKEY key;
+    HKEY key = nullptr;
     DWORD ret = _winapi.RegOpenKeyExW(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
                                       KEY_READ, &key);
     if (ret != ERROR_SUCCESS) {
@@ -79,19 +79,19 @@ vector<wstring> MessageResolver::getMessageFiles(LPCWSTR source) const {
         return vector<wstring>();
     }
 
-    // TODO: wrap registry handling properly
-    OnScopeExit close_key([&]() { _winapi.RegCloseKey(key); });
+    HKeyHandle hKey{key, _winapi};
 
     DWORD size = 64;
     vector<BYTE> buffer(size);
     // first try with fixed-size buffer
-    DWORD res = _winapi.RegQueryValueExW(key, L"EventMessageFile", nullptr,
-                                         nullptr, &buffer[0], &size);
+    DWORD res =
+        _winapi.RegQueryValueExW(hKey.get(), L"EventMessageFile", nullptr,
+                                 nullptr, buffer.data(), &size);
     if (res == ERROR_MORE_DATA) {
         buffer.resize(size);
         // actual read
-        res = _winapi.RegQueryValueExW(key, L"EventMessageFile", nullptr,
-                                       nullptr, &buffer[0], &size);
+        res = _winapi.RegQueryValueExW(hKey.get(), L"EventMessageFile", nullptr,
+                                       nullptr, buffer.data(), &size);
     }
     if (res != ERROR_SUCCESS) {
         Error(_logger) << "failed to read at EventMessageFile in HKLM:%ls : %s"

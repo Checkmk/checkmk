@@ -30,7 +30,7 @@ TEST_F(wa_EnvironmentTest, constructor_CurrentDirectory) {
 TEST_F(wa_EnvironmentTest, constructor_AgentDirectory_use_cwd) {
     EXPECT_CALL(_mockwinapi, RegOpenKeyEx(_, _, _, _, _)).Times(0);
     EXPECT_CALL(_mockwinapi, RegQueryValueEx(_, _, _, _, _, _)).Times(0);
-    EXPECT_CALL(_mockwinapi, RegCloseKey(_)).Times(1);
+    EXPECT_CALL(_mockwinapi, RegCloseKey(_)).Times(0);
     const ::Environment testEnvironment(true, &_mocklogger, _mockwinapi);
     EXPECT_EQ(testEnvironment.currentDirectory(),
               testEnvironment.agentDirectory());

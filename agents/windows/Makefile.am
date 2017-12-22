@@ -79,20 +79,31 @@ check_mk_agent_SOURCES = \
         sections/SectionWinperf.cc
 
 WindowsAgentTest_SOURCES = \
+        Configurable.cc \
+        Configuration.cc \
         Environment.cc \
+        EventLog.cc \
         EventLogVista.cc \
+        IEventLog.cc \
         Logger.cc \
+        PerfCounterCommon.cc \
         RotatingFileHandler.cc \
+        Section.cc \
+        stringutil.cc \
+        types.cc \
         win_error.cc \
         wmiHelper.cc \
+        sections/SectionEventlog.cc \
         test/EnvironmentTest.cc \
         test/EventLogVistaTest.cc \
         test/MockLogger.cc \
         test/MockWinApi.cc \
         test/RotatingFileHandlerTest.cc \
         test/gtest_main.cc \
+        test/stringutilTest.cc \
         test/typesTest.cc \
-        test/wmiHelperTest.cc
+        test/wmiHelperTest.cc \
+        test/sections/SectionEventlogTest.cc
 
 wmitest_SOURCES = wmitest.cc stringutil.cc WinApi.cc wmiHelper.cc
 

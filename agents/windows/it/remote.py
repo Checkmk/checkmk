@@ -8,9 +8,9 @@ import subprocess
 import sys
 import telnetlib
 
-# To use a another host for running the tests, replace this IP address.
+# To use another host for running the tests, replace this IP address.
 remote_ip = '10.1.2.30'
-# To use a another user account for running the tests, replace this username.
+# To use another user account for running the tests, replace this username.
 remoteuser = 'NetworkAdministrator'
 remotedir = os.path.join(os.sep, 'Users', remoteuser, 'Tests')
 sshopts = "-o StrictHostKeyChecking=no"

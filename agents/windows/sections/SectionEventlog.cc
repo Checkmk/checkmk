@@ -27,10 +27,26 @@
 #include <inttypes.h>
 #include <cstring>
 #include <ctime>
+#include <fstream>
 #include "Environment.h"
 #include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "stringutil.h"
+
+eventlog_hint_t parseStateLine(const std::string &line) {
+    /* Example: line = "System|1234" */
+    const auto tokens = tokenize(line, "\\|");
+
+    if (tokens.size() != 2) {
+        throw StateParseError{std::string("Invalid state line: ") + line};
+    }
+
+    try {
+        return {tokens[0], std::stoull(tokens[1])};
+    } catch (const std::invalid_argument &) {
+        throw StateParseError{std::string("Invalid state line: ") + line};
+    }
+}
 
 SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
@@ -44,42 +60,30 @@ SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
 
 SectionEventlog::~SectionEventlog() {}
 
-void SectionEventlog::parseStateLine(char *line) {
-    /* Example: line = "System|1234" */
-    rstrip(line);
-    char *p = line;
-    while (*p && *p != '|') p++;
-    *p = 0;
-    char *path = line;
-    p++;
-
-    char *token = strtok(p, "|");
-
-    if (!token) return;
-
-    _hints.emplace_back(path, std::stoull(token));
-}
-
 void SectionEventlog::loadEventlogOffsets(const std::string &statefile) {
     if (!_records_loaded) {
-        FILE *file = fopen(statefile.c_str(), "r");
-        if (file) {
-            char line[256];
-            while (NULL != fgets(line, sizeof(line), file)) {
-                parseStateLine(line);
+        std::ifstream ifs(statefile);
+        std::string line;
+        while (std::getline(ifs, line)) {
+            try {
+                _hints.push_back(parseStateLine(line));
+            } catch (const StateParseError &e) {
+                Error(_logger) << e.what();
             }
-            fclose(file);
         }
         _records_loaded = true;
     }
 }
 
 void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
-    FILE *file = fopen(statefile.c_str(), "w");
-    if (file == nullptr) {
-        fprintf(stderr, "failed to open %s for writing\n", statefile.c_str());
+    std::ofstream ofs(statefile);
+
+    if (!ofs) {
+        std::cerr << "failed to open " << statefile << " for writing"
+                  << std::endl;
         return;
     }
+
     for (const auto &state : _state) {
         int level = 1;
         for (const auto &config : *_config) {
@@ -88,11 +92,10 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
                 break;
             }
         }
-        if (level != -1)
-            fprintf(file, "%s|%" PRIu64 "\n", state.name.c_str(),
-                    state.record_no);
+        if (level != -1) {
+            ofs << state.name << "|" << state.record_no << std::endl;
+        }
     }
-    fclose(file);
 }
 
 namespace {

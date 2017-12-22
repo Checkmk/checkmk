@@ -60,6 +60,8 @@ public:
     }
 };
 
+eventlog_hint_t parseStateLine(const std::string &line);
+
 class SectionEventlog : public Section {
 public:
     SectionEventlog(Configuration &config, Logger *logger,
@@ -77,7 +79,6 @@ private:
                             int hideContext);
     void registerEventlog(const char *logname);
     bool find_eventlogs(std::ostream &out);
-    void parseStateLine(char *line);
     void loadEventlogOffsets(const std::string &statefile);
     void saveEventlogOffsets(const std::string &statefile);
 

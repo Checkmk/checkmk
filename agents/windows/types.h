@@ -236,6 +236,12 @@ template <>
 mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
                                       const std::string &value);
 
+class StateParseError : public std::invalid_argument {
+public:
+    explicit StateParseError(const std::string &what)
+        : std::invalid_argument(what) {}
+};
+
 // Our memory of what event logs we know and up to
 // which record entry we have seen its messages so
 // far.

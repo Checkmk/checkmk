@@ -29,9 +29,13 @@
 #include <codecvt>
 #include <iostream>
 #include <locale>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
+
+using std::regex;
+using std::sregex_token_iterator;
 
 class WinApiAdaptor;
 
@@ -42,6 +46,13 @@ char *strip(char *s);
 
 std::vector<const char *> split_line(char *pos, int (*split_pred)(int));
 char *next_word(char **line);
+
+inline std::vector<std::string> tokenize(const std::string &input,
+                                         const std::string &delimiter) {
+    regex re(delimiter);
+    sregex_token_iterator first{input.cbegin(), input.cend(), re, -1}, last;
+    return {first, last};
+}
 
 unsigned long long string_to_llu(const char *s);
 

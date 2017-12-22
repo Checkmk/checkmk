@@ -470,4 +470,16 @@ struct HKeyHandleTraits {
 };
 
 using HKeyHandle = WrappedHandle<HKeyHandleTraits>;
+
+struct ServiceHandleTraits {
+    using HandleT = SC_HANDLE;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.CloseServiceHandle(value);
+    }
+};
+
+using ServiceHandle = WrappedHandle<ServiceHandleTraits>;
+
 #endif  // types_h

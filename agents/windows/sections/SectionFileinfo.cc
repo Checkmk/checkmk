@@ -51,13 +51,13 @@ bool SectionFileinfo::produceOutputInner(std::ostream &out) {
 
 void SectionFileinfo::get_directories(std::string base_path) {
     WIN32_FIND_DATA findData;
-    HANDLE findHandle;
 
     std::stringstream ss;
     ss << base_path << "\\"
        << "*.*";
-    if ((findHandle = _winapi.FindFirstFile(ss.str().c_str(), &findData)) !=
-        INVALID_HANDLE_VALUE) {
+    SearchHandle findHandle{_winapi.FindFirstFile(ss.str().c_str(), &findData),
+                            _winapi};
+    if (findHandle) {
         do {
             if (strcmp(findData.cFileName, ".") &&
                 strcmp(findData.cFileName,
@@ -72,8 +72,7 @@ void SectionFileinfo::get_directories(std::string base_path) {
                 else
                     _temp_files.push_back(ss.str());
             }
-        } while (_winapi.FindNextFile(findHandle, &findData));
-        _winapi.FindClose(findHandle);
+        } while (_winapi.FindNextFile(findHandle.get(), &findData));
     }
 }
 
@@ -91,12 +90,13 @@ void SectionFileinfo::determine_filepaths_full_search(
 void SectionFileinfo::determine_filepaths_simple_search(
     std::string base_path, std::string search_pattern) {
     WIN32_FIND_DATA data;
-    auto findHandle =
+    SearchHandle findHandle{
         _winapi.FindFirstFileEx(search_pattern.c_str(), FindExInfoStandard,
-                                &data, FindExSearchNameMatch, NULL, 0);
+                                &data, FindExSearchNameMatch, NULL, 0),
+        _winapi};
 
     std::stringstream ss;
-    if (findHandle != INVALID_HANDLE_VALUE) {
+    if (findHandle) {
         do {
             if (0 == (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
                 ss.str("");
@@ -104,8 +104,7 @@ void SectionFileinfo::determine_filepaths_simple_search(
                 ss << base_path << "\\" << data.cFileName;
                 _found_files.push_back(ss.str());
             }
-        } while (_winapi.FindNextFile(findHandle, &data));
-        _winapi.FindClose(findHandle);
+        } while (_winapi.FindNextFile(findHandle.get(), &data));
     }
 }
 
@@ -144,16 +143,15 @@ void SectionFileinfo::outputFileinfos(std::ostream &out, const char *path) {
 bool SectionFileinfo::outputFileinfo(std::ostream &out,
                                      const std::string filename) {
     WIN32_FIND_DATA findData;
-    HANDLE findHandle;
-    if ((findHandle = _winapi.FindFirstFile(filename.c_str(), &findData)) !=
-        INVALID_HANDLE_VALUE) {
+    SearchHandle findHandle{_winapi.FindFirstFile(filename.c_str(), &findData),
+                            _winapi};
+    if (findHandle) {
         unsigned long long size =
             (unsigned long long)findData.nFileSizeLow +
             (((unsigned long long)findData.nFileSizeHigh) << 32);
         out << filename << "|" << size << "|" << std::fixed
             << std::setprecision(0) << file_time(&findData.ftLastWriteTime)
             << "\n";
-        _winapi.FindClose(findHandle);
         return true;
     }
     return false;

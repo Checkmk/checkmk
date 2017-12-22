@@ -482,4 +482,15 @@ struct ServiceHandleTraits {
 
 using ServiceHandle = WrappedHandle<ServiceHandleTraits>;
 
+struct SearchHandleTraits {
+    using HandleT = HANDLE;
+    static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.FindClose(value);
+    }
+};
+
+using SearchHandle = WrappedHandle<SearchHandleTraits>;
+
 #endif  // types_h

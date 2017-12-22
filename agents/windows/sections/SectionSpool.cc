@@ -26,9 +26,9 @@
 #include <sys/types.h>
 #include "Environment.h"
 #include "Logger.h"
-typedef short SHORT;
-#include "WinApiAdaptor.h"
 #include "SectionSpool.h"
+#include "WinApiAdaptor.h"
+#include "types.h"
 
 extern double file_time(const FILETIME *filetime);
 
@@ -64,12 +64,12 @@ bool SectionSpool::produceOutputInner(std::ostream &out) {
             if (isdigit(*name)) max_age = atoi(name);
 
             if (max_age >= 0) {
-                HANDLE h =
+                SearchHandle searchHandle{
                     _winapi.FindFirstFileEx(path, FindExInfoStandard, &filedata,
-                                            FindExSearchNameMatch, NULL, 0);
-                if (h != INVALID_HANDLE_VALUE) {
+                                            FindExSearchNameMatch, NULL, 0),
+                    _winapi};
+                if (searchHandle) {
                     double mtime = file_time(&(filedata.ftLastWriteTime));
-                    _winapi.FindClose(h);
                     int age = now - mtime;
                     if (age > max_age) {
                         Informational(_logger)

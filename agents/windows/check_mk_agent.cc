@@ -365,12 +365,11 @@ void InstallService() {
                                        sizeof(path) / sizeof(path[0])) > 0) {
             char quoted_path[1024];
             snprintf(quoted_path, sizeof(quoted_path), "\"%s\"", path);
-            SC_HANDLE service = s_winapi.CreateService(
+            ServiceHandle service{s_winapi.CreateService(
                 serviceControlManager, gszServiceName, gszServiceName,
                 SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-                SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, quoted_path);
+                SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, quoted_path), s_winapi};
             if (service) {
-                s_winapi.CloseServiceHandle(service);
                 printf(SERVICE_NAME " Installed Successfully\n");
             } else {
                 const DWORD lastError = s_winapi.GetLastError();
@@ -382,22 +381,20 @@ void InstallService() {
                            static_cast<int>(lastError));
             }
         }
-
-        s_winapi.CloseServiceHandle(serviceControlManager);
     }
 }
 
 void UninstallService() {
-    SC_HANDLE serviceControlManager =
-        s_winapi.OpenSCManager(0, 0, SC_MANAGER_CONNECT);
+    ServiceHandle serviceControlManager{
+        s_winapi.OpenSCManager(0, 0, SC_MANAGER_CONNECT), s_winapi};
 
     if (serviceControlManager) {
-        SC_HANDLE service =
-            s_winapi.OpenService(serviceControlManager, gszServiceName,
-                                 SERVICE_QUERY_STATUS | DELETE);
+        ServiceHandle service{
+            s_winapi.OpenService(serviceControlManager.get(), gszServiceName,
+                                 SERVICE_QUERY_STATUS | DELETE), s_winapi};
         if (service) {
             SERVICE_STATUS serviceStatus;
-            if (s_winapi.QueryServiceStatus(service, &serviceStatus)) {
+            if (s_winapi.QueryServiceStatus(service.get(), &serviceStatus)) {
                 while (in_set(serviceStatus.dwCurrentState,
                               {SERVICE_RUNNING, SERVICE_STOP_PENDING})) {
                     if (serviceStatus.dwCurrentState == SERVICE_STOP_PENDING) {
@@ -407,12 +404,12 @@ void UninstallService() {
                         waitTime =
                             std::max(1000UL, std::min(waitTime, 10000UL));
                         s_winapi.Sleep(waitTime);
-                        if (!s_winapi.QueryServiceStatus(service,
+                        if (!s_winapi.QueryServiceStatus(service.get(),
                                                          &serviceStatus)) {
                             break;
                         }
                     } else {
-                        if (s_winapi.ControlService(service,
+                        if (s_winapi.ControlService(service.get(),
                                                     SERVICE_CONTROL_STOP,
                                                     &serviceStatus) == 0) {
                             break;
@@ -421,7 +418,7 @@ void UninstallService() {
                 }
 
                 if (serviceStatus.dwCurrentState == SERVICE_STOPPED) {
-                    if (s_winapi.DeleteService(service))
+                    if (s_winapi.DeleteService(service.get()))
                         printf(SERVICE_NAME " Removed Successfully\n");
                     else {
                         const DWORD dwError = s_winapi.GetLastError();
@@ -441,9 +438,7 @@ void UninstallService() {
                     printf(SERVICE_NAME " is still Running.\n");
                 }
             }
-            s_winapi.CloseServiceHandle(service);
         }
-        s_winapi.CloseServiceHandle(serviceControlManager);
     }
 }
 void do_install() { InstallService(); }

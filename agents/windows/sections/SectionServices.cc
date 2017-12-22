@@ -27,6 +27,7 @@ typedef short SHORT;
 #include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "stringutil.h"
+#include "types.h"
 
 SectionServices::SectionServices(const Environment &env, Logger *logger,
                                  const WinApiAdaptor &winapi)
@@ -38,13 +39,14 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
                                               LPCWSTR service_name) {
     // Query the start type of the service
     const char *start_type = "invalid1";
-    SC_HANDLE schService;
     LPQUERY_SERVICE_CONFIGW lpsc;
-    schService = _winapi.OpenServiceW(scm, service_name, SERVICE_QUERY_CONFIG);
+    ServiceHandle schService{
+        _winapi.OpenServiceW(scm, service_name, SERVICE_QUERY_CONFIG), _winapi};
     if (schService) {
         start_type = "invalid2";
         DWORD dwBytesNeeded, cbBufSize;
-        if (!_winapi.QueryServiceConfig(schService, NULL, 0, &dwBytesNeeded)) {
+        if (!_winapi.QueryServiceConfig(schService.get(), NULL, 0,
+                                        &dwBytesNeeded)) {
             start_type = "invalid3";
             DWORD dwError = _winapi.GetLastError();
             if (dwError == ERROR_INSUFFICIENT_BUFFER) {
@@ -52,8 +54,8 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
                 cbBufSize = dwBytesNeeded;
                 lpsc = (LPQUERY_SERVICE_CONFIGW)_winapi.LocalAlloc(LMEM_FIXED,
                                                                    cbBufSize);
-                if (_winapi.QueryServiceConfig(schService, lpsc, cbBufSize,
-                                               &dwBytesNeeded)) {
+                if (_winapi.QueryServiceConfig(schService.get(), lpsc,
+                                               cbBufSize, &dwBytesNeeded)) {
                     switch (lpsc->dwStartType) {
                         case SERVICE_AUTO_START:
                             start_type = "auto";
@@ -77,27 +79,28 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
                 _winapi.LocalFree(lpsc);
             }
         }
-        _winapi.CloseServiceHandle(schService);
     }
     return start_type;
 }
 
 bool SectionServices::produceOutputInner(std::ostream &out) {
     Debug(_logger) << "SectionServices::produceOutputInner";
-    SC_HANDLE scm = _winapi.OpenSCManager(
-        0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
-    if (scm != INVALID_HANDLE_VALUE) {
+    ServiceHandle scm{
+        _winapi.OpenSCManager(
+            0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE),
+        _winapi};
+    if (scm) {
         DWORD bytes_needed = 0;
         DWORD num_services = 0;
         // first determine number of bytes needed
-        _winapi.EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
-                                      SERVICE_STATE_ALL, NULL, 0, &bytes_needed,
-                                      &num_services, 0, 0);
+        _winapi.EnumServicesStatusExW(scm.get(), SC_ENUM_PROCESS_INFO,
+                                      SERVICE_WIN32, SERVICE_STATE_ALL, NULL, 0,
+                                      &bytes_needed, &num_services, 0, 0);
         if (_winapi.GetLastError() == ERROR_MORE_DATA && bytes_needed > 0) {
             BYTE *buffer = (BYTE *)malloc(bytes_needed);
             if (buffer) {
                 if (_winapi.EnumServicesStatusExW(
-                        scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
+                        scm.get(), SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
                         SERVICE_STATE_ALL, buffer, bytes_needed, &bytes_needed,
                         &num_services, 0, 0)) {
                     ENUM_SERVICE_STATUS_PROCESSW *service =
@@ -131,7 +134,7 @@ bool SectionServices::produceOutputInner(std::ostream &out) {
                         }
 
                         const char *start_type =
-                            serviceStartType(scm, service->lpServiceName);
+                            serviceStartType(scm.get(), service->lpServiceName);
 
                         // The service name usually does not contain spaces. But
                         // in some cases it does. We replace them with _ in
@@ -152,7 +155,6 @@ bool SectionServices::produceOutputInner(std::ostream &out) {
                 free(buffer);
             }
         }
-        _winapi.CloseServiceHandle(scm);
     }
     return true;
 }

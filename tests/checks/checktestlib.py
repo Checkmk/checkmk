@@ -29,10 +29,12 @@ class PerfValue(object):
 
 
 class BasicCheckResult(object):
-    """A basic check result
+    """
+    A basic check result
 
     This class models a basic check result (status, infotext, perfdata) and provides
-    facilities to match it against conditions, such as 'Status is...' or 'Infotext contains...'
+    facilities to match it against conditions, such as 'Status is...' or
+    'Infotext contains...'
     """
 
     def __init__(self, status, infotext, perfdata=None):
@@ -55,13 +57,17 @@ class BasicCheckResult(object):
 
 
 class CheckResult(object):
-    """A check result potentially consisting of multiple subresults, as returned by yield-style checks"""
+    """
+    A check result potentially consisting of multiple subresults,
+    as returned by yield-style checks
+    """
 
     def __init__(self, result):
-        """Initializes a list of subresults using BasicCheckResult.
+        """
+        Initializes a list of subresults using BasicCheckResult.
 
-        If the result is already a plain check result in its tuple representation, we initialize
-        a list of length 1.
+        If the result is already a plain check result in its tuple representation,
+        we initialize a list of length 1.
         """
 
         if type(result) == types.GeneratorType:

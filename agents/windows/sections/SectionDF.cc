@@ -28,6 +28,18 @@
 #include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "stringutil.h"
+#include "types.h"
+
+namespace {
+
+struct MountPointHandleTraits {
+    using HandleT = HANDLE;
+    static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.FindVolumeMountPointClose(value);
+    }
+};
 
 void char_replace(char what, char into, char *in) {
     while (*in) {
@@ -35,6 +47,8 @@ void char_replace(char what, char into, char *in) {
         in++;
     }
 }
+
+}  // namespace
 
 SectionDF::SectionDF(const Environment &env, Logger *logger,
                      const WinApiAdaptor &winapi)
@@ -77,19 +91,21 @@ void SectionDF::output_filesystem(std::ostream &out, char *volid) {
 
 void SectionDF::output_mountpoints(std::ostream &out, char *volid) {
     char mountpoint[512];
-    HANDLE hPt = _winapi.FindFirstVolumeMountPoint(volid, mountpoint,
-                                                   sizeof(mountpoint));
-    if (hPt != INVALID_HANDLE_VALUE) {
+    WrappedHandle<MountPointHandleTraits> hPt{
+        _winapi.FindFirstVolumeMountPoint(volid, mountpoint,
+                                          sizeof(mountpoint)),
+        _winapi};
+
+    if (hPt) {
         while (true) {
             char combined_path[1024];
             snprintf(combined_path, sizeof(combined_path), "%s%s", volid,
                      mountpoint);
             output_filesystem(out, combined_path);
-            if (!_winapi.FindNextVolumeMountPoint(hPt, mountpoint,
+            if (!_winapi.FindNextVolumeMountPoint(hPt.get(), mountpoint,
                                                   sizeof(mountpoint)))
                 break;
         }
-        _winapi.FindVolumeMountPointClose(hPt);
     }
 }
 

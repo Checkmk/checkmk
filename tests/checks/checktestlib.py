@@ -18,13 +18,13 @@ class PerfValue(object):
         assert type(value) in [int, float]
         self.value = value
 
-        assert type(warn) in [int, float, type(None)]
+        assert type(warn) in [int, float, types.NoneType]
         self.warn = warn
-        assert type(crit) in [int, float, type(None)]
+        assert type(crit) in [int, float, types.NoneType]
         self.crit = crit
-        assert type(minimum) in [int, float, type(None)]
+        assert type(minimum) in [int, float, types.NoneType]
         self.minimum = minimum
-        assert type(maximum) in [int, float, type(None)]
+        assert type(maximum) in [int, float, types.NoneType]
         self.maximum = maximum
 
 

@@ -460,4 +460,14 @@ using HModuleHandle = WrappedHandle<HModuleTraits>;
 template <int exitCode>
 using JobHandle = WrappedHandle<JobHandleTraits<exitCode>>;
 
+struct HKeyHandleTraits {
+    using HandleT = HKEY;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.RegCloseKey(value);
+    }
+};
+
+using HKeyHandle = WrappedHandle<HKeyHandleTraits>;
 #endif  // types_h

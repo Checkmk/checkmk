@@ -27,6 +27,19 @@ class PerfValue(object):
         assert type(maximum) in [int, float, types.NoneType]
         self.maximum = maximum
 
+    def __eq__(self, other_value):
+        return all([
+            self.key == other_value.key,
+            self.value == other_value.value,
+            self.warn == other_value.warn,
+            self.crit == other_value.crit,
+            self.minimum == other_value.minimum,
+            self.maximum == other_value.maximum,
+        ])
+
+    def __ne__(self, other_value):
+        return not self.__eq__(other_value)
+
 
 class BasicCheckResult(object):
     """
@@ -76,3 +89,10 @@ class CheckResult(object):
                 self.subresults.append(BasicCheckResult(*subresult))
         else:
             self.subresults = [ BasicCheckResult(*result) ]
+
+    # TODO: @property this
+    def perfdata(self):
+        perfdata = []
+        for subresult in self.subresults:
+            perfdata += subresult.perfdata if subresult.perfdata else []
+        return perfdata

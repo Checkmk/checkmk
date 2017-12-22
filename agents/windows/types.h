@@ -248,7 +248,9 @@ struct eventlog_file_state {
 };
 
 struct eventlog_hint_t {
-    char *name;
+    eventlog_hint_t(const std::string &name_, uint64_t record_no_)
+        : name(name_), record_no(record_no_) {}
+    std::string name;
     uint64_t record_no;
 };
 
@@ -272,7 +274,7 @@ typedef std::vector<globline_container *> logwatch_globlines_t;
 typedef std::vector<eventlog_config_entry> eventlog_config_t;
 typedef std::vector<mrpe_entry *> mrpe_entries_t;
 typedef std::vector<eventlog_file_state> eventlog_state_t;
-typedef std::vector<eventlog_hint_t *> eventlog_hints_t;
+typedef std::vector<eventlog_hint_t> eventlog_hints_t;
 typedef std::vector<char *> fileinfo_paths_t;
 typedef std::vector<retry_config *> retry_count_configs_t;
 typedef std::vector<timeout_config *> timeout_configs_t;

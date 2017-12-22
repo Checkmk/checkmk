@@ -38,15 +38,6 @@ using std::ofstream;
 
 namespace {
 
-struct SearchHandleTraits {
-    using HandleT = HANDLE;
-    static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
-
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
-        winapi.FindClose(value);
-    }
-};
-
 const size_t UNICODE_BUFFER_SIZE = 8192;
 
 // Process content of the given textfile
@@ -206,7 +197,7 @@ std::vector<SectionLogwatch::FileEntryType> SectionLogwatch::globMatches(
     }
 
     WIN32_FIND_DATA data;
-    WrappedHandle<SearchHandleTraits> searchHandle{
+    SearchHandle searchHandle{
         _winapi.FindFirstFileEx(pattern, FindExInfoStandard, &data,
                                 FindExSearchNameMatch, nullptr, 0),
         _winapi};

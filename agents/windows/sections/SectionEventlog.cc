@@ -42,14 +42,7 @@ SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
     config.reg("logwatch", "logfile", &_config);
 }
 
-SectionEventlog::~SectionEventlog() {
-    _state.clear();
-    for (auto ptr : _hints) {
-        free(ptr->name);
-        delete ptr;
-    }
-    _hints.clear();
-}
+SectionEventlog::~SectionEventlog() {}
 
 void SectionEventlog::parseStateLine(char *line) {
     /* Example: line = "System|1234" */
@@ -64,10 +57,7 @@ void SectionEventlog::parseStateLine(char *line) {
 
     if (!token) return;
 
-    eventlog_hint_t *elh = new eventlog_hint_t();
-    elh->name = strdup(path);
-    elh->record_no = std::stoull(token);
-    _hints.push_back(elh);
+    _hints.emplace_back(path, std::stoull(token));
 }
 
 void SectionEventlog::loadEventlogOffsets(const std::string &statefile) {
@@ -90,9 +80,9 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
         fprintf(stderr, "failed to open %s for writing\n", statefile.c_str());
         return;
     }
-    for (eventlog_file_state &state : _state) {
+    for (const auto &state : _state) {
         int level = 1;
-        for (eventlog_config_entry &config : *_config) {
+        for (const auto &config : *_config) {
             if ((config.name == "*") || ci_equal(config.name, state.name)) {
                 level = config.level;
                 break;
@@ -232,7 +222,7 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
 // might already be known and will not be stored twice.
 void SectionEventlog::registerEventlog(const char *logname) {
     // check if we already know this one...
-    for (eventlog_file_state &state : _state) {
+    for (auto &state : _state) {
         if (state.name.compare(logname) == 0) {
             state.newly_discovered = true;
             return;
@@ -246,7 +236,7 @@ void SectionEventlog::registerEventlog(const char *logname) {
 /* Look into the registry in order to find out, which
    event logs are available. */
 bool SectionEventlog::find_eventlogs(std::ostream &out) {
-    for (eventlog_file_state &state : _state) {
+    for (auto &state : _state) {
         state.newly_discovered = false;
     }
 
@@ -317,11 +307,11 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
         // The last processed record number of each eventlog is stored in the
         // file eventstate.txt
         if (_first_run && !*_send_initial) {
-            for (eventlog_file_state &state : _state) {
+            for (auto &state : _state) {
                 bool found_hint = false;
-                for (eventlog_hint_t *hint : _hints) {
-                    if (state.name.compare(hint->name) == 0) {
-                        state.record_no = hint->record_no;
+                for (const auto &hint : _hints) {
+                    if (state.name == hint.name) {
+                        state.record_no = hint.record_no;
                         found_hint = true;
                         break;
                     }
@@ -334,7 +324,7 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
             }
         }
 
-        for (eventlog_file_state &state : _state) {
+        for (auto &state : _state) {
             if (!state.newly_discovered)  // not here any more!
                 out << "[[[" << state.name << ":missing]]]\n";
             else {

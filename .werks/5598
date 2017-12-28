@@ -1,0 +1,15 @@
+Title: postfix_mailq_status: Fix Linux agent to handle newer SuSE systems
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1514465574
+
+Postfixes master executable can be found under postfix/sbin or postfix/bin
+depending on the system. The latter case had not been handled by the agent.
+This has been fixed.
+
+Thanks to Robert Sander for the patch!

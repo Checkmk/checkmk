@@ -24,6 +24,7 @@
 
 #include "TableStatus.h"
 #include <atomic>
+#include <cstdint>
 #include <ctime>
 #include <memory>
 #include "AtomicInt32PointerColumn.h"
@@ -68,7 +69,7 @@ extern int g_num_hosts;
 extern int g_num_services;
 extern int g_livestatus_threads;
 extern int g_num_queued_connections;
-extern std::atomic_int32_t g_livestatus_active_connections;
+extern std::atomic<int32_t> g_livestatus_active_connections;
 
 #ifndef NAGIOS4
 extern circular_buffer external_command_buffer;

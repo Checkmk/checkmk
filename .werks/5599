@@ -1,0 +1,12 @@
+Title: check_dns: Return to the behaviour prior to Werk #5526
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p23
+Date: 1514555220
+Class: fix
+
+Although Werk #5526 brought the behaviour in line with what's described in the GUI,
+this kind of change requires further discussion as to what the desired behaviour is.
+We return to the old behaviour and adjust the GUIs description

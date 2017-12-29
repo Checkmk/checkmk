@@ -2,6 +2,6 @@
 -I../..
 -I..
 -DHAVE_CONFIG_H
--std=c++14
+-std=c++17
 -Wall
 -Wextra

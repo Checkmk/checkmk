@@ -24,11 +24,13 @@
 
 # TODO(sp) We should really use autotools here...
 ifneq ($(shell which g++-7 2>/dev/null),)
-        CXX := g++-7 -std=c++14
-else ifneq ($(shell which g++-6 2>/dev/null),)
-        CXX := g++-6 -std=c++14
+        CXX := g++-7 -std=c++17
+else ifneq ($(shell which clang++-5.0 2>/dev/null),)
+        CXX := clang++-5.0 -std=c++17
+else ifneq ($(shell which g++ 2>/dev/null),)
+        CXX := g++ -std=c++17
 else
-        CXX := g++-5 -std=c++14
+        CXX := clang++ -std=c++17
 endif
 
 CXXFLAGS    := -g -O3 -Wall -Wextra

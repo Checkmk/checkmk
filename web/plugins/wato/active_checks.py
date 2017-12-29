@@ -451,8 +451,8 @@ register_rule(group,
                         Alternative(
                             title = _("DNS Server"),
                             elements = [
-                                FixedValue( value=None, totext=_("use local configuration"),
-                                            title = _("Use local DNS configuration of monitoring site")),
+                                FixedValue( value=None, totext=_("this host"),
+                                            title = _("Use this host as a DNS server for the lookup")),
                                 TextAscii(
                                     title = _("Specify DNS Server"),
                                     allow_empty = False,

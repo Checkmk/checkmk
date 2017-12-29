@@ -31,6 +31,8 @@ def check_dns_arguments(params):
     if "server" in settings:
         if settings["server"] != None:
             args += ' -s %s' % quote_shell_string(settings["server"])
+    else:
+        args += " -s '$HOSTADDRESS$'"
 
     if "expected_address" in settings:
         # Convert from old (str) to new (list of strings)

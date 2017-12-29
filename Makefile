@@ -58,15 +58,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
-
-# HACK: Starting with GCC 6.1, g++ defaults to C++14, but even clang++-4.0 still
-# defaults to C++11. So when configure finds such a g++ first, the resulting
-# compilation database does not contain a -std=c++14 flag, because it's simply
-# not needed. But when we want to use our clang-based tools, it *is* needed. :-/
-# To work around that issue, we hackily add that flag below. This is ugly and
-# should be removed when the compiler defaults are in sync again.
-CXX_FLAGS          += -std=c++14
-
 CLANG_VERSION      := 5.0
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
@@ -499,7 +490,7 @@ endif
 # Not really perfect rules, but better than nothing
 analyze: config.h
 	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++14"
+	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
 
 # TODO: Repeating the include paths in the cppcheck targets below is ugly and
 # fragile.

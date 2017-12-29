@@ -49,13 +49,13 @@ AS_IF([test "x$enable_rrd_is_thread_safe" != "xno"], [RRDLIB_TO_CHECK=rrd],
       [RRDLIB_TO_CHECK=rrd_th])
 
 # Checks for programs.
-AC_PROG_CC([gcc-7 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])
+AC_PROG_CC([gcc-7 clang-5.0 gcc clang])
 AC_PROG_CC_C99([], [])
 if test "x$ac_cv_prog_cc_c99" = xno; then
   AC_MSG_ERROR([Need a C99-compliant C compiler])
 fi
-AC_PROG_CXX([g++-7 clang++-5.0 g++-6 clang++-4.0 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++])
-AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory])
+AC_PROG_CXX([g++-7 clang++-5.0 g++ clang++])
+AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 AC_PROG_RANLIB
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it. :-P
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -93,27 +93,21 @@ fi
 
 AC_LANG_PUSH([C++])
 
-AC_MSG_CHECKING([whether C++14 headers are supported by default])
+AC_MSG_CHECKING([whether C++17 headers are supported by default])
 AC_COMPILE_IFELSE(
-    [AC_LANG_PROGRAM([#include <shared_mutex>], [])],
+    [AC_LANG_PROGRAM([#include <optional>
+#include <shared_mutex>], [std::shared_mutex sm])],
     [AC_MSG_RESULT([yes])],
     [AC_MSG_RESULT([no])
      CXX="$CXX -stdlib=libc++"
      CXXCPP="$CXXCPP -stdlib=libc++"
-     AC_MSG_CHECKING([whether C++14 headers are supported with -stdlib=libc++])
+     AC_MSG_CHECKING([whether C++17 headers are supported with -stdlib=libc++])
      AC_COMPILE_IFELSE(
-         [AC_LANG_PROGRAM([#include <shared_mutex>], [])],
+         [AC_LANG_PROGRAM([#include <optional>
+#include <shared_mutex>], [std::shared_mutex sm])],
          [AC_MSG_RESULT([yes])],
          [AC_MSG_RESULT([no])
           AC_MSG_ERROR([C++ headers are too old. Please install a newer g++/clang/libc++-dev package.])])])
-
-AC_MSG_CHECKING([whether <shared_mutex> defines std::shared_timed_mutex])
-AC_COMPILE_IFELSE(
-  [AC_LANG_PROGRAM([#include <shared_mutex>], [std::shared_timed_mutex stm])],
-  [AC_MSG_RESULT([yes])
-   AC_DEFINE(HAVE_STD_SHARED_TIMED_MUTEX, 1,
-	     [Define to 1 if <shared_mutex> defines std::shared_timed_mutex])],
-  [AC_MSG_RESULT([no])])
 
 AC_LANG_POP([C++])
 

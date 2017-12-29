@@ -139,7 +139,7 @@ AC_DEFUN([AX_CXX_COMPILE_STDCXX], [dnl
               [define if the compiler supports basic C++$1 syntax])
   fi
   AC_SUBST(HAVE_CXX$1)
-  m4_if([$1], [17], [AC_MSG_WARN([C++17 is not yet standardized, so the checks may change in incompatible ways anytime])])
+#  m4_if([$1], [17], [AC_MSG_WARN([C++17 is not yet standardized, so the checks may change in incompatible ways anytime])])
 ])
 
 

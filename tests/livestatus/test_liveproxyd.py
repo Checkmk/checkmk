@@ -6,6 +6,8 @@ import pytest
 import signal
 from testlib import web
 
+pytestmark = pytest.mark.skipif(True, "liveproxyd remains in an unkillable state with tons of child processes")
+
 @pytest.fixture(scope="module")
 def default_cfg(web):
     print "Applying default config"

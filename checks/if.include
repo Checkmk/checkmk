@@ -304,10 +304,6 @@ def inventory_if_common(info, has_nodeinfo = False):
         return False
 
     group_patterns = _prepare_if_group_patterns_from_conf()
-
-
-    print settings_sets
-
     for settings in settings_sets:
         uses_description = settings.get('use_desc', if_inventory_uses_description)
         uses_alias       = settings.get('use_alias', if_inventory_uses_alias)

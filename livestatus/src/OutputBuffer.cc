@@ -27,7 +27,6 @@
 #include <chrono>
 #include <cstddef>
 #include <iomanip>
-#include <ratio>
 #include "Logger.h"
 #include "Poller.h"
 

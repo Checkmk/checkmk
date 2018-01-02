@@ -211,7 +211,7 @@ void Renderer::outputUTF8(const char *start, const char *end) {
                 return invalidUTF8(ch2);
             }
             unsigned char ch3 = *++p;
-            if ((ch2 & 0xC0) != 0x80) {
+            if ((ch3 & 0xC0) != 0x80) {
                 return invalidUTF8(ch3);
             }
             output(char32_t(((ch0 & 0x07) << 18) |  //

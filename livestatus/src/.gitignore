@@ -1,10 +1,12 @@
 *.a
-.cproject
-.deps
 *.la
-livecheck
-Makefile
-Makefile.in
 *.o
 *.so
+.cproject
+.deps
+Makefile
+Makefile.in
+compile_commands.json
+cppcheck-result.xml
+livecheck
 unixcat

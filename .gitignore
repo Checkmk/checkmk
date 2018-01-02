@@ -29,7 +29,6 @@ clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
 compile
-compile_commands.json
 config.guess
 config.h
 config.h.in

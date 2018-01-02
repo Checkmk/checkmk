@@ -31,16 +31,21 @@ def parse_salesforce(info):
     except ImportError:
         import json
 
-    parsed = []
+    pre_parsed = []
     for line in info:
-        parsed.append(json.loads(" ".join(line)))
+        pre_parsed.append(json.loads(" ".join(line)))
+
+    parsed = {}
+    for entry in pre_parsed:
+        if entry.get("key"):
+            parsed.setdefault(entry.get("key"), entry)
     return parsed
 
 
 def inventory_salesforce_instances(parsed):
-    for entry in parsed:
-        if entry.get("key") and entry.get("isActive"):
-            yield entry["key"], {}
+    for instance, attrs in parsed.iteritems():
+        if attrs.get("isActive"):
+            yield instance, {}
 
 
 def check_salesforce_instances(item, params, parsed):
@@ -56,20 +61,19 @@ def check_salesforce_instances(item, params, parsed):
         "INFORMATIONAL_NONCORE": (0, "informational noncore"),
     }
 
-    for entry in parsed:
-        if entry.get("key") == item:
-            status = entry.get("status")
-            state, state_readable = map_states.get(status, (3, "unknown[%s]" % status))
-            yield state, "Status: %s" % state_readable
-            if entry.get("environment"):
-                yield 0, "Environment: %s" % entry["environment"]
-            release_info = []
-            if entry.get("releaseNumber"):
-                release_info.append("Number: %s" % entry["releaseNumber"])
-            if entry.get("releaseVersion"):
-                release_info.append("Version: %s" % entry["releaseVersion"])
-            if release_info:
-                yield 0, "Release %s" % ", ".join(release_info)
+    if item in parsed:
+        data = parsed[item]
+        status = data.get("status")
+        state, state_readable = map_states.get(status, (3, "unknown[%s]" % status))
+        yield state, "Status: %s" % state_readable
+
+        for key, title in [
+            ("environment", "Environment"),
+            ("releaseNumber", "Release Number"),
+            ("releaseVersion", "Release Version")
+        ]:
+            if data.get(key):
+                yield 0, "%s: %s" % (title, data[key])
 
 
 check_info['salesforce_instances'] = {

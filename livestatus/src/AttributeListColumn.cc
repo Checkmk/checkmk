@@ -25,7 +25,7 @@
 #include "AttributeListColumn.h"
 #include <memory>
 #include <vector>
-#include "Filter.h"
+#include "Filter.h"  // IWYU pragma: keep
 #include "Row.h"
 
 std::unique_ptr<Filter> AttributeListColumn::createFilter(

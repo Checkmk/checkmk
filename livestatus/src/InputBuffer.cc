@@ -27,7 +27,6 @@
 #include <cctype>
 #include <cstring>
 #include <ostream>
-#include <ratio>
 #include <type_traits>
 #include "Logger.h"
 #include "Poller.h"

@@ -374,7 +374,7 @@ install-minified-js: $(JAVASCRIPT_MINI)
 # GNU standards here (see "Standard Targets for Users",
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
-	rm -rf api clang-analyzer compile_commands.json dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf api clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
@@ -461,14 +461,6 @@ GTAGS: config.h
 # to configure.ac).
 	$(MAKE) -C livestatus GTAGS
 
-compile_commands.json: config.h $(FILES_TO_FORMAT)
-	$(MAKE) -C livestatus clean
-	$(BEAR) $(MAKE) -C livestatus -j4
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core clean
-	$(BEAR) --append $(MAKE) -C enterprise/core -j4
-endif
-
 compile-neb-cmc: config.status
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
@@ -496,29 +488,17 @@ analyze: config.h
 # fragile.
 
 # GCC-like output on stderr intended for human consumption.
-cppcheck: compile_commands.json
-	@scripts/compiled_sources | \
-	grep /livestatus/src/ |\
-	sed 's/^"\(.*\)"$$/\1/' | \
-	( cd livestatus && $(CPPCHECK) -DHAVE_CONFIG_H -UCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=passedByValue --inline-suppr -I src -I .. -I . --file-list=- --quiet --template=gcc )
+cppcheck: config.h
+	$(MAKE) -C livestatus/src cppcheck
 ifeq ($(ENTERPRISE),yes)
-	@scripts/compiled_sources | \
-	grep /enterprise/core/ |\
-	sed 's/^"\(.*\)"$$/\1/' | \
-	( cd enterprise/core/src && $(CPPCHECK) -DHAVE_CONFIG_H -DCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=passedByValue --inline-suppr -I . -I ../../.. -I livestatus -I checkhelper --file-list=- --quiet --template=gcc )
+	$(MAKE) -C enterprise/core/src cppcheck
 endif
 
 # XML output into file intended for machine processing.
-cppcheck-xml: compile_commands.json
-	scripts/compiled_sources | \
-	grep /livestatus/src/ |\
-	sed 's/^"\(.*\)"$$/\1/' | \
-	( cd livestatus && $(CPPCHECK) -DHAVE_CONFIG_H -UCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=passedByValue --inline-suppr -I src -I .. -I . --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml )
+cppcheck-xml: config.h
+	$(MAKE) -C livestatus/src cppcheck-xml
 ifeq ($(ENTERPRISE),yes)
-	scripts/compiled_sources | \
-	grep /enterprise/core/ |\
-	sed 's/^"\(.*\)"$$/\1/' | \
-	( cd enterprise/core/src && $(CPPCHECK) -DHAVE_CONFIG_H -DCMC --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction --suppress=passedByValue --inline-suppr -I . -I ../../.. -I livestatus -I checkhelper --file-list=- --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml )
+	$(MAKE) -C enterprise/core/src cppcheck-xml
 endif
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in

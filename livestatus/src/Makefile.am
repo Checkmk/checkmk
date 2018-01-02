@@ -23,9 +23,11 @@
 # Boston, MA 02110-1301 USA.
 
 CLANG_VERSION ?= 5.0
-RUN_CLANG_TIDY ?= run-clang-tidy-$(CLANG_VERSION).py
-IWYU_TOOL ?= iwyu_tool
+
 BEAR ?= bear
+CPPCHECK ?= cppcheck
+IWYU_TOOL ?= iwyu_tool
+RUN_CLANG_TIDY ?= run-clang-tidy-$(CLANG_VERSION).py
 
 bin_PROGRAMS = unixcat
 
@@ -176,6 +178,12 @@ tidy: compile_commands.json
 
 iwyu: compile_commands.json
 	$(IWYU_TOOL) --output-format=clang -p . -- --mapping_file=$(abs_top_srcdir)/tests/iwyu-mappings/check_mk.imp
+
+cppcheck: compile_commands.json
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc
+
+cppcheck-xml: compile_commands.json
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
 
 all-local: livestatus.o
 

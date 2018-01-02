@@ -1,7 +1,0 @@
-#!/usr/bin/python
-
-import json
-
-with open('compile_commands.json') as cc:
-    for command_object in json.load(cc):
-        print('"%s"' % command_object['file'])

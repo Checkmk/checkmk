@@ -1,0 +1,22 @@
+Title: Fixed possible deadlock in shutdown/restart procedure
+Level: 1
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1514903032
+Class: fix
+
+During the shutdown/restart procedure of the livestatus proxy
+daemon a deadlock could occur. It seems this could rarely happen
+when the system running the process is under high load together
+with a large number of sites (>100) configured.
+
+When this situation occures, you can see several left over
+liveproxyd processes (master + several site processes) which
+can only be terminated with SIGKILL. When looking at the processes
+with strace, you can see hanging futex() calls.
+
+Workaround: In such a situation it is safe to simply kill all those
+processes using SIGKILL and start a clean liveproxyd processes after
+that.

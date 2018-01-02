@@ -6,8 +6,6 @@ import pytest
 import signal
 from testlib import web
 
-pytestmark = pytest.mark.skipif(True, reason="liveproxyd remains in an unkillable state with tons of child processes")
-
 @pytest.fixture(scope="module")
 def default_cfg(web):
     print "Applying default config"
@@ -182,6 +180,9 @@ def test_large_number_of_sites(default_cfg, site):
         site.write_file("etc/check_mk/conf.d/liveproxyd-test.mk",
             "cmc_livestatus_threads = %d\n" % (num_channels*num_sites + 20))
 
+        site.write_file("etc/check_mk/multisite.d/sites.mk",
+            "sites.update(%r)\n" % livestatus_api_sites)
+
         site.execute(["cmk", "-O"])
 
         # Disable limits of livestatus xinetd service
@@ -218,3 +219,4 @@ def test_large_number_of_sites(default_cfg, site):
     finally:
         _use_liveproxyd_for_local_site(site, proto="unix")
         site.delete_file("etc/check_mk/conf.d/liveproxyd-test.mk")
+        site.delete_file("etc/check_mk/multisite.d/sites.mk")

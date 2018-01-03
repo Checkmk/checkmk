@@ -26,8 +26,6 @@
 #include <ctime>
 #include <vector>
 
-using std::vector;
-
 namespace {
 constexpr int num_counters = 11;
 
@@ -37,7 +35,7 @@ struct CounterInfo {
     double rate;
 };
 
-vector<CounterInfo> counters(num_counters);
+std::vector<CounterInfo> counters(num_counters);
 
 CounterInfo &counter(Counter which) {
     return counters[static_cast<int>(which)];

@@ -28,41 +28,32 @@
 #include <utility>
 #include "ChronoUtils.h"
 
-using std::cerr;
-using std::endl;
-using std::lock_guard;
-using std::make_unique;
-using std::mutex;
-using std::ostream;
-using std::ostringstream;
-using std::string;
-using std::unique_ptr;
-
 // -----------------------------------------------------------------------------
 
-ostream &operator<<(ostream &os, const LogLevel &c) {
+std::ostream &operator<<(std::ostream &os, const LogLevel &c) {
     return os << static_cast<int>(c);
 }
 
 // -----------------------------------------------------------------------------
 
-void SimpleFormatter::format(ostream &os, const LogRecord &record) {
+void SimpleFormatter::format(std::ostream &os, const LogRecord &record) {
     os << FormattedTimePoint(record.getTimePoint()) <<  //
         " [" << record.getLevel() << "] " << record.getMessage();
 }
 
-SharedStreamHandler::SharedStreamHandler(mutex &mutex, ostream &os)
+SharedStreamHandler::SharedStreamHandler(std::mutex &mutex, std::ostream &os)
     : _mutex(mutex), _os(os) {}
 
 void SharedStreamHandler::publish(const LogRecord &record) {
-    lock_guard<mutex> lg(_mutex);
+    std::lock_guard<std::mutex> lg(_mutex);
     getFormatter()->format(_os, record);
-    _os << endl;
+    _os << std::endl;
 }
 
-StreamHandler::StreamHandler(ostream &os) : SharedStreamHandler(_mutex, os) {}
+StreamHandler::StreamHandler(std::ostream &os)
+    : SharedStreamHandler(_mutex, os) {}
 
-FileHandler::FileHandler(const string &filename) : StreamHandler(_os) {
+FileHandler::FileHandler(const std::string &filename) : StreamHandler(_os) {
     _os.open(filename, std::ofstream::app);
     if (!_os) {
         throw generic_error("could not open logfile " + filename);
@@ -72,22 +63,22 @@ FileHandler::FileHandler(const string &filename) : StreamHandler(_os) {
 // -----------------------------------------------------------------------------
 
 // static
-Logger *Logger::getLogger(const string &name) {
+Logger *Logger::getLogger(const std::string &name) {
     return LogManager::getLogManager()->getLogger(name);
 }
 
 bool Logger::isLoggable(LogLevel level) const { return level <= getLevel(); }
 
-ConcreteLogger::ConcreteLogger(const string &name, Logger *parent)
+ConcreteLogger::ConcreteLogger(const std::string &name, Logger *parent)
     : _name(name)
     , _parent(parent)
     , _level(LogLevel::debug)
-    , _handler(name.empty() ? nullptr : new StreamHandler(cerr))
+    , _handler(name.empty() ? nullptr : new StreamHandler(std::cerr))
     , _use_parent_handlers(true) {}
 
 ConcreteLogger::~ConcreteLogger() { delete _handler; }
 
-string ConcreteLogger::getName() const { return _name; }
+std::string ConcreteLogger::getName() const { return _name; }
 
 Logger *ConcreteLogger::getParent() const { return _parent; }
 
@@ -97,7 +88,7 @@ void ConcreteLogger::setLevel(LogLevel level) { _level = level; }
 
 Handler *ConcreteLogger::getHandler() const { return _handler; }
 
-void ConcreteLogger::setHandler(unique_ptr<Handler> handler) {
+void ConcreteLogger::setHandler(std::unique_ptr<Handler> handler) {
     delete _handler;
     _handler = handler.release();
 }
@@ -109,7 +100,7 @@ void ConcreteLogger::setUseParentHandlers(bool useParentHandlers) {
     _use_parent_handlers = useParentHandlers;
 }
 
-void ConcreteLogger::emitContext(ostream & /*unused*/) const {}
+void ConcreteLogger::emitContext(std::ostream & /*unused*/) const {}
 
 void ConcreteLogger::log(const LogRecord &record) {
     if (!isLoggable(record.getLevel())) {
@@ -128,7 +119,7 @@ void ConcreteLogger::log(const LogRecord &record) {
 
 LoggerDecorator::LoggerDecorator(Logger *logger) : _logger(logger) {}
 
-string LoggerDecorator::getName() const { return _logger->getName(); }
+std::string LoggerDecorator::getName() const { return _logger->getName(); }
 
 Logger *LoggerDecorator::getParent() const { return _logger->getParent(); }
 
@@ -138,7 +129,7 @@ void LoggerDecorator::setLevel(LogLevel level) { _logger->setLevel(level); }
 
 Handler *LoggerDecorator::getHandler() const { return _logger->getHandler(); }
 
-void LoggerDecorator::setHandler(unique_ptr<Handler> handler) {
+void LoggerDecorator::setHandler(std::unique_ptr<Handler> handler) {
     _logger->setHandler(std::move(handler));
 }
 
@@ -150,24 +141,24 @@ void LoggerDecorator::setUseParentHandlers(bool useParentHandlers) {
     _logger->setUseParentHandlers(useParentHandlers);
 }
 
-void LoggerDecorator::emitContext(ostream &os) const {
+void LoggerDecorator::emitContext(std::ostream &os) const {
     _logger->emitContext(os);
 }
 
 void LoggerDecorator::log(const LogRecord &record) { _logger->log(record); }
 
-void ContextLogger::emitContext(ostream &os) const {
+void ContextLogger::emitContext(std::ostream &os) const {
     _logger->emitContext(os);
     _context(os);
 }
 
 // -----------------------------------------------------------------------------
 
-Logger *LogManager::getLogger(const string &name) {
+Logger *LogManager::getLogger(const std::string &name) {
     Logger *current = lookup("", nullptr);
     for (size_t pos = 0; pos <= name.size();) {
         size_t dot = name.find('.', pos);
-        if (dot == string::npos) {
+        if (dot == std::string::npos) {
             dot = name.size();
         }
         if (dot != pos) {
@@ -181,12 +172,12 @@ Logger *LogManager::getLogger(const string &name) {
     return current;
 }
 
-Logger *LogManager::lookup(const string &name, Logger *parent) {
-    lock_guard<mutex> lg(_mutex);
+Logger *LogManager::lookup(const std::string &name, Logger *parent) {
+    std::lock_guard<std::mutex> lg(_mutex);
     auto it = _known_loggers.find(name);
     if (it == _known_loggers.end()) {
         it = _known_loggers
-                 .emplace(name, make_unique<ConcreteLogger>(name, parent))
+                 .emplace(name, std::make_unique<ConcreteLogger>(name, parent))
                  .first;
     }
     return it->second.get();
@@ -197,6 +188,6 @@ LogManager LogManager::_global_log_manager;  // NOLINT
 
 // -----------------------------------------------------------------------------
 
-ostream &operator<<(ostream &os, const generic_error &ge) {
+std::ostream &operator<<(std::ostream &os, const generic_error &ge) {
     return os << ge.what();
 }

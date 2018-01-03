@@ -29,23 +29,18 @@
 #include <utility>
 #include "Logger.h"
 
-using std::chrono::minutes;
-using std::chrono::system_clock;
-using std::lock_guard;
-using std::mutex;
-using std::string;
-
 extern timeperiod *timeperiod_list;
 
 TimeperiodsCache::TimeperiodsCache(Logger *logger) : _logger(logger) {}
 
 void TimeperiodsCache::logCurrentTimeperiods() {
-    lock_guard<mutex> lg(_mutex);
+    std::lock_guard<std::mutex> lg(_mutex);
     // Loop over all timeperiods and compute if we are currently in. Detect the
     // case where no time periods are known (yet!). This might be the case when
     // a timed event broker message arrives *before* the start of the event
     // loop.
-    auto now = system_clock::to_time_t(system_clock::now());
+    auto now =
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         bool is_in = check_time_against_period(now, tp) == 0;
         // check previous state and log transition if state has changed
@@ -58,11 +53,11 @@ void TimeperiodsCache::logCurrentTimeperiods() {
     }
 }
 
-void TimeperiodsCache::update(system_clock::time_point now) {
-    lock_guard<mutex> lg(_mutex);
+void TimeperiodsCache::update(std::chrono::system_clock::time_point now) {
+    std::lock_guard<std::mutex> lg(_mutex);
     // Update cache only once a minute. The timeperiod definitions have a
     // 1-minute granularity, so a 1-second resultion is not needed.
-    if (now < _last_update + minutes(1)) {
+    if (now < _last_update + std::chrono::minutes(1)) {
         return;
     }
     _last_update = now;
@@ -72,8 +67,8 @@ void TimeperiodsCache::update(system_clock::time_point now) {
     // a timed event broker message arrives *before* the start of the event
     // loop.
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        bool is_in =
-            check_time_against_period(system_clock::to_time_t(now), tp) == 0;
+        bool is_in = check_time_against_period(
+                         std::chrono::system_clock::to_time_t(now), tp) == 0;
         // check previous state and log transition if state has changed
         auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
@@ -90,7 +85,7 @@ void TimeperiodsCache::update(system_clock::time_point now) {
     }
 }
 
-bool TimeperiodsCache::inTimeperiod(const string &tpname) const {
+bool TimeperiodsCache::inTimeperiod(const std::string &tpname) const {
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         if (tpname == tp->name) {
             return inTimeperiod(tp);
@@ -100,7 +95,7 @@ bool TimeperiodsCache::inTimeperiod(const string &tpname) const {
 }
 
 bool TimeperiodsCache::inTimeperiod(const timeperiod *tp) const {
-    lock_guard<mutex> lg(_mutex);
+    std::lock_guard<std::mutex> lg(_mutex);
     auto it = _cache.find(tp);
     if (it == _cache.end()) {
         // Problem: check_time_against_period is not thread safe, so we can't

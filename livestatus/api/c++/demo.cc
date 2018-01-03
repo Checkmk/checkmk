@@ -24,12 +24,9 @@
 
 #include <stdio.h>
 #include "Livestatus.h"
-using std::string;
-using std::vector;
 
 const char *query =
-    "GET status\nColumns: livestatus_version program_version\nColumnHeaders: "
-    "on\n";
+    "GET status\nColumns: livestatus_version program_version\nColumnHeaders: on\n";
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -45,7 +42,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     live.sendQuery(query);
-    vector<string> *row;
+    std::vector<std::string> *row;
     while (0 != (row = live.nextRow())) {
         printf("Line:\n");
         for (size_t i = 0; i < row->size(); i++)

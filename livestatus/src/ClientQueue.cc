@@ -26,25 +26,22 @@
 #include <unistd.h>
 #include <algorithm>
 
-using std::for_each;
-using std::lock_guard;
-using std::mutex;
-using std::unique_lock;
-
 ClientQueue::ClientQueue() : _should_terminate(false) {}
 
-ClientQueue::~ClientQueue() { for_each(_queue.begin(), _queue.end(), close); }
+ClientQueue::~ClientQueue() {
+    std::for_each(_queue.begin(), _queue.end(), close);
+}
 
 void ClientQueue::addConnection(int fd) {
     {
-        lock_guard<mutex> lg(_mutex);
+        std::lock_guard<std::mutex> lg(_mutex);
         _queue.push_back(fd);
     }
     _cond.notify_one();
 }
 
 int ClientQueue::popConnection() {
-    unique_lock<mutex> ul(_mutex);
+    std::unique_lock<std::mutex> ul(_mutex);
     while (_queue.empty() && !_should_terminate) {
         _cond.wait(ul);
     }
@@ -60,7 +57,7 @@ int ClientQueue::popConnection() {
 // notify_all_at_thread_exit.
 void ClientQueue::terminate() {
     {
-        lock_guard<mutex> lg(_mutex);
+        std::lock_guard<std::mutex> lg(_mutex);
         _should_terminate = true;
     }
     _cond.notify_all();

@@ -25,9 +25,7 @@
 #include "mk_inventory.h"
 #include <sys/stat.h>
 
-using std::string;
-
-time_t mk_inventory_last(const string &path) {
+time_t mk_inventory_last(const std::string &path) {
     struct stat st;
     return stat(path.c_str(), &st) != 0 ? 0 : st.st_mtime;
 }

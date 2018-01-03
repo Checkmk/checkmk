@@ -29,16 +29,13 @@
 #include <utility>
 #include "MonitoringCore.h"
 
-using std::string;
-using std::unordered_map;
-
 // 0123456789012345678901234567890
 // [1234567890] FOO BAR: blah blah
 static constexpr size_t timestamp_prefix_length = 13;
 
 // TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
 // this set-me-to-zero-to-be-sure-block.
-LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, string line)
+LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, std::string line)
     : _lineno(static_cast<int32_t>(lineno))
     , _complete(std::move(line))
     , _state(0)
@@ -48,10 +45,10 @@ LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, string line)
     , _contact(nullptr) {
     // pointer to options (everything after ':')
     size_t pos = _complete.find(':');
-    if (pos != string::npos) {
+    if (pos != std::string::npos) {
         pos = _complete.find_first_not_of(' ', pos + 1);
     }
-    if (pos == string::npos) {
+    if (pos == std::string::npos) {
         pos = _complete.size();
     }
     _options = &_complete[pos];
@@ -73,7 +70,7 @@ LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, string line)
     updateReferences(mc);
 }
 
-bool LogEntry::assign(Param par, const string &field) {
+bool LogEntry::assign(Param par, const std::string &field) {
     switch (par) {
         case Param::HostName:
             this->_host_name = field;
@@ -276,10 +273,10 @@ void LogEntry::classifyLogMessage() {
             for (Param par : def.params) {
                 size_t sep_pos = _complete.find(';', pos);
                 size_t end_pos =
-                    sep_pos == string::npos ? _complete.size() : sep_pos;
+                    sep_pos == std::string::npos ? _complete.size() : sep_pos;
                 assign(par, _complete.substr(pos, end_pos - pos));
-                pos =
-                    sep_pos == string::npos ? _complete.size() : (sep_pos + 1);
+                pos = sep_pos == std::string::npos ? _complete.size()
+                                                   : (sep_pos + 1);
             }
             return;
         }
@@ -316,12 +313,12 @@ void LogEntry::classifyLogMessage() {
     _type = LogEntryType::none;
 }
 
-bool LogEntry::textStartsWith(const string &what) {
+bool LogEntry::textStartsWith(const std::string &what) {
     return _complete.compare(timestamp_prefix_length, what.size(), what) == 0;
 }
 
-bool LogEntry::textContains(const string &what) {
-    return _complete.find(what, timestamp_prefix_length) != string::npos;
+bool LogEntry::textContains(const std::string &what) {
+    return _complete.find(what, timestamp_prefix_length) != std::string::npos;
 }
 
 // The NotifyHelper class has a long, tragic history: Through a long series of
@@ -354,17 +351,17 @@ void LogEntry::applyWorkarounds() {
 namespace {
 // Ugly: Depending on where we're called, the actual state type can be in
 // parentheses at the end, e.g. "ALERTHANDLER (OK)".
-string extractStateType(const string &str) {
+std::string extractStateType(const std::string &str) {
     if (!str.empty() && str[str.size() - 1] == ')') {
         size_t lparen = str.rfind('(');
-        if (lparen != string::npos) {
+        if (lparen != std::string::npos) {
             return str.substr(lparen + 1, str.size() - lparen - 2);
         }
     }
     return str;
 }
 
-unordered_map<string, ServiceState> serviceStateTypes{
+std::unordered_map<std::string, ServiceState> serviceStateTypes{
     // normal states
     {"OK", ServiceState::ok},
     {"WARNING", ServiceState::warning},
@@ -373,7 +370,7 @@ unordered_map<string, ServiceState> serviceStateTypes{
     // states from "... ALERT"/"... NOTIFICATION"
     {"RECOVERY", ServiceState::ok}};
 
-unordered_map<string, HostState> hostStateTypes{
+std::unordered_map<std::string, HostState> hostStateTypes{
     // normal states
     {"UP", HostState::up},
     {"DOWN", HostState::down},
@@ -388,12 +385,12 @@ unordered_map<string, HostState> hostStateTypes{
     {"UNKNOWN", HostState::up}};
 }  // namespace
 
-ServiceState LogEntry::parseServiceState(const string &str) {
+ServiceState LogEntry::parseServiceState(const std::string &str) {
     auto it = serviceStateTypes.find(extractStateType(str));
     return it == serviceStateTypes.end() ? ServiceState::ok : it->second;
 }
 
-HostState LogEntry::parseHostState(const string &str) {
+HostState LogEntry::parseHostState(const std::string &str) {
     auto it = hostStateTypes.find(extractStateType(str));
     return it == hostStateTypes.end() ? HostState::up : it->second;
 }

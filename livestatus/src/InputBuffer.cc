@@ -31,24 +31,21 @@
 #include "Logger.h"
 #include "Poller.h"
 
-using std::chrono::milliseconds;
-using std::chrono::system_clock;
-using std::string;
-
 namespace {
 const size_t initial_buffer_size = 4096;
 // TODO(sp): Make this configurable?
 const size_t maximum_buffer_size = 500 * 1024 * 1024;
 
-bool timeout_reached(const system_clock::time_point &start,
-                     const milliseconds &timeout) {
-    return (timeout != milliseconds(0)) &&
-           (system_clock::now() - start >= timeout);
+bool timeout_reached(const std::chrono::system_clock::time_point &start,
+                     const std::chrono::milliseconds &timeout) {
+    return (timeout != std::chrono::milliseconds(0)) &&
+           (std::chrono::system_clock::now() - start >= timeout);
 }
 }  // namespace
 
 InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger,
-                         milliseconds query_timeout, milliseconds idle_timeout)
+                         std::chrono::milliseconds query_timeout,
+                         std::chrono::milliseconds idle_timeout)
     : _fd(fd)
     , _termination_flag(termination_flag)
     , _query_timeout(query_timeout)
@@ -63,7 +60,7 @@ InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger,
 InputBuffer::Result InputBuffer::readRequest() {
     // Remember when we started waiting for a request. This is needed for the
     // idle_timeout. A connection may not be idle longer than that value.
-    auto start_of_idle = system_clock::now();
+    auto start_of_idle = std::chrono::system_clock::now();
 
     // Remember if we have read some part of the query. During
     // a query the timeout is another (short) than between
@@ -199,7 +196,7 @@ InputBuffer::Result InputBuffer::readRequest() {
 // read at least *some* data. Return IB_TIMEOUT if that lasts more than
 // _query_timeout msecs.
 InputBuffer::Result InputBuffer::readData() {
-    auto start = system_clock::now();
+    auto start = std::chrono::system_clock::now();
     while (!_termination_flag) {
         if (timeout_reached(start, _query_timeout)) {
             return Result::timeout;
@@ -207,7 +204,7 @@ InputBuffer::Result InputBuffer::readData() {
 
         Poller poller;
         poller.addFileDescriptor(_fd, PollEvents::in);
-        int retval = poller.poll(milliseconds(200));
+        int retval = poller.poll(std::chrono::milliseconds(200));
         if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::in)) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],
                              _readahead_buffer.capacity() - _write_index);
@@ -226,8 +223,8 @@ InputBuffer::Result InputBuffer::readData() {
 
 bool InputBuffer::empty() const { return _request_lines.empty(); }
 
-string InputBuffer::nextLine() {
-    string s = _request_lines.front();
+std::string InputBuffer::nextLine() {
+    std::string s = _request_lines.front();
     _request_lines.pop_front();
     return s;
 }

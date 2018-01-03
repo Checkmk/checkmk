@@ -33,71 +33,67 @@
 #include <sys/socket.h>
 #endif
 
-using std::pair;
-using std::string;
-using std::transform;
-using std::vector;
-
 namespace mk {
-
-string unsafe_tolower(const string &str) {
-    string result = str;
-    transform(str.begin(), str.end(), result.begin(), ::tolower);
+std::string unsafe_tolower(const std::string &str) {
+    std::string result = str;
+    std::transform(str.begin(), str.end(), result.begin(), ::tolower);
     return result;
 }
 
 #ifdef CMC
-string unsafe_toupper(const string &str) {
-    string result = str;
-    transform(str.begin(), str.end(), result.begin(), ::toupper);
+std::string unsafe_toupper(const std::string &str) {
+    std::string result = str;
+    std::transform(str.begin(), str.end(), result.begin(), ::toupper);
     return result;
 }
 #endif
 
-bool starts_with(const string &input, const string &test) {
+bool starts_with(const std::string &input, const std::string &test) {
     return input.size() >= test.size() &&
            std::equal(test.begin(), test.end(), input.begin());
 }
 
-vector<string> split(const string &str, char delimiter) {
+std::vector<std::string> split(const std::string &str, char delimiter) {
     std::istringstream iss(str);
-    vector<string> result;
-    string field;
+    std::vector<std::string> result;
+    std::string field;
     while (std::getline(iss, field, delimiter)) {
         result.push_back(field);
     }
     return result;
 }
 
-string lstrip(const string &str, const string &chars) {
+std::string lstrip(const std::string &str, const std::string &chars) {
     auto pos = str.find_first_not_of(chars);
-    return pos == string::npos ? "" : str.substr(pos);
+    return pos == std::string::npos ? "" : str.substr(pos);
 }
 
-string rstrip(const string &str, const string &chars) {
+std::string rstrip(const std::string &str, const std::string &chars) {
     auto pos = str.find_last_not_of(chars);
-    return pos == string::npos ? "" : str.substr(0, pos + 1);
+    return pos == std::string::npos ? "" : str.substr(0, pos + 1);
 }
 
-string strip(const string &str, const string &chars) {
+std::string strip(const std::string &str, const std::string &chars) {
     return rstrip(lstrip(str, chars), chars);
 }
 
-pair<string, string> nextField(const string &str, const string &chars) {
+std::pair<std::string, std::string> nextField(const std::string &str,
+                                              const std::string &chars) {
     auto s = lstrip(str, chars);
     auto pos = s.find_first_of(chars);
-    return pos == string::npos ? make_pair(s, "")
-                               : make_pair(s.substr(0, pos), s.substr(pos + 1));
+    return pos == std::string::npos
+               ? std::make_pair(s, "")
+               : std::make_pair(s.substr(0, pos), s.substr(pos + 1));
 }
 
 #ifdef CMC
-string ipv4ToString(in_addr_t ipv4_address) {
+std::string ipv4ToString(in_addr_t ipv4_address) {
     char addr_buf[INET_ADDRSTRLEN];
     struct in_addr ia = {ipv4_address};
     inet_ntop(AF_INET, &ia, addr_buf, sizeof(addr_buf));
     return addr_buf;
 }
 
-string portToString(in_port_t port) { return std::to_string(ntohs(port)); }
+std::string portToString(in_port_t port) { return std::to_string(ntohs(port)); }
 #endif
 }  // namespace mk

@@ -31,10 +31,6 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 
-using std::chrono::system_clock;
-using std::make_unique;
-using std::string;
-
 namespace {
 // Check memory every N'th new message
 constexpr unsigned long check_mem_cycle = 1000;
@@ -83,7 +79,7 @@ void LogCache::forgetLogfiles() {
 
 void LogCache::updateLogfileIndex() {
     Informational(logger()) << "updating log file index";
-    _last_index_update = system_clock::now();
+    _last_index_update = std::chrono::system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
     scanLogfile(log_file, true);
@@ -99,7 +95,7 @@ void LogCache::updateLogfileIndex() {
 }
 
 void LogCache::scanLogfile(const fs::path &path, bool watch) {
-    auto logfile = make_unique<Logfile>(_mc, path, watch);
+    auto logfile = std::make_unique<Logfile>(_mc, path, watch);
     time_t since = logfile->since();
     if (since == 0) {
         return;

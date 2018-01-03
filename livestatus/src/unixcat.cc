@@ -37,12 +37,6 @@
 #include <string>
 #include "Poller.h"
 
-using std::cerr;
-using std::chrono::microseconds;
-using std::endl;
-using std::string;
-using std::to_string;
-
 int copy_data(int from, int to);
 void *voidp;
 
@@ -53,12 +47,12 @@ struct thread_info {
     int terminate_on_read_eof;
 };
 
-void printErrno(const string &msg) {
-    cerr << msg + ": " + strerror(errno) << endl;
+void printErrno(const std::string &msg) {
+    std::cerr << msg + ": " + strerror(errno) << std::endl;
 }
 
 ssize_t read_with_timeout(int from, char *buffer, int size,
-                          microseconds timeout) {
+                          std::chrono::microseconds timeout) {
     Poller poller;
     poller.addFileDescriptor(from, PollEvents::in);
     return poller.poll(timeout) > 0 ? read(from, buffer, size) : -2;
@@ -75,9 +69,9 @@ void *copy_thread(void *info) {
     char read_buffer[65536];
     while (true) {
         ssize_t r = read_with_timeout(from, read_buffer, sizeof(read_buffer),
-                                      microseconds(1000000));
+                                      std::chrono::microseconds(1000000));
         if (r == -1) {
-            printErrno("Error reading from " + to_string(from));
+            printErrno("Error reading from " + std::to_string(from));
             break;
         }
         if (r == 0) {
@@ -99,8 +93,9 @@ void *copy_thread(void *info) {
         while (bytes_to_write > 0) {
             ssize_t bytes_written = write(to, buffer, bytes_to_write);
             if (bytes_written == -1) {
-                printErrno("Error: Cannot write " + to_string(bytes_to_write) +
-                           " bytes to " + to_string(to));
+                printErrno("Error: Cannot write " +
+                           std::to_string(bytes_to_write) + " bytes to " +
+                           std::to_string(to));
                 break;
             }
             buffer += bytes_written;
@@ -112,18 +107,18 @@ void *copy_thread(void *info) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        cerr << "Usage: " << argv[0] << " UNIX-socket" << endl;
+        std::cerr << "Usage: " << argv[0] << " UNIX-socket" << std::endl;
         exit(1);
     }
 
     // https://llvm.org/bugs/show_bug.cgi?id=29089
     signal(SIGWINCH, SIG_IGN);  // NOLINT
 
-    string unixpath = argv[1];
+    std::string unixpath = argv[1];
     struct stat st;
 
     if (0 != stat(unixpath.c_str(), &st)) {
-        cerr << "No UNIX socket " << unixpath << " existing" << endl;
+        std::cerr << "No UNIX socket " << unixpath << " existing" << std::endl;
         exit(2);
     }
 

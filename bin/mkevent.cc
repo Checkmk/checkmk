@@ -37,10 +37,6 @@
 #include <iostream>
 #include <string>
 
-using std::cerr;
-using std::endl;
-using std::string;
-
 /* Methods for specified the path to the pipe of
    mkeventd:
 
@@ -57,7 +53,7 @@ using std::string;
 
 */
 
-int file_exists(const string &path) {
+int file_exists(const std::string &path) {
     struct stat st;
     return static_cast<int>(stat(path.c_str(), &st) == 0);
 }
@@ -81,11 +77,12 @@ char *append_int(long n, char *dest) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        cerr << "Usage: mkevent [-P PIPE] 'Text of the messsage'" << endl;
+        std::cerr << "Usage: mkevent [-P PIPE] 'Text of the messsage'"
+                  << std::endl;
         exit(1);
     }
 
-    string path_to_pipe;
+    std::string path_to_pipe;
 
     /* Path to pipe can be specified with -P */
     if (argc > 2 && (strcmp(argv[1], "-P") == 0)) {
@@ -96,10 +93,10 @@ int main(int argc, char **argv) {
 
     if (path_to_pipe.empty()) {
         if (const char *omd_root = getenv("OMD_ROOT")) {
-            path_to_pipe = string(omd_root) + "/tmp/run/mkeventd/events";
+            path_to_pipe = std::string(omd_root) + "/tmp/run/mkeventd/events";
         } else if (strncmp(argv[0], "/omd/sites/", 11) == 0) {
             // cut off /bin/mkevent
-            path_to_pipe = string(argv[0], strlen(argv[0]) - 12) +
+            path_to_pipe = std::string(argv[0], strlen(argv[0]) - 12) +
                            "/tmp/run/mkeventd/events";
         }
     }
@@ -178,9 +175,9 @@ int main(int argc, char **argv) {
     int fd;
     if (file_exists(path_to_pipe) == 0 && remote[0] != 0) {
         if (isdigit(remote[0]) == 0) {
-            cerr << "ERROR: Please specify the remote host as IPv4 "
-                    "address, not '"
-                 << remote << "'" << endl;
+            std::cerr
+                << "ERROR: Please specify the remote host as IPv4 address, not '"
+                << remote << "'" << std::endl;
             exit(1);
         }
         fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -196,8 +193,8 @@ int main(int argc, char **argv) {
         fd = open(path_to_pipe.c_str(), O_WRONLY);
         if (fd < 0) {
             int errno_saved = errno;
-            cerr << "Cannot open event pipe '" << path_to_pipe
-                 << "': " << strerror(errno_saved) << endl;
+            std::cerr << "Cannot open event pipe '" << path_to_pipe
+                      << "': " << strerror(errno_saved) << std::endl;
             exit(1);
         }
         // TODO(sp) Handle errors and partial writes.

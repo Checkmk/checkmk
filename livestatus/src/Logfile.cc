@@ -39,19 +39,10 @@
 #ifdef CMC
 #include <new>
 #include "cmc.h"
-using std::bad_alloc;
-using std::to_string;
-using std::unique_ptr;
 #else
 #include <memory>
 #include <vector>
 #endif
-
-using std::ifstream;
-using std::ios;
-using std::make_unique;
-using std::string;
-using std::vector;
 
 Logfile::Logfile(MonitoringCore *mc, fs::path path, bool watch)
     : _mc(mc)
@@ -64,7 +55,7 @@ Logfile::Logfile(MonitoringCore *mc, fs::path path, bool watch)
     , _world(nullptr)
 #endif
     , _logclasses_read(0) {
-    ifstream is(_path, ios::binary);
+    std::ifstream is(_path, std::ios::binary);
     if (!is) {
         generic_error ge("cannot open logfile " + _path.string());
         Informational(logger()) << ge;
@@ -149,7 +140,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
 
 void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
                         time_t since, time_t until, unsigned logclasses) {
-    vector<char> linebuffer(65536);
+    std::vector<char> linebuffer(65536);
     // TODO(sp) We should really use C++ I/O here...
     while (fgets(&linebuffer[0], static_cast<int>(linebuffer.size()), file) !=
            nullptr) {
@@ -191,8 +182,9 @@ long Logfile::freeMessages(unsigned logclasses) {
     return freed;
 }
 
-bool Logfile::processLogLine(size_t lineno, string line, unsigned logclasses) {
-    auto entry = make_unique<LogEntry>(_mc, lineno, std::move(line));
+bool Logfile::processLogLine(size_t lineno, std::string line,
+                             unsigned logclasses) {
+    auto entry = std::make_unique<LogEntry>(_mc, lineno, std::move(line));
     // ignored invalid lines
     if (entry->_logclass == LogEntry::Class::invalid) {
         return false;
@@ -279,9 +271,9 @@ void Logfile::updateReferences() {
 }
 
 #ifdef CMC
-unique_ptr<vector<char>> Logfile::readIntoBuffer() {
-    unique_ptr<vector<char>> result;
-    ifstream is(_path, ios::binary | ios::ate);
+std::unique_ptr<std::vector<char>> Logfile::readIntoBuffer() {
+    std::unique_ptr<std::vector<char>> result;
+    std::ifstream is(_path, std::ios::binary | std::ios::ate);
     if (!is) {
         generic_error ge("cannot open logfile " + _path.string());
         Warning(logger()) << ge;
@@ -289,7 +281,7 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
     }
 
     auto end = is.tellg();
-    is.seekg(0, ios::beg);
+    is.seekg(0, std::ios::beg);
     if (!is) {
         generic_error ge("cannot determine size of " + _path.string());
         Warning(logger()) << ge;
@@ -299,8 +291,8 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
 
     try {
         // Remember: Zeroes at both ends, so we need a bit more space.
-        result = make_unique<vector<char>>(size + 2);
-    } catch (bad_alloc &) {
+        result = std::make_unique<std::vector<char>>(size + 2);
+    } catch (std::bad_alloc &) {
         Warning(logger()) << "cannot allocate " << size << " byte buffer for "
                           << _path;
         return result;
@@ -308,7 +300,7 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
 
     is.read(&result->front() + 1, size);
     if (!is) {
-        generic_error ge("cannot open read " + to_string(size) +
+        generic_error ge("cannot open read " + std::to_string(size) +
                          " byted from " + _path.string());
         Warning(logger()) << ge;
     }

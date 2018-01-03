@@ -67,17 +67,6 @@
 #include "nagios.h"
 #include "strutil.h"
 
-using std::chrono::milliseconds;
-using std::chrono::minutes;
-using std::chrono::seconds;
-using std::chrono::system_clock;
-using std::make_unique;
-using std::ostream;
-using std::ostringstream;
-using std::string;
-using std::to_string;
-using std::unordered_map;
-using std::vector;
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 #ifndef NAGIOS4
 extern int event_broker_options;
@@ -88,10 +77,10 @@ extern int enable_environment_macros;
 extern char *log_file;
 
 // maximum idle time for connection in keep alive state
-static milliseconds fl_idle_timeout = minutes(5);
+static std::chrono::milliseconds fl_idle_timeout = std::chrono::minutes(5);
 
 // maximum time for reading a query
-static milliseconds fl_query_timeout = seconds(10);
+static std::chrono::milliseconds fl_query_timeout = std::chrono::seconds(10);
 
 // allow 10 concurrent connections per default
 size_t g_livestatus_threads = 10;
@@ -115,10 +104,10 @@ static bool fl_should_terminate = false;
 
 struct ThreadInfo {
     pthread_t id;
-    string name;
+    std::string name;
 };
 
-static vector<ThreadInfo> fl_thread_info;
+static std::vector<ThreadInfo> fl_thread_info;
 static thread_local ThreadInfo *tl_info;
 size_t fl_max_cached_messages = 500000;
 // do never read more than that number of lines from a logfile
@@ -131,7 +120,7 @@ Encoding fl_data_encoding = Encoding::utf8;
 Triggers fl_triggers;
 
 // Map to speed up access via name/alias/address
-unordered_map<string, host *> fl_hosts_by_designation;
+std::unordered_map<std::string, host *> fl_hosts_by_designation;
 
 static Logger *fl_logger_nagios = nullptr;
 static Logger *fl_logger_livestatus = nullptr;
@@ -203,7 +192,7 @@ void *main_thread(void *data) {
 
         Poller poller;
         poller.addFileDescriptor(g_unix_socket, PollEvents::in);
-        int retval = poller.poll(milliseconds(2500));
+        int retval = poller.poll(std::chrono::milliseconds(2500));
         if (retval > 0 &&
             poller.isFileDescriptorSet(g_unix_socket, PollEvents::in)) {
             int cc = accept(g_unix_socket, nullptr, nullptr);
@@ -261,17 +250,17 @@ void *client_thread(void *data) {
 namespace {
 class NagiosHandler : public Handler {
 public:
-    NagiosHandler() { setFormatter(make_unique<NagiosFormatter>()); }
+    NagiosHandler() { setFormatter(std::make_unique<NagiosFormatter>()); }
 
 private:
     class NagiosFormatter : public Formatter {
-        void format(ostream &os, const LogRecord &record) override {
+        void format(std::ostream &os, const LogRecord &record) override {
             os << "livestatus: " << record.getMessage();
         }
     };
 
     void publish(const LogRecord &record) override {
-        ostringstream os;
+        std::ostringstream os;
         getFormatter()->format(os, record);
         // TODO(sp) The Nagios headers are (once again) not const-correct...
         write_to_all_logs(const_cast<char *>(os.str().c_str()),
@@ -281,13 +270,14 @@ private:
 
 class LivestatusHandler : public FileHandler {
 public:
-    explicit LivestatusHandler(const string &filename) : FileHandler(filename) {
-        setFormatter(make_unique<LivestatusFormatter>());
+    explicit LivestatusHandler(const std::string &filename)
+        : FileHandler(filename) {
+        setFormatter(std::make_unique<LivestatusFormatter>());
     }
 
 private:
     class LivestatusFormatter : public Formatter {
-        void format(ostream &os, const LogRecord &record) override {
+        void format(std::ostream &os, const LogRecord &record) override {
             os << FormattedTimePoint(record.getTimePoint()) << " ["
                << tl_info->name << "] " << record.getMessage();
         }
@@ -304,7 +294,7 @@ void start_threads() {
         fl_logger_livestatus->setUseParentHandlers(false);
         try {
             fl_logger_livestatus->setHandler(
-                make_unique<LivestatusHandler>(fl_logfile_path));
+                std::make_unique<LivestatusHandler>(fl_logfile_path));
         } catch (const generic_error &ex) {
             Warning(fl_logger_nagios) << ex;
         }
@@ -341,7 +331,7 @@ void start_threads() {
                 // needs thread-local infos for logging, too.
                 tl_info = &info;
             } else {
-                info.name = "client " + to_string(idx);
+                info.name = "client " + std::to_string(idx);
                 pthread_create(&info.id, &attr, client_thread, &info);
             }
         }
@@ -381,7 +371,7 @@ bool open_unix_socket() {
                 << "removed old socket file " << fl_socket_path;
         } else {
             generic_error ge("cannot remove old socket file " +
-                             string(fl_socket_path));
+                             std::string(fl_socket_path));
             Alert(fl_logger_nagios) << ge;
             return false;
         }
@@ -411,7 +401,7 @@ bool open_unix_socket() {
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
         generic_error ge("cannot bind UNIX socket to address " +
-                         string(fl_socket_path));
+                         std::string(fl_socket_path));
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
@@ -421,7 +411,7 @@ bool open_unix_socket() {
     // why!)
     if (0 != chmod(fl_socket_path, 0660)) {
         generic_error ge("cannot change file permissions for UNIX socket at " +
-                         string(fl_socket_path) + " to 0660");
+                         std::string(fl_socket_path) + " to 0660");
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
@@ -429,7 +419,7 @@ bool open_unix_socket() {
 
     if (0 != listen(g_unix_socket, 3 /* backlog */)) {
         generic_error ge("cannot listen to UNIX socket at " +
-                         string(fl_socket_path));
+                         std::string(fl_socket_path));
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
@@ -588,7 +578,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 
 class NagiosCore : public MonitoringCore {
 public:
-    Host *getHostByDesignation(const string &designation) override {
+    Host *getHostByDesignation(const std::string &designation) override {
         auto it = fl_hosts_by_designation.find(mk::unsafe_tolower(designation));
         return it == fl_hosts_by_designation.end() ? nullptr
                                                    : fromImpl(it->second);
@@ -611,14 +601,14 @@ public:
                    const_cast<::contact *>(toImpl(contact))) != 0;
     }
 
-    system_clock::time_point last_logfile_rotation() override {
+    std::chrono::system_clock::time_point last_logfile_rotation() override {
         // TODO(sp) We should better listen to NEBCALLBACK_PROGRAM_STATUS_DATA
         // instead of this 'extern' hack...
         extern time_t last_log_rotation;
-        return system_clock::from_time_t(last_log_rotation);
+        return std::chrono::system_clock::from_time_t(last_log_rotation);
     }
 
-    Command find_command(string name) const override {
+    Command find_command(std::string name) const override {
         // Older Nagios headers are not const-correct... :-P
         if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
             return {cmd->name, cmd->command_line};
@@ -630,45 +620,49 @@ public:
         return fl_max_lines_per_logfile;
     }
 
-    vector<Command> commands() const override {
+    std::vector<Command> commands() const override {
         extern command *command_list;
-        vector<Command> commands;
+        std::vector<Command> commands;
         for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
             commands.push_back({cmd->name, cmd->command_line});
         }
         return commands;
     }
 
-    vector<DowntimeData> downtimes_for_host(const Host *host) const override {
+    std::vector<DowntimeData> downtimes_for_host(
+        const Host *host) const override {
         return downtimes_for_object(toImpl(host), nullptr);
     }
 
-    vector<DowntimeData> downtimes_for_service(
+    std::vector<DowntimeData> downtimes_for_service(
         const Service *service) const override {
         return downtimes_for_object(toImpl(service)->host_ptr, toImpl(service));
     }
 
-    vector<CommentData> comments_for_host(const Host *host) const override {
+    std::vector<CommentData> comments_for_host(
+        const Host *host) const override {
         return comments_for_object(toImpl(host), nullptr);
     }
 
-    vector<CommentData> comments_for_service(
+    std::vector<CommentData> comments_for_service(
         const Service *service) const override {
         return comments_for_object(toImpl(service)->host_ptr, toImpl(service));
     }
 
     bool mkeventdEnabled() override {
         if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
-            return config_mkeventd == string("on");
+            return config_mkeventd == std::string("on");
         }
         return false;
     }
 
-    string mkeventdSocketPath() override { return fl_mkeventd_socket_path; }
-    string mkLogwatchPath() override { return fl_mk_logwatch_path; }
-    string mkInventoryPath() override { return fl_mk_inventory_path; }
-    string pnpPath() override { return fl_pnp_path; }
-    string logArchivePath() override {
+    std::string mkeventdSocketPath() override {
+        return fl_mkeventd_socket_path;
+    }
+    std::string mkLogwatchPath() override { return fl_mk_logwatch_path; }
+    std::string mkInventoryPath() override { return fl_mk_inventory_path; }
+    std::string pnpPath() override { return fl_pnp_path; }
+    std::string logArchivePath() override {
         extern char *log_archive_path;
         return log_archive_path;
     }
@@ -720,9 +714,9 @@ private:
         return reinterpret_cast<const service *>(h);
     }
 
-    vector<DowntimeData> downtimes_for_object(const ::host *h,
-                                              const ::service *s) const {
-        vector<DowntimeData> result;
+    std::vector<DowntimeData> downtimes_for_object(const ::host *h,
+                                                   const ::service *s) const {
+        std::vector<DowntimeData> result;
         for (const auto &entry : fl_store->_downtimes) {
             auto *dt = static_cast<Downtime *>(entry.second.get());
             if (dt->_host == h && dt->_service == s) {
@@ -732,15 +726,16 @@ private:
         return result;
     }
 
-    vector<CommentData> comments_for_object(const ::host *h,
-                                            const ::service *s) const {
-        vector<CommentData> result;
+    std::vector<CommentData> comments_for_object(const ::host *h,
+                                                 const ::service *s) const {
+        std::vector<CommentData> result;
         for (const auto &entry : fl_store->_comments) {
             auto *co = static_cast<Comment *>(entry.second.get());
             if (co->_host == h && co->_service == s) {
-                result.push_back({co->_id, co->_author_name, co->_comment,
-                                  static_cast<uint32_t>(co->_entry_type),
-                                  system_clock::from_time_t(co->_entry_time)});
+                result.push_back(
+                    {co->_id, co->_author_name, co->_comment,
+                     static_cast<uint32_t>(co->_entry_type),
+                     std::chrono::system_clock::from_time_t(co->_entry_time)});
             }
         }
         return result;
@@ -926,7 +921,7 @@ void livestatus_parse_arguments(const char *args_orig) {
     }
 
     // TODO(sp) Nuke next_field and friends. Use C++ strings everywhere.
-    vector<char> args_buf(args_orig, args_orig + strlen(args_orig) + 1);
+    std::vector<char> args_buf(args_orig, args_orig + strlen(args_orig) + 1);
     char *args = &args_buf[0];
     while (char *token = next_field(&args)) {
         /* find = */
@@ -988,7 +983,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 if (c < 0) {
                     Warning(fl_logger_nagios) << "query_timeout must be >= 0";
                 } else {
-                    fl_query_timeout = milliseconds(c);
+                    fl_query_timeout = std::chrono::milliseconds(c);
                     if (c == 0) {
                         Notice(fl_logger_nagios) << "disabled query timeout!";
                     } else {
@@ -1002,7 +997,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 if (c < 0) {
                     Warning(fl_logger_nagios) << "idle_timeout must be >= 0";
                 } else {
-                    fl_idle_timeout = milliseconds(c);
+                    fl_idle_timeout = std::chrono::milliseconds(c);
                     if (c == 0) {
                         Notice(fl_logger_nagios) << "disabled idle timeout!";
                     } else {
@@ -1117,7 +1112,7 @@ void omd_advertize() {
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                               void *handle) {
     fl_logger_nagios = Logger::getLogger("nagios");
-    fl_logger_nagios->setHandler(make_unique<NagiosHandler>());
+    fl_logger_nagios->setHandler(std::make_unique<NagiosHandler>());
     fl_logger_nagios->setUseParentHandlers(false);
 
     fl_logger_livestatus = Logger::getLogger("cmk.livestatus");

@@ -30,14 +30,6 @@
 #include "Logger.h"
 #include "Poller.h"
 
-using std::chrono::milliseconds;
-using std::ostringstream;
-using std::setfill;
-using std::setw;
-using std::string;
-using std::stringbuf;
-using std::to_string;
-
 OutputBuffer::OutputBuffer(int fd, const bool &termination_flag, Logger *logger)
     : _fd(fd)
     , _termination_flag(termination_flag)
@@ -59,18 +51,18 @@ void OutputBuffer::flush() {
         }
         auto code = static_cast<unsigned>(_response_code);
         size_t size = _os.tellp();
-        ostringstream header;
-        header << setw(3) << setfill('0') << code << " "  //
-               << setw(11) << setfill(' ') << size << "\n";
+        std::ostringstream header;
+        header << std::setw(3) << std::setfill('0') << code << " "  //
+               << std::setw(11) << std::setfill(' ') << size << "\n";
         writeData(header);
     }
     writeData(_os);
 }
 
-void OutputBuffer::writeData(ostringstream &os) {
+void OutputBuffer::writeData(std::ostringstream &os) {
     // TODO(sp) This cruel and slightly non-portable hack avoids copying (which
     // is important). We could do better by e.g. using boost::asio::streambuf.
-    struct Hack : public stringbuf {
+    struct Hack : public std::stringbuf {
         const char *base() const { return pbase(); }
     };
     const char *buffer = static_cast<Hack *>(os.rdbuf())->base();
@@ -78,12 +70,12 @@ void OutputBuffer::writeData(ostringstream &os) {
     while (!_termination_flag && bytes_to_write > 0) {
         Poller poller;
         poller.addFileDescriptor(_fd, PollEvents::out);
-        int retval = poller.poll(milliseconds(100));
+        int retval = poller.poll(std::chrono::milliseconds(100));
         if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::out)) {
             ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
                 generic_error ge("could not write " +
-                                 to_string(bytes_to_write) +
+                                 std::to_string(bytes_to_write) +
                                  " bytes to client socket");
                 Informational(_logger) << ge;
                 break;
@@ -94,7 +86,7 @@ void OutputBuffer::writeData(ostringstream &os) {
     }
 }
 
-void OutputBuffer::setError(ResponseCode code, const string &message) {
+void OutputBuffer::setError(ResponseCode code, const std::string &message) {
     Warning(_logger) << "error: " << message;
     // only the first error is being returned
     if (_error_message.empty()) {

@@ -28,8 +28,6 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
-using std::string;
-using std::vector;
 
 void Livestatus::connectUNIX(const char *socket_path) {
     _connection = socket(PF_LOCAL, SOCK_STREAM, 0);
@@ -59,12 +57,12 @@ void Livestatus::disconnect() {
 
 void Livestatus::sendQuery(const char *query) {
     write(_connection, query, strlen(query));
-    string separators = "Separators: 10 1 2 3\n";
+    std::string separators = "Separators: 10 1 2 3\n";
     write(_connection, separators.c_str(), separators.size());
     shutdown(_connection, SHUT_WR);
 }
 
-vector<string> *Livestatus::nextRow() {
+std::vector<std::string> *Livestatus::nextRow() {
     char line[65536];
     if (0 != fgets(line, sizeof(line), _file)) {
         // strip trailing linefeed
@@ -73,13 +71,13 @@ vector<string> *Livestatus::nextRow() {
             *(end - 1) = 0;
             --end;
         }
-        vector<string> *row = new vector<string>;
+        std::vector<std::string> *row = new std::vector<std::string>;
         char *scan = line;
         while (scan < end) {
             char *zero = scan;
             while (zero < end && *zero != '\001') zero++;
             *zero = 0;
-            row->push_back(string(scan));
+            row->push_back(std::string(scan));
             scan = zero + 1;
         }
         return row;

@@ -25,9 +25,6 @@
 #include "RendererBrokenCSV.h"
 #include <ostream>
 
-using std::string;
-using std::vector;
-
 // --------------------------------------------------------------------------
 
 void RendererBrokenCSV::beginQuery() {}
@@ -69,8 +66,8 @@ void RendererBrokenCSV::endDict() {}
 
 void RendererBrokenCSV::outputNull() {}
 
-void RendererBrokenCSV::outputBlob(const vector<char> &value) {
+void RendererBrokenCSV::outputBlob(const std::vector<char> &value) {
     _os.write(&value[0], value.size());
 }
 
-void RendererBrokenCSV::outputString(const string &value) { _os << value; }
+void RendererBrokenCSV::outputString(const std::string &value) { _os << value; }

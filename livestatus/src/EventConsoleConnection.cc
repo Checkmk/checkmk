@@ -33,10 +33,7 @@
 #include <utility>
 #include "Logger.h"
 
-using boost::system::system_error;
-using std::string;
-
-EventConsoleConnection::EventConsoleConnection(Logger *logger, string path)
+EventConsoleConnection::EventConsoleConnection(Logger *logger, std::string path)
     : _logger(logger), _path(std::move(path)) {}
 
 EventConsoleConnection::~EventConsoleConnection() {
@@ -76,7 +73,7 @@ void EventConsoleConnection::run() {
     check(stream, "receive reply");
 }
 
-std::string EventConsoleConnection::prefix(const string &message) const {
+std::string EventConsoleConnection::prefix(const std::string &message) const {
     return "[mkeventd at " + _path + "] " + message;
 }
 
@@ -86,6 +83,7 @@ void EventConsoleConnection::check(
     if (!stream && !stream.eof()) {
         // NOTE: Boost's system_error has a mutable string member for lazy
         // construction of what(), this screws up cert-err60-cpp. :-P
-        throw system_error(stream.error(), prefix("cannot " + what));  // NOLINT
+        throw boost::system::system_error(stream.error(),
+                                          prefix("cannot " + what));  // NOLINT
     }
 }

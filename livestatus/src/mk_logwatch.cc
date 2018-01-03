@@ -28,11 +28,10 @@
 #include "Logger.h"
 #include "pnp4nagios.h"
 
-using std::string;
-
 void mk_logwatch_acknowledge(Logger *logger, const std::string &logwatch_path,
-                             const string &host_name, const string &file_name) {
-    if (file_name.find('/') != string::npos) {
+                             const std::string &host_name,
+                             const std::string &file_name) {
+    if (file_name.find('/') != std::string::npos) {
         Warning(logger) << "Invalid character / in mk_logfile filename '"
                         << file_name << "' of host '" << host_name << "'";
         return;
@@ -40,7 +39,7 @@ void mk_logwatch_acknowledge(Logger *logger, const std::string &logwatch_path,
     if (logwatch_path.empty()) {
         return;
     }
-    string path = logwatch_path + pnp_cleanup(host_name) + "/" + file_name;
+    std::string path = logwatch_path + pnp_cleanup(host_name) + "/" + file_name;
     if (unlink(path.c_str()) != 0) {
         generic_error ge("Cannot acknowledge mk_logfile file '" + file_name +
                          "' of host '" + host_name + "'");

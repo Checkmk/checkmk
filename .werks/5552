@@ -1,0 +1,14 @@
+Title: reporting: Fixed unreasonable high timeout for availability elements
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p23
+Date: 1515065877
+
+The option "Query Time Limit" is not available for the availability element
+in reports and is instead hardcoded. The value has originally been set to
+5*60*3600 (300 hrs) but should have been to 5 minutes. This bug has always
+been in this element and is fixed as of now.

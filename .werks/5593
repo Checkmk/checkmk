@@ -1,0 +1,10 @@
+Title: Added AC test to warn about unencrypted agent updater communication
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1515071915
+Class: feature
+
+

@@ -9595,7 +9595,7 @@ class ACTest(object):
             log_exception()
             result = ACResultCRIT("<pre>%s</pre>" %
                 _("Failed to execute the test %s: %s") % (html.attrencode(self.__class__.__name__),
-                                                          html.attrencode(traceback.format_exc())))
+                                                          traceback.format_exc()))
             result.from_test(self)
             yield result
 

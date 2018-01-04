@@ -24,6 +24,9 @@ description:
 
  Limits can be configured with WATO.
 
+ This check is also cluster-aware and worst or best state is configurable.
+ Default is worst state.
+
 item:
  The identifier of the job defined by the first argument to {mk-job}.
 

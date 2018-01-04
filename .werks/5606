@@ -1,0 +1,10 @@
+Title: job: This check is now cluster-aware and worst or best state is configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1515053957
+Class: feature
+
+

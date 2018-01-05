@@ -1,0 +1,15 @@
+Title: cmk-update-agent: New show-config mode
+Level: 2
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1515154865
+Class: feature
+
+With this werk, a new debugging-feature gets added to the cmk-update-agent(.exe) executable.
+
+You can now display the current configuration and state saved within the cmk-update-agent.cfg and cmk-update-agent.state files.
+Please note that the configuration file is prioritized over the state file and only effective configurations will be shown. E.g. a saved Check_MK server from state file will be shadowed by a configured server from cfg file and hence it will not be shown by the show-config mode.
+
+You can invoke the show-config mode by running "cmk-update-agent(.exe) show-config"

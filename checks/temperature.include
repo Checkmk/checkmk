@@ -131,7 +131,7 @@ def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, 
 
     # Use device's levels if present, otherwise yours
     elif dlh == "devdefault":
-        if dev_warn is not None and dev_crit is None:
+        if dev_warn is not None and dev_crit is not None:
             warn, crit = dev_warn, dev_crit
         else:
             warn, crit = usr_warn, usr_crit

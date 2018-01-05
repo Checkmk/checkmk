@@ -1,0 +1,34 @@
+Title: HW/SW Inventory: Access of certain inventory tree sections is configurable in contact groups
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1515144641
+Class: feature
+
+You're able to restrict contact groups to see certain inventory tree
+paths.
+First go to inventory tree and enable 'Show internal tree paths' in
+the display options in order to see the internal tree paths.
+Below 'Permissions', 'Permitted HW/SW inventory paths' in the
+configuration of any contact group you can register these internal
+paths.
+
+Consider the following exceptions:
+- By default all contact groups are allowed to see the whole tree
+- If one user is not part of any group this user is allowed to see
+  the whole tree
+- 'Allowed to see the whole tree' takes first priority.
+- 'Forbid to see any path' takes lowest priority.
+
+Examples:
+- 'Allowed to see the whole tree' is configured in one group and
+  'Allowed to see following paths' in another group, then
+  the user is allowed to see the whole tree.
+- 'Allowed to see the whole tree' is configured in one group and
+  'Forbid to see any path' in another group, then
+  the user is allowed to see the whole tree.
+- 'Allowed to see following paths' is configured in one group and
+ 'Forbid to see any path' is another group,
+  the user is allowed to see the configured paths.

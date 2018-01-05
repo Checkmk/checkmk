@@ -2626,6 +2626,8 @@ class html(HTMLGenerator, RequestHandler):
                          class_=["treeangle", "open" if isopen else "closed"],
                          src="images/%s_closed.png" % tree_img, align="absbottom", onclick=onclick)
             if isinstance(title, HTML): # custom HTML code
+                if icon:
+                    self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon, onclick=onclick)
                 self.write_text(title)
                 if indent != "form":
                     self.br()

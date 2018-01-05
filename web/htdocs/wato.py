@@ -7563,6 +7563,50 @@ class ModeEditContactgroup(ModeEditGroup):
             return _("Edit contact group")
 
 
+    def _determine_additional_group_data(self):
+        super(ModeEditContactgroup, self)._determine_additional_group_data()
+
+        permitted_inventory_paths = self._vs_inventory_paths().from_html_vars('inventory_paths')
+        self._vs_inventory_paths().validate_value(permitted_inventory_paths, 'inventory_paths')
+        if permitted_inventory_paths:
+            self.group['inventory_paths'] = permitted_inventory_paths
+
+        permitted_maps = self._vs_nagvis_maps().from_html_vars('nagvis_maps')
+        self._vs_nagvis_maps().validate_value(permitted_maps, 'nagvis_maps')
+        if permitted_maps:
+            self.group["nagvis_maps"] = permitted_maps
+
+
+    def _show_extra_page_elements(self):
+        super(ModeEditContactgroup, self)._show_extra_page_elements()
+
+        forms.header(_("Permissions"))
+        forms.section(_("Permitted HW/SW inventory paths"))
+        self._vs_inventory_paths().render_input('inventory_paths', self.group.get('inventory_paths'))
+
+        if self._get_nagvis_maps():
+            forms.section(_("Access to NagVis Maps"))
+            html.help(_("Configure access permissions to NagVis maps."))
+            self._vs_nagvis_maps().render_input('nagvis_maps', self.group.get('nagvis_maps', []))
+
+
+    def _vs_inventory_paths(self):
+        return CascadingDropdown(
+            choices=[
+                ("all", _("Allowed to see whole tree")),
+                ("none", _("Forbid to see any path")),
+                ("paths", _("Allowed to see following paths"), ListOf(
+                    TextAscii(
+                        title=_("Inventory Paths"),
+                        size=60,
+                        allow_empty=False,
+                    ),
+                    allow_empty=False,
+                )),
+            ],
+        )
+
+
     def _vs_nagvis_maps(self):
         return ListChoice(
             title = _('NagVis Maps'),
@@ -7581,24 +7625,6 @@ class ModeEditContactgroup(ModeEditGroup):
             if f[0] != '.' and f.endswith('.cfg'):
                 maps.append((f[:-4], f[:-4]))
         return maps
-
-
-    def _determine_additional_group_data(self):
-        super(ModeEditContactgroup, self)._determine_additional_group_data()
-        permitted_maps = self._vs_nagvis_maps().from_html_vars('nagvis_maps')
-        self._vs_nagvis_maps().validate_value(permitted_maps, 'nagvis_maps')
-        if permitted_maps:
-            self.group["nagvis_maps"] = permitted_maps
-
-
-    def _show_extra_page_elements(self):
-        super(ModeEditContactgroup, self)._show_extra_page_elements()
-        # Show permissions for NagVis maps if any of those exist
-        if self._get_nagvis_maps():
-            forms.header(_("Permissions"))
-            forms.section(_("Access to NagVis Maps"))
-            html.help(_("Configure access permissions to NagVis maps."))
-            self._vs_nagvis_maps().render_input('nagvis_maps', self.group.get('nagvis_maps', []))
 
 
 

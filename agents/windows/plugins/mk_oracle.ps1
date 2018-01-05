@@ -1155,7 +1155,7 @@ Function sql_locks {
                      || '|||||||||||||||||'
               from v$instance i
               ;
-        '@
+'@
         echo $query_locks
     }
 }

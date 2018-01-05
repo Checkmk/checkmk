@@ -268,7 +268,7 @@ def available(what, all_visuals):
     permprefix = what[:-1]
 
     def published_to_user(visual):
-        if visual["public"] == True:
+        if visual["public"] is True:
             return True
 
         if type(visual["public"]) == tuple and visual["public"][0] == "contact_groups":
@@ -354,17 +354,17 @@ def page_list(what, title, visuals, custom_columns = None,
 
     # TODO: We hack in those visuals that already have been moved to pagetypes here
     if pagetypes.has_page_type("graph_collection"):
-        html.context_button(_("Graph Collections"), "graph_collections.py", "graph_collection")
+        html.context_button(_("Graph collections"), "graph_collections.py", "graph_collection")
     if pagetypes.has_page_type("custom_graph"):
-        html.context_button(_("Custom Graphs"), "custom_graphs.py", "custom_graph")
+        html.context_button(_("Custom graphs"), "custom_graphs.py", "custom_graph")
     if pagetypes.has_page_type("graph_tuning"):
-        html.context_button(_("Grap tunings"), "graph_tunings.py", "graph_tuning")
-    html.context_button(_("Bookmark Lists"), "bookmark_lists.py", "bookmark_list")
+        html.context_button(_("Graph tunings"), "graph_tunings.py", "graph_tuning")
+    html.context_button(_("Bookmark lists"), "bookmark_lists.py", "bookmark_list")
 
     html.end_context_buttons()
 
     # Deletion of visuals
-    delname  = html.var("_delete")
+    delname = html.var("_delete")
     if delname and html.transaction_valid():
         if config.user.may('general.delete_foreign_%s' % what):
             user_id = html.var('_user_id', config.user.id)
@@ -388,23 +388,26 @@ def page_list(what, title, visuals, custom_columns = None,
         except MKUserError, e:
             html.user_error(e)
 
-    keys_sorted = visuals.keys()
-    keys_sorted.sort(cmp = lambda a,b: -cmp(a[0],b[0]) or cmp(a[1], b[1]))
+    keys_sorted = sorted(visuals.keys(),
+                         cmp=lambda a, b: -cmp(a[0], b[0]) or cmp(a[1], b[1]))
 
-    custom  = []
-    builtin = []
+    my_visuals, foreign_visuals, builtin_visuals  = [], [], []
     for (owner, visual_name) in keys_sorted:
         if owner == "" and not config.user.may("%s.%s" % (what_s, visual_name)):
             continue # not allowed to see this view
 
         visual = visuals[(owner, visual_name)]
-        if owner == config.user.id or \
-           (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
-            custom.append((owner, visual_name, visual))
-        elif visual["public"] and owner == "":
-            builtin.append((owner, visual_name, visual))
+        if visual["public"] and owner == "":
+            builtin_visuals.append((owner, visual_name, visual))
+        elif owner == config.user.id:
+            my_visuals.append((owner, visual_name, visual))
+        elif (visual["public"] and owner != '' and config.user_may(owner, "general.publish_%s" % what)) or \
+                config.user.may("general.edit_foreign_%s" % what):
+            foreign_visuals.append((owner, visual_name, visual))
 
-    for title, items in [ (_('Custom'), custom), (_('Builtin'), builtin) ]:
+    for title, items in [(_('Customized'), my_visuals),
+                         (_("Owned by other users"), foreign_visuals),
+                         (_('Builtin'), builtin_visuals)]:
         html.open_h3()
         html.write(title)
         html.close_h3()

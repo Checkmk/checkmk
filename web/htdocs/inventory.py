@@ -33,7 +33,9 @@ try:
 except ImportError:
     import json
 
+import ast
 import config
+import userdb
 import sites
 import cmk.paths
 import cmk.store as store
@@ -58,6 +60,8 @@ def get_inventory_data(inventory_tree, tree_path):
 
 def parse_tree_path(tree_path):
     # tree_path may look like:
+    # .                          (ROOT) => path = []                            key = None
+    # .hardware.                 (dict) => path = ["hardware"],                 key = None
     # .hardware.cpu.model        (leaf) => path = ["hardware", "cpu"],          key = "model"
     # .hardware.cpu.             (dict) => path = ["hardware", "cpu"],          key = None
     # .software.packages:17.name (leaf) => path = ["software", "packages", 17], key = "name"
@@ -194,6 +198,42 @@ def parent_path(invpath):
 
     last_sep = max(invpath.rfind(":"), invpath.rfind("."))
     return invpath[:last_sep+1]
+
+
+def get_permitted_inventory_paths():
+    """
+Returns either a list of permitted paths or
+None in case the user is allowed to see the whole tree.
+"""
+    contact_groups = userdb.load_group_information().get("contact", {})
+    user_groups = userdb.contactgroups_of_user(config.user.id)
+    if not user_groups:
+        return None
+
+    forbid_whole_tree = False
+    permitted_paths = []
+    for user_group in user_groups:
+        inventory_paths = contact_groups.get(user_group, {}).get('inventory_paths')
+
+        if inventory_paths == "all":
+            return None
+
+        elif inventory_paths == "none":
+            forbid_whole_tree = True
+            continue
+
+        for path_repr in inventory_paths[1]:
+            parsed = []
+            for part in path_repr.split("."):
+                try:
+                    parsed.append(int(part))
+                except ValueError:
+                    parsed.append(part)
+            permitted_paths.append(parsed)
+
+    if forbid_whole_tree and not permitted_paths:
+        return []
+    return permitted_paths
 
 
 def page_host_inv_api():

@@ -3045,15 +3045,22 @@ def ajax_inv_render_tree():
     hostname = html.var("host")
     invpath = html.var("path")
     tree_id = html.var("treeid", "")
+    if html.var("show_internal_tree_paths"):
+        show_internal_tree_paths = True
+    else:
+        show_internal_tree_paths = False
     if tree_id:
         struct_tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
         tree_renderer = DeltaNodeRenderer(hostname, tree_id, invpath)
     else:
         struct_tree = inventory.load_tree(hostname)
-        tree_renderer = AttributeRenderer(hostname, "", invpath)
+        tree_renderer = AttributeRenderer(hostname, "", invpath,
+                        show_internal_tree_paths=show_internal_tree_paths)
 
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))
+
+    struct_tree = struct_tree.get_filtered_tree(inventory.get_permitted_inventory_paths())
 
     parsed_path, attributes_key = inventory.parse_tree_path(invpath)
     if parsed_path:

@@ -36,10 +36,13 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
         return "", ""
 
     if column == "host_inventory":
-        tree_renderer = AttributeRenderer(row["host_name"], "", invpath)
+        tree_renderer = AttributeRenderer(row["host_name"], "", invpath,
+                        show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
     else:
         tree_id = "/" + str(row["invhist_time"])
         tree_renderer = DeltaNodeRenderer(row["host_name"], tree_id, invpath)
+
+    struct_tree = struct_tree.get_filtered_tree(inventory.get_permitted_inventory_paths())
 
     parsed_path, attributes_key = inventory.parse_tree_path(invpath)
     if attributes_key is None:
@@ -99,6 +102,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
     multisite_painters[name] = {
         "title"    : invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
         "columns"  : ["host_inventory"],
+        "options"  : ["show_internal_tree_paths"],
         "load_inv" : True,
         "paint"    : lambda row: paint_host_inventory_tree(row, invpath),
         "sorter"   : name,
@@ -171,11 +175,19 @@ def inv_titleinfo_long(invpath, node):
         return last_title
 
 
+multisite_painter_options["show_internal_tree_paths"] = {
+    'valuespec' : Checkbox(
+        title = _("Show internal tree paths"),
+        default_value = False,
+    )
+}
+
+
 multisite_painters["inventory_tree"] = {
     "title"    : _("Hardware & Software Tree"),
     "columns"  : ["host_inventory"],
+    "options"  : ["show_internal_tree_paths"],
     "load_inv" : True,
-    #"paint"    : paint_inv_tree,
     "paint"    : paint_host_inventory_tree,
 }
 
@@ -1317,6 +1329,7 @@ view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".")
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 # Just for compatibility
 def render_inv_dicttable(*args):
     pass
@@ -1344,10 +1357,14 @@ def show_child_value(value, hint):
 
 
 class NodeRenderer(object):
-    def __init__(self, hostname, tree_id, invpath):
+    def __init__(self, hostname, tree_id, invpath, show_internal_tree_paths=False):
         self._hostname = hostname
         self._tree_id = tree_id
         self._invpath = invpath
+        if show_internal_tree_paths:
+            self._show_internal_tree_paths = "on"
+        else:
+            self._show_internal_tree_paths = ""
 
     #   ---container------------------------------------------------------------
 
@@ -1379,12 +1396,18 @@ class NodeRenderer(object):
             raw_invpath = self._get_raw_path(".".join(map(str, node_abs_path)))
             invpath = ".%s." % raw_invpath
 
+            header = HTML(title)
+            if self._show_internal_tree_paths:
+                header += HTML(" <span style='color: #666'>(%s)</span>" % ".".join(map(str, node_abs_path)))
+
             fetch_url = html.makeuri_contextless([("host", self._hostname),
                                                   ("path", invpath),
+                                                  ("show_internal_tree_paths", self._show_internal_tree_paths),
                                                   ("treeid", self._tree_id)],
                                                  "ajax_inv_render_tree.py")
+
             if html.begin_foldable_container("inv_%s%s" % (self._hostname, self._tree_id), invpath, False,
-                                             title, icon=icon, fetch_url=fetch_url, tree_img="tree_black"):
+                                             header, icon=icon, fetch_url=fetch_url, tree_img="tree_black"):
                 # Render only if it is open. We'll get the stuff via ajax later if it's closed
                 for child in inventory.sort_children(node.get_node_children()):
                     child.show(self, path=raw_invpath)

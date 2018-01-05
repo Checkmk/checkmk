@@ -1,0 +1,9 @@
+Title: temperature.include: Fixed device levels handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p27
+Date: 1515162662
+Class: fix
+
+

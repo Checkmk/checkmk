@@ -8,6 +8,7 @@
     * 5550 FIX: mk_oracle.ps1: Fixed exceptions because of useless backslashes...
     * 5451 FIX: logwatch: Fixed reclassifying mechanism: Patterns did not apply correctly if they have changed
     * 5417 FIX: Windows: allow whitespace in eventlog event source...
+    * 5608 FIX: temperature.include: Fixed device levels handling
 
     WATO:
     * 4222 FIX: Services of host page: Fixed encoding issue for hosts with umlauts in alias

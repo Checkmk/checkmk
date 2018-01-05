@@ -38,6 +38,7 @@ loaded_with_language = False
 #   | Declare general permissions for Multisite                            |
 #   '----------------------------------------------------------------------'
 
+
 def load_plugins(force):
     global loaded_with_language
     if loaded_with_language == current_language and not force:
@@ -166,6 +167,7 @@ def load_plugins(force):
 
     loaded_with_language = current_language
 
+
 # TODO: This has been obsoleted by pagetypes.py
 def declare_visual_permissions(what, what_plural):
     config.declare_permission("general.edit_" + what,
@@ -186,6 +188,11 @@ def declare_visual_permissions(what, what_plural):
     config.declare_permission("general.force_" + what,
          _("Modify builtin %s") % what_plural,
          _("Make own published %s override builtin %s for all users.") % (what_plural, what_plural),
+         [ "admin" ])
+
+    config.declare_permission("general.edit_foreign_" + what,
+         _("Edit foreign %s") % what_plural,
+         _("Allows to edit %s created by other users.") % what_plural,
          [ "admin" ])
 
     config.declare_permission("general.delete_foreign_" + what,

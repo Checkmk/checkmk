@@ -1,0 +1,13 @@
+Title: Add permission for admins to see custom views, dashboards and reports
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1515161999
+Class: feature
+
+Previously, admins could only see custom views, dashboards and reports of a
+user if the owner set the option "Make this view/dashboard/report available for
+other users". Now admins can see the views, dashboards and reports of all
+users. This also implies that admins are allowed to edit and clone these views.

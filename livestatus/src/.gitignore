@@ -8,5 +8,6 @@ Makefile
 Makefile.in
 compile_commands.json
 cppcheck-result.xml
+html/
 livecheck
 unixcat

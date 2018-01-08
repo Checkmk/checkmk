@@ -387,10 +387,9 @@ class PageRenderer(Base):
 
     def render_title(self):
         if not self.is_hidden():
-            return HTML("<a href=\"%s\">%s</a>" %
-                    (self.page_url(), html.attrencode(self.title())))
+            return html.render_a(self.title(), href=self.page_url())
         else:
-            return ""
+            return self.title()
 
 
 #.

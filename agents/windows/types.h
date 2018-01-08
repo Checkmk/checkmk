@@ -183,14 +183,35 @@ enum file_encoding {
 // Pattern definition within the config file:
 //      C = *critpatternglobdescription*
 struct condition_pattern {
+    condition_pattern(const char state_, const std::string glob_pattern_)
+        : state(state_), glob_pattern(glob_pattern_) {}
     char state;
-    char *glob_pattern;
+    std::string glob_pattern;
 };
-typedef std::vector<condition_pattern *> condition_patterns_t;
+typedef std::vector<condition_pattern> condition_patterns_t;
 
 // A textfile instance containing information about various file
 // parameters and the pointer to the matching pattern_container
 struct logwatch_textfile {
+    logwatch_textfile(const std::string &name_,
+                      const std::vector<std::string> &paths_,
+                      unsigned long long file_id_,
+                      unsigned long long file_size_, unsigned long long offset_,
+                      bool nocontext_, bool rotated_,
+                      const condition_patterns_t &patterns_)
+        : name(name_)
+        , paths(paths_)
+        , file_id(file_id_)
+        , file_size(file_size_)
+        , offset(offset_)
+        , nocontext(nocontext_)
+        , rotated(rotated_)
+        , patterns(std::ref(patterns_)) {}
+    logwatch_textfile(const logwatch_textfile&) = delete;
+    logwatch_textfile &operator=(const logwatch_textfile&) = delete;
+    logwatch_textfile(logwatch_textfile&&) = default;
+    logwatch_textfile &operator=(logwatch_textfile&&) = default;
+
     std::string name;  // name used for section headers. this is the
                        // filename for regular logs and the pattern
                        // for rotated logs
@@ -201,20 +222,21 @@ struct logwatch_textfile {
     bool missing{false};           // file no longer exists
     bool nocontext;                // do not report ignored lines
     bool rotated;                  // assume the logfile is a rotating log
-    file_encoding encoding;
-    condition_patterns_t *patterns;  // glob patterns applying for this file
+    file_encoding encoding{UNDEF};
+    std::reference_wrapper<const condition_patterns_t>
+        patterns;  // glob patterns applying for this file
 };
 
 // Single element of a globline:
 // C:/tmp/Testfile*.log
 struct glob_token {
-    char *pattern;
+    std::string pattern;
     bool nocontext{false};
     bool from_start{false};
     bool rotated{false};
-    bool found_match;
+    bool found_match{false};
 };
-typedef std::vector<glob_token *> glob_tokens_t;
+typedef std::vector<glob_token> glob_tokens_t;
 
 // Container for all globlines read from the config
 // The following is considered a globline

@@ -38,6 +38,11 @@ using std::ofstream;
 
 namespace {
 
+class MissingFile : public std::runtime_error {
+public:
+    explicit MissingFile(const std::string &what) : std::runtime_error(what) {}
+};
+
 const size_t UNICODE_BUFFER_SIZE = 8192;
 
 // Process content of the given textfile
@@ -66,8 +71,8 @@ inline void rtrim(std::string &s) {
             s.end());
 }
 
-file_encoding determine_encoding(logwatch_textfile *textfile) {
-    ifstream ifs(textfile->paths.front(), ifstream::in | ifstream::binary);
+file_encoding determine_encoding(const logwatch_textfile &textfile) {
+    ifstream ifs(textfile.paths.front(), ifstream::in | ifstream::binary);
 
     if (ifs.fail()) {
         return UNDEF;
@@ -84,32 +89,37 @@ file_encoding determine_encoding(logwatch_textfile *textfile) {
     }
 }
 
-ifstream open_logfile(logwatch_textfile *textfile) {
+ifstream open_logfile(logwatch_textfile &textfile) {
     ifstream result;
 
-    if ((textfile->encoding == UNDEF) || (textfile->offset == 0)) {
-        textfile->encoding = determine_encoding(textfile);
+    if ((textfile.encoding == UNDEF) || (textfile.offset == 0)) {
+        textfile.encoding = determine_encoding(textfile);
     }
 
-    if (textfile->encoding == UNDEF) {
+    if (textfile.encoding == UNDEF) {
         result.setstate(std::ios_base::badbit);
     } else {
         auto mode = ifstream::in;
-        if (textfile->encoding == UNICODE) {
+        if (textfile.encoding == UNICODE) {
             mode |= ifstream::binary;
         }
-        result.open(textfile->paths.front(), mode);
+        result.open(textfile.paths.front(), mode);
     }
 
     return result;
 }
 
-uint64_t logfile_offset(logwatch_textfile *textfile) {
-    uint64_t offset = textfile->offset;
-    if ((offset == 0) && (textfile->encoding == UNICODE)) {
+uint64_t logfile_offset(const logwatch_textfile &textfile) {
+    uint64_t offset = textfile.offset;
+    if ((offset == 0) && (textfile.encoding == UNICODE)) {
         offset = 2;
     }
     return offset;
+}
+
+void addConditionPattern(globline_container &globline, const char *state,
+                         const char *value) {
+    globline.patterns.emplace_back(std::toupper(state[0]), value);
 }
 
 }  // namespace
@@ -118,17 +128,16 @@ SectionLogwatch::SectionLogwatch(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
     : Section("logwatch", "logfiles", config.getEnvironment(), logger, winapi)
     , _globlines(config, "logfiles", winapi) {
-    _globlines.setGroupFunction(&SectionLogwatch::addConditionPattern);
-
+    _globlines.setGroupFunction(&addConditionPattern);
     loadLogwatchOffsets();
 }
 
-SectionLogwatch::~SectionLogwatch() { cleanup(); }
+SectionLogwatch::~SectionLogwatch() {}
 
 void SectionLogwatch::init() {
-    for (const auto &globline : *_globlines) {
-        for (const auto &token : globline->tokens) {
-            processGlobExpression(token, globline->patterns);
+    for (auto &globline : *_globlines) {
+        for (auto &token : globline.tokens) {
+            processGlobExpression(token, globline.patterns);
         }
     }
 }
@@ -137,68 +146,27 @@ void SectionLogwatch::init() {
 void SectionLogwatch::cleanupTextfiles() {
     // remove_if puts the missing textfiles to the end of the list, it doesn't
     // actually remove anything
-    auto first_missing =
-        std::remove_if(_textfiles.begin(), _textfiles.end(),
-                       [](logwatch_textfile *file) { return file->missing; });
-
-    for (auto iter = first_missing; iter != _textfiles.end(); ++iter) {
-        delete *iter;
-    }
+    auto first_missing = std::remove_if(
+        _textfiles.begin(), _textfiles.end(),
+        [](const logwatch_textfile &file) { return file.missing; });
 
     _textfiles.erase(first_missing, _textfiles.end());
 }
 
-// Called on program exit
-void SectionLogwatch::cleanup() {
-    for (logwatch_textfile *textfile : _textfiles) {
-        delete textfile;
-    }
-    _textfiles.clear();
-    for (logwatch_textfile *hint : _hints) {
-        delete hint;
-    }
-    _hints.clear();
-
-    // cleanup globlines and textpatterns
-    for (globline_container *cont : *_globlines) {
-        for (auto tok : cont->tokens) {
-            free(tok->pattern);
-            delete (tok);
-        }
-        cont->tokens.clear();
-
-        for (auto pat : cont->patterns) {
-            free(pat->glob_pattern);
-            delete (pat);
-        }
-        cont->patterns.clear();
-        delete cont;
-    }
-}
-
-void SectionLogwatch::addConditionPattern(globline_container *&globline,
-                                          const char *state,
-                                          const char *value) {
-    condition_pattern *new_pattern = new condition_pattern();
-    new_pattern->state = std::toupper(state[0]);
-    new_pattern->glob_pattern = strdup(value);
-    globline->patterns.push_back(new_pattern);
-}
-
 std::vector<SectionLogwatch::FileEntryType> SectionLogwatch::globMatches(
-    const char *pattern) {
+    const std::string &pattern) {
     std::vector<FileEntryType> matches;
 
     std::string path;
-    const char *end = strrchr(pattern, '\\');
+    const auto end = pattern.find_last_of('\\');
 
-    if (end != nullptr) {
-        path = std::string(static_cast<const char *>(pattern), end + 1);
+    if (end != std::string::npos) {
+        path = pattern.substr(0, end + 1);
     }
 
     WIN32_FIND_DATA data;
     SearchHandle searchHandle{
-        _winapi.FindFirstFileEx(pattern, FindExInfoStandard, &data,
+        _winapi.FindFirstFileEx(pattern.c_str(), FindExInfoStandard, &data,
                                 FindExSearchNameMatch, nullptr, 0),
         _winapi};
 
@@ -215,63 +183,70 @@ std::vector<SectionLogwatch::FileEntryType> SectionLogwatch::globMatches(
     return matches;
 }
 
-logwatch_textfile *SectionLogwatch::getLogwatchTextfile(const char *name) {
-    for (logwatch_textfile *textfile : _textfiles) {
-        if (strcmp(name, textfile->name.c_str()) == 0) return textfile;
-    }
-    return nullptr;
+std::vector<logwatch_textfile>::iterator SectionLogwatch::findLogwatchTextfile(
+    const std::string &name) {
+    return std::find_if(_textfiles.begin(), _textfiles.end(),
+                        [&name](const logwatch_textfile &textfile) {
+                            return textfile.name == name;
+                        });
 }
 
 // Check if the given full_filename already exists. If so, do some basic file
 // integrity checks
 // Otherwise create a new textfile instance
 void SectionLogwatch::updateOrCreateLogwatchTextfile(
-    const char *full_filename, glob_token *token,
+    const char *full_filename, const glob_token &token,
     condition_patterns_t &patterns) {
-    logwatch_textfile *textfile = getLogwatchTextfile(full_filename);
-    if (textfile == nullptr)
-        textfile = addNewLogwatchTextfile(full_filename, token, patterns);
+    auto it = findLogwatchTextfile(full_filename);
+    auto &textfile =
+        (it != _textfiles.end()) ? *it : addNewLogwatchTextfile(
+                                             full_filename, token, patterns);
     updateLogwatchTextfile(textfile);
 }
 
 void SectionLogwatch::updateOrCreateRotatedLogfile(
-    const std::vector<std::string> &filenames, glob_token *token,
+    const std::vector<std::string> &filenames, const glob_token &token,
     condition_patterns_t &patterns) {
     assert(filenames.size() > 0);
 
-    logwatch_textfile *textfile = getLogwatchTextfile(token->pattern);
-
-    if (textfile == nullptr)
-        textfile =
-            addNewRotatedLogfile(token->pattern, filenames, token, patterns);
-    updateRotatedLogfile(token->pattern, textfile);
+    auto it = findLogwatchTextfile(token.pattern);
+    auto &textfile =
+        (it != _textfiles.end())
+            ? *it
+            : addNewRotatedLogfile(token.pattern, filenames, token, patterns);
+    updateRotatedLogfile(token.pattern, textfile);
 }
 
 // Process a single expression (token) of a globline and try to find matching
 // files
-void SectionLogwatch::processGlobExpression(glob_token *glob_token,
+void SectionLogwatch::processGlobExpression(glob_token &glob_token,
                                             condition_patterns_t &patterns) {
-    std::vector<FileEntryType> matches = globMatches(glob_token->pattern);
-    glob_token->found_match = !matches.empty();
+    std::vector<FileEntryType> matches =
+        globMatches(glob_token.pattern.c_str());
+    glob_token.found_match = !matches.empty();
 
-    if (glob_token->rotated) {
-        // rotated: all matches are assumed to belong to the same log.
-        // If the file most recently read has been consumed we need to read
-        // the next file. This sorting defines what is considered
-        // "next"
-        if (matches.size() > 0) {
-            updateOrCreateRotatedLogfile(sortedByTime(matches), glob_token,
-                                         patterns);
+    try {
+        if (glob_token.rotated) {
+            // rotated: all matches are assumed to belong to the same log.
+            // If the file most recently read has been consumed we need to read
+            // the next file. This sorting defines what is considered
+            // "next"
+            if (matches.size() > 0) {
+                updateOrCreateRotatedLogfile(sortedByTime(matches), glob_token,
+                                             patterns);
+            } else {
+                Notice(_logger)
+                    << "pattern " << glob_token.pattern << " matches no files";
+            }
         } else {
-            Notice(_logger)
-                << "pattern " << glob_token->pattern << " matches no files";
+            // non-rotated: each match is a separate log
+            for (const FileEntryType &ent : matches) {
+                updateOrCreateLogwatchTextfile(ent.first.c_str(), glob_token,
+                                               patterns);
+            }
         }
-    } else {
-        // non-rotated: each match is a separate log
-        for (const FileEntryType &ent : matches) {
-            updateOrCreateLogwatchTextfile(ent.first.c_str(), glob_token,
-                                           patterns);
-        }
+    } catch (const MissingFile &e) {
+        Notice(_logger) << e.what();
     }
 }
 
@@ -286,23 +261,22 @@ void SectionLogwatch::saveOffsets(const std::string &logwatch_statefile) {
         // notices something went wrong.
         // FIXME: unless there aren't any textfiles configured to be monitored
     }
-    for (logwatch_textfile *tf : _textfiles) {
-        if (!tf->missing) {
-            ofs << tf->name << "|" << tf->file_id << "|" << tf->file_size << "|"
-                << tf->offset << std::endl;
+    for (const auto &tf : _textfiles) {
+        if (!tf.missing) {
+            ofs << tf.name << "|" << tf.file_id << "|" << tf.file_size << "|"
+                << tf.offset << std::endl;
         }
     }
 }
 
 SectionLogwatch::ProcessTextfileResponse
 SectionLogwatch::processTextfileUnicode(ifstream &file,
-                                        logwatch_textfile *textfile,
+                                        const logwatch_textfile &textfile,
                                         std::ostream &out, bool write_output) {
-    Notice(_logger) << "Checking UNICODE file " << textfile->paths.front();
+    Notice(_logger) << "Checking UNICODE file " << textfile.paths.front();
     ProcessTextfileResponse response;
     char unicode_block[UNICODE_BUFFER_SIZE];
 
-    condition_pattern *pattern = 0;
     int buffer_level = 0;     // Current bytes in buffer
     bool cut_line = false;    // Line does not fit in buffer
     int crnl_end_offset = 0;  // Byte index of CRLF in unicode block
@@ -342,28 +316,28 @@ SectionLogwatch::processTextfileUnicode(ifstream &file,
             << output_buffer;
         // Check line
         char state = '.';
-        for (condition_patterns_t::iterator it_patt =
-                 textfile->patterns->begin();
-             it_patt != textfile->patterns->end(); it_patt++) {
-            pattern = *it_patt;
-            Debug(_logger) << "glob_pattern: " << pattern->glob_pattern
-                           << ", state: " << pattern->state;
-            if (globmatch(pattern->glob_pattern, output_buffer.c_str())) {
+        for (auto it_patt = textfile.patterns.get().begin();
+             it_patt != textfile.patterns.get().end(); it_patt++) {
+            const auto &pattern = *it_patt;
+            Debug(_logger) << "glob_pattern: " << pattern.glob_pattern
+                           << ", state: " << pattern.state;
+            if (globmatch(pattern.glob_pattern.c_str(),
+                          output_buffer.c_str())) {
                 if (!write_output &&
-                    (pattern->state == 'C' || pattern->state == 'W' ||
-                     pattern->state == 'O')) {
+                    (pattern.state == 'C' || pattern.state == 'W' ||
+                     pattern.state == 'O')) {
                     response.found_match = true;
                     response.unprocessed_bytes = buffer_level;
                     return response;
                 }
-                state = pattern->state;
+                state = pattern.state;
                 break;
             }
         }
 
         // Output line
         if (write_output && !output_buffer.empty() &&
-            !(textfile->nocontext && (state == 'I' || state == '.'))) {
+            !(textfile.nocontext && (state == 'I' || state == '.'))) {
             out << state << " " << output_buffer << "\n";
         }
 
@@ -399,11 +373,11 @@ SectionLogwatch::processTextfileUnicode(ifstream &file,
 
 SectionLogwatch::ProcessTextfileResponse
 SectionLogwatch::processTextfileDefault(ifstream &file,
-                                        logwatch_textfile *textfile,
+                                        const logwatch_textfile &textfile,
                                         std::ostream &out, bool write_output) {
     char line[4096];
     ProcessTextfileResponse response;
-    Notice(_logger) << "Checking file " << textfile->paths.front();
+    Notice(_logger) << "Checking file " << textfile.paths.front();
 
     while (!file.eof()) {
         if (!file.getline(line, sizeof(line))) break;
@@ -411,22 +385,22 @@ SectionLogwatch::processTextfileDefault(ifstream &file,
         rtrim(lineString);
 
         char state = '.';
-        for (condition_pattern *pattern : *textfile->patterns) {
-            if (globmatch(pattern->glob_pattern, lineString.c_str())) {
+        for (const auto &pattern : textfile.patterns.get()) {
+            if (globmatch(pattern.glob_pattern.c_str(), lineString.c_str())) {
                 if (!write_output &&
-                    (pattern->state == 'C' || pattern->state == 'W' ||
-                     pattern->state == 'O')) {
+                    (pattern.state == 'C' || pattern.state == 'W' ||
+                     pattern.state == 'O')) {
                     response.found_match = true;
                     response.unprocessed_bytes = 0;
                     return response;
                 }
-                state = pattern->state;
+                state = pattern.state;
                 break;
             }
         }
 
         if (write_output && strlen(line) > 0 &&
-            !(textfile->nocontext && (state == 'I' || state == '.')))
+            !(textfile.nocontext && (state == 'I' || state == '.')))
             out << state << " " << lineString << "\n";
     }
 
@@ -436,22 +410,22 @@ SectionLogwatch::processTextfileDefault(ifstream &file,
 }
 
 SectionLogwatch::ProcessTextfileResponse SectionLogwatch::processTextfile(
-    ifstream &file, logwatch_textfile *textfile, std::ostream &out,
+    ifstream &file, const logwatch_textfile &textfile, std::ostream &out,
     bool write_output) {
     // Reset stream state after previous read as we process the files twice.
     // Necessary as reading UTF-16 file sets some fail bit(s) at the end.
     file.clear();
     file.seekg(logfile_offset(textfile));
-    if (textfile->encoding == UNICODE)
+    if (textfile.encoding == UNICODE)
         return processTextfileUnicode(file, textfile, out, write_output);
     else
         return processTextfileDefault(file, textfile, out, write_output);
 }
 
 void SectionLogwatch::processTextfile(std::ostream &out,
-                                      logwatch_textfile *textfile) {
-    if (textfile->missing) {
-        out << "[[[" << textfile->name << ":missing]]]\n";
+                                      logwatch_textfile &textfile) {
+    if (textfile.missing) {
+        out << "[[[" << textfile.name << ":missing]]]\n";
         return;
     }
 
@@ -459,12 +433,12 @@ void SectionLogwatch::processTextfile(std::ostream &out,
     ifstream file = open_logfile(textfile);
 
     if (file.fail()) {
-        out << "[[[" << textfile->name << ":cannotopen]]]\n";
+        out << "[[[" << textfile.name << ":cannotopen]]]\n";
         return;
     }
 
-    out << "[[[" << replaceAll(textfile->name, "*", "__all__") << "]]]\n";
-    if (textfile->offset == textfile->file_size) {  // no new data
+    out << "[[[" << replaceAll(textfile.name, "*", "__all__") << "]]]\n";
+    if (textfile.offset == textfile.file_size) {  // no new data
         return;
     }
 
@@ -476,7 +450,7 @@ void SectionLogwatch::processTextfile(std::ostream &out,
         response = processTextfile(file, textfile, out, true);
     }
 
-    textfile->offset = textfile->file_size - response.unprocessed_bytes;
+    textfile.offset = textfile.file_size - response.unprocessed_bytes;
 }
 
 // The output of this section is compatible with
@@ -484,24 +458,24 @@ void SectionLogwatch::processTextfile(std::ostream &out,
 bool SectionLogwatch::produceOutputInner(std::ostream &out) {
     Debug(_logger) << "SectionLogwatch::produceOutputInner";
     // First of all invalidate all textfiles
-    for (logwatch_textfile *textfile : _textfiles) {
-        textfile->missing = true;
+    for (auto &textfile : _textfiles) {
+        textfile.missing = true;
     }
     init();
 
     // Missing glob patterns
-    for (const globline_container *cont : *_globlines) {
-        for (const glob_token *token : cont->tokens) {
-            if (!token->found_match) {
-                out << "[[[" << token->pattern << ":missing]]]\n";
+    for (const auto &cont : *_globlines) {
+        for (const auto &token : cont.tokens) {
+            if (!token.found_match) {
+                out << "[[[" << token.pattern << ":missing]]]\n";
             }
         }
     }
     // found files
-    for (logwatch_textfile *textfile : _textfiles) {
+    for (auto &textfile : _textfiles) {
         // for rotated log, this list may contain entries where the pattern
         // currently matches nothing
-        if (!textfile->paths.empty()) {
+        if (!textfile.paths.empty()) {
             processTextfile(out, textfile);
         }
     }
@@ -511,12 +485,12 @@ bool SectionLogwatch::produceOutputInner(std::ostream &out) {
     return true;
 }
 
-bool SectionLogwatch::getFileInformation(const char *filename,
+bool SectionLogwatch::getFileInformation(const std::string &filename,
                                          BY_HANDLE_FILE_INFORMATION *info) {
     WrappedHandle<InvalidHandleTraits> hFile{
         _winapi.CreateFile(
-            filename,      // file to open
-            GENERIC_READ,  // open for reading
+            filename.c_str(),  // file to open
+            GENERIC_READ,      // open for reading
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
             nullptr,                // default security
             OPEN_EXISTING,          // existing file only
@@ -524,11 +498,8 @@ bool SectionLogwatch::getFileInformation(const char *filename,
             nullptr),               // no attr. template
         _winapi};
 
-    if (!hFile) {
-        return false;
-    }
-
-    return _winapi.GetFileInformationByHandle(hFile.get(), info);
+    return hFile ? _winapi.GetFileInformationByHandle(hFile.get(), info)
+                 : false;
 }
 
 std::vector<std::string> SectionLogwatch::sortedByTime(
@@ -545,109 +516,96 @@ std::vector<std::string> SectionLogwatch::sortedByTime(
     return result;
 }
 
-void SectionLogwatch::updateLogwatchTextfile(logwatch_textfile *textfile) {
-    BY_HANDLE_FILE_INFORMATION fileinfo;
-    if (!getFileInformation(textfile->paths.front().c_str(), &fileinfo)) {
+void SectionLogwatch::updateLogwatchTextfile(logwatch_textfile &textfile) {
+    BY_HANDLE_FILE_INFORMATION fileinfo{0};
+    if (!getFileInformation(textfile.paths.front().c_str(), &fileinfo)) {
         Notice(_logger) << "Cant open file with CreateFile "
-                        << textfile->paths.front();
+                        << textfile.paths.front();
         return;
     }
 
     // Do some basic checks to ensure its still the same file
     // try to fill the structure with info regarding the file
     uint64_t file_id = to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
-    textfile->file_size = to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
+    textfile.file_size = to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
 
-    if (file_id != textfile->file_id) {  // file has been changed
-        Notice(_logger) << "File " << textfile->paths.front()
-                        << ": id has changed from " << textfile->file_id
+    if (file_id != textfile.file_id) {  // file has been changed
+        Notice(_logger) << "File " << textfile.paths.front()
+                        << ": id has changed from " << textfile.file_id
                         << " to " << file_id;
-        textfile->offset = 0;
-        textfile->file_id = file_id;
-    } else if (textfile->file_size <
-               textfile->offset) {  // file has been truncated
-        Notice(_logger) << "File " << textfile->paths.front()
+        textfile.offset = 0;
+        textfile.file_id = file_id;
+    } else if (textfile.file_size <
+               textfile.offset) {  // file has been truncated
+        Notice(_logger) << "File " << textfile.paths.front()
                         << ": file has been truncated";
-        textfile->offset = 0;
+        textfile.offset = 0;
     }
 
-    textfile->missing = false;
-}
-
-bool SectionLogwatch::updateFromHint(const char *file_name,
-                                     logwatch_textfile *textfile) {
-    for (logwatch_textfile *hint : _hints) {
-        if (hint->paths.front() == file_name) {
-            textfile->file_size = hint->file_size;
-            textfile->file_id = hint->file_id;
-            textfile->offset = hint->offset;
-            return true;
-        }
-    }
-    return false;
+    textfile.missing = false;
 }
 
 // Add a new textfile to the global textfile list
 // and determine some initial values
-logwatch_textfile *SectionLogwatch::addNewLogwatchTextfile(
-    const char *full_filename, glob_token *token,
-    condition_patterns_t &patterns) {
+logwatch_textfile &SectionLogwatch::addNewLogwatchTextfile(
+    const char *full_filename, const glob_token &token,
+    const condition_patterns_t &patterns) {
     BY_HANDLE_FILE_INFORMATION fileinfo;
     if (!getFileInformation(full_filename, &fileinfo)) {
         Debug(_logger) << "failed to open " << full_filename;
-        return nullptr;
+        throw MissingFile(std::string("failed to open ") + full_filename);
     }
 
-    logwatch_textfile *new_textfile = new logwatch_textfile();
-    new_textfile->name = full_filename;
-    new_textfile->paths.push_back(full_filename);
-    new_textfile->missing = false;
-    new_textfile->patterns = &patterns;
-    new_textfile->nocontext = token->nocontext;
-
-    bool found_hint = updateFromHint(full_filename, new_textfile);
+    const auto cend = _hints.cend();
+    const auto it = std::find_if(
+        _hints.cbegin(), cend, [full_filename](const logwatch_textfile &hint) {
+            return hint.paths.front() == full_filename;
+        });
+    bool found_hint = it != cend;
 
     // previously the file size was taken from the hint file. Why is the file
     // size stored with the hint???
-    if (!found_hint) {
-        new_textfile->file_size =
-            to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
-        new_textfile->file_id =
-            to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
+    unsigned long long file_id =
+        found_hint ? it->file_id
+                   : to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
+    unsigned long long file_size =
+        found_hint ? it->file_size
+                   : to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
+    unsigned long long offset =
+        found_hint ? it->offset : (token.from_start ? 0 : file_size);
 
-        if (!token->from_start) new_textfile->offset = new_textfile->file_size;
-    }
-
-    _textfiles.push_back(new_textfile);
-    return new_textfile;
+    _textfiles.emplace_back(
+        full_filename, std::move(std::vector<std::string>{full_filename}),
+        file_id, file_size, offset, token.nocontext, false, patterns);
+    return _textfiles.back();
 }
 
 bool SectionLogwatch::updateCurrentRotatedTextfile(
-    logwatch_textfile *textfile) {
-    const std::string &current_file = textfile->paths.front();
+    logwatch_textfile &textfile) {
+    const std::string &current_file = textfile.paths.front();
 
-    BY_HANDLE_FILE_INFORMATION fileinfo;
+    BY_HANDLE_FILE_INFORMATION fileinfo{0};
     if (!getFileInformation(current_file.c_str(), &fileinfo)) {
         Debug(_logger) << "Can't retrieve file info " << current_file;
         return false;
     }
 
     uint64_t file_id = to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
-    textfile->file_size = to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
+    textfile.file_size = to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
 
-    if (textfile->file_id != file_id) {
+    if (textfile.file_id != file_id) {
         // the oldest file we know is "newer" than the one read last.
         Debug(_logger) << "File " << current_file << " rotated";
-        textfile->offset = 0;
-        textfile->file_id = file_id;
+        textfile.offset = 0;
+        textfile.file_id = file_id;
         return true;
-    } else if (textfile->file_size < textfile->offset) {
+    } else if (textfile.file_size < textfile.offset) {
         // this shouldn't happen on a rotated log
         Debug(_logger) << "File " << current_file << " truncated";
-        textfile->offset = 0;
+        textfile.offset = 0;
         return true;
-    } else if ((textfile->offset == textfile->file_size) &&
-               (textfile->paths.size() > 1)) {
+    } else if ((textfile.offset == textfile.file_size) &&
+               (textfile.paths.size() > 1)) {
         // we read to the end of the file and there are newer files.
         // This means this file is finished and will not be written to anymore.
         return false;
@@ -665,7 +623,7 @@ void SectionLogwatch::eraseFilesOlder(std::vector<std::string> &file_names,
                                       uint64_t file_id) {
     auto iter = file_names.begin();
     for (; iter != file_names.end(); ++iter) {
-        BY_HANDLE_FILE_INFORMATION fileinfo;
+        BY_HANDLE_FILE_INFORMATION fileinfo{0};
         if (getFileInformation(iter->c_str(), &fileinfo) &&
             (file_id ==
              to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh))) {
@@ -684,66 +642,67 @@ void SectionLogwatch::eraseFilesOlder(std::vector<std::string> &file_names,
     file_names.erase(file_names.begin(), iter);
 }
 
-void SectionLogwatch::updateRotatedLogfile(const char *pattern,
-                                           logwatch_textfile *textfile) {
-    textfile->paths = sortedByTime(globMatches(pattern));
-    eraseFilesOlder(textfile->paths, textfile->file_id);
+void SectionLogwatch::updateRotatedLogfile(const std::string &pattern,
+                                           logwatch_textfile &textfile) {
+    textfile.paths = sortedByTime(globMatches(pattern));
+    eraseFilesOlder(textfile.paths, textfile.file_id);
 
     // find the file to read from
-    while ((textfile->paths.size() > 0) &&
+    while ((textfile.paths.size() > 0) &&
            !updateCurrentRotatedTextfile(textfile)) {
-        textfile->paths.erase(textfile->paths.begin());
-        textfile->offset = 0;
+        textfile.paths.erase(textfile.paths.begin());
+        textfile.offset = 0;
     }
 
-    textfile->missing = textfile->paths.size() == 0;
+    textfile.missing = textfile.paths.size() == 0;
 }
 
-logwatch_textfile *SectionLogwatch::addNewRotatedLogfile(
-    const char *pattern, const std::vector<std::string> &filenames,
-    glob_token *token, condition_patterns_t &patterns) {
+logwatch_textfile &SectionLogwatch::addNewRotatedLogfile(
+    const std::string &pattern, const std::vector<std::string> &filenames,
+    const glob_token &token, condition_patterns_t &patterns) {
     assert(filenames.size() > 0);
 
-    logwatch_textfile *textfile = new logwatch_textfile();
-    textfile->name = token->pattern;
-    textfile->paths = filenames;
-    textfile->missing = false;
-    textfile->patterns = &patterns;
-    textfile->nocontext = token->nocontext;
+    const auto cend = _hints.cend();
+    auto hint_iter = std::find_if(_hints.cbegin(), _hints.cend(),
+                                  [&pattern](const logwatch_textfile &hint) {
+                                      return hint.name == pattern;
+                                  });
+    bool found_hint = hint_iter != cend;
+    std::vector<std::string> paths{filenames};
 
-    auto hint_iter = std::find_if(
-        _hints.begin(), _hints.end(),
-        [pattern](logwatch_textfile *hint) { return hint->name == pattern; });
-    if (hint_iter != _hints.end()) {
-        logwatch_textfile *hint = *hint_iter;
-        // ok, there is a hint. find the file we stopped reading before
-        // by its index
-        eraseFilesOlder(textfile->paths, hint->file_id);
-        textfile->file_size = hint->file_size;
-        textfile->file_id = hint->file_id;
-        textfile->offset = hint->offset;
+    if (found_hint) {
+        eraseFilesOlder(paths, hint_iter->file_id);
+    } else if (!token.from_start) {
+        paths.erase(paths.begin(), paths.end() - 1);
+    }
+
+    unsigned long long file_id = 0, file_size = 0, offset = 0;
+
+    if (found_hint) {
+        file_id = hint_iter->file_id;
+        file_size = hint_iter->file_size;
+        offset = hint_iter->offset;
     } else {
-        if (!token->from_start) {
-            // keep only the newest file and start reading at the end of it
-            textfile->paths.erase(textfile->paths.begin(),
-                                  textfile->paths.end() - 1);
-        }
+        if (!paths.empty()) {
+            BY_HANDLE_FILE_INFORMATION fileinfo{0};
 
-        BY_HANDLE_FILE_INFORMATION fileinfo;
-        if (textfile->paths.size() > 0) {
-            getFileInformation(textfile->paths.front().c_str(), &fileinfo);
-            textfile->file_size =
-                to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
-            textfile->file_id =
-                to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
-            textfile->offset = token->from_start ? 0 : textfile->file_size;
-        } else {
-            textfile->file_size = textfile->offset = textfile->file_id = 0;
+            if (!getFileInformation(filenames.front(), &fileinfo)) {
+                Debug(_logger) << "failed to open " << filenames.front();
+                throw MissingFile(
+                    std::string("failed to open " + filenames.front()));
+            }
+
+            file_id = to_u64(fileinfo.nFileIndexLow, fileinfo.nFileIndexHigh);
+            file_size = to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
+            if (!token.from_start) {
+                offset = file_size;
+            }
         }
     }
 
-    _textfiles.push_back(textfile);
-    return textfile;
+    _textfiles.emplace_back(token.pattern, std::move(paths), file_id, file_size,
+                            offset, token.nocontext, true, patterns);
+    return _textfiles.back();
 }
 
 void SectionLogwatch::parseLogwatchStateLine(char *line) {
@@ -767,15 +726,9 @@ void SectionLogwatch::parseLogwatchStateLine(char *line) {
     if (!token) return;
     unsigned long long offset = std::strtoull(token, NULL, 10);
 
-    logwatch_textfile *tf = new logwatch_textfile();
-    tf->name = std::string(path);
-    tf->paths.push_back(tf->name);
-    tf->file_id = file_id;
-    tf->file_size = file_size;
-    tf->offset = offset;
-    tf->missing = false;
-    tf->patterns = 0;
-    _hints.push_back(tf);
+    _hints.emplace_back(path, std::move(std::vector<std::string>{path}),
+                        file_id, file_size, offset, false, false,
+                        condition_patterns_t());
 }
 
 void SectionLogwatch::loadLogwatchOffsets() {
@@ -796,12 +749,12 @@ void SectionLogwatch::loadLogwatchOffsets() {
 // This globline is split into tokens which are processed by
 // process_glob_expression
 template <>
-globline_container *from_string<globline_container *>(
-    const WinApiAdaptor &, const std::string &value) {
+globline_container from_string<globline_container>(const WinApiAdaptor &,
+                                                   const std::string &value) {
     // Each globline receives its own pattern container
     // In case new files matching the glob pattern are we
     // we already have all state,regex patterns available
-    globline_container *new_globline = new globline_container();
+    glob_tokens_t tokens;
 
     // Split globline into tokens
     std::regex split_exp("[^|]+");
@@ -813,25 +766,25 @@ globline_container *from_string<globline_container *>(
     for (; iter != end; ++iter) {
         std::string descriptor = iter->str();
         const char *token = lstrip(descriptor.c_str());
-        glob_token *new_token = new glob_token();
+        glob_token new_token;
 
         while (true) {
             if (strncmp(token, "nocontext", 9) == 0) {
-                new_token->nocontext = true;
+                new_token.nocontext = true;
                 token = lstrip(token + 9);
             } else if (strncmp(token, "from_start", 10) == 0) {
-                new_token->from_start = true;
+                new_token.from_start = true;
                 token = lstrip(token + 10);
             } else if (strncmp(token, "rotated", 7) == 0) {
-                new_token->rotated = true;
+                new_token.rotated = true;
                 token = lstrip(token + 7);
             } else {
                 break;
             }
         }
-
-        new_token->pattern = strdup(token);
-        new_globline->tokens.push_back(new_token);
+        new_token.pattern = token;
+        tokens.push_back(new_token);
     }
-    return new_globline;
+
+    return {tokens, {}};
 }

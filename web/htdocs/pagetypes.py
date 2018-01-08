@@ -393,7 +393,7 @@ class PageRenderer(Base):
         if not self.is_hidden():
             return html.render_a(self.title(), href=self.page_url())
         else:
-            return ""
+            return self.title()
 
 
 #.

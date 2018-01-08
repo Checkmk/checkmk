@@ -1,0 +1,12 @@
+Title: Custom graphs: Fixed rendering titles of "sidebar hidden" custom graphs on graph list page
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i3
+Date: 1515407044
+
+The title of the custom graphs was not shown on the graph list page for graphs that are configured
+to be hidden from the sidebar.

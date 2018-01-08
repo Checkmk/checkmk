@@ -31,11 +31,17 @@
 
 typedef struct _BY_HANDLE_FILE_INFORMATION BY_HANDLE_FILE_INFORMATION;
 
-typedef std::vector<globline_container *> GlobListT;
+typedef std::vector<globline_container> GlobListT;
 
 template <>
-globline_container *from_string<globline_container *>(
-    const WinApiAdaptor &winapi, const std::string &value);
+globline_container from_string<globline_container>(const WinApiAdaptor &winapi,
+                                                   const std::string &value);
+
+// A bogus stream operator for globline_container just to enable template
+// instantiation for ListConfigurable<GlobListT>.
+inline std::ostream &operator<<(std::ostream &os, const globline_container &) {
+    return os << "[reference to globline_container instance]";
+}
 
 class GlobListConfigurable
     : public ListConfigurable<GlobListT, BlockMode::Nop<GlobListT>,
@@ -87,70 +93,65 @@ private:
                          uint64_t file_id);
 
     void cleanupTextfiles();
-    void cleanup();
 
     void loadLogwatchOffsets();
     void parseLogwatchStateLine(char *line);
-    bool updateFromHint(const char *file_name, logwatch_textfile *textfile);
 
-    bool getFileInformation(const char *filename,
+    bool getFileInformation(const std::string &filename,
                             BY_HANDLE_FILE_INFORMATION *info);
 
     void saveOffsets(const std::string &logwatch_statefile);
 
     std::vector<std::string> sortedByTime(
         const std::vector<FileEntryType> &entries);
-    logwatch_textfile *getLogwatchTextfile(const char *name);
+    std::vector<logwatch_textfile>::iterator findLogwatchTextfile(
+        const std::string &name);
 
-    bool updateCurrentRotatedTextfile(logwatch_textfile *textfile);
+    bool updateCurrentRotatedTextfile(logwatch_textfile &textfile);
 
-    logwatch_textfile *addNewLogwatchTextfile(const char *full_filename,
-                                              glob_token *token,
-                                              condition_patterns_t &patterns);
+    logwatch_textfile &addNewLogwatchTextfile(
+        const char *full_filename, const glob_token &token,
+        const condition_patterns_t &patterns);
 
-    void updateLogwatchTextfile(logwatch_textfile *textfile);
+    void updateLogwatchTextfile(logwatch_textfile &textfile);
 
-    void updateRotatedLogfile(const char *pattern, logwatch_textfile *textfile);
+    void updateRotatedLogfile(const std::string &pattern,
+                              logwatch_textfile &textfile);
 
-    logwatch_textfile *addNewRotatedLogfile(
-        const char *pattern, const std::vector<std::string> &filenames,
-        glob_token *token, condition_patterns_t &patterns);
+    logwatch_textfile &addNewRotatedLogfile(
+        const std::string &pattern, const std::vector<std::string> &filenames,
+        const glob_token &token, condition_patterns_t &patterns);
 
     void updateOrCreateLogwatchTextfile(const char *full_filename,
-                                        glob_token *token,
+                                        const glob_token &token,
                                         condition_patterns_t &patterns);
 
     void updateOrCreateRotatedLogfile(const std::vector<std::string> &filenames,
-                                      glob_token *token,
+                                      const glob_token &token,
                                       condition_patterns_t &patterns);
-    std::vector<FileEntryType> globMatches(const char *pattern);
+    std::vector<FileEntryType> globMatches(const std::string &pattern);
 
-    static void addConditionPattern(globline_container *&globline,
-                                    const char *state, const char *value);
+    ProcessTextfileResponse processTextfileDefault(
+        std::ifstream &file, const logwatch_textfile &textfile,
+        std::ostream &out, bool write_output);
 
-    ProcessTextfileResponse processTextfileDefault(std::ifstream &file,
-                                                   logwatch_textfile *textfile,
-                                                   std::ostream &out,
-                                                   bool write_output);
-
-    ProcessTextfileResponse processTextfileUnicode(std::ifstream &file,
-                                                   logwatch_textfile *textfile,
-                                                   std::ostream &out,
-                                                   bool write_output);
+    ProcessTextfileResponse processTextfileUnicode(
+        std::ifstream &file, const logwatch_textfile &textfile,
+        std::ostream &out, bool write_output);
 
     ProcessTextfileResponse processTextfile(std::ifstream &file,
-                                            logwatch_textfile *textfile,
+                                            const logwatch_textfile &textfile,
                                             std::ostream &out,
                                             bool write_output);
 
-    void processTextfile(std::ostream &out, logwatch_textfile *textfile);
+    void processTextfile(std::ostream &out, logwatch_textfile &textfile);
 
-    void processGlobExpression(glob_token *glob_token,
+    void processGlobExpression(glob_token &glob_token,
                                condition_patterns_t &patterns);
 
     GlobListConfigurable _globlines;
-    std::vector<logwatch_textfile *> _textfiles;
-    std::vector<logwatch_textfile *> _hints;
+    std::vector<logwatch_textfile> _textfiles;
+    std::vector<logwatch_textfile> _hints;
     bool _offsets_loaded{false};
     bool _initialised{false};
 };

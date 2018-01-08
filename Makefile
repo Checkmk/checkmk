@@ -63,8 +63,8 @@ CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
 export RUN_CLANG_TIDY := run-clang-tidy-$(CLANG_VERSION).py
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
-CPPCHECK           := cppcheck
-DOXYGEN            := doxygen
+export CPPCHECK    := cppcheck
+export DOXYGEN     := doxygen
 export IWYU_TOOL   := iwyu_tool
 
 # The Bear versions have a slightly tragic history: Due to the clang bug
@@ -374,7 +374,7 @@ install-minified-js: $(JAVASCRIPT_MINI)
 # GNU standards here (see "Standard Targets for Users",
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
-	rm -rf api clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
@@ -509,9 +509,9 @@ format:
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
-	$(DOXYGEN) doc/Doxyfile
+	$(MAKE) -C livestatus/src documentation
 ifeq ($(ENTERPRISE),yes)
-	cd enterprise && $(DOXYGEN) doc/Doxyfile
+	$(MAKE) -C enterprise/core/src documentation
 endif
 
 # This dummy rule is called from subdirectories whenever one of the

@@ -26,6 +26,7 @@ CLANG_VERSION ?= 5.0
 
 BEAR ?= bear
 CPPCHECK ?= cppcheck
+DOXYGEN ?= doxygen
 IWYU_TOOL ?= iwyu_tool
 RUN_CLANG_TIDY ?= run-clang-tidy-$(CLANG_VERSION).py
 
@@ -156,7 +157,7 @@ liblivestatus_a_SOURCES = \
         pnp4nagios.cc \
         strutil.cc
 
-.PHONY: tidy
+.PHONY: tidy iwyu cppcheck cppcheck-xml documentation
 
 liblivestatus_a_CPPFLAGS = -I.. @BOOST_CPPFLAGS@
 liblivestatus_a_CXXFLAGS = -fPIC
@@ -185,6 +186,9 @@ cppcheck: compile_commands.json
 cppcheck-xml: compile_commands.json
 	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
 
+documentation:
+	$(DOXYGEN) doc/Doxyfile
+
 all-local: livestatus.o
 
 install-data-local:
@@ -193,4 +197,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -f *~
+	rm -rf *~ compile_commands.json cppcheck-result.xml html

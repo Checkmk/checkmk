@@ -1,0 +1,12 @@
+Title: Vertical axis width can now be set to a custom width
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1515511202
+Class: feature
+
+You can now configure a new render option "vertical axis width"
+to override the default vertical axis width with a custom fixed
+width.

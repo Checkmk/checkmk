@@ -14,3 +14,58 @@ To reproduce the bug:
 - Activate Changes
 
 It seems, that the autochecks.mk is not updated, if the agent_data of a host is not reachable.
+
+-------- LM
+
+The error is:
+
+Failed: Error creating configuration: Invalid entry '({'deferred': (10, 20)}, [], ['@all'], [''])' in host configuration list: must have 2 or 3 entries (on host oldstable, checktype postfix_mailq)
+
+Traceback (most recent call last):
+  File "/omd/sites/oldstable/share/check_mk/modules/check_mk.py", line 4722, in <module>
+    do_restart()
+  File "/omd/sites/oldstable/share/check_mk/modules/check_mk.py", line 3861, in do_restart
+    do_create_config(with_agents=True)
+  File "/omd/sites/oldstable/share/check_mk/modules/check_mk.py", line 3745, in do_create_config
+    create_core_config()
+  File "/omd/sites/oldstable/share/check_mk/modules/check_mk.py", line 2870, in create_core_config
+    do_create_cmc_config(opt_cmc_relfilename)
+  File "/omd/sites/oldstable/share/check_mk/modules/cmc.py", line 140, in do_create_cmc_config
+    hosts_config             = _measure_time(cmc_all_hosts)
+  File "/omd/sites/oldstable/share/check_mk/modules/cmc.py", line 172, in _measure_time
+    result = func(*args, **kwargs)
+  File "/omd/sites/oldstable/share/check_mk/modules/cmc.py", line 418, in cmc_all_hosts
+    hosts_config = cmc_hosts() + cmc_shadow_hosts()
+  File "/omd/sites/oldstable/share/check_mk/modules/cmc.py", line 434, in cmc_hosts
+    con += cmc_host(hostname)
+  File "/omd/sites/oldstable/share/check_mk/modules/cmc.py", line 593, in cmc_host
+    con += cmc_services(hostname, tags, attrs, macros, contactlist_id)
+  File "/omd/sites/oldstable/share/check_mk/modules/cmc.py", line 626, in cmc_services
+    host_checks = get_check_table(hostname, remove_duplicates=True).items()
+  File "/omd/sites/oldstable/share/check_mk/modules/check_mk.py", line 1997, in get_check_table
+    for entry in read_autochecks_of(hostname, world):
+  File "/omd/sites/oldstable/share/check_mk/modules/discovery.py", line 1279, in read_autochecks_of
+    autochecks.append((check_type, item, compute_check_parameters(hostname, check_type, item, parameters)))
+  File "/omd/sites/oldstable/share/check_mk/modules/check_mk.py", line 4512, in compute_check_parameters
+    entries = get_checkgroup_parameters(host, checktype, item)
+  File "/omd/sites/oldstable/share/check_mk/modules/check_mk.py", line 4548, in get_checkgroup_parameters
+    raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
+cmk.exceptions.MKGeneralException: Invalid entry '({'deferred': (10, 20)}, [], ['@all'], [''])' in host configuration list: must have 2 or 3 entries (on host oldstable, checktype postfix_mailq)
+
+The problem here is that the check is using the new ruleset which is a service
+ruleset instead of a host ruleset (like the old one).
+
+This is no configuration warning but an exception which prevents activation of
+the configuration.
+
+Updating the autochecks would solve the problem, but that is not possible in
+this situation because of the unreachable host).
+
+Possible workaround: Remove the autochecks of this host from var/check_mk/autochecks/[host].mk and
+re-discover it once it's reachable again.
+
+----
+
+We could fix this by making read_autochecks_of() skip these invalid autochecks
+with a configuration warning. Together with the hint that a rediscover might
+solve the situation.

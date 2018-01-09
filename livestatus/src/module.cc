@@ -516,6 +516,9 @@ int broker_program(int event_type __attribute__((__unused__)),
     return 0;
 }
 
+// TODO(sp) This looks a bit obscure: We do not check if the downtime is active
+// and if it is the right downtime. Furthermore, we only retrieve and log one
+// downtime, even if the current object is in several downtimes at once.
 const char *get_downtime_comment(char *host_name, char *svc_desc) {
     char *comment;
     int matches = 0;

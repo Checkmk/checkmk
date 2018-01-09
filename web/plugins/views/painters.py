@@ -857,6 +857,46 @@ multisite_painters["svc_next_notification"] = {
     "paint"   : lambda row: paint_future_time(row["service_next_notification"]),
 }
 
+def paint_notification_postponement_reason(what, row):
+    # Needs to be in sync with the possible reasons. Can not be translaated otherwise.
+    reasons = {
+        "delayed notification":
+            _("Delay notification"),
+        "periodic notification":
+            _("Periodic notification"),
+        "currently in downtime":
+            _("In downtime"),
+        "host of this service is currently in downtime":
+            _("Host is in downtime"),
+        "problem acknowledged and periodic notifications are enabled":
+            _("Problem is acknowledged, but is configured to be periodic"),
+        "notifications are disabled, but periodic notifications are enabled":
+            _("Notifications are disabled, but is configured to be periodic"),
+        "not in notification period":
+            _("Is not in notification period"),
+        "host of this service is not up":
+            _("Host is down"),
+        "last host check not recent enough":
+            _("Last host check is not recent enough"),
+        "last service check not recent enough":
+            _("Last service check is not recent enough"),
+        "all parents are down":
+            _("All parents are down"),
+        "at least one parent is up, but no check is recent enough":
+            _("Last service check is not recent enough"),
+    }
+
+    return "", \
+        reasons.get(row[what + "_notification_postponement_reason"],
+                    row[what + "_notification_postponement_reason"])
+
+multisite_painters["svc_notification_postponement_reason"] = {
+    "title"   : _("Notification postponement reason"),
+    "short"   : _("Notif. postponed"),
+    "columns" : [ "service_notification_postponement_reason" ],
+    "paint"   : lambda row: paint_notification_postponement_reason("service", row),
+}
+
 multisite_painters["svc_last_notification"] = {
     "title"   : _("The time of the last service notification"),
     "short"   : _("last notification"),
@@ -1343,6 +1383,13 @@ multisite_painters["host_next_notification"] = {
     "short"   : _("Next notification"),
     "columns" : [ "host_next_notification" ],
     "paint"   : lambda row: paint_future_time(row["host_next_notification"]),
+}
+
+multisite_painters["host_notification_postponement_reason"] = {
+    "title"   : _("Notification postponement reason"),
+    "short"   : _("Notif. postponed"),
+    "columns" : [ "host_notification_postponement_reason" ],
+    "paint"   : lambda row: paint_notification_postponement_reason("host", row),
 }
 
 multisite_painters["host_last_notification"] = {

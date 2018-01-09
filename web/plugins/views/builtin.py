@@ -1129,8 +1129,9 @@ multisite_builtin_views.update({
                     ('host_notifper',              None),
                     ('host_in_notifper',           None),
                     ('host_notification_number',   None),
-                    ('host_next_notification',     None),
                     ('host_last_notification',     None),
+                    ('host_next_notification',     None),
+                    ('host_notification_postponement_reason', None),
 
                     # 5. Configuration
                     ('host_check_interval',        None),
@@ -1331,8 +1332,9 @@ multisite_builtin_views.update({
                   ('svc_notifper',              None),
                   ('svc_in_notifper',           None),
                   ('svc_notification_number',   None),
-                  ('svc_next_notification',     None),
                   ('svc_last_notification',     None),
+                  ('svc_next_notification',     None),
+                  ('svc_notification_postponement_reason', None),
 
                   # 5. Configuration
                   ('svc_check_interval',        None),

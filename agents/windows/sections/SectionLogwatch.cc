@@ -124,6 +124,30 @@ void addConditionPattern(globline_container &globline, const char *state,
 
 }  // namespace
 
+logwatch_textfile parseLogwatchStateLine(const std::string &line) {
+    /* Example: line = "M://log1.log|98374598374|0|16"; */
+    const auto tokens = tokenize(line, "\\|");
+
+    if (tokens.size() != 4 ||
+        std::any_of(tokens.cbegin(), tokens.cend(),
+                    [](const std::string &t) { return t.empty(); })) {
+        throw StateParseError{std::string("Invalid state line: ") + line};
+    }
+
+    try {
+        return {tokens[0],
+                std::move(std::vector<std::string>{tokens[0]}),
+                std::stoull(tokens[1]),
+                std::stoull(tokens[2]),
+                std::stoull(tokens[3]),
+                false,
+                false,
+                condition_patterns_t()};
+    } catch (const std::invalid_argument &) {
+        throw StateParseError{std::string("Invalid state line: ") + line};
+    }
+}
+
 SectionLogwatch::SectionLogwatch(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
     : Section("logwatch", "logfiles", config.getEnvironment(), logger, winapi)
@@ -375,18 +399,16 @@ SectionLogwatch::ProcessTextfileResponse
 SectionLogwatch::processTextfileDefault(ifstream &file,
                                         const logwatch_textfile &textfile,
                                         std::ostream &out, bool write_output) {
-    char line[4096];
+    std::string line;
     ProcessTextfileResponse response;
     Notice(_logger) << "Checking file " << textfile.paths.front();
 
-    while (!file.eof()) {
-        if (!file.getline(line, sizeof(line))) break;
-        std::string lineString(line);
-        rtrim(lineString);
+    while (std::getline(file, line)) {
+        rtrim(line);
 
         char state = '.';
         for (const auto &pattern : textfile.patterns.get()) {
-            if (globmatch(pattern.glob_pattern.c_str(), lineString.c_str())) {
+            if (globmatch(pattern.glob_pattern.c_str(), line.c_str())) {
                 if (!write_output &&
                     (pattern.state == 'C' || pattern.state == 'W' ||
                      pattern.state == 'O')) {
@@ -399,9 +421,9 @@ SectionLogwatch::processTextfileDefault(ifstream &file,
             }
         }
 
-        if (write_output && strlen(line) > 0 &&
+        if (write_output && !line.empty() &&
             !(textfile.nocontext && (state == 'I' || state == '.')))
-            out << state << " " << lineString << "\n";
+            out << state << " " << line << "\n";
     }
 
     response.found_match = false;
@@ -705,39 +727,14 @@ logwatch_textfile &SectionLogwatch::addNewRotatedLogfile(
     return _textfiles.back();
 }
 
-void SectionLogwatch::parseLogwatchStateLine(char *line) {
-    /* Example: line = "M://log1.log|98374598374|0|16"; */
-    rstrip(line);
-    char *p = line;
-    while (*p && *p != '|') p++;
-    *p = 0;
-    char *path = line;
-    p++;
-
-    char *token = strtok(p, "|");
-    if (!token) return;  // Ignore invalid lines
-    unsigned long long file_id = std::strtoull(token, NULL, 10);
-
-    token = strtok(NULL, "|");
-    if (!token) return;
-    unsigned long long file_size = std::strtoull(token, NULL, 10);
-
-    token = strtok(NULL, "|");
-    if (!token) return;
-    unsigned long long offset = std::strtoull(token, NULL, 10);
-
-    _hints.emplace_back(path, std::move(std::vector<std::string>{path}),
-                        file_id, file_size, offset, false, false,
-                        condition_patterns_t());
-}
-
 void SectionLogwatch::loadLogwatchOffsets() {
     if (!_offsets_loaded) {
         ifstream ifs(_env.logwatchStatefile());
         if (ifs) {
-            char line[256];
-            while (ifs.getline(line, sizeof(line))) {
-                parseLogwatchStateLine(line);
+            std::string line;
+            while (std::getline(ifs, line)) {
+                rtrim(line);
+                _hints.push_back(parseLogwatchStateLine(line));
             }
         }
         _offsets_loaded = true;

@@ -1,0 +1,11 @@
+Title: Fixed exception when editing "Metrics graph of a single service" reportlets
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1515505202
+Class: fix
+
+Fixed an error related to the background_color attribute when trying to edit
+a single metric reportlet. This issue was introduced with 1.5.0i2.

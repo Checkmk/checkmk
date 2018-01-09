@@ -64,13 +64,6 @@ inline int find_crnl_end(char *buffer) {
     return -1;
 }
 
-inline void rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-                         [](int ch) { return !std::isspace(ch); })
-                .base(),
-            s.end());
-}
-
 file_encoding determine_encoding(const logwatch_textfile &textfile) {
     ifstream ifs(textfile.paths.front(), ifstream::in | ifstream::binary);
 
@@ -762,24 +755,26 @@ globline_container from_string<globline_container>(const WinApiAdaptor &,
 
     for (; iter != end; ++iter) {
         std::string descriptor = iter->str();
-        const char *token = lstrip(descriptor.c_str());
+        ltrim(descriptor);
         glob_token new_token;
 
-        while (true) {
-            if (strncmp(token, "nocontext", 9) == 0) {
-                new_token.nocontext = true;
-                token = lstrip(token + 9);
-            } else if (strncmp(token, "from_start", 10) == 0) {
-                new_token.from_start = true;
-                token = lstrip(token + 10);
-            } else if (strncmp(token, "rotated", 7) == 0) {
-                new_token.rotated = true;
-                token = lstrip(token + 7);
-            } else {
-                break;
+        for (const auto &token :
+             std::vector<std::string>{"nocontext", "from_start", "rotated"}) {
+            std::regex tokenRegex("\\b" + token + "\\b");
+            if (std::regex_search(descriptor, tokenRegex)) {
+                if (token == "nocontext") {
+                    new_token.nocontext = true;
+                } else if (token == "from_start") {
+                    new_token.from_start = true;
+                } else if (token == "rotated") {
+                    new_token.rotated = true;
+                }
+                descriptor = std::regex_replace(descriptor, tokenRegex, "");
+                ltrim(descriptor);
             }
         }
-        new_token.pattern = token;
+
+        new_token.pattern = descriptor;
         tokens.push_back(new_token);
     }
 

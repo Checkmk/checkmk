@@ -44,6 +44,18 @@ const char *lstrip(const char *s);
 char *rstrip(char *s);
 char *strip(char *s);
 
+inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.cbegin(), s.cend(),
+                                    [](int ch) { return !std::isspace(ch); }));
+}
+
+inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.crbegin(), s.crend(),
+                         [](int ch) { return !std::isspace(ch); })
+                .base(),
+            s.end());
+}
+
 std::vector<const char *> split_line(char *pos, int (*split_pred)(int));
 char *next_word(char **line);
 

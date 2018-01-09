@@ -37,10 +37,21 @@ template <>
 globline_container from_string<globline_container>(const WinApiAdaptor &winapi,
                                                    const std::string &value);
 
-// A bogus stream operator for globline_container just to enable template
-// instantiation for ListConfigurable<GlobListT>.
-inline std::ostream &operator<<(std::ostream &os, const globline_container &) {
-    return os << "[reference to globline_container instance]";
+inline std::ostream &operator<<(std::ostream &os, const globline_container &g) {
+    os << "\n[tokens]\n";
+    for (const auto &token : g.tokens) {
+        os << "<pattern: " << token.pattern
+           << ", nocontext: " << std::boolalpha << token.nocontext
+           << ", from_start: " << token.from_start
+           << ", rotated: " << token.rotated
+           << ", found_match: " << token.found_match << ">\n";
+    }
+    os << "[patterns]\n";
+    for (const auto &pattern : g.patterns) {
+        os << "<state: " << pattern.state
+           << ", glob_pattern: " << pattern.glob_pattern << ">\n";
+    }
+    return os;
 }
 
 class GlobListConfigurable

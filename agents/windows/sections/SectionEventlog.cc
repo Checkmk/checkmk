@@ -37,7 +37,9 @@ eventlog_hint_t parseStateLine(const std::string &line) {
     /* Example: line = "System|1234" */
     const auto tokens = tokenize(line, "\\|");
 
-    if (tokens.size() != 2) {
+    if (tokens.size() != 2 ||
+        std::any_of(tokens.cbegin(), tokens.cend(),
+                    [](const std::string &t) { return t.empty(); })) {
         throw StateParseError{std::string("Invalid state line: ") + line};
     }
 

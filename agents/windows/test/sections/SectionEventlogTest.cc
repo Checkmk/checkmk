@@ -27,6 +27,11 @@ TEST_F(wa_SectionEventlogTest, parseStateLine_Application_valid) {
     ASSERT_EQ(expected, parseStateLine(line));
 }
 
+TEST_F(wa_SectionEventlogTest, parseStateLine_Application_missing_name) {
+    char line[] = "|19881";
+    ASSERT_THROW(parseStateLine(line), StateParseError);
+}
+
 TEST_F(wa_SectionEventlogTest, parseStateLine_Application_missing_value) {
     char line[] = "Application|";
     ASSERT_THROW(parseStateLine(line), StateParseError);
@@ -59,7 +64,5 @@ TEST_F(wa_SectionEventlogTest, parseStateLine_Internet_Explorer_negative) {
 TEST_F(wa_SectionEventlogTest,
        parseStateLine_Internet_Explorer_conversion_error) {
     char line[] = "Internet Explorer|garbage";
-    const eventlog_hint_t expected{
-        "Internet Explorer", std::numeric_limits<unsigned long long>::max()};
     ASSERT_THROW(parseStateLine(line), StateParseError);
 }

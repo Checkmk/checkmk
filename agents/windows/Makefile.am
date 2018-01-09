@@ -94,6 +94,7 @@ WindowsAgentTest_SOURCES = \
         win_error.cc \
         wmiHelper.cc \
         sections/SectionEventlog.cc \
+        sections/SectionLogwatch.cc \
         test/EnvironmentTest.cc \
         test/EventLogVistaTest.cc \
         test/MockLogger.cc \
@@ -103,7 +104,8 @@ WindowsAgentTest_SOURCES = \
         test/stringutilTest.cc \
         test/typesTest.cc \
         test/wmiHelperTest.cc \
-        test/sections/SectionEventlogTest.cc
+        test/sections/SectionEventlogTest.cc \
+        test/sections/SectionLogwatchTest.cc
 
 wmitest_SOURCES = wmitest.cc stringutil.cc WinApi.cc wmiHelper.cc
 

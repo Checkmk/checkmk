@@ -70,6 +70,8 @@ public:
     }
 };
 
+logwatch_textfile parseLogwatchStateLine(const std::string &line);
+
 class SectionLogwatch : public Section {
     struct ProcessTextfileResponse {
         bool found_match;
@@ -95,7 +97,6 @@ private:
     void cleanupTextfiles();
 
     void loadLogwatchOffsets();
-    void parseLogwatchStateLine(char *line);
 
     bool getFileInformation(const std::string &filename,
                             BY_HANDLE_FILE_INFORMATION *info);

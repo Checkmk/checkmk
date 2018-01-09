@@ -2604,14 +2604,14 @@ class EventServer(ECServerThread):
         ########################################################
         # Check create-event
         if match_groups["match_groups_message"] != False and\
-            match_groups.get("match_groups_syslog_application", False) != False and\
+            match_groups.get("match_groups_syslog_application", ()) != False and\
             match_priority["has_match"] == True:
             if g_config["debug_rules"]:
                 self.logger.info("  found new event")
             return False, match_groups
 
         # Check canceling-event
-        has_canceling_condition = bool(x for x in ["match_ok", "cancel_application", "cancel_priority"] if x in rule)
+        has_canceling_condition = bool([x for x in ["match_ok", "cancel_application", "cancel_priority"] if x in rule])
         if has_canceling_condition:
             if ("match_ok" not in rule or match_groups.get("match_groups_message_ok", False) != False) and\
                ("cancel_application" not in rule or match_groups.get("match_groups_syslog_application_ok", False) != False) and\

@@ -132,7 +132,6 @@ TimeperiodsCache *g_timeperiods_cache = nullptr;
 /* simple statistics data for TableStatus */
 extern host *host_list;
 extern service *service_list;
-extern scheduled_downtime *scheduled_downtime_list;
 extern int log_initial_states;
 
 int g_num_hosts;
@@ -516,51 +515,24 @@ int broker_program(int event_type __attribute__((__unused__)),
     return 0;
 }
 
-// TODO(sp) This looks a bit obscure: We do not check if the downtime is active
-// and if it is the right downtime. Furthermore, we only retrieve and log one
-// downtime, even if the current object is in several downtimes at once.
-const char *get_downtime_comment(char *host_name, char *svc_desc) {
-    char *comment;
-    int matches = 0;
-    for (scheduled_downtime *dt_list = scheduled_downtime_list;
-         dt_list != nullptr; dt_list = dt_list->next) {
-        if (dt_list->type == HOST_DOWNTIME) {
-            if (strcmp(dt_list->host_name, host_name) == 0) {
-                matches++;
-                comment = dt_list->comment;
-            }
-        }
-        if (svc_desc != nullptr && dt_list->type == SERVICE_DOWNTIME) {
-            if (strcmp(dt_list->host_name, host_name) == 0 &&
-                strcmp(dt_list->service_description, svc_desc) == 0) {
-                matches++;
-                comment = dt_list->comment;
-            }
-        }
-    }
-    return matches == 0 ? "No comment"
-                        : matches > 1 ? "Multiple Downtime Comments" : comment;
-}
-
 void livestatus_log_initial_states() {
-    // Log DOWNTIME hosts
-    for (host *h = host_list; h != nullptr; h = h->next) {
-        if (h->scheduled_downtime_depth > 0) {
+    extern scheduled_downtime *scheduled_downtime_list;
+    // It's a bit unclear if we need to log downtimes of hosts *before* their
+    // corresponding service downtimes, so let's play safe...
+    for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
+        if (dt->is_in_effect != 0 && dt->type == HOST_DOWNTIME) {
             Informational(fl_logger_nagios)
-                << "HOST DOWNTIME ALERT: " << h->name << ";STARTED;"
-                << get_downtime_comment(h->name, nullptr);
+                << "HOST DOWNTIME ALERT: " << dt->host_name << ";STARTED;"
+                << dt->comment;
         }
     }
-    // Log DOWNTIME services
-    for (service *s = service_list; s != nullptr; s = s->next) {
-        if (s->scheduled_downtime_depth > 0) {
+    for (auto dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
+        if (dt->is_in_effect != 0 && dt->type == SERVICE_DOWNTIME) {
             Informational(fl_logger_nagios)
-                << "SERVICE DOWNTIME ALERT: " << s->host_name << ";"
-                << s->description << ";STARTED;"
-                << get_downtime_comment(s->host_name, s->description);
+                << "SERVICE DOWNTIME ALERT: " << dt->host_name << ";"
+                << dt->service_description << ";STARTED;" << dt->comment;
         }
     }
-    // Log TIMERPERIODS
     g_timeperiods_cache->logCurrentTimeperiods();
 }
 

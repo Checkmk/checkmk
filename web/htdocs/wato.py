@@ -11363,8 +11363,8 @@ class UserSelection(DropdownChoice):
 
 class RoleManagement(object):
     def __init__(self):
-        super(RoleManagement, self).__init__()
         self._roles = userdb.load_roles()
+        super(RoleManagement, self).__init__()
 
 
     def _save_roles(self):

@@ -1,0 +1,11 @@
+Title: Reduced default vertical axis width to previous width
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1515509073
+Class: fix
+
+In 1.5.0i2 the vertical axis width was increased a bit by accident.
+This has now been reduced again to the intended width

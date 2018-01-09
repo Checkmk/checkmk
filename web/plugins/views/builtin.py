@@ -1108,7 +1108,6 @@ multisite_builtin_views.update({
                     ('host_pnpgraph',              None),
                     ('host_perf_data',             None),
                     ('host_in_downtime',           None),
-                    ('host_in_notifper',           None),
 
                     # 2b. Serivce statistics
                     ('num_services',               None),
@@ -1120,18 +1119,21 @@ multisite_builtin_views.update({
 
                     # 3. Runtime data, timestamps
                     ('host_attempt',               None),
-                    ('host_notification_number',   None),
                     ('host_state_age',             None),
                     ('host_check_age',             None),
                     ('host_next_check',            None),
-                    ('host_next_notification',     None),
-                    ('host_last_notification',     None),
                     ('host_check_latency',         None),
                     ('host_check_duration',        None),
 
-                    # 4. Configuration
-                    ('host_check_interval',        None),
+                    # 4. Notification
                     ('host_notifper',              None),
+                    ('host_in_notifper',           None),
+                    ('host_notification_number',   None),
+                    ('host_next_notification',     None),
+                    ('host_last_notification',     None),
+
+                    # 5. Configuration
+                    ('host_check_interval',        None),
                     ('host_contact_groups',        None),
                     ('host_contacts',              None),
                     ('host_group_memberlist',      None),
@@ -1314,24 +1316,26 @@ multisite_builtin_views.update({
                   ('svc_pnpgraph',              None),
                   ('svc_metrics',               None),
                   ('svc_in_downtime',           None),
-                  ('svc_in_notifper',           None),
 
                   # 3. Runtime data, timestamps
                   ('svc_attempt',               None),
-                  ('svc_notification_number',   None),
                   ('svc_state_age',             None),
                   ('svc_check_age',             None),
                   ('svc_check_cache_info',      None),
                   ('svc_next_check',            None),
-                  ('svc_next_notification',     None),
-                  ('svc_last_notification',     None),
                   ('svc_last_time_ok',          None),
                   ('svc_check_latency',         None),
                   ('svc_check_duration',        None),
 
-                  # 4. Configuration
-                  ('svc_check_interval',        None),
+                  # 4. Notifications
                   ('svc_notifper',              None),
+                  ('svc_in_notifper',           None),
+                  ('svc_notification_number',   None),
+                  ('svc_next_notification',     None),
+                  ('svc_last_notification',     None),
+
+                  # 5. Configuration
+                  ('svc_check_interval',        None),
                   ('svc_contact_groups',        None),
                   ('svc_contacts',              None),
                   ('svc_group_memberlist',      None),

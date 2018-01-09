@@ -1,0 +1,11 @@
+Title: Fixed "Events of monitored host" view showing events not related to the wanted host
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1515494847
+
+

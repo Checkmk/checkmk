@@ -1,0 +1,20 @@
+Title: Rule-based recurring downtimes can have and end now.
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1515590636
+Class: feature
+
+Prevously, you could only specify a point in time when a rule-based
+recurring downtime starts.  You can now optionally specify an additional
+point in time when no new downtimes will be started for such a rule, i.e. 
+effectively disabling that rule from that point onwards.
+
+Note that specifying such an end point is not possible for ad-hoc downtimes,
+i.e. the ones entered directly without rules.  This is caused by the
+underlying Nagios-compatible external commands which don't know such a
+field.  Simply extending the commands by adding such a field is not a
+reliable option: In multi-site environments you can have a mix of monitoring
+cores and don't know which site uses which core.

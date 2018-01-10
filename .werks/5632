@@ -1,0 +1,18 @@
+Title: Fixed XSS when rendering values of dropdown choices
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1515597400
+
+When using the WATO configuration it was possible to create e.g.
+a service level definition with javascript code in it's alias. When
+this definition was configured in a rule of the ruleset
+"Service Level of Hosts", the javascript code could be executed in the
+browsers context of the user viewing the rule.
+
+The insertion of the javascript code is only possible for authenticated
+users with the permission to configure Check_MK.

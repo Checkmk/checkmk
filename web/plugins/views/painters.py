@@ -152,7 +152,7 @@ def paint_custom_var(what, key, row, choices=None):
         custom_val = custom_vars[key]
         if choices:
             custom_val = dict(choices).get(int(custom_val), custom_val)
-        return key, custom_val
+        return key, html.attrencode(custom_val)
 
     return key, ""
 

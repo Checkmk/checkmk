@@ -1966,6 +1966,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
     nodes = rule.get("nodes", [])
     state_messages = rule.get("state_messages")
     docu_url = rule.get("docu_url")
+    icon = rule.get("icon")
 
     if lvl == 50:
         raise MKConfigError(_("<b>BI depth limit reached</b>: "
@@ -2075,6 +2076,9 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 
     if docu_url:
         aggregation["docu_url"] = docu_url
+
+    if icon:
+        aggregation["icon"] = icon
 
     # Handle REMAINING references, if we are a root node
     if lvl == 0:
@@ -2810,8 +2814,8 @@ def compute_output_message(effective_state, rule):
     str_state = str(effective_state["state"])
     if str_state in rule.get("state_messages", {}):
         output.append(html.attrencode(rule["state_messages"][str_state]))
-
     return ", ".join(output)
+
 
 def render_tree_json(row):
     expansion_level = int(html.var("expansion_level", 999))
@@ -3073,6 +3077,8 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
         css_class = "open" if self._is_open(path) else "closed"
 
         with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
+            if tree[2].get('icon'):
+                html.write(html.render_icon(tree[2]['icon']))
             if tree[2].get("docu_url"):
                 html.icon_button(tree[2]["docu_url"], _("Context information about this rule"),
                                  "url", target="_blank")
@@ -3678,12 +3684,13 @@ def _convert_legacy_aggregation_rule(rule):
         # Since version 1.4.0b4
         # - werk 4460 introduced 'state_messages'.
         # Since version 1.5.0i3
-        # - werk 5617 introduced 'docu_url'
+        # - werk 5617 introduced 'docu_url' and
+        # - werk introduced 'icon'.
         # zip function:
         # The returned list is truncated in length to the length of the
         # shortest argument sequence.
         return dict(zip(["title", "params", "aggregation", "nodes",
-                         "state_messages", "docu_url"], rule))
+                         "state_messages", "docu_url", "icon"], rule))
 
     raise MKConfigError(_("<b>Invalid BI aggregation rule</b>: "
                           "Aggregation rules must contain at least four elements: "

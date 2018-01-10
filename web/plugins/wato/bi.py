@@ -1393,7 +1393,13 @@ class ModeBIRules(ModeBI):
                 table.text_cell(_("Level"), level or "", css="number")
                 table.text_cell(_("ID"), html.render_a(rule_id, edit_url))
                 table.text_cell(_("Parameters"), " ".join(rule["params"]))
-                table.text_cell(_("Title"), rule["title"])
+
+                if rule.get('icon'):
+                    title = html.render_icon(rule["icon"]) + rule["title"]
+                else:
+                    title = rule["title"]
+                table.text_cell(_("Title"), title)
+
                 table.text_cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
                 table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
                 table.cell(_("Used by"))
@@ -1405,6 +1411,7 @@ class ModeBIRules(ModeBI):
                         html.a(self.aggregation_title(aggregation), href=aggr_url)
                         html.br()
                         have_this.add(aggr_id)
+
                 table.text_cell(_("Comment"), rule.get("comment", ""))
                 table.text_cell(_("Documentation URL"), rule.get("docu_url", ""))
         table.end()
@@ -1801,7 +1808,8 @@ class ModeBIEditRule(ModeBI):
                           "check plugins."),
                 label  = _("Add messages")
                 )
-            )
+            ),
+            ("icon", IconSelector(title=_("Icon"))),
         ]
 
         return Dictionary(
@@ -1812,7 +1820,7 @@ class ModeBIEditRule(ModeBI):
             headers = [
                 ( _("Rule Properties"),     [ "id", "title", "docu_url", "comment", "params", "disabled" ]),
                 ( _("Child Node Generation"),  [ "nodes" ] ),
-                ( _("Aggregation Function"),   [ "aggregation", "state_messages" ], ),
+                ( _("Aggregation Function"),   [ "aggregation", "state_messages", "icon" ], ),
             ]
         )
 

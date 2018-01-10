@@ -66,10 +66,10 @@ struct logwatch_textfile {
         , nocontext(nocontext_)
         , rotated(rotated_)
         , patterns(std::ref(patterns_)) {}
-    logwatch_textfile(const logwatch_textfile&) = delete;
-    logwatch_textfile &operator=(const logwatch_textfile&) = delete;
-    logwatch_textfile(logwatch_textfile&&) = default;
-    logwatch_textfile &operator=(logwatch_textfile&&) = default;
+    logwatch_textfile(const logwatch_textfile &) = delete;
+    logwatch_textfile &operator=(const logwatch_textfile &) = delete;
+    logwatch_textfile(logwatch_textfile &&) = default;
+    logwatch_textfile &operator=(logwatch_textfile &&) = default;
 
     std::string name;  // name used for section headers. this is the
                        // filename for regular logs and the pattern
@@ -84,6 +84,32 @@ struct logwatch_textfile {
     file_encoding encoding{UNDEF};
     std::reference_wrapper<const condition_patterns_t>
         patterns;  // glob patterns applying for this file
+};
+
+// A hint instance containing information about the stored offsets for a
+// monitored logfile.
+struct logwatch_hint {
+    logwatch_hint(const std::string &name_,
+                  const std::vector<std::string> &paths_,
+                  unsigned long long file_id_, unsigned long long file_size_,
+                  unsigned long long offset_)
+        : name(name_)
+        , paths(paths_)
+        , file_id(file_id_)
+        , file_size(file_size_)
+        , offset(offset_) {}
+    logwatch_hint(const logwatch_hint &) = delete;
+    logwatch_hint &operator=(const logwatch_hint &) = delete;
+    logwatch_hint(logwatch_hint &&) = default;
+    logwatch_hint &operator=(logwatch_hint &&) = default;
+
+    std::string name;  // name used for section headers. this is the
+                       // filename for regular logs and the pattern
+                       // for rotated logs
+    std::vector<std::string> paths;
+    unsigned long long file_id;    // used to detect if a file has been replaced
+    unsigned long long file_size;  // size of the file
+    unsigned long long offset{0};  // current fseek offset in the file
 };
 
 // Single element of a globline:
@@ -115,9 +141,8 @@ globline_container from_string<globline_container>(const WinApiAdaptor &winapi,
 inline std::ostream &operator<<(std::ostream &os, const globline_container &g) {
     os << "\n[tokens]\n";
     for (const auto &token : g.tokens) {
-        os << "<pattern: " << token.pattern
-           << ", nocontext: " << std::boolalpha << token.nocontext
-           << ", from_start: " << token.from_start
+        os << "<pattern: " << token.pattern << ", nocontext: " << std::boolalpha
+           << token.nocontext << ", from_start: " << token.from_start
            << ", rotated: " << token.rotated
            << ", found_match: " << token.found_match << ">\n";
     }
@@ -156,7 +181,7 @@ public:
     }
 };
 
-logwatch_textfile parseLogwatchStateLine(const std::string &line);
+logwatch_hint parseLogwatchStateLine(const std::string &line);
 
 class SectionLogwatch : public Section {
     struct ProcessTextfileResponse {
@@ -238,7 +263,7 @@ private:
 
     GlobListConfigurable _globlines;
     std::vector<logwatch_textfile> _textfiles;
-    std::vector<logwatch_textfile> _hints;
+    std::vector<logwatch_hint> _hints;
     bool _offsets_loaded{false};
     bool _initialised{false};
 };

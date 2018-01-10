@@ -27,7 +27,6 @@
 
 #include <map>
 #include "SettingsCollector.h"
-#include "types.h"
 
 class ConfigurableBase;
 class Environment;

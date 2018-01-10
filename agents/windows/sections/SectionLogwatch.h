@@ -31,7 +31,82 @@
 
 typedef struct _BY_HANDLE_FILE_INFORMATION BY_HANDLE_FILE_INFORMATION;
 
-typedef std::vector<globline_container> GlobListT;
+enum file_encoding {
+    UNDEF,
+    DEFAULT,
+    UNICODE,
+};
+
+// Stores the condition pattern together with its state
+// Pattern definition within the config file:
+//      C = *critpatternglobdescription*
+struct condition_pattern {
+    condition_pattern(const char state_, const std::string glob_pattern_)
+        : state(state_), glob_pattern(glob_pattern_) {}
+    char state;
+    std::string glob_pattern;
+};
+
+using condition_patterns_t = std::vector<condition_pattern>;
+
+// A textfile instance containing information about various file
+// parameters and a reference to the matching pattern_container
+struct logwatch_textfile {
+    logwatch_textfile(const std::string &name_,
+                      const std::vector<std::string> &paths_,
+                      unsigned long long file_id_,
+                      unsigned long long file_size_, unsigned long long offset_,
+                      bool nocontext_, bool rotated_,
+                      const condition_patterns_t &patterns_)
+        : name(name_)
+        , paths(paths_)
+        , file_id(file_id_)
+        , file_size(file_size_)
+        , offset(offset_)
+        , nocontext(nocontext_)
+        , rotated(rotated_)
+        , patterns(std::ref(patterns_)) {}
+    logwatch_textfile(const logwatch_textfile&) = delete;
+    logwatch_textfile &operator=(const logwatch_textfile&) = delete;
+    logwatch_textfile(logwatch_textfile&&) = default;
+    logwatch_textfile &operator=(logwatch_textfile&&) = default;
+
+    std::string name;  // name used for section headers. this is the
+                       // filename for regular logs and the pattern
+                       // for rotated logs
+    std::vector<std::string> paths;
+    unsigned long long file_id;    // used to detect if a file has been replaced
+    unsigned long long file_size;  // size of the file
+    unsigned long long offset{0};  // current fseek offset in the file
+    bool missing{false};           // file no longer exists
+    bool nocontext;                // do not report ignored lines
+    bool rotated;                  // assume the logfile is a rotating log
+    file_encoding encoding{UNDEF};
+    std::reference_wrapper<const condition_patterns_t>
+        patterns;  // glob patterns applying for this file
+};
+
+// Single element of a globline:
+// C:/tmp/Testfile*.log
+struct glob_token {
+    std::string pattern;
+    bool nocontext{false};
+    bool from_start{false};
+    bool rotated{false};
+    bool found_match{false};
+};
+
+using glob_tokens_t = std::vector<glob_token>;
+
+// Container for all globlines read from the config
+// The following is considered a globline
+// textfile = C:\Logfile1.txt C:\tmp\Logfile*.txt
+struct globline_container {
+    glob_tokens_t tokens;
+    condition_patterns_t patterns;
+};
+
+using GlobListT = std::vector<globline_container>;
 
 template <>
 globline_container from_string<globline_container>(const WinApiAdaptor &winapi,

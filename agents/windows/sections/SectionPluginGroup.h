@@ -34,6 +34,35 @@
 class Environment;
 class SectionPlugin;
 
+// How single scripts are executed
+enum script_execution_mode {
+    SYNC,  // inline
+    ASYNC  // delayed
+};
+
+// How delayed scripts are executed
+enum script_async_execution { PARALLEL, SEQUENTIAL };
+
+template <>
+inline script_execution_mode from_string<script_execution_mode>(
+    const WinApiAdaptor &, const std::string &value) {
+    if (value == "async")
+        return ASYNC;
+    else if (value == "sync")
+        return SYNC;
+    throw std::runtime_error("invalid execution mode");
+}
+
+template <>
+inline script_async_execution from_string<script_async_execution>(
+    const WinApiAdaptor &, const std::string &value) {
+    if (value == "parallel")
+        return PARALLEL;
+    else if (value == "sequential")
+        return SEQUENTIAL;
+    throw std::runtime_error("invalid async mode");
+}
+
 // States for plugin and local scripts
 typedef enum _script_status {
     SCRIPT_IDLE,

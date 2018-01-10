@@ -25,7 +25,6 @@
 #include "OHMMonitor.h"
 #include "Logger.h"
 #include "WinApiAdaptor.h"
-#include "types.h"
 
 namespace {
 

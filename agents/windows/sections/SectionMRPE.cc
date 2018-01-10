@@ -176,3 +176,63 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
     }
     return true;
 }
+
+template <>
+mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
+                                      const std::string &value) {
+    mrpe_entry *result = new mrpe_entry();
+    memset(result, 0, sizeof(mrpe_entry));
+
+    std::string service_description;
+    std::string command_line;
+
+    {
+        std::stringstream str(value);
+        getline(str, service_description, ' ');
+        getline(str, command_line);
+    }
+
+    // Strip any " from start and end
+    if (!command_line.empty() && command_line.front() == '"') {
+        command_line = command_line.substr(1);
+    }
+    if (!command_line.empty() && command_line.back() == '"') {
+        command_line = command_line.substr(0, command_line.length() - 1);
+    }
+
+    if (command_line.empty()) {
+        delete result;
+        throw StringConversionError(
+            "Invalid command specification for mrpe:\r\n"
+            "Format: SERVICEDESC COMMANDLINE");
+    }
+
+    if (winapi.PathIsRelative(command_line.c_str())) {
+        Environment *env = Environment::instance();
+        if (env == nullptr) {
+            delete result;
+            throw StringConversionError("No environment");
+        }
+        snprintf(result->command_line, sizeof(result->command_line), "%s\\%s",
+                 env->agentDirectory().c_str(), lstrip(command_line.c_str()));
+    } else {
+        strncpy(result->command_line, command_line.c_str(),
+                sizeof(result->command_line));
+    }
+
+    strncpy(result->service_description, service_description.c_str(),
+            sizeof(result->service_description));
+
+    // compute plugin name, drop directory part
+    std::string plugin_name;
+    {
+        std::stringstream str(command_line);
+        getline(str, plugin_name, ' ');
+        plugin_name = std::string(
+            plugin_name.begin() + plugin_name.find_last_of("/\\") + 1,
+            plugin_name.end());
+    }
+    strncpy(result->plugin_name, plugin_name.c_str(),
+            sizeof(result->plugin_name));
+    return result;
+}

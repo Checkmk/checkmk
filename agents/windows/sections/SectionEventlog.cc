@@ -33,73 +33,6 @@
 #include "WinApiAdaptor.h"
 #include "stringutil.h"
 
-eventlog_hint_t parseStateLine(const std::string &line) {
-    /* Example: line = "System|1234" */
-    const auto tokens = tokenize(line, "\\|");
-
-    if (tokens.size() != 2 ||
-        std::any_of(tokens.cbegin(), tokens.cend(),
-                    [](const std::string &t) { return t.empty(); })) {
-        throw StateParseError{std::string("Invalid state line: ") + line};
-    }
-
-    try {
-        return {tokens[0], std::stoull(tokens[1])};
-    } catch (const std::invalid_argument &) {
-        throw StateParseError{std::string("Invalid state line: ") + line};
-    }
-}
-
-SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
-                                 const WinApiAdaptor &winapi)
-    : Section("logwatch", "logwatch", config.getEnvironment(), logger, winapi)
-    , _send_initial(config, "logwatch", "sendall", false, winapi)
-    , _vista_api(config, "logwatch", "vista_api", false, winapi)
-    , _config(config, "logwatch", "logname", winapi) {
-    // register a second key-name
-    config.reg("logwatch", "logfile", &_config);
-}
-
-SectionEventlog::~SectionEventlog() {}
-
-void SectionEventlog::loadEventlogOffsets(const std::string &statefile) {
-    if (!_records_loaded) {
-        std::ifstream ifs(statefile);
-        std::string line;
-        while (std::getline(ifs, line)) {
-            try {
-                _hints.push_back(parseStateLine(line));
-            } catch (const StateParseError &e) {
-                Error(_logger) << e.what();
-            }
-        }
-        _records_loaded = true;
-    }
-}
-
-void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
-    std::ofstream ofs(statefile);
-
-    if (!ofs) {
-        std::cerr << "failed to open " << statefile << " for writing"
-                  << std::endl;
-        return;
-    }
-
-    for (const auto &state : _state) {
-        int level = 1;
-        for (const auto &config : *_config) {
-            if ((config.name == "*") || ci_equal(config.name, state.name)) {
-                level = config.level;
-                break;
-            }
-        }
-        if (level != -1) {
-            ofs << state.name << "|" << state.record_no << std::endl;
-        }
-    }
-}
-
 namespace {
 
 using uint64limits = std::numeric_limits<uint64_t>;
@@ -123,6 +56,21 @@ std::pair<char, int> getEventState(const IEventLogRecord &event, int level) {
             return {'u', 1};
     }
 }
+
+    const char *level_name(int level_id) {
+        switch (level_id) {
+        case -1:
+            return "off";
+        case 0:
+            return "all";
+        case 1:
+            return "warn";
+        case 2:
+            return "crit";
+        default:
+            return "invalid";
+        }
+    }
 
 // The int return value is there just for convenience, actually we are not
 // interested in the state int value at this point any more.
@@ -176,6 +124,115 @@ std::pair<uint64_t, int> processEventLog(
 }
 
 }  // namespace
+
+eventlog_hint_t parseStateLine(const std::string &line) {
+    /* Example: line = "System|1234" */
+    const auto tokens = tokenize(line, "\\|");
+
+    if (tokens.size() != 2 ||
+        std::any_of(tokens.cbegin(), tokens.cend(),
+                    [](const std::string &t) { return t.empty(); })) {
+        throw StateParseError{std::string("Invalid state line: ") + line};
+    }
+
+    try {
+        return {tokens[0], std::stoull(tokens[1])};
+    } catch (const std::invalid_argument &) {
+        throw StateParseError{std::string("Invalid state line: ") + line};
+    }
+}
+
+template <>
+eventlog_config_entry from_string<eventlog_config_entry>(
+    const WinApiAdaptor &, const std::string &value) {
+    // this parses only what's on the right side of the = in the configuration
+    // file
+    std::stringstream str(value);
+
+    bool hide_context = false;
+    int level = 0;
+
+    std::string entry;
+    while (std::getline(str, entry, ' ')) {
+        if (entry == "nocontext")
+            hide_context = 1;
+        else if (entry == "off")
+            level = -1;
+        else if (entry == "all")
+            level = 0;
+        else if (entry == "warn")
+            level = 1;
+        else if (entry == "crit")
+            level = 2;
+        else {
+            fprintf(stderr,
+                    "Invalid log level '%s'.\r\n"
+                    "Allowed are off, all, warn and crit.\r\n",
+                    entry.c_str());
+        }
+    }
+
+    return eventlog_config_entry(level, hide_context ? 1 : 0, "", false);
+}
+
+std::ostream &operator<<(std::ostream &out, const eventlog_config_entry &val) {
+    out << val.name << " = ";
+    if (val.hide_context) {
+        out << "nocontext ";
+    }
+    out << level_name(val.level);
+    return out;
+}
+
+SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
+                                 const WinApiAdaptor &winapi)
+    : Section("logwatch", "logwatch", config.getEnvironment(), logger, winapi)
+    , _send_initial(config, "logwatch", "sendall", false, winapi)
+    , _vista_api(config, "logwatch", "vista_api", false, winapi)
+    , _config(config, "logwatch", "logname", winapi) {
+    // register a second key-name
+    config.reg("logwatch", "logfile", &_config);
+}
+
+SectionEventlog::~SectionEventlog() {}
+
+void SectionEventlog::loadEventlogOffsets(const std::string &statefile) {
+    if (!_records_loaded) {
+        std::ifstream ifs(statefile);
+        std::string line;
+        while (std::getline(ifs, line)) {
+            try {
+                _hints.push_back(parseStateLine(line));
+            } catch (const StateParseError &e) {
+                Error(_logger) << e.what();
+            }
+        }
+        _records_loaded = true;
+    }
+}
+
+void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
+    std::ofstream ofs(statefile);
+
+    if (!ofs) {
+        std::cerr << "failed to open " << statefile << " for writing"
+                  << std::endl;
+        return;
+    }
+
+    for (const auto &state : _state) {
+        int level = 1;
+        for (const auto &config : *_config) {
+            if ((config.name == "*") || ci_equal(config.name, state.name)) {
+                level = config.level;
+                break;
+            }
+        }
+        if (level != -1) {
+            ofs << state.name << "|" << state.record_no << std::endl;
+        }
+    }
+}
 
 uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
                                          uint64_t previouslyReadId, int level,

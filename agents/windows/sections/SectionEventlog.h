@@ -26,12 +26,53 @@
 #define SectionEventlog_h
 
 #include "Configurable.h"
-#include "Configuration.h"
 #include "EventLog.h"
 #include "Section.h"
-#include "types.h"
 
 class WinApiAdaptor;
+
+// Configuration entries from [logwatch] for individual logfiles
+struct eventlog_config_entry {
+    eventlog_config_entry(int level, int hide_context, const char *name,
+                          bool vista_api)
+        : name(name)
+        , level(level)
+        , hide_context(hide_context)
+        , vista_api(vista_api) {}
+
+    std::string name;
+    int level;
+    int hide_context;
+    bool vista_api;
+};
+
+template <>
+eventlog_config_entry from_string<eventlog_config_entry>(
+    const WinApiAdaptor &winapi, const std::string &value);
+
+std::ostream &operator<<(std::ostream &out, const eventlog_config_entry &val);
+
+// Our memory of what event logs we know and up to
+// which record entry we have seen its messages so
+// far.
+struct eventlog_file_state {
+    eventlog_file_state(const char *name)
+        : name(name), newly_discovered(true) {}
+    std::string name;
+    uint64_t record_no;
+    bool newly_discovered;
+};
+
+struct eventlog_hint_t {
+    eventlog_hint_t(const std::string &name_, uint64_t record_no_)
+        : name(name_), record_no(record_no_) {}
+    std::string name;
+    uint64_t record_no;
+};
+
+using eventlog_config_t = std::vector<eventlog_config_entry>;
+using eventlog_state_t = std::vector<eventlog_file_state>;
+using eventlog_hints_t = std::vector<eventlog_hint_t>;
 
 class EventlogConfigurable
     : public ListConfigurable<eventlog_config_t,

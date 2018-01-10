@@ -28,7 +28,6 @@
 #include "WinApiAdaptor.h"
 #include "dynamic_func.h"
 #include "stringutil.h"
-#include "types.h"
 
 /////////////////////////////////////////////////////////////
 // Careful! All Evt-Functions have to be used through the

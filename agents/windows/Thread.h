@@ -25,10 +25,10 @@
 #ifndef Thread_h
 #define Thread_h
 
+#include <winsock2.h>
 #include <functional>
 #include <memory>
 #include <mutex>
-#include "types.h"
 
 class Environment;
 class Logger;

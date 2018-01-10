@@ -1619,9 +1619,9 @@ class DropdownChoice(ValueSpec):
             val, title = entry[:2]
             if value == val:
                 if self._help_separator:
-                    return title.split(self._help_separator, 1)[0].strip()
+                    return html.attrencode(title.split(self._help_separator, 1)[0].strip())
                 else:
-                    return title
+                    return html.attrencode(title)
         return html.attrencode(self._get_invalid_choice_title(value))
 
 

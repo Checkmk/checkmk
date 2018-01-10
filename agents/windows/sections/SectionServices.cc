@@ -39,7 +39,6 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
                                               LPCWSTR service_name) {
     // Query the start type of the service
     const char *start_type = "invalid1";
-    LPQUERY_SERVICE_CONFIGW lpsc;
     ServiceHandle schService{
         _winapi.OpenServiceW(scm, service_name, SERVICE_QUERY_CONFIG), _winapi};
     if (schService) {
@@ -52,11 +51,13 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
             if (dwError == ERROR_INSUFFICIENT_BUFFER) {
                 start_type = "invalid4";
                 cbBufSize = dwBytesNeeded;
-                lpsc = (LPQUERY_SERVICE_CONFIGW)_winapi.LocalAlloc(LMEM_FIXED,
-                                                                   cbBufSize);
-                if (_winapi.QueryServiceConfig(schService.get(), lpsc,
+                LocalMemoryHandle<LPQUERY_SERVICE_CONFIGW> lpsc{
+                    reinterpret_cast<LPQUERY_SERVICE_CONFIGW>(
+                        _winapi.LocalAlloc(LMEM_FIXED, cbBufSize)),
+                    _winapi};
+                if (_winapi.QueryServiceConfig(schService.get(), lpsc.get(),
                                                cbBufSize, &dwBytesNeeded)) {
-                    switch (lpsc->dwStartType) {
+                    switch (lpsc.get()->dwStartType) {
                         case SERVICE_AUTO_START:
                             start_type = "auto";
                             break;
@@ -76,7 +77,6 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
                             start_type = "other";
                     }
                 }
-                _winapi.LocalFree(lpsc);
             }
         }
     }
@@ -97,62 +97,60 @@ bool SectionServices::produceOutputInner(std::ostream &out) {
                                       SERVICE_WIN32, SERVICE_STATE_ALL, NULL, 0,
                                       &bytes_needed, &num_services, 0, 0);
         if (_winapi.GetLastError() == ERROR_MORE_DATA && bytes_needed > 0) {
-            BYTE *buffer = (BYTE *)malloc(bytes_needed);
-            if (buffer) {
-                if (_winapi.EnumServicesStatusExW(
-                        scm.get(), SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
-                        SERVICE_STATE_ALL, buffer, bytes_needed, &bytes_needed,
-                        &num_services, 0, 0)) {
-                    ENUM_SERVICE_STATUS_PROCESSW *service =
-                        (ENUM_SERVICE_STATUS_PROCESSW *)buffer;
-                    for (unsigned i = 0; i < num_services; i++) {
-                        DWORD state =
-                            service->ServiceStatusProcess.dwCurrentState;
-                        const char *state_name = "unknown";
-                        switch (state) {
-                            case SERVICE_CONTINUE_PENDING:
-                                state_name = "continuing";
-                                break;
-                            case SERVICE_PAUSE_PENDING:
-                                state_name = "pausing";
-                                break;
-                            case SERVICE_PAUSED:
-                                state_name = "paused";
-                                break;
-                            case SERVICE_RUNNING:
-                                state_name = "running";
-                                break;
-                            case SERVICE_START_PENDING:
-                                state_name = "starting";
-                                break;
-                            case SERVICE_STOP_PENDING:
-                                state_name = "stopping";
-                                break;
-                            case SERVICE_STOPPED:
-                                state_name = "stopped";
-                                break;
-                        }
+            std::vector<BYTE> buffer(bytes_needed, 0);
 
-                        const char *start_type =
-                            serviceStartType(scm.get(), service->lpServiceName);
-
-                        // The service name usually does not contain spaces. But
-                        // in some cases it does. We replace them with _ in
-                        // order
-                        // the keep it in one space-separated column. Since we
-                        // own
-                        // the buffer, we can simply change the name inplace.
-                        for (LPWSTR w = service->lpServiceName; *w; ++w) {
-                            if (*w == L' ') *w = L'_';
-                        }
-
-                        out << Utf8(service->lpServiceName) << " " << state_name
-                            << "/" << start_type << " "
-                            << Utf8(service->lpDisplayName) << "\n";
-                        ++service;
+            if (_winapi.EnumServicesStatusExW(
+                    scm.get(), SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
+                    SERVICE_STATE_ALL, buffer.data(), bytes_needed,
+                    &bytes_needed, &num_services, 0, 0)) {
+                ENUM_SERVICE_STATUS_PROCESSW *service =
+                    reinterpret_cast<ENUM_SERVICE_STATUS_PROCESSW *>(
+                        buffer.data());
+                for (unsigned i = 0; i < num_services; i++) {
+                    DWORD state = service->ServiceStatusProcess.dwCurrentState;
+                    const char *state_name = "unknown";
+                    switch (state) {
+                        case SERVICE_CONTINUE_PENDING:
+                            state_name = "continuing";
+                            break;
+                        case SERVICE_PAUSE_PENDING:
+                            state_name = "pausing";
+                            break;
+                        case SERVICE_PAUSED:
+                            state_name = "paused";
+                            break;
+                        case SERVICE_RUNNING:
+                            state_name = "running";
+                            break;
+                        case SERVICE_START_PENDING:
+                            state_name = "starting";
+                            break;
+                        case SERVICE_STOP_PENDING:
+                            state_name = "stopping";
+                            break;
+                        case SERVICE_STOPPED:
+                            state_name = "stopped";
+                            break;
                     }
+
+                    const char *start_type =
+                        serviceStartType(scm.get(), service->lpServiceName);
+
+                    // The service name usually does not contain spaces. But
+                    // in some cases it does. We replace them with _ in
+                    // order
+                    // the keep it in one space-separated column. Since we
+                    // own
+                    // the buffer, we can simply change the name inplace.
+                    for (LPWSTR w = service->lpServiceName; *w; ++w) {
+                        if (*w == L' ') *w = L'_';
+                    }
+
+                    out << Utf8(service->lpServiceName) << " " << state_name
+                        << "/" << start_type << " "
+                        << Utf8(service->lpDisplayName) << "\n";
+                    ++service;
                 }
-                free(buffer);
             }
         }
     }

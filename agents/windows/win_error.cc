@@ -24,6 +24,7 @@
 
 #include "win_error.h"
 #include "WinApiAdaptor.h"
+#include "types.h"
 
 std::string get_win_error_as_string(const WinApiAdaptor &winapi,
                                     DWORD error_id /* = GET_LAST_ERROR */) {
@@ -31,17 +32,15 @@ std::string get_win_error_as_string(const WinApiAdaptor &winapi,
     if (error_id == 0) return "No error message has been recorded";
     if (error_id == GET_LAST_ERROR) error_id = winapi.GetLastError();
 
-    LPSTR messageBuffer = NULL;
+    LPSTR messageBuffer = nullptr;
     size_t size = winapi.FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL, error_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPSTR)&messageBuffer, 0, NULL);
 
+    LocalMemoryHandle<LPSTR> messageHandle(messageBuffer, winapi);
     std::string message(messageBuffer, size);
-
-    // Free the buffer.
-    winapi.LocalFree(messageBuffer);
 
     return message + " (" + std::to_string(error_id) + ")";
 }

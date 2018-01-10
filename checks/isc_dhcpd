@@ -45,6 +45,7 @@ isc_dhcpd_default_levels = (15.0, 5.0)
 # 10.0.1.53
 # 10.0.1.57
 
+
 def parse_isc_dhcpd(info):
     def ip_to_number(ip):
         number = 0
@@ -82,20 +83,6 @@ def parse_isc_dhcpd(info):
             parsed["leases"].append(ip_to_number(line[0]))
 
     return parsed
-
-# The upper example after parsing:
-# {'leases': ['10.0.1.16',
-#             '10.0.1.24',
-#             '10.0.1.26',
-#             '10.0.1.27',
-#             '10.0.1.34',
-#             '10.0.1.36',
-#             '10.0.1.45',
-#             '10.0.1.50',
-#             '10.0.1.53',
-#             '10.0.1.57'],
-#  'pids': [3670],
-#  'pools': [('10.0.1.1'), ('10.0.1.254')]}
 
 
 def inventory_isc_dhcpd(parsed):

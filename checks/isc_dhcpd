@@ -46,10 +46,18 @@ isc_dhcpd_default_levels = (15.0, 5.0)
 # 10.0.1.57
 
 def parse_isc_dhcpd(info):
+    def ip_to_number(ip):
+        number = 0
+        factor = 1
+        for part in ip.split('.')[::-1]:
+            number += factor * int(part)
+            factor *= 256
+        return number
+
     parsed = {
-        "pids"   : [],
-        "pools"  : [],
-        "leases" : [],
+        "pids":   [],
+        "pools":  {},
+        "leases": [],
     }
 
     mode = None
@@ -66,10 +74,12 @@ def parse_isc_dhcpd(info):
                 parsed["pids"] = map(int, line[1:])
 
         elif mode == "pools":
-            parsed["pools"].append((line[0], line[1]))
+            start, end = line[0], line[1]
+            item = "%s-%s" % (start, end)
+            parsed["pools"][item] = (ip_to_number(start), ip_to_number(end))
 
         elif mode == "leases":
-            parsed["leases"].append(line[0])
+            parsed["leases"].append(ip_to_number(line[0]))
 
     return parsed
 
@@ -89,8 +99,7 @@ def parse_isc_dhcpd(info):
 
 
 def inventory_isc_dhcpd(parsed):
-    return [ ("%s-%s" % pool, "isc_dhcpd_default_levels")
-             for pool in parsed["pools"] ]
+    return [(item, "isc_dhcpd_default_levels") for item in parsed["pools"]]
 
 
 def check_isc_dhcpd(item, params, parsed):
@@ -100,24 +109,13 @@ def check_isc_dhcpd(item, params, parsed):
         yield 1, "DHCP Daemon running %d times (PIDs: %s)" % (
             len(parsed["pids"]), ", ".join(map(str, parsed["pids"])))
 
-    def ip_to_number(ip):
-        number = 0
-        factor = 1
-        for part in ip.split('.')[::-1]:
-            number += factor * int(part)
-            factor *= 256
-        return number
-
-    pool = tuple(item.split("-"))
-    if pool not in parsed["pools"]:
+    if item not in parsed["pools"]:
         return
 
-    range_from = ip_to_number(pool[0])
-    range_to = ip_to_number(pool[1])
+    range_from, range_to = parsed["pools"][item]
     num_leases = range_to - range_from + 1
     num_used = 0
-    for lease in parsed["leases"]:
-        lease_dec = ip_to_number(lease)
+    for lease_dec in parsed["leases"]:
         if lease_dec >= range_from and lease_dec <= range_to:
             num_used += 1
 

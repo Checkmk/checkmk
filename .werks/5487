@@ -1,0 +1,11 @@
+Title: isc_dhcpd: Resolve performance issues
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1515573287
+Class: fix
+
+Resolves performance issues which could lead to a timeout when a large amount
+of pools and leases were present.

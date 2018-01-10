@@ -1,0 +1,14 @@
+Title: veeam_jobs: Add support for new veeam API
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1515682965
+Class: fix
+
+The new veeam API only supports StartTimeLocal and StopTimeLocal. The old API
+using StartTime and StopTime is not supported anymore. This lead to the error
+that backup jobs using the new API were shown as "No complete backup". This
+change adds support for StartTimeLocal and StopTimeLocal while maintaining
+compatibility to the old API.

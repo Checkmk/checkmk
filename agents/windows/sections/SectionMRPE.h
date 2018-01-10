@@ -28,6 +28,20 @@
 #include "Configurable.h"
 #include "Section.h"
 
+// Command definitions for MRPE
+struct mrpe_entry {
+    char run_as_user[256];
+    char command_line[256];
+    char plugin_name[64];
+    char service_description[256];
+};
+
+using mrpe_entries_t = std::vector<mrpe_entry *>;
+
+template <>
+mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
+                                      const std::string &value);
+
 class SectionMRPE : public Section {
 public:
     SectionMRPE(Configuration &config, Logger *logger,

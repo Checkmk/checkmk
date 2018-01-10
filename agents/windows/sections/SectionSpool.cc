@@ -22,11 +22,11 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "SectionSpool.h"
 #include <dirent.h>
 #include <sys/types.h>
 #include "Environment.h"
 #include "Logger.h"
-#include "SectionSpool.h"
 #include "WinApiAdaptor.h"
 #include "types.h"
 

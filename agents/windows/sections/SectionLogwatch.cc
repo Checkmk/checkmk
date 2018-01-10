@@ -28,7 +28,6 @@
 #include <regex>
 #include "Environment.h"
 #include "Logger.h"
-#include "types.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include "WinApiAdaptor.h"

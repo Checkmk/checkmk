@@ -28,7 +28,6 @@
 #include "Logger.h"
 #include "PerfCounter.h"
 #include "dynamic_func.h"
-#include "types.h"
 
 extern double file_time(const FILETIME *filetime);
 extern double current_time();

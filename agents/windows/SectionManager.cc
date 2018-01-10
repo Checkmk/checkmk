@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include "Configuration.h"
 #include "Environment.h"
+#include "PerfCounterCommon.h"
 #include "sections/SectionCheckMK.h"
 #include "sections/SectionDF.h"
 #include "sections/SectionEventlog.h"
@@ -32,6 +33,38 @@ std::string mapSectionName(const std::string &sectionName) {
 }
 
 }  // namespace
+
+template <>
+winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
+                                                const std::string &value) {
+    size_t colonIdx = value.find_last_of(":");
+    if (colonIdx == std::string::npos) {
+        fprintf(stderr,
+                "Invalid counter '%s' in section [winperf]: need number(or "
+                "text) and colon, e.g. 238:processor.\n",
+                value.c_str());
+        exit(1);
+    }
+    winperf_counter *result = new winperf_counter();
+    result->name = std::string(value.begin() + colonIdx + 1, value.end());
+
+    std::string base_id(value.begin(), value.begin() + colonIdx);
+
+    auto non_digit = std::find_if_not(base_id.begin(), base_id.end(), isdigit);
+
+    if (non_digit == base_id.end()) {
+        result->id = std::stoi(base_id);
+    } else {
+        result->id = resolveCounterName(winapi, base_id);
+        if (result->id == -1) {
+            delete result;
+            throw StringConversionError(
+                "No matching performance counter id found for " + value);
+        }
+    }
+
+    return result;
+}
 
 SectionManager::SectionManager(Configuration &config, Logger *logger,
                                const WinApiAdaptor &winapi)

@@ -34,8 +34,19 @@ class Environment;
 class Logger;
 class WinApiAdaptor;
 
+// Configuration for section [winperf]
+struct winperf_counter {
+    int id;
+    std::string name;
+};
+
+template <>
+winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
+                                                const std::string &value);
+
 std::ostream &operator<<(std::ostream &out,
                          const std::pair<std::string, std::string> &value);
+
 class SectionManager {
 public:
     SectionManager(Configuration &config, Logger *logger,

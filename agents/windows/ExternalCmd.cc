@@ -28,7 +28,6 @@
 #include "Environment.h"
 #include "Logger.h"
 #include "WinApiAdaptor.h"
-#include "types.h"
 #include "win_error.h"
 
 extern bool with_stderr;

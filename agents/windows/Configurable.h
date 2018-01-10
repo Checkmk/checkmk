@@ -6,6 +6,7 @@
 #include "Configuration.h"
 #include "SettingsCollector.h"
 #include "stringutil.h"
+#include "types.h"
 
 class WinApiAdaptor;
 

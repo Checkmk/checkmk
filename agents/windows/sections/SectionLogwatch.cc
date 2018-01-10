@@ -116,7 +116,7 @@ void addConditionPattern(globline_container &globline, const char *state,
 
 }  // namespace
 
-logwatch_textfile parseLogwatchStateLine(const std::string &line) {
+logwatch_hint parseLogwatchStateLine(const std::string &line) {
     /* Example: line = "M://log1.log|98374598374|0|16"; */
     const auto tokens = tokenize(line, "\\|");
 
@@ -127,14 +127,9 @@ logwatch_textfile parseLogwatchStateLine(const std::string &line) {
     }
 
     try {
-        return {tokens[0],
-                std::move(std::vector<std::string>{tokens[0]}),
-                std::stoull(tokens[1]),
-                std::stoull(tokens[2]),
-                std::stoull(tokens[3]),
-                false,
-                false,
-                condition_patterns_t()};
+        return {tokens[0], std::move(std::vector<std::string>{tokens[0]}),
+                std::stoull(tokens[1]), std::stoull(tokens[2]),
+                std::stoull(tokens[3])};
     } catch (const std::invalid_argument &) {
         throw StateParseError{std::string("Invalid state line: ") + line};
     }
@@ -571,10 +566,10 @@ logwatch_textfile &SectionLogwatch::addNewLogwatchTextfile(
     }
 
     const auto cend = _hints.cend();
-    const auto it = std::find_if(
-        _hints.cbegin(), cend, [full_filename](const logwatch_textfile &hint) {
-            return hint.paths.front() == full_filename;
-        });
+    const auto it = std::find_if(_hints.cbegin(), cend,
+                                 [full_filename](const logwatch_hint &hint) {
+                                     return hint.paths.front() == full_filename;
+                                 });
     bool found_hint = it != cend;
 
     // previously the file size was taken from the hint file. Why is the file
@@ -677,10 +672,9 @@ logwatch_textfile &SectionLogwatch::addNewRotatedLogfile(
     assert(filenames.size() > 0);
 
     const auto cend = _hints.cend();
-    auto hint_iter = std::find_if(_hints.cbegin(), _hints.cend(),
-                                  [&pattern](const logwatch_textfile &hint) {
-                                      return hint.name == pattern;
-                                  });
+    auto hint_iter = std::find_if(
+        _hints.cbegin(), _hints.cend(),
+        [&pattern](const logwatch_hint &hint) { return hint.name == pattern; });
     bool found_hint = hint_iter != cend;
     std::vector<std::string> paths{filenames};
 

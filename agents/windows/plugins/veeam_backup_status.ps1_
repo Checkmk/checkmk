@@ -101,11 +101,23 @@ foreach ($myJob in $myBackupJobs)
 
 		$myTaskText = "$myTaskText" + "TransferedSizeByte" + "`t" + "$myTaskTransferedSize" + "`n"
 
-		$myTaskStartTime = $myTask.Progress.StartTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
+    # Starting from Version 9.5U3 StartTime is not supported anymore
+    If ($myTask.Progress.StartTime -eq $Null) {
+		   $myTaskStartTime = $myTask.Progress.StartTimeLocal
+    } Else {
+		   $myTaskStartTime = $myTask.Progress.StartTime
+    }
+    $myTaskStartTime = $myTaskStartTime | Get-Date -Format "dd.MM.yyyy HH\:mm\:ss" -ErrorAction SilentlyContinue
 
 		$myTaskText = "$myTaskText" + "StartTime" + "`t" + "$myTaskStartTime" + "`n"
 
-		$myTaskStopTime = $myTask.Progress.StopTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
+    # Starting from Version 9.5U3 StopTime is not supported anymore
+    If ($myTask.Progress.StopTime -eq $Null) {
+    		$myTaskStopTime = $myTask.Progress.StopTimeLocal
+    } Else {
+    		$myTaskStopTime = $myTask.Progress.StopTime
+    }
+    $myTaskStopTime = $myTaskStopTime | Get-Date -Format "dd.MM.yyyy HH\:mm\:ss" -ErrorAction SilentlyContinue
 
 		$myTaskText = "$myTaskText" + "StopTime" + "`t" + "$myTaskStopTime" + "`n"
 

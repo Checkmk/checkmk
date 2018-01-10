@@ -188,12 +188,14 @@ bool SectionPS::outputWMI(std::ostream &out) {
 
             if (*_full_commandline && result.contains(L"CommandLine")) {
                 int argc;
-                LPWSTR *argv = _winapi.CommandLineToArgvW(
-                    result.get<std::wstring>(L"CommandLine").c_str(), &argc);
+                LocalMemoryHandle<LPWSTR *> argv(
+                    _winapi.CommandLineToArgvW(
+                        result.get<std::wstring>(L"CommandLine").c_str(),
+                        &argc),
+                    _winapi);
                 for (int i = 1; i < argc; ++i) {
-                    process_name += std::wstring(L" ") + argv[i];
+                    process_name += std::wstring(L" ") + argv.get()[i];
                 }
-                _winapi.LocalFree(argv);
             }
 
             auto creation_date = result.get<std::wstring>(L"CreationDate");

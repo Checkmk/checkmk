@@ -288,4 +288,17 @@ struct SearchHandleTraits {
 
 using SearchHandle = WrappedHandle<SearchHandleTraits>;
 
+template <typename PointerT>
+struct LocalMemoryHandleTraits {
+    using HandleT = PointerT;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.LocalFree(value);
+    }
+};
+
+template <typename PointerT>
+using LocalMemoryHandle = WrappedHandle<LocalMemoryHandleTraits<PointerT>>;
+
 #endif  // types_h

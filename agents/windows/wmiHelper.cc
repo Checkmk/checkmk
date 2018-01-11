@@ -33,6 +33,7 @@
 
 #include "Logger.h"
 #include "stringutil.h"
+#include "types.h"
 
 using namespace wmi;
 using namespace std;
@@ -168,6 +169,31 @@ Result &Result::operator=(const Result &reference) {
 
 bool Result::valid() const { return _current.get() != nullptr; }
 
+namespace {
+
+struct SafeArrayHandleTraits {
+    using HandleT = SAFEARRAY *;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.SafeArrayDestroy(value);
+    }
+};
+
+struct BStringHandleTraits {
+    using HandleT = BSTR;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.SysFreeString(value);
+    }
+};
+
+using SafeArrayHandle = WrappedHandle<SafeArrayHandleTraits>;
+using BStringHandle = WrappedHandle<BStringHandleTraits>;
+
+}  // namespace
+
 vector<wstring> Result::names() const {
     Debug(_logger) << "Result::names";
     vector<wstring> result;
@@ -179,18 +205,19 @@ vector<wstring> Result::names() const {
         throw ComException("Failed to retrieve field names", res, _winapi);
     }
 
-    long lLower, lUpper;
-    BSTR propName = nullptr;
-    _winapi.SafeArrayGetLBound(names, 1, &lLower);
-    _winapi.SafeArrayGetUBound(names, 1, &lUpper);
+    SafeArrayHandle namesHandle{names, _winapi};
+    long lLower = 0, lUpper = 0;
+    _winapi.SafeArrayGetLBound(namesHandle.get(), 1, &lLower);
+    _winapi.SafeArrayGetUBound(namesHandle.get(), 1, &lUpper);
+    result.reserve(static_cast<size_t>(lUpper - lLower + 1));
 
     for (long i = lLower; i <= lUpper; ++i) {
-        res = _winapi.SafeArrayGetElement(names, &i, &propName);
+        BSTR propName = nullptr;
+        res = _winapi.SafeArrayGetElement(namesHandle.get(), &i, &propName);
+        BStringHandle propHandle{propName, _winapi};
         result.push_back(wstring(propName));
-        _winapi.SysFreeString(propName);
     }
 
-    _winapi.SafeArrayDestroy(names);
     return result;
 }
 

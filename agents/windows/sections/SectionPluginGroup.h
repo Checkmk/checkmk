@@ -75,6 +75,17 @@ typedef enum _script_status {
 
 typedef enum _script_type { PLUGIN, LOCAL, MRPE } script_type;
 
+struct HeapBufferHandleTraits {
+    using HandleT = char *;
+    static HandleT invalidValue() { return nullptr; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.HeapFree(winapi.GetProcessHeap(), 0, value);
+    }
+};
+
+using HeapBufferHandle = WrappedHandle<HeapBufferHandleTraits>;
+
 struct script_container {
     script_container(
         const std::string &_path,  // full path with interpreter, cscript, etc.
@@ -95,8 +106,8 @@ struct script_container {
     const int max_retries;
     int retry_count{0};
     time_t buffer_time{0};
-    char *buffer{nullptr};
-    char *buffer_work{nullptr};
+    HeapBufferHandle buffer;
+    HeapBufferHandle buffer_work;
     const std::string run_as_user;
     const script_type type;
     const script_execution_mode execution_mode;

@@ -1,5 +1,6 @@
 import contextlib
 from itertools import chain, repeat
+import math
 import os
 import platform
 import re
@@ -23,6 +24,7 @@ testlog = 'Application'
 testsource = 'Test source'
 testeventtype = 'Warning'
 testdescription = 'Something might happen!'
+tolerance = 10
 testids = range(1, 3)
 
 
@@ -171,9 +173,12 @@ def verify_eventstate():
                 sorted(expected_eventstate.items()),
                 sorted(actual_eventstate.items())):
             assert expected_log == actual_log
-            assert expected_state == actual_state, (
-                "expected state for log '%s' is %d, actual state %d" %
-                (expected_log, expected_state, actual_state))
+            state_tolerance = 0 if expected_log == testlog else tolerance
+            assert math.fabs(
+                expected_state - actual_state) <= state_tolerance, (
+                    "expected state for log '%s' is %d, actual state %d, "
+                    "state_tolerance %d" % (expected_log, expected_state,
+                                            actual_state, state_tolerance))
 
 
 @pytest.mark.usefixtures("no_statefile")

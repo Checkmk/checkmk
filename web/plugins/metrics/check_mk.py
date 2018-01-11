@@ -5250,20 +5250,23 @@ check_metrics["check_mk-fortigate_sessions_base"] = {
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
 
-perfometer_info.append(("dual", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "tcp_active_sessions",
-        "half_value"    : 4,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "udp_active_sessions",
-        "half_value"    : 4,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type"        : "dual",
+    "perfometers" : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "tcp_active_sessions",
+            "half_value"    : 4,
+            "exponent"      : 2,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "udp_active_sessions",
+            "half_value"    : 4,
+            "exponent"      : 2,
+        }
+    ],
+})
 
 perfometer_info.append({
     "type"       : "logarithmic",
@@ -5420,20 +5423,21 @@ perfometer_info.append({
     "exponent"      : 2,
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "checkpoint_age",
-        "half_value"    : 86400,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "backup_age",
-        "half_value"    : 86400,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type"          : "stacked",
+    "perfometers"   : [{
+            "type"          : "logarithmic",
+            "metric"        : "checkpoint_age",
+            "half_value"    : 86400,
+            "exponent"      : 2,
+        }, {
+            "type"          : "logarithmic",
+            "metric"        : "backup_age",
+            "half_value"    : 86400,
+            "exponent"      : 2,
+        }
+    ],
+})
 
 perfometer_info.append({
     "type"          : "logarithmic",
@@ -5442,20 +5446,23 @@ perfometer_info.append({
     "exponent"      : 2,
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "read_latency",
-        "half_value"    : 5,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "write_latency",
-        "half_value"    : 5,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type"          : "stacked",
+    "perfometers"   : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "read_latency",
+            "half_value"    : 5,
+            "exponent"      : 2,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "write_latency",
+            "half_value"    : 5,
+            "exponent"      : 2,
+        }
+    ],
+})
 
 perfometer_info.append({
     "type"          : "logarithmic",
@@ -5484,33 +5491,39 @@ perfometer_info.append({
     "total"         : 100.0,
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"       : "logarithmic",
-        "metric"     : "mem_heap",
-        "half_value" : 100 * MB,
-        "exponent"   : 2,
-    },
-    {
-        "type"       : "logarithmic",
-        "metric"     : "mem_nonheap",
-        "half_value" : 100*MB,
-        "exponent"   : 2,
-    }
-]))
+perfometer_info.append({
+    "type"          : "stacked",
+    "perfometers"   : [
+        {
+            "type"       : "logarithmic",
+            "metric"     : "mem_heap",
+            "half_value" : 100 * MB,
+            "exponent"   : 2,
+        },
+        {
+            "type"       : "logarithmic",
+            "metric"     : "mem_nonheap",
+            "half_value" : 100*MB,
+            "exponent"   : 2,
+        }
+    ],
+})
 
-perfometer_info.append(("stacked", [
-    {
+perfometer_info.append({
+    "type"          : "stacked",
+    "perfometers"   : [
+        {
             "type"      : "linear",
             "segments"  : [ "threads_idle" ],
             "total"     : "threads_idle:max",
         },
-    {
+        {
             "type"      : "linear",
             "segments"  : [ "threads_busy" ],
             "total"     : "threads_busy:max",
-    }
-]))
+        }
+    ],
+})
 
 perfometer_info.append({
     "type"          : "logarithmic",
@@ -5673,8 +5686,17 @@ perfometer_info.append({
     "label"     : ( "fs_used(%)", "%" ),
 })
 
-# TODO total = None?
-perfometer_info.append(("linear", ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,+,swap_used,/,100,*", "%"))))
+perfometer_info.append({
+    "type"        : "linear",
+    "segments"    : [
+        "mem_used",
+        "swap_used",
+        "caches",
+        "mem_free",
+        "swap_free"
+    ],
+    "label"       : ("mem_total,mem_used,+,swap_used,/,100,*", "%"),
+})
 
 perfometer_info.append({
     "type"      : "linear",
@@ -5695,20 +5717,23 @@ perfometer_info.append({
     "exponent"      : 10.0,
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "tablespace_wasted",
-        "half_value"    : 1000000,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "indexspace_wasted",
-        "half_value"    : 1000000,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type"          : "stacked",
+    "perfometers"   : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "tablespace_wasted",
+            "half_value"    : 1000000,
+            "exponent"      : 2,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "indexspace_wasted",
+            "half_value"    : 1000000,
+            "exponent"      : 2,
+        },
+    ],
+})
 
 perfometer_info.append({
     "type"      : "linear",
@@ -5737,66 +5762,78 @@ perfometer_info.append({
     "exponent"      : 2,
 })
 
-perfometer_info.append(("dual", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "input_signal_power_dbm",
-        "half_value"    : 4,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "output_signal_power_dbm",
-        "half_value"    : 4,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type"        : "dual",
+    "perfometers" : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "input_signal_power_dbm",
+            "half_value"    : 4,
+            "exponent"      : 2,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "output_signal_power_dbm",
+            "half_value"    : 4,
+            "exponent"      : 2,
+        },
+    ],
+})
 
 
-perfometer_info.append(("dual", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "if_in_octets",
-        "half_value"    : 5000000,
-        "exponent"      : 5,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "if_out_octets",
-        "half_value"    : 5000000,
-        "exponent"      : 5,
-    }
-]))
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "if_in_octets",
+            "half_value"    : 5000000,
+            "exponent"      : 5,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "if_out_octets",
+            "half_value"    : 5000000,
+            "exponent"      : 5,
+        },
+    ],
+})
 
-perfometer_info.append(("dual", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "if_out_unicast_octets,if_out_non_unicast_octets,+",
-        "half_value"    : 5000000,
-        "exponent"      : 5,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "if_in_octets",
-        "half_value"    : 5000000,
-        "exponent"      : 5,
-    }
-]))
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "if_out_unicast_octets,if_out_non_unicast_octets,+",
+            "half_value"    : 5000000,
+            "exponent"      : 5,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "if_in_octets",
+            "half_value"    : 5000000,
+            "exponent"      : 5,
+        },
+    ],
+})
 
-perfometer_info.append(("dual", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "read_blocks",
-        "half_value"    : 50000000,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "write_blocks",
-        "half_value"    : 50000000,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "read_blocks",
+            "half_value"    : 50000000,
+            "exponent"      : 2,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "write_blocks",
+            "half_value"    : 50000000,
+            "exponent"      : 2,
+        },
+    ],
+})
 
 perfometer_info.append({
     "type"      : "logarithmic",
@@ -5805,20 +5842,23 @@ perfometer_info.append({
     "exponent"  : 2
 })
 
-perfometer_info.append(("dual", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "deadlocks",
-        "half_value"    : 50,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "lockwaits",
-        "half_value"    : 50,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "deadlocks",
+            "half_value"    : 50,
+            "exponent"      : 2,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "lockwaits",
+            "half_value"    : 50,
+            "exponent"      : 2,
+        },
+    ],
+})
 
 
 # TODO: max fehlt
@@ -5839,36 +5879,45 @@ perfometer_info.append({
     "total"     : "tablespace_max_size",
 })
 
-perfometer_info.append(("stacked", [
-    ("dual", [
+perfometer_info.append({
+    "type"        : "stacked",
+    "perfometers" : [
         {
-            "type"      : "linear",
-            "label"     : None,
-            "segments"  : [ "total_hitratio" ],
-            "total": 100
+            "type"        : "dual",
+            "perfometers" : [
+                {
+                    "type"      : "linear",
+                    "label"     : None,
+                    "segments"  : [ "total_hitratio" ],
+                    "total": 100
+                },
+                {
+                    "type"      : "linear",
+                    "label"     : None,
+                    "segments"  : [ "data_hitratio" ],
+                    "total"     : 100
+                },
+            ],
         },
         {
-            "type"      : "linear",
-            "label"     : None,
-            "segments"  : [ "data_hitratio" ],
-            "total"     : 100
-        }
-    ]),
-    ("dual", [
-        {
-            "type"      : "linear",
-            "label"     : None,
-            "segments"  : [ "index_hitratio" ],
-            "total"     : 100
+            "type"       : "dual",
+            "perfometers" : [
+                {
+                    "type"      : "linear",
+                    "label"     : None,
+                    "segments"  : [ "index_hitratio" ],
+                    "total"     : 100
+                },
+                {
+                    "type"      : "linear",
+                    "label"     : None,
+                    "segments"  : [ "xda_hitratio" ],
+                    "total"     : 100
+                },
+            ],
         },
-        {
-            "type"      : "linear",
-            "label"     : None,
-            "segments"  : [ "xda_hitratio" ],
-            "total"     : 100
-        }
-    ])
-]))
+    ],
+})
 
 perfometer_info.append({
     "type"      : "linear",
@@ -5916,20 +5965,23 @@ perfometer_info.append({
     "total"     : 100.0,
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "requests_per_second",
-        "half_value"    : 10,
-        "exponent"      : 5,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "busy_workers",
-        "half_value"    : 10,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type"       : "stacked",
+    "perfometers" : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "requests_per_second",
+            "half_value"    : 10,
+            "exponent"      : 5,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "busy_workers",
+            "half_value"    : 10,
+            "exponent"      : 2,
+        },
+    ],
+})
 
 perfometer_info.append({
     "type"      : "linear",
@@ -5955,19 +6007,22 @@ perfometer_info.append({
     "total"     : 100,
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "signal_noise",
-        "half_value"    : 50.0,
-        "exponent"      : 2.0,
-    },
-    {
-        "type"          : "linear",
-        "segments"      : [ "codewords_corrected", "codewords_uncorrectable" ],
-        "total"         : 1.0,
-    }
-]))
+perfometer_info.append({
+    "type"       : "stacked",
+    "perfometers" : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "signal_noise",
+            "half_value"    : 50.0,
+            "exponent"      : 2.0,
+        },
+        {
+            "type"          : "linear",
+            "segments"      : [ "codewords_corrected", "codewords_uncorrectable" ],
+            "total"         : 1.0,
+        },
+    ],
+})
 
 perfometer_info.append({
     "type"          : "logarithmic",
@@ -5976,20 +6031,23 @@ perfometer_info.append({
     "exponent"      : 2.0
 }) # Fallback if no codewords are available
 
-perfometer_info.append(("dual", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "disk_read_throughput",
-        "half_value"    : 5000000,
-        "exponent"      : 10,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "disk_write_throughput",
-        "half_value"    : 5000000,
-        "exponent"      : 10,
-    }
-]))
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "disk_read_throughput",
+            "half_value"    : 5000000,
+            "exponent"      : 10,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "disk_write_throughput",
+            "half_value"    : 5000000,
+            "exponent"      : 10,
+        },
+    ],
+})
 
 perfometer_info.append({
     "type"      : "logarithmic",
@@ -6093,20 +6151,23 @@ perfometer_info.append({
     "exponent"   : 5,
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "direct_io",
-        "half_value"    : 25,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "buffered_io",
-        "half_value"    : 25,
-        "expoent"       : 2,
-    }
-]))
+perfometer_info.append({
+    "type"        : "stacked",
+    "perfometers" : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "direct_io",
+            "half_value"    : 25,
+            "exponent"      : 2,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "buffered_io",
+            "half_value"    : 25,
+            "expoent"       : 2,
+        },
+    ],
+})
 
 # TODO: :max should be the default?
 perfometer_info.append({
@@ -6115,35 +6176,41 @@ perfometer_info.append({
     "total"     : "free_dhcp_leases:max",
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "host_check_rate",
-        "half_value"    : 50,
-        "exponent"      : 5,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "service_check_rate",
-        "half_value"    : 200,
-        "exponent"      : 5,
-    }
-]))
+perfometer_info.append({
+    "type"        : "stacked",
+    "perfometers" : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "host_check_rate",
+            "half_value"    : 50,
+            "exponent"      : 5,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "service_check_rate",
+            "half_value"    : 200,
+            "exponent"      : 5,
+        },
+    ],
+})
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "normal_updates",
-        "half_value"    : 10,
-        "exponent"      : 2,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "security_updates",
-        "half_value"    : 10,
-        "exponent"      : 2,
-    }
-]))
+perfometer_info.append({
+    "type"        : "stacked",
+    "perfometers" : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "normal_updates",
+            "half_value"    : 10,
+            "exponent"      : 2,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "security_updates",
+            "half_value"    : 10,
+            "exponent"      : 2,
+        },
+    ],
+})
 
 perfometer_info.append({
     "type"       : "logarithmic",
@@ -6159,20 +6226,23 @@ perfometer_info.append({
     "exponent"   : 2,
 })
 
-perfometer_info.append(("stacked", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "mail_queue_deferred_length",
-        "half_value"    : 10000,
-        "exponent"      : 5,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "mail_queue_active_length",
-        "half_value"    : 10000,
-        "exponent"      : 5,
-    }
-]))
+perfometer_info.append({
+    "type"        : "stacked",
+    "perfometers" : [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "mail_queue_deferred_length",
+            "half_value"    : 10000,
+            "exponent"      : 5,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "mail_queue_active_length",
+            "half_value"    : 10000,
+            "exponent"      : 5,
+        }
+    ],
+})
 
 perfometer_info.append({
     "type"          : "logarithmic",
@@ -6194,18 +6264,21 @@ perfometer_info.append({
     "total"    : 100.0,
 })
 
-perfometer_info.append(("dual", [
-    {
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
             "type"      : "linear",
             "segments"  : [ "qos_dropped_bytes_rate" ],
             "total"     : "qos_dropped_bytes_rate:max"
-    },
-    {
+        },
+        {
             "type"      : "linear",
             "segments"  : [ "qos_outbound_bytes_rate" ],
             "total"     : "qos_outbound_bytes_rate:max"
-    }
-]))
+        },
+    ],
+})
 
 perfometer_info.append({
     "type"      : "logarithmic",
@@ -6228,20 +6301,23 @@ perfometer_info.append({
     "exponent"  : 2,
 })
 
-perfometer_info.append(("dual", [
-    {
-        "type"          : "logarithmic",
-        "metric"        : "fc_rx_bytes",
-        "half_value"    : 30 * MB,
-        "exponent"      : 3,
-    },
-    {
-        "type"          : "logarithmic",
-        "metric"        : "fc_tx_bytes",
-        "half_value"    : 30 * MB,
-        "exponent"      : 3,
-    }
-]))
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
+            "type"          : "logarithmic",
+            "metric"        : "fc_rx_bytes",
+            "half_value"    : 30 * MB,
+            "exponent"      : 3,
+        },
+        {
+            "type"          : "logarithmic",
+            "metric"        : "fc_tx_bytes",
+            "half_value"    : 30 * MB,
+            "exponent"      : 3,
+        },
+    ],
+})
 
 perfometer_info.append({
     "type"       : "logarithmic",
@@ -6271,19 +6347,22 @@ perfometer_info.append({
 
 
 for x in reversed(range(1, MAX_NUMBER_HOPS)):
-    perfometer_info.append(("dual", [
-        {
-            "type"     : "linear",
-            "segments" : [ "hop_%d_pl" % x ],
-            "total"    : 100.0,
-        },
-        {
-            "type"       : "logarithmic",
-            "metric"        : "hop_%d_rta" % x,
-            "half_value"    : 0.1,
-            "exponent"      : 4
-        }
-    ]))
+    perfometer_info.append({
+        "type": "dual",
+        "perfometers": [
+            {
+                "type"     : "linear",
+                "segments" : [ "hop_%d_pl" % x ],
+                "total"    : 100.0,
+            },
+            {
+                "type"       : "logarithmic",
+                "metric"        : "hop_%d_rta" % x,
+                "half_value"    : 0.1,
+                "exponent"      : 4
+            },
+        ],
+    })
 
 perfometer_info.append({
     "type"       : "logarithmic",

@@ -36,7 +36,7 @@ the current metrics of this service.
 <li><i>Linear</i>: The first segment of the displayed values is used</li>
 <li><i>Stacked</i>: The sort value of the first stacked perfometer is used</li>
 <li><i>Dual<i>: The maximum of both displayed value is used for sorting</li>
-<ul>
+</ul>
 
 The sorting only works for perfometers that are implemented as metric plugin
 (in <tt>plugins/metrics/</tt>). The legacy perfometers that are implemented as perfometer

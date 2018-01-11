@@ -87,14 +87,17 @@ def load_plugins(force):
     global metric_info     ; metric_info     = {}
     global check_metrics   ; check_metrics   = {}
     global perfometer_info ; perfometer_info = []
+
     # mk_collections.AutomaticDict is used here to provide some list methods.
     # This is needed to maintain backwards-compatibility.
     global graph_info      ; graph_info      = AutomaticDict("manual_graph_template")
+
     load_web_plugins("metrics", globals())
     loaded_with_language = current_language
 
     fixup_graph_info()
     fixup_unit_info()
+    fixup_perfometer_info()
 
 
 def fixup_graph_info():
@@ -109,6 +112,49 @@ def fixup_unit_info():
         unit["id"] = unit_id
         unit.setdefault("description", unit["title"])
 
+
+# During implementation of the metric system the perfometers were first defined using
+# tuples. This has been replaced with a dict based syntax. This function converts the
+# old known formats from tuple to dict.
+# All shipped perfometers have been converted to the dict format with 1.5.0i3.
+# TODO: Remove this one day.
+def fixup_perfometer_info():
+    _convert_legacy_tuple_perfometers(perfometer_info)
+
+
+def _convert_legacy_tuple_perfometers(perfometers):
+    for index, perfometer in reversed(list(enumerate(perfometers))):
+        if type(perfometer) == dict:
+            continue
+
+        if type(perfometer) != tuple or len(perfometer) != 2:
+            raise MKGeneralException(_("Invalid perfometer declaration: %r") % perfometer)
+
+        # Convert legacy tuple based perfometer
+        perfometer_type, perfometer_args = perfometer[0], perfometer[1]
+        if perfometer_type in ("dual", "stacked"):
+
+            sub_performeters = perfometer_args[:]
+            _convert_legacy_tuple_perfometers(sub_performeters)
+
+            perfometers[index] = {
+                "type"        : perfometer_type,
+                "perfometers" : sub_performeters,
+            }
+
+        elif perfometer_type == "linear" and len(perfometer_args) == 3:
+            required, total, label = perfometer_args
+
+            perfometers[index] = {
+                "type"        : perfometer_type,
+                "segments"    : required,
+                "total"       : total,
+                "label"       : label,
+            }
+
+        else:
+            logger.warning(_("Could not convert perfometer to dict format: %r. Ignoring this one.") % perfometer)
+            perfometers.pop(index)
 
 #.
 #   .--Constants-----------------------------------------------------------.
@@ -777,67 +823,51 @@ def get_perfometers(translated_metrics):
 
 # TODO: We will run into a performance problem here when we
 # have more and more Perf-O-Meter definitions.
-# TODO: remove all tuple-perfometers and use dicts
 def perfometer_possible(perfometer, translated_metrics):
-
-    if type(perfometer) == dict:
-        if perfometer["type"] == "linear":
-            required = perfometer["segments"][:]
-        elif perfometer["type"] == "logarithmic":
-            required = [ perfometer["metric"] ]
-        else:
-            pass # TODO: dual, stacked?
-
-        if "label" in perfometer and perfometer["label"] != None:
-            required.append(perfometer["label"][0])
-        if "total" in perfometer:
-            required.append(perfometer["total"])
-
-        for req in required:
-            try:
-                evaluate(req, translated_metrics)
-            except:
-                return False
-
-        if "condition" in perfometer:
-            try:
-                value, color, unit = evaluate(perfometer["condition"], translated_metrics)
-                if value == 0.0:
-                    return False
-            except:
-                return False
-
-        return True
-
-
-
-    perf_type, perf_args = perfometer
-
-    if perf_type == "logarithmic":
-        required = [ perf_args[0] ]
-
-    elif perf_type == "linear":
-        required = perf_args[0]
-        if perf_args[1]:
-            required = required + [perf_args[1]] # Reference value for 100%
-        if perf_args[2]:
-            required = required + [perf_args[2]] # Labelling value
-
-    elif perf_type in ("stacked", "dual"):
-        for sub_perf in perf_args:
-            if not perfometer_possible(sub_perf, translated_metrics):
-                return False
-        return True
-
-    else:
-        raise MKInternalError(_("Undefined Perf-O-Meter type '%s'") % perf_type)
-
-    for req in required:
+    for req in _get_perfometer_expressions(perfometer, translated_metrics):
         try:
             evaluate(req, translated_metrics)
         except:
             return False
+
+    if "condition" in perfometer:
+        try:
+            value, color, unit = evaluate(perfometer["condition"], translated_metrics)
+            if value == 0.0:
+                return False
+        except:
+            return False
+
     return True
+
+
+def _get_perfometer_expressions(perfometer, translated_metrics):
+    required = []
+
+    if perfometer["type"] == "linear":
+        required = perfometer["segments"][:]
+
+    elif perfometer["type"] == "logarithmic":
+        required = [ perfometer["metric"] ]
+
+    elif perfometer["type"] in ("stacked", "dual"):
+        if "perfometers" not in perfometer:
+	    raise MKGeneralException(_("Perfometers of type 'stacked' and 'dual' need "
+                    "the element 'perfometers' (%r)") % perfometer)
+
+        for sub_perfometer in perfometer["perfometers"]:
+            required += _get_perfometer_expressions(sub_perfometer, translated_metrics)
+
+    else:
+        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
+
+    if "label" in perfometer and perfometer["label"] != None:
+        required.append(perfometer["label"][0])
+
+    if "total" in perfometer:
+        required.append(perfometer["total"])
+
+    return required
 
 
 def metricometer_logarithmic(value, half_value, base, color):
@@ -858,93 +888,32 @@ def metricometer_logarithmic(value, half_value, base, color):
 
 
 def build_perfometer(perfometer, translated_metrics):
-    # TODO: alle nicht-dict Perfometer umstellen
-    if type(perfometer) == dict:
-        if perfometer["type"] == "logarithmic":
-            value, unit, color = evaluate(perfometer["metric"], translated_metrics)
-            label = unit["render"](value)
-            stack = [ metricometer_logarithmic(value, perfometer["half_value"], perfometer["exponent"], color) ]
-
-        elif perfometer["type"] == "linear":
-            entry = []
-            stack = [entry]
-
-            summed = 0.0
-
-            for ex in perfometer["segments"]:
-                value, unit, color = evaluate(ex, translated_metrics)
-                summed += value
-
-            if "total" in perfometer:
-                total, unit, color = evaluate(perfometer["total"], translated_metrics)
-            else:
-                total = summed
-
-            if total == 0:
-                entry.append((100.0, "#ffffff"))
-
-            else:
-                for ex in perfometer["segments"]:
-                    value, unit, color = evaluate(ex, translated_metrics)
-                    entry.append((100.0 * value / total, color))
-
-                # Paint rest only, if it is positive and larger than one promille
-                if total - summed > 0.001:
-                    entry.append((100.0 * (total - summed) / total, "#ffffff"))
-
-            # Use unit of first metrics for output of sum. We assume that all
-            # stackes metrics have the same unit anyway
-            value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
-            label = unit["render"](summed)
-
-        # "label" option in all Perf-O-Meters overrides automatic label
-        if "label" in perfometer:
-            if perfometer["label"] == None:
-                label = ""
-            else:
-                expr, unit_name = perfometer["label"]
-                value, unit, color = evaluate(expr, translated_metrics)
-                if unit_name:
-                    unit = unit_info[unit_name]
-                label = unit["render"](value)
-
-        return label, stack
-
-
-
-    # This stuf is deprecated and will be removed soon. Watch out!
-    perfometer_type, definition = perfometer
-
-    if perfometer_type == "logarithmic":
-        expression, median, exponent = definition
-        value, unit, color = evaluate(expression, translated_metrics)
+    if perfometer["type"] == "logarithmic":
+        value, unit, color = evaluate(perfometer["metric"], translated_metrics)
         label = unit["render"](value)
-        stack = [ metricometer_logarithmic(value, median, exponent, color) ]
+        stack = [ metricometer_logarithmic(value, perfometer["half_value"], perfometer["exponent"], color) ]
 
-    # TODO: das hier fliegt raus
-    elif perfometer_type == "linear":
+    elif perfometer["type"] == "linear":
         entry = []
         stack = [entry]
 
-        # NOTE: This might be converted to a dict later.
-        metrics_expressions, total_spec, label_expression = definition
         summed = 0.0
 
-        for ex in metrics_expressions:
-            value, unit_name, color = evaluate(ex, translated_metrics)
+        for ex in perfometer["segments"]:
+            value, unit, color = evaluate(ex, translated_metrics)
             summed += value
 
-        if total_spec == None:
-            total = summed
+        if "total" in perfometer:
+            total, unit, color = evaluate(perfometer["total"], translated_metrics)
         else:
-            total, unit_name, color = evaluate(total_spec, translated_metrics)
+            total = summed
 
         if total == 0:
             entry.append((100.0, "#ffffff"))
 
         else:
-            for ex in metrics_expressions:
-                value, unit_name, color = evaluate(ex, translated_metrics)
+            for ex in perfometer["segments"]:
+                value, unit, color = evaluate(ex, translated_metrics)
                 entry.append((100.0 * value / total, color))
 
             # Paint rest only, if it is positive and larger than one promille
@@ -953,37 +922,31 @@ def build_perfometer(perfometer, translated_metrics):
 
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
-        if label_expression:
-            expr, unit_name = label_expression
-            value, unit, color = evaluate(expr, translated_metrics)
-            if unit_name:
-                unit = unit_info[unit_name]
-            label = unit["render"](summed)
-        else: # absolute
-            value, unit, color = evaluate(metrics_expressions[0], translated_metrics)
-            label = unit["render"](summed)
+        value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
+        label = unit["render"](summed)
 
-    elif perfometer_type == "stacked":
+    elif perfometer["type"] == "stacked":
         stack = []
-        labels = []
-        for sub_perf in definition:
+        sub_labels = []
+        for sub_perf in perfometer["perfometers"]:
             sub_label, sub_stack = build_perfometer(sub_perf, translated_metrics)
             stack.append(sub_stack[0])
             if sub_label:
-                labels.append(sub_label)
-        if labels:
-            label = " / ".join(labels)
+                sub_labels.append(sub_label)
+
+        if sub_labels:
+            label = " / ".join(sub_labels)
         else:
             label = ""
-        return label, stack
 
-    elif perfometer_type == "dual":
-        labels = []
-        if len(definition) != 2:
-            raise MKInternalError(_("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d") % len(definition))
+    elif perfometer["type"] == "dual":
+        if len(perfometer["perfometers"]) != 2:
+            raise MKInternalError(_("Perf-O-Meter of type 'dual' must contain exactly "
+			            "two definitions, not %d") % len(perfometer["perfometers"]))
 
+        sub_labels = []
         content = []
-        for nr, sub_perf in enumerate(definition):
+        for nr, sub_perf in enumerate(perfometer["perfometers"]):
             sub_label, sub_stack = build_perfometer(sub_perf, translated_metrics)
             if len(sub_stack) != 1:
                 raise MKInternalError(_("Perf-O-Meter of type 'dual' must only contain plain Perf-O-Meters"))
@@ -993,22 +956,30 @@ def build_perfometer(perfometer, translated_metrics):
                 half_stack.reverse()
             content += half_stack
             if sub_label:
-                labels.append(sub_label)
+                sub_labels.append(sub_label)
 
-        if labels:
-            label = " / ".join(labels)
+        if sub_labels:
+            label = " / ".join(sub_labels)
         else:
             label = ""
-        return label, [ content ]
 
+	stack = [ content ]
 
     else:
-        raise MKInternalError(_("Unsupported Perf-O-Meter type '%s'") % perfometer_type)
+        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
+
+    # "label" option in all Perf-O-Meters overrides automatic label
+    if "label" in perfometer:
+        if perfometer["label"] == None:
+            label = ""
+        else:
+            expr, unit_name = perfometer["label"]
+            value, unit, color = evaluate(expr, translated_metrics)
+            if unit_name:
+                unit = unit_info[unit_name]
+            label = unit["render"](value)
 
     return label, stack
-
-
-
 
 #.
 #   .--Graphs--------------------------------------------------------------.

@@ -870,41 +870,119 @@ def _get_perfometer_expressions(perfometer, translated_metrics):
     return required
 
 
-def metricometer_logarithmic(value, half_value, base, color):
-    # Negative values are printed like positive ones (e.g. time offset)
-    value = abs(float(value))
-    if value == 0.0:
-        pos = 0
-    else:
-        half_value = float(half_value)
-        h = math.log(half_value, base) # value to be displayed at 50%
-        pos = 50 + 10.0 * (math.log(value, base) - h)
-        if pos < 2:
-            pos = 2
-        if pos > 98:
-            pos = 98
 
-    return [ (pos, color), (100 - pos, "#ffffff") ]
+class MetricometerRenderer(object):
+    @classmethod
+    def type_name(cls):
+        raise NotImplementedError()
 
 
-def build_perfometer(perfometer, translated_metrics):
-    if perfometer["type"] == "logarithmic":
-        value, unit, color = evaluate(perfometer["metric"], translated_metrics)
-        label = unit["render"](value)
-        stack = [ metricometer_logarithmic(value, perfometer["half_value"], perfometer["exponent"], color) ]
+    @classmethod
+    def get_renderer(cls, perfometer_type):
+        subclasses = cls.__subclasses__() # pylint: disable=no-member
 
-    elif perfometer["type"] == "linear":
+        for subclass in subclasses:
+            if subclass.type_name() == perfometer_type:
+                return subclass
+
+        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer_type)
+
+
+    def __init__(self, perfometer, translated_metrics):
+        super(MetricometerRenderer, self).__init__()
+        self._perfometer = perfometer
+        self._translated_metrics = translated_metrics
+
+
+    def get_stack(self):
+        """Return a list of perfometer elements
+
+        Each element is represented by a 2 element tuple where the first element is
+        the width in px and the second element the hex color code of this element.
+        """
+        raise NotImplementedError()
+
+
+    def get_label(self):
+        """Returns the label to be shown on top of the rendered stack
+
+        When the perfometer type definition has a "label" element, this will be used.
+        Otherwise the perfometer type specific label of _get_type_label() will be used.
+        """
+
+        # "label" option in all Perf-O-Meters overrides automatic label
+        if "label" in self._perfometer:
+            if self._perfometer["label"] == None:
+                return ""
+
+            expr, unit_name = self._perfometer["label"]
+            value, unit, color = evaluate(expr, self._translated_metrics)
+            if unit_name:
+                unit = unit_info[unit_name]
+            return unit["render"](value)
+
+        return self._get_type_label()
+
+
+    def _get_type_label(self):
+        """Returns the label for this perfometer type"""
+        raise NotImplementedError()
+
+
+
+class MetricometerRendererLogarithmic(MetricometerRenderer):
+    @classmethod
+    def type_name(cls):
+        return "logarithmic"
+
+
+    def __init__(self, perfometer, translated_metrics):
+        super(MetricometerRendererLogarithmic, self).__init__(perfometer, translated_metrics)
+
+        if "metric" not in self._perfometer:
+            raise MKGeneralException(_("Missing key \"metric\" in logarithmic perfometer: %r") % self._perfometer)
+
+
+    def get_stack(self):
+        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        return [ self.get_stack_from_values(value, self._perfometer["half_value"], self._perfometer["exponent"], color) ]
+
+
+    def _get_type_label(self):
+        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        return unit["render"](value)
+
+
+    def get_stack_from_values(self, value, half_value, base, color):
+        # Negative values are printed like positive ones (e.g. time offset)
+        value = abs(float(value))
+        if value == 0.0:
+            pos = 0
+        else:
+            half_value = float(half_value)
+            h = math.log(half_value, base) # value to be displayed at 50%
+            pos = 50 + 10.0 * (math.log(value, base) - h)
+            if pos < 2:
+                pos = 2
+            if pos > 98:
+                pos = 98
+
+        return [ (pos, color), (100 - pos, "#ffffff") ]
+
+
+
+class MetricometerRendererLinear(MetricometerRenderer):
+    @classmethod
+    def type_name(cls):
+        return "linear"
+
+    def get_stack(self):
         entry = []
-        stack = [entry]
 
-        summed = 0.0
+        summed = self._get_summed_values()
 
-        for ex in perfometer["segments"]:
-            value, unit, color = evaluate(ex, translated_metrics)
-            summed += value
-
-        if "total" in perfometer:
-            total, unit, color = evaluate(perfometer["total"], translated_metrics)
+        if "total" in self._perfometer:
+            total, unit, color = evaluate(self._perfometer["total"], self._translated_metrics)
         else:
             total = summed
 
@@ -912,42 +990,89 @@ def build_perfometer(perfometer, translated_metrics):
             entry.append((100.0, "#ffffff"))
 
         else:
-            for ex in perfometer["segments"]:
-                value, unit, color = evaluate(ex, translated_metrics)
+            for ex in self._perfometer["segments"]:
+                value, unit, color = evaluate(ex, self._translated_metrics)
                 entry.append((100.0 * value / total, color))
 
             # Paint rest only, if it is positive and larger than one promille
             if total - summed > 0.001:
                 entry.append((100.0 * (total - summed) / total, "#ffffff"))
 
+        return [ entry ]
+
+
+    def _get_type_label(self):
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
-        value, unit, color = evaluate(perfometer["segments"][0], translated_metrics)
-        label = unit["render"](summed)
+        value, unit, color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
+        return unit["render"](self._get_summed_values())
 
-    elif perfometer["type"] == "stacked":
+
+    def _get_summed_values(self):
+        summed = 0.0
+        for ex in self._perfometer["segments"]:
+            value, unit, color = evaluate(ex, self._translated_metrics)
+            summed += value
+        return summed
+
+
+
+class MetricometerRendererStacked(MetricometerRenderer):
+    @classmethod
+    def type_name(cls):
+        return "stacked"
+
+
+    def get_stack(self):
         stack = []
-        sub_labels = []
-        for sub_perf in perfometer["perfometers"]:
-            sub_label, sub_stack = build_perfometer(sub_perf, translated_metrics)
+        for sub_perfometer in self._perfometer["perfometers"]:
+            renderer_cls = MetricometerRenderer.get_renderer(sub_perfometer["type"])
+            renderer = renderer_cls(sub_perfometer, self._translated_metrics)
+
+            sub_stack = renderer.get_stack()
             stack.append(sub_stack[0])
+
+        return stack
+
+
+    def _get_type_label(self):
+        sub_labels = []
+        for sub_perfometer in self._perfometer["perfometers"]:
+            renderer_cls = MetricometerRenderer.get_renderer(sub_perfometer["type"])
+            renderer = renderer_cls(sub_perfometer, self._translated_metrics)
+
+            sub_label = renderer.get_label()
             if sub_label:
                 sub_labels.append(sub_label)
 
-        if sub_labels:
-            label = " / ".join(sub_labels)
-        else:
-            label = ""
+        if not sub_labels:
+            return ""
 
-    elif perfometer["type"] == "dual":
+        return " / ".join(sub_labels)
+
+
+
+class MetricometerRendererDual(MetricometerRenderer):
+    def __init__(self, perfometer, translated_metrics):
+        super(MetricometerRendererDual, self).__init__(perfometer, translated_metrics)
+
         if len(perfometer["perfometers"]) != 2:
             raise MKInternalError(_("Perf-O-Meter of type 'dual' must contain exactly "
 			            "two definitions, not %d") % len(perfometer["perfometers"]))
 
-        sub_labels = []
+
+    @classmethod
+    def type_name(cls):
+        return "dual"
+
+
+    def get_stack(self):
         content = []
-        for nr, sub_perf in enumerate(perfometer["perfometers"]):
-            sub_label, sub_stack = build_perfometer(sub_perf, translated_metrics)
+        for nr, sub_perfometer in enumerate(self._perfometer["perfometers"]):
+            renderer_cls = MetricometerRenderer.get_renderer(sub_perfometer["type"])
+            renderer = renderer_cls(sub_perfometer, self._translated_metrics)
+
+            sub_stack = renderer.get_stack()
             if len(sub_stack) != 1:
                 raise MKInternalError(_("Perf-O-Meter of type 'dual' must only contain plain Perf-O-Meters"))
 
@@ -955,31 +1080,25 @@ def build_perfometer(perfometer, translated_metrics):
             if nr == 0:
                 half_stack.reverse()
             content += half_stack
+
+        return [ content ]
+
+
+    def _get_type_label(self):
+        sub_labels = []
+        for sub_perfometer in self._perfometer["perfometers"]:
+            renderer_cls = MetricometerRenderer.get_renderer(sub_perfometer["type"])
+            renderer = renderer_cls(sub_perfometer, self._translated_metrics)
+
+            sub_label = renderer.get_label()
             if sub_label:
                 sub_labels.append(sub_label)
 
-        if sub_labels:
-            label = " / ".join(sub_labels)
-        else:
-            label = ""
+        if not sub_labels:
+            return ""
 
-	stack = [ content ]
+        return " / ".join(sub_labels)
 
-    else:
-        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
-
-    # "label" option in all Perf-O-Meters overrides automatic label
-    if "label" in perfometer:
-        if perfometer["label"] == None:
-            label = ""
-        else:
-            expr, unit_name = perfometer["label"]
-            value, unit, color = evaluate(expr, translated_metrics)
-            if unit_name:
-                unit = unit_info[unit_name]
-            label = unit["render"](value)
-
-    return label, stack
 
 #.
 #   .--Graphs--------------------------------------------------------------.

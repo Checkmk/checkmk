@@ -379,7 +379,6 @@ public:
                        HRESULT(SAFEARRAY *psa, UINT nDim, LONG *plLbound));
     MOCK_CONST_METHOD3(SafeArrayGetUBound,
                        HRESULT(SAFEARRAY *psa, UINT nDim, LONG *plUbound));
-    MOCK_CONST_METHOD1(SysAllocString, BSTR(const OLECHAR *));
     MOCK_CONST_METHOD1(SysFreeString, void(BSTR));
     MOCK_CONST_METHOD1(VariantClear, HRESULT(VARIANTARG *pvarg));
 

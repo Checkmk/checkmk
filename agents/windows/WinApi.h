@@ -346,7 +346,6 @@ public:
                                        LONG *plLbound) const override;
     virtual HRESULT SafeArrayGetUBound(SAFEARRAY *psa, UINT nDim,
                                        LONG *plUbound) const override;
-    virtual BSTR SysAllocString(const OLECHAR *) const override;
     virtual void SysFreeString(BSTR) const override;
     virtual HRESULT VariantClear(VARIANTARG *pvarg) const override;
 

@@ -382,7 +382,6 @@ public:
                                        LONG *plLbound) const = 0;
     virtual HRESULT SafeArrayGetUBound(SAFEARRAY *psa, UINT nDim,
                                        LONG *plUbound) const = 0;
-    virtual BSTR SysAllocString(const OLECHAR *) const = 0;
     virtual void SysFreeString(BSTR) const = 0;
     virtual HRESULT VariantClear(VARIANTARG *pvarg) const = 0;
 

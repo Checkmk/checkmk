@@ -116,9 +116,3 @@ CLEANFILES = \
         $(addprefix $(bindir)/,$(bin_PROGRAMS)) \
         $(patsubst %$(EXEEXT),%-64$(EXEEXT),$(addprefix $(bindir)/,$(bin_PROGRAMS))) \
         $(patsubst %$(EXEEXT),%.msi,$(addprefix $(bindir)/,$(bin_PROGRAMS)))
-
-setversion:
-	package="Check_MK Windows Agent" ; \
-	mail=feedback@check-mk.org ; \
-	sed -i "s/^AC_INIT.*/AC_INIT([$$package], [$(NEW_VERSION)], [$$mail])/" \
-	    $(VPATH)/configure.ac

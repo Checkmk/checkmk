@@ -59,14 +59,11 @@ const char *typeToSection(script_type type) {
 
 void outputScript(const std::string &output, script_container *cont,
                   const WinApiAdaptor &winapi) {
-    if (cont->buffer_work != nullptr) {
-        winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
-    }
     const auto count = output.size();
-    cont->buffer_work = reinterpret_cast<char *>(
-        winapi.HeapAlloc(winapi.GetProcessHeap(), HEAP_ZERO_MEMORY, count + 1));
-    output.copy(cont->buffer_work, count);
-    cont->buffer_work[count] = '\0';
+    cont->buffer_work.reset(reinterpret_cast<char *>(winapi.HeapAlloc(
+        winapi.GetProcessHeap(), HEAP_ZERO_MEMORY, count + 1)));
+    output.copy(cont->buffer_work.get(), count);
+    cont->buffer_work.get()[count] = '\0';
 }
 
 int launch_program(script_container *cont) {
@@ -82,14 +79,11 @@ int launch_program(script_container *cont) {
         memset(buf, 0, BUFFER_SIZE);
         time_t process_start = time(0);
 
-        if (cont->buffer_work != NULL) {
-            winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
-        }
-        cont->buffer_work = (char *)winapi.HeapAlloc(
-            winapi.GetProcessHeap(), HEAP_ZERO_MEMORY, HEAP_BUFFER_DEFAULT);
+        cont->buffer_work.reset(reinterpret_cast<char *>(winapi.HeapAlloc(
+            winapi.GetProcessHeap(), HEAP_ZERO_MEMORY, HEAP_BUFFER_DEFAULT)));
 
-        unsigned long current_heap_size =
-            winapi.HeapSize(winapi.GetProcessHeap(), 0, cont->buffer_work);
+        unsigned long current_heap_size = winapi.HeapSize(
+            winapi.GetProcessHeap(), 0, cont->buffer_work.get());
 
         int out_offset = 0;
         // outer loop -> wait until the process is finished, reading its output
@@ -116,11 +110,14 @@ int launch_program(script_container *cont) {
                 while (out_offset + available > current_heap_size) {
                     // Increase heap buffer
                     if (current_heap_size * 2 <= HEAP_BUFFER_MAX) {
-                        cont->buffer_work = (char *)winapi.HeapReAlloc(
-                            winapi.GetProcessHeap(), HEAP_ZERO_MEMORY,
-                            cont->buffer_work, current_heap_size * 2);
-                        current_heap_size = winapi.HeapSize(
-                            winapi.GetProcessHeap(), 0, cont->buffer_work);
+                        cont->buffer_work.reset(
+                            reinterpret_cast<char *>(winapi.HeapReAlloc(
+                                winapi.GetProcessHeap(), HEAP_ZERO_MEMORY,
+                                cont->buffer_work.release(),
+                                current_heap_size * 2)));
+                        current_heap_size =
+                            winapi.HeapSize(winapi.GetProcessHeap(), 0,
+                                            cont->buffer_work.get());
                     } else {
                         result = BUFFER_FULL;
                         break;
@@ -131,7 +128,7 @@ int launch_program(script_container *cont) {
                         BUFFER_SIZE - 1, current_heap_size - out_offset);
 
                     DWORD bread = command.readStdout(
-                        cont->buffer_work + out_offset, max_read, true);
+                        cont->buffer_work.get() + out_offset, max_read, true);
                     if (bread == 0) {
                         result = BUFFER_FULL;
                     }
@@ -156,10 +153,10 @@ int launch_program(script_container *cont) {
         // if the output has a utf-16 bom, we need to convert it now, as the
         // remaining code doesn't handle wide characters
         unsigned char *buf_u =
-            reinterpret_cast<unsigned char *>(cont->buffer_work);
+            reinterpret_cast<unsigned char *>(cont->buffer_work.get());
         if ((buf_u[0] == 0xFF) && (buf_u[1] == 0xFE)) {
             wchar_t *buffer_u16 =
-                reinterpret_cast<wchar_t *>(cont->buffer_work + 2);
+                reinterpret_cast<wchar_t *>(cont->buffer_work.get() + 2);
             outputScript(to_utf8(buffer_u16), cont, winapi);
         }
     } catch (const AgentUpdaterError &e) {
@@ -206,11 +203,9 @@ ScriptWorkerThread(LPVOID lpParam) {
             cont->retry_count--;
     }
 
-    const WinApiAdaptor &winapi = cont->winapi;
     // Cleanup work buffer in case the script ran into a timeout / error
     if (cont->status == SCRIPT_TIMEOUT || cont->status == SCRIPT_ERROR) {
-        winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
-        cont->buffer_work = NULL;
+        cont->buffer_work.reset();
     }
     return 0;
 }
@@ -228,6 +223,8 @@ script_container::script_container(
     , max_age(_max_age)
     , timeout(_timeout)
     , max_retries(_max_entries)
+    , buffer(_winapi)
+    , buffer_work(_winapi)
     , run_as_user(_user)
     , type(_type)
     , execution_mode(_execution_mode)
@@ -236,11 +233,7 @@ script_container::script_container(
     , logger(_logger)
     , winapi(_winapi) {}
 
-script_container::~script_container() {
-    // allocated with HeapAlloc (may be null)
-    winapi.HeapFree(winapi.GetProcessHeap(), 0, buffer);
-    winapi.HeapFree(winapi.GetProcessHeap(), 0, buffer_work);
-}
+script_container::~script_container() {}
 
 bool SectionPluginGroup::exists(script_container *cont) const {
     DWORD dwAttr = _winapi.GetFileAttributes(cont->script_path.c_str());
@@ -273,7 +266,7 @@ void SectionPluginGroup::runContainer(script_container *cont) {
                                  cont,      // argument to thread function
                                  0,         // use default creation flags
                                  nullptr),  // returns the thread identifier
-            _winapi };
+            _winapi};
         if (cont->execution_mode == SYNC ||
             (cont->execution_mode == ASYNC && *_async_execution == SEQUENTIAL))
             _winapi.WaitForSingleObject(cont->worker_thread.get(), INFINITE);
@@ -294,30 +287,30 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
 
         if (cont->status == SCRIPT_FINISHED) {
             // Free buffer
-            if (cont->buffer != NULL) {
-                _winapi.HeapFree(_winapi.GetProcessHeap(), 0, cont->buffer);
-                cont->buffer = NULL;
-            }
+            cont->buffer.reset();
 
             // Replace BOM with newlines.
             // At this point the buffer must not contain a wide character
             // encoding as the code can't handle it!
-            if (strlen(cont->buffer_work) >= 3 &&
-                (unsigned char)cont->buffer_work[0] == 0xEF &&
-                (unsigned char)cont->buffer_work[1] == 0xBB &&
-                (unsigned char)cont->buffer_work[2] == 0xBF) {
-                cont->buffer_work[0] = '\n';
-                cont->buffer_work[1] = '\n';
-                cont->buffer_work[2] = '\n';
+            if (strlen(cont->buffer_work.get()) >= 3 &&
+                static_cast<unsigned char>(cont->buffer_work.get()[0]) ==
+                    0xEF &&
+                static_cast<unsigned char>(cont->buffer_work.get()[1]) ==
+                    0xBB &&
+                static_cast<unsigned char>(cont->buffer_work.get()[2]) ==
+                    0xBF) {
+                cont->buffer_work.get()[0] = '\n';
+                cont->buffer_work.get()[1] = '\n';
+                cont->buffer_work.get()[2] = '\n';
             }
 
             if (cont->max_age == 0) {
-                cont->buffer = cont->buffer_work;
+                cont->buffer.reset(cont->buffer_work.release());
             } else {
                 // Determine chache_info text
                 char cache_info[32];
                 snprintf(cache_info, sizeof(cache_info), ":cached(%d,%d)",
-                         (int)cont->buffer_time, cont->max_age);
+                         static_cast<int>(cont->buffer_time), cont->max_age);
                 int cache_len = strlen(cache_info) + 1;
 
                 // We need to parse each line and replace any <<<section>>>
@@ -331,13 +324,15 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
                 // TODO: Maybe add a dry run mode. Count the number of
                 // section lines and reserve a fitting extra heap
                 int buffer_heap_size = _winapi.HeapSize(
-                    _winapi.GetProcessHeap(), 0, cont->buffer_work);
-                char *cache_buffer = (char *)_winapi.HeapAlloc(
-                    _winapi.GetProcessHeap(), HEAP_ZERO_MEMORY,
-                    buffer_heap_size + 262144);
+                    _winapi.GetProcessHeap(), 0, cont->buffer_work.get());
+                HeapBufferHandle cache_buffer(
+                    reinterpret_cast<char *>(_winapi.HeapAlloc(
+                        _winapi.GetProcessHeap(), HEAP_ZERO_MEMORY,
+                        buffer_heap_size + 262144)),
+                    _winapi);
                 int cache_buffer_offset = 0;
 
-                char *line = strtok(cont->buffer_work, "\n");
+                char *line = strtok(cont->buffer_work.get(), "\n");
                 int write_bytes = 0;
                 while (line) {
                     int length = strlen(line);
@@ -349,40 +344,39 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
                         // 3?). Great...
                         write_bytes = length - cr_offset - 3 +
                                       1;  // length - \r - <<< + \0
-                        snprintf(cache_buffer + cache_buffer_offset,
+                        snprintf(cache_buffer.get() + cache_buffer_offset,
                                  write_bytes, "%s", line);
                         cache_buffer_offset += write_bytes - 1;
 
-                        snprintf(cache_buffer + cache_buffer_offset, cache_len,
-                                 "%s", cache_info);
+                        snprintf(cache_buffer.get() + cache_buffer_offset,
+                                 cache_len, "%s", cache_info);
                         cache_buffer_offset += cache_len - 1;
 
                         write_bytes =
                             3 + cr_offset + 1 + 1;  // >>> + \r + \n + \0
-                        snprintf(cache_buffer + cache_buffer_offset,
+                        snprintf(cache_buffer.get() + cache_buffer_offset,
                                  write_bytes, "%s\n",
                                  line + length - cr_offset - 3);
                         cache_buffer_offset += write_bytes - 1;
                     } else {
                         write_bytes = length + 1 + 1;  // length + \n + \0
-                        snprintf(cache_buffer + cache_buffer_offset,
+                        snprintf(cache_buffer.get() + cache_buffer_offset,
                                  write_bytes, "%s\n", line);
                         cache_buffer_offset += write_bytes - 1;
                     }
                     line = strtok(NULL, "\n");
                 }
-                _winapi.HeapFree(_winapi.GetProcessHeap(), 0,
-                                 cont->buffer_work);
-                cont->buffer = cache_buffer;
+                cont->buffer.reset(cache_buffer.release());
             }
-            cont->buffer_work = NULL;
+            cont->buffer_work.reset();
             cont->status = SCRIPT_IDLE;
-        } else if (cont->retry_count < 0 && cont->buffer != NULL) {
+        } else if (cont->retry_count < 0) {
             // Remove outdated cache entries
-            _winapi.HeapFree(_winapi.GetProcessHeap(), 0, cont->buffer);
-            cont->buffer = NULL;
+            cont->buffer.reset();
         }
-        if (cont->buffer) out << cont->buffer;
+        if (cont->buffer) {
+            out << cont->buffer.get();
+        }
     }
 }
 
@@ -411,9 +405,7 @@ SectionPluginGroup::SectionPluginGroup(Configuration &config,
     }
 }
 
-SectionPluginGroup::~SectionPluginGroup() {
-    _containers.clear();
-}
+SectionPluginGroup::~SectionPluginGroup() { _containers.clear(); }
 
 void SectionPluginGroup::startIfAsync() {
     updateScripts();
@@ -676,11 +668,10 @@ void SectionPluginGroup::collectData(script_execution_mode mode) {
         _collection_thread = {
             _winapi.CreateThread(nullptr,  // default security attributes
                                  0,        // use default stack size
-                                 DataCollectionThread, // thread function name
-                                 this,     // argument to thread function
-                                 0,        // use default creation flags
-                                 nullptr), // returns the thread identifier
-            _winapi
-        };
+                                 DataCollectionThread,  // thread function name
+                                 this,      // argument to thread function
+                                 0,         // use default creation flags
+                                 nullptr),  // returns the thread identifier
+            _winapi};
     }
 }

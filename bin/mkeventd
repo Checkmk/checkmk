@@ -5379,7 +5379,7 @@ if __name__ == "__main__":
         logger.info("Successfully shut down.")
         sys.exit(0)
 
-    except:
+    except Exception:
         if opt_debug:
             raise
         bail_out(traceback.format_exc())

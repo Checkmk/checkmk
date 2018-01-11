@@ -61,6 +61,10 @@ setversion:
 	        sed -i 's/echo Version: [0-9.a-z-]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
 	    fi ; \
 	done
+	package="Check_MK Windows Agent" ; \
+	mail=feedback@check-mk.org ; \
+	sed -i "s/^AC_INIT.*/AC_INIT([$$package], [$(NEW_VERSION)], [$$mail])/" \
+	    windows/configure.ac
 
 build:
 	$(MAKE) packages

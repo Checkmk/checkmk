@@ -51,13 +51,12 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
             if (dwError == ERROR_INSUFFICIENT_BUFFER) {
                 start_type = "invalid4";
                 cbBufSize = dwBytesNeeded;
-                LocalMemoryHandle<LPQUERY_SERVICE_CONFIGW> lpsc{
-                    reinterpret_cast<LPQUERY_SERVICE_CONFIGW>(
-                        _winapi.LocalAlloc(LMEM_FIXED, cbBufSize)),
-                    _winapi};
-                if (_winapi.QueryServiceConfig(schService.get(), lpsc.get(),
+                std::vector<BYTE> buffer(cbBufSize, 0);
+                LPQUERY_SERVICE_CONFIGW lpsc =
+                    reinterpret_cast<LPQUERY_SERVICE_CONFIGW>(buffer.data());
+                if (_winapi.QueryServiceConfig(schService.get(), lpsc,
                                                cbBufSize, &dwBytesNeeded)) {
-                    switch (lpsc.get()->dwStartType) {
+                    switch (lpsc->dwStartType) {
                         case SERVICE_AUTO_START:
                             start_type = "auto";
                             break;

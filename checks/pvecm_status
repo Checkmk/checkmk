@@ -77,7 +77,11 @@ def inventory_pvecm_status(info):
 
 def check_pvecm_status(_no_item, _no_params, info):
     parsed = {}
-    for what, value in info:
+    for line in info:
+        if len(line) != 2:
+            continue
+        what, value = line
+
         parsed[what.lower()] = value.strip().lower()
 
     if "cman_tool" in parsed and \
@@ -85,8 +89,12 @@ def check_pvecm_status(_no_item, _no_params, info):
         yield 2, "Cluster management tool: %s" % parsed["cman_tool"]
 
     else:
+        name = parsed.get("cluster name",
+                          parsed.get("quorum provider",
+                                     "unknown"))
+
         yield 0, "Name: %s, Nodes: %s" % \
-                 (parsed["cluster name"], parsed["nodes"])
+                 (name, parsed["nodes"])
 
         if "activity blocked" in parsed["quorum"]:
             yield 2, "Quorum: %s" % parsed["quorum"]

@@ -496,28 +496,3 @@ Result Helper::getClass(LPCWSTR className) {
     }
     return Result(enumerator, _logger, _winapi);
 }
-
-ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method) {
-    // NOTE: currently broken and unused, only here as a starting point for
-    // future implementation
-    IWbemClassObject *outParams = nullptr;
-
-    BSTR className;
-    HRESULT res = result._current->GetMethodOrigin(method, &className);
-    if (FAILED(res)) {
-        throw ComException(
-            string("Failed to determine method origin: ") + to_utf8(method),
-            res, _winapi);
-    }
-
-    // please don't ask me why ExecMethod needs the method name in a writable
-    // buffer...
-    BSTR methodName = _winapi.SysAllocString(method);
-
-    res = _services->ExecMethod(className, methodName, 0, nullptr,
-                                result._current.get(), &outParams, nullptr);
-
-    _winapi.SysFreeString(methodName);
-
-    return ObjectWrapper(outParams, _logger, _winapi);
-}

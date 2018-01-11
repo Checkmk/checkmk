@@ -713,10 +713,6 @@ HRESULT WinApi::SafeArrayGetUBound(SAFEARRAY *psa, UINT nDim,
     return ::SafeArrayGetUBound(psa, nDim, plUbound);
 }
 
-BSTR WinApi::SysAllocString(const OLECHAR *ptr) const {
-    return ::SysAllocString(ptr);
-}
-
 void WinApi::SysFreeString(BSTR str) const { return ::SysFreeString(str); }
 
 HRESULT WinApi::VariantClear(VARIANTARG *pvarg) const {

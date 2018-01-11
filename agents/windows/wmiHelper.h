@@ -185,8 +185,6 @@ public:
     Result query(LPCWSTR query);
     Result getClass(LPCWSTR className);
 
-    ObjectWrapper call(ObjectWrapper &result, LPCWSTR method);
-
 private:
     // get a locator that is used to look up WMI namespaces
     IWbemLocator *getWBEMLocator();

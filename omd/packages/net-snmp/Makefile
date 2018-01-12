@@ -43,7 +43,7 @@ install:
 # creation of a lib/python/site.py, a copy of site-patch.py from setuptools.
 # Having this in the PYTHONPATH makes it impossible to run python3-based SW as a
 # site user, including gdb! So let's simply nuke it here...
-	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py
+	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py*
 
 skel:
 

@@ -928,27 +928,29 @@ void do_unpack_plugins(const char *plugin_filename, const Environment &env) {
 void postProcessOnlyFrom() {
     if (*s_config->support_ipv6) {
         // find all ipv4 specs, later insert a the same spec as a v6 adress.
-        std::vector<ipspec *> v4specs;
-        for (ipspec *spec : *s_config->only_from) {
-            if (!spec->ipv6) {
+        only_from_t v4specs;
+        v4specs.reserve(s_config->only_from->size());
+        for (const auto &spec : *s_config->only_from) {
+            if (!spec.ipv6) {
                 v4specs.push_back(spec);
             }
         }
 
-        for (ipspec *spec : v4specs) {
+        s_config->only_from->reserve(s_config->only_from->size() + v4specs.size());
+        for (const auto &spec : v4specs) {
             // also add a v4->v6 coverted filter
 
-            ipspec *result = new ipspec();
+            ipspec result{0};
             // first 96 bits are fixed: 0:0:0:0:0:ffff
-            result->bits = 96 + spec->bits;
-            result->ipv6 = true;
-            memset(result->ip.v6.address, 0, sizeof(uint16_t) * 5);
-            result->ip.v6.address[5] = 0xFFFFu;
-            result->ip.v6.address[6] =
-                static_cast<uint16_t>(spec->ip.v4.address & 0xFFFFu);
-            result->ip.v6.address[7] =
-                static_cast<uint16_t>(spec->ip.v4.address >> 16);
-            netmaskFromPrefixIPv6(result->bits, result->ip.v6.netmask,
+            result.bits = 96 + spec.bits;
+            result.ipv6 = true;
+            memset(result.ip.v6.address, 0, sizeof(uint16_t) * 5);
+            result.ip.v6.address[5] = 0xFFFFu;
+            result.ip.v6.address[6] =
+                static_cast<uint16_t>(spec.ip.v4.address & 0xFFFFu);
+            result.ip.v6.address[7] =
+                static_cast<uint16_t>(spec.ip.v4.address >> 16);
+            netmaskFromPrefixIPv6(result.bits, result.ip.v6.netmask,
                                   s_winapi);
             s_config->only_from.add(result);
         }

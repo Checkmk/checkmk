@@ -68,9 +68,9 @@ bool ListenSocket::check_only_from(sockaddr *ip) {
 
     for (only_from_t::const_iterator it_from = _source_whitelist.begin();
          it_from != _source_whitelist.end(); ++it_from) {
-        ipspec *only_from = *it_from;
+        const ipspec &only_from = *it_from;
 
-        if (only_from->ipv6 != (ip->sa_family == AF_INET6)) {
+        if (only_from.ipv6 != (ip->sa_family == AF_INET6)) {
             // test ipv6 address only against ipv6 filter and ipv4 address
             // against ipv4 filter.
             // the only_from list already contains v4->v6 converted addresses
@@ -82,8 +82,8 @@ bool ListenSocket::check_only_from(sockaddr *ip) {
             sockaddr_in6 *addrv6 = (sockaddr_in6 *)ip;
             for (int i = 0; i < 8 && match; ++i) {
                 match =
-                    only_from->ip.v6.address[i] ==
-                    (addrv6->sin6_addr.u.Word[i] & only_from->ip.v6.netmask[i]);
+                    only_from.ip.v6.address[i] ==
+                    (addrv6->sin6_addr.u.Word[i] & only_from.ip.v6.netmask[i]);
             }
             if (match) {
                 return true;
@@ -91,8 +91,9 @@ bool ListenSocket::check_only_from(sockaddr *ip) {
         } else {
             uint32_t significant_bits =
                 ((sockaddr_in *)ip)->sin_addr.S_un.S_addr &
-                only_from->ip.v4.netmask;
-            if (significant_bits == only_from->ip.v4.address) {
+                only_from.ip.v4.netmask;
+
+            if (significant_bits == only_from.ip.v4.address) {
                 return true;
             }
         }

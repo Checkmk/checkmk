@@ -85,16 +85,18 @@ struct ipspec {
 };
 
 template <>
-ipspec *from_string<ipspec *>(const WinApiAdaptor &winapi,
-                              const std::string &value);
+ipspec from_string<ipspec>(const WinApiAdaptor &winapi,
+                           const std::string &value);
+
+std::ostream &operator<<(std::ostream &os, const ipspec &ips);
+
+using only_from_t = std::vector<ipspec>;
 
 class StateParseError : public std::invalid_argument {
 public:
     explicit StateParseError(const std::string &what)
         : std::invalid_argument(what) {}
 };
-
-using only_from_t = std::vector<ipspec *>;
 
 class OnScopeExit {
 public:

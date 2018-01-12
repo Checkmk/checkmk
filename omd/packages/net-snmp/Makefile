@@ -38,6 +38,12 @@ install:
 	        --prefix='' \
 	        --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
 	        --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python
+# For some obscure reason beyond the mental capacities of mere humans, the
+# easy_install mechanism triggered by the setup call above results in the
+# creation of a lib/python/site.py, a copy of site-patch.py from setuptools.
+# Having this in the PYTHONPATH makes it impossible to run python3-based SW as a
+# site user, including gdb! So let's simply nuke it here...
+	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py
 
 skel:
 

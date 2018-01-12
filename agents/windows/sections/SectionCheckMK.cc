@@ -100,17 +100,8 @@ bool SectionCheckMK::produceOutputInner(std::ostream &out) {
     if (_only_from->size() == 0) {
         out << " 0.0.0.0/0\n";
     } else {
-        for (const ipspec *is : *_only_from) {
-            if (is->ipv6) {
-                out << " "
-                    << join(is->ip.v6.address, is->ip.v6.address + 7, ":")
-                    << "/" << is->bits;
-            } else {
-                out << " " << (is->ip.v4.address & 0xff) << "."
-                    << (is->ip.v4.address >> 8 & 0xff) << "."
-                    << (is->ip.v4.address >> 16 & 0xff) << "."
-                    << (is->ip.v4.address >> 24 & 0xff) << "/" << is->bits;
-            }
+        for (const auto &is : *_only_from) {
+            out << " " << is;
         }
     }
     return true;

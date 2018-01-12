@@ -7,7 +7,14 @@ from remote import (actual_output, agent_exe, config, remotetest, remotedir,
                     wait_agent, write_config)
 import sys
 
-output_file = 'agentoutput.txt'
+
+class Globals(object):
+    output_file = 'agentoutput.txt'
+    only_from = None
+    ipv4_to_ipv6 = {
+        '127.0.0.1': '0:0:0:0:0:0:0:1',
+        '10.1.2.3': '0:0:0:0:0:ffff:a01:203'
+    }
 
 
 @pytest.fixture
@@ -15,16 +22,21 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(config):
+@pytest.fixture(
+    params=[None, '127.0.0.1 10.1.2.3'],
+    ids=['only_from=None', 'only_from=127.0.0.1_10.1.2.3'])
+def testconfig(request, config):
+    Globals.only_from = request.param
     section = 'check_mk'
     config.set("global", "sections", section)
     config.set("global", "crash_debug", "yes")
+    if request.param:
+        config.set("global", "only_from", request.param)
     return config
 
 
 @pytest.fixture(
-    params=[['test'], ['debug'], ['file', output_file]],
+    params=[['test'], ['debug'], ['file', Globals.output_file]],
     ids=['test', 'debug', 'file'])
 def actual_output_no_tcp(request, write_config):
     if platform.system() == 'Windows':
@@ -41,13 +53,13 @@ def actual_output_no_tcp(request, write_config):
             sys.stderr.write(stderr)
             assert p.returncode == 0
             if request.param[0] == 'file':
-                with open(output_file) as outfile:
+                with open(Globals.output_file) as outfile:
                     yield outfile.readlines()
             else:
                 yield stdout.splitlines()
         finally:
             try:
-                os.unlink(output_file)
+                os.unlink(Globals.output_file)
             except OSError:
                 pass  # File may not exist
             os.chdir(save_cwd)
@@ -59,6 +71,7 @@ def actual_output_no_tcp(request, write_config):
 @pytest.fixture
 def expected_output():
     drive_letter = r'[A-Z]:'
+    ipv4 = Globals.only_from.split() if Globals.only_from else None
     return [
         # Note: The first two lines are output with crash_debug = yes in 1.2.8
         # but no longer in 1.4.0:
@@ -103,7 +116,9 @@ def expected_output():
         # r'SuccessLog: %s%s' %
         # (drive_letter,
         #  re.escape(os.path.join(remotedir, 'log', 'success.log'))),
-        r'OnlyFrom: 0\.0\.0\.0/0'
+        (r'OnlyFrom: %s/32 %s/32 %s/128 %s/128' %
+         tuple(ipv4 + [Globals.ipv4_to_ipv6[i4] for i4 in ipv4])
+         if Globals.only_from else r'OnlyFrom: 0\.0\.0\.0/0')
     ]
 
 

@@ -11749,6 +11749,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
     def __init__(self):
         super(ModeHostTags, self).__init__()
         self._hosttags, self._auxtags = self._load_hosttags()
+        self._effective_tag_groups = watolib.get_effective_tag_groups(self._hosttags)
 
 
     def title(self):
@@ -11877,13 +11878,11 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                     empty_text = _("You haven't defined any tag groups yet."),
                     searchable = False, sortable = False)
 
-        tag_groups = watolib.get_effective_tag_groups(self._hosttags)
-
-        if not tag_groups:
+        if not self._effective_tag_groups:
             table.end()
             return
 
-        for nr, entry in enumerate(tag_groups):
+        for nr, entry in enumerate(self._effective_tag_groups):
             tag_id, title, choices = entry[:3] # fourth: tag dependency information
             topic, title = map(_u, watolib.parse_hosttag_title(title))
             table.row()
@@ -11898,7 +11897,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 else:
                     html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
                                 _("Move this tag group one position up"), "up")
-                if nr == len(tag_groups) - 1:
+                if nr == len(self._effective_tag_groups) - 1:
                     html.empty_icon_button()
                 else:
                     html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
@@ -11948,7 +11947,18 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
 
             table.text_cell(_("Title"), _u(title))
             table.text_cell(_("Topic"), _u(topic) or '')
+            table.text_cell(_("Tags using this auxiliary tag"),
+                            ", ".join(self._get_tags_using_aux_tag(self._effective_tag_groups, tag_id)))
         table.end()
+
+
+    def _get_tags_using_aux_tag(self, tag_groups, aux_tag):
+        used_tags = set()
+        for tag_def in tag_groups:
+            for entry in tag_def[2]:
+                if aux_tag in entry[-1]:
+                    used_tags.add(tag_def[1].split("/")[-1])
+        return sorted(used_tags)
 
 
 

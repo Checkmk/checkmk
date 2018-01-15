@@ -1700,7 +1700,7 @@ class ModeBIEditRule(ModeBI):
         elements = [
             ( "id",
               TextAscii(
-                  title = _("Unique Rule ID"),
+                  title = _("Rule ID"),
                   help = _("The ID of the rule must be a unique text. It will be used as an internal key "
                            "when rules refer to each other. The rule IDs will not be visible in the status "
                            "GUI. They are just used within the configuration."),
@@ -1716,14 +1716,15 @@ class ModeBIEditRule(ModeBI):
                             "top level nodes this title must be unique. You can insert "
                             "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
                    allow_empty = False,
-                   size = 64,
+                   size = 80,
                ),
             ),
             ( "comment",
-               TextUnicode(
+               TextAreaUnicode(
                    title = _("Comment"),
                    help = _("An arbitrary comment of this rule for you."),
-                   size = 64,
+                   cols = 80,
+                   rows = 4,
                ),
             ),
             ( "params",
@@ -1792,12 +1793,12 @@ class ModeBIEditRule(ModeBI):
         ]
 
         return Dictionary(
-            title = _("General Properties"),
+            title = _("Rule Properties"),
             optional_keys = False,
             render = "form",
             elements = elements,
             headers = [
-                ( _("General Properties"),     [ "id", "title", "comment", "params", "disabled" ]),
+                ( _("Rule Properties"),     [ "id", "title", "docu_url", "comment", "params", "disabled" ]),
                 ( _("Child Node Generation"),  [ "nodes" ] ),
                 ( _("Aggregation Function"),   [ "aggregation", "state_messages" ], ),
             ]

@@ -191,6 +191,8 @@ def check_ceph_status_pgs(_no_item, params, parsed):
     map_pg_states = {
         "active"           : (0, "active"),
         "backfill"         : (0, "backfill"),
+        "backfill_wait"    : (1, "backfill wait"),
+        "backfilling"      : (1, "backfilling"),
         "backfill_toofull" : (0, "backfill too full"),
         "clean"            : (0, "clean"),
         "creating"         : (0, "creating"),

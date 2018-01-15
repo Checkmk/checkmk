@@ -1,0 +1,10 @@
+Title: ceph_status.pgs: Added new states 'backfilling' and 'backfill_wait' which are treated as WARNING
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516008607
+Class: feature
+
+

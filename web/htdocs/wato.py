@@ -7819,7 +7819,7 @@ def vs_notification_rule(userid = None):
     ]
 
     return Dictionary(
-        title = _("General Properties"),
+        title = _("Rule Properties"),
         elements = rule_option_elements()
             + section_override
             + generic_rule_match_conditions()
@@ -7899,7 +7899,7 @@ def vs_notification_rule(userid = None):
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails",
                           "contact_match_macros", "contact_match_groups" ],
         headers = [
-            ( _("General Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
+            ( _("Rule Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
@@ -17293,7 +17293,7 @@ syslog_facilities = [
 
 def vs_rule_options(disabling=True):
     return Dictionary(
-        title = _("Rule Options"),
+        title = _("Rule Properties"),
         optional_keys = False,
         render = "form",
         elements = rule_option_elements(disabling),

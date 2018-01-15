@@ -288,7 +288,7 @@ def vs_mkeventd_rule(rule_pack):
             help = _("A unique ID of this rule. Each event will remember the rule "
                      "it was classified with by its rule ID."),
             allow_empty = False,
-            size = 12,
+            size = 24,
         )),
     ] + rule_option_elements()
 

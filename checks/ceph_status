@@ -80,10 +80,13 @@ def check_ceph_status(_no_item, params, parsed):
     map_health_states = {
         "HEALTH_OK"   : (0, "OK"),
         "HEALTH_WARN" : (1, "warning"),
-        "HEALTH_CRIT" : (1, "critical"),
+        "HEALTH_CRIT" : (2, "critical"),
+        "HEALTH_ERR" : (2, "error"),
     }
 
-    state, state_readable = map_health_states[parsed["health"]["overall_status"]]
+    overall_status = parsed["health"]["overall_status"]
+    state, state_readable = map_health_states.get(overall_status,
+                            (3, "unknown[%s]" % overall_status))
     yield state, 'Status: %s' % state_readable
     yield ceph_check_epoch("ceph_status", parsed["election_epoch"], params)
 

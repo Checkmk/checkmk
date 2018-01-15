@@ -15,6 +15,7 @@ PACKAGES=\
     perl-modules \
     python \
     freetds \
+    re2 \
     python-modules \
     boost \
     rrdtool \

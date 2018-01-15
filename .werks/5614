@@ -1,0 +1,11 @@
+Title: raritan_pdu_ocprot: Fixed wrong scaling of current value
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p24
+Date: 1516004028
+
+

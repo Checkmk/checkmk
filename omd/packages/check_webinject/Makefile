@@ -12,7 +12,7 @@ build:
 	    echo "applying $$p..." ; \
 	    patch -p1 -d $(DIR) < $$p ; \
 	done
-	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
+	export PERL5LIB=$(LOCAL_PERL5LIB); \
 	    cd $(DIR) && echo "" | $(PERL) Makefile.PL
 	cd $(DIR) && $(MAKE) check_webinject
 

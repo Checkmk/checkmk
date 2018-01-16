@@ -97,7 +97,7 @@ build:
 	    export PERL_MM_OPT=INSTALL_BASE=$(P5TMPDIST)/dest; \
 	    export PERL_MB_OPT=--install_base=$(P5TMPDIST)/dest; \
 	    export MODULEBUILDRC=$(P5TMPDIST)/dest/.modulebuildrc; \
-	    export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5:$(P5TMPDIST)/src/lib:$(P5TMPDIST)/src/Crypt-SSLeay-0.72; \
+	    export PERL5LIB=$(LOCAL_PERL5LIB):$(P5TMPDIST)/src/lib:$(P5TMPDIST)/src/Crypt-SSLeay-0.72; \
 	    cd $(P5TMPDIST)/src && \
 	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest \
 	            ExtUtils-MakeMaker-*.tar.gz \
@@ -110,9 +110,9 @@ build:
 	    export PERL_JSON_BACKEND='JSON::XS'; \
 	    cd $(P5TMPDIST)/src && \
 	        ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(MODULES)
-	cd $(P5TMPDIST)/dest/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
-	mkdir -p $(P5TMPDIST)/dest/lib/perl5/CPAN
-	cp MyConfig.pm $(P5TMPDIST)/dest/lib/perl5/CPAN/MyConfig.skel
+	cd $(LOCAL_PERL5LIB)/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
+	mkdir -p $(LOCAL_PERL5LIB)/CPAN
+	cp MyConfig.pm $(LOCAL_PERL5LIB)/CPAN/MyConfig.skel
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi

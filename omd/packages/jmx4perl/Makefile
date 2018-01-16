@@ -13,7 +13,7 @@ build:
 #	    echo "applying $$p..." ; \
 #	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 #	done
-	export PERL5LIB=$(LOCAL_PERL5LIB); \
+	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
 	    cd $(DIR) && $(PERL) Build.PL < /dev/null >build.log 2>&1
 	cd $(DIR) && ./Build
 

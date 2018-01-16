@@ -83,23 +83,23 @@ MODULES = \
           DateTime-1.18.tar.gz
 
 build:
-	mkdir -p $(P5TMPDIST)/dest
-	mkdir -p $(P5TMPDIST)/src
-	rsync -a src/. $(P5TMPDIST)/src/.
-	rsync -a build_module.pl lib $(P5TMPDIST)/src/.
-	echo "install --install_base $(P5TMPDIST)/dest" > $(P5TMPDIST)/dest/.modulebuildrc
+	mkdir -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest
+	mkdir -p $(PACKAGE_PERL_MODULES_DESTDIR)/src
+	rsync -a src/. $(PACKAGE_PERL_MODULES_DESTDIR)/src/.
+	rsync -a build_module.pl lib $(PACKAGE_PERL_MODULES_DESTDIR)/src/.
+	echo "install --install_base $(PACKAGE_PERL_MODULES_DESTDIR)/dest" > $(PACKAGE_PERL_MODULES_DESTDIR)/dest/.modulebuildrc
 	unset LANG; \
 	unset PERL5LIB; \
 	unset PERL_MB_OPT; \
 	unset PERL_LOCAL_LIB_ROOT; \
 	unset PERL_MM_OPT; \
-	export PATH=$(P5TMPDIST)/dest/bin:$$PATH; \
-	    export PERL_MM_OPT=INSTALL_BASE=$(P5TMPDIST)/dest; \
-	    export PERL_MB_OPT=--install_base=$(P5TMPDIST)/dest; \
-	    export MODULEBUILDRC=$(P5TMPDIST)/dest/.modulebuildrc; \
-	    export PERL5LIB=$(LOCAL_PERL5LIB):$(P5TMPDIST)/src/lib:$(P5TMPDIST)/src/Crypt-SSLeay-0.72; \
-	    cd $(P5TMPDIST)/src && \
-	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest \
+	export PATH=$(PACKAGE_PERL_MODULES_DESTDIR)/dest/bin:$$PATH; \
+	    export PERL_MM_OPT=INSTALL_BASE=$(PACKAGE_PERL_MODULES_DESTDIR)/dest; \
+	    export PERL_MB_OPT=--install_base=$(PACKAGE_PERL_MODULES_DESTDIR)/dest; \
+	    export MODULEBUILDRC=$(PACKAGE_PERL_MODULES_DESTDIR)/dest/.modulebuildrc; \
+	    export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB):$(PACKAGE_PERL_MODULES_DESTDIR)/src/lib:$(PACKAGE_PERL_MODULES_DESTDIR)/src/Crypt-SSLeay-0.72; \
+	    cd $(PACKAGE_PERL_MODULES_DESTDIR)/src && \
+	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest \
 	            ExtUtils-MakeMaker-*.tar.gz \
 	            parent-*.tar.gz \
 	            version-*.tar.gz \
@@ -108,17 +108,17 @@ build:
 	            Types-Serialiser-*.tar.gz \
 	            JSON-*.tar.gz; \
 	    export PERL_JSON_BACKEND='JSON::XS'; \
-	    cd $(P5TMPDIST)/src && \
-	        ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(MODULES)
-	cd $(LOCAL_PERL5LIB)/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
-	mkdir -p $(LOCAL_PERL5LIB)/CPAN
-	cp MyConfig.pm $(LOCAL_PERL5LIB)/CPAN/MyConfig.skel
+	    cd $(PACKAGE_PERL_MODULES_DESTDIR)/src && \
+	        ./build_module.pl -d "$(DISTRO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest $(MODULES)
+	cd $(PACKAGE_PERL_MODULES_PERL5LIB)/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
+	mkdir -p $(PACKAGE_PERL_MODULES_PERL5LIB)/CPAN
+	cp MyConfig.pm $(PACKAGE_PERL_MODULES_PERL5LIB)/CPAN/MyConfig.skel
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5 $(DESTDIR)$(OMD_ROOT)/bin
-	rsync -a $(P5TMPDIST)/dest/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
-	rsync -a $(P5TMPDIST)/dest/bin $(DESTDIR)$(OMD_ROOT)/lib/perl5/
+	rsync -a $(PACKAGE_PERL_MODULES_DESTDIR)/dest/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
+	rsync -a $(PACKAGE_PERL_MODULES_DESTDIR)/dest/bin $(DESTDIR)$(OMD_ROOT)/lib/perl5/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
 	install -m 755 bin/cpan.wrapper $(DESTDIR)$(OMD_ROOT)/bin/cpan.wrapper
 
@@ -126,4 +126,4 @@ skel:
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
 
 clean:
-	rm -rf src/inc $(P5TMPDIST)
+	rm -rf src/inc $(PACKAGE_PERL_MODULES_DESTDIR)

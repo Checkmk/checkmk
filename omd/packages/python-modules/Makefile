@@ -3,7 +3,6 @@ include ../../Makefile.omd
 NAME     = python-modules
 SHELL    = /bin/bash
 VERSION  = $(OMD_VERSION)
-DISTRO   = $(shell ../../distro)
 
 PATCHES  := $(wildcard patches/*.dif)
 

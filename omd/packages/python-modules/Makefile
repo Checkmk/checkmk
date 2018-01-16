@@ -121,8 +121,8 @@ build: check-python check-freetds unpack
 	    mkdir -p $(TMP_INSTALL_PATH)/lib || true; \
 	    export PYTHONPATH="$$PYTHONPATH:$(TMP_INSTALL_PATH)/lib" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
-	    export CPATH="$(shell pwd)/../freetds/freetds-0.95.95/include" ; \
-	    export LDFLAGS="-$(PACKAGE_PYTHON_LDFLAGS) -L$(shell pwd)/../freetds/freetds-0.95.95/src/dblib/.libs" ; \
+	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
+	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	    for M in $(MODULES); do \
 		echo "Building $$M..." ; \
@@ -157,20 +157,13 @@ unpack:
 	    patch -p1 -b -d dest < $$p ; \
 	done
 
-
-check-freetds:
-	@if [ ! -d ../freetds/freetds-0.95.95 ]; then \
-	    echo "ERROR: You need to build the \"freetds\" package first" ; \
-	    exit 1 ; \
-	fi
-
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:"$(TMP_INSTALL_PATH)/lib" ; \
 	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_PYTHONPATH)" ; \
-	    export CPATH="$(shell pwd)/../freetds/freetds-0.95.95/include" ; \
-	    export LDFLAGS="-$(PACKAGE_PYTHON_LDFLAGS) -L$(shell pwd)/../freetds/freetds-0.95.95/src/dblib/.libs" ; \
+	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
+	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	    for M in $$(ls); do \
 		echo "Installing $$M..." ; \
@@ -198,4 +191,4 @@ install:
 skel:
 
 clean:
-	rm -rf dest tmp.python
+	rm -rf dest $(TMP_INSTALL_PATH)

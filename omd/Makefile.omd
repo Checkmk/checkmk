@@ -1,8 +1,5 @@
 # General settings included by all packages
 
-PERL               := /usr/bin/perl
-P5TMPDIST          := $(shell pwd)/../perl-modules/dist
-
 # Makefile is loaded either from omd/packages/*/Makefile or omd/Makefile
 ifneq (,$(wildcard ../../../omd/distro))
     REPO_PATH      := $(abspath ../../..)
@@ -45,6 +42,8 @@ include $(REPO_PATH)/omd/distros/$(DISTRO_NAME)_$(DISTRO_VERSION).mk
 # Net result -> all Makefiles have now access to the linux distribution
 # specific settings
 
+PERL               := /usr/bin/perl
+P5TMPDIST          := $(REPO_PATH)/omd/packages/perl-modules/dist
 
 TMP_PYTHON_PATH    := $(REPO_PATH)/omd/packages/python/tmp.python27
 PYTHON_LIB         := $(TMP_PYTHON_PATH)/lib/python2.7

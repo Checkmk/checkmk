@@ -57,5 +57,5 @@ check_info['hp_fan'] = {
                                             "2",     # hpicfFanTray
                                             "4",     # hpicfFanState
                                 ]),
-    'snmp_scan_function'    : lambda oid: "hp" in oid(".1.3.6.1.2.1.1.1.0").lower() and "switch" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    'snmp_scan_function'    : lambda oid: "hp" in oid(".1.3.6.1.2.1.1.1.0").lower() and "5406rzl2" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

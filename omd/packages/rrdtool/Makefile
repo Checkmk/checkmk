@@ -30,7 +30,7 @@ build: check-python check-python-modules
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
 	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
 	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
-	export PERL5LIB=$(LOCAL_PERL5LIB); \
+	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
 	export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
 	export MODULEBUILDRC=$$(pwd)/.modulebuildrc; \
 	export PKG_CONFIG_PATH="../../glib/glib-2.13.7:../../pango/pango-1.17.5:../../cairo/cairo-1.4.6/src"; \
@@ -53,7 +53,7 @@ install:
 	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
 	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
-	export PERL5LIB=$(LOCAL_PERL5LIB); \
+	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 # clean up perl man pages which end up in wrong location
 # clean up systemd init files. Note that on RPM based distros this

@@ -42,9 +42,9 @@ include $(REPO_PATH)/omd/distros/$(DISTRO_NAME)_$(DISTRO_VERSION).mk
 # Net result -> all Makefiles have now access to the linux distribution
 # specific settings
 
-PERL               := /usr/bin/perl
-P5TMPDIST          := $(REPO_PATH)/omd/packages/perl-modules/dist
-LOCAL_PERL5LIB     := $(P5TMPDIST)/dest/lib/perl5
+PERL                           := /usr/bin/perl
+PACKAGE_PERL_MODULES_DESTDIR   := $(REPO_PATH)/omd/packages/perl-modules/dist
+PACKAGE_PERL_MODULES_PERL5LIB  := $(PACKAGE_PERL_MODULES_DESTDIR)/dest/lib/perl5
 
 PACKAGE_PYTHON_DESTDIR         := $(REPO_PATH)/omd/packages/python/tmp.python27
 PACKAGE_PYTHON_PYTHONPATH      := $(PACKAGE_PYTHON_DESTDIR)/lib/python2.7

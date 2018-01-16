@@ -43,7 +43,9 @@ install:
 # creation of a lib/python/site.py, a copy of site-patch.py from setuptools.
 # Having this in the PYTHONPATH makes it impossible to run python3-based SW as a
 # site user, including gdb! So let's simply nuke it here...
-	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py*
+# TODO(sp): Disabled for now, otherwise the netsnmp module is not found. Figure
+# out what's really going on here!
+#	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py*
 
 skel:
 

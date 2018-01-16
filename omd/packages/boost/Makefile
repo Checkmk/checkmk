@@ -3,7 +3,6 @@ include ../../Makefile.omd
 NAME       := boost
 VERSION    := 1_64_0
 DIR        := $(NAME)_$(VERSION)
-TMP_PYTHON := "$(abspath $(shell pwd)/../python/tmp.python27)"
 
 # For some obscure reason (GCC's dual ABI) we have to link all Boost stuff
 # statically, otherwise we get linker errors later, e.g.:
@@ -37,14 +36,13 @@ build: check-python
 	test -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
 	echo "using gcc : : $$CXX ;" > $(DIR)/tools/build/src/user-config.jam
 	( cd $(DIR) && \
-	  export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	  export PYTHONPATH=$$PYTHONPATH:$(PYTHON_LIB) ; \
-	  export LDFLAGS="-L$(TMP_PYTHON)/lib -L$(PYTHON_LIB)/config" ; \
-	  export LD_LIBRARY_PATH=$(TMP_PYTHON)/lib; \
+	  export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
+	  export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
+	  export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	  ./bootstrap.sh \
 	    "--prefix=$(shell pwd)/local" \
             --without-libraries=graph,locale,log,math,program_options,regex,serialization,wave \
-	    "--with-python=$(PYTHON_BIN)" && \
+	    "--with-python=$(PACKAGE_PYTHON_EXECUTABLE)" && \
 	  ./b2 $(B2_LINK_OPTION) cxxflags=-fPIC cflags=-fPIC -j2 install )
 
 install:

@@ -4,7 +4,6 @@ NAME           := rrdtool
 # Note: We actually use the snapshot f1edd121a from 2017-06-11
 VERSION        := 1.7.0
 DIR            := $(NAME)-$(VERSION)
-TMP_SETUPTOOLS := $(wildcard $(abspath ../python-modules/dest/setuptools-[0-9]*))
 CONFIGUREOPTS  := \
 	--prefix=$(OMD_ROOT) \
 	--disable-ruby \
@@ -28,17 +27,15 @@ build: check-python check-python-modules
 	  CentOS\ 5.*) MS_ASYNC=broken ;; \
 	  *) MS_ASYNC=ok ;; \
 	esac ; \
-	export PATH="$(TMP_PYTHON_PATH)/bin:$$PATH" ; \
-	export LD_LIBRARY_PATH=$(TMP_PYTHON_PATH)/lib ; \
-	export PYTHONPATH=$$PYTHONPATH:$(TMP_PYTHON_PATH)/lib/python2.7 ; \
-	export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	export PYTHONPATH=$$PYTHONPATH:$(TMP_SETUPTOOLS) ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
+	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
+	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	export PERL5LIB=$(LOCAL_PERL5LIB); \
 	export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
 	export MODULEBUILDRC=$$(pwd)/.modulebuildrc; \
 	export PKG_CONFIG_PATH="../../glib/glib-2.13.7:../../pango/pango-1.17.5:../../cairo/cairo-1.4.6/src"; \
 	export top_builddir="."; \
-	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 -L$$(pwd)/../../cairo/cairo-1.4.6/src/.libs -L$$(pwd)/../../glib/glib-2.13.7/glib/.libs -L$$(pwd)/../../pango/pango-1.17.5/pango/.libs -L$$(pwd)/../../pango/pango-1.17.5/pango -L$(TMP_PYTHON_PATH)/lib -L$(TMP_PYTHON_PATH)/lib/python2.7/config" ; \
+	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 -L$$(pwd)/../../cairo/cairo-1.4.6/src/.libs -L$$(pwd)/../../glib/glib-2.13.7/glib/.libs -L$$(pwd)/../../pango/pango-1.17.5/pango/.libs -L$$(pwd)/../../pango/pango-1.17.5/pango $(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0) -I$$(pwd)/../../glib/glib-2.13.7 -I$$(pwd)/../../glib/glib-2.13.7/glib -I$$(pwd)/../../pango/pango-1.17.5 -I$$(pwd)/../../pango/pango-1.17.5/pango -I$$(pwd)/../../cairo/cairo-1.4.6/src" ; \
 	export rd_cv_ms_async="$$MS_ASYNC" ; \
 	cd $(DIR) && \
@@ -46,19 +43,16 @@ build: check-python check-python-modules
         $(MAKE) all
 
 check-python-modules:
-	@if [ ! -d $(TMP_SETUPTOOLS) ]; then \
+	@if [ ! -d $(PACKAGE_PYTHON_DESTDIR) ]; then \
 	    echo "ERROR: You need to build the \"python-modules\" package first" ; \
 	    exit 1 ; \
 	fi
 
 install:
-	export PATH="$(TMP_PYTHON_PATH)/bin:$$PATH" ; \
-	export LD_LIBRARY_PATH=$(TMP_PYTHON_PATH)/lib ; \
-	export LDFLAGS="-L$(TMP_PYTHON_PATH)/lib -L$(TMP_PYTHON_PATH)/lib/python2.7/config" ; \
-	export PYTHONPATH=$$PYTHONPATH:$(TMP_PYTHON_PATH)/lib/python2.7 ; \
-	export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	export PYTHONPATH=$$PYTHONPATH:$(TMP_SETUPTOOLS) ; \
-	export LDFLAGS="-L$(TMP_PYTHON_PATH)/lib -L$(TMP_PYTHON_PATH)/lib/python2.7/config" ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
+	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
+	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
+	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	export PERL5LIB=$(LOCAL_PERL5LIB); \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 # clean up perl man pages which end up in wrong location

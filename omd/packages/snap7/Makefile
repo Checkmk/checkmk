@@ -20,10 +20,10 @@ endif
 build: check-python
 	tar xzf $(DIR).tar.gz
 	cd $(DIR)/build/unix && $(MAKE) -f $(ARCH)_linux.mk
-	
-	# Now handle the python module
+
+# Now handle the python module
 	unzip -o $(PY_DIR).zip
-	
+
 	set -e ; for p in python-patches/*.dif ; do \
 	echo "applying $$p..." ; \
 	    patch -d $(PY_DIR) -p1 < $$p ; \
@@ -32,12 +32,13 @@ build: check-python
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
 	install -m 644 $(DIR)/build/bin/$(ARCH)-linux/libsnap7.so $(DESTDIR)$(OMD_ROOT)/lib
-	
+
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python && \
-	export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	export PYTHONPATH=$$PYTHONPATH:$(PYTHON_LIB) ; \
+	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
+	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	cd $(PY_DIR) && \
-	$(PYTHON) setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
+	$(PACKAGE_PYTHON_EXECUTABLE) setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	    --prefix='' \
 	    --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
 	    --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python

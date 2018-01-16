@@ -31,10 +31,10 @@ install:
 	cd $(DIR)/mibs && make DESTDIR=$(DESTDIR) mibsinstall
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	cd $(DIR)/python && \
-	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    export PYTHONPATH=$$PYTHONPATH:$(PYTHON_LIB) ; \
-	    export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(PYTHON_LIB)/config" ; \
-	    $(PYTHON) setup.py install --basedir=.. --home=$(DESTDIR)$(OMD_ROOT) \
+	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
+	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py install --basedir=.. --home=$(DESTDIR)$(OMD_ROOT) \
 	        --prefix='' \
 	        --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
 	        --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python

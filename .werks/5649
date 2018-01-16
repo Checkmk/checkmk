@@ -1,0 +1,15 @@
+Title: Fixed performance issue caused by too many parse function calls
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516109439
+Class: fix
+
+Fixed a regression that was introduced with 1.5.0i2. The parse functions
+were called not only once per Check_MK check, as it is intended. Each
+service of a Check_MK check lead to a new call of the parse function logic.
+
+For example in case you have 100 services of a single check type on one host,
+the parse logic was called a hundred times instead of a single time.

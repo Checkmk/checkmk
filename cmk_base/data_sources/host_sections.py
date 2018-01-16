@@ -32,6 +32,7 @@ import cmk.debug
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
+import cmk_base.caching as caching
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.item_state as item_state
 
@@ -93,6 +94,7 @@ class MultiHostSections(object):
     def __init__(self):
         super(MultiHostSections, self).__init__()
         self._multi_host_sections = {}
+        self._section_content_cache = caching.DictCache()
 
 
     def add_or_get_host_sections(self, host_name, ipaddress, deflt=None):
@@ -125,6 +127,15 @@ class MultiHostSections(object):
         It can return an section_content construct or None when there is no section content
         for this check available.
         """
+        try:
+            return self._section_content_cache[(hostname, ipaddress, check_plugin_name, for_discovery)]
+        except KeyError:
+            section_content = self._get_section_content(hostname, ipaddress, check_plugin_name, for_discovery)
+            self._section_content_cache[(hostname, ipaddress, check_plugin_name, for_discovery)] = section_content
+            return section_content
+
+
+    def _get_section_content(self, hostname, ipaddress, check_plugin_name, for_discovery):
         section_name = checks.section_name_of(check_plugin_name)
 
         # First abstract cluster / non cluster hosts

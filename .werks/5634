@@ -1,0 +1,24 @@
+Title: Fixed slowing of CMC stop operation when SNMP checks are running
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1516095164
+Class: fix
+
+The Check_MK Microcore may need a long time for completing stop/restart of the
+process waiting for currently running operations to finish.
+
+One possible situation was that the Check_MK check helpers currently execute
+checks in form of SNMP queries. A common case is that the helpers wait for
+the response of a SNMP device which may take up to minutes, depending on the
+"SNMP timing settings".
+
+We have now changed the logic that these SNMP queries are terminated which
+leads to an immediately ending Check_MK check helper and also a faster ending
+Microcore process.
+
+This change is especially important for cluster setups that have a tight
+timeout configured for the stop operation of the OMD sites. With this change
+the failover situations should be handled a lot faster and more stable.

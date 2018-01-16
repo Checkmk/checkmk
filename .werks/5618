@@ -1,0 +1,15 @@
+Title: skype.sip_stack: Fixed "missing key" error which caused a check crash
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516097649
+Class: fix
+
+Above error was a result of different key notations for
+the same object, eg. in "skype.sip_stack" we got
+- "SIP - Incoming Responses Dropped /Sec" and
+- "SIP - Incoming Responses Dropped/sec"
+Now we normalize these keys by ignoring upper/lower
+case and spaces.

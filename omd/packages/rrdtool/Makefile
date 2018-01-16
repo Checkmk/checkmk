@@ -33,13 +33,13 @@ build: check-python check-python-modules
 	export PYTHONPATH=$$PYTHONPATH:$(TMP_PYTHON_PATH)/lib/python2.7 ; \
 	export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	export PYTHONPATH=$$PYTHONPATH:$(TMP_SETUPTOOLS) ; \
-	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); \
-        export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
-        export MODULEBUILDRC=$$(pwd)/.modulebuildrc; \
-        export PKG_CONFIG_PATH="../../glib/glib-2.13.7:../../pango/pango-1.17.5:../../cairo/cairo-1.4.6/src"; \
-        export top_builddir="."; \
+	export PERL5LIB=$(LOCAL_PERL5LIB); \
+	export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
+	export MODULEBUILDRC=$$(pwd)/.modulebuildrc; \
+	export PKG_CONFIG_PATH="../../glib/glib-2.13.7:../../pango/pango-1.17.5:../../cairo/cairo-1.4.6/src"; \
+	export top_builddir="."; \
 	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 -L$$(pwd)/../../cairo/cairo-1.4.6/src/.libs -L$$(pwd)/../../glib/glib-2.13.7/glib/.libs -L$$(pwd)/../../pango/pango-1.17.5/pango/.libs -L$$(pwd)/../../pango/pango-1.17.5/pango -L$(TMP_PYTHON_PATH)/lib -L$(TMP_PYTHON_PATH)/lib/python2.7/config" ; \
-        export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0) -I$$(pwd)/../../glib/glib-2.13.7 -I$$(pwd)/../../glib/glib-2.13.7/glib -I$$(pwd)/../../pango/pango-1.17.5 -I$$(pwd)/../../pango/pango-1.17.5/pango -I$$(pwd)/../../cairo/cairo-1.4.6/src" ; \
+	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0) -I$$(pwd)/../../glib/glib-2.13.7 -I$$(pwd)/../../glib/glib-2.13.7/glib -I$$(pwd)/../../pango/pango-1.17.5 -I$$(pwd)/../../pango/pango-1.17.5/pango -I$$(pwd)/../../cairo/cairo-1.4.6/src" ; \
 	export rd_cv_ms_async="$$MS_ASYNC" ; \
 	cd $(DIR) && \
         ./configure $(CONFIGUREOPTS) && \
@@ -59,7 +59,7 @@ install:
 	export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	export PYTHONPATH=$$PYTHONPATH:$(TMP_SETUPTOOLS) ; \
 	export LDFLAGS="-L$(TMP_PYTHON_PATH)/lib -L$(TMP_PYTHON_PATH)/lib/python2.7/config" ; \
-	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
+	export PERL5LIB=$(LOCAL_PERL5LIB); \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 # clean up perl man pages which end up in wrong location
 # clean up systemd init files. Note that on RPM based distros this

@@ -44,6 +44,7 @@ include $(REPO_PATH)/omd/distros/$(DISTRO_NAME)_$(DISTRO_VERSION).mk
 
 PERL               := /usr/bin/perl
 P5TMPDIST          := $(REPO_PATH)/omd/packages/perl-modules/dist
+LOCAL_PERL5LIB     := $(P5TMPDIST)/dest/lib/perl5
 
 TMP_PYTHON_PATH    := $(REPO_PATH)/omd/packages/python/tmp.python27
 PYTHON_LIB         := $(TMP_PYTHON_PATH)/lib/python2.7

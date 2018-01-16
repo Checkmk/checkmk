@@ -11,20 +11,21 @@ build:
 	cd $(DIR) && \
 	    ./configure \
 		--enable-msdblib \
-		--prefix=/usr \
+		--prefix=$(OMD_ROOT) \
 		--sysconfdir=/etc/freetds \
 		--with-tdsver=7.1 \
 		--disable-apps \
 		--disable-server \
 		--disable-pool \
-		--disable-odbc \
-	       	&& \
-	    $(MAKE) -j4
+		--disable-odbc
+	$(MAKE) -C $(DIR) -j4
+# Package python-modules needs some stuff during the build.
+	$(MAKE) -C $(DIR)/include prefix=$(PACKAGE_FREETDS_DESTDIR) install
+	$(MAKE) -C $(DIR)/src/dblib prefix=$(PACKAGE_FREETDS_DESTDIR) install
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
-	install -m 644 $(DIR)/src/ctlib/.libs/libct.so $(DESTDIR)$(OMD_ROOT)/lib/
-	install -m 644 $(DIR)/src/dblib/.libs/libsybdb.so $(DESTDIR)$(OMD_ROOT)/lib/
+# At runtime we need only the libraries.
+	$(MAKE) -C $(DIR)/src/dblib DESTDIR=$(DESTDIR) install
 
 skel:
 

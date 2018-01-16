@@ -58,3 +58,12 @@ check-python:
 	    echo "ERROR: You need to build the \"python\" package first" ; \
 	    exit 1 ; \
 	fi
+
+PACKAGE_FREETDS_DESTDIR        := $(REPO_PATH)/omd/packages/freetds/destdir
+PACKAGE_FREETDS_LDFLAGS        := -L$(PACKAGE_FREETDS_DESTDIR)/lib
+
+check-freetds:
+	@if [ ! -d $(PACKAGE_FREETDS_DESTDIR) ]; then \
+	    echo "ERROR: You need to build the \"freetds\" package first" ; \
+	    exit 1 ; \
+	fi

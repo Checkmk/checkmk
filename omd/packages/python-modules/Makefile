@@ -4,7 +4,6 @@ NAME     = python-modules
 SHELL    = /bin/bash
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
-TMP_INSTALL_PATH = $(shell pwd)/tmp.python
 
 PATCHES  := $(wildcard patches/*.dif)
 
@@ -118,8 +117,8 @@ MODULES+=paramiko-2.1.2.tar.gz
 
 build: check-python check-freetds unpack
 	set -e ; cd dest && \
-	    mkdir -p $(TMP_INSTALL_PATH)/lib || true; \
-	    export PYTHONPATH="$$PYTHONPATH:$(TMP_INSTALL_PATH)/lib" ; \
+	    mkdir -p $(PACKAGE_PYTHON_MODULES_PYTHONPATH) || true; \
+	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
@@ -134,7 +133,7 @@ build: check-python check-freetds unpack
 		cd $$PKG ; \
 	        $(PACKAGE_PYTHON_EXECUTABLE) setup.py build ; \
 	        $(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
-		    --root=$(TMP_INSTALL_PATH) \
+		    --root=$(PACKAGE_PYTHON_MODULES_DESTDIR) \
 	            --prefix='' \
 	            --install-platlib=/lib \
 	            --install-purelib=/lib ; \
@@ -160,7 +159,7 @@ unpack:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	set -e ; cd dest && \
-	    export PYTHONPATH=$$PYTHONPATH:"$(TMP_INSTALL_PATH)/lib" ; \
+	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
@@ -191,4 +190,4 @@ install:
 skel:
 
 clean:
-	rm -rf dest $(TMP_INSTALL_PATH)
+	rm -rf dest $(PACKAGE_PYTHON_MODULES_DESTDIR)

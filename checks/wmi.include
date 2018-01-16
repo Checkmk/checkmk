@@ -74,13 +74,14 @@ def parse_wmi_table(info, key="Name"):
                     # MS apparently doesn't bother to provide a name
                     # for base columns with performance counters
                     header = prev_header + "_Base"
+                header = self._normalize_key(header)
                 self.__headers[header] = index
                 prev_header = header
                 index += 1
             self.__key_index = None
             if key_field is not None:
                 try:
-                    self.__key_index = self.__headers[key_field]
+                    self.__key_index = self.__headers[self._normalize_key(key_field)]
                 except KeyError, e:
                     raise KeyError(e.message + " missing, valid keys: "
                                    + ", ".join(self.__headers.keys()))
@@ -114,7 +115,7 @@ def parse_wmi_table(info, key="Name"):
                 col_index = column
             else:
                 try:
-                    col_index = self.__headers[column]
+                    col_index = self.__headers[self._normalize_key(column)]
                 except KeyError, e:
                     raise MKGeneralException(e.message + " missing, valid keys: "
                                    + ", ".join(self.__headers.keys()))
@@ -135,6 +136,16 @@ def parse_wmi_table(info, key="Name"):
 
         def frequency(self):
             return self.__frequency
+
+        def _normalize_key(self, key):
+            # Different API versions may return different headers/keys
+            # for equal objects, eg. "skype.sip_stack":
+            # - "SIP - Incoming Responses Dropped /Sec"
+            # - "SIP - Incoming Responses Dropped/sec"
+            # For these cases we normalize these keys to be independent of
+            # upper/lower case and spaces.
+            return key.replace(" ", "").lower()
+
 
     try:
         info_iter = iter(info)

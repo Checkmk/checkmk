@@ -27,6 +27,7 @@ build: check-python check-python-modules
 	  CentOS\ 5.*) MS_ASYNC=broken ;; \
 	  *) MS_ASYNC=ok ;; \
 	esac ; \
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
 	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
 	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
@@ -42,13 +43,8 @@ build: check-python check-python-modules
         ./configure $(CONFIGUREOPTS) && \
         $(MAKE) all
 
-check-python-modules:
-	@if [ ! -d $(PACKAGE_PYTHON_DESTDIR) ]; then \
-	    echo "ERROR: You need to build the \"python-modules\" package first" ; \
-	    exit 1 ; \
-	fi
-
 install:
+	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
 	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \

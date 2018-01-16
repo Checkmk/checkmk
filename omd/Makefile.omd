@@ -67,3 +67,12 @@ check-freetds:
 	    echo "ERROR: You need to build the \"freetds\" package first" ; \
 	    exit 1 ; \
 	fi
+
+PACKAGE_PYTHON_MODULES_DESTDIR    := $(REPO_PATH)/omd/packages/python-modules/destdir
+PACKAGE_PYTHON_MODULES_PYTHONPATH := $(PACKAGE_PYTHON_MODULES_DESTDIR)/lib
+
+check-python-modules:
+	@if [ ! -d $(PACKAGE_PYTHON_MODULES_DESTDIR) ]; then \
+	    echo "ERROR: You need to build the \"python-modules\" package first" ; \
+	    exit 1 ; \
+	fi

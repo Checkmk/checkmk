@@ -278,7 +278,7 @@ be switched.
 This is the default behaviour of interactive conflict resolution.
 
 .TP
-.B omd [-f, --force] start      [SITE] [SERVICE]
+.B omd [-f, --force] start [-p, --parallel]    [SITE] [SERVICE]
 Start a site, i.e. start all activated daemons and services of a site.
 If you call this as root, you need to specify the site to
 be started. If you do not specify a site, then all sites with AUTOSTART=on
@@ -289,8 +289,15 @@ The current site will be started.
 If you add the name of a service, e.g. \fBnagios\fP, then only that
 service is being started. If being called as root, a service can only
 be specified if also a site is specified.
+
+When you use the start operation with multiple sites, this is done sequentially
+for each site and service. You can execute the operations on the different
+sites in parallel by providing the option \fB-p\fP or \fB--parallel\fP. This
+will slightly change the output of the command and invoke the start operation
+on each site at first and then collect the results from each site after that
+and block till the start operations for all sites have been completed.
 .TP
-.B omd stop       [SITE] [SERVICE]
+.B omd stop [-p, --parallel]      [SITE] [SERVICE]
 Stop a site. See \fBomd start\fP for details. This stops also sites where
 AUTOSTART=off.
 .TP

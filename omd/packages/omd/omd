@@ -50,6 +50,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "update" and sys.version_info[2] != 14:
 
 
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
+import fcntl
 import string
 import random
 import tarfile, fnmatch
@@ -3248,55 +3249,122 @@ def main_umount(args, options = {}):
 
 
 def main_init_action(command, args, options={}):
-    only_version = options.get("version")
-    bare = "bare" in options
+    if g_sitename:
+        exit_status = init_action(command, args, options)
+        sys.exit(exit_status)
 
     # if no site is selected, all sites are affected
-    if not g_sitename:
-        exit_states = []
-        for site in all_sites():
-            v = site_version(site)
-            if v == None: # skip partially created sites
-                continue
-            if only_version and v != only_version:
-                continue
-            # Skip disabled sites completely
-            if site_is_disabled(site):
-                continue
 
-            # We need to do an os.system(), because each
-            # site must be started with the account of the
-            # site user. And after setuid() we cannot return.
-            if command in [ "start", "restart", "reload" ] or \
-		 ( "auto" in options and command == "status" ):
-                if not opt_force and not site_autostart(site):
-		    if not bare:
-			sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
+    only_version = options.get("version")
+    bare = "bare" in options
+    parallel = "parallel" in options
+
+    max_site_len = max([ len(site_id) for site_id in all_sites() ])
+
+    def parallel_output(site_id, line):
+        sys.stdout.write(("%-"+str(max_site_len)+"s - %s") % (site_id, line))
+
+    exit_states, processes = [], []
+    for site in all_sites():
+        v = site_version(site)
+        if v == None: # skip partially created sites
+            continue
+
+        if only_version and v != only_version:
+            continue
+
+        # Skip disabled sites completely
+        if site_is_disabled(site):
+            continue
+
+        # Handle non autostart sites
+        if command in [ "start", "restart", "reload" ] or \
+            ( "auto" in options and command == "status" ):
+            if not opt_force and not site_autostart(site):
+                if bare:
                     continue
+                elif not parallel:
+                    sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
+                else:
+                    parallel_output(site, "Ignoring since autostart is disabled\n")
+                continue
 
-	    if bare:
-		sys.stdout.write('[%s]\n' % site)
-	    else:
-		sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
-	    sys.stdout.flush()
-            exit_states.append(os.system("%s %s %s %s %s" % (sys.argv[0], command,
-                                         "bare" in options and "--bare" or "", site, " ".join(args))) >> 8)
-	    if not bare:
-		sys.stdout.write("\n")
-
-        # Do not simply take the highest exit code from the single sites.
-        # We want to be able to output the fact that either none of the
-        # sites is running or just some of the sites. For this we transform
-        # the sites states 1 (not running) to 2 (partially running) if at least
-        # one other site has state 0 (running) or 2 (partially running).
-        if 1 in exit_states and (0 in exit_states or 2 in exit_states):
-            exit_status = 2 # not all sites running, but at least one
-        elif exit_states:
-            exit_status = max(exit_states)
+        if command == "status" and bare:
+            sys.stdout.write('[%s]\n' % site)
+        elif not parallel:
+            sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
         else:
-            exit_status = 0 # No OMD site existing
+            parallel_output(site, "Invoking '%s'\n" % (command))
+        sys.stdout.flush()
+
+        # We need to open a subprocess, because each site must be started with the account of the
+        # site user. And after setuid() we cannot return.
+        stdout = sys.stdout if not parallel else subprocess.PIPE
+        stderr = sys.stderr if not parallel else subprocess.STDOUT
+        bare_arg = [ "--bare" ] if bare else []
+        p = subprocess.Popen([sys.argv[0], command ] + bare_arg + [ site ] + args,
+                              stdin=open(os.devnull, "r"), stdout=stdout, stderr=stderr)
+
+        if parallel:
+            # Make the output non blocking
+            fd = p.stdout.fileno()
+            fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+            fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
+            processes.append((site, p))
+        else:
+            exit_states.append(p.wait())
+            if not bare:
+                sys.stdout.write("\n")
+
+    # In parallel mode wait for completion of all processes and collect
+    # the output produced on stdout in the meantime. Since the processes
+    # work in parallel and we want to have nearly "live" output, we process
+    # the output line by line and prefix each line with the ID of the site.
+    # The output of a single process must not block the output of the others,
+    # so it seems we need to do some low level stuff here :-/.
+    site_buf = {}
+    while parallel and processes:
+        for site_id, p in processes[:]:
+            buf = site_buf.get(site_id, "")
+            try:
+                while True:
+                    b = p.stdout.read(1024)
+                    if not b:
+                        break
+                    buf += b
+            except IOError, e:
+                if e.errno == 11: # Resource temporarily unavailable
+                    pass
+                else:
+                    raise
+
+            while True:
+                pos = buf.find("\n")
+                if pos == -1:
+                    break
+                line, buf = buf[:pos+1], buf[pos+1:]
+                parallel_output(site_id, line)
+
+            site_buf[site_id] = buf
+
+            if not buf and p.poll() is not None:
+                exit_states.append(p.returncode)
+                processes.remove((site_id, p))
+        time.sleep(0.01)
+
+    # Do not simply take the highest exit code from the single sites.
+    # We want to be able to output the fact that either none of the
+    # sites is running or just some of the sites. For this we transform
+    # the sites states 1 (not running) to 2 (partially running) if at least
+    # one other site has state 0 (running) or 2 (partially running).
+    if 1 in exit_states and (0 in exit_states or 2 in exit_states):
+        exit_status = 2 # not all sites running, but at least one
+    elif exit_states:
+        exit_status = max(exit_states)
     else:
-        exit_status = init_action(command, args, options)
+        exit_status = 0 # No OMD site existing
+
     sys.exit(exit_status)
 
 def main_config(args, options={}):
@@ -3893,12 +3961,18 @@ commands = [
     ""),
 
   ( "start",     False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("start", args, opts),
-    [ ( "version", "V", True, "only start services having version ARG" ) ],
+    [
+        ( "version", "V", True, "only start services having version ARG" ),
+        ( "parallel", "p", False, "Invoke start of sites in parallel" ),
+    ],
     "Start services of one or all sites",
     ""),
 
   ( "stop",      False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("stop", args, opts),
-    [ ( "version", "V", True, "only stop sites having version ARG" ) ],
+    [
+        ( "version", "V", True, "only stop sites having version ARG" ),
+        ( "parallel", "p", False, "Invoke stop of sites in parallel" ),
+    ],
     "Stop services of site(s)",
     ""),
 
@@ -3915,7 +3989,8 @@ commands = [
   ( "status",    False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("status", args, opts),
     [ ( "version", "V", True, "show only sites having version ARG" ),
       ( "auto", None, False, "show only sites with AUTOSTART = on"),
-      ( "bare", "b", False, "output plain format optimized for parsing") ],
+      ( "bare", "b", False, "output plain format optimized for parsing"),
+    ],
     "Show status of services of site(s)",
     ""),
 

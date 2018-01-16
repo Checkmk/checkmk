@@ -119,12 +119,11 @@ MODULES+=paramiko-2.1.2.tar.gz
 build: check-python check-freetds unpack
 	set -e ; cd dest && \
 	    mkdir -p $(TMP_INSTALL_PATH)/lib || true; \
-	    export PYTHONPATH=$$PYTHONPATH:$(TMP_INSTALL_PATH)/lib ; \
-	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    export PYTHONPATH=$$PYTHONPATH:$(PYTHON_LIB) ; \
-	    export PYTHONPATH=$$PYTHONPATH:$(shell pwd)/dest/setuptools-28.8.0 ; \
+	    export PYTHONPATH="$$PYTHONPATH:$(TMP_INSTALL_PATH)/lib" ; \
+	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(shell pwd)/../freetds/freetds-0.95.95/include" ; \
-	    export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(PYTHON_LIB)/config -L$(shell pwd)/../freetds/freetds-0.95.95/src/dblib/.libs" ; \
+	    export LDFLAGS="-$(PACKAGE_PYTHON_LDFLAGS) -L$(shell pwd)/../freetds/freetds-0.95.95/src/dblib/.libs" ; \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	    for M in $(MODULES); do \
 		echo "Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
@@ -133,8 +132,8 @@ build: check-python check-freetds unpack
 		    PKG=pysnmp-master ; \
 		fi ; \
 		cd $$PKG ; \
-	        $(PYTHON) setup.py build ; \
-	        $(PYTHON) setup.py install \
+	        $(PACKAGE_PYTHON_EXECUTABLE) setup.py build ; \
+	        $(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(TMP_INSTALL_PATH) \
 	            --prefix='' \
 	            --install-platlib=/lib \
@@ -168,13 +167,15 @@ check-freetds:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	set -e ; cd dest && \
-	    export PYTHONPATH=$$PYTHONPATH:$(TMP_INSTALL_PATH)/lib ; \
-	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    export PYTHONPATH=$$PYTHONPATH:$(PYTHON_LIB) ; \
+	    export PYTHONPATH=$$PYTHONPATH:"$(TMP_INSTALL_PATH)/lib" ; \
+	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_PYTHONPATH)" ; \
+	    export CPATH="$(shell pwd)/../freetds/freetds-0.95.95/include" ; \
+	    export LDFLAGS="-$(PACKAGE_PYTHON_LDFLAGS) -L$(shell pwd)/../freetds/freetds-0.95.95/src/dblib/.libs" ; \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	    for M in $$(ls); do \
 		echo "Installing $$M..." ; \
 		cd $$M ; \
-	        $(PYTHON) setup.py install \
+	        $(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
 	            --install-platlib=/lib/python \

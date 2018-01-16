@@ -33,7 +33,7 @@ build: bin/gcc bin/g++
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
-	PATH="$(abspath bin):$$PATH" ; $(MAKE) -j1 -C $(DIR) DESTDIR=$(shell pwd)/tmp.python27 install
+	PATH="$(abspath bin):$$PATH" ; $(MAKE) -j1 -C $(DIR) DESTDIR=$(PACKAGE_PYTHON_DESTDIR) install
 
 # The compiler detection code below is basically what part of AC_PROC_CXX does.
 bin/gcc:
@@ -85,7 +85,7 @@ install: bin/gcc bin/g++
 skel:
 
 clean:
-	rm -rf $(DIR) bin build tmp.python27
+	rm -rf $(DIR) bin build $(PACKAGE_PYTHON_DESTDIR)
 
 upstream:
 	git rm Python-*.tgz

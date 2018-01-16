@@ -46,13 +46,15 @@ PERL               := /usr/bin/perl
 P5TMPDIST          := $(REPO_PATH)/omd/packages/perl-modules/dist
 LOCAL_PERL5LIB     := $(P5TMPDIST)/dest/lib/perl5
 
-TMP_PYTHON_PATH    := $(REPO_PATH)/omd/packages/python/tmp.python27
-PYTHON_LIB         := $(TMP_PYTHON_PATH)/lib/python2.7
-PYTHON_BIN         := $(TMP_PYTHON_PATH)/bin/python
-PYTHON             := LD_LIBRARY_PATH=$(TMP_PYTHON_PATH)/lib $(PYTHON_BIN)
+PACKAGE_PYTHON_DESTDIR         := $(REPO_PATH)/omd/packages/python/tmp.python27
+PACKAGE_PYTHON_PYTHONPATH      := $(PACKAGE_PYTHON_DESTDIR)/lib/python2.7
+PACKAGE_PYTHON_LDFLAGS         := -L$(PACKAGE_PYTHON_DESTDIR)/lib -L$(PACKAGE_PYTHON_PYTHONPATH)/config
+PACKAGE_PYTHON_LD_LIBRARY_PATH := $(PACKAGE_PYTHON_DESTDIR)/lib
+PACKAGE_PYTHON_BIN             := $(PACKAGE_PYTHON_DESTDIR)/bin
+PACKAGE_PYTHON_EXECUTABLE      := $(PACKAGE_PYTHON_BIN)/python
 
 check-python:
-	@if [ ! -d "$(TMP_PYTHON_PATH)" ]; then \
+	@if [ ! -d "$(PACKAGE_PYTHON_DESTDIR)" ]; then \
 	    echo "ERROR: You need to build the \"python\" package first" ; \
 	    exit 1 ; \
 	fi

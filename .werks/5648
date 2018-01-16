@@ -1,0 +1,17 @@
+Title: omd stop/start: Add new option to execute site actions simultaneously
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516100951
+Class: fix
+
+When having a larger number of sites an "omd start" or "omd stop" operation
+may take a lot of time since all processes are handles sequentially. To improve
+the overall execution time we have now added the optional -p/--parallel arguments
+to handle the site actions simultaneously.
+
+This change has mainly been made to fix long running overall startup / stop times
+caused when having a lot of sites on a single system. This can be a problem
+especially in clustered environments.

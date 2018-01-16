@@ -2,7 +2,6 @@ include ../../Makefile.omd
 
 NAME     = cma
 VERSION  = $(OMD_VERSION)
-DISTRO   = $(shell ../../distro)
 
 build:
 

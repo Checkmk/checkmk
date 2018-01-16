@@ -2,7 +2,6 @@ include ../../Makefile.omd
 
 NAME     = perl-modules
 VERSION  = $(OMD_VERSION)
-DISTRO   = $(shell ../../distro)
 
 MODULES = \
           Capture-Tiny-0.27.tar.gz \
@@ -99,7 +98,7 @@ build:
 	    export MODULEBUILDRC=$(PACKAGE_PERL_MODULES_DESTDIR)/dest/.modulebuildrc; \
 	    export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB):$(PACKAGE_PERL_MODULES_DESTDIR)/src/lib:$(PACKAGE_PERL_MODULES_DESTDIR)/src/Crypt-SSLeay-0.72; \
 	    cd $(PACKAGE_PERL_MODULES_DESTDIR)/src && \
-	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest \
+	        FORCE=1 ./build_module.pl -d "$(DISTRO_INFO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest \
 	            ExtUtils-MakeMaker-*.tar.gz \
 	            parent-*.tar.gz \
 	            version-*.tar.gz \
@@ -109,7 +108,7 @@ build:
 	            JSON-*.tar.gz; \
 	    export PERL_JSON_BACKEND='JSON::XS'; \
 	    cd $(PACKAGE_PERL_MODULES_DESTDIR)/src && \
-	        ./build_module.pl -d "$(DISTRO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest $(MODULES)
+	        ./build_module.pl -d "$(DISTRO_INFO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest $(MODULES)
 	cd $(PACKAGE_PERL_MODULES_PERL5LIB)/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
 	mkdir -p $(PACKAGE_PERL_MODULES_PERL5LIB)/CPAN
 	cp MyConfig.pm $(PACKAGE_PERL_MODULES_PERL5LIB)/CPAN/MyConfig.skel

@@ -1,0 +1,23 @@
+Title: Improved Agent Updater Check behaviour
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1516085347
+Class: feature
+
+Formerly, the Agent Updater Check did not update immediately after a manual action on the host. This could lead to some confusion.
+Notably, you had to wait for the next update cycle to have a successful Agent registration displayed within the Check.
+
+
+In order to mitigate this situation, the Agent Updater now:
+
+- Invalidates the cache file age after registration in order to have an Update executed with next Check_MK Agent execution
+
+- Updates the cachefile information after a successful manual update.
+
+The latter action is not performed in --debug option mode.
+
+
+Information about the cachefile updates will be displayed in -vv mode

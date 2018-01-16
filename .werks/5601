@@ -1,10 +1,10 @@
-Title: fortinet_controller_aps: New check which monitors the number of WiFi access points for Fortinet WLAN controller
+Title: hp_psu, hp_psu.temp: New checks to monitor the status and temperature of power supplies for HP switches
 Level: 1
 Component: checks
 Compatible: compat
 Edition: cre
 Version: 1.5.0i3
-Date: 1513762766
+Date: 1516103958
 Class: feature
 
 

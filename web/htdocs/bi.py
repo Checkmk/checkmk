@@ -1965,6 +1965,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
     funcname = rule.get("aggregation", "worst")
     nodes = rule.get("nodes", [])
     state_messages = rule.get("state_messages")
+    docu_url = rule.get("docu_url")
 
     if lvl == 50:
         raise MKConfigError(_("<b>BI depth limit reached</b>: "
@@ -2071,6 +2072,9 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 
     if state_messages:
         aggregation["state_messages"] = state_messages
+
+    if docu_url:
+        aggregation["docu_url"] = docu_url
 
     # Handle REMAINING references, if we are a root node
     if lvl == 0:
@@ -3069,6 +3073,10 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
         css_class = "open" if self._is_open(path) else "closed"
 
         with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
+            if tree[2].get("docu_url"):
+                html.icon_button(tree[2]["docu_url"], _("Context information about this rule"),
+                                 "url", target="_blank")
+                html.write("&nbsp;")
             html.write_text(tree[2]["title"])
 
         if not is_empty:
@@ -3669,10 +3677,13 @@ def _convert_legacy_aggregation_rule(rule):
         # Rule has at least four entries.
         # Since version 1.4.0b4
         # - werk 4460 introduced 'state_messages'.
+        # Since version 1.5.0i3
+        # - werk 5617 introduced 'docu_url'
         # zip function:
         # The returned list is truncated in length to the length of the
         # shortest argument sequence.
-        return dict(zip(["title", "params", "aggregation", "nodes", "state_messages"], rule))
+        return dict(zip(["title", "params", "aggregation", "nodes",
+                         "state_messages", "docu_url"], rule))
 
     raise MKConfigError(_("<b>Invalid BI aggregation rule</b>: "
                           "Aggregation rules must contain at least four elements: "

@@ -17348,7 +17348,7 @@ def rule_option_elements(disabling=True):
         ( "comment", RuleComment()),
         ( "docu_url",
           TextAscii(
-            title = _("Documentation-URL"),
+            title = _("Documentation URL"),
             help = HTML(_("An optional URL pointing to documentation or any other page. This will be displayed "
                      "as an icon <img class=icon src='images/button_url.png'> and open a new page when clicked. "
                      "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "

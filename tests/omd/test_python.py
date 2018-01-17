@@ -66,4 +66,4 @@ def test_python_modules(site):
     import importlib
     for test_module_name in test_modules:
         module = importlib.import_module(test_module_name)
-        assert module.__file__.startswith("/omd/sites/heute/lib/python")
+        assert module.__file__.startswith(site.root)

@@ -53,3 +53,17 @@ def test_03_pip_interpreter_version(site):
                      stdout=subprocess.PIPE)
     version = p.stdout.read()
     assert version.startswith("pip 9.")
+
+
+def test_python_modules(site):
+    test_modules = [
+        "netsnmp",
+        "pysphere",
+        "ldap",
+        "cryptography",
+    ]
+
+    import importlib
+    for test_module_name in test_modules:
+        module = importlib.import_module(test_module_name)
+        assert module.__file__.startswith("/omd/sites/heute/lib/python")

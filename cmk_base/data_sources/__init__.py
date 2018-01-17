@@ -85,6 +85,10 @@ class DataSources(object):
         self._hostname = hostname
         self._initialize_data_sources()
 
+        # Has currently no effect. The value possibly set during execution on the single data
+        # sources is kept here in this object to return it later on
+        self._enforced_check_plugin_names = None
+
 
     def _initialize_data_sources(self):
         self._sources = {}
@@ -202,8 +206,14 @@ class DataSources(object):
 
 
     def enforce_check_plugin_names(self, check_plugin_names):
+        self._enforced_check_plugin_names = check_plugin_names
         for source in self.get_data_sources():
             source.enforce_check_plugin_names(check_plugin_names)
+
+
+    def get_enforced_check_plugin_names(self):
+        """Returns either the collection of enforced check plugin names (when they have been set before) or None"""
+        return self._enforced_check_plugin_names
 
 
     def get_data_sources(self):

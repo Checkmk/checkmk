@@ -323,7 +323,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
         # flexible notifications even if they are enabled.
         contact = config.contacts.get(contactname)
 
-        disable_notifications_opts = transform_user_disable_notifications_opts(contact)
+        disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
         if disable_notifications_opts.get("disable", False):
             start, end = disable_notifications_opts.get("timerange", (None, None))
             if start is None or end is None:

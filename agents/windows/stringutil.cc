@@ -256,6 +256,7 @@ void stringToIPv6(const char *value, uint16_t *address,
     while (pos != NULL) {
         char *endpos = NULL;
         unsigned long segment = strtoul(pos, &endpos, 16);
+
         if (segment > 0xFFFFu) {
             fprintf(stderr, "Invalid ipv6 address %s\n", value);
             exit(1);

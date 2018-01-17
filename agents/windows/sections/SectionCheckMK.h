@@ -29,12 +29,15 @@
 #include "Section.h"
 
 class Environment;
-typedef std::pair<std::string, std::string> KVPair;
+using KVPair = std::pair<std::string, std::string>;
+using OnlyFromConfigurable =
+    SplittingListConfigurable<only_from_t,
+                              BlockMode::FileExclusive<only_from_t>>;
 
 class SectionCheckMK : public Section {
 public:
-    SectionCheckMK(Configuration &config, Logger *logger,
-                   const WinApiAdaptor &winapi);
+    SectionCheckMK(Configuration &config, OnlyFromConfigurable &only_from,
+                   Logger *logger, const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
@@ -43,9 +46,7 @@ private:
     std::vector<KVPair> createInfoFields() const;
 
     Configurable<bool> _crash_debug;
-    SplittingListConfigurable<only_from_t,
-                              BlockMode::FileExclusive<only_from_t>>
-        _only_from;
+    OnlyFromConfigurable &_only_from;
 
     // static fields
     const std::vector<KVPair> _info_fields;

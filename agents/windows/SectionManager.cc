@@ -66,7 +66,8 @@ winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
     return result;
 }
 
-SectionManager::SectionManager(Configuration &config, Logger *logger,
+SectionManager::SectionManager(Configuration &config,
+                               OnlyFromConfigurable &only_from, Logger *logger,
                                const WinApiAdaptor &winapi)
     : _ps_use_wmi(config, "ps", "use_wmi", false, winapi)
     , _enabled_sections(config, "global", "sections", winapi, mapSectionName)
@@ -80,7 +81,7 @@ SectionManager::SectionManager(Configuration &config, Logger *logger,
     , _env(config.getEnvironment())
     , _logger(logger)
     , _winapi(winapi) {
-    loadStaticSections(config);
+    loadStaticSections(config, only_from);
 }
 
 void SectionManager::emitConfigLoaded() {
@@ -128,8 +129,9 @@ void SectionManager::loadDynamicSections() {
     }
 }
 
-void SectionManager::loadStaticSections(Configuration &config) {
-    addSection(new SectionCheckMK(config, _logger, _winapi));
+void SectionManager::loadStaticSections(Configuration &config,
+                                        OnlyFromConfigurable &only_from) {
+    addSection(new SectionCheckMK(config, only_from, _logger, _winapi));
     addSection(new SectionUptime(_env, _logger, _winapi));
     addSection((new SectionDF(_env, _logger, _winapi))->withRealtimeSupport());
     addSection(new SectionPS(config, _logger, _winapi));

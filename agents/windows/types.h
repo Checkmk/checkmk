@@ -70,6 +70,7 @@ std::string from_string<std::string>(const WinApiAdaptor &winapi,
 
 // Needed for only_from
 struct ipspec {
+    explicit ipspec(const WinApiAdaptor &winapi_) : winapi(std::ref(winapi_)) {}
     union {
         struct {
             uint32_t address;
@@ -82,6 +83,7 @@ struct ipspec {
     } ip;
     int bits;
     bool ipv6;
+    std::reference_wrapper<const WinApiAdaptor> winapi;
 };
 
 template <>
@@ -89,6 +91,8 @@ ipspec from_string<ipspec>(const WinApiAdaptor &winapi,
                            const std::string &value);
 
 std::ostream &operator<<(std::ostream &os, const ipspec &ips);
+
+ipspec toIPv6(const ipspec &ips, const WinApiAdaptor &winapi);
 
 using only_from_t = std::vector<ipspec>;
 

@@ -395,6 +395,7 @@ public:
                        int(SOCKET s, struct sockaddr *name, int *namelen));
     MOCK_CONST_METHOD1(htons, u_short(u_short hostshort));
     MOCK_CONST_METHOD2(listen, int(SOCKET s, int backlog));
+    MOCK_CONST_METHOD1(ntohs, u_short(u_short netshort));
     MOCK_CONST_METHOD5(select, int(int nfds, fd_set *readfds, fd_set *writefds,
                                    fd_set *exceptfds, const PTIMEVAL timeout));
     MOCK_CONST_METHOD4(send,

@@ -179,9 +179,7 @@ struct GlobalConfig {
     Configurable<bool> encrypted_rt;
     Configurable<bool> support_ipv6;
     Configurable<std::string> passphrase;
-    SplittingListConfigurable<only_from_t,
-                              BlockMode::FileExclusive<only_from_t>>
-        only_from;
+    OnlyFromConfigurable only_from;
 
     GlobalConfig(const Environment &env)
         : parser(env)
@@ -365,10 +363,12 @@ void InstallService() {
                                        sizeof(path) / sizeof(path[0])) > 0) {
             char quoted_path[1024];
             snprintf(quoted_path, sizeof(quoted_path), "\"%s\"", path);
-            ServiceHandle service{s_winapi.CreateService(
-                serviceControlManager, gszServiceName, gszServiceName,
-                SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-                SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, quoted_path), s_winapi};
+            ServiceHandle service{
+                s_winapi.CreateService(
+                    serviceControlManager, gszServiceName, gszServiceName,
+                    SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
+                    SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, quoted_path),
+                s_winapi};
             if (service) {
                 printf(SERVICE_NAME " Installed Successfully\n");
             } else {
@@ -391,7 +391,8 @@ void UninstallService() {
     if (serviceControlManager) {
         ServiceHandle service{
             s_winapi.OpenService(serviceControlManager.get(), gszServiceName,
-                                 SERVICE_QUERY_STATUS | DELETE), s_winapi};
+                                 SERVICE_QUERY_STATUS | DELETE),
+            s_winapi};
         if (service) {
             SERVICE_STATUS serviceStatus;
             if (s_winapi.QueryServiceStatus(service.get(), &serviceStatus)) {
@@ -925,35 +926,18 @@ void do_unpack_plugins(const char *plugin_filename, const Environment &env) {
     }
 }
 
-void postProcessOnlyFrom() {
+void addIPv6Addresses() {
     if (*s_config->support_ipv6) {
-        // find all ipv4 specs, later insert a the same spec as a v6 adress.
-        only_from_t v4specs;
-        v4specs.reserve(s_config->only_from->size());
-        for (const auto &spec : *s_config->only_from) {
-            if (!spec.ipv6) {
-                v4specs.push_back(spec);
+        auto &only_from = *s_config->only_from;
+        const size_t origSize = only_from.size();
+        only_from.reserve(only_from.size() * 2);
+        // also add a v4->v6 converted filter
+        for (size_t i = 0; i < origSize; ++i) {
+            if (!only_from[i].ipv6) {
+                only_from.push_back(toIPv6(only_from[i], s_winapi));
             }
         }
-
-        s_config->only_from->reserve(s_config->only_from->size() + v4specs.size());
-        for (const auto &spec : v4specs) {
-            // also add a v4->v6 coverted filter
-
-            ipspec result{0};
-            // first 96 bits are fixed: 0:0:0:0:0:ffff
-            result.bits = 96 + spec.bits;
-            result.ipv6 = true;
-            memset(result.ip.v6.address, 0, sizeof(uint16_t) * 5);
-            result.ip.v6.address[5] = 0xFFFFu;
-            result.ip.v6.address[6] =
-                static_cast<uint16_t>(spec.ip.v4.address & 0xFFFFu);
-            result.ip.v6.address[7] =
-                static_cast<uint16_t>(spec.ip.v4.address >> 16);
-            netmaskFromPrefixIPv6(result.bits, result.ip.v6.netmask,
-                                  s_winapi);
-            s_config->only_from.add(result);
-        }
+        s_config->only_from->shrink_to_fit();
     }
 }
 
@@ -978,7 +962,8 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     }
 
     s_config = new GlobalConfig(env);
-    s_sections = new SectionManager(s_config->parser, logger, s_winapi);
+    s_sections = new SectionManager(s_config->parser, s_config->only_from,
+                                    logger, s_winapi);
 
     // careful: destroying the section manager destroys the wmi helpers created
     // for
@@ -998,7 +983,7 @@ void RunImmediate(const char *mode, int argc, char **argv) {
         logger->setLevel(LogLevel::warning);
     }
 
-    postProcessOnlyFrom();
+    addIPv6Addresses();
     s_sections->loadDynamicSections();
     s_sections->emitConfigLoaded();
 

@@ -30,17 +30,29 @@
 
 // Command definitions for MRPE
 struct mrpe_entry {
-    char run_as_user[256];
-    char command_line[256];
-    char plugin_name[64];
-    char service_description[256];
+    mrpe_entry(const std::string run_as_user_, const std::string command_line_,
+               const std::string &plugin_name_,
+               const std::string &service_description_)
+        : run_as_user(run_as_user_)
+        , command_line(command_line_)
+        , plugin_name(plugin_name_)
+        , service_description(service_description_) {}
+    std::string run_as_user;
+    std::string command_line;
+    std::string plugin_name;
+    std::string service_description;
 };
 
-using mrpe_entries_t = std::vector<mrpe_entry *>;
+inline std::ostream &operator<<(std::ostream &os, const mrpe_entry &entry) {
+    os << "(" << entry.plugin_name << ") " << entry.service_description;
+    return os;
+}
+
+using mrpe_entries_t = std::vector<mrpe_entry>;
 
 template <>
-mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
-                                      const std::string &value);
+mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &,
+                                   const std::string &value);
 
 class SectionMRPE : public Section {
 public:

@@ -413,7 +413,6 @@ public:
                                        int *pNumArgs) const override;
     virtual HANDLE CreateToolhelp32Snapshot(DWORD dwFlags,
                                             DWORD th32ProcessID) const override;
-    virtual WINBOOL PathIsRelative(LPCSTR pszPath) const override;
     virtual WINBOOL Process32First(HANDLE hSnapshot,
                                    LPPROCESSENTRY32 lppe) const override;
     virtual WINBOOL Process32Next(HANDLE hSnapshot,

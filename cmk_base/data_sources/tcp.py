@@ -96,12 +96,16 @@ class TCPDataSource(CheckMKAgentDataSource):
         s = socket.socket(socktype, socket.SOCK_STREAM)
 
         timeout = self._get_timeout(hostname)
-        s.settimeout(timeout)
 
         output = []
-        self._logger.debug("[%s] Connecting via TCP to %s:%d (%ss timeout)" % (self.id(), ipaddress, port, s.gettimeout()))
+        self._logger.debug("[%s] Connecting via TCP to %s:%d (%ss timeout)" % (self.id(), ipaddress, port, timeout))
         try:
+            s.settimeout(timeout)
             s.connect((ipaddress, port))
+            s.settimeout(None)
+
+            self._logger.debug("[%s] Reading data from agent" % (self.id()))
+
             while True:
                 data = s.recv(4096, socket.MSG_WAITALL)
 

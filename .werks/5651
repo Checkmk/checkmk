@@ -1,0 +1,11 @@
+Title: Fixed agent TCP connect timeout being used for whole communication (1.5.0i2 regression)
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516186453
+Class: fix
+
+The configurable "Agent TCP connect timeout" was used not only for the connect phase of
+the TCP connection. This lead to many timeout messages like "agent:myhost:12.16.11.42: timed out".

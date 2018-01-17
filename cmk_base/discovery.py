@@ -111,7 +111,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
 
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            sources = data_sources.DataSources(hostname)
+            sources = _get_sources_for_discovery(hostname, check_plugin_names, do_snmp_scan, on_error)
 
             # Usually we disable SNMP scan if cmk -I is used without a list of
             # explicity hosts. But for host that have never been service-discovered
@@ -119,10 +119,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             do_snmp_scan = not use_caches or not _has_autochecks(hostname)
 
             multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
-                                                           check_plugin_names=check_plugin_names,
-                                                           use_caches=use_caches,
-                                                           do_snmp_scan=do_snmp_scan,
-                                                           on_error=on_error)
+                                                                   use_caches=use_caches)
 
             _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names, only_new, on_error)
             console.verbose("\n")
@@ -218,15 +215,16 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
         if mode == "refresh":
             counts["removed"] += remove_autochecks_of(hostname) # this is cluster-aware!
 
-        sources = data_sources.DataSources(hostname)
+        sources = _get_sources_for_discovery(hostname, check_plugin_names=None,
+                                             do_snmp_scan=do_snmp_scan, on_error=on_error)
 
         if config.is_cluster(hostname):
             ipaddress = None
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress, check_plugin_names=None,
-                                                use_caches=use_caches, do_snmp_scan=do_snmp_scan, on_error=on_error)
+        multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
+                                                               use_caches=use_caches)
 
         # Compute current state of new and existing checks
         services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error=on_error)
@@ -301,14 +299,13 @@ def check_discovery(hostname, ipaddress):
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        sources = data_sources.DataSources(hostname)
+        sources = _get_sources_for_discovery(hostname, check_plugin_names=None,
+                                             do_snmp_scan=params["inventory_check_do_scan"],
+                                             on_error="raise")
 
         try:
             multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
-                                    check_plugin_names=None,
-                                    use_caches=data_sources.abstract.DataSource.get_may_use_cache_file(),
-                                    do_snmp_scan=params["inventory_check_do_scan"],
-                                    on_error="raise")
+                              use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
         except socket.gaierror, e:
             # TODO: Seems to be the wrong place for this execption handling
             if e[0] == -2 and cmk.debug.disabled():
@@ -710,7 +707,9 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _get_host_sections_for_discovery(sources, hostname, ipaddress, check_plugin_names, use_caches, do_snmp_scan, on_error):
+def _get_sources_for_discovery(hostname, check_plugin_names, do_snmp_scan, on_error):
+    sources = data_sources.DataSources(hostname)
+
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error(on_error)
@@ -723,6 +722,10 @@ def _get_host_sections_for_discovery(sources, hostname, ipaddress, check_plugin_
     if check_plugin_names:
         sources.enforce_check_plugin_names(check_plugin_names)
 
+    return sources
+
+
+def _get_host_sections_for_discovery(sources, hostname, ipaddress, use_caches):
     max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
     return sources.get_host_sections(hostname, ipaddress, max_cachefile_age)
 
@@ -1027,7 +1030,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 # This function is cluster-aware
 def _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error):
     if config.is_cluster(hostname):
-        return _get_cluster_services(hostname, ipaddress, multi_host_sections, on_error)
+        return _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_error)
     else:
         return _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_error)
 
@@ -1122,16 +1125,16 @@ def _merge_manual_services(services, hostname, on_error):
     return services
 
 # Do the work for a cluster
-def _get_cluster_services(hostname, ipaddress, multi_host_sections, on_error):
+def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_error):
     nodes = config.nodes_of(hostname)
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     cluster_items = {}
     for node in nodes:
-        sources = data_sources.DataSources(node)
+        node_sources = _get_sources_for_discovery(node, check_plugin_names, do_snmp_scan, on_error)
         node_ipaddress = ip_lookup.lookup_ip_address(node)
-        services = _get_discovered_services(node, node_ipaddress, sources, multi_host_sections, on_error)
+        services = _get_discovered_services(node, node_ipaddress, node_sources, multi_host_sections, on_error)
         for (check_plugin_name, item), (check_source, paramstring) in services.items():
             descr = config.service_description(hostname, check_plugin_name, item)
             if hostname == config.host_of_clustered_service(node, descr):
@@ -1166,16 +1169,16 @@ def resolve_paramstring(paramstring):
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     import cmk_base.checking as checking
 
-    sources = data_sources.DataSources(hostname)
+    sources = _get_sources_for_discovery(hostname, check_plugin_names=None,
+                                         do_snmp_scan=do_snmp_scan, on_error=on_error)
 
     if config.is_cluster(hostname):
         ipaddress = None
     else:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
-                                               check_plugin_names=None, use_caches=use_caches,
-                                               do_snmp_scan=do_snmp_scan, on_error=on_error)
+    multi_host_sections = _get_host_sections_for_discovery(sources, hostname,
+                                                           ipaddress, use_caches=use_caches)
 
     services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error)
 

@@ -44,6 +44,12 @@ TEST(wa_stringutilTest, join_strings_space_separator) {
     ASSERT_EQ(expected, join(input.cbegin(), input.cend(), " "));
 }
 
+TEST(wa_stringutilTest, join_strings_empty_separator) {
+    const vector<string> input{"This", "is", "an", "example", "sentence."};
+    const string expected{"Thisisanexamplesentence."};
+    ASSERT_EQ(expected, join(input.cbegin(), input.cend(), ""));
+}
+
 TEST(wa_stringutilTest, join_wstrings_colon_separator) {
     const vector<wstring> input{L"This", L"is", L"an", L"example", L"sentence."};
     const wstring expected{L"This:is:an:example:sentence."};
@@ -60,4 +66,54 @@ TEST(wa_stringutilTest, join_ints_hexadecimal_colon_separator) {
     const vector<int> input{1, 17, 273};
     const string expected{"1:11:111"};
     ASSERT_EQ(expected, join(input.cbegin(), input.cend(), ":", std::ios::hex));
+}
+
+TEST(wa_stringutilTest, isPathRelative_absolute_with_drive_letter_windows) {
+    const std::string path{"C:\\foo\\bar"};
+    ASSERT_FALSE(isPathRelative(path)) << path << " recognized as relative";
+}
+
+TEST(wa_stringutilTest, isPathRelative_absolute_without_drive_letter_windows) {
+    const std::string path{"\\foo\\bar"};
+    ASSERT_FALSE(isPathRelative(path)) << path << " recognized as relative";
+}
+
+TEST(wa_stringutilTest, isPathRelative_absolute_unc_windows) {
+    const std::string path{"\\\\foo\\bar"};
+    ASSERT_FALSE(isPathRelative(path)) << path << " recognized as relative";
+}
+
+TEST(wa_stringutilTest, isPathRelative_relative_without_drive_letter_windows) {
+    const std::string path{"foo\\bar"};
+    ASSERT_TRUE(isPathRelative(path)) << path << " recognized as absolute";
+}
+
+TEST(wa_stringutilTest, isPathRelative_relative_with_drive_letter_windows) {
+    const std::string path{"C:foo\\bar"};
+    ASSERT_TRUE(isPathRelative(path)) << path << " recognized as absolute";
+}
+
+TEST(wa_stringutilTest, isPathRelative_absolute_with_drive_letter_unix) {
+    const std::string path{"C:/foo/bar"};
+    ASSERT_FALSE(isPathRelative(path)) << path << " recognized as relative";
+}
+
+TEST(wa_stringutilTest, isPathRelative_absolute_without_drive_letter_unix) {
+    const std::string path{"/foo/bar"};
+    ASSERT_FALSE(isPathRelative(path)) << path << " recognized as relative";
+}
+
+TEST(wa_stringutilTest, isPathRelative_absolute_unc_unix) {
+    const std::string path{"//foo/bar"};
+    ASSERT_FALSE(isPathRelative(path)) << path << " recognized as relative";
+}
+
+TEST(wa_stringutilTest, isPathRelative_relative_without_drive_letter_unix) {
+    const std::string path{"foo/bar"};
+    ASSERT_TRUE(isPathRelative(path)) << path << " recognized as absolute";
+}
+
+TEST(wa_stringutilTest, isPathRelative_relative_with_drive_letter_unix) {
+    const std::string path{"C:foo/bar"};
+    ASSERT_TRUE(isPathRelative(path)) << path << " recognized as absolute";
 }

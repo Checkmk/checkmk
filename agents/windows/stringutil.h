@@ -35,6 +35,8 @@
 #include <vector>
 
 using std::regex;
+using std::regex_match;
+using std::smatch;
 using std::sregex_token_iterator;
 
 class WinApiAdaptor;
@@ -126,6 +128,21 @@ template <typename ValueT, typename SeparatorT>
 std::basic_string<SeparatorT> join(const std::vector<ValueT> &input,
                                    const SeparatorT *sep) {
     return join(input.begin(), input.end(), sep);
+}
+
+inline bool isPathRelative(const std::string &path) {
+    const std::array<regex, 2> regexes{
+        // Windows absolute path (with/without drive letter or UNC):
+        regex{"^([A-Za-z]:)?\\\\[^<>:\"/\\\\|?*]|\\\\\\\\[^<>:\"/\\\\|?*]",
+              regex::extended},
+        // Unix-style absolute path (with/without drive letter or UNC):
+        regex{"^([A-Za-z]:)?/[^<>:\"/\\\\|?*]|//[^<>:\"/\\\\|?*]",
+              regex::extended}};
+    smatch match;
+    return std::all_of(regexes.cbegin(), regexes.cend(),
+                       [&path, &match](const regex &re) {
+                           return !regex_search(path, match, re);
+                       });
 }
 
 // to_string and to_wstring supplied in C++11 but not before

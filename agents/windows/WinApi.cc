@@ -841,10 +841,6 @@ HANDLE WinApi::CreateToolhelp32Snapshot(DWORD dwFlags,
     return ::CreateToolhelp32Snapshot(dwFlags, th32ProcessID);
 }
 
-WINBOOL WinApi::PathIsRelative(LPCSTR pszPath) const {
-    return ::PathIsRelative(pszPath);
-}
-
 WINBOOL WinApi::Process32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe) const {
     return ::Process32First(hSnapshot, lppe);
 }

@@ -447,7 +447,6 @@ public:
                        LPWSTR *(LPCWSTR lpCmdLine, int *pNumArgs));
     MOCK_CONST_METHOD2(CreateToolhelp32Snapshot,
                        HANDLE(DWORD dwFlags, DWORD th32ProcessID));
-    MOCK_CONST_METHOD1(PathIsRelative, WINBOOL(LPCSTR pszPath));
     MOCK_CONST_METHOD2(Process32First,
                        WINBOOL(HANDLE hSnapshot, LPPROCESSENTRY32 lppe));
     MOCK_CONST_METHOD2(Process32Next,

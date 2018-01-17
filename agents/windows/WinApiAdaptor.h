@@ -447,7 +447,6 @@ public:
                                        int *pNumArgs) const = 0;
     virtual HANDLE CreateToolhelp32Snapshot(DWORD dwFlags,
                                             DWORD th32ProcessID) const = 0;
-    virtual WINBOOL PathIsRelative(LPCSTR pszPath) const = 0;
     virtual WINBOOL Process32First(HANDLE hSnapshot,
                                    LPPROCESSENTRY32 lppe) const = 0;
     virtual WINBOOL Process32Next(HANDLE hSnapshot,

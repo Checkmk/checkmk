@@ -35,77 +35,43 @@ SectionMRPE::SectionMRPE(Configuration &config, Logger *logger,
     , _includes(config, "mrpe", "include", winapi) {}
 
 void SectionMRPE::updateIncludes() {
-    for (unsigned int i = 0; i < _included_entries.size(); ++i)
-        delete _included_entries[i];
     _included_entries.clear();
 
-    FILE *file;
-    char line[512];
-    int lineno = 0;
     for (const auto &user_path : *_includes) {
         std::string user, path;
         std::tie(user, path) = user_path;
-        file = fopen(path.c_str(), "r");
-        if (!file) {
+        std::ifstream ifs(path);
+        if (!ifs) {
             Warning(_logger) << "Include file not found " << path;
             continue;
         }
 
-        lineno = 0;
-        while (fgets(line, sizeof(line), file) != nullptr) {
-            lineno++;
-            char *l = strip(line);
-            if (l[0] == 0 || l[0] == '#' || l[0] == ';')
+        std::string line;
+        for (unsigned lineno = 1; std::getline(ifs, line); ++lineno) {
+            ltrim(line);
+            rtrim(line);
+            if (line.empty() || line[0] == '#' || line[0] == ';')
                 continue;  // skip empty lines and comments
 
             // split up line at = sign
-            char *s = l;
-            while (*s && *s != '=') s++;
-            if (*s != '=') {
+            auto tokens = tokenize(line, "=");
+            if (tokens.size() != 2) {
                 Warning(_logger)
                     << "Invalid line " << lineno << " in " << path << ".";
                 continue;
             }
-            *s = 0;
-            char *value = s + 1;
-            char *var = l;
-            rstrip(var);
-            lowercase(var);
-            value = strip(value);
+            auto &var = tokens[0];
+            auto &value = tokens[1];
+            rtrim(var);
+            std::transform(var.cbegin(), var.cend(), var.begin(), tolower);
+            ltrim(value);
 
-            if (!strcmp(var, "check")) {
-                // First word: service description
-                // Rest: command line
-                char *service_description = next_word(&value);
-                char *command_line = value;
-                if (!command_line || !command_line[0]) {
-                    Warning(_logger)
-                        << "Invalid line " << lineno << " in " << path
-                        << ". Invalid command specification.";
-                    continue;
-                }
-
-                mrpe_entry *tmp_entry = new mrpe_entry();
-                memset(tmp_entry, 0, sizeof(mrpe_entry));
-
-                strncpy(tmp_entry->command_line, command_line,
-                        sizeof(tmp_entry->command_line));
-                strncpy(tmp_entry->service_description, service_description,
-                        sizeof(tmp_entry->service_description));
-
-                // compute plugin name, drop directory part
-                char *plugin_name = next_word(&value);
-                char *p = strrchr(plugin_name, '/');
-                if (!p) p = strrchr(plugin_name, '\\');
-                if (p) plugin_name = p + 1;
-                strncpy(tmp_entry->plugin_name, plugin_name,
-                        sizeof(tmp_entry->plugin_name));
-                strncpy(tmp_entry->run_as_user, user.c_str(),
-                        sizeof(tmp_entry->run_as_user));
-                _included_entries.push_back(tmp_entry);
+            if (var == "check") {
+                mrpe_entry entry = from_string<mrpe_entry>(_winapi, value);
+                entry.run_as_user = user;
+                _included_entries.push_back(entry);
             }
         }
-        fclose(file);
     }
 }
 
@@ -118,20 +84,16 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
     all_entries.insert(all_entries.end(), _included_entries.begin(),
                        _included_entries.end());
 
-    for (mrpe_entry *entry : all_entries) {
-        out << "(" << entry->plugin_name << ") " << entry->service_description
-            << " ";
-        Debug(_logger) << entry->run_as_user << " (" << entry->plugin_name
-                       << ") " << entry->service_description;
+    for (const auto &entry : all_entries) {
+        out << entry << " ";
+        Debug(_logger) << entry.run_as_user << " " << entry;
 
-        char modified_command[1024];
-        char run_as_prefix[512];
-        memset(run_as_prefix, 0, sizeof(run_as_prefix));
-        if (strlen(entry->run_as_user) > 0)
-            snprintf(run_as_prefix, sizeof(run_as_prefix), "runas /User:%s ",
-                     entry->run_as_user);
-        snprintf(modified_command, sizeof(modified_command), "%s%s",
-                 run_as_prefix, entry->command_line);
+        std::string run_as_prefix;
+
+        if (!entry.run_as_user.empty()) {
+            run_as_prefix = "runas /User:" + entry.run_as_user + " ";
+        }
+        std::string modified_command = run_as_prefix + entry.command_line;
 
         try {
             ExternalCmd command(modified_command, _env, _logger, _winapi);
@@ -172,19 +134,11 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
 }
 
 template <>
-mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
-                                      const std::string &value) {
-    mrpe_entry *result = new mrpe_entry();
-    memset(result, 0, sizeof(mrpe_entry));
-
-    std::string service_description;
-    std::string command_line;
-
-    {
-        std::stringstream str(value);
-        getline(str, service_description, ' ');
-        getline(str, command_line);
-    }
+mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &,
+                                   const std::string &value) {
+    const auto tokens = tokenize(value, " ");
+    const std::string &service_description = tokens[0];
+    std::string command_line = join(std::next(tokens.cbegin()), tokens.cend(), " ");
 
     // Strip any " from start and end
     if (!command_line.empty() && command_line.front() == '"') {
@@ -195,38 +149,29 @@ mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
     }
 
     if (command_line.empty()) {
-        delete result;
         throw StringConversionError(
             "Invalid command specification for mrpe:\r\n"
             "Format: SERVICEDESC COMMANDLINE");
     }
 
-    if (winapi.PathIsRelative(command_line.c_str())) {
+    if (isPathRelative(command_line)) {
         Environment *env = Environment::instance();
         if (env == nullptr) {
-            delete result;
             throw StringConversionError("No environment");
         }
-        snprintf(result->command_line, sizeof(result->command_line), "%s\\%s",
-                 env->agentDirectory().c_str(), lstrip(command_line.c_str()));
-    } else {
-        strncpy(result->command_line, command_line.c_str(),
-                sizeof(result->command_line));
+        ltrim(command_line);
+        command_line = env->agentDirectory() + "\\" + command_line;
     }
-
-    strncpy(result->service_description, service_description.c_str(),
-            sizeof(result->service_description));
 
     // compute plugin name, drop directory part
-    std::string plugin_name;
-    {
-        std::stringstream str(command_line);
-        getline(str, plugin_name, ' ');
-        plugin_name = std::string(
-            plugin_name.begin() + plugin_name.find_last_of("/\\") + 1,
-            plugin_name.end());
+    std::string plugin_name = tokenize(command_line, " ")[0];
+    for (const auto &delimiter : {"/", "\\"}) {
+        auto pos = plugin_name.find_last_of(delimiter);
+        if (pos != std::string::npos) {
+            plugin_name = plugin_name.substr(pos + 1);
+            break;
+        }
     }
-    strncpy(result->plugin_name, plugin_name.c_str(),
-            sizeof(result->plugin_name));
-    return result;
+
+    return {"", command_line, plugin_name, service_description};
 }

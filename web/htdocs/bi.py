@@ -1338,7 +1338,6 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
         return
     html.set_cache(html_cache_id, "1")
 
-
     compilation_start_time = time.time()
     log("###########################################################")
     log("Query only hosts: %d, only_groups: %d (%r)" % (len(only_hosts or []), len(only_groups or []), only_groups))
@@ -1416,7 +1415,6 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     if not config.bi_use_legacy_compilation:
         compile_forest_improved(only_hosts, only_groups)
         return
-
 
     global g_cache, g_tree_cache
     global used_cache, did_compilation
@@ -1962,31 +1960,17 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
         global g_compiled_services_leafes
         g_compiled_services_leafes = {}
 
-    # Convert new dictionary style rule into old tuple based
-    # format
-    # TODO: O.o Remove this code, all of it...
-    if type(rule) == dict:
-        rule = (
-            rule.get("title", _("Untitled BI rule")),
-            rule.get("params", []),
-            rule.get("aggregation", "worst"),
-            rule.get("nodes", []),
-            rule.get("state_messages")
-        )
-
-    if len(rule) != 5:
-        raise MKConfigError(_("<b>Invalid BI aggregation rule</b>: "
-                "Aggregation rules must contain four elements: description, argument list, "
-                "aggregation function and list of nodes. Your rule has %d elements: "
-                "<pre>%s</pre>") % (len(rule), pprint.pformat(rule)))
+    description = rule.get("title", _("Untitled BI rule"))
+    arglist = rule.get("params", [])
+    funcname = rule.get("aggregation", "worst")
+    nodes = rule.get("nodes", [])
+    state_messages = rule.get("state_messages")
 
     if lvl == 50:
         raise MKConfigError(_("<b>BI depth limit reached</b>: "
                 "The nesting level of aggregations is limited to 50. You either configured "
                 "too many levels or built an infinite recursion. This happened in rule %s")
                   % pprint.pformat(rule))
-
-    description, arglist, funcname, nodes, state_messages = rule
 
     # check arguments and convert into dictionary
     if len(arglist) != len(args):
@@ -3638,33 +3622,60 @@ def get_state_name(node):
 
 
 def migrate_bi_configuration():
-    def convert_aggregation(aggr_tuple):
-        if type(aggr_tuple[0]) == dict:
-            return aggr_tuple # already converted
-
-        options = {}
-        map_class_to_key = {
-            config.DISABLED:     "disabled",
-            config.HARD_STATES:  "hard_states",
-            config.DT_AGGR_WARN: "downtime_aggr_warn",
-        }
-        for idx, token in enumerate(list(aggr_tuple)):
-            if token in map_class_to_key:
-                options[map_class_to_key[token]] = True
-            else:
-                aggr_tuple = aggr_tuple[idx:]
-                break
-        return (options,) + aggr_tuple
-
+    converted_host_aggregations = []
+    converted_aggregations = []
+    converted_aggregation_rules = {}
     if config.bi_packs:
         for pack in config.bi_packs.values():
-            config.aggregations += map(convert_aggregation, pack["aggregations"])
-            config.host_aggregations += map(convert_aggregation, pack["host_aggregations"])
-            config.aggregation_rules.update(pack["rules"])
+            converted_host_aggregations += map(_convert_aggregation, pack["host_aggregations"])
+            converted_aggregations += map(_convert_aggregation, pack["aggregations"])
+            converted_aggregation_rules.update(pack["rules"])
         config.bi_packs = {}
-    else:
-        if config.host_aggregations and type(config.host_aggregations[0]) != dict:
-            config.host_aggregations = map(convert_aggregation, config.host_aggregations)
-        if config.aggregations and type(config.aggregations[0]) != dict:
-            config.aggregations = map(convert_aggregation, config.aggregations)
 
+    converted_host_aggregations += map(_convert_aggregation, config.host_aggregations)
+    converted_aggregations += map(_convert_aggregation, config.aggregations)
+    converted_aggregation_rules.update({rule_id: _convert_legacy_aggregation_rule(rule)
+                                        for rule_id, rule in config.aggregation_rules.iteritems()})
+
+    config.host_aggregations = converted_host_aggregations
+    config.aggregations = converted_aggregations
+    config.aggregation_rules = converted_aggregation_rules
+
+
+def _convert_aggregation(aggr_tuple):
+    if type(aggr_tuple[0]) == dict:
+        return aggr_tuple # already converted
+
+    options = {}
+    map_class_to_key = {
+        config.DISABLED:     "disabled",
+        config.HARD_STATES:  "hard_states",
+        config.DT_AGGR_WARN: "downtime_aggr_warn",
+    }
+    for idx, token in enumerate(list(aggr_tuple)):
+        if token in map_class_to_key:
+            options[map_class_to_key[token]] = True
+        else:
+            aggr_tuple = aggr_tuple[idx:]
+            break
+    return (options,) + aggr_tuple
+
+
+def _convert_legacy_aggregation_rule(rule):
+    if isinstance(rule, dict):
+        return rule
+
+    if isinstance(rule, tuple) or isinstance(rule, list):
+        # Rule has at least four entries.
+        # Since version 1.4.0b4
+        # - werk 4460 introduced 'state_messages'.
+        # zip function:
+        # The returned list is truncated in length to the length of the
+        # shortest argument sequence.
+        return dict(zip(["title", "params", "aggregation", "nodes", "state_messages"], rule))
+
+    raise MKConfigError(_("<b>Invalid BI aggregation rule</b>: "
+                          "Aggregation rules must contain at least four elements: "
+                          "description, argument list, aggregation function and "
+                          "list of nodes. This rule is <pre>%s</pre>") % \
+                          pprint.pformat(rule))

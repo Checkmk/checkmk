@@ -1406,6 +1406,7 @@ class ModeBIRules(ModeBI):
                         html.br()
                         have_this.add(aggr_id)
                 table.text_cell(_("Comment"), rule.get("comment", ""))
+                table.text_cell(_("Documentation URL"), rule.get("docu_url", ""))
         table.end()
 
 
@@ -1726,6 +1727,17 @@ class ModeBIEditRule(ModeBI):
                    cols = 80,
                    rows = 4,
                ),
+            ),
+            ( "docu_url",
+              TextAscii(
+                title = _("Documentation URL"),
+                help = HTML(_("An optional URL pointing to documentation or any other page. This will be "
+                              "displayed as an icon <img class=icon src='images/button_url.png'> and open "
+                              "a new page when clicked. You can use either global URLs (beginning with "
+                              "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
+                              "URLs (that are relative to <tt>check_mk/</tt>).")),
+                size = 80,
+              ),
             ),
             ( "params",
               ListOfStrings(

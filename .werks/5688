@@ -1,0 +1,25 @@
+Title: Windows agent: numerous fixes to only_from
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516178707
+Class: fix
+
+The setting only_from was handled improperly in many ways:
+
+ * The IPv4 loopback address 127.0.0.1 did not always work in
+   only_from, depending on what kind of client was used on localhost.
+   Now if the IPv4 loopback address is given in only_from, the
+   corresponding IPv6 loopback ::1 is added there to ensure the correct
+   functionality with different clients on localhost.
+ * IPv6 addresses converted from only_from IPv4 addresses were not
+   output in section Check_MK. This was a regression from 1.2.8
+   introduced in the huge refactoring
+   c5ee818358e695b01c2f2dbc05ad0713723a37f8.
+ * IPv6 addresses were output incorrectly in section Check_MK:
+   * the last colon-separated group was always missing.
+   * the groups were output as decimal instead of hexadecimal digits.
+   * the groups were output in network byte order instead of host byte
+     order, leading to incorrect output.

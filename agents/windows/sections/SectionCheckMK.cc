@@ -42,11 +42,12 @@ struct script_statistics_t {
     int lo_timeouts;
 } g_script_stat;
 
-SectionCheckMK::SectionCheckMK(Configuration &config, Logger *logger,
+SectionCheckMK::SectionCheckMK(Configuration &config,
+                               OnlyFromConfigurable &only_from, Logger *logger,
                                const WinApiAdaptor &winapi)
     : Section("check_mk", "check_mk", config.getEnvironment(), logger, winapi)
     , _crash_debug(config, "global", "crash_debug", false, winapi)
-    , _only_from(config, "global", "only_from", winapi)
+    , _only_from(only_from)
     , _info_fields(createInfoFields()) {}
 
 std::vector<KVPair> SectionCheckMK::createInfoFields() const {

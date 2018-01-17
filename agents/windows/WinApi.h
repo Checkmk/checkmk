@@ -362,6 +362,7 @@ public:
                             int *namelen) const override;
     virtual u_short htons(u_short hostshort) const override;
     virtual int listen(SOCKET s, int backlog) const override;
+    virtual u_short ntohs(u_short netshort) const override;
     virtual int select(int nfds, fd_set *readfds, fd_set *writefds,
                        fd_set *exceptfds,
                        const PTIMEVAL timeout) const override;

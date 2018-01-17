@@ -47,10 +47,14 @@ winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
 std::ostream &operator<<(std::ostream &out,
                          const std::pair<std::string, std::string> &value);
 
+using OnlyFromConfigurable =
+    SplittingListConfigurable<only_from_t,
+                              BlockMode::FileExclusive<only_from_t>>;
+
 class SectionManager {
 public:
-    SectionManager(Configuration &config, Logger *logger,
-                   const WinApiAdaptor &winapi);
+    SectionManager(Configuration &config, OnlyFromConfigurable &only_from,
+                   Logger *logger, const WinApiAdaptor &winapi);
     ~SectionManager() { _sections.clear(); }
 
     void emitConfigLoaded();
@@ -65,7 +69,8 @@ public:
 
 private:
     void addSection(Section *section);
-    void loadStaticSections(Configuration &config);
+    void loadStaticSections(Configuration &config,
+                            OnlyFromConfigurable &only_from);
 
     std::vector<std::unique_ptr<Section>> _sections;
     Configurable<bool> _ps_use_wmi;

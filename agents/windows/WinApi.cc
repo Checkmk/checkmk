@@ -746,6 +746,8 @@ u_short WinApi::htons(u_short hostshort) const { return ::htons(hostshort); }
 
 int WinApi::listen(SOCKET s, int backlog) const { return ::listen(s, backlog); }
 
+u_short WinApi::ntohs(u_short netshort) const { return ::ntohs(netshort); }
+
 int WinApi::select(int nfds, fd_set *readfds, fd_set *writefds,
                    fd_set *exceptfds, const PTIMEVAL timeout) const {
     return ::select(nfds, readfds, writefds, exceptfds, timeout);

@@ -398,6 +398,7 @@ public:
                             int *namelen) const = 0;
     virtual u_short htons(u_short hostshort) const = 0;
     virtual int listen(SOCKET s, int backlog) const = 0;
+    virtual u_short ntohs(u_short netshort) const = 0;
     virtual int select(int nfds, fd_set *readfds, fd_set *writefds,
                        fd_set *exceptfds, const PTIMEVAL timeout) const = 0;
     virtual int send(SOCKET s, const char *buf, int len, int flags) const = 0;

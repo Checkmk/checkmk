@@ -107,18 +107,18 @@ void netmaskFromPrefixIPv4(int bits, uint32_t &netmask);
 
 template <typename InputIt, typename SeparatorT>
 std::basic_string<SeparatorT> join(InputIt begin, InputIt end,
-                                   const SeparatorT *sep) {
+                                   const SeparatorT *sep,
+                                   std::ios::fmtflags flags = std::ios::dec) {
     std::basic_ostringstream<SeparatorT> stream;
-    bool first = true;
+    stream.setf(flags, std::ios::basefield);
 
     for (InputIt iter = begin; iter != end; ++iter) {
-        if (!first) {
+        if (iter != begin) {
             stream << sep;
-        } else {
-            first = false;
         }
         stream << *iter;
     }
+
     return stream.str();
 }
 

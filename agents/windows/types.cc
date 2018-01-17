@@ -25,7 +25,7 @@ std::string from_string<std::string>(const WinApiAdaptor &,
 template <>
 ipspec from_string<ipspec>(const WinApiAdaptor &winapi,
                            const std::string &value) {
-    ipspec result{0};
+    ipspec result{winapi};
 
     char *slash_pos = strchr(value.c_str(), '/');
     if (slash_pos != NULL) {
@@ -65,8 +65,15 @@ ipspec from_string<ipspec>(const WinApiAdaptor &winapi,
 
 std::ostream &operator<<(std::ostream &os, const ipspec &ips) {
     if (ips.ipv6) {
-        os << join(ips.ip.v6.address, ips.ip.v6.address + 7, ":") << "/"
-           << ips.bits;
+        std::array<uint16_t, 8> hostByteAddress = {0};
+        std::transform(ips.ip.v6.address, ips.ip.v6.address + 8,
+                       hostByteAddress.begin(),
+                       [&ips](const uint16_t netshort) {
+                           return ips.winapi.get().ntohs(netshort);
+                       });
+        os << join(hostByteAddress.cbegin(), hostByteAddress.cend(), ":",
+                   std::ios::hex)
+           << "/" << ips.bits;
     } else {
         os << (ips.ip.v4.address & 0xff) << "."
            << (ips.ip.v4.address >> 8 & 0xff) << "."
@@ -75,4 +82,32 @@ std::ostream &operator<<(std::ostream &os, const ipspec &ips) {
     }
 
     return os;
+}
+
+ipspec toIPv6(const ipspec &ips, const WinApiAdaptor &winapi) {
+    ipspec result{winapi};
+    // first 96 bits are fixed: 0:0:0:0:0:ffff
+    result.bits = 96 + ips.bits;
+    result.ipv6 = true;
+
+    uint32_t ipv4_loopback = 0;
+    stringToIPv4("127.0.0.1", ipv4_loopback);
+
+    // For IPv4 loopback address 127.0.0.1, add corresponding IPv6
+    // loopback address 0:0:0:0:0:0:0:1 (also known as ::1).
+    if (ips.ip.v4.address == ipv4_loopback) {
+        memset(result.ip.v6.address, 0, sizeof(uint16_t) * 7);
+        result.ip.v6.address[7] = winapi.htons(0x1);
+    } else {
+        memset(result.ip.v6.address, 0, sizeof(uint16_t) * 5);
+        result.ip.v6.address[5] = 0xFFFFu;
+        result.ip.v6.address[6] =
+            static_cast<uint16_t>(ips.ip.v4.address & 0xFFFFu);
+        result.ip.v6.address[7] =
+            static_cast<uint16_t>(ips.ip.v4.address >> 16);
+    }
+
+    netmaskFromPrefixIPv6(result.bits, result.ip.v6.netmask, winapi);
+
+    return result;
 }

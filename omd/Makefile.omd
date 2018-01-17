@@ -7,6 +7,8 @@ else
     REPO_PATH      := $(abspath ..)
 endif
 
+PACKAGE_BASE       := $(REPO_PATH)/omd/packages
+
 EDITION            := raw
 EDITION_SHORT      := cre
 ifneq (,$(wildcard $(REPO_PATH)/enterprise))
@@ -35,18 +37,18 @@ DISTRO_INFO        := $(shell $(REPO_PATH)/omd/distro)
 DISTRO_NAME        := $(word 1, $(DISTRO_INFO))
 DISTRO_VERSION     := $(word 2, $(DISTRO_INFO))
 
-# Depending on the distro we include a Makefile with distro-
-# specific variables
+# Depending on the distro we include a Makefile with distro-specific variables.
 include $(REPO_PATH)/omd/distros/$(DISTRO_NAME)_$(DISTRO_VERSION).mk
 
-# Net result -> all Makefiles have now access to the linux distribution
-# specific settings
+# perl #########################################################################
 
-PERL                           := /usr/bin/perl
-PACKAGE_PERL_MODULES_DESTDIR   := $(REPO_PATH)/omd/packages/perl-modules/destdir
-PACKAGE_PERL_MODULES_PERL5LIB  := $(PACKAGE_PERL_MODULES_DESTDIR)/dest/lib/perl5
+PERL                          := /usr/bin/perl
+PACKAGE_PERL_MODULES_DESTDIR  := $(PACKAGE_BASE)/perl-modules/destdir
+PACKAGE_PERL_MODULES_PERL5LIB := $(PACKAGE_PERL_MODULES_DESTDIR)/dest/lib/perl5
 
-PACKAGE_PYTHON_DESTDIR         := $(REPO_PATH)/omd/packages/python/destdir
+# python #######################################################################
+
+PACKAGE_PYTHON_DESTDIR         := $(PACKAGE_BASE)/python/destdir
 PACKAGE_PYTHON_PYTHONPATH      := $(PACKAGE_PYTHON_DESTDIR)/lib/python2.7
 PACKAGE_PYTHON_LDFLAGS         := -L$(PACKAGE_PYTHON_DESTDIR)/lib -L$(PACKAGE_PYTHON_PYTHONPATH)/config
 PACKAGE_PYTHON_LD_LIBRARY_PATH := $(PACKAGE_PYTHON_DESTDIR)/lib
@@ -59,8 +61,10 @@ check-python:
 	    exit 1 ; \
 	fi
 
-PACKAGE_FREETDS_DESTDIR        := $(REPO_PATH)/omd/packages/freetds/destdir
-PACKAGE_FREETDS_LDFLAGS        := -L$(PACKAGE_FREETDS_DESTDIR)/lib
+# freetds #####################################################################
+
+PACKAGE_FREETDS_DESTDIR := $(PACKAGE_BASE)/freetds/destdir
+PACKAGE_FREETDS_LDFLAGS := -L$(PACKAGE_FREETDS_DESTDIR)/lib
 
 check-freetds:
 	@if [ ! -d $(PACKAGE_FREETDS_DESTDIR) ]; then \
@@ -68,7 +72,9 @@ check-freetds:
 	    exit 1 ; \
 	fi
 
-PACKAGE_PYTHON_MODULES_DESTDIR    := $(REPO_PATH)/omd/packages/python-modules/destdir
+# python-module ################################################################
+
+PACKAGE_PYTHON_MODULES_DESTDIR    := $(PACKAGE_BASE)/python-modules/destdir
 PACKAGE_PYTHON_MODULES_PYTHONPATH := $(PACKAGE_PYTHON_MODULES_DESTDIR)/lib
 
 check-python-modules:
@@ -76,3 +82,7 @@ check-python-modules:
 	    echo "ERROR: You need to build the \"python-modules\" package first" ; \
 	    exit 1 ; \
 	fi
+
+# perl #########################################################################
+
+PACKAGE_BOOST_DESTDIR := $(PACKAGE_BASE)/boost/destdir

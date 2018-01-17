@@ -24,11 +24,12 @@ build:
 	    echo "no"; IFS=$$SAVED_IFS ; \
 	done ; \
 	test -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
-	$(MAKE) -C $(DIR) CXX="$$CXX" DESTDIR=$(abspath dest) prefix=$(OMD_ROOT) install
+	$(MAKE) -C $(DIR) CXX="$$CXX" prefix=$(OMD_ROOT) && \
+	$(MAKE) -C $(DIR) CXX="$$CXX" DESTDIR=$(PACKAGE_RE2_DESTDIR) prefix="" install
 
 install:
 
 skel:
 
 clean:
-	rm -rf $(DIR) dest
+	rm -rf $(DIR) $(PACKAGE_RE2_DESTDIR)

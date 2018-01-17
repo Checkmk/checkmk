@@ -72,6 +72,17 @@ check-freetds:
 	    exit 1 ; \
 	fi
 
+# re2 #########################################################################
+
+PACKAGE_RE2_DESTDIR := $(PACKAGE_BASE)/re2/destdir
+
+check-re2:
+	@if [ ! -d $(PACKAGE_RE2_DESTDIR) ]; then \
+	    echo "ERROR: You need to build the \"re2\" package first" ; \
+	    exit 1 ; \
+	fi
+
+
 # python-module ################################################################
 
 PACKAGE_PYTHON_MODULES_DESTDIR    := $(PACKAGE_BASE)/python-modules/destdir

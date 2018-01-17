@@ -3259,7 +3259,7 @@ def main_init_action(command, args, options={}):
     bare = "bare" in options
     parallel = "parallel" in options
 
-    max_site_len = max([ len(site_id) for site_id in all_sites() ])
+    max_site_len = max([ 8 ] + [ len(site_id) for site_id in all_sites() ])
 
     def parallel_output(site_id, line):
         sys.stdout.write(("%-"+str(max_site_len)+"s - %s") % (site_id, line))

@@ -73,6 +73,14 @@ class CheckResult(object):
     """
     A check result potentially consisting of multiple subresults,
     as returned by yield-style checks
+
+    Initializing test results using this has the following advantages:
+    -Some basic consistency checks are being performed, making sure the
+     check's result conforms to the API
+    -A common interface to test assertions is provided, regardless of whether
+     or not the check uses subresults via the yield-API
+    -The check's code is being run, and doesn't disappear in the yield-APIs
+     generator-induced laziness.
     """
 
     def __init__(self, result):

@@ -1,0 +1,15 @@
+Title: Fixed service discovery page for SNMP cluster hosts
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516176294
+Class: fix
+
+The service discovery page of WATO was showing a warning message
+"Service discovery failed for this host: The check type filter function has not been set "
+and no discovery could be performed for this host using the GUI
+anymore.
+
+Workaround: Use the discovery mode on the command line via <tt>cmk -II [HOSTNAME]</tt>.

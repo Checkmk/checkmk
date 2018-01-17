@@ -111,12 +111,12 @@ def do_discovery(hostnames, check_plugin_names, only_new):
 
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            sources = _get_sources_for_discovery(hostname, check_plugin_names, do_snmp_scan, on_error)
-
             # Usually we disable SNMP scan if cmk -I is used without a list of
             # explicity hosts. But for host that have never been service-discovered
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not _has_autochecks(hostname)
+
+            sources = _get_sources_for_discovery(hostname, check_plugin_names, do_snmp_scan, on_error)
 
             multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
                                                                    use_caches=use_caches)
@@ -1128,11 +1128,22 @@ def _merge_manual_services(services, hostname, on_error):
 def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_error):
     nodes = config.nodes_of(hostname)
 
+    # Get setting from cluster SNMP data source
+    do_snmp_scan = False
+    for source in sources.get_data_sources():
+        if isinstance(source, data_sources.SNMPDataSource):
+            do_snmp_scan = source.get_do_snmp_scan()
+
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     cluster_items = {}
     for node in nodes:
-        node_sources = _get_sources_for_discovery(node, check_plugin_names, do_snmp_scan, on_error)
+        node_sources = _get_sources_for_discovery(node,
+            check_plugin_names=sources.get_enforced_check_plugin_names(),
+            do_snmp_scan=do_snmp_scan,
+            on_error=on_error,
+        )
+
         node_ipaddress = ip_lookup.lookup_ip_address(node)
         services = _get_discovered_services(node, node_ipaddress, node_sources, multi_host_sections, on_error)
         for (check_plugin_name, item), (check_source, paramstring) in services.items():

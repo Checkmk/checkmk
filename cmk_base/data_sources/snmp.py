@@ -126,6 +126,10 @@ class SNMPDataSource(DataSource):
         self._do_snmp_scan = do_snmp_scan
 
 
+    def get_do_snmp_scan(self):
+        return self._do_snmp_scan
+
+
     def set_check_plugin_name_filter(self, filter_func):
         self._check_plugin_name_filter_func = filter_func
 

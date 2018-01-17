@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       := boost
-VERSION    := 1_64_0
+VERSION    := 1_66_0
 DIR        := $(NAME)_$(VERSION)
 
 # For some obscure reason (GCC's dual ABI) we have to link all Boost stuff

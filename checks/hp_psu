@@ -50,6 +50,9 @@ def inventory_hp_psu_temp(parsed):
 
 
 def check_hp_psu_temp(item, params, parsed):
+    temp_unknown_status = ["8"] # For some status, the device simply reports 0 as a temperature value.
+    if parsed[item]["status"] in temp_unknown_status and parsed[item]["temp"] == 0:
+        return 3, "No temperature data available"
     return check_temperature(parsed[item]["temp"], params, item)
 
 
@@ -89,9 +92,10 @@ def check_hp_psu(item, params, parsed):
         "4"     : (1, "Failed"),
         "5"     : (2, "Permanent Failure"),
         "6"     : (3, "Max"),
+        "8"     : (2, "Unplugged"), # This value is not specified in the MIB, but has been observed in the wild.
     }
 
-    return ps_statemap[parsed[item]["status"]]
+    return ps_statemap.get(parsed[item]["status"],(3, "Unknown status code sent by device"))
 
 
 check_info['hp_psu'] = {

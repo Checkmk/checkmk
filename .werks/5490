@@ -1,0 +1,10 @@
+Title: ra32e_temp, ra32e_power, ra32e_humidity, ra32e_heatindex, ra32e_sensors, ra32e_switch: new checks to monitor AVTECH Room Alert 32E devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516296245
+Class: feature
+
+

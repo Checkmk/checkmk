@@ -1,0 +1,17 @@
+title: AVTECH Room Alert 32E: Internal power status
+agents: snmp
+catalog: hw/environment/avtech
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of the power supply
+ of a AVTECH Room Alert 32E device. If the unit runs
+ on AC/utility power the status {OK} is returned. If
+ the unit runs on battery backup power the status
+ {WARN} is returned.
+
+item:
+ No item.
+
+inventory:
+ One service per device.

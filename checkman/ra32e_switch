@@ -1,0 +1,17 @@
+title: AVTECH Room Alert 32E: Switch Sensors
+agents: snmp
+catalog: hw/environment/avtech
+license: GPL
+distribution: check_mk
+description:
+ This check monitors switch sensors
+ connected to a AVTECH Room Alert 32E device.
+ The expected output of the sensors can be
+ configured via WATO.
+
+item:
+ "Sensor X" where X=1-16 is the ID of the connected
+ sensor.
+
+inventory:
+ One service for each switch sensor.

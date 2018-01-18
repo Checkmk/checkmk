@@ -416,10 +416,10 @@ config.status: $(DIST_DEPS)
 	  echo "update config.status by reconfiguring in the same conditions" ; \
 	  ./config.status --recheck; \
 	else \
-	  if test -d ../boost/local ; then \
-	    BOOST_OPT="--with-boost=$(abspath ../boost/local)" ; \
-	  elif test -d omd/packages/boost/local ; then \
-	    BOOST_OPT="--with-boost=$(abspath omd/packages/boost/local)" ; \
+	  if test -d ../boost/destdir ; then \
+	    BOOST_OPT="--with-boost=$(abspath ../boost/destdir)" ; \
+	  elif test -d omd/packages/boost/destdir ; then \
+	    BOOST_OPT="--with-boost=$(abspath omd/packages/boost/destdir)" ; \
 	  elif test ! -d /usr/include/boost -a -d /usr/include/boost141/boost ; then \
 	    BOOST_OPT="CPPFLAGS=-I/usr/include/boost141" ; \
 	  else \

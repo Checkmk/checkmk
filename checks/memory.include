@@ -39,38 +39,35 @@ def check_memory_simple(used, total, params):
                get_bytes_human_readable(used),
                get_bytes_human_readable(total))
 
-    levelstext = ""
-
     status = 0
-    # No levels imposed
-    if params["levels"][0] == "ignore":
-        warn_abs, crit_abs = None, None
+    if params["levels"][0] == "perc_used":
+        warn_perc, crit_perc = params["levels"][1]
+        warn_abs = (warn_perc / 100.0) * total
+        crit_abs = (crit_perc / 100.0) * total
+        levelstext = " (warn/crit at %s/%s used)" % (
+                     get_percent_human_readable(warn_perc),
+                     get_percent_human_readable(crit_perc))
 
-    # Absolute or percentual levels
+    elif params["levels"][0] == "abs_free":
+        warn_abs_free, crit_abs_free = params["levels"][1]
+        warn_abs = total - warn_abs_free
+        crit_abs = total - crit_abs_free
+        levelstext = " (warn/crit below %s/%s free)" % (
+                     get_bytes_human_readable(warn_abs_free),
+                     get_bytes_human_readable(crit_abs_free))
+
     else:
-        if params["levels"][0] == "perc_used":
-            warn_perc, crit_perc = params["levels"][1]
-            warn_abs = (warn_perc / 100.0) * total
-            crit_abs = (crit_perc / 100.0) * total
-            levelstext = " (warn/crit at %s/%s used)" % (
-                         get_percent_human_readable(warn_perc),
-                         get_percent_human_readable(crit_perc))
+        # No levels imposed, ie. params = {'levels': 'ignore'}
+        crit_abs = None
+        warn_abs = None
+        levelstext = ""
 
-        elif params["levels"][0] == "abs_free":
-            warn_abs_free, crit_abs_free = params["levels"][1]
-            warn_abs = total - warn_abs_free
-            crit_abs = total - crit_abs_free
-            levelstext = " (warn/crit below %s/%s free)" % (
-                         get_bytes_human_readable(warn_abs_free),
-                         get_bytes_human_readable(crit_abs_free))
-
-        if used >= crit_abs:
-            status = 2
-        elif used >= warn_abs:
-            status = 1
-
-        if status:
-            infotext += levelstext
+    if crit_abs is not None and used >= crit_abs:
+        status = 2
+    elif warn_abs is not None and used >= warn_abs:
+        status = 1
+    if status:
+        infotext += levelstext
 
     perfdata = [ ("memory_used", used, warn_abs, crit_abs, 0, total) ]
     return status, infotext, perfdata

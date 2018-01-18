@@ -420,8 +420,6 @@ config.status: $(DIST_DEPS)
 	    BOOST_OPT="--with-boost=$(abspath ../boost/destdir)" ; \
 	  elif test -d omd/packages/boost/destdir ; then \
 	    BOOST_OPT="--with-boost=$(abspath omd/packages/boost/destdir)" ; \
-	  elif test ! -d /usr/include/boost -a -d /usr/include/boost141/boost ; then \
-	    BOOST_OPT="CPPFLAGS=-I/usr/include/boost141" ; \
 	  else \
 	    BOOST_OPT="DUMMY1=" ; \
 	  fi ; \

@@ -1,6 +1,5 @@
 DISTRO_CODE       = el5
 BUILD_PACKAGES    =
-BUILD_PACKAGES   += boost141-devel
 BUILD_PACKAGES   += curl-devel     # needed by perl modules / thruk
 BUILD_PACKAGES   += expat-devel
 BUILD_PACKAGES   += fping

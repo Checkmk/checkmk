@@ -10,12 +10,8 @@ build: clean
 	    $(MAKE) -C ../../.. $(DIR).tar.gz ; \
 	fi
 	tar xzf ../../../$(DIR).tar.gz
-	@if test -d ../boost/local ; then \
-	  BOOST_OPT="--with-boost=$(abspath ../boost/local)" ; \
-	elif test -d ../cmk-omd/packages/boost/local ; then \
-	  BOOST_OPT="--with-boost=$(abspath ../cmk-omd/packages/boost/local)" ; \
-	elif test ! -d /usr/include/boost -a -d /usr/include/boost141/boost ; then \
-	  BOOST_OPT="CPPFLAGS=-I/usr/include/boost141" ; \
+	@if test -d "$(PACKAGE_BOOST_DESTDIR)" ; then \
+	  BOOST_OPT="--with-boost=$(PACKAGE_BOOST_DESTDIR)" ; \
 	else \
 	  BOOST_OPT="DUMMY1=" ; \
 	fi ; \

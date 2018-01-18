@@ -1,0 +1,11 @@
+Title: memory.include: Ignoring levels led to a crash because the handling of the paramters was not correct
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1516277491
+
+

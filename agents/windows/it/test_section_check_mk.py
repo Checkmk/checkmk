@@ -131,5 +131,6 @@ def test_section_check_mk(request, testconfig, expected_output, actual_output,
 
 def test_section_check_mk__no_tcp(request, testconfig, expected_output,
                                   actual_output_no_tcp, testfile):
+    # request.node.name gives test name
     remotetest(testconfig, expected_output, actual_output_no_tcp, testfile,
                request.node.name)

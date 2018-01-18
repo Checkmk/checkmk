@@ -7,10 +7,14 @@ from remote import (actual_output, assert_subprocess, config, remote_ip,
                     write_config)
 
 
-section = 'mrpe'
-pluginname = 'check_crit.bat'
-checkname = 'Dummy'
-mrpedir = 'mrpe'
+class Globals(object):
+    section = 'mrpe'
+    pluginname = 'check_crit.bat'
+    checkname = 'Dummy'
+    mrpedir = 'mrpe'
+    includedir = 'testinclude'
+    cfgfile = 'test.cfg'
+    newline = None
 
 
 @pytest.fixture
@@ -20,11 +24,16 @@ def testfile():
 
 @pytest.fixture
 def testconfig(config):
-    config.set("global", "sections", section)
+    config.set("global", "sections", Globals.section)
     config.set("global", "crash_debug", "yes")
-    config.add_section(section)
-    config.set(section, 'check', '%s %s' % (checkname,
-                                            os.path.join(mrpedir, pluginname)))
+    config.add_section(Globals.section)
+    if Globals.newline is None:
+        config.set(Globals.section, 'check', '%s %s' %
+                   (Globals.checkname,
+                    os.path.join(Globals.mrpedir, Globals.pluginname)))
+    else:
+        config.set(Globals.section, "include",
+                   os.path.join(Globals.includedir, Globals.cfgfile))
     return config
 
 
@@ -32,33 +41,51 @@ def testconfig(config):
 def expected_output():
     drive = r'[A-Z]:%s' % re.escape(os.sep)
     return [
-        re.escape(r'<<<%s>>>' % section),
-        r'\(%s\) %s 2 CRIT - This check is always critical' % (pluginname,
-                                                               checkname)
+        re.escape(r'<<<%s>>>' % Globals.section),
+        r'\(%s\) %s 2 CRIT - This check is always critical' %
+        (Globals.pluginname, Globals.checkname)
     ]
 
 
-@pytest.fixture(autouse=True)
-def manage_plugin():
+@pytest.fixture(
+    params=[None, False, True],
+    ids=['direct', 'include_without_newline', 'include_with_newline'],
+    autouse=True)
+def manage_plugin(request):
+    Globals.newline = request.param
+    plugindir = (Globals.mrpedir
+                 if Globals.newline is None else Globals.includedir)
     source = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), mrpedir,
-        pluginname)
-    targetdir = os.path.join(remotedir, mrpedir)
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        Globals.mrpedir, Globals.pluginname)
+    targetdir = os.path.join(remotedir, plugindir)
     targetdir_windows = targetdir.replace('/', '\\')
     if platform.system() != 'Windows':
         cmds = [[
-            'ssh',
-            sshopts,
+            'ssh', sshopts,
             '%s@%s' % (remoteuser, remote_ip),
             'if not exist %s md %s' % (targetdir_windows, targetdir_windows)
-        ], ['scp', sshopts, source,
-            '%s@%s:%s' % (remoteuser, remote_ip, targetdir)]]
+        ], [
+            'scp', sshopts, source,
+            '%s@%s:%s' % (remoteuser, remote_ip, targetdir)
+        ]]
         for cmd in cmds:
             assert_subprocess(cmd)
+    elif Globals.newline is not None:
+        with open(os.path.join(targetdir, Globals.cfgfile), 'wb') as cfg:
+            cfg.write("check = %s %s%s" %
+                      (Globals.checkname,
+                       os.path.join(targetdir_windows, Globals.pluginname),
+                       "\n" if Globals.newline else ""))
     yield
     if platform.system() == 'Windows':
-        os.unlink(os.path.join(targetdir, pluginname))
+        os.unlink(os.path.join(targetdir, Globals.pluginname))
+        if Globals.newline is not None:
+            os.unlink(os.path.join(targetdir, Globals.cfgfile))
 
 
-def test_section_mrpe(testconfig, expected_output, actual_output, testfile):
-    remotetest(testconfig, expected_output, actual_output, testfile)
+def test_section_mrpe(request, testconfig, expected_output, actual_output,
+                      testfile):
+    # request.node.name gives test name
+    remotetest(testconfig, expected_output, actual_output, testfile,
+               request.node.name)

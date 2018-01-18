@@ -49,14 +49,8 @@ void SectionMRPE::updateIncludes() {
         }
 
         lineno = 0;
-        while (!feof(file)) {
+        while (fgets(line, sizeof(line), file) != nullptr) {
             lineno++;
-            if (!fgets(line, sizeof(line), file)) {
-                printf("intern clse\n");
-                fclose(file);
-                continue;
-            }
-
             char *l = strip(line);
             if (l[0] == 0 || l[0] == '#' || l[0] == ';')
                 continue;  // skip empty lines and comments

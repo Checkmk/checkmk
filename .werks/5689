@@ -1,0 +1,15 @@
+Title: Newline in mrpe include file crashed Windows agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516267515
+Class: fix
+
+A newline character in a file included through the mrpe configuration
+option <tt>include</tt> (see Werk #266) put Windows agent into an
+eternal loop.
+
+
+

@@ -1,0 +1,12 @@
+Title: ps: Fixed missing Total RAM if AIX is the source and percentual thresholds are configured
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p24
+Date: 1516287829
+
+AIX has not been considered while computing the percentual thresholds for
+Memory. This is now fixed.

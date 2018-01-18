@@ -242,18 +242,20 @@ def parse_ps(info):
 
 
 def inventory_ps(info):
-    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info = info
+    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info = info
     return inventory_ps_common(inventory_processes, inventory_processes_rules, parsed)
 
 
 def check_ps(item, params, info):
-    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info = info
+    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info = info
     if mem_info:
         total_ram = parse_proc_meminfo_bytes(mem_info).get("MemTotal")
     elif solaris_mem_info:
         total_ram = solaris_mem_info.get("MemTotal") * 1024
     elif statgrab_mem_info:
         total_ram = statgrab_mem_info.get("MemTotal") * 1024
+    elif aix_memory_info:
+        total_ram = int(aix_memory_info[0][0]) * 4 * 1024
     else:
         total_ram = None
 
@@ -270,7 +272,7 @@ check_info['ps'] = {
     "node_info"               : True, # add first column with actual host name
     "group"                   : "ps",
     "default_levels_variable" : "ps_default_levels",
-    "extra_sections"          : [ "mem", "solaris_mem", "statgrab_mem" ],
+    "extra_sections"          : [ "mem", "solaris_mem", "statgrab_mem", "aix_memory" ],
 }
 
 # NOTE: This check is deprecated and will be removed any decade now. ps now
@@ -283,5 +285,5 @@ check_info['ps.perf'] = {
     "node_info"               : True, # add first column with actual host name
     "group"                   : "ps",
     "default_levels_variable" : "ps_default_levels",
-    "extra_sections"          : [ "mem", "solaris_mem", "statgrab_mem" ],
+    "extra_sections"          : [ "mem", "solaris_mem", "statgrab_mem", "aix_memory" ],
 }

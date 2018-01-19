@@ -184,7 +184,7 @@ def check_cpu_util_unix(values, params, cores = None):
     else:
         steal_perc = 0
 
-    if len(values) >= 10: # and (values[8] or values[9]):
+    if len(values) >= 10:
         guest = diff_values[8] + diff_values[9]
         guest_perc = 100.0 * float(guest) / float(sum_jiffies)
         yield 0, "guest: %.1f%%" % guest_perc, [ ("guest", guest_perc) ]

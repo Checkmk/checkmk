@@ -390,6 +390,7 @@ mrproper:
 
 setup:
 	sudo apt-get install \
+	    aptitude \
 	    autoconf \
 	    bear \
 	    build-essential \

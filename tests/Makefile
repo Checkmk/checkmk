@@ -67,7 +67,7 @@ test-shellcheck-ci:
 setup:
 	sudo apt-get install \
 	    python-pip \
-	    chrpath
+	    chrpath \
 	    cabal-install
 	sudo pip install --upgrade pip
 	sudo pip install --upgrade --ignore-installed -r requirements.txt

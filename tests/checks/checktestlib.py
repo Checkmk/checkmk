@@ -28,17 +28,24 @@ class PerfValue(object):
         self.maximum = maximum
 
     def __eq__(self, other_value):
-        return all([
-            self.key == other_value.key,
-            self.value == other_value.value,
-            self.warn == other_value.warn,
-            self.crit == other_value.crit,
-            self.minimum == other_value.minimum,
-            self.maximum == other_value.maximum,
-        ])
+        if isinstance(other_value, self.__class__):
+            return all([
+                self.key == other_value.key,
+                self.value == other_value.value,
+                self.warn == other_value.warn,
+                self.crit == other_value.crit,
+                self.minimum == other_value.minimum,
+                self.maximum == other_value.maximum,
+            ])
+        elif type(other_value) == tuple:
+            return all(x==y for x, y in zip(other_value, self.tuple))
 
     def __ne__(self, other_value):
         return not self.__eq__(other_value)
+
+    @property
+    def tuple(self):
+        return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
 
 
 class BasicCheckResult(object):
@@ -98,7 +105,7 @@ class CheckResult(object):
         else:
             self.subresults = [ BasicCheckResult(*result) ]
 
-    # TODO: @property this
+    @property
     def perfdata(self):
         perfdata = []
         for subresult in self.subresults:

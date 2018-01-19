@@ -1,0 +1,10 @@
+Title: Fixed escaped underline HTML tag in help texts
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p24
+Date: 1516347704
+Class: fix
+
+

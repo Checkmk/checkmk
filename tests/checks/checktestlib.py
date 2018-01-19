@@ -1,6 +1,23 @@
 import types
 
-class PerfValue(object):
+class Tuploid(object):
+    """Base class for values with variadic tuple representations"""
+
+    def __eq__(self, other_value):
+        if isinstance(other_value, self.__class__):
+            return all(x==y for x, y in zip(other_value.tuple, self.tuple))
+        elif type(other_value) == tuple:
+            return all(x==y for x, y in zip(other_value, self.tuple))
+
+    def __ne__(self, other_value):
+        return not self.__eq__(other_value)
+
+    @property
+    def tuple(self):
+        return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
+
+
+class PerfValue(Tuploid):
     """Represents a single perf value"""
 
     def __init__(self, key, value, warn=None, crit=None, minimum=None, maximum=None):
@@ -27,21 +44,8 @@ class PerfValue(object):
         assert type(maximum) in [int, float, types.NoneType]
         self.maximum = maximum
 
-    def __eq__(self, other_value):
-        if isinstance(other_value, self.__class__):
-            return all(x==y for x, y in zip(other_value.tuple, self.tuple))
-        elif type(other_value) == tuple:
-            return all(x==y for x, y in zip(other_value, self.tuple))
 
-    def __ne__(self, other_value):
-        return not self.__eq__(other_value)
-
-    @property
-    def tuple(self):
-        return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
-
-
-class BasicCheckResult(object):
+class BasicCheckResult(Tuploid):
     """
     A basic check result
 

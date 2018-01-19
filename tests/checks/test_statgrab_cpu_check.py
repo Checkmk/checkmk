@@ -22,12 +22,13 @@ info_statgrab_cpu_hpux = lambda t: [[u'idle', u'%d' % int(t*5)],
     ),
 ])
 def test_statgrab_cpu_check(check_manager, monkeypatch, time_to_info, params, predicate):
-    import time
     check = check_manager.get_check("statgrab_cpu")
+    # NOTE: We do not mock the time module here, because the check does not depend on any
+    #       absolute rates. The mocking that was included in this test previously had no
+    #       effect, which went unnoticed because it doesn't matter in this case.
     try:
         list(check.run_check(None, params, time_to_info(0)))
     except MKCounterWrapped:
         pass
-    monkeypatch.setattr("time.time", lambda: 60)
     result = checktestlib.CheckResult(check.run_check(None, params, time_to_info(60)))
     assert predicate(result)

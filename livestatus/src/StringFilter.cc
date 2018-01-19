@@ -40,8 +40,8 @@ StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
             _regex.assign(_value,
                           (_relOp == RelationalOperator::matches_icase ||
                            _relOp == RelationalOperator::doesnt_match_icase)
-                              ? std::regex::extended | std::regex::icase
-                              : std::regex::extended);
+                              ? RegExp::Case::ignore
+                              : RegExp::Case::respect);
             break;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -65,10 +65,10 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
             return act_string != _value;
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
-            return regex_search(act_string, _regex);
+            return _regex.search(act_string);
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
-            return !regex_search(act_string, _regex);
+            return !_regex.search(act_string);
         case RelationalOperator::equal_icase:
             return strcasecmp(_value.c_str(), act_string.c_str()) == 0;
         case RelationalOperator::not_equal_icase:

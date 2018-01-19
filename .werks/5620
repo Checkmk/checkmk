@@ -1,0 +1,10 @@
+Title: orion_system, orion_system.charging, orion_system.dc, orion_backup, orion_batterytest: New checks for Delta Energy Systems devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516367132
+Class: feature
+
+

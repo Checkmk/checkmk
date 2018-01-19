@@ -1,0 +1,14 @@
+title: Delta Energy Systems: Direct Current
+agents: snmp
+catalog: hw/environment/orion
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the direct currents of Delta Energy Systems
+ devices which support the ORION-MIB.
+
+item:
+ The items are 'System', 'Battery' and 'Rectifier'.
+
+inventory:
+ One service for each item is generated.

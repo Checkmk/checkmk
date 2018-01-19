@@ -35,7 +35,8 @@ using PipeHandle = WrappedHandle<InvalidHandleTraits>;
 
 class AgentUpdaterError : public std::runtime_error {
 public:
-    explicit AgentUpdaterError(const std::string &what) : std::runtime_error(buildSectionCheckMK(what)) {}
+    explicit AgentUpdaterError(const std::string &what)
+        : std::runtime_error(buildSectionCheckMK(what)) {}
 
 private:
     std::string buildSectionCheckMK(const std::string &what) const;
@@ -43,9 +44,10 @@ private:
 
 class ExternalCmd {
     using ProcessHandle = WrappedHandle<NullHandleTraits>;
+
 public:
-    ExternalCmd(const std::string &cmdline, const Environment &env, Logger *logger,
-                const WinApiAdaptor &winapi);
+    ExternalCmd(const std::string &cmdline, const Environment &env,
+                Logger *logger, const WinApiAdaptor &winapi);
 
     ~ExternalCmd();
 
@@ -70,6 +72,7 @@ private:
     JobHandle<1> _job_object;
     PipeHandle _stdout;
     PipeHandle _stderr;
+    const bool _with_stderr;
     Logger *_logger;
     const WinApiAdaptor &_winapi;
 };

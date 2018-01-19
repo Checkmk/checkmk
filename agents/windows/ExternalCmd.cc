@@ -30,9 +30,6 @@
 #include "WinApiAdaptor.h"
 #include "win_error.h"
 
-extern bool with_stderr;
-extern HANDLE g_workers_job_object;
-
 namespace {
 
 const char *updater_exe = "cmk-update-agent.exe";
@@ -97,6 +94,7 @@ ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
     , _job_object{winapi}
     , _stdout{winapi}
     , _stderr{winapi}
+    , _with_stderr{env.withStderr()}
     , _logger(logger)
     , _winapi(winapi) {
     SECURITY_DESCRIPTOR security_descriptor;
@@ -119,7 +117,7 @@ ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
     std::tie(_stdout, _script_stdout) =
         createPipe(security_attributes, _winapi);
 
-    if (with_stderr) {
+    if (_with_stderr) {
         std::tie(_stderr, _script_stderr) =
             createPipe(security_attributes, _winapi);
     }
@@ -132,7 +130,7 @@ ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
     si.hStdOutput = _script_stdout.get();
-    si.hStdError = with_stderr ? _script_stdout.get() : _script_stderr.get();
+    si.hStdError = _with_stderr ? _script_stdout.get() : _script_stderr.get();
 
     bool detach_process = false;
     std::string actualCmd(cmdline);
@@ -175,7 +173,8 @@ ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
     _job_object = {_winapi.CreateJobObject(nullptr, nullptr), _winapi};
     if (!detach_process) {
         _winapi.AssignProcessToJobObject(_job_object.get(), pi.hProcess);
-        _winapi.AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
+        _winapi.AssignProcessToJobObject(env.workersJobObject().get(),
+                                         pi.hProcess);
     }
 }
 
@@ -206,7 +205,7 @@ DWORD ExternalCmd::readStdout(char *buffer, size_t buffer_size, bool block) {
 }
 
 DWORD ExternalCmd::readStderr(char *buffer, size_t buffer_size, bool block) {
-    if (!with_stderr) {
+    if (!_with_stderr) {
         return readPipe(_stderr.get(), buffer, buffer_size, block);
     } else {
         return 0;

@@ -1,5 +1,6 @@
 bin_PROGRAMS = check_mk_agent
 check_PROGRAMS = WindowsAgentTest wmitest
+noinst_LIBRARIES = check_mk_agent.a
 
 AUTOMAKE_OPTIONS = foreign
 AM_CPPFLAGS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++14 -gdwarf-2 \
@@ -7,9 +8,10 @@ AM_CPPFLAGS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++14 -gdwarf-2 \
 AM_LDFLAGS = -static -static-libgcc -static-libstdc++
 LD_COMMON = -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp -lntdll
 
-check_mk_agent_LDADD = check_mk_agent.res $(LD_COMMON)
+check_mk_agent_LDADD = check_mk_agent.res check_mk_agent.a $(LD_COMMON)
 
-WindowsAgentTest_LDADD = -lwbemuuid -lgtest -lgmock
+WindowsAgentTest_CPPFLAGS = -I$(top_srcdir)/sections -I$(top_srcdir)/test
+WindowsAgentTest_LDADD = check_mk_agent.a -lgtest -lgmock $(LD_COMMON)
 
 wmitest_LDADD = $(LD_COMMON)
 
@@ -31,7 +33,7 @@ check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 unittest: WindowsAgentTest$(EXEEXT)
 	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
 
-check_mk_agent_SOURCES = \
+check_mk_agent_a_SOURCES = \
         Configurable.cc \
         Configuration.cc \
         CrashHandler.cc \
@@ -53,7 +55,6 @@ check_mk_agent_SOURCES = \
         SettingsCollector.cc \
         Thread.cc \
         WinApi.cc \
-        check_mk_agent.cc \
         stringutil.cc \
         types.cc \
         win_error.cc \
@@ -78,23 +79,9 @@ check_mk_agent_SOURCES = \
         sections/SectionWMI.cc \
         sections/SectionWinperf.cc
 
+check_mk_agent_SOURCES = check_mk_agent.cc
+
 WindowsAgentTest_SOURCES = \
-        Configurable.cc \
-        Configuration.cc \
-        Environment.cc \
-        EventLog.cc \
-        EventLogVista.cc \
-        IEventLog.cc \
-        Logger.cc \
-        PerfCounterCommon.cc \
-        RotatingFileHandler.cc \
-        Section.cc \
-        stringutil.cc \
-        types.cc \
-        win_error.cc \
-        wmiHelper.cc \
-        sections/SectionEventlog.cc \
-        sections/SectionLogwatch.cc \
         test/EnvironmentTest.cc \
         test/EventLogVistaTest.cc \
         test/MockLogger.cc \

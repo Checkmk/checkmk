@@ -213,12 +213,6 @@ SectionManager *s_sections;
 // Thread relevant variables
 volatile bool g_should_terminate = false;
 
-// Job object for all worker threads
-// Gets terminated on shutdown
-JobHandle<0> g_workers_job_object{s_winapi};
-
-bool with_stderr = false;
-
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
 //  |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -521,9 +515,7 @@ void do_debug(const Environment &env) {
     logger->setLevel(saveLevel);
 }
 
-void do_test(bool output_stderr, const Environment &env) {
-    // TODO: Set logger handler to match fileout / stdout
-    with_stderr = output_stderr;
+void do_test(const Environment &env) {
     FileOutputProxy dummy(do_file ? fileout : stdout);
     Notice(Logger::getLogger("winagent")) << "Started in test mode.";
     output_data(dummy, env, false, *s_config->section_flush);
@@ -698,11 +690,6 @@ void do_adhoc(const Environment &env) {
 
     printf("Close window or press Ctrl-C to exit\n");
     fflush(stdout);
-
-    // Job object for worker jobs. All worker are within this object
-    // and receive a terminate when the agent ends
-    g_workers_job_object = {s_winapi.CreateJobObject(nullptr, "workers_job"),
-                            s_winapi};
 
     // Run all ASYNC scripts on startup, so that their data is available on
     // the first query of a client. Obviously, this slows down the agent
@@ -946,7 +933,7 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     // (from registry)?
     bool use_cwd = !strcmp(mode, "adhoc") || !strcmp(mode, "test");
     Logger *logger = Logger::getLogger("winagent");
-    Environment env(use_cwd, logger, s_winapi);
+    Environment env(use_cwd, strcmp(mode, "test") == 0, logger, s_winapi);
 
     const std::string logFilename = env.logDirectory() + "\\agent.log";
 
@@ -988,7 +975,7 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     s_sections->emitConfigLoaded();
 
     if (!strcmp(mode, "test"))
-        do_test(true, env);
+        do_test(env);
     else if (!strcmp(mode, "file")) {
         if (argc < 1) {
             fprintf(stderr, "Please specify the name of an output file.\n");
@@ -1000,7 +987,7 @@ void RunImmediate(const char *mode, int argc, char **argv) {
             exit(1);
         }
         do_file = true;
-        do_test(false, env);
+        do_test(env);
         fclose(fileout);
     } else if (!strcmp(mode, "adhoc") || !strcmp(mode, "service"))
         do_adhoc(env);
@@ -1035,7 +1022,7 @@ int main(int argc, char **argv) {
     if ((argc > 2) && (strcmp(argv[1], "file") && strcmp(argv[1], "unpack"))) {
         // need to parse config so we can display defaults in usage
         bool use_cwd = true;
-        Environment env(use_cwd, Logger::getLogger("winagent"), s_winapi);
+        Environment env(use_cwd, false, Logger::getLogger("winagent"), s_winapi);
         s_config = new GlobalConfig(env);
         usage();
     }

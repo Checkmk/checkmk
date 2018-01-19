@@ -100,6 +100,7 @@ liblivestatus_a_SOURCES = \
         OutputBuffer.cc \
         PerfdataAggregator.cc \
         Query.cc \
+        RegExp.cc \
         Renderer.cc \
         RendererBrokenCSV.cc \
         RendererCSV.cc \

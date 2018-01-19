@@ -28,9 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <memory>
-#include <regex>
 #include <string>
 #include "ColumnFilter.h"
+#include "RegExp.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
@@ -53,7 +53,7 @@ private:
     const StringColumn &_column;
     const RelationalOperator _relOp;
     const std::string _value;
-    std::regex _regex;
+    RegExp _regex;
 };
 
 #endif  // StringFilter_h

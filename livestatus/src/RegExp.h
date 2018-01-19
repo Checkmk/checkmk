@@ -22,38 +22,25 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef CustomVarsDictFilter_h
-#define CustomVarsDictFilter_h
+#ifndef RegExp_h
+#define RegExp_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <chrono>
-#include <memory>
+#include <regex>
 #include <string>
-#include "ColumnFilter.h"
-#include "RegExp.h"
-#include "contact_fwd.h"
-#include "opids.h"
-class CustomVarsDictColumn;
-class Filter;
-class Row;
 
-class CustomVarsDictFilter : public ColumnFilter {
+class RegExp {
 public:
-    CustomVarsDictFilter(const CustomVarsDictColumn &column,
-                         RelationalOperator relOp, const std::string &value);
-    bool accepts(Row row, const contact *auth_user,
-                 std::chrono::seconds timezone_offset) const override;
-    std::unique_ptr<Filter> copy() const override;
-    std::unique_ptr<Filter> negate() const override;
-    std::string columnName() const override;
+    enum class Case { ignore, respect };
+
+    void assign(const std::string &str, Case c);
+    std::string replace(const std::string &str,
+                        const std::string &replacement) const;
+
+    bool search(const std::string &str) const;
 
 private:
-    const CustomVarsDictColumn &_column;
-    const RelationalOperator _relOp;
-    std::string _value;
-    RegExp _regex;
-    std::string _ref_string;
-    std::string _ref_varname;
+    std::regex _regex;
 };
 
-#endif  // CustomVarsDictFilter_h
+#endif  // RegExp_h

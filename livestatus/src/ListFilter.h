@@ -29,11 +29,11 @@
 #include <algorithm>
 #include <chrono>
 #include <memory>
-#include <regex>
 #include <string>
 #include <vector>
 #include "ColumnFilter.h"
 #include "ListColumn.h"
+#include "RegExp.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
@@ -55,7 +55,7 @@ private:
     const ListColumn &_column;
     const RelationalOperator _relOp;
     const std::string _value;
-    std::regex _regex;
+    RegExp _regex;
 
     template <typename UnaryPredicate>
     bool any(Row row, const contact *auth_user,

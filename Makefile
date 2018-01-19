@@ -394,7 +394,11 @@ setup:
 	    autoconf \
 	    bear \
 	    build-essential \
+	    clang-5.0 \
+	    clang-format-5.0 \
+	    clang-tidy-5.0 \
 	    figlet \
+	    g++ \
 	    libboost-dev \
 	    libboost-system-dev \
 	    libpcap-dev \

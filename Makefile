@@ -397,6 +397,7 @@ setup:
 	    clang-5.0 \
 	    clang-format-5.0 \
 	    clang-tidy-5.0 \
+	    doxygen \
 	    figlet \
 	    g++ \
 	    libboost-dev \
@@ -406,7 +407,8 @@ setup:
 	    librrd-dev \
 	    llvm-5.0-dev \
 	    pngcrush \
-	    slimit
+	    slimit \
+	    valgrind
 	$(MAKE) -C tests setup
 	$(MAKE) -C omd setup
 

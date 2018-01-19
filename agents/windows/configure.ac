@@ -23,6 +23,7 @@ AC_CHECK_TOOL([STRIP], @STRIP@)
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 # Checks for header files.
 AC_CHECK_HEADERS([inttypes.h limits.h locale.h stdint.h sys/time.h unistd.h])
 

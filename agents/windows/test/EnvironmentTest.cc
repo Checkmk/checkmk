@@ -23,7 +23,8 @@ TEST_F(wa_EnvironmentTest, constructor_CurrentDirectory) {
         .WillOnce(
             DoAll(SetArrayArgument<1>(testCurrDir.cbegin(), testCurrDir.cend()),
                   Return(testCurrDir.length())));
-    const ::Environment testEnvironment(false, &_mocklogger, _mockwinapi);
+    const ::Environment testEnvironment(false, false, &_mocklogger,
+                                        _mockwinapi);
     EXPECT_EQ(testCurrDir, testEnvironment.currentDirectory());
 }
 
@@ -31,7 +32,7 @@ TEST_F(wa_EnvironmentTest, constructor_AgentDirectory_use_cwd) {
     EXPECT_CALL(_mockwinapi, RegOpenKeyEx(_, _, _, _, _)).Times(0);
     EXPECT_CALL(_mockwinapi, RegQueryValueEx(_, _, _, _, _, _)).Times(0);
     EXPECT_CALL(_mockwinapi, RegCloseKey(_)).Times(0);
-    const ::Environment testEnvironment(true, &_mocklogger, _mockwinapi);
+    const ::Environment testEnvironment(true, false, &_mocklogger, _mockwinapi);
     EXPECT_EQ(testEnvironment.currentDirectory(),
               testEnvironment.agentDirectory());
 }
@@ -52,7 +53,8 @@ TEST_F(wa_EnvironmentTest, constructor_AgentDirectory) {
             SetArrayArgument<4>(testImagePath.cbegin(), testImagePath.cend()),
             SetArgPointee<5>(testImagePath.length()), Return(ERROR_SUCCESS)));
     EXPECT_CALL(_mockwinapi, RegCloseKey(testKey));
-    const ::Environment testEnvironment(false, &_mocklogger, _mockwinapi);
+    const ::Environment testEnvironment(false, false, &_mocklogger,
+                                        _mockwinapi);
     const string expectedAgentDir = "C:\\Baz\\Qux";
     EXPECT_EQ(expectedAgentDir, testEnvironment.agentDirectory());
 }
@@ -73,7 +75,8 @@ TEST_F(wa_EnvironmentTest, constructor_AgentDirectory_ImagePathQuoted) {
             SetArrayArgument<4>(testImagePath.cbegin(), testImagePath.cend()),
             SetArgPointee<5>(testImagePath.length()), Return(ERROR_SUCCESS)));
     EXPECT_CALL(_mockwinapi, RegCloseKey(testKey));
-    const ::Environment testEnvironment(false, &_mocklogger, _mockwinapi);
+    const ::Environment testEnvironment(false, false, &_mocklogger,
+                                        _mockwinapi);
     const string expectedAgentDir = "C:\\Baz\\Qux";
     EXPECT_EQ(expectedAgentDir, testEnvironment.agentDirectory());
 }
@@ -90,7 +93,8 @@ TEST_F(wa_EnvironmentTest, constructor_AgentDirectory_RegOpenKeyEx_failure) {
         .WillOnce(DoAll(SetArgPointee<4>(testKey), Return(1)));  // return error
     EXPECT_CALL(_mockwinapi, RegQueryValueEx(_, _, _, _, _, _)).Times(0);
     EXPECT_CALL(_mockwinapi, RegCloseKey(testKey));
-    const ::Environment testEnvironment(false, &_mocklogger, _mockwinapi);
+    const ::Environment testEnvironment(false, false, &_mocklogger,
+                                        _mockwinapi);
     EXPECT_EQ(testEnvironment.currentDirectory(),
               testEnvironment.agentDirectory());
 }
@@ -139,7 +143,8 @@ TEST_F(wa_EnvironmentTest, constructor_OtherDirectories) {
         }
     }
 
-    const ::Environment testEnvironment(false, &_mocklogger, _mockwinapi);
+    const ::Environment testEnvironment(false, false, &_mocklogger,
+                                        _mockwinapi);
 
     for (const auto &entry : testEntries) {
         EXPECT_EQ(get<0>(entry), get<2>(entry)(&testEnvironment));
@@ -211,7 +216,8 @@ TEST_F(wa_EnvironmentTest, constructor_OtherDirectories_creation_failed) {
         }
     }
 
-    const ::Environment testEnvironment(false, &_mocklogger, _mockwinapi);
+    const ::Environment testEnvironment(false, false, &_mocklogger,
+                                        _mockwinapi);
 
     for (const auto &entry : testEntries) {
         EXPECT_EQ(get<0>(entry), get<2>(entry)(&testEnvironment));

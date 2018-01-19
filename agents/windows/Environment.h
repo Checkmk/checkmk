@@ -26,13 +26,15 @@
 #define Environment_h
 
 #include <string>
+#include "types.h"
 
 class Logger;
 class WinApiAdaptor;
 
 class Environment {
 public:
-    Environment(bool use_cwd, Logger *logger, const WinApiAdaptor &winapi);
+    Environment(bool use_cwd, bool with_stderr, Logger *logger,
+                const WinApiAdaptor &winapi);
     ~Environment();
 
     // TODO: this is an evil hack, but currently there is at least one global
@@ -55,6 +57,10 @@ public:
 
     std::string logwatchStatefile() const { return _logwatch_statefile; }
     std::string eventlogStatefile() const { return _eventlog_statefile; }
+
+    const JobHandle<0> &workersJobObject() const { return _workers_job_object; }
+
+    bool withStderr() const { return _with_stderr; }
 
     bool isWinNt() const;
 
@@ -89,6 +95,11 @@ private:
 
     const std::string _logwatch_statefile;
     const std::string _eventlog_statefile;
+
+    // Job object for all worker threads
+    // Gets terminated on shutdown
+    JobHandle<0> _workers_job_object;
+    const bool _with_stderr{false};
 };
 
 #endif  // Environment_h

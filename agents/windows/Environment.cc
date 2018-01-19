@@ -41,7 +41,7 @@ static const int MAX_PATH_UNICODE = 32767;
 
 Environment *Environment::s_Instance = nullptr;
 
-Environment::Environment(bool use_cwd, Logger *logger,
+Environment::Environment(bool use_cwd, bool with_stderr, Logger *logger,
                          const WinApiAdaptor &winapi)
     : _logger(logger)
     , _winapi(winapi)
@@ -57,7 +57,10 @@ Environment::Environment(bool use_cwd, Logger *logger,
     , _log_directory(assignDirectory("log"))
     , _bin_directory(_agent_directory + "\\bin")  // not created if missing
     , _logwatch_statefile(_state_directory + "\\logstate.txt")
-    , _eventlog_statefile(_state_directory + "\\eventstate.txt") {
+    , _eventlog_statefile(_state_directory + "\\eventstate.txt")
+    , _workers_job_object(_winapi.CreateJobObject(nullptr, "workers_job"),
+                          _winapi)
+    , _with_stderr(with_stderr) {
     // Set these directories as environment variables. Some scripts might use
     // them...
     _winapi.SetEnvironmentVariable("MK_PLUGINSDIR", _plugins_directory.c_str());

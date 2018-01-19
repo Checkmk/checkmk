@@ -29,14 +29,7 @@ class PerfValue(object):
 
     def __eq__(self, other_value):
         if isinstance(other_value, self.__class__):
-            return all([
-                self.key == other_value.key,
-                self.value == other_value.value,
-                self.warn == other_value.warn,
-                self.crit == other_value.crit,
-                self.minimum == other_value.minimum,
-                self.maximum == other_value.maximum,
-            ])
+            return all(x==y for x, y in zip(other_value.tuple, self.tuple))
         elif type(other_value) == tuple:
             return all(x==y for x, y in zip(other_value, self.tuple))
 

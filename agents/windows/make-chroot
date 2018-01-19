@@ -4,7 +4,7 @@
 
 set -e
 
-DISTRO=zesty
+DISTRO=artful
 MIRROR=http://de.archive.ubuntu.com/ubuntu
 
 export HOSTNAME=cmk-windows-agent-chroot

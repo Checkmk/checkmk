@@ -585,6 +585,9 @@ class Site(object):
 
 
     def cleanup_old_sites(self, cleanup_pattern):
+        if not os.path.exists("/omd/sites"):
+            return
+
         for site_id in os.listdir("/omd/sites"):
             if site_id != self.id and site_id.startswith(cleanup_pattern):
                 print "Cleaning up old site: %s" % site_id

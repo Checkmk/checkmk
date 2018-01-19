@@ -1,0 +1,17 @@
+title: Delta Energy Systems: Backup
+agents: snmp
+catalog: hw/environment/orion
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the backup status and expected time of
+ Delta Energy Systems devices which support the ORION-MIB.
+
+ The check goes WARN if the status is 'inactive' or 'occured',
+ CRIT if 'fail' is reported, otherwise OK.
+
+item:
+ The item is called 'Battery'.
+
+inventory:
+ One service for each item is generated.

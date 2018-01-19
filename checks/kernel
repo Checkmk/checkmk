@@ -106,7 +106,6 @@ check_info["kernel"] = {
 #   |  Check system/user/io-wait                                           |
 #   '----------------------------------------------------------------------'
 
-kernel_util_default_levels = None
 
 def inventory_cpu_utilization(info):
     for x in info:
@@ -160,7 +159,6 @@ check_info["kernel.util"] = {
     'inventory_function':       inventory_cpu_utilization,
     'service_description':      'CPU utilization',
     'has_perfdata':             True,
-    'default_levels_variable':  'kernel_util_default_levels',
     'group':                    'cpu_iowait',
     'includes':                 ['cpu_util.include'],
 }

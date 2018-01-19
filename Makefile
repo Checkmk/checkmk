@@ -403,6 +403,7 @@ setup:
 	    libboost-system-dev \
 	    libpcap-dev \
 	    librrd-dev \
+	    llvm-5.0-dev \
 	    pngcrush \
 	    slimit
 	$(MAKE) -C tests setup

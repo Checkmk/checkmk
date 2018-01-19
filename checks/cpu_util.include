@@ -146,7 +146,7 @@ def check_cpu_util_unix(values, params, cores = None):
         diff_values.append(v - last_val)
         set_item_state(countername, (this_time, v))
 
-    sum_jiffies = sum(diff_values) # do not account for steal!
+    sum_jiffies = sum(diff_values)
     if sum_jiffies == 0:
         raise MKCounterWrapped("Too short time difference since last check")
 

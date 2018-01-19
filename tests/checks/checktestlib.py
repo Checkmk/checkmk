@@ -5,7 +5,7 @@ class Tuploid(object):
 
     def __eq__(self, other_value):
         if isinstance(other_value, self.__class__):
-            return all(x==y for x, y in zip(other_value.tuple, self.tuple))
+            return other_value.tuple == self.tuple
         elif type(other_value) == tuple:
             return all(x==y for x, y in zip(other_value, self.tuple))
 
@@ -14,7 +14,7 @@ class Tuploid(object):
 
     @property
     def tuple(self):
-        return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
+        raise NotImplementedError()
 
 
 class PerfValue(Tuploid):
@@ -44,6 +44,10 @@ class PerfValue(Tuploid):
         assert type(maximum) in [int, float, types.NoneType]
         self.maximum = maximum
 
+    @property
+    def tuple(self):
+        return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
+
 
 class BasicCheckResult(Tuploid):
     """
@@ -71,6 +75,10 @@ class BasicCheckResult(Tuploid):
                 self.perfdata.append(PerfValue(*entry))
         else:
             self.perfdata = None
+
+    @property
+    def tuple(self):
+        return (self.status, self.infotext, self.perfdata)
 
 
 class CheckResult(object):

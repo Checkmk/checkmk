@@ -401,6 +401,7 @@ setup:
 	    g++ \
 	    libboost-dev \
 	    libboost-system-dev \
+	    libclang-5.0-dev \
 	    libpcap-dev \
 	    librrd-dev \
 	    llvm-5.0-dev \

@@ -10,11 +10,12 @@ from remote import (actual_output, assert_subprocess, config, remote_ip,
 class Globals(object):
     section = 'mrpe'
     pluginname = 'check_crit.bat'
+    param = 'foobar'
     checkname = 'Dummy'
     mrpedir = 'mrpe'
-    includedir = 'testinclude'
+    includedir = 'test include' # space in directory name!
     cfgfile = 'test.cfg'
-    newline = None
+    newline = -1
 
 
 @pytest.fixture
@@ -27,7 +28,7 @@ def testconfig(config):
     config.set("global", "sections", Globals.section)
     config.set("global", "crash_debug", "yes")
     config.add_section(Globals.section)
-    if Globals.newline is None:
+    if Globals.newline < 0:
         config.set(Globals.section, 'check', '%s %s' %
                    (Globals.checkname,
                     os.path.join(Globals.mrpedir, Globals.pluginname)))
@@ -48,13 +49,16 @@ def expected_output():
 
 
 @pytest.fixture(
-    params=[None, False, True],
-    ids=['direct', 'include_without_newline', 'include_with_newline'],
+    params=[-1, 0, 1, 2],
+    ids=[
+        'direct', 'include_without_newline', 'include_with_newline',
+        'include_with_newline_forward_slash'
+    ],
     autouse=True)
 def manage_plugin(request):
     Globals.newline = request.param
     plugindir = (Globals.mrpedir
-                 if Globals.newline is None else Globals.includedir)
+                 if Globals.newline < 0 else Globals.includedir)
     source = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         Globals.mrpedir, Globals.pluginname)
@@ -64,23 +68,24 @@ def manage_plugin(request):
         cmds = [[
             'ssh', sshopts,
             '%s@%s' % (remoteuser, remote_ip),
-            'if not exist %s md %s' % (targetdir_windows, targetdir_windows)
+            'if not exist "%s" md "%s"' % (targetdir_windows, targetdir_windows)
         ], [
             'scp', sshopts, source,
-            '%s@%s:%s' % (remoteuser, remote_ip, targetdir)
+            '%s@%s:"%s"' % (remoteuser, remote_ip, targetdir)
         ]]
         for cmd in cmds:
             assert_subprocess(cmd)
-    elif Globals.newline is not None:
+    elif Globals.newline >= 0:
         with open(os.path.join(targetdir, Globals.cfgfile), 'wb') as cfg:
-            cfg.write("check = %s %s%s" %
-                      (Globals.checkname,
-                       os.path.join(targetdir_windows, Globals.pluginname),
-                       "\n" if Globals.newline else ""))
+            path = os.path.join(targetdir_windows, Globals.pluginname)
+            if Globals.newline == 2:
+                path = path.replace('\\', '/')
+            cfg.write('check = %s "%s"%s' % (Globals.checkname, path, "\n"
+                                           if Globals.newline > 0 else ""))
     yield
     if platform.system() == 'Windows':
         os.unlink(os.path.join(targetdir, Globals.pluginname))
-        if Globals.newline is not None:
+        if Globals.newline >= 0:
             os.unlink(os.path.join(targetdir, Globals.cfgfile))
 
 

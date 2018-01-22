@@ -1,0 +1,30 @@
+Title: Windows agent: space in MRPE plugin path resulted in wrong plugin name
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i3
+Date: 1516625396
+Class: fix
+
+If the path of a(n included) MRPE plugin contained one or more spaces,
+the plugin name was parsed incorrectly. Quotes were incorrectly
+required for the whole command line including parameters within quotes,
+making it impossible to distinguish between a script path containing
+space(s) and space-separated script parameters. Now the MRPE plugin
+path must be enclosed in double quotes (") in order to be processed
+correctly. The same applies for script parameters with whitespace:
+also they must be separately enclosed in quotes.
+
+Example:
+
+check_mk.ini:
+
+[mrpe]
+    include = C:\Temp\my.cfg
+
+
+C:\Temp\my.cfg:
+
+check = Dummy "C:\Program Files (x86)\check_mk\mrpe\check_crit.bat" some parameter "with space"
+

@@ -133,10 +133,10 @@ std::basic_string<SeparatorT> join(const std::vector<ValueT> &input,
 inline bool isPathRelative(const std::string &path) {
     const std::array<regex, 2> regexes{
         // Windows absolute path (with/without drive letter or UNC):
-        regex{"^([A-Za-z]:)?\\\\[^<>:\"/\\\\|?*]|\\\\\\\\[^<>:\"/\\\\|?*]",
+        regex{"^\"?(([A-Za-z]:)?\\\\[^<>:\"/\\\\|?*]|\\\\\\\\[^<>:\"/\\\\|?*])",
               regex::extended},
         // Unix-style absolute path (with/without drive letter or UNC):
-        regex{"^([A-Za-z]:)?/[^<>:\"/\\\\|?*]|//[^<>:\"/\\\\|?*]",
+        regex{"^\"?(([A-Za-z]:)?/[^<>:\"/\\\\|?*]|//[^<>:\"/\\\\|?*])",
               regex::extended}};
     smatch match;
     return std::all_of(regexes.cbegin(), regexes.cend(),

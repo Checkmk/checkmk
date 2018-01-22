@@ -28,6 +28,11 @@
 #include "ExternalCmd.h"
 #include "Logger.h"
 
+using std::regex;
+using std::sregex_token_iterator;
+using std::string;
+using std::vector;
+
 SectionMRPE::SectionMRPE(Configuration &config, Logger *logger,
                          const WinApiAdaptor &winapi)
     : Section("mrpe", "mrpe", config.getEnvironment(), logger, winapi)
@@ -38,7 +43,7 @@ void SectionMRPE::updateIncludes() {
     _included_entries.clear();
 
     for (const auto &user_path : *_includes) {
-        std::string user, path;
+        string user, path;
         std::tie(user, path) = user_path;
         std::ifstream ifs(path);
         if (!ifs) {
@@ -46,7 +51,7 @@ void SectionMRPE::updateIncludes() {
             continue;
         }
 
-        std::string line;
+        string line;
         for (unsigned lineno = 1; std::getline(ifs, line); ++lineno) {
             ltrim(line);
             rtrim(line);
@@ -88,17 +93,17 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
         out << entry << " ";
         Debug(_logger) << entry.run_as_user << " " << entry;
 
-        std::string run_as_prefix;
+        string run_as_prefix;
 
         if (!entry.run_as_user.empty()) {
             run_as_prefix = "runas /User:" + entry.run_as_user + " ";
         }
-        std::string modified_command = run_as_prefix + entry.command_line;
+        string modified_command = run_as_prefix + entry.command_line;
 
         try {
             ExternalCmd command(modified_command, _env, _logger, _winapi);
             Debug(_logger) << "Script started -> collecting data";
-            std::string buffer;
+            string buffer;
             buffer.resize(8192);
             char *buf_start = &buffer[0];
             char *pos = &buffer[0];
@@ -133,45 +138,75 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
     return true;
 }
 
+namespace {
+
+void cleanQuotes(string &s) {
+    if (s.front() == '"' && s.back() == '"') {
+        s = s.substr(1, s.size() - 2);
+    }
+}
+
+void normalizeCommand(string &cmd) {
+    if (isPathRelative(cmd)) {
+        Environment *env = Environment::instance();
+        if (env == nullptr) {
+            throw StringConversionError("No environment");
+        }
+        ltrim(cmd);
+        rtrim(cmd);
+        bool quoted = cmd.front() == '"' && cmd.back() == '"';
+        if (quoted) {
+            cleanQuotes(cmd);
+        }
+        cmd.insert(0, env->agentDirectory() + "\\");
+        if (quoted) {
+            cmd.reserve(cmd.size() + 2);
+            cmd.insert(0, 1, '"');
+            cmd.push_back('"');
+        }
+    }
+}
+
+}  // namespace
+
 template <>
-mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &,
-                                   const std::string &value) {
-    const auto tokens = tokenize(value, " ");
-    const std::string &service_description = tokens[0];
-    std::string command_line = join(std::next(tokens.cbegin()), tokens.cend(), " ");
+mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &, const string &value) {
+    regex re("(\"([^\"]+)\"|[^\" ]+)");
+    vector<string> tokens{
+        sregex_token_iterator{value.cbegin(), value.cend(), re, 1},
+        sregex_token_iterator{}};
 
-    // Strip any " from start and end
-    if (!command_line.empty() && command_line.front() == '"') {
-        command_line = command_line.substr(1);
-    }
-    if (!command_line.empty() && command_line.back() == '"') {
-        command_line = command_line.substr(0, command_line.length() - 1);
-    }
-
-    if (command_line.empty()) {
+    if (tokens.size() < 2) {
         throw StringConversionError(
             "Invalid command specification for mrpe:\r\n"
             "Format: SERVICEDESC COMMANDLINE");
     }
 
-    if (isPathRelative(command_line)) {
-        Environment *env = Environment::instance();
-        if (env == nullptr) {
-            throw StringConversionError("No environment");
-        }
-        ltrim(command_line);
-        command_line = env->agentDirectory() + "\\" + command_line;
-    }
-
+    auto plugin_name = tokens[1]; // Intentional copy
     // compute plugin name, drop directory part
-    std::string plugin_name = tokenize(command_line, " ")[0];
+    cleanQuotes(plugin_name);
+
     for (const auto &delimiter : {"/", "\\"}) {
         auto pos = plugin_name.find_last_of(delimiter);
-        if (pos != std::string::npos) {
+        if (pos != string::npos) {
             plugin_name = plugin_name.substr(pos + 1);
             break;
         }
     }
+
+    string command_line =
+        join(std::next(tokens.cbegin(), 2), tokens.cend(), " ");
+    auto &cmd = tokens[1];
+    normalizeCommand(cmd);
+
+    if (command_line.empty()) {
+        command_line = cmd;
+    } else {
+        command_line.insert(0, cmd + " ");
+    }
+
+    auto &service_description = tokens[0];
+    cleanQuotes(service_description);
 
     return {"", command_line, plugin_name, service_description};
 }

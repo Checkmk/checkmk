@@ -390,11 +390,17 @@ def get_host_attributes(hostname, tags):
 
     ipv6_primary = config.is_ipv6_primary(hostname)
     if ipv6_primary:
-        attrs["address"]        = attrs["_ADDRESS_6"]
+        attrs["address"] = attrs["_ADDRESS_6"]
         attrs["_ADDRESS_FAMILY"] = "6"
     else:
-        attrs["address"]        = attrs["_ADDRESS_4"]
+        attrs["address"] = attrs["_ADDRESS_4"]
         attrs["_ADDRESS_FAMILY"] = "4"
+
+    add_ipv4addrs, add_ipv6addrs = config.get_additional_ipaddresses_of(hostname)
+    if add_ipv4addrs:
+        attrs["_ADDRESSES_4"] = " ".join(add_ipv4addrs)
+    if add_ipv6addrs:
+        attrs["_ADDRESSES_6"] = " ".join(add_ipv6addrs)
 
     # Add the optional WATO folder path
     path = config.host_paths.get(hostname)
@@ -526,9 +532,9 @@ def fallback_ip_for(hostname, family=None):
 
 def get_host_macros_from_attributes(hostname, attrs):
     macros = {
-        "$HOSTNAME$"    : hostname,
-        "$HOSTADDRESS$" : attrs['address'],
-        "$HOSTALIAS$"   : attrs['alias'],
+        "$HOSTNAME$"     : hostname,
+        "$HOSTADDRESS$"  : attrs['address'],
+        "$HOSTALIAS$"    : attrs['alias'],
     }
 
     # Add custom macros

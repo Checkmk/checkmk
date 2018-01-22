@@ -1,0 +1,27 @@
+Title: Hosts can have multiple IP addresses which may be checked by ICMP service
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516625065
+Class: feature
+
+In the host properties you can configure extra IPv4 or IPv6 addresses
+below 'Address'. Within the rule 'Check hosts with PING (ICMP Echo Request)'
+you can choose 'PING all IPv4 addresses', 'PING all IPv6 addresses',
+'Ping additional IPv4 addresses' or 'Ping additional IPv6 addresses'
+below 'Alternative address to ping'.
+
+Note that the active check ICMP can ping multiple IP addresses which have
+to be of the same type. That means if you want to ping
+
+- only IPv4 addresses, use
+  'PING all IPv4 addresses' or 'Ping additional IPv4 addresses' in the check
+  configuration.
+
+- only IPv6 addresses, use
+  'PING all IPv6 addresses' or 'Ping additional IPv6 addresses' in the check
+  configuration.
+
+- both IPv4 and IPv6 addresses, you have to configure two active checks.

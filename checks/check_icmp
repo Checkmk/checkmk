@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_icmp_arguments(params):
     args = []
     rta = 200, 500
@@ -45,6 +46,14 @@ def check_icmp_arguments(params):
         args.append("'$HOSTADDRESS$'")
     elif target == "alias":
         args.append("'$HOSTALIAS$'")
+    elif target == "all_ipv4addresses":
+        args += ["$HOST_ADDRESSES_4$", "$HOST_ADDRESS_4$"]
+    elif target == "all_ipv6addresses":
+        args += ["-6", "$HOST_ADDRESSES_6$", "$HOST_ADDRESS_6$"]
+    elif target == "additional_ipv4addresses":
+        args.append("$HOST_ADDRESSES_4$")
+    elif target == "additional_ipv6addresses":
+        args += ["-6", "$HOST_ADDRESSES_6$"]
     else: # custom
         args.append(quote_shell_string(target[1]))
     return " ".join(args)

@@ -183,8 +183,7 @@ Logger *LogManager::lookup(const std::string &name, Logger *parent) {
     return it->second.get();
 }
 
-// False positive in clang-tidy-4.0, see https://reviews.llvm.org/D27048
-LogManager LogManager::_global_log_manager;  // NOLINT
+LogManager LogManager::_global_log_manager;
 
 // -----------------------------------------------------------------------------
 

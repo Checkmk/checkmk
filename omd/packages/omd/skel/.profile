@@ -11,7 +11,7 @@ export PATH="$OMD_ROOT/lib/perl5/bin:$PATH"
 export MODULEBUILDRC="$OMD_ROOT/.modulebuildrc"
 export PERL_MM_OPT=INSTALL_BASE="$OMD_ROOT/local/lib/perl5/"
 export MANPATH="$OMD_ROOT/share/man:$MANPATH"
-export PYTHONPATH="$OMD_ROOT/lib/python:$OMD_ROOT/local/lib/python"
+export PYTHONPATH="$OMD_ROOT/local/lib/python:$OMD_ROOT/lib/python"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
 
 # Make the python requests module trust the CAs configured in Check_MK

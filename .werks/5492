@@ -1,0 +1,11 @@
+Title: Prefer local/lib over lib in the PYTHONPATH
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516870075
+Class: fix
+
+Locally installed Python packages under $OMD_ROOT/local/lib/python
+will now be prefered over shipped packages in $OMD_ROOT/lib/python.

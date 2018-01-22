@@ -2300,7 +2300,7 @@ def set_environment():
 
     putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_sitedir, g_sitedir))
     putenv("HOME", g_sitedir)
-    putenv("PYTHONPATH", "%s/lib/python:%s/local/lib/python" % (g_sitedir, g_sitedir))
+    putenv("PYTHONPATH", "%s/local/lib/python:%s/lib/python" % (g_sitedir, g_sitedir))
 
     # allow user to define further environment variable in ~/etc/environment
     envfile = g_sitedir + "/etc/environment"

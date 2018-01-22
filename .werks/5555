@@ -1,0 +1,10 @@
+Title: mk_inventory: Added Bakery configuration for AIX inventory plugin
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1516644221
+Class: feature
+
+

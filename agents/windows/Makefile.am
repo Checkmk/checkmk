@@ -1,6 +1,6 @@
 bin_PROGRAMS = check_mk_agent
 check_PROGRAMS = WindowsAgentTest wmitest
-noinst_LIBRARIES = check_mk_agent.a
+noinst_LIBRARIES = libcheck_mk_agent.a
 
 AUTOMAKE_OPTIONS = foreign
 AM_CPPFLAGS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++14 -gdwarf-2 \
@@ -8,10 +8,10 @@ AM_CPPFLAGS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++14 -gdwarf-2 \
 AM_LDFLAGS = -static -static-libgcc -static-libstdc++
 LD_COMMON = -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp -lntdll
 
-check_mk_agent_LDADD = check_mk_agent.res check_mk_agent.a $(LD_COMMON)
+check_mk_agent_LDADD = check_mk_agent.res libcheck_mk_agent.a $(LD_COMMON)
 
 WindowsAgentTest_CPPFLAGS = -I$(top_srcdir)/sections -I$(top_srcdir)/test
-WindowsAgentTest_LDADD = check_mk_agent.a -lgtest -lgmock $(LD_COMMON)
+WindowsAgentTest_LDADD = libcheck_mk_agent.a -lgtest -lgmock $(LD_COMMON)
 
 wmitest_LDADD = $(LD_COMMON)
 
@@ -33,7 +33,7 @@ check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 unittest: WindowsAgentTest$(EXEEXT)
 	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
 
-check_mk_agent_a_SOURCES = \
+libcheck_mk_agent_a_SOURCES = \
         Configurable.cc \
         Configuration.cc \
         CrashHandler.cc \

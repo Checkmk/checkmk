@@ -568,6 +568,11 @@ def alias_of(hostname, fallback):
         return aliases[0]
 
 
+def get_additional_ipaddresses_of(hostname):
+    return (host_attributes.get(hostname, {}).get("additional_ipv4addresses", []),
+            host_attributes.get(hostname, {}).get("additional_ipv6addresses", []))
+
+
 def parents_of(hostname):
     par = rulesets.host_extra_conf(hostname, parents)
     # Use only those parents which are defined and active in

@@ -82,6 +82,38 @@ declare_host_attribute(ValueSpecAttribute("ipv6address",
     topic = _("Address"),
 )
 
+declare_host_attribute(ValueSpecAttribute("additional_ipv4addresses",
+    ListOf(
+        HostAddress(
+            allow_empty = False,
+            allow_ipv6_address = False,
+        ),
+        title = _("Additional IPv4 addresses"),
+        help = _("Here you can specify additional IPv4 addresses. "
+                 "These can be used in some active checks like ICMP."),
+    )),
+    show_in_table = True,
+    show_in_folder = False,
+    depends_on_tags = ["ip-v4"],
+    topic = _("Address"),
+)
+
+declare_host_attribute(ValueSpecAttribute("additional_ipv6addresses",
+    ListOf(
+        HostAddress(
+            allow_empty = False,
+            allow_ipv4_address = False,
+        ),
+        title = _("Additional IPv6 addresses"),
+        help = _("Here you can specify additional IPv4 addresses. "
+                 "These can be used in some active checks like ICMP."),
+    )),
+    show_in_table = True,
+    show_in_folder = False,
+    depends_on_tags = ["ip-v6"],
+    topic = _("Address"),
+)
+
 _snmpv3_auth_elements = [
     DropdownChoice(
         choices = [

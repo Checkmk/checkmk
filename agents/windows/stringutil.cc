@@ -150,7 +150,8 @@ bool ci_compare_pred(unsigned char lhs, unsigned char rhs) {
 }
 
 bool ci_equal(const std::string &lhs, const std::string &rhs) {
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin(), ci_compare_pred);
+    return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend(),
+                      ci_compare_pred);
 }
 
 bool globmatch(const char *pattern, const char *astring) {

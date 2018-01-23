@@ -78,10 +78,9 @@ class EventlogConfigurable
     : public ListConfigurable<eventlog_config_t,
                               BlockMode::Nop<eventlog_config_t>,
                               AddMode::PriorityAppend<eventlog_config_t>> {
-    typedef ListConfigurable<eventlog_config_t,
-                             BlockMode::Nop<eventlog_config_t>,
-                             AddMode::PriorityAppend<eventlog_config_t>>
-        SuperT;
+    using SuperT =
+        ListConfigurable<eventlog_config_t, BlockMode::Nop<eventlog_config_t>,
+                         AddMode::PriorityAppend<eventlog_config_t>>;
 
 public:
     EventlogConfigurable(Configuration &config, const char *section,
@@ -92,11 +91,15 @@ public:
                       const std::string &value) override {
         eventlog_config_entry entry =
             from_string<eventlog_config_entry>(_winapi, value);
-        std::istringstream str(var);
-        std::string key;
-        getline(str, key, ' ');
-        getline(str, entry.name, ' ');
-        entry.vista_api = (key == "logname");
+        const auto tokens = tokenize(var, " ");
+
+        if (tokens.size() < 2) {
+            std::cerr << "Invalid eventlog logname entry: '" << var << "'"
+                      << std::endl;
+        }
+
+        entry.name = join(std::next(tokens.cbegin()), tokens.cend(), " ");
+        entry.vista_api = (tokens[0] == "logname");
         add(entry);
     }
 };

@@ -109,7 +109,7 @@ def load_tree(hostname):
 
     inventory_tree_cache = html.get_cached("inventory")
     if not inventory_tree_cache:
-        inventory_tree_cache = StructuredDataTree()
+        inventory_tree_cache = {}
         html.set_cache("inventory", inventory_tree_cache)
 
     if hostname in inventory_tree_cache:

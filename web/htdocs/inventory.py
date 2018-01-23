@@ -105,18 +105,18 @@ def sort_children(children):
 def load_tree(hostname):
     # Load data of a host, cache it in the current HTTP request
     if not hostname:
-        return {}
+        return None
 
     inventory_tree_cache = html.get_cached("inventory")
     if not inventory_tree_cache:
-        inventory_tree_cache = {}
+        inventory_tree_cache = StructuredDataTree()
         html.set_cache("inventory", inventory_tree_cache)
 
     if hostname in inventory_tree_cache:
         inventory_tree = inventory_tree_cache[hostname]
     else:
         if '/' in hostname:
-            return StructuredDataTree() # just for security reasons
+            return None # just for security reasons
         cache_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
         inventory_tree = StructuredDataTree().load_from(cache_path)
         inventory_tree_cache[hostname] = inventory_tree
@@ -238,6 +238,8 @@ def _inventory_of_host(host_name, request):
         raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % host_name)
 
     inventory_tree = load_tree(host_name)
+    if not inventory_tree:
+        return {}
     if "paths" in request:
         parsed_paths = []
         for path in request["paths"]:

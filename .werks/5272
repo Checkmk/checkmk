@@ -1,0 +1,13 @@
+Title: Make Real-Timer-Helper Pool configurable
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1518601423
+Class: feature
+
+The number of Maximum concurrent Real-Time checks is now configurable.
+
+You can change the setting on the GUI at Global Settings - Monitoring Core.
+Default value is set to 1, which preserves the previous behavior.

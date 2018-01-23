@@ -29,6 +29,8 @@ import urllib
 import os
 import time
 
+import cmk.password_store
+cmk.password_store.replace_passwords()
 
 # tell requests not to honour "http(s)_proxy" env variables
 proxies = {

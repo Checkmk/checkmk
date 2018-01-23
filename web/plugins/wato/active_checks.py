@@ -1666,7 +1666,7 @@ register_rule(group,
                          "authentication is set to \"Automation Secret\" based authentication."),
                 allow_empty = False
             ),
-            Password(
+            IndividualOrStoredPassword(
                 title = _("Password / Secret"),
                 help = _("Valid automation secret or password for the user, depending on the chosen "
                          "authentication mode. Be aware that this mode has to be enabled on the monitoring instance. "                         "Otherwise authentication will fail."),

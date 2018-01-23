@@ -140,9 +140,32 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
 
 namespace {
 
-void cleanQuotes(string &s) {
-    if (s.front() == '"' && s.back() == '"') {
+enum class QuoteType { none, singleQuoted, doubleQuoted };
+
+inline bool quoted(QuoteType qt) { return qt != QuoteType::none; }
+
+inline QuoteType getQuoteType(const string &s) {
+    if (s.front() == '\'' && s.back() == '\'') {
+        return QuoteType::singleQuoted;
+    } else if (s.front() == '"' && s.back() == '"') {
+        return QuoteType::doubleQuoted;
+    } else {
+        return QuoteType::none;
+    }
+}
+
+void removeQuotes(string &s, QuoteType qt) {
+    if (quoted(qt)) {
         s = s.substr(1, s.size() - 2);
+    }
+}
+
+void wrapInQuotes(string &s, QuoteType qt) {
+    if (quoted(qt)) {
+        char quote = (qt == QuoteType::singleQuoted) ? '\'' : '"';
+        s.reserve(s.size() + 2);
+        s.insert(0, 1, quote);
+        s.push_back(quote);
     }
 }
 
@@ -154,16 +177,10 @@ void normalizeCommand(string &cmd) {
         }
         ltrim(cmd);
         rtrim(cmd);
-        bool quoted = cmd.front() == '"' && cmd.back() == '"';
-        if (quoted) {
-            cleanQuotes(cmd);
-        }
+        auto quoteType = getQuoteType(cmd);
+        removeQuotes(cmd, quoteType);
         cmd.insert(0, env->agentDirectory() + "\\");
-        if (quoted) {
-            cmd.reserve(cmd.size() + 2);
-            cmd.insert(0, 1, '"');
-            cmd.push_back('"');
-        }
+        wrapInQuotes(cmd, quoteType);
     }
 }
 
@@ -171,10 +188,7 @@ void normalizeCommand(string &cmd) {
 
 template <>
 mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &, const string &value) {
-    regex re("(\"([^\"]+)\"|[^\" ]+)");
-    vector<string> tokens{
-        sregex_token_iterator{value.cbegin(), value.cend(), re, 1},
-        sregex_token_iterator{}};
+    vector<string> tokens = tokenizePossiblyQuoted(value);
 
     if (tokens.size() < 2) {
         throw StringConversionError(
@@ -182,9 +196,9 @@ mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &, const string &value) {
             "Format: SERVICEDESC COMMANDLINE");
     }
 
-    auto plugin_name = tokens[1]; // Intentional copy
+    auto plugin_name = tokens[1];  // Intentional copy
     // compute plugin name, drop directory part
-    cleanQuotes(plugin_name);
+    removeQuotes(plugin_name, getQuoteType(plugin_name));
 
     for (const auto &delimiter : {"/", "\\"}) {
         auto pos = plugin_name.find_last_of(delimiter);
@@ -206,7 +220,7 @@ mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &, const string &value) {
     }
 
     auto &service_description = tokens[0];
-    cleanQuotes(service_description);
+    removeQuotes(service_description, getQuoteType(service_description));
 
     return {"", command_line, plugin_name, service_description};
 }

@@ -79,6 +79,16 @@ char *next_word(char **line) {
     return 0;
 }
 
+template <>
+std::regex possiblyQuotedRegex<char>() {
+    return std::regex{"(\"([^\"]+)\"|'([^']+)'|[^\" \\t]+)"};
+}
+
+template <>
+std::wregex possiblyQuotedRegex<wchar_t>() {
+    return std::wregex{L"(\"([^\"]+)\"|'([^']+)'|[^\" \\t]+)"};
+}
+
 unsigned long long string_to_llu(const char *s) {
     unsigned long long value = 0;
     unsigned long long mult = 1;

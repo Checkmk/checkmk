@@ -50,7 +50,7 @@ TEST_F(wa_SectionMRPETest, from_string__relative_path_params_no_quotes) {
 }
 
 TEST_F(wa_SectionMRPETest,
-       from_string__absolute_path__with_spaces_params_with_quotes) {
+       from_string__absolute_path__with_spaces_params_with_double_quotes) {
     const std::string input{
         "\"foo bar\" \"\\baz qux\\quux\" corge \"grault garply\""};
     const mrpe_entry expected{"", "\"\\baz qux\\quux\" corge \"grault garply\"",
@@ -58,7 +58,8 @@ TEST_F(wa_SectionMRPETest,
     ASSERT_EQ(expected, from_string<mrpe_entry>(_mockwinapi, input));
 }
 
-TEST_F(wa_SectionMRPETest, from_string__relative_path_params_with_quotes) {
+TEST_F(wa_SectionMRPETest,
+       from_string__relative_path_params_with_double_quotes) {
     const std::string cwd{"C:\\corge"};
     EXPECT_CALL(_mockwinapi, GetCurrentDirectoryA(32767, _))
         .WillOnce(DoAll(SetArrayArgument<1>(cwd.cbegin(), cwd.cend()),
@@ -66,6 +67,19 @@ TEST_F(wa_SectionMRPETest, from_string__relative_path_params_with_quotes) {
     ::Environment testEnv{true, false, &_mocklogger, _mockwinapi};
     const std::string input{"foo \"bar baz\\qux\" quux"};
     const mrpe_entry expected{"", "\"C:\\corge\\bar baz\\qux\" quux", "qux",
+                              "foo"};
+    ASSERT_EQ(expected, from_string<mrpe_entry>(_mockwinapi, input));
+}
+
+TEST_F(wa_SectionMRPETest,
+       from_string__relative_path_params_with_single_quotes) {
+    const std::string cwd{"C:\\corge"};
+    EXPECT_CALL(_mockwinapi, GetCurrentDirectoryA(32767, _))
+        .WillOnce(DoAll(SetArrayArgument<1>(cwd.cbegin(), cwd.cend()),
+                        Return(cwd.size())));
+    ::Environment testEnv{true, false, &_mocklogger, _mockwinapi};
+    const std::string input{"foo 'bar baz\\qux' quux"};
+    const mrpe_entry expected{"", "'C:\\corge\\bar baz\\qux' quux", "qux",
                               "foo"};
     ASSERT_EQ(expected, from_string<mrpe_entry>(_mockwinapi, input));
 }

@@ -1,0 +1,25 @@
+Title: New report element: Add host report for multiple hosts
+Level: 2
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1516700903
+Class: feature
+
+Using the new report element "Host report for multiple hosts" it is now
+possible to include reports in other reports to instanciate it multiple
+times.
+
+For example you can now create a top-level "ESX host" report that
+contains sub reports for each of your ESX servers.
+
+All you need to do is to create a report that contains all the report elements
+you want to see for a single ESX server. Either the whole report or at least
+the single elements in that report need to have the "single host context"
+configured. Then you need to create a top level report, add the element
+"Host report for multiple hosts" to this report and select the previously
+configured host specific report as child report. In that element you also
+need to configure the "Search filters" to match the hosts you want to create
+the child elements for. In the example above you need to configure e.g. the
+host tag filter to select the ESX hosts.

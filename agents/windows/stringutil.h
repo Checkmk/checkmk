@@ -61,11 +61,67 @@ inline void rtrim(std::string &s) {
 std::vector<const char *> split_line(char *pos, int (*split_pred)(int));
 char *next_word(char **line);
 
-inline std::vector<std::string> tokenize(const std::string &input,
-                                         const std::string &delimiter) {
-    regex re(delimiter);
-    sregex_token_iterator first{input.cbegin(), input.cend(), re, -1}, last;
-    return {first, last};
+template <typename CharT>
+inline std::vector<std::basic_string<CharT>> tokenizeBase(
+    const std::basic_string<CharT> &input, const std::basic_regex<CharT> &re,
+    int submatch) {
+    return {std::regex_token_iterator<
+                typename std::basic_string<CharT>::const_iterator>{
+                input.cbegin(), input.cend(), re, submatch},
+            std::regex_token_iterator<
+                typename std::basic_string<CharT>::const_iterator>{}};
+}
+
+/**
+ * Split a string into tokens at given delimiter.
+ *
+ * @param[in] input        The string to be split
+ * @param[in] delimiter    The delimiter to split at
+ * @return                 A vector of tokens
+ */
+template <typename CharT>
+inline std::vector<std::basic_string<CharT>> tokenize(
+    const std::basic_string<CharT> &input,
+    const std::basic_string<CharT> &delimiter) {
+    return tokenizeBase(input, std::basic_regex<CharT>{delimiter}, -1);
+}
+
+/**
+ * Split a string into tokens at given delimiter.
+ *
+ * @param[in] input        The string to be split
+ * @param[in] delimiter    The delimiter to split at
+ * @return                 A vector of tokens
+ */
+template <typename CharT>
+inline std::vector<std::basic_string<CharT>> tokenize(
+    const std::basic_string<CharT> &input, const CharT *delimiter) {
+    return tokenizeBase(input, std::basic_regex<CharT>{delimiter}, -1);
+}
+
+template <typename CharT>
+inline std::basic_regex<CharT> possiblyQuotedRegex();
+template <>
+std::regex possiblyQuotedRegex<char>();
+template <>
+std::wregex possiblyQuotedRegex<wchar_t>();
+
+/**
+ * Split a string into tokens at space or tab. Substrings enclosed in single or
+ * double quotes are not split and the enclosing quotes are retained in the
+ * returned tokens.
+ *
+ * Example: ()
+ * input:              This\t'is \t an' "example sentence."
+ * returned tokens:    This, 'is \t an', "example sentence."
+ *
+ * @param[in] input        The string to be split
+ * @return                 A vector of tokens
+ */
+template <typename CharT>
+inline std::vector<std::basic_string<CharT>> tokenizePossiblyQuoted(
+    const std::basic_string<CharT> &input) {
+    return tokenizeBase(input, possiblyQuotedRegex<CharT>(), 1);
 }
 
 unsigned long long string_to_llu(const char *s);
@@ -130,6 +186,16 @@ std::basic_string<SeparatorT> join(const std::vector<ValueT> &input,
     return join(input.begin(), input.end(), sep);
 }
 
+/**
+ * Check if a path is relative or absolute. Works with both Windows and Unix
+ * style paths with backslash and forward slash separators, respectively. The
+ * presence of Windows drive letter does not affect the result for absolute or
+ * relative paths. Absolute UNC paths starting with either '\\' or '//' are
+ * recognized as absolute paths.
+
+ * param[in] path    The path to be checked
+ * return            True if the path is relative, False if it is absolute
+ */
 inline bool isPathRelative(const std::string &path) {
     const std::array<regex, 2> regexes{
         // Windows absolute path (with/without drive letter or UNC):

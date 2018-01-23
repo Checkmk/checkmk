@@ -411,6 +411,9 @@ setup:
 	    valgrind
 	$(MAKE) -C tests setup
 	$(MAKE) -C omd setup
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/locale setup
+endif
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n

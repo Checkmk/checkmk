@@ -285,7 +285,7 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
 void SectionEventlog::registerEventlog(const char *logname) {
     // check if we already know this one...
     for (auto &state : _state) {
-        if (state.name.compare(logname) == 0) {
+        if (ci_equal(state.name, logname)) {
             state.newly_discovered = true;
             return;
         }

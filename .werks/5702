@@ -1,0 +1,14 @@
+Title: Allow spaces in Windows eventlog name
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1518165429
+Class: feature
+
+Add support for Windows eventlogs whose names contain spaces. Previously, such
+eventlog names could not be handled as the first space-separated word was
+interpreted to be the complete name.
+
+

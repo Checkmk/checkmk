@@ -977,6 +977,8 @@ def _create_view_enabled_check_func(invpath):
         if context["host"] == "":
             return False
         struct_tree = inventory.load_tree(context["host"])
+        if not struct_tree:
+            return False
         if struct_tree.is_empty():
             return False
         parsed_path, unused_key = inventory.parse_tree_path(invpath)

@@ -35,8 +35,8 @@ std::string mapSectionName(const std::string &sectionName) {
 }  // namespace
 
 template <>
-winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
-                                                const std::string &value) {
+winperf_counter from_string<winperf_counter>(const WinApiAdaptor &winapi,
+                                             const std::string &value) {
     size_t colonIdx = value.find_last_of(":");
     if (colonIdx == std::string::npos) {
         fprintf(stderr,
@@ -45,25 +45,23 @@ winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
                 value.c_str());
         exit(1);
     }
-    winperf_counter *result = new winperf_counter();
-    result->name = std::string(value.begin() + colonIdx + 1, value.end());
 
+    std::string name(value.begin() + colonIdx + 1, value.end());
     std::string base_id(value.begin(), value.begin() + colonIdx);
-
     auto non_digit = std::find_if_not(base_id.begin(), base_id.end(), isdigit);
 
+    int id = 0;
     if (non_digit == base_id.end()) {
-        result->id = std::stoi(base_id);
+        id = std::stoi(base_id);
     } else {
-        result->id = resolveCounterName(winapi, base_id);
-        if (result->id == -1) {
-            delete result;
+        id = resolveCounterName(winapi, base_id);
+        if (id == -1) {
             throw StringConversionError(
                 "No matching performance counter id found for " + value);
         }
     }
 
-    return result;
+    return {id, name};
 }
 
 SectionManager::SectionManager(Configuration &config,
@@ -120,11 +118,11 @@ bool SectionManager::useRealtimeMonitoring() const {
 }
 
 void SectionManager::loadDynamicSections() {
-    for (winperf_counter *counter : *_winperf_counters) {
-        if (counter->id != -1) {
-            addSection((new SectionWinperf(counter->name.c_str(), _env, _logger,
-                                           _winapi))
-                           ->withBase(counter->id));
+    for (const auto &counter : *_winperf_counters) {
+        if (counter.id != -1) {
+            addSection(
+                (new SectionWinperf(counter.name, _env, _logger, _winapi))
+                    ->withBase(counter.id));
         }
     }
 }

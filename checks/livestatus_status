@@ -137,7 +137,7 @@ def check_livestatus_status(item, params, parsed):
         ("accept_passive_service_checks", "Passive service checks are disabled"),
         ("check_host_freshness",          "Host freshness checking is disabled"),
         ("check_service_freshness",       "Service freshness checking is disabled"),
-        ("enable_event_handlers",         "Event handlers are disabled"),
+        ("enable_event_handlers",         "Alert handlers are disabled"),
         ("enable_flap_detection",         "Flap detection is disabled"),
         ("enable_notifications",          "Notifications are disabled"),
         ("process_performance_data",      "Performance data is disabled"),

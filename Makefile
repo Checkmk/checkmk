@@ -214,6 +214,7 @@ endif
 	    --exclude .gitattributes \
 	    --exclude $(DIST_ARCHIVE) \
 	    --exclude enterprise/agents/plugins/{build,src} \
+	    --exclude enterprise/agents/windows/{build64,build} \
 	    $$EXCLUDES \
 	    * .werks .clang* | tar x -C check-mk-$(EDITION)-$(OMD_VERSION) ; \
 	if [ -f COMMIT ]; then \

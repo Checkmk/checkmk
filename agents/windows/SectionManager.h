@@ -36,13 +36,18 @@ class WinApiAdaptor;
 
 // Configuration for section [winperf]
 struct winperf_counter {
+    winperf_counter(int id_, const std::string &name_) : id(id_), name(name_) {}
     int id;
     std::string name;
 };
 
+inline std::ostream &operator<<(std::ostream &out, const winperf_counter &wpc) {
+    return out << "(id = " << wpc.id << ", name = " << wpc.name << ")";
+}
+
 template <>
-winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
-                                                const std::string &value);
+winperf_counter from_string<winperf_counter>(const WinApiAdaptor &winapi,
+                                             const std::string &value);
 
 std::ostream &operator<<(std::ostream &out,
                          const std::pair<std::string, std::string> &value);
@@ -88,7 +93,7 @@ private:
         _realtime_sections;
     KeyedListConfigurable<std::string> _script_local_includes;
     KeyedListConfigurable<std::string> _script_plugin_includes;
-    ListConfigurable<std::vector<winperf_counter *>> _winperf_counters;
+    ListConfigurable<std::vector<winperf_counter>> _winperf_counters;
     const Environment &_env;
     Logger *_logger;
     const WinApiAdaptor &_winapi;

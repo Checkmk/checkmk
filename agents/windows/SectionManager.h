@@ -60,7 +60,6 @@ class SectionManager {
 public:
     SectionManager(Configuration &config, OnlyFromConfigurable &only_from,
                    Logger *logger, const WinApiAdaptor &winapi);
-    ~SectionManager() { _sections.clear(); }
 
     void emitConfigLoaded();
     void loadDynamicSections();

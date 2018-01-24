@@ -146,7 +146,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
 
     def _decrypt_package(self, encrypted_pkg, encryption_key):
-        from Crypto.Cipher import AES
+        from Cryptodome.Cipher import AES
         from hashlib import md5
 
         unpad = lambda s : s[0:-ord(s[-1])]

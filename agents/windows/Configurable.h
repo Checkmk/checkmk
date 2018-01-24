@@ -13,6 +13,10 @@ class WinApiAdaptor;
 class ConfigurableBase {
 public:
     explicit ConfigurableBase(const WinApiAdaptor &winapi) : _winapi(winapi) {}
+    virtual ~ConfigurableBase() = default;
+    ConfigurableBase(const ConfigurableBase &) = delete;
+    ConfigurableBase &operator=(const ConfigurableBase &) = delete;
+
     virtual void feed(const std::string &key, const std::string &value) = 0;
     virtual void output(const std::string &key, std::ostream &out) const = 0;
     virtual void startFile() = 0;
@@ -31,7 +35,7 @@ public:
         config.reg(section, key, this);
     }
 
-    ~Configurable() {}
+    virtual ~Configurable() = default;
 
     ValueT *operator->() { return &_value; }
 
@@ -74,6 +78,8 @@ public:
         : ConfigurableBase(winapi) {
         config.reg(section, key, this);
     }
+
+    virtual ~ListConfigurable() = default;
 
     ContainerT *operator->() { return &_values; }
 
@@ -156,6 +162,8 @@ public:
         config.reg(section, key, this);
     }
 
+    virtual ~KeyedListConfigurable() = default;
+
     virtual void feed(const std::string &var,
                       const std::string &value) override {
         size_t pos = var.find_first_of(" ");
@@ -225,6 +233,8 @@ public:
         : SuperT(config, section, key, winapi)
         , _mapFunction(mapFunction)
         , _split_char(split_char) {}
+
+    virtual ~SplittingListConfigurable() = default;
 
     virtual void feed(const std::string &key,
                       const std::string &value) override {

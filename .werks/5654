@@ -1,0 +1,18 @@
+Title: Fixed XSS on the site management page
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1516802216
+
+When using the WATO configuration it was possible to create a site on
+the distributed monitoring page which uses with javascript code in
+it's alias. When this site was later displayed in the site tables, the
+javascript code could be executed in the browsers context of the user
+viewing the table.
+
+The insertion of the javascript code is only possible for authenticated
+users with the permission to configure Check_MK sites.

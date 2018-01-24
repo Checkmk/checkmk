@@ -48,6 +48,10 @@ class PerfValue(Tuploid):
     def tuple(self):
         return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
 
+    def __repr__(self):
+        return "PerfValue(%s, %s, %s, %s, %s, %s)" % (self.key, self.value, self.warn,
+                                                      self.crit, self.minimum, self.maximum)
+
 
 class BasicCheckResult(Tuploid):
     """
@@ -61,7 +65,7 @@ class BasicCheckResult(Tuploid):
     def __init__(self, status, infotext, perfdata=None):
         """We perform some basic consistency checks during initialization"""
 
-        assert status in [0,1,2,3]
+        assert status in [0, 1, 2, 3]
         assert type(infotext) == str
         assert "\n" not in infotext
         self.status = status
@@ -71,14 +75,20 @@ class BasicCheckResult(Tuploid):
 
             self.perfdata = []
             for entry in perfdata:
-                assert type(entry) == tuple
-                self.perfdata.append(PerfValue(*entry))
+                assert type(entry) in [tuple, PerfValue]
+                if type(entry) is tuple:
+                    self.perfdata.append(PerfValue(*entry))
+                else:
+                    self.perfdata.append(entry)
         else:
             self.perfdata = None
 
     @property
     def tuple(self):
         return (self.status, self.infotext, self.perfdata)
+
+    def __repr__(self):
+        return 'BasicCheckResult(%s, "%s", %s)' % (self.status, self.infotext, self.perfdata)
 
 
 class CheckResult(object):

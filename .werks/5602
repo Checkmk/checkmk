@@ -1,0 +1,10 @@
+Title: ups_modulys_alarms: Make check handle devices outputting NULL instead of integer type flags on some values
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p24
+Date: 1516812347
+Class: fix
+
+

@@ -14,11 +14,11 @@ MODULES += setuptools-38.4.0.zip  # needed by rrdtool bindings
 # Modules really needed on all platforms
 MODULES += pysphere-0.1.7.zip
 MODULES += pyasn1-0.4.2.tar.gz
-MODULES += pycryptodome-3.4.7.tar.gz
+MODULES += pycryptodomex-3.4.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz # needed by pysmi
 MODULES += ply-3.10.tar.gz # needed by pysmi
 MODULES += pysmi-0.2.2.tar.gz # needed by EC (for trap translation)
-MODULES += pysnmp-4.3.5.tar.gz # needed by EC (for trap translation)
+MODULES += pysnmp-4.4.4.tar.gz # needed by EC (for trap translation)
 
 MODULES += setuptools-git-1.2.tar.gz # needed for pymssql
 MODULES += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
@@ -42,10 +42,10 @@ MODULES += psycopg2-2.6.2.tar.gz # needed by check_sql
 MODULES += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 MODULES += pycparser-2.18.tar.gz # needed for cffi
 MODULES += enum34-1.1.6.tar.gz # needed for cffi
-MODULES += cffi-1.11.3.tar.gz # needed by e.g. Pillow
-MODULES += Pillow-3.4.2.tar.gz # needed by reportlab (pillow>=2.4.0)
+MODULES += cffi-1.11.4.tar.gz # needed by e.g. Pillow
+MODULES += Pillow-5.0.0.tar.gz # needed by reportlab (pillow>=2.4.0)
 MODULES += pip-9.0.1.tar.gz # needed by reportlab (pip>=1.4.1)
-MODULES += reportlab-3.3.0.tar.gz # needed by reporting
+MODULES += reportlab-3.4.0.tar.gz # needed by reporting
 MODULES += PyPDF2-1.26.0.tar.gz # needed by reporting
 
 MODULES += npyscreen-4.10.5.tar.gz # needed for mkbench
@@ -104,10 +104,10 @@ MODULES+=requests-2.13.0.tar.gz
 # Has requests as dependency -> must be built after
 MODULES += pyOpenSSL-16.2.0.tar.gz
 # Added for check_bi_aggr with kerberos support
-MODULES+=pykerberos-1.1.14.tar.gz
+MODULES+=pykerberos-1.2.1.tar.gz
 MODULES+=requests-kerberos-0.11.0.tar.gz
 # Added for tinkerforge special agent
-MODULES+=tinkerforge-2.1.11.tar.gz
+MODULES+=tinkerforge-2.1.15.tar.gz
 # Added for check_sftp
 MODULES+=paramiko-2.1.2.tar.gz
 

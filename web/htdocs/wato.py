@@ -5436,7 +5436,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             if site_url:
                 html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
 
-            table.cell(_("Site"), site.get("alias", site_id))
+            table.text_cell(_("Site"), site.get("alias", site_id))
 
             # Livestatus
             table.cell(_("Status"), css="narrow nobr")
@@ -9414,8 +9414,8 @@ class ModeDistributedMonitoring(ModeSites):
 
 
     def _page_basic_settings(self, site_id, site):
-        table.cell(_("ID"), site_id)
-        table.cell(_("Alias"), site.get("alias", ""))
+        table.text_cell(_("ID"), site_id)
+        table.text_cell(_("Alias"), site.get("alias", ""))
 
 
     def _page_livestatus_settings(self, site_id, site):
@@ -9432,27 +9432,27 @@ class ModeDistributedMonitoring(ModeSites):
         # Status host
         if site.get("status_host"):
             sh_site, sh_host = site["status_host"]
-            table.cell(_("Status host"), "%s/%s" % (sh_site, sh_host))
+            table.text_cell(_("Status host"), "%s/%s" % (sh_site, sh_host))
         else:
-            table.cell(_("Status host"))
+            table.text_cell(_("Status host"))
 
         # Disabled
         if site.get("disabled", False) == True:
-            table.cell(_("Disabled"), "<b>%s</b>" % _("yes"))
+            table.text_cell(_("Disabled"), "<b>%s</b>" % _("yes"))
         else:
-            table.cell(_("Disabled"), _("no"))
+            table.text_cell(_("Disabled"), _("no"))
 
         # Timeout
         if "timeout" in site:
-            table.cell(_("Timeout"), _("%d sec") % int(site["timeout"]), css="number")
+            table.text_cell(_("Timeout"), _("%d sec") % int(site["timeout"]), css="number")
         else:
-            table.cell(_("Timeout"), "")
+            table.text_cell(_("Timeout"), "")
 
         # Persist
         if site.get("persist", False):
-            table.cell(_("Pers."), "<b>%s</b>" % _("yes"))
+            table.text_cell(_("Pers."), "<b>%s</b>" % _("yes"))
         else:
-            table.cell(_("Pers."), _("no"))
+            table.text_cell(_("Pers."), _("no"))
 
 
     def _page_replication_configuration(self, site_id, site):
@@ -9465,7 +9465,7 @@ class ModeDistributedMonitoring(ModeSites):
                 repl += ", " + _("MKPs")
         else:
             repl = ""
-        table.cell(_("Replication"), repl)
+        table.text_cell(_("Replication"), repl)
 
         # Login-Button for Replication
         table.cell(_("Login"))

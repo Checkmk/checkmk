@@ -35,48 +35,22 @@
 
 #define __STDC_FORMAT_MACROS
 
-Configuration::Configuration(const Environment &env) : _environment(env) {}
-
-Configuration::~Configuration() {}
-
 void Configuration::readSettings() {
-    for (const auto &cfg : _configurables) {
-        for (auto entry : cfg.second) {
-            entry->startFile();
+    for (bool local : {false, true}) {
+        for (const auto &cfg : _configurables) {
+            for (auto &entry : cfg.second) {
+                entry->startFile();
+            }
         }
+
+        readConfigFile(configFileName(local, _environment));
     }
-
-    readConfigFile(configFileName(false, _environment));
-
-    for (const auto &cfg : _configurables) {
-        for (auto entry : cfg.second) {
-            entry->startFile();
-        }
-    }
-
-    readConfigFile(configFileName(true, _environment));
 }
 
 void Configuration::reg(const char *section, const char *key,
                         ConfigurableBase *cfg) {
     _configurables[std::pair<std::string, std::string>(section, key)].push_back(
-        cfg);
-}
-
-void Configuration::deregister(const char *section, const char *key,
-                               ConfigurableBase *cfg) {
-    auto map_iter =
-        _configurables.find(std::pair<std::string, std::string>(section, key));
-    if (map_iter != _configurables.end()) {
-        for (auto iter = map_iter->second.begin();
-             iter != map_iter->second.end(); ++iter) {
-            if (cfg == *iter) {
-                map_iter->second.erase(iter);
-                break;
-            }
-        }
-    }
-    // if there is nothing to deregister that is actually a usage error
+        std::unique_ptr<ConfigurableBase>(cfg));
 }
 
 std::string Configuration::configFileName(bool local, const Environment &env) {
@@ -96,25 +70,27 @@ bool Configuration::checkHostRestriction(char *patterns) {
 }
 
 void Configuration::outputConfigurables(std::ostream &out) {
-    std::map<std::string, std::map<std::string, ConfigurableBase *>> config_map;
+    using ConfigMap =
+        std::map<std::string, std::reference_wrapper<ConfigurableBase>>;
+    std::map<std::string, ConfigMap> config_map;
 
     for (const auto &kv : _configurables) {
         std::string section, key;
         tie(section, key) = kv.first;
         if (config_map.find(section) == config_map.end()) {
-            config_map[section] = std::map<std::string, ConfigurableBase *>();
+            config_map[section] = {};
         }
         // this serializes only the first configurable registered under that
         // name,
         // if there are multiple with different mechanisms, this may be
         // confusing
-        config_map[section][key] = kv.second[0];
+        config_map[section].emplace(key, *kv.second[0]);
     }
 
     for (const auto &section : config_map) {
         out << "[" << section.first << "]\n";
         for (const auto &keys : section.second) {
-            keys.second->output(keys.first, out);
+            keys.second.get().output(keys.first, out);
         }
     }
 }
@@ -182,7 +158,7 @@ void Configuration::readConfigFile(const std::string &filename) {
                 auto map_iter = _configurables.find(
                     config_key(section, std::string(variable, key_len)));
                 if (map_iter != _configurables.end()) {
-                    for (auto cfg : map_iter->second) {
+                    for (auto &cfg : map_iter->second) {
                         try {
                             cfg->feed(variable, value);
                             found = true;

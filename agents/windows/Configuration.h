@@ -26,6 +26,7 @@
 #define Configuration_h
 
 #include <map>
+#include <memory>
 #include "SettingsCollector.h"
 
 class ConfigurableBase;
@@ -61,22 +62,23 @@ check = DISK_C: mrpe/check_disk -w C:
 check = MEM mrpe/check_mem -w 10 -c 20
  */
 class Configuration {
-    typedef std::pair<std::string, std::string> ConfigKey;
+    using ConfigKey = std::pair<std::string, std::string>;
+    using ConfigurableKey = std::pair<std::string, std::string>;
+    using ConfigurableMap =
+        std::map<ConfigurableKey,
+                 std::vector<std::unique_ptr<ConfigurableBase>>>;
 
     ConfigKey config_key(const std::string &section, const std::string &key) {
         return std::make_pair(section, key);
     }
 
 public:
-    Configuration(const Environment &env);
-    ~Configuration();
+    Configuration(const Environment &env) : _environment(env) {}
 
     void outputConfigurables(std::ostream &out);
     void readSettings();
 
     void reg(const char *section, const char *key, ConfigurableBase *cfg);
-    void deregister(const char *section, const char *key,
-                    ConfigurableBase *cfg);
     inline const Environment &getEnvironment() const { return _environment; }
 
     static std::string configFileName(bool local, const Environment &env);
@@ -87,8 +89,7 @@ private:
     bool checkHostRestriction(char *patterns);
 
 private:
-    typedef std::pair<std::string, std::string> ConfigurableKey;
-    std::map<ConfigurableKey, std::vector<ConfigurableBase *>> _configurables;
+    ConfigurableMap _configurables;
 
     const Environment &_environment;
 };

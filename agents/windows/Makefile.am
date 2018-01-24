@@ -34,7 +34,6 @@ unittest: WindowsAgentTest$(EXEEXT)
 	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
 
 libcheck_mk_agent_a_SOURCES = \
-        Configurable.cc \
         Configuration.cc \
         CrashHandler.cc \
         Crypto.cc \

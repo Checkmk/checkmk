@@ -941,7 +941,20 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_plugin_name)
 
-    section_content = multi_host_sections.get_section_content(hostname, ipaddress, check_plugin_name, for_discovery=True)
+    try:
+        section_content = multi_host_sections.get_section_content(hostname, ipaddress,
+                                                    check_plugin_name, for_discovery=True)
+    except MKParseFunctionError, e:
+        if cmk.debug.enabled():
+            x = e.exc_info()
+            raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
+
+        if on_error == "warn":
+            section_name = checks.section_name_of(check_plugin_name)
+            console.warning("Exception while parsing agent section '%s': %s\n" % (section_name, e))
+        elif on_error == "raise":
+            raise
+        return []
 
     if section_content is None: # No data for this check type
         return []

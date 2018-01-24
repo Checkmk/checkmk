@@ -1,0 +1,10 @@
+Title: Discovery: Display parse function errors on console instead of suppressing
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516806215
+Class: fix
+
+

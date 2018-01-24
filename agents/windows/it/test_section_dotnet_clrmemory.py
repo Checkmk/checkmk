@@ -35,8 +35,8 @@ def expected_output():
          r'Timestamp_Sys100NS')
     ],
                  repeat(r'\d+,,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'[\w\#]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'\-?\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'))
+                        r'[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+                        r'\d+,\-?\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'))
 
 
 def test_section_dotnet_clrmemory(testconfig, expected_output, actual_output,

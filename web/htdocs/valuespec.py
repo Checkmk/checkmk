@@ -42,7 +42,7 @@ import socket
 import ipaddress
 from lib import *
 import cmk.defines as defines
-from Crypto.PublicKey import RSA
+from Cryptodome.PublicKey import RSA
 
 try:
     import simplejson as json

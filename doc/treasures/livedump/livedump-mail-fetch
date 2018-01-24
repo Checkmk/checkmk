@@ -33,9 +33,9 @@ encrypt    = None
 
 if encrypt:
     from base64 import b64decode
-    from Crypto import Random
-    from Crypto.Hash import MD5
-    from Crypto.Cipher import AES
+    from Cryptodome import Random
+    from Cryptodome.Hash import MD5
+    from Cryptodome.Cipher import AES
 
 M = poplib.POP3_SSL(pop_server)
 M.user(pop_user)

@@ -53,9 +53,9 @@ from tarfile import TarFile, ReadError
 from hashlib import md5
 
 from OpenSSL import crypto
-from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.PublicKey import RSA
-import Crypto.Util.number
+from Cryptodome.Cipher import AES, PKCS1_OAEP
+from Cryptodome.PublicKey import RSA
+import Cryptodome.Util.number
 
 try:
     import simplejson as json

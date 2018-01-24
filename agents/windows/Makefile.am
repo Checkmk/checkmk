@@ -19,6 +19,7 @@ build_version: $(check_mk_agent_SOURCES:.cc=.o)
 	echo $$(( $$(cat $(VPATH)/build_version) + 1 )) > $(VPATH)/build_version
 
 check_mk_agent.rc: $(VPATH)/check_mk_agent.rc.in build_version
+	echo "BUILD VERSION: $$(cat $(VPATH)/build_version)"
 	sed -e "s/%VERSION%/$(VERSION)/g" \
 	    -e "s/%YEAR%/$$(date +%Y)/g" \
 	    -e "s/%BUILD_VERSION%/$$(cat $(VPATH)/build_version)/g" $< > $@

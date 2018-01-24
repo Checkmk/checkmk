@@ -64,9 +64,9 @@ def check_ups_modulys_alarms(_no_item, _no_params, info):
         '29'    : (2, 'Output breaker open'),
     }
 
+    result = False
     for oidend, flag in info:
-        result = False
-        if flag and int(flag):
+        if flag and flag != "NULL" and int(flag):
             result = True
             yield oiddef[oidend]
 

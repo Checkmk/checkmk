@@ -150,7 +150,6 @@ register_rule(group,
     match = "dict",
 )
 
-#TODO
 register_rule(group,
     "status_data_inventory",
     title=_("Do status data inventory"),

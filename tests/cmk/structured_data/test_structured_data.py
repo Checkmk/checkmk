@@ -539,7 +539,7 @@ def test_structured_data_StructuredDataTree_building_tree():
     (("tree_old_large_ora_tablespaces",
       "tree_new_large_ora_tablespaces_fixed_len",
       "tree_new_large_ora_tablespaces_variable_len"),
-     (0.8, 0.5, 0.002),
+     (1.2, 0.5, 0.002),
      (82523, 82523, 82517),
      ((0, 16272, 0), (16270, 0, 16272)),
     ),

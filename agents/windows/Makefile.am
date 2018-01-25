@@ -16,7 +16,7 @@ WindowsAgentTest_LDADD = libcheck_mk_agent.a -lgtest -lgmock $(LD_COMMON)
 wmitest_LDADD = $(LD_COMMON)
 
 pytest = /usr/bin/env pytest
-pytest_options = --cache-clear --maxfail=10
+pytest_options = --maxfail=10
 pytest_jenkins = $(pytest_options) --junitxml=$$WORKSPACE/results/junit.xml
 
 build_version: $(check_mk_agent_SOURCES:.cc=.o)
@@ -41,6 +41,7 @@ unittest: WindowsAgentTest$(EXEEXT)
 integrationtest: install-strip
 	cd $(bindir)/it ; \
         rm -f remote.pyc ; \
+        rm -rf __pycache__ ; \
         if [[ $$SUDO_USER == jenkins ]] ; then \
           $(pytest) $(pytest_jenkins) ; \
         else \

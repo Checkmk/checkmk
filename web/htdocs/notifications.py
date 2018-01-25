@@ -97,31 +97,31 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
     if not may_see_notifications:
         return [0]
 
-    query_filters = [
-        "class = 3",
-        "log_type = SERVICE NOTIFICATION RESULT",
-    ]
+    query = ["GET log"]
+    if stat_only:
+        query.append("Stats: log_state != 0")
+    else:
+        query.append("Columns: %s" % " ".join(g_columns))
+        query.append("Filter: log_state != 0")
+
+    query.extend([
+        "Filter: class = 3",
+        "Filter: log_type = SERVICE NOTIFICATION RESULT",
+        "Filter: log_type = HOST NOTIFICATION RESULT",
+        "Or: 2",
+    ])
 
     if before is not None:
-        query_filters.append("time <= %d" % before)
+        query.append("Filter: time <= %d" % before)
     if after is not None:
-        query_filters.append("time >= %d" % after)
+        query.append("Filter: time >= %d" % after)
 
     if may_see_notifications:
         if config.user.may("general.see_failed_notifications"):
             horizon = config.failed_notification_horizon
         else:
             horizon = 86400
-
-        query_filters.append("time > %d" % (int(time.time()) - horizon))
-
-    query = ["GET log"]
-    if stat_only:
-        query.append("Stats: log_state != 0")
-    else:
-        query.append("Columns: %s" % " ".join(g_columns))
-        query_filters.append("log_state != 0")
-    query += ["Filter: %s" % filt for filt in query_filters]
+        query.append("Filter: time > %d" % (int(time.time()) - horizon))
 
     query = "\n".join(query)
 

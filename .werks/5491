@@ -1,0 +1,12 @@
+Title: Show failed host notifications in tactival overview
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p24
+Date: 1516868860
+
+Due to an error in a livestatus query only failed service
+notificaitons were shown.

@@ -1,0 +1,12 @@
+Title: statgrab_net: collect net stats for local zones if dlstat exists
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517496765
+Class: feature
+
+Previously, only the net stats of the global zone were delivered by the
+check_mk_agent of solaris. Now the net stats of local zones are delivered
+as well if dlstat is available.

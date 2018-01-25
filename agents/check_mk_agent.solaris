@@ -250,8 +250,8 @@ then
     statgrab_vars="const. cpu. disk. general. mem. page. swap. user."
     statgrab_sections="cpu disk page"
 
-    # Only collect net stats in global zone.
-    if [ "$zonename" == "global" ]
+    # Collect net stats in the global zone and in local zones if dlstat is present.
+    if [ "$zonename" == "global" ] || type dlstat &>/dev/null
     then
         statgrab_vars="$statgrab_vars net."
         statgrab_sections="$statgrab_sections net"

@@ -27,7 +27,7 @@ def testconfig(request, config):
 def wait_agent():
     def inner():
         # Wait a little so that OpenHardwareMonitorCLI.exe starts properly.
-        time.sleep(1)
+        time.sleep(3)
 
     return inner
 

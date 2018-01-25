@@ -1,0 +1,12 @@
+Title: check_mk_agent.solaris: deliver informations about tmpfs filesystems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516876151
+Class: feature
+
+The check_mk_agent.solaris now additionally delivers informations about
+tmpfs filesystems. This way it can be used together with werk #5523 to
+monitor tmpfs filesystems on Solaris hosts.

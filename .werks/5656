@@ -1,0 +1,10 @@
+Title: Report edit: Add validation that reports can not use layouts from itself
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.4.0p24
+Date: 1516897861
+Class: fix
+
+

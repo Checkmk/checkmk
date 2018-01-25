@@ -613,5 +613,14 @@ def get_management_board_precedence(check_plugin_name):
     else:
         return mgmt_board
 
+
 def do_status_data_inventory_for(hostname):
-    return rulesets.in_binary_hostlist(hostname, config.status_data_inventory)
+    rules = config.active_checks.get('cmk_inv')
+    # 'host_extra_conf' is already cached thus we can
+    # use it after every check cycle.
+    params = rulesets.host_extra_conf(hostname, rules)
+    if params:
+        # Means: Enabled "Do hardware/software inventory",
+        #        => params is at least [{}]
+        return params[0].get('status_data_inventory', True)
+    return False

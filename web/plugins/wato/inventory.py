@@ -60,6 +60,20 @@ register_rule(group,
                                "off - so you will get no notifications in that case."),
                       default_value = 1,
                 )),
+                ("status_data_inventory", DropdownChoice(
+                    title=_("Status data inventory"),
+                    help=_("All hosts configured via this ruleset will do a hardware and "
+                         "software inventory after every check cycle if there's at least "
+                         "one inventory plugin which processes status data. "
+                         "<b>Note:</b> in order to get any useful "
+                         "result for agent based hosts make sure that you have installed "
+                         "the agent plugin <tt>mk_inventory</tt> on these hosts."),
+                    choices=[
+                        (True, _("Do status data inventory")),
+                        (False, _("Do not status data inventory")),
+                    ],
+                    default_value=True,
+                )),
             ]
         ),
         title = _("Do hardware/software Inventory"),
@@ -148,15 +162,4 @@ register_rule(group,
         ]
     ),
     match = "dict",
-)
-
-register_rule(group,
-    "status_data_inventory",
-    title=_("Do status data inventory"),
-    help=_("All hosts configured via this ruleset will do a hardware and "
-         "software inventory after every check cycle if there's at least "
-         "one inventory plugin which processes status data. "
-         "<b>Note:</b> in order to get any useful "
-         "result for agent based hosts make sure that you have installed "
-         "the agent plugin <tt>mk_inventory</tt> on these hosts."),
 )

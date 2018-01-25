@@ -84,20 +84,18 @@ def do_inv(hostnames):
     errors = []
     for hostname in hostnames:
         try:
-            console.verbose("Doing HW/SW-Inventory for %s..." % hostname)
-
             if config.is_cluster(hostname):
                 ipaddress = None
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             do_inv_for(hostname, ipaddress)
-            console.verbose("..OK\n")
+            console.verbose(" OK\n")
         except Exception, e:
             if cmk.debug.enabled():
                 raise
 
-            console.verbose("Failed: %s\n" % e)
+            console.verbose(" Failed: %s\n" % e)
             errors.append("Failed to inventorize %s: %s" % (hostname, e))
         finally:
             for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
@@ -173,6 +171,8 @@ def do_inv_check(options, hostname):
 
 
 def do_inv_for(hostname, ipaddress):
+    console.verbose("Doing HW/SW inventory for %s;" % hostname)
+
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
@@ -185,14 +185,16 @@ def do_inv_for(hostname, ipaddress):
         node["is_cluster"] = False
         _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree)
 
+    inventory_tree.normalize_nodes()
+    old_timestamp = _save_inventory_tree(hostname, inventory_tree)
+    console.verbose(" %s%s%d%s entries;" %
+            (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
+
     if not status_data_tree.is_empty():
         status_data_tree.normalize_nodes()
         _save_status_data_tree(hostname, status_data_tree)
-
-    inventory_tree.normalize_nodes()
-    old_timestamp = _save_inventory_tree(hostname, inventory_tree)
-    console.verbose("..%s%s%d%s entries" %
-            (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
+        console.verbose(" Status data inventory: %s%s%d%s entries;" %
+                (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
 
     _run_inventory_export_hooks(hostname, inventory_tree)
     return old_timestamp, inventory_tree
@@ -219,6 +221,7 @@ def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
 
     multi_host_sections = sources.get_host_sections(hostname, ipaddress)
 
+    console.verbose(" Execute inventory plugins;")
     import cmk_base.inventory_plugins
     for section_name, plugin in cmk_base.inventory_plugins.inv_info.items():
         section_content = multi_host_sections.get_section_content(hostname, ipaddress,
@@ -233,7 +236,7 @@ def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
             # Note: this also excludes existing sections without info..
             continue
 
-        console.verbose(tty.green + tty.bold + section_name + " " + tty.normal)
+        console.verbose(" %s%s%s%s" % (tty.green, tty.bold, section_name, tty.normal))
 
         # Inventory functions can optionally have a second argument: parameters.
         # These are configured via rule sets (much like check parameters).
@@ -254,6 +257,7 @@ def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
         else:
             args = [section_content]
         inv_function(*args, **kwargs)
+    console.verbose(";")
 
 
 def _gather_snmp_check_plugin_names_inventory(hostname, ipaddress, on_error, do_snmp_scan):
@@ -319,12 +323,12 @@ def _save_inventory_tree(hostname, inventory_tree):
     if inventory_tree:
         old_tree = StructuredDataTree().load_from(filepath)
         if old_tree.is_equal(inventory_tree):
-            console.verbose("..unchanged")
+            console.verbose(" unchanged;")
         else:
             if old_tree.is_empty():
-                console.verbose("..new")
+                console.verbose(" new;")
             else:
-                console.verbose("..changed")
+                console.verbose(" changed;")
                 old_time = os.stat(filepath).st_mtime
                 arcdir = "%s/%s" % (inventory_archive_dir, hostname)
                 if not os.path.exists(arcdir):
@@ -361,7 +365,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
     for hookname, ruleset in config.inv_exports.items():
         entries = rulesets.host_extra_conf(hostname, ruleset)
         if entries:
-            console.verbose(", running %s%s%s%s..." % (tty.blue, tty.bold, hookname, tty.normal))
+            console.verbose(" running %s%s%s%s;" % (tty.blue, tty.bold, hookname, tty.normal))
             params = entries[0]
             try:
                 cmk_base.inventory_plugins.inv_export[hookname]["export_function"](hostname, params, inventory_tree.get_raw_tree())

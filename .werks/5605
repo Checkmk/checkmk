@@ -31,10 +31,11 @@ Later in the web GUI both tree objects are merged and visible below 'Inventory'.
 Inventory history is only calculated for the inventory data, not for the
 status data.
 
-In order to use this feature you have to enable the rule
-'Do status data inventory' for a host. When it's enabled Check_MK does a
-HW/Sw inventory for this host after every check cycle if and only if there's
-a inventory plugin which fills up status data tree.
+If the rule 'Do hardware/software inventory' is enabled for a host then
+doing status data inventory is also enabled. In this case Check_MK does a
+HW/SW inventory for this host after every check cycle if and only if there's a
+inventory plugin which fills up status data tree.
+Within above ruleset 'do status data inventory' can be disabled.
 
 Notes for inventory plugin development:
 Previously an inventory plugin used the functions inv_tree_list and inv_tree

@@ -96,4 +96,4 @@ echo "[MAKE-CHROOT LOCK] released"
 # Build the Windows agent within chroot by calling the 'build-agent' script as
 # $SUDO_USER.
 ./do-chroot \
-        "/bin/su - $SUDO_USER -c bash -c 'CHROOT_NAME=$CHROOT_NAME CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR NEW_VERSION=$NEW_VERSION SSH_AUTH_SOCK=$SSH_AUTH_SOCK /$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"
+        "/bin/su - $SUDO_USER -c bash -c 'CHROOT_NAME=$CHROOT_NAME CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR NEW_VERSION=$NEW_VERSION WORKSPACE=$WORKSPACE /$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"

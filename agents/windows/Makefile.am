@@ -42,7 +42,7 @@ integrationtest: install-strip
 	cd $(bindir)/it ; \
         rm -f remote.pyc ; \
         rm -rf __pycache__ ; \
-        if [[ $$SUDO_USER == jenkins ]] ; then \
+        if [[ $$USER == jenkins ]] ; then \
           $(pytest) $(pytest_jenkins) ; \
         else \
           $(pytest) $(pytest_options) ; \

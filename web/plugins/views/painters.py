@@ -1138,6 +1138,13 @@ def paint_time_graph_pnp(row):
                            config.url_prefix() + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts)
 
 
+def time_graph_params():
+    if not metrics.cmk_graphs_possible():
+        return # The method is only available in CEE
+
+    return cmk_time_graph_params()
+
+
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("Service Graphs"),
     "columns" : [ "host_name", "service_description", "service_perf_data", "service_metrics", "service_check_command" ],

@@ -196,11 +196,13 @@ class CMKVersion(object):
             print("Waiting for other dpkg process to complete...\n")
             time.sleep(1)
 
-        cmd = "sudo /usr/bin/gdebi --non-interactive %s" % temp_package_path
-        print(cmd)
-        sys.stdout.flush()
-        if os.system(cmd) >> 8 != 0:
-            raise Exception("Failed to install package: %s" % temp_package_path)
+        # Improve the protection against other test runs installing packages
+        with lockfile.FileLock("/tmp/cmk-test-install-version.lock"):
+            cmd = "sudo /usr/bin/gdebi --non-interactive %s" % temp_package_path
+            print(cmd)
+            sys.stdout.flush()
+            if os.system(cmd) >> 8 != 0:
+                raise Exception("Failed to install package: %s" % temp_package_path)
 
         os.unlink(temp_package_path)
 

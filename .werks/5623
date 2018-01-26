@@ -1,0 +1,10 @@
+Title: lnx_if: Do not ignore interface any more if no speed information is available
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.4.0p24
+Date: 1516960129
+Class: fix
+
+

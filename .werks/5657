@@ -1,0 +1,10 @@
+Title: Custom user attributes that are not editable by the user can now edited by the admin
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p24
+Date: 1516958049
+Class: fix
+
+

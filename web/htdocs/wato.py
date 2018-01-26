@@ -10500,7 +10500,7 @@ def mode_edit_user(phase):
 
             vs = attr['valuespec']
             forms.section(_u(vs.title()))
-            if attr['user_editable'] and not is_locked(name):
+            if not is_locked(name):
                 vs.render_input("ua_" + name, user.get(name, vs.default_value()))
             else:
                 html.write(vs.value_to_text(user.get(name, vs.default_value())))

@@ -6139,20 +6139,18 @@ def configured_aux_tags():
     return get_effective_aux_tags(config.wato_aux_tags)
 
 
-# When a tag group is not defined in the users tag groups,
-# it must be a builtin tag group
 def is_builtin_host_tag_group(tag_group_id):
-    for tag_group in config.wato_host_tags:
+    for tag_group in builtin_host_tags:
         if tag_group[0] == tag_group_id:
-            return False
-    return True
+            return True
+    return False
 
 
 def is_builtin_aux_tag(taggroup_id):
-    for builtin_taggroup in config.wato_aux_tags:
+    for builtin_taggroup in builtin_aux_tags:
         if builtin_taggroup[0] == taggroup_id:
-            return False
-    return True
+            return True
+    return False
 
 
 def save_hosttags(hosttags, auxtags):

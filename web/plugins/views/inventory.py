@@ -1494,11 +1494,11 @@ class NodeRenderer(object):
 
 class AttributeRenderer(NodeRenderer):
     def _show_numeration_value(self, invpath, value):
-        html.write(show_child_value(invpath, value))
+        show_child_value(invpath, value)
 
 
     def _show_attribute(self, invpath, value):
-        html.write(show_child_value(invpath, value))
+        show_child_value(invpath, value)
 
 
 
@@ -1506,26 +1506,26 @@ class DeltaNodeRenderer(NodeRenderer):
     def _show_numeration_value(self, invpath, value):
         if value is None:
             value = (None, None)
-        html.write(self._show_attribute(invpath, value))
+        self._show_attribute(invpath, value)
 
 
     def _show_attribute(self, invpath, value):
         old, new = value
         if old is None and new is not None:
             html.open_span(class_="invnew")
-            html.write(show_child_value(invpath, new))
+            show_child_value(invpath, new)
             html.close_span()
         elif old is not None and new is None:
             html.open_span(class_="invold")
-            html.write(show_child_value(invpath, old))
+            show_child_value(invpath, old)
             html.close_span()
         elif old is not None and new is not None:
             html.open_span(class_="invold")
-            html.write(show_child_value(invpath, old))
+            show_child_value(invpath, old)
             html.close_span()
             html.write(u" → ")
             html.open_span(class_="invnew")
-            html.write(show_child_value(invpath, new))
+            show_child_value(invpath, new)
             html.close_span()
         elif old == new:
-            html.write(show_child_value(invpath, old))
+            show_child_value(invpath, old)

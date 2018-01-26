@@ -74,13 +74,14 @@ class CMKVersion(object):
         self._edition = edition
         self._branch  = branch
 
-        self.set_version(version, branch)
-
         if len(edition) != 3:
             raise Exception("Invalid edition: %s. Must be short notation (cee, cre, ...)")
         self.edition_short = edition
 
         self._credentials = ("d-vonheute", "lOBFsgAH")
+
+        self.set_version(version, branch)
+
 
 
     def get_default_version(self):
@@ -93,12 +94,18 @@ class CMKVersion(object):
 
     def set_version(self, version, branch):
         if version in [ CMKVersion.DAILY, CMKVersion.GIT ]:
-            date_part = time.strftime("%Y.%m.%d")
+            for days_ago in range(7): # Try a week's worth of versions. If none of these exist, there's likely another issue at play.
+                localtime = time.localtime(time.time() - 60*60*24*days_ago)
 
-            if branch != "master":
-                self.version = "%s-%s" % (branch, date_part)
-            else:
-                self.version = date_part
+                date_part = time.strftime("%Y.%m.%d", localtime)
+
+                if branch != "master":
+                    self.version = "%s-%s" % (branch, date_part)
+                else:
+                    self.version = date_part
+
+                if self._version_available():
+                    break
 
         elif version == CMKVersion.DEFAULT:
             self.version = self.get_default_version()
@@ -165,6 +172,12 @@ class CMKVersion(object):
 
     def is_installed(self):
         return os.path.exists(self.version_path())
+
+
+    def _version_available(self):
+        response = requests.head(self.package_url(), auth=self._credentials, verify=False)
+        available_on_server = response.status_code == 200
+        return self.is_installed() or available_on_server
 
 
     def install(self):

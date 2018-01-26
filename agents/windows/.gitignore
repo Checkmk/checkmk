@@ -19,4 +19,4 @@ chroot
 *.exe
 *.msi
 Makefile.in
-
+junit.xml

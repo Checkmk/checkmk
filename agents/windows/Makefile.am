@@ -17,7 +17,7 @@ wmitest_LDADD = $(LD_COMMON)
 
 pytest = /usr/bin/env pytest
 pytest_options = --maxfail=10
-pytest_jenkins = $(pytest_options) --junitxml=$$WORKSPACE/results/junit.xml
+pytest_jenkins = $(pytest_options) --junitxml=$(bindir)/junit.xml
 
 build_version: $(check_mk_agent_SOURCES:.cc=.o)
 	echo $$(( $$(cat $(VPATH)/build_version) + 1 )) > $(VPATH)/build_version

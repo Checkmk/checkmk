@@ -1,0 +1,13 @@
+Title: nfsmounts, cifsmounts: increase timeout of nfsmounts and deliver correct status details
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1516970190
+Class: fix
+
+The waiting time of nfsmounts was increased to prevent agent timeouts.
+Furthermore, the common check function was rewritten to deliver correct error
+messages in the status details. E.g. a timeout in the agent now shows the
+message "Server not responding" instead of "Stale fs handle".

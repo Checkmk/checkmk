@@ -1,0 +1,10 @@
+Title: Master control snapin: Improved handling of half configured sites
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p24
+Date: 1516968363
+Class: fix
+
+

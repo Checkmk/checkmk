@@ -52,45 +52,38 @@ def inventory_network_fs_mounts(parsed):
 
 
 def check_network_fs_mounts(item, params, parsed):
-    if item in parsed:
-        attrs = parsed[item]
-        state = attrs["state"]
-        data = attrs.get("data")
+    attrs = parsed.get(item)
+    if not attrs:
+        return 3, "%s not mounted" % item
 
-        if state == "Permission denied" or data is None:
-            return 2, "Permissions denied"
+    state = attrs["state"]
+    if state == "Permission denied":
+        return 2, "Permission denied"
+    elif state == "hanging":
+        return 2, "Server not responding"
+    elif state != 'ok':
+        return 2, "Unknown state"
 
-        size_blocks_, unused_, free_blocks_, block_size_ = data
-        if size_blocks_ == "-":
-            if state == 'ok':
-               return 0, "mount seems OK"
-            else:
-               return 2, "Server not responding"
+    data = attrs["data"]
+    if data == ['-', '-', '-', '-']:
+        return 0, "Mount seems OK"
+    size_blocks, _, free_blocks, blocksize = map(int, data)
 
-        size_blocks = int(size_blocks_)
-        free_blocks = int(free_blocks_) # for non-root user
-        blocksize   = int(block_size_)
+    if size_blocks <= 0 or free_blocks < 0 or blocksize > 1024 * 1024:
+        return 2, "Stale fs handle"
 
-        if size_blocks <= 0 or free_blocks < 0 or blocksize > 1024*1024:
-            return 2, "Stale fs handle"
+    size_bytes = size_blocks * blocksize
+    free_bytes = free_blocks * blocksize
+    used_bytes = size_bytes - free_bytes
+    used_perc = 100.0 * used_bytes / size_bytes
 
-        size_bytes = size_blocks * blocksize
-        free_bytes = free_blocks * blocksize
-        used_bytes = size_bytes - free_bytes
-        used_perc  = 100.0 * used_bytes / size_bytes
-        perfdata   = None
-        if params is not None and params.get("has_perfdata"):
-            perfdata = [("fs_size", size_bytes), ("fs_used", used_bytes)]
+    perfdata = None
+    if params is not None and params.get("has_perfdata"):
+        perfdata = [("fs_size", size_bytes), ("fs_used", used_bytes)]
 
-        if state == 'ok':
-            if size_bytes == 0:
-                return 0, "server is responding", perfdata
-
-            return 0, "%.1f%% used (%s of %s)" % \
-                      (used_perc, get_bytes_human_readable(used_bytes),
-                       get_bytes_human_readable(size_bytes)), perfdata
-
-        else:
-            return 2, "server not responding", perfdata
-
-    return 3, "%s not mounted" % item
+    infotext = "%.1f%% used (%s of %s)" % (
+        used_perc,
+        get_bytes_human_readable(used_bytes),
+        get_bytes_human_readable(size_bytes)
+    )
+    return 0, infotext, perfdata

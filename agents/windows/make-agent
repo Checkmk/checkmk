@@ -87,7 +87,7 @@ echo "CHROOT_PATH is $CHROOT_PATH"
     fi
 
     # Copy windows test-specific ssh key pair from ~$SUDO_USER/.ssh to chroot.
-    if [[ ! -f "$CHROOT_PATH/home/$SUDO_USER/.ssh/id_rsa" ]] ; then
+    if [[ "$targets" == *integrationtest* && ! -f "$CHROOT_PATH/home/$SUDO_USER/.ssh/id_rsa" ]] ; then
         $script_dir/setup-ssh
     fi
 ) 200>/var/lock/cmk-make-agent_${CHROOT_PATH//\//-}.lock

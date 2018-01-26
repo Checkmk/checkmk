@@ -252,10 +252,10 @@ def inv_paint_bytes_rounded(b):
 
 
 def inv_paint_nic_speed(bits_per_second):
-    if bits_per_second == 0:
-        return "", ""
+    if bits_per_second:
+        return "number", nic_speed_human_readable(int(bits_per_second))
     else:
-        return "number", nic_speed_human_readable(bits_per_second)
+        return "", ""
 
 
 def inv_paint_if_oper_status(oper_status):

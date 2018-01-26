@@ -58,7 +58,6 @@
                             (for those functions not available on all windowses)
 
 ** Remaining files are not part of the agent
-    nowin.cc              - converts time units
     crash.cc              - causes a crash
     perftest.cc           - commandline tool to test perfcounter interface (old api)
     pdhtest.cc            - commandline tool to test perfcounter interface (pdh api)

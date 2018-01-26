@@ -170,7 +170,7 @@ check_mk_agent-64.exe.versioned:
 # -----------------------------------------------------------------------------
 # NSIS installer will be removed and replaced by multiarch MSI installer
 # -----------------------------------------------------------------------------
-install_agent.exe: check_mk_agent.exe.versioned crash.exe nowin.exe
+install_agent.exe: check_mk_agent.exe.versioned crash.exe
 	if ! which makensis; then \
 	    echo "ERROR: makensis missing. Please install the nsis package." ; \
 	    exit 1 ; \
@@ -178,7 +178,7 @@ install_agent.exe: check_mk_agent.exe.versioned crash.exe nowin.exe
 	makensis installer.nsi
 	chmod +x install_agent.exe
 
-install_agent-64.exe: check_mk_agent-64.exe.versioned crash.exe nowin.exe
+install_agent-64.exe: check_mk_agent-64.exe.versioned crash.exe
 	if ! which makensis; then \
 	    echo "ERROR: makensis missing. Please install the nsis package." ; \
 	    exit 1 ; \
@@ -192,9 +192,6 @@ msi_installer:
 	chmod +x check_mk_agent.msi
 
 crash.exe: crash.cc
-	$(CXX) -o $@ $<
-
-nowin.exe: nowin.cc
 	$(CXX) -o $@ $<
 
 clean:

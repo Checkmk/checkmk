@@ -1,0 +1,13 @@
+Title: Windows agent: Removed unused nowin.exe
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p24
+Date: 1516976301
+Class: fix
+
+The <tt>nowin.exe</tt> was shipped as part of the windows agent for a long time.
+This unused file was now reported as being infected with some kind of virus/trojan,
+which was a false positive in all cases we had a look at. To get rid of these false
+positives we have decided to drop this file now.

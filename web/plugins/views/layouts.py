@@ -336,7 +336,7 @@ def calculate_grouping_of_services(rows):
 
 def try_to_match_group(row):
     for group_spec in config.service_view_grouping:
-        if row.get('service_description', '') != '' \
+        if row.get('service_description') \
            and re.match(group_spec["pattern"], row["service_description"]):
             return group_spec
 

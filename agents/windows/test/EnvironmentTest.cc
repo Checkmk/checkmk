@@ -2,6 +2,7 @@
 #include <functional>
 #include <string>
 #include <tuple>
+#include "CustomActions.h"
 #include "Environment.h"
 #include "MockLogger.h"
 #include "MockWinApi.h"
@@ -149,13 +150,6 @@ TEST_F(wa_EnvironmentTest, constructor_OtherDirectories) {
     for (const auto &entry : testEntries) {
         EXPECT_EQ(get<0>(entry), get<2>(entry)(&testEnvironment));
     }
-}
-
-ACTION_TEMPLATE(SetCharBuffer, HAS_1_TEMPLATE_PARAMS(unsigned, uIndex),
-                AND_1_VALUE_PARAMS(data)) {
-    // Courtesy of Microsoft: A function takes a char** param
-    // but is declared as taking char* (>sigh<)
-    *reinterpret_cast<char **>(std::get<uIndex>(args)) = data;
 }
 
 TEST_F(wa_EnvironmentTest, constructor_OtherDirectories_creation_failed) {

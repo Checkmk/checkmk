@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -81,6 +81,7 @@
 #include "SectionManager.h"
 #include "Thread.h"
 #include "WinApi.h"
+#include "WritableFile.h"
 #include "dynamic_func.h"
 #include "stringutil.h"
 #include "types.h"
@@ -147,6 +148,11 @@ void RunImmediate(const char *mode, int argc, char **argv);
 //  | Internal linkage                                                     |
 //  '----------------------------------------------------------------------'
 namespace {
+
+class UnpackError : public std::runtime_error {
+public:
+    UnpackError(const std::string &what) : std::runtime_error(what) {}
+};
 
 bool do_file = false;
 static FILE *fileout;
@@ -790,126 +796,133 @@ void show_version() { printf("Check_MK_Agent version %s\n", check_mk_version); }
 
 void show_config() { s_config->parser.outputConfigurables(std::cout); }
 
-void do_unpack_plugins(const char *plugin_filename, const Environment &env) {
-    FILE *file = fopen(plugin_filename, "rb");
-    if (!file) {
-        printf("Unable to open Check_MK-Agent package %s\n", plugin_filename);
-        exit(1);
+namespace {
+
+const char *integrityErrorMsg =
+    "There was an error on unpacking the Check_MK-Agent package: File "
+    "integrity is broken.\n"
+    "The file might have been installed partially!";
+
+const char *uninstallInfo =
+    "REM * If you want to uninstall the plugins which were installed "
+    "during the\n"
+    "REM * last 'check_mk_agent.exe unpack' command, just execute this "
+    "script\n\n";
+
+std::string managePluginPath(const std::string &filePath,
+                             const Environment &env) {
+    // Extract basename and dirname from path
+    auto pos = filePath.find_last_of("/");
+    const std::string basename =
+        pos == std::string::npos ? filePath : filePath.substr(pos + 1);
+    const std::string dirname =
+        pos == std::string::npos ? "" : filePath.substr(0, pos);
+    std::string pluginPath{env.agentDirectory() + "\\"};
+
+    if (!dirname.empty()) {
+        pluginPath += dirname;
+        s_winapi.CreateDirectory(pluginPath.c_str(), nullptr);
+        pluginPath += "\\";
     }
 
-    char uninstall_file_path[512];
-    snprintf(uninstall_file_path, 512, "%s\\uninstall_plugins.bat",
-             env.agentDirectory().c_str());
-    FILE *uninstall_file = fopen(uninstall_file_path, "w");
-    fprintf(uninstall_file,
-            "REM * If you want to uninstall the plugins which were installed "
-            "during the\n"
-            "REM * last 'check_mk_agent.exe unpack' command, just execute this "
-            "script\n\n");
+    pluginPath += basename;
 
-    bool had_error = false;
-    while (true) {
-        int read_bytes;
-        BYTE filepath_length;
-        int content_length;
-        BYTE *filepath;
-        BYTE *content;
+    return pluginPath;
+}
 
-        // Read Filename
-        read_bytes = fread(&filepath_length, 1, 1, file);
-        if (read_bytes != 1) {
-            if (feof(file))
-                break;
-            else {
-                had_error = true;
-                break;
-            }
+template <typename LengthT>
+std::vector<BYTE> readData(std::ifstream &ifs,
+                           const std::function<void(LengthT)> &check =
+                               [](LengthT) {}) {
+    LengthT length = 0;
+    ifs.read(reinterpret_cast<char *>(&length), sizeof(length));
+    if (!ifs.good()) {
+        return {};
+    }
+    check(length);
+    std::vector<BYTE> dataBuffer;
+    dataBuffer.reserve(static_cast<size_t>(length + 1));
+    ifs.read(reinterpret_cast<char *>(dataBuffer.data()), length);
+
+    if (!ifs.good()) {
+        throw UnpackError(integrityErrorMsg);
+    }
+
+    dataBuffer[length] = '\0';
+    return dataBuffer;
+}
+
+void extractPlugin(const Environment &env, std::ifstream &ifs,
+                   WritableFile &uninstallFile) {
+    // Read Filename
+    const auto filepath = readData<BYTE>(ifs);
+
+    if (!ifs.good()) {
+        if (ifs.eof()) {
+            return;
+        } else {
+            throw UnpackError(integrityErrorMsg);
         }
-        filepath = (BYTE *)malloc(filepath_length + 1);
-        read_bytes = fread(filepath, 1, filepath_length, file);
-        filepath[filepath_length] = 0;
-
-        if (read_bytes != filepath_length) {
-            had_error = true;
-            break;
-        }
-
-        // Read Content
-        read_bytes = fread(&content_length, 1, sizeof(content_length), file);
-        if (read_bytes != sizeof(content_length)) {
-            had_error = true;
-            break;
-        }
-
+    }
+    const std::string filePath(reinterpret_cast<char const *>(filepath.data()));
+    const auto checkPluginSize = [&filePath](const int length) {
         // Maximum plugin size is 20 MB
-        if (content_length > 20 * 1024 * 1024) {
-            had_error = true;
-            break;
+        if (length > 20 * 1024 * 1024) {
+            throw UnpackError("Size of plugin '" + filePath +
+                              "' exceeds 20 MB");
         }
-        content = (BYTE *)malloc(content_length);
-        read_bytes = fread(content, 1, content_length, file);
-        if (read_bytes != content_length) {
-            had_error = true;
-            break;
+    };
+    const auto content = readData<int>(ifs, checkPluginSize);
+    if (!ifs.good()) {
+        throw UnpackError(integrityErrorMsg);
+    }
+    const auto pluginPath = managePluginPath(filePath, env);
+    uninstallFile << "del \"" << pluginPath << "\"\n";
+
+    // TODO: remove custom dirs on uninstall
+
+    // Write plugin
+    WritableFile pluginFile(pluginPath, 0, CREATE_NEW, s_winapi);
+    pluginFile << reinterpret_cast<char const *>(content.data());
+}
+
+}  // namespace
+
+void do_unpack_plugins(const char *plugin_filename, const Environment &env) {
+    Logger *logger = Logger::getLogger("winagent");
+    try {
+        std::ifstream ifs(plugin_filename,
+                          std::ifstream::in | std::ifstream::binary);
+        if (!ifs) {
+            throw UnpackError(
+                std::string{"Unable to open Check_MK-Agent package "} +
+                plugin_filename);
         }
 
-        // Extract filename and path to file
-        BYTE *filename = NULL;
-        BYTE *dirname = NULL;
-        for (int i = filepath_length - 1; i >= 0; i--) {
-            if (filepath[i] == '/') {
-                if (filename == NULL) {
-                    filename = filepath + i + 1;
-                    dirname = filepath;
-                    filepath[i] = 0;
-                } else {
-                    filepath[i] = '\\';
-                }
-            }
+        WritableFile uninstallFile(
+            env.agentDirectory() + "\\uninstall_plugins.bat", 0, CREATE_NEW,
+            s_winapi);
+        uninstallFile << uninstallInfo;
+
+        while (!ifs.eof()) {
+            extractPlugin(env, ifs, uninstallFile);
         }
-        if (dirname == NULL) filename = filepath;
 
-        if (dirname != NULL) {
-            char new_dir[1024];
-            snprintf(new_dir, sizeof(new_dir), "%s\\%s",
-                     env.agentDirectory().c_str(), dirname);
-            s_winapi.CreateDirectory(new_dir, NULL);
-            fprintf(uninstall_file, "del \"%s\\%s\\%s\"\n",
-                    env.agentDirectory().c_str(), dirname, filename);
-        } else
-            fprintf(uninstall_file, "del \"%s\\%s\"\n",
-                    env.agentDirectory().c_str(), filename);
-
-        // TODO: remove custom dirs on uninstall
-
-        // Write plugin
-        char plugin_path[512];
-        if (dirname != NULL)
-            snprintf(plugin_path, sizeof(plugin_path), "%s\\%s\\%s",
-                     env.agentDirectory().c_str(), dirname, filename);
-        else
-            snprintf(plugin_path, sizeof(plugin_path), "%s\\%s",
-                     env.agentDirectory().c_str(), filename);
-
-        FILE *plugin_file = fopen(plugin_path, "wb");
-        fwrite(content, 1, content_length, plugin_file);
-        fclose(plugin_file);
-
-        free(filepath);
-        free(content);
+        uninstallFile << "del \"" << env.agentDirectory()
+                      << "\\uninstall_plugins.bat\"\n";
+    } catch (const std::runtime_error &e) {
+        Error(logger) << e.what();
+        std::cerr << e.what() << std::endl;
+        exit(1);
     }
 
-    fprintf(uninstall_file, "del \"%s\\uninstall_plugins.bat\"\n",
-            env.agentDirectory().c_str());
-    fclose(uninstall_file);
-    fclose(file);
-
-    if (had_error) {
-        printf(
-            "There was an error on unpacking the Check_MK-Agent package: File "
-            "integrity is broken\n."
-            "The file might have been installed partially!");
-        exit(1);
+    try {
+        Debug(logger) << "areAllFilesWritable: " << std::boolalpha
+                      << areAllFilesWritable(
+                             env.agentDirectory(), s_winapi,
+                             getDefaultWhitelist(env, s_winapi));
+    } catch (const FileError &e) {
+        Error(logger) << e.what();
     }
 }
 
@@ -1022,7 +1035,8 @@ int main(int argc, char **argv) {
     if ((argc > 2) && (strcmp(argv[1], "file") && strcmp(argv[1], "unpack"))) {
         // need to parse config so we can display defaults in usage
         bool use_cwd = true;
-        Environment env(use_cwd, false, Logger::getLogger("winagent"), s_winapi);
+        Environment env(use_cwd, false, Logger::getLogger("winagent"),
+                        s_winapi);
         s_config = new GlobalConfig(env);
         usage();
     }

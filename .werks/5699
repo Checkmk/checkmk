@@ -1,0 +1,16 @@
+Title: Windows agent crashed at non-existent Skype perf counter
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1516959650
+
+Werk #5410 fixed a number of problems related to section Skype. It also
+enabled the agent to run further than it was earlier capable of and
+revealed some other old problems, this crash, among others. The extent
+of the problem is not exactly known but it is likely that the crash was
+restricted to some Windows versions only, at least Windows Server 2012
+R2 was having the crash under certain circumstances.

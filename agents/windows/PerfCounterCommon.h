@@ -42,8 +42,13 @@ size_t string_length<wchar_t>(const wchar_t *s);
 // retrieve the next line from a multi-sz registry key
 template <typename CharT>
 const CharT *get_next_multi_sz(const std::vector<CharT> &data, size_t &offset) {
+    if (data.size() < offset + 1) {
+        return nullptr;
+    }
+
     const CharT *next = &data[offset];
     size_t len = string_length(next);
+
     if ((len == 0) || (offset + (len * sizeof(CharT)) > data.size())) {
         // the second condition would only happen with an invalid registry value
         // but that's not unheard of

@@ -70,6 +70,7 @@ libcheck_mk_agent_a_SOURCES = \
         SettingsCollector.cc \
         Thread.cc \
         WinApi.cc \
+        WritableFile.cc \
         stringutil.cc \
         types.cc \
         win_error.cc \
@@ -102,6 +103,7 @@ WindowsAgentTest_SOURCES = \
         test/MockLogger.cc \
         test/MockWinApi.cc \
         test/RotatingFileHandlerTest.cc \
+        test/WritableFileTest.cc \
         test/gtest_main.cc \
         test/stringutilTest.cc \
         test/typesTest.cc \

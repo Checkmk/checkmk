@@ -1,0 +1,19 @@
+Title: Windows agent crashed while unpacking plugins
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1517408564
+Class: fix
+
+The agent updater and MSI installer call the Windows agent with a
+special parameter 'unpack' in order to extract plugins from the
+.cap-archive. The agent crashed if it could not write the batch file
+'uninstall_plugins.bat' or any of the extracted plugin files.
+
+Now any errors with writing files are logged before interrupting the
+unpack process. After successfully unpacking the plugins, the agent
+checks recursively that all files in its installation directory are
+writable by the agent. The check stops at the first unwritable file
+and logs a corresponding error message before exiting.

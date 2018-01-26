@@ -1335,6 +1335,12 @@ def render_master_control():
         elif site_state["state"] == "disabled":
             html.show_info(_("Site is disabled"))
 
+        elif site_state["state"] == "unknown":
+            if site_state.get("exception"):
+                html.show_error(site_state["exception"])
+            else:
+                html.show_error(_("Site state is unknown"))
+
         else:
             is_cmc = site_state["program_version"].startswith("Check_MK ")
 

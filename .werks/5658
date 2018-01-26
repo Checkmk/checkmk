@@ -1,0 +1,11 @@
+Title: Fixed possible "TypeError" on "Agent update status" view
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.4.0p24
+Date: 1516968100
+Class: fix
+
+The exception "TypeError: expected string or buffer" could occur
+when using the service grouping feature (Global settings > Grouping of services in table views).

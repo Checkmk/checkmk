@@ -71,7 +71,10 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, invpath, attribut
     if child is None:
         return  "", ""
     with html.plugged():
-        show_child_value(invpath, child.get_child_data().get(attributes_key))
+        if invpath.endswith(".") or invpath.endswith(":"):
+            invpath = invpath[:-1]
+        show_child_value(child.get_child_data().get(attributes_key),
+                         inv_display_hint(invpath))
         code = html.drain()
     return "invtree", code
 
@@ -133,7 +136,7 @@ def cmp_inventory_node(a, b, invpath):
 
 # Convert .foo.bar:18.test to .foo.bar:*.test
 def inv_display_hint(invpath):
-    r = regex(":[0-9]+")
+    r = regex(".[0-9]+")
     invpath = r.sub(":*", invpath)
     hint = inventory_displayhints.get(invpath, {})
 
@@ -1319,10 +1322,7 @@ def render_inv_dicttable(*args):
     pass
 
 
-def show_child_value(invpath, value):
-    if invpath.endswith(".") or invpath.endswith(":"):
-        invpath = invpath[:-1]
-    hint = inv_display_hint(invpath)
+def show_child_value(value, hint):
     if "paint_function" in hint:
         tdclass, code = hint["paint_function"](value)
         html.write(code)
@@ -1450,15 +1450,26 @@ class NodeRenderer(object):
         for index, entry in enumerate(data):
             html.open_tr(class_="even0")
             for title, key in titles:
-                html.open_td()
-                self._show_numeration_value("%s%d.%s" % \
-                    (invpath, index, key), entry.get(key))
+                value = entry.get(key)
+                sub_invpath = "%s%d.%s" % (invpath, index, key)
+                hint = inv_display_hint(sub_invpath)
+                if "paint_function" in hint:
+                    #FIXME At the moment  we need it to get tdclass
+                    # Clean this up one day.
+                    # The value is not really needed, but we need to deal with the delta mode
+                    unused_value = value[1] if type(value) == tuple else value
+                    tdclass, _ = hint["paint_function"](unused_value)
+                else:
+                    tdclass = None
+
+                html.open_td(class_=tdclass)
+                self._show_numeration_value(value, hint)
                 html.close_td()
             html.close_tr()
         html.close_table()
 
 
-    def _show_numeration_value(self, sub_invpath, value):
+    def _show_numeration_value(self, value, hint):
         raise NotImplementedError()
 
     #   ---attributes-----------------------------------------------------------
@@ -1469,17 +1480,19 @@ class NodeRenderer(object):
         for key, value in attributes.get_child_data().iteritems():
             sub_invpath = "%s.%s" % (invpath, key)
             icon, title = inv_titleinfo(sub_invpath, key)
+            hint = inv_display_hint(sub_invpath)
+
             html.open_tr()
             html.open_th(title=sub_invpath)
             html.write(title)
             html.close_th()
             html.open_td()
-            self._show_attribute(sub_invpath, value)
+            self._show_attribute(value, hint)
             html.close_td()
             html.close_tr()
         html.close_table()
 
-    def _show_attribute(self, invpath, value):
+    def _show_attribute(self, value, hint):
         raise NotImplementedError()
 
     #   ---helper---------------------------------------------------------------
@@ -1493,39 +1506,39 @@ class NodeRenderer(object):
 
 
 class AttributeRenderer(NodeRenderer):
-    def _show_numeration_value(self, invpath, value):
-        show_child_value(invpath, value)
+    def _show_numeration_value(self, value, hint):
+        show_child_value(value, hint)
 
 
-    def _show_attribute(self, invpath, value):
-        show_child_value(invpath, value)
+    def _show_attribute(self, value, hint):
+        show_child_value(value, hint)
 
 
 
 class DeltaNodeRenderer(NodeRenderer):
-    def _show_numeration_value(self, invpath, value):
+    def _show_numeration_value(self, value, hint):
         if value is None:
             value = (None, None)
-        self._show_attribute(invpath, value)
+        self._show_attribute(value, hint)
 
 
-    def _show_attribute(self, invpath, value):
+    def _show_attribute(self, value, hint):
         old, new = value
         if old is None and new is not None:
             html.open_span(class_="invnew")
-            show_child_value(invpath, new)
+            show_child_value(new, hint)
             html.close_span()
         elif old is not None and new is None:
             html.open_span(class_="invold")
-            show_child_value(invpath, old)
+            show_child_value(old, hint)
             html.close_span()
         elif old is not None and new is not None:
             html.open_span(class_="invold")
-            show_child_value(invpath, old)
+            show_child_value(old, hint)
             html.close_span()
             html.write(u" → ")
             html.open_span(class_="invnew")
-            show_child_value(invpath, new)
+            show_child_value(new, hint)
             html.close_span()
         elif old == new:
-            show_child_value(invpath, old)
+            show_child_value(old, hint)

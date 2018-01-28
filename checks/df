@@ -123,6 +123,8 @@ def parse_df(info):
                 if device not in btrfs_devices:
                     btrfs_devices.add(device)
                     mountpoint = "btrfs " + device
+                else:
+                    continue
 
             else:
                 mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /

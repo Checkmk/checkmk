@@ -237,8 +237,8 @@ info_df_btrfs = \
     (info_df_lnx_tmpfs, [(u'tmpfs /opt/omd/sites/heute/tmp', {}), (u'tmpfs /dev/shm', {})],
                             { "ignore_fs_types" : [ 'nfs', 'smbfs', 'cifs', 'iso9660' ],
                               "include_volume_name" : True}),                                            # Including tmpfs and volume name
-    (info_df_btrfs, [(u'/sys/fs/cgroup', {}), (u'btrfs /dev/sda1', {})], {}),                            # btrfs
-    (info_df_btrfs, [(u'/dev/sda1 /sys/fs/cgroup', {}), (u'/dev/sda1 btrfs /dev/sda1', {})],
+    (info_df_btrfs, [(u'btrfs /dev/sda1', {})], {}),                                                     # btrfs
+    (info_df_btrfs, [(u'/dev/sda1 btrfs /dev/sda1', {})],
                                                          { "include_volume_name" : True }),              # btrfs w/ volume name option
 ])
 def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, inventory_df_rules):

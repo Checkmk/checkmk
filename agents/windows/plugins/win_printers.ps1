@@ -251,4 +251,4 @@ function Join-Object
     }
 }
 
-Join-Object -Left $Data_Set1 -Right $Data_Set2 -Where {$args[0].Name -eq $args[1].Name} –LeftProperties "Name","CurrentJobs" –RightProperties "printerstatus","detectederrorstate" -Type OnlyIfInBoth | format-table -HideTableHeaders
+Join-Object -Left $Data_Set1 -Right $Data_Set2 -Where {$args[0].Name -eq $args[1].Name} -LeftProperties "Name","CurrentJobs" -RightProperties "printerstatus","detectederrorstate" -Type OnlyIfInBoth | format-table -HideTableHeaders

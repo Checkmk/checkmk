@@ -1,0 +1,18 @@
+Title: Publish views (and dashboard): Only own contact groups are selectable for users
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517243324
+Class: feature
+
+Views and also dashboards can be published to members of contact groups. Earlier versions
+allowed even normal users to select any configured contact group to publish these things to.
+
+We have changed this now for normal monitoring users. They can now only select contact groups
+which they are a member of. If you need the old behaviour back, you can enable the permission
+"Publish views to foreign contact groups" for them.
+
+Administators have this permission by default and can still publish views/dashboards to the
+members of any contact group.

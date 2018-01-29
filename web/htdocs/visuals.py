@@ -730,7 +730,11 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
         )),
     ]
     if config.user.may("general.publish_" + what):
-        visibility_elements.append(('public', PublishTo(type_title=visual_type["title"])))
+        with_foreign_groups = config.user.may("general.publish_" + what + "_to_foreign_groups")
+        visibility_elements.append(('public', PublishTo(
+            type_title=visual_type["title"],
+            with_foreign_groups=with_foreign_groups,
+        )))
 
     vs_general = Dictionary(
         title = _("General Properties"),
@@ -880,12 +884,13 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
 
 class PublishTo(CascadingDropdown):
-    def __init__(self, type_title=None, **kwargs):
+    def __init__(self, type_title=None, with_foreign_groups=True, **kwargs):
         super(PublishTo, self).__init__(
             choices = [
                 (True, _("Publish to all users")),
                 ("contact_groups", _("Publish to members of contact groups"), userdb.GroupChoice(
                     "contact",
+                    with_foreign_groups=with_foreign_groups,
                     title = _("Publish to members of contact groups"),
                     rows = 5,
                     size = 40,

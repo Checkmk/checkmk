@@ -25,16 +25,23 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inv_oracle_recovery_area(info):
-    node = inv_tree_list("software.applications.oracle.recovery_area:")
-    for line in info:
-        if len(line) > 5:
-            node.append({
-                "sid"       : line[0],
-                "flashback" : line[-1],
+# <<<oracle_performance:sep(124)>>>
+# XE|SGA_info|Maximum SGA Size|367439872
+
+
+def inv_oracle_performance(parsed, status_data_tree):
+    status_node = status_data_tree.get_list("software.applications.oracle.performance:")
+    for entry, entryinfo in parsed.items():
+        if "SGA_info" in entryinfo:
+            sga_info, sga_size = entryinfo["SGA_info"].items()[0]
+            status_node.append({
+                "sid"      : entry,
+                "sga_info" : sga_info,
+                "sga_size" : sga_size,
             })
 
 
-inv_info['oracle_recovery_area'] = {
-    'inv_function': inv_oracle_recovery_area,
+inv_info['oracle_performance'] = {
+    'inv_function': inv_oracle_performance,
+    'has_status_data': True,
 }

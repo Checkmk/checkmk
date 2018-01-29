@@ -721,14 +721,29 @@ inventory_displayhints.update({
     ".software.applications.oracle.recovery_area:*.sid"       : { "title" : _("SID"), },
     ".software.applications.oracle.recovery_area:*.flashback" : { "title" : _("Flashback"), },
 
+    ".software.applications.oracle.performance:" : { "title"    : _("Performance"),
+                                                     "keyorder" : [ "sid", "sga_info", "sga_size" ],
+                                                     "view": "invoraperformance_of_host"},
+    ".software.applications.oracle.performance:*.sid"      : { "title" : _("SID"), },
+    ".software.applications.oracle.performance:*.sga_info" : { "title" : _("SGA info"), },
+    ".software.applications.oracle.performance:*.sga_size" : { "title" : _("SGA size"), "paint" : "size" },
+
     ".software.applications.oracle.tablespaces:"                 : { "title"    : _("Tablespaces"),
-                                                                     "keyorder" : [ "sid", "name", "version", "type", "autoextensible" ],
+                                                                     "keyorder" : ["sid", "name", "version", "type", "autoextensible",
+                                                                                    "current_size", "max_size", "used_size", "num_increments",
+                                                                                    "increment_size", "free_space"],
                                                                      "view"     : "invoratablespace_of_host" },
     ".software.applications.oracle.tablespaces:*.sid"            : { "title" : _("SID"), },
     ".software.applications.oracle.tablespaces:*.name"           : { "title" : _("Name"), },
     ".software.applications.oracle.tablespaces:*.version"        : { "title" : _("Version"), },
     ".software.applications.oracle.tablespaces:*.type"           : { "title" : _("Type"), },
     ".software.applications.oracle.tablespaces:*.autoextensible" : { "title" : _("Autoextensible"), },
+    ".software.applications.oracle.tablespaces:*.current_size"   : { "title" : _("Current size"), "paint" : "size" },
+    ".software.applications.oracle.tablespaces:*.max_size"       : { "title" : _("Max. size"), "paint" : "size" },
+    ".software.applications.oracle.tablespaces:*.used_size"      : { "title" : _("Used size"), "paint" : "size" },
+    ".software.applications.oracle.tablespaces:*.num_increments" : { "title" : _("Number of increments"), },
+    ".software.applications.oracle.tablespaces:*.increment_size" : { "title" : _("Increment size"), "paint" : "size" },
+    ".software.applications.oracle.tablespaces:*.free_space"     : { "title" : _("Free space"), "paint" : "size" },
 
     ".software.applications.vmwareesx:*."              : { "title" : _("Datacenter %d") },
     ".software.applications.vmwareesx:*.clusters:*."   : { "title" : _("Cluster %d") },
@@ -1080,6 +1095,7 @@ declare_invtable_view("invorainstance",       ".software.applications.oracle.ins
 declare_invtable_view("invorarecoveryarea",   ".software.applications.oracle.recovery_area:",   _("Oracle recovery area"),       _("Oracle recovery areas"))
 declare_invtable_view("invoradataguardstats", ".software.applications.oracle.dataguard_stats:", _("Oracle dataguard statistic"), _("Oracle dataguard statistics"))
 declare_invtable_view("invoratablespace",     ".software.applications.oracle.tablespaces:",     _("Oracle tablespace"),          _("Oracle tablespaces"))
+declare_invtable_view("invoraperformance",    ".software.applications.oracle.performance:",     _("Oracle performance"),         _("Oracle performance"))
 
 
 # This would also be possible. But we muss a couple of display and filter hints.

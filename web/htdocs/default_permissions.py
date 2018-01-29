@@ -180,6 +180,11 @@ def declare_visual_permissions(what, what_plural):
          _("Make %s visible and usable for other users.") % what_plural,
          [ "admin", "user" ])
 
+    config.declare_permission("general.publish_" + what + "_to_foreign_groups",
+         _("Publish %s to foreign contact groups") % what_plural,
+         _("Make %s visible and usable for users of contact groups the publishing user is not a member of.") % what_plural,
+         [ "admin" ])
+
     config.declare_permission("general.see_user_" + what,
          _("See user %s") % what_plural,
          _("Is needed for seeing %s that other users have created.") % what_plural,

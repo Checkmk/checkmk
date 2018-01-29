@@ -1030,15 +1030,17 @@ def load_group_information():
 
 
 class GroupChoice(DualListChoice):
-    def __init__(self, what, **kwargs):
+    def __init__(self, what, with_foreign_groups=True, **kwargs):
         DualListChoice.__init__(self, **kwargs)
         self.what = what
-        self._choices = lambda: self.load_groups()
+        self._choices = lambda: self.load_groups(with_foreign_groups)
 
-    def load_groups(self):
+
+    def load_groups(self, with_foreign_groups):
         all_groups = load_group_information()
         this_group = all_groups.get(self.what, {})
-        return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
+        return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items()
+                 if with_foreign_groups or k in config.user.contact_groups() ]
 
 
 #.

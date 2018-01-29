@@ -71,8 +71,8 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         "The time period in which the contact will be notified about service problems",
         indirect_offset, -1, -1,
         DANGEROUS_OFFSETOF(contact, service_notification_period)));
-    for (int i = 1; i <= MAX_CONTACT_ADDRESSES; ++i) {
-        std::string b = "address" + std::to_string(i);
+    for (int i = 0; i < MAX_CONTACT_ADDRESSES; ++i) {
+        std::string b = "address" + std::to_string(i + 1);
         table->addColumn(std::make_unique<OffsetStringColumn>(
             prefix + b, "The additional field " + b, indirect_offset, -1, -1,
             DANGEROUS_OFFSETOF(contact, address[i])));

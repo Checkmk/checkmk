@@ -616,6 +616,8 @@ def get_management_board_precedence(check_plugin_name):
 
 def do_status_data_inventory_for(hostname):
     rules = config.active_checks.get('cmk_inv')
+    if rules is None:
+        return False
     # 'host_extra_conf' is already cached thus we can
     # use it after every check cycle.
     params = rulesets.host_extra_conf(hostname, rules)

@@ -75,8 +75,8 @@ void TableContacts::addColumns(Table *table, const string &prefix,
         "The time period in which the contact will be notified about service problems",
         DANGEROUS_OFFSETOF(contact, service_notification_period),
         indirect_offset, -1, -1));
-    for (int i = 1; i <= MAX_CONTACT_ADDRESSES; ++i) {
-        string b = "address" + to_string(i);
+    for (int i = 0; i < MAX_CONTACT_ADDRESSES; ++i) {
+        string b = "address" + to_string(i + 1);
         table->addColumn(make_unique<OffsetStringColumn>(
             prefix + b, "The additional field " + b,
             DANGEROUS_OFFSETOF(contact, address[i]), indirect_offset, -1, -1));

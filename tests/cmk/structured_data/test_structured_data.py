@@ -1,3 +1,4 @@
+import time
 import pprint
 import pytest
 from testlib import repo_path, cmk_path, cmc_path, cme_path, CMKWebSession
@@ -557,28 +558,40 @@ def test_structured_data_StructuredDataTree_cpu_tracking_load_from(trees, stats,
 
     #   ---loading tree---------------------------------------------------------
 
-    cpu_tracking.start("busy")
+    #TODO testing
+    start = time.clock()
     tree_old = StructuredDataTree().load_from("%s/%s" % (TEST_DIR, tree_old_name))
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
+    run_time = time.clock() - start
+    #cpu_tracking.start("busy")
+    #tree_old = StructuredDataTree().load_from("%s/%s" % (TEST_DIR, tree_old_name))
+    #cpu_tracking.end()
+    #phase_times = cpu_tracking.get_times()
+    #total_times = phase_times["TOTAL"]
+    #run_time = total_times[4]
     assert run_time < time_loading_tree
 
-    cpu_tracking.start("busy")
+    #TODO testing
+    start = time.clock()
     tree_new_fixed = StructuredDataTree().load_from("%s/%s" % (TEST_DIR, tree_new_fixed_name))
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
+    run_time = time.clock() - start
+    #cpu_tracking.start("busy")
+    #tree_new_fixed = StructuredDataTree().load_from("%s/%s" % (TEST_DIR, tree_new_fixed_name))
+    #cpu_tracking.end()
+    #phase_times = cpu_tracking.get_times()
+    #total_times = phase_times["TOTAL"]
+    #run_time = total_times[4]
     assert run_time < time_loading_tree
 
-    cpu_tracking.start("busy")
+    #TODO testing
+    start = time.clock()
     tree_new_variable = StructuredDataTree().load_from("%s/%s" % (TEST_DIR, tree_new_variable_name))
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
+    run_time = time.clock() - start
+    #cpu_tracking.start("busy")
+    #tree_new_variable = StructuredDataTree().load_from("%s/%s" % (TEST_DIR, tree_new_variable_name))
+    #cpu_tracking.end()
+    #phase_times = cpu_tracking.get_times()
+    #total_times = phase_times["TOTAL"]
+    #run_time = total_times[4]
     assert run_time < time_loading_tree
 
     #   ---count entries--------------------------------------------------------

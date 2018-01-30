@@ -42,6 +42,7 @@ def default_config():
             "cmk.mkeventd.EventServer":  cmk.log.INFO,
             "cmk.mkeventd.EventStatus":  cmk.log.INFO,
             "cmk.mkeventd.StatusServer": cmk.log.INFO,
+            "cmk.mkeventd.lock":         cmk.log.INFO,
         },
         "log_rulehits":          False,
         "log_messages":          False,

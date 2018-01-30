@@ -333,7 +333,7 @@ class NodeAttribute(object):
         raise NotImplementedError()
 
 
-    def _get_delta_tree(self, mode):
+    def get_delta_tree(self, mode):
         raise NotImplementedError()
 
 
@@ -411,7 +411,7 @@ class Container(NodeAttribute):
             new_entries = my_child.count_entries()
             if new_entries:
                 new += new_entries
-                delta.add_child(edge, my_child._get_delta_tree(mode="new"), abs_path)
+                delta.add_child(edge, my_child.get_delta_tree(mode="new"), abs_path)
 
         for edge, abs_path, my_child, old_child in \
             self._get_comparable_children(old, edges=intersect_edges):
@@ -431,15 +431,15 @@ class Container(NodeAttribute):
             removed_entries = old_child.count_entries()
             if removed_entries:
                 removed += removed_entries
-                delta.add_child(edge, old_child._get_delta_tree(mode="removed"), abs_path)
+                delta.add_child(edge, old_child.get_delta_tree(mode="removed"), abs_path)
 
         return new, changed, removed, delta
 
 
-    def _get_delta_tree(self, mode):
+    def get_delta_tree(self, mode):
         delta = Container()
         for edge, abs_path, child in self.get_children():
-            delta.add_child(edge, child._get_delta_tree(mode), abs_path)
+            delta.add_child(edge, child.get_delta_tree(mode), abs_path)
         return delta
 
 
@@ -810,7 +810,7 @@ class Numeration(Leaf):
         return converted
 
 
-    def _get_delta_tree(self, mode):
+    def get_delta_tree(self, mode):
         delta = Numeration()
         data = []
         for entry in self._numeration:
@@ -919,12 +919,14 @@ class Attributes(Leaf):
         return len(new), len(changed), len(removed), delta
 
 
-    def _get_delta_tree(self, mode):
+    def get_delta_tree(self, mode):
         delta = Attributes()
         if mode == "new":
             data = {k: (None,v) for k,v in self._attributes.iteritems()}
         elif mode == "removed":
             data = {k: (v,None) for k,v in self._attributes.iteritems()}
+        else:
+            data = {}
         delta.set_child_data(data)
         return delta
 
@@ -998,10 +1000,6 @@ class Node(object):
         child_type = type(child)
         if child_type in self._children:
             del self._children[child_type]
-
-
-    def get_node_attribute(self, type_):
-        return self._children.get(type_)
 
 
     def get_node_container(self, default=None):

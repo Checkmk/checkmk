@@ -755,6 +755,8 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
 
     html.open_table(class_=["content_center", "tacticaloverview"], cellspacing=2, cellpadding=0, border=0)
 
+    show_stales = config.user.may("general.see_stales_in_tactical_overview")
+
     for row in rows:
         if row["what"] == "event":
             amount, problems, unhandled_problems = row["data"]
@@ -770,7 +772,7 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
         html.th(row["title"])
         html.th(_("Problems"))
         html.th(_("Unhandled"))
-        if td_class == 'col4':
+        if show_stales and td_class == 'col4':
             html.th(_("Stale"))
         html.close_tr()
 
@@ -786,7 +788,7 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
             link(str(value), url)
             html.close_td()
 
-        if td_class == 'col4':
+        if show_stales and td_class == 'col4':
             if row["views"]["stale"]:
                 url = html.makeuri_contextless(row["views"]["stale"] + extra_url_variables, filename="view.py")
                 html.open_td(class_=[td_class, "states prob" if stales != 0 else None])

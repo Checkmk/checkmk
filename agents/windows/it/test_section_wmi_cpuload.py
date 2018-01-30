@@ -61,4 +61,4 @@ def expected_output():
 
 def test_section_wmi_cpuload(testconfig, expected_output, actual_output,
                              testfile):
-    remotetest(testconfig, expected_output, actual_output, testfile)
+    remotetest(expected_output, actual_output, testfile)

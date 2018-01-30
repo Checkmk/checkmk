@@ -125,12 +125,12 @@ def expected_output():
 def test_section_check_mk(request, testconfig, expected_output, actual_output,
                           testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output, actual_output, testfile,
+    remotetest(expected_output, actual_output, testfile,
                request.node.name)
 
 
 def test_section_check_mk__no_tcp(request, testconfig, expected_output,
                                   actual_output_no_tcp, testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output, actual_output_no_tcp, testfile,
+    remotetest(expected_output, actual_output_no_tcp, testfile,
                request.node.name)

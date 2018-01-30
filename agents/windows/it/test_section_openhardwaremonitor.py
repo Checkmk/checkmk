@@ -91,5 +91,5 @@ def manage_ohm_binaries():
 def test_section_openhardwaremonitor(request, testconfig, expected_output,
                                      actual_output, testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output, actual_output, testfile,
+    remotetest(expected_output, actual_output, testfile,
                request.node.name)

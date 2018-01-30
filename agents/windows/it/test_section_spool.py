@@ -57,5 +57,5 @@ def manage_spoolfile(request):
 def test_section_spool(request, testconfig, expected_output, actual_output,
                        testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output, actual_output, testfile,
+    remotetest(expected_output, actual_output, testfile,
                request.node.name)

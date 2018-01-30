@@ -79,5 +79,5 @@ def expected_output():
 def test_section_wmi_webservices(request, testconfig, expected_output,
                                  actual_output, testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output, actual_output, testfile,
+    remotetest(expected_output, actual_output, testfile,
                request.node.name)

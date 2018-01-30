@@ -116,5 +116,5 @@ def manage_plugins(request, plugindir):
 def test_section_plugin_group(request, testconfig, expected_output,
                               actual_output, testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output, actual_output, testfile,
+    remotetest(expected_output, actual_output, testfile,
                request.node.name)

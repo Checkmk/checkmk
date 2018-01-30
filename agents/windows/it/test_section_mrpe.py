@@ -92,5 +92,5 @@ def manage_plugin(request):
 def test_section_mrpe(request, testconfig, expected_output, actual_output,
                       testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output, actual_output, testfile,
+    remotetest(expected_output, actual_output, testfile,
                request.node.name)

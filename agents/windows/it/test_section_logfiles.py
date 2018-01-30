@@ -189,7 +189,7 @@ def test_section_logfiles__new_file(request, testconfig_glob,
                                     expected_output_no_statefile,
                                     actual_output, testfile):
     # request.node.name gives test name
-    remotetest(testconfig_glob, expected_output_no_statefile, actual_output,
+    remotetest(expected_output_no_statefile, actual_output,
                testfile, request.node.name)
 
 
@@ -198,5 +198,5 @@ def test_section_logfiles__new_entries_in_log(request, testconfig_glob,
                                               expected_output_with_statefile,
                                               actual_output, testfile):
     # request.node.name gives test name
-    remotetest(testconfig_glob, expected_output_with_statefile, actual_output,
+    remotetest(expected_output_with_statefile, actual_output,
                testfile, request.node.name)

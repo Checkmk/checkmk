@@ -73,4 +73,4 @@ def use_testfiles():
 @pytest.mark.usefixtures("use_testfiles")
 def test_section_fileinfo(testconfig, expected_output, actual_output,
                           testfile):
-    remotetest(testconfig, expected_output, actual_output, testfile)
+    remotetest(expected_output, actual_output, testfile)

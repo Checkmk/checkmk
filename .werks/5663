@@ -1,0 +1,12 @@
+Title: Fixed adding graphs to graph collections
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1517315360
+Class: fix
+
+Graphs could not be added to graph collections in all 1.5 releases anymore.
+This made the graph collections not appear in the sidebar, since empty collections
+are not shown there.

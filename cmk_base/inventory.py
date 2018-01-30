@@ -171,7 +171,7 @@ def do_inv_check(options, hostname):
 
 
 def do_inv_for(hostname, ipaddress):
-    console.verbose("Doing HW/SW inventory for %s;" % hostname)
+    console.verbose("Doing HW/SW inventory for %s;\n" % hostname)
 
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
@@ -221,7 +221,7 @@ def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
 
     multi_host_sections = sources.get_host_sections(hostname, ipaddress)
 
-    console.verbose(" Execute inventory plugins;")
+    console.verbose("Execute inventory plugins;")
     import cmk_base.inventory_plugins
     for section_name, plugin in cmk_base.inventory_plugins.inv_info.items():
         section_content = multi_host_sections.get_section_content(hostname, ipaddress,

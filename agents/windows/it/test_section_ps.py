@@ -38,5 +38,4 @@ def expected_output():
 def test_section_ps(request, full_path_config, expected_output, actual_output,
                     testfile):
     # request.node.name gives test name
-    remotetest(full_path_config, expected_output, actual_output, testfile,
-               request.node.name)
+    remotetest(expected_output, actual_output, testfile, request.node.name)

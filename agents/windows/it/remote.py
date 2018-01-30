@@ -142,8 +142,7 @@ class IniWriter(ConfigParser.RawConfigParser):
                     filehandle.write('    %s = %s\r\n' % (key, value))
 
 
-def remotetest(testconfig,
-               expected_output,
+def remotetest(expected_output,
                actual_output,
                testfile,
                testname=None,
@@ -159,7 +158,7 @@ def remotetest(testconfig,
                                 if testname else '')
         ]
         assert_subprocess(cmd)
-    # On Windows: verify agent output
+    # On Windows: verify output against expected
     else:
         comparison_data = zip(expected_output, actual_output)
         for expected, actual in comparison_data:
@@ -183,4 +182,4 @@ def remotetest(testconfig,
                 ('\n'.join(expected_output), '\n'.join(actual_output)))
         except TypeError:
             # expected_output may be an iterator without len
-            assert len(actual_output) > 0, "Agent output was empty"
+            assert len(actual_output) > 0, "Actual output was empty"

@@ -229,6 +229,36 @@ def post_test():
                                 'expected contents of file %s: %s, '
                                 'actual contents: %s' % (f, expected_data,
                                                          actual_data))
+                drive_letter = r'[A-Z]:'
+
+                def paircmp(t1, t2):
+                    if t1[0] < t2[0]:
+                        return -1
+                    elif t2[0] < t1[0]:
+                        return 1
+                    return 0
+
+                expected_uninstall = [
+                    ("REM \\* If you want to uninstall the plugins which were "
+                     "installed during the"),
+                    ("REM \\* last 'check_mk_agent.exe unpack' command, just "
+                     "execute this script"), ""
+                ] + [
+                    'del "%s%s"' %
+                    (drive_letter,
+                     re.escape(
+                         os.path.join(remotedir, Globals.testfiles[1], t[0])))
+                    for t in sorted(Globals.testfiles[2], paircmp)
+                ] + [
+                    'del "%s%s"' %
+                    (drive_letter,
+                     re.escape(
+                         os.path.join(remotedir, 'uninstall_plugins.bat')))
+                ]
+                with open(os.path.join(remotedir,
+                                       'uninstall_plugins.bat')) as fhandle:
+                    actual_uninstall = fhandle.read().splitlines()
+                    remotetest(expected_uninstall, actual_uninstall, None)
             finally:
                 os.unlink(Globals.capfile)
                 shutil.rmtree(Globals.testfiles[1])
@@ -238,5 +268,4 @@ def post_test():
 def test_agent_start_parameters(request, testconfig, expected_output,
                                 actual_output, testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output, actual_output, testfile,
-               request.node.name)
+    remotetest(expected_output, actual_output, testfile, request.node.name)

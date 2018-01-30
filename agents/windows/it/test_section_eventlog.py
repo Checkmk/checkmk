@@ -186,7 +186,7 @@ def test_section_eventlog__no_statefile__no_events(request, testconfig,
                                                    expected_output_no_events,
                                                    actual_output, testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output_no_events, actual_output, testfile,
+    remotetest(expected_output_no_events, actual_output, testfile,
                request.node.name)
 
 
@@ -195,5 +195,5 @@ def test_section_eventlog__application_warnings(
         request, testconfig, expected_output_application_events, actual_output,
         testfile):
     # request.node.name gives test name
-    remotetest(testconfig, expected_output_application_events, actual_output,
+    remotetest(expected_output_application_events, actual_output,
                testfile, request.node.name)

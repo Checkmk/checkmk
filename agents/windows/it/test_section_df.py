@@ -29,4 +29,4 @@ def expected_output():
 
 
 def test_section_df(testconfig, expected_output, actual_output, testfile):
-    remotetest(testconfig, expected_output, actual_output, testfile)
+    remotetest(expected_output, actual_output, testfile)

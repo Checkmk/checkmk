@@ -1,0 +1,13 @@
+Title: Tactical overview: Can now be configured to not show stale hosts/services
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517296086
+Class: feature
+
+There is a new permission <i>See stale objects in tactical overview snapin</i> which
+can be used to hide the stale hosts and services column from the tactical overview
+snapin. This permission is enabled by default for all roles to keep the current
+default behaviour.

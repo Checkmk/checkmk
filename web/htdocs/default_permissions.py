@@ -165,6 +165,11 @@ def load_plugins(force):
            "and the configured <a href=\"wato.py?mode=edit_configvar&varname=failed_notification_horizon\">Failed notification horizon</a>."),
          [ "admin" ])
 
+    config.declare_permission("general.see_stales_in_tactical_overview",
+         _("See stale objects in tactical overview snapin"),
+         _("Show the column for stale host and service checks in the tactical overview snapin."),
+         [ "guest", "user", "admin" ])
+
     loaded_with_language = current_language
 
 

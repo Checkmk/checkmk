@@ -32,7 +32,7 @@ def expected_output():
          r'ProcessorQueueLength,SystemCallsPersec,SystemUpTime,Threads,'
          r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS'),
         (r'\d+,,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,,\d+,'
-         r'\-?\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'),
+         r'\-?\d+,\d+,\d+,\-?\d+,\d+,\d+,\d+,\d+,\d+'),
         re.escape(r'[computer_system]'),
         (r'AdminPasswordStatus,AutomaticManagedPagefile,'
          r'AutomaticResetBootOption,AutomaticResetCapability,BootOptionOnLimit,'

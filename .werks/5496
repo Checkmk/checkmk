@@ -1,0 +1,10 @@
+Title: lnx_if: fix an issue that could lead to a crash of the agent if no interface address is returned
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517490540
+Class: fix
+
+

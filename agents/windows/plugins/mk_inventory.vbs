@@ -309,6 +309,15 @@ Call startSection("win_wmi_software",124,timeUntil)
 swVars = Array( "ProductName", "Publisher", "VersionString", "InstallDate", "Language")
 Call SoftwareFromInstaller(swVars)
 
+' Windows Updates
+Call startSection("win_wmi_updates",44,timeUntil)
+Set objShell = WScript.CreateObject("WScript.Shell")
+Set objExecObject = objShell.Exec("wmic qfe get HotfixID,Description,InstalledOn /format:csv")
+Do While Not objExecObject.StdOut.AtEndOfStream
+    strText = objExecObject.StdOut.ReadLine()
+    outPut(strText)
+Loop
+
 ' Search Registry
 Call startSection("win_reg_uninstall",124,timeUntil)
 Set rego = GetObject("WinMgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")

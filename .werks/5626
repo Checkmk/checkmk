@@ -1,0 +1,10 @@
+Title: win_wmi_updates: Inventory of Windows Update KBs
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517302546
+Class: feature
+
+

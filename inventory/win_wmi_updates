@@ -37,7 +37,7 @@
 
 
 def inv_win_wmi_updates(info):
-    paclist = inv_tree("software.packages:")
+    paclist = inv_tree_list("software.packages:")
     for line in info:
         if len(line) <> 4:
             continue

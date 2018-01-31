@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_memory_simple(used, total, params):
     # Convert old-style tuple params to dict
     if params:
@@ -34,7 +35,7 @@ def check_memory_simple(used, total, params):
 
 
     perc_used = (float(used) / total) * 100
-    infotext = "Memory usage: %s (Used: %s, Total: %s)" % (
+    infotext = "%s used (%s of %s)" % (
                get_percent_human_readable(perc_used),
                get_bytes_human_readable(used),
                get_bytes_human_readable(total))
@@ -71,3 +72,47 @@ def check_memory_simple(used, total, params):
 
     perfdata = [ ("memory_used", used, warn_abs, crit_abs, 0, total) ]
     return status, infotext, perfdata
+
+
+def check_memory_multiitem(params, data, base=1024):
+    mem_total = data['mem_total']
+    if 'mem_used' in data:
+        mem_used = data["mem_used"]
+        mem_avail = mem_total - mem_used
+    elif 'mem_avail' in data:
+        mem_avail = data['mem_avail']
+        mem_used = mem_total - mem_avail
+    else:
+        return 3, 'Invalid data: missing mem_used or mem_avail sizes'
+
+    infotext = '%s used (%s of %s)' % (
+               get_percent_human_readable(float(mem_used) / float(mem_total) * 100),
+               get_bytes_human_readable(mem_used, base=base),
+               get_bytes_human_readable(mem_total, base=base))
+
+    state = 0
+    if 'levels' in params:
+        warn, crit = params['levels']
+        if type(warn) is int:
+            warn_absolute = warn
+        else:
+            warn_absolute = int(mem_total * warn / 100)
+
+        if type(crit) is int:
+            crit_absolute = crit
+        else:
+            crit_absolute = int(mem_total * crit / 100)
+
+        if mem_used > crit_absolute:
+            state = 2
+        elif mem_used > warn_absolute:
+            state = 1
+        if state:
+            infotext += ' (warn/crit at %s/%s)' % (
+                        get_bytes_human_readable(warn_absolute),
+                        get_bytes_human_readable(crit_absolute))
+    else:
+        warn_absolute = None
+        crit_absolute = None
+
+    return state, infotext, [('memused', mem_used, warn_absolute, crit_absolute, 0, mem_total)]

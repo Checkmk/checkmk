@@ -1,4 +1,4 @@
-Title: Improved Agent Updater Check behaviour
+Title: Improved Agent Updater Check behaviour for Linux Hosts
 Level: 1
 Component: agents
 Compatible: compat
@@ -6,6 +6,8 @@ Edition: cee
 Version: 1.5.0i3
 Date: 1516085347
 Class: feature
+
+This werk only applies to the Linux Agent.
 
 Formerly, the Agent Updater Check did not update immediately after a manual action on the host. This could lead to some confusion.
 Notably, you had to wait for the next update cycle to have a successful Agent registration displayed within the Check.

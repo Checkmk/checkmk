@@ -24,64 +24,50 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 factory_settings["arris_cmts_mem"] = {
     "levels"     : ( 80.0, 90.0 ),
 }
 
-def inventory_arris_cmts_mem(info):
+
+def parse_arris_cmts_mem(info):
+    parsed = {}
     for cid, heap, heap_free in info:
         # The Module numbers are starting with 0, not with 1 like the OIDs
-        cid = int(cid) - 1
-        yield cid, {}
+        heap, heap_free = float(heap), float(heap_free)
+        parsed.setdefault(int(cid) - 1, {
+            'mem_used': heap - heap_free,
+            'mem_total': heap,
+        })
+    return parsed
 
-def check_arris_cmts_mem(item, params, info):
-    for cid, heap, heap_free in info:
-        cid = int(cid) - 1
-        if cid == item:
-            heap_free, heap = float(heap_free), float(heap)
-            usage = heap - heap_free
-            usage_perc = (usage / heap) * 100
-            infotext = "Usage: %s of %s (%.2f %%)" % \
-                (get_bytes_human_readable(usage), get_bytes_human_readable(heap), usage_perc)
-            warn, crit = params['levels']
-            # Percent level
-            if type(crit) == float:
-                warn_abs = heap * warn / 100
-                crit_abs = heap * crit / 100
-                perfdata = [ ( 'usage', usage, warn_abs, crit_abs, 0, heap )]
-                levels = " (warn/crit at %.0f/%.0f %%)" % ( warn, crit )
-                if usage_perc >= crit:
-                    yield 2, infotext+levels, perfdata
-                elif usage_perc >= warn:
-                    yield 1, infotext+levels, perfdata
-                else:
-                    yield 0, infotext, perfdata
-            else:
-                perfdata = [ ( 'usage', usage, warn, crit, 0, heap )]
-                levels = " (warn/crit at %s/%s)" % \
-                    ( get_bytes_human_readable(warn), get_bytes_human_readable(crit) )
-                if usage >= crit:
-                    yield 2, infotext+levels, perfdata
-                elif usage >= warn:
-                    yield 1, infotext+levels, perfdata
-                else:
-                    yield 0, infotext, perfdata
-            return
-    yield 3, "Card not found in Output"
+
+def inventory_arris_cmts_mem(parsed):
+    for k in parsed:
+        yield k, {}
+
+
+def check_arris_cmts_mem(item, params, parsed):
+    if item not in parsed:
+        return 3, '%s not found in agent output' % item
+    return check_memory_multiitem(params, parsed[item])
+
+
 
 check_info["arris_cmts_mem"] = {
-    "check_function"        : check_arris_cmts_mem,
-    "inventory_function"    : inventory_arris_cmts_mem,
-    "service_description"   : "Memory Module %s",
-    "has_perfdata"          : True,
-    "snmp_scan_function"    : arris_cmts_scan_function,
-    "default_levels_variable" : "arris_cmts_mem",
-    "snmp_info"             : ( ".1.3.6.1.4.1.4998.1.1.5.3.2.1.1", [
-                                          OID_END,
-                                          2, # cadMeHeapSize
-                                          3, # cadMeHeapRemaining
-                                          ] ),
-    "group"                 : "memory_multiitem",
-    "includes"              : [ "arris_cmts.include" ]
+    "parse_function"            : parse_arris_cmts_mem,
+    "inventory_function"        : inventory_arris_cmts_mem,
+    "check_function"            : check_arris_cmts_mem,
+    "service_description"       : "Memory Module %s",
+    "has_perfdata"              : True,
+    "snmp_scan_function"        : arris_cmts_scan_function,
+    "snmp_info"                 : (".1.3.6.1.4.1.4998.1.1.5.3.2.1.1", [
+                                    OID_END,
+                                    2, # cadMeHeapSize
+                                    3, # cadMeHeapRemaining
+                                  ]),
+    "group"                     : "memory_multiitem",
+    "includes"                  : ["arris_cmts.include", "memory.include"],
+    "default_levels_variable"   : "arris_cmts_mem",
 }
 

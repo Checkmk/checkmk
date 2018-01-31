@@ -34,9 +34,9 @@ def testfile():
 
 @pytest.fixture
 def testconfig(config):
+    config.set("global", "crash_debug", "yes")
     if Globals.param[0] == 'showconfig':
         config.set("global", "sections", ' '.join(Globals.sections))
-        config.set("global", "crash_debug", "yes")
         for section in filter(lambda s: s != 'check_mk', Globals.sections):
             config.add_section(section)
         config.set('fileinfo', 'path', os.path.join(remotedir, '*.log'))

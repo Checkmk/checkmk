@@ -14818,8 +14818,12 @@ def page_download_agent_output():
         raise MKGeneralException(_("Invalid host."))
     host.need_permission("read")
 
-    success, output, agent_data = watolib.check_mk_automation(host.site_id(), "get-agent-output",
+    import htmllib
+    try:
+        success, output, agent_data = watolib.check_mk_automation(host.site_id(), "get-agent-output",
                                                       [host_name, ty])
+    except htmllib.RequestTimeout, e:
+        success, output, agent_data = False, "%s" % e, ""
 
     if success:
         html.set_output_format("text")

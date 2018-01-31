@@ -41,6 +41,9 @@ def get_input(valuespec, varprefix):
     return value
 
 
+# TODO: Remove all call sites and clean this up! The mechanic of this
+# and the edit_dictionaries() is very uncommon compared to the other
+# usages of valuespecs.
 def edit_dictionary(entries, value, **args):
     result = edit_dictionaries([("value", entries)], {"value": value}, **args)
     if result:
@@ -54,6 +57,9 @@ def edit_dictionary(entries, value, **args):
 # TODO: As soon as the reports have been migrated to pagetypes.py
 # we can drop edit_dictionaries()? At least the function for editing
 # several dictionaries at once.
+# TODO: Remove all call sites and clean this up! The mechanic of this
+# and the edit_dictionary() is very uncommon compared to the other
+# usages of valuespecs.
 def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     validate=None, buttontext=None, title=None,
                     buttons = None, method="GET", preview=False,

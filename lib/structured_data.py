@@ -741,7 +741,7 @@ class Numeration(Leaf):
         new, changed, removed = 0, 0, 0
         data = []
         for my_entries, old_entries in \
-            zip(sorted(self._numeration), sorted(old._numeration)):
+            zip(self._numeration, old._numeration):
             new_entries, changed_entries, removed_entries, identical_entries = \
                 self._compare_entries(my_entries, old_entries)
             new += len(new_entries)
@@ -818,6 +818,8 @@ class Numeration(Leaf):
                 data.append({k: (None,v) for k,v in entry.iteritems()})
             elif mode == "removed":
                 data.append({k: (v,None) for k,v in entry.iteritems()})
+            else:
+                break
         delta.set_child_data(data)
         return delta
 

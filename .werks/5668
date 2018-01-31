@@ -1,0 +1,12 @@
+Title: Fixed potential segfault when talking to the event console
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517394549
+Class: fix
+
+When users with restricted permissions tried to retrieve the event console
+events or their history, a segfault could happen in the Livestatus NEB/Micro
+Core.  This has been fixed.

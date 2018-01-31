@@ -366,7 +366,7 @@ def test_structured_data_StructuredDataTree_compare_with_self(tree):
 @pytest.mark.parametrize("tree_old,tree_new,result", zip(
     trees_old,
     trees_new,
-    [(2,2,1), (0,5,1), (1,0,1), (2,3,16), (1,1,1), (1,1,2),]
+    [(2,2,1), (0,2,1), (1,0,1), (2,3,16), (1,1,1), (1,1,2),]
 ))
 def test_structured_data_StructuredDataTree_compare_with(tree_old, tree_new, result):
     new, changed, removed, delta = tree_new.compare_with(tree_old)

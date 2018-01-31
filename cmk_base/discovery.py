@@ -842,7 +842,10 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
     if default_found:
         _output_snmp_check_plugins("SNMP without scan function", default_found)
 
-    filtered = _filter_by_management_board(hostname, found, for_mgmt_board)
+    if for_inv:
+        filtered = found
+    else:
+        filtered = _filter_by_management_board(hostname, found, for_mgmt_board)
     snmp.write_single_oid_cache(hostname)
     return sorted(filtered)
 

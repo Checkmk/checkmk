@@ -260,8 +260,9 @@ def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
     console.verbose(";")
 
 
-def _gather_snmp_check_plugin_names_inventory(hostname, ipaddress, on_error, do_snmp_scan):
-    return discovery.gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan, for_inventory=True)
+def _gather_snmp_check_plugin_names_inventory(hostname, ipaddress, on_error, do_snmp_scan, for_mgmt_board=False):
+    return discovery.gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan,
+                                                    for_inventory=True, for_mgmt_board=for_mgmt_board)
 
 
 def _get_inv_params(hostname, section_name):

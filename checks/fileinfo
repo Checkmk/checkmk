@@ -47,7 +47,7 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
     found_these_groups = {}
     for group_name, pattern in group_patterns:
         if type(pattern) == str: # support old format
-            pattern = ( pattern, '' )
+            pattern = (pattern, '')
 
         inclusion, exclusion = pattern
         inclusion_is_regex   = False
@@ -70,27 +70,27 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
             incl_match = regex(inclusion).match(filename)
             if incl_match:
                 num_perc_s = group_name.count("%s")
-                matches    = [ g and g or "" for g in incl_match.groups() ]
+                matches    = [g and g or "" for g in incl_match.groups()]
         else:
-            incl_match = fnmatch.fnmatch( filename, inclusion )
+            incl_match = fnmatch.fnmatch(filename, inclusion)
 
         if exclusion_is_regex:
             excl_match = regex(exclusion).match(filename)
         else:
-            excl_match = fnmatch.fnmatch( filename, exclusion )
+            excl_match = fnmatch.fnmatch(filename, exclusion)
 
         if len(matches) < num_perc_s:
             raise MKGeneralException("Invalid entry in inventory_fileinfo_groups: "
-                  "group name '%s' contains %d times '%%s', but regular expression "
-                  "'%s' contains only %d subexpression(s)." % \
-                  (group_name, num_perc_s, inclusion, len(matches)))
+                                     "group name '%s' contains %d times '%%s', but regular expression "
+                                     "'%s' contains only %d subexpression(s)." %
+                                     (group_name, num_perc_s, inclusion, len(matches)))
 
         this_group_name = None
         if incl_match and not excl_match:
             if matches:
                 for nr, group in enumerate(matches):
                     inclusion  = instantiate_regex_pattern_once(inclusion, group)
-                    group_name = group_name.replace("%%%d" % (nr+1), group)
+                    group_name = group_name.replace("%%%d" % (nr + 1), group)
 
                 this_group_name = group_name % tuple(matches[:num_perc_s])
                 this_pattern    = ("~%s" % inclusion, exclusion)
@@ -121,38 +121,38 @@ def inventory_fileinfo_common(info, case):
                                     line[0], reftime))
 
             if not found_groups and case == 'single' and line[1] != 'missing':
-                inventory.append((line[0], {}));
+                inventory.append((line[0], {}))
 
             elif found_groups and case == 'group':
                 for group_name, patterns in found_groups.items():
-                    inventory.append((group_name, {"group_patterns" : patterns}))
+                    inventory.append((group_name, {"group_patterns": patterns}))
 
     return inventory
 
 
 def fileinfo_process_date(pattern, reftime):
-    for what, the_time in [ ("DATE", reftime), ("YESTERDAY", reftime - 86400) ]:
+    for what, the_time in [("DATE", reftime), ("YESTERDAY", reftime - 86400)]:
         the_regex = '((?:/|[A-Za-z]).*)\$%s:((?:%%\w.?){1,})\$(.*)' % what
         disect    = re.match(the_regex, pattern)
         if disect:
             prefix      = disect.group(1)
             datepattern = time.strftime(disect.group(2),time.localtime(the_time))
             postfix     = disect.group(3)
-            pattern     = prefix+datepattern+postfix
+            pattern     = prefix + datepattern + postfix
             return pattern
     return pattern
 
 
 def fileinfo_check_timeranges(params):
     ranges = params.get("timeofday")
-    if ranges == None:
-        return None # no ranges defined
+    if ranges is None:
+        return ""
 
     now = time.localtime()
     for range_spec in ranges:
         if fileinfo_in_timerange(now, *range_spec):
-            return None
-    return " (out of relevant time of day)"
+            return ""
+    return "Out of relevant time of day"
 
 
 def fileinfo_in_timerange(now, range_from, range_to):
@@ -167,7 +167,7 @@ def check_fileinfo(item, params, info):
         return (3, "no information sent by agent")
 
     outof_range_txt  = fileinfo_check_timeranges(params)
-    in_timerange     = outof_range_txt == None
+    in_timerange     = outof_range_txt == ""
     reftime          = None
     check_definition = False
     state_missing    = params.get("state_missing", 3)
@@ -185,10 +185,14 @@ def check_fileinfo(item, params, info):
 
             check_definition = [
                 ("Size", "size", size, get_filesize_human_readable),
-                ("Age",  "age",  age,  get_age_human_readable) ]
+                ("Age",  "age",  age,  get_age_human_readable)
+            ]
 
-    if check_definition == False:
-        return in_timerange and state_missing or 0, "File not found" + (outof_range_txt or "")
+    if check_definition is False:
+        state = state_missing if in_timerange else 0
+        infotext = ("File not found" if not outof_range_txt else
+                    "File not found - %s" % outof_range_txt)
+        return state, infotext
 
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
@@ -240,8 +244,8 @@ def check_fileinfo_groups(item, params, info):
             if line[0].endswith("No such file or directory"):
                 continue
 
-            if type(pattern) == str: # support old format
-                pattern = ( pattern, '' )
+            if type(pattern) == str:  # support old format
+                pattern = (pattern, '')
 
             inclusion, exclusion = pattern
             inclusion_is_regex   = False
@@ -268,18 +272,18 @@ def check_fileinfo_groups(item, params, info):
             else:
                 excl_match = fnmatch.fnmatch(line[0], exclusion)
 
-            if str(line[1]) not in [ 'missing', '' ] and \
+            if str(line[1]) not in ['missing', ''] and \
                incl_match and not excl_match:
                 size = int(line[1])
                 size_all += size
-                if size_smallest == None:
+                if size_smallest is None:
                     size_smallest = size
                 else:
                     size_smallest = min(size_smallest, size)
                 size_largest = max(size_largest, size)
 
                 age = reftime - int(line[2])
-                if age_oldest == None: # very first match
+                if age_oldest is None:  # very first match
                     age_oldest = age
                     age_newest = age
                 else:
@@ -287,7 +291,7 @@ def check_fileinfo_groups(item, params, info):
                     age_newest = min(age_newest, age)
                 count_all += 1
 
-    if age_oldest == None:
+    if age_oldest is None:
         age_oldest = 0
 
     # Start Checking
@@ -303,9 +307,9 @@ def check_fileinfo_groups(item, params, info):
                                  size_smallest, get_filesize_human_readable))
     if size_largest != 0:
         check_definition.append(("Largest size", "size_largest",
-                                 size_largest,  get_filesize_human_readable))
+                                 size_largest, get_filesize_human_readable))
     if date_inclusion:
-        check_definition.append(("Date pattern", "date pattern",  date_inclusion, str ))
+        check_definition.append(("Date pattern", "date pattern", date_inclusion, str))
 
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
@@ -316,7 +320,7 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
     perfdata = []
     for what_title, what, val, verbfunc in check_definition:
         infos.append("%s: %s" % (what_title, verbfunc(val)))
-        if type(val) in [long, int]: # because strings go into infos but not into perfdata
+        if type(val) in [long, int]:  # because strings go into infos but not into perfdata
             warn, crit = "", ""
             for how, comp, cfunc in [
                 ("min", "<", lambda a, b: a < b),
@@ -336,7 +340,7 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
     infotext = ", ".join(infos)
     if outof_range_txt:
         state = 0
-        infotext += outof_range_txt
+        infotext = outof_range_txt + ', ' + infotext.replace('(!)', '').replace('(!!)', '')
     return (state, infotext, perfdata)
 
 

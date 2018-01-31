@@ -1,0 +1,17 @@
+Title: fileinfo: Make out of relevant time of day more present and remove state markers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517406458
+Class: feature
+
+Previously, the information that a service was out of the relevant time of day
+was displayed at the end of the plugin output where it can be missed easily.
+Now the information is displayed at the beginning of the plugin output.
+
+Furthermore, the subresults of a service do not show {WARN} and {CRIT} markers
+anymore since this yields the impression that the check should not be {OK}.
+Additional information about violations are still shown, e.g. if the age
+of a file is older than a configured level.

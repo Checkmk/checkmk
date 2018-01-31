@@ -89,50 +89,6 @@ def load_plugins(force):
         },
     }
 
-    dest_choices = [
-        ('broadcast', _('Everybody (Broadcast)')),
-        ('list', _('A list of specific users'), DualListChoice(
-            choices = [ (uid, u.get('alias', uid)) for uid, u in config.multisite_users.items() ],
-            allow_empty = False,
-        )),
-        #('contactgroup', _('All members of a contact group')),
-    ]
-
-    if config.save_user_access_times:
-        dest_choices.append(('online', _('All online users')))
-
-    global vs_notify
-    vs_notify = [
-        ('text', TextAreaUnicode(
-            title = _('Text'),
-            help = _('Insert the text to be sent to all reciepents.'),
-            cols = 50,
-            rows = 10
-        )),
-        ('dest', CascadingDropdown(
-            title = _('Send notification to'),
-            help = _('You can send the notification to a list of multiple users, which '
-                     'can be choosen out of these predefined filters.'),
-            choices = dest_choices,
-        )),
-        ('methods', ListChoice(
-            title = _('How to notify'),
-            choices = [ (k, v['title']) for k, v in notify_methods.items() ],
-            default_value = ['popup'],
-        )),
-        ('valid_till', Optional(
-            AbsoluteDate(
-                include_time = True,
-            ),
-            title = _('Automatically invalidate notification'),
-            label = _('Enable automatic invalidation at'),
-            help = _('It is possible to automatically delete messages when the '
-                     'configured time is reached. This makes it possible to inform '
-                     'users about a scheduled event but suppress the notification '
-                     'after the event has happened.'),
-        )),
-    ]
-
     config.declare_permission("general.notify",
          _("Notify Users"),
          _("This permissions allows users to send notifications to the users of "
@@ -155,96 +111,154 @@ def page_notify():
     html.context_button(_('User Config'), 'wato.py?mode=users', 'users')
     html.end_context_buttons()
 
-    def validate(msg):
-        if not msg.get('text'):
-            raise MKUserError('text', _('You need to provide a text.'))
+    vs_notify = _vs_notify()
 
-        if not msg.get('methods'):
-            raise MKUserError('methods', _('Please select at least one notification method.'))
+    if html.check_transaction():
+        try:
+            msg = vs_notify.from_html_vars("_notify")
+            vs_notify.validate_value(msg, "_notify")
+            _process_notify_message(msg)
+        except MKUserError, e:
+            html.user_error(e)
 
-        valid_methods = notify_methods.keys()
-        for method in msg['methods']:
-            if method not in valid_methods:
-                raise MKUserError('methods', _('Invalid notitification method selected.'))
+    html.begin_form("notify", method="POST")
+    vs_notify.render_input("_notify", {}, form=True)
 
-        # On manually entered list of users validate the names
-        if type(msg['dest']) == tuple and msg['dest'][0] == 'list':
-            existing = config.multisite_users.keys()
-            for user_id in msg['dest'][1]:
-                if user_id not in existing:
-                    raise MKUserError('dest', _('A user with the id "%s" does not exist.') % user_id)
+    html.button("save", _("Send notification"))
 
-        # FIXME: More validation
+    html.hidden_fields()
+    html.end_form()
+    html.footer()
 
-    msg = forms.edit_dictionary(vs_notify, {},
-        title = _('Notify Users'),
-        buttontext = _('Send Notification'),
-        validate = validate,
-        method = 'POST',
+
+def _vs_notify():
+    dest_choices = [
+        ('broadcast', _('Everybody (Broadcast)')),
+        ('list', _('A list of specific users'), DualListChoice(
+            choices = [ (uid, u.get('alias', uid)) for uid, u in config.multisite_users.items() ],
+            allow_empty = False,
+        )),
+        #('contactgroup', _('All members of a contact group')),
+    ]
+
+    if config.save_user_access_times:
+        dest_choices.append(('online', _('All online users')))
+
+    return Dictionary(
+        elements = [
+            ('text', TextAreaUnicode(
+                title = _('Text'),
+                help = _('Insert the text to be sent to all reciepents.'),
+                cols = 50,
+                rows = 10
+            )),
+            ('dest', CascadingDropdown(
+                title = _('Send notification to'),
+                help = _('You can send the notification to a list of multiple users, which '
+                         'can be choosen out of these predefined filters.'),
+                choices = dest_choices,
+            )),
+            ('methods', ListChoice(
+                title = _('How to notify'),
+                choices = [ (k, v['title']) for k, v in notify_methods.items() ],
+                default_value = ['popup'],
+            )),
+            ('valid_till', Optional(
+                AbsoluteDate(
+                    include_time = True,
+                ),
+                title = _('Automatically invalidate notification'),
+                label = _('Enable automatic invalidation at'),
+                help = _('It is possible to automatically delete messages when the '
+                         'configured time is reached. This makes it possible to inform '
+                         'users about a scheduled event but suppress the notification '
+                         'after the event has happened.'),
+            )),
+        ],
+        validate = _validate_msg,
+        optional_keys = [],
     )
 
-    if msg:
-        msg['id']   = lib.gen_id()
-        msg['time'] = time.time()
 
-        # construct the list of recipients
-        recipients = []
+def _validate_msg(msg, varprefix):
+    if not msg.get('text'):
+        raise MKUserError('text', _('You need to provide a text.'))
 
-        if type(msg['dest']) == str:
-            dest_what = msg['dest']
-        else:
-            dest_what = msg['dest'][0]
+    if not msg.get('methods'):
+        raise MKUserError('methods', _('Please select at least one notification method.'))
 
-        if dest_what == 'broadcast':
-            recipients = config.multisite_users.keys()
+    valid_methods = notify_methods.keys()
+    for method in msg['methods']:
+        if method not in valid_methods:
+            raise MKUserError('methods', _('Invalid notitification method selected.'))
 
-        elif dest_what == 'online':
-            recipients = userdb.get_online_user_ids()
+    # On manually entered list of users validate the names
+    if type(msg['dest']) == tuple and msg['dest'][0] == 'list':
+        existing = config.multisite_users.keys()
+        for user_id in msg['dest'][1]:
+            if user_id not in existing:
+                raise MKUserError('dest', _('A user with the id "%s" does not exist.') % user_id)
 
-        elif dest_what == 'list':
-            recipients = msg['dest'][1]
+def _process_notify_message(msg):
+    msg['id']   = lib.gen_id()
+    msg['time'] = time.time()
 
-        num_recipients = len(recipients)
+    # construct the list of recipients
+    recipients = []
 
-        num_success = {}
+    if type(msg['dest']) == str:
+        dest_what = msg['dest']
+    else:
+        dest_what = msg['dest'][0]
+
+    if dest_what == 'broadcast':
+        recipients = config.multisite_users.keys()
+
+    elif dest_what == 'online':
+        recipients = userdb.get_online_user_ids()
+
+    elif dest_what == 'list':
+        recipients = msg['dest'][1]
+
+    num_recipients = len(recipients)
+
+    num_success = {}
+    for method in msg['methods']:
+        num_success[method] = 0
+
+    # Now loop all notitification methods to send the notifications
+    errors = {}
+    for user_id in recipients:
         for method in msg['methods']:
-            num_success[method] = 0
+            try:
+                handler = notify_methods[method]['handler']
+                handler(user_id, msg)
+                num_success[method] = num_success[method] + 1
+            except MKInternalError, e:
+                errors.setdefault(method, []).append((user_id, e))
 
-        # Now loop all notitification methods to send the notifications
-        errors = {}
-        for user_id in recipients:
-            for method in msg['methods']:
-                try:
-                    handler = notify_methods[method]['handler']
-                    handler(user_id, msg)
-                    num_success[method] = num_success[method] + 1
-                except MKInternalError, e:
-                    errors.setdefault(method, []).append((user_id, e))
+    message = _('The notification has been sent via<br>')
+    message += "<table>"
+    for method in msg['methods']:
+        message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
+                        (notify_methods[method]["title"], num_success[method], num_recipients)
+    message += "</table>"
 
-        message = _('The notification has been sent via<br>')
-        message += "<table>"
-        for method in msg['methods']:
-            message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
-                            (notify_methods[method]["title"], num_success[method], num_recipients)
-        message += "</table>"
+    message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
+    message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
+    html.message(HTML(message))
 
-        message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
-        message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
-        html.message(HTML(message))
+    if errors:
+        error_message = ""
+        for method, method_errors in errors.items():
+            error_message += _("Failed to send %s notifications to the following users:") % method
+            table_rows = ''
+            for user, exception in method_errors:
+                table_rows += html.render_tr(html.render_td(html.render_tt(user))\
+                                             + html.render_td(exception))
+            error_message += html.render_table(table_rows) + html.render_br()
+        html.show_error(HTML(error_message))
 
-        if errors:
-            error_message = ""
-            for method, method_errors in errors.items():
-                error_message += _("Failed to send %s notifications to the following users:") % method
-                table_rows = ''
-                for user, exception in method_errors:
-                    table_rows += html.render_tr(html.render_td(html.render_tt(user))\
-                                                 + html.render_td(exception))
-                error_message += html.render_table(table_rows) + html.render_br()
-            html.show_error(HTML(error_message))
-
-
-    html.footer()
 
 #   .--Notify Plugins------------------------------------------------------.
 #   |    _   _       _   _  __         ____  _             _               |

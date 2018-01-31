@@ -1,0 +1,11 @@
+Title: Improved timeout error handling when trying to download agent output of a host
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p25
+Date: 1517400098
+
+

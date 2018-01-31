@@ -33,6 +33,7 @@
 #include "EventConsoleConnection.h"
 #include "Logger.h"
 #include "Query.h"
+#include "auth.h"
 
 namespace {
 class ECTableConnection : public EventConsoleConnection {
@@ -123,18 +124,17 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
                                              const contact *ctc) const {
     // TODO(sp) Remove evil casts below.
     auto c = reinterpret_cast<const MonitoringCore::Contact *>(ctc);
-    auto r = rowData<ECRow>(row);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
     auto precedence = std::static_pointer_cast<StringEventConsoleColumn>(
                           column("event_contact_groups_precedence"))
                           ->getValue(row);
     if (precedence == "rule") {
-        isAuthorizedForEventViaContactGroups(c, r, result) ||
-            isAuthorizedForEventViaHost(c, r, result);
+        isAuthorizedForEventViaContactGroups(c, row, result) ||
+            isAuthorizedForEventViaHost(c, row, result);
     } else if (precedence == "host") {
-        isAuthorizedForEventViaHost(c, r, result) ||
-            isAuthorizedForEventViaContactGroups(c, r, result);
+        isAuthorizedForEventViaHost(c, row, result) ||
+            isAuthorizedForEventViaContactGroups(c, row, result);
     } else {
         Error(logger()) << "unknown precedence '" << precedence << "' in table "
                         << name();
@@ -144,13 +144,14 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
 }
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
-    const MonitoringCore::Contact *ctc, const ECRow *row, bool &result) const {
+    const MonitoringCore::Contact *ctc, Row row, bool &result) const {
     auto col = std::static_pointer_cast<ListEventConsoleColumn>(
         column("event_contact_groups"));
     if (col->isNone(row)) {
         return false;
     }
-    for (const auto &name : col->getValue(Row(row))) {
+    for (const auto &name :
+         col->getValue(row, unknown_auth_user(), std::chrono::seconds(0))) {
         if (core()->is_contact_member_of_contactgroup(
                 core()->find_contactgroup(name), ctc)) {
             return (result = true, true);
@@ -160,8 +161,8 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
 }
 
 bool TableEventConsole::isAuthorizedForEventViaHost(
-    const MonitoringCore::Contact *ctc, const ECRow *row, bool &result) const {
-    if (MonitoringCore::Host *hst = row->_host) {
+    const MonitoringCore::Contact *ctc, Row row, bool &result) const {
+    if (MonitoringCore::Host *hst = rowData<ECRow>(row)->_host) {
         return (result = core()->host_has_contact(hst, ctc), true);
     }
     return false;

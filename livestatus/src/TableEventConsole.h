@@ -29,7 +29,7 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
-#include <functional>
+#include <ctime>
 #include <map>
 #include <string>
 #include <utility>
@@ -59,126 +59,99 @@ public:
     };
 
 protected:
-    template <typename T>
-    class EventConsoleColumn {
-        Column &_column;
-        T _default_value;
-        std::function<T(std::string)> _f;
-
-    public:
-        EventConsoleColumn(Column &column, T default_value,
-                           std::function<T(std::string)> f)
-            : _column(column)
-            , _default_value(std::move(default_value))
-            , _f(std::move(f)) {}
-
-        std::string getRaw(const ECRow *row) const {
-            return row == nullptr ? "" : row->_map.at(_column.name());
+    // TODO(sp) Use std::optional<std::string> here.
+    static bool getRaw(Row row, const Column &column, std::string &result) {
+        if (auto r = column.columnData<ECRow>(row)) {
+            auto it = r->_map.find(column.name());
+            if (it == r->_map.end()) {
+                return false;
+            }
+            result = it->second;
+            return true;
         }
+        return false;
+    }
 
-        T getValue(Row row) const {
-            auto r = _column.columnData<ECRow>(row);
-            return r == nullptr ? _default_value
-                                : _f(r->_map.at(_column.name()));
-        }
-    };
-
-    class StringEventConsoleColumn : public StringColumn {
-        EventConsoleColumn<std::string> _ecc;
-
-    public:
+    struct StringEventConsoleColumn : public StringColumn {
         StringEventConsoleColumn(const std::string &name,
                                  const std::string &description)
-            : StringColumn(name, description, -1, -1, -1, 0)
-            , _ecc(*this, std::string(), [](std::string x) { return x; }) {}
+            : StringColumn(name, description, -1, -1, -1, 0) {}
 
         std::string getValue(Row row) const override {
-            return _ecc.getValue(row);
+            std::string result;
+            return getRaw(row, *this, result) ? result : "";
         }
     };
 
-    class IntEventConsoleColumn : public IntColumn {
-        EventConsoleColumn<int32_t> _ecc;
-
-    public:
+    struct IntEventConsoleColumn : public IntColumn {
         IntEventConsoleColumn(const std::string &name,
                               const std::string &description)
-            : IntColumn(name, description, -1, -1, -1, 0)
-            , _ecc(*this, 0, [](std::string x) {
-                return static_cast<int32_t>(atol(x.c_str()));
-            }) {}
+            : IntColumn(name, description, -1, -1, -1, 0) {}
 
         int32_t getValue(Row row,
                          const contact * /* auth_user */) const override {
-            return _ecc.getValue(row);
+            std::string result;
+            return getRaw(row, *this, result)
+                       ? static_cast<int32_t>(atol(result.c_str()))
+                       : 0;
         }
     };
 
-    class DoubleEventConsoleColumn : public DoubleColumn {
-        EventConsoleColumn<double> _ecc;
-
-    public:
+    struct DoubleEventConsoleColumn : public DoubleColumn {
         DoubleEventConsoleColumn(const std::string &name,
                                  const std::string &description)
-            : DoubleColumn(name, description, -1, -1, -1, 0)
-            , _ecc(*this, 0, [](std::string x) { return atof(x.c_str()); }) {}
+            : DoubleColumn(name, description, -1, -1, -1, 0) {}
 
-        double getValue(Row row) const override { return _ecc.getValue(row); }
+        double getValue(Row row) const override {
+            std::string result;
+            return getRaw(row, *this, result) ? atof(result.c_str()) : 0;
+        }
     };
 
-    class TimeEventConsoleColumn : public TimeColumn {
-        EventConsoleColumn<int32_t> _ecc;
-
-    public:
+    struct TimeEventConsoleColumn : public TimeColumn {
         TimeEventConsoleColumn(const std::string &name,
                                const std::string &description)
-            : TimeColumn(name, description, -1, -1, -1, 0)
-            , _ecc(*this, 0, [](std::string x) {
-                return static_cast<int32_t>(atof(x.c_str()));
-            }) {}
+            : TimeColumn(name, description, -1, -1, -1, 0) {}
 
     private:
         std::chrono::system_clock::time_point getRawValue(
             Row row) const override {
-            return std::chrono::system_clock::from_time_t(_ecc.getValue(row));
+            std::string result;
+            return std::chrono::system_clock::from_time_t(
+                getRaw(row, *this, result)
+                    ? static_cast<std::time_t>(atof(result.c_str()))
+                    : 0);
         }
     };
 
-    class ListEventConsoleColumn : public ListColumn {
-        using _column_t = std::vector<std::string>;
-        EventConsoleColumn<_column_t> _ecc;
-
-    public:
+    struct ListEventConsoleColumn : public ListColumn {
         ListEventConsoleColumn(const std::string &name,
                                const std::string &description)
-            : ListColumn(name, description, -1, -1, -1, 0)
-            , _ecc(*this, _column_t(), [](std::string x) {
-                return x.empty() || x == "\002"
-                           ? _column_t()
-                           : mk::split(x.substr(1), '\001');
-            }) {}
+            : ListColumn(name, description, -1, -1, -1, 0) {}
 
         std::vector<std::string> getValue(
             Row row, const contact * /*auth_user*/,
             std::chrono::seconds /*timezone_offset*/) const override {
-            return _ecc.getValue(row);
+            std::string result;
+            return getRaw(row, *this, result) && !result.empty() &&
+                           result != "\002"
+                       ? mk::split(result.substr(1), '\001')
+                       : std::vector<std::string>();
         }
 
-        bool isNone(const ECRow *row) const {
-            return _ecc.getRaw(row) == "\002";
+        bool isNone(Row row) const {
+            std::string result;
+            return getRaw(row, *this, result) && result == "\002";
         }
-
-        _column_t getValue(Row row) const { return _ecc.getValue(row); }
     };
 
     bool isAuthorizedForEvent(Row row, const contact *ctc) const;
 
 private:
     bool isAuthorizedForEventViaContactGroups(
-        const MonitoringCore::Contact *ctc, const ECRow *row,
-        bool &result) const;
+        const MonitoringCore::Contact *ctc, Row row, bool &result) const;
     bool isAuthorizedForEventViaHost(const MonitoringCore::Contact *ctc,
-                                     const ECRow *row, bool &result) const;
+                                     Row row, bool &result) const;
 };
 
 #endif  // TableEventConsole_h

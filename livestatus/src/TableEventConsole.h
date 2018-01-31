@@ -72,13 +72,20 @@ protected:
             : _column(column), _default_value(default_value), _f(f) {}
 
         std::string getRaw(ECRow *row) const {
-            return row == nullptr ? "" : row->_map.at(_column.name());
+            if (row == nullptr) {
+                return "";
+            }
+            auto it = row->_map.find(_column.name());
+            return it == row->_map.end() ? "" : it->second;
         }
 
         T getValue(Row row) const {
             auto r = _column.columnData<ECRow>(row);
-            return r == nullptr ? _default_value
-                                : _f(r->_map.at(_column.name()));
+            if (r == nullptr) {
+                return _default_value;
+            }
+            auto it = r->_map.find(_column.name());
+            return it == r->_map.end() ? _default_value : _f(it->second);
         }
     };
 

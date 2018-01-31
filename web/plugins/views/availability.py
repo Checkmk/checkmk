@@ -211,7 +211,6 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
     html.write(confirmation_html_code)
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
-    html.del_all_vars("editanno_")
     html.del_all_vars("anno_")
     if html.var("filled_in") == "editanno":
         html.del_var("filled_in")
@@ -744,7 +743,6 @@ def render_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     table.end()
 
 
-
 def edit_annotation():
     site_id       = html.var("anno_site") or ""
     hostname      = html.var("anno_host")
@@ -756,6 +754,7 @@ def edit_annotation():
     # Find existing annotation with this specification
     annotations = availability.load_annotations()
     annotation = availability.find_annotation(annotations, site_host_svc, fromtime, untiltime)
+
     if not annotation:
         value = {
             "from"    : fromtime,
@@ -764,59 +763,75 @@ def edit_annotation():
         }
     else:
         value = annotation.copy()
+
     value["host"] = hostname
     value["service"] = service
     value["site"] = site_id
 
-    value = forms.edit_dictionary([
-        ( "site",     TextAscii(title = _("Site")) ),
-        ( "host",     TextUnicode(title = _("Hostname")) ),
-        ( "service",  Optional(TextUnicode(allow_empty=False), sameline = True, title = _("Service")) ),
-        ( "from",     AbsoluteDate(title = _("Start-Time"), include_time = True) ),
-        ( "until",    AbsoluteDate(title = _("End-Time"), include_time = True) ),
-        ( "downtime", Optional(
-                          DropdownChoice(
-                              choices = [
-                                  ( True,  _("regard as scheduled downtime") ),
-                                  ( False, _("do not regard as scheduled downtime") ),
-                              ],
-                          ),
-                          title = _("Scheduled downtime"),
-                          label = _("Reclassify downtime of this period"),
-        )),
-        ( "text",    TextAreaUnicode(title = _("Annotation"), allow_empty = False) ), ],
-        value,
-        varprefix = "editanno_",
-        formname = "editanno",
-        focus = "text")
+    if html.check_transaction():
+        try:
+            vs = _vs_annotation()
+            value = vs.from_html_vars("_editanno")
+            vs.validate_value(value, "_editanno")
 
-    # FIXME: Is value not always given by the lines above??
-    if value:
-        site_host_svc = value["site"], value["host"], value["service"]
-        del value["site"]
-        del value["host"]
-        value["date"] = time.time()
-        value["author"] = config.user.id
-        availability.update_annotations(site_host_svc, value, replace_existing=annotation)
-        html.del_all_vars(prefix="editanno_")
-        html.del_var("filled_in")
-        return False
+            site_host_svc = value["site"], value["host"], value["service"]
+            del value["site"]
+            del value["host"]
+            value["date"] = time.time()
+            value["author"] = config.user.id
+            availability.update_annotations(site_host_svc, value, replace_existing=annotation)
+            html.del_var("filled_in")
+            return False
+        except MKUserError, e:
+            html.user_error(e)
 
-    else:
-        title = _("Edit annotation of ") + hostname
-        if service:
-            title += "/" + service
+    title = _("Edit annotation of ") + hostname
+    if service:
+        title += "/" + service
 
-        html.body_start(title, stylesheets=["pages","views","status"])
-        html.top_heading(title)
+    html.body_start(title, stylesheets=["pages","views","status"])
+    html.top_heading(title)
 
-        html.begin_context_buttons()
-        html.context_button(_("Abort"), html.makeuri([("anno_host", "")]), "abort")
-        html.end_context_buttons()
+    html.begin_context_buttons()
+    html.context_button(_("Abort"), html.makeuri([("anno_host", "")]), "abort")
+    html.end_context_buttons()
 
-        html.bottom_footer()
-        html.body_end()
-        return True
+    html.begin_form("editanno", method="GET")
+    _vs_annotation().render_input("_editanno", value, form=True)
+
+    html.button("save", _("Save"))
+
+    html.hidden_fields()
+    html.end_form()
+
+    html.bottom_footer()
+    html.body_end()
+    return True
+
+
+def _vs_annotation():
+    return Dictionary(
+        elements = [
+            ("site",     TextAscii(title = _("Site")) ),
+            ("host",     TextUnicode(title = _("Hostname")) ),
+            ("service",  Optional(TextUnicode(allow_empty=False), sameline = True, title = _("Service")) ),
+            ("from",     AbsoluteDate(title = _("Start-Time"), include_time = True) ),
+            ("until",    AbsoluteDate(title = _("End-Time"), include_time = True) ),
+            ("downtime", Optional(
+                              DropdownChoice(
+                                  choices = [
+                                      ( True,  _("regard as scheduled downtime") ),
+                                      ( False, _("do not regard as scheduled downtime") ),
+                                  ],
+                              ),
+                              title = _("Scheduled downtime"),
+                              label = _("Reclassify downtime of this period"),
+            )),
+            ("text",    TextAreaUnicode(title = _("Annotation"), allow_empty = False) ),
+        ],
+        title = _("Edit annotation"),
+        optional_keys = [],
+    )
 
 
 # Called at the beginning of every availability page

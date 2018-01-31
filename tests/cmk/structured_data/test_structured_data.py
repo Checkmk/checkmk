@@ -550,7 +550,7 @@ def test_structured_data_StructuredDataTree_building_tree():
      ((0, 16272, 0), (16270, 0, 16272)),
     ),
 ])
-def test_structured_data_StructuredDataTree_cpu_tracking_load_from(trees, stats, entries, results):
+def test_structured_data_StructuredDataTree_performance(trees, stats, entries, results):
     tree_old_name, tree_new_fixed_name, tree_new_variable_name = trees
     time_loading_tree, time_delta_tree, time_count_entries = stats
     tree_old_entries, tree_new_fixed_entries, tree_new_variable_entries = entries
@@ -596,50 +596,70 @@ def test_structured_data_StructuredDataTree_cpu_tracking_load_from(trees, stats,
 
     #   ---count entries--------------------------------------------------------
 
-    cpu_tracking.start("busy")
+    #TODO testing
+    start = time.clock()
     entries_old = tree_old.count_entries()
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
+    run_time = time.clock() - start
+    #cpu_tracking.start("busy")
+    #entries_old = tree_old.count_entries()
+    #cpu_tracking.end()
+    #phase_times = cpu_tracking.get_times()
+    #total_times = phase_times["TOTAL"]
+    #run_time = total_times[4]
     assert run_time < time_count_entries
     assert tree_old_entries == entries_old
 
-    cpu_tracking.start("busy")
+    #TODO testing
+    start = time.clock()
     entries_new_fixed = tree_new_fixed.count_entries()
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
+    run_time = time.clock() - start
+    #cpu_tracking.start("busy")
+    #entries_new_fixed = tree_new_fixed.count_entries()
+    #cpu_tracking.end()
+    #phase_times = cpu_tracking.get_times()
+    #total_times = phase_times["TOTAL"]
+    #run_time = total_times[4]
     assert run_time < time_count_entries
     assert tree_new_fixed_entries == entries_new_fixed
 
-    cpu_tracking.start("busy")
+    #TODO testing
+    start = time.clock()
     entries_new_variable = tree_new_variable.count_entries()
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
+    run_time = time.clock() - start
+    #cpu_tracking.start("busy")
+    #entries_new_variable = tree_new_variable.count_entries()
+    #cpu_tracking.end()
+    #phase_times = cpu_tracking.get_times()
+    #total_times = phase_times["TOTAL"]
+    #run_time = total_times[4]
     assert run_time < time_count_entries
     assert tree_new_variable_entries == entries_new_variable
 
     #   ---delta tree computation-----------------------------------------------
 
-    cpu_tracking.start("busy")
+    #TODO testing
+    start = time.clock()
     n,c,r,d = tree_new_fixed.compare_with(tree_old)
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
+    run_time = time.clock() - start
+    #cpu_tracking.start("busy")
+    #n,c,r,d = tree_new_fixed.compare_with(tree_old)
+    #cpu_tracking.end()
+    #phase_times = cpu_tracking.get_times()
+    #total_times = phase_times["TOTAL"]
+    #run_time = total_times[4]
     assert compare_fixed_result == (n,c,r)
     assert run_time < time_delta_tree
 
-    cpu_tracking.start("busy")
+    #TODO testing
+    start = time.clock()
     n,c,r,d = tree_new_variable.compare_with(tree_old)
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
+    run_time = time.clock() - start
+    #cpu_tracking.start("busy")
+    #n,c,r,d = tree_new_variable.compare_with(tree_old)
+    #cpu_tracking.end()
+    #phase_times = cpu_tracking.get_times()
+    #total_times = phase_times["TOTAL"]
+    #run_time = total_times[4]
     assert compare_variable_result == (n,c,r)
     assert run_time < time_delta_tree
 

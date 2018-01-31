@@ -4157,6 +4157,12 @@ metric_info["quarantine"] = {
     "color" : "43/b",
 }
 
+metric_info["messages_in_queue"] = {
+    "title" : _("Messages in queue"),
+    "unit"  : "count",
+    "color" : "#701141",
+}
+
 metric_info["mail_queue_hold_length"] = {
     "title" : _("Length of hold mail queue"),
     "unit"  : "count",
@@ -5089,6 +5095,13 @@ check_metrics["check_mk-veeam_client"] = {
 check_metrics["check_mk-cups_queues"] = {
     "jobs" : { "name" : "printer_queue" }
 }
+
+mq_translation = {
+    "queue" : { "name" : "messages_in_queue" }
+}
+check_metrics['check_mk-mq_queues'] = mq_translation
+check_metrics['check_mk-websphere_mq_channels'] = mq_translation
+check_metrics['check_mk-websphere_mq_queues'] = mq_translation
 
 check_metrics["check_mk-printer_pages"] = {
     "pages" : { "name" : "pages_total" }
@@ -6462,6 +6475,13 @@ perfometer_info.append({
     'type'      : 'logarithmic',
     'metric'    : 'fireeye_stat_attachment',
     'half_value': 50.0,
+    'exponent'  : 2.0,
+})
+
+perfometer_info.append({
+    'type'      : 'logarithmic',
+    'metric'    : 'messages_in_queue',
+    'half_value': 1.0,
     'exponent'  : 2.0,
 })
 

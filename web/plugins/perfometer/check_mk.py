@@ -836,14 +836,6 @@ def perfometer_esx_vsphere_hostsystem_cpu(row, command, perf):
 
 perfometers['check_mk-esx_vsphere_hostsystem.cpu_usage'] = perfometer_esx_vsphere_hostsystem_cpu
 
-def perfometer_mq_queues(row, command, perf):
-    size = int(perf[0][1])
-    return "%s Messages" % size, perfometer_logarithmic(size, 1, 2, "#701141")
-
-perfometers['check_mk-mq_queues'] = perfometer_mq_queues
-perfometers['check_mk-websphere_mq_channels'] = perfometer_mq_queues
-perfometers['check_mk-websphere_mq_queues'] = perfometer_mq_queues
-
 def perfometer_apc_mod_pdu_modules(row, check_command, perf_data):
     value = int(savefloat(perf_data[0][1]) * 100)
     return "%skw" % perf_data[0][1], perfometer_logarithmic(value, 500, 2, "#3366CC")

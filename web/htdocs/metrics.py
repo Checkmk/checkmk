@@ -950,7 +950,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
     def __init__(self, perfometer, translated_metrics):
         super(MetricometerRendererLogarithmic, self).__init__(perfometer, translated_metrics)
 
-        if "metric" not in self._perfometer:
+        if self._perfometer is not None and "metric" not in self._perfometer:
             raise MKGeneralException(_("Missing key \"metric\" in logarithmic perfometer: %r") % self._perfometer)
 
 

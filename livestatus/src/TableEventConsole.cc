@@ -28,6 +28,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 #include "Column.h"
 #include "EventConsoleConnection.h"
@@ -38,24 +39,56 @@
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *mc, std::string table_name, Query *query)
+    ECTableConnection(MonitoringCore *mc, const Table &table, Query *query)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
         , _mc(mc)
-        , _table_name(std::move(table_name))
+        , _table(table)
         , _query(query) {}
 
 private:
     void sendRequest(std::ostream &os) override {
-        // NOTE: The EC ignores Columns: at the moment!
-        os << std::nounitbuf << "GET " << _table_name
-           << "\nOutputFormat: plain\nColumns:";
-        for (const auto &c : _query->allColumns()) {
+        os << std::nounitbuf;
+        emitGET(os);
+        emitOutputFormat(os);
+        emitColumnsHeader(os);
+        emitTimeRangeFilter(os);
+        os << std::endl;
+    }
+
+    void emitGET(std::ostream &os) const {
+        // skip "eventconsole" prefix :-P
+        os << "GET " << _table.name().substr(12);
+    }
+
+    void emitOutputFormat(std::ostream &os) const {
+        os << "\nOutputFormat: plain";
+    }
+
+    void emitColumnsHeader(std::ostream &os) {
+        os << "\nColumns:";
+        // Initially we consider all columns used in the query...
+        auto all = _query->allColumns();
+        // ... then we add some special columns which we might need irrespective
+        // of the actual query (see receiveReply, isAuthorizedForEvent, and
+        // isAuthorizedForEventViaContactGroups below)...
+        for (const auto &name : {"event_host",                       //
+                                 "event_contact_groups_precedence",  //
+                                 "event_contact_groups"}) {
+            if (auto col = _table.column(name)) {
+                all.insert(col);
+            }
+        }
+        // .. and then we ignore all host-related columns, they are implicitly
+        // joined later via ECRow._host later.
+        for (const auto &c : all) {
             if (!mk::starts_with(c->name(), "host_")) {
                 os << " " << c->name();
             }
         }
-        // HACK: Reconstruct time range filter
+    }
+
+    void emitTimeRangeFilter(std::ostream &os) {
         auto end = time(nullptr) + 1;
         int since = 0;
         int until = end;
@@ -66,7 +99,6 @@ private:
         if (until != end) {
             os << "\nFilter: history_time <= " << until - 1;
         }
-        os << std::endl;
     }
 
     void receiveReply(std::istream &is) override {
@@ -102,7 +134,7 @@ private:
     }
 
     MonitoringCore *_mc;
-    std::string _table_name;
+    const Table &_table;
     Query *_query;
 };
 }  // namespace
@@ -112,8 +144,7 @@ TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table(mc) {}
 void TableEventConsole::answerQuery(Query *query) {
     if (core()->mkeventdEnabled()) {
         try {
-            // skip "eventconsole" prefix :-P
-            ECTableConnection(core(), name().substr(12), query).run();
+            ECTableConnection(core(), *this, query).run();
         } catch (const std::runtime_error &err) {
             query->invalidRequest(err.what());
         }

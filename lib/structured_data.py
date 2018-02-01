@@ -738,6 +738,8 @@ class Numeration(Leaf):
 
 
     def _compare_with_fixed_length(self, old, keep_identical=False):
+        # In this case we assume that each entry corresponds to the
+        # old one with the same index.
         new, changed, removed = 0, 0, 0
         data = []
         for my_entries, old_entries in \
@@ -782,19 +784,35 @@ class Numeration(Leaf):
                 data.append({k: (v,None) for k,v in old_entry.iteritems()})
 
         for intersect_key in intersect_keys:
-            my_entries = set([x for x in my_converted[intersect_key].values()])
-            old_entries = set([x for x in old_converted[intersect_key].values()])
-            new_entries = my_entries - old_entries
-            removed_entries = old_entries - my_entries
-            for new_entry in new_entries:
-                data.append({k: (None,v) for k,v in zip(intersect_key, new_entry)})
-            for old_entry in old_entries:
-                data.append({k: (v,None) for k,v in zip(intersect_key, old_entry)})
-            new += len(new_entries)
-            removed += len(removed_entries)
-            if keep_identical:
-                for intersect_entry in my_entries.intersection(old_entries):
-                    data.append({k: (v,v) for k,v in zip(intersect_key, old_entry)})
+            my_entries = my_converted[intersect_key].values()
+            old_entries = old_converted[intersect_key].values()
+            if len(my_entries) == len(old_entries):
+                data_entry = {}
+                # In this case we assume that each entry corresponds to the
+                # old one with the same index.
+                for k, my_entry, old_entry in zip(intersect_key, my_entries, old_entries):
+                    if my_entry == old_entry:
+                        if keep_identical:
+                            data_entry.setdefault(k, (my_entry, my_entry))
+                    else:
+                        data_entry.setdefault(k, (old_entry, my_entry))
+                        changed += 1
+                data.append(data_entry)
+
+            else:
+                my_entries = set(my_entries)
+                old_entries = set(old_entries)
+                new_entries = my_entries - old_entries
+                removed_entries = old_entries - my_entries
+                for new_entry in new_entries:
+                    data.append({k: (None,v) for k,v in zip(intersect_key, new_entry)})
+                for removed_entry in removed_entries:
+                    data.append({k: (v,None) for k,v in zip(intersect_key, removed_entry)})
+                new += len(new_entries)
+                removed += len(removed_entries)
+                if keep_identical:
+                    for intersect_entry in my_entries.intersection(old_entries):
+                        data.append({k: (v,v) for k,v in zip(intersect_key, old_entry)})
         return new, changed, removed, data
 
 

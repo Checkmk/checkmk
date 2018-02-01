@@ -1,0 +1,18 @@
+Title: omd: Improved error handling when deleting site users
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517516618
+Class: fix
+
+When deleting a Check_MK site, the whole site user including it's
+home directory and group is removed. Previous versions were suppressing
+errors occuring during deletion of the site user which could leave
+the site user untouched including the site group which can only
+be deleted when the user has been deleted.
+
+The <tt>omd rm</tt> command will now fail with an error in case the
+user can not be deleted and print out the reason for this issue. After
+resolving it, you can then try to execute <tt>omd rm</tt> again.

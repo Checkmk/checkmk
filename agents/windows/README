@@ -54,10 +54,16 @@
     RotatingFileHandler   - (log)file rotation utility
     stringutil            - helper functions for string operations (some very crude, some are
                             probably obsolete)
-    types                 - declaration of data types (most are probably superfluous)
+    types                 - declaration of data types 
     CrashHandler          - produces backtraces on crashes
     dynamic_func          - small helper to get function handles dynamically
                             (for those functions not available on all windowses)
+    WritableFile          - Wrapper for managing (a) writable file handle(s) over WinAPI
+
+** Tests
+    test/*                - Unit tests (Google Test / Google Mock) for Windows agent
+    test/section          - Unit tests for section wrappers
+    it/*                  - Integration tests (pytest) using a remote Windows VM
 
 ** Remaining files are not part of the agent
     perftest.cc           - commandline tool to test perfcounter interface (old api)
@@ -75,21 +81,30 @@
 
 Currently mingw-w64 5.0.1-1 (http://mingw-w64.org), based on gcc 6.2.1, is used to build the agent.
 The compilation uses GNU autotools and takes place within a chroot jail. The bash script
-'make-agent' is used for setting up the chroot jail and executing the desired build steps within it.
+'make-agent' (sudo necessary!) is used for setting up the chroot jail and executing the desired
+build steps within it.
 
 ** Build output
 
-The default make ('make-agent' without parameters) generates 4 binaries (2 for x86, 2 for x64):
+The default make ('sudo ./make-agent' without parameters) generates 4 binaries (2 for x86, 2 for
+x64):
     check_mk_agent.exe             (debugging symbols removed)
     check_mk_agent-64.exe          (debugging symbols removed)
     wmitest.exe                    (debugging symbols removed)
     wmitest-64.exe                 (debugging symbols removed)
 
 In order to create executables with all debugging symbols (that is, without stripping the symbols
-during the installation step), please call 'make-agent install'.
+during the installation step), please call 'sudo ./make-agent install'.
 
 Object files and other intermediate build artifacts are stored in the subdirectories "build" and
 "build64".
+
+Unit tests are by default executed at the end of each build (make-agent without parameters). Unit
+tests (only 64 bit) can be built and run exclusively using 'sudo ./make-agent unittest'.
+
+Integration tests can be run using 'sudo ./make-agent integrationtest'. In order to do this, special
+SSH keys must be generated for the current user without password and saved as
+~/.ssh/id_rsa_windows_test[.pub]
 
 ** Debugging
 

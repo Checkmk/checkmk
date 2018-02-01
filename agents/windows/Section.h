@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -31,7 +31,11 @@
 #include <map>
 #include <memory>
 #include <string>
-#include "Configuration.h"
+#include <vector>
+
+class Environment;
+class Logger;
+typedef void* HANDLE;
 
 class Section {
     friend class SectionGroup;
@@ -44,10 +48,14 @@ protected:
     const std::string _outputName;
     const std::string _configName;
 
-public:
-    Section(const std::string &outputName, const std::string &configName);
+protected:
+    const Environment &_env;
+    Logger *_logger;
 
-    virtual ~Section() {}
+public:
+    Section(const std::string &outputName, const std::string &configName, const Environment &env, Logger *logger);
+
+    virtual ~Section() = default;
 
     Section *withSeparator(char sep) {
         _separator = sep;
@@ -60,7 +68,7 @@ public:
     std::string outputName() const { return _outputName; }
     std::string configName() const { return _configName; }
 
-    virtual void postprocessConfig(const Environment &env) {}
+    virtual void postprocessConfig() {}
 
     /// TODO please implement me
     virtual void startIfAsync() {}
@@ -72,8 +80,7 @@ public:
      **/
     virtual std::vector<HANDLE> stopAsync() { return std::vector<HANDLE>(); }
 
-    bool produceOutput(std::ostream &out, const Environment &env,
-                       bool nested = false);
+    bool produceOutput(std::ostream &out, bool nested = false);
 
     virtual bool isEnabled() const { return true; }
     virtual bool realtimeSupport() const { return _realtime_support; }
@@ -82,9 +89,8 @@ protected:
     char separator() const { return _separator; }
 
 private:
-    bool generateOutput(const Environment &env, std::string &buffer);
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) = 0;
+    bool generateOutput(std::string &buffer);
+    virtual bool produceOutputInner(std::ostream &out) = 0;
 };
 
 #endif  // Section_h

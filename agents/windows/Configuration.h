@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -26,11 +26,12 @@
 #define Configuration_h
 
 #include <map>
-#include "Environment.h"
 #include "SettingsCollector.h"
 #include "types.h"
 
 class ConfigurableBase;
+class Environment;
+
 
 /* Example configuration file:
 
@@ -78,7 +79,8 @@ public:
     void reg(const char *section, const char *key, ConfigurableBase *cfg);
     void deregister(const char *section, const char *key,
                     ConfigurableBase *cfg);
-
+    inline const Environment& getEnvironment() const { return _environment; }
+    
     static std::string configFileName(bool local, const Environment &env);
 
 private:
@@ -90,7 +92,7 @@ private:
     typedef std::pair<std::string, std::string> ConfigurableKey;
     std::map<ConfigurableKey, std::vector<ConfigurableBase *>> _configurables;
 
-    Environment _environment;
+    const Environment &_environment;
 };
 
 #endif  // Configuration_h

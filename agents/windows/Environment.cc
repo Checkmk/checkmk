@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -26,7 +26,7 @@
 #include <windows.h>
 #include <cassert>
 #include <stdexcept>
-#include "logging.h"
+#include "Logger.h"
 #include "stringutil.h"
 
 using namespace std;
@@ -38,7 +38,8 @@ static const int MAX_PATH_UNICODE = 32767;
 
 Environment *Environment::s_Instance = nullptr;
 
-Environment::Environment(bool use_cwd) : _hostname() {
+Environment::Environment(bool use_cwd, Logger *logger)
+    : _hostname(), _logger(logger) {
     determineDirectories(use_cwd);
 
     char buffer[256];
@@ -100,11 +101,13 @@ void Environment::getAgentDirectory(char *buffer, int size, bool use_cwd) {
 }
 
 string Environment::assignDirectory(const char *name) {
-    string result(_agent_directory + "\\" + name);
+    const string result(_agent_directory + "\\" + name);
     if (!CreateDirectoryA(result.c_str(), NULL)) {
-        if (GetLastError() != ERROR_ALREADY_EXISTS) {
-            crash_log("Failed to create directory %s: %s (%lu)", name,
-                      get_win_error_as_string().c_str(), GetLastError());
+        const auto lastError = GetLastError();
+        if (lastError != ERROR_ALREADY_EXISTS) {
+            Error(_logger) << "Failed to create directory : " << name << ": "
+                           << get_win_error_as_string(lastError)
+                           << " (" << lastError << ")";
         }
     }
     return result;

@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -28,6 +28,8 @@
 #include <windows.h>
 #include "types.h"
 
+class Logger;
+
 class AgentUpdaterError : public std::runtime_error {
 public:
     explicit AgentUpdaterError(const std::string &what) : std::runtime_error(buildSectionCheckMK(what)) {}
@@ -38,7 +40,7 @@ private:
 
 class ExternalCmd {
 public:
-    ExternalCmd(const std::string &cmdline);
+    ExternalCmd(const std::string &cmdline, Logger *logger);
 
     ~ExternalCmd();
 
@@ -66,6 +68,7 @@ private:
     HANDLE _job_object{INVALID_HANDLE_VALUE};
     WinHandle _stdout{INVALID_HANDLE_VALUE};
     WinHandle _stderr{INVALID_HANDLE_VALUE};
+    Logger *_logger;
 };
 
 #endif  // ExternalCmd_h

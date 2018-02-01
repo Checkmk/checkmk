@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,9 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionWMI.h"
-#include "../logging.h"
+#include "../Logger.h"
 #include "../stringutil.h"
 #include "../wmiHelper.h"
+#include <algorithm>
 #include <ctime>
 
 
@@ -33,8 +34,10 @@
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
 SectionWMI::SectionWMI(const std::string &outputName,
-                       const std::string &configName)
-    : Section(outputName, configName) {
+                       const std::string &configName,
+                       const Environment &env,
+                       Logger *logger)
+    : Section(outputName, configName, env, logger) {
     withSeparator(',');
 }
 
@@ -66,7 +69,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
 
     // First use a local stream buffer...
     std::stringstream localStream;
-    localStream << to_utf8(join(data.names(), L",").c_str()) << "\n";
+    localStream << Utf8(join(data.names(), L",")) << "\n";
 
     // output data
     bool more = true;
@@ -77,7 +80,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
                        [&data](const std::wstring &name) {
                            return data.get<std::wstring>(name.c_str());
                        });
-        localStream << to_utf8(join(values, L",").c_str());
+        localStream << Utf8(join(values, L","));
 
         more = data.next();
 
@@ -95,7 +98,7 @@ void SectionWMI::suspend(int duration)
     _disabled_until = time(nullptr) + duration;
 }
 
-bool SectionWMI::produceOutputInner(std::ostream &out, const Environment &) {
+bool SectionWMI::produceOutputInner(std::ostream &out) {
     if (_disabled_until > time(nullptr)) {
         return false;
     }
@@ -131,7 +134,7 @@ bool SectionWMI::produceOutputInner(std::ostream &out, const Environment &) {
     } catch (const wmi::Timeout &t) {
         // Output WMI timeout so that the check in question knows to handle it.
         out << t.what() << std::endl;
-        crash_log("SectionWMI::produceOutputInner caught %s", t.what());
+        Debug(_logger) << "SectionWMI::produceOutputInner caught " << t.what();
         success = true;
     }
 

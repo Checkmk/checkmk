@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,9 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionPerfcounter.h"
+#include "../Environment.h"
+#include "../Logger.h"
 #include "../PerfCounter.h"
 #include "../PerfCounterCommon.h"
-#include "../logging.h"
 #include "../stringutil.h"
 
 int NameBaseNumberMap::getCounterBaseNumber(const std::string &counterName) {
@@ -42,15 +43,17 @@ int NameBaseNumberMap::getCounterBaseNumber(const std::string &counterName) {
             return it->second;
         }
     }
-    crash_log("NameBaseNumberMap::getCounterBaseNumber "
-              "could not resolve counter name %s", counterName.c_str());
+    Debug(_logger) << "NameBaseNumberMap::getCounterBaseNumber "
+                   << "could not resolve counter name " << counterName;
     return -1;
 }
 
 SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
                                        const std::string &configName,
-                                       NameBaseNumberMap &nameNumberMap)
-    : Section(outputName, configName)
+                                       NameBaseNumberMap &nameNumberMap,
+                                       const Environment &env,
+                                       Logger *logger)
+    : Section(outputName, configName, env, logger)
     , _nameNumberMap(nameNumberMap) {
     withSeparator(',');
 }
@@ -60,8 +63,7 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
     return this;
 }
 
-bool SectionPerfcounter::produceOutputInner(std::ostream &out,
-                                            const Environment &) {
+bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
     try {
         const int counterBaseNumber =
             _nameNumberMap.getCounterBaseNumber(_outputName);
@@ -90,8 +92,7 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out,
             }
         }
 
-        out << "instance,"
-            << to_utf8(join(counter_object.counterNames(), L",").c_str())
+        out << "instance," << Utf8(join(counter_object.counterNames(), L","))
             << "\n";
         for (const auto &instance_values : value_map) {
             std::wstring instance_name = L"\"\"";
@@ -99,11 +100,11 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out,
                 instance_names.size()) {
                 instance_name = instance_names[instance_values.first];
             }
-            out << to_utf8(instance_name.c_str()) << ","
-                << to_utf8(join(instance_values.second, L",").c_str()) << "\n";
+            out << Utf8(instance_name) << ","
+                << Utf8(join(instance_values.second, L",")) << "\n";
         }
     } catch (const std::exception &e) {
-        crash_log("Exception: %s", e.what());
+        Error(_logger) << "Exception: " << e.what();
         return false;
     }
     return true;

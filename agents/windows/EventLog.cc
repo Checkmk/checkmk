@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -22,11 +22,16 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "EventLog.h"
-#include <windows.h>
 #include <algorithm>
 #include <map>
 #include <string>
+#include <windows.h>
+#include "EventLog.h"
+#include "Logger.h"
+#include "stringutil.h"
+
+using std::vector;
+using std::wstring;
 
 // loads a dll with support for environment variables in the path
 HMODULE load_library_ext(LPCWSTR dllpath) {
@@ -63,6 +68,7 @@ HMODULE load_library_ext(LPCWSTR dllpath) {
 class MessageResolver {
     std::wstring _name;
     std::map<std::wstring, HModuleWrapper> _cache;
+    Logger *_logger;
 
     std::vector<std::wstring> getMessageFiles(LPCWSTR source) const {
         static const std::wstring base =
@@ -73,7 +79,7 @@ class MessageResolver {
         DWORD ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
                                   KEY_READ, &key);
         if (ret != ERROR_SUCCESS) {
-            crash_log("failed to open HKLM:%ls", regpath.c_str());
+            Error(_logger) << "failed to open HKLM:" << Utf8(regpath);
             return std::vector<std::wstring>();
         }
 
@@ -91,23 +97,24 @@ class MessageResolver {
                                    &buffer[0], &size);
         }
         if (res != ERROR_SUCCESS) {
-            crash_log("failed to read at EventMessageFile in HKLM:%ls : %s",
-                      regpath.c_str(), get_win_error_as_string(res).c_str());
-            return std::vector<std::wstring>();
-        }
-
-        // result may be multiple dlls
-        std::vector<std::wstring> result;
-        std::wstringstream str(reinterpret_cast<wchar_t *>(&buffer[0]));
-        std::wstring dll_path;
-        while (std::getline(str, dll_path, L';')) {
-            result.push_back(dll_path);
-        }
-        return result;
+            Error(_logger) << "failed to read at EventMessageFile in HKLM:%ls : %s"
+                           << Utf8(regpath) << " : "
+                           << get_win_error_as_string(res);
+            return vector<wstring>();
     }
 
-    std::wstring resolveInt(DWORD eventID, LPCWSTR dllpath,
-                            LPCWSTR *parameters) {
+    // result may be multiple dlls
+    vector<wstring> result;
+    std::wstringstream str(reinterpret_cast<wchar_t *>(&buffer[0]));
+    wstring dll_path;
+    while (std::getline(str, dll_path, L';')) {
+        result.push_back(dll_path);
+    }
+    return result;
+}
+
+    wstring resolveInt(DWORD eventID, LPCWSTR dllpath,
+                       LPCWSTR *parameters) {
         HMODULE dll = nullptr;
 
         if (dllpath) {
@@ -121,7 +128,7 @@ class MessageResolver {
             }
 
             if (!dll) {
-                crash_log("     --> failed to load %ls", dllpath);
+                Error(_logger) << "     --> failed to load " << Utf8(dllpath);
                 return L"";
             }
         } else {
@@ -136,16 +143,16 @@ class MessageResolver {
             FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
         if (dll) dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
 
-        crash_log("Event ID: %lu.%lu",
-                  eventID / 65536,   // "Qualifiers": no idea what *that* is
-                  eventID % 65536);  // the actual event id
+        Debug(_logger) << "Event ID: "
+                       << eventID / 65536  // "Qualifiers": no idea what *that* is
+                       << "." << eventID % 65536;  // the actual event id
 
-        crash_log("Formatting Message");
+        Debug(_logger) << "Formatting Message";
         DWORD len =
             FormatMessageW(dwFlags, dll, eventID,
                            0,  // accept any language
                            &result[0], result.size(), (char **)parameters);
-        crash_log("Formatting Message - DONE");
+        Debug(_logger) << "Formatting Message - DONE";
 
         // this trims the result string or empties it if formatting failed
         result.resize(len);
@@ -153,7 +160,8 @@ class MessageResolver {
     }
 
 public:
-    MessageResolver(const std::wstring &logName) : _name(logName) {}
+    MessageResolver(const std::wstring &logName, Logger *logger)
+	: _name(logName), _logger(logger) {}
 
     std::wstring resolve(DWORD eventID, LPCWSTR source, LPCWSTR *parameters) {
         std::wstring result;
@@ -206,8 +214,8 @@ public:
         return _record->TimeGenerated;
     }
 
-    virtual std::wstring source() const override {
-        return std::wstring(reinterpret_cast<LPCWSTR>(_record + 1));
+    virtual wstring source() const override {
+        return wstring(reinterpret_cast<LPCWSTR>(_record + 1));
     }
 
     virtual Level level() const override {
@@ -229,10 +237,10 @@ public:
         }
     }
 
-    virtual std::wstring message() const override {
+    virtual wstring message() const override {
         // prepare array of zero terminated strings to be inserted
         // into message template.
-        std::vector<LPCWSTR> strings;
+        vector<LPCWSTR> strings;
         LPCWSTR string = (WCHAR *)(((char *)_record) + _record->StringOffset);
         for (int i = 0; i < _record->NumStrings; ++i) {
             strings.push_back(string);
@@ -250,8 +258,11 @@ public:
     }
 };
 
-EventLog::EventLog(LPCWSTR name)
-    : _name(name), _log(name), _resolver(new MessageResolver(name)) {
+EventLog::EventLog(const std::wstring &name, Logger *logger)
+    : _name(name)
+    , _log(name)
+    , _resolver(new MessageResolver(name, logger))
+    , _logger(logger) {
     _buffer.resize(INIT_BUFFER_SIZE);
 }
 
@@ -262,7 +273,7 @@ void EventLog::reset() {
     _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
 }
 
-std::wstring EventLog::getName() const { return _name; }
+wstring EventLog::getName() const { return _name; }
 
 void EventLog::seek(uint64_t record_number) {
     DWORD oldest_record, record_count;
@@ -351,7 +362,7 @@ bool EventLog::fillBuffer() {
         flags |= EVENTLOG_SEQUENTIAL_READ;
     }
 
-    crash_log("    . seek to %lu", _record_offset);
+    Debug(_logger) << "    . seek to " << _record_offset;
 
     DWORD bytes_required;
 

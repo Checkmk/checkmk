@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -60,9 +60,14 @@
 #include <winreg.h>  // performance counters from registry
 #include <ws2ipdef.h>
 #include <algorithm>
+#include <fstream>
+#include <functional>
 #include <map>
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
+#include "ChronoUtils.h"
 #include "Configurable.h"
 #include "Configuration.h"
 #include "Environment.h"
@@ -72,16 +77,25 @@
 #include "OHMMonitor.h"
 #include "OutputProxy.h"
 #include "PerfCounter.h"
+#include "RotatingFileHandler.h"
 #include "SectionManager.h"
 #include "Thread.h"
-#include "crashhandling.h"
+#include "CrashHandler.h"
 #include "dynamic_func.h"
-#include "logging.h"
+#include "Logger.h"
 #include "stringutil.h"
 #include "types.h"
 #include "wmiHelper.h"
 #define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+using std::chrono::milliseconds;
+using std::make_unique;
+using std::map;
+using std::ostream;
+using std::setfill;
+using std::setw;
+using std::string;
+using std::unordered_map;
+using std::vector;
 
 //  .----------------------------------------------------------------------.
 //  |       ____            _                 _   _                        |
@@ -115,8 +129,6 @@ static const char RT_PROTOCOL_VERSION[2] = {'0', '0'};
 #endif
 #endif
 
-using namespace std;
-
 // Forward declarations of functions
 void listen_tcp_loop(const Environment &env);
 void output_data(OutputProxy &out, const Environment &env, bool realtime,
@@ -134,17 +146,40 @@ void RunImmediate(const char *mode, int argc, char **argv);
 //  | Global variables                                                     |
 //  '----------------------------------------------------------------------'
 
-bool verbose_mode = false;
-bool with_stderr = false;
-bool do_file = false;
-static FILE *fileout;
-
 // Thread relevant variables
 volatile bool g_should_terminate = false;
 
 // Job object for all worker threads
 // Gets terminated on shutdown
 HANDLE g_workers_job_object;
+
+bool with_stderr = false;
+
+//  .----------------------------------------------------------------------.
+//  |                   _        _                          _              |
+//  |                  | | _ __ | |_  ___  _ __ _ __   __ _| |___          |
+//  |                  | || '_ \| __|/ _ \| '__| '_ \ / _` | / __|         |
+//  |                  | || | | | |_|  __/| |  | | | | (_| | \__ \         |
+//  |                  |_||_| |_\___|\___||_|  |_| |_|\__,_|_|___/         |
+//  |                                                                      |
+//  +----------------------------------------------------------------------+
+//  | Internal linkage                                                     |
+//  '----------------------------------------------------------------------'
+namespace {
+
+bool do_file = false;
+static FILE *fileout;
+
+class MillisecondsFormatter : public Formatter {
+    void format(ostream &os, const LogRecord &record) override {
+        auto tp = record.getTimePoint();
+        os << FormattedTimePoint(record.getTimePoint())            //
+           << setfill('0') << "."                                  //
+           << setw(3) << time_point_part<milliseconds>(tp) << " "  //
+           << "[" << record.getLevel() << "] "                     //
+           << record.getMessage();
+    }
+};
 
 struct GlobalConfig {
     Configuration parser;
@@ -174,9 +209,11 @@ struct GlobalConfig {
         , support_ipv6(parser, "global", "ipv6", true)
         , passphrase(parser, "global", "passphrase", "")
         , only_from(parser, "global", "only_from") {}
-} * g_config;
+} * s_config;
 
-SectionManager *g_sections;
+SectionManager *s_sections;
+
+}  // namespace
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -215,10 +252,9 @@ bool in_set(const T &val, const std::set<T> &test_set) {
 
 void foreach_enabled_section(bool realtime,
                              const std::function<void(Section *)> &func) {
-    for (auto &section : g_sections->sections()) {
-        if ((realtime &&
-             g_sections->realtimeSectionEnabled(section->configName())) ||
-            (!realtime && g_sections->sectionEnabled(section->configName()))) {
+    for (auto &section : s_sections->sections()) {
+        if ((realtime && s_sections->realtimeSectionEnabled(section->configName())) ||
+            (!realtime && s_sections->sectionEnabled(section->configName()))) {
             func(section.get());
         }
     }
@@ -465,29 +501,27 @@ void usage() {
             "of debug output\n"
             "check_mk_agent showconfig      -- shows the effective "
             "configuration used (currently incomplete)\n",
-            check_mk_version, *g_config->port);
+            check_mk_version, *s_config->port);
     exit(1);
 }
 
 void do_debug(const Environment &env) {
-    verbose_mode = true;
+    Logger *logger = Logger::getLogger("winagent");
+    const auto saveLevel = logger->getLevel();
+    logger->setLevel(LogLevel::notice);
 
     FileOutputProxy dummy(do_file ? fileout : stdout);
 
-    output_data(dummy, env, false, *g_config->section_flush);
+    output_data(dummy, env, false, *s_config->section_flush);
+    logger->setLevel(saveLevel);
 }
 
 void do_test(bool output_stderr, const Environment &env) {
+    // TODO: Set logger handler to match fileout / stdout
     with_stderr = output_stderr;
     FileOutputProxy dummy(do_file ? fileout : stdout);
-    if (*g_config->crash_debug) {
-        open_crash_log(env.logDirectory());
-    }
-    crash_log("Started in test mode.");
-    output_data(dummy, env, false, *g_config->section_flush);
-    if (*g_config->crash_debug) {
-        close_crash_log();
-    }
+    Notice(Logger::getLogger("winagent")) << "Started in test mode.";
+    output_data(dummy, env, false, *s_config->section_flush);
 }
 
 bool ctrl_handler(DWORD fdwCtrlType) {
@@ -502,17 +536,9 @@ bool ctrl_handler(DWORD fdwCtrlType) {
     }
 }
 
-struct ThreadData {
-    time_t push_until;
-    bool terminate;
-    Environment env;
-    bool new_request;
-    sockaddr_storage last_address;
-    Mutex mutex;
-};
-
 DWORD WINAPI realtime_check_func(void *data_in) {
     ThreadData *data = (ThreadData *)data_in;
+    Logger *logger = Logger::getLogger("winagent");
 
     try {
         sockaddr_storage current_address;
@@ -520,12 +546,11 @@ DWORD WINAPI realtime_check_func(void *data_in) {
         SOCKET current_socket = INVALID_SOCKET;
 
         std::unique_ptr<BufferedSocketProxy> out;
-
-        if (*g_config->encrypted_rt) {
-            out.reset(new EncryptingBufferedSocketProxy(INVALID_SOCKET,
-                                                        *g_config->passphrase));
+        if (*s_config->encrypted_rt) {
+            out.reset(new EncryptingBufferedSocketProxy(
+                INVALID_SOCKET, *s_config->passphrase, logger));
         } else {
-            out.reset(new BufferedSocketProxy(INVALID_SOCKET));
+            out.reset(new BufferedSocketProxy(INVALID_SOCKET, logger));
         }
 
         timeval before;
@@ -557,7 +582,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                         if (current_address.ss_family == AF_INET) {
                             sockaddr_in *addrv4 =
                                 (sockaddr_in *)&current_address;
-                            addrv4->sin_port = htons(*g_config->realtime_port);
+                            addrv4->sin_port = htons(*s_config->realtime_port);
                             sockaddr_size = sizeof(sockaddr_in);
                         } else {
                             sockaddr_in6 *addrv6 =
@@ -573,7 +598,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                                 // able
                                 // to connect.
                                 sockaddr_in temp{0};
-                                temp.sin_port = htons(*g_config->realtime_port);
+                                temp.sin_port = htons(*s_config->realtime_port);
                                 temp.sin_family = AF_INET;
                                 memcpy(&temp.sin_addr.s_addr,
                                        addrv6->sin6_addr.u.Byte + 12, 4);
@@ -594,7 +619,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                                 }
 
                                 addrv6->sin6_port =
-                                    htons(*g_config->realtime_port);
+                                    htons(*s_config->realtime_port);
                                 sockaddr_size = sizeof(sockaddr_in6);
                             }
                         }
@@ -603,15 +628,16 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                         current_socket = socket(current_address.ss_family,
                                                 SOCK_DGRAM, IPPROTO_UDP);
                         if (current_socket == INVALID_SOCKET) {
-                            crash_log("failed to establish socket: %d",
-                                      (int)::WSAGetLastError());
+                            Emergency(logger)
+                                << "failed to establish socket: "
+                                << ::WSAGetLastError();
                             return 1;
                         }
                         if (connect(current_socket,
                                     (const sockaddr *)&current_address,
                                     sockaddr_size) == SOCKET_ERROR) {
-                            crash_log("failed to connect: %d",
-                                      (int)::WSAGetLastError());
+                            Emergency(logger) << "failed to connect: "
+                                                << ::WSAGetLastError();
                             closesocket(current_socket);
                             current_socket = INVALID_SOCKET;
                         }
@@ -628,7 +654,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                     snprintf(timestamp, 11, "%" PRIdtime, time(NULL));
 
                     // these writes are unencrypted!
-                    if (*g_config->encrypted) {
+                    if (*s_config->encrypted) {
                         out->writeBinary(RT_PROTOCOL_VERSION, 2);
                     }
                     out->writeBinary(timestamp, 10);
@@ -640,25 +666,26 @@ DWORD WINAPI realtime_check_func(void *data_in) {
 
         return 0;
     } catch (const std::exception &e) {
-        crash_log("failed to run realtime check: %s", e.what());
+        Alert(logger) << "failed to run realtime check: " << e.what();
         return 1;
     }
 }
 
 void do_adhoc(const Environment &env) {
     g_should_terminate = false;
+    Logger *logger = Logger::getLogger("winagent");
 
-    ListenSocket sock(*g_config->port, *g_config->only_from,
-                      *g_config->support_ipv6);
+    ListenSocket sock(*s_config->port, *s_config->only_from,
+                      *s_config->support_ipv6, logger);
 
     printf("Listening for TCP connections (%s) on port %d\n",
            sock.supportsIPV6()
                ? sock.supportsIPV4() ? "IPv4 and IPv6" : "IPv6 only"
                : "IPv4 only",
-           *g_config->port);
+           *s_config->port);
 
     printf("realtime monitoring %s\n",
-           g_sections->useRealtimeMonitoring() ? "active" : "inactive");
+           s_sections->useRealtimeMonitoring() ? "active" : "inactive");
 
     printf("Close window or press Ctrl-C to exit\n");
     fflush(stdout);
@@ -677,49 +704,49 @@ void do_adhoc(const Environment &env) {
     foreach_enabled_section(
         false, [](Section *section) { section->waitForCompletion(); });
 
-    ThreadData thread_data{0, false, env};
+    ThreadData thread_data{0, false, env, logger};
     Thread realtime_checker(realtime_check_func, thread_data);
 
-    if (g_sections->useRealtimeMonitoring()) {
+    if (s_sections->useRealtimeMonitoring()) {
         thread_data.terminate = false;
         realtime_checker.start();
     }
 
     std::unique_ptr<BufferedSocketProxy> out;
-    if (*g_config->encrypted) {
-        out.reset(new EncryptingBufferedSocketProxy(INVALID_SOCKET,
-                                                    *g_config->passphrase));
+
+    if (*s_config->encrypted) {
+        out.reset(new EncryptingBufferedSocketProxy(
+            INVALID_SOCKET, *s_config->passphrase, logger));
     } else {
-        out.reset(new BufferedSocketProxy(INVALID_SOCKET));
+        out.reset(new BufferedSocketProxy(INVALID_SOCKET, logger));
     }
+
     while (!g_should_terminate) {
         SOCKET connection = sock.acceptConnection();
         if ((void *)connection != NULL) {
-            if (*g_config->crash_debug) {
-                close_crash_log();
-                open_crash_log(env.logDirectory());
-            }
             out->setSocket(connection);
-            if (*g_config->encrypted) {
+
+            if (*s_config->encrypted) {
                 out->writeBinary(RT_PROTOCOL_VERSION, 2);
             }
 
             std::string ip_hr = sock.readableIP(connection);
-            crash_log("Accepted client connection from %s.", ip_hr.c_str());
+            Debug(logger)
+                << "Accepted client connection from " << ip_hr << ".";
             {  // limit lifetime of mutex lock
                 MutexLock guard(thread_data.mutex);
                 thread_data.new_request = true;
                 thread_data.last_address = sock.address(connection);
                 thread_data.push_until =
-                    time(NULL) + *g_config->realtime_timeout;
+                    time(NULL) + *s_config->realtime_timeout;
             }
 
             SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
             SetEnvironmentVariable("REMOTE", ip_hr.c_str());
             try {
-                output_data(*out, env, false, *g_config->section_flush);
+                output_data(*out, env, false, *s_config->section_flush);
             } catch (const std::exception &e) {
-                crash_log("unhandled exception: %s", e.what());
+                Alert(Logger::getLogger("winagent")) << "unhandled exception: " << e.what();
             }
             closesocket(connection);
         }
@@ -733,11 +760,11 @@ void do_adhoc(const Environment &env) {
 
     if (realtime_checker.wasStarted()) {
         int res = realtime_checker.join();
-        crash_log("realtime check thread ended with errror code %d.", res);
+        Debug(logger) << "Realtime check thread ended with error code " << res
+                        << ".";
     }
 
     WSACleanup();
-    close_crash_log();
 }
 
 void output_data(OutputProxy &out, const Environment &env, bool realtime,
@@ -753,7 +780,7 @@ void output_data(OutputProxy &out, const Environment &env, bool realtime,
     foreach_enabled_section(realtime,
                             [&out, &env, section_flush](Section *section) {
                                 std::stringstream str;
-                                section->produceOutput(str, env);
+                                section->produceOutput(str);
                                 out.output("%s", str.str().c_str());
                                 if (section_flush) out.flush(false);
                             });
@@ -764,7 +791,7 @@ void output_data(OutputProxy &out, const Environment &env, bool realtime,
 
 void show_version() { printf("Check_MK_Agent version %s\n", check_mk_version); }
 
-void show_config() { g_config->parser.outputConfigurables(std::cout); }
+void show_config() { s_config->parser.outputConfigurables(std::cout); }
 
 void do_unpack_plugins(const char *plugin_filename, const Environment &env) {
     FILE *file = fopen(plugin_filename, "rb");
@@ -890,10 +917,10 @@ void do_unpack_plugins(const char *plugin_filename, const Environment &env) {
 }
 
 void postProcessOnlyFrom() {
-    if (*g_config->support_ipv6) {
+    if (*s_config->support_ipv6) {
         // find all ipv4 specs, later insert a the same spec as a v6 adress.
         std::vector<ipspec *> v4specs;
-        for (ipspec *spec : *g_config->only_from) {
+        for (ipspec *spec : *s_config->only_from) {
             if (!spec->ipv6) {
                 v4specs.push_back(spec);
             }
@@ -913,7 +940,7 @@ void postProcessOnlyFrom() {
             result->ip.v6.address[7] =
                 static_cast<uint16_t>(spec->ip.v4.address >> 16);
             netmaskFromPrefixIPv6(result->bits, result->ip.v6.netmask);
-            g_config->only_from.add(result);
+            s_config->only_from.add(result);
         }
     }
 }
@@ -922,10 +949,11 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     // base directory structure on current working directory or registered dir
     // (from registry)?
     bool use_cwd = !strcmp(mode, "adhoc") || !strcmp(mode, "test");
-    Environment env(use_cwd);
+    Logger *logger = Logger::getLogger("winagent");
+    Environment env(use_cwd, logger);
 
-    g_config = new GlobalConfig(env);
-    g_sections = new SectionManager(g_config->parser, env);
+    s_config = new GlobalConfig(env);
+    s_sections = new SectionManager(s_config->parser, logger);
 
     // careful: destroying the section manager destroys the wmi helpers created
     // for
@@ -935,14 +963,32 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     // called
     // and then those releases will fail
     OnScopeExit selectionsFree([]() {
-        delete g_sections;
-        g_sections = nullptr;
+        delete s_sections;
+        s_sections = nullptr;
     });
 
-    g_config->parser.readSettings();
+    s_config->parser.readSettings();
+
+    if (!*s_config->crash_debug) {  // default level already LogLevel::debug
+        logger->setLevel(LogLevel::warning);
+    }
+
+    const std::string logFilename = env.logDirectory() + "\\agent.log";
+
+    if (strcmp(mode, "debug")) {  // if not debugging, use log file
+        // TODO: Make logfile rotation parameters configurable
+        logger->setHandler(std::make_unique<RotatingFileHandler>(
+            logFilename, std::make_unique<FileRotationApi>(),
+            8388608 /* 8 MB */, 5));
+    }
+
+    if (Handler *handler = logger->getHandler()) {
+        handler->setFormatter(make_unique<MillisecondsFormatter>());
+    }
+
     postProcessOnlyFrom();
-    g_sections->loadDynamicSections();
-    g_sections->emitConfigLoaded(env);
+    s_sections->loadDynamicSections();
+    s_sections->emitConfigLoaded();
 
     if (!strcmp(mode, "test"))
         do_test(true, env);
@@ -977,6 +1023,10 @@ void RunImmediate(const char *mode, int argc, char **argv) {
         usage();
 }
 
+inline LONG WINAPI exception_handler(LPEXCEPTION_POINTERS ptrs) {
+    return CrashHandler(Logger::getLogger("winagent")).handleCrash(ptrs);
+}
+
 int main(int argc, char **argv) {
     wsa_startup();
 
@@ -987,8 +1037,8 @@ int main(int argc, char **argv) {
     if ((argc > 2) && (strcmp(argv[1], "file") && strcmp(argv[1], "unpack"))) {
         // need to parse config so we can display defaults in usage
         bool use_cwd = true;
-        Environment env(use_cwd);
-        g_config = new GlobalConfig(env);
+        Environment env(use_cwd, Logger::getLogger("winagent"));
+        s_config = new GlobalConfig(env);
         usage();
     }
 

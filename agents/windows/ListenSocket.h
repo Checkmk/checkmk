@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -30,15 +30,18 @@
 #include <string>
 #include "types.h"
 
+class Logger;
+
 class ListenSocket {
     SOCKET _socket;
     only_from_t _source_whitelist;
     bool _supports_ipv4;
     bool _use_ipv6;
+    Logger *_logger;
 
 public:
     ListenSocket(int port, const only_from_t &source_whitelist,
-                 bool supportIPV6);
+                 bool supportIPV6, Logger *logger);
     ~ListenSocket();
 
     bool supportsIPV4() const;

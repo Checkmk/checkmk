@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,6 +25,7 @@
 #ifndef SectionPerfcounter_h
 #define SectionPerfcounter_h
 
+#include <wtypesbase.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -33,7 +34,8 @@
 
 class NameBaseNumberMap {
 public:
-    NameBaseNumberMap() {}
+    explicit NameBaseNumberMap(Logger *logger)
+        : _logger(logger) {}
     NameBaseNumberMap(const NameBaseNumberMap &) = delete;
     NameBaseNumberMap &operator=(const NameBaseNumberMap &) = delete;
 
@@ -42,23 +44,27 @@ public:
 private:
     // Fill name -> counter ID maps lazily when first needed.
     std::vector<std::unordered_map<std::string, DWORD>> _nameIdMaps;
+
+    Logger *_logger;
 };
 
 class SectionPerfcounter : public Section {
-    bool _toggle_if_missing{false};
-    time_t _disabled_until{0};
-    NameBaseNumberMap &_nameNumberMap;
-
 public:
     SectionPerfcounter(const std::string &outputName,
                        const std::string &configName,
-                       NameBaseNumberMap &nameNumberMap);
+                       NameBaseNumberMap &nameNumberMap,
+                       const Environment &env,
+                       Logger *logger);
 
     SectionPerfcounter *withToggleIfMissing();
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
+
+private:
+    bool _toggle_if_missing{false};
+    time_t _disabled_until{0};
+    NameBaseNumberMap &_nameNumberMap;
 };
 
 #endif  // SectionPerfcounter_h

@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,14 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionEventlog.h"
-#include <ctime>
-#include "../logging.h"
+#include "../Environment.h"
+#include "../Logger.h"
 #include "../stringutil.h"
 #define __STDC_FORMAT_MACROS
+#include <ctime>
 #include <inttypes.h>
 
-SectionEventlog::SectionEventlog(Configuration &config)
-    : Section("logwatch", "logwatch")
+SectionEventlog::SectionEventlog(Configuration &config, Logger *logger)
+    : Section("logwatch", "logwatch", config.getEnvironment(), logger)
     , _send_initial(config, "logwatch", "sendall", false)
     , _vista_api(config, "logwatch", "vista_api", false)
     , _config(config, "logwatch", "logname") {
@@ -149,21 +150,21 @@ void SectionEventlog::process_eventlog_entry(std::ostream &out,
 
     out << type_char << " " << timestamp << " " << event.eventQualifiers()
         << "." << event.eventId() << " " << source_name << " "
-        << to_utf8(event.message().c_str()) << "\n";
+        << Utf8(event.message()) << "\n";
 }
 
-void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
+void SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
                                       uint64_t &first_record, int level,
                                       int hide_context) {
-    crash_log(" - event log \"%ls\":", logname);
+    Debug(_logger) << " - event log \"" << logname << "\":";
 
     try {
         std::unique_ptr<IEventLog> log(
-            open_eventlog(logname, *_vista_api));
+            open_eventlog(to_utf16(logname).c_str(), *_vista_api, _logger));
         {
-            crash_log("   . successfully opened event log");
+            Debug(_logger) << "   . successfully opened event log";
 
-            out << "[[[" << to_utf8(logname) << "]]]\n";
+            out << "[[[" << logname << "]]]\n";
             int worst_state = 0;
             uint64_t last_record = first_record;
             // first_record is the last event we read, so we want to seek past
@@ -186,7 +187,7 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
                 record      = log->read();
             }
 
-            crash_log("    . worst state: %d", worst_state);
+            Debug(_logger) << "    . worst state: " << worst_state;
 
             // second pass - if there were, print everything
             if (worst_state >= level) {
@@ -210,7 +211,7 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
                             last_record) ? log->getLastRecordId() : last_record;
         }
     } catch (const std::exception &e) {
-        crash_log("failed to read event log: %s\n", e.what());
+        Error(_logger) << "failed to read event log: " << e.what() << std::endl;
         out << "[[[" << logname << ":missing]]]\n";
     }
 }
@@ -285,14 +286,13 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
     return success;
 }
 
-void SectionEventlog::postprocessConfig(const Environment &env) {
-    loadEventlogOffsets(env.eventlogStatefile());
+void SectionEventlog::postprocessConfig() {
+    loadEventlogOffsets(_env.eventlogStatefile());
 }
 
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
-bool SectionEventlog::produceOutputInner(std::ostream &out,
-                                         const Environment &env) {
+bool SectionEventlog::produceOutputInner(std::ostream &out) {
     // This agent remembers the record numbers
     // of the event logs up to which messages have
     // been processed. When started, the eventlog
@@ -339,12 +339,12 @@ bool SectionEventlog::produceOutputInner(std::ostream &out,
                     }
                 }
                 if (level != -1) {
-                    outputEventlog(out, to_utf16(state.name.c_str()).c_str(),
-                                   state.record_no, level, hide_context);
+                    outputEventlog(out, state.name.c_str(), state.record_no,
+                                   level, hide_context);
                 }
             }
         }
-        saveEventlogOffsets(env.eventlogStatefile());
+        saveEventlogOffsets(_env.eventlogStatefile());
     }
     first_run = false;
     return true;

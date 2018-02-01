@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,20 +23,21 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionLogwatch.h"
+#include "../Environment.h"
+#include "../Logger.h"
 #include "../types.h"
-#include "../logging.h"
 #include <cassert>
 #include <regex>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-SectionLogwatch::SectionLogwatch(Configuration &config, const Environment &env)
-    : Section("logwatch", "logfiles")
+SectionLogwatch::SectionLogwatch(Configuration &config, Logger *logger)
+    : Section("logwatch", "logfiles", config.getEnvironment(), logger)
     , _globlines(config, "logfiles")
 {
     _globlines.setGroupFunction(&SectionLogwatch::addConditionPattern);
 
-    loadLogwatchOffsets(env);
+    loadLogwatchOffsets();
 }
 
 SectionLogwatch::~SectionLogwatch()
@@ -182,7 +183,8 @@ void SectionLogwatch::processGlobExpression(glob_token *glob_token,
             updateOrCreateRotatedLogfile(sortedByTime(matches), glob_token,
                                          patterns);
         } else {
-            verbose("pattern %s matches no files", glob_token->pattern);
+            Notice(_logger)
+                << "pattern " << glob_token->pattern << " matches no files";
         }
     } else {
         // non-rotated: each match is a separate log
@@ -196,8 +198,10 @@ void SectionLogwatch::processGlobExpression(glob_token *glob_token,
 void SectionLogwatch::saveOffsets(const std::string &logwatch_statefile) {
     FILE *file = fopen(logwatch_statefile.c_str(), "w");
     if (!file) {
-        crash_log("Cannot open %s for writing: %s (%d).\n",
-                  logwatch_statefile.c_str(), strerror(errno), errno);
+        const auto saveErrno = errno;
+        Error(_logger) << "Cannot open " << logwatch_statefile
+                       << " for writing: " << strerror(saveErrno) << " ("
+                       << saveErrno << ").";
         // not stopping the agent from crashing. This way the user at least
         // notices something went wrong.
         // FIXME: unless there aren't any textfiles configured to be monitored
@@ -249,7 +253,7 @@ inline void rtrim(std::string &s) {
 SectionLogwatch::ProcessTextfileResponse
 SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
                                         std::ostream &out, bool write_output) {
-    verbose("Checking UNICODE file %s\n", textfile->paths.front().c_str());
+    Notice(_logger) << "Checking UNICODE file " << textfile->paths.front();
     ProcessTextfileResponse response;
     char output_buffer[UNICODE_BUFFER_SIZE];
     char unicode_block[UNICODE_BUFFER_SIZE];
@@ -351,7 +355,7 @@ SectionLogwatch::processTextfileDefault(FILE *file, logwatch_textfile *textfile,
                                         std::ostream &out, bool write_output) {
     char line[4096];
     ProcessTextfileResponse response;
-    verbose("Checking file %s\n", textfile->paths.front().c_str());
+    Notice(_logger) << "Checking file " << textfile->paths.front();
 
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file)) break;
@@ -471,8 +475,7 @@ void SectionLogwatch::processTextfile(std::ostream &out, logwatch_textfile *text
 
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
-bool SectionLogwatch::produceOutputInner(std::ostream &out,
-                                         const Environment &env) {
+bool SectionLogwatch::produceOutputInner(std::ostream &out) {
     // First of all invalidate all textfiles
     for (logwatch_textfile *textfile : _textfiles) {
         textfile->missing = true;
@@ -497,7 +500,7 @@ bool SectionLogwatch::produceOutputInner(std::ostream &out,
     }
 
     cleanupTextfiles();
-    saveOffsets(env.logwatchStatefile());
+    saveOffsets(_env.logwatchStatefile());
     return true;
 }
 
@@ -538,8 +541,8 @@ std::vector<std::string> SectionLogwatch::sortedByTime(
 void SectionLogwatch::updateLogwatchTextfile(logwatch_textfile *textfile) {
     BY_HANDLE_FILE_INFORMATION fileinfo;
     if (!getFileInformation(textfile->paths.front().c_str(), &fileinfo)) {
-        verbose("Cant open file with CreateFile %s\n",
-                textfile->paths.front().c_str());
+        Notice(_logger) << "Cant open file with CreateFile "
+                        << textfile->paths.front();
         return;
     }
 
@@ -549,15 +552,15 @@ void SectionLogwatch::updateLogwatchTextfile(logwatch_textfile *textfile) {
     textfile->file_size = to_u64(fileinfo.nFileSizeLow, fileinfo.nFileSizeHigh);
 
     if (file_id != textfile->file_id) {  // file has been changed
-        verbose("File %s: id has changed from %" PRIu64,
-                textfile->paths.front().c_str(), textfile->file_id);
-        verbose(" to %" PRIu64 "\n", file_id);
+        Notice(_logger) << "File " << textfile->paths.front()
+                        << ": id has changed from " << textfile->file_id
+                        << " to " << file_id;
         textfile->offset = 0;
         textfile->file_id = file_id;
     } else if (textfile->file_size <
                textfile->offset) {  // file has been truncated
-        verbose("File %s: file has been truncated\n",
-                textfile->paths.front().c_str());
+        Notice(_logger) << "File " << textfile->paths.front()
+                        << ": file has been truncated";
         textfile->offset = 0;
     }
 
@@ -584,7 +587,7 @@ logwatch_textfile *SectionLogwatch::addNewLogwatchTextfile(
     condition_patterns_t &patterns) {
     BY_HANDLE_FILE_INFORMATION fileinfo;
     if (!getFileInformation(full_filename, &fileinfo)) {
-        verbose("failed to open %s\n", full_filename);
+        Debug(_logger) << "failed to open " << full_filename;
         return nullptr;
     }
 
@@ -617,7 +620,7 @@ bool SectionLogwatch::updateCurrentRotatedTextfile(logwatch_textfile *textfile) 
 
     BY_HANDLE_FILE_INFORMATION fileinfo;
     if (!getFileInformation(current_file.c_str(), &fileinfo)) {
-        verbose("Can't retrieve file info  %s\n", current_file.c_str());
+        Debug(_logger) << "Can't retrieve file info " << current_file;
         return false;
     }
 
@@ -626,13 +629,13 @@ bool SectionLogwatch::updateCurrentRotatedTextfile(logwatch_textfile *textfile) 
 
     if (textfile->file_id != file_id) {
         // the oldest file we know is "newer" than the one read last.
-        verbose("File %s rotated\n", current_file.c_str());
+        Debug(_logger) << "File " << current_file << " rotated";
         textfile->offset = 0;
         textfile->file_id = file_id;
         return true;
     } else if (textfile->file_size < textfile->offset) {
         // this shouldn't happen on a rotated log
-        verbose("File %s truncated\n", current_file.c_str());
+        Debug(_logger) << "File " << current_file << " truncated";
         textfile->offset = 0;
         return true;
     } else if ((textfile->offset == textfile->file_size) &&
@@ -768,10 +771,10 @@ void SectionLogwatch::parseLogwatchStateLine(char *line) {
     _hints.push_back(tf);
 }
 
-void SectionLogwatch::loadLogwatchOffsets(const Environment &env) {
+void SectionLogwatch::loadLogwatchOffsets() {
     static bool offsets_loaded = false;
     if (!offsets_loaded) {
-        FILE *file = fopen(env.logwatchStatefile().c_str(), "r");
+        FILE *file = fopen(_env.logwatchStatefile().c_str(), "r");
         if (file) {
             char line[256];
             while (NULL != fgets(line, sizeof(line), file)) {

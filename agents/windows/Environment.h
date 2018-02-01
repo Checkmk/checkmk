@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -27,9 +27,11 @@
 
 #include <string>
 
+class Logger;
+
 class Environment {
 public:
-    Environment(bool use_cwd);
+    Environment(bool use_cwd, Logger *logger);
     ~Environment();
 
     // TODO: this is an evil hack, but currently there is at least one global
@@ -70,6 +72,7 @@ private:
     static Environment *s_Instance;
 
     std::string _hostname;
+    Logger *_logger;
 
     std::string _agent_directory;
     std::string _current_directory;

@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,11 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OHMMonitor.h"
-#include "logging.h"
+#include "Logger.h"
 #include "types.h"
 
-OHMMonitor::OHMMonitor(const std::string &bin_path)
-    : _exe_path(bin_path + "\\OpenHardwareMonitorCLI.exe") {
+OHMMonitor::OHMMonitor(const std::string &bin_path, Logger *logger)
+    : _exe_path(bin_path + "\\OpenHardwareMonitorCLI.exe")
+    , _logger(logger) {
     _available =
         ::GetFileAttributesA(_exe_path.c_str()) != INVALID_FILE_ATTRIBUTES;
 }
@@ -67,13 +68,13 @@ bool OHMMonitor::checkAvailabe() {
         DWORD exitCode = 0;
         if (!::GetExitCodeProcess(_current_process, &exitCode)) {
             // handle invalid???
-            crash_log("ohm process handle invalid");
+            Debug(_logger) << "ohm process handle invalid";
             ::CloseHandle(_current_process);
             _current_process = INVALID_HANDLE_VALUE;
         } else {
             if (exitCode != STILL_ACTIVE) {
-                crash_log("OHM process ended with exit code %" PRIudword,
-                          exitCode);
+                Debug(_logger)
+                    << "OHM process ended with exit code " << exitCode;
                 ::CloseHandle(_current_process);
                 _current_process = INVALID_HANDLE_VALUE;
             }
@@ -92,12 +93,12 @@ bool OHMMonitor::checkAvailabe() {
 
         if (!::CreateProcessA(_exe_path.c_str(), nullptr, nullptr, nullptr,
                               TRUE, 0, nullptr, nullptr, &si, &pi)) {
-            crash_log("failed to run %s", _exe_path.c_str());
+            Error(_logger) << "failed to run %s" << _exe_path;
             return false;
         } else {
             _current_process = pi.hProcess;
-            crash_log("started %s (pid %lu)", _exe_path.c_str(),
-                      pi.dwProcessId);
+            Debug(_logger) << "started " << _exe_path << " (pid "
+                           << pi.dwProcessId << ")";
             ::CloseHandle(pi.hThread);
         }
     }

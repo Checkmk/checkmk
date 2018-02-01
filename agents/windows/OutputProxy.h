@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -29,6 +29,8 @@
 #include <cstdio>
 #include <vector>
 #include "Crypto.h"
+
+class Logger;
 
 class OutputProxy {
 public:
@@ -55,6 +57,7 @@ class BufferedSocketProxy : public OutputProxy {
     std::vector<char> _buffer;
     size_t _length{0};
     size_t _collect_size;
+    Logger *_logger;
 
 protected:
     std::vector<char> &buffer() { return _buffer; }
@@ -64,8 +67,7 @@ public:
     static const size_t DEFAULT_BUFFER_SIZE = 16384L;
 
 public:
-    BufferedSocketProxy(SOCKET socket,
-                        size_t buffer_size = DEFAULT_BUFFER_SIZE);
+    BufferedSocketProxy(SOCKET socket, Logger *logger);
 
     void setSocket(SOCKET socket);
 
@@ -92,7 +94,7 @@ class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
 
 public:
     EncryptingBufferedSocketProxy(SOCKET socket, const std::string &passphrase,
-                                  size_t buffer_size = DEFAULT_BUFFER_SIZE);
+                                  Logger *logger);
     virtual void output(const char *format, ...) override;
     // writeBinary is NOT overridden so calls to it are not encrypted!
     virtual void flush(bool last) override;

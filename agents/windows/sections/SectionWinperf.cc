@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,15 +23,18 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionWinperf.h"
+#include "../Environment.h"
+#include "../Logger.h"
 #include "../PerfCounter.h"
-#include "../logging.h"
+#include "../stringutil.h"
+#include <algorithm>
 #include <iomanip>
 
 
 extern double current_time();
 
-SectionWinperf::SectionWinperf(const std::string &name)
-    : Section("winperf_" + name, "winperf_" + name)
+SectionWinperf::SectionWinperf(const std::string &name, const Environment &env, Logger *logger)
+    : Section("winperf_" + name, "winperf_" + name, env, logger)
     , _base(0) {}
 
 SectionWinperf *SectionWinperf::withBase(unsigned int base) {
@@ -39,8 +42,7 @@ SectionWinperf *SectionWinperf::withBase(unsigned int base) {
     return this;
 }
 
-bool SectionWinperf::produceOutputInner(std::ostream &out,
-                                        const Environment &env) {
+bool SectionWinperf::produceOutputInner(std::ostream &out) {
     try {
         PerfCounterObject counterObject(_base);
 
@@ -57,7 +59,7 @@ bool SectionWinperf::produceOutputInner(std::ostream &out,
                 out << instances.size() << " instances:";
                 for (std::wstring name : counterObject.instanceNames()) {
                     std::replace(name.begin(), name.end(), L' ', L'_');
-                    out << " " << to_utf8(name.c_str());
+                    out << " " << Utf8(name);
                 }
                 out << "\n";
             }
@@ -75,7 +77,7 @@ bool SectionWinperf::produceOutputInner(std::ostream &out,
         }
         return true;
     } catch (const std::exception &e) {
-        crash_log("Exception: %s", e.what());
+        Error(_logger) << "Exception: " << e.what();
         return false;
     }
 }

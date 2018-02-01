@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -28,6 +28,7 @@
 #include <ctime>
 #include <memory>
 #include "../Section.h"
+class Environment;
 
 /**
  * allows treating several sections as a group.
@@ -46,7 +47,7 @@ class SectionGroup : public Section {
     time_t _disabled_until{0};
 
 public:
-    SectionGroup(const std::string &outputName, const std::string &configName);
+    SectionGroup(const std::string &outputName, const std::string &configName, const Environment &env, Logger *logger);
     SectionGroup *withNestedSubtables();
     /**
      * add a section that will be printed as part of this group
@@ -63,8 +64,7 @@ public:
     SectionGroup *withToggleIfMissing();
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 };
 
 #endif  // SectionGroup_h

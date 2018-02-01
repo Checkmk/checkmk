@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -66,17 +66,16 @@ class SectionEventlog : public Section {
     eventlog_state_t _state;
 
 public:
-    SectionEventlog(Configuration &config);
+    SectionEventlog(Configuration &config, Logger *logger);
     virtual ~SectionEventlog();
 
-    virtual void postprocessConfig(const Environment &env);
+    virtual void postprocessConfig() override;
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 
 private:
-    void outputEventlog(std::ostream &out, LPCWSTR logname,
+    void outputEventlog(std::ostream &out, const char *logname,
                         uint64_t &first_record, int level, int hide_context);
     void registerEventlog(const char *logname);
     bool find_eventlogs(std::ostream &out);

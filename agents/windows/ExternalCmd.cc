@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,7 +25,7 @@
 #include "ExternalCmd.h"
 #include <shlwapi.h>
 #include "Environment.h"
-#include "logging.h"
+#include "Logger.h"
 #include "types.h"
 
 extern bool with_stderr;
@@ -54,7 +54,8 @@ std::string AgentUpdaterError::buildSectionCheckMK(
     return oss.str();
 }
 
-ExternalCmd::ExternalCmd(const std::string &cmdline) {
+ExternalCmd::ExternalCmd(const std::string &cmdline, Logger *logger)
+    : _logger(logger) {
     SECURITY_DESCRIPTOR security_descriptor;
     SECURITY_ATTRIBUTES security_attributes;
     // initialize security descriptor (Windows NT)
@@ -101,8 +102,8 @@ ExternalCmd::ExternalCmd(const std::string &cmdline) {
         detach_process = true;
         const auto *env = Environment::instance();
         if (env == nullptr) {
-            const char *errorMsg = "No environment!";
-            crash_log("%s", errorMsg);
+            const std::string errorMsg = "No environment!";
+            Error(_logger) << errorMsg;
             throw win_exception(errorMsg);
         }
         const auto source = combinePaths(env->pluginsDirectory(), updater_exe);
@@ -123,7 +124,8 @@ ExternalCmd::ExternalCmd(const std::string &cmdline) {
 
     DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
     if (detach_process) {
-        crash_log("Detaching process: %s, %d", actualCmd.c_str(), detach_process);
+        Debug(_logger) << "Detaching process: " << actualCmd << ", "
+                       << detach_process;
         dwCreationFlags = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
     }
 

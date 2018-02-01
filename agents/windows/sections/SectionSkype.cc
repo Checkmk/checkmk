@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -24,8 +24,12 @@
 
 #include "SectionSkype.h"
 #include "../PerfCounterCommon.h"
+#include "../stringutil.h"
+#include <windows.h>
 
-SectionSkype::SectionSkype() : SectionGroup("skype", "skype") {
+SectionSkype::SectionSkype(const Environment &env, Logger *logger)
+    : SectionGroup("skype", "skype", env, logger)
+    , _nameNumberMap(_logger) {
     withToggleIfMissing();
     withNestedSubtables();
     withSeparator(',');
@@ -62,18 +66,17 @@ SectionSkype::SectionSkype() : SectionGroup("skype", "skype") {
           "LS:A/V Edge - TCP Counters",
           "LS:A/V Edge - UDP Counters"}) {
         withSubSection(new SectionPerfcounter(counterName, counterName,
-                                              _nameNumberMap));
+                                              _nameNumberMap, _env, _logger));
     }
 
     // TODO the version number in the counter name isn't exactly inspiring
     // trust, but there currently is no support for wildcards.
     const std::string counterName = "ASP.NET Apps v4.0.30319";
     withDependentSubSection(new SectionPerfcounter(
-        counterName, counterName, _nameNumberMap));
+        counterName, counterName, _nameNumberMap, _env, _logger));
 }
 
-bool SectionSkype::produceOutputInner(std::ostream &out,
-                                      const Environment &env) {
+bool SectionSkype::produceOutputInner(std::ostream &out) {
     LARGE_INTEGER Counter, Frequency;
     QueryPerformanceCounter(&Counter);
     QueryPerformanceFrequency(&Frequency);
@@ -81,5 +84,5 @@ bool SectionSkype::produceOutputInner(std::ostream &out,
     out << "sampletime," << Counter.QuadPart << "," << Frequency.QuadPart
         << "\n";
 
-    return SectionGroup::produceOutputInner(out, env);
+    return SectionGroup::produceOutputInner(out);
 }

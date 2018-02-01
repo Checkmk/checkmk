@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,29 +23,28 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionSpool.h"
-#include "../logging.h"
+#include "../Environment.h"
+#include "../Logger.h"
 #include <dirent.h>
 #include <sys/types.h>
+#include <windows.h>
 
 
 extern double file_time(const FILETIME *filetime);
 
-
-SectionSpool::SectionSpool()
-    : Section("spool", "spool")
-{
+SectionSpool::SectionSpool(const Environment &env, Logger *logger)
+    : Section("spool", "spool", env, logger) {
     withHiddenHeader();
 }
 
-bool SectionSpool::produceOutputInner(std::ostream &out,
-                                      const Environment &env) {
+bool SectionSpool::produceOutputInner(std::ostream &out) {
     // Look for files in the spool directory and append these files to
     // the agent output. The name of the files may begin with a number
     // of digits. If this is the case then it is interpreted as a time
     // in seconds: the maximum allowed age of the file. Outdated files
     // are simply being ignored.
     //
-    DIR *dir = opendir(env.spoolDirectory().c_str());
+    DIR *dir = opendir(_env.spoolDirectory().c_str());
     if (dir) {
         WIN32_FIND_DATA filedata;
         char path[512];
@@ -57,7 +56,7 @@ bool SectionSpool::produceOutputInner(std::ostream &out,
             char *name = de->d_name;
             if (name[0] == '.') continue;
 
-            snprintf(path, sizeof(path), "%s\\%s", env.spoolDirectory().c_str(),
+            snprintf(path, sizeof(path), "%s\\%s", _env.spoolDirectory().c_str(),
                      name);
             int max_age = -1;
             if (isdigit(*name)) max_age = atoi(name);
@@ -70,18 +69,20 @@ bool SectionSpool::produceOutputInner(std::ostream &out,
                     FindClose(h);
                     int age = now - mtime;
                     if (age > max_age) {
-                        crash_log(
-                            "    %s: skipping outdated file: age is %d sec, "
-                            "max age is %d sec.",
-                            name, age, max_age);
+                        Informational(_logger)
+                            << "    " << name
+                            << ": skipping outdated file: age is " << age
+                            << " sec, "
+                            << "max age is " << max_age << " sec.";
                         continue;
                     }
                 } else {
-                    crash_log("    %s: cannot determine file age", name);
+                    Warning(_logger)
+                        << "    " << name << ": cannot determine file age";
                     continue;
                 }
             }
-            crash_log("    %s", name);
+            Debug(_logger) << "    " << name;
 
             // Output file in blocks of 4kb
             FILE *file = fopen(path, "r");

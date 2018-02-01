@@ -1,0 +1,14 @@
+Title: Always fetch host/authorization-related info from EC when needed
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517491383
+Class: fix
+
+To correctly show host-related information and to handle EC-related
+authorization, Livestatus needs to retrieve enough information from the EC. 
+This was broken by an optimization in the master branch quite some time ago
+(Oct 2017), so v1.5.0i1 and v1.5.0i2 showed some strange behaviour in this
+area.  This is fixed again now.

@@ -1,0 +1,32 @@
+Title: Windows agent: renew logging
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1517473402
+Class: feature
+
+The logging functionality of the Windows agent was rewritten. The key
+features and changes are as follows:
+
+ * The logs are built incrementally over time and rotated up to 5
+   copies once the log size of 8 MB is reached.
+ * The formatting of the log entries has been changed to include a
+   numeric log level (0...7) and an absolute timestamp with the
+   accuracy of milliseconds (instead of a relative time since the
+   agent started).
+ * The naming of agent logfiles has been changed: the agent logs to
+   CHECK_MK_AGENT_INSTALL_DIR\log\agent.log which will then be rotated
+   as agent.log.N, N={1...5}
+ * Crash info as subsection [[[Check_MK Agent]]] within the section
+   <<<logwatch>>> was removed. Now that the logs are persistent,
+   information about past crashes can be obtained in the logs.
+ * Debug log entries are enabled by setting crash_debug = yes in the
+   global section of check_mk.ini.
+ * The names of the various logfiles no longer appear in the output of
+   section Check_MK when crash_debug = yes.
+
+
+
+

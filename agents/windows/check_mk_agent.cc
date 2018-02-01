@@ -154,9 +154,6 @@ public:
     UnpackError(const std::string &what) : std::runtime_error(what) {}
 };
 
-bool do_file = false;
-static FILE *fileout;
-
 class MillisecondsFormatter : public Formatter {
     void format(ostream &os, const LogRecord &record) override {
         auto tp = record.getTimePoint();
@@ -510,21 +507,37 @@ void usage() {
     exit(1);
 }
 
+void outputFileBase(const Environment &env, FILE *file) {
+    FileOutputProxy dummy(file);
+    output_data(dummy, env, false, *s_config->section_flush);
+}
+
 void do_debug(const Environment &env) {
     Logger *logger = Logger::getLogger("winagent");
     const auto saveLevel = logger->getLevel();
     logger->setLevel(LogLevel::notice);
 
-    FileOutputProxy dummy(do_file ? fileout : stdout);
+    outputFileBase(env, stdout);
 
-    output_data(dummy, env, false, *s_config->section_flush);
     logger->setLevel(saveLevel);
 }
 
 void do_test(const Environment &env) {
-    FileOutputProxy dummy(do_file ? fileout : stdout);
     Notice(Logger::getLogger("winagent")) << "Started in test mode.";
-    output_data(dummy, env, false, *s_config->section_flush);
+    outputFileBase(env, stdout);
+}
+
+void do_file(const Environment &env, const char *filename) {
+    auto closeFile = [](FILE *f) { fclose(f); };
+    std::unique_ptr<FILE, decltype(closeFile)> file(fopen(filename, "w"),
+                                                    closeFile);
+
+    if (!file) {
+        std::cerr << "Cannot open " << filename << " for writing." << std::endl;
+        exit(1);
+    }
+
+    outputFileBase(env, file.get());
 }
 
 bool ctrl_handler(DWORD fdwCtrlType) {
@@ -994,14 +1007,7 @@ void RunImmediate(const char *mode, int argc, char **argv) {
             fprintf(stderr, "Please specify the name of an output file.\n");
             exit(1);
         }
-        fileout = fopen(argv[0], "w");
-        if (!fileout) {
-            fprintf(stderr, "Cannot open %s for writing.\n", argv[2]);
-            exit(1);
-        }
-        do_file = true;
-        do_test(env);
-        fclose(fileout);
+        do_file(env, argv[0]);
     } else if (!strcmp(mode, "adhoc") || !strcmp(mode, "service"))
         do_adhoc(env);
     else if (!strcmp(mode, "install"))

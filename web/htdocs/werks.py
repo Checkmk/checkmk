@@ -409,15 +409,15 @@ def render_werk_table_options():
     html.begin_foldable_container("werks", "options", isopen=True, title=_("Searching and Filtering"), indent=False)
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
-    begin_floating_options("werks", is_open=True)
+    html.begin_floating_options("werks", is_open=True)
     for name, height, vs, default_value in werk_table_option_entries():
         if html.var("wo_set"):
             value = vs.from_html_vars("wo_" + name)
         else:
             value = default_value
         werk_table_options.setdefault(name, value)
-        render_floating_option(name, height, "wo_", vs, werk_table_options[name])
-    end_floating_options(reset_url = html.makeuri([], remove_prefix = ""))
+        html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
+    html.end_floating_options(reset_url = html.makeuri([], remove_prefix = ""))
     html.hidden_fields()
     html.end_form()
     html.end_foldable_container()

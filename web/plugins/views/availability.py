@@ -98,10 +98,10 @@ def render_availability_options(what):
     if html.has_user_errors():
         html.show_user_errors()
 
-    begin_floating_options("avoptions", is_open)
+    html.begin_floating_options("avoptions", is_open)
     for name, height, show_in_reporting, vs in avoption_entries:
-        render_floating_option(name, height, "avo_", vs, avoptions.get(name))
-    end_floating_options(reset_url = html.makeuri([("_reset", "1")], remove_prefix="avo_", delvars=["apply", "filled_in"]))
+        html.render_floating_option(name, height, "avo_", vs, avoptions.get(name))
+    html.end_floating_options(reset_url = html.makeuri([("_reset", "1")], remove_prefix="avo_", delvars=["apply", "filled_in"]))
 
     html.hidden_fields()
     html.end_form()

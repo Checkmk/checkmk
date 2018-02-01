@@ -398,7 +398,16 @@ def find_processes_of_user(username):
         return []
 
 def groupdel(groupname):
-    os.system("groupdel " + groupname)
+    try:
+        p = subprocess.Popen(["groupdel", groupname],
+                         stdin=open(os.devnull, "r"), stdout=open(os.devnull, "w"),
+                         stderr=subprocess.PIPE, close_fds=True)
+    except OSError, e:
+        bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (groupname, e))
+
+    stderr = p.communicate()[1]
+    if p.returncode != 0:
+        bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (groupname, stderr))
 
 def groupadd(groupname, gid = None):
     cmd = "groupadd "
@@ -434,7 +443,17 @@ def add_user_to_group(user, group):
     return os.system(cmd + " >/dev/null") == 0
 
 def userdel(name):
-    os.system("userdel -r %s >/dev/null 2>&1" % name)
+    try:
+        p = subprocess.Popen(["userdel", "-r", name],
+                         stdin=open(os.devnull, "r"), stdout=open(os.devnull, "w"),
+                         stderr=subprocess.PIPE, close_fds=True)
+    except OSError, e:
+        bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, e))
+
+    stderr = p.communicate()[1]
+    if p.returncode != 0:
+        bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, stderr))
+
     # On some OSes (e.g. debian) the group is automatically removed if
     # it bears the same name as the user. So first check for the group.
     if group_exists(name):

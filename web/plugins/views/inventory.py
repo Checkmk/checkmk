@@ -279,7 +279,7 @@ def inv_paint_if_admin_status(admin_status):
 
 
 def inv_paint_if_port_type(port_type):
-    type_name = interface_port_types.get(port_type, _("unknown"))
+    type_name = defines.interface_port_types().get(port_type, _("unknown"))
     return "", "%d - %s" % (port_type, type_name)
 
 

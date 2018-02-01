@@ -55,6 +55,8 @@ def type_name(v):
     except:
         return html.attrencode(type(v))
 
+seconds_per_day = 86400
+
 # Abstract base class of all value declaration classes.
 class ValueSpec(object):
     def __init__(self, **kwargs):

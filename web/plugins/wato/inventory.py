@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.paths
+import cmk.defines as defines
 
 register_rulegroup("inventory",
     _("Hardware/Software-Inventory"),
@@ -152,7 +153,7 @@ register_rule(group,
             ( "usage_port_types",
               DualListChoice(
                 title = _("Port types to include in usage statistics"),
-                choices = interface_port_type_choices,
+                choices = dict_choices(defines.interface_port_types()),
                 autoheight = False,
                 rows = 40,
                 enlarge_active = False,

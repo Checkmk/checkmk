@@ -266,7 +266,7 @@ class FilterInvtableInterfaceType(Filter):
 
     def valuespec(self):
         return DualListChoice(
-            choices = interface_port_type_choices,
+            choices = dict_choices(defines.interface_port_types()),
             rows = 4,
             enlarge_active = True,
             custom_order = True)

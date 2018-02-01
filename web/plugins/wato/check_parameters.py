@@ -973,7 +973,7 @@ register_rule(group + '/' + subgroup_inventory,
           DualListChoice(title = _("Network interface port types to discover"),
               help = _("When doing discovery on switches or other devices with network interfaces "
                        "then only ports of the specified types will be created services for."),
-              choices = interface_port_type_choices,
+              choices = dict_choices(defines.interface_port_types()),
               custom_order = True,
               rows = 40,
               toggle_all = True,
@@ -11780,7 +11780,7 @@ vs_elements_if_groups_matches = [
     ("iftype", Transform(
         DropdownChoice(
             title = _("Select interface port type"),
-            choices = interface_port_type_choices,
+            choices = dict_choices(defines.interface_port_types()),
             help = _("Only interfaces with the given port type are put into this group. "
                      "For example 53 (propVirtual)."),
         ), forth = lambda x: str(x),

@@ -2735,6 +2735,39 @@ class html(HTMLGenerator, RequestHandler):
 
 
     #
+    # Floating Options
+    #
+
+    def begin_floating_options(self, div_id, is_open):
+        self.open_div(id_=div_id, class_=["view_form"], style="display: none" if not is_open else None)
+        self.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
+        self.open_tr()
+        self.open_td()
+
+    def end_floating_options(self, reset_url=None):
+        self.close_td()
+        self.close_tr()
+        self.open_tr()
+        self.open_td()
+        self.button("apply", _("Apply"), "submit")
+        if reset_url:
+            self.buttonlink(reset_url, _("Reset to defaults"))
+
+        self.close_td()
+        self.close_tr()
+        self.close_table()
+        self.close_div()
+
+    def render_floating_option(self, name, height, varprefix, valuespec, value):
+        self.open_div(class_=["floatfilter", height, name])
+        self.div(valuespec.title(), class_=["legend"])
+        self.open_div(class_=["content"])
+        valuespec.render_input(varprefix + name, value)
+        self.close_div()
+        self.close_div()
+
+
+    #
     # HTML icon rendering
     #
 

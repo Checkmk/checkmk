@@ -70,15 +70,20 @@ private:
         // Initially we consider all columns used in the query...
         auto all = _query->allColumns();
         // ... then we add some special columns which we might need irrespective
-        // of the actual query (see receiveReply, isAuthorizedForEvent, and
-        // isAuthorizedForEventViaContactGroups below)...
-        for (const auto &name : {"event_host",                       //
-                                 "event_contact_groups_precedence",  //
-                                 "event_contact_groups"}) {
-            if (auto col = _table.column(name)) {
+        // of the actual query...
+        static std::unordered_set<std::string> special_columns{
+            // see receiveReply
+            "event_host",
+            // see isAuthorizedForEvent
+            "event_contact_groups_precedence",
+            // see  isAuthorizedForEventViaContactGroups
+            "event_contact_groups"};
+        _table.any_column([&](const auto &col) {
+            if (special_columns.find(col->name()) != special_columns.end()) {
                 all.insert(col);
             }
-        }
+            return false;
+        });
         // .. and then we ignore all host-related columns, they are implicitly
         // joined later via ECRow._host later.
         for (const auto &c : all) {

@@ -1,0 +1,11 @@
+Title: Fixed broken newline rendring in sidebar user messages
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p25
+Date: 1517468881
+
+

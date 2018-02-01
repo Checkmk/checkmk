@@ -231,7 +231,7 @@ def render_messages():
         if 'gui_hint' in msg['methods']:
             html.open_div(id_="message-%s" % msg['id'], class_=["popup_msg"])
             html.a("x", href="javascript:void(0)", class_=["close"], onclick="message_close(\'%s\')" % msg['id'])
-            html.write_text(msg['text'].replace('\n', '<br/>\n'))
+            html.write_text(msg['text'].replace('\n', '<br>\n'))
             html.close_div()
         if 'gui_popup' in msg['methods']:
             html.javascript('alert(\'%s\'); mark_message_read("%s")' %

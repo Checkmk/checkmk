@@ -1048,6 +1048,7 @@ class CMKWebSession(WebSession):
         r = self.post("user_profile.py", data={
             "filled_in" : "profile",
             "_set_lang" : "on",
+            "ua_start_url_use": "0",
             "language"  : lang,
             "_save"     : "Save",
         }, add_transid=True)

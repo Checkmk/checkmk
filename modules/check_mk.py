@@ -2522,7 +2522,6 @@ skipped_config_variable_names = [
     "host_paths",
     "timeperiods",
     "extra_service_conf",
-    "extra_host_conf",
     "extra_nagios_conf",
 ]
 

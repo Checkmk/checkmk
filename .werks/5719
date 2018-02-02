@@ -1,0 +1,23 @@
+Title: The Start URL is now configured optionally for new users
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517579382
+Class: fix
+
+There is either a global defaukt start URL for fresh logged in users set
+in Check_MK. It is either <tt>dashboard.py</tt> by default or customized
+using the global settings. There is also a user attribute to customize
+this setting for each user individually.
+
+The idea of this setting was to set the start URL attribute only in case 
+one wanted to override the global setting. But the attribute was set to
+<tt>dashboard.py</tt> during creation of each new user, since the attribute
+was not an optional one. If one then tried to change the global setting
+it had no effect on the users, because they had all the start URL set to
+<tt>dashboard.py</tt> individually.
+
+This option has been made optionally now. It defaults to
+<i>Use the default start URL</i> for new users.

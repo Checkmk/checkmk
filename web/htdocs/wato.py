@@ -3420,7 +3420,7 @@ class ModeDiscovery(WatoMode):
               "to be monitored.")),
             (self.SERVICE_IGNORED, True, _("Disabled services"),
             _("These services are being discovered but have been disabled by creating a rule "
-              "in the rule set <i>Disabled services</i> oder <i>Disabled checks</i>.")),
+              "in the rule set <i>Disabled services</i> or <i>Disabled checks</i>.")),
             ("active",        False, _("Active checks"),
             _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
               "call classical check plugins. They have been added by a rule in the section "

@@ -31,7 +31,6 @@
 #include "Logger.h"
 #include "stringutil.h"
 
-extern const char *check_mk_version;
 
 struct script_statistics_t {
     int pl_count;
@@ -59,7 +58,7 @@ std::vector<KVPair> SectionCheckMK::createInfoFields() const {
 
     // common fields
     std::vector<KVPair> info_fields = {
-        {"Version", check_mk_version},
+        {"Version", CHECK_MK_VERSION},
         {"BuildDate", __DATE__},
         {"AgentOS", "windows"},
         {"Hostname", _env.hostname()},

@@ -110,7 +110,6 @@ using std::vector;
 //  | Declarations of macros, structs and function prototypes             |
 //  '----------------------------------------------------------------------'
 
-const char *check_mk_version = CHECK_MK_VERSION;
 
 static const char RT_PROTOCOL_VERSION[2] = {'0', '0'};
 
@@ -503,7 +502,7 @@ void usage() {
             "of debug output\n"
             "check_mk_agent showconfig      -- shows the effective "
             "configuration used (currently incomplete)\n",
-            check_mk_version, *s_config->port);
+            CHECK_MK_VERSION, *s_config->port);
     exit(1);
 }
 
@@ -805,7 +804,7 @@ void output_data(OutputProxy &out, const Environment &env, bool realtime,
     out.flush(true);
 }
 
-void show_version() { printf("Check_MK_Agent version %s\n", check_mk_version); }
+void show_version() { printf("Check_MK_Agent version %s\n", CHECK_MK_VERSION); }
 
 void show_config() { s_config->parser.outputConfigurables(std::cout); }
 

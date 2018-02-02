@@ -110,7 +110,6 @@ using std::vector;
 //  | Declarations of macros, structs and function prototypes             |
 //  '----------------------------------------------------------------------'
 
-
 static const char RT_PROTOCOL_VERSION[2] = {'0', '0'};
 
 #define SERVICE_NAME "Check_MK_Agent"
@@ -843,7 +842,7 @@ std::string managePluginPath(const std::string &filePath,
 }
 
 template <typename LengthT>
-std::vector<BYTE> readData(std::ifstream &ifs,
+std::vector<BYTE> readData(std::ifstream &ifs, bool zeroTerminate,
                            const std::function<void(LengthT)> &check =
                                [](LengthT) {}) {
     LengthT length = 0;
@@ -852,22 +851,28 @@ std::vector<BYTE> readData(std::ifstream &ifs,
         return {};
     }
     check(length);
-    std::vector<BYTE> dataBuffer;
-    dataBuffer.reserve(static_cast<size_t>(length + 1));
+    size_t count = length;
+    if (zeroTerminate) {
+        count += 1;
+    }
+    std::vector<BYTE> dataBuffer(count, 0);
     ifs.read(reinterpret_cast<char *>(dataBuffer.data()), length);
 
     if (!ifs.good()) {
         throw UnpackError(integrityErrorMsg);
     }
 
-    dataBuffer[length] = '\0';
+    if (zeroTerminate) {
+        dataBuffer[length] = '\0';
+    }
+
     return dataBuffer;
 }
 
 void extractPlugin(const Environment &env, std::ifstream &ifs,
                    WritableFile &uninstallFile) {
     // Read Filename
-    const auto filepath = readData<BYTE>(ifs);
+    const auto filepath = readData<BYTE>(ifs, true);
 
     if (!ifs.good()) {
         if (ifs.eof()) {
@@ -884,7 +889,7 @@ void extractPlugin(const Environment &env, std::ifstream &ifs,
                               "' exceeds 20 MB");
         }
     };
-    const auto content = readData<int>(ifs, checkPluginSize);
+    const auto content = readData<int>(ifs, false, checkPluginSize);
     if (!ifs.good()) {
         throw UnpackError(integrityErrorMsg);
     }
@@ -895,7 +900,7 @@ void extractPlugin(const Environment &env, std::ifstream &ifs,
 
     // Write plugin
     WritableFile pluginFile(pluginPath, 0, CREATE_NEW, s_winapi);
-    pluginFile << reinterpret_cast<char const *>(content.data());
+    pluginFile << content;
 }
 
 }  // namespace

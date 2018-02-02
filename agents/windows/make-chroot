@@ -4,7 +4,7 @@
 
 set -e
 
-DISTRO=artful
+DISTRO=bionic
 MIRROR=http://de.archive.ubuntu.com/ubuntu
 
 export HOSTNAME=cmk-windows-agent-chroot
@@ -112,7 +112,10 @@ package_names=(
     python2.7
     ssh-askpass
     uuid-dev
-    wine-stable
+# TODO: Need to install wine separately in order to use --force-overwrite, see
+# https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/
+# Cannot pass --force-overwrite through debootstrap.
+#    wine-stable
 )
 packages=$(IFS=,; echo "${package_names[*]}")
 
@@ -121,6 +124,12 @@ debootstrap \
     --components=main,universe \
     --include="$packages" \
     --arch amd64 $DISTRO $CHROOT_PATH $MIRROR
+
+# Cope with the known bug with libsane1 that wine depends on.
+# https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/
+# Need to use --force-overwrite with apt-get. This option cannot be passed
+# through debootstrap.
+$SCRIPT_DIR/do-chroot 'apt-get -y -o Dpkg::Options::="--force-overwrite" install wine-stable'
 
 # Need to be installed for installation.
 cat <<EOF > $CHROOT_PATH/etc/fstab
@@ -161,7 +170,7 @@ fi
 sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
 
 # We need to enable 32bit Wine
-$SCRIPT_DIR/do-chroot "dpkg --add-architecture i386 && apt-get update && apt-get -y install wine32"
+$SCRIPT_DIR/do-chroot 'dpkg --add-architecture i386 && apt-get update && apt-get -o Dpkg::Options::="--force-overwrite" -y install wine32'
 
 # Build Google Test and Google Mock
 $SCRIPT_DIR/do-chroot "$CHROOT_BUILD_DIR/agents/windows/test/build-googletest"

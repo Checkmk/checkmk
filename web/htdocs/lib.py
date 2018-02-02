@@ -718,34 +718,3 @@ def metric_number_with_precision(v, *args, **kwargs):
     if kwargs.get("drop_zeroes"):
         text = text.rstrip("0").rstrip(".")
     return text
-
-
-
-def metric_number_with_precision_list(values, *args, **kwargs):
-    if not values:
-        reference = 0
-    else:
-        reference = min([ abs(v) for v in values ])
-
-    kwargs["base"] = 1000.0
-    scale_symbol, places_after_comma, scale_factor = calculate_scaled_number(reference, *args, **kwargs)
-
-    units = []
-    scaled_values = []
-    for value in values:
-        scaled_value = float(value) / scale_factor
-        scaled_values.append(("%%.%df" % places_after_comma) % scaled_value)
-
-    return "%s" % scale_symbol, scaled_values
-
-
-def file_size_human_readable(file_size):
-    if file_size < 10000:
-        return str(file_size)
-    as_string = str(file_size)
-    result = ""
-    while len(as_string) > 3:
-        result = "." + as_string[-3:] + result
-        as_string = as_string[:-3]
-    result = as_string + result
-    return result

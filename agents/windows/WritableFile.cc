@@ -59,6 +59,15 @@ WritableFile &WritableFile::operator<<(const std::string &s) {
     return *this;
 }
 
+WritableFile &WritableFile::operator<<(const std::vector<BYTE> &s) {
+    DWORD written = 0;
+    if (!_winapi.WriteFile(_hFile.get(), s.data(), s.size(), &written,
+                           nullptr)) {
+        throw FileError(_path, get_win_error_as_string(_winapi));
+    }
+    return *this;
+}
+
 std::unordered_set<std::string> getDefaultWhitelist(
     const Environment &env, const WinApiAdaptor &winapi) {
     std::unordered_set<std::string> whitelist = {

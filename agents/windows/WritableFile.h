@@ -68,6 +68,14 @@ public:
      */
     WritableFile &operator<<(const std::string &s);
 
+    /**
+     * Write given byte sequence to file.
+     *
+     * @param[in] s        Byte sequence to be written
+     * @throw FileError    If the write operation fails
+     */
+    WritableFile &operator<<(const std::vector<BYTE> &s);
+
 private:
     const std::string _path;
     WrappedHandle<InvalidHandleTraits> _hFile;

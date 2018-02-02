@@ -82,11 +82,27 @@ declare_user_attribute(
 
 declare_user_attribute(
     "start_url",
-    TextAscii(title = _("Start-URL to display in main frame"),
-              help = _("When you point your browser to the Multisite GUI, usually the dashboard "
-                       "is shown in the main (right) frame. You can replace this with any other "
-                       "URL you like here."),
-              size = 80,
-              default_value = "dashboard.py",
-              attrencode = True),
+    Transform(
+        Alternative(
+            title = _("Start URL to display in main frame"),
+            style = "dropdown",
+            orientation = "horizontal",
+            elements = [
+                FixedValue(None,
+                    title = _("Use the default start URL"),
+                    totext = "",
+                ),
+                TextAscii(
+                    title = _("Use this custom start URL"),
+                    help = _("When you point your browser to the Check_MK GUI, usually the dashboard "
+                             "is shown in the main (right) frame. You can replace this with any other "
+                             "URL you like here."),
+                    size = 80,
+                    default_value = "dashboard.py",
+                    attrencode = True
+                ),
+            ],
+        ),
+        forth = lambda v: None if v == "" else v,
+    ),
     domain = "multisite")

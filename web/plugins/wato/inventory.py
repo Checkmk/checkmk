@@ -153,7 +153,7 @@ register_rule(group,
             ( "usage_port_types",
               DualListChoice(
                 title = _("Port types to include in usage statistics"),
-                choices = dict_choices(defines.interface_port_types()),
+                choices = defines.interface_port_types(),
                 autoheight = False,
                 rows = 40,
                 enlarge_active = False,

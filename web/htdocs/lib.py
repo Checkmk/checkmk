@@ -749,13 +749,3 @@ def file_size_human_readable(file_size):
         as_string = as_string[:-3]
     result = as_string + result
     return result
-
-# For usage in Dropdown choices an the like
-#
-# TODO: Move this functionality into the related value specs. We could simply
-# make them work with choices passed as dict types and then use this logic
-# to convert the dict to choices.
-def dict_choices(types):
-    return [ (str(type_id), "%d - %s" % (type_id, type_name))
-        for (type_id, type_name)
-        in sorted(types.items()) ]

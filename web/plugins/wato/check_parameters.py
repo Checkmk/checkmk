@@ -965,7 +965,7 @@ register_rule(group + '/' + subgroup_inventory,
                        "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
                        "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
                        "This will add about 5% of additional SNMP traffic."),
-              choices = dict_choices(defines.interface_oper_states()),
+              choices = defines.interface_oper_states(),
               toggle_all = True,
               default_value = ['1'],
         )),
@@ -973,7 +973,7 @@ register_rule(group + '/' + subgroup_inventory,
           DualListChoice(title = _("Network interface port types to discover"),
               help = _("When doing discovery on switches or other devices with network interfaces "
                        "then only ports of the specified types will be created services for."),
-              choices = dict_choices(defines.interface_port_types()),
+              choices = defines.interface_port_types(),
               custom_order = True,
               rows = 40,
               toggle_all = True,
@@ -7882,7 +7882,7 @@ register_check_parameters(
                 Optional(
                     ListChoice(
                         title = _("Allowed states:"),
-                        choices = dict_choices(defines.interface_oper_states())),
+                        choices = defines.interface_oper_states()),
                     title = _("Operational state"),
                     help = _("If you activate the monitoring of the operational state (<tt>ifOperStatus</tt>) "
                              "the check will get warning or critical if the current state "
@@ -7898,7 +7898,7 @@ register_check_parameters(
                     Tuple(
                         orientation = "horizontal",
                         elements = [
-                            DropdownChoice(choices = dict_choices(defines.interface_oper_states())),
+                            DropdownChoice(choices = defines.interface_oper_states()),
                             MonitoringState()
                         ]),
                     title = _('Map operational states'),
@@ -11780,7 +11780,7 @@ vs_elements_if_groups_matches = [
     ("iftype", Transform(
         DropdownChoice(
             title = _("Select interface port type"),
-            choices = dict_choices(defines.interface_port_types()),
+            choices = defines.interface_port_types(),
             help = _("Only interfaces with the given port type are put into this group. "
                      "For example 53 (propVirtual)."),
         ), forth = lambda x: str(x),

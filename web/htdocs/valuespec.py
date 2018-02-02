@@ -1555,6 +1555,8 @@ class DropdownChoice(ValueSpec):
         result = []
         if type(self._choices) == list:
             result = self._choices
+        elif type(self._choices) == dict:
+            result = ListChoice.dict_choices(self._choices)
         else:
             result = self._choices()
 
@@ -1980,6 +1982,12 @@ class RadioChoice(DropdownChoice):
 
 # A list of checkboxes representing a list of values
 class ListChoice(ValueSpec):
+    @staticmethod
+    def dict_choices(types):
+        return [ ("%s" % type_id, "%d - %s" % (type_id, type_name))
+                 for (type_id, type_name) in sorted(types.items()) ]
+
+
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._choices = kwargs.get("choices")
@@ -1999,6 +2007,8 @@ class ListChoice(ValueSpec):
         if self._choices != None:
             if type(self._choices) == list:
                 self._elements = self._choices
+            elif type(self._choices) == dict:
+                self._elements = ListChoice.dict_choices(self._choices)
             else:
                 self._elements = self._choices()
             return

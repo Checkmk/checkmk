@@ -1,0 +1,12 @@
+Title: Standard tables now tell their number of rows in page title area
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517609742
+Class: feature
+
+When a data table is rendered, e.g. like it is done in the configuration GUI on
+a lot of pages, the tables write the number of shown rows to detail text of the
+header area of the page.

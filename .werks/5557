@@ -1,0 +1,10 @@
+Title: check_mk_agent.aix: Fixed bug in uptime because AIX is not able to interpret ? and + in regexes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517833562
+Class: fix
+
+

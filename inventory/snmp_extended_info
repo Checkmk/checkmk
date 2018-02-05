@@ -61,16 +61,20 @@ def inv_snmp_extended_info(info):
 
     parsed = {}
     count_parents = 0
-    for child, parent, description, child_type, name, serial, model in info:
+    for child, description, parent, child_type, name, software, \
+        serial, manufacturer, model in info:
         if parent == "0":
             count_parents += 1
         if child_type in map_type:
-            parsed.setdefault(child, (parent, description, child_type, name, serial, model))
+            parsed.setdefault(child, (parent, description, child_type, name,
+                                      software, serial, manufacturer, model))
         else:
-            parsed.setdefault(child, (parent, description, "2", name, serial, model))
+            parsed.setdefault(child, (parent, description, "2", name, software,
+                                      serial, manufacturer, model))
 
     node = None
-    for index, (parent, description, entity_type, name, serial, model) in parsed.items():
+    for index, (parent, description, entity_type, name, software, \
+        serial, manufacturer, model) in parsed.items():
         if count_parents == 1 and parent == "0":
             node = inv_tree("hardware.system.")
             if serial:
@@ -81,6 +85,8 @@ def inv_snmp_extended_info(info):
         elif entity_type != "10":
             if parsed.get(parent):
                 location_info = (map_type[parsed[parent][2]][0], parent)
+            elif parent == "0":
+                location_info = ("Device", "0")
             else:
                 location_info = ("Missing in ENTITY table", parent)
             node = inv_tree_list("hardware.components.%s:" % (map_type[entity_type][1]))
@@ -88,7 +94,9 @@ def inv_snmp_extended_info(info):
                 "index"       : index,
                 "name"        : name,
                 "description" : description,
+                "software"    : software,
                 "serial"      : serial,
+                "manufacturer": manufacturer,
                 "model"       : model,
                 "location"    : "%s (%s)" % location_info,
             })
@@ -99,13 +107,15 @@ def inv_snmp_extended_info(info):
 inv_info['snmp_extended_info'] = {
     'inv_function'       : inv_snmp_extended_info,
     'snmp_info'          : ('.1.3.6.1.2.1.47.1.1.1.1', [
-                                  OID_END,
-                                  "4",    # entPhysicalContainedIn
-                                  "2",    # entPhysicalDescr
-                                  "5",    # entPhysicalClass
-                                  "7",    # entPhysicalName
-                                  "11",   # entPhysicalSerialNum
-                                  "13",   # entPhysicalModelName
+                            OID_END,
+                            "2",    # entPhysicalDescr
+                            "4",    # entPhysicalContainedIn
+                            "5",    # entPhysicalClass
+                            "7",    # entPhysicalName
+                            "10",   # entPhysicalSoftwareRev (NEW)
+                            "11",   # entPhysicalSerialNum
+                            "12",   # entPhysicalMfgName (NEW)
+                            "13",   # entPhysicalModelName
                            ]),
     'snmp_scan_function' : lambda oid: oid(".1.3.6.1.2.1.47.1.1.1.1.*"),
 }

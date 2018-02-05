@@ -817,13 +817,6 @@ const vector<unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
-    // TODO(sp): Funny special case, do we really want/need this?
-    if (_wait_condition.size() == 0 && _wait_trigger != nullptr) {
-        waitForTrigger();
-        return;
-    }
-
-    // Starting from here, it's basically a standard condition variable.
     while (
         !_wait_condition.accepts(_wait_object, _auth_user, timezoneOffset())) {
         if (waitForTrigger() == std::cv_status::timeout) {

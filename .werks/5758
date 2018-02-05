@@ -1,0 +1,10 @@
+Title: lnx_distro: Fixed 'Inventory failed' while parsing os-release output of RHEL 7.4 distros
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517825837
+Class: fix
+
+

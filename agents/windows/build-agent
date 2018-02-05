@@ -30,9 +30,16 @@ if [[ " $targets " =~ " integrationtest " && "$targets" != integrationtest ]] ; 
     exit 1
 fi
 
+if [[ " $targets " =~ " check " && "$targets" != check ]] ; then
+    echo "check cannot be combined with other targets"
+    exit 1
+fi
+
 if [[ "$targets" == unittest || "$targets" == integrationtest ]] ; then
     # Only unittest or integrationtest
     build_archs=()
+elif [[ "$targets" == check ]] ; then
+    build_archs=(64)
 elif [[ " $targets " =~ " unittest " ]] ; then
     # unittest together with other target(s)
     targets=${targets/unittest/}

@@ -112,7 +112,7 @@ WindowsAgentTest_SOURCES = \
         test/sections/SectionLogwatchTest.cc \
         test/sections/SectionMRPETest.cc
 
-wmitest_SOURCES = wmitest.cc stringutil.cc WinApi.cc wmiHelper.cc
+wmitest_SOURCES = Logger.cc WinApi.cc stringutil.cc wmiHelper.cc wmitest.cc
 
 CLEANFILES = \
         *.ico *.res *.rc config.* stamp-* Makefile \

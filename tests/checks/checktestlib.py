@@ -56,8 +56,8 @@ class PerfValue(Tuploid):
         return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
 
     def __repr__(self):
-        return "PerfValue(%s, %s, %s, %s, %s, %s)" % (self.key, self.value, self.warn,
-                                                      self.crit, self.minimum, self.maximum)
+        return "PerfValue('%s', %s, %s, %s, %s, %s)" % (self.key, self.value, self.warn,
+                                                        self.crit, self.minimum, self.maximum)
 
 
 class BasicCheckResult(Tuploid):
@@ -73,10 +73,12 @@ class BasicCheckResult(Tuploid):
         """We perform some basic consistency checks during initialization"""
 
         assert status in [0, 1, 2, 3]
+        self.status = status
+
         assert type(infotext) == str
         assert "\n" not in infotext
-        self.status = status
         self.infotext = infotext
+
         if perfdata is not None:
             assert type(perfdata) == list
 
@@ -120,12 +122,27 @@ class CheckResult(object):
         we initialize a list of length 1.
         """
 
-        if type(result) == types.GeneratorType:
-            self.subresults = []
+        self.subresults = []
+        if isinstance(result, types.GeneratorType):
             for subresult in result:
                 self.subresults.append(BasicCheckResult(*subresult))
+        # creation of a CheckResult via a list of BasicCheckResult for test writing
+        elif isinstance(result, list):
+            assert all(isinstance(subresult, BasicCheckResult) for subresult in result)
+            self.subresults = result
         else:
-            self.subresults = [ BasicCheckResult(*result) ]
+            self.subresults.append(BasicCheckResult(*result))
+
+    def __repr__(self):
+        return 'CheckResult(%s)' % repr(self.subresults)
+
+    def __eq__(self, other):
+        if not isinstance(other, CheckResult):
+            return False
+        return all(s1 == s2 for (s1, s2) in zip(self.subresults, other.subresults))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     @property
     def perfdata(self):

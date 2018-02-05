@@ -27,8 +27,10 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include "Aggregator.h"
 #include "Column.h"
@@ -75,7 +77,7 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
     , _keepalive(false)
     , _auth_user(nullptr)
     , _wait_timeout(0)
-    , _wait_trigger(nullptr)
+    , _wait_trigger(&trigger_all())
     , _wait_object(nullptr)
     , _separators("\n", ";", ",", "|")
     , _show_column_headers(true)
@@ -817,27 +819,20 @@ const vector<unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
-    while (
-        !_wait_condition.accepts(_wait_object, _auth_user, timezoneOffset())) {
-        if (waitForTrigger() == std::cv_status::timeout) {
-            return;
-        }
-    }
-}
-
-std::cv_status Query::waitForTrigger() const {
-    auto trigger = _wait_trigger == nullptr ? &trigger_all() : _wait_trigger;
+    auto pred = [this] {
+        return _wait_condition.accepts(_wait_object, _auth_user,
+                                       timezoneOffset());
+    };
+    std::unique_lock<std::mutex> lock(trigger_mutex());
     if (_wait_timeout == std::chrono::milliseconds(0)) {
         Debug(_logger) << "waiting until condition becomes true";
-        trigger_wait(*trigger);
-        return std::cv_status::no_timeout;
+        _wait_trigger->wait(lock, pred);
+    } else {
+        Debug(_logger) << "waiting "
+                       << std::chrono::duration_cast<std::chrono::milliseconds>(
+                              _wait_timeout)
+                              .count()
+                       << "ms or until condition becomes true";
+        _wait_trigger->wait_for(lock, _wait_timeout, pred);
     }
-    Debug(_logger) << "waiting " << _wait_timeout.count()
-                   << "ms or until condition becomes true";
-    auto status = trigger_wait_for(*trigger, _wait_timeout);
-    if (status == std::cv_status::timeout) {
-        Debug(_logger) << "wait timeout after " << _wait_timeout.count()
-                       << "ms";
-    }
-    return status;
 }

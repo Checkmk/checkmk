@@ -28,8 +28,10 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <condition_variable>
+#include <mutex>
 #include <string>
 
+std::mutex &trigger_mutex();
 std::condition_variable &trigger_all();
 std::condition_variable &trigger_check();
 std::condition_variable &trigger_state();

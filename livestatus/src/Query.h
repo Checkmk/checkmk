@@ -109,7 +109,6 @@ private:
 
     bool doStats();
     void doWait();
-    std::cv_status waitForTrigger() const;
     // TODO(sp) The column parameter should actually be a const reference, but
     // Column::createFilter is not const-correct yet...
     std::unique_ptr<Filter> createFilter(Column &column,

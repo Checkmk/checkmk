@@ -250,7 +250,7 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_resu
 
     check = check_manager.get_check("df")
     monkeypatch.setitem(check.context, "host_extra_conf_merged", lambda _, __: inventory_df_rules)
-    assert check.run_discovery(check.run_parse(info)) == expected_result
+    assert checktestlib.DiscoveryResult(check.run_discovery(check.run_parse(info))) == expected_result
 
 
 @pytest.mark.parametrize("item,params,info,expected_result", [

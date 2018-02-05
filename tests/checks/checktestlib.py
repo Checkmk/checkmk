@@ -16,6 +16,10 @@ class Tuploid(object):
     def tuple(self):
         raise NotImplementedError()
 
+    def __iter__(self):
+        for x in self.tuple:
+            yield x
+
 
 class PerfValue(Tuploid):
     """Represents a single perf value"""
@@ -132,12 +136,13 @@ class DiscoveryEntry(Tuploid):
 
     def __init__(self, entry):
         item, default_params = entry
-        assert type(item) in [ str. types.NoneType ]
+        assert type(item) in [ str, unicode, types.NoneType ]
         self.item = item
         self.default_params = default_params
 
+    @property
     def tuple(self):
-        return (item, default_params)
+        return (self.item, self.default_params)
 
 
 class DiscoveryResult(object):
@@ -146,3 +151,7 @@ class DiscoveryResult(object):
         self.entries = []
         for entry in result:
             self.entries.append(DiscoveryEntry(entry))
+
+    def __eq__(self, other_value):
+        return all(entry in other_value for entry in self.entries) and \
+               all(other_entry in self.entries for other_entry in other_value)

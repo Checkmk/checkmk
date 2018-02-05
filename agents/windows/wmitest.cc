@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <string>
+#include "Logger.h"
 #include "WinApi.h"
 #include "stringutil.h"
 #include "wmiHelper.h"
@@ -18,7 +19,7 @@ void print_usage(const char *exe_name) {
 }
 
 void print_namespace(const std::wstring &path, int depth = 0) {
-    wmi::Helper helper(winapi, path.c_str());
+    wmi::Helper helper(Logger::getLogger("wmitest"), winapi, path.c_str());
 
     std::string offset = std::string(depth * 2, ' ');
     {
@@ -48,7 +49,8 @@ void print_namespace(const std::wstring &path, int depth = 0) {
 }
 
 void print_table(const std::string &ns, const std::string &pattern) {
-    wmi::Helper helper(winapi, to_utf16(ns.c_str(), winapi).c_str());
+    wmi::Helper helper(Logger::getLogger("wmitest"), winapi,
+                       to_utf16(ns.c_str(), winapi).c_str());
 
     wmi::Result result = helper.query(L"SELECT * FROM meta_class");
     bool more = result.valid();

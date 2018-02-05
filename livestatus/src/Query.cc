@@ -620,13 +620,11 @@ void Query::parseWaitTriggerLine(char *line) {
         invalidHeader("WaitTrigger: missing keyword");
         return;
     }
-    struct trigger *t = trigger_find(value);
-    if (t == nullptr) {
-        invalidHeader("WaitTrigger: invalid trigger '" + string(value) +
-                      "'. Allowed are " + trigger_all_names() + ".");
-        return;
+    try {
+        _wait_trigger = &trigger_find(value);
+    } catch (const std::runtime_error &err) {
+        invalidHeader(std::string("WaitTrigger: ") + err.what());
     }
-    _wait_trigger = t;
 }
 
 void Query::parseWaitObjectLine(char *line) {
@@ -835,15 +833,15 @@ void Query::doWait() {
 }
 
 std::cv_status Query::waitForTrigger() const {
-    auto trigger = _wait_trigger == nullptr ? trigger_all() : _wait_trigger;
+    auto trigger = _wait_trigger == nullptr ? &trigger_all() : _wait_trigger;
     if (_wait_timeout == std::chrono::milliseconds(0)) {
         Debug(_logger) << "waiting until condition becomes true";
-        trigger_wait(trigger);
+        trigger_wait(*trigger);
         return std::cv_status::no_timeout;
     }
     Debug(_logger) << "waiting " << _wait_timeout.count()
                    << "ms or until condition becomes true";
-    auto status = trigger_wait_for(trigger, _wait_timeout);
+    auto status = trigger_wait_for(*trigger, _wait_timeout);
     if (status == std::cv_status::timeout) {
         Debug(_logger) << "wait timeout after " << _wait_timeout.count()
                        << "ms";

@@ -87,7 +87,7 @@ private:
     contact *_auth_user;
     AndingFilter _wait_condition;
     std::chrono::milliseconds _wait_timeout;
-    struct trigger *_wait_trigger;
+    std::condition_variable *_wait_trigger;
     Row _wait_object;
     CSVSeparators _separators;
     bool _show_column_headers;

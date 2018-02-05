@@ -59,6 +59,8 @@ def inventory_jolokia_generic_string(parsed):
 
 
 def check_jolokia_generic_string(item, params, parsed):
+    if item not in parsed:
+        return 3, "Item not found in agent output"
     value = parsed[item]["value"]
     default_status = params.get("default_status", 0)
 
@@ -95,6 +97,9 @@ def inventory_jolokia_generic_rate(parsed):
 
 
 def check_jolokia_generic_rate(item, params, parsed):
+    if item not in parsed:
+        yield 3, "Item not found in agent output"
+        return
     now = time.time()
     rate = get_rate(item, now, parsed[item]["value"])
     infotext = "%.1f" % rate
@@ -160,6 +165,9 @@ def inventory_jolokia_generic(parsed):
 
 
 def check_jolokia_generic(item, params, parsed):
+    if item not in parsed:
+        yield 3, "Item not found in agent output"
+        return
     value = parsed[item]["value"]
     infotext = "%.1f" % value
     perfdata = None

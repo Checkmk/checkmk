@@ -243,20 +243,20 @@ fi
 echo '<<<uptime>>>'
 UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
 case $UPTIME in
-    *day* ) DAYS=$(echo $UPTIME | sed -e 's/days\?,.*//g') ;;
+    *day* ) DAYS=$(echo $UPTIME | sed -e 's/days\{0,1\},.*//g') ;;
     * ) DAYS="0" ;;
 esac
 
 case $UPTIME in
     *:* )
-        HOURS=$(echo $UPTIME | sed -e 's/.*days\?,//g' -e 's/:.*//g')
-        MINS=$(echo $UPTIME | sed -e 's/.*days\?,//g' -e 's/.*://g' -e 's/,.*//g') ;;
+        HOURS=$(echo $UPTIME | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
+        MINS=$(echo $UPTIME | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g') ;;
     *hr* )
-        HOURS=$(echo $UPTIME | sed -e 's/hrs\?,.*//g' -e 's/.*,//g')
+        HOURS=$(echo $UPTIME | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
         MINS=0 ;;
     *min* )
         HOURS=0
-        MINS=$(echo $UPTIME | sed -e 's/mins\?,.*//g' -e 's/.*hrs\?,//g' -e 's/.*days\?,//g') ;;
+        MINS=$(echo $UPTIME | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g') ;;
     * )
         HOURS="0"
         MINS=0 ;;

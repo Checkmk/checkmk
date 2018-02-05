@@ -29,6 +29,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include "Triggers.h"
 #include "data_encoding.h"
 class Logger;
 
@@ -93,6 +94,8 @@ public:
     virtual bool stateHistoryFilteringEnabled() = 0;
 
     virtual Logger *loggerLivestatus() = 0;
+
+    virtual Triggers &triggers() = 0;
 
     // Our escape hatch, this should die in the long run...
     template <typename T>

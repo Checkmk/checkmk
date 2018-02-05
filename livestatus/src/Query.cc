@@ -27,24 +27,23 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
-#include <mutex>
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 #include "Aggregator.h"
 #include "Column.h"
 #include "Filter.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
 #include "OutputBuffer.h"
 #include "StatsColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
+#include "Triggers.h"
 #include "auth.h"
 #include "strutil.h"
-#include "waittriggers.h"
 
 // for find_contact, ugly...
 #ifdef CMC
@@ -77,7 +76,7 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
     , _keepalive(false)
     , _auth_user(nullptr)
     , _wait_timeout(0)
-    , _wait_trigger(&trigger_all())
+    , _wait_trigger(Triggers::Kind::all)
     , _wait_object(nullptr)
     , _separators("\n", ";", ",", "|")
     , _show_column_headers(true)
@@ -623,7 +622,7 @@ void Query::parseWaitTriggerLine(char *line) {
         return;
     }
     try {
-        _wait_trigger = &trigger_find(value);
+        _wait_trigger = _table->core()->triggers().find(value);
     } catch (const std::runtime_error &err) {
         invalidHeader(std::string("WaitTrigger: ") + err.what());
     }
@@ -819,20 +818,8 @@ const vector<unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
-    auto pred = [this] {
+    _table->core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
         return _wait_condition.accepts(_wait_object, _auth_user,
                                        timezoneOffset());
-    };
-    std::unique_lock<std::mutex> lock(trigger_mutex());
-    if (_wait_timeout == std::chrono::milliseconds(0)) {
-        Debug(_logger) << "waiting until condition becomes true";
-        _wait_trigger->wait(lock, pred);
-    } else {
-        Debug(_logger) << "waiting "
-                       << std::chrono::duration_cast<std::chrono::milliseconds>(
-                              _wait_timeout)
-                              .count()
-                       << "ms or until condition becomes true";
-        _wait_trigger->wait_for(lock, _wait_timeout, pred);
-    }
+    });
 }

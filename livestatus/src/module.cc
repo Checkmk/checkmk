@@ -59,13 +59,13 @@
 #include "Store.h"
 #include "StringUtils.h"
 #include "TimeperiodsCache.h"
+#include "Triggers.h"
 #include "auth.h"
 #include "contact_fwd.h"
 #include "data_encoding.h"
 #include "global_counters.h"
 #include "nagios.h"
 #include "strutil.h"
-#include "waittriggers.h"
 
 using mk::unsafe_tolower;
 using std::chrono::milliseconds;
@@ -129,6 +129,7 @@ int g_thread_running = 0;
 AuthorizationKind g_service_authorization = AuthorizationKind::loose;
 AuthorizationKind g_group_authorization = AuthorizationKind::strict;
 Encoding fl_data_encoding = Encoding::utf8;
+Triggers fl_triggers;
 
 // Map to speed up access via name/alias/address
 unordered_map<string, host *> fl_hosts_by_designation;
@@ -467,7 +468,7 @@ int broker_check(int event_type, void *data) {
             counterIncrement(Counter::host_checks);
         }
     }
-    trigger_notify_all(trigger_check());
+    fl_triggers.notify_all(Triggers::Kind::check);
     return result;
 }
 
@@ -475,7 +476,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     auto co = static_cast<nebstruct_comment_data *>(data);
     fl_store->registerComment(co);
     counterIncrement(Counter::neb_callbacks);
-    trigger_notify_all(trigger_comment());
+    fl_triggers.notify_all(Triggers::Kind::comment);
     return 0;
 }
 
@@ -483,7 +484,7 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     auto dt = static_cast<nebstruct_downtime_data *>(data);
     fl_store->registerDowntime(dt);
     counterIncrement(Counter::neb_callbacks);
-    trigger_notify_all(trigger_downtime());
+    fl_triggers.notify_all(Triggers::Kind::downtime);
     return 0;
 }
 
@@ -491,7 +492,7 @@ int broker_log(int event_type __attribute__((__unused__)),
                void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
     counterIncrement(Counter::log_messages);
-    trigger_notify_all(trigger_log());
+    fl_triggers.notify_all(Triggers::Kind::log);
     return 0;
 }
 
@@ -501,21 +502,21 @@ int broker_command(int event_type __attribute__((__unused__)), void *data) {
         counterIncrement(Counter::commands);
     }
     counterIncrement(Counter::neb_callbacks);
-    trigger_notify_all(trigger_command());
+    fl_triggers.notify_all(Triggers::Kind::command);
     return 0;
 }
 
 int broker_state(int event_type __attribute__((__unused__)),
                  void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
-    trigger_notify_all(trigger_state());
+    fl_triggers.notify_all(Triggers::Kind::state);
     return 0;
 }
 
 int broker_program(int event_type __attribute__((__unused__)),
                    void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
-    trigger_notify_all(trigger_program());
+    fl_triggers.notify_all(Triggers::Kind::program);
     return 0;
 }
 
@@ -670,6 +671,8 @@ public:
     }
 
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
+
+    Triggers &triggers() override { return fl_triggers; }
 
 private:
     void *implInternal() const override { return fl_store; }

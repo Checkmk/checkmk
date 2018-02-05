@@ -146,6 +146,7 @@ liblivestatus_a_SOURCES = \
         TimeFilter.cc \
         TimeperiodColumn.cc \
         TimeperiodsCache.cc \
+        Triggers.cc \
         VariadicFilter.cc \
         WorldNagios.cc \
         auth.cc \
@@ -155,8 +156,7 @@ liblivestatus_a_SOURCES = \
         module.cc \
         opids.cc \
         pnp4nagios.cc \
-        strutil.cc \
-        waittriggers.cc
+        strutil.cc
 
 liblivestatus_a_CPPFLAGS = -I.. @BOOST_CPPFLAGS@
 liblivestatus_a_CXXFLAGS = -fPIC

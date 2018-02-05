@@ -324,6 +324,7 @@ class Table(object):
 
 
     def _write_table(self, rows, actions_enabled, actions_visible, search_term):
+        self._update_headinfo(len(rows))
 
         table_id = self.id
         num_cols = len(self.headers)
@@ -397,6 +398,11 @@ class Table(object):
             html.close_tr()
 
         html.close_table()
+
+
+    def _update_headinfo(self, num_rows):
+        headinfo = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
+        html.javascript("update_headinfo('%s');" % headinfo)
 
 
     def _write_csv(self, csv_separator):

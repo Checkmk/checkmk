@@ -133,6 +133,7 @@ class CheckResult(object):
 
 
 class DiscoveryEntry(Tuploid):
+    """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
 
     def __init__(self, entry):
         item, default_params = entry
@@ -146,7 +147,15 @@ class DiscoveryEntry(Tuploid):
 
 
 class DiscoveryResult(object):
+    """
+    The result of the discovery as a whole.
 
+    Much like in the case of the check result, this also makes sure
+    that yield-based discovery functions run, and that no exceptions
+    get lost in the laziness.
+    """
+
+    # TODO: Add some more consistency checks here.
     def __init__(self, result):
         self.entries = []
         for entry in result:

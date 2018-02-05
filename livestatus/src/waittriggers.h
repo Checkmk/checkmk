@@ -26,6 +26,8 @@
 #define waittriggers_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
+#include <condition_variable>
 
 // This is basically a C++ class for triggers done the "C way" via an opaque
 // struct, explicit passing of 'this' and using a prefix for names.
@@ -46,6 +48,7 @@ const char *trigger_all_names();
 void trigger_notify_all(struct trigger *which);
 
 void trigger_wait(struct trigger *which);
-int trigger_wait_for(struct trigger *which, unsigned ms);
+std::cv_status trigger_wait_for(struct trigger *which,
+                                std::chrono::milliseconds ms);
 
 #endif  // waittriggers_h

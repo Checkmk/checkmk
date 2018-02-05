@@ -103,12 +103,9 @@ def parse_infoblox_services(info):
         "59" : "taxii",
     }
 
-    parsed = {}
-    for service_id, status, status_descr in info:
-        service_name = map_service_ids[service_id]
-        if status not in [ "5", "4" ]:
-            parsed.setdefault(service_name, (status, status_descr))
-
+    parsed = {map_service_ids[service_id]: (status, status_descr)
+              for service_id, status, status_descr in info
+              if status not in [ "5", "4" ]}
     return parsed
 
 

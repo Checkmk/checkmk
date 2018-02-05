@@ -1,7 +1,7 @@
 import types
 
 class Tuploid(object):
-    """Base class for values with variadic tuple representations"""
+    """Base class for values with (potentially variadic) tuple representations"""
 
     def __eq__(self, other_value):
         if isinstance(other_value, self.__class__):
@@ -126,3 +126,23 @@ class CheckResult(object):
         for subresult in self.subresults:
             perfdata += subresult.perfdata if subresult.perfdata else []
         return perfdata
+
+
+class DiscoveryEntry(Tuploid):
+
+    def __init__(self, entry):
+        item, default_params = entry
+        assert type(item) in [ str. types.NoneType ]
+        self.item = item
+        self.default_params = default_params
+
+    def tuple(self):
+        return (item, default_params)
+
+
+class DiscoveryResult(object):
+
+    def __init__(self, result):
+        self.entries = []
+        for entry in result:
+            self.entries.append(DiscoveryEntry(entry))

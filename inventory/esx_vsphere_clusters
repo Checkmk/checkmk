@@ -49,6 +49,7 @@ def inv_esx_vsphere_clusters(info):
             data["clusters"].append(dict([("name", cluster)] + values.items()))
         node.append(data)
 
+
 inv_info['esx_vsphere_clusters'] = {
    "inv_function"           : inv_esx_vsphere_clusters,
 }

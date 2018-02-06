@@ -112,7 +112,7 @@ class StructuredDataTree(object):
     def _validate_tree_path(self, tree_path):
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        if not type(tree_path) in [str, unicode]:
+        if not isinstance(tree_path, str) or not isinstance(tree_path, unicode):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
         if not (tree_path.endswith(":") or tree_path.endswith(".")):
             raise MKGeneralException("No valid tree path.")
@@ -166,7 +166,7 @@ class StructuredDataTree(object):
             else:
                 abs_path = tuple()
             abs_path += (edge,)
-            if type(attrs) == list:
+            if isinstance(attrs, list):
                 numeration = Numeration()
                 numeration.set_child_data(attrs)
                 parent.add_child(edge, numeration, abs_path)
@@ -185,11 +185,11 @@ class StructuredDataTree(object):
         leaf_data = {}
         sub_raw_tree = {}
         for k, v in raw_entries.iteritems():
-            if type(v) == dict:
+            if isinstance(v, dict):
                 # Dict based values mean that current key
                 # is a node.
                 sub_raw_tree.setdefault(k, v)
-            elif type(v) == list:
+            elif isinstance(v, list):
                 # Concerns "a.b:" and "a.b:*.c".
                 # In the second case we have to deal with nested numerations
                 # We take a look at children which may be real numerations
@@ -208,7 +208,7 @@ class StructuredDataTree(object):
     def _is_numeration(self, entries):
         for entry in entries:
             for k, v in entry.iteritems():
-                if type(v) == list:
+                if isinstance(v, list):
                     return False
         return True
 
@@ -459,7 +459,7 @@ class Container(NodeAttribute):
     def _is_nested_numeration_tree(self, child):
         if isinstance(child, Container):
             for key in child._edges.keys():
-                if type(key) == int:
+                if isinstance(key, int):
                     return True
         return False
 
@@ -489,7 +489,7 @@ numerated nodes ('arrays') containing real numerations ('devices').
     def _has_nested_numeration_node(self, node_data):
         for nr, entry in enumerate(node_data):
             for k, v in entry.iteritems():
-                if type(v) == list:
+                if isinstance(v, list):
                     return True
         return False
 
@@ -500,7 +500,7 @@ numerated nodes ('arrays') containing real numerations ('devices').
         for nr, entry in enumerate(child_data):
             attrs = {}
             for k, v in entry.iteritems():
-                if type(v) == list:
+                if isinstance(v, list):
                     numeration = parent.add_child(nr, Container(), abs_path+(nr,))\
                                        .add_child(k, Numeration(), abs_path+(nr,k))
                     numeration.set_child_data(v)

@@ -11,20 +11,25 @@ import re
 import shutil
 import subprocess
 from remote import (actual_output, agent_exe, assert_subprocess, config, port,
-                    remotetest, remotedir, run_subprocess, write_config)
+                    remote_ip, remotedir, remotetest, remoteuser,
+                    run_subprocess, sshopts, write_config)
 import sys
 
 
 class Globals(object):
     param = None
+    builddir = 'build64'
     capfile = 'plugins.cap'
+    remote_capfile = os.path.join(remotedir, capfile)
     plugintype = 'plugins'
     pluginnames = ['netstat_an.bat', 'wmic_if.bat']
+    binaryplugin = 'DummyPlugin.exe'
     sections = ['check_mk', 'fileinfo', 'logfiles', 'logwatch', plugintype]
     testfiles = ('basedir', 'monty', [('python', 'flying'), ('circus',
                                                              "It's")])
     testlogs = tuple(
         [os.path.join(remotedir, l) for l in ['test1.log', 'test2.log']])
+    uninstall_batch = os.path.join(remotedir, 'uninstall_plugins.bat')
 
 
 @pytest.fixture
@@ -122,6 +127,14 @@ def expected_output(request, testconfig):
     }[Globals.param[0]]
 
 
+def copy_capfile():
+    cmd = [
+        'scp', sshopts, Globals.capfile,
+        '%s@%s:"%s"' % (remoteuser, remote_ip, remotedir)
+    ]
+    assert_subprocess(cmd)
+
+
 # Pack a directory and return the byte stream of the CAP.
 # Excerpt from enterprise/cmk_base/cee/cap.py
 def pack(install_basedir):
@@ -150,12 +163,49 @@ def _cap_filesize(l):
            chr(l>>24 & 0xff)
 
 
+def pack_plugins(script):
+    basedir, directory, plugins = Globals.testfiles
+    plugindir = os.path.join(basedir, directory)
+    # Clear possible leftovers from previous interrupted / failed tests:
+    if os.path.exists(plugindir):
+        shutil.rmtree(plugindir)
+    os.makedirs(plugindir)
+    if script:
+        for pluginname, content in plugins:
+            with open(os.path.join(plugindir, pluginname),
+                      'w') as outfile:
+                outfile.write(content)
+    else:
+        source = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            Globals.builddir, Globals.binaryplugin)
+        shutil.copy(source, plugindir)
+
+    with open(Globals.capfile, 'wb') as capfile:
+        capfile.write(pack(basedir))
+    shutil.rmtree(basedir)
+
+
+def run_uninstall_plugins():
+    if os.path.isfile(Globals.uninstall_batch):
+        cmd = [Globals.uninstall_batch]
+        exit_code, stdout, stderr = run_subprocess(cmd)
+        if stdout:
+            sys.stdout.write(stdout)
+        if stderr:
+            sys.stderr.write(stderr)
+
+
 @pytest.fixture(
     # Note: param 'adhoc' is tested in all section tests
     #       params 'test' and 'debug' are tested in section check_mk tests
     params=[['version'], ['install'], ['remove'], ['showconfig'],
-            ['unpack', Globals.capfile], ['/?']],
-    ids=['version', 'install', 'remove', 'showconfig', 'unpack', 'usage'],
+            ['unpack', Globals.remote_capfile,
+             'script'], ['unpack', Globals.remote_capfile, 'binary'], ['/?']],
+    ids=[
+        'version', 'install', 'remove', 'showconfig', 'unpack_script',
+        'unpack_binary', 'usage'
+    ],
     autouse=True)
 def pre_test(request):
     if request.param[0] == 'showconfig':
@@ -172,23 +222,67 @@ def pre_test(request):
                 ['sc', 'create', 'Check_MK_Agent',
                  'binPath=%s' % remotedir])
         elif Globals.param[0] == 'unpack':
-            save_cwd = os.getcwd()
-            try:
-                os.chdir(remotedir)
-                basedir, directory, plugins = Globals.testfiles
-                os.mkdir(basedir)
-                os.mkdir(os.path.join(basedir, directory))
-                for pluginname, content in plugins:
-                    with open(
-                            os.path.join(basedir, directory, pluginname),
-                            'w') as outfile:
-                        outfile.write(content)
-                with open(Globals.capfile, 'wb') as capfile:
-                    capfile.write(pack(basedir))
-                shutil.rmtree(basedir)
-            finally:
-                os.chdir(save_cwd)
+            run_uninstall_plugins()
+    elif Globals.param[0] == 'unpack':
+        pack_plugins(Globals.param[2] == 'script')
+        copy_capfile()
     yield
+
+
+def verify_plugin_contents():
+    for root, dirs, files in os.walk(Globals.testfiles[1]):
+        assert len(dirs) == 0
+        for f in files:
+            plugin_contents = [v[1] for v in Globals.testfiles[2] if v[0] == f]
+            assert len(plugin_contents) == 1
+            with open(os.path.join(root, f)) as fhandle:
+                actual_data = fhandle.read()
+                expected_data = plugin_contents[0]
+                assert expected_data == actual_data, (
+                    'expected contents of file %s: %s, '
+                    'actual contents: %s' % (f, expected_data, actual_data))
+
+
+def verify_plugin_output():
+    cmd = [os.path.join(Globals.testfiles[1], Globals.binaryplugin)]
+    exit_code, stdout, stderr = run_subprocess(cmd)
+    assert exit_code == 0, "'%s' failed" % Globals.binaryplugin
+    assert "Hello, World!\r\n" == stdout
+    assert len(stderr) == 0, "Expected empty stderr, got '%s'" % stderr
+
+
+def verify_uninstall_batch(script):
+    drive_letter = r'[A-Z]:'
+
+    def paircmp(t1, t2):
+        if t1[0] < t2[0]:
+            return -1
+        elif t2[0] < t1[0]:
+            return 1
+        return 0
+
+    if script:
+        test_plugins = [t[0] for t in Globals.testfiles[2]]
+    else:
+        test_plugins = [Globals.binaryplugin]
+    expected_uninstall = [
+        ("REM \\* If you want to uninstall the plugins which were "
+         "installed during the"),
+        ("REM \\* last 'check_mk_agent.exe unpack' command, just "
+         "execute this script"), ""
+    ] + [
+        'del "%s%s"' %
+        (drive_letter,
+         re.escape(os.path.join(remotedir, Globals.testfiles[1], t)))
+        for t in test_plugins
+    ] + [
+        'del "%s%s"' %
+        (drive_letter,
+         re.escape(os.path.join(remotedir, 'uninstall_plugins.bat')))
+    ]
+    with open(os.path.join(remotedir, 'uninstall_plugins.bat')) as fhandle:
+        actual_uninstall = fhandle.read().splitlines()
+        remotetest(expected_uninstall, actual_uninstall, None)
 
 
 @pytest.fixture(autouse=True)
@@ -215,54 +309,19 @@ def post_test():
             try:
                 save_cwd = os.getcwd()
                 os.chdir(remotedir)
-                for root, dirs, files in os.walk(Globals.testfiles[1]):
-                    assert len(dirs) == 0
-                    for f in files:
-                        plugin_contents = [
-                            v[1] for v in Globals.testfiles[2] if v[0] == f
-                        ]
-                        assert len(plugin_contents) == 1
-                        with open(os.path.join(root, f)) as fhandle:
-                            actual_data = fhandle.read()
-                            expected_data = plugin_contents[0]
-                            assert expected_data == actual_data, (
-                                'expected contents of file %s: %s, '
-                                'actual contents: %s' % (f, expected_data,
-                                                         actual_data))
-                drive_letter = r'[A-Z]:'
-
-                def paircmp(t1, t2):
-                    if t1[0] < t2[0]:
-                        return -1
-                    elif t2[0] < t1[0]:
-                        return 1
-                    return 0
-
-                expected_uninstall = [
-                    ("REM \\* If you want to uninstall the plugins which were "
-                     "installed during the"),
-                    ("REM \\* last 'check_mk_agent.exe unpack' command, just "
-                     "execute this script"), ""
-                ] + [
-                    'del "%s%s"' %
-                    (drive_letter,
-                     re.escape(
-                         os.path.join(remotedir, Globals.testfiles[1], t[0])))
-                    for t in sorted(Globals.testfiles[2], paircmp)
-                ] + [
-                    'del "%s%s"' %
-                    (drive_letter,
-                     re.escape(
-                         os.path.join(remotedir, 'uninstall_plugins.bat')))
-                ]
-                with open(os.path.join(remotedir,
-                                       'uninstall_plugins.bat')) as fhandle:
-                    actual_uninstall = fhandle.read().splitlines()
-                    remotetest(expected_uninstall, actual_uninstall, None)
+                if Globals.param[2] == 'script':
+                    verify_plugin_contents()
+                else:
+                    verify_plugin_output()
+                verify_uninstall_batch(Globals.param[2] == 'script')
             finally:
-                os.unlink(Globals.capfile)
+                # run_uninstall_plugins()
+                os.unlink(Globals.remote_capfile)
                 shutil.rmtree(Globals.testfiles[1])
                 os.chdir(save_cwd)
+    else:
+        if Globals.param[0] == 'unpack':
+            os.unlink(Globals.capfile)
 
 
 def test_agent_start_parameters(request, testconfig, expected_output,

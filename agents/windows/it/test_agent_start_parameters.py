@@ -142,7 +142,7 @@ def pack(install_basedir):
     old_cwd = os.path.abspath('.')
     os.chdir(install_basedir)
     for relative_dir, _unused_dirs, files in os.walk("."):
-        for filename in files:
+        for filename in sorted(files):
             path = (relative_dir + "/" + filename)[2:]
             cap += _cap_entry(path)
     os.chdir(old_cwd)
@@ -254,15 +254,8 @@ def verify_plugin_output():
 def verify_uninstall_batch(script):
     drive_letter = r'[A-Z]:'
 
-    def paircmp(t1, t2):
-        if t1[0] < t2[0]:
-            return -1
-        elif t2[0] < t1[0]:
-            return 1
-        return 0
-
     if script:
-        test_plugins = [t[0] for t in Globals.testfiles[2]]
+        test_plugins = [t[0] for t in sorted(Globals.testfiles[2])]
     else:
         test_plugins = [Globals.binaryplugin]
     expected_uninstall = [

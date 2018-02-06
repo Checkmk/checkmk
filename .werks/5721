@@ -1,0 +1,11 @@
+Title: Saving backup jobs: Fixed AttributeError() occuring while handling an exception
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1517920517
+
+

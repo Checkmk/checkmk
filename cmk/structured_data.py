@@ -194,10 +194,15 @@ class StructuredDataTree(object):
                 # In the second case we have to deal with nested numerations
                 # We take a look at children which may be real numerations
                 # or sub trees.
-                if self._is_numeration(v):
+                # May also be a flat list, thus we convert to expected
+                # numeration format: [{KEY: VAL,..},..]
+                entries_type = self._get_entries_type(v)
+                if isinstance(entries_type, Numeration):
                     sub_raw_tree.setdefault(k, v)
-                else:
+                elif isinstance(entries_type, Container):
                     sub_raw_tree.setdefault(k, dict(enumerate(v)))
+                else:
+                    sub_raw_tree.setdefault(k, [{"name": e} for e in v])
             else:
                 # Here we collect all other values meaning simple
                 # attributes of this node.
@@ -205,12 +210,15 @@ class StructuredDataTree(object):
         return sub_raw_tree, leaf_data
 
 
-    def _is_numeration(self, entries):
+    def _get_entries_type(self, entries):
+        #TODO test
         for entry in entries:
+            if not isinstance(entry, dict):
+                return
             for k, v in entry.iteritems():
                 if isinstance(v, list):
-                    return False
-        return True
+                    return Container()
+        return Numeration()
 
     #   ---delegators-----------------------------------------------------------
 

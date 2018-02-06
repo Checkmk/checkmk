@@ -5842,7 +5842,7 @@ class SiteBackupJobs(backup.Jobs):
                          close_fds=True, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, stdin=open(os.devnull))
         if p.wait() != 0:
-            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stderr.read())
+            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stdout.read())
 
 
 

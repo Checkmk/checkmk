@@ -67,8 +67,7 @@ date +"start_time %s" > "$OUTPUT_PATH/$IDENT.running" 2>/dev/null
 if [ ! -w "$OUTPUT_PATH/$IDENT.running" ] ; then
   # Looks like we are lacking the permissions to create this file..
   # In this scenario no mk-job status file is created. We simply execute the command
-  "$@"
-  exit $?
+  exec "$@"
 fi
 
 

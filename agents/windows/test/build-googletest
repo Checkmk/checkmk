@@ -23,9 +23,17 @@ for project in test mock ; do
     # we only need the libs...
     targets=lib/libg${project}.la
     autoreconf --install
+    # Build 32 and 64 bit in parallel, wait for child processes to terminate.
+    children=()
     for arch in 32 64 ; do
-        build $arch
+        build $arch &
+        children+=($!)
     done
+    for pid in "${children[@]}" ; do
+        # If any subprocess fails, wait for the rest to exit in a controlled way.
+        wait $pid || { wait; exit 1; }
+    done
+
     # make install is not supported by Google -> copy headers and libs
     cp -r include/g${project} /usr/share/mingw-w64/include/
     for arch in 32 64 ; do

@@ -1,6 +1,7 @@
 bin_PROGRAMS = check_mk_agent
 check_PROGRAMS = WindowsAgentTest wmitest
 noinst_LIBRARIES = libcheck_mk_agent.a
+noinst_PROGRAMS = DummyPlugin
 
 AUTOMAKE_OPTIONS = foreign
 AM_CPPFLAGS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++14 -gdwarf-2 \
@@ -96,6 +97,8 @@ libcheck_mk_agent_a_SOURCES = \
         sections/SectionWinperf.cc
 
 check_mk_agent_SOURCES = check_mk_agent.cc
+
+DummyPlugin_SOURCES = it/DummyPlugin.cc
 
 WindowsAgentTest_SOURCES = \
         test/EnvironmentTest.cc \

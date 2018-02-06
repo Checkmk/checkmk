@@ -1,0 +1,13 @@
+Title: apc_netbotz_sensors, apc_netbotz_other_sensors: Fix discovery for newer models
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1517924598
+
+An overzealous SNMP scan function prevented discovery for newer models. This has been fixed.
+
+Thanks to Mathias Götze for the patch!

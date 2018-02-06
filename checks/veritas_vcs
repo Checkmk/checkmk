@@ -149,7 +149,6 @@ def parse_veritas_vcs(info):
 
 
 
-# Handle states
 def veritas_vcs_aggregate_states_in_cluster(states):
     if "FAULTED" in states:
         return 2

@@ -1200,13 +1200,10 @@ function do_instance() {
 
     if [ "$DEBUGCONNECT" ] ; then
         do_testmode $SID
-        # do not execute any check
-        continue
+    else
+        do_sync_checks $SID "$SECTIONS"
+        run_cached oracle_$SID $CACHE_MAXAGE do_async_checks $SID
     fi
-
-    do_sync_checks $SID "$SECTIONS"
-    run_cached oracle_$SID $CACHE_MAXAGE do_async_checks $SID
-
 }
 
 #.

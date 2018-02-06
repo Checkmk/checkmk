@@ -53,7 +53,7 @@ echo "CHROOT_PATH is $CHROOT_PATH"
 # created, multiple jobs may be executed in the chroot simultaneously,
 # but the setup must be performed only by a single job.
 (
-    echo "[MAKE-CHROOT LOCK] aquire"
+    echo "[MAKE-CHROOT LOCK] acquire"
     flock -x -w 1800 200 || (echo "[MAKE-CHROOT LOCK] ERROR: Failed to get lock within 1800 seconds" ; exit 1)
     echo "[MAKE-CHROOT LOCK] got it"
 

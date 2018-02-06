@@ -119,8 +119,8 @@ wmitest_SOURCES = Logger.cc WinApi.cc stringutil.cc wmiHelper.cc wmitest.cc
 
 CLEANFILES = \
         *.ico *.res *.rc config.* stamp-* Makefile \
-        sections/.dirstamp test/.dirstamp \
-        $$(find .deps/ sections/.deps test/.deps -type f) \
+        $$(find . -name .dirstamp) \
+        $$(find .deps/ sections/.deps test/.deps test/sections/.deps it/.deps -type f) \
         $(addprefix $(bindir)/,$(bin_PROGRAMS)) \
         $(patsubst %$(EXEEXT),%-64$(EXEEXT),$(addprefix $(bindir)/,$(bin_PROGRAMS))) \
         $(patsubst %$(EXEEXT),%.msi,$(addprefix $(bindir)/,$(bin_PROGRAMS)))

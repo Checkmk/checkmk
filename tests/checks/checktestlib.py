@@ -29,6 +29,9 @@ class PerfValue(Tuploid):
         #       in what kind of values are allowed as metric names.
         #       I'm not too sure unicode should be allowed, either.
         assert type(key) in [str, unicode]
+        assert " " not in key   # This leads to serious errors
+        assert "=" not in key   # The parsing around this is way too funky and doesn't work properly
+        assert "\n" not in key
         self.key = key
 
         # NOTE: The CMC as well as all other Nagios-compatible cores do accept a

@@ -173,8 +173,8 @@ def parse_brocade_fcport(info):
                 "porttype":       porttype,
                 "ifspeed":        int(ifspeed),
                 "is_isl":         index in isl_ports,
-                "islspeed":       islspeed,
-                "bbcredits":      bbcredits,
+                "islspeed":       islspeed,             # Might be None
+                "bbcredits":      bbcredits,            # Might be None
             })
         except: # missing vital data. Skipping this port
             continue

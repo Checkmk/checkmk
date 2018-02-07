@@ -26,18 +26,6 @@
 $parts = explode("_", $servicedesc);
 $sensorname = implode(" ", $parts);
 
-/* This is obsolete. ipmi_sensors does not longer send perfdata
-   for fans...
-if ($parts[2] == "Fan")
-{
-	$opt[1] = "--vertical-label 'RPM' -X0 -l0 -u6000 --title \"$sensorname\" ";
-
-	$def[1] = "DEF:rpm=$RRDFILE[1]:$DS[1]:MIN ";
-	$def[1] .= "AREA:rpm#0080a0:\"Rotations per minute\" ";
-	$def[1] .= "LINE:rpm#004060 ";
-	$def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical below $CRIT[1] RPM\" ";
-}
-else */
 if ($parts[2] == "Temperature")
 {
 	$upper = max(60, $CRIT[1] + 3);

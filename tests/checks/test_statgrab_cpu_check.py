@@ -21,7 +21,7 @@ info_statgrab_cpu_hpux = lambda t: [[u'idle', u'%d' % int(t*5)],
                                         ("wait", 20.0) in cr.perfdata
     ),
 ])
-def test_statgrab_cpu_check(check_manager, monkeypatch, time_to_info, params, predicate):
+def test_statgrab_cpu_check(check_manager, time_to_info, params, predicate):
     check = check_manager.get_check("statgrab_cpu")
     # NOTE: We do not mock the time module here, because the check does not depend on any
     #       absolute rates. The mocking that was included in this test previously had no

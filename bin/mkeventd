@@ -3780,13 +3780,7 @@ class StatusServer(ECServerThread):
         log_event_history(event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
-        with lock_configuration:
-            load_configuration()
-            initialize_snmptrap_handling()
-            g_event_server.reload_configuration()
-
-        g_status_server.reload_configuration()
-        self.logger.info("Reloaded configuration.")
+        reload_configuration()
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3912,6 +3906,7 @@ def run_eventd():
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
+                reload_configuration()
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 terminate()
@@ -5030,6 +5025,16 @@ def load_configuration():
         g_config["action"][action["id"]] = action
 
     g_last_config_reload = time.time()
+
+
+def reload_configuration():
+    with lock_configuration:
+        load_configuration()
+        initialize_snmptrap_handling()
+        g_event_server.reload_configuration()
+
+    g_status_server.reload_configuration()
+    logger.info("Reloaded configuration.")
 
 
 def snmptrap_translation_enabled():

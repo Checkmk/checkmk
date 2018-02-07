@@ -1,0 +1,10 @@
+Title: mkeventd: reload configuration on SIGHUP used e.g. by omd reload
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1517997070
+Class: fix
+
+

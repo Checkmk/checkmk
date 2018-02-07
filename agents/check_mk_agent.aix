@@ -235,29 +235,26 @@ fi
 # 08:47AM  up 66 days,  18:34,   1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
 # 08:45AM  up 76 days,  34 mins, 1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
 echo '<<<uptime>>>'
-UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9] user.*//g')
-if [[ $UPTIME == *"days"* ]]; then
-    DAYS=$(echo $UPTIME | sed -e 's/days,.*//g')
-else
-    DAYS="0"
-fi
+UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
+case $UPTIME in
+    *day* ) DAYS=$(echo $UPTIME | sed -e 's/days\{0,1\},.*//g') ;;
+    * ) DAYS="0" ;;
+esac
 
-if [[ $UPTIME == *"hrs"* ]]; then
-    HOURS=$(echo $UPTIME | sed -e 's/hrs,.*//g' -e 's/.*,//g')
-else
-    HOURS="0"
-fi
-
-if [[ $UPTIME == *"mins"* ]]; then
-    MINS=$(echo $UPTIME | sed -e 's/mins,.*//g' -e 's/.*hrs,//g' -e 's/.*days,//g')
-else
-    MINS="0"
-fi
-
-if [[ $UPTIME == *":"* ]]; then
-    HOURS=$(echo $UPTIME | sed -e 's/.*days,//g' -e 's/:.*//g')
-    MINS=$(echo $UPTIME | sed -e 's/.*days,//g' -e 's/.*://g' -e 's/,.*//g')
-fi
+case $UPTIME in
+    *:* )
+        HOURS=$(echo $UPTIME | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
+        MINS=$(echo $UPTIME | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g') ;;
+    *hr* )
+        HOURS=$(echo $UPTIME | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
+        MINS=0 ;;
+    *min* )
+        HOURS=0
+        MINS=$(echo $UPTIME | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g') ;;
+    * )
+        HOURS="0"
+        MINS=0 ;;
+esac
 
 echo $(((DAYS*86400)+(HOURS*3600)+(MINS*60)))
 

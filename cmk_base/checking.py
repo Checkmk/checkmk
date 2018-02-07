@@ -489,6 +489,7 @@ def _item_not_found(is_snmp):
 def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
     if len(result) >= 3:
         state, infotext, perfdata = result[:3]
+        _validate_perf_data_values(perfdata)
     else:
         state, infotext = result
         perfdata = None
@@ -496,6 +497,15 @@ def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
     infotext = _sanitize_check_result_infotext(infotext, allow_missing_infotext)
 
     return state, infotext, perfdata
+
+
+def _validate_perf_data_values(perfdata):
+    if not isinstance(perfdata, list):
+        return
+    for v in [value for entry in perfdata for value in entry[1:]]:
+        if " " in str(v):
+            # See Nagios performance data spec for detailed information
+            raise MKGeneralException("Performance data values must not contain spaces")
 
 
 def _sanitize_check_result_infotext(infotext, allow_missing_infotext):

@@ -92,7 +92,7 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
         if what == "ipmitool":
             old_perf_val = str(val)
             if unit is not None:
-                old_perf_val += unit
+                old_perf_val += " %s" % unit
             perfdata = [ (item, old_perf_val, warn_high, crit_high) ]
 
         elif what == "freeipmi" and \

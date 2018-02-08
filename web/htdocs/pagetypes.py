@@ -390,10 +390,28 @@ class PageRenderer(Base):
 
 
     def render_title(self):
-        if not self.is_hidden():
+        if self._can_be_linked():
             return html.render_a(self.title(), href=self.page_url())
         else:
             return self.title()
+
+
+    def _can_be_linked(self):
+        """Whether or not the thing can be linked to"""
+        if self.is_hidden():
+            return False # don't link to hidden things
+
+        if self.is_mine():
+            return True
+
+        # Is this the visual which would be shown to the user in case the user
+        # requests a visual with the current name?
+        page = self.find_page(self.name())
+        if page.owner() != self.owner():
+            return False
+
+        return self.is_public()
+
 
 
 #.

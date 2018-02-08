@@ -26,21 +26,31 @@
 #define RegExp_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <regex>
+#include <memory>
 #include <string>
 
 class RegExp {
 public:
     enum class Case { ignore, respect };
 
+    // Standard pimpl boileplate code, see Scott Meyer's "Effective Modern C++",
+    // item 22: "When using the Pimpl Idiom, define special member functions in
+    // the implementation file."
+    RegExp();
+    ~RegExp();
+    RegExp(const RegExp &rhs) noexcept;
+    RegExp &operator=(const RegExp &rhs) noexcept;
+    RegExp(RegExp &&rhs) noexcept;
+    RegExp &operator=(RegExp &&rhs) noexcept;
+
     void assign(const std::string &str, Case c);
     std::string replace(const std::string &str,
                         const std::string &replacement) const;
-
     bool search(const std::string &str) const;
 
 private:
-    std::regex _regex;
+    struct Impl;
+    std::unique_ptr<Impl> _impl;
 };
 
 #endif  // RegExp_h

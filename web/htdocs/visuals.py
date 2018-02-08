@@ -452,7 +452,7 @@ def page_list(what, title, visuals, custom_columns = None,
             # Title
             table.cell(_('Title'))
             title = _u(visual['title'])
-            if not visual["hidden"]:
+            if not visual["hidden"] and (owner == config.user.id or visual["public"]):
                 html.a(title, href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'], visual_name))
             else:
                 html.write_text(title)

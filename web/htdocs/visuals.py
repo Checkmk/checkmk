@@ -452,7 +452,7 @@ def page_list(what, title, visuals, custom_columns = None,
             # Title
             table.cell(_('Title'))
             title = _u(visual['title'])
-            if not visual["hidden"] and (owner == config.user.id or visual["public"]):
+            if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
                 html.a(title, href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'], visual_name))
             else:
                 html.write_text(title)
@@ -477,6 +477,22 @@ def page_list(what, title, visuals, custom_columns = None,
         table.end()
 
     html.footer()
+
+
+def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
+    if visual["hidden"]:
+        return False # don't link to hidden visuals
+
+    if owner == config.user.id:
+        return True
+
+    # Is this the visual which would be shown to the user in case the user
+    # requests a visual with the current name?
+    user_visuals = available(what, all_visuals)
+    if user_visuals.get(visual_name) != visual:
+        return False
+
+    return visual["public"]
 
 #.
 #   .--Create Visual-------------------------------------------------------.

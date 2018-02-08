@@ -1,0 +1,10 @@
+Title: View/Dashboard list: Link titles only for views/dashboards visible to the user
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1518116400
+Class: fix
+
+Previously also overriden views/dashboards were linked.

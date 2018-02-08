@@ -25,11 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os, copy, sys
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 from lib import *
 from valuespec import *

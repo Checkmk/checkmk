@@ -109,6 +109,46 @@ AC_COMPILE_IFELSE(
          [AC_MSG_RESULT([no])
           AC_MSG_ERROR([C++ headers are too old. Please install a newer g++/clang/libc++-dev package.])])])
 
+# RE2 stuff
+AC_ARG_WITH([re2],
+            [AS_HELP_STRING([--with-re2@<:@=ARG@:>@],
+                            [use RE2 library from a standard location (ARG=yes),
+                             from the specified location (ARG=<path>),
+                             or disable it (ARG=no) @<:@ARG=yes@:>@ ])],
+            [AS_CASE([$withval],
+                     [no],[want_re2="no";_AX_RE2_BASE_re2_path=""],
+                     [yes],[want_re2="yes";_AX_RE2_BASE_re2_path=""],
+                     [want_re2="yes";_AX_RE2_BASE_re2_path="$withval"])],
+            [want_re2="yes"])
+RE2_CPPFLAGS=""
+RE2_LDFLAGS=""
+RE2_LIBS=""
+AS_IF([test "x$want_re2" = "xyes"],
+      [AS_IF([test "x$_AX_RE2_BASE_re2_path" != x],
+             [RE2_CPPFLAGS="-I$_AX_RE2_BASE_re2_path/include"
+              RE2_LDFLAGS="-L$_AX_RE2_BASE_re2_path/lib"])
+       RE2_LIBS="-lre2"
+       CPPFLAGS_SAVED=$CPPFLAGS
+       CPPFLAGS="$CPPFLAGS $RE2_CPPFLAGS"
+       AC_CHECK_HEADER([re2/re2.h], [], [AC_MSG_ERROR([could not find a working RE2 header])])
+       AC_MSG_CHECKING([for RE2 library])
+       LDFLAGS_SAVED=$LDFLAGS
+       LDFLAGS="$LDFLAGS $RE2_LDFLAGS"
+       LIBS_SAVED=$LIBS
+       LIBS="$LIBS $RE2_LIBS"
+       AC_LINK_IFELSE([AC_LANG_PROGRAM([[@%:@include <re2/re2.h>]],
+                                       [[RE2::FullMatch("hello", "e")]])],
+                      [AC_MSG_RESULT([yes])],
+                      [AC_MSG_RESULT([no])
+                       AC_MSG_ERROR([could not find a working RE2 library])])
+       LIBS=$LIBS_SAVED
+       LDFLAGS=$LDFLAGS_SAVED
+       CPPFLAGS=$CPPFLAGS_SAVED
+       AC_DEFINE([HAVE_RE2], [1], [Define to 1 if RE2 should be used.])])
+AC_SUBST(RE2_CPPFLAGS)
+AC_SUBST(RE2_LDFLAGS)
+AC_SUBST(RE2_LIBS)
+
 AC_LANG_POP([C++])
 
 # Checks for typedefs, structures, and compiler characteristics.

@@ -114,12 +114,12 @@ AC_ARG_WITH([re2],
             [AS_HELP_STRING([--with-re2@<:@=ARG@:>@],
                             [use RE2 library from a standard location (ARG=yes),
                              from the specified location (ARG=<path>),
-                             or disable it (ARG=no) @<:@ARG=yes@:>@ ])],
+                             or disable it (ARG=no) @<:@ARG=no@:>@ ])],
             [AS_CASE([$withval],
                      [no],[want_re2="no";_AX_RE2_BASE_re2_path=""],
                      [yes],[want_re2="yes";_AX_RE2_BASE_re2_path=""],
                      [want_re2="yes";_AX_RE2_BASE_re2_path="$withval"])],
-            [want_re2="yes"])
+            [want_re2="no"])
 RE2_CPPFLAGS=""
 RE2_LDFLAGS=""
 RE2_LIBS=""

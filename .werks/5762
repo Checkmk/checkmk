@@ -1,0 +1,10 @@
+Title: mk_jolokia, mk_logwatch, win_eventlog, win_logwatch, winperf: Fixed UnicodeEncodeError while baking agents
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p25
+Date: 1518102359
+Class: fix
+
+

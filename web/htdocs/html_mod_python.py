@@ -64,6 +64,8 @@ class html_mod_python(htmllib.html):
         self.read_get_vars()
         self.read_cookies()
 
+        self._requested_url = self.makeuri_contextless(self.vars.items())
+
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
         self.set_http_header("Cache-Control", "no-cache")

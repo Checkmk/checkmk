@@ -1555,7 +1555,9 @@ class html(DeprecationWrapper, RequestHandler):
         DeprecationWrapper.__init__(self)
         RequestHandler.__init__(self)
 
+        # TODO: Rename to something more meaningful (e.g. self._requested_file_name)
         self.myfile = None
+        self._requested_url = None
         self.cookies = {}
         self._user_id = None
         self.user_errors = {}
@@ -1850,6 +1852,13 @@ class html(DeprecationWrapper, RequestHandler):
     #
     # URL building
     #
+
+    def requested_url(self):
+        """Returns the URL requested by the user.
+        This is not the bare original URL used by the user. Some HTTP variables may
+        have been filtered by Check_MK while parsing the incoming request."""
+        return self._requested_url
+
 
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):

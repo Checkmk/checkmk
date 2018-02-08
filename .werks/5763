@@ -1,0 +1,10 @@
+Title: mk_jolokia: relative URI was not written into configuration file
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p25
+Date: 1518103245
+Class: fix
+
+

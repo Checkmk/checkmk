@@ -435,8 +435,12 @@ def page_list(what, title, visuals, custom_columns = None,
                 html.icon_button(html.makeactionuri(add_vars), _("Delete!"), "delete")
 
             # Edit
-            if owner == config.user.id:
-                html.icon_button("edit_%s.py?load_name=%s" % (what_s, visual_name), _("Edit"), "edit")
+            if owner == config.user.id or (owner != "" and config.user.may("general.edit_foreign_%s" % what)):
+                edit_vars = [("load_name", visual_name)]
+                if owner != config.user.id:
+                    edit_vars.append(("owner", owner))
+                edit_url = html.makeuri_contextless(edit_vars, filename="edit_%s.py" % what_s)
+                html.icon_button(edit_url, _("Edit"), "edit")
 
             # Custom buttons - visual specific
             if render_custom_buttons:
@@ -646,6 +650,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     visualname = html.var("load_name")
     oldname  = visualname
     mode     = html.var('mode', 'edit')
+    owner_user_id = config.user.id
     if visualname:
         cloneuser = html.var("load_user")
         if cloneuser is not None:
@@ -655,23 +660,24 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type["title"])
 
             # Make sure, name is unique
-            if cloneuser == config.user.id: # Clone own visual
+            if cloneuser == owner_user_id: # Clone own visual
                 newname = visualname + "_clone"
             else:
                 newname = visualname
             # Name conflict -> try new names
             n = 1
-            while (config.user.id, newname) in all_visuals:
+            while (owner_user_id, newname) in all_visuals:
                 n += 1
                 newname = visualname + "_clone%d" % n
             visual["name"] = newname
             visual["public"] = False
             visualname = newname
             oldname = None # Prevent renaming
-            if cloneuser == config.user.id:
+            if cloneuser == owner_user_id:
                 visual["title"] += _(" (Copy)")
         else:
-            visual = all_visuals.get((config.user.id, visualname))
+            owner_user_id = html.var("owner", config.user.id)
+            visual = all_visuals.get((owner_user_id, visualname))
             if not visual:
                 visual = all_visuals.get(('', visualname)) # load builtin visual
                 mode = 'clone'
@@ -826,17 +832,17 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                         back = 'edit_%s.py' % what
 
                 if html.check_transaction():
-                    all_visuals[(config.user.id, visual["name"])] = visual
+                    all_visuals[(owner_user_id, visual["name"])] = visual
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:
                         # -> delete old entry
-                        if (config.user.id, oldname) in all_visuals:
-                            del all_visuals[(config.user.id, oldname)]
+                        if (owner_user_id, oldname) in all_visuals:
+                            del all_visuals[(owner_user_id, oldname)]
                         # -> change visual_name in back parameter
                         if back:
                             varstring = visual_type["ident_attr"] + "="
                             back = back.replace(varstring + oldname, varstring + visual["name"])
-                    save(what, all_visuals)
+                    save(what, all_visuals, owner_user_id)
 
                 html.immediate_browser_redirect(1, back)
                 html.message(_('Your %s has been saved.') % visual_type["title"])

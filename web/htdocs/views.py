@@ -2169,12 +2169,15 @@ def show_context_links(thisview, datasource, show_filters,
 
     # Customize/Edit view button
     if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
-        backurl = html.urlencode(html.makeuri([]))
-        if thisview["owner"] == config.user.id:
-            url = "edit_view.py?load_name=%s&back=%s" % (thisview["name"], backurl)
-        else:
-            url = "edit_view.py?load_user=%s&load_name=%s&back=%s" % \
-                  (thisview["owner"], thisview["name"], backurl)
+        url_vars = [
+            ("back", html.requested_url()),
+            ("load_name", thisview["name"]),
+        ]
+
+        if thisview["owner"] != config.user.id:
+            url_vars.append(("load_user", thisview["owner"]))
+
+        url = html.makeuri_contextless(url_vars, filename="edit_view.py")
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
 
     if display_options.enabled(display_options.E):

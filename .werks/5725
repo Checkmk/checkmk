@@ -1,0 +1,12 @@
+Title: Fixed changing view filter default values not being effective right after editing
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p25
+Date: 1518119511
+Class: fix
+
+When editing the default values of filters in views (or dashboards) and saving the view,
+the default filter variables were not effective in all cases in the view rendered after
+edit. When closing and opening the view again the filter options were set as configured.

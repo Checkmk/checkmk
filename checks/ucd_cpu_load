@@ -67,7 +67,7 @@ check_info["ucd_cpu_load"] = {
                               ]),
                                # 'CPU load' is not available in the HR-MIB
                                # thus we cannot use 'prefer_hr_scan_function'
-    'snmp_scan_function'    : ucd_scan_function,
+    'snmp_scan_function'    : is_ucd,
     'group'                 : 'cpu_load',
-    "includes"              : ["cpu_load.include", "ucd.include"],
+    "includes"              : ["cpu_load.include", "ucd_hr.include"],
 }

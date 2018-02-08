@@ -61,8 +61,8 @@ check_info['ucd_mem'] = {
                                   # Some devices are reporting wrong data on
                                   # HOST-RESOURCES-MIB. Use UCD-MIB in these
                                   # cases instead
-    'snmp_scan_function'        : ucd_mem_scan_function,
+    'snmp_scan_function'        : is_ucd_mem,
     'default_levels_variable'   : 'ucd_mem_default_levels',
     'group'                     : 'memory_simple',
-    'includes'                  : [ "ucd.include", "memory.include" ],
+    'includes'                  : ["ucd_hr.include", "memory.include"],
 }

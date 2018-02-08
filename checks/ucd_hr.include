@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# We are not sure how to safely detect the UCD SNMP Daemon. We know that
+# it is mainly used on Linux, but not only. But fetching and OID outside
+# of the info area for scanning is not a good idea. It will slow down
+# scans for *all* hosts.
+
+#   ---ucd cpu load---------------------------------------------------------
+
+# We prefer HOST-RESOURCES-MIB implementation but not in case
+# of check 'ucd_cpu_load' because the HR-MIB has not data
+# about cpu load
+
+def is_ucd(oid):
+    return _is_ucd(oid)
+
+#   ---general ucd/hr-------------------------------------------------------
+
+def is_hr(oid):
+    return not not oid('.1.3.6.1.2.1.25.1.1.0')
+
+
+def prefer_hr_else_ucd(oid):
+    return _is_ucd(oid) and not oid(".1.3.6.1.2.1.25.1.1.0")
+
+#   ---memory---------------------------------------------------------------
+
+def is_ucd_mem(oid):
+    # Avoid inverting output of a function in a check plugin and be
+    # descriptive about what a function is actually doing
+    if _ignore_both(oid):
+        return False
+    return _is_ucd_mem(oid)
+
+
+def is_hr_mem(oid):
+    # We prefer HOST-RESOURCES-MIB implementation but not in case
+    # of devices, which are known to report incorrect information
+    # about mem usage
+    if _ignore_both(oid):
+        return False
+    return not _is_ucd_mem(oid)
+
+#   ---helper---------------------------------------------------------------
+
+# Within _is_ucd or _is_ucd_mem we make use of a whitelist
+# in order to expand this list of devices easily.
+
+def _is_ucd(oid):
+    sys_descr = oid(".1.3.6.1.2.1.1.1.0").lower()
+    for name in [
+        "linux", "cmc-tc", "hp onboard administrator",
+        "barracuda", "pfsense", "genugate",
+    ]:
+        if name in sys_descr:
+            return True
+
+    # Artec email archive appliances
+    if oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.8072.3.2.10' \
+       and "version" in sys_descr and "serial" in sys_descr:
+        return True
+
+    return False
+
+
+def _is_ucd_mem(oid):
+    sys_descr = oid(".1.3.6.1.2.1.1.1.0").lower()
+    # Devices for which ucd_mem should be used
+    # if and only if HR-table is not available
+    for name in [
+        "pfsense", "ironport model c3",
+    ]:
+        if name in sys_descr and not oid(".1.3.6.1.2.1.25.1.1.0"):
+            return True
+
+    # Otherwise use ucd_mem for listed devices in _is_ucd.
+    return _is_ucd(oid)
+
+
+def _ignore_both(oid):
+    # Some devices report incorrect data on both HR and UCD, eg. F5 BigIP
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3375")

@@ -37,10 +37,9 @@ check_info["hr_fs"] = {
                                        5, # hrStorageSize
                                        6, # hrStorageUsed
                                   ]),
-    'snmp_scan_function'        : lambda oid: \
-                                    not not oid('.1.3.6.1.2.1.25.1.1.0'),
-                                    # HOST-RESOURCES-MIB::hrSystemUptime.0
+    'snmp_scan_function'        : is_hr,
     'group'                     : 'filesystem',
     'default_levels_variable'   : 'filesystem_default_levels',
-    'includes'                  : [ "size_trend.include", "df.include", "hr_fs.include"],
+    'includes'                  : ['ucd_hr.include', "size_trend.include",
+                                   "df.include", "hr_fs.include"],
 }

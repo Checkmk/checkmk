@@ -116,7 +116,7 @@ check_info["hr_mem"] = {
                                   # Some devices are reporting wrong data on
                                   # HOST-RESOURCES-MIB. Use UCD-MIB in these
                                   # cases instead
-    'snmp_scan_function'        : hr_mem_scan_function,
+    'snmp_scan_function'        : is_hr_mem,
     'group'                     : 'memory',
-    'includes'                  : [ "ucd.include" ]
+    'includes'                  : ["ucd_hr.include"]
 }

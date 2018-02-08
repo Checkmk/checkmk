@@ -1,0 +1,14 @@
+Title: Fixed broken sorting of services
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1518095011
+
+The sorting was a case insentivitve text sorting at least since
+1.4.0p7. This has now been fixed to work like as case insensitive
+sort with the addition that texts and numbers are separated from
+eachother before sorting.

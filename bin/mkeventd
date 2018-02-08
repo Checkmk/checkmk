@@ -3187,12 +3187,7 @@ class StatusServer:
 
 
     def handle_command_reload(self):
-        with lock_configuration:
-            load_configuration()
-            initialize_snmptrap_handling()
-            g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
-        g_status_server.reload_configuration()
-        log("Reloaded configuration.")
+        reload_configuration()
 
 
     def handle_command_reopenlog(self):
@@ -3424,15 +3419,13 @@ def run_eventd():
             if is_replication_slave() and now > next_replication:
                 replication_pull()
                 next_replication = now + g_config["replication"]["interval"]
-
-
         except MKSignalException, e:
             if e._signum == 1:
                 log("Received SIGHUP - going to reload configuration")
+                reload_configuration()
             else:
                 log("Signalled to death by signal %d" % e._signum)
                 break
-
         except Exception, e:
             log("EXCEPTION in main thread:\n%s" % format_exception())
             if opt_debug:
@@ -4629,6 +4622,15 @@ def default_config():
             }
         },
     }
+
+
+def reload_configuration():
+    with lock_configuration:
+        load_configuration()
+        initialize_snmptrap_handling()
+        g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
+    g_status_server.reload_configuration()
+    log("Reloaded configuration.")
 
 
 def snmptrap_translation_enabled():

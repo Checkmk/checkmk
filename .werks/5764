@@ -1,0 +1,23 @@
+Title: df.include: Fixed dynamic levels in ruleset 'Filesystem (used space and growth)'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1518165866
+
+When configuring dynamic levels, eg. for filesystems, if you configure
+the dynamic levels for example like this:
+
+larger than 100GB: 90% WARN / 95% CRIT
+larger than 1TB: 95% WARN / 98% CRIT
+
+This will result in all filesystems smaller than 100GB in always being OK.
+If you also want to set levels for all filesystems smaller than 100GB
+then you have to choose 0 bytes, eg.
+
+larger than 0B: 85% WARN / 90% CRIT
+
+With werk 2725 this was not allowed any more. Fixed that.

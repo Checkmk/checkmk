@@ -204,6 +204,15 @@ public:
             result = eventData();
         }
 
+        // EvtFormatMessage delivers the formatted message with trailing null
+        // character within the required buffer size! Later, this would cause
+        // the socket output to be cut at the 1st null character, so we need to
+        // trim trailing null away here.
+        while (!result.empty() && result.back() == L'\0') {
+            result.pop_back();
+        }
+
+
         std::replace_if(result.begin(), result.end(),
                         [](wchar_t ch) { return ch == '\n' || ch == '\r'; },
                         ' ');

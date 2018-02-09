@@ -1,0 +1,13 @@
+Title: Windows agent: section logwatch output was cut abruptly with 'vista_api=yes'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p25
+Date: 1518186931
+Class: fix
+
+The output of section logwatch was cut after an output eventlog entry
+when using the configuration option 'vista_api=yes' in check_mk.ini.
+
+

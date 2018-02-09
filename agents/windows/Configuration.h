@@ -80,7 +80,7 @@ public:
     void deregister(const char *section, const char *key,
                     ConfigurableBase *cfg);
     inline const Environment& getEnvironment() const { return _environment; }
-    
+
     static std::string configFileName(bool local, const Environment &env);
 
 private:

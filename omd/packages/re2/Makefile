@@ -24,10 +24,17 @@ build:
 	    echo "no"; IFS=$$SAVED_IFS ; \
 	done ; \
 	test -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
-	$(MAKE) -C $(DIR) CXX="$$CXX" prefix=$(OMD_ROOT) && \
-	$(MAKE) -C $(DIR) CXX="$$CXX" DESTDIR=$(PACKAGE_RE2_DESTDIR) prefix="" install
+	$(MAKE) -C $(DIR) CXX="$$CXX" CPPFLAGS="-DRE2_ON_VALGRIND" DESTDIR=$(PACKAGE_RE2_DESTDIR) prefix=$(OMD_ROOT) install
+# TODO(sp): What should we do about RE2_ON_VALGRIND?
+# Massage paths a bit by moving things around.
+	mv $(PACKAGE_RE2_DESTDIR)/$(OMD_ROOT)/include  $(PACKAGE_RE2_DESTDIR)/$(OMD_ROOT)/lib $(PACKAGE_RE2_DESTDIR)
+	rm -rf $(PACKAGE_RE2_DESTDIR)/$(OMD_BASE)
+# The RE2 Makefile offers no mechanism to strip the libraries. :-/
+	strip $(PACKAGE_RE2_DESTDIR)/lib/*.a $(PACKAGE_RE2_DESTDIR)/lib/*.so
 
 install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)
+	cp -a $(PACKAGE_RE2_DESTDIR)/include $(PACKAGE_RE2_DESTDIR)/lib $(DESTDIR)$(OMD_ROOT)
 
 skel:
 

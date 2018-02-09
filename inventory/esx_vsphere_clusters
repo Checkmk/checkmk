@@ -41,7 +41,7 @@ def inv_esx_vsphere_clusters(info):
         datacenters.setdefault(datacenter, {})
         datacenters[datacenter].setdefault(cluster, {})
         datacenters[datacenter][cluster]["name"] = cluster
-        datacenters[datacenter][cluster][what]   = entries
+        datacenters[datacenter][cluster][what] = [{"name": e} for e in entries]
 
     for dc_name, clusters in datacenters.items():
         data = { "name": dc_name, "clusters": [] }

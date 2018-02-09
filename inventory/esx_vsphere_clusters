@@ -32,7 +32,6 @@
 
 def inv_esx_vsphere_clusters(info):
     node = inv_tree_list("software.applications.vmwareesx:")
-
     datacenters = {}
     for line in info:
         datacenter, what, cluster = line[0:3]
@@ -41,12 +40,12 @@ def inv_esx_vsphere_clusters(info):
         datacenters.setdefault(datacenter, {})
         datacenters[datacenter].setdefault(cluster, {})
         datacenters[datacenter][cluster]["name"] = cluster
-        datacenters[datacenter][cluster][what] = [{"name": e} for e in entries]
+        datacenters[datacenter][cluster][what] = ", ".join(entries)
 
     for dc_name, clusters in datacenters.items():
         data = { "name": dc_name, "clusters": [] }
-        for cluster, values in clusters.items():
-            data["clusters"].append(dict([("name", cluster)] + values.items()))
+        for cluster_name, values in clusters.items():
+            data["clusters"].append(dict([("name", cluster_name)] + values.items()))
         node.append(data)
 
 

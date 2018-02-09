@@ -160,15 +160,15 @@ liblivestatus_a_SOURCES = \
 
 .PHONY: tidy iwyu cppcheck cppcheck-xml documentation
 
-liblivestatus_a_CPPFLAGS = -I.. @BOOST_CPPFLAGS@
+liblivestatus_a_CPPFLAGS = -I.. @BOOST_CPPFLAGS@ @RE2_CPPFLAGS@
 liblivestatus_a_CXXFLAGS = -fPIC
 
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread -static-libstdc++ @BOOST_LDFLAGS@ @BOOST_ASIO_LIB@
+	$(CXXLINK) -shared $^ -lstdc++fs -lpthread -static-libstdc++ @BOOST_LDFLAGS@ @BOOST_ASIO_LIB@ @RE2_LDFLAGS@ @RE2_LIBS@
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
+	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup @RE2_LDFLAGS@ @RE2_LIBS@
 	$(RM) NagiosMockup
 
 compile_commands.json: Makefile $(wildcard *.cc *.h)

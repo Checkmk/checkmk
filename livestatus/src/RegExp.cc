@@ -23,6 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RegExp.h"
+
+// Currently just for testing purposes, the real stuff will follow soon...
+#ifdef HAVE_RE2
+#include <re2/re2.h>
+#endif
+
 #include <regex>
 
 class RegExp::Impl {
@@ -65,6 +71,9 @@ RegExp &RegExp::operator=(RegExp &&rhs) noexcept = default;
 
 std::string RegExp::replace(const std::string &str,
                             const std::string &replacement) const {
+#ifdef HAVE_RE2
+    RE2 dummyRegExpJustForTesting{".*"};
+#endif
     return _impl->replace(str, replacement);
 }
 

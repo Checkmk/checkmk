@@ -423,6 +423,7 @@ ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	autoreconf --install --include=m4
 	touch ar-lib compile config.guess config.sub install-sh missing depcomp
 
+# TODO(sp): We should really detect and use our own packages in a less hacky way...
 config.status: $(DIST_DEPS)
 	@echo "Build $@ (newer targets: $?)"
 	@if test -f config.status; then \
@@ -441,8 +442,15 @@ config.status: $(DIST_DEPS)
 	  else \
 	    RRD_OPT="DUMMY2=" ; \
 	  fi ; \
-	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$BOOST_OPT\" \"$$RRD_OPT\"" ; \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$BOOST_OPT" "$$RRD_OPT" ; \
+	  if test -d ../re2/destdir ; then \
+	    RE2_OPT="--with-re2=$(abspath ../re2/destdir)" ; \
+	  elif test -d omd/packages/re2/destdir ; then \
+	    RE2_OPT="--with-re2=$(abspath omd/packages/re2/destdir)" ; \
+	  else \
+	    RE2_OPT="DUMMY3=" ; \
+	  fi ; \
+	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$BOOST_OPT\" \"$$RRD_OPT\" \"$$RE2_OPT\"" ; \
+	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$BOOST_OPT" "$$RRD_OPT" "$$RE2_OPT" ; \
 	fi
 
 configure: $(CONFIGURE_DEPS)

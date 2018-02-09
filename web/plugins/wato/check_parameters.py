@@ -5301,7 +5301,8 @@ register_check_parameters(
                     help = _("Outside these ranges the check will always be OK"),
                     count = 3,
             )),
-        ]
+        ],
+        ignored_keys = ["precompiled_patterns"]
     ),
     TextAscii(
         title = _("File Group Name"),

@@ -1,0 +1,10 @@
+Title: fileinfo.groups: Fixed check parameters display bug in service discovery page
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p25
+Date: 1518177945
+Class: fix
+
+

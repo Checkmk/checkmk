@@ -25,11 +25,29 @@
 #include "RegExp.h"
 #include <regex>
 
-struct RegExp::Impl {
+class RegExp::Impl {
+public:
+    Impl(const std::string &str, Case c)
+        : _regex(str, c == Case::ignore
+                          ? std::regex::extended | std::regex::icase
+                          : std::regex::extended) {}
+
+    std::string replace(const std::string &str,
+                        const std::string &replacement) {
+        return std::regex_replace(str, _regex, replacement,
+                                  std::regex_constants::format_sed);
+    }
+
+    bool search(const std::string &str) const {
+        return regex_search(str, _regex);
+    }
+
+private:
     std::regex _regex;
 };
 
-RegExp::RegExp() : _impl(std::make_unique<Impl>()) {}
+RegExp::RegExp(const std::string &str, Case c)
+    : _impl(std::make_unique<Impl>(str, c)) {}
 
 RegExp::~RegExp() = default;
 
@@ -45,18 +63,9 @@ RegExp::RegExp(RegExp &&rhs) noexcept = default;
 
 RegExp &RegExp::operator=(RegExp &&rhs) noexcept = default;
 
-void RegExp::assign(const std::string &str, Case c) {
-    _impl->_regex.assign(str, c == Case::ignore
-                                  ? std::regex::extended | std::regex::icase
-                                  : std::regex::extended);
-}
-
 std::string RegExp::replace(const std::string &str,
                             const std::string &replacement) const {
-    return std::regex_replace(str, _impl->_regex, replacement,
-                              std::regex_constants::format_sed);
+    return _impl->replace(str, replacement);
 }
 
-bool RegExp::search(const std::string &str) const {
-    return regex_search(str, _impl->_regex);
-}
+bool RegExp::search(const std::string &str) const { return _impl->search(str); }

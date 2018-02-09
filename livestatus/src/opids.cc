@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+#include "RegExp.h"
 
 namespace {
 std::unordered_map<std::string, RelationalOperator> fromString = {
@@ -94,4 +95,29 @@ RelationalOperator negateRelationalOperator(RelationalOperator relOp) {
             return RelationalOperator::greater;
     }
     return RelationalOperator::equal;  // unreachable
+}
+
+std::unique_ptr<RegExp> makeRegExpFor(RelationalOperator relOp,
+                                      const std::string &value) {
+    switch (relOp) {
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            return std::make_unique<RegExp>(
+                value, (relOp == RelationalOperator::matches_icase ||
+                        relOp == RelationalOperator::doesnt_match_icase)
+                           ? RegExp::Case::ignore
+                           : RegExp::Case::respect);
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            return nullptr;
+    }
+    return nullptr;  // make the compiler happy...
 }

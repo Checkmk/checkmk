@@ -7,10 +7,9 @@ NAME     = re2
 VERSION  = 2018-02-01
 DIR      = $(NAME)-$(VERSION)
 
-.PHONY: build install skel clean
+.PHONY: build unpacks install skel clean
 
-build:
-	tar xzf $(DIR).tar.gz
+build: unpack
 # basically what part of AC_PROC_CXX does
 	@CXX="" ; \
 	for PROG in g++-7 clang++-5.0 g++-6 clang++-4.0 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++; do \
@@ -31,6 +30,13 @@ build:
 	rm -rf $(PACKAGE_RE2_DESTDIR)/$(OMD_BASE)
 # The RE2 Makefile offers no mechanism to strip the libraries. :-/
 	strip $(PACKAGE_RE2_DESTDIR)/lib/*.a $(PACKAGE_RE2_DESTDIR)/lib/*.so
+
+unpack:
+	tar xzf $(DIR).tar.gz
+	for p in patches/*.patch; do \
+		echo "applying $$p..." ; \
+		patch -p1 -b -d $(DIR) < $$p ; \
+	done
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)

@@ -207,6 +207,10 @@ class StructuredDataTree(object):
 
     def _is_numeration(self, entries):
         for entry in entries:
+            #TODO Skipping invalid entries such as
+            # esx_vsphere_clusters: {u'hostsystems': [LIST OF STRINGS], ...}
+            #if not isinstance(entry, dict):
+            #    continue
             for k, v in entry.iteritems():
                 if isinstance(v, list):
                     return False

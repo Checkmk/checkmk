@@ -178,6 +178,10 @@ class Base(object):
         return False
 
 
+    def _can_be_linked(self):
+        return True
+
+
     def render_title(self):
         return _u(self.title())
 
@@ -396,23 +400,6 @@ class PageRenderer(Base):
             return self.title()
 
 
-    def _can_be_linked(self):
-        """Whether or not the thing can be linked to"""
-        if self.is_hidden():
-            return False # don't link to hidden things
-
-        if self.is_mine():
-            return True
-
-        # Is this the visual which would be shown to the user in case the user
-        # requests a visual with the current name?
-        page = self.find_page(self.name())
-        if page.owner() != self.owner():
-            return False
-
-        return self.is_public()
-
-
 
 #.
 #   .--Overridable---------------------------------------------------------.
@@ -492,6 +479,23 @@ class Overridable(Base):
 
     def is_mine_and_may_have_own(self):
         return self.is_mine() and config.user.may("general.edit_" + self.type_name())
+
+
+    def _can_be_linked(self):
+        """Whether or not the thing can be linked to"""
+        if self.is_hidden():
+            return False # don't link to hidden things
+
+        if self.is_mine():
+            return True
+
+        # Is this the visual which would be shown to the user in case the user
+        # requests a visual with the current name?
+        page = self.find_page(self.name())
+        if page.owner() != self.owner():
+            return False
+
+        return self.is_public()
 
 
     @classmethod

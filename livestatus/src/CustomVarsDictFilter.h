@@ -30,11 +30,11 @@
 #include <memory>
 #include <string>
 #include "ColumnFilter.h"
-#include "RegExp.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class CustomVarsDictColumn;
 class Filter;
+class RegExp;
 class Row;
 
 class CustomVarsDictFilter : public ColumnFilter {
@@ -51,7 +51,7 @@ private:
     const CustomVarsDictColumn &_column;
     const RelationalOperator _relOp;
     std::string _value;
-    RegExp _regex;
+    std::shared_ptr<RegExp> _regExp;
     std::string _ref_string;
     std::string _ref_varname;
 };

@@ -27,7 +27,9 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <iosfwd>
+#include <memory>
 #include <string>
+class RegExp;
 
 enum class RelationalOperator {
     equal,
@@ -50,4 +52,6 @@ RelationalOperator relationalOperatorForName(const std::string &name);
 
 RelationalOperator negateRelationalOperator(RelationalOperator relOp);
 
+std::unique_ptr<RegExp> makeRegExpFor(RelationalOperator relOp,
+                                      const std::string &value);
 #endif  // opids_h

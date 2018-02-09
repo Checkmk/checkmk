@@ -29,6 +29,7 @@
 #include <utility>
 #include "CustomVarsDictColumn.h"
 #include "Filter.h"
+#include "RegExp.h"
 #include "Row.h"
 #include "StringUtils.h"
 
@@ -41,29 +42,7 @@ CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsDictColumn &column,
     // The variable name is part of the value and separated with spaces
     std::tie(_ref_varname, _ref_string) = mk::nextField(value);
     _ref_string = mk::lstrip(_ref_string);
-
-    // Prepare regular expression
-    switch (_relOp) {
-        case RelationalOperator::matches:
-        case RelationalOperator::doesnt_match:
-        case RelationalOperator::matches_icase:
-        case RelationalOperator::doesnt_match_icase:
-            _regex.assign(_ref_string,
-                          (_relOp == RelationalOperator::matches_icase ||
-                           _relOp == RelationalOperator::doesnt_match_icase)
-                              ? RegExp::Case::ignore
-                              : RegExp::Case::respect);
-            break;
-        case RelationalOperator::equal:
-        case RelationalOperator::not_equal:
-        case RelationalOperator::equal_icase:
-        case RelationalOperator::not_equal_icase:
-        case RelationalOperator::less:
-        case RelationalOperator::greater_or_equal:
-        case RelationalOperator::greater:
-        case RelationalOperator::less_or_equal:
-            break;
-    }
+    _regExp = makeRegExpFor(_relOp, _ref_string);
 }
 
 bool CustomVarsDictFilter::accepts(
@@ -79,10 +58,10 @@ bool CustomVarsDictFilter::accepts(
             return act_string != _ref_string;
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
-            return _regex.search(act_string);
+            return _regExp->search(act_string);
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
-            return !_regex.search(act_string);
+            return !_regExp->search(act_string);
         case RelationalOperator::equal_icase:
             return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
         case RelationalOperator::not_equal_icase:

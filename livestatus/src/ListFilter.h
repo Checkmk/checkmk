@@ -33,10 +33,10 @@
 #include <vector>
 #include "ColumnFilter.h"
 #include "ListColumn.h"
-#include "RegExp.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class RegExp;
 class Filter;
 
 class ListFilter : public ColumnFilter {
@@ -55,7 +55,7 @@ private:
     const ListColumn &_column;
     const RelationalOperator _relOp;
     const std::string _value;
-    RegExp _regex;
+    std::shared_ptr<RegExp> _regExp;
 
     template <typename UnaryPredicate>
     bool any(Row row, const contact *auth_user,

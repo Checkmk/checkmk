@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nrpe
-VERSION = 2.13
+VERSION = 3.2.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -13,10 +13,10 @@ CONFIGUREOPTS = ""
 
 build:
 	tar xzf $(DIR).tar.gz
-	set -e ; for p in patches/*.dif ; do \
-	    echo "applying $$p..." ; \
-	    patch -p1 -b -d $(DIR) < $$p ; \
-	done
+	#set -e ; for p in patches/*.dif ; do \
+	#    echo "applying $$p..." ; \
+	#    patch -p1 -b -d $(DIR) < $$p ; \
+	#done
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 

@@ -1,0 +1,11 @@
+Title: Updated NRPE to 3.2.1
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1518417906
+Class: feature
+
+Have a look at the NRPE upstream CHANGELOG.md for details. This release
+should seamlessly be compatible with the previous NRPE versions.

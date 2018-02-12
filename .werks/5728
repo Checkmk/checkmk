@@ -1,0 +1,11 @@
+Title: Fixed larger graph legends being cut off in graph dashlets
+Level: 1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i3
+Date: 1518433372
+
+

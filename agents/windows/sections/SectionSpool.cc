@@ -23,12 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionSpool.h"
-#include <dirent.h>
 #include <sys/types.h>
+#include <experimental/filesystem>
 #include "Environment.h"
 #include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "types.h"
+
+namespace fs = std::experimental::filesystem;
 
 extern double file_time(const FILETIME *filetime);
 
@@ -46,60 +48,44 @@ bool SectionSpool::produceOutputInner(std::ostream &out) {
     // in seconds: the maximum allowed age of the file. Outdated files
     // are simply being ignored.
     //
-    DIR *dir = opendir(_env.spoolDirectory().c_str());
-    if (dir) {
-        WIN32_FIND_DATA filedata;
-        char path[512];
-        char buffer[4096];
-        time_t now = time(0);
+    time_t now = time(0);
 
-        struct dirent *de;
-        while (0 != (de = readdir(dir))) {
-            char *name = de->d_name;
-            if (name[0] == '.') continue;
+    for (const auto &de : fs::directory_iterator(_env.spoolDirectory())) {
+        const auto &path = de.path();
+        const auto filename = path.filename().string();
+        const int max_age = isdigit(filename[0]) ? atoi(filename.c_str()) : -1;
 
-            snprintf(path, sizeof(path), "%s\\%s",
-                     _env.spoolDirectory().c_str(), name);
-            int max_age = -1;
-            if (isdigit(*name)) max_age = atoi(name);
-
-            if (max_age >= 0) {
-                SearchHandle searchHandle{
-                    _winapi.FindFirstFileEx(path, FindExInfoStandard, &filedata,
-                                            FindExSearchNameMatch, NULL, 0),
-                    _winapi};
-                if (searchHandle) {
-                    double mtime = file_time(&(filedata.ftLastWriteTime));
-                    int age = now - mtime;
-                    if (age > max_age) {
-                        Informational(_logger)
-                            << "    " << name
-                            << ": skipping outdated file: age is " << age
-                            << " sec, "
-                            << "max age is " << max_age << " sec.";
-                        continue;
-                    }
-                } else {
-                    Warning(_logger)
-                        << "    " << name << ": cannot determine file age";
+        if (max_age >= 0) {
+            WIN32_FIND_DATA filedata{0};
+            SearchHandle searchHandle{
+                _winapi.FindFirstFileEx(path.string().c_str(),
+                                        FindExInfoStandard, &filedata,
+                                        FindExSearchNameMatch, NULL, 0),
+                _winapi};
+            if (searchHandle) {
+                double mtime = file_time(&(filedata.ftLastWriteTime));
+                int age = now - mtime;
+                if (age > max_age) {
+                    Informational(_logger)
+                        << "    " << filename
+                        << ": skipping outdated file: age is " << age
+                        << " sec, "
+                        << "max age is " << max_age << " sec.";
                     continue;
                 }
-            }
-            Debug(_logger) << "    " << name;
-
-            // Output file in blocks of 4kb
-            FILE *file = fopen(path, "r");
-            if (file) {
-                int bytes_read;
-                while (0 < (bytes_read =
-                                fread(buffer, 1, sizeof(buffer) - 1, file))) {
-                    buffer[bytes_read] = 0;
-                    out << buffer;
-                }
-                fclose(file);
+            } else {
+                Warning(_logger)
+                    << "    " << filename << ": cannot determine file age";
+                continue;
             }
         }
-        closedir(dir);
+        Debug(_logger) << "    " << filename;
+
+        std::ifstream ifs(path.string());
+        if (ifs) {
+            out << ifs.rdbuf();
+        }
     }
+
     return true;
 }

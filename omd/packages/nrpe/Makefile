@@ -18,7 +18,7 @@ build:
 	#    patch -p1 -b -d $(DIR) < $$p ; \
 	#done
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
-	$(MAKE) -C $(DIR) all
+	$(MAKE) -C $(DIR)/src check_nrpe
 
 install:
 	install -m 755 $(DIR)/src/check_nrpe $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins

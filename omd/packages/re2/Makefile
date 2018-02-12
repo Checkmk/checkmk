@@ -23,13 +23,16 @@ build: unpack
 	    echo "no"; IFS=$$SAVED_IFS ; \
 	done ; \
 	test -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
-	$(MAKE) -C $(DIR) CXX="$$CXX" CPPFLAGS="-DRE2_ON_VALGRIND" DESTDIR=$(PACKAGE_RE2_DESTDIR) prefix=$(OMD_ROOT) install
+	$(MAKE) -C $(DIR) CXX="$$CXX" CPPFLAGS="-DRE2_ON_VALGRIND" CXXFLAGS="-O3 -g -fPIC" DESTDIR=$(PACKAGE_RE2_DESTDIR) prefix=$(OMD_ROOT) install
+# Note: We need the -fPIC above to link RE2 statically into livestatus.o.
 # TODO(sp): What should we do about RE2_ON_VALGRIND?
 # Massage paths a bit by moving things around.
 	mv $(PACKAGE_RE2_DESTDIR)/$(OMD_ROOT)/include  $(PACKAGE_RE2_DESTDIR)/$(OMD_ROOT)/lib $(PACKAGE_RE2_DESTDIR)
 	rm -rf $(PACKAGE_RE2_DESTDIR)/$(OMD_BASE)
-# The RE2 Makefile offers no mechanism to strip the libraries. :-/
-	strip $(PACKAGE_RE2_DESTDIR)/lib/*.a $(PACKAGE_RE2_DESTDIR)/lib/*.so
+# To link statically against RE2, we must *only* see the static library at link
+# time. It is a bit wasteful to build the dynamic library, too, but RE2's
+# Makefile doesn't offer an easy way around that.
+	$(RM) $(PACKAGE_RE2_DESTDIR)/lib/*.so*
 
 unpack:
 	tar xzf $(DIR).tar.gz
@@ -39,8 +42,6 @@ unpack:
 	done
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)
-	cp -a $(PACKAGE_RE2_DESTDIR)/include $(PACKAGE_RE2_DESTDIR)/lib $(DESTDIR)$(OMD_ROOT)
 
 skel:
 

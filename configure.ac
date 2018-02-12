@@ -135,7 +135,7 @@ AS_IF([test "x$want_re2" = "xyes"],
        LDFLAGS_SAVED=$LDFLAGS
        LDFLAGS="$LDFLAGS $RE2_LDFLAGS"
        LIBS_SAVED=$LIBS
-       LIBS="$LIBS $RE2_LIBS"
+       LIBS="$LIBS $RE2_LIBS -pthread"
        AC_LINK_IFELSE([AC_LANG_PROGRAM([[@%:@include <re2/re2.h>]],
                                        [[RE2::FullMatch("hello", "e")]])],
                       [AC_MSG_RESULT([yes])],

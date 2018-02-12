@@ -306,7 +306,12 @@ cma: check-edition
 	make PACKAGES="$(PACKAGES) cma" build pack
 	
 	# Create info file to mark minimal cma firmware version requirement
-	@echo -e "MIN_VERSION=1.1.2\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
+	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
+	    MIN_VERSION=1.4.0 ; \
+	else \
+	    MIN_VERSION=1.1.2 ; \
+	fi ; \
+	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 	
 	# Mark demo builds in cma.info file
 	@if [ -f packages/nagios/patches/9999-demo-version.dif ]; then \
@@ -314,11 +319,17 @@ cma: check-edition
 	fi
 	
 	rm check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz
+	
+	if [ "$(DISTRO_CODE)" = "stretch" ]; then \
+	    CMA_PKG_VERSION_TXT="-2" ; \
+	else \
+	    CMA_PKG_VERSION_TXT="" ; \
+	fi ; \
 	PKG_VERSION=$(OMD_VERSION) ; \
 	PKG_VERSION=$${PKG_VERSION/.cee/} ; \
 	PKG_VERSION=$${PKG_VERSION/.cre/} ; \
 	PKG_VERSION=$${PKG_VERSION/.cme/} ; \
-	tar czf $(REPO_PATH)/check-mk-$(EDITION)-$$PKG_VERSION-$$(uname -m).cma \
+	tar czf $(REPO_PATH)/check-mk-$(EDITION)-$${PKG_VERSION}$${CMA_PKG_VERSION_TXT}-$$(uname -m).cma \
 	    --owner=root \
 	    --group=root \
 	    -C $(DESTDIR)/opt/omd/versions/ \

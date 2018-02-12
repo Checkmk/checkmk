@@ -526,9 +526,7 @@ void do_test(const Environment &env) {
 }
 
 void do_file(const Environment &env, const char *filename) {
-    auto closeFile = [](FILE *f) { fclose(f); };
-    std::unique_ptr<FILE, decltype(closeFile)> file(fopen(filename, "w"),
-                                                    closeFile);
+    std::unique_ptr<FILE, decltype(&fclose)> file(fopen(filename, "w"), fclose);
 
     if (!file) {
         std::cerr << "Cannot open " << filename << " for writing." << std::endl;

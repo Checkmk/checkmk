@@ -38,10 +38,10 @@ public:
     // the implementation file."
     RegExp(const std::string &str, Case c);
     ~RegExp();
-    RegExp(const RegExp &rhs) noexcept;
-    RegExp &operator=(const RegExp &rhs) noexcept;
-    RegExp(RegExp &&rhs) noexcept;
-    RegExp &operator=(RegExp &&rhs) noexcept;
+    RegExp(const RegExp &rhs) = delete;
+    RegExp &operator=(const RegExp &rhs) = delete;
+    RegExp(RegExp &&rhs) = delete;
+    RegExp &operator=(RegExp &&rhs) = delete;
 
     std::string replace(const std::string &str,
                         const std::string &replacement) const;

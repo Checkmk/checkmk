@@ -1,0 +1,13 @@
+Title: Fixed loosing configured icons when editing bookmark lists
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i3
+Date: 1518516799
+
+When editing the bookmark list and an input error is shown to the
+user, for example when a title is empty, all previously configured
+icons were reset. They are kept now.

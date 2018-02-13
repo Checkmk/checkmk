@@ -12,73 +12,6 @@
 using std::string;
 using std::wstring;
 
-char *lstrip(char *s) {
-    while (isspace(*s)) s++;
-    return s;
-}
-
-const char *lstrip(const char *s) {
-    while (isspace(*s)) s++;
-    return s;
-}
-
-char *rstrip(char *s) {
-    char *end = s + strlen(s);  // point one beyond last character
-    while (end > s && isspace(*(end - 1))) {
-        end--;
-    }
-    *end = 0;
-    return end;
-}
-
-char *strip(char *s) {
-    rstrip(s);
-    return lstrip(s);
-}
-
-std::vector<const char *> split_line(char *pos, int (*split_pred)(int)) {
-    std::vector<const char *> result;
-
-    char *current_word = pos;
-    while (*pos != '\0') {
-        if (split_pred(*pos)) {
-            *pos = '\0';
-            const char *trimmed = strip(current_word);
-            if (*trimmed != '\0') {
-                result.push_back(trimmed);
-            }
-            current_word = pos + 1;
-        }
-        ++pos;
-    }
-    const char *trimmed = strip(current_word);
-    if (*trimmed != '\0') {
-        result.push_back(trimmed);
-    }
-    return result;
-}
-
-char *next_word(char **line) {
-    if (*line == 0)  // allow subsequent calls without checking
-        return 0;
-
-    char *end = *line + strlen(*line);
-    char *value = *line;
-    while (value < end) {
-        value = lstrip(value);
-        char *s = value;
-        while (*s && !isspace(*s)) s++;
-        *s = 0;
-        *line = s + 1;
-        rstrip(value);
-        if (strlen(value) > 0)
-            return value;
-        else
-            return 0;
-    }
-    return 0;
-}
-
 template <>
 std::regex possiblyQuotedRegex<char>() {
     return std::regex{"(\"([^\"]+)\"|'([^']+)'|[^\" \\t]+)"};
@@ -87,25 +20,6 @@ std::regex possiblyQuotedRegex<char>() {
 template <>
 std::wregex possiblyQuotedRegex<wchar_t>() {
     return std::wregex{L"(\"([^\"]+)\"|'([^']+)'|[^\" \\t]+)"};
-}
-
-unsigned long long string_to_llu(const char *s) {
-    unsigned long long value = 0;
-    unsigned long long mult = 1;
-    const char *e = s + strlen(s);
-    while (e > s) {
-        --e;
-        value += mult * (*e - '0');
-        mult *= 10;
-    }
-    return value;
-}
-
-void lowercase(char *s) {
-    while (*s) {
-        *s = tolower(*s);
-        s++;
-    }
 }
 
 int parse_boolean(const char *value) {

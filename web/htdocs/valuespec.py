@@ -4087,6 +4087,11 @@ class IconSelector(ValueSpec):
         return icon
 
     def render_input(self, varprefix, value):
+        # Handle complain phase with validation errors correctly and get the value
+        # from the HTML vars
+        if value is None:
+            value = html.var(varprefix + "_value")
+
         self.classtype_info()
         if not value:
             value = self._empty_img

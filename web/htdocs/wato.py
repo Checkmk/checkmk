@@ -7593,17 +7593,28 @@ class ModeEditContactgroup(ModeEditGroup):
     def _vs_inventory_paths(self):
         return CascadingDropdown(
             choices=[
-                ("all", _("Allowed to see whole tree")),
-                ("none", _("Forbid to see any path")),
-                ("paths", _("Allowed to see following paths"), ListOf(
-                    TextAscii(
-                        title=_("Inventory Paths"),
-                        size=60,
-                        allow_empty=False,
+                ("allow_all", _("Allowed to see the whole tree")),
+                ("forbid_all", _("Forbid to see the whole tree")),
+                ("paths", _("Allowed to see the following entries"), ListOf(
+                    Dictionary(
+                        elements=[
+                        ("path", TextAscii(
+                            title=_("Path"),
+                            size=60,
+                            allow_empty=False,
+                        )),
+                        ("attributes", ListOfStrings(
+                            orientation="horizontal",
+                            title=_("Attributes"),
+                            size=15,
+                            allow_empty=True,
+                        ))],
+                        optional_keys=["attributes"],
                     ),
                     allow_empty=False,
                 )),
             ],
+            default_value="allow_all",
         )
 
 

@@ -284,12 +284,12 @@ class StructuredDataTree(object):
         return self._root
 
 
-    def get_filtered_tree(self, paths):
-        if paths is None:
+    def get_filtered_tree(self, allowed_paths):
+        if allowed_paths is None:
             return self
         filtered = StructuredDataTree()
-        for path in paths:
-            sub_tree = self._root.get_filtered_branch(path, Container())
+        for path, keys in allowed_paths:
+            sub_tree = self._root.get_filtered_branch(path, keys, Container())
             if sub_tree is None:
                 continue
             filtered._root.merge_with(sub_tree)
@@ -550,7 +550,7 @@ numerated nodes ('arrays') containing real numerations ('devices').
         return bool(self._edges.get(edge))
 
 
-    def get_filtered_branch(self, path, parent):
+    def get_filtered_branch(self, path, keys, parent):
         sub_node = self._get_sub_node(path[:1])
         if sub_node is None:
             return None
@@ -559,11 +559,26 @@ numerated nodes ('arrays') containing real numerations ('devices').
         if path:
             container = sub_node.get_node_container()
             if container is not None:
-                filtered = container.get_filtered_branch(path, Container())
+                filtered = container.get_filtered_branch(path, keys, Container())
                 parent.add_child(edge, filtered, sub_node_abs_path)
         else:
-            for child in sub_node.get_node_children():
-                parent.add_child(edge, child, sub_node_abs_path)
+            if keys:
+                container = sub_node.get_node_container()
+                if container is not None:
+                    parent.add_child(edge, container, sub_node_abs_path)
+
+                numeration = sub_node.get_node_numeration()
+                if numeration is not None:
+                    filtered_numeration = numeration.get_filtered_data(keys)
+                    parent.add_child(edge, filtered_numeration, sub_node_abs_path)
+
+                attributes = sub_node.get_node_attributes()
+                if attributes is not None:
+                    filtered_attributes = attributes.get_filtered_data(keys)
+                    parent.add_child(edge, filtered_attributes, sub_node_abs_path)
+            else:
+                for child in sub_node.get_node_children():
+                    parent.add_child(edge, child, sub_node_abs_path)
         return parent
 
     #   ---getting [sub] nodes/node attributes----------------------------------
@@ -676,6 +691,10 @@ class Leaf(NodeAttribute):
         raise NotImplementedError()
 
 
+    def get_filtered_data(self, keys):
+        raise NotImplementedError()
+
+
     def _compare_entries(self, new_entries, old_entries):
         """
 Format of compared entries:
@@ -697,6 +716,16 @@ Format of compared entries:
             else:
                 changed.setdefault(k, (old_v, new_v))
         return new, changed, removed, identical
+
+
+    def _get_filtered_entries(self, entries, keys):
+        filtered = {}
+        for k,v in entries.iteritems():
+            if k in keys:
+                filtered.setdefault(k, v)
+            else:
+                filtered.setdefault(k, None)
+        return filtered
 
 #.
 #   .--Numeration----------------------------------------------------------.
@@ -895,6 +924,15 @@ class Numeration(Leaf):
     def get_child_data(self):
         return self._numeration
 
+
+    def get_filtered_data(self, keys):
+        filtered = Numeration()
+        numeration = []
+        for entry in self._numeration:
+            numeration.append(self._get_filtered_entries(entry, keys))
+        filtered.set_child_data(numeration)
+        return filtered
+
     #   ---web------------------------------------------------------------------
 
     def show(self, renderer, path=None):
@@ -982,6 +1020,13 @@ class Attributes(Leaf):
 
     def get_child_data(self):
         return self._attributes
+
+
+    def get_filtered_data(self, keys):
+        filtered = Attributes()
+        attributes = self._get_filtered_entries(self._attributes, keys)
+        filtered.set_child_data(attributes)
+        return filtered
 
     #   ---web------------------------------------------------------------------
 

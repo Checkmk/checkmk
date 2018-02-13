@@ -127,6 +127,8 @@ def load_tree(hostname, merge_trees=True):
 
     if merge_trees:
         inventory_tree = _merge_with_status_data_tree(hostname, inventory_tree)
+
+    inventory_tree = inventory_tree.get_filtered_tree(get_permitted_inventory_paths())
     return inventory_tree
 
 
@@ -214,22 +216,21 @@ None in case the user is allowed to see the whole tree.
     permitted_paths = []
     for user_group in user_groups:
         inventory_paths = contact_groups.get(user_group, {}).get('inventory_paths')
-
-        if inventory_paths == "all":
+        if inventory_paths == "allow_all":
             return None
 
-        elif inventory_paths == "none":
+        elif inventory_paths == "forbid_all":
             forbid_whole_tree = True
             continue
 
-        for path_repr in inventory_paths[1]:
+        for entry in inventory_paths[1]:
             parsed = []
-            for part in path_repr.split("."):
+            for part in entry["path"].split("."):
                 try:
                     parsed.append(int(part))
                 except ValueError:
                     parsed.append(part)
-            permitted_paths.append(parsed)
+            permitted_paths.append((parsed, entry.get("attributes")))
 
     if forbid_whole_tree and not permitted_paths:
         return []

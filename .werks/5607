@@ -8,12 +8,12 @@ Date: 1515144641
 Class: feature
 
 You're able to restrict contact groups to see certain inventory tree
-paths.
+paths and attributes.
 First go to inventory tree and enable 'Show internal tree paths' in
 the display options in order to see the internal tree paths.
 Below 'Permissions', 'Permitted HW/SW inventory paths' in the
 configuration of any contact group you can register these internal
-paths.
+paths and attributes.
 
 Consider the following exceptions:
 - By default all contact groups are allowed to see the whole tree

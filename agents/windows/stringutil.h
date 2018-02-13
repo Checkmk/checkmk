@@ -116,8 +116,6 @@ inline std::vector<std::basic_string<CharT>> tokenizePossiblyQuoted(
     return tokenizeBase(input, possiblyQuotedRegex<CharT>(), 1);
 }
 
-unsigned long long string_to_llu(const char *s);
-
 int parse_boolean(const char *value);
 
 inline std::string to_utf8(const std::wstring &input) {

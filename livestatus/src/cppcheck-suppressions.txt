@@ -6,4 +6,4 @@ constStatement
 // This is nonsense, but otherwise cppcheck complains even if it shouldn't.
 unmatchedSuppression
 // cppcheck is simply too dumb about macros...
-*:/usr/include/boost/config.hpp
+*:*/include/boost/config.hpp

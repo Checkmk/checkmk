@@ -86,7 +86,7 @@ public:
 private:
     void readConfigFile(const std::string &filename);
 
-    bool checkHostRestriction(char *patterns);
+    bool checkHostRestriction(const std::string &input);
 
 private:
     ConfigurableMap _configurables;

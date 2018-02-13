@@ -24,9 +24,11 @@
 
 #include "Configuration.h"
 #include <inttypes.h>
+#include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <regex>
 #include "Configurable.h"
 #include "Environment.h"
@@ -58,15 +60,13 @@ std::string Configuration::configFileName(bool local, const Environment &env) {
            (local ? "_local" : "") + ".ini";
 }
 
-bool Configuration::checkHostRestriction(char *patterns) {
-    char *word;
+bool Configuration::checkHostRestriction(const std::string &input) {
     std::string hostname = _environment.hostname();
-    while ((word = next_word(&patterns))) {
-        if (globmatch(word, hostname.c_str())) {
-            return true;
-        }
-    }
-    return false;
+    const auto patterns = tokenize(input, "\\s+");
+    return std::any_of(patterns.cbegin(), patterns.cend(),
+                       [&hostname](const auto &p) {
+                           return globmatch(p.c_str(), hostname.c_str());
+                       });
 }
 
 void Configuration::outputConfigurables(std::ostream &out) {
@@ -96,51 +96,44 @@ void Configuration::outputConfigurables(std::ostream &out) {
 }
 
 void Configuration::readConfigFile(const std::string &filename) {
-    FILE *file = fopen(filename.c_str(), "r");
-    if (!file) {
+    std::ifstream ifs(filename);
+    if (!ifs) {
         return;
     }
 
-    char line[512];
-    int lineno = 0;
-
+    std::string line;
     bool is_active = true;  // false in sections with host restrictions
-
     std::string section;
-    while (!feof(file)) {
-        if (!fgets(line, sizeof(line), file)) {
-            fclose(file);
-            return;
-        }
-        lineno++;
-        char *l = strip(line);
-        if (l[0] == 0 || l[0] == '#' || l[0] == ';')
+
+    for (unsigned lineno = 1; std::getline(ifs, line); ++lineno) {
+        ltrim(line);
+        rtrim(line);
+        if (line.empty() || line.front() == '#' || line.front() == ';')
             continue;  // skip empty lines and comments
-        int len = strlen(l);
-        if (l[0] == '[' && l[len - 1] == ']') {
+
+        if (line.front() == '[' && line.back() == ']') {
             // found section header
-            l[len - 1] = 0;
-            section = l + 1;
+            section = std::move(line.substr(1, line.size() - 2));
             // forget host-restrictions if new section begins
             is_active = true;
         } else {
             // split up line at = sign
-            char *s = l;
-            while (*s && *s != '=') s++;
-            if (*s != '=') {
-                fprintf(stderr, "Invalid line %d in %s.\r\n", lineno,
-                        filename.c_str());
+            const auto tokens = tokenize(line, "=");
+            if (tokens.size() != 2) {
+                std::cerr << "Invalid line " << lineno << " in " << filename
+                          << "." << std::endl;
                 exit(1);
             }
-            *s = 0;
-            char *value = s + 1;
-            char *variable = l;
-            rstrip(variable);
-            lowercase(variable);
-            value = strip(value);
+            std::string variable{tokens[0]};
+            rtrim(variable);
+            std::transform(variable.cbegin(), variable.cend(), variable.begin(),
+                           tolower);
+            std::string value{tokens[1]};
+            ltrim(value);
+            rtrim(value);
 
             // handle host restriction
-            if (!strcmp(variable, "host"))
+            if (variable == "host")
                 is_active = checkHostRestriction(value);
 
             // skip all other variables for non-relevant hosts
@@ -148,35 +141,32 @@ void Configuration::readConfigFile(const std::string &filename) {
                 continue;
 
             // Useful for debugging host restrictions
-            else if (!strcmp(variable, "print"))
-                fprintf(stderr, "%s\r\n", value);
+            else if (variable == "print")
+                std::cerr << value << std::endl;
 
             else {
                 bool found = false;
-                size_t key_len = strcspn(variable, " \n");
-
+                size_t key_len = strcspn(variable.c_str(), " \n");
                 auto map_iter = _configurables.find(
-                    config_key(section, std::string(variable, key_len)));
+                    config_key(section, std::string(variable, 0, key_len)));
                 if (map_iter != _configurables.end()) {
                     for (auto &cfg : map_iter->second) {
                         try {
                             cfg->feed(variable, value);
                             found = true;
                         } catch (const std::exception &e) {
-                            fprintf(stderr, "Failed to interpret %s: %s\n",
-                                    line, e.what());
+                            std::cerr << "Failed to interpret " << line << ": "
+                                      << e.what() << std::endl;
                         }
                     }
                 }
                 if (!found) {
-                    fprintf(stderr, "Invalid entry (%s:%s) in %s line %d.\r\n",
-                            section.c_str(), variable, filename.c_str(),
-                            lineno);
+                    std::cerr << "Invalid entry (" << section << ":" << variable
+                              << ") in " << filename << " line " << lineno
+                              << std::endl;
                     exit(1);
                 }
             }
         }
     }
-
-    fclose(file);
 }

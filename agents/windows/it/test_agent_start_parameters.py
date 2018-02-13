@@ -23,7 +23,7 @@ class Globals(object):
     remote_capfile = os.path.join(remotedir, capfile)
     plugintype = 'plugins'
     pluginnames = ['netstat_an.bat', 'wmic_if.bat']
-    binaryplugin = 'DummyPlugin.exe'
+    binaryplugin = 'MontyPython.exe'
     sections = ['check_mk', 'fileinfo', 'logfiles', 'logwatch', plugintype]
     testfiles = ('basedir', 'monty', [('python', 'flying'), ('circus',
                                                              "It's")])

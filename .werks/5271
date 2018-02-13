@@ -1,0 +1,12 @@
+Title: Better handling of erroneous deployment information in Agent Bakery
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1518527285
+Class: fix
+
+Depending of the state of the agent deployment information file for a host, the pages "Automatic agent updates" and "Agent update status" would crash and show only partial information.
+
+This is now mitigated by handling corrupt agent deployment files per-host and displaying an error message in a convenient format and location on the affected pages.

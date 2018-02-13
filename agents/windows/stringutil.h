@@ -41,11 +41,6 @@ using std::sregex_token_iterator;
 
 class WinApiAdaptor;
 
-char *lstrip(char *s);
-const char *lstrip(const char *s);
-char *rstrip(char *s);
-char *strip(char *s);
-
 inline void ltrim(std::string &s) {
     s.erase(s.begin(), std::find_if(s.cbegin(), s.cend(),
                                     [](int ch) { return !std::isspace(ch); }));
@@ -57,9 +52,6 @@ inline void rtrim(std::string &s) {
                 .base(),
             s.end());
 }
-
-std::vector<const char *> split_line(char *pos, int (*split_pred)(int));
-char *next_word(char **line);
 
 template <typename CharT>
 inline std::vector<std::basic_string<CharT>> tokenizeBase(
@@ -125,8 +117,6 @@ inline std::vector<std::basic_string<CharT>> tokenizePossiblyQuoted(
 }
 
 unsigned long long string_to_llu(const char *s);
-
-void lowercase(char *s);
 
 int parse_boolean(const char *value);
 

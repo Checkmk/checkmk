@@ -115,10 +115,10 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
             }
             command.readStdout(pos, buffer.size() - (pos - buf_start), false);
 
-            char *output_end = rstrip(&buffer[0]);
-            char *plugin_output = lstrip(&buffer[0]);
+            rtrim(buffer);
+            ltrim(buffer);
             // replace newlines
-            std::transform(plugin_output, output_end, plugin_output,
+            std::transform(buffer.cbegin(), buffer.cend(), buffer.begin(),
                            [](char ch) {
                                if (ch == '\n') return '\1';
                                if (ch == '\r')
@@ -127,7 +127,7 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
                                    return ch;
                            });
             int nagios_code = command.exitCode();
-            out << nagios_code << " " << plugin_output << "\n";
+            out << nagios_code << " " << buffer << "\n";
             Debug(_logger) << "Script finished";
         } catch (const std::exception &e) {
             Error(_logger) << "mrpe failed: " << e.what();

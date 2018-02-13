@@ -503,9 +503,6 @@ analyze: config.h
 	$(MAKE) -C livestatus clean
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
 
-# TODO: Repeating the include paths in the cppcheck targets below is ugly and
-# fragile.
-
 # GCC-like output on stderr intended for human consumption.
 cppcheck: config.h
 	$(MAKE) -C livestatus/src cppcheck

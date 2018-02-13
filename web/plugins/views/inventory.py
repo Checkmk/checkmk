@@ -42,8 +42,6 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
         tree_id = "/" + str(row["invhist_time"])
         tree_renderer = DeltaNodeRenderer(row["host_name"], tree_id, invpath)
 
-    struct_tree = struct_tree.get_filtered_tree(inventory.get_permitted_inventory_paths())
-
     parsed_path, attributes_key = inventory.parse_tree_path(invpath)
     if attributes_key is None:
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
@@ -138,6 +136,273 @@ def cmp_inventory_node(a, b, invpath):
     return cmp(val_a, val_b)
 
 
+multisite_painter_options["show_internal_tree_paths"] = {
+    'valuespec' : Checkbox(
+        title = _("Show internal tree paths"),
+        default_value = False,
+    )
+}
+
+
+multisite_painters["inventory_tree"] = {
+    "title"    : _("Hardware & Software Tree"),
+    "columns"  : ["host_inventory"],
+    "options"  : ["show_internal_tree_paths"],
+    "load_inv" : True,
+    "paint"    : paint_host_inventory_tree,
+}
+
+
+#.
+#   .--paint helper--------------------------------------------------------.
+#   |                   _       _     _          _                         |
+#   |       _ __   __ _(_)_ __ | |_  | |__   ___| |_ __   ___ _ __         |
+#   |      | '_ \ / _` | | '_ \| __| | '_ \ / _ \ | '_ \ / _ \ '__|        |
+#   |      | |_) | (_| | | | | | |_  | | | |  __/ | |_) |  __/ |           |
+#   |      | .__/ \__,_|_|_| |_|\__| |_| |_|\___|_| .__/ \___|_|           |
+#   |      |_|                                    |_|                      |
+#   '----------------------------------------------------------------------'
+
+
+def decorate_inv_paint(f):
+    def wrapper(v):
+        if v in ["", None]:
+            return "", ""
+        else:
+            return f(v)
+    return wrapper
+
+
+@decorate_inv_paint
+def inv_paint_generic(v):
+    if isinstance(v, float):
+        return "number", "%.2f" % v
+    elif isinstance(v, int):
+        return "number", str(v)
+    else:
+        return "", str(v)
+
+
+@decorate_inv_paint
+def inv_paint_hz(hz):
+    if hz == None:
+        return "", ""
+    if hz < 10:
+        return "number", "%.2f" % hz
+    elif hz < 100:
+        return "number", "%.1f" % hz
+    elif hz < 1500:
+        return "number", "%.0f" % hz
+    elif hz < 1000000:
+        return "number", "%.1f kHz" % (hz / 1000)
+    elif hz < 1000000000:
+        return "number", "%.1f MHz" % (hz / 1000000)
+    else:
+        return "number", "%.2f GHz" % (hz / 1000000000)
+
+
+@decorate_inv_paint
+def inv_paint_bytes(b):
+    if b == 0:
+        return "number", "0"
+
+    units = [ 'B', 'kB', 'MB', 'GB', 'TB' ]
+    i = 0
+    while b % 1024 == 0 and i+1 < len(units):
+        b = b / 1024
+        i += 1
+    return "number", "%d %s" % (b, units[i])
+
+
+@decorate_inv_paint
+def inv_paint_size(b):
+    return "number", bytes_human_readable(b)
+
+
+@decorate_inv_paint
+def inv_paint_number(b):
+    return "number", str(b)
+
+
+# Similar to paint_number, but is allowed to
+# abbreviate things if numbers are very large
+# (though it doesn't do so yet)
+@decorate_inv_paint
+def inv_paint_count(b):
+    return "number", str(b)
+
+
+@decorate_inv_paint
+def inv_paint_bytes_rounded(b):
+    if b == 0:
+        return "number", "0"
+
+    units = [ 'B', 'kB', 'MB', 'GB', 'TB' ]
+    i = len(units) - 1
+    fac = 1024 ** (len(units) - 1)
+    while b < fac * 1.5 and i > 0:
+        i -= 1
+        fac = fac / 1024.0
+
+    if i:
+        return "number", "%.2f&nbsp;%s" % (b / fac, units[i])
+    else:
+        return "number", "%d&nbsp;%s" % (b, units[0])
+
+
+@decorate_inv_paint
+def inv_paint_nic_speed(bits_per_second):
+    if bits_per_second:
+        return "number", nic_speed_human_readable(int(bits_per_second))
+    else:
+        return "", ""
+
+
+@decorate_inv_paint
+def inv_paint_if_oper_status(oper_status):
+    if oper_status == 1:
+        css_class = "if_state_up"
+    elif oper_status == 2:
+        css_class = "if_state_down"
+    else:
+        css_class = "if_state_other"
+
+    return "if_state " + css_class, \
+        defines.interface_oper_state_name(oper_status, "%s" % oper_status).replace(" ", "&nbsp;")
+
+
+# admin status can only be 1 or 2, matches oper status :-)
+@decorate_inv_paint
+def inv_paint_if_admin_status(admin_status):
+    return inv_paint_if_oper_status(admin_status)
+
+
+@decorate_inv_paint
+def inv_paint_if_port_type(port_type):
+    type_name = defines.interface_port_types().get(port_type, _("unknown"))
+    return "", "%d - %s" % (port_type, type_name)
+
+
+@decorate_inv_paint
+def inv_paint_if_available(available):
+    return "if_state " + (available and "if_available" or "if_not_available"), \
+                         (available and _("free") or _("used"))
+
+
+@decorate_inv_paint
+def inv_paint_mssql_is_clustered(clustered):
+    return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
+                      (clustered and _("is clustered") or _("is not clustered"))
+
+
+@decorate_inv_paint
+def inv_paint_mssql_node_names(node_names):
+    return "", ", ".join(node_names)
+
+
+@decorate_inv_paint
+def inv_paint_ipv4_network(nw):
+    if nw == "0.0.0.0/0":
+        return "", _("Default")
+    else:
+        return "", nw
+
+
+@decorate_inv_paint
+def inv_paint_ip_address_type(t):
+    if t == "ipv4":
+        return "", _("IPv4")
+    elif t == "ipv6":
+        return "", _("IPv6")
+    else:
+        return "", t
+
+
+@decorate_inv_paint
+def inv_paint_route_type(rt):
+    if rt == "local":
+        return "", _("Local route")
+    else:
+        return "", _("Gateway route")
+
+
+@decorate_inv_paint
+def inv_paint_volt(volt):
+    if volt:
+        return "number", "%.1f V" % volt
+    else:
+        return "", ""
+
+
+@decorate_inv_paint
+def inv_paint_date(timestamp):
+    if timestamp:
+        date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
+        return "number", "%s" % date_painted
+    else:
+        return "", ""
+
+
+@decorate_inv_paint
+def inv_paint_date_and_time(timestamp):
+    if timestamp:
+        date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+        return "number", "%s" % date_painted
+    else:
+        return "", ""
+
+
+@decorate_inv_paint
+def inv_paint_age(age):
+    if age:
+        return "number", age_human_readable(age)
+    else:
+        return "", ""
+
+
+@decorate_inv_paint
+def inv_paint_bool(value):
+    if value == None:
+        return "", ""
+    return "", (_("Yes") if value else _("No"))
+
+
+@decorate_inv_paint
+def inv_paint_timestamp_as_age(timestamp):
+    age = time.time() - timestamp
+    return inv_paint_age(age)
+
+
+@decorate_inv_paint
+def inv_paint_timestamp_as_age_days(timestamp):
+    def round_to_day(ts):
+        broken = time.localtime(ts)
+        return int(time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday, broken.tm_yday, broken.tm_isdst)))
+
+    now_day = round_to_day(time.time())
+    change_day = round_to_day(timestamp)
+    age_days = (now_day - change_day) / 86400
+
+    css_class = "number"
+    if age_days == 0:
+        return css_class, _("today")
+    elif age_days == 1:
+        return css_class, _("yesterday")
+    else:
+        return css_class, "%d %s ago" % (int(age_days), _("days"))
+
+
+#.
+#   .--display hints-------------------------------------------------------.
+#   |           _ _           _               _     _       _              |
+#   |        __| (_)___ _ __ | | __ _ _   _  | |__ (_)_ __ | |_ ___        |
+#   |       / _` | / __| '_ \| |/ _` | | | | | '_ \| | '_ \| __/ __|       |
+#   |      | (_| | \__ \ |_) | | (_| | |_| | | | | | | | | | |_\__ \       |
+#   |       \__,_|_|___/ .__/|_|\__,_|\__, | |_| |_|_|_| |_|\__|___/       |
+#   |                  |_|            |___/                                |
+#   '----------------------------------------------------------------------'
+
+
 # Convert .foo.bar:18.test to .foo.bar:*.test
 def inv_display_hint(invpath):
     r = regex(".[0-9]+")
@@ -173,226 +438,6 @@ def inv_titleinfo_long(invpath, node):
         return parent_title + u" ➤ " + last_title
     else:
         return last_title
-
-
-multisite_painter_options["show_internal_tree_paths"] = {
-    'valuespec' : Checkbox(
-        title = _("Show internal tree paths"),
-        default_value = False,
-    )
-}
-
-
-multisite_painters["inventory_tree"] = {
-    "title"    : _("Hardware & Software Tree"),
-    "columns"  : ["host_inventory"],
-    "options"  : ["show_internal_tree_paths"],
-    "load_inv" : True,
-    "paint"    : paint_host_inventory_tree,
-}
-
-
-def inv_paint_hz(hz):
-    if hz == None:
-        return "", ""
-
-    if hz < 10:
-        return "number", "%.2f" % hz
-    elif hz < 100:
-        return "number", "%.1f" % hz
-    elif hz < 1500:
-        return "number", "%.0f" % hz
-    elif hz < 1000000:
-        return "number", "%.1f kHz" % (hz / 1000)
-    elif hz < 1000000000:
-        return "number", "%.1f MHz" % (hz / 1000000)
-    else:
-        return "number", "%.2f GHz" % (hz / 1000000000)
-
-
-def inv_paint_bytes(b):
-    if b == None:
-        return "", ""
-    elif b == 0:
-        return "number", "0"
-
-    units = [ 'B', 'kB', 'MB', 'GB', 'TB' ]
-    i = 0
-    while b % 1024 == 0 and i+1 < len(units):
-        b = b / 1024
-        i += 1
-    return "number", "%d %s" % (b, units[i])
-
-
-def inv_paint_size(b):
-    if b is None:
-        return "", ""
-    return "number", bytes_human_readable(b)
-
-
-def inv_paint_number(b):
-    if b == None:
-        return "", ""
-    else:
-        return "number", str(b)
-
-
-# Similar to paint_number, but is allowed to
-# abbreviate things if numbers are very large
-# (though it doesn't do so yet)
-def inv_paint_count(b):
-    if b == None:
-        return "", ""
-    else:
-        return "number", str(b)
-
-
-def inv_paint_bytes_rounded(b):
-    if b == None:
-        return "", ""
-    elif b == 0:
-        return "number", "0"
-
-    units = [ 'B', 'kB', 'MB', 'GB', 'TB' ]
-    i = len(units) - 1
-    fac = 1024 ** (len(units) - 1)
-    while b < fac * 1.5 and i > 0:
-        i -= 1
-        fac = fac / 1024.0
-
-    if i:
-        return "number", "%.2f&nbsp;%s" % (b / fac, units[i])
-    else:
-        return "number", "%d&nbsp;%s" % (b, units[0])
-
-
-def inv_paint_nic_speed(bits_per_second):
-    if bits_per_second:
-        return "number", nic_speed_human_readable(int(bits_per_second))
-    else:
-        return "", ""
-
-
-def inv_paint_if_oper_status(oper_status):
-    if oper_status == 1:
-        css_class = "if_state_up"
-    elif oper_status == 2:
-        css_class = "if_state_down"
-    else:
-        css_class = "if_state_other"
-
-    return "if_state " + css_class, \
-        defines.interface_oper_state_name(oper_status, "%s" % oper_status).replace(" ", "&nbsp;")
-
-
-# admin status can only be 1 or 2, matches oper status :-)
-def inv_paint_if_admin_status(admin_status):
-    return inv_paint_if_oper_status(admin_status)
-
-
-def inv_paint_if_port_type(port_type):
-    type_name = defines.interface_port_types().get(port_type, _("unknown"))
-    return "", "%d - %s" % (port_type, type_name)
-
-
-def inv_paint_if_available(available):
-    if available == None:
-        return "", ""
-    else:
-        return "if_state " + (available and "if_available" or "if_not_available"), \
-           (available and _("free") or _("used"))
-
-
-def inv_paint_mssql_is_clustered(clustered):
-    return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
-       (clustered and _("is clustered") or _("is not clustered"))
-
-
-def inv_paint_mssql_node_names(node_names):
-    return "", ", ".join(node_names)
-
-
-def inv_paint_ipv4_network(nw):
-    if nw == "0.0.0.0/0":
-        return "", _("Default")
-    else:
-        return "", nw
-
-
-def inv_paint_ip_address_type(t):
-    if t == "ipv4":
-        return "", _("IPv4")
-    elif t == "ipv6":
-        return "", _("IPv6")
-    else:
-        return "", t
-
-
-def inv_paint_route_type(rt):
-    if rt == "local":
-        return "", _("Local route")
-    else:
-        return "", _("Gateway route")
-
-
-def inv_paint_volt(volt):
-    if volt:
-        return "number", "%.1f V" % volt
-    else:
-        return "", ""
-
-
-def inv_paint_date(timestamp):
-    if timestamp:
-        date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
-        return "number", "%s" % date_painted
-    else:
-        return "", ""
-
-
-def inv_paint_date_and_time(timestamp):
-    if timestamp:
-        date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
-        return "number", "%s" % date_painted
-    else:
-        return "", ""
-
-
-def inv_paint_age(age):
-    if age:
-        return "number", age_human_readable(age)
-    else:
-        return "", ""
-
-
-def inv_paint_bool(value):
-    if value == None:
-        return "", ""
-    return "", (_("Yes") if value else _("No"))
-
-
-def inv_paint_timestamp_as_age(timestamp):
-    age = time.time() - timestamp
-    return inv_paint_age(age)
-
-
-def round_to_day(ts):
-    broken = time.localtime(ts)
-    return int(time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday, broken.tm_yday, broken.tm_isdst)))
-
-
-def inv_paint_timestamp_as_age_days(timestamp):
-    now_day = round_to_day(time.time())
-    change_day = round_to_day(timestamp)
-    age_days = (now_day - change_day) / 86400
-
-    css_class = "number"
-    if age_days == 0:
-        return css_class, _("today")
-    elif age_days == 1:
-        return css_class, _("yesterday")
-    else:
-        return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 
 inventory_displayhints.update({
@@ -767,7 +812,7 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
         if not header.startswith("Sites:"):
             filter_code += header
     host_columns = [ "host_name" ] + list(set(filter(lambda c: c.startswith("host_")
-                                                               and c != "host_name", columns)))
+                                                     and c != "host_name", columns)))
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(host_columns)) + "\n"
     query += filter_code
@@ -789,7 +834,6 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
     headers = [ "site" ] + host_columns
 
     # Now create big table of all inventory entries of these hosts
-
     rows = []
     hostnames = [ row[1] for row in data ]
     for row in data:
@@ -831,11 +875,10 @@ def declare_invtable_columns(infoname, invpath, topic):
         sortfunc = hint.get("sort", cmp)
         if "paint" in hint:
             paint_name = hint["paint"]
-            render_function_name = "inv_paint_" + paint_name
-            render_function = globals()[render_function_name]
+            paint_function = globals()["inv_paint_" + paint_name]
         else:
             paint_name = "str"
-            render_function = None
+            paint_function = inv_paint_generic
 
         # Sync this with declare_inv_column()
         filter_class = hint.get("filter")
@@ -849,26 +892,17 @@ def declare_invtable_columns(infoname, invpath, topic):
                 filter_class = visuals.FilterInvtableIDRange
 
         declare_invtable_column(infoname, name, topic, hint["title"],
-                           hint.get("short", hint["title"]), sortfunc, render_function, filter_class)
+                           hint.get("short", hint["title"]), sortfunc, paint_function, filter_class)
 
 
 def declare_invtable_column(infoname, name, topic, title, short_title,
-                            sortfunc, render_func, filter_class):
+                            sortfunc, paint_function, filter_class):
     column = infoname + "_" + name
-    if render_func == None:
-        paint = lambda row: ("", "%s" % row.get(column))
-    else:
-        def paint(row):
-            if column not in row:
-                return "", ""
-            else:
-                return render_func(row[column])
-
     multisite_painters[column] = {
         "title"   : topic + ": " + title,
         "short"   : short_title,
         "columns" : [ column ],
-        "paint"   : paint,
+        "paint"   : lambda row: paint_function(row.get(column)),
         "sorter"  : column,
     }
     multisite_sorters[column] = {
@@ -1005,6 +1039,7 @@ def _create_view_enabled_check_func(invpath):
             return False
         return True
     return _check_view_enabled
+
 
 # Now declare Multisite views for a couple of embedded tables
 declare_invtable_view("invswpac",      ".software.packages:",       _("Software package"),   _("Software packages"))
@@ -1395,11 +1430,7 @@ class NodeRenderer(object):
 
             raw_invpath = self._get_raw_path(".".join(map(str, node_abs_path)))
             invpath = ".%s." % raw_invpath
-
-            header = HTML(title)
-            if self._show_internal_tree_paths:
-                header += HTML(" <span style='color: #666'>(%s)</span>" % ".".join(map(str, node_abs_path)))
-
+            header = self._get_header(title, ".".join(map(str, node_abs_path)), "#666")
             fetch_url = html.makeuri_contextless([("host", self._hostname),
                                                   ("path", invpath),
                                                   ("show_internal_tree_paths", self._show_internal_tree_paths),
@@ -1468,7 +1499,7 @@ class NodeRenderer(object):
         html.open_table(class_="data")
         html.open_tr()
         for title, key in titles:
-            html.th(title)
+            html.th(self._get_header(title, key, "#DDD"))
         html.close_tr()
         for index, entry in enumerate(data):
             html.open_tr(class_="even0")
@@ -1507,7 +1538,7 @@ class NodeRenderer(object):
 
             html.open_tr()
             html.open_th(title=sub_invpath)
-            html.write(title)
+            html.write(self._get_header(title, key, "#DDD"))
             html.close_th()
             html.open_td()
             self._show_attribute(value, hint)
@@ -1525,6 +1556,13 @@ class NodeRenderer(object):
             return self._invpath.strip(".")
         else:
             return path.strip(".")
+
+    def _get_header(self, title, key, hex_color):
+        header = HTML(title)
+        if self._show_internal_tree_paths:
+            header += HTML(" <span style='color: %s'>(%s)</span>" % \
+                           (hex_color, key))
+        return header
 
 
 

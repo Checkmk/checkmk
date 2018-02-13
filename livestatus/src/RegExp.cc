@@ -24,19 +24,52 @@
 
 #include "RegExp.h"
 
-// Currently just for testing purposes, the real stuff will follow soon...
 #ifdef HAVE_RE2
+// -----------------------------------------------------------------------------
+// RE2 implementation
+// -----------------------------------------------------------------------------
 #include <re2/re2.h>
-#endif
-
-#include <regex>
+#include "re2/stringpiece.h"
+#include <stdexcept>
 
 class RegExp::Impl {
 public:
+    Impl(const std::string &str, Case c) : _regex(str, opts(c)) {
+        if (!_regex.ok()) {
+            throw std::runtime_error(_regex.error());
+        }
+    }
+
+    std::string replace(std::string str, const std::string &replacement) {
+        RE2::GlobalReplace(&str, _regex, replacement);
+        return str;
+    }
+
+    bool search(const std::string &str) const {
+        return RE2::PartialMatch(str, _regex);
+    }
+
+private:
+    RE2 _regex;
+
+    static RE2::Options opts(Case c) {
+        RE2::Options options{RE2::Quiet};
+        options.set_case_sensitive(c == Case::respect);
+        return options;
+    }
+};
+
+#else
+// -----------------------------------------------------------------------------
+// standard <regex> implementation
+// -----------------------------------------------------------------------------
+#include <regex>
+class RegExp::Impl {
+public:
     Impl(const std::string &str, Case c)
-        : _regex(str, c == Case::ignore
-                          ? std::regex::extended | std::regex::icase
-                          : std::regex::extended) {}
+        : _regex(str, c == Case::respect
+                          ? std::regex::extended
+                          : std::regex::extended | std::regex::icase) {}
 
     std::string replace(const std::string &str,
                         const std::string &replacement) {
@@ -51,29 +84,19 @@ public:
 private:
     std::regex _regex;
 };
+#endif
+
+// -----------------------------------------------------------------------------
+// boilerplate pimpl code
+// -----------------------------------------------------------------------------
 
 RegExp::RegExp(const std::string &str, Case c)
     : _impl(std::make_unique<Impl>(str, c)) {}
 
 RegExp::~RegExp() = default;
 
-RegExp::RegExp(const RegExp &rhs) noexcept
-    : _impl(std::make_unique<Impl>(*rhs._impl)) {}
-
-RegExp &RegExp::operator=(const RegExp &rhs) noexcept {
-    *_impl = *rhs._impl;
-    return *this;
-}
-
-RegExp::RegExp(RegExp &&rhs) noexcept = default;
-
-RegExp &RegExp::operator=(RegExp &&rhs) noexcept = default;
-
 std::string RegExp::replace(const std::string &str,
                             const std::string &replacement) const {
-#ifdef HAVE_RE2
-    RE2 dummyRegExpJustForTesting{".*"};
-#endif
     return _impl->replace(str, replacement);
 }
 

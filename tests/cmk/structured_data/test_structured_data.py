@@ -476,7 +476,7 @@ def test_structured_data_StructuredDataTree_get_root_container(tree):
 @pytest.mark.parametrize("tree,paths,unavail", [
     (tree_new_interfaces,
      # container                   numeration                    attributes
-     [["hardware", "components"], ["networking", "interfaces"], ["software", "os"]],
+     [(["hardware", "components"], None), (["networking", "interfaces"], None), (["software", "os"], None)],
      [["hardware", "system"], ["software", "applications"]]),
 ])
 def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):

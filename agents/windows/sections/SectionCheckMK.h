@@ -37,7 +37,8 @@ using OnlyFromConfigurable =
 class SectionCheckMK : public Section {
 public:
     SectionCheckMK(Configuration &config, OnlyFromConfigurable &only_from,
-                   Logger *logger, const WinApiAdaptor &winapi);
+                   script_statistics_t &script_statistics, Logger *logger,
+                   const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
@@ -50,6 +51,8 @@ private:
 
     // static fields
     const std::vector<KVPair> _info_fields;
+
+    script_statistics_t &_script_statistics;
 };
 
 #endif  // SectionCheckMK_h

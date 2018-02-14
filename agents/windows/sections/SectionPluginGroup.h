@@ -137,17 +137,10 @@ class SectionPluginGroup : public Section {
     static const int DEFAULT_PLUGIN_TIMEOUT = 60;
     static const int DEFAULT_LOCAL_TIMEOUT = 60;
 
-    // Statistical values
-    struct script_statistics_t {
-        int count;
-        int errors;
-        int timeouts;
-    } _script_stat;
-
 public:
     SectionPluginGroup(Configuration &config, const std::string &path,
-                       script_type type, Logger *logger,
-                       const WinApiAdaptor &winapi,
+                       script_type type, script_statistics_t &script_statistics,
+                       Logger *logger, const WinApiAdaptor &winapi,
                        const std::string &user = std::string());
 
     virtual ~SectionPluginGroup();
@@ -194,6 +187,7 @@ private:
     KeyedListConfigurable<int> _cache_age;
     KeyedListConfigurable<int> _retry_count;
     KeyedListConfigurable<script_execution_mode> _execution_mode;
+    script_statistics_t &_script_statistics;
 };
 
 #endif  // SectionPluginGroup_h

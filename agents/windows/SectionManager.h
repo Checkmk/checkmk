@@ -93,6 +93,7 @@ private:
     KeyedListConfigurable<std::string> _script_local_includes;
     KeyedListConfigurable<std::string> _script_plugin_includes;
     ListConfigurable<std::vector<winperf_counter>> _winperf_counters;
+    script_statistics_t _script_statistics;
     const Environment &_env;
     Logger *_logger;
     const WinApiAdaptor &_winapi;

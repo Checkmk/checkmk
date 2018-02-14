@@ -30,15 +30,6 @@
 #include "Logger.h"
 #include "WinApiAdaptor.h"
 
-extern struct script_statistics_t {
-    int pl_count;
-    int pl_errors;
-    int pl_timeouts;
-    int lo_count;
-    int lo_errors;
-    int lo_timeouts;
-} g_script_stat;
-
 namespace {
 
 const size_t HEAP_BUFFER_MAX = 2097152L;
@@ -380,11 +371,10 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
     }
 }
 
-SectionPluginGroup::SectionPluginGroup(Configuration &config,
-                                       const std::string &path,
-                                       script_type type, Logger *logger,
-                                       const WinApiAdaptor &winapi,
-                                       const std::string &user)
+SectionPluginGroup::SectionPluginGroup(
+    Configuration &config, const std::string &path, script_type type,
+    script_statistics_t &script_statistics, Logger *logger,
+    const WinApiAdaptor &winapi, const std::string &user)
     : Section(typeToSection(type), typeToSection(type), config.getEnvironment(),
               logger, winapi)
     , _path(path)
@@ -398,7 +388,8 @@ SectionPluginGroup::SectionPluginGroup(Configuration &config,
     , _timeout(config, typeToSection(type), "timeout", _winapi)
     , _cache_age(config, typeToSection(type), "cache_age", _winapi)
     , _retry_count(config, typeToSection(type), "retry_count", _winapi)
-    , _execution_mode(config, typeToSection(type), "execution", _winapi) {
+    , _execution_mode(config, typeToSection(type), "execution", _winapi)
+    , _script_statistics(script_statistics) {
     if (type == PLUGIN) {
         // plugins don't have a "collective" header
         withHiddenHeader();
@@ -597,22 +588,22 @@ void SectionPluginGroup::updateStatistics() {
     for (const auto &kv : _containers) {
         std::shared_ptr<script_container> cont = kv.second;
         if (cont->type == PLUGIN)
-            g_script_stat.pl_count++;
+            ++_script_statistics["plugin_count"];
         else
-            g_script_stat.lo_count++;
+            ++_script_statistics["local_count"];
 
         switch (cont->last_problem) {
             case SCRIPT_TIMEOUT:
                 if (cont->type == PLUGIN)
-                    g_script_stat.pl_timeouts++;
+                    ++_script_statistics["plugin_timeouts"];
                 else
-                    g_script_stat.lo_timeouts++;
+                    ++_script_statistics["local_timeouts"];
                 break;
             case SCRIPT_ERROR:
                 if (cont->type == PLUGIN)
-                    g_script_stat.pl_errors++;
+                    ++_script_statistics["plugin_errors"];
                 else
-                    g_script_stat.lo_errors++;
+                    ++_script_statistics["local_errors"];
                 break;
             default:
                 break;

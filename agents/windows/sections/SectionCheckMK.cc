@@ -31,22 +31,15 @@
 #include "Logger.h"
 #include "stringutil.h"
 
-struct script_statistics_t {
-    int pl_count;
-    int pl_errors;
-    int pl_timeouts;
-    int lo_count;
-    int lo_errors;
-    int lo_timeouts;
-} g_script_stat;
-
 SectionCheckMK::SectionCheckMK(Configuration &config,
-                               OnlyFromConfigurable &only_from, Logger *logger,
-                               const WinApiAdaptor &winapi)
+                               OnlyFromConfigurable &only_from,
+                               script_statistics_t &script_statistics,
+                               Logger *logger, const WinApiAdaptor &winapi)
     : Section("check_mk", "check_mk", config.getEnvironment(), logger, winapi)
     , _crash_debug(config, "global", "crash_debug", false, winapi)
     , _only_from(only_from)
-    , _info_fields(createInfoFields()) {}
+    , _info_fields(createInfoFields())
+    , _script_statistics(script_statistics) {}
 
 std::vector<KVPair> SectionCheckMK::createInfoFields() const {
 #ifdef ENVIRONMENT32
@@ -86,13 +79,15 @@ bool SectionCheckMK::produceOutputInner(std::ostream &out) {
 
     out << "ScriptStatistics:"
         << " Plugin"
-        << " C:" << g_script_stat.pl_count << " E:" << g_script_stat.pl_errors
-        << " T:" << g_script_stat.pl_timeouts << " Local"
-        << " C:" << g_script_stat.lo_count << " E:" << g_script_stat.lo_errors
-        << " T:" << g_script_stat.lo_timeouts << "\n";
+        << " C:" << _script_statistics["plugin_count"]
+        << " E:" << _script_statistics["plugin_errors"]
+        << " T:" << _script_statistics["plugin_timeouts"] << " Local"
+        << " C:" << _script_statistics["local_count"]
+        << " E:" << _script_statistics["local_errors"]
+        << " T:" << _script_statistics["local_timeouts"] << "\n";
 
     // reset script statistics for next round
-    memset(&g_script_stat, 0, sizeof(g_script_stat));
+    _script_statistics.reset();
 
     out << "OnlyFrom:";
     // only from, isn't this static too?

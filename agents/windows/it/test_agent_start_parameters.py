@@ -247,7 +247,7 @@ def verify_plugin_output():
     cmd = [os.path.join(Globals.testfiles[1], Globals.binaryplugin)]
     exit_code, stdout, stderr = run_subprocess(cmd)
     assert exit_code == 0, "'%s' failed" % Globals.binaryplugin
-    assert "Hello, World!\r\n" == stdout
+    assert "<<<monty_python>>>\r\nMonty Python's Flying Circus\r\n" == stdout
     assert len(stderr) == 0, "Expected empty stderr, got '%s'" % stderr
 
 

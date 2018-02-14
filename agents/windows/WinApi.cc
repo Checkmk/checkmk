@@ -194,7 +194,7 @@ LONG WinApi::CompareFileTime(const FILETIME *lpFileTime1,
 }
 
 WINBOOL WinApi::CopyFile(LPCSTR lpExistingFileName, LPCSTR lpNewFileName,
-                 WINBOOL bFailIfExists) const {
+                         WINBOOL bFailIfExists) const {
     return ::CopyFileA(lpExistingFileName, lpNewFileName, bFailIfExists);
 }
 

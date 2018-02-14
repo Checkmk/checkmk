@@ -22,12 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "SectionOHM.h"
+#include "Configuration.h"
 #include "Environment.h"
 #include "Logger.h"
 #include "OHMMonitor.h"
 #include "SectionWMI.h"
-#include "Configuration.h"
-#include "SectionOHM.h"
 
 SectionOHM::SectionOHM(Configuration &config, Logger *logger,
                        const WinApiAdaptor &winapi)
@@ -38,9 +38,7 @@ SectionOHM::SectionOHM(Configuration &config, Logger *logger,
     withObject(L"Sensor");
 }
 
-void SectionOHM::startIfAsync() {
-    _ohm_monitor.startProcess();
-}
+void SectionOHM::startIfAsync() { _ohm_monitor.startProcess(); }
 
 bool SectionOHM::produceOutputInner(std::ostream &out) {
     Debug(_logger) << "SectionOHM::produceOutputInner";

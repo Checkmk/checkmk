@@ -1,0 +1,20 @@
+Title: Graph export can now use custom consolidation function
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1518605998
+Class: feature
+
+In addition to werk #8643 it is now possible to provide the optional key
+<tt>consolidation_function</tt> to control which consolidation function
+should be used when calculating aggregated numbers.
+
+Possible values are:
+
+<ul>
+    <li><tt>"consolidation_function": "max"</tt> - The default</li>
+    <li><tt>"consolidation_function": "min"</tt></li>
+    <li><tt>"consolidation_function": "average"</tt></li>
+</ul>

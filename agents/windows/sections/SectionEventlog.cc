@@ -57,8 +57,8 @@ std::pair<char, int> getEventState(const IEventLogRecord &event, int level) {
     }
 }
 
-    const char *level_name(int level_id) {
-        switch (level_id) {
+const char *level_name(int level_id) {
+    switch (level_id) {
         case -1:
             return "off";
         case 0:
@@ -69,8 +69,8 @@ std::pair<char, int> getEventState(const IEventLogRecord &event, int level) {
             return "crit";
         default:
             return "invalid";
-        }
     }
+}
 
 // The int return value is there just for convenience, actually we are not
 // interested in the state int value at this point any more.

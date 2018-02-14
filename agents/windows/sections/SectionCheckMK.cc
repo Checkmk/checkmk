@@ -31,7 +31,6 @@
 #include "Logger.h"
 #include "stringutil.h"
 
-
 struct script_statistics_t {
     int pl_count;
     int pl_errors;

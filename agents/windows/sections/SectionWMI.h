@@ -28,8 +28,8 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "wmiHelper.h"
 #include "Section.h"
+#include "wmiHelper.h"
 
 class SectionWMI : public Section {
 public:

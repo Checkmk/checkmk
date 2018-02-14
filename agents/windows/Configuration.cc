@@ -133,8 +133,7 @@ void Configuration::readConfigFile(const std::string &filename) {
             rtrim(value);
 
             // handle host restriction
-            if (variable == "host")
-                is_active = checkHostRestriction(value);
+            if (variable == "host") is_active = checkHostRestriction(value);
 
             // skip all other variables for non-relevant hosts
             else if (!is_active)

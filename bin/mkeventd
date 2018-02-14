@@ -111,10 +111,10 @@ event_columns = [
     ( "event_state",                       0 ),
     ( "event_phase",                      "" ),
     ( "event_owner",                      "" ),
-    ( "event_match_groups",               "" ),
-    ( "event_contact_groups",             "" ),
-    ( "event_ipaddress",                  "" ), # introduced in 1.2.7
-    ( "event_orig_host",                  "" ),
+    ( "event_match_groups",               "" ),     # last column up to 1.2.4
+    ( "event_contact_groups",             "" ),     # introduced in 1.2.5i2
+    ( "event_ipaddress",                  "" ),     # introduced in 1.2.7i1
+    ( "event_orig_host",                  "" ),     # introduced in 1.4.0b1
     ( "event_contact_groups_precedence",  "host" ), # introduced in 1.4.0b1
 ]
 
@@ -207,6 +207,7 @@ def unsplit(s):
 # Speed-critical function for converting string representation
 # of log line back to Python values
 def convert_history_line(values):
+    # NOTE: history_line column is missing here, so indices are off by 1! :-P
     values[0] = float(values[0])         # history_time
     values[4] = int(values[4])           # event_id
     values[5] = int(values[5])           # event_count
@@ -218,10 +219,17 @@ def convert_history_line(values):
     values[16] = int(values[16])         # event_facility
     values[18] = int(values[18])         # event_state
     values[21] = unsplit(values[21])     # event_match_groups
-    if len(values) >= 23:
-        values[22] = unsplit(values[22]) # event_contact_groups
-    else:
+    num_values = len(values)
+    if num_values <= 22:                 # event_contact_groups
         values.append(None)
+    else:
+        values[22] = unsplit(values[22])
+    if num_values <= 23:                 # event_ipaddress
+        values.append(history_columns[24][1])
+    if num_values <= 24:                 # event_orig_host
+        values.append(history_columns[25][1])
+    if num_values <= 25:                 # event_contact_groups_precedence
+        values.append(history_columns[26][1])
 
 
 

@@ -457,27 +457,27 @@ bool SectionPluginGroup::produceOutputInner(std::ostream &out) {
     return true;
 }
 
-int SectionPluginGroup::getTimeout(const char *name) const {
+int SectionPluginGroup::getTimeout(const std::string &name) const {
     for (const auto &cfg : *_timeout) {
-        if (globmatch(cfg.first.c_str(), name)) {
+        if (globmatch(cfg.first.c_str(), name.c_str())) {
             return cfg.second;
         }
     }
     return _type == PLUGIN ? DEFAULT_PLUGIN_TIMEOUT : DEFAULT_LOCAL_TIMEOUT;
 }
 
-int SectionPluginGroup::getCacheAge(const char *name) const {
+int SectionPluginGroup::getCacheAge(const std::string &name) const {
     for (const auto &cfg : *_cache_age) {
-        if (globmatch(cfg.first.c_str(), name)) {
+        if (globmatch(cfg.first.c_str(), name.c_str())) {
             return cfg.second;
         }
     }
     return 0;
 }
 
-int SectionPluginGroup::getMaxRetries(const char *name) const {
+int SectionPluginGroup::getMaxRetries(const std::string &name) const {
     for (const auto &cfg : *_retry_count) {
-        if (globmatch(cfg.first.c_str(), name)) {
+        if (globmatch(cfg.first.c_str(), name.c_str())) {
             return cfg.second;
         }
     }
@@ -485,50 +485,46 @@ int SectionPluginGroup::getMaxRetries(const char *name) const {
 }
 
 script_execution_mode SectionPluginGroup::getExecutionMode(
-    const char *name) const {
+    const std::string &name) const {
     for (const auto &cfg : *_execution_mode) {
-        if (globmatch(cfg.first.c_str(), name)) {
+        if (globmatch(cfg.first.c_str(), name.c_str())) {
             return cfg.second;
         }
     }
     return *_default_execution_mode;
 }
 
-bool SectionPluginGroup::fileInvalid(const char *name) const {
-    if (strlen(name) < 5) return false;
+bool SectionPluginGroup::fileInvalid(const fs::path &filename) const {
+    if (filename.string().size() < 5) return false;
 
-    const char *extension = strrchr(name, '.');
-    if (extension == nullptr) {
+    const auto extension = filename.extension();
+    if (extension.empty()) {
         // ban files without extension
         return true;
     }
-
-    if (_execute_suffixes.wasAssigned()) {
-        ++extension;
-        auto iter = std::find_if(
-            _execute_suffixes->begin(), _execute_suffixes->end(),
-            [extension](const std::string &valid_ext) {
-                return strcasecmp(extension, valid_ext.c_str()) == 0;
-            });
-        return iter == _execute_suffixes->end();
-    } else {
-        return (!strcasecmp(extension, ".dir") ||
-                !strcasecmp(extension, ".txt"));
-    }
+    const std::vector<std::string> defaultSuffixes{"dir", "txt"};
+    bool negativeMatch = _execute_suffixes.wasAssigned();
+    const auto &suffixes = negativeMatch ? *_execute_suffixes : defaultSuffixes;
+    const auto extString = extension.string().substr(1);
+    bool match = std::any_of(suffixes.cbegin(), suffixes.cend(),
+                             [&extString](const std::string &suffix) {
+                                 return ci_equal(extString, suffix);
+                             });
+    return negativeMatch ? !match : match;
 }
 
-std::string SectionPluginGroup::withInterpreter(const char *path) const {
-    size_t path_len = strlen(path);
-    if (!strcmp(path + path_len - 3, ".pl")) {
-        return std::string("perl.exe \"") + path + "\"";
-    } else if (!strcmp(path + path_len - 3, ".py")) {
-        return std::string("python.exe \"") + path + "\"";
-    } else if (!strcmp(path + path_len - 4, ".vbs")) {
+std::string SectionPluginGroup::withInterpreter(const fs::path &path) const {
+    const auto extString = path.extension().string();
+    if (extString == ".pl") {
+        return std::string("perl.exe \"") + path.string() + "\"";
+    } else if (extString == ".py") {
+        return std::string("python.exe \"") + path.string() + "\"";
+    } else if (extString == ".vbs") {
         // If this is a vbscript don't rely on the default handler for this
         // file extensions. This might be notepad or some other editor by
         // default on a lot of systems. So better add cscript as interpreter.
-        return std::string("cscript.exe //Nologo \"") + path + "\"";
-    } else if (!strcmp(path + path_len - 4, ".ps1")) {
+        return std::string("cscript.exe //Nologo \"") + path.string() + "\"";
+    } else if (extString == ".ps1") {
         // Same for the powershell scripts. Add the powershell interpreter.
         // To make this work properly two things are needed:
         //   1.) The powershell interpreter needs to be in PATH
@@ -538,8 +534,8 @@ std::string SectionPluginGroup::withInterpreter(const char *path) const {
         // actually, microsoft always installs the powershell interpreter to the
         // same directory (independent of the version) so even if it's not in
         // the path, we have a good chance with this fallback.
-        const char *fallback =
-            "C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe";
+        const std::string fallback{
+            "C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe"};
 
         char dummy;
         _winapi.SearchPathA(NULL, "powershell.exe", NULL, 1, &dummy, NULL);
@@ -548,14 +544,14 @@ std::string SectionPluginGroup::withInterpreter(const char *path) const {
                                       : fallback;
 
         return interpreter + " -NoLogo -ExecutionPolicy RemoteSigned \"& \'" +
-               path + "\'\"";
+               path.string() + "\'\"";
     } else {
-        return std::string("\"") + path + "\"";
+        return std::string("\"") + path.string() + "\"";
     }
 }
 
-std::string SectionPluginGroup::deriveCommand(const char *filename) const {
-    std::string full_path = _path + "\\" + filename;
+std::string SectionPluginGroup::deriveCommand(const fs::path &path) const {
+    std::string full_path = path.string();
     // If the path in question is a directory -> continue
     DWORD dwAttr = _winapi.GetFileAttributes(full_path.c_str());
     if (dwAttr != INVALID_FILE_ATTRIBUTES &&
@@ -563,7 +559,7 @@ std::string SectionPluginGroup::deriveCommand(const char *filename) const {
         return std::string();
     }
 
-    std::string command = withInterpreter(full_path.c_str());
+    std::string command = withInterpreter(path);
 
     std::string command_with_user;
     if (!_user.empty())
@@ -573,31 +569,27 @@ std::string SectionPluginGroup::deriveCommand(const char *filename) const {
 }
 
 script_container *SectionPluginGroup::createContainer(
-    const char *filename) const {
+    const fs::path &path) const {
+    const auto filename = path.filename().string();
     return new script_container(
-        deriveCommand(filename), _path + "\\" + filename, getCacheAge(filename),
+        deriveCommand(path), path.string(), getCacheAge(filename),
         getTimeout(filename), getMaxRetries(filename), _user, _type,
         getExecutionMode(filename), _env, _logger, _winapi);
 }
 
 void SectionPluginGroup::updateScripts() {
-    DIR *dir = opendir(_path.c_str());
-    if (dir) {
-        struct dirent *de;
-        while ((de = readdir(dir)) != 0) {
-            char *name = de->d_name;
+    for (const auto &de : fs::directory_iterator(_path)) {
+        const auto filename = de.path().filename();
 
-            if (name[0] != '.' && !fileInvalid(name)) {
-                std::string full_command = deriveCommand(name);
+        if (filename.string().front() != '.' && !fileInvalid(filename)) {
+            std::string full_command = deriveCommand(de.path());
 
-                // Look if there is already an section for this program
-                if (!full_command.empty() &&
-                    (_containers.find(full_command) == _containers.end())) {
-                    _containers[full_command].reset(createContainer(name));
-                }
+            // Look if there is already an section for this program
+            if (!full_command.empty() &&
+                (_containers.find(full_command) == _containers.end())) {
+                _containers[full_command].reset(createContainer(de.path()));
             }
         }
-        closedir(dir);
     }
 }
 

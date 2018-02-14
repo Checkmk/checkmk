@@ -25,11 +25,14 @@
 #ifndef SectionPluginGroup_h
 #define SectionPluginGroup_h
 
+#include <experimental/filesystem>
 #include <map>
 #include <string>
 #include "Configurable.h"
 #include "Section.h"
 #include "types.h"
+
+namespace fs = std::experimental::filesystem;
 
 class Environment;
 class SectionPlugin;
@@ -164,16 +167,16 @@ private:
     void updateStatistics();
 
     bool exists(script_container *cont) const;
-    bool fileInvalid(const char *filename) const;
-    std::string deriveCommand(const char *filename) const;
-    inline script_container *createContainer(const char *filename) const;
+    bool fileInvalid(const fs::path &filename) const;
+    std::string deriveCommand(const fs::path &path) const;
+    inline script_container *createContainer(const fs::path &path) const;
     void updateScripts();
-    std::string withInterpreter(const char *path) const;
+    std::string withInterpreter(const fs::path &path) const;
 
-    int getTimeout(const char *name) const;
-    int getCacheAge(const char *name) const;
-    int getMaxRetries(const char *name) const;
-    script_execution_mode getExecutionMode(const char *name) const;
+    int getTimeout(const std::string &name) const;
+    int getCacheAge(const std::string &name) const;
+    int getMaxRetries(const std::string &name) const;
+    script_execution_mode getExecutionMode(const std::string &name) const;
 
     std::string _path;
     script_type _type;

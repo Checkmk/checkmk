@@ -40,8 +40,8 @@ public:
     ~RegExp();
     RegExp(const RegExp &rhs) = delete;
     RegExp &operator=(const RegExp &rhs) = delete;
-    RegExp(RegExp &&rhs) = delete;
-    RegExp &operator=(RegExp &&rhs) = delete;
+    RegExp(RegExp &&rhs) noexcept;
+    RegExp &operator=(RegExp &&rhs) noexcept;
 
     std::string replace(const std::string &str,
                         const std::string &replacement) const;

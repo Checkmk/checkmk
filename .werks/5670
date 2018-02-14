@@ -1,0 +1,17 @@
+Title: Handle history files from older EC versions, which have fewer columns.
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p25
+Date: 1518616944
+
+History files written by older versions of the EC might contain fewer
+columns than a newer EC handles.  This fix fills these missing columns with
+their default values, avoiding log messages like
+
+   unknown precedence '' in table eventconsolehistory
+
+in cmc.log later.

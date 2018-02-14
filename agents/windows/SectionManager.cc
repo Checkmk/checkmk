@@ -129,7 +129,8 @@ void SectionManager::loadDynamicSections() {
 
 void SectionManager::loadStaticSections(Configuration &config,
                                         OnlyFromConfigurable &only_from) {
-    addSection(new SectionCheckMK(config, only_from, _logger, _winapi));
+    addSection(new SectionCheckMK(config, only_from, _script_statistics,
+                                  _logger, _winapi));
     addSection(new SectionUptime(_env, _logger, _winapi));
     addSection((new SectionDF(_env, _logger, _winapi))->withRealtimeSupport());
     addSection(new SectionPS(config, _logger, _winapi));
@@ -221,17 +222,19 @@ void SectionManager::loadStaticSections(Configuration &config,
                                   L"Value"}));
 
     addSection(new SectionPluginGroup(config, _env.localDirectory(), LOCAL,
-                                      _logger, _winapi));
+                                      _script_statistics, _logger, _winapi));
     for (const auto &include : *_script_local_includes) {
         addSection(new SectionPluginGroup(config, include.second, LOCAL,
-                                          _logger, _winapi, include.first));
+                                          _script_statistics, _logger, _winapi,
+                                          include.first));
     }
 
     addSection(new SectionPluginGroup(config, _env.pluginsDirectory(), PLUGIN,
-                                      _logger, _winapi));
+                                      _script_statistics, _logger, _winapi));
     for (const auto &include : *_script_plugin_includes) {
         addSection(new SectionPluginGroup(config, include.second, PLUGIN,
-                                          _logger, _winapi, include.first));
+                                          _script_statistics, _logger, _winapi,
+                                          include.first));
     }
 
     addSection(new SectionSpool(_env, _logger, _winapi));

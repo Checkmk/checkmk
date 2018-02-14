@@ -31,6 +31,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "WinApiAdaptor.h"
 #undef _WIN32_WINNT
@@ -49,6 +50,27 @@
 #ifndef INVALID_HANDLE_VALUE
 #define INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR)-1)
 #endif  // INVALID_HANDLE_VALUE
+
+class script_statistics_t {
+public:
+    script_statistics_t() { reset(); }
+    script_statistics_t(script_statistics_t &) = delete;
+    script_statistics_t &operator=(script_statistics_t &) = delete;
+
+    void reset() {
+        _statistics["plugin_count"] = 0;
+        _statistics["plugin_errors"] = 0;
+        _statistics["plugin_timeouts"] = 0;
+        _statistics["local_count"] = 0;
+        _statistics["local_errors"] = 0;
+        _statistics["local_timeouts"] = 0;
+    }
+
+    unsigned &operator[](const std::string &key) { return _statistics[key]; }
+
+private:
+    std::unordered_map<std::string, unsigned> _statistics;
+};
 
 class StringConversionError : public std::invalid_argument {
 public:

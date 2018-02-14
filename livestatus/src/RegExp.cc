@@ -95,6 +95,10 @@ RegExp::RegExp(const std::string &str, Case c)
 
 RegExp::~RegExp() = default;
 
+RegExp::RegExp(RegExp &&rhs) noexcept = default;
+
+RegExp &RegExp::operator=(RegExp &&rhs) noexcept = default;
+
 std::string RegExp::replace(const std::string &str,
                             const std::string &replacement) const {
     return _impl->replace(str, replacement);

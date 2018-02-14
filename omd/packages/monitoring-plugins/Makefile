@@ -17,7 +17,6 @@ build:
 prepare:
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz
-	cp check_icmp-master.c $(DIR)/plugins-root/check_icmp.c
 	set -e ; for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    patch -p1 -b -d $(DIR) < $$p ; \

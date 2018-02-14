@@ -1649,7 +1649,8 @@ def setup_cluster_environment(info):
 
     # To be able to start the DRBD volume we need to have the IP
     # addresses configured in the DRBD config active. Simply activate
-    # all IP addresses of the host on eth0. Will be cleaned up by reboot.
+    # all IP addresses of the host on the primary network interface.
+    # This will be cleaned up by reboot.
     enable_drbd_ip_addresses()
 
     cma.initialize_drbd()
@@ -1681,7 +1682,7 @@ def enable_drbd_ip_addresses():
     log("Enabling DRBD network address (%s: %s/%s)" % (drbd_if, address, netmask))
 
     subprocess.call(["ip", "a", "a", "%s/%s" % (address, netmask),
-                     "dev", "eth0"])
+                     "dev", cma_net.get_simple_interface_name()])
 
 
 def verify_cma_version_compatible(info):

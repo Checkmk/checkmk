@@ -207,19 +207,19 @@ def convert_history_line(values):
     else:
         values[22] = unsplit(values[22])
     if num_values <= 23:                 # event_ipaddress
-        values.append(history_columns[24][1])
+        values.append(StatusTableHistory.columns[24][1])
     if num_values <= 24:                 # event_orig_host
-        values.append(history_columns[25][1])
+        values.append(StatusTableHistory.columns[25][1])
     if num_values <= 25:                 # event_contact_groups_precedence
-        values.append(history_columns[26][1])
+        values.append(StatusTableHistory.columns[26][1])
     if num_values <= 26:                 # event_core_host
-        values.append(history_columns[27][1])
+        values.append(StatusTableHistory.columns[27][1])
     if num_values <= 27:                 # event_host_in_downtime
-        values.append(history_columns[28][1])
+        values.append(StatusTableHistory.columns[28][1])
     else:
         values[27] = values[27] == "1"
     if num_values <= 28:                 # event_match_groups_syslog_application
-        values.append(history_columns[29][1])
+        values.append(StatusTableHistory.columns[29][1])
     else:
         values[28] = unsplit(values[28])
 

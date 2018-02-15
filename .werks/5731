@@ -1,0 +1,12 @@
+Title: Custom icons and actions: Add new macro $USER_ID$
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1518708871
+Class: feature
+
+The macro <tt>$USER_ID</tt> has been added to the replacement mechanic of
+"Custom icons and actions" URL. This macro is replaced with the ID of the
+user that is currently working with the GUI.

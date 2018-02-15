@@ -67,6 +67,7 @@ import copy
 
 import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
+import config
 
 import cmk.paths
 import cmk.man_pages as man_pages
@@ -391,6 +392,7 @@ def replace_action_url_macros(url, what, row):
     macros = {
         "HOSTNAME"    : row['host_name'],
         "HOSTADDRESS" : row['host_address'],
+        "USER_ID"     : config.user.id,
     }
     if what == 'service':
         macros.update({

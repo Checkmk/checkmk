@@ -1,0 +1,41 @@
+Title: Use RE2 regular expression engine for Livestatus queries.
+Level: 2
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1518698354
+Class: feature
+
+Livestatus offers various places where a regular expression can be used, e.g. in
+its "Filter:" header for GET queries. The previous implementation had various
+problems, which have all been fixed by switching to a new regular expression
+engine (RE2, see https://github.com/google/re2):
+
+<ul>
+<li>Unicode was not handled correctly: RE2 fully understands UTF-8, so this has
+been fixed.</li>
+<li>Unbounded memory usage during matching: This could lead to stack overflows
+and CMC/Nagios crashes when trying to match some classes of regular expressions
+on long inputs. RE2 guarantees that this won't happen, it either complains that
+a regular expression is too complicated (which is hard to provoke) or runs in
+constant memory afterwards.</li>
+<li>Exponential runtime: Some classes of regular expressions could lead to
+exponential runtime, blocking Livestatus threads and using CPU time for some
+millenia or more. RE2's runtime is linear in the size of the regular expression
+and the input, so this has been fixed, too.</li>
+</ul>
+
+As an additional bonus, most of the time RE2 is quite a bit faster than the
+previous implementation.
+
+RE2's regular expression syntax (https://github.com/google/re2/wiki/Syntax) is
+basically a superset of the previous POSIX extended regular expression syntax
+(http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04),
+so you won't have to change your patterns.
+
+Note that one esoteric detail is different, though, namely the semantics of
+submatching (see https://swtch.com/~rsc/regexp/regexp2.html#posix). If you
+relied on this, you probably already had some problems, because almost every
+POSIX regex implementation out there was buggy in some way (see
+https://wiki.haskell.org/Regex_Posix#Results_and_Bugs).

@@ -79,7 +79,7 @@
 
 ** Compilation dependencies
 
-Currently mingw-w64 5.0.1-1 (http://mingw-w64.org), based on gcc 6.2.1, is used to build the agent.
+Currently mingw-w64 5.0.3 (http://mingw-w64.org), based on gcc 7.2.0, is used to build the agent.
 The compilation uses GNU autotools and takes place within a chroot jail. The bash script
 'make-agent' (sudo necessary!) is used for setting up the chroot jail and executing the desired
 build steps within it.

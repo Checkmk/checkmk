@@ -148,6 +148,9 @@ class DiscoveryEntry(Tuploid):
     def tuple(self):
         return (self.item, self.default_params)
 
+    def __repr__(self):
+        return "DiscoveryEntry(%r, %r)" % (self.item, self.default_params)
+
 
 class DiscoveryResult(object):
     """
@@ -167,3 +170,6 @@ class DiscoveryResult(object):
     def __eq__(self, other_value):
         return all(entry in other_value for entry in self.entries) and \
                all(other_entry in self.entries for other_entry in other_value)
+
+    def __repr__(self):
+        return "DiscoveryResult(%s)" % (",\n".join([repr(entry) for entry in self.entries]))

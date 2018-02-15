@@ -11,6 +11,7 @@ import sys
 class Globals(object):
     output_file = 'agentoutput.txt'
     only_from = None
+    host = None
     ipv4_to_ipv6 = {
         '127.0.0.1': '0:0:0:0:0:0:0:1',
         '10.1.2.3': '0:0:0:0:0:ffff:a01:203'
@@ -23,16 +24,26 @@ def testfile():
 
 
 @pytest.fixture(
-    params=[None, '127.0.0.1 10.1.2.3'],
-    ids=['only_from=None', 'only_from=127.0.0.1_10.1.2.3'])
+    params=[None, 'MontyPython'],
+    ids=['host_restriction=None', 'host_restriction=MontyPython'])
 def testconfig(request, config):
-    Globals.only_from = request.param
+    Globals.host = request.param
     section = 'check_mk'
     config.set("global", "sections", section)
     config.set("global", "crash_debug", "yes")
     if request.param:
-        config.set("global", "only_from", request.param)
+        config.set("global", "host", request.param)
     return config
+
+
+@pytest.fixture(
+    params=[None, '127.0.0.1 10.1.2.3'],
+    ids=['only_from=None', 'only_from=127.0.0.1_10.1.2.3'])
+def testconfig_only_from(request, testconfig):
+    Globals.only_from = request.param
+    if request.param:
+        testconfig.set("global", "only_from", request.param)
+    return testconfig
 
 
 @pytest.fixture(
@@ -117,20 +128,20 @@ def expected_output():
         # (drive_letter,
         #  re.escape(os.path.join(remotedir, 'log', 'success.log'))),
         (r'OnlyFrom: %s/32 %s/32 %s/128 %s/128' %
-         tuple(ipv4 + [Globals.ipv4_to_ipv6[i4] for i4 in ipv4])
-         if Globals.only_from else r'OnlyFrom: 0\.0\.0\.0/0')
+         tuple(ipv4 + [Globals.ipv4_to_ipv6[i4] for i4 in ipv4]) if
+         Globals.only_from and not Globals.host else r'OnlyFrom: 0\.0\.0\.0/0')
     ]
 
 
-def test_section_check_mk(request, testconfig, expected_output, actual_output,
-                          testfile):
+def test_section_check_mk(request, testconfig_only_from, expected_output,
+                          actual_output, testfile):
     # request.node.name gives test name
-    remotetest(expected_output, actual_output, testfile,
-               request.node.name)
+    remotetest(expected_output, actual_output, testfile, request.node.name)
 
 
-def test_section_check_mk__no_tcp(request, testconfig, expected_output,
-                                  actual_output_no_tcp, testfile):
+def test_section_check_mk__no_tcp(request, testconfig_only_from,
+                                  expected_output, actual_output_no_tcp,
+                                  testfile):
     # request.node.name gives test name
     remotetest(expected_output, actual_output_no_tcp, testfile,
                request.node.name)

@@ -48,7 +48,7 @@ info1= [ [None] + line for line in node1 ]
 #   '----------------------------------------------------------------------'
 
 @pytest.mark.parametrize("info,predicate",[
-    (info1, lambda result: True),
+    (info1, lambda result: ("foocluster", None) in result),
 ])
 def test_veritas_vcs_discovery_with_parse(check_manager, info, predicate):
     check = check_manager.get_check("veritas_vcs")

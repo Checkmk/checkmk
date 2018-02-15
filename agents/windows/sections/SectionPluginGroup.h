@@ -97,7 +97,6 @@ struct script_container {
         script_type _type, script_execution_mode _execution_mode,
         const Environment &_env, Logger *_logger, const WinApiAdaptor &_winapi);
 
-    script_container() = delete;
     script_container(const script_container &) = delete;
     ~script_container();
     script_container &operator=(const script_container &) = delete;

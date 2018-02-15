@@ -27,10 +27,34 @@
 
 #include <map>
 #include <memory>
+#include "Environment.h"
 #include "SettingsCollector.h"
 
 class ConfigurableBase;
 class Environment;
+
+class ParseError : public std::runtime_error {
+public:
+    explicit ParseError(const std::string &what, unsigned lineno)
+        : std::runtime_error(what), _lineno(lineno) {}
+
+    unsigned getLineNo() const { return _lineno; }
+
+private:
+    unsigned _lineno{0};
+};
+
+using ConfigKey = std::pair<std::string, std::string>;
+using ConfigurableMap =
+    std::map<ConfigKey, std::vector<std::unique_ptr<ConfigurableBase>>>;
+
+void readConfigFile(std::istream &is, const std::string &hostname,
+                    ConfigurableMap &configurables);
+
+inline std::string configFileName(bool local, const Environment &env) {
+    return env.agentDirectory() + "\\" + "check_mk" + (local ? "_local" : "") +
+           ".ini";
+}
 
 /* Example configuration file:
 
@@ -62,31 +86,16 @@ check = DISK_C: mrpe/check_disk -w C:
 check = MEM mrpe/check_mem -w 10 -c 20
  */
 class Configuration {
-    using ConfigKey = std::pair<std::string, std::string>;
-    using ConfigurableKey = std::pair<std::string, std::string>;
-    using ConfigurableMap =
-        std::map<ConfigurableKey,
-                 std::vector<std::unique_ptr<ConfigurableBase>>>;
-
-    ConfigKey config_key(const std::string &section, const std::string &key) {
-        return std::make_pair(section, key);
-    }
-
 public:
-    Configuration(const Environment &env) : _environment(env) {}
+    explicit Configuration(const Environment &env) : _environment(env) {}
+    Configuration(Configuration &) = delete;
+    Configuration &operator=(const Configuration &) = delete;
 
     void outputConfigurables(std::ostream &out);
     void readSettings();
 
     void reg(const char *section, const char *key, ConfigurableBase *cfg);
     inline const Environment &getEnvironment() const { return _environment; }
-
-    static std::string configFileName(bool local, const Environment &env);
-
-private:
-    void readConfigFile(const std::string &filename);
-
-    bool checkHostRestriction(const std::string &input);
 
 private:
     ConfigurableMap _configurables;

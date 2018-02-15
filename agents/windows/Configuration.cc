@@ -31,11 +31,23 @@
 #include <fstream>
 #include <regex>
 #include "Configurable.h"
-#include "Environment.h"
 #include "PerfCounter.h"
 #include "stringutil.h"
 
 #define __STDC_FORMAT_MACROS
+
+namespace {
+
+bool checkHostRestriction(const std::string &hostname,
+                          const std::string &input) {
+    const auto patterns = tokenize(input, "\\s+");
+    return std::any_of(patterns.cbegin(), patterns.cend(),
+                       [&hostname](const auto &p) {
+                           return globmatch(p.c_str(), hostname.c_str());
+                       });
+}
+
+}  // namespace
 
 void Configuration::readSettings() {
     for (bool local : {false, true}) {
@@ -44,8 +56,15 @@ void Configuration::readSettings() {
                 entry->startFile();
             }
         }
-
-        readConfigFile(configFileName(local, _environment));
+        const auto filename = configFileName(local, _environment);
+        try {
+            std::ifstream ifs(filename);
+            readConfigFile(ifs, _environment.hostname(), _configurables);
+        } catch (const ParseError &e) {
+            std::cerr << e.what() << " line " << e.getLineNo() << " in "
+                      << filename << std::endl;
+            exit(1);
+        }
     }
 }
 
@@ -53,20 +72,6 @@ void Configuration::reg(const char *section, const char *key,
                         ConfigurableBase *cfg) {
     _configurables[std::pair<std::string, std::string>(section, key)].push_back(
         std::unique_ptr<ConfigurableBase>(cfg));
-}
-
-std::string Configuration::configFileName(bool local, const Environment &env) {
-    return std::string(env.agentDirectory()) + "\\" + "check_mk" +
-           (local ? "_local" : "") + ".ini";
-}
-
-bool Configuration::checkHostRestriction(const std::string &input) {
-    std::string hostname = _environment.hostname();
-    const auto patterns = tokenize(input, "\\s+");
-    return std::any_of(patterns.cbegin(), patterns.cend(),
-                       [&hostname](const auto &p) {
-                           return globmatch(p.c_str(), hostname.c_str());
-                       });
 }
 
 void Configuration::outputConfigurables(std::ostream &out) {
@@ -95,9 +100,9 @@ void Configuration::outputConfigurables(std::ostream &out) {
     }
 }
 
-void Configuration::readConfigFile(const std::string &filename) {
-    std::ifstream ifs(filename);
-    if (!ifs) {
+void readConfigFile(std::istream &is, const std::string &hostname,
+                    ConfigurableMap &configurables) {
+    if (!is) {
         return;
     }
 
@@ -105,7 +110,7 @@ void Configuration::readConfigFile(const std::string &filename) {
     bool is_active = true;  // false in sections with host restrictions
     std::string section;
 
-    for (unsigned lineno = 1; std::getline(ifs, line); ++lineno) {
+    for (unsigned lineno = 1; std::getline(is, line); ++lineno) {
         ltrim(line);
         rtrim(line);
         if (line.empty() || line.front() == '#' || line.front() == ';')
@@ -120,9 +125,7 @@ void Configuration::readConfigFile(const std::string &filename) {
             // split up line at = sign
             const auto tokens = tokenize(line, "=");
             if (tokens.size() != 2) {
-                std::cerr << "Invalid line " << lineno << " in " << filename
-                          << "." << std::endl;
-                exit(1);
+                throw ParseError("Invalid", lineno);
             }
             std::string variable{tokens[0]};
             rtrim(variable);
@@ -133,7 +136,8 @@ void Configuration::readConfigFile(const std::string &filename) {
             rtrim(value);
 
             // handle host restriction
-            if (variable == "host") is_active = checkHostRestriction(value);
+            if (variable == "host")
+                is_active = checkHostRestriction(hostname, value);
 
             // skip all other variables for non-relevant hosts
             else if (!is_active)
@@ -146,9 +150,9 @@ void Configuration::readConfigFile(const std::string &filename) {
             else {
                 bool found = false;
                 size_t key_len = strcspn(variable.c_str(), " \n");
-                auto map_iter = _configurables.find(
-                    config_key(section, std::string(variable, 0, key_len)));
-                if (map_iter != _configurables.end()) {
+                auto map_iter = configurables.find(
+                    ConfigKey(section, std::string(variable, 0, key_len)));
+                if (map_iter != configurables.end()) {
                     for (auto &cfg : map_iter->second) {
                         try {
                             cfg->feed(variable, value);
@@ -160,10 +164,9 @@ void Configuration::readConfigFile(const std::string &filename) {
                     }
                 }
                 if (!found) {
-                    std::cerr << "Invalid entry (" << section << ":" << variable
-                              << ") in " << filename << " line " << lineno
-                              << std::endl;
-                    exit(1);
+                    throw ParseError(
+                        "Invalid entry (" + section + ":" + variable + ")",
+                        lineno);
                 }
             }
         }

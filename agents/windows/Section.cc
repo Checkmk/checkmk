@@ -27,6 +27,29 @@
 #include "Environment.h"
 #include "Logger.h"
 
+namespace section_helpers {
+
+static const double SEC_TO_UNIX_EPOCH = 11644473600.0;
+static const double WINDOWS_TICK = 10000000.0;
+
+double file_time(const FILETIME *filetime) {
+    ULARGE_INTEGER uli{0};
+    uli.LowPart = filetime->dwLowDateTime;
+    uli.HighPart = filetime->dwHighDateTime;
+
+    return (double(uli.QuadPart) / WINDOWS_TICK) - SEC_TO_UNIX_EPOCH;
+}
+
+double current_time(const WinApiAdaptor &winapi) {
+    SYSTEMTIME systime{0};
+    FILETIME filetime{0};
+    winapi.GetSystemTime(&systime);
+    winapi.SystemTimeToFileTime(&systime, &filetime);
+    return file_time(&filetime);
+}
+
+}  // namespace section_helpers
+
 Section::Section(const std::string &outputName, const std::string &configName,
                  const Environment &env, Logger *logger,
                  const WinApiAdaptor &winapi)

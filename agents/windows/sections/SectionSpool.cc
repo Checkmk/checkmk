@@ -32,8 +32,6 @@
 
 namespace fs = std::experimental::filesystem;
 
-extern double file_time(const FILETIME *filetime);
-
 SectionSpool::SectionSpool(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
     : Section("spool", "spool", env, logger, winapi) {
@@ -63,7 +61,8 @@ bool SectionSpool::produceOutputInner(std::ostream &out) {
                                         FindExSearchNameMatch, NULL, 0),
                 _winapi};
             if (searchHandle) {
-                double mtime = file_time(&(filedata.ftLastWriteTime));
+                double mtime =
+                    section_helpers::file_time(&(filedata.ftLastWriteTime));
                 int age = now - mtime;
                 if (age > max_age) {
                     Informational(_logger)

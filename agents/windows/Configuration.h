@@ -36,7 +36,7 @@ class Environment;
 
    [global]
 # Process this logfile only on the following hosts
-only_on = zhamzr12
+host = zhamzr12
 
 # Restrict access to certain IP addresses
 only_from = 127.0.0.1 192.168.56.0/24

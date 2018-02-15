@@ -171,5 +171,8 @@ class DiscoveryResult(object):
         return all(entry in other_value for entry in self.entries) and \
                all(other_entry in self.entries for other_entry in other_value)
 
+    def __contains__(self, value):
+        return value in self.entries
+
     def __repr__(self):
         return "DiscoveryResult(%s)" % (",\n".join([repr(entry) for entry in self.entries]))

@@ -37,6 +37,14 @@
 class Environment;
 class Logger;
 
+namespace section_helpers {
+
+double file_time(const FILETIME *filetime);
+
+double current_time(const WinApiAdaptor &winapi);
+
+}  // namespace section_helpers
+
 class Section {
     friend class SectionGroup;
 

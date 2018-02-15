@@ -172,4 +172,5 @@ check_info["zpool_status"] = {
     'check_function'      : check_zpool_status,
     'inventory_function'  : inventory_zpool_status,
     'service_description' : 'zpool status',
+    'group'               : 'zpool_status',
 }

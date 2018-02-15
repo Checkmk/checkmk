@@ -26,6 +26,8 @@
 
 # WATO-Module for the rules and aggregations of Check_MK BI
 
+import table
+
 #   .--Base class----------------------------------------------------------.
 #   |             ____                        _                            |
 #   |            | __ )  __ _ ___  ___    ___| | __ _ ___ ___              |
@@ -1039,10 +1041,6 @@ class ModeBIEditPack(ModeBI):
 
 
 class ModeBIAggregations(ModeBI):
-    def __init__(self):
-        ModeBI.__init__(self)
-
-
     def title(self):
         return ModeBI.title(self) + " - " + _("Aggregations")
 

@@ -11,6 +11,9 @@
     * 5608 FIX: temperature.include: Fixed device levels handling
     * 5557 FIX: check_mk_agent.aix: Fixed bug in uptime because AIX is not able to interpret ? and + in regexes
 
+    Multisite:
+    * 4757 SEC: Fixed possible reflected XSS in webapi.py...
+
     WATO:
     * 4222 FIX: Services of host page: Fixed encoding issue for hosts with umlauts in alias
 

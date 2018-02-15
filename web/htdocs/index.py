@@ -63,7 +63,7 @@ def handler(req, fields = None, is_profiling = False):
                 try:
                     handler()
                 except Exception, e:
-                    html.write("%s" % e)
+                    html.write(html.attrencode("%s" % e))
                     if config.debug:
                         html.write(html.attrencode(format_exception()))
                 raise FinalizeRequest()
@@ -152,6 +152,7 @@ def handler(req, fields = None, is_profiling = False):
             plain_title = e.plain_title
 
         if plain_error():
+            html.set_output_format("text")
             html.write("%s: %s\n" % (plain_title, e))
         elif not fail_silently():
             html.header(title)
@@ -182,7 +183,8 @@ def handler(req, fields = None, is_profiling = False):
             msg = msg.encode('utf-8')
         logger(LOG_ERR, msg)
         if plain_error():
-            html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
+            html.set_output_format("text")
+            html.write(_("Internal error") + ": %s\n" % e)
         elif not fail_silently():
             modules.get_handler("gui_crash")()
         response_code = apache.OK

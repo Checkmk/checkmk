@@ -1,0 +1,12 @@
+Title: Fix display of CustomGraphs for metrics without current performance data
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1518706513
+Class: fix
+
+The graphing system was unable to display metrics within a custom graph if the corresponding performance-data is currently not available. This would for example be the case if a check isin a temporary "Unknown" state. 
+
+The rendering now correctly relies on the corresponding historical metric data instead of discarding the metric completely.

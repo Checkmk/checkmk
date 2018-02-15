@@ -653,6 +653,7 @@ register_configvar(group,
                                                      '<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>'
                                                      '<li>$HOSTADDRESS$: Contains the network address of the host</li>'
                                                      '<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>'
+                                                     '<li>$USER_ID$: The user ID of the currently active user</li>'
                                                      '</ul>'),
                                             size = 80,
                                         ),

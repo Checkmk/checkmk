@@ -224,7 +224,7 @@ unit_info["l/s"] = {
 }
 
 unit_info["rpm"] = {
-    "title"  : _("Rounds Per Minute"),
+    "title"  : _("Rotations per minute"),
     "symbol" : _("rpm"),
     "render" : lambda v: physical_precision(v, 4, _("rpm")),
 }

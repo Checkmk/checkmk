@@ -10,7 +10,7 @@ Class: feature
 Livestatus offers various places where a regular expression can be used, e.g. in
 its "Filter:" header for GET queries. The previous implementation had various
 problems, which have all been fixed by switching to a new regular expression
-engine (RE2, see https://github.com/google/re2):
+engine <a href="https://github.com/google/re2">RE2</a>:
 
 <ul>
 <li>Unicode was not handled correctly: RE2 fully understands UTF-8, so this has
@@ -29,13 +29,15 @@ and the input, so this has been fixed, too.</li>
 As an additional bonus, most of the time RE2 is quite a bit faster than the
 previous implementation.
 
-RE2's regular expression syntax (https://github.com/google/re2/wiki/Syntax) is
-basically a superset of the previous POSIX extended regular expression syntax
-(http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04),
+RE2's regular expression <a
+href="https://github.com/google/re2/wiki/Syntax">syntax</a> is basically a
+superset of the previous POSIX extended regular expression <a
+href="http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04">syntax</a>,
 so you won't have to change your patterns.
 
-Note that one esoteric detail is different, though, namely the semantics of
-submatching (see https://swtch.com/~rsc/regexp/regexp2.html#posix). If you
-relied on this, you probably already had some problems, because almost every
-POSIX regex implementation out there was buggy in some way (see
-https://wiki.haskell.org/Regex_Posix#Results_and_Bugs).
+Note that one esoteric detail is different, though, namely the <a
+href="https://swtch.com/~rsc/regexp/regexp2.html#posix">semantics of
+submatching</a>. If you relied on this, you probably already had some problems,
+because almost every POSIX regex implementation out there was <a
+href="https://wiki.haskell.org/Regex_Posix#Results_and_Bugs">buggy</a> in some
+way.

@@ -33,14 +33,6 @@ import cmk.paths
 from log import logger
 
 
-# TODO: Deprecate this function! Don't use this anymore. Use the store.* functions!
-def create_user_file(path, mode):
-    path = make_utf8(path)
-    f = file(path, mode, 0)
-    os.chmod(path, 0660)
-    return f
-
-
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
 # in using code.
 def savefloat(f):

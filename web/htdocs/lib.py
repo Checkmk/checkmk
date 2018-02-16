@@ -337,36 +337,6 @@ def drop_dotzero(v, digits=2):
         return t
 
 
-# Renders a floating point number with the given number
-# of non-zero digits. Example if precision is 3:
-# 12.40349034         -> 12.4
-# 1.23894859348563478 -> 1.24
-# 0.00001239898568978 -> 0.0000124
-# 12400000.00230923   -> 12400000
-
-def render_float_with_precision(value, precision):
-    if value == 0:
-        return "0"
-
-    elif value < 0:
-        return "-" + render_float_with_precision(-value, precision)
-
-    mantissa, exponent = frexp10(float(value))
-    # exponent + 1 is the number of digits left of the .
-
-    # Digits left of . are more than precision -> no fraction.
-    if exponent + 1 >= precision:
-        return "%.0f" % value
-
-    # Allow so many digits after comma that we have at least 'precision'
-    # valid non-zero digits
-    else:
-        digits = precision - exponent - 1
-        return "%%.%df" % digits % value
-
-
-
-
 def number_human_readable(n, precision=1, unit="B"):
     base = 1024.0
     if unit == "Bit":

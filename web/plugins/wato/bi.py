@@ -26,7 +26,11 @@
 
 # WATO-Module for the rules and aggregations of Check_MK BI
 
-import managed
+if cmk.is_managed_edition():
+    import managed
+else:
+    managed = None
+
 import table
 
 #   .--Base class----------------------------------------------------------.

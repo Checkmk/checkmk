@@ -8926,7 +8926,9 @@ def mode_notifications(phase):
                 table.cell(_("Host"), context.get("HOSTNAME", ""))
                 table.cell(_("Service"), context.get("SERVICEDESC", ""))
                 output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
-                table.cell(_("Plugin output"), format_plugin_output(output))
+
+                import views
+                table.cell(_("Plugin output"), views.format_plugin_output(output))
 
                 # Add toggleable notitication context
                 table.row(class_="notification_context hidden",

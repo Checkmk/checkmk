@@ -1761,23 +1761,6 @@ multisite_painters["host_services"] = {
 }
 
 
-def paint_host_list(site, hosts):
-    entries = []
-    for host in hosts:
-        args = [
-            ("view_name", "hoststatus"),
-            ("site",      site),
-            ("host",      host),
-        ]
-
-        if html.var("display_options"):
-            args.append(("display_options", html.var("display_options")))
-
-        url = html.makeuri_contextless(args, filename="view.py")
-        entries.append(html.render_a(host, href=url))
-
-    return "", HTML(", ").join(entries)
-
 multisite_painters["host_parents"] = {
     "title"   : _("Host's parents"),
     "short"   : _("Parents"),

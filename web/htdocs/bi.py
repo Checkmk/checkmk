@@ -3138,7 +3138,8 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
             html.close_span()
 
-        output = format_plugin_output(effective_state["output"])
+        import views
+        output = views.format_plugin_output(effective_state["output"])
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:

@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringMacroColumn.h"
-#include <strings.h>
 #include <cstdlib>
 #include <cstring>
 #include "Column.h"
+#include "RegExp.h"
 #include "Row.h"
 
 std::string OffsetStringMacroColumn::getValue(Row row) const {
@@ -152,8 +152,9 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
 // static
 const char *OffsetStringMacroColumn::expandCustomVariables(
     const char *varname, const customvariablesmember *custvars) {
+    RegExp regExp(varname, RegExp::Case::ignore, RegExp::Syntax::literal);
     for (; custvars != nullptr; custvars = custvars->next) {
-        if (strcasecmp(varname, custvars->variable_name) == 0) {
+        if (regExp.match(custvars->variable_name)) {
             return custvars->variable_value;
         }
     }

@@ -105,14 +105,23 @@ std::unique_ptr<RegExp> makeRegExpFor(RelationalOperator relOp,
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
             return std::make_unique<RegExp>(
-                value, (relOp == RelationalOperator::matches_icase ||
-                        relOp == RelationalOperator::doesnt_match_icase)
-                           ? RegExp::Case::ignore
-                           : RegExp::Case::respect);
+                value,
+                (relOp == RelationalOperator::matches_icase ||
+                 relOp == RelationalOperator::doesnt_match_icase)
+                    ? RegExp::Case::ignore
+                    : RegExp::Case::respect,
+                RegExp::Syntax::pattern);
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
+            return std::make_unique<RegExp>(
+                value,
+                (relOp == RelationalOperator::equal_icase ||
+                 relOp == RelationalOperator::not_equal_icase)
+                    ? RegExp::Case::ignore
+                    : RegExp::Case::respect,
+                RegExp::Syntax::literal);
         case RelationalOperator::less:
         case RelationalOperator::greater_or_equal:
         case RelationalOperator::greater:

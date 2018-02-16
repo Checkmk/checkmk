@@ -32,11 +32,12 @@
 class RegExp {
 public:
     enum class Case { ignore, respect };
+    enum class Syntax { pattern, literal };
 
     // Standard pimpl boileplate code, see Scott Meyer's "Effective Modern C++",
     // item 22: "When using the Pimpl Idiom, define special member functions in
     // the implementation file."
-    RegExp(const std::string &str, Case c);
+    RegExp(const std::string &str, Case c, Syntax s);
     ~RegExp();
     RegExp(const RegExp &rhs) = delete;
     RegExp &operator=(const RegExp &rhs) = delete;
@@ -45,6 +46,7 @@ public:
 
     std::string replace(const std::string &str,
                         const std::string &replacement) const;
+    bool match(const std::string &str) const;
     bool search(const std::string &str) const;
 
 private:

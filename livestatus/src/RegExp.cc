@@ -29,12 +29,12 @@
 // RE2 implementation
 // -----------------------------------------------------------------------------
 #include <re2/re2.h>
-#include "re2/stringpiece.h"
+#include <re2/stringpiece.h>
 #include <stdexcept>
 
 class RegExp::Impl {
 public:
-    Impl(const std::string &str, Case c) : _regex(str, opts(c)) {
+    Impl(const std::string &str, Case c, Syntax s) : _regex(str, opts(c, s)) {
         if (!_regex.ok()) {
             throw std::runtime_error(_regex.error());
         }
@@ -45,6 +45,10 @@ public:
         return str;
     }
 
+    bool match(const std::string &str) const {
+        return RE2::FullMatch(str, _regex);
+    }
+
     bool search(const std::string &str) const {
         return RE2::PartialMatch(str, _regex);
     }
@@ -52,9 +56,10 @@ public:
 private:
     RE2 _regex;
 
-    static RE2::Options opts(Case c) {
+    static RE2::Options opts(Case c, Syntax s) {
         RE2::Options options{RE2::Quiet};
         options.set_case_sensitive(c == Case::respect);
+        options.set_literal(s == Syntax::literal);
         return options;
     }
 };
@@ -66,7 +71,8 @@ private:
 #include <regex>
 class RegExp::Impl {
 public:
-    Impl(const std::string &str, Case c)
+    // TODO(sp): Handle Syntax == literal.
+    Impl(const std::string &str, Case c, Syntax s)
         : _regex(str, c == Case::respect
                           ? std::regex::extended
                           : std::regex::extended | std::regex::icase) {}
@@ -75,6 +81,10 @@ public:
                         const std::string &replacement) {
         return std::regex_replace(str, _regex, replacement,
                                   std::regex_constants::format_sed);
+    }
+
+    bool match(const std::string &str) const {
+        return regex_match(str, _regex);
     }
 
     bool search(const std::string &str) const {
@@ -90,8 +100,8 @@ private:
 // boilerplate pimpl code
 // -----------------------------------------------------------------------------
 
-RegExp::RegExp(const std::string &str, Case c)
-    : _impl(std::make_unique<Impl>(str, c)) {}
+RegExp::RegExp(const std::string &str, Case c, Syntax s)
+    : _impl(std::make_unique<Impl>(str, c, s)) {}
 
 RegExp::~RegExp() = default;
 
@@ -103,5 +113,7 @@ std::string RegExp::replace(const std::string &str,
                             const std::string &replacement) const {
     return _impl->replace(str, replacement);
 }
+
+bool RegExp::match(const std::string &str) const { return _impl->match(str); }
 
 bool RegExp::search(const std::string &str) const { return _impl->search(str); }

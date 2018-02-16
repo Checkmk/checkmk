@@ -34,6 +34,7 @@ import sites
 import livestatus
 from lib import *
 from gui_exceptions import MKGeneralException
+import cmk.utils
 import cmk.store as store
 
 
@@ -54,7 +55,9 @@ def page_graph():
     current_value = get_current_perfdata(host, service, dsname)
 
     dir = "%s/prediction/%s/%s/%s" % (
-            cmk.paths.var_dir, host, pnp_cleanup(service), pnp_cleanup(dsname))
+            cmk.paths.var_dir, host,
+            cmk.utils.pnp_cleanup(service),
+            cmk.utils.pnp_cleanup(dsname))
 
     if not os.path.exists(dir):
         raise MKGeneralException(_("There is currently no prediction information "

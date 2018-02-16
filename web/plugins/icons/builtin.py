@@ -57,6 +57,8 @@
 #    'paint':           paint_icon_image,
 #})
 
+import cmk.utils
+
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
 #   |         / \   ___| |_(_) ___  _ __   |  \/  | ___ _ __  _   _        |
@@ -280,11 +282,11 @@ multisite_icons_and_actions['status_acknowledged'] = {
 # Intelligent Links to PNP4Nagios 0.6.X
 def pnp_url(row, what, how = 'graph'):
     sitename = row["site"]
-    host = pnp_cleanup(row["host_name"])
+    host = cmk.utils.pnp_cleanup(row["host_name"])
     if what == "host":
         svc = "_HOST_"
     else:
-        svc = pnp_cleanup(row["service_description"])
+        svc = cmk.utils.pnp_cleanup(row["service_description"])
     url_prefix = config.site(sitename)["url_prefix"]
     if html.mobile:
         url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" % \

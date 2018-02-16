@@ -39,3 +39,13 @@ def make_utf8(x):
 def quote_shell_string(s):
     """Quote string for use as arguments on the shell"""
     return "'" + s.replace("'", "'\"'\"'") + "'"
+
+
+# TODO: Change to better name like: quote_pnp_string()
+def pnp_cleanup(s):
+    """Quote a string (host name or service description) in PNP4Nagios format"""
+    return s \
+        .replace(' ', '_') \
+        .replace(':', '_') \
+        .replace('/', '_') \
+        .replace('\\', '_')

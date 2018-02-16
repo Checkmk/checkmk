@@ -101,6 +101,7 @@ check_mk_agent_SOURCES = check_mk_agent.cc
 MontyPython_SOURCES = it/MontyPython.cc
 
 WindowsAgentTest_SOURCES = \
+        test/ConfigurationTest.cc \
         test/EnvironmentTest.cc \
         test/EventLogVistaTest.cc \
         test/MockLogger.cc \

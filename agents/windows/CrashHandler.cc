@@ -137,9 +137,9 @@ LONG WINAPI CrashHandler::handleCrash(LPEXCEPTION_POINTERS ptrs) const {
                    << " from address "
                    << ptrs->ExceptionRecord->ExceptionAddress << " (revision "
                    << VCS_REV << ")";
-    
+
 #ifdef __x86_64
-    
+
     HANDLE proc = ::GetCurrentProcess();
     ::SymInitialize(proc, nullptr, TRUE);
 

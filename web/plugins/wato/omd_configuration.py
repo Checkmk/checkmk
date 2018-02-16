@@ -328,7 +328,7 @@ class ConfigDomainApache(watolib.ConfigDomain):
 
             return []
         except Exception, e:
-            log_exception()
+            logger.exception()
             return ["Failed to activate apache configuration: %s" % (traceback.format_exc())]
 
 
@@ -432,7 +432,7 @@ class ConfigDomainRRDCached(watolib.ConfigDomain):
 
             return []
         except Exception, e:
-            log_exception()
+            logger.exception()
             return ["Failed to activate rrdcached configuration: %s" % (traceback.format_exc())]
 
 

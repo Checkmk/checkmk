@@ -324,9 +324,9 @@ class LDAPUserConnector(UserConnector):
             server = locator.locate(domain)
             self._logger.debug('  DISCOVERY: Discovered server %r from %r' % (server, domain))
             return server
-        except Exception, e:
+        except Exception:
             self._logger.debug('  DISCOVERY: Failed to discover a server from domain %r' % domain)
-            log_exception()
+            self._logger.exception()
             self._logger.debug('  DISCOVERY: Try to use domain DNS name %r as server' % domain)
             return domain
 

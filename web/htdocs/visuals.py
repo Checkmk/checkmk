@@ -27,6 +27,7 @@
 import os, copy, sys
 import json
 
+from log import logger
 from lib import *
 from gui_exceptions import MKGeneralException, MKAuthException, MKUserError, MKInternalError
 from valuespec import *
@@ -948,7 +949,7 @@ def show_filter(f):
     except Exception, e:
         #TODO: html.plugged_text = ''
         #TODO: html.unplug()
-        log_exception()
+        logger.exception()
         tb = sys.exc_info()[2]
         tbs = ['Traceback (most recent call last):\n']
         tbs += traceback.format_tb(tb)

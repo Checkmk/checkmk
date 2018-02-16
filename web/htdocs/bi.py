@@ -1375,7 +1375,7 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
 
     except Exception, e:
         log("Exception in BI compilation main loop:")
-        log_exception()
+        logger.exception()
     finally:
         if g_bi_cache_manager.get_error_info():
             raise MKConfigError(g_bi_cache_manager.get_error_info())

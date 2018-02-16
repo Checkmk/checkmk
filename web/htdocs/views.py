@@ -31,6 +31,7 @@ import bi
 import inspect
 import livestatus
 from lib import *
+from log import logger
 from gui_exceptions import MKGeneralException, MKUserError, MKInternalError
 
 import cmk.paths
@@ -754,7 +755,7 @@ class Cell(object):
         try:
             tdclass, content = self.render_content(row)
         except:
-            log_exception("Failed to render painter '%s' (Row: %r)" %
+            logger.exception("Failed to render painter '%s' (Row: %r)" %
                                         (self._painter_name, row))
             raise
 

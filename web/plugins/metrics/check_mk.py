@@ -126,7 +126,7 @@ unit_info["%"] = {
     "title"  : _("%"),
     "description" : _("Percentage (0...100)"),
     "symbol" : _("%"),
-    "render" : lambda v: percent_human_redable(v, 3),
+    "render" : lambda v: cmk.render.percent(v, precision=3),
 }
 
 unit_info["s"] = {
@@ -279,7 +279,7 @@ unit_info["ppm"] = {
 unit_info["%/m"] = {
     "title"     : _("Percent Per Meter"),
     "symbol"    : _("%/m"),
-    "render"    : lambda v: percent_human_redable(v, 3) + _("/m"),
+    "render"    : lambda v: cmk.render.percent(v, precision=3) + _("/m"),
 }
 
 unit_info["bar"] = {

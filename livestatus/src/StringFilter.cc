@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringFilter.h"
-#include <strings.h>
 #include <algorithm>
 #include "Filter.h"
 #include "RegExp.h"
@@ -42,19 +41,18 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
     std::string act_string = _column.getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:
-            return act_string == _value;
+        case RelationalOperator::equal_icase:
+            return _regExp->match(act_string);
         case RelationalOperator::not_equal:
-            return act_string != _value;
+        case RelationalOperator::not_equal_icase:
+            return !_regExp->match(act_string);
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
             return _regExp->search(act_string);
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
             return !_regExp->search(act_string);
-        case RelationalOperator::equal_icase:
-            return strcasecmp(_value.c_str(), act_string.c_str()) == 0;
-        case RelationalOperator::not_equal_icase:
-            return strcasecmp(_value.c_str(), act_string.c_str()) != 0;
+            // FIXME: The cases below are nonsense for UTF-8...
         case RelationalOperator::less:
             return act_string < _value;
         case RelationalOperator::greater_or_equal:

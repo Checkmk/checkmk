@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsDictFilter.h"
-#include <strings.h>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -53,19 +52,18 @@ bool CustomVarsDictFilter::accepts(
     auto act_string = it == cvm.end() ? "" : it->second;
     switch (_relOp) {
         case RelationalOperator::equal:
-            return act_string == _ref_string;
+        case RelationalOperator::equal_icase:
+            return _regExp->match(_ref_string);
         case RelationalOperator::not_equal:
-            return act_string != _ref_string;
+        case RelationalOperator::not_equal_icase:
+            return !_regExp->match(_ref_string);
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
             return _regExp->search(act_string);
         case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
             return !_regExp->search(act_string);
-        case RelationalOperator::equal_icase:
-            return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
-        case RelationalOperator::not_equal_icase:
-            return strcasecmp(_ref_string.c_str(), act_string.c_str()) != 0;
+            // FIXME: The cases below are nonsense for UTF-8...
         case RelationalOperator::less:
             return act_string < _ref_string;
         case RelationalOperator::greater_or_equal:

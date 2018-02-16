@@ -1,0 +1,27 @@
+#!/bin/bash
+# The script extracts the simpleini library necessary for building the Windows
+# agent.
+
+set -e
+sha1=2af65fc
+[[ -z $CHROOT_BUILD_DIR ]] && exit 1
+
+# Load the variables $archs and $common from build.sh:
+. $CHROOT_BUILD_DIR/agents/windows/build.sh
+
+cd $CHROOT_BUILD_DIR/agents/windows
+mkdir simpleini
+cd simpleini
+tar xzf /$CHROOT_BUILD_DIR/omd/packages/simpleini/simpleini-${sha1}.tar.gz
+cd ..
+
+# 1) Copy the library contents to the shared mingw-w64 path.
+# Actually, only the header is needed but the other stuff won't harm.
+cp -r simpleini /usr/share/mingw-w64/include/
+
+# 2) Link the shared simpleini path to 32 & 64 bit mingw-g++ default include paths:
+for arch in 32 64 ; do
+    ln -sf ../../share/mingw-w64/include/simpleini /usr/${archs[$arch]}${common}/include/simpleini
+done
+
+rm -rf simpleini

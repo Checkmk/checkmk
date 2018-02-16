@@ -128,12 +128,6 @@ def pnp_cleanup(s):
         .replace('\\', '_')
 
 
-# Quote string for use as arguments on the shell
-# TODO: Move to Check_MK library
-def quote_shell_string(s):
-    return "'" + s.replace("'", "'\"'\"'") + "'"
-
-
 def log_exception(msg=None):
     if msg is None:
         msg = _('Internal error')

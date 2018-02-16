@@ -47,6 +47,7 @@ from gui_exceptions import MKGeneralException, MKUserError, MKInternalError, \
                            MKUnauthenticatedException, MKAuthException
 
 import livestatus
+import cmk.utils
 from cmk.regex import regex
 
 import json
@@ -1569,8 +1570,8 @@ def render_graph_pnp(graph_template, translated_metrics):
     vertical_label = graph_template.get("vertical_label", vertical_label)
 
     rrdgraph_arguments += " --vertical-label %s --title %s " % (
-        quote_shell_string(vertical_label or " "),
-        quote_shell_string(graph_title))
+        cmk.utils.quote_shell_string(vertical_label or " "),
+        cmk.utils.quote_shell_string(graph_title))
 
     min_value, max_value = get_graph_range(graph_template, translated_metrics)
     if min_value != None and max_value != None:

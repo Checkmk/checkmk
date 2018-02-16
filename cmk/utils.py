@@ -34,3 +34,8 @@ def make_utf8(x):
         return x.encode('utf-8')
     else:
         return x
+
+
+def quote_shell_string(s):
+    """Quote string for use as arguments on the shell"""
+    return "'" + s.replace("'", "'\"'\"'") + "'"

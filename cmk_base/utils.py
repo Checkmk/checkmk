@@ -32,7 +32,11 @@ import signal
 import time
 
 from cmk.exceptions import MKGeneralException, MKTerminate
-from cmk.utils import make_utf8
+
+# TODO: Clean up the call sites
+from cmk.utils import \
+    make_utf8, \
+    quote_shell_string
 
 # TODO: Try to find a better place for them.
 
@@ -46,11 +50,6 @@ def worst_service_state(*states):
         return 2
     else:
         return max(states)
-
-
-def quote_shell_string(s):
-    """Quote string for use as arguments on the shell"""
-    return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
 # Works with Check_MK version (without tailing .cee and/or .demo)

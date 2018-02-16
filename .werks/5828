@@ -1,0 +1,18 @@
+Title: Handle case-insensitive equality correctly in Livestatus.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1518788550
+Class: fix
+
+Equality-based Livestatus filters did not handle case-insensitivity
+correctly for non-ASCII characters. This has been fixed.
+
+The affected operators are =~ and !=~ for string-valued columns plus > and
+<= for list-valued columns.
+
+Note that regular expressions already handle case-(in)sensitivity correctly
+since werk 5672 ("Use RE2 regular expression engine for Livestatus
+queries").

@@ -39,6 +39,7 @@ from lib import *
 import log
 from html_mod_python import html_mod_python, FinalizeRequest
 import cmk.paths
+import cmk.store as store
 
 from gui_exceptions import \
     MKUserError, \
@@ -210,7 +211,7 @@ def ensure_general_access():
 
 
 def finalize_request():
-    release_all_locks()
+    store.release_all_locks()
     userdb.finalize()
     sites.disconnect()
     html.finalize()

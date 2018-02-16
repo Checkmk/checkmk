@@ -700,7 +700,7 @@ def save_users(profiles):
     # Release the lock to make other threads access possible again asap
     # This lock is set by load_users() only in the case something is expected
     # to be written (like during user syncs, wato, ...)
-    release_lock(root_dir + "contacts.mk")
+    store.release_lock(root_dir + "contacts.mk")
 
     # populate the users cache
     # TODO: Can we clean this up?

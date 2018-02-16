@@ -4613,7 +4613,7 @@ class ActivateChanges(object):
         path = site_changes_path(site_id)
 
         if lock:
-            aquire_lock(path)
+            store.aquire_lock(path)
 
         changes = []
         try:
@@ -4627,7 +4627,7 @@ class ActivateChanges(object):
                 raise
         except:
             if lock:
-                release_lock(path)
+                store.release_lock(path)
             raise
 
         return changes
@@ -4656,7 +4656,7 @@ class ActivateChanges(object):
     def _save_change(self, site_id, change_spec):
         path = site_changes_path(site_id)
         try:
-            aquire_lock(path)
+            store.aquire_lock(path)
 
             with open(path, "a+") as f:
                 f.write(repr(change_spec)+"\0")
@@ -4669,7 +4669,7 @@ class ActivateChanges(object):
             raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
 
         finally:
-            release_lock(path)
+            store.release_lock(path)
 
 
     # Returns a list of changes ordered by time and grouped by the change.
@@ -6269,7 +6269,7 @@ def export_hosttags_to_php(hosttags, auxtags):
     tempfile = path + '.tmp'
     lockfile = path + '.state'
     file(lockfile, 'a')
-    aquire_lock(lockfile)
+    store.aquire_lock(lockfile)
 
     # Transform WATO internal data structures into easier usable ones
     hosttags_dict =  {}
@@ -6333,7 +6333,7 @@ function all_taggroup_choices($object_tags) {
 ''' % (format_php(hosttags_dict), format_php(auxtags_dict)))
     # Now really replace the destination file
     os.rename(tempfile, path)
-    release_lock(lockfile)
+    store.release_lock(lockfile)
     os.unlink(lockfile)
 
 
@@ -9822,11 +9822,11 @@ def folder_preserving_link(add_vars):
 
 
 def lock_exclusive():
-    aquire_lock(cmk.paths.default_config_dir + "/multisite.mk")
+    store.aquire_lock(cmk.paths.default_config_dir + "/multisite.mk")
 
 
 def unlock_exclusive():
-    release_lock(cmk.paths.default_config_dir + "/multisite.mk")
+    store.release_lock(cmk.paths.default_config_dir + "/multisite.mk")
 
 
 def git_command(args):

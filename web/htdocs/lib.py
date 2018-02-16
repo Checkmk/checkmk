@@ -151,11 +151,6 @@ def tryint(x):
         return x
 
 
-aquire_lock       = store.aquire_lock
-release_lock      = store.release_lock
-have_lock         = store.have_lock
-release_all_locks = store.release_all_locks
-
 # Splits a word into sequences of numbers and non-numbers.
 # Creates a tuple from these where the number are converted
 # into int datatype. That way a naturual sort can be

@@ -90,7 +90,7 @@ class ModeBI(WatoMode):
 
 
     def buttons(self):
-        home_button()
+        global_buttons()
         if self._pack:
             html.context_button(_("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]), "back")
 

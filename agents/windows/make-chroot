@@ -175,6 +175,9 @@ $SCRIPT_DIR/do-chroot 'dpkg --add-architecture i386 && apt-get update && apt-get
 # Build Google Test and Google Mock
 $SCRIPT_DIR/do-chroot "$CHROOT_BUILD_DIR/agents/windows/test/build-googletest"
 
+# Extract necessary boost headers
+$SCRIPT_DIR/do-chroot "$CHROOT_BUILD_DIR/agents/windows/extract-simpleini"
+
 cp "$BASE/agents/windows/$VERSIONFILE" "$CHROOT_PATH/"
 
 echo "+ CLEANING UP"

@@ -3775,8 +3775,7 @@ class ModeBulkImport(WatoMode):
     # for this request. It needs to be available during several potential "confirm"
     # steps and then through the upload step.
     def _upload_csv_file(self):
-        if not os.path.exists(self._upload_tmp_path):
-            make_nagios_directories(self._upload_tmp_path)
+        store.makedirs(self._upload_tmp_path)
 
         self._cleanup_old_files()
 
@@ -11715,7 +11714,7 @@ class RoleManagement(object):
         # functions from the config module
         config.roles.update(self._roles)
 
-        make_nagios_directory(multisite_dir)
+        store.mkdir(multisite_dir)
         store.save_to_mk_file(multisite_dir + "roles.mk", "roles", self._roles, pprint_value = config.wato_pprint_config)
 
         watolib.call_hook_roles_saved(self._roles)
@@ -15778,9 +15777,8 @@ def save_custom_attrs_to_mk_file(attrs):
             output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
             output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
 
-    make_nagios_directory(multisite_dir)
+    store.mkdir(multisite_dir)
     store.save_file(multisite_dir + "custom_attrs.mk", output)
-
 
 def custom_attr_types():
     return [
@@ -16645,7 +16643,7 @@ class ModeIcons(WatoMode):
 
         # and finally save the image
         dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.paths.omd_root
-        make_nagios_directories(dest_dir)
+        store.makedirs(dest_dir)
         try:
             file_name = os.path.basename(icon_info['icon'][0])
             im.save(dest_dir+'/'+file_name, 'PNG', pnginfo=meta)

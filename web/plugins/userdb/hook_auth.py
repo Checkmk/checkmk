@@ -55,6 +55,7 @@
 # may(<USER_NAME>, <PERMISSION>)
 # Returns true/false whether or not the user is permitted
 
+import cmk.store as store
 import cmk.paths
 
 g_auth_base_dir = cmk.paths.var_dir + '/wato/auth'
@@ -217,7 +218,7 @@ function permitted_maps($username) {
 
 
 def create_auth_file(callee, users):
-    make_nagios_directory(g_auth_base_dir)
+    store.mkdir(g_auth_base_dir)
 
     contactgroups = load_group_information().get('contact', {})
     groups = {}

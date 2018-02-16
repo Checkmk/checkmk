@@ -478,6 +478,12 @@ class LDAPUserConnector(UserConnector):
                 LDAP_CONTROL_PAGED_RESULTS, True, (page_size, '')
             )
 
+        if type(base) == unicode:
+            base = base.encode("utf-8")
+
+        if type(filt) == unicode:
+            filt = filt.encode("utf-8")
+
         results = []
         while True:
             # issue the ldap search command (async)
@@ -529,8 +535,8 @@ class LDAPUserConnector(UserConnector):
 
                 result = []
                 try:
-                    for dn, obj in self.ldap_paged_async_search(make_utf8(base),
-                                        self.ldap_get_scope(scope), make_utf8(filt), columns):
+                    for dn, obj in self.ldap_paged_async_search(base,
+                                        self.ldap_get_scope(scope), filt, columns):
                         if dn is None:
                             continue # skip unwanted answers
                         new_obj = {}

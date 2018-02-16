@@ -1,0 +1,19 @@
+Title: BI aggregations are now customer aware
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.5.0i3
+Date: 1518733322
+Class: feature
+
+The configuration if the BI aggregations is now handled in a customer aware
+way by the Check_MK Managed Services Edition. You can now configure each
+aggregation to be associated with a customer, the provider or being globally
+available. The aggregations are assigned to the provider by default.
+
+In case you want to have an aggregation only be synchronized to a single
+customer, you can configure it in the aggregation properties.
+
+A customer only get's the BI packs and BI rules synchronized that are
+needed to handle the aggregations that are made available to this customer.

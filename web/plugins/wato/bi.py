@@ -26,6 +26,7 @@
 
 # WATO-Module for the rules and aggregations of Check_MK BI
 
+import managed
 import table
 
 #   .--Base class----------------------------------------------------------.
@@ -98,6 +99,7 @@ class ModeBI(WatoMode):
     # .--------------------------------------------------------------------.
     # | Loading and saving                                                 |
     # '--------------------------------------------------------------------'
+
     def _load_config(self):
         filename = multisite_dir + "bi.mk"
         try:
@@ -156,14 +158,19 @@ class ModeBI(WatoMode):
 
 
     def save_config(self):
+        output = self.generate_bi_config_file_content(self._packs)
+        make_nagios_directory(multisite_dir)
+        store.save_file(multisite_dir + "bi.mk", output)
+
+
+
+    def generate_bi_config_file_content(self, packs):
         output = watolib.wato_fileheader()
-        for pack_id, pack in sorted(self._packs.items()):
+        for pack_id, pack in sorted(packs.items()):
             converted_pack = self._convert_pack_to_bi(pack)
             output += "bi_packs[%r] = %s\n\n" % (
                 pack_id, self._replace_bi_constants(pprint.pformat(converted_pack, width=50)))
-
-        make_nagios_directory(multisite_dir)
-        store.save_file(multisite_dir + "bi.mk", output)
+        return output
 
 
     def _convert_pack_to_bi(self, pack):
@@ -206,12 +213,19 @@ class ModeBI(WatoMode):
         node = self._convert_node_to_bi(aggr["node"])
         convaggr = conv + node
 
+        option_keys = [
+            ("hard_states",        False),
+            ("downtime_aggr_warn", False),
+            ("disabled",           False),
+        ]
+
+        if cmk.is_managed_edition():
+            option_keys.append(("customer", managed.default_customer_id()))
+
         # Create dict with all aggregation options
         options = {}
-        for option in ["hard_states",
-                       "downtime_aggr_warn",
-                       "disabled"]:
-            options[option] = aggr.get(option, False)
+        for option, default_value in option_keys:
+            options[option] = aggr.get(option, default_value)
 
         convaggr = (options,) + convaggr
         return convaggr
@@ -374,10 +388,12 @@ class ModeBI(WatoMode):
                 return ("foreach_host", (what, tags, hostspec, subnode))
 
 
-
     def _add_change(self, action_name, text):
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=config.get_login_sites())
 
+
+    def get_packs(self):
+        return self._packs
 
     # .--------------------------------------------------------------------.
     # | Valuespecs                                                         |
@@ -644,11 +660,16 @@ class ModeBI(WatoMode):
 
 
     def _get_vs_aggregation(self):
+        if cmk.is_managed_edition():
+            cme_elements = managed.customer_choice_element()
+        else:
+            cme_elements = []
+
         return Dictionary(
             title = _("Aggregation Properties"),
             optional_keys = False,
             render = "form",
-            elements = [
+            elements = cme_elements + [
             ( "groups",
               ListOfStrings(
                   title = _("Aggregation Groups"),
@@ -815,6 +836,33 @@ class ModeBI(WatoMode):
             if r:
                 sub_rule_ids.append(r[0])
         return sub_rule_ids
+
+
+    def find_aggregation_rule_usages(self):
+        aggregations_that_use_rule = {}
+        for pack_id, pack in self._packs.items():
+            for aggr_id, aggregation in enumerate(pack["aggregations"]):
+                rule_id, description = self.rule_called_by_node(aggregation["node"])
+                aggregations_that_use_rule.setdefault(rule_id, []).append((aggr_id, aggregation))
+                sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
+                for sub_rule_id in sub_rule_ids:
+                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id, aggregation))
+        return aggregations_that_use_rule
+
+
+    def _aggregation_recursive_sub_rule_ids(self, ruleid):
+        rule = self.find_rule_by_id(ruleid)
+        if not rule:
+            return []
+
+        sub_rule_ids = self.aggregation_sub_rule_ids(rule)
+        if not sub_rule_ids:
+            return []
+
+        result = sub_rule_ids[:]
+        for sub_rule_id in sub_rule_ids:
+            result += self._aggregation_recursive_sub_rule_ids(sub_rule_id)
+        return result
 
     # .--------------------------------------------------------------------.
     # | Generic rendering                                                  |
@@ -1164,6 +1212,12 @@ class ModeBIAggregations(ModeBI):
                 html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 
             table.text_cell(_("Nr."), aggregation_id+1, css="number")
+
+            if cmk.is_managed_edition():
+                table.text_cell(_("Customer"))
+                if "customer" in aggregation:
+                    html.write_text(managed.get_customer_name(aggregation))
+
             table.text_cell("", css="buttons")
 
             if aggregation["disabled"]:
@@ -1413,33 +1467,6 @@ class ModeBIRules(ModeBI):
                 table.text_cell(_("Comment"), rule.get("comment", ""))
                 table.text_cell(_("Documentation URL"), rule.get("docu_url", ""))
         table.end()
-
-
-    def find_aggregation_rule_usages(self):
-        aggregations_that_use_rule = {}
-        for pack_id, pack in self._packs.items():
-            for aggr_id, aggregation in enumerate(pack["aggregations"]):
-                rule_id, description = self.rule_called_by_node(aggregation["node"])
-                aggregations_that_use_rule.setdefault(rule_id, []).append((aggr_id, aggregation))
-                sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
-                for sub_rule_id in sub_rule_ids:
-                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id, aggregation))
-        return aggregations_that_use_rule
-
-
-    def _aggregation_recursive_sub_rule_ids(self, ruleid):
-        rule = self.find_rule_by_id(ruleid)
-        if not rule:
-            return []
-
-        sub_rule_ids = self.aggregation_sub_rule_ids(rule)
-        if not sub_rule_ids:
-            return []
-
-        result = sub_rule_ids[:]
-        for sub_rule_id in sub_rule_ids:
-            result += self._aggregation_recursive_sub_rule_ids(sub_rule_id)
-        return result
 
 
 

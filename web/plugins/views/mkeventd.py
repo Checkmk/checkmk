@@ -291,7 +291,7 @@ if mkeventd_enabled:
         "title"   : _("Process ID"),
         "short"   : _("PID"),
         "columns" : ["event_pid" ],
-        "paint"   : lambda row: ("", row["event_pid"]),
+        "paint"   : lambda row: ("", "%s" % row["event_pid"]),
     }
 
     multisite_painters["event_priority"] = {

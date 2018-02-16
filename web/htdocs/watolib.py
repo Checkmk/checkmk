@@ -214,7 +214,8 @@ def log_entry(linkinfo, action, message, user_id=None):
         user_id = user_id.encode("utf-8")
 
     store.mkdir(os.path.dirname(audit_log_path))
-    with create_user_file(audit_log_path, "ab") as f:
+    with open(audit_log_path, "ab") as f:
+        os.chmod(f.name, 0660)
         f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id,
                                       action, message.replace("\n", "\\n")))
 

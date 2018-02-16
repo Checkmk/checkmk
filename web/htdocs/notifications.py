@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.render
 import config
 import lib
 import sites
@@ -170,7 +171,7 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
     if failed_notifications:
         html.write('<div class="really">\n')
         html.write(_("Do you really want to acknowledge all failed notifications up to %s?") %\
-                   lib.datetime_human_readable(acktime))
+                   cmk.render.date_and_time(acktime))
         html.begin_form("confirm", method="GET", action=prev_url)
         html.hidden_field('acktime', acktime),
         html.button('_confirm', _("Yes"))

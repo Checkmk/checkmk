@@ -1,0 +1,23 @@
+Title: LDAP: It's now possible to create user accounts only on first login
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i3
+Date: 1518769402
+Class: feature
+
+The LDAP connections can now be configured to create user accounts only on
+demand which means the accounts are created during the first login of the
+user.
+
+This feature can be used if you need to allow a large base of users to access
+Check_MK, but only want to have the accounts of users created that really work
+with it.
+
+Please note that you will only be able to configure the users after their
+first login. For example the roles / groups of a user can only be configured
+after account creation.
+
+It can be enabled using the option <i>Create users only on login</i> in
+the <i>Users</i> options of your LDAP connection.

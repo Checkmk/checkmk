@@ -42,6 +42,7 @@
 #   | Some basic declarations and module loading etc.                      |
 #   '----------------------------------------------------------------------'
 
+import os
 import time
 import copy
 
@@ -391,6 +392,10 @@ class LDAPUserConnector(UserConnector):
 
     def has_user_base_dn_configured(self):
         return self._config['user_dn'] != ''
+
+
+    def create_users_only_on_login(self):
+        return self._config.get('create_only_on_login', False)
 
 
     def user_id_attr(self):
@@ -1037,6 +1042,12 @@ class LDAPUserConnector(UserConnector):
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
             user_connection_id = cleanup_connection_id(user.get('connector'))
+
+            if self.create_users_only_on_login() and mode_create:
+                self._logger.debug('  SKIP SYNC "%s" (Only create user of "%s" connector on login)' %
+                                                                        (user_id, user_connection_id))
+                continue
+
 
             if only_username and user_id != only_username:
                 continue # Only one user should be synced, skip others.

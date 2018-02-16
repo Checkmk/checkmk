@@ -33,6 +33,7 @@ os.environ["CRYPTOGRAPHY_ALLOW_OPENSSL_098"] = "1"
 
 from OpenSSL import crypto
 
+import cmk.render
 import cmk.store as store
 
 import table
@@ -176,7 +177,7 @@ class PageKeyManagement(object):
                                     ("mode", self.download_mode), ("key", key_id)])
             html.icon_button(download_url, _("Download this key"), "download")
             table.cell(_("Description"), html.render_text(key["alias"]))
-            table.cell(_("Created"), date_human_readable(key["date"]))
+            table.cell(_("Created"), cmk.render.date(key["date"]))
             table.cell(_("By"), html.render_text(key["owner"]))
             table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5")))
         table.end()

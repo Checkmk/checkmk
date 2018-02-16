@@ -43,15 +43,15 @@ except NameError:
 
 
 def date(timestamp):
-    return time.strftime("%Y-%m-%d", time.localtime(timestamp))
+    return time.strftime(_("%Y-%m-%d"), time.localtime(timestamp))
 
 
 def date_and_time(timestamp):
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+    return time.strftime(_("%Y-%m-%d %H:%M:%S"), time.localtime(timestamp))
 
 
 def time_of_day(timestamp):
-    return time.strftime("%H:%M:%S", time.localtime(timestamp))
+    return time.strftime(_("%H:%M:%S"), time.localtime(timestamp))
 
 
 def timespan(seconds):

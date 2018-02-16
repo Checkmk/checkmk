@@ -114,7 +114,7 @@ class HtpasswdUserConnector(UserConnector):
                     locksym = '!'
                 else:
                     locksym = ""
-                output += "%s:%s%s\n" % (make_utf8(id), locksym, user["password"])
+                output += "%s:%s%s\n" % (id.encode("utf-8"), locksym, user["password"])
 
         store.save_file(cmk.paths.htpasswd_file, output)
 

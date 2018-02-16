@@ -64,6 +64,7 @@ from gui_exceptions import MKGeneralException, MKAuthException, MKUserError
 
 import cmk.paths
 import cmk.defines
+import cmk.utils
 import cmk.store as store
 import cmk.render as render
 import cmk.ec.defaults
@@ -193,7 +194,7 @@ def log_entry(linkinfo, action, message, user_id=None):
     # at the last possible time: When rendering. But this here is the last
     # place where we can distinguish between HTML() encapsulated (already)
     # escaped / allowed HTML and strings to be escaped.
-    message = make_utf8(html.attrencode(message)).strip()
+    message = cmk.utils.make_utf8(html.attrencode(message)).strip()
 
     # linkinfo is either a Folder, or a Host or a hostname or None
     if isinstance(linkinfo, Folder):
@@ -603,7 +604,7 @@ class ConfigDomainOMD(ConfigDomain):
         p = subprocess.Popen(["omd", "config", "change"],
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 stdin=subprocess.PIPE, close_fds=True)
-        stdout = p.communicate(make_utf8("\n".join(config_change_commands)))[0]
+        stdout = p.communicate(cmk.utils.make_utf8("\n".join(config_change_commands)))[0]
         self._logger.debug("  Exit code: %d" % p.returncode)
         self._logger.debug("  Output: %r" % stdout)
         if p.returncode != 0:
@@ -7011,7 +7012,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if command in [ 'restart', 'reload' ]:
         call_hook_pre_activate_changes()
 
-    cmd = [ make_utf8(a) for a in cmd ]
+    cmd = [ cmk.utils.make_utf8(a) for a in cmd ]
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output
@@ -7442,7 +7443,7 @@ class Rulespecs(object):
                 if group_name.startswith(main_group_name + "/"):
                     # TODO: Move this subgroup title calculation to some generic place
                     sub_group_title = group_name.split("/", 1)[1]
-                    choices.append((make_utf8(group_name), u"&nbsp;&nbsp;⌙ %s" % sub_group_title))
+                    choices.append((cmk.utils.make_utf8(group_name), u"&nbsp;&nbsp;⌙ %s" % sub_group_title))
 
         return choices
 
@@ -7462,7 +7463,7 @@ class Rulespecs(object):
         group_names = []
 
         for group_name in self._sorted_groups:
-            main_group = make_utf8(group_name.split('/')[0])
+            main_group = cmk.utils.make_utf8(group_name.split('/')[0])
             if main_group not in seen:
                 group_names.append(main_group)
                 seen.add(main_group)

@@ -32,14 +32,6 @@ import cmk.paths
 
 from log import logger
 
-
-def make_utf8(x):
-    if type(x) == unicode:
-        return x.encode('utf-8')
-    else:
-        return x
-
-
 # We should use /dev/random here for cryptographic safety. But
 # that involves the great problem that the system might hang
 # because of loss of entropy. So we hope /dev/urandom is enough.

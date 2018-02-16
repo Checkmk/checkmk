@@ -39,6 +39,7 @@ import cmk.paths
 import cmk.ec.settings
 import cmk.ec.export
 import cmk.store
+import cmk.utils
 
 if cmk.is_managed_edition():
     import managed
@@ -174,7 +175,7 @@ def send_event(event):
                 event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", map(make_utf8, rfc), site=event["site"])
+    execute_command("CREATE", map(cmk.utils.make_utf8, rfc), site=event["site"])
 
     return ";".join(rfc)
 

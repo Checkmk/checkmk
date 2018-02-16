@@ -25,13 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import Cookie, util, apache # pylint: disable=import-error
-from lib import make_utf8
 from gui_exceptions import MKGeneralException, MKException
 from log import logger
 import htmllib
 import os, time, config, weblib, re
 import mobile
 import cmk.paths
+import cmk.utils
 
 # Is used to end the HTTP request processing from deeper code levels
 class FinalizeRequest(Exception):
@@ -176,9 +176,9 @@ class html_mod_python(htmllib.html):
         # httponly tells the browser not to make this cookie available to Javascript.
         # But it is only available from Python 2.6+. Be compatible.
         try:
-            c = Cookie.Cookie(varname, make_utf8(value), path='/', httponly=True)
+            c = Cookie.Cookie(varname, cmk.utils.make_utf8(value), path='/', httponly=True)
         except AttributeError:
-            c = Cookie.Cookie(varname, make_utf8(value), path='/')
+            c = Cookie.Cookie(varname, cmk.utils.make_utf8(value), path='/')
 
         if self.is_ssl_request():
             c.secure = True

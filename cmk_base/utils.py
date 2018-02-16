@@ -32,18 +32,12 @@ import signal
 import time
 
 from cmk.exceptions import MKGeneralException, MKTerminate
+from cmk.utils import make_utf8
 
 # TODO: Try to find a better place for them.
 
 import sys
 import itertools
-
-
-def make_utf8(x):
-    if type(x) == unicode:
-        return x.encode('utf-8')
-    else:
-        return x
 
 
 # Aggegates several monitoring states to the worst state

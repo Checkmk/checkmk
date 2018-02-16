@@ -33,15 +33,6 @@ import cmk.paths
 from log import logger
 
 
-# TODO: Remove this helper function. Replace with explicit checks and covnersion
-# in using code.
-def savefloat(f):
-    try:
-        return float(f)
-    except:
-        return 0.0
-
-
 def make_utf8(x):
     if type(x) == unicode:
         return x.encode('utf-8')
@@ -144,6 +135,7 @@ def pnp_cleanup(s):
         .replace('/', '_') \
         .replace('\\', '_')
 
+
 # Quote string for use as arguments on the shell
 # TODO: Move to Check_MK library
 def quote_shell_string(s):
@@ -154,6 +146,16 @@ def log_exception(msg=None):
     if msg is None:
         msg = _('Internal error')
     logger.error("%s %s: %s" % (html.request_uri(), msg, traceback.format_exc()))
+
+
+# TODO: Remove this helper function. Replace with explicit checks and covnersion
+# in using code.
+def savefloat(f):
+    try:
+        return float(f)
+    except:
+        return 0.0
+
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
 # in using code.

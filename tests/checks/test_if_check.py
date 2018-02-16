@@ -1,5 +1,4 @@
 import pytest
-import pprint
 import ast
 from testlib import cmk_path
 

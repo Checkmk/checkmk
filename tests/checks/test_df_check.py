@@ -1,5 +1,4 @@
 import pytest
-import pprint
 import checktestlib
 
 pytestmark = pytest.mark.checks

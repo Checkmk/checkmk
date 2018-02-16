@@ -1,5 +1,4 @@
 import pytest
-import pprint
 from cmk_base.check_api import MKCounterWrapped
 import checktestlib
 

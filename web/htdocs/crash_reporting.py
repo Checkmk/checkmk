@@ -27,6 +27,7 @@
 import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
 import i18n
 import sites
+import livestatus
 from lib import *
 from gui_exceptions import MKGeneralException, MKUserError
 from valuespec import *
@@ -126,7 +127,7 @@ def get_crash_report_archive_as_string(site, host, service):
             "Filter: host_name = %s\n" \
             "Filter: service_description = %s\n" \
             "Columns: long_plugin_output\n" % (
-            lqencode(host), lqencode(service))
+            livestatus.lqencode(host), livestatus.lqencode(service))
 
     sites.live().set_only_sites([site])
     data = sites.live().query_value(query)

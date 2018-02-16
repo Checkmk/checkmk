@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import mkeventd
+import livestatus
 
 try:
     mkeventd_enabled = config.mkeventd_enabled
@@ -235,8 +236,8 @@ if mkeventd_enabled:
                    "Filter: event_contact_groups_precedence = rule\n" \
                    "Filter: event_contact_groups %s>= %s\n" \
                    "And: 2\n" \
-                   "Or: 2\n" % (negate, lqencode(current_value),
-                                negate, lqencode(current_value))
+                   "Or: 2\n" % (negate, livestatus.lqencode(current_value),
+                                negate, livestatus.lqencode(current_value))
 
 
         def variable_settings(self, row):

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import sites
+import livestatus
 
 
 # Filters for substring search, displaying a text input field
@@ -63,7 +64,7 @@ class FilterText(Filter):
         if current_value:
             if type(current_value) == unicode:
                 current_value = current_value.encode("utf-8")
-            return "Filter: %s %s%s %s\n" % (self.column, negate, self.op, lqencode(current_value))
+            return "Filter: %s %s%s %s\n" % (self.column, negate, self.op, livestatus.lqencode(current_value))
         else:
             return ""
 
@@ -98,7 +99,7 @@ class FilterHostnameOrAlias(FilterUnicode):
         if current_value:
             if type(current_value) == unicode:
                 current_value = current_value.encode("utf-8")
-            return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((negate, self.op, lqencode(current_value)) * 2)
+            return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((negate, self.op, livestatus.lqencode(current_value)) * 2)
         else:
             return ""
 
@@ -165,9 +166,9 @@ class FilterIPAddress(Filter):
             op = "="
             if html.var(self.htmlvars[1]) == "yes":
                 op = "~"
-                address = "^" + lqencode(address)
+                address = "^" + livestatus.lqencode(address)
             else:
-                address = lqencode(address)
+                address = livestatus.lqencode(address)
 
             if self._what == "primary":
                 return "Filter: host_address %s %s\n" % (op, address)
@@ -206,7 +207,7 @@ class FilterAddressFamily(Filter):
         if family == "both":
             return ""
         else:
-            return "Filter: host_custom_variables = ADDRESS_FAMILY %s\n" % lqencode(family)
+            return "Filter: host_custom_variables = ADDRESS_FAMILY %s\n" % livestatus.lqencode(family)
 
 
 declare_filter(103, FilterAddressFamily())
@@ -240,14 +241,14 @@ class FilterAddressFamilies(Filter):
                 tag = "ip-v4"
             elif family[0] == "6":
                 tag = "ip-v6"
-            filt = "Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])\n" % lqencode(tag)
+            filt = "Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])\n" % livestatus.lqencode(tag)
 
             if family.endswith("_only"):
                 if family[0] == "4":
                     tag = "ip-v6"
                 elif family[0] == "6":
                     tag = "ip-v4"
-                filt += "Filter: host_custom_variables !~ TAGS (^|[ ])%s($|[ ])\n" % lqencode(tag)
+                filt += "Filter: host_custom_variables !~ TAGS (^|[ ])%s($|[ ])\n" % livestatus.lqencode(tag)
 
             return filt
 
@@ -313,7 +314,7 @@ class FilterMultigroup(Filter):
             op = "Or"
         filters = ""
         for group in current:
-            filters += "Filter: %s_groups %s>= %s\n" % (self.what, negate, lqencode(group))
+            filters += "Filter: %s_groups %s>= %s\n" % (self.what, negate, livestatus.lqencode(group))
         if len(current) > 1:
             filters += "%s: %d\n" % (op, len(current))
         return filters
@@ -371,7 +372,7 @@ class FilterGroupCombo(Filter):
             negate = "!"
         else:
             negate = ""
-        return "Filter: %s %s>= %s\n" % (col, negate, lqencode(current_value))
+        return "Filter: %s %s>= %s\n" % (col, negate, livestatus.lqencode(current_value))
 
     def variable_settings(self, row):
         varname = self.htmlvars[0]
@@ -391,7 +392,7 @@ class FilterGroupCombo(Filter):
         if current_value:
             table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
             alias = sites.live().query_value("GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
-                (table, lqencode(current_value)), current_value)
+                (table, livestatus.lqencode(current_value)), current_value)
             return alias
 
 declare_filter(104, FilterGroupCombo("host",            _("Host is in Group"),        False), _("Optional selection of host group"))
@@ -425,7 +426,7 @@ class FilterGroupSelection(Filter):
     def filter(self, infoname):
         current_value = self.current_value()
         if current_value:
-            return "Filter: %s_name = %s\n" % (self.what, lqencode(current_value))
+            return "Filter: %s_name = %s\n" % (self.what, livestatus.lqencode(current_value))
         else:
             return ""
 
@@ -475,7 +476,7 @@ class FilterQueryDropdown(Filter):
     def filter(self, infoname):
         current = html.var(self.name)
         if current:
-            return self.filterline % lqencode(current)
+            return self.filterline % livestatus.lqencode(current)
         else:
             return ""
 
@@ -1143,7 +1144,7 @@ class FilterHostTags(Filter):
         html.close_table()
 
     def hosttag_filter(self, negate, tag):
-        return  'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~', lqencode(tag))
+        return  'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~', livestatus.lqencode(tag))
 
     def filter(self, infoname):
         headers = []
@@ -1220,7 +1221,7 @@ class FilterHostAuxTags(Filter):
 
 
     def host_auxtags_filter(self, tag, negate):
-        return "Filter: host_custom_variables %s~ TAGS (^|[ ])%s($|[ ])" % (negate, lqencode(tag))
+        return "Filter: host_custom_variables %s~ TAGS (^|[ ])%s($|[ ])" % (negate, livestatus.lqencode(tag))
 
 
     def filter(self, infoname):
@@ -1297,7 +1298,7 @@ class FilterECServiceLevelRange(Filter):
             for value, readable in config.mkeventd_service_levels:
                 if match_func(value):
                     filterline_values.append( "Filter: %s_custom_variable_values >= %s" % \
-                                              (self.info, lqencode(str(value))) )
+                                              (self.info, livestatus.lqencode(str(value))) )
 
             filterline += "%s\n" % "\n".join( filterline_values )
 
@@ -1356,15 +1357,15 @@ class FilterStarred(FilterTristate):
             for star in stars:
                 if ";" in star:
                     continue
-                filters += "Filter: host_name %s %s\n" % (eq, lqencode(star))
+                filters += "Filter: host_name %s %s\n" % (eq, livestatus.lqencode(star))
                 count += 1
         else:
             for star in stars:
                 if ";" not in star:
                     continue
                 h, s = star.split(";")
-                filters += "Filter: host_name %s %s\n" % (eq, lqencode(h))
-                filters += "Filter: service_description %s %s\n" % (eq, lqencode(s))
+                filters += "Filter: host_name %s %s\n" % (eq, livestatus.lqencode(h))
+                filters += "Filter: service_description %s %s\n" % (eq, livestatus.lqencode(s))
                 filters += "%s: 2\n" % aand
                 count += 1
 

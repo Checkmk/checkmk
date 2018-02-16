@@ -232,17 +232,6 @@ def log_exception(msg=None):
         msg = _('Internal error')
     logger.error("%s %s: %s" % (html.request_uri(), msg, traceback.format_exc()))
 
-
-# Escape/strip unwanted chars from (user provided) strings to
-# use them in livestatus queries. Prevent injections of livestatus
-# protocol related chars or strings
-def lqencode(s):
-    # It is not enough to strip off \n\n, because one might submit "\n \n",
-    # which is also interpreted as termination of the last query and beginning
-    # of the next query.
-    return s.replace('\n', '')
-
-
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
 # in using code.
 def saveint(x):

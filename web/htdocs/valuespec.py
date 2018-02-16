@@ -44,6 +44,7 @@ import ipaddress
 from Cryptodome.PublicKey import RSA
 from UserDict import DictMixin
 
+import livestatus
 from lib import *
 from gui_exceptions import MKUserError, MKGeneralException
 
@@ -783,7 +784,7 @@ class MonitoredHostname(TextAsciiAutocomplete):
         query = (
             "GET hosts\n"
             "Columns: host_name\n"
-            "Filter: host_name ~~ %s" % lqencode(value)
+            "Filter: host_name ~~ %s" % livestatus.lqencode(value)
         )
         hosts = sorted(sites.live().query_column_unique(query))
 

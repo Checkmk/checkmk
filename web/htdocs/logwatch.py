@@ -533,7 +533,7 @@ def logfiles_of_host(site, host_name):
     file_names = sites.live().query_value(
         "GET hosts\n"
         "Columns: mk_logwatch_files\n"
-        "Filter: name = %s\n" % lqencode(host_name))
+        "Filter: name = %s\n" % livestatus.lqencode(host_name))
     if site: # Honor site hint if available
         sites.live().set_only_sites(None)
     if file_names == None: # Not supported by that Livestatus version
@@ -550,7 +550,7 @@ def get_logfile_lines(site, host_name, file_name):
     query = \
         "GET hosts\n" \
         "Columns: mk_logwatch_file:file:%s\n" \
-        "Filter: name = %s\n" % (lqencode(file_name.replace('\\', '\\\\').replace(' ', '\\s')), lqencode(host_name))
+        "Filter: name = %s\n" % (livestatus.lqencode(file_name.replace('\\', '\\\\').replace(' ', '\\s')), livestatus.lqencode(host_name))
     file_content = sites.live().query_value(query)
     if site: # Honor site hint if available
         sites.live().set_only_sites(None)
@@ -580,7 +580,7 @@ def may_see(site, host_name):
             sites.live().set_only_sites([site])
         # Note: This query won't work in a distributed setup and no site given as argument
         # livestatus connection is setup with AuthUser
-        host_found = sites.live().query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)) > 0
+        host_found = sites.live().query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % livestatus.lqencode(host_name)) > 0
     finally:
         sites.live().set_only_sites(None)
 

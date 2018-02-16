@@ -34,7 +34,7 @@ import ast
 import config
 import userdb
 import sites
-from lib import lqencode
+import livestatus
 from gui_exceptions import MKException, MKGeneralException, MKAuthException, MKUserError
 
 import cmk.paths
@@ -310,7 +310,7 @@ def _may_see(host_name, site=None):
     if config.user.may("general.see_all"):
         return True
 
-    query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)
+    query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % livestatus.lqencode(host_name)
     if site:
         sites.live().set_only_sites([site])
 

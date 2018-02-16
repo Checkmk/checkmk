@@ -31,6 +31,7 @@ import json
 import cmk.paths
 import config
 import sites
+import livestatus
 from lib import *
 from gui_exceptions import MKGeneralException
 import cmk.store as store
@@ -215,7 +216,7 @@ def compute_vertical_scala(low, high):
 def get_current_perfdata(host, service, dsname):
     perf_data = sites.live().query_value(
                     "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
-                    "Columns: perf_data" % (lqencode(host), lqencode(service)))
+                    "Columns: perf_data" % (livestatus.lqencode(host), livestatus.lqencode(service)))
 
     for part in perf_data.split():
         name, rest = part.split("=")
@@ -235,7 +236,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
           "Filter: host_name = %s\n" \
           "Filter: description = %s\n" % (
              rpn, fromtime, untiltime, step,
-             lqencode(hostname), lqencode(service_description))
+             livestatus.lqencode(hostname), livestatus.lqencode(service_description))
 
     try:
         response = sites.live().query_row(query)[0]

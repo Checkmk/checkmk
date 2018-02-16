@@ -29,6 +29,7 @@ import weblib, traceback, forms, valuespec, inventory, visuals, metrics
 import sites
 import bi
 import inspect
+import livestatus
 from lib import *
 from gui_exceptions import MKGeneralException, MKUserError, MKInternalError
 
@@ -898,7 +899,7 @@ class JoinCell(Cell):
 
     def livestatus_filter(self, join_column_name):
         return "Filter: %s = %s" % \
-            (lqencode(join_column_name), lqencode(self._join_service_descr))
+            (livestatus.lqencode(join_column_name), livestatus.lqencode(self._join_service_descr))
 
 
     def title(self, use_short=True):
@@ -3259,10 +3260,10 @@ def do_reschedule():
 
         if wait_svc:
             wait_spec = u'%s;%s' % (host, wait_svc)
-            add_filter = "Filter: service_description = %s\n" % lqencode(wait_svc)
+            add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(wait_svc)
         else:
             wait_spec = spec
-            add_filter = "Filter: service_description = %s\n" % lqencode(service)
+            add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(service)
     else:
         cmd = "HOST"
         what = "host"
@@ -3272,7 +3273,7 @@ def do_reschedule():
 
     try:
         now = int(time.time())
-        sites.live().command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, lqencode(spec), now), site)
+        sites.live().command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now), site)
         sites.live().set_only_sites([site])
         query = u"GET %ss\n" \
                 "WaitObject: %s\n" \
@@ -3281,7 +3282,7 @@ def do_reschedule():
                 "WaitTrigger: check\n" \
                 "Columns: last_check state plugin_output\n" \
                 "Filter: host_name = %s\n%s" \
-                % (what, lqencode(wait_spec), now, config.reschedule_timeout * 1000, lqencode(host), add_filter)
+                % (what, livestatus.lqencode(wait_spec), now, config.reschedule_timeout * 1000, livestatus.lqencode(host), add_filter)
         row = sites.live().query_row(query)
         sites.live().set_only_sites()
         last_check = row[0]

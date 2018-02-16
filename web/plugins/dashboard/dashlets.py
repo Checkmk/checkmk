@@ -387,7 +387,7 @@ def dashlet_graph_reload_js(nr, dashlet):
     if html.has_var('site'):
         site = html.var('site')
     else:
-        query = "GET hosts\nFilter: name = %s\nColumns: name" % lqencode(host)
+        query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
         try:
             sites.live().set_prepend_site(True)
             site = sites.live().query_column(query)[0]

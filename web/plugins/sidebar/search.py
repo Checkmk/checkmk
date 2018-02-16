@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import livestatus
+
 def render_searchform():
     html.open_div(id_="mk_side_search", class_="content_center", onclick="mkSearchClose();")
     html.input(id_="mk_side_search_field", type_="text", name="search", autocomplete="off")
@@ -418,7 +420,7 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
             raise MKGeneralException("You can only set up to three 'tg:' filters")
 
         for entry in used_filters.get(self.get_filter_shortname()):
-            filter_lines.append("Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])" % lqencode(entry))
+            filter_lines.append("Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])" % livestatus.lqencode(entry))
 
         if len(filter_lines) > 1:
             filter_lines.append("And: %d" % len(filter_lines))

@@ -31,6 +31,8 @@ import cStringIO
 import cmk.paths
 import cmk.ec.export as ec
 import cmk.ec.defaults
+import cmk.store as store
+import cmk.render
 
 mkeventd_enabled = config.mkeventd_enabled
 
@@ -2164,7 +2166,7 @@ def show_mib_table(path, title):
         table.cell(_("Filename"), filename)
         table.cell(_("MIB"), mib.get("name", ""))
         table.cell(_("Organization"), mib.get("organization", ""))
-        table.cell(_("Size"), bytes_human_readable(mib.get("size", 0)), css="number")
+        table.cell(_("Size"), cmk.render.bytes(mib.get("size", 0)), css="number")
 
     table.end()
 

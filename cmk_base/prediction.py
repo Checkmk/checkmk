@@ -35,6 +35,7 @@ import livestatus
 
 import cmk.paths
 import cmk.debug
+import cmk.utils
 
 from cmk.exceptions import MKGeneralException
 
@@ -219,7 +220,7 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
 
     # Compute directory for prediction data
     dir = "%s/prediction/%s/%s/%s" % (cmk.paths.var_dir, hostname,
-             pnp_cleanup(service_description), pnp_cleanup(dsname))
+             cmk.utils.pnp_cleanup(service_description), cmk.utils.pnp_cleanup(dsname))
     if not os.path.exists(dir):
         os.makedirs(dir)
 
@@ -320,11 +321,3 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
                 levels.append((None, None))
 
     return ref_value, levels
-
-
-def pnp_cleanup(s):
-    return s \
-        .replace(' ',  '_') \
-        .replace(':',  '_') \
-        .replace('/',  '_') \
-        .replace('\\', '_')

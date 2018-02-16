@@ -120,14 +120,6 @@ def local_web_plugins_have_changed():
     return have_changed
 
 
-def pnp_cleanup(s):
-    return s \
-        .replace(' ', '_') \
-        .replace(':', '_') \
-        .replace('/', '_') \
-        .replace('\\', '_')
-
-
 def log_exception(msg=None):
     if msg is None:
         msg = _('Internal error')

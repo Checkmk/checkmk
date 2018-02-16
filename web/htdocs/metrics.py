@@ -565,7 +565,7 @@ def parse_perf_data(perf_data_string, check_command=None):
     for part in parts:
         try:
             varname, values = part.split("=", 1)
-            varname = pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
+            varname = cmk.utils.pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
 
             value_parts = values.split(";")
             while len(value_parts) < 5:
@@ -1703,8 +1703,8 @@ def page_host_service_graph_popup():
 
 
 def host_service_graph_popup_pnp(site, host_name, service_description):
-    pnp_host   = pnp_cleanup(host_name)
-    pnp_svc    = pnp_cleanup(service_description)
+    pnp_host   = cmk.utils.pnp_cleanup(host_name)
+    pnp_svc    = cmk.utils.pnp_cleanup(service_description)
     url_prefix = config.site(site)["url_prefix"]
 
     if html.mobile:
@@ -1821,8 +1821,8 @@ def host_service_graph_dashlet_pnp(graph_identification):
     site = graph_identification[1]["site"]
     source = int(graph_identification[1]["graph_index"])
 
-    pnp_host   = pnp_cleanup(graph_identification[1]["host_name"])
-    pnp_svc    = pnp_cleanup(graph_identification[1]["service_description"])
+    pnp_host   = cmk.utils.pnp_cleanup(graph_identification[1]["host_name"])
+    pnp_svc    = cmk.utils.pnp_cleanup(graph_identification[1]["service_description"])
     url_prefix = config.site(site)["url_prefix"]
 
     html.write(url_prefix + "pnp4nagios/index.php/image?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \

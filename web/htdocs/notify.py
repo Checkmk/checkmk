@@ -62,7 +62,7 @@ def save_gui_messages(messages, user_id = None):
     if user_id is None:
         user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
-    make_nagios_directory(os.path.dirname(path))
+    store.mkdir(os.path.dirname(path))
     store.save_data_to_file(path, messages)
 
 loaded_with_language = False

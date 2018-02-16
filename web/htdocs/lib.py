@@ -32,38 +32,6 @@ import cmk.paths
 
 from log import logger
 
-# Create directory owned by common group of Nagios and webserver,
-# and make it writable for the group
-def make_nagios_directory(path):
-    path = make_utf8(path)
-    if not os.path.exists(path):
-        parent_dir, lastpart = path.rstrip('/').rsplit('/', 1)
-        make_nagios_directory(parent_dir)
-        try:
-            os.mkdir(path)
-            os.chmod(path, 0770)
-        except Exception, e:
-            from gui_exceptions import MKConfigError
-            raise MKConfigError("Your web server cannot create the directory <tt>%s</tt>, "
-                    "or cannot set the permissions to <tt>0770</tt>: %s" % (path, e))
-
-# Same as make_nagios_directory but also creates parent directories
-# Logic has been copied from os.makedirs()
-def make_nagios_directories(name):
-    name = make_utf8(name)
-    head, tail = os.path.split(name)
-    if not tail:
-        head, tail = os.path.split(head)
-    if head and tail and not os.path.exists(head):
-        try:
-            make_nagios_directories(head)
-        except OSError, e:
-            # be happy if someone already created the path
-            if e.errno != errno.EEXIST:
-                raise
-        if tail == ".":           # xxx/newdir/. exists if xxx/newdir exists
-            return
-    make_nagios_directory(name)
 
 # TODO: Deprecate this function! Don't use this anymore. Use the store.* functions!
 def create_user_file(path, mode):
@@ -230,20 +198,6 @@ def num_split(s):
 
     return tuple(parts)
 
-
-def cmp_service_name_equiv(r):
-    if r == "Check_MK":
-        return -6
-    elif r == "Check_MK Agent":
-        return -5
-    elif r == "Check_MK Discovery":
-        return -4
-    elif r == "Check_MK inventory":
-        return -3 # FIXME: Remove old name one day
-    elif r == "Check_MK HW/SW Inventory":
-        return -2
-    else:
-        return 0
 
 def cmp_version(a, b):
     if a == None or b == None:

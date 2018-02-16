@@ -661,7 +661,7 @@ def load_custom_attr(userid, key, conv_func, default = None):
 
 def save_custom_attr(userid, key, val):
     path = custom_attr_path(userid, key)
-    make_nagios_directory(os.path.dirname(path))
+    store.mkdir(os.path.dirname(path))
     store.save_file(path, '%s\n' % val)
 
 
@@ -732,7 +732,7 @@ def _save_user_profiles(updated_profiles):
 
     for user_id, user in updated_profiles.items():
         user_dir = cmk.paths.var_dir + "/web/" + user_id.encode("utf-8")
-        make_nagios_directory(user_dir)
+        store.mkdir(user_dir)
 
         # authentication secret for local processes
         auth_file = user_dir + "/automation.secret"
@@ -1095,7 +1095,7 @@ def load_connection_config(lock=False):
 def save_connection_config(connections, base_dir=None):
     if not base_dir:
         base_dir = multisite_dir
-    make_nagios_directory(base_dir)
+    store.mkdir(base_dir)
     store.save_to_mk_file(os.path.join(base_dir, "user_connections.mk"),
                           "user_connections", connections)
 

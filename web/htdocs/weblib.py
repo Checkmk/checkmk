@@ -55,7 +55,6 @@ def ajax_tree_openclose():
 #   +----------------------------------------------------------------------+
 
 import os, time
-from lib import make_nagios_directory
 
 def init_selection():
     # Generate the initial selection_id

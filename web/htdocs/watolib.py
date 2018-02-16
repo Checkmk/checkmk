@@ -213,7 +213,7 @@ def log_entry(linkinfo, action, message, user_id=None):
     if user_id:
         user_id = user_id.encode("utf-8")
 
-    make_nagios_directory(os.path.dirname(audit_log_path))
+    store.mkdir(os.path.dirname(audit_log_path))
     with create_user_file(audit_log_path, "ab") as f:
         f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id,
                                       action, message.replace("\n", "\\n")))
@@ -359,7 +359,7 @@ class ConfigDomain(object):
         for varname, value in settings.items():
             output += "%s = %s\n" % (varname, pprint.pformat(value))
 
-        make_nagios_directory(os.path.dirname(filename))
+        store.mkdir(os.path.dirname(filename))
         store.save_file(filename, output)
 
 
@@ -1653,8 +1653,7 @@ class CREFolder(BaseFolder):
 
 
     def _ensure_folder_directory(self):
-        if not os.path.exists(self.filesystem_path()):
-            make_nagios_directories(self.filesystem_path())
+        store.makedirs(self.filesystem_path())
 
 
     def _fallback_title(self):
@@ -3993,7 +3992,7 @@ class CRESiteManagement(object):
 
     @classmethod
     def save_sites(cls, sites, activate=True):
-        make_nagios_directory(multisite_dir)
+        store.mkdir(multisite_dir)
         store.save_to_mk_file(sites_mk, "sites", sites)
 
         # Do not activate when just the site's global settings have
@@ -4390,7 +4389,7 @@ def save_replication_status(status):
 
 # Updates one or more dict elements of a site in an atomic way.
 def update_replication_status(site_id, vars):
-    make_nagios_directory(var_dir)
+    store.mkdir(var_dir)
 
     repl_status = load_site_replication_status(site_id, lock=True)
     try:
@@ -4435,7 +4434,7 @@ def save_site_globals_on_slave_site(tarcontent):
     tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
     try:
         if not os.path.exists(tmp_dir):
-            make_nagios_directory(tmp_dir)
+            store.mkdir(tmp_dir)
 
         multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
 
@@ -5767,7 +5766,7 @@ def execute_activate_changes(domains):
 
 # TODO: Remove once new changes mechanism has been implemented
 def create_snapshot(comment):
-    make_nagios_directory(snapshot_dir)
+    store.mkdir(snapshot_dir)
 
     snapshot_name = "wato-snapshot-%s.tar" % time.strftime("%Y-%m-%d-%H-%M-%S",
                                                         time.localtime(time.time()))
@@ -6233,7 +6232,7 @@ def save_hosttags(hosttags, auxtags):
     output += "wato_host_tags += \\\n%s\n\n" % format_config_value(hosttags)
     output += "wato_aux_tags += \\\n%s\n" %    format_config_value(auxtags)
 
-    make_nagios_directory(multisite_dir)
+    store.mkdir(multisite_dir)
     store.save_file(multisite_dir + "hosttags.mk", output)
 
     export_hosttags_to_php(hosttags, auxtags)
@@ -6260,7 +6259,7 @@ def save_hosttags(hosttags, auxtags):
 #
 def export_hosttags_to_php(hosttags, auxtags):
     path = php_api_dir + '/hosttags.php'
-    make_nagios_directory(php_api_dir)
+    store.mkdir(php_api_dir)
 
     # need an extra lock file, since we move the auth.php.tmp file later
     # to auth.php. This move is needed for not having loaded incomplete
@@ -7629,7 +7628,7 @@ class RulesetCollection(object):
 
 
     def _save_folder(self, folder):
-        make_nagios_directory(folder.get_root_dir())
+        store.mkdir(folder.get_root_dir())
 
         content = ""
         for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
@@ -8582,7 +8581,7 @@ def load_timeperiods():
 
 
 def save_timeperiods(timeperiods):
-    make_nagios_directory(wato_root_dir)
+    store.mkdir(wato_root_dir)
     store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", timeperiods, pprint_value = config.wato_pprint_config)
 
 
@@ -8758,7 +8757,7 @@ def save_group_information(all_groups, custom_default_config_dir = None):
                     multisite_groups[what][gid][attr] = value
 
     # Save Check_MK world related parts
-    make_nagios_directory(check_mk_config_dir)
+    store.mkdir(check_mk_config_dir)
     output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
         if check_mk_groups.get(what):
@@ -8767,7 +8766,7 @@ def save_group_information(all_groups, custom_default_config_dir = None):
     cmk.store.save_file("%s/groups.mk" % check_mk_config_dir, output)
 
     # Users with passwords for Multisite
-    make_nagios_directory(multisite_config_dir)
+    store.mkdir(multisite_config_dir)
     output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
         if multisite_groups.get(what):
@@ -8875,7 +8874,7 @@ def load_notification_rules():
 
 
 def save_notification_rules(rules):
-    make_nagios_directory(wato_root_dir)
+    store.mkdir(wato_root_dir)
     store.save_to_mk_file(wato_root_dir + "notifications.mk",
                           "notification_rules", rules, pprint_value = config.wato_pprint_config)
 

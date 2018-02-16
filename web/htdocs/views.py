@@ -3052,6 +3052,22 @@ def cmp_simple_number(column, r1, r2):
 def cmp_custom_variable(r1, r2, key, cmp_func):
     return cmp(get_custom_var(r1, key), get_custom_var(r2, key))
 
+
+def cmp_service_name_equiv(r):
+    if r == "Check_MK":
+        return -6
+    elif r == "Check_MK Agent":
+        return -5
+    elif r == "Check_MK Discovery":
+        return -4
+    elif r == "Check_MK inventory":
+        return -3 # FIXME: Remove old name one day
+    elif r == "Check_MK HW/SW Inventory":
+        return -2
+    else:
+        return 0
+
+
 def declare_simple_sorter(name, title, column, func):
     multisite_sorters[name] = {
         "title"   : title,

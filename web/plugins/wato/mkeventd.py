@@ -2273,7 +2273,7 @@ def validate_and_compile_mib(mibname, content):
     except ImportError, e:
         raise Exception(_('You are missing the needed pysmi python module (%s).') % e)
 
-    make_nagios_directory(mkeventd.compiled_mibs_dir)
+    store.mkdir(mkeventd.compiled_mibs_dir)
 
     # This object manages the compilation of the uploaded SNMP mib
     # but also resolving dependencies and compiling dependents

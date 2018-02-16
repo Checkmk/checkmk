@@ -33,6 +33,7 @@ import i18n
 import log
 from lib import *
 import cmk.paths
+import cmk.store as store
 
 from gui_exceptions import MKConfigError, MKAuthException
 
@@ -412,7 +413,7 @@ class LoggedInUser(object):
 
     def _load_confdir(self):
         self.confdir = config_dir + "/" + self.id.encode("utf-8")
-        make_nagios_directory(self.confdir)
+        store.mkdir(self.confdir)
 
 
     def _load_site_config(self):
@@ -649,7 +650,7 @@ def user_may(user_id, pname):
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)
 def save_user_file(name, data, user, unlock=False):
     path = config_dir + "/" + user.encode("utf-8") + "/" + name + ".mk"
-    make_nagios_directory(os.path.dirname(path))
+    store.mkdir(os.path.dirname(path))
     store.save_data_to_file(path, data)
 
 

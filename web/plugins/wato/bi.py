@@ -26,6 +26,8 @@
 
 # WATO-Module for the rules and aggregations of Check_MK BI
 
+import cmk.store as store
+
 if cmk.is_managed_edition():
     import managed
 else:
@@ -164,7 +166,7 @@ class ModeBI(WatoMode):
 
     def save_config(self):
         output = self.generate_bi_config_file_content(self._packs)
-        make_nagios_directory(multisite_dir)
+        store.mkdir(multisite_dir)
         store.save_file(multisite_dir + "bi.mk", output)
 
 

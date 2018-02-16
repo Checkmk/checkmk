@@ -1987,7 +1987,7 @@ def get_av_groups(availability_table, avoptions):
 def cmp_av_entry(a, b):
     return cmp(a["site"], b["site"]) or \
            cmp(num_split(a["host"]) + (a["host"],), num_split(b["host"]) + (b["host"],)) or \
-           cmp(cmp_service_name_equiv(a["service"]), cmp_service_name_equiv(b["service"])) or \
+           cmp(views.cmp_service_name_equiv(a["service"]), views.cmp_service_name_equiv(b["service"])) or \
            cmp(a["service"], b["service"])
 
 

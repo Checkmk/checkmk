@@ -1,0 +1,16 @@
+Title: Check_MK Update Agent: Now automatically repairs missing agent plugins after a failed windows agent update
+Level: 2
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1518711069
+Class: fix
+
+On some occassions, the windows agent may loose its agent plugins during an msi update.
+This issue is still being investigated. In the meantime, the cmk-update-agent.exe is now able to detect
+a failed installation and tries to repair the missing plugin files.
+
+Keep in mind that this workaround is only available -after- the next agent update, so the initial rollout
+of this update may still fail, since it is done by an earlier version of the agent updater.
+

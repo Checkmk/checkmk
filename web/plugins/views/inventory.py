@@ -28,7 +28,7 @@
 import inventory
 from cmk.regex import regex
 import cmk.defines as defines
-
+import cmk.render
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     struct_tree = row.get(column)
@@ -220,7 +220,7 @@ def inv_paint_bytes(b):
 
 @decorate_inv_paint
 def inv_paint_size(b):
-    return "number", bytes_human_readable(b)
+    return "number", cmk.render.bytes(b)
 
 
 @decorate_inv_paint

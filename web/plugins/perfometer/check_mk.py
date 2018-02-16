@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.render
+
 # Perf-O-Meters for Check_MK's checks
 #
 # They are called with:
@@ -1055,7 +1057,7 @@ def perfometer_veeam_client(row, check_command, perf_data):
             duration_secs = int(graph[1])
     h = perfometer_logarithmic_dual_independent(avgspeed_bytes, '#54b948', 10000000, 2, duration_secs, '#2098cb', 500, 2)
 
-    avgspeed = bytes_human_readable(avgspeed_bytes)
+    avgspeed = cmk.render.bytes(avgspeed_bytes)
     # Return Value always as minutes
     duration = age_human_readable(duration_secs, True)
 

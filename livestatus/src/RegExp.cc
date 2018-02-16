@@ -71,11 +71,15 @@ private:
 #include <regex>
 class RegExp::Impl {
 public:
-    // TODO(sp): Handle Syntax == literal.
     Impl(const std::string &str, Case c, Syntax s)
-        : _regex(str, c == Case::respect
-                          ? std::regex::extended
-                          : std::regex::extended | std::regex::icase) {}
+        : _regex(s == Syntax::literal
+                     ? std::regex_replace(
+                           str, std::regex(R"([.^$|()\[\]{}*+?\\])"),
+                           R"(\&)", std::regex_constants::format_sed)
+                     : str,
+                 c == Case::respect
+                     ? std::regex::extended
+                     : std::regex::extended | std::regex::icase) {}
 
     std::string replace(const std::string &str,
                         const std::string &replacement) {

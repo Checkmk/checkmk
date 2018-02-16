@@ -194,20 +194,6 @@ warn_marker    = '<b class="stmark state1">WARN</b>'
 crit_marker    = '<b class="stmark state2">CRIT</b>'
 unknown_marker = '<b class="stmark state3">UNKN</b>'
 
-def paint_host_list(site, hosts):
-    h = ""
-    first = True
-    for host in hosts:
-        if first:
-            first = False
-        else:
-            h += ", "
-        link = "view.py?view_name=hoststatus&site=%s&host=%s" % (html.urlencode(site), html.urlencode(host))
-        if html.var("display_options"):
-            link += "&display_options=%s" % html.var("display_options")
-        h += "<a href=\"%s\">%s</a></div>" % (link, host)
-    return "", h
-
 # There is common code with modules/events.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.

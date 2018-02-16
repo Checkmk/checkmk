@@ -316,7 +316,7 @@ def paint_perfometer(row):
         if title is None and h is None:
             return "", ""
     except Exception, e:
-        log_exception()
+        logger.exception()
         if config.debug:
             raise
         return " ".join(classes), _("Exception: %s") % e
@@ -364,7 +364,7 @@ def cmp_perfometer(r1, r2):
         p2 = Perfometer(r2)
         return cmp(p1.sort_value(), p2.sort_value())
     except Exception, e:
-        log_exception()
+        logger.exception()
         if config.debug:
             raise
         return 0

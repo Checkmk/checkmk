@@ -30,8 +30,6 @@ from cmk.regex import regex
 import cmk.store as store
 import cmk.paths
 
-from log import logger
-
 # We should use /dev/random here for cryptographic safety. But
 # that involves the great problem that the system might hang
 # because of loss of entropy. So we hope /dev/urandom is enough.
@@ -118,12 +116,6 @@ def local_web_plugins_have_changed():
     have_changed = this_time > last_time
     html.set_cache("local_web_plugins_have_changed", have_changed)
     return have_changed
-
-
-def log_exception(msg=None):
-    if msg is None:
-        msg = _('Internal error')
-    logger.error("%s %s: %s" % (html.request_uri(), msg, traceback.format_exc()))
 
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion

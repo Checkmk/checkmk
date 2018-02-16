@@ -26,6 +26,7 @@
 
 import traceback
 
+from log import logger
 from lib import *
 import config
 import watolib
@@ -139,7 +140,7 @@ def page_api():
     except Exception, e:
         if config.debug:
             raise
-        log_exception()
+        logger.exception()
         response = {
             "result_code" : 1,
             "result"      : _("Unhandled exception: %s") % traceback.format_exc(),

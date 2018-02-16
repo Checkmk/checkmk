@@ -37,6 +37,7 @@ import config
 import login
 from lib import *
 import log
+from log import logger
 from html_mod_python import html_mod_python, FinalizeRequest
 import cmk.paths
 import cmk.store as store
@@ -140,7 +141,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
             response_code = apache.HTTP_BAD_GATEWAY
 
         if ty in [MKConfigError, MKGeneralException]:
-            log.logger.error(_("%s: %s") % (plain_title, e))
+            logger.error(_("%s: %s") % (plain_title, e))
 
     except (apache.SERVER_RETURN,
             (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),
@@ -149,7 +150,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
 
     except Exception, e:
         html.unplug_all()
-        log_exception()
+        logger.exception()
         if plain_error():
             html.set_output_format("text")
             html.write(_("Internal error") + ": %s\n" % e)
@@ -161,7 +162,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
         try:
             finalize_request()
         except:
-            log_exception()
+            logger.exception()
             raise
 
     return response_code

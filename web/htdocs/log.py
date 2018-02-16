@@ -25,10 +25,26 @@
 # Boston, MA 02110-1301 USA.
 
 import logging as _logging
+import traceback
+
 import cmk.log
 import cmk.paths
 
+class CMKWebLogger(_logging.getLoggerClass()):
+    def exception(self, msg=None, *args, **kwargs):
+        """Logs an optional message together with the traceback of the
+        last exception to the current logger (-> web.log)"""
+        if msg is None:
+            msg = _('Internal error')
+
+        super(CMKWebLogger, self).exception("%s %s" % (html.request_uri(), msg))
+
+
+_logging.setLoggerClass(CMKWebLogger)
+
+
 logger = cmk.log.get_logger("web")
+
 
 def init_logging():
     _setup_web_log_logging()

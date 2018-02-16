@@ -496,7 +496,7 @@ class ConfigDomainCACertificates(ConfigDomain):
         try:
             return self._update_trusted_cas(config.trusted_certificate_authorities)
         except Exception, e:
-            log_exception()
+            logger.exception()
             return ["Failed to create trusted CA file '%s': %s" %
                         (self.trusted_cas_file, traceback.format_exc())]
 
@@ -528,7 +528,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
                     trusted_cas.update(self._get_certificates_from_file(os.path.join(cert_path, entry)))
                 except IOError:
-                    log_exception()
+                    logger.exception()
                     errors.append("Failed to add certificate '%s' to trusted CA certificates. "
                                   "See web.log for details." % os.path.join(cert_path, entry))
 
@@ -4526,7 +4526,7 @@ def ajax_profile_repl():
         try:
             result = synchronize_profile(site_id, site, config.user.id)
         except Exception, e:
-            log_exception()
+            logger.exception()
             result = "%s" % e
 
     if result == True:
@@ -5042,7 +5042,7 @@ class ActivateChangesManager(ActivateChanges):
         try:
             call_hook_pre_distribute_changes()
         except Exception, e:
-            log_exception()
+            logger.exception()
             if config.debug:
                 raise
             raise MKUserError(None, _("Can not start activation: %s") % e)
@@ -5221,7 +5221,7 @@ class ActivateChangesManager(ActivateChanges):
             site_activation.start()
             os._exit(0)
         except:
-            log_exception()
+            logger.exception()
 
 
     def _log_activation(self):
@@ -5399,7 +5399,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         try:
             self._do_run()
         except:
-            log_exception()
+            logger.exception()
 
 
     def _do_run(self):
@@ -5421,7 +5421,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             self._set_done_result(configuration_warnings)
         except Exception, e:
-            log_exception()
+            logger.exception()
             self._set_result(PHASE_DONE, _("Failed"),
                              _("Failed: %s") % e,
                              state=STATE_ERROR)
@@ -8433,7 +8433,7 @@ class Rule(object):
             try:
                 value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
             except Exception, e:
-                log_exception()
+                logger.exception()
                 html.show_warning(_("Failed to search rule of ruleset '%s' in folder '%s' (%s): %s") %
                                        (self.ruleset.title(), self.folder.title(), self.to_config(), e))
 
@@ -9675,7 +9675,7 @@ class ACTest(object):
             total_result.from_test(self)
             yield total_result
         except Exception, e:
-            log_exception()
+            logger.exception()
             result = ACResultCRIT("<pre>%s</pre>" %
                 _("Failed to execute the test %s: %s") % (html.attrencode(self.__class__.__name__),
                                                           traceback.format_exc()))

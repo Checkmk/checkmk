@@ -483,7 +483,7 @@ class WatoWebApiMode(WatoMode):
         except Exception, e:
             if config.debug:
                 raise
-            log_exception()
+            logger.exception()
             response = { "result_code": 1, "result": "%s" % e }
 
         html.write(json.dumps(response))
@@ -3081,7 +3081,7 @@ class ModeDiscovery(WatoMode):
         try:
             check_table = self._get_check_table()
         except Exception, e:
-            log_exception()
+            logger.exception()
             if config.debug:
                 raise
             retry_link = html.render_a(
@@ -6536,7 +6536,7 @@ class ModeEditLDAPConnection(LDAPMode):
                     except Exception, e:
                         state = False
                         msg = _('Exception: %s') % html.render_text(e)
-                        log_exception()
+                        logger.exception()
 
                     if state:
                         img = html.render_icon("success", _('Success'))
@@ -7177,7 +7177,7 @@ class ModeGlobalSettings(WatoMode):
                 try:
                     to_text = valuespec.value_to_text(value)
                 except Exception, e:
-                    log_exception()
+                    logger.exception()
                     to_text = html.render_error(_("Failed to render value: %r") % value)
 
                 # Is this a simple (single) value or not? change styling in these cases...
@@ -10054,7 +10054,7 @@ class ModeDistributedMonitoring(ModeSites):
                 error = "%s" % e
 
             except Exception, e:
-                log_exception()
+                logger.exception()
                 if config.debug:
                     raise
                 html.add_user_error("_name", error)
@@ -10744,7 +10744,7 @@ def page_automation():
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             html.write(watolib.mk_repr(automation_push_profile()))
         except Exception, e:
-            log_exception()
+            logger.exception()
             if config.debug:
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
@@ -10754,7 +10754,7 @@ def page_automation():
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             html.write(repr(watolib.execute_automation_command(command)))
         except Exception, e:
-            log_exception()
+            logger.exception()
             if config.debug:
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % \
@@ -10850,7 +10850,7 @@ class ModeUsers(WatoMode):
 
                 self._job_snapshot = job.get_status_snapshot()
             except Exception, e:
-                log_exception()
+                logger.exception()
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
         elif html.var("_bulk_delete_users"):
@@ -17355,7 +17355,7 @@ class ModeAnalyzeConfig(WatoMode):
                 time.sleep(0.5) # wait some time to prevent CPU hogs
 
             except Exception, e:
-                log_exception()
+                logger.exception()
                 html.show_error("%s: %s" % (site_id, e))
 
         self._logger.debug("Got test results")
@@ -17419,7 +17419,6 @@ class ModeAnalyzeConfig(WatoMode):
 
         except Exception, e:
             self._logger.exception("[%s] Failed" % site_id)
-            log_exception()
             result = {
                 "state"    : 1,
                 "response" : "Traceback:<br>%s" %

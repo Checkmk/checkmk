@@ -1334,7 +1334,7 @@ def ajax_sync():
         job.start()
         html.write('OK Started synchronization\n')
     except Exception, e:
-        log_exception()
+        logger.exception()
         if config.debug:
             raise
         else:

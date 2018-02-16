@@ -37,6 +37,7 @@ import livestatus
 import notifications
 from valuespec import *
 from lib import *
+from log import logger
 import cmk.paths
 import cmk.store as store
 
@@ -1365,7 +1366,7 @@ def render_master_control():
         try:
             _render_master_control_site(site_id)
         except Exception, e:
-            log_exception()
+            logger.exception()
             write_snapin_exception(e)
         finally:
             if not config.is_single_local_site():

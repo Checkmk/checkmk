@@ -1,0 +1,14 @@
+title: F5 Big-IP: active/active or passive/active vCMP guest failover status
+agents: snmp
+catalog: hw/network/f5
+license: GPL
+distribution: check_mk
+description:
+ The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) to identify
+ if the vCMP guest correctly runs in an {active/active} or an {active/passive} setup.
+ You can configure the expected behaviour via a WATO rule.
+ It will issue a warning if the cluster setup differs from the expected setup.
+
+inventory:
+ Creates one service
+

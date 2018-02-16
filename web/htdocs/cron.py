@@ -29,6 +29,7 @@ import traceback
 from lib import *
 from log import logger
 import cmk.paths
+import cmk.store as store
 
 from gui_exceptions import MKGeneralException
 
@@ -68,7 +69,7 @@ def page_run_cron():
         if time.time() - last_run < 59:
             raise MKGeneralException("Cron called too early. Skipping.")
     file(lock_file, "w") # touches the file
-    aquire_lock(lock_file)
+    store.aquire_lock(lock_file)
 
     logger.debug("Starting cron jobs")
 

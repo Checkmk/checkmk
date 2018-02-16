@@ -100,7 +100,7 @@ def create_php_file(callee, users, role_permissions, groups):
     tempfile = g_auth_base_dir + '/auth.php.tmp'
     lockfile = g_auth_base_dir + '/auth.php.state'
     file(lockfile, "a")
-    aquire_lock(lockfile)
+    store.aquire_lock(lockfile)
 
     # First write a temp file and then do a move to prevent syntax errors
     # when reading half written files during creating that new file
@@ -214,7 +214,7 @@ function permitted_maps($username) {
     # Now really replace the file
     os.rename(tempfile, g_auth_base_dir + '/auth.php')
 
-    release_lock(lockfile)
+    store.release_lock(lockfile)
 
 
 def create_auth_file(callee, users):

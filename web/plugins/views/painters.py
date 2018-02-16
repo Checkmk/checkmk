@@ -1762,18 +1762,21 @@ multisite_painters["host_services"] = {
 
 
 def paint_host_list(site, hosts):
-    h = ""
-    first = True
+    entries = []
     for host in hosts:
-        if first:
-            first = False
-        else:
-            h += ", "
-        link = "view.py?view_name=hoststatus&site=%s&host=%s" % (html.urlencode(site), html.urlencode(host))
+        args = [
+            ("view_name", "hoststatus"),
+            ("site",      site),
+            ("host",      host),
+        ]
+
         if html.var("display_options"):
-            link += "&display_options=%s" % html.var("display_options")
-        h += "<a href=\"%s\">%s</a></div>" % (link, host)
-    return "", h
+            args.append(("display_options", html.var("display_options")))
+
+        url = html.makeuri_contextless(args, filename="view.py")
+        entries.append(html.render_a(host, href=url))
+
+    return "", HTML(", ").join(entries)
 
 multisite_painters["host_parents"] = {
     "title"   : _("Host's parents"),

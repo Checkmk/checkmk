@@ -1,5 +1,3 @@
-1.2.8p28:
-
 1.2.8p27:
     Checks & Agents:
     * 5302 FIX: oracle_instance: Fixed crash if output contains more than 12 columns

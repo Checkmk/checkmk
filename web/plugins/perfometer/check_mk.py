@@ -1058,8 +1058,7 @@ def perfometer_veeam_client(row, check_command, perf_data):
     h = perfometer_logarithmic_dual_independent(avgspeed_bytes, '#54b948', 10000000, 2, duration_secs, '#2098cb', 500, 2)
 
     avgspeed = cmk.render.bytes(avgspeed_bytes)
-    # Return Value always as minutes
-    duration = age_human_readable(duration_secs, True)
+    duration = age_human_readable(duration_secs)
 
     return "%s/s&nbsp;&nbsp;&nbsp;%s" % (avgspeed, duration), h
 

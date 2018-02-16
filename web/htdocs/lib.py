@@ -354,26 +354,26 @@ def number_human_readable(n, precision=1, unit="B"):
         return (f + "%s") % (n, unit)
 
 
-def age_human_readable(secs, min_only=False):
+def age_human_readable(secs):
     if secs < 0:
-        return "- " + age_human_readable(-secs, min_only)
+        return "- " + age_human_readable(-secs)
     elif secs > 0 and secs < 1: # ms
         return physical_precision(secs, 3, _("s"))
-    elif min_only:
-        mins = secs / 60.0
-        return "%.1f %s" % (mins, _("m"))
     elif secs < 10:
         return "%.2f %s" % (secs, _("s"))
     elif secs < 60:
         return "%.1f %s" % (secs, _("s"))
     elif secs < 240:
         return "%d %s" % (secs, _("s"))
+
     mins = secs / 60
     if mins < 360:
         return "%d %s" % (mins, _("m"))
+
     hours = mins / 60
     if hours < 48:
         return "%d %s" % (hours, _("h"))
+
     days = hours / 24.0
     if days < 6:
         d = ("%.1f" % days).rstrip("0").rstrip(".")

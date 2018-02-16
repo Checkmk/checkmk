@@ -10292,7 +10292,7 @@ def mode_users(phase):
                    sortable=False, css="buttons")
 
         if id != config.user.id:
-            html.checkbox("_c_user_%s" % id)
+            html.checkbox("_c_user_%s" % base64.b64encode(id.encode("utf-8")))
 
         user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
         connection = userdb.get_connection(user_connection_id)
@@ -10440,7 +10440,7 @@ def bulk_delete_users_after_confirm(users):
     selected_users = []
     for varname in html.all_varnames_with_prefix("_c_user_"):
         if html.get_checkbox(varname):
-            user = varname.split("_c_user_")[-1]
+            user = base64.b64decode(varname.split("_c_user_")[-1]).decode("utf-8")
             if user in users:
                 selected_users.append(user)
 

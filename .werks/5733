@@ -1,0 +1,11 @@
+Title: Fixed bulk deletion of users with special characters in their ID
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p25
+Date: 1518768939
+
+

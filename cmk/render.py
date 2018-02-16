@@ -32,6 +32,7 @@ are just for optical output purposes."""
 # THIS IS STILL EXPERIMENTAL
 
 import time
+import math
 
 # TODO: Clean this up one day by using the way recommended by gettext.
 # (See https://docs.python.org/2/library/gettext.html). For this we
@@ -41,6 +42,15 @@ try:
 except NameError:
     _ = lambda x: x # Fake i18n when not available
 
+#.
+#   .--Date/Time-----------------------------------------------------------.
+#   |           ____        _          _______ _                           |
+#   |          |  _ \  __ _| |_ ___   / /_   _(_)_ __ ___   ___            |
+#   |          | | | |/ _` | __/ _ \ / /  | | | | '_ ` _ \ / _ \           |
+#   |          | |_| | (_| | ||  __// /   | | | | | | | | |  __/           |
+#   |          |____/ \__,_|\__\___/_/    |_| |_|_| |_| |_|\___|           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def date(timestamp):
     return time.strftime(_("%Y-%m-%d"), time.localtime(timestamp))
@@ -88,6 +98,15 @@ class Age(object):
     def __float__(self):
         return float(self.__secs)
 
+#.
+#   .--Bits/Bytes----------------------------------------------------------.
+#   |            ____  _ _          ______        _                        |
+#   |           | __ )(_) |_ ___   / / __ ) _   _| |_ ___  ___             |
+#   |           |  _ \| | __/ __| / /|  _ \| | | | __/ _ \/ __|            |
+#   |           | |_) | | |_\__ \/ / | |_) | |_| | ||  __/\__ \            |
+#   |           |____/|_|\__|___/_/  |____/ \__, |\__\___||___/            |
+#   |                                       |___/                          |
+#   '----------------------------------------------------------------------'
 
 def bytes(b, base=1024.0, bytefrac=True, unit="B"):
     """Formats byte values to be used in texts for humans.
@@ -130,3 +149,29 @@ def filesize(size):
         return str(size)[:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
     else:
         return str(size)[:-9] + dec_sep + str(size)[-9:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
+
+
+#.
+#   .--Misc.Numbers--------------------------------------------------------.
+#   |    __  __ _            _   _                 _                       |
+#   |   |  \/  (_)___  ___  | \ | |_   _ _ __ ___ | |__   ___ _ __ ___     |
+#   |   | |\/| | / __|/ __| |  \| | | | | '_ ` _ \| '_ \ / _ \ '__/ __|    |
+#   |   | |  | | \__ \ (__ _| |\  | |_| | | | | | | |_) |  __/ |  \__ \    |
+#   |   |_|  |_|_|___/\___(_)_| \_|\__,_|_| |_| |_|_.__/ \___|_|  |___/    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def percent(perc, precision=2, drop_zeroes=True):
+    """Renders a given number as string"""
+    if perc > 0:
+        perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
+    else:
+        perc_precision = 1
+
+    text = "%%.%df" % perc_precision % perc
+
+    if drop_zeroes:
+        text = text.rstrip("0").rstrip(".")
+
+    return text + "%"
+

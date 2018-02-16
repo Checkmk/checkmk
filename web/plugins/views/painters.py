@@ -70,6 +70,7 @@ import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
 import config
 
 import cmk.paths
+import cmk.render
 import cmk.man_pages as man_pages
 from cmk.regex import regex
 from cmk.defines import short_service_state_name, short_host_state_name
@@ -820,7 +821,7 @@ def render_cache_info(what, row):
 
     if cache_interval:
         percentage = 100.0 * cache_age / cache_interval
-        text += _(", elapsed cache lifespan: %s") % percent_human_redable(percentage)
+        text += _(", elapsed cache lifespan: %s") % cmk.render.percent(percentage)
 
     return text
 

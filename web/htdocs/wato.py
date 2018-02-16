@@ -6728,6 +6728,12 @@ class ModeEditLDAPConnection(LDAPMode):
                 ),
                 forth = lambda x: "keep" if (x == "skip") else x
             )),
+            ("create_only_on_login", FixedValue(
+                title  = _("Create users only on login"),
+                value  = True,
+                totext = _("Instead of creating the user accounts during the regular sync, create "
+                           "the user on the first login."),
+            )),
         ]
 
         group_elements = [
@@ -6813,7 +6819,7 @@ class ModeEditLDAPConnection(LDAPMode):
                 optional_keys = [
                     'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
                     'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
-                    'group_filter', 'group_member', 'suffix',
+                    'group_filter', 'group_member', 'suffix', 'create_only_on_login',
                 ],
                 validate = self._validate_ldap_connection,
             ),

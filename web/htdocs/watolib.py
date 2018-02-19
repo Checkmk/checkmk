@@ -1582,7 +1582,7 @@ class CREFolder(BaseFolder):
     def _load(self):
         wato_info               = self._load_wato_info()
         self._title             = wato_info.get("title", self._fallback_title())
-        self._attributes        = wato_info.get("attributes", {})
+        self._attributes        = self._transform_old_agent_type_in_attributes(wato_info.get("attributes", {}))
         self._locked            = wato_info.get("lock", False)
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
 

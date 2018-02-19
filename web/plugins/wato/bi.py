@@ -320,6 +320,12 @@ class ModeBI(WatoMode):
     # Make some conversions so that the format of the
     # valuespecs is matched
     def _convert_rule_from_bi(self, rule, ruleid):
+        def tryint(x):
+            try:
+                return int(x)
+            except:
+                return x
+
         if type(rule) == tuple:
             rule = {
                 "title"       : rule[0],

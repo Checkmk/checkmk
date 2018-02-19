@@ -555,8 +555,7 @@ class ManPageRenderer(object):
     def _load(self):
         self.man_page = load_man_page(self.name)
         if not self.man_page:
-            sys.stdout.write("ERROR: No manpage for %s. Sorry.\n" % self.name)
-            return
+            raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
 
 
     def paint(self):

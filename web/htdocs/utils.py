@@ -102,6 +102,7 @@ def saveint(x):
 # Furthermore we filter out non-printable characters. The byte
 # 0x00 for example does not make it through HTTP and the URL.
 def get_random_string(size, from_ascii=48, to_ascii=90):
+    """Generate a random string (no cryptographic safety)"""
     secret = ""
     urandom = file("/dev/urandom")
     while len(secret) < size:
@@ -109,3 +110,15 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
         if ord(c) >= from_ascii and ord(c) <= to_ascii:
             secret += c
     return secret
+
+
+def gen_id():
+    """Generates a unique id"""
+    try:
+        return file('/proc/sys/kernel/random/uuid').read().strip()
+    except IOError:
+        # On platforms where the above file does not exist we try to
+        # use the python uuid module which seems to be a good fallback
+        # for those systems. Well, if got python < 2.5 you are lost for now.
+        import uuid
+        return str(uuid.uuid4())

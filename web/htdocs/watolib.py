@@ -4839,7 +4839,7 @@ class ActivateChangesWriter(ActivateChanges):
 
 
     def _new_change_id(self):
-        return gen_id()
+        return utils.gen_id()
 
 
     def _add_change_to_site(self, site_id, change_id, action_name, text, obj,
@@ -4994,7 +4994,7 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _new_activation_id(self):
-        return gen_id()
+        return utils.gen_id()
 
 
     def _get_sites(self, sites):

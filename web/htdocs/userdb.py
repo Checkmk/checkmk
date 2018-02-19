@@ -444,7 +444,7 @@ def initialize_session(username):
 
 # Creates a random session id for the user and returns it.
 def create_session_id():
-    return gen_id()
+    return utils.gen_id()
 
 
 # Updates the current session of the user and returns the session_id or only
@@ -880,7 +880,7 @@ def rewrite_users():
 
 
 def create_cmk_automation_user():
-    secret = gen_id()
+    secret = utils.gen_id()
 
     users = load_users(lock=True)
     users["automation"] = {

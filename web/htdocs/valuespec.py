@@ -1452,7 +1452,7 @@ class Float(Integer):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        Integer.render_input(self, varprefix, value, convfunc = savefloat)
+        Integer.render_input(self, varprefix, value, convfunc = utils.savefloat)
 
     def canonical_value(self):
         return float(Integer.canonical_value(self))

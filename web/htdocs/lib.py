@@ -116,12 +116,3 @@ def local_web_plugins_have_changed():
     have_changed = this_time > last_time
     html.set_cache("local_web_plugins_have_changed", have_changed)
     return have_changed
-
-
-# TODO: Remove this helper function. Replace with explicit checks and covnersion
-# in using code.
-def savefloat(f):
-    try:
-        return float(f)
-    except:
-        return 0.0

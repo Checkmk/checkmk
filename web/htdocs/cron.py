@@ -26,6 +26,7 @@
 
 import time
 import traceback
+import utils
 from lib import *
 from log import logger
 import cmk.paths
@@ -46,7 +47,7 @@ def load_plugins(force):
 
     global multisite_cronjobs
     multisite_cronjobs = []
-    load_web_plugins("cron", globals())
+    utils.load_web_plugins("cron", globals())
 
     loaded_with_language = current_language
 

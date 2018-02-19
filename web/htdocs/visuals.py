@@ -27,6 +27,7 @@
 import os, copy, sys
 import json
 
+import utils
 from log import logger
 from lib import *
 from gui_exceptions import MKGeneralException, MKAuthException, MKUserError, MKInternalError
@@ -80,7 +81,7 @@ def load_plugins(force):
     global multisite_filters    ; multisite_filters  = {}
     global ubiquitary_filters   ; ubiquitary_filters = [] # Always show these filters
 
-    load_web_plugins('visuals', globals())
+    utils.load_web_plugins('visuals', globals())
     declare_site_filters()
 
     loaded_with_language = current_language

@@ -48,6 +48,7 @@ from gui_exceptions import MKGeneralException, MKUserError, MKInternalError, \
 
 import livestatus
 import cmk.utils
+import cmk.render
 from cmk.regex import regex
 
 import json
@@ -299,6 +300,7 @@ class GraphDestinations(object):
 #   +----------------------------------------------------------------------+
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
+# A few helper function to be used by the definitions
 
 # "45.0" -> 45.0, "45" -> 45
 def float_or_int(v):
@@ -312,7 +314,10 @@ def metric_to_text(metric, value=None):
         value = metric["value"]
     return metric["unit"]["render"](value)
 
-# A few helper function to be used by the definitions
+# aliases to be compatible to old plugins
+physical_precision = cmk.render.physical_precision
+age_human_readable = cmk.render.approx_age
+
 
 #.
 #   .--Colors--------------------------------------------------------------.

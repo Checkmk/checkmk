@@ -75,28 +75,71 @@ def time_since(timestamp):
 
 
 class Age(object):
+    """Format time difference seconds into approximated human readable text"""
     def __init__(self, secs):
         super(Age, self).__init__()
         self.__secs = secs
 
     def __str__(self):
-        if self.__secs < 240:
-            return "%d sec" % self.__secs
-        mins = self.__secs / 60
-        if mins < 120:
-            return "%d min" % mins
-        hours, mins = divmod(mins, 60)
-        if hours < 12 and mins > 0:
-            return "%d hours %d min" % (hours, mins)
-        elif hours < 48:
-            return "%d hours" % hours
-        days, hours = divmod(hours, 24)
-        if days < 7 and hours > 0:
-            return "%d days %d hours" % (days, hours)
-        return "%d days" % days
+        secs = self.__secs
+
+        if secs < 0:
+            return "- " + approx_age(-secs)
+        elif secs > 0 and secs < 1: # ms
+            return physical_precision(secs, 3, _("s"))
+        elif secs < 10:
+            return "%.2f %s" % (secs, _("s"))
+        elif secs < 60:
+            return "%.1f %s" % (secs, _("s"))
+        elif secs < 240:
+            return "%d %s" % (secs, _("s"))
+
+        mins = secs / 60
+        if mins < 360:
+            return "%d %s" % (mins, _("m"))
+
+        hours = mins / 60
+        if hours < 48:
+            return "%d %s" % (hours, _("h"))
+
+        days = hours / 24.0
+        if days < 6:
+            d = ("%.1f" % days).rstrip("0").rstrip(".")
+            return "%s %s" % (d, _("d"))
+        elif days < 999:
+            return "%.0f %s" % (days, _("d"))
+        else:
+            years = days / 365
+            if years < 10:
+                return "%.1f %s" % (years, _("y"))
+            else:
+                return "%.0f %s" % (years, _("y"))
+
+    # OLD LOGIC:
+    #
+    #def __str__(self):
+    #    if self.__secs < 240:
+    #        return "%d sec" % self.__secs
+    #    mins = self.__secs / 60
+    #    if mins < 120:
+    #        return "%d min" % mins
+    #    hours, mins = divmod(mins, 60)
+    #    if hours < 12 and mins > 0:
+    #        return "%d hours %d min" % (hours, mins)
+    #    elif hours < 48:
+    #        return "%d hours" % hours
+    #    days, hours = divmod(hours, 24)
+    #    if days < 7 and hours > 0:
+    #        return "%d days %d hours" % (days, hours)
+    #    return "%d days" % days
 
     def __float__(self):
         return float(self.__secs)
+
+
+# TODO: Make call sites use Age() directly?
+def approx_age(secs):
+    return "%s" % Age(secs)
 
 #.
 #   .--Bits/Bytes----------------------------------------------------------.
@@ -162,7 +205,7 @@ def filesize(size):
 #   '----------------------------------------------------------------------'
 
 def percent(perc, precision=2, drop_zeroes=True):
-    """Renders a given number as string"""
+    """Renders a given number as percentage string"""
     if perc > 0:
         perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
     else:
@@ -175,3 +218,95 @@ def percent(perc, precision=2, drop_zeroes=True):
 
     return text + "%"
 
+
+def scientific(v, precision=3):
+    """Renders a given number in scientific notation (E-notation)"""
+    if v == 0:
+        return "0"
+    elif v < 0:
+        return "-" + scientific(v*-1, precision)
+
+    mantissa, exponent = _frexp10(float(v))
+    # Render small numbers without exponent
+    if exponent >= -3 and exponent <= 4:
+        return "%%.%df" % max(0, precision - exponent) % v
+
+    return "%%.%dfe%%d" % precision % (mantissa, exponent)
+
+
+# Render a physical value with a precision of p
+# digits. Use K (kilo), M (mega), m (milli), µ (micro)
+# p is the number of non-zero digits - not the number of
+# decimal places.
+# Examples for p = 3:
+# a: 0.0002234   b: 4,500,000  c: 137.56
+# Result:
+# a: 223 µ       b: 4.50 M     c: 138
+#
+# Note if the type of v is integer, then the precision cut
+# down to the precision of the actual number
+def physical_precision(v, precision, unit_symbol):
+    if v < 0:
+        return "-" + physical_precision(-v, precision, unit_symbol)
+
+    scale_symbol, places_after_comma, scale_factor = calculate_physical_precision(v, precision)
+
+    scaled_value = float(v) / scale_factor
+    return (u"%%.%df %%s%%s" % places_after_comma) % (scaled_value, scale_symbol, unit_symbol)
+
+
+def calculate_physical_precision(v, precision):
+    if v == 0:
+        return "", precision - 1, 1
+
+    # Splitup in mantissa (digits) an exponent to the power of 10
+    # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
+    mantissa, exponent = _frexp10(float(v))
+
+    if type(v) == int:
+        precision = min(precision, exponent + 1)
+
+    # Choose a power where no artifical zero (due to rounding) needs to be
+    # placed left of the decimal point.
+    scale_symbols = {
+        -5 : "f",
+        -4 : "p",
+        -3 : "n",
+        -2 : u"µ",
+        -1 : "m",
+         0 : "",
+         1 : "K",
+         2 : "M",
+         3 : "G",
+         4 : "T",
+         5 : "P",
+    }
+    scale = 0
+
+    while exponent < 0 and scale > -5:
+        scale -= 1
+        exponent += 3
+
+    # scale, exponent = divmod(exponent, 3)
+    places_before_comma = exponent + 1
+    places_after_comma = precision - places_before_comma
+    while places_after_comma < 0 and scale < 5:
+        scale += 1
+        exponent -= 3
+        places_before_comma = exponent + 1
+        places_after_comma = precision - places_before_comma
+
+    return scale_symbols[scale], places_after_comma, 1000 ** scale
+
+
+def _frexp10(x):
+    return _frexpb(x, 10)
+
+
+def _frexpb(x, base):
+    exp = int(math.log(x, base))
+    mantissa = x / base**exp
+    if mantissa < 1:
+        mantissa *= base
+        exp -= 1
+    return mantissa, exp

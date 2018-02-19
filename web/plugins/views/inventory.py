@@ -359,7 +359,7 @@ def inv_paint_date_and_time(timestamp):
 @decorate_inv_paint
 def inv_paint_age(age):
     if age:
-        return "number", age_human_readable(age)
+        return "number", cmk.render.approx_age(age)
     else:
         return "", ""
 

@@ -650,7 +650,7 @@ def perfometer_fileinfo(row, check_command, perf_data):
     texts = []
     for i, color, base, scale, verbfunc in [
         ( 0, "#ffcc50", 1000000, 10, lambda v: number_human_readable(v, precision=0) ), # size
-        ( 1, "#ccff50", 3600, 10,    age_human_readable )]:   # age
+        ( 1, "#ccff50", 3600, 10,    cmk.render.approx_age)]:   # age
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
@@ -662,7 +662,7 @@ def perfometer_fileinfo_groups(row, check_command, perf_data):
     texts = []
     for i, color, base, scale, verbfunc in [
         ( 2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v ), # count
-        ( 1, "#ccff50", 3600, 10, age_human_readable )]: #age_newest
+        ( 1, "#ccff50", 3600, 10, cmk.render.approx_age )]: #age_newest
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
@@ -1058,7 +1058,7 @@ def perfometer_veeam_client(row, check_command, perf_data):
     h = perfometer_logarithmic_dual_independent(avgspeed_bytes, '#54b948', 10000000, 2, duration_secs, '#2098cb', 500, 2)
 
     avgspeed = cmk.render.bytes(avgspeed_bytes)
-    duration = age_human_readable(duration_secs)
+    duration = cmk.render.approx_age(duration_secs)
 
     return "%s/s&nbsp;&nbsp;&nbsp;%s" % (avgspeed, duration), h
 

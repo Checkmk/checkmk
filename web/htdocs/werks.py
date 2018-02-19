@@ -27,6 +27,7 @@
 # Functions for parsing Werks and showing the users a browsable change
 # log
 
+import utils
 import config, os, table
 import re
 from lib import *
@@ -376,10 +377,10 @@ def werk_matches_options(werk, werk_table_options):
         return False
 
     from_version, to_version = werk_table_options["version"]
-    if from_version and cmp_version(werk["version"], from_version) < 0:
+    if from_version and utils.cmp_version(werk["version"], from_version) < 0:
         return False
 
-    if to_version and cmp_version(werk["version"], to_version) > 0:
+    if to_version and utils.cmp_version(werk["version"], to_version) > 0:
         return False
 
     if werk_table_options["content"]:

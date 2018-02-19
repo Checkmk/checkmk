@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import utils
 import inventory
 import cmk.defines as defines
 
@@ -316,9 +317,9 @@ class FilterInvtableVersion(Filter):
         new_rows = []
         for row in rows:
             version = row.get(self.name, "")
-            if from_version and cmp_version(version, from_version) == -1:
+            if from_version and utils.cmp_version(version, from_version) == -1:
                 continue
-            if to_version and cmp_version(version, to_version) == 1:
+            if to_version and utils.cmp_version(version, to_version) == 1:
                 continue
             new_rows.append(row)
 
@@ -546,7 +547,7 @@ class FilterInvHasSoftwarePackage(Filter):
         return a != b and not self.version_is_higher(a, b)
 
     def version_is_higher(self, a, b):
-        return cmp_version(a, b) == 1
+        return utils.cmp_version(a, b) == 1
 
 declare_filter(801, FilterInvHasSoftwarePackage())
 

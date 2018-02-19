@@ -156,11 +156,3 @@ def num_split(s):
             parts.append(part)
 
     return tuple(parts)
-
-
-def cmp_version(a, b):
-    if a == None or b == None:
-        return cmp(a, b)
-    aa = map(tryint, a.split("."))
-    bb = map(tryint, b.split("."))
-    return cmp(aa, bb)

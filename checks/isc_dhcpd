@@ -75,6 +75,8 @@ def parse_isc_dhcpd(info):
                 parsed["pids"] = map(int, line[1:])
 
         elif mode == "pools":
+            if 'bootp' in line[0]:
+                line = line[1:]
             start, end = line[0], line[1]
             item = "%s-%s" % (start, end)
             parsed["pools"][item] = (ip_to_number(start), ip_to_number(end))

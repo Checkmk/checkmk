@@ -68,6 +68,10 @@ class SNMPDataSource(DataSource):
         return "snmp"
 
 
+    def title(self):
+        return "SNMP"
+
+
     def _cpu_tracking_id(self):
         return "snmp"
 
@@ -96,8 +100,8 @@ class SNMPDataSource(DataSource):
         if portinfo == None:
             portinfo = 'default'
 
-        return "SNMP (%s, Bulk walk: %s, Port: %s, Inline: %s)" % \
-                                   (cred, bulk, portinfo, inline)
+        return "%s (%s, Bulk walk: %s, Port: %s, Inline: %s)" % \
+                           (self.title(), cred, bulk, portinfo, inline)
 
 
     def _from_cache_file(self, raw_data):
@@ -250,6 +254,10 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
 
     def id(self):
         return "mgmt_snmp"
+
+
+    def title(self):
+        return "Management board - SNMP"
 
 
     def _execute(self, hostname, ipaddress):

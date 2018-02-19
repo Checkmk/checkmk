@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Painters for Perf-O-Meter
+import utils
 import math
 import metrics
 from log import logger
@@ -382,4 +383,4 @@ multisite_sorters["perfometer"] = {
     "cmp"     : cmp_perfometer,
 }
 
-load_web_plugins("perfometer", globals())
+utils.load_web_plugins("perfometer", globals())

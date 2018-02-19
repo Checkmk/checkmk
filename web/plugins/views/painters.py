@@ -68,6 +68,7 @@ import copy
 import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
 import config
+import utils
 
 import cmk.paths
 import cmk.render
@@ -249,7 +250,7 @@ multisite_icons = []
 # Use this structure for new icons
 multisite_icons_and_actions = {}
 
-load_web_plugins('icons', globals())
+utils.load_web_plugins('icons', globals())
 
 def get_multisite_icons():
     icons = {}

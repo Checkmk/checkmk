@@ -28,6 +28,7 @@ import pprint
 import os
 import copy
 import urlparse
+import utils
 import config, views, userdb, pagetypes
 import notify, werks
 import sites
@@ -62,7 +63,7 @@ def load_plugins(force):
 
     config.declare_permission_section("sidesnap", _("Sidebar snapins"), do_sort = True)
 
-    load_web_plugins("sidebar", globals())
+    utils.load_web_plugins("sidebar", globals())
 
     transform_old_dict_based_snapins()
 

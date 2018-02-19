@@ -80,7 +80,7 @@ def load_plugins(force):
     user_attributes.clear()
     multisite_user_connectors.clear()
 
-    load_web_plugins("userdb", globals())
+    utils.load_web_plugins("userdb", globals())
     builtin_user_attribute_names = user_attributes.keys()
     declare_custom_user_attrs()
 

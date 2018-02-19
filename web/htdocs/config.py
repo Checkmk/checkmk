@@ -29,6 +29,7 @@ import pprint
 import glob
 import copy
 
+import utils
 import i18n
 import log
 from lib import *
@@ -860,7 +861,7 @@ def get_event_console_site_choices():
 #   '----------------------------------------------------------------------'
 
 def load_plugins(force):
-    load_web_plugins("config", globals())
+    utils.load_web_plugins("config", globals())
 
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
     for br in builtin_role_ids:

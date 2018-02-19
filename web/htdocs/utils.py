@@ -122,3 +122,27 @@ def gen_id():
         # for those systems. Well, if got python < 2.5 you are lost for now.
         import uuid
         return str(uuid.uuid4())
+
+
+# Load all files below share/check_mk/web/plugins/WHAT into a
+# specified context (global variables). Also honors the
+# local-hierarchy for OMD
+# TODO: Couldn't we precompile all our plugins during packaging to make loading faster?
+# TODO: Replace the execfile thing by some more pythonic plugin structure. But this would
+#       be a large rewrite :-/
+def load_web_plugins(forwhat, globalvars):
+    for plugins_path in [ cmk.paths.web_dir + "/plugins/" + forwhat,
+                          cmk.paths.local_web_dir + "/plugins/" + forwhat ]:
+        if not os.path.exists(plugins_path):
+            continue
+
+        for fn in sorted(os.listdir(plugins_path)):
+            file_path = plugins_path + "/" + fn
+
+            if fn.endswith(".py") and not os.path.exists(file_path + "c"):
+                execfile(file_path, globalvars)
+
+            elif fn.endswith(".pyc"):
+                code_bytes = file(file_path).read()[8:]
+                code = marshal.loads(code_bytes)
+                exec code in globalvars

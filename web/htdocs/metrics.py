@@ -35,6 +35,8 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 import math, time, colorsys, shlex, operator, random
 import string
+
+import utils
 import config, pagetypes, table
 import sites
 import traceback
@@ -96,11 +98,13 @@ def load_plugins(force):
     # This is needed to maintain backwards-compatibility.
     global graph_info      ; graph_info      = AutomaticDict("manual_graph_template")
 
-    load_web_plugins("metrics", globals())
+    utils.load_web_plugins("metrics", globals())
 
     fixup_graph_info()
     fixup_unit_info()
     fixup_perfometer_info()
+    loaded_with_language = current_language
+
     loaded_with_language = current_language
 
 

@@ -28,6 +28,7 @@ import traceback
 
 from log import logger
 from lib import *
+import utils
 import config
 import watolib
 import userdb
@@ -51,7 +52,7 @@ def load_plugins(force):
     if loaded_with_language == current_language and not force:
         return
 
-    load_web_plugins("webapi", globals())
+    utils.load_web_plugins("webapi", globals())
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

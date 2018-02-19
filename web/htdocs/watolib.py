@@ -139,7 +139,7 @@ def load_watolib_plugins():
 
     backup_domains.clear()
 
-    load_web_plugins("watolib", globals())
+    utils.load_web_plugins("watolib", globals())
     return globals()
 
 def init_watolib_datastructures():

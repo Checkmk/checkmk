@@ -65,7 +65,7 @@ def load_plugins(force):
 
     config.declare_permission_section("action", _("Commands on host and services"), do_sort = True)
 
-    load_web_plugins("views", globals())
+    utils.load_web_plugins("views", globals())
     load_host_tag_painters()
     clear_alarm_sound_states()
 

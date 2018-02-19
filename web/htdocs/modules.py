@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import utils
 from types import ModuleType
-from lib import load_web_plugins
 from mod_python.apache import import_module # pylint: disable=import-error
 import pagetypes
 
@@ -90,7 +90,7 @@ def init_modules():
         modules.append(import_module(module_name))
 
     # Load all multisite pages which will also perform imports of the needed modules
-    load_web_plugins('pages', globals())
+    utils.load_web_plugins('pages', globals())
 
     # Save the modules loaded during the former steps in the modules list
     modules += [ globals()[m] for m in set(imports()).difference(module_names_prev) ]

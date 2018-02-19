@@ -18771,7 +18771,7 @@ def load_plugins(force):
          _("Service discovery: Remove services"),
          [ "admin", "user" ])
 
-    load_web_plugins("wato", globals())
+    utils.load_web_plugins("wato", globals())
 
     watolib.declare_host_tag_attributes(force = True)
 

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import utils
 import config, time, os, re, pprint
 import weblib, traceback, forms, valuespec, inventory, visuals, metrics
 import sites
@@ -3038,9 +3039,7 @@ def cmp_simple_string(column, r1, r2):
     return cmp_insensitive_string(v1, v2)
 
 def cmp_num_split(column, r1, r2):
-    c1 = num_split(r1[column].lower())
-    c2 = num_split(r2[column].lower())
-    return cmp(c1, c2)
+    return utils.cmp_num_split(r1[column].lower(), r2[column].lower())
 
 def cmp_string_list(column, r1, r2):
     v1 = ''.join(r1.get(column, []))

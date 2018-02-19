@@ -101,6 +101,7 @@ import time
 import traceback
 from hashlib import sha256
 
+import utils
 import i18n
 import config
 import table
@@ -811,7 +812,7 @@ class ModeFolder(WatoMode):
         show_checkboxes = html.var('show_checkboxes', '0') == '1'
 
         hostnames = self._folder.hosts().keys()
-        hostnames.sort(cmp = lambda a, b: cmp(num_split(a), num_split(b)))
+        hostnames.sort(cmp=utils.cmp_num_split)
         search_text = html.var("search")
 
         # Helper function for showing bulk actions. This is needed at the bottom

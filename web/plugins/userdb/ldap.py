@@ -70,8 +70,6 @@ try:
 except:
     pass
 
-from lib import *
-
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
 # by configuration.

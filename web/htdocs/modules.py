@@ -25,9 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-import utils
 from types import ModuleType
 from mod_python.apache import import_module # pylint: disable=import-error
+
+import cmk.paths
+
+import utils
 import pagetypes
 
 # Register non page specific modules which are not having own pages,

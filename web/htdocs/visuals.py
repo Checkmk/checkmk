@@ -25,11 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 import os, copy, sys
+import traceback
 import json
 
 import utils
 from log import logger
-from lib import *
 from gui_exceptions import MKGeneralException, MKAuthException, MKUserError, MKInternalError
 from valuespec import *
 import config, table, userdb

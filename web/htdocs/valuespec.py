@@ -35,21 +35,28 @@
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
 
-import math, os, time, re, sre_constants, urlparse, forms, tempfile, types
-import json
+import math
+import os
+import time
+import re
+import sre_constants
+import urlparse
+import types
 import base64
 import hashlib
 import socket
 import ipaddress
 from Cryptodome.PublicKey import RSA
 from UserDict import DictMixin
+import json
 
-import utils
-import livestatus
-from lib import *
-from gui_exceptions import MKUserError, MKGeneralException
-
+import cmk.paths
 import cmk.defines as defines
+import livestatus
+
+import forms
+import utils
+from gui_exceptions import MKUserError, MKGeneralException
 
 def type_name(v):
     try:

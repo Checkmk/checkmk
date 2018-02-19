@@ -28,16 +28,18 @@ import pprint
 import os
 import copy
 import urlparse
+import traceback
+
+import cmk.paths
+import cmk.store as store
+
 import utils
 import config, views, userdb, pagetypes
 import notify, werks
 import sites
 import modules
-from lib import *
 from gui_exceptions import MKGeneralException, MKUserError, MKException
 from log import logger
-import cmk.paths
-import cmk.store as store
 
 import json
 

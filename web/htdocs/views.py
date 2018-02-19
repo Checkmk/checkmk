@@ -31,7 +31,6 @@ import sites
 import bi
 import inspect
 import livestatus
-from lib import *
 from log import logger
 from gui_exceptions import MKGeneralException, MKUserError, MKInternalError
 

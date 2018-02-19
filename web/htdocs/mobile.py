@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import re
-from lib import *
 import views, config, visuals, metrics
 from gui_exceptions import MKGeneralException, MKUserError
 

@@ -33,7 +33,6 @@ import time
 import cmk
 import background_job
 import traceback
-from lib import logger
 from cmk.exceptions import MKGeneralException
 import cmk.store
 
@@ -71,7 +70,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
     def initialize_environment(self):
         # setup logging
         log.init_logging()
-        self._logger = logger.getChild("background_process")
+        self._logger = log.logger.getChild("background_process")
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
 
         # Disable html request timeout
@@ -224,7 +223,7 @@ class GUIBackgroundStatusSnapshot(object):
 
 class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def __init__(self):
-        super(GUIBackgroundJobManager, self).__init__(logger=logger.getChild("background_job_manager"))
+        super(GUIBackgroundJobManager, self).__init__(logger=log.logger.getChild("background_job_manager"))
 
     def get_running_job_ids(self, job_class):
         job_ids = super(GUIBackgroundJobManager, self).get_running_job_ids(job_class)
@@ -244,7 +243,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 if job.is_available():
                     visible_jobs.append(job_id)
             except Exception, e:
-                logger.error(_("Exception parsing background job %s: %s") % (job_id, e))
+                self._logger.error(_("Exception parsing background job %s: %s") % (job_id, e))
                 continue
         return visible_jobs
 

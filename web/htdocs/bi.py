@@ -24,18 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, re, pprint, time
-import sites
+import re
+import pprint
+import time
+import os
 import marshal
+import fcntl
 import md5
 import copy
-from lib import *
-from log import logger
-from cmk.regex import regex
-import cmk
 import multiprocessing
 from contextlib import contextmanager
+import traceback
 
+from cmk.regex import regex
+import cmk
+
+import config
+import sites
+from log import logger
 from gui_exceptions import MKConfigError, MKGeneralException
 
 # Datastructures and functions needed before plugins can be loaded

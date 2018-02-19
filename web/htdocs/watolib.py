@@ -42,8 +42,13 @@
 #   |  Doing this that must be done when the module WATO is loaded.        |
 #   '----------------------------------------------------------------------'
 
-import utils
-import os, shutil, subprocess, base64, pickle, pwd
+import os
+import shutil
+import subprocess
+import base64
+import pickle
+import pwd
+import pprint
 import glob
 import traceback
 import ast
@@ -51,17 +56,8 @@ import multiprocessing
 import tarfile
 import cStringIO
 import requests
-from lib import *
-from log import logger
-from valuespec import *
 from hashlib import sha256
 from pathlib2 import Path
-
-import config, hooks, userdb, multitar
-import sites
-import mkeventd
-import backup
-from gui_exceptions import MKGeneralException, MKAuthException, MKUserError
 
 import cmk.paths
 import cmk.defines
@@ -70,7 +66,19 @@ import cmk.store as store
 import cmk.render as render
 import cmk.ec.defaults
 import cmk.ec.export
+import cmk.regex
 
+import utils
+import config
+import hooks
+import userdb
+import multitar
+import sites
+import mkeventd
+import backup
+from log import logger
+from valuespec import *
+from gui_exceptions import MKGeneralException, MKAuthException, MKUserError
 
 if cmk.is_managed_edition():
     import managed
@@ -8396,7 +8404,7 @@ class Rule(object):
             if not regex_match and hostname == check_host:
                 return not negate
 
-            elif regex_match and regex(check_host).match(hostname):
+            elif regex_match and cmk.regex.regex(check_host).match(hostname):
                 return not negate
 
         return negate

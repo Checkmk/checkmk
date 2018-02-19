@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
 import pprint
 import glob
@@ -32,7 +33,6 @@ import copy
 import utils
 import i18n
 import log
-from lib import *
 import cmk.paths
 import cmk.store as store
 

@@ -35,7 +35,6 @@ import modules
 import userdb
 import config
 import login
-from lib import *
 import log
 from log import logger
 from html_mod_python import html_mod_python, FinalizeRequest

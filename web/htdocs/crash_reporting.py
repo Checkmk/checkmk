@@ -28,7 +28,6 @@ import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
 import i18n
 import sites
 import livestatus
-from lib import *
 from gui_exceptions import MKGeneralException, MKUserError
 from valuespec import *
 import table, config, forms

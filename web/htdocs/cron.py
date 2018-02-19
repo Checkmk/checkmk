@@ -24,10 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 import time
 import traceback
+
 import utils
-from lib import *
 from log import logger
 import cmk.paths
 import cmk.store as store

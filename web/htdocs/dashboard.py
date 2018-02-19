@@ -28,7 +28,6 @@ import config, visuals, pprint, time, copy
 
 import utils
 from valuespec import *
-from lib import *
 import wato
 
 from gui_exceptions import MKGeneralException, MKAuthException, MKUserError
@@ -772,7 +771,7 @@ def ajax_dashlet():
         raise MKGeneralException(_('The requested dashboard does not exist.'))
     dashboard = available_dashboards[board]
 
-    mtime = saveint(html.var('mtime'))
+    mtime = int(html.var('mtime', 0))
     if mtime < dashboard['mtime']:
         # prevent reloading on the dashboard which already has the current mtime,
         # this is normally the user editing this dashboard. All others: reload

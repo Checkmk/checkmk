@@ -30,7 +30,6 @@
 import utils
 import config, os, table
 import re
-from lib import *
 from valuespec import *
 import cmk.store as store
 import cmk.paths

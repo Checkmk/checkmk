@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
+import utils
 import inventory
 from cmk.regex import regex
 import cmk.defines as defines
@@ -254,10 +254,27 @@ def inv_paint_bytes_rounded(b):
         return "number", "%d&nbsp;%s" % (b, units[0])
 
 
+def _nic_speed_human_readable(bits_per_second):
+    if bits_per_second == 10000000:
+        return "10 Mbit/s"
+    elif bits_per_second == 100000000:
+        return "100 Mbit/s"
+    elif bits_per_second == 1000000000:
+        return "1 Gbit/s"
+    elif bits_per_second < 1500:
+        return "%d bit/s" % bits_per_second
+    elif bits_per_second < 1000000:
+        return "%s Kbit/s" % utils.drop_dotzero(bits_per_second / 1000.0, digits=1)
+    elif bits_per_second < 1000000000:
+        return "%s Mbit/s" % utils.drop_dotzero(bits_per_second / 1000000.0, digits=2)
+    else:
+        return "%s Gbit/s" % utils.drop_dotzero(bits_per_second / 1000000000.0, digits=2)
+
+
 @decorate_inv_paint
 def inv_paint_nic_speed(bits_per_second):
     if bits_per_second:
-        return "number", nic_speed_human_readable(int(bits_per_second))
+        return "number", _nic_speed_human_readable(int(bits_per_second))
     else:
         return "", ""
 

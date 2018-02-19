@@ -36,6 +36,25 @@ import cmk.render
 # 3. The parsed performance data as a list of 7-tuples of
 #    (varname, value, unit, warn, crit, min, max)
 
+
+# TODO: Migrate to cmk.render.*
+def number_human_readable(n, precision=1, unit="B"):
+    base = 1024.0
+    if unit == "Bit":
+        base = 1000.0
+
+    n = float(n)
+    f = "%." + str(precision) + "f"
+    if abs(n) > base * base * base:
+        return (f + "G%s") % (n / (base * base * base), unit)
+    elif abs(n) > base * base:
+        return (f + "M%s") % (n / (base * base), unit)
+    elif abs(n) > base:
+        return (f + "k%s") % (n / base, unit)
+    else:
+        return (f + "%s") % (n, unit)
+
+
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
     used_mb        = perf_data[0][1]
     maxx           = perf_data[0][-1]

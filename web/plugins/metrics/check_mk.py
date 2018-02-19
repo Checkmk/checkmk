@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import utils
 import cmk.render
 
 # TODO Graphingsystem:
@@ -141,7 +142,7 @@ unit_info["1/s"] = {
     "title" : _("per second"),
     "description" : _("Frequency (displayed in events/s)"),
     "symbol" : _("/s"),
-    "render" : lambda v: "%s%s" % (drop_dotzero(v), _("/s")),
+    "render" : lambda v: "%s%s" % (utils.drop_dotzero(v), _("/s")),
 }
 
 unit_info["hz"] = {
@@ -233,7 +234,7 @@ unit_info["bytes/d"] = {
 unit_info["c"] = {
     "title"  : _("Degree Celsius"),
     "symbol" : u"°C",
-    "render" : lambda v: "%s %s" % (drop_dotzero(v), u"°C"),
+    "render" : lambda v: "%s %s" % (utils.drop_dotzero(v), u"°C"),
 }
 
 unit_info["a"] = {
@@ -269,13 +270,13 @@ unit_info["wh"] = {
 unit_info["dbm"] = {
     "title"  : _("Decibel-milliwatts"),
     "symbol" : _("dBm"),
-    "render" : lambda v: "%s %s" % (drop_dotzero(v), _("dBm")),
+    "render" : lambda v: "%s %s" % (utils.drop_dotzero(v), _("dBm")),
 }
 
 unit_info["dbmv"] = {
     "title"  : _("Decibel-millivolt"),
     "symbol" : _("dBmV"),
-    "render" : lambda v: "%s %s" % (drop_dotzero(v), _("dBmV")),
+    "render" : lambda v: "%s %s" % (utils.drop_dotzero(v), _("dBmV")),
 }
 
 unit_info["db"] = {

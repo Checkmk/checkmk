@@ -189,6 +189,11 @@ class Base(object):
     def is_empty(self):
         return False
 
+
+    def _show_in_sidebar(self):
+        return not self.is_empty() and not self.is_hidden()
+
+
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
@@ -375,7 +380,7 @@ class PageRenderer(Base):
     @classmethod
     def sidebar_links(cls):
         for page in cls.pages():
-            if not page.is_empty() and not page.is_hidden():
+            if page._show_in_sidebar():
                 yield page.topic(), page.title(), page.page_url()
 
 

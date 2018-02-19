@@ -78,10 +78,16 @@ class CMKVersion(object):
             raise Exception("Invalid edition: %s. Must be short notation (cee, cre, ...)")
         self.edition_short = edition
 
-        self._credentials = ("d-vonheute", "lOBFsgAH")
+        self._credentials = self._get_cmk_download_credentials()
 
         self.set_version(version, branch)
 
+
+    def _get_cmk_download_credentials(self):
+        try:
+            return tuple(file("%s/.cmk-credentials" % os.environ["HOME"]).read().strip().split(":"))
+        except IOError:
+            raise Exception("Missing ~/.cmk-credentials file (Create with content: USER:PASSWORD)")
 
 
     def get_default_version(self):

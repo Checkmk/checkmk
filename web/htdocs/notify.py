@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, forms, time, lib, userdb
+import utils
+import config, forms, time, userdb
 import subprocess
 from valuespec import *
 import cmk.store as store
@@ -202,7 +203,7 @@ def _validate_msg(msg, varprefix):
                 raise MKUserError('dest', _('A user with the id "%s" does not exist.') % user_id)
 
 def _process_notify_message(msg):
-    msg['id']   = lib.gen_id()
+    msg['id']   = utils.gen_id()
     msg['time'] = time.time()
 
     # construct the list of recipients

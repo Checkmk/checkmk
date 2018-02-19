@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config
-import lib
+import utils
 import re
 
 from gui_exceptions import MKUserError
@@ -79,14 +79,14 @@ def cleanup_old_selections():
 # Generates a selection id or uses the given one
 def selection_id():
     if not html.has_var('selection'):
-        sel_id = lib.gen_id()
+        sel_id = utils.gen_id()
         html.set_var('selection', sel_id)
         return sel_id
     else:
         sel_id = html.var('selection')
         # Avoid illegal file access by introducing .. or /
         if not re.match("^[-0-9a-zA-Z]+$", sel_id):
-            new_id = lib.gen_id()
+            new_id = utils.gen_id()
             html.set_var('selection', new_id)
             return new_id
         else:

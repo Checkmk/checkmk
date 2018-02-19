@@ -1279,11 +1279,7 @@ class CREFolder(BaseFolder):
         if host_name in variables["host_attributes"]:
             attributes = variables["host_attributes"][host_name]
 
-            attributes = self._transform_old_agent_type_in_attributes(attributes)
-
-            # Old WATO was saving "site" attribute with value of None. Skip this key.
-            if "site" in attributes and attributes["site"] == None:
-                del attributes["site"]
+            attributes = self._transform_old_attributes(attributes)
 
         else:
             host_tags = self._transform_old_agent_type_in_tag_list(host_tags)
@@ -1333,6 +1329,13 @@ class CREFolder(BaseFolder):
         return host_tags
 
 
+    def _transform_old_attributes(self, attributes):
+        """Mangle all attribute structures read from the disk to prepare it for the current logic"""
+        attributes = self._transform_old_agent_type_in_attributes(attributes)
+        attributes = self._transform_none_value_site_attribute(attributes)
+        return attributes
+
+
     # Old tag group trans:
     #('agent', u'Agent type',
     #    [
@@ -1372,6 +1375,13 @@ class CREFolder(BaseFolder):
             attributes["tag_agent"] = "no-agent"
             attributes["tag_snmp"]  = "no-snmp"
 
+        return attributes
+
+
+    def _transform_none_value_site_attribute(self, attributes):
+        # Old WATO was saving "site" attribute with value of None. Skip this key.
+        if "site" in attributes and attributes["site"] == None:
+            del attributes["site"]
         return attributes
 
 
@@ -1582,7 +1592,7 @@ class CREFolder(BaseFolder):
     def _load(self):
         wato_info               = self._load_wato_info()
         self._title             = wato_info.get("title", self._fallback_title())
-        self._attributes        = self._transform_old_agent_type_in_attributes(wato_info.get("attributes", {}))
+        self._attributes        = self._transform_old_attributes(wato_info.get("attributes", {}))
         self._locked            = wato_info.get("lock", False)
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
 

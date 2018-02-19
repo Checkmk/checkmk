@@ -3,7 +3,7 @@ agents: snmp
 catalog: app/netscaler
 license: GPL
 distribution: check_mk
-description:                                                                                                                                                                                                       
+description:
  This check validates found SSL certificates against {WARN} and {CRIT} levels.
 
  Levels default to {(30, 10)} days but can be customized by the WATO rule

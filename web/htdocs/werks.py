@@ -207,10 +207,9 @@ def werk_table_option_entries():
          ),
         ( "id",
           "single",
-          TextAscii(
+          Integer(
               title = _("Werk ID"),
               label = "#",
-              regex = "[0-9]{4}",
               allow_empty = True,
               size = 4,
           ),
@@ -363,7 +362,7 @@ def werk_group_value(werk, grouping):
             return time.strftime("%s %%U - %%Y" % _("Week"), broken_time)
 
 def werk_matches_options(werk, werk_table_options):
-    if not ((not werk_table_options["id"] or werk["id"] == tryint(werk_table_options["id"])) and \
+    if not ((not werk_table_options["id"] or werk["id"] == int(werk_table_options["id"])) and \
            werk["level"] in werk_table_options["levels"] and \
            werk["class"] in werk_table_options["classes"] and \
            werk["compatible"] in werk_table_options["compatibility"] and \
@@ -407,16 +406,24 @@ def default_werk_table_options():
 def render_werk_table_options():
     werk_table_options = {}
 
+    for name, height, vs, default_value in werk_table_option_entries():
+        try:
+            if html.var("wo_set"):
+                value = vs.from_html_vars("wo_" + name)
+                vs.validate_value(value, "wo_" + name)
+            else:
+                value = default_value
+        except MKUserError, e:
+            html.user_error(e)
+            value = default_value
+
+        werk_table_options.setdefault(name, value)
+
     html.begin_foldable_container("werks", "options", isopen=True, title=_("Searching and Filtering"), indent=False)
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
     html.begin_floating_options("werks", is_open=True)
     for name, height, vs, default_value in werk_table_option_entries():
-        if html.var("wo_set"):
-            value = vs.from_html_vars("wo_" + name)
-        else:
-            value = default_value
-        werk_table_options.setdefault(name, value)
         html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
     html.end_floating_options(reset_url = html.makeuri([], remove_prefix = ""))
     html.hidden_fields()

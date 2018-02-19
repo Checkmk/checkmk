@@ -35,18 +35,12 @@ class Environment;
 
 class ParseError : public std::runtime_error {
 public:
-    explicit ParseError(const std::string &what, unsigned lineno)
-        : std::runtime_error(what), _lineno(lineno) {}
-
-    unsigned getLineNo() const { return _lineno; }
-
-private:
-    unsigned _lineno{0};
+    explicit ParseError(const std::string &what) : std::runtime_error(what) {}
 };
 
 using ConfigKey = std::pair<std::string, std::string>;
-using ConfigurableMap =
-    std::map<ConfigKey, std::vector<std::unique_ptr<ConfigurableBase>>>;
+using ConfigurableVector = std::vector<std::unique_ptr<ConfigurableBase>>;
+using ConfigurableMap = std::map<ConfigKey, ConfigurableVector>;
 
 void readConfigFile(std::istream &is, const std::string &hostname,
                     ConfigurableMap &configurables);
@@ -99,7 +93,6 @@ public:
 
 private:
     ConfigurableMap _configurables;
-
     const Environment &_environment;
 };
 

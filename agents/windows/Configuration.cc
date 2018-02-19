@@ -24,6 +24,7 @@
 
 #include "Configuration.h"
 #include <inttypes.h>
+#include <simpleini/SimpleIni.h>
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
@@ -31,12 +32,16 @@
 #include <fstream>
 #include <regex>
 #include "Configurable.h"
+#include "Logger.h"
 #include "PerfCounter.h"
 #include "stringutil.h"
 
 #define __STDC_FORMAT_MACROS
 
 namespace {
+
+using Entry = CSimpleIniA::Entry;
+using EntryPair = std::pair<Entry, Entry>;
 
 bool checkHostRestriction(const std::string &hostname,
                           const std::string &input) {
@@ -45,6 +50,94 @@ bool checkHostRestriction(const std::string &hostname,
                        [&hostname](const auto &p) {
                            return globmatch(p.c_str(), hostname.c_str());
                        });
+}
+
+enum class CheckResult { Nop, Continue, Return };
+
+inline CheckResult checkSpecialVariables(const std::string &variable,
+                                         const std::string &hostname,
+                                         const std::string &value) {
+    if (variable == "host") {
+        if (checkHostRestriction(hostname, value)) {
+            return CheckResult::Continue;
+        } else {
+            return CheckResult::Return;
+        }
+    } else if (variable == "print") {
+        std::cout << value << std::endl;
+        return CheckResult::Continue;
+    }
+
+    return CheckResult::Nop;
+}
+
+bool assignVariable(const std::string &variable, const std::string &value,
+                    ConfigurableVector &configurables) {
+    bool found = false;
+
+    for (auto &cfg : configurables) {
+        try {
+            cfg->feed(variable, value);
+            found = true;
+        } catch (const std::exception &e) {
+            std::cerr << "Failed to interpret: " << e.what() << std::endl;
+        }
+    }
+
+    return found;
+}
+
+bool valueLoadOrder(const EntryPair &e1, const EntryPair &e2) {
+    return Entry::LoadOrder()(e1.second, e2.second);
+};
+
+std::vector<EntryPair> collectKeyValuePairs(const Entry &section,
+                                            const CSimpleIni &ini) {
+    CSimpleIniA::TNamesDepend keys;
+    ini.GetAllKeys(section.pItem, keys);
+    keys.sort(Entry::LoadOrder());
+    std::vector<EntryPair> kvPairs;
+
+    for (const auto &key : keys) {
+        CSimpleIniA::TNamesDepend values;
+        ini.GetAllValues(section.pItem, key.pItem, values);
+        kvPairs.reserve(kvPairs.size() + values.size());
+        std::transform(
+            values.cbegin(), values.cend(), std::back_inserter(kvPairs),
+            [&key](const Entry &value) { return std::make_pair(key, value); });
+    }
+
+    std::sort(kvPairs.begin(), kvPairs.end(), valueLoadOrder);
+
+    return kvPairs;
+}
+
+void feedSection(const std::string &hostname, ConfigurableMap &configurables,
+                 const Entry &section, const CSimpleIni &ini) {
+    for (const auto kvPair : collectKeyValuePairs(section, ini)) {
+        std::string variable{kvPair.first.pItem};  // intentional copy
+        std::transform(variable.cbegin(), variable.cend(), variable.begin(),
+                       tolower);
+        const std::string value{kvPair.second.pItem};
+
+        switch (checkSpecialVariables(variable, hostname, value)) {
+            case CheckResult::Continue:
+                continue;
+            case CheckResult::Return:
+                return;
+            default:;
+        }
+
+        const auto tokens = tokenize(variable, "\\s+");
+        std::string sectionName{section.pItem};
+        auto mapIt = configurables.find(ConfigKey(sectionName, tokens[0]));
+
+        if (mapIt == configurables.end() ||
+            !assignVariable(variable, value, mapIt->second)) {
+            throw ParseError("Invalid entry (" + sectionName + ":" + variable +
+                             ")");
+        }
+    }
 }
 
 }  // namespace
@@ -61,8 +154,7 @@ void Configuration::readSettings() {
             std::ifstream ifs(filename);
             readConfigFile(ifs, _environment.hostname(), _configurables);
         } catch (const ParseError &e) {
-            std::cerr << e.what() << " line " << e.getLineNo() << " in "
-                      << filename << std::endl;
+            std::cerr << e.what() << " in " << filename << std::endl;
             exit(1);
         }
     }
@@ -106,69 +198,26 @@ void readConfigFile(std::istream &is, const std::string &hostname,
         return;
     }
 
-    std::string line;
-    bool is_active = true;  // false in sections with host restrictions
-    std::string section;
+    CSimpleIni ini(false, true);  // No UTF-8, multikey support
+    auto res = ini.LoadData(is);
 
-    for (unsigned lineno = 1; std::getline(is, line); ++lineno) {
-        ltrim(line);
-        rtrim(line);
-        if (line.empty() || line.front() == '#' || line.front() == ';')
-            continue;  // skip empty lines and comments
-
-        if (line.front() == '[' && line.back() == ']') {
-            // found section header
-            section = std::move(line.substr(1, line.size() - 2));
-            // forget host-restrictions if new section begins
-            is_active = true;
-        } else {
-            // split up line at = sign
-            const auto tokens = tokenize(line, "=");
-            if (tokens.size() != 2) {
-                throw ParseError("Invalid", lineno);
-            }
-            std::string variable{tokens[0]};
-            rtrim(variable);
-            std::transform(variable.cbegin(), variable.cend(), variable.begin(),
-                           tolower);
-            std::string value{tokens[1]};
-            ltrim(value);
-            rtrim(value);
-
-            // handle host restriction
-            if (variable == "host")
-                is_active = checkHostRestriction(hostname, value);
-
-            // skip all other variables for non-relevant hosts
-            else if (!is_active)
-                continue;
-
-            // Useful for debugging host restrictions
-            else if (variable == "print")
-                std::cerr << value << std::endl;
-
-            else {
-                bool found = false;
-                size_t key_len = strcspn(variable.c_str(), " \n");
-                auto map_iter = configurables.find(
-                    ConfigKey(section, std::string(variable, 0, key_len)));
-                if (map_iter != configurables.end()) {
-                    for (auto &cfg : map_iter->second) {
-                        try {
-                            cfg->feed(variable, value);
-                            found = true;
-                        } catch (const std::exception &e) {
-                            std::cerr << "Failed to interpret " << line << ": "
-                                      << e.what() << std::endl;
-                        }
-                    }
-                }
-                if (!found) {
-                    throw ParseError(
-                        "Invalid entry (" + section + ":" + variable + ")",
-                        lineno);
-                }
-            }
+    if (res < 0) {
+        switch (res) {
+            case SI_Error::SI_FAIL:
+                throw ParseError("Generic error");
+            case SI_Error::SI_NOMEM:
+                throw ParseError("Out of memory");
+            case SI_Error::SI_FILE:
+                throw ParseError(generic_error().what());
+            default:;
         }
+    }
+
+    CSimpleIniA::TNamesDepend sections;
+    ini.GetAllSections(sections);
+    // Currently there is no need to sort the returned sections as section
+    // configurations are handled independently and can be fed in any order.
+    for (const auto &section : sections) {
+        feedSection(hostname, configurables, section, ini);
     }
 }

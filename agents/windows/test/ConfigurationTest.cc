@@ -54,7 +54,8 @@ TEST_F(wa_ConfigurationTest, readConfigFile_global_only_from_hash_comment) {
     readConfigFile(iss, "", _configurables);
 }
 
-TEST_F(wa_ConfigurationTest, readConfigFile_global_only_from_semicolon_comment) {
+TEST_F(wa_ConfigurationTest,
+       readConfigFile_global_only_from_semicolon_comment) {
     const std::string testConfig =
         "; This is a comment line\r\n"
         "[global]\r\n"
@@ -68,7 +69,8 @@ TEST_F(wa_ConfigurationTest, readConfigFile_global_only_from_semicolon_comment) 
     readConfigFile(iss, "", _configurables);
 }
 
-TEST_F(wa_ConfigurationTest, readConfigFile_global_only_from_indented_hash_comment) {
+TEST_F(wa_ConfigurationTest,
+       readConfigFile_global_only_from_indented_hash_comment) {
     const std::string testConfig =
         "[global]\r\n"
         "    # This is an indented comment line\r\n"
@@ -82,7 +84,8 @@ TEST_F(wa_ConfigurationTest, readConfigFile_global_only_from_indented_hash_comme
     readConfigFile(iss, "", _configurables);
 }
 
-TEST_F(wa_ConfigurationTest, readConfigFile_global_only_from_indented_semicolon_comment) {
+TEST_F(wa_ConfigurationTest,
+       readConfigFile_global_only_from_indented_semicolon_comment) {
     const std::string testConfig =
         "[global]\r\n"
         "    ; This is a comment line\r\n"
@@ -174,6 +177,60 @@ TEST_F(wa_ConfigurationTest, readConfigFile_host_restriction_no_match) {
     auto *testConfigurable = new StrictMock<MockConfigurable>();
     reg("global", "only_from", testConfigurable);
     readConfigFile(iss, testHost, _configurables);
+}
+
+TEST_F(wa_ConfigurationTest,
+       readConfigFile_host_restriction_no_match_preceding_entry) {
+    const std::string testConfig =
+        "[global]\r\n"
+        "    sections = check_mk\r\n"
+        "    host = foo bar\r\n"
+        "    only_from = 127.0.0.1 192.168.56.0/24 ::1\r\n";
+    std::istringstream iss(testConfig);
+    const std::string testHost = "baz";
+    auto *testConfigurable1 = new StrictMock<MockConfigurable>();
+    auto *testConfigurable2 = new StrictMock<MockConfigurable>();
+    reg("global", "sections", testConfigurable1);
+    reg("global", "only_from", testConfigurable2);
+    EXPECT_CALL(*testConfigurable1, feed(StrEq("sections"), StrEq("check_mk")));
+    readConfigFile(iss, testHost, _configurables);
+}
+
+TEST_F(wa_ConfigurationTest, readConfigFile_host_restriction_match_print) {
+    const std::string testConfig =
+        "[global]\r\n"
+        "    host = foo ba*\r\n"
+        "    print = qux quux\r\n";
+    std::istringstream iss(testConfig);
+    const std::string testHost = "baz";
+    internal::CaptureStdout();
+    readConfigFile(iss, testHost, _configurables);
+    ASSERT_EQ(std::string{"qux quux\n"}, internal::GetCapturedStdout());
+}
+
+TEST_F(wa_ConfigurationTest, readConfigFile_host_restriction_no_match_print) {
+    const std::string testConfig =
+        "[global]\r\n"
+        "    host = foo bar\r\n"
+        "    print = qux quux\r\n";
+    std::istringstream iss(testConfig);
+    const std::string testHost = "baz";
+    internal::CaptureStdout();
+    readConfigFile(iss, testHost, _configurables);
+    ASSERT_EQ(std::string(), internal::GetCapturedStdout());
+}
+
+TEST_F(wa_ConfigurationTest, readConfigFile_host_restriction_no_match_print_before_after) {
+    const std::string testConfig =
+        "[global]\r\n"
+        "    print = qux quux\r\n"
+        "    host = foo bar\r\n"
+        "    print = corge grault\r\n";
+    std::istringstream iss(testConfig);
+    const std::string testHost = "baz";
+    internal::CaptureStdout();
+    readConfigFile(iss, testHost, _configurables);
+    ASSERT_EQ(std::string{"qux quux\n"}, internal::GetCapturedStdout());
 }
 
 TEST_F(wa_ConfigurationTest,
@@ -295,11 +352,9 @@ TEST_F(wa_ConfigurationTest, fileinfo_multiple_paths) {
     auto *testConfigurable = new StrictMock<MockConfigurable>();
     reg("fileinfo", "path", testConfigurable);
     EXPECT_CALL(*testConfigurable,
-                feed(StrEq("path"),
-                     StrEq("C:\\Programs\\Foo\\*.log")));
+                feed(StrEq("path"), StrEq("C:\\Programs\\Foo\\*.log")));
     EXPECT_CALL(*testConfigurable,
-                feed(StrEq("path"),
-                     StrEq("M:\\Bar Test\\*.*")));
+                feed(StrEq("path"), StrEq("M:\\Bar Test\\*.*")));
     readConfigFile(iss, "", _configurables);
 }
 
@@ -328,4 +383,45 @@ TEST_F(wa_ConfigurationTest, readConfigFile_plugins) {
     EXPECT_CALL(*testConfigurable4,
                 feed(StrEq("retry_count windows_updates.vbs"), StrEq("3")));
     readConfigFile(iss, "", _configurables);
+}
+
+TEST_F(wa_ConfigurationTest, readConfigFile_invalid_entry) {
+    const std::string testConfig =
+        "[global]\r\n"
+        "    foo = bar\r\n";
+    std::istringstream iss(testConfig);
+    ASSERT_THROW(
+        {
+            try {
+                readConfigFile(iss, "", _configurables);
+            } catch (const ParseError &e) {
+                EXPECT_STREQ("Invalid entry (global:foo)", e.what());
+                throw;
+            }
+        },
+        ParseError);
+}
+
+TEST_F(wa_ConfigurationTest, readConfigFile_interpret_failure) {
+    const std::string testConfig =
+        "[global]\r\n"
+        "    foo = bar\r\n";
+    std::istringstream iss(testConfig);
+    auto *testConfigurable = new StrictMock<MockConfigurable>();
+    reg("global", "foo", testConfigurable);
+    EXPECT_CALL(*testConfigurable, feed(StrEq("foo"), StrEq("bar")))
+        .WillOnce(Throw(std::runtime_error("Test exception")));
+    internal::CaptureStderr();
+    ASSERT_THROW(
+        {
+            try {
+                readConfigFile(iss, "", _configurables);
+            } catch (const ParseError &e) {
+                EXPECT_STREQ("Invalid entry (global:foo)", e.what());
+                throw;
+            }
+        },
+        ParseError);
+    ASSERT_EQ(std::string{"Failed to interpret: Test exception\n"},
+              internal::GetCapturedStderr());
 }

@@ -17532,7 +17532,10 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 if depends_on_roles:
                     dependency_mapping_roles[attrname] = depends_on_roles
 
-                if not depends_on_tags and not depends_on_roles:
+                if for_what not in [ "host", "cluster" ]:
+                    topic_is_volatile = False
+
+                elif not depends_on_tags and not depends_on_roles:
                     # One attribute is always shown -> topic is always visible
                     topic_is_volatile = False
             else:

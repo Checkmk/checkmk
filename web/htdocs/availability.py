@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import utils
 import bi, views, visuals
 import sites
 # TODO: Get rid of import of views
@@ -1985,10 +1986,10 @@ def get_av_groups(availability_table, avoptions):
 # Sort according to host and service. First after site, then
 # host (natural sort), then service
 def cmp_av_entry(a, b):
-    return cmp(a["site"], b["site"]) or \
-           cmp(num_split(a["host"]) + (a["host"],), num_split(b["host"]) + (b["host"],)) or \
+    return utils.cmp_num_split(a["site"], b["site"]) or \
+           utils.cmp_num_split(a["host"], b["host"]) or \
            cmp(views.cmp_service_name_equiv(a["service"]), views.cmp_service_name_equiv(b["service"])) or \
-           cmp(a["service"], b["service"])
+           utils.cmp_num_split(a["service"], b["service"])
 
 
 def history_url_of(av_object, time_range):

@@ -27,8 +27,8 @@
 import re
 from contextlib import contextmanager
 
+import utils
 import config
-from lib import num_split
 
 
 tables = []
@@ -521,8 +521,8 @@ def _sort_rows(rows, sort_col, sort_reverse):
     # sorting. This gives the user the chance to change the sorting and
     # see the table in the first place.
     try:
-        rows.sort(cmp=lambda a, b: cmp(num_split(a[0][sort_col][0]),
-                                       num_split(b[0][sort_col][0])),
+        rows.sort(cmp=lambda a, b: utils.cmp_num_split(a[0][sort_col][0],
+                                                       b[0][sort_col][0]),
                   reverse=sort_reverse==1)
     except IndexError:
         pass

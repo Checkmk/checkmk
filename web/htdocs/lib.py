@@ -141,18 +141,3 @@ def tryint(x):
         return int(x)
     except:
         return x
-
-
-# Splits a word into sequences of numbers and non-numbers.
-# Creates a tuple from these where the number are converted
-# into int datatype. That way a naturual sort can be
-# implemented.
-def num_split(s):
-    parts = []
-    for part in re.split('(\d+)', s):
-        try:
-            parts.append(int(part))
-        except ValueError:
-            parts.append(part)
-
-    return tuple(parts)

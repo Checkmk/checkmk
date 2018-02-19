@@ -1,0 +1,11 @@
+Title: Fixed visibility of "Data sources" properties when editing folders
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519046689
+Class: fix
+
+Werk #5535 introduced a new way the data sources (agent, snmp, ...) of hosts are configured.
+The new attributes were not editable in WATO folders at all.

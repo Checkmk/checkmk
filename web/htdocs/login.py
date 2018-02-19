@@ -27,7 +27,6 @@
 import config
 import userdb
 import utils
-from lib import *
 from log import logger
 from html_mod_python import FinalizeRequest
 import os

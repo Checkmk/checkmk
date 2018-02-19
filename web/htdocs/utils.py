@@ -29,8 +29,11 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
+import os
 import re
+import marshal
 
+import cmk.paths
 
 def drop_dotzero(v, digits=2):
     """Renders a number as a floating point number and drops useless

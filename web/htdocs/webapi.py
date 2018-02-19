@@ -25,24 +25,23 @@
 # Boston, MA 02110-1301 USA.
 
 import traceback
+import json
+
+import cmk
 
 from log import logger
-from lib import *
 import utils
 import config
 import watolib
 import userdb
 from gui_exceptions import MKGeneralException, MKUserError, MKAuthException, \
                            MKException
-
 from valuespec import *
 
 if cmk.is_managed_edition():
     import managed
 else:
     managed = None
-
-import json
 
 api_actions = {}
 loaded_with_language = False

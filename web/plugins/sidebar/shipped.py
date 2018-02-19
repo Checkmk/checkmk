@@ -36,7 +36,6 @@ import watolib
 import livestatus
 import notifications
 from valuespec import *
-from lib import *
 from log import logger
 import cmk.paths
 import cmk.store as store

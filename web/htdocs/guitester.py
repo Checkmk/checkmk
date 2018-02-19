@@ -26,13 +26,15 @@
 
 import re
 import time
+import pprint
+import os
+
+import cmk.paths
+import cmk.store as store
 
 import config
-import cmk.paths
 import sites
-from lib import *
 from gui_exceptions import MKException, MKGeneralException, MKException, MKAuthException
-import cmk.store as store
 
 
 class MKGuitestFailed(MKException):

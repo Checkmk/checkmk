@@ -27,8 +27,6 @@
 import utils
 import bi, views, visuals
 import sites
-# TODO: Get rid of import of views
-# from lib import *
 from valuespec import *
 import cmk.defines as defines
 import cmk.paths

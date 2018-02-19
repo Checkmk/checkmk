@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import time, re, datetime, config, table, livestatus
-from lib import *
 import views, sites
 from gui_exceptions import MKGeneralException, MKUserError, MKAuthException
 

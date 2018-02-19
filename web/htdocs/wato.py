@@ -101,24 +101,6 @@ import time
 import traceback
 from hashlib import sha256
 
-import utils
-import i18n
-import config
-import table
-import multitar
-import userdb
-import weblib
-import login
-from lib import *
-from gui_exceptions import MKGeneralException, MKUserError, MKAuthException, \
-                           MKInternalError, MKException
-from log import logger
-from valuespec import *
-import forms
-import backup
-import modules as multisite_modules
-import watolib
-
 import cmk.paths
 import cmk.translations
 import cmk.store as store
@@ -127,6 +109,22 @@ from cmk.regex import escape_regex_chars, regex
 from cmk.defines import short_service_state_name
 import cmk.render as render
 
+import utils
+import i18n
+import config
+import table
+import multitar
+import userdb
+import weblib
+import login
+from gui_exceptions import MKGeneralException, MKUserError, MKAuthException, \
+                           MKInternalError, MKException
+from log import logger
+from valuespec import *
+import forms
+import backup
+import modules as multisite_modules
+import watolib
 import gui_background_job
 
 if cmk.is_managed_edition():

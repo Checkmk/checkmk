@@ -43,7 +43,6 @@ import traceback
 from collections import OrderedDict
 
 from log import logger
-from lib import *
 from valuespec import *
 from gui_exceptions import MKGeneralException, MKUserError, MKInternalError, \
                            MKUnauthenticatedException, MKAuthException

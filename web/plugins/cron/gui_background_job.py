@@ -25,11 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 import background_job
+
 import gui_background_job
+from log import logger
 
 def housekeeping():
     housekeep_classes = gui_background_job.GUIBackgroundJob.get_concrete_subclasses()
-    from lib import logger
     background_job.BackgroundJobManager(logger).do_housekeeping(housekeep_classes)
 
 register_job(housekeeping)

@@ -26,7 +26,6 @@
 
 import cmk.render
 import config
-import lib
 import sites
 import table
 import time

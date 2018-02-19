@@ -75,7 +75,6 @@ import cmk.render
 import cmk.man_pages as man_pages
 from cmk.regex import regex
 from cmk.defines import short_service_state_name, short_host_state_name
-from lib import *
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |

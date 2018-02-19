@@ -26,6 +26,7 @@
 
 import config
 import userdb
+import utils
 from lib import *
 from log import logger
 from html_mod_python import FinalizeRequest
@@ -105,7 +106,7 @@ def load_secret():
     return secret
 
 def generate_secret():
-    return get_random_string(256)
+    return utils.get_random_string(256)
 
 # Load the password serial of the user. This serial identifies the current config
 # state of the user account. If either the password is changed or the account gets

@@ -42,6 +42,7 @@
 #   |  Doing this that must be done when the module WATO is loaded.        |
 #   '----------------------------------------------------------------------'
 
+import utils
 import os, shutil, subprocess, base64, pickle, pwd
 import glob
 import traceback
@@ -4068,7 +4069,7 @@ def get_login_secret(create_on_demand = False):
     if not create_on_demand:
         return None
 
-    secret = get_random_string(32)
+    secret = utils.get_random_string(32)
     store.save_data_to_file(path, secret)
     return secret
 

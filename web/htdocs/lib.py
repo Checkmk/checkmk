@@ -30,20 +30,6 @@ from cmk.regex import regex
 import cmk.store as store
 import cmk.paths
 
-# We should use /dev/random here for cryptographic safety. But
-# that involves the great problem that the system might hang
-# because of loss of entropy. So we hope /dev/urandom is enough.
-# Furthermore we filter out non-printable characters. The byte
-# 0x00 for example does not make it through HTTP and the URL.
-def get_random_string(size, from_ascii=48, to_ascii=90):
-    secret = ""
-    urandom = file("/dev/urandom")
-    while len(secret) < size:
-        c = urandom.read(1)
-        if ord(c) >= from_ascii and ord(c) <= to_ascii:
-            secret += c
-    return secret
-
 # Generates a unique id
 def gen_id():
     try:

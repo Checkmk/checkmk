@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.render
+import utils
 
 # Perf-O-Meters for Check_MK's checks
 #
@@ -185,7 +186,7 @@ def perfometer_ipmi_sensors(row, check_command, perf_data):
     state = row["service_state"]
     color = "#39f"
     value = float(perf_data[0][1])
-    crit = savefloat(perf_data[0][4])
+    crit = utils.savefloat(perf_data[0][4])
     if not crit:
         return "%d" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
 
@@ -280,9 +281,9 @@ perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
 def perfometer_power(row, check_command, perf_data):
     display_color = "#60f020"
 
-    value=savefloat(perf_data[0][1])
-    crit=savefloat(perf_data[0][4])
-    warn=savefloat(perf_data[0][3])
+    value=utils.savefloat(perf_data[0][1])
+    crit=utils.savefloat(perf_data[0][4])
+    warn=utils.savefloat(perf_data[0][3])
     power_perc = value/crit*90 # critical is at 90% to allow for more than crit
 
     if value > warn:
@@ -310,7 +311,7 @@ def perfometer_users(row, check_command, perf_data):
     state = row["service_state"]
     color = "#39f"
     value = float(perf_data[0][1])
-    crit = savefloat(perf_data[0][4])
+    crit = utils.savefloat(perf_data[0][4])
     return u"%d users" % int(value), perfometer_logarithmic(value, 50, 2, color)
 
 perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
@@ -361,10 +362,10 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit = "B"):
 def perfometer_check_mk_if(row, check_command, perf_data):
     unit = "Bit" if  "Bit/s" in row["service_plugin_output"] else "B"
     return perfometer_bandwidth(
-        in_traffic  = savefloat(perf_data[0][1]),
-        out_traffic = savefloat(perf_data[5][1]),
-        in_bw     = savefloat(perf_data[0][6]),
-        out_bw    = savefloat(perf_data[5][6]),
+        in_traffic  = utils.savefloat(perf_data[0][1]),
+        out_traffic = utils.savefloat(perf_data[5][1]),
+        in_bw     = utils.savefloat(perf_data[0][6]),
+        out_bw    = utils.savefloat(perf_data[5][6]),
         unit      = unit
     )
 
@@ -388,10 +389,10 @@ perfometers["check_mk-ucs_bladecenter_if"] = perfometer_check_mk_if
 def perfometer_check_mk_fc_port(row, check_command, perf_data):
     unit = "B"
     return perfometer_bandwidth(
-        in_traffic  = savefloat(perf_data[0][1]),
-        out_traffic = savefloat(perf_data[1][1]),
-        in_bw     = savefloat(perf_data[0][6]),
-        out_bw    = savefloat(perf_data[1][6]),
+        in_traffic  = utils.savefloat(perf_data[0][1]),
+        out_traffic = utils.savefloat(perf_data[1][1]),
+        in_bw     = utils.savefloat(perf_data[0][6]),
+        out_bw    = utils.savefloat(perf_data[1][6]),
         unit      = unit
     )
 perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
@@ -399,10 +400,10 @@ perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
 
 def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
     return perfometer_bandwidth(
-        in_traffic  = savefloat(perf_data[0][1]),
-        out_traffic = savefloat(perf_data[1][1]),
-        in_bw     = savefloat(perf_data[0][6]),
-        out_bw    = savefloat(perf_data[1][6]),
+        in_traffic  = utils.savefloat(perf_data[0][1]),
+        out_traffic = utils.savefloat(perf_data[1][1]),
+        in_bw     = utils.savefloat(perf_data[0][6]),
+        out_bw    = utils.savefloat(perf_data[1][6]),
     )
 
 perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
@@ -411,10 +412,10 @@ perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
 def perfometer_check_mk_cisco_qos(row, check_command, perf_data):
     unit = "Bit" if  "Bit/s" in row["service_plugin_output"] else "B"
     return perfometer_bandwidth(
-        in_traffic  = savefloat(perf_data[0][1]),
-        out_traffic = savefloat(perf_data[1][1]),
-        in_bw     = savefloat(perf_data[0][5])  ,
-        out_bw    = savefloat(perf_data[1][5])  ,
+        in_traffic  = utils.savefloat(perf_data[0][1]),
+        out_traffic = utils.savefloat(perf_data[1][1]),
+        in_bw     = utils.savefloat(perf_data[0][5])  ,
+        out_bw    = utils.savefloat(perf_data[1][5])  ,
         unit      = unit
     )
 
@@ -608,11 +609,11 @@ def perfometer_check_mk_iops(row, check_command, perf_data):
 perfometers["check_mk-emc_isilon_iops"] = perfometer_check_mk_iops
 
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):
-    left = savefloat(perf_data[0][1])
-    warn = savefloat(perf_data[0][3])
-    crit = savefloat(perf_data[0][4])
-    mini = savefloat(perf_data[0][5])
-    maxi = savefloat(perf_data[0][6])
+    left = utils.savefloat(perf_data[0][1])
+    warn = utils.savefloat(perf_data[0][3])
+    crit = utils.savefloat(perf_data[0][4])
+    mini = utils.savefloat(perf_data[0][5])
+    maxi = utils.savefloat(perf_data[0][6])
     if maxi < 0:
         return "", "" # Printer does not supply a max value
 
@@ -858,7 +859,7 @@ def perfometer_esx_vsphere_hostsystem_cpu(row, command, perf):
 perfometers['check_mk-esx_vsphere_hostsystem.cpu_usage'] = perfometer_esx_vsphere_hostsystem_cpu
 
 def perfometer_apc_mod_pdu_modules(row, check_command, perf_data):
-    value = int(savefloat(perf_data[0][1]) * 100)
+    value = int(utils.savefloat(perf_data[0][1]) * 100)
     return "%skw" % perf_data[0][1], perfometer_logarithmic(value, 500, 2, "#3366CC")
 
 perfometers["check_mk-apc_mod_pdu_modules"] = perfometer_apc_mod_pdu_modules
@@ -990,9 +991,9 @@ perfometers["check_mk-zfs_arc_cache.l2"] = perfometer_cache_hit_ratio
 def perfometer_current(row, check_command, perf_data):
     display_color = "#50f020"
 
-    value=savefloat(perf_data[0][1])
-    crit=savefloat(perf_data[0][4])
-    warn=savefloat(perf_data[0][3])
+    value=utils.savefloat(perf_data[0][1])
+    crit=utils.savefloat(perf_data[0][4])
+    warn=utils.savefloat(perf_data[0][3])
     current_perc = value/crit*90 # critical is at 90% to allow for more than crit
 
     if value > warn:
@@ -1092,7 +1093,7 @@ perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
 def perfometer_el_inphase(row, check_command, perf_data):
     for data in perf_data:
         if data[0] == "power":
-            power = savefloat(data[1])
+            power = utils.savefloat(data[1])
     return "%.0f W" % power, perfometer_linear(power, "#8050ff")
 
 perfometers["check_mk-raritan_pdu_inlet"] = perfometer_el_inphase

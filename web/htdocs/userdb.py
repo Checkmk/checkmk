@@ -619,7 +619,7 @@ def load_users(lock = False):
                 for attr, conv_func in [
                         ('num_failed_logins', utils.saveint),
                         ('last_pw_change',    utils.saveint),
-                        ('last_seen',         savefloat),
+                        ('last_seen',         utils.savefloat),
                         ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                         ('idle_timeout',      convert_idle_timeout),
                         ('session_id',        convert_session_info),

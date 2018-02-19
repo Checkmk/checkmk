@@ -76,3 +76,21 @@ def cmp_version(a, b):
     aa = map(num_split, a.split("."))
     bb = map(num_split, b.split("."))
     return cmp(aa, bb)
+
+
+# TODO: Remove this helper function. Replace with explicit checks and covnersion
+# in using code.
+def savefloat(f):
+    try:
+        return float(f)
+    except:
+        return 0.0
+
+
+# TODO: Remove this helper function. Replace with explicit checks and covnersion
+# in using code.
+def saveint(x):
+    try:
+        return int(x)
+    except:
+        return 0

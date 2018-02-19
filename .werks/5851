@@ -1,0 +1,10 @@
+Title: Hosts: Don't show additional IP addresses on host list pages
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519065235
+Class: fix
+
+

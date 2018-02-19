@@ -134,10 +134,3 @@ def saveint(x):
         return int(x)
     except:
         return 0
-
-
-def tryint(x):
-    try:
-        return int(x)
-    except:
-        return x

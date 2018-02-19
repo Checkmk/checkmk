@@ -6053,7 +6053,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
                 for filename in lines[1:]:
                     name, info = filename.split(":", 1)
                     text, size = info[:-1].split(":", 1)
-                    file_info[name] = {"size" : saveint(size), "text": text}
+                    file_info[name] = {"size" : int(size), "text": text}
                 status["files"] = file_info
                 return status
 

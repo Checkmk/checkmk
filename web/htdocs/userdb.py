@@ -26,6 +26,7 @@
 
 # TODO: Rework connection management and multiplexing
 
+import utils
 import config, hooks
 import gui_background_job
 from lib import *
@@ -295,7 +296,7 @@ def update_user_access_time(username):
 
 
 def on_succeeded_login(username):
-    num_failed_logins = load_custom_attr(username, 'num_failed_logins', saveint)
+    num_failed_logins = load_custom_attr(username, 'num_failed_logins', utils.saveint)
     if num_failed_logins != None and num_failed_logins != 0:
         save_custom_attr(username, 'num_failed_logins', '0')
 
@@ -305,10 +306,10 @@ def on_succeeded_login(username):
 # userdb.need_to_change_pw returns either False or the reason description why the
 # password needs to be changed
 def need_to_change_pw(username):
-    if load_custom_attr(username, 'enforce_pw_change', saveint) == 1:
+    if load_custom_attr(username, 'enforce_pw_change', utils.saveint) == 1:
         return 'enforced'
 
-    last_pw_change = load_custom_attr(username, 'last_pw_change', saveint)
+    last_pw_change = load_custom_attr(username, 'last_pw_change', utils.saveint)
     max_pw_age = config.password_policy.get('max_age')
     if max_pw_age:
         if not last_pw_change:
@@ -605,7 +606,7 @@ def load_users(lock = False):
             user_id, serial = line.split(':')[:2]
             user_id = user_id.decode("utf-8")
             if user_id in result:
-                result[user_id]['serial'] = saveint(serial)
+                result[user_id]['serial'] = utils.saveint(serial)
 
     # Now read the user specific files
     dir = cmk.paths.var_dir + "/web/"
@@ -616,10 +617,10 @@ def load_users(lock = False):
             # read special values from own files
             if id in result:
                 for attr, conv_func in [
-                        ('num_failed_logins', saveint),
-                        ('last_pw_change',    saveint),
+                        ('num_failed_logins', utils.saveint),
+                        ('last_pw_change',    utils.saveint),
                         ('last_seen',         savefloat),
-                        ('enforce_pw_change', lambda x: bool(saveint(x))),
+                        ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                         ('idle_timeout',      convert_idle_timeout),
                         ('session_id',        convert_session_info),
                     ]:

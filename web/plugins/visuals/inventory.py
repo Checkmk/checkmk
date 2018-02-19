@@ -151,8 +151,8 @@ class FilterInvtableIDRange(Filter):
         html.number_input(self.name + "_to")
 
     def filter_table(self, rows):
-        from_value = saveint(html.var(self.name + "_from"))
-        to_value = saveint(html.var(self.name + "_to"))
+        from_value = utils.saveint(html.var(self.name + "_from"))
+        to_value = utils.saveint(html.var(self.name + "_to"))
 
         if not from_value and not to_value:
             return rows

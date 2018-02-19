@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import livestatus
+import utils
 
 # Declarations of commands on monitoring objects. This file is
 # read in with execfile by views.py.
@@ -54,7 +55,7 @@ register_command_group(
 
 def command_reschedule(cmdtag, spec, row, row_nr, total_rows):
     if html.var("_resched_checks"):
-        spread = saveint(html.var("_resched_spread"))
+        spread = utils.saveint(html.var("_resched_spread"))
         text = "<b>" + _("reschedule an immediate check")
         if spread:
             text += _(" spread over %d minutes ") % spread

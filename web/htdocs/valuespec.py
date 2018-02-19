@@ -44,6 +44,7 @@ import ipaddress
 from Cryptodome.PublicKey import RSA
 from UserDict import DictMixin
 
+import utils
 import livestatus
 from lib import *
 from gui_exceptions import MKUserError, MKGeneralException
@@ -238,10 +239,10 @@ class Age(ValueSpec):
     def from_html_vars(self, varprefix):
         # TODO: Validate for correct numbers!
         return (
-               saveint(html.var(varprefix + '_days',    0)) * 3600 * 24
-             + saveint(html.var(varprefix + '_hours',   0)) * 3600
-             + saveint(html.var(varprefix + '_minutes', 0)) * 60
-             + saveint(html.var(varprefix + '_seconds', 0))
+               utils.saveint(html.var(varprefix + '_days',    0)) * 3600 * 24
+             + utils.saveint(html.var(varprefix + '_hours',   0)) * 3600
+             + utils.saveint(html.var(varprefix + '_minutes', 0)) * 60
+             + utils.saveint(html.var(varprefix + '_seconds', 0))
         )
 
     def value_to_text(self, value):
@@ -297,7 +298,7 @@ class Integer(ValueSpec):
         else:
             return 0
 
-    def render_input(self, varprefix, value, convfunc = saveint):
+    def render_input(self, varprefix, value, convfunc = utils.saveint):
         self.classtype_info()
         if self._label:
             html.write(self._label)
@@ -1158,7 +1159,7 @@ class ListOfIntegers(ListOfStrings):
             if key in kwargs:
                 int_args[key] = kwargs[key]
         int_args["display_format"] = "%s"
-        int_args["convfunc"] = lambda x: x if x == '' else saveint(x)
+        int_args["convfunc"] = lambda x: x if x == '' else utils.saveint(x)
         int_args["minvalue"] = 17
         int_args["default_value"] = 34
         valuespec = Integer(**int_args)

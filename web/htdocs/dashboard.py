@@ -1253,8 +1253,8 @@ def ajax_dashlet_pos():
 
     board['mtime'] = int(time.time())
 
-    dashlet['position'] = saveint(html.var('x')), saveint(html.var('y'))
-    dashlet['size']     = saveint(html.var('w')), saveint(html.var('h'))
+    dashlet['position'] = int(html.var('x')), int(html.var('y'))
+    dashlet['size']     = int(html.var('w')), int(html.var('h'))
     visuals.save('dashboards', dashboards)
     html.write('OK %d' % board['mtime'])
 

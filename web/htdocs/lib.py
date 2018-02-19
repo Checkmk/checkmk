@@ -125,12 +125,3 @@ def savefloat(f):
         return float(f)
     except:
         return 0.0
-
-
-# TODO: Remove this helper function. Replace with explicit checks and covnersion
-# in using code.
-def saveint(x):
-    try:
-        return int(x)
-    except:
-        return 0

@@ -263,13 +263,13 @@ def perfometer_temperature_multi(row, check_command, perf_data):
     display_color = "#60f020"
 
     for sensor, value, uom, warn, crit, min, max in perf_data:
-        value = saveint(value)
+        value = int(value)
         if value > display_value:
             display_value = value
 
-            if display_value > saveint(warn):
+            if display_value > int(warn):
                 display_color = "#FFC840"
-            if display_value > saveint(crit):
+            if display_value > int(crit):
                 display_color = "#FF0000"
 
     display_string = "%s °C" % display_value
@@ -316,14 +316,14 @@ def perfometer_users(row, check_command, perf_data):
 perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
 
 def perfometer_blower(row, check_command, perf_data):
-    rpm = saveint(perf_data[0][1])
+    rpm = int(perf_data[0][1])
     perc = rpm / 10000.0 * 100.0
     return "%d RPM" % rpm, perfometer_logarithmic(rpm, 2000, 1.5, "#88c")
 
 perfometers["check_mk-cmctc_lcp.blower"] = perfometer_blower
 
 def perfometer_lcp_regulator(row, check_command, perf_data):
-    value = saveint(perf_data[0][1])
+    value = int(perf_data[0][1])
     return "%d%%" % value, perfometer_linear(value, "#8c8")
 
 perfometers["check_mk-cmctc_lcp.regulator"] = perfometer_lcp_regulator
@@ -727,8 +727,8 @@ def perfometer_hpux_tunables(row, check_command, perf_data):
 
 
     if warn != "" or crit != "":
-        warn = saveint(warn)
-        crit = saveint(crit)
+        warn = int(warn)
+        crit = int(crit)
 
         # go red if we're over crit
         if value > crit:
@@ -825,7 +825,7 @@ def perfometer_ups_capacity(row, command, perf):
 perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity
 
 def perfometer_genu_screen(row, command, perf):
-    value = saveint(perf[0][1])
+    value = int(perf[0][1])
     return "%d Sessions" % value  , perfometer_logarithmic(value, 5000 , 2 , "#7109AA")
 
 perfometers['check_mk-genu_pfstate'] = perfometer_genu_screen
@@ -1084,7 +1084,7 @@ def perfometer_veeam_client(row, check_command, perf_data):
 perfometers["check_mk-veeam_client"] = perfometer_veeam_client
 
 def perfometer_ups_outphase(row, check_command, perf_data):
-    load = saveint(perf_data[2][1])
+    load = int(perf_data[2][1])
     return "%d%%" % load, perfometer_linear(load, "#8050ff")
 
 perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase

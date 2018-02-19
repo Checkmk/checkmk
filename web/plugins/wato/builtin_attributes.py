@@ -489,34 +489,12 @@ declare_host_attribute(NetworkScanResultAttribute(),
                        topic = _("Network Scan"))
 
 
-class ManagementTypeAttribute(Attribute):
-    def __init__(self, name):
-        self._choices = [
-            ("snmp", "SNMP"),
-            #("ipmi", "IPMI"),
-            #("ping", _("Ping-only"))
-        ]
-
-        self._choices_dict = dict(self._choices)
-
-        Attribute.__init__(self, name, _("Protocol"),
-                    _("Specify the protocol used to connect to the management board."))
-
-    def paint(self, value, hostname):
-        return "", self._choices_dict.get(value, value)
-
-    def render_input(self, varprefix, value):
-        html.dropdown(varprefix + "protocol", self._choices, deflt=value)
-
-    def from_html_vars(self, varprefix):
-        return html.var(varprefix + "protocol")
-
 declare_host_attribute(ValueSpecAttribute("management_address",
     HostAddress(
         title = _("Address"),
         help = _("Address (IPv4 or IPv6) or dns name under which the "
                  "management board can be reached. If this is not set, "
-                 "the same address as that of the Host will be used."),
+                 "the same address as that of the host will be used."),
         allow_empty = False
     )),
     show_in_table = False,
@@ -524,11 +502,21 @@ declare_host_attribute(ValueSpecAttribute("management_address",
     topic = _("Management Board")
 )
 
-declare_host_attribute(ManagementTypeAttribute("management_protocol"),
-                       show_in_table = False,
-                       show_in_folder = False,
-                       topic = _("Management Board")
-                       )
+declare_host_attribute(ValueSpecAttribute("management_protocol",
+    DropdownChoice(
+        title = _("Protocol"),
+        help = _("Specify the protocol used to connect to the management board."),
+        choices = [
+            (None,    _("No management board")),
+            ("snmp",  "SNMP"),
+            #("ipmi", "IPMI"),
+            #("ping", _("Ping-only"))
+        ],
+    )),
+    show_in_table = False,
+    show_in_folder = True,
+    topic = _("Management Board")
+)
 
 declare_host_attribute(ValueSpecAttribute("management_snmp_community",
     SNMPCredentials(

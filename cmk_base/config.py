@@ -674,28 +674,35 @@ def management_protocol(hostname):
 
 
 def _management_board_settings_of(hostname):
-    rule_settings = rulesets.host_extra_conf(hostname, management_board_config)
     attributes_of_host = host_attributes.get(hostname, {})
+
     management_board = {
-        "address": None,
-        "protocol": None,
-        "credentials": None,
+        "address"     : None,
+        "protocol"    : None,
+        "credentials" : None,
     }
-    if "management_protocol" not in attributes_of_host and not rule_settings:
+
+    # When management_protocol is set to no management board, don't do anything else
+    # -> The management board can not be enabled by the credentials rule
+    if not attributes_of_host.get("management_protocol"):
         return management_board
 
-    if rule_settings:
-        protocol, credentials = rule_settings[0]
-        management_board["protocol"] = protocol
-        management_board["credentials"] = credentials
+    management_board["protocol"] = attributes_of_host["management_protocol"]
 
     if attributes_of_host.get("management_address"):
         management_board["address"] = attributes_of_host["management_address"]
     else:
         management_board["address"] = ipaddresses.get(hostname)
 
-    if attributes_of_host.get("management_protocol"):
-        management_board["protocol"] = attributes_of_host["management_protocol"]
+    # Set the defaults form the management board related ruleset. Use the first
+    # rule that matches the protocol configured for this host.
+    rule_settings = rulesets.host_extra_conf(hostname, management_board_config)
+    for protocol, credentials in rule_settings:
+        if protocol == management_board["protocol"]:
+            management_board["credentials"] = credentials
+            break
+
+    # Override the defaults set above with explicit host/folder settings
     if attributes_of_host.get("management_snmp_community"):
         management_board["credentials"] = attributes_of_host["management_snmp_community"]
 

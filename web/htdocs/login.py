@@ -113,7 +113,7 @@ def generate_secret():
 # Better use the value from the "serials.mk" file, instead of loading the whole
 # user database via load_users() for performance reasons.
 def load_serial(username):
-    return userdb.load_custom_attr(username, 'serial', saveint, 0)
+    return userdb.load_custom_attr(username, 'serial', int, 0)
 
 
 def generate_auth_hash(username, now):

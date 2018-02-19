@@ -4671,11 +4671,11 @@ def mode_parentscan(phase):
         "alias"          : html.get_unicode_input("alias", "").strip() or None,
         "recurse"        : html.get_checkbox("recurse"),
         "select"         : html.var("select"),
-        "timeout"        : saveint(html.var("timeout")) or 8,
-        "probes"         : saveint(html.var("probes")) or 2,
-        "max_ttl"        : saveint(html.var("max_ttl")) or 10,
+        "timeout"        : utils.saveint(html.var("timeout")) or 8,
+        "probes"         : utils.saveint(html.var("probes")) or 2,
+        "max_ttl"        : utils.saveint(html.var("max_ttl")) or 10,
         "force_explicit" : html.get_checkbox("force_explicit"),
-        "ping_probes"    : saveint(html.var("ping_probes")) or 0,
+        "ping_probes"    : utils.saveint(html.var("ping_probes")) or 0,
     }
 
     if phase == "action":

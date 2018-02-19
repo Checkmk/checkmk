@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import utils
+
 def init_rowselect(view):
     # Don't make rows selectable when no commands can be fired
     # Ignore "C" display option here. Otherwise the rows will not be selectable
@@ -216,9 +218,9 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
             odd = "even" if odd == "odd" else "odd"
 
             # state = row.get("service_state", row.get("aggr_state"))
-            state = saveint(row.get("service_state"))
+            state = utils.saveint(row.get("service_state"))
             if state == None:
-                state = saveint(row.get("host_state", 0))
+                state = utils.saveint(row.get("host_state", 0))
                 if state > 0:
                     state +=1 # 1 is critical for hosts
 

@@ -1449,6 +1449,7 @@ class CREFolder(BaseFolder):
             else:
                 all_hosts.append(hostentry)
 
+            # TODO: Management board?
             for attribute_name, dictionary in [
                 ( "ipaddress", ipv4_addresses ),
                 ( "ipv6address", ipv6_addresses ),

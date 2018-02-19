@@ -1,0 +1,15 @@
+Title: Management board protocol can now be configured on folders
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519055783
+Class: feature
+
+To make the configuration more flexible it is now possible to
+configure the management board protocol on folders and inherit
+this option to the hosts in a folder.
+
+It is also possible to override the value inherited from a folder
+to e.g. set it to "No management board" for specific hosts again.

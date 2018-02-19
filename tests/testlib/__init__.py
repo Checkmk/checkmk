@@ -179,9 +179,11 @@ class CMKVersion(object):
 
 
     def _version_available(self):
+        if self.is_installed():
+            return True
+
         response = requests.head(self.package_url(), auth=self._get_cmk_download_credentials(), verify=False)
-        available_on_server = response.status_code == 200
-        return self.is_installed() or available_on_server
+        return response.status_code == 200
 
 
     def install(self):

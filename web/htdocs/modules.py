@@ -26,7 +26,7 @@
 
 import os
 from types import ModuleType
-from lib import load_web_plugins, local_web_plugins_have_changed
+from lib import load_web_plugins
 from mod_python.apache import import_module # pylint: disable=import-error
 import pagetypes
 
@@ -110,7 +110,7 @@ def load_all_plugins():
     else:
         only_modules = None
 
-    need_plugins_reload = local_web_plugins_have_changed()
+    need_plugins_reload = _local_web_plugins_have_changed()
 
     for module in modules:
         if only_modules != None and get_module_name(module) not in only_modules:
@@ -138,3 +138,41 @@ def register_handlers(handlers):
 
 def get_handler(name, dflt=None):
     return pagehandlers.get(name, dflt)
+
+
+def _find_local_web_plugins():
+    basedir = cmk.paths.local_web_dir + "/plugins/"
+
+    try:
+        plugin_dirs = os.listdir(basedir)
+    except OSError, e:
+        if e.errno == 2:
+            return
+        else:
+            raise
+
+    for plugins_dir in plugin_dirs:
+        dir_path = basedir + plugins_dir
+        yield dir_path # Changes in the directory like deletion of files!
+        if os.path.isdir(dir_path):
+            for file_name in os.listdir(dir_path):
+                if file_name.endswith(".py") or file_name.endswith(".pyc"):
+                    yield dir_path + "/" + file_name
+
+
+_last_web_plugins_update = 0
+def _local_web_plugins_have_changed():
+    global _last_web_plugins_update
+
+    if html.is_cached("local_web_plugins_have_changed"):
+        return html.get_cached("local_web_plugins_have_changed")
+
+    this_time = 0.0
+    for path in _find_local_web_plugins():
+        this_time = max(os.stat(path).st_mtime, this_time)
+    last_time = _last_web_plugins_update
+    _last_web_plugins_update = this_time
+
+    have_changed = this_time > last_time
+    html.set_cache("local_web_plugins_have_changed", have_changed)
+    return have_changed

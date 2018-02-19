@@ -221,7 +221,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     else:
         age_class = "age"
 
-    return age_class, prefix + (output_format % age_human_readable(age)) + warn_txt
+    return age_class, prefix + (output_format % cmk.render.approx_age(age)) + warn_txt
 
 
 def paint_future_time(timestamp):
@@ -817,7 +817,7 @@ def render_cache_info(what, row):
     cache_age = time.time() - cached_at
 
     text = _("Cache generated %s ago, cache interval: %s") % \
-            (age_human_readable(cache_age), age_human_readable(cache_interval))
+            (cmk.render.approx_age(cache_age), cmk.render.approx_age(cache_interval))
 
     if cache_interval:
         percentage = 100.0 * cache_age / cache_interval
@@ -920,14 +920,14 @@ multisite_painters["svc_check_latency"] = {
     "title"   : _("Service check latency"),
     "short"   : _("Latency"),
     "columns" : [ "service_latency" ],
-    "paint"   : lambda row: ("", age_human_readable(row["service_latency"])),
+    "paint"   : lambda row: ("", cmk.render.approx_age(row["service_latency"])),
 }
 
 multisite_painters["svc_check_duration"] = {
     "title"   : _("Service check duration"),
     "short"   : _("Duration"),
     "columns" : [ "service_execution_time" ],
-    "paint"   : lambda row: ("", age_human_readable(row["service_execution_time"])),
+    "paint"   : lambda row: ("", cmk.render.approx_age(row["service_execution_time"])),
 }
 
 multisite_painters["svc_attempt"] = {
@@ -941,21 +941,21 @@ multisite_painters["svc_normal_interval"] = {
     "title"   : _("Service normal check interval"),
     "short"   : _("Check int."),
     "columns" : [ "service_check_interval" ],
-    "paint"   : lambda row: ("number", age_human_readable(row["service_check_interval"] * 60.0)),
+    "paint"   : lambda row: ("number", cmk.render.approx_age(row["service_check_interval"] * 60.0)),
 }
 multisite_painters["svc_retry_interval"] = {
     "title"   : _("Service retry check interval"),
     "short"   : _("Retry"),
     "columns" : [ "service_retry_interval" ],
-    "paint"   : lambda row: ("number", age_human_readable(row["service_retry_interval"] * 60.0)),
+    "paint"   : lambda row: ("number", cmk.render.approx_age(row["service_retry_interval"] * 60.0)),
 }
 multisite_painters["svc_check_interval"] = {
     "title"   : _("Service normal/retry check interval"),
     "short"   : _("Interval"),
     "columns" : [ "service_check_interval", "service_retry_interval" ],
     "paint"   : lambda row: (None, "%s / %s" % (
-            age_human_readable(row["service_check_interval"] * 60.0),
-            age_human_readable(row["service_retry_interval"] * 60.0))),
+            cmk.render.approx_age(row["service_check_interval"] * 60.0),
+            cmk.render.approx_age(row["service_retry_interval"] * 60.0))),
 }
 
 multisite_painters["svc_check_type"] = {
@@ -1414,14 +1414,14 @@ multisite_painters["host_check_latency"] = {
     "title"   : _("Host check latency"),
     "short"   : _("Latency"),
     "columns" : [ "host_latency" ],
-    "paint"   : lambda row: ("", age_human_readable(row["host_latency"])),
+    "paint"   : lambda row: ("", cmk.render.approx_age(row["host_latency"])),
 }
 
 multisite_painters["host_check_duration"] = {
     "title"   : _("Host check duration"),
     "short"   : _("Duration"),
     "columns" : [ "host_execution_time" ],
-    "paint"   : lambda row: ("", age_human_readable(row["host_execution_time"])),
+    "paint"   : lambda row: ("", cmk.render.approx_age(row["host_execution_time"])),
 }
 
 multisite_painters["host_attempt"] = {
@@ -1435,21 +1435,21 @@ multisite_painters["host_normal_interval"] = {
     "title"   : _("Normal check interval"),
     "short"   : _("Check int."),
     "columns" : [ "host_check_interval" ],
-    "paint"   : lambda row: (None, age_human_readable(row["host_check_interval"] * 60.0)),
+    "paint"   : lambda row: (None, cmk.render.approx_age(row["host_check_interval"] * 60.0)),
 }
 multisite_painters["host_retry_interval"] = {
     "title"   : _("Retry check interval"),
     "short"   : _("Retry"),
     "columns" : [ "host_retry_interval" ],
-    "paint"   : lambda row: (None, age_human_readable(row["host_retry_interval"] * 60.0)),
+    "paint"   : lambda row: (None, cmk.render.approx_age(row["host_retry_interval"] * 60.0)),
 }
 multisite_painters["host_check_interval"] = {
     "title"   : _("Normal/retry check interval"),
     "short"   : _("Interval"),
     "columns" : [ "host_check_interval", "host_retry_interval" ],
     "paint"   : lambda row: (None, "%s / %s" % (
-            age_human_readable(row["host_check_interval"] * 60.0),
-            age_human_readable(row["host_retry_interval"] * 60.0))),
+            cmk.render.approx_age(row["host_check_interval"] * 60.0),
+            cmk.render.approx_age(row["host_retry_interval"] * 60.0))),
 }
 
 multisite_painters["host_check_type"] = {

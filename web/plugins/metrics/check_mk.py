@@ -67,7 +67,7 @@ unit_info[""] = {
     "title"  : "",
     "description" : _("Floating point number"),
     "symbol" : "",
-    "render" : lambda v: render_scientific(v, 2),
+    "render" : lambda v: cmk.render.scientific(v, 2),
 }
 
 
@@ -133,7 +133,7 @@ unit_info["s"] = {
     "title"    : _("sec"),
     "description" : _("Timespan or Duration in seconds"),
     "symbol"   : _("s"),
-    "render"   : age_human_readable,
+    "render"   : cmk.render.approx_age,
     "stepping" : "time", # for vertical graph labels
 }
 
@@ -148,7 +148,7 @@ unit_info["hz"] = {
     "title"  : _("Hz"),
     "symbol" : _("Hz"),
     "description" : _("Frequency (displayed in Hz)"),
-    "render" : lambda v : physical_precision(v, 3, _("Hz")),
+    "render" : lambda v : cmk.render.physical_precision(v, 3, _("Hz")),
 }
 
 
@@ -166,10 +166,26 @@ unit_info["bytes/s"] = {
     "stepping" : "binary", # for vertical graph labels
 }
 
+def physical_precision_list(values, precision, unit_symbol):
+    if not values:
+        reference = 0
+    else:
+        reference = min([ abs(v) for v in values ])
+
+    scale_symbol, places_after_comma, scale_factor = cmk.render.calculate_physical_precision(reference, precision)
+
+    units = []
+    scaled_values = []
+    for value in values:
+        scaled_value = float(value) / scale_factor
+        scaled_values.append(("%%.%df" % places_after_comma) % scaled_value)
+
+    return "%s%s" % (scale_symbol, unit_symbol), scaled_values
+
 unit_info["bits/s"] = {
     "title"      : _("Bits per second"),
     "symbol"     : _("bits/s"),
-    "render"     : lambda v: physical_precision(v, 3, _("bit/s")),
+    "render"     : lambda v: cmk.render.physical_precision(v, 3, _("bit/s")),
     "graph_unit" : lambda v: physical_precision_list(v, 3, _("bit/s")),
 }
 
@@ -223,31 +239,31 @@ unit_info["c"] = {
 unit_info["a"] = {
     "title"  : _("Electrical Current (Amperage)"),
     "symbol" : _("A"),
-    "render" : lambda v: physical_precision(v, 3, _("A")),
+    "render" : lambda v: cmk.render.physical_precision(v, 3, _("A")),
 }
 
 unit_info["v"] = {
     "title"  : _("Electrical Tension (Voltage)"),
     "symbol" : _("V"),
-    "render" : lambda v: physical_precision(v, 3, _("V")),
+    "render" : lambda v: cmk.render.physical_precision(v, 3, _("V")),
 }
 
 unit_info["w"] = {
     "title"  : _("Electrical Power"),
     "symbol" : _("W"),
-    "render" : lambda v: physical_precision(v, 3, _("W")),
+    "render" : lambda v: cmk.render.physical_precision(v, 3, _("W")),
 }
 
 unit_info["va"] = {
     "title"  : _("Electrical Apparent Power"),
     "symbol" : _("VA"),
-    "render" : lambda v: physical_precision(v, 3, _("VA")),
+    "render" : lambda v: cmk.render.physical_precision(v, 3, _("VA")),
 }
 
 unit_info["wh"] = {
     "title"  : _("Electrical Energy"),
     "symbol" : _("Wh"),
-    "render" : lambda v: physical_precision(v, 3, _("Wh")),
+    "render" : lambda v: cmk.render.physical_precision(v, 3, _("Wh")),
 }
 
 unit_info["dbm"] = {
@@ -265,7 +281,7 @@ unit_info["dbmv"] = {
 unit_info["db"] = {
     "title" : _("Decibel"),
     "symbol" : _("dB"),
-    "render" : lambda v: physical_precision(v, 3, _("dB")),
+    "render" : lambda v: cmk.render.physical_precision(v, 3, _("dB")),
 }
 
 # 'Percent obscuration per meter'-Obscuration for any atmospheric phenomenon, e.g. smoke, dust, snow
@@ -273,7 +289,7 @@ unit_info["ppm"] = {
     "title"  : _("ppm"),
     "symbol" : _("ppm"),
     "description" : _("Parts per Million"),
-    "render" : lambda v : physical_precision(v, 3, _("ppm")),
+    "render" : lambda v : cmk.render.physical_precision(v, 3, _("ppm")),
 }
 
 unit_info["%/m"] = {
@@ -285,25 +301,25 @@ unit_info["%/m"] = {
 unit_info["bar"] = {
     "title"     : _("Bar"),
     "symbol"    : _("bar"),
-    "render"    : lambda v: physical_precision(v, 4, _("bar")),
+    "render"    : lambda v: cmk.render.physical_precision(v, 4, _("bar")),
 }
 
 unit_info["pa"] = {
     "title"     : _("Pascal"),
     "symbol"    : _("Pa"),
-    "render"    : lambda v: physical_precision(v, 3, _("Pa")),
+    "render"    : lambda v: cmk.render.physical_precision(v, 3, _("Pa")),
 }
 
 unit_info["l/s"] = {
     "title"     : _("Liters per second"),
     "symbol"    : _("l/s"),
-    "render"    : lambda v: physical_precision(v, 3, _("l/s")),
+    "render"    : lambda v: cmk.render.physical_precision(v, 3, _("l/s")),
 }
 
 unit_info["rpm"] = {
     "title"  : _("Rotations per minute"),
     "symbol" : _("rpm"),
-    "render" : lambda v: physical_precision(v, 4, _("rpm")),
+    "render" : lambda v: cmk.render.physical_precision(v, 4, _("rpm")),
 }
 
 #.

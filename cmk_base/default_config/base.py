@@ -82,6 +82,7 @@ snmp_character_encodings           = []
 management_board_config            = [] # Ruleset to specify management board settings
 management_protocol                = {} # Mapping from hostname to management board protocol
 management_snmp_credentials        = {} # Mapping from hostname to SNMP credentials
+management_ipmi_credentials        = {} # Mapping from hostname to IPMI credentials
 
 # RRD creation (only with CMC)
 cmc_log_rrdcreation                = None # also: "terse", "full"

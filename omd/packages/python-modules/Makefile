@@ -110,6 +110,8 @@ MODULES += requests-kerberos-0.11.0.tar.gz
 MODULES += tinkerforge-2.1.15.tar.gz
 # Added for check_sftp
 MODULES += paramiko-2.1.2.tar.gz
+# Added for IPMI monitoring of management interface
+MODULES += pyghmi-1.0.38.tar.gz
 
 MODULES += typing-3.6.4.tar.gz
 MODULES += scandir-1.7.tar.gz

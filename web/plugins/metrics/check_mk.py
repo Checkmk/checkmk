@@ -4749,6 +4749,10 @@ check_metrics["check_mk-bluecoat_diskcpu"] = {
     "value" : { "name" : "generic_util" }
 }
 
+check_metrics["check_mk-mgmt_ipmi_sensors"] = {
+    "value" : { "name" : "temp" }
+}
+
 check_metrics["check_mk-ipmi_sensors"] = {
     "value" : { "name" : "temp" }
 }

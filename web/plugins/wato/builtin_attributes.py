@@ -522,8 +522,8 @@ declare_host_attribute(ValueSpecAttribute("management_protocol",
         help = _("Specify the protocol used to connect to the management board."),
         choices = [
             (None,    _("No management board")),
-            ("snmp",  "SNMP"),
-            #("ipmi", "IPMI"),
+            ("snmp",  _("SNMP")),
+            ("ipmi",  _("IPMI")),
             #("ping", _("Ping-only"))
         ],
     )),
@@ -540,6 +540,29 @@ declare_host_attribute(ValueSpecAttribute("management_snmp_community",
     show_in_table = False,
     show_in_folder = True,
     topic = _("Management Board")
+)
+
+class IPMICredentials(Alternative):
+    def __init__(self, **kwargs):
+        kwargs["style"] = "dropdown"
+        kwargs["elements"] = [
+            FixedValue(None,
+                title = _("No explicit credentials"),
+                totext = "",
+            ),
+            IPMIParameters(),
+        ]
+        super(IPMICredentials, self).__init__(**kwargs)
+
+
+declare_host_attribute(ValueSpecAttribute("management_ipmi_credentials",
+    IPMICredentials(
+        title = _("IPMI credentials"),
+        default_value = None,
+    )),
+    show_in_table = False,
+    show_in_folder = True,
+    topic = _("Management Board"),
 )
 
 

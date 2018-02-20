@@ -1,0 +1,16 @@
+title: IPMI Management board: Sensors
+agents: linux
+catalog: os/hardware
+license: GPL
+distribution: check_mk
+description:
+ This check uses the information of sensors provided via IPMI. The current
+ management board monitoring reports states about all available fans,
+ temperature sensors and power supplies.
+
+item:
+ The name of the sensor as provided via IPMI.
+
+inventory:
+ All sensors that are reported by the management board of a host via IPMI
+ are automatically inventorized.

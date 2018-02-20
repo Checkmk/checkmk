@@ -690,8 +690,20 @@ def management_protocol_of(hostname):
 
 
 def management_credentials_of(hostname):
+    protocol = management_protocol_of(hostname)
+    if protocol == "snmp":
+        credentials_variable, default_value = management_snmp_credentials, snmp_default_community
+    elif protocol == "ipmi":
+        credentials_variable, default_value = management_ipmi_credentials, None
+    elif protocol is None:
+        return None
+    else:
+        raise NotImplementedError()
+
+    # First try to use the explicit configuration of the host
+    # (set directly for a host or via folder inheritance in WATO)
     try:
-        return management_snmp_credentials[hostname]
+        return credentials_variable[hostname]
     except KeyError:
         pass
 
@@ -701,7 +713,7 @@ def management_credentials_of(hostname):
         if protocol == management_protocol_of(hostname):
             return credentials
 
-    return snmp_default_community
+    return default_value
 
 
 #

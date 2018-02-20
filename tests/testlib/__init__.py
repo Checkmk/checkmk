@@ -1148,6 +1148,83 @@ class CMKWebSession(WebSession):
         return result
 
 
+    def host_exists(self, hostname):
+        try:
+            result = self._api_request("webapi.py?action=get_host", {
+                "request": json.dumps({
+                    "hostname": hostname,
+                }),
+            })
+        except AssertionError, e:
+            if "No such host" in "%s" % e:
+                return False
+            else:
+                raise
+
+        assert type(result) == dict
+        return "hostname" in result
+
+
+    def add_folder(self, folder_path, attributes=None, create_folders=True, expect_error=False):
+        if attributes == None:
+            attributes = {}
+
+        result = self._api_request("webapi.py?action=add_folder", {
+            "request": json.dumps({
+                "folder"         : folder_path,
+                "attributes"     : attributes or {},
+                "create_parent_folders" : create_folders,
+            }),
+        }, expect_error=expect_error)
+
+        assert result == None
+
+        folder = self.get_folder(folder_path)
+        assert folder["attributes"] == attributes
+
+
+    def get_folder(self, folder_path, effective_attributes=False):
+        result = self._api_request("webapi.py?action=get_folder", {
+            "request": json.dumps({
+                "folder"               : folder_path,
+                "effective_attributes" : effective_attributes,
+            }),
+        })
+
+        assert type(result) == dict
+        assert "attributes" in result
+
+        return result
+
+
+    def folder_exists(self, folder_path):
+        try:
+            result = self._api_request("webapi.py?action=get_folder", {
+                "request": json.dumps({
+                    "folder": folder_path,
+                }),
+            })
+        except AssertionError, e:
+            if "does not exist" in "%s" % e:
+                return False
+            else:
+                raise
+
+        assert type(result) == dict
+        return "folder" in result
+
+
+    def delete_folder(self, folder_path):
+        result = self._api_request("webapi.py?action=delete_folder", {
+            "request": json.dumps({
+                "folder": folder_path,
+            }),
+        })
+
+        assert result == None
+        assert not self.folder_exists(folder_path)
+
+
     def get_ruleset(self, ruleset_name):
         result = self._api_request("webapi.py?action=get_ruleset&output_format=python", {
             "request": json.dumps({

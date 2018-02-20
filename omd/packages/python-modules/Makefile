@@ -104,13 +104,14 @@ MODULES+=requests-2.13.0.tar.gz
 # Has requests as dependency -> must be built after
 MODULES += pyOpenSSL-16.2.0.tar.gz
 # Added for check_bi_aggr with kerberos support
-MODULES+=pykerberos-1.2.1.tar.gz
-MODULES+=requests-kerberos-0.11.0.tar.gz
+MODULES += pykerberos-1.2.1.tar.gz
+MODULES += requests-kerberos-0.11.0.tar.gz
 # Added for tinkerforge special agent
-MODULES+=tinkerforge-2.1.15.tar.gz
+MODULES += tinkerforge-2.1.15.tar.gz
 # Added for check_sftp
-MODULES+=paramiko-2.1.2.tar.gz
+MODULES += paramiko-2.1.2.tar.gz
 
+MODULES += typing-3.6.4.tar.gz
 
 .PHONY: build check-freetds install skel clean
 

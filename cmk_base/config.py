@@ -665,7 +665,7 @@ def has_management_board(hostname):
     return management_protocol.get(hostname) is not None
 
 
-def management_address(hostname):
+def management_address_of(hostname):
     attributes_of_host = host_attributes.get(hostname, {})
     if attributes_of_host.get("management_address"):
         return attributes_of_host["management_address"]

@@ -1,0 +1,12 @@
+Title: Fixed escaped HTML entities in view columns
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.4.0p26
+Date: 1519133099
+Class: fix
+
+When creating a PDF report which contains a view element. The columns
+in this view could contain HTML escaped special characters like "&amp;quot;".
+These signs are now displayed correctly in the PDF export.

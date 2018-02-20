@@ -130,6 +130,13 @@ class Escaper(object):
                     .replace(">", "&gt;")
 
 
+    def unescape_attributes(self, value):
+        return value.replace("&amp;", "&")\
+                    .replace("&quot;", "\"")\
+                    .replace("&lt;", "<")\
+                    .replace("&gt;", ">")
+
+
     # render HTML text.
     # We only strip od some tags and allow some simple tags
     # such as <h1>, <b> or <i> to be part of the string.

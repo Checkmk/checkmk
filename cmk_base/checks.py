@@ -103,6 +103,9 @@ def get_plugin_paths(*dirs):
 # If a check or check.include is both found in local/ and in the
 # normal structure, then only the file in local/ must be read!
 def load_checks(filelist):
+    # Initialize some data structures which are populated while loading the checks
+    _check_variables.clear()
+
     loaded_files = set()
     check_variable_defaults = {}
     ignored_variable_types = [ type(lambda: None), type(os) ]

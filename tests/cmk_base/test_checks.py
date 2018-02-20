@@ -206,7 +206,7 @@ check_info["test_check_2"] = {
 
 
 # Test whether or not factory settings and checkgroup parameters work
-def test_test_check_factory_settings(request, test_cfg, site, web):
+def test_check_factory_settings(request, test_cfg, site, web):
     test_check_path = "local/share/check_mk/checks/test_check_3"
 
     def cleanup():

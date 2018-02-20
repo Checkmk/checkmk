@@ -294,7 +294,7 @@ class ECServerThread(threading.Thread):
 
         while not self._shal_terminate():
             try:
-                with cmk.profile.Profile(enabled=profiling_enabled,
+                with cmk.profile.Profile(enabled=self.profiling_enabled,
                                          profile_file=os.path.join(g_state_dir, "%s.profile" % self.name)):
                     self.serve()
             except Exception:

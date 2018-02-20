@@ -209,7 +209,7 @@ def _do_inv_for_cluster(hostname, inventory_tree):
 
 
 def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
-    sources = data_sources.DataSources(hostname)
+    sources = data_sources.DataSources(hostname, ipaddress)
 
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
@@ -219,7 +219,7 @@ def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
             source.set_ignore_check_interval(True)
             source.set_check_plugin_name_filter(_gather_snmp_check_plugin_names_inventory)
 
-    multi_host_sections = sources.get_host_sections(hostname, ipaddress)
+    multi_host_sections = sources.get_host_sections()
 
     console.verbose("Execute inventory plugins;")
     import cmk_base.inventory_plugins
@@ -260,8 +260,8 @@ def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
     console.verbose(";")
 
 
-def _gather_snmp_check_plugin_names_inventory(hostname, ipaddress, on_error, do_snmp_scan, for_mgmt_board=False):
-    return discovery.gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan,
+def _gather_snmp_check_plugin_names_inventory(access_data, on_error, do_snmp_scan, for_mgmt_board=False):
+    return discovery.gather_snmp_check_plugin_names(access_data, on_error, do_snmp_scan,
                                                     for_inventory=True, for_mgmt_board=for_mgmt_board)
 
 

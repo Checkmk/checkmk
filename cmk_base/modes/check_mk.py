@@ -349,7 +349,7 @@ def mode_dump_agent(hostname):
 
         output = ""
 
-        sources = data_sources.DataSources(hostname)
+        sources = data_sources.DataSources(hostname, ipaddress)
         sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
         for source in sources.get_data_sources():

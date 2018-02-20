@@ -37,20 +37,20 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         return "piggyback"
 
 
-    def describe(self, hostname, ipaddress):
-        path = os.path.join(cmk.paths.tmp_dir, "piggyback", hostname)
+    def describe(self):
+        path = os.path.join(cmk.paths.tmp_dir, "piggyback", self._hostname)
         return "Process piggyback data from %s" % path
 
 
-    def _execute(self, hostname, ipaddress):
-        return piggyback.get_piggyback_raw_data(hostname) \
-               + piggyback.get_piggyback_raw_data(ipaddress)
+    def _execute(self):
+        return piggyback.get_piggyback_raw_data(self._hostname) \
+               + piggyback.get_piggyback_raw_data(self._ipaddress)
 
 
-    def _get_raw_data(self, hostname, ipaddress):
+    def _get_raw_data(self):
         """Returns the current raw data of this data source
 
         Special for piggyback: No caching of raw data
         """
         self._logger.verbose("[%s] Execute data source" % self.id())
-        return self._execute(hostname, ipaddress), False
+        return self._execute(), False

@@ -81,15 +81,15 @@ def dump_host(hostname):
     console.output(tty.yellow + "Contact groups:         " + tty.normal + cmk_base.utils.make_utf8(", ".join(config.contactgroups_of(hostname))) + "\n")
 
     agenttypes = []
-    sources = data_sources.DataSources(hostname)
+    sources = data_sources.DataSources(hostname, ipaddress)
     for source in sources.get_data_sources():
-        agenttypes.append(source.describe(hostname, ipaddress))
+        agenttypes.append(source.describe(hostname))
 
     if config.is_ping_host(hostname):
         agenttypes.append('PING only')
 
     console.output(tty.yellow + "Agent mode:             " + tty.normal)
-    console.output(data_sources.DataSources(hostname).describe_data_sources() + "\n")
+    console.output(sources.describe_data_sources() + "\n")
 
     console.output(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:

@@ -47,6 +47,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     # speed up multiple lookup of same host
     check_table_cache = cmk_base.config_cache.get_dict("check_tables")
+
     if not skip_autochecks and use_cache and hostname in check_table_cache:
         if remove_duplicates and config.is_dual_host(hostname):
             return _remove_duplicate_checks(check_table_cache[hostname])
@@ -259,6 +260,7 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config"):
     unsorted = [ (checkname, item, params, descr, deps)
                  for ((checkname, item), (params, descr, deps))
                  in get_check_table(hostname, remove_duplicates=remove_duplicates, world=world).items() ]
+
     def cmp(a, b):
         if a[3] < b[3]:
             return -1

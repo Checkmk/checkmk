@@ -67,6 +67,10 @@ from .host_sections import HostSections, MultiHostSections
 # of a call.
 g_data_source_errors = {}
 
+# TODO: Cluster with different data sources, eg. TCP node and SNMP node:
+# - Discovery works.
+# - Checking doesn't work - as it was before. Maybe we can handle this in the future.
+
 #.
 #   .--Data Sources--------------------------------------------------------.
 #   |     ____        _          ____                                      |
@@ -80,9 +84,10 @@ g_data_source_errors = {}
 #   '----------------------------------------------------------------------'
 
 class DataSources(object):
-    def __init__(self, hostname):
+    def __init__(self, hostname, ipaddress):
         super(DataSources, self).__init__()
         self._hostname = hostname
+        self._ipaddress = ipaddress
         self._initialize_data_sources()
 
         # Has currently no effect. The value possibly set during execution on the single data
@@ -114,12 +119,12 @@ class DataSources(object):
             source.set_main_agent_data_source()
             self._add_source(source)
 
-        self._add_source(PiggyBackDataSource())
+        self._add_source(PiggyBackDataSource(self._hostname, self._ipaddress))
 
 
     def _initialize_snmp_data_sources(self):
         if config.is_snmp_host(self._hostname):
-            self._add_source(SNMPDataSource())
+            self._add_source(SNMPDataSource(self._hostname, self._ipaddress))
 
 
     def _initialize_management_board_data_sources(self):
@@ -134,7 +139,14 @@ class DataSources(object):
         if not is_management_snmp:
             return
 
-        self._add_source(SNMPManagementBoardDataSource())
+        # TODO: Clean this up one day. To stay compatible for old configurations,
+        # ie. TCP host with SNMP management board, we use the standard SNMP data source
+        # instead of SNMP management board data source.
+        if config.is_tcp_host(self._hostname):
+            source = SNMPDataSource(self._hostname, self._ipaddress)
+        else:
+            source = SNMPManagementBoardDataSource(self._hostname, self._ipaddress)
+        self._add_source(source)
 
 
     def _add_sources(self, sources):
@@ -168,9 +180,9 @@ class DataSources(object):
 
         programs = rulesets.host_extra_conf(self._hostname, config.datasource_programs)
         if programs:
-            return DSProgramDataSource(programs[0])
+            return DSProgramDataSource(self._hostname, self._ipaddress, programs[0])
 
-        return TCPDataSource()
+        return TCPDataSource(self._hostname, self._ipaddress)
 
 
     def _get_special_agent_data_sources(self):
@@ -185,12 +197,13 @@ class DataSources(object):
         for agentname, ruleset in sorted(config.special_agents.items()):
             params = rulesets.host_extra_conf(self._hostname, ruleset)
             if params:
-                special_agents.append(SpecialAgentDataSource(agentname, params[0]))
+                special_agents.append(SpecialAgentDataSource(self._hostname, self._ipaddress,
+                                                             agentname, params[0]))
 
         return special_agents
 
 
-    def get_check_plugin_names(self, hostname, ipaddress):
+    def get_check_plugin_names(self):
         """Returns the list of check types the caller may execute on the sections produced
         by these sources.
 
@@ -200,7 +213,7 @@ class DataSources(object):
         check_plugin_names = set()
 
         for source in self._sources.values():
-            check_plugin_names.update(source.get_check_plugin_names(hostname, ipaddress))
+            check_plugin_names.update(source.get_check_plugin_names())
 
         return list(check_plugin_names)
 
@@ -226,7 +239,7 @@ class DataSources(object):
             source.set_max_cachefile_age(max_cachefile_age)
 
 
-    def get_host_sections(self, hostname, ipaddress, max_cachefile_age=None):
+    def get_host_sections(self, max_cachefile_age=None):
         """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
         Returns a dictionary object of already parsed HostSections() constructs for each related host.
@@ -242,13 +255,15 @@ class DataSources(object):
 
         # First abstract clusters/nodes/hosts
         hosts = []
-        nodes = config.nodes_of(hostname)
+        nodes = config.nodes_of(self._hostname)
         if nodes is not None:
             for node_hostname in nodes:
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
-                hosts.append((node_hostname, node_ipaddress, config.cluster_max_cachefile_age))
+                hosts.append((node_hostname, node_ipaddress,
+                              DataSources(node_hostname, node_ipaddress),
+                              config.cluster_max_cachefile_age))
         else:
-            hosts.append((hostname, ipaddress, config.check_max_cachefile_age))
+            hosts.append((self._hostname, self._ipaddress, self, config.check_max_cachefile_age))
 
         if nodes:
             import abstract
@@ -257,16 +272,16 @@ class DataSources(object):
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         multi_host_sections = MultiHostSections()
-        for this_hostname, this_ipaddress, this_max_cachfile_age in hosts:
+        for this_hostname, this_ipaddress, these_sources, this_max_cachfile_age in hosts:
             # In case a max_cachefile_age is given with the function call, always use this one
             # instead of the host individual one. This is only used in discovery mode.
             if max_cachefile_age is not None:
-                self.set_max_cachefile_age(max_cachefile_age)
+                these_sources.set_max_cachefile_age(max_cachefile_age)
             else:
-                self.set_max_cachefile_age(this_max_cachfile_age)
+                these_sources.set_max_cachefile_age(this_max_cachfile_age)
 
-            for source in self.get_data_sources():
-                host_sections_from_source = source.run(this_hostname, this_ipaddress)
+            for source in these_sources.get_data_sources():
+                host_sections_from_source = source.run()
                 host_sections = multi_host_sections.add_or_get_host_sections(this_hostname, this_ipaddress)
                 host_sections.update(host_sections_from_source)
 
@@ -275,8 +290,6 @@ class DataSources(object):
             cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_raw_data)
 
         return multi_host_sections
-
-
 
 
 #.

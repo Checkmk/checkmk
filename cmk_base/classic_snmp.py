@@ -49,11 +49,13 @@ from cmk_base.exceptions import MKSNMPError, MKTimeout
 #   | Implements the neccessary function for Check_MK                      |
 #   '----------------------------------------------------------------------'
 
-def walk(hostname, ip, oid, hex_plain=False, context_name=None):
+def walk(access_data, oid, hex_plain=False, context_name=None):
+    hostname = access_data["hostname"]
+    ipaddress = access_data["ipaddress"]
     protospec = _snmp_proto_spec(hostname)
     portspec = _snmp_port_spec(hostname)
-    command = _snmp_walk_command(hostname, context_name)
-    command += [ "-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ip, portspec), oid ]
+    command = _snmp_walk_command(access_data, context_name)
+    command += [ "-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid ]
 
     debug_cmd = [ "''" if a == "" else a for a in command ]
     console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
@@ -86,7 +88,7 @@ def walk(hostname, ip, oid, hex_plain=False, context_name=None):
 
     if exitstatus:
         console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip())
-        raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ip, error.strip(), exitstatus))
+        raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ipaddress, error.strip(), exitstatus))
     return rowinfo
 
 
@@ -126,7 +128,9 @@ def _get_rowinfo_from_snmp_process(snmp_process, hex_plain):
     return rowinfo
 
 
-def get(hostname, ipaddress, oid, context_name=None):
+def get(access_data, oid, context_name=None):
+    hostname = access_data["hostname"]
+    ipaddress = access_data["ipaddress"]
     if oid.endswith(".*"):
         oid_prefix = oid[:-2]
         commandtype = "getnext"
@@ -136,7 +140,7 @@ def get(hostname, ipaddress, oid, context_name=None):
 
     protospec = _snmp_proto_spec(hostname)
     portspec = _snmp_port_spec(hostname)
-    command = _snmp_base_command(commandtype, hostname, context_name) + \
+    command = _snmp_base_command(commandtype, access_data, context_name) + \
                [ "-On", "-OQ", "-Oe", "-Ot",
                  "%s%s%s" % (protospec, ipaddress, portspec),
                  oid_prefix ]
@@ -192,8 +196,8 @@ def _snmp_proto_spec(hostname):
 # Returns command lines for snmpwalk and snmpget including
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
-def _snmp_walk_command(hostname, context_name):
-    return _snmp_base_command('walk', hostname, context_name) + [ "-Cc" ]
+def _snmp_walk_command(access_data, context_name):
+    return _snmp_base_command('walk', access_data, context_name) + [ "-Cc" ]
 
 
 # if the credentials are a string, we use that as community,
@@ -205,7 +209,10 @@ def _snmp_walk_command(hostname, context_name):
 # And if it is a six-tuple, it has the following additional arguments:
 # (5) privacy protocol (DES|AES) (-x)
 # (6) privacy protocol pass phrase (-X)
-def _snmp_base_command(what, hostname, context_name):
+def _snmp_base_command(what, access_data, context_name):
+    hostname = access_data["hostname"]
+    ipaddress = access_data["ipaddress"]
+    credentials = access_data["credentials"]
     options = []
 
     if what == 'get':
@@ -218,8 +225,6 @@ def _snmp_base_command(what, hostname, context_name):
         options.append("-Cr%d" % config.bulk_walk_size_of(hostname))
     else:
         command = [ 'snmpwalk' ]
-
-    credentials = config.snmp_credentials_of(hostname)
 
     if type(credentials) in [ str, unicode ]:
         # Handle V1 and V2C

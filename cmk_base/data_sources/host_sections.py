@@ -45,7 +45,7 @@ class HostSections(object):
 
         1. sections:                A dictionary from section_name to a list of rows,
                                     the section content
-        2. piggybacked_raw_data:  piggy-backed data for other hosts
+        2. piggybacked_raw_data:    piggy-backed data for other hosts
         3. persisted_sections:      Sections to be persisted for later usage
         4. cache_info:              Agent cache information
                                     (dict section name -> (cached_at, cache_interval))
@@ -97,10 +97,10 @@ class MultiHostSections(object):
         self._section_content_cache = caching.DictCache()
 
 
-    def add_or_get_host_sections(self, host_name, ipaddress, deflt=None):
+    def add_or_get_host_sections(self, hostname, ipaddress, deflt=None):
         if deflt is None:
             deflt = HostSections()
-        return self._multi_host_sections.setdefault((host_name, ipaddress), deflt)
+        return self._multi_host_sections.setdefault((hostname, ipaddress), deflt)
 
 
     def get_host_sections(self):
@@ -127,6 +127,7 @@ class MultiHostSections(object):
         It can return an section_content construct or None when there is no section content
         for this check available.
         """
+
         try:
             return self._section_content_cache[(hostname, ipaddress, check_plugin_name, for_discovery)]
         except KeyError:
@@ -264,3 +265,14 @@ class MultiHostSections(object):
         return section_content
 
 
+    def get_check_plugin_names(self):
+        # TODO: There is a function 'section_name_of' in checks.py
+        # but no inverse function, ie. get all subchecks of main check.
+        check_keys = set(checks.check_info.keys())
+        check_plugin_names = set()
+        for v in self._multi_host_sections.values():
+            for k in v.sections.keys():
+                for check_k in check_keys:
+                    if check_k.startswith(k):
+                        check_plugin_names.add(check_k)
+        return list(check_plugin_names)

@@ -56,8 +56,8 @@ class ProgramDataSource(CheckMKAgentDataSource):
         return "ds"
 
 
-    def _execute(self, hostname, ipaddress):
-        command_line = self._get_command_line(hostname, ipaddress)
+    def _execute(self):
+        command_line = self._get_command_line()
         return self._get_agent_info_program(command_line)
 
 
@@ -103,21 +103,21 @@ class ProgramDataSource(CheckMKAgentDataSource):
         return stdout
 
 
-    def _get_command_line(self, hostname, ipaddress):
+    def _get_command_line(self):
         """Returns the final command line to be executed"""
         raise NotImplementedError()
 
 
-    def describe(self, hostname, ipaddress):
+    def describe(self):
         """Return a short textual description of the agent"""
-        return "Program: %s" % self._get_command_line(hostname, ipaddress)
+        return "Program: %s" % self._get_command_line()
 
 
 
 
 class DSProgramDataSource(ProgramDataSource):
-    def __init__(self, command_template):
-        super(DSProgramDataSource, self).__init__()
+    def __init__(self, hostname, ipaddress, command_template):
+        super(DSProgramDataSource, self).__init__(hostname, ipaddress)
         self._command_template = command_template
 
 
@@ -125,42 +125,42 @@ class DSProgramDataSource(ProgramDataSource):
         return "agent"
 
 
-    def name(self, hostname, ipaddress):
+    def name(self):
         """Return a unique (per host) textual identification of the data source"""
-        program = self._get_command_line(hostname, ipaddress).split(" ")[0]
+        program = self._get_command_line().split(" ")[0]
         return os.path.basename(program)
 
 
-    def _get_command_line(self, hostname, ipaddress):
+    def _get_command_line(self):
         cmd = self._command_template
 
-        cmd = self._translate_legacy_macros(cmd, hostname, ipaddress)
-        cmd = self._translate_host_macros(cmd, hostname)
+        cmd = self._translate_legacy_macros(cmd)
+        cmd = self._translate_host_macros(cmd)
 
         return cmd
 
 
-    def _translate_legacy_macros(self, cmd, hostname, ipaddress):
+    def _translate_legacy_macros(self, cmd):
         # Make "legacy" translation. The users should use the $...$ macros in future
-        return cmd.replace("<IP>", ipaddress or "").replace("<HOST>", hostname)
+        return cmd.replace("<IP>", self._ipaddress or "").replace("<HOST>", self._hostname)
 
 
-    def _translate_host_macros(self, cmd, hostname):
-        tags = config.tags_of_host(hostname)
-        attrs = core_config.get_host_attributes(hostname, tags)
-        if config.is_cluster(hostname):
-            parents_list = core_config.get_cluster_nodes_for_config(hostname)
+    def _translate_host_macros(self, cmd):
+        tags = config.tags_of_host(self._hostname)
+        attrs = core_config.get_host_attributes(self._hostname, tags)
+        if config.is_cluster(self._hostname):
+            parents_list = core_config.get_cluster_nodes_for_config(self._hostname)
             attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
-            attrs.update(core_config.get_cluster_attributes(hostname, parents_list))
+            attrs.update(core_config.get_cluster_attributes(self._hostname, parents_list))
 
-        macros = core_config.get_host_macros_from_attributes(hostname, attrs)
+        macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
         return core_config.replace_macros(cmd, macros)
 
 
 
 class SpecialAgentDataSource(ProgramDataSource):
-    def __init__(self, special_agent_id, params):
-        super(SpecialAgentDataSource, self).__init__()
+    def __init__(self, hostname, ipaddress, special_agent_id, params):
+        super(SpecialAgentDataSource, self).__init__(hostname, ipaddress)
         self._special_agent_id = special_agent_id
         self._params = params
 
@@ -170,14 +170,14 @@ class SpecialAgentDataSource(ProgramDataSource):
 
 
     # TODO: Can't we make this more specific in case of special agents?
-    def _gather_check_plugin_names(self, hostname, ipaddress):
+    def _gather_check_plugin_names(self):
         return checks.discoverable_tcp_checks()
 
 
-    def _get_command_line(self, hostname, ipaddress):
+    def _get_command_line(self):
         """Create command line using the special_agent_info"""
         info_func = checks.special_agent_info[self._special_agent_id]
-        cmd_arguments = info_func(self._params, hostname, ipaddress)
+        cmd_arguments = info_func(self._params, self._hostname, self._ipaddress)
 
         special_agents_dir       = cmk.paths.agents_dir + "/special"
         local_special_agents_dir = cmk.paths.local_agents_dir + "/special"

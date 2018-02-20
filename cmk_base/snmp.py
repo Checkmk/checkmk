@@ -56,6 +56,7 @@ _enforce_stored_walks = False
 
 # TODO: Replace this by generic caching
 _g_single_oid_hostname    = None
+_g_single_oid_ipaddress   = None
 _g_single_oid_cache       = None
 _g_walk_cache             = {}
 
@@ -72,24 +73,30 @@ _g_walk_cache             = {}
 
 #TODO CACHING
 
-def initialize_single_oid_cache(hostname, from_disk=False):
-    global _g_single_oid_cache, _g_single_oid_hostname
-    if _g_single_oid_hostname != hostname or _g_single_oid_cache is None:
+def initialize_single_oid_cache(access_data, from_disk=False):
+    hostname = access_data["hostname"]
+    ipaddress = access_data["ipaddress"]
+    global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
+
+    if not (_g_single_oid_hostname == hostname \
+       and _g_single_oid_ipaddress == ipaddress) \
+       or _g_single_oid_cache is None:
         _g_single_oid_hostname = hostname
+        _g_single_oid_ipaddress = ipaddress
         if from_disk:
-            _g_single_oid_cache = _load_single_oid_cache(hostname)
+            _g_single_oid_cache = _load_single_oid_cache(access_data)
         else:
             _g_single_oid_cache = {}
 
 
-def write_single_oid_cache(hostname):
+def write_single_oid_cache(access_data):
     if not _g_single_oid_cache:
         return
 
     cache_dir = cmk.paths.snmp_scan_cache_dir
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
-    cache_path = "%s/%s" % (cache_dir, hostname)
+    cache_path = "%s/%s.%s" % (cache_dir, access_data["hostname"], access_data["ipaddress"])
     store.save_data_to_file(cache_path, _g_single_oid_cache, pretty=False)
 
 
@@ -105,8 +112,9 @@ def _get_oid_from_single_oid_cache(hostname, oid):
     return _g_single_oid_cache.get(oid)
 
 
-def _load_single_oid_cache(hostname):
-    cache_path = "%s/%s" % (cmk.paths.snmp_scan_cache_dir, hostname)
+def _load_single_oid_cache(access_data):
+    cache_path = "%s/%s.%s" % (cmk.paths.snmp_scan_cache_dir,
+                 access_data["hostname"], access_data["ipaddress"])
     return store.load_data_from_file(cache_path, {})
 
 
@@ -119,10 +127,11 @@ def cleanup_host_caches():
 
 
 def _clear_other_hosts_oid_cache(hostname):
-    global _g_single_oid_hostname, _g_single_oid_cache
+    global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
     if _g_single_oid_hostname != hostname:
         _g_single_oid_cache = None
         _g_single_oid_hostname = hostname
+        _g_single_oid_ipaddress = None
 
 
 #.
@@ -175,7 +184,8 @@ def binstring_to_int(binstring):
 #   | Top level functions to realize SNMP functionality for Check_MK.      |
 #   '----------------------------------------------------------------------'
 
-def get_snmp_table(hostname, ip, check_plugin_name, oid_info, use_snmpwalk_cache):
+def get_snmp_table(access_data, check_plugin_name, oid_info, use_snmpwalk_cache):
+    hostname = access_data["hostname"]
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
     # suboids is a list if OID-infixes that are put between baseoid
@@ -221,7 +231,7 @@ def get_snmp_table(hostname, ip, check_plugin_name, oid_info, use_snmpwalk_cache
                 index_format = column
                 continue
 
-            rowinfo = _get_snmpwalk(hostname, ip, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache)
+            rowinfo = _get_snmpwalk(access_data, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache)
 
             columns.append((fetchoid, rowinfo, value_encoding))
             number_of_rows = len(rowinfo)
@@ -273,11 +283,11 @@ def get_snmp_table(hostname, ip, check_plugin_name, oid_info, use_snmpwalk_cache
 
 
 # Contextes can only be used when check_plugin_name is given.
-def get_single_oid(hostname, ipaddress, oid, check_plugin_name=None, do_snmp_scan=True):
+def get_single_oid(access_data, oid, check_plugin_name=None, do_snmp_scan=True):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
     # we do a snmpgetnext and try to find an OID with the prefix
     # in question. The *cache* is working including the X, however.
-
+    hostname = access_data["hostname"]
     if oid[0] != '.':
         if cmk.debug.enabled():
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
@@ -314,9 +324,10 @@ def get_single_oid(hostname, ipaddress, oid, check_plugin_name=None, do_snmp_sca
         for context_name in snmp_contexts:
             try:
                 if config.is_inline_snmp_host(hostname):
-                    value = inline_snmp.get(hostname, oid, ipaddress=ipaddress, context_name=context_name)
+                    value = inline_snmp.get(hostname, oid, ipaddress=access_data["ipaddress"],
+                                            context_name=context_name, credentials=access_data["credentials"])
                 else:
-                    value = classic_snmp.get(hostname, ipaddress, oid, context_name=context_name)
+                    value = classic_snmp.get(access_data, oid, context_name=context_name)
 
                 if value is not None:
                     break # Use first received answer in case of multiple contextes
@@ -334,12 +345,14 @@ def get_single_oid(hostname, ipaddress, oid, check_plugin_name=None, do_snmp_sca
     return value
 
 
-def walk_for_export(hostname, ip, oid):
+def walk_for_export(access_data, oid):
+    hostname = access_data["hostname"]
     if config.is_inline_snmp_host(hostname):
-        rows = inline_snmp.walk(hostname, None, oid)
+        rows = inline_snmp.walk(hostname, None, oid, ipaddress=access_data["ipaddress"],
+                                credentials=access_data["credentials"])
         return inline_snmp.convert_rows_for_stored_walk(rows)
     else:
-        return classic_snmp.walk(hostname, ip, oid, hex_plain=True)
+        return classic_snmp.walk(access_data, oid, hex_plain=True)
 
 
 def enforce_use_stored_walks():
@@ -386,7 +399,8 @@ def _snmpv3_contexts_of(hostname, check_plugin_name):
             return rules
     return [None]
 
-def _get_snmpwalk(hostname, ip, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
+def _get_snmpwalk(access_data, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
+    hostname = access_data["hostname"]
     is_cachable = _is_snmpwalk_cachable(column)
     rowinfo = None
     if is_cachable and use_snmpwalk_cache:
@@ -397,7 +411,7 @@ def _get_snmpwalk(hostname, ip, check_plugin_name, oid, fetchoid, column, use_sn
         if _enforce_stored_walks or config.is_usewalk_host(hostname):
             rowinfo = _get_stored_snmpwalk(hostname, fetchoid)
         else:
-            rowinfo = _perform_snmpwalk(hostname, ip, check_plugin_name, oid, fetchoid)
+            rowinfo = _perform_snmpwalk(access_data, check_plugin_name, oid, fetchoid)
 
         if is_cachable:
             _save_snmpwalk_cache(hostname, fetchoid, rowinfo)
@@ -405,7 +419,8 @@ def _get_snmpwalk(hostname, ip, check_plugin_name, oid, fetchoid, column, use_sn
     return rowinfo
 
 
-def _perform_snmpwalk(hostname, ip, check_plugin_name, base_oid, fetchoid):
+def _perform_snmpwalk(access_data, check_plugin_name, base_oid, fetchoid):
+    hostname = access_data["hostname"]
     added_oids = set([])
     rowinfo = []
     if config.is_snmpv3_host(hostname):
@@ -416,10 +431,10 @@ def _perform_snmpwalk(hostname, ip, check_plugin_name, base_oid, fetchoid):
     for context_name in snmp_contexts:
         if config.is_inline_snmp_host(hostname):
             rows = inline_snmp.walk(hostname, check_plugin_name, fetchoid, base_oid,
-                                                                  context_name=context_name,
-                                                                  ipaddress=ip)
+                                    context_name=context_name, ipaddress=access_data["ipaddress"],
+                                    credentials=access_data["credentials"])
         else:
-            rows = classic_snmp.walk(hostname, ip, fetchoid, context_name=context_name)
+            rows = classic_snmp.walk(access_data, fetchoid, context_name=context_name)
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when
@@ -759,20 +774,25 @@ def do_snmpwalk(options, hostnames):
     if not os.path.exists(cmk.paths.snmpwalks_dir):
         os.makedirs(cmk.paths.snmpwalks_dir)
 
-    for host in hostnames:
+    for hostname in hostnames:
+        #TODO: What about SNMP management boards?
+        access_data = {
+            "hostname": hostname,
+            "ipaddress": ip_lookup.lookup_ipv4_address(hostname),
+            "credentials": config.snmp_credentials_of(hostname),
+        }
         try:
-            do_snmpwalk_on(options, host, cmk.paths.snmpwalks_dir + "/" + host)
+            do_snmpwalk_on(options, access_data, cmk.paths.snmpwalks_dir + "/" + hostname)
         except Exception, e:
-            console.error("Error walking %s: %s\n" % (host, e))
+            console.error("Error walking %s: %s\n" % (hostname, e))
             if cmk.debug.enabled():
                 raise
         cmk_base.utils.cleanup_globals()
 
 
-def do_snmpwalk_on(options, hostname, filename):
+def do_snmpwalk_on(options, access_data, filename):
+    hostname = access_data["hostname"]
     console.verbose("%s:\n" % hostname)
-    ip = ip_lookup.lookup_ipv4_address(hostname)
-
     oids_to_walk = [
         ".1.3.6.1.2.1", # SNMPv2-SMI::mib-2
         ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
@@ -787,7 +807,7 @@ def do_snmpwalk_on(options, hostname, filename):
             try:
                 console.verbose("Walk on \"%s\"..." % oid)
 
-                rows = walk_for_export(hostname, ip, oid)
+                rows = walk_for_export(access_data, oid)
                 for oid, value in rows:
                     out.write("%s %s\n" % (oid, value))
 
@@ -812,8 +832,14 @@ def do_snmpget(*args):
             if config.is_snmp_host(host):
                 hostnames.append(host)
 
-    for host in hostnames:
-        ip = ip_lookup.lookup_ipv4_address(host)
-        value = get_single_oid(host, ip, oid)
-        console.output("%s (%s): %r\n" % (host, ip, value))
+    for hostname in hostnames:
+        #TODO what about SNMP management boards?
+        ipaddress = ip_lookup.lookup_ipv4_address(hostname)
+        access_data = {
+            "hostname": hostname,
+            "ipaddress": ipaddress,
+            "credentials": config.snmp_credentials_of(hostname),
+        }
+        value = get_single_oid(access_data, oid)
+        console.output("%s (%s): %r\n" % (hostname, ipaddress, value))
         cmk_base.utils.cleanup_globals()

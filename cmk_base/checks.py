@@ -629,3 +629,68 @@ def do_status_data_inventory_for(hostname):
         #        => params is at least [{}]
         return params[0].get('status_data_inventory', True)
     return False
+
+
+def filter_by_management_board(hostname, found_check_plugin_names, for_mgmt_board):
+    # #1 SNMP host with MGMT board
+    #    MGMT board:
+    #        SNMP management board precedence: mgmt_prec_check
+    #        SNMP management board only:       mgmt_only_check
+    #        SNMP host precedence:             host_prec_check
+    #        SNMP host only:                   host_only_check
+    #        SNMP Finally found check plugins: mgmt_only_check mgmt_prec_check
+    #    HOST:
+    #        SNMP management board precedence: mgmt_prec_check
+    #        SNMP management board only:       mgmt_only_check
+    #        SNMP host precedence:             host_prec_check
+    #        SNMP host only:                   host_only_check
+    #        SNMP Finally found check plugins: host_prec_check
+    #    => Discovery:
+    #        1 host_prec_snmp_uptime
+    #        1 mgmt_only_snmp_uptime
+    #        1 mgmt_prec_snmp_uptime
+    #
+    # #2 SNMP host without MGMT board
+    #    HOST:
+    #        SNMP management board precedence: mgmt_prec_check
+    #        SNMP management board only:       mgmt_only_check
+    #        SNMP host precedence:             host_prec_check
+    #        SNMP host only:                   host_only_check
+    #        SNMP Finally found check plugins: host_only_check host_prec_check mgmt_prec_check
+    #    => Discovery:
+    #        1 host_only_snmp_uptime
+    #        1 host_prec_snmp_uptime
+    #        1 mgmt_prec_snmp_uptime
+
+    final_collection = set()
+    mgmt_precedence = set()
+    host_precedence = set()
+    mgmt_only = set()
+    host_only = set()
+    for check_plugin_name in found_check_plugin_names:
+        mgmt_board = get_management_board_precedence(check_plugin_name)
+        if mgmt_board == check_api.MGMT_PRECEDENCE:
+            mgmt_precedence.add(check_plugin_name)
+
+        elif mgmt_board == check_api.HOST_PRECEDENCE:
+            host_precedence.add(check_plugin_name)
+
+        elif mgmt_board == check_api.MGMT_ONLY:
+            mgmt_only.add(check_plugin_name)
+
+        elif mgmt_board == check_api.HOST_ONLY:
+            host_only.add(check_plugin_name)
+
+    has_mgmt_board = config.has_management_board(hostname)
+    if for_mgmt_board:
+        final_collection.update(mgmt_precedence)
+        final_collection.update(mgmt_only)
+    else:
+        final_collection.update(host_precedence)
+        if not has_mgmt_board:
+            final_collection.update(mgmt_precedence)
+
+    if not (has_mgmt_board or for_mgmt_board):
+        final_collection.update(host_only)
+
+    return final_collection

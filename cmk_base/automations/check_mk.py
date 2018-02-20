@@ -1069,13 +1069,13 @@ class AutomationDiagHost(Automation):
                 return (p.wait(), response)
 
             elif test == 'agent':
-                sources = data_sources.DataSources(hostname)
+                sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
                 output = ""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.DSProgramDataSource) and cmd:
-                        source = data_sources.DSProgramDataSource(cmd)
+                        source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
                     elif isinstance(source, data_sources.TCPDataSource):
                         source.set_port(agent_port)
                         source.set_timeout(tcp_connect_timeout)
@@ -1147,8 +1147,16 @@ class AutomationDiagHost(Automation):
                 else:
                     return 1, "SNMP command not implemented"
 
-                data = snmp.get_snmp_table(hostname, ipaddress, None,
-                                      ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']), use_snmpwalk_cache=True)
+                #TODO: What about SNMP management boards?
+                access_data = {
+                    "hostname": hostname,
+                    "ipaddress": ipaddress,
+                    "credentials": snmp_community,
+                }
+                data = snmp.get_snmp_table(access_data, None,
+                       ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),
+                       use_snmpwalk_cache=True)
+
                 if data:
                     return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(data[0])
                 else:
@@ -1282,11 +1290,11 @@ class AutomationGetAgentOutput(Automation):
 
         try:
             if ty == "agent":
-                ipaddress = ip_lookup.lookup_ip_address(hostname)
 
                 data_sources.abstract.DataSource.set_may_use_cache_file(not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-                sources = data_sources.DataSources(hostname)
+                ipaddress = ip_lookup.lookup_ip_address(hostname)
+                sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
                 agent_output = ""

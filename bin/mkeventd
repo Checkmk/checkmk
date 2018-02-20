@@ -78,7 +78,8 @@ logger = cmk.log.get_logger("mkeventd")
 opt_verbose = 0
 opt_debug = False
 opt_foreground = False
-opt_profile = {}
+opt_profile_status = False
+opt_profile_event = False
 opt_syslog = False
 opt_syslog_fd = None
 opt_syslog_tcp = False
@@ -282,8 +283,9 @@ class ECLock(object):
 
 
 class ECServerThread(threading.Thread):
-    def __init__(self, name):
+    def __init__(self, name, profiling_enabled):
         super(ECServerThread, self).__init__(name=name)
+        self.profiling_enabled = profiling_enabled
         self._terminate_event = threading.Event()
         self.logger = logger.getChild(name)
 
@@ -292,7 +294,7 @@ class ECServerThread(threading.Thread):
 
         while not self._shal_terminate():
             try:
-                with cmk.profile.Profile(enabled=opt_profile.get(self.name),
+                with cmk.profile.Profile(enabled=profiling_enabled,
                                          profile_file=os.path.join(g_state_dir, "%s.profile" % self.name)):
                     self.serve()
             except Exception:
@@ -1286,7 +1288,8 @@ class EventServer(ECServerThread):
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
     def __init__(self):
-        super(EventServer, self).__init__(name="EventServer")
+        super(EventServer, self).__init__(name="EventServer",
+                                          profiling_enabled=opt_profile_event)
         self._syslog = None
         self._syslog_tcp = None
         self._snmptrap = None
@@ -3540,7 +3543,8 @@ class StatusTableStatus(StatusTable):
 
 class StatusServer(ECServerThread):
     def __init__(self):
-        super(StatusServer, self).__init__(name="StatusServer")
+        super(StatusServer, self).__init__(name="StatusServer",
+                                           profiling_enabled=opt_profile_status)
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
@@ -5146,12 +5150,10 @@ if __name__ == "__main__":
                 opt_snmptrap = True
             elif o == '--snmptrap-fd':
                 opt_snmptrap_fd = int(a)
-            elif o.startswith('--profile-'):
-                what = o.split("-")[-1]
-                if what == "status":
-                    opt_profile["StatusServer"] = True
-                elif what == "event":
-                    opt_profile["EventServer"] = True
+            elif o == '--profile-status':
+                opt_profile_status = True
+            elif o == '--profile-event':
+                opt_profile_event = True
 
         cmk.log.open_log(sys.stderr)
         cmk.log.set_verbosity(opt_verbose)

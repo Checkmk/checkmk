@@ -26,6 +26,7 @@
 
 import os
 import sys
+import copy
 import marshal
 
 import cmk.paths
@@ -51,7 +52,12 @@ def get_default_config():
     """Provides a dictionary containing the Check_MK default configuration"""
     cfg = {}
     for key in get_variable_names():
-        cfg[key] = getattr(default_config, key)
+        value = getattr(default_config, key)
+
+        if isinstance(value, dict) or isinstance(value, list):
+            value = copy.deepcopy(value)
+
+        cfg[key] = value
     return cfg
 
 

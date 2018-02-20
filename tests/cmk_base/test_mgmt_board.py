@@ -5,11 +5,33 @@ from testlib import web
 
 import cmk_base.config as config
 
-@pytest.fixture(autouse=True)
-def test_cfg(web):
+
+@pytest.fixture(scope="function")
+def clear_config_caches(monkeypatch):
+    import cmk_base
+    import cmk_base.caching
+    monkeypatch.setattr(cmk_base, "config_cache", cmk_base.caching.CacheManager())
+    monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
+
+
+@pytest.fixture(scope="function")
+def reload_config():
+    # Needs to be done together, even when the checks are not directly needed
+    import cmk_base.checks as checks
+    checks.load()
+    config.load()
+
+
+@pytest.fixture(scope="function")
+def enable_debug():
     import cmk.debug
     cmk.debug.enable()
+    yield
+    cmk.debug.disable()
 
+
+@pytest.fixture(autouse=True)
+def test_cfg(web, clear_config_caches, reload_config, enable_debug):
     yield
 
     #
@@ -17,17 +39,19 @@ def test_cfg(web):
     #
     print "Cleaning up test config"
 
-    cmk.debug.disable()
-
     if web.host_exists("mgmt-host"):
         web.delete_host("mgmt-host")
 
     if web.folder_exists("folder1"):
         web.delete_folder("folder1")
 
-    web.activate_changes()
+    web.set_ruleset("management_board_config", {
+        "ruleset": {
+            "": [], # -> folder
+        }
+    })
 
-    config.load()
+    web.activate_changes()
 
 
 def test_mgmt_explicit_settings(web):
@@ -37,7 +61,7 @@ def test_mgmt_explicit_settings(web):
         "management_snmp_community": "HOST",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == "snmp"
@@ -51,7 +75,7 @@ def test_mgmt_explicit_address(web):
         "management_address": "127.0.0.2",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.2"
     assert config.management_protocol_of("mgmt-host") == "snmp"
@@ -66,7 +90,7 @@ def test_mgmt_disabled(web):
         "management_snmp_community": "HOST",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host") == False
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == None
@@ -84,7 +108,7 @@ def test_mgmt_inherit_credentials_explicit_host(web):
         "management_snmp_community": "HOST",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == "snmp"
@@ -102,7 +126,7 @@ def test_mgmt_inherit_credentials(web):
         "management_protocol": "snmp",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == "snmp"
@@ -121,7 +145,7 @@ def test_mgmt_inherit_protocol_explicit_host(web):
         "management_snmp_community": "HOST",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == "snmp"
@@ -139,7 +163,7 @@ def test_mgmt_inherit_protocol(web):
         "ipaddress": "127.0.0.1",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == "snmp"
@@ -169,7 +193,7 @@ def test_mgmt_config_ruleset(web):
         "management_protocol": "snmp",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == "snmp"
@@ -201,7 +225,7 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(web):
         "management_protocol": "snmp",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == "snmp"
@@ -239,7 +263,7 @@ def test_mgmt_config_ruleset_order(web):
         "management_protocol": "snmp",
     })
 
-    config.load()
+    reload_config()
     assert config.has_management_board("mgmt-host")
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
     assert config.management_protocol_of("mgmt-host") == "snmp"

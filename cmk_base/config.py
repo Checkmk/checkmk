@@ -80,12 +80,18 @@ def add_check_variables(check_variables):
 #
 # In the same step we remove the check related configuration settings from the
 # config module because they are not needed there anymore.
+#
+# And also remove it from the default config (in case it was present)
 def set_check_variables_for_checks():
     import cmk_base.checks
     global_dict = globals()
     for varname in cmk_base.checks.check_variable_names():
         cmk_base.checks.set_check_variable(varname, global_dict.pop(varname))
-        delattr(default_config, varname)
+
+        try:
+            delattr(default_config, varname)
+        except AttributeError:
+            pass
 
 
 #.

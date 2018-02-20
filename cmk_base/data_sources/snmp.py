@@ -76,6 +76,10 @@ class SNMPDataSource(DataSource):
         return "snmp"
 
 
+    def _credentials(self, hostname):
+        return config.snmp_credentials_of(hostname)
+
+
     def describe(self, hostname, ipaddress):
         if config.is_usewalk_host(hostname):
             return "SNMP (use stored walk)"
@@ -85,7 +89,7 @@ class SNMPDataSource(DataSource):
         else:
             inline = "no"
 
-        credentials = config.snmp_credentials_of(hostname)
+        credentials = self._credentials(hostname)
         if type(credentials) in [ str, unicode ]:
             cred = "Community: %r" % credentials
         else:
@@ -258,6 +262,10 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
 
     def title(self):
         return "Management board - SNMP"
+
+
+    def _credentials(self, hostname):
+        return config.management_credentials_of(hostname)
 
 
     def _execute(self, hostname, ipaddress):

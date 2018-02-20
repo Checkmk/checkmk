@@ -75,9 +75,13 @@ record_inline_snmp_stats           = False
 snmp_default_community             = 'public'
 snmp_communities                   = []
 explicit_snmp_communities          = {} # override the rule based configuration
-management_board_config            = []
 snmp_timing                        = []
 snmp_character_encodings           = []
+
+# Management board settings
+management_board_config            = [] # Ruleset to specify management board settings
+management_protocol                = {} # Mapping from hostname to management board protocol
+management_snmp_credentials        = {} # Mapping from hostname to SNMP credentials
 
 # RRD creation (only with CMC)
 cmc_log_rrdcreation                = None # also: "terse", "full"

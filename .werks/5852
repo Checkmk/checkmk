@@ -1,0 +1,16 @@
+Title: Fixed broken "Management board SNMP credentials" inheritance
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519068168
+Class: fix
+
+SNMP credentials for management board that were set on folders were not
+inherited to hosts.
+
+The credentials can now also be set to "No explicit credentials" to disable
+the inheritance of credentials for a host. The host will then either use
+the SNMP credentials set in the ruleset "Management board config" or
+use the default SNMP community "public".

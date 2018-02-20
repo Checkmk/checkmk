@@ -130,7 +130,7 @@ class DataSources(object):
         # protocol. If at some point we support having both host and management board queried
         # through snmp we have to decide which check belongs where at discovery time and change
         # all data structures, including in the nagios interface...
-        is_management_snmp = config.management_protocol(self._hostname) == "snmp"
+        is_management_snmp = config.management_protocol_of(self._hostname) == "snmp"
         if not is_management_snmp:
             return
 

@@ -23,12 +23,14 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-check_info["ipmi_sensors"] = {
+
+check_info["mgmt_ipmi_sensors"] = {
     'parse_function'        : parse_freeipmi,
     'inventory_function'    : inventory_freeipmi,
     'check_function'        : check_freeipmi,
-    'service_description'   : 'IPMI Sensor %s',
+    'service_description'   : 'Management Interface: IPMI Sensor %s',
     'has_perfdata'          : True,
     'group'                 : 'ipmi',
-    'includes'              : [ 'ipmi_sensors.include', 'ipmi_common.include' ],
+    'includes'              : ['ipmi_sensors.include', 'ipmi_common.include'],
+    "management_board"      : MGMT_ONLY,
 }

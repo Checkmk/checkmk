@@ -2334,6 +2334,7 @@ register_rule(group,
         title=_("Management board config"),
         choices=[
            ("snmp", _("SNMP"), SNMPCredentials()),
+           ("ipmi", _("IPMI"), IPMIParameters()),
         ],
     ),
 )

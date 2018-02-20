@@ -57,6 +57,7 @@ import cmk_base.ip_lookup as ip_lookup
 import cmk_base.piggyback
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
+from .ipmi import IPMIManagementBoardDataSource
 from .tcp import TCPDataSource
 from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
@@ -128,25 +129,17 @@ class DataSources(object):
 
 
     def _initialize_management_board_data_sources(self):
-        if not config.has_management_board(self._hostname):
-            return
-
-        # this assumes all snmp checks belong to the management board if there is one with snmp
-        # protocol. If at some point we support having both host and management board queried
-        # through snmp we have to decide which check belongs where at discovery time and change
-        # all data structures, including in the nagios interface...
-        is_management_snmp = config.management_protocol_of(self._hostname) == "snmp"
-        if not is_management_snmp:
-            return
-
-        # TODO: Clean this up one day. To stay compatible for old configurations,
-        # ie. TCP host with SNMP management board, we use the standard SNMP data source
-        # instead of SNMP management board data source.
-        if config.is_tcp_host(self._hostname):
-            source = SNMPDataSource(self._hostname, self._ipaddress)
+        protocol = config.management_protocol_of(self._hostname)
+        if protocol == "snmp":
+            # TODO: Why not hand over management board IP address?
+            self._add_source(SNMPManagementBoardDataSource(self._hostname, self._ipaddress))
+        elif protocol == "ipmi":
+            # TODO: Why not hand over management board IP address?
+            self._add_source(IPMIManagementBoardDataSource(self._hostname, self._ipaddress))
+        elif protocol is None:
+            return None
         else:
-            source = SNMPManagementBoardDataSource(self._hostname, self._ipaddress)
-        self._add_source(source)
+            raise NotImplementedError()
 
 
     def _add_sources(self, sources):

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import socket
 import time
 
 import cmk.debug
@@ -39,6 +40,7 @@ import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.piggyback as piggyback
 import cmk_base.checks as checks
+import cmk_base.ip_lookup as ip_lookup
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKDataSourceError, MKSNMPError, \
                                 MKParseFunctionError, MKTimeout
 
@@ -46,6 +48,9 @@ from .host_sections import HostSections
 
 class DataSource(object):
     """Abstract base class for all data source classes"""
+
+    _for_mgmt_board = False
+
     # TODO: Clean these options up! We need to change all call sites to use
     #       a single DataSources() object during processing first. Then we
     #       can change these class attributes to object attributes.
@@ -558,3 +563,45 @@ class CheckMKAgentDataSource(DataSource):
                 section_content.append(line.split(separator))
 
         return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)
+
+
+
+class ManagementBoardDataSource(object):
+    """Abstract base class for all data sources that work with the management board configuration"""
+    _for_mgmt_board = True
+
+    def __init__(self, hostname, ipaddress):
+        # Do not use the (custom) ipaddress for the host. Use the management board
+        # address instead
+        ipaddress = self._management_board_ipaddress(hostname)
+        super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
+
+
+    def _credentials(self):
+        return config.management_credentials_of(self._hostname)
+
+
+    def _management_board_ipaddress(self, hostname):
+        mgmt_ipaddress = config.management_address_of(hostname)
+
+        if not self._is_ipaddress(mgmt_ipaddress):
+            return ip_lookup.lookup_ip_address(mgmt_ipaddress)
+        else:
+            return mgmt_ipaddress
+
+
+    # TODO: Why is it used only here?
+    def _is_ipaddress(self, address):
+        try:
+            socket.inet_pton(socket.AF_INET, address)
+            return True
+        except socket.error:
+            # not a ipv4 address
+            pass
+
+        try:
+            socket.inet_pton(socket.AF_INET6, address)
+            return True
+        except socket.error:
+            # no ipv6 address either
+            return False

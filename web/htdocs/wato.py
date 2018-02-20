@@ -17464,6 +17464,24 @@ class UserIconOrAction(DropdownChoice):
         return sorted(choices, key = lambda x: x[1])
 
 
+
+class IPMIParameters(Dictionary):
+    def __init__(self, **kwargs):
+        kwargs["title"] = _("IPMI credentials")
+        kwargs["elements"] = [
+            ("username", TextAscii(
+                  title = _("Username"),
+                  allow_empty = False,
+            )),
+            ("password", Password(
+                title = _("Password"),
+                allow_empty = False,
+            )),
+        ]
+        kwargs["optional_keys"] = []
+        super(IPMIParameters, self).__init__(**kwargs)
+
+
 # Show HTML form for editing attributes.
 #
 # new: Boolean flag if this is a creation step or editing

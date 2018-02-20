@@ -662,7 +662,7 @@ def is_ipv4_host(hostname):
 #
 
 def has_management_board(hostname):
-    return management_protocol.get(hostname) is not None
+    return management_protocol_of(hostname) is not None
 
 
 def management_address_of(hostname):
@@ -674,7 +674,7 @@ def management_address_of(hostname):
 
 
 def management_protocol_of(hostname):
-    return management_protocol[hostname]
+    return management_protocol.get(hostname)
 
 
 def management_credentials_of(hostname):

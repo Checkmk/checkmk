@@ -87,13 +87,16 @@ opt_snmptrap = False
 opt_snmptrap_fd = None
 
 # Set default values for options (TODO: Move to smaller scopes)
-g_socket_path = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
-g_eventsocket_path = cmk.paths.omd_root + "/tmp/run/mkeventd/eventsocket"
-g_pipe_path = cmk.paths.omd_root + "/tmp/run/mkeventd/events"
-g_pid_file = cmk.paths.omd_root + "/tmp/run/mkeventd/pid"
-g_logfile_path = cmk.paths.omd_root + "/var/log/mkeventd.log"
-g_state_dir = cmk.paths.omd_root + "/var/mkeventd"
-g_compiled_mibs_dir = cmk.paths.omd_root + "/local/share/check_mk/compiled_mibs"
+g_socket_path = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/status")
+g_eventsocket_path = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/eventsocket")
+g_pipe_path = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/events")
+g_pid_file = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/pid")
+g_logfile_path = os.path.join(cmk.paths.omd_root, "var/log/mkeventd.log")
+g_state_dir = os.path.join(cmk.paths.omd_root, "var/mkeventd")
+g_compiled_mibs_dir = os.path.join(cmk.paths.omd_root, "local/share/check_mk/compiled_mibs")
+g_mongo_db_conf = os.path.join(cmk.paths.omd_root, "etc/mongodb.conf")
+g_main_config_path = os.path.join(cmk.paths.default_config_dir, "mkeventd.mk")
+g_config_dir = os.path.join(cmk.paths.default_config_dir, "mkeventd.d")
 
 
 # Basic settings, can be changed with configuration file (at
@@ -290,7 +293,7 @@ class ECServerThread(threading.Thread):
         while not self._shal_terminate():
             try:
                 with cmk.profile.Profile(enabled=opt_profile.get(self.name),
-                                         profile_file=cmk.paths.omd_root + "/var/mkeventd/%s.profile" % self.name):
+                                         profile_file=os.path.join(g_state_dir, "%s.profile" % self.name)):
                     self.serve()
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
@@ -731,7 +734,7 @@ g_mongo_db = None
 
 def mongodb_local_connection_opts():
     ip, port = None, None
-    for l in file('%s/etc/mongodb.conf' % cmk.paths.omd_root):
+    for l in file(g_mongo_db_conf):
         if l.startswith('bind_ip'):
             ip = l.split('=')[1].strip()
         elif l.startswith('port'):
@@ -4971,18 +4974,17 @@ def load_configuration():
     global g_config, g_last_config_reload
     g_config = cmk.event_console.default_config()
 
-    main_file = os.path.join(cmk.paths.default_config_dir, "mkeventd.mk")
-    if not os.path.exists(main_file):
-        bail_out("Main configuration file %s missing." % main_file)
+    if not os.path.exists(g_main_config_path):
+        bail_out("Main configuration file %s missing." % g_main_config_path)
 
     config_files = (
         os.path.join(dirpath, filename)
-        for dirpath, _dirnames, filenames in os.walk(os.path.join(cmk.paths.default_config_dir, "mkeventd.d"))
+        for dirpath, _dirnames, filenames in os.walk(g_config_dir)
         for filename in filenames
         if filename.endswith(".mk")
     )
 
-    for path in [main_file] + sorted(config_files):
+    for path in [g_main_config_path] + sorted(config_files):
         with open(path) as f:
             exec(f, g_config)
 

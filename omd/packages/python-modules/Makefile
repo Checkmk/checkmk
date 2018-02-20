@@ -112,6 +112,8 @@ MODULES += tinkerforge-2.1.15.tar.gz
 MODULES += paramiko-2.1.2.tar.gz
 
 MODULES += typing-3.6.4.tar.gz
+MODULES += scandir-1.7.tar.gz
+MODULES += pathlib2-2.3.0.tar.gz
 
 .PHONY: build check-freetds install skel clean
 

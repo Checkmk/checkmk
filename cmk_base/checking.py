@@ -244,16 +244,16 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fet
     table = check_table.get_precompiled_check_table(hostname, remove_duplicates=True,
                                     world="active" if _in_keepalive_mode() else "config")
 
-    sources = data_sources.DataSources(hostname)
-
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
     if only_check_plugin_names is None:
         only_check_plugin_names = list(set([ e[0] for e in table ]))
+
+    sources = data_sources.DataSources(hostname, ipaddress)
     sources.enforce_check_plugin_names(only_check_plugin_names)
 
     # Gather the data from the sources
-    multi_host_sections = sources.get_host_sections(hostname, ipaddress)
+    multi_host_sections = sources.get_host_sections()
 
     for check_plugin_name, item, params, description in table:
         if only_check_plugin_names != None and check_plugin_name not in only_check_plugin_names:

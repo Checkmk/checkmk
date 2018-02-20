@@ -52,8 +52,8 @@ from .abstract import DataSource, CheckMKAgentDataSource
 class TCPDataSource(CheckMKAgentDataSource):
     _use_only_cache = False
 
-    def __init__(self):
-        super(TCPDataSource, self).__init__()
+    def __init__(self, hostname, ipaddress):
+        super(TCPDataSource, self).__init__(hostname, ipaddress)
         self._port = None
         self._timeout = None
 
@@ -66,42 +66,44 @@ class TCPDataSource(CheckMKAgentDataSource):
         self._port = port
 
 
-    def _get_port(self, hostname):
+    def _get_port(self):
         if self._port is not None:
             return self._port
         else:
-            return config.agent_port_of(hostname)
+            return config.agent_port_of(self._hostname)
+
 
     def set_timeout(self, timeout):
         self._timeout = timeout
 
-    def _get_timeout(self, hostname):
+
+    def _get_timeout(self):
         if self._timeout:
             return self._timeout
         else:
-            return config.tcp_connect_timeout_of(hostname)
+            return config.tcp_connect_timeout_of(self._hostname)
 
-    def _execute(self, hostname, ipaddress):
+    def _execute(self):
         if self._use_only_cache:
-            raise MKAgentError("Got no data: No usable cache file present at %s" % self._cache_file_path(hostname))
+            raise MKAgentError("Got no data: No usable cache file present at %s" % self._cache_file_path())
 
-        self._verify_ipaddress(ipaddress)
+        self._verify_ipaddress()
 
-        port = self._get_port(hostname)
+        port = self._get_port()
 
-        encryption_settings = config.agent_encryption_of(hostname)
+        encryption_settings = config.agent_encryption_of(self._hostname)
 
-        socktype = (socket.AF_INET6 if config.is_ipv6_primary(hostname)
+        socktype = (socket.AF_INET6 if config.is_ipv6_primary(self._hostname)
                     else socket.AF_INET)
         s = socket.socket(socktype, socket.SOCK_STREAM)
 
-        timeout = self._get_timeout(hostname)
+        timeout = self._get_timeout()
 
         output = []
-        self._logger.debug("[%s] Connecting via TCP to %s:%d (%ss timeout)" % (self.id(), ipaddress, port, timeout))
+        self._logger.debug("[%s] Connecting via TCP to %s:%d (%ss timeout)" % (self.id(), self._ipaddress, port, timeout))
         try:
             s.settimeout(timeout)
-            s.connect((ipaddress, port))
+            s.connect((self._ipaddress, port))
             s.settimeout(None)
 
             self._logger.debug("[%s] Reading data from agent" % (self.id()))
@@ -167,9 +169,9 @@ class TCPDataSource(CheckMKAgentDataSource):
         return unpad(decrypted_pkg)
 
 
-    def describe(self, hostname, ipaddress):
+    def describe(self):
         """Return a short textual description of the agent"""
-        return "TCP: %s:%d" % (ipaddress, config.agent_port_of(hostname))
+        return "TCP: %s:%d" % (self._ipaddress, config.agent_port_of(self._hostname))
 
 
     @classmethod

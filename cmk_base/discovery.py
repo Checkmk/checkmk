@@ -116,10 +116,8 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not _has_autochecks(hostname)
 
-            sources = _get_sources_for_discovery(hostname, check_plugin_names, do_snmp_scan, on_error)
-
-            multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
-                                                                   use_caches=use_caches)
+            sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names, do_snmp_scan, on_error)
+            multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
             _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names, only_new, on_error)
             console.verbose("\n")
@@ -138,7 +136,17 @@ def do_discovery(hostnames, check_plugin_names, only_new):
 
 
 def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names, only_new, on_error):
+    if not check_plugin_names:
+        # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
+        # we've already discovered the right check plugin names.
+        # _discover_services(..) would discover check plugin names again.
+        # In order to avoid a second discovery (SNMP data source would do
+        # another SNMP scan) we enforce this selection to be used.
+        check_plugin_names = multi_host_sections.get_check_plugin_names()
+        sources.enforce_check_plugin_names(check_plugin_names)
+
     new_items = _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error=on_error)
+
     if not check_plugin_names and not only_new:
         old_items = [] # do not even read old file
     else:
@@ -215,16 +223,15 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
         if mode == "refresh":
             counts["removed"] += remove_autochecks_of(hostname) # this is cluster-aware!
 
-        sources = _get_sources_for_discovery(hostname, check_plugin_names=None,
-                                             do_snmp_scan=do_snmp_scan, on_error=on_error)
-
         if config.is_cluster(hostname):
             ipaddress = None
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
-                                                               use_caches=use_caches)
+        sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names=None,
+                                             do_snmp_scan=do_snmp_scan, on_error=on_error)
+
+        multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
         # Compute current state of new and existing checks
         services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error=on_error)
@@ -299,13 +306,13 @@ def check_discovery(hostname, ipaddress):
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        sources = _get_sources_for_discovery(hostname, check_plugin_names=None,
+        sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names=None,
                                              do_snmp_scan=params["inventory_check_do_scan"],
                                              on_error="raise")
 
         try:
-            multi_host_sections = _get_host_sections_for_discovery(sources, hostname, ipaddress,
-                              use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
+            multi_host_sections = _get_host_sections_for_discovery(sources,
+                                  use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
         except socket.gaierror, e:
             # TODO: Seems to be the wrong place for this execption handling
             if e[0] == -2 and cmk.debug.disabled():
@@ -690,7 +697,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
 
     discovered_services = []
     try:
-        for check_plugin_name in sources.get_check_plugin_names(hostname, ipaddress):
+        for check_plugin_name in sources.get_check_plugin_names():
             try:
                 for item, paramstring in _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):
                     discovered_services.append((check_plugin_name, item, paramstring))
@@ -707,8 +714,8 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _get_sources_for_discovery(hostname, check_plugin_names, do_snmp_scan, on_error):
-    sources = data_sources.DataSources(hostname)
+def _get_sources_for_discovery(hostname, ipaddress, check_plugin_names, do_snmp_scan, on_error):
+    sources = data_sources.DataSources(hostname, ipaddress)
 
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
@@ -725,17 +732,17 @@ def _get_sources_for_discovery(hostname, check_plugin_names, do_snmp_scan, on_er
     return sources
 
 
-def _get_host_sections_for_discovery(sources, hostname, ipaddress, use_caches):
+def _get_host_sections_for_discovery(sources, use_caches):
     max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
-    return sources.get_host_sections(hostname, ipaddress, max_cachefile_age)
+    return sources.get_host_sections(max_cachefile_age)
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan, for_inventory=False, for_mgmt_board=False):
+def gather_snmp_check_plugin_names(access_data, on_error, do_snmp_scan, for_inventory=False, for_mgmt_board=False):
     check_plugin_names = set()
 
     try:
-        check_plugin_names.update(snmp_scan(hostname, ipaddress, on_error=on_error,
+        check_plugin_names.update(snmp_scan(access_data, on_error=on_error,
                                      do_snmp_scan=do_snmp_scan, for_inv=for_inventory,
                                      for_mgmt_board=for_mgmt_board))
     except Exception, e:
@@ -747,20 +754,22 @@ def gather_snmp_check_plugin_names(hostname, ipaddress, on_error, do_snmp_scan, 
     return list(check_plugin_names)
 
 
-def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_scan=True, for_mgmt_board=False):
+def snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True, for_mgmt_board=False):
     import cmk_base.inventory_plugins as inventory_plugins
+
+    hostname = access_data["hostname"]
 
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
     # this to evaluate if_disabled_if64_checks.
     checks.set_hostname(hostname)
 
-    snmp.initialize_single_oid_cache(hostname)
+    snmp.initialize_single_oid_cache(access_data)
     console.vverbose("  SNMP scan:\n")
     if not rulesets.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
         for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
                            (".1.3.6.1.2.1.1.2.0", "system object") ]:
-            value = snmp.get_single_oid(hostname, ipaddress, oid, do_snmp_scan=do_snmp_scan)
+            value = snmp.get_single_oid(access_data, oid, do_snmp_scan=do_snmp_scan)
             if value == None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
@@ -774,7 +783,7 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
         snmp.set_single_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
         snmp.set_single_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
 
-    found = []
+    found_check_plugin_names = []
     if for_inv:
         items = inventory_plugins.inv_info.items()
     else:
@@ -809,7 +818,7 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
         if scan_function:
             try:
                 def oid_function(oid, default_value=None):
-                    value = snmp.get_single_oid(hostname, ipaddress, oid, check_plugin_name, do_snmp_scan=do_snmp_scan)
+                    value = snmp.get_single_oid(access_data, oid, check_plugin_name, do_snmp_scan=do_snmp_scan)
                     if value == None:
                         return default_value
                     else:
@@ -823,7 +832,7 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
                     elif on_error == "raise":
                         raise MKGeneralException("SNMP Scan aborted.")
                 elif result:
-                    found.append(check_plugin_name)
+                    found_check_plugin_names.append(check_plugin_name)
                     positive_found.append(check_plugin_name)
             except MKGeneralException:
                 # some error messages which we explicitly want to show to the user
@@ -835,7 +844,7 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
                 elif on_error == "raise":
                     raise
         else:
-            found.append(check_plugin_name)
+            found_check_plugin_names.append(check_plugin_name)
             default_found.append(check_plugin_name)
 
     _output_snmp_check_plugins("SNMP scan found", positive_found)
@@ -843,84 +852,12 @@ def snmp_scan(hostname, ipaddress, on_error="ignore", for_inv=False, do_snmp_sca
         _output_snmp_check_plugins("SNMP without scan function", default_found)
 
     if for_inv:
-        filtered = found
+        filtered = found_check_plugin_names
     else:
-        filtered = _filter_by_management_board(hostname, found, for_mgmt_board)
-    snmp.write_single_oid_cache(hostname)
+        filtered = checks.filter_by_management_board(hostname, found_check_plugin_names, for_mgmt_board)
+    _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
+    snmp.write_single_oid_cache(access_data)
     return sorted(filtered)
-
-
-def _filter_by_management_board(hostname, found, for_mgmt_board):
-    # #1 SNMP host with MGMT board
-    #    MGMT board:
-    #        SNMP management board precedence: mgmt_prec_check
-    #        SNMP management board only:       mgmt_only_check
-    #        SNMP host precedence:             host_prec_check
-    #        SNMP host only:                   host_only_check
-    #        SNMP Finally found check plugins: mgmt_only_check mgmt_prec_check
-    #    HOST:
-    #        SNMP management board precedence: mgmt_prec_check
-    #        SNMP management board only:       mgmt_only_check
-    #        SNMP host precedence:             host_prec_check
-    #        SNMP host only:                   host_only_check
-    #        SNMP Finally found check plugins: host_prec_check
-    #    => Discovery:
-    #        1 host_prec_snmp_uptime
-    #        1 mgmt_only_snmp_uptime
-    #        1 mgmt_prec_snmp_uptime
-    #
-    # #2 SNMP host without MGMT board
-    #    HOST:
-    #        SNMP management board precedence: mgmt_prec_check
-    #        SNMP management board only:       mgmt_only_check
-    #        SNMP host precedence:             host_prec_check
-    #        SNMP host only:                   host_only_check
-    #        SNMP Finally found check plugins: host_only_check host_prec_check mgmt_prec_check
-    #    => Discovery:
-    #        1 host_only_snmp_uptime
-    #        1 host_prec_snmp_uptime
-    #        1 mgmt_prec_snmp_uptime
-
-    final_collection = set()
-    mgmt_precedence = set()
-    host_precedence = set()
-    mgmt_only = set()
-    host_only = set()
-    for check_plugin_name in found:
-        mgmt_board = checks.get_management_board_precedence(check_plugin_name)
-        if mgmt_board == check_api.MGMT_PRECEDENCE:
-            mgmt_precedence.add(check_plugin_name)
-
-        elif mgmt_board == check_api.HOST_PRECEDENCE:
-            host_precedence.add(check_plugin_name)
-
-        elif mgmt_board == check_api.MGMT_ONLY:
-            mgmt_only.add(check_plugin_name)
-
-        elif mgmt_board == check_api.HOST_ONLY:
-            host_only.add(check_plugin_name)
-
-    has_mgmt_board = config.has_management_board(hostname)
-    if for_mgmt_board:
-        final_collection.update(mgmt_precedence)
-        final_collection.update(mgmt_only)
-    else:
-        final_collection.update(host_precedence)
-        if not has_mgmt_board:
-            final_collection.update(mgmt_precedence)
-
-    if not (has_mgmt_board or for_mgmt_board):
-        final_collection.update(host_only)
-
-    for title, collection in [
-        ("SNMP management board precedence", mgmt_precedence),
-        ("SNMP management board only", mgmt_only),
-        ("SNMP host precedence", host_precedence),
-        ("SNMP host only", host_only),
-        ("SNMP Finally found check plugins", final_collection),
-    ]:
-        _output_snmp_check_plugins(title, collection)
-    return list(final_collection)
 
 
 def _output_snmp_check_plugins(title, collection):
@@ -1154,13 +1091,13 @@ def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_
     # From the states and parameters of these we construct the final state per service.
     cluster_items = {}
     for node in nodes:
-        node_sources = _get_sources_for_discovery(node,
+        node_ipaddress = ip_lookup.lookup_ip_address(node)
+        node_sources = _get_sources_for_discovery(node, node_ipaddress,
             check_plugin_names=sources.get_enforced_check_plugin_names(),
             do_snmp_scan=do_snmp_scan,
             on_error=on_error,
         )
 
-        node_ipaddress = ip_lookup.lookup_ip_address(node)
         services = _get_discovered_services(node, node_ipaddress, node_sources, multi_host_sections, on_error)
         for (check_plugin_name, item), (check_source, paramstring) in services.items():
             descr = config.service_description(hostname, check_plugin_name, item)
@@ -1196,16 +1133,15 @@ def resolve_paramstring(paramstring):
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     import cmk_base.checking as checking
 
-    sources = _get_sources_for_discovery(hostname, check_plugin_names=None,
-                                         do_snmp_scan=do_snmp_scan, on_error=on_error)
-
     if config.is_cluster(hostname):
         ipaddress = None
     else:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    multi_host_sections = _get_host_sections_for_discovery(sources, hostname,
-                                                           ipaddress, use_caches=use_caches)
+    sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names=None,
+                                         do_snmp_scan=do_snmp_scan, on_error=on_error)
+
+    multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
     services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error)
 

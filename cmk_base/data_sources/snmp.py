@@ -54,8 +54,8 @@ class SNMPDataSource(DataSource):
     _for_mgmt_board = False
 
 
-    def __init__(self):
-        super(SNMPDataSource, self).__init__()
+    def __init__(self, hostname, ipaddress):
+        super(SNMPDataSource, self).__init__(hostname, ipaddress)
         self._check_plugin_name_filter_func = None
         self._check_plugin_names = {}
         self._do_snmp_scan = False
@@ -76,31 +76,39 @@ class SNMPDataSource(DataSource):
         return "snmp"
 
 
-    def _credentials(self, hostname):
-        return config.snmp_credentials_of(hostname)
+    def _get_access_data(self):
+        return {
+            "hostname": self._hostname,
+            "ipaddress": self._ipaddress,
+            "credentials": self._credentials()
+        }
 
 
-    def describe(self, hostname, ipaddress):
-        if config.is_usewalk_host(hostname):
+    def _credentials(self):
+        return config.snmp_credentials_of(self._hostname)
+
+
+    def describe(self):
+        if config.is_usewalk_host(self._hostname):
             return "SNMP (use stored walk)"
 
-        if config.is_inline_snmp_host(hostname):
+        if config.is_inline_snmp_host(self._hostname):
             inline = "yes"
         else:
             inline = "no"
 
-        credentials = self._credentials(hostname)
+        credentials = self._credentials()
         if type(credentials) in [ str, unicode ]:
             cred = "Community: %r" % credentials
         else:
             cred = "Credentials: '%s'" % ", ".join(credentials)
 
-        if config.is_snmpv3_host(hostname) or config.is_bulkwalk_host(hostname):
+        if config.is_snmpv3_host(self._hostname) or config.is_bulkwalk_host(self._hostname):
             bulk = "yes"
         else:
             bulk = "no"
 
-        portinfo = config.snmp_port_of(hostname)
+        portinfo = config.snmp_port_of(self._hostname)
         if portinfo == None:
             portinfo = 'default'
 
@@ -142,35 +150,38 @@ class SNMPDataSource(DataSource):
         self._check_plugin_name_filter_func = filter_func
 
 
-    def _gather_check_plugin_names(self, hostname, ipaddress):
+    def _gather_check_plugin_names(self):
         """Returns a list of check types that shal be executed with this source.
 
         The logic is only processed once per hostname+ipaddress combination. Once processed
         check types are cached to answer subsequent calls to this function.
         """
+
         if self._check_plugin_name_filter_func is None:
             raise MKGeneralException("The check type filter function has not been set")
 
         try:
-            return self._check_plugin_names[(hostname, ipaddress)]
+            return self._check_plugin_names[(self._hostname, self._ipaddress)]
         except KeyError:
-            check_plugin_names = self._check_plugin_name_filter_func(hostname, ipaddress,
+            check_plugin_names = self._check_plugin_name_filter_func(self._get_access_data(),
                                                        on_error=self._on_error,
                                                        do_snmp_scan=self._do_snmp_scan,
                                                        for_mgmt_board=self._for_mgmt_board)
-            self._check_plugin_names[(hostname, ipaddress)] = check_plugin_names
+            self._check_plugin_names[(self._hostname, self._ipaddress)] = check_plugin_names
             return check_plugin_names
 
 
-    def _execute(self, hostname, ipaddress):
+    def _execute(self):
     	import cmk_base.inventory_plugins
 
-        self._verify_ipaddress(ipaddress)
+        self._verify_ipaddress()
 
-        persisted_sections = self._load_persisted_sections(hostname)
+        persisted_sections = self._load_persisted_sections()
+
+        check_plugin_names = self.get_check_plugin_names()
 
         info = {}
-        for check_plugin_name in self.get_check_plugin_names(hostname, ipaddress):
+        for check_plugin_name in check_plugin_names:
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
@@ -198,7 +209,7 @@ class SNMPDataSource(DataSource):
             if type(oid_info) == list:
                 check_info = []
                 for entry in oid_info:
-                    check_info_part = snmp.get_snmp_table(hostname, ipaddress, check_plugin_name, entry, self._use_snmpwalk_cache)
+                    check_info_part = snmp.get_snmp_table(self._get_access_data(), check_plugin_name, entry, self._use_snmpwalk_cache)
 
                     # If at least one query fails, we discard the whole info table
                     if check_info_part is None:
@@ -207,19 +218,19 @@ class SNMPDataSource(DataSource):
                     else:
                         check_info.append(check_info_part)
             else:
-                check_info = snmp.get_snmp_table(hostname, ipaddress, check_plugin_name, oid_info, self._use_snmpwalk_cache)
+                check_info = snmp.get_snmp_table(self._get_access_data(), check_plugin_name, oid_info, self._use_snmpwalk_cache)
 
             info[section_name] = check_info
 
         return info
 
 
-    def _convert_to_sections(self, raw_data, hostname):
-        persisted_sections = self._extract_persisted_sections(hostname, raw_data)
+    def _convert_to_sections(self, raw_data):
+        persisted_sections = self._extract_persisted_sections(raw_data)
         return HostSections(raw_data, persisted_sections=persisted_sections)
 
 
-    def _extract_persisted_sections(self, hostname, raw_data):
+    def _extract_persisted_sections(self, raw_data):
         """Extract the sections to be persisted from the raw_data and return it
 
         Gather the check types to be persisted, extract the related data from
@@ -229,7 +240,7 @@ class SNMPDataSource(DataSource):
         persisted_sections = {}
 
         for section_name, section_content in raw_data.items():
-            check_interval = config.check_interval_of(hostname, section_name)
+            check_interval = config.check_interval_of(self._hostname, section_name)
             if check_interval is None:
                 continue
 
@@ -252,33 +263,30 @@ class SNMPDataSource(DataSource):
 #   | Special case for managing the Management Board SNMP data             |
 #   '----------------------------------------------------------------------'
 
+
+#TODO
+# 1. TCP host + SNMP MGMT Board: standard SNMP beibehalten
+# 2. snmpv3 context
+
+
 class SNMPManagementBoardDataSource(SNMPDataSource):
     _for_mgmt_board = True
 
 
-    def id(self):
-        return "mgmt_snmp"
+    def __init__(self, hostname, ipaddress):
+        ipaddress = self._get_mgmt_ipaddress(hostname)
+        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress)
 
 
-    def title(self):
-        return "Management board - SNMP"
-
-
-    def _credentials(self, hostname):
-        return config.management_credentials_of(hostname)
-
-
-    def _execute(self, hostname, ipaddress):
-        # Do not use the (custom) ipaddress for the host. Use the management board
-        # address instead
+    def _get_mgmt_ipaddress(self, hostname):
         mgmt_ipaddress = config.management_address_of(hostname)
         if not self._is_ipaddress(mgmt_ipaddress):
             mgmt_ipaddress = ip_lookup.lookup_ip_address(mgmt_ipaddress)
-
-        return super(SNMPManagementBoardDataSource, self)._execute(hostname, mgmt_ipaddress)
+        return mgmt_ipaddress
 
 
     # TODO: Why is it used only here?
+    # TODO Was in snmp mgmt board data source class
     def _is_ipaddress(self, address):
         try:
             socket.inet_pton(socket.AF_INET, address)
@@ -293,3 +301,19 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
         except socket.error:
             # no ipv6 address either
             return False
+
+
+    def id(self):
+        return "mgmt_snmp"
+
+
+    def title(self):
+        return "Management board - SNMP"
+
+
+    def _credentials(self):
+        return config.management_credentials_of(self._hostname)
+
+
+    def _execute(self):
+        return super(SNMPManagementBoardDataSource, self)._execute()

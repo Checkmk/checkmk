@@ -1,4 +1,7 @@
 1.2.8p28:
+    Multisite:
+    * 5854 FIX: Fixed broken werk list (regression in 1.2.8p27)
+
 
 1.2.8p27:
     Checks & Agents:

@@ -2333,7 +2333,6 @@ register_rule(group,
     CascadingDropdown(
         title=_("Management board config"),
         choices=[
-           (None, _("No protocol specified"), FixedValue(None, totext="")),
            ("snmp", _("SNMP"), SNMPCredentials()),
         ],
     ),

@@ -745,7 +745,7 @@ class Site(object):
     # Check_MK is now the site, so all tests that somehow rely on the environment should be
     # executed this way.
     def switch_to_site_user(self):
-        env_var_str = ""
+        env_var_str = "VERSION='%s' " % self.version._version
         if "WORKSPACE" in os.environ:
             env_var_str = "WORKSPACE='%s' " % os.environ["WORKSPACE"]
 

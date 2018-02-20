@@ -271,7 +271,7 @@ class SNMPManagementBoardDataSource(SNMPDataSource):
     def _execute(self, hostname, ipaddress):
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
-        mgmt_ipaddress = config.management_address(hostname)
+        mgmt_ipaddress = config.management_address_of(hostname)
         if not self._is_ipaddress(mgmt_ipaddress):
             mgmt_ipaddress = ip_lookup.lookup_ip_address(mgmt_ipaddress)
 

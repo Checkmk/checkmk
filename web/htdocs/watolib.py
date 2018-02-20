@@ -1425,13 +1425,17 @@ class CREFolder(BaseFolder):
 
         all_hosts = [] # list of [Python string for all_hosts]
         clusters = [] # tuple list of (Python string, nodes)
-        ipv4_addresses = {}
-        ipv6_addresses = {}
-        explicit_snmp_communities = {}
         hostnames = self.hosts().keys()
         hostnames.sort()
         custom_macros = {} # collect value for attributes that are to be present in Nagios
         cleaned_hosts = {}
+
+        attribute_mappings = [
+            # host attr, cmk_base variable name, value, title
+            ("ipaddress",      "ipaddresses",               {}, "Explicit IPv4 addresses"),
+            ("ipv6address",    "ipv6addresses",             {}, "Explicit IPv6 addresses"),
+            ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),
+        ]
 
         for hostname in hostnames:
             host = self.hosts()[hostname]
@@ -1449,12 +1453,10 @@ class CREFolder(BaseFolder):
             else:
                 all_hosts.append(hostentry)
 
-            # TODO: Management board?
-            for attribute_name, dictionary in [
-                ( "ipaddress", ipv4_addresses ),
-                ( "ipv6address", ipv6_addresses ),
-                ( "snmp_community", explicit_snmp_communities )
-            ]:
+            # Save the effective attributes of a host to the related attribute maps.
+            # These maps are saved directly in the hosts.mk to transport the effective
+            # attributes to Check_MK base.
+            for attribute_name, _unused_cmk_var_name, dictionary, _unused_title in attribute_mappings:
                 value = effective.get(attribute_name)
                 if value:
                     dictionary[hostname] = value
@@ -1504,24 +1506,12 @@ class CREFolder(BaseFolder):
                 out.write('\n  %s : %s,\n' % (entry, repr(nodes)))
             out.write("})\n")
 
-        if len(ipv4_addresses) > 0:
-            out.write("\n# Explicit IPv4 addresses\n")
-            out.write("ipaddresses.update(")
-            out.write(format_config_value(ipv4_addresses))
-            out.write(")\n")
-
-        if len(ipv6_addresses) > 0:
-            out.write("\n# Explicit IPv6 addresses\n")
-            out.write("ipv6addresses.update(")
-            out.write(format_config_value(ipv6_addresses))
-            out.write(")\n")
-
-        if len(explicit_snmp_communities) > 0:
-            out.write("\n# Explicit SNMP communities\n")
-            out.write("explicit_snmp_communities.update(")
-            out.write(format_config_value(explicit_snmp_communities))
-            out.write(")")
-        out.write("\n")
+        for attribute_name, cmk_base_varname, dictionary, title in attribute_mappings:
+            if dictionary:
+                out.write("\n# %s\n" % title)
+                out.write("%s.update(" % cmk_base_varname)
+                out.write(format_config_value(dictionary))
+                out.write(")\n")
 
         for custom_varname, entries in custom_macros.items():
             macrolist = []

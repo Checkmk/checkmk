@@ -662,51 +662,35 @@ def is_ipv4_host(hostname):
 #
 
 def has_management_board(hostname):
-    return _management_board_settings_of(hostname)["protocol"] is not None
+    return management_protocol.get(hostname) is not None
 
 
 def management_address(hostname):
-    return _management_board_settings_of(hostname)["address"]
-
-
-def management_protocol(hostname):
-    return _management_board_settings_of(hostname)["protocol"]
-
-
-def _management_board_settings_of(hostname):
     attributes_of_host = host_attributes.get(hostname, {})
-
-    management_board = {
-        "address"     : None,
-        "protocol"    : None,
-        "credentials" : None,
-    }
-
-    # When management_protocol is set to no management board, don't do anything else
-    # -> The management board can not be enabled by the credentials rule
-    if not attributes_of_host.get("management_protocol"):
-        return management_board
-
-    management_board["protocol"] = attributes_of_host["management_protocol"]
-
     if attributes_of_host.get("management_address"):
-        management_board["address"] = attributes_of_host["management_address"]
+        return attributes_of_host["management_address"]
     else:
-        management_board["address"] = ipaddresses.get(hostname)
+        return ipaddresses.get(hostname)
 
-    # Set the defaults form the management board related ruleset. Use the first
-    # rule that matches the protocol configured for this host.
+
+def management_protocol_of(hostname):
+    return management_protocol[hostname]
+
+
+def management_credentials_of(hostname):
+    try:
+        return management_snmp_credentials[hostname]
+    except KeyError:
+        pass
+
+    # If a rule matches, use the first rule for the management board protocol of the host
     rule_settings = rulesets.host_extra_conf(hostname, management_board_config)
     for protocol, credentials in rule_settings:
-        if protocol == management_board["protocol"]:
-            management_board["credentials"] = credentials
-            break
+        if protocol == management_protocol_of(hostname):
+            return credentials
 
-    # Override the defaults set above with explicit host/folder settings
-    if attributes_of_host.get("management_snmp_community"):
-        management_board["credentials"] = attributes_of_host["management_snmp_community"]
+    return snmp_default_community
 
-    return management_board
 
 #
 # Agent communication
@@ -763,17 +747,6 @@ def agent_target_version(hostname):
 # the snmp_default_community is returned (wich is preset with
 # "public", but can be overridden in main.mk
 def snmp_credentials_of(hostname):
-    # TODO: this works under the assumption that we can't have the management
-    #  board and the host itself queried through snmp.
-    #  The alternative is a lengthy and errorprone refactoring of the whole check-
-    #  call hierarchy to get the credentials passed around.
-    management_board = _management_board_settings_of(hostname)
-    if management_board["protocol"] == "snmp":
-        if management_board["credentials"]:
-            return management_board["credentials"]
-        else:
-            return "public"
-
     try:
         return explicit_snmp_communities[hostname]
     except KeyError:

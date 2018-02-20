@@ -133,8 +133,8 @@ _snmpv3_auth_elements = [
 ]
 
 class SNMPCredentials(Alternative):
-    def __init__(self, **kwargs):
-        def match(x):
+    def __init__(self, allow_none=False, **kwargs):
+        def alternative_match(x):
             if kwargs.get("only_v3"):
                 return x and (len(x) == 6 and 2 or len(x) == 4 and 1) or 0
             else:
@@ -142,8 +142,22 @@ class SNMPCredentials(Alternative):
                             len(x) in [1, 2] and 1 or \
                             len(x) == 4 and 2 or 3) or 0
 
+        if allow_none:
+            none_elements = [
+                FixedValue(None,
+                    title = _("No explicit credentials"),
+                    totext = "",
+                )
+            ]
+
+            # Wrap match() function defined above
+            match = lambda x: 0 if x is None else (alternative_match(x)+1)
+        else:
+            none_elements = []
+            match = alternative_match
+
         kwargs.update({
-            "elements": [
+            "elements": none_elements + [
                 Password(
                     title = _("SNMP community (SNMP Versions 1 and 2c)"),
                     allow_empty = False,
@@ -521,6 +535,7 @@ declare_host_attribute(ValueSpecAttribute("management_protocol",
 declare_host_attribute(ValueSpecAttribute("management_snmp_community",
     SNMPCredentials(
         default_value = None,
+        allow_none = True,
     )),
     show_in_table = False,
     show_in_folder = True,

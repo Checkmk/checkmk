@@ -1387,20 +1387,22 @@ class CREFolder(BaseFolder):
 
     def _load_hosts_file(self):
         variables = {
-            "FOLDER_PATH"               : "",
-            "ALL_HOSTS"                 : ALL_HOSTS,
-            "ALL_SERVICES"              : ALL_SERVICES,
-            "all_hosts"                 : [],
-            "clusters"                  : {},
-            "ipaddresses"               : {},
-            "ipv6addresses"             : {},
-            "explicit_snmp_communities" : {},
-            "extra_host_conf"           : { "alias" : [] },
-            "extra_service_conf"        : { "_WATO" : [] },
-            "host_attributes"           : {},
-            "host_contactgroups"        : [],
-            "service_contactgroups"     : [],
-            "_lock"                     : False,
+            "FOLDER_PATH"                 : "",
+            "ALL_HOSTS"                   : ALL_HOSTS,
+            "ALL_SERVICES"                : ALL_SERVICES,
+            "all_hosts"                   : [],
+            "clusters"                    : {},
+            "ipaddresses"                 : {},
+            "ipv6addresses"               : {},
+            "explicit_snmp_communities"   : {},
+            "management_snmp_credentials" : {},
+            "management_protocol"         : {},
+            "extra_host_conf"             : { "alias" : [] },
+            "extra_service_conf"          : { "_WATO" : [] },
+            "host_attributes"             : {},
+            "host_contactgroups"          : [],
+            "service_contactgroups"       : [],
+            "_lock"                       : False,
         }
         return store.load_mk_file(self.hosts_file_path(), variables)
 
@@ -1435,6 +1437,8 @@ class CREFolder(BaseFolder):
             ("ipaddress",      "ipaddresses",               {}, "Explicit IPv4 addresses"),
             ("ipv6address",    "ipv6addresses",             {}, "Explicit IPv6 addresses"),
             ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),
+            ("management_snmp_community", "management_snmp_credentials", {}, "Management board SNMP credentials"),
+            ("management_protocol",       "management_protocol",         {}, "Management board protocol"),
         ]
 
         for hostname in hostnames:

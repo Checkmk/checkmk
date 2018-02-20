@@ -52,9 +52,9 @@ def test_cfg(web, site):
     import cmk.debug
     cmk.debug.enable()
 
+    # Needs to be done together, even when the checks are not directly needed
     import cmk_base.checks as checks
     checks.load()
-
     config.load()
 
     yield None

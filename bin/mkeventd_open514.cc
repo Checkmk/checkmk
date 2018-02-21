@@ -97,7 +97,8 @@ int main(int argc, char **argv) {
         addr.sin_addr.s_addr = 0;
         if (0 != bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
                       sizeof(addr))) {
-            perror("Cannot bind UDP socket for syslog to port");
+            perror("Cannot bind UDP socket for syslog to port "
+                   "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
             exit(1);
         }
 
@@ -133,7 +134,8 @@ int main(int argc, char **argv) {
         if (0 != bind(syslog_tcp_sock,
                       reinterpret_cast<struct sockaddr *>(&addr),
                       sizeof(addr))) {
-            perror("Cannot bind TCP socket for syslog-tcp to port");
+            perror("Cannot bind TCP socket for syslog-tcp to port "
+                   "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
             exit(1);
         }
 
@@ -168,7 +170,8 @@ int main(int argc, char **argv) {
         addr.sin_addr.s_addr = 0;
         if (0 != bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
                       sizeof(addr))) {
-            perror("Cannot bind UDP socket for snmptrap to port");
+            perror("Cannot bind UDP socket for snmptrap to port "
+                   "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
             exit(1);
         }
 

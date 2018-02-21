@@ -1197,7 +1197,7 @@ class FilterHostAuxTags(Filter):
 
 
     def host_auxtags_filter(self, tag):
-        return "Filter: custom_variables ~ TAGS (^|[ ])%s($|[ ])" % lqencode(tag)
+        return "Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])" % lqencode(tag)
 
 
     def filter(self, infoname):

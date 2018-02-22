@@ -1,0 +1,14 @@
+Title: agent_ipmi_sensors: Search PATH for ipmi-sensors command
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519319399
+Class: fix
+
+The special agent was only searching the hard coded directories
+/usr/sbin, /usr/bin, /usr/local/sbin and /usr/local/bin. Instead
+of this, the special agent is now using the PATH variable of the
+environment to search for this command, which also includes
+environment related custom paths.

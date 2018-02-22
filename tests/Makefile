@@ -1,5 +1,9 @@
 SHELL=/bin/bash -e
 
+.PHONY: help test test-pylint test-pylint-ci test-bandit test-bandit-ci \
+        test-shellcheck test-shellcheck-ci setup format test-mypy \
+        test-pylint-simple
+
 help:
 	@echo "test               - Run integration and git tests"
 	@echo "test-pylint        - Run pylint based tests"
@@ -26,8 +30,8 @@ test-pylint-ci:
 
 
 test-bandit:
-	# Currently only care about high severity reported issues. Once this is
-	# reached, go and enable the medium/low checks.
+# Currently only care about high severity reported issues. Once this is reached,
+# go and enable the medium/low checks.
 	CMK_DIR="$(realpath ..)" ; \
 	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
 	bandit \
@@ -72,3 +76,19 @@ setup:
 	sudo pip install --upgrade pip
 	sudo pip install --upgrade --ignore-installed -r requirements.txt
 	$(MAKE) -C pylint setup
+
+# TODO(sp): Proof of concept only for now, do this in a more general way
+PYTHONPATH := $(realpath ..)
+MYPYPATH := $(realpath typeshed)
+FILES_TO_CHECK := $(realpath ../cmk/ec/settings.py)
+
+sanitize: format test-mypy test-pylint-simple
+
+format:
+	autopep8 -i $(FILES_TO_CHECK)
+
+test-mypy:
+	MYPYPATH="$(MYPYPATH)" mypy --py2 --follow-imports=silent --strict-optional $(FILES_TO_CHECK)
+
+test-pylint-simple:
+	PYTHONPATH="$(PYTHONPATH)" pylint $(FILES_TO_CHECK)

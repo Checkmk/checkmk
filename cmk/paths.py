@@ -45,8 +45,8 @@ except NameError:
 #
 
 # TODO: Add piggyback_dir and use it in code
-omd_root                  = None
-default_config_dir        = None
+omd_root                  = None  # type: str
+default_config_dir        = None  # type: str
 main_config_file          = None
 final_config_file         = None
 local_config_file         = None

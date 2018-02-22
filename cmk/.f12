@@ -5,6 +5,6 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo rsync -a *.py $ROOT/lib/python/cmk/
+sudo rsync -a * $ROOT/lib/python/cmk/
 sudo pycompile -q $ROOT/lib/python/cmk/
 echo "Installed to $ROOT/lib/python/cmk/"

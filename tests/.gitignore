@@ -1,4 +1,5 @@
 .cache
+.mypy_cache/
 __pycache__
-var
 test.log
+var

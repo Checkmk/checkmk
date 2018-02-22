@@ -26,6 +26,7 @@
 
 
 import os
+import errno
 import sys
 import getopt
 import subprocess
@@ -60,26 +61,10 @@ OPTIONS:
                                     with the remote host for IPMI 2.0.
 """ )
 
-
-# output
-# ID   | Name            | Type              | Reading    | Units | Event
-# 4    | CPU Temp        | Temperature       | 28.00      | C     | 'OK'
-# 71   | System Temp     | Temperature       | 28.00      | C     | 'OK'
-# 607  | P1-DIMMC2 TEMP  | Temperature       | N/A        | C     | N/A
-
-
-def agent_ipmi_sensors_parse_data( ipmi_sensor_data ):
-    for line in ipmi_sensor_data:
-        if line.startswith( "ID" ):
-            continue
-        else:
-            sys.stdout.write( "%s\n" % line )
-
-
-def agent_ipmi_sensors_main( cmdline_args ):
-    short_options = 'u:p:l:' + 'D:k:'
-    long_options  = [ 'help', 'debug' ] + \
-                    [ 'quiet-cache', 'sdr-cache-recreate', 'interpret-oem-data',
+def agent_ipmi_sensors_main(cmdline_args):
+    short_options = 'u:p:l:D:k:'
+    long_options  = [ 'help', 'debug'
+                      'quiet-cache', 'sdr-cache-recreate', 'interpret-oem-data',
                       'output-sensor-state', 'ignore-not-available-sensors',
                       'driver-type=', 'output-sensor-thresholds' ]
 
@@ -127,10 +112,6 @@ def agent_ipmi_sensors_main( cmdline_args ):
         elif o in [ '--output-sensor-thresholds' ]:
             additional_opts.append( o )
 
-    if opt_debug:
-        sys.stderr.write( "DEBUG: opts are '%s'.\n" % opts + \
-                          "DEBUG: args are '%s'.\n" % args )
-
     if len(args) == 1:
         hostname = args[0]
     else:
@@ -141,33 +122,52 @@ def agent_ipmi_sensors_main( cmdline_args ):
         sys.stderr.write( "ERROR: Credentials are missing.\n" )
         sys.exit(1)
 
-    for sub_path in [ "sbin", "bin", "local/sbin", "local/bin" ]:
-        ipmi_cmd = [ "/usr/%s/ipmi-sensors" % sub_path,
-                     "-h", hostname, "-u", username,
-                     "-p", password, "-l", privilege_lvl ] + \
-                     additional_opts
+    os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
-        if opt_debug:
-            sys.stderr.write( "DEBUG: try executing '%s'.\n" % " ".join( ipmi_cmd ) )
+    ipmi_cmd = [ "ipmi-sensors",
+                 "-h", hostname, "-u", username,
+                 "-p", password, "-l", privilege_lvl ] + \
+                 additional_opts
+    ipmi_cmd_str = subprocess.list2cmdline(ipmi_cmd)
 
+    if opt_debug:
+        sys.stderr.write("Executing: '%s'\n" % ipmi_cmd_str)
+
+    try:
         try:
-            p = subprocess.Popen( ipmi_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-            sensor_data, err = p.communicate()
-            break
-        except Exception, e:
-            err = e
-            if opt_debug:
-                sys.stderr.write( "ERROR: '%s': %s.\n" % (ipmi_cmd_str, e) )
+            p = subprocess.Popen(ipmi_cmd, shell=False, close_fds=True,
+                                 stdin=open(os.devnull),
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except OSError, e:
+            if e.errno == errno.ENOENT: # No such file or directory
+                raise Exception("Could not find 'ipmi-sensors' command (PATH: %s)" %
+                                                            os.environ.get("PATH"))
+            else:
+                raise
+
+        stdout, stderr = p.communicate()
+    except Exception, e:
+        sys.stderr.write("ERROR: %s\n" % (e))
+        sys.exit(1)
+
+    if stderr:
+        sys.stderr.write("ERROR: '%s'.\n" % stderr)
+        sys.exit(1)
+
+    # output
+    # ID   | Name            | Type              | Reading    | Units | Event
+    # 4    | CPU Temp        | Temperature       | 28.00      | C     | 'OK'
+    # 71   | System Temp     | Temperature       | 28.00      | C     | 'OK'
+    # 607  | P1-DIMMC2 TEMP  | Temperature       | N/A        | C     | N/A
+    sys.stdout.write( "<<<ipmi_sensors:sep(124)>>>\n" )
+    for line in stdout.splitlines():
+        if line.startswith("ID"):
             continue
 
-    if err:
-        sys.stderr.write( "ERROR: '%s'.\n" % err )
-        sys.exit(1)
-    else:
-        sys.stdout.write( "<<<ipmi_sensors:sep(124)>>>\n" )
-        agent_ipmi_sensors_parse_data( sensor_data.splitlines() )
-        sys.exit(0)
+        sys.stdout.write( "%s\n" % line )
+
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    agent_ipmi_sensors_main( sys.argv[1:] )
+    agent_ipmi_sensors_main(sys.argv[1:])

@@ -221,11 +221,11 @@ catalog_titles = {
 # TODO: Do we need a more generic place for this?
 check_mk_agents = {
     "vms"     : "VMS",
-    "linux"   :"Linux",
+    "linux"   : "Linux",
     "aix"     : "AIX",
-    "solaris" :"Solaris",
-    "windows" :"Windows",
-    "snmp"    :"SNMP",
+    "solaris" : "Solaris",
+    "windows" : "Windows",
+    "snmp"    : "SNMP",
     "openvms" : "OpenVMS",
     "vsphere" : "vSphere"
 }

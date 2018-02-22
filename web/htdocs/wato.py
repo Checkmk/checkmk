@@ -15741,6 +15741,7 @@ class ModeCheckPlugins(WatoMode):
 
     def _get_manpages_after_search(self):
         collection  = {}
+        handled_check_names = set([])
 
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry( entry ):
@@ -15767,7 +15768,16 @@ class ModeCheckPlugins(WatoMode):
 
                 if these_matches:
                     collection.setdefault( key, [] )
-                    collection[key] += these_matches
+                    # avoid duplicates due to the fact that a man page can have more than
+                    # one places in the global tree of man pages.
+                    for match in these_matches:
+                        name = match.get("name")
+                        if name and name in handled_check_names:
+                            continue # avoid duplicate
+                        else:
+                            collection[key].append(match)
+                            if name:
+                                handled_check_names.add(name)
 
             elif type(entries) == dict:
                 for key, subentries in entries.items():

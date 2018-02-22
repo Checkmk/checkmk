@@ -1,0 +1,12 @@
+Title: Fix duplicate search entries in check plugins search in WATO
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519307412
+Class: fix
+
+Some check plugins are listed in several paths in the catalog of man pages
+(e.g. <tt>nfsmount</tt>). These would be listed twice in the search results
+of the WATO module {{Check plugins}}.  This has been fixed.

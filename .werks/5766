@@ -1,0 +1,10 @@
+Title: Contact groups: Fixed handling of missing inventory paths
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519289175
+Class: fix
+
+Old configurations have not permitted inventory paths configured.

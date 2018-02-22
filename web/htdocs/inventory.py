@@ -216,6 +216,10 @@ None in case the user is allowed to see the whole tree.
     permitted_paths = []
     for user_group in user_groups:
         inventory_paths = contact_groups.get(user_group, {}).get('inventory_paths')
+        if inventory_paths is None:
+            # Old configuration: no paths configured means 'allow_all'
+            return None
+
         if inventory_paths == "allow_all":
             return None
 

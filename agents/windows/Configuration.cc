@@ -114,7 +114,7 @@ std::vector<EntryPair> collectKeyValuePairs(const Entry &section,
 
 void feedSection(const std::string &hostname, ConfigurableMap &configurables,
                  const Entry &section, const CSimpleIni &ini) {
-    for (const auto kvPair : collectKeyValuePairs(section, ini)) {
+    for (const auto &kvPair : collectKeyValuePairs(section, ini)) {
         std::string variable{kvPair.first.pItem};  // intentional copy
         std::transform(variable.cbegin(), variable.cend(), variable.begin(),
                        tolower);

@@ -82,6 +82,8 @@ def check_windows_tasks(item, _no_params, parsed):
         return
 
     map_codes = {
+        "0": "operation completed successfully",
+        "1": "task containing a popup action",
         "267009": "currently running",
         "267014": "terminated by user",
         "267045": "queued",
@@ -91,10 +93,16 @@ def check_windows_tasks(item, _no_params, parsed):
 
     data = parsed[item]
     last_result = data['Last Result']
+    # schtasks.exe (used by the check plugin) returns a signed integer
+    # e.g. -2147024629. However, error codes are unsigned integers.
+    # To make it easier for the user to lookup the error code (e.g. on
+    # MSDN) we convert the negative numbers to the hexadecimal
+    # representation.
+    last_result_hex = hex(int(last_result) & 0xffffffff)
     if last_result in map_codes:
-        infotext = "Service Status: %s (%s)" % (map_codes[last_result], last_result)
+        infotext = "Service Status: %s (%s)" % (map_codes[last_result], last_result_hex)
     else:
-        infotext = "Service status: %s" % last_result
+        infotext = "Service status: Got exit code %s" % last_result_hex
 
     state = 0
     if last_result not in [

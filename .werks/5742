@@ -1,0 +1,14 @@
+Title: windows_tasks: show the hexadecimal representation of the status code
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519374443
+Class: feature
+
+schtasks.exe used by the check plugin windows_tasks.ps1 returns a signed
+integer value as the last result of a task. However, the status codes
+(e.g. on MSDN) are usually represented as a hexadecimal value. To make
+it easier to lookup a status code the hexadecimal value is now shown by
+the check plugin.

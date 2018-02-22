@@ -59,6 +59,7 @@
 #include <windows.h>
 #include <winreg.h>  // performance counters from registry
 #include <ws2ipdef.h>
+#include <ws2spi.h>
 #include <algorithm>
 #include <fstream>
 #include <functional>
@@ -169,6 +170,7 @@ namespace {
 
 bool do_file = false;
 static FILE *fileout;
+static const DWORD DEFAULT_BUFFER_SIZE = 16384L;
 
 class MillisecondsFormatter : public Formatter {
     void format(ostream &os, const LogRecord &record) override {
@@ -180,6 +182,32 @@ class MillisecondsFormatter : public Formatter {
            << record.getMessage();
     }
 };
+
+
+bool supportIPv6() {
+    INT iNuminfo = 0;
+    DWORD bufferSize = DEFAULT_BUFFER_SIZE;
+    std::vector<BYTE> protocolInfo(bufferSize, 0);
+    int iErrno = 0;
+    auto lpProtocolInfo = reinterpret_cast<LPWSAPROTOCOL_INFOW>(protocolInfo.data());
+
+    while ((iNuminfo = WSCEnumProtocols(nullptr, lpProtocolInfo, &bufferSize, &iErrno)) == SOCKET_ERROR) {
+        if (iErrno == WSAENOBUFS) {
+            protocolInfo.resize(bufferSize, 0);
+        } else {
+            std::cerr << "WSCEnumProtocols failed with error: " << iErrno << std::endl;
+            WSACleanup();
+            exit(1);
+        }
+    }
+
+    for (INT i = 0; i < iNuminfo; ++i) {
+        if (lpProtocolInfo[i].iAddressFamily == AF_INET6)
+            return true;
+    }
+
+    return false;
+}
 
 struct GlobalConfig {
     Configuration parser;
@@ -206,7 +234,7 @@ struct GlobalConfig {
         , section_flush(parser, "global", "section_flush", true)
         , encrypted(parser, "global", "encrypted", false)
         , encrypted_rt(parser, "global", "encrypted_rt", true)
-        , support_ipv6(parser, "global", "ipv6", true)
+        , support_ipv6(parser, "global", "ipv6", supportIPv6())
         , passphrase(parser, "global", "passphrase", "")
         , only_from(parser, "global", "only_from") {}
 } * s_config;
@@ -968,6 +996,7 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     });
 
     s_config->parser.readSettings();
+
 
     if (!*s_config->crash_debug) {  // default level already LogLevel::debug
         logger->setLevel(LogLevel::warning);

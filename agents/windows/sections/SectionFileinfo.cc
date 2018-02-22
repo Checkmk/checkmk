@@ -77,7 +77,7 @@ void SectionFileinfo::get_directories(std::string base_path) {
 void SectionFileinfo::determine_filepaths_full_search(
     std::string base_path, std::string search_pattern) {
     get_directories(base_path);
-    for (auto entry : _temp_files) {
+    for (const auto &entry : _temp_files) {
         if (globmatch(search_pattern.c_str(), entry.c_str())) {
             _found_files.push_back(entry);
         }
@@ -129,7 +129,7 @@ void SectionFileinfo::outputFileinfos(std::ostream &out, const char *path) {
     determine_filepaths(search_pattern);
 
     bool found_file = false;
-    for (auto entry : _found_files) {
+    for (const auto &entry : _found_files) {
         found_file = outputFileinfo(out, entry) || found_file;
     }
 

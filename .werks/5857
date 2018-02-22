@@ -1,0 +1,11 @@
+Title: Improve amount of v axis labels for smaller graphs
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i4
+Date: 1519305713
+Class: fix
+
+In some cases where V axis labels should be shown, the label rendering
+mechanic was simply showing no graph label.

@@ -496,9 +496,29 @@ register_check_parameters(
                     default_difference = (5, 8),
                     default_value = None,
                 ),
-            )
-                ]
-        ),
+            ),
+            ("state", Dictionary(
+                title=_("Map states"),
+                elements=[
+                    ("is_disabled",
+                        MonitoringState(title=_("Is disabled"), default_value=1)),
+                    ("is_up_and_available",
+                        MonitoringState(title=_("Is up and available"), default_value=0)),
+                    ("is_currently_not_available",
+                        MonitoringState(title=_("Is currently not available"), default_value=2)),
+                    ("is_not_available",
+                        MonitoringState(title=_("Is not available"), default_value=2)),
+                    ("availability_is_unknown",
+                        MonitoringState(title=_("Availability is unknown"), default_value=1)),
+                    ("is_unlicensed",
+                        MonitoringState(title=_("Is unlicensed"), default_value=3)),
+                    ("children_pool_members_down_if_not_available",
+                        # Special handling, see check plugin
+                        MonitoringState(title=_("The children pool member(s) are down if VServer is not available"), default_value=0)),
+                ],
+                optional_keys=False,
+            )),
+        ]),
         TextAscii(
                 title = _("VServer name"),
                 allow_empty = False

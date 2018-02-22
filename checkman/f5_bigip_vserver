@@ -12,6 +12,12 @@ description:
  There is one special handling in the check. If the vserver is not available
  and all its children pool members are down the check reports {OK}.
 
+ All states are configurable. Default values are
+ OK (is up and available, the children pool member(s) are down if VServer is not available),
+ WARN (is disabled, availability unknown),
+ CRIT (is currently not available, is not available),
+ UNKNOWN (is unlicensed).
+
 inventory:
  Any virtual server that is found online will be added during inventory
  and checked for it's status. Virtual servers in the various "Warning"

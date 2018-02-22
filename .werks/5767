@@ -1,0 +1,10 @@
+Title: f5_bigip_vserver: Status of VServer is configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519299680
+Class: feature
+
+

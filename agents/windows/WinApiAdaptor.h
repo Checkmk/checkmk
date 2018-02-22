@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <winnt.h>
 #include <winsvc.h>
+#include <ws2spi.h>
 #include <cstdarg>
 #include <cstddef>
 #include <cstring>
@@ -441,6 +442,12 @@ public:
     // LWSTDAPI:
     virtual LPSTR PathCombine(LPSTR pszDest, LPCSTR pszDir,
                               LPCSTR pszFile) const = 0;
+
+    // WSPAPI:
+    virtual int WSCEnumProtocols(LPINT lpiProtocols,
+                                 LPWSAPROTOCOL_INFOW lpProtocolBuffer,
+                                 LPDWORD lpdwBufferLength,
+                                 LPINT lpErrno) const = 0;
 
     // MISC:
     virtual LPWSTR *CommandLineToArgvW(LPCWSTR lpCmdLine,

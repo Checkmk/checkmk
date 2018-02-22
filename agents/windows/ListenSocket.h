@@ -55,10 +55,10 @@ private:
 
     Logger *_logger;
     const WinApiAdaptor &_winapi;
+    bool _use_ipv6;
     SOCKET _socket;
     only_from_t _source_whitelist;
     bool _supports_ipv4;
-    bool _use_ipv6;
 };
 
 #endif  // ListenSocket_h

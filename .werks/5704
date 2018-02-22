@@ -1,0 +1,18 @@
+Title: Windows agent: prevent crash without IPv6 support
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519310458
+Class: fix
+
+Windows agent crashed on older systems (at least Windows Server 2003 and
+Windows XP) that only supported IPv4.
+
+The bug was introduced in 1.4.0p25. Older releases and systems that
+support IPv6 should have remained unaffected.
+
+The configuration option ipv6 was not obeyed. Now this option can be
+set to 'no' in order to only listen IPv4 connections on a IPv6 capable
+system.

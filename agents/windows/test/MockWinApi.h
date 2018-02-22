@@ -442,6 +442,12 @@ public:
     MOCK_CONST_METHOD3(PathCombine,
                        LPSTR(LPSTR pszDest, LPCSTR pszDir, LPCSTR pszFile));
 
+    // WSPAPI:
+    MOCK_CONST_METHOD4(WSCEnumProtocols,
+                       int(LPINT lpiProtocols,
+                           LPWSAPROTOCOL_INFOW lpProtocolBuffer,
+                           LPDWORD lpdwBufferLength, LPINT lpErrno));
+
     // MISC:
     MOCK_CONST_METHOD2(CommandLineToArgvW,
                        LPWSTR *(LPCWSTR lpCmdLine, int *pNumArgs));

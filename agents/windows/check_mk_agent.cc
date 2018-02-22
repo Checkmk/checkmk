@@ -147,6 +147,8 @@ void RunImmediate(const char *mode, int argc, char **argv);
 //  '----------------------------------------------------------------------'
 namespace {
 
+const DWORD DEFAULT_BUFFER_SIZE = 16384L;
+
 class UnpackError : public std::runtime_error {
 public:
     UnpackError(const std::string &what) : std::runtime_error(what) {}
@@ -164,9 +166,37 @@ class MillisecondsFormatter : public Formatter {
 };
 
 // Ugly but there is no (?) way to pass these as parameters to the Windows
-// service stuff. At least, let us *not* make these yet another global variables
+// service stuff. At least, let us *not* make this yet another global variable
 // and access them from other compilation units...
 const WinApi s_winapi;
+
+bool supportIPv6() {
+    INT iNuminfo = 0;
+    DWORD bufferSize = DEFAULT_BUFFER_SIZE;
+    std::vector<BYTE> protocolInfo(bufferSize, 0);
+    int iErrno = 0;
+    auto lpProtocolInfo =
+        reinterpret_cast<LPWSAPROTOCOL_INFOW>(protocolInfo.data());
+
+    while ((iNuminfo = s_winapi.WSCEnumProtocols(nullptr, lpProtocolInfo,
+                                                 &bufferSize, &iErrno)) ==
+           SOCKET_ERROR) {
+        if (iErrno == WSAENOBUFS) {
+            protocolInfo.resize(bufferSize, 0);
+        } else {
+            std::cerr << "WSCEnumProtocols failed with error: " << iErrno
+                      << std::endl;
+            WSACleanup();
+            exit(1);
+        }
+    }
+
+    for (INT i = 0; i < iNuminfo; ++i) {
+        if (lpProtocolInfo[i].iAddressFamily == AF_INET6) return true;
+    }
+
+    return false;
+}
 
 struct GlobalConfig {
     Configuration parser;
@@ -191,7 +221,7 @@ struct GlobalConfig {
         , section_flush(parser, "global", "section_flush", true, s_winapi)
         , encrypted(parser, "global", "encrypted", false, s_winapi)
         , encrypted_rt(parser, "global", "encrypted_rt", true, s_winapi)
-        , support_ipv6(parser, "global", "ipv6", true, s_winapi)
+        , support_ipv6(parser, "global", "ipv6", supportIPv6(), s_winapi)
         , passphrase(parser, "global", "passphrase", "", s_winapi)
         , only_from(parser, "global", "only_from", s_winapi) {}
 } * s_config;
@@ -671,7 +701,6 @@ DWORD WINAPI realtime_check_func(void *data_in) {
 void do_adhoc(const Environment &env) {
     g_should_terminate = false;
     Logger *logger = Logger::getLogger("winagent");
-
     ListenSocket sock(*s_config->port, *s_config->only_from,
                       *s_config->support_ipv6, logger, s_winapi);
 

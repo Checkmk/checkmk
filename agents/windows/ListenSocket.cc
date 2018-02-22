@@ -39,10 +39,10 @@ ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist,
                            const WinApiAdaptor &winapi)
     : _logger(logger)
     , _winapi(winapi)
+    , _use_ipv6(supportIPV6)
     , _socket(init_listen_socket(port))
     , _source_whitelist(source_whitelist)
-    , _supports_ipv4(true)
-    , _use_ipv6(supportIPV6) {}
+    , _supports_ipv4(true) {}
 
 ListenSocket::~ListenSocket() { _winapi.closesocket(_socket); }
 

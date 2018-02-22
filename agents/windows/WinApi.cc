@@ -831,6 +831,14 @@ LPSTR WinApi::PathCombine(LPSTR pszDest, LPCSTR pszDir, LPCSTR pszFile) const {
     return ::PathCombineA(pszDest, pszDir, pszFile);
 }
 
+// WSPAPI:
+int WinApi::WSCEnumProtocols(LPINT lpiProtocols,
+                             LPWSAPROTOCOL_INFOW lpProtocolBuffer,
+                             LPDWORD lpdwBufferLength, LPINT lpErrno) const {
+    return ::WSCEnumProtocols(lpiProtocols, lpProtocolBuffer, lpdwBufferLength,
+                              lpErrno);
+}
+
 // MISC:
 LPWSTR *WinApi::CommandLineToArgvW(LPCWSTR lpCmdLine, int *pNumArgs) const {
     return ::CommandLineToArgvW(lpCmdLine, pNumArgs);

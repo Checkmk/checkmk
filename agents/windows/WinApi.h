@@ -408,6 +408,12 @@ public:
     virtual LPSTR PathCombine(LPSTR pszDest, LPCSTR pszDir,
                               LPCSTR pszFile) const override;
 
+    // WSPAPI:
+    virtual int WSCEnumProtocols(LPINT lpiProtocols,
+                                 LPWSAPROTOCOL_INFOW lpProtocolBuffer,
+                                 LPDWORD lpdwBufferLength,
+                                 LPINT lpErrno) const override;
+
     // MISC:
     virtual LPWSTR *CommandLineToArgvW(LPCWSTR lpCmdLine,
                                        int *pNumArgs) const override;

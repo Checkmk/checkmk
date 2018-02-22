@@ -37,7 +37,6 @@ import socket
 import os
 import time
 import sys
-import getopt
 import signal
 import threading
 import pprint
@@ -48,8 +47,10 @@ import stat
 import string
 import traceback
 import json
+import pathlib2 as pathlib
 
 import cmk
+import cmk.ec.settings
 import cmk.log
 import cmk.paths
 import cmk.defines as defines
@@ -74,28 +75,9 @@ logger = cmk.log.get_logger("mkeventd")
 #   |  Global declarations and defaults settings                           |
 #   '----------------------------------------------------------------------'
 
-# Defaults for command line modifiable options (TODO: Encapsulate this somehow)
-opt_verbose = 0
-opt_debug = False
-opt_foreground = False
-opt_profile_status = False
-opt_profile_event = False
-opt_syslog = False
-opt_syslog_fd = None
-opt_syslog_tcp = False
-opt_syslog_tcp_fd = None
-opt_snmptrap = False
-opt_snmptrap_fd = None
-
-# Set default values for options (TODO: Move to smaller scopes)
-g_socket_path = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/status")
-g_eventsocket_path = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/eventsocket")
+# TODO(sp) Use cmk.ec.settings
 g_pipe_path = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/events")
-g_pid_file = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/pid")
-g_logfile_path = os.path.join(cmk.paths.omd_root, "var/log/mkeventd.log")
 g_state_dir = os.path.join(cmk.paths.omd_root, "var/mkeventd")
-g_compiled_mibs_dir = os.path.join(cmk.paths.omd_root, "local/share/check_mk/compiled_mibs")
-g_mongo_db_conf = os.path.join(cmk.paths.omd_root, "etc/mongodb.conf")
 g_main_config_path = os.path.join(cmk.paths.default_config_dir, "mkeventd.mk")
 g_config_dir = os.path.join(cmk.paths.default_config_dir, "mkeventd.d")
 
@@ -299,7 +281,7 @@ class ECServerThread(threading.Thread):
                     self.serve()
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
-                if opt_debug:
+                if g_settings.options.debug:
                     raise
                 time.sleep(1)
 
@@ -482,7 +464,7 @@ class MKClientError(Exception):
 #   '----------------------------------------------------------------------'
 
 def initialize_snmptrap_handling():
-    if not opt_snmptrap:
+    if g_settings.options.snmptrap_udp is None:
         return
 
     initialize_snmptrap_engine()
@@ -582,7 +564,7 @@ def update_timeperiods():
         g_last_timeperiod_update = int(time.time()) / 60
     except Exception as e:
         logger.exception("Cannot update timeperiod information: %s" % e)
-        if opt_debug:
+        if g_settings.options.debug:
             raise
 
 
@@ -736,11 +718,12 @@ g_mongo_db = None
 
 def mongodb_local_connection_opts():
     ip, port = None, None
-    for l in file(g_mongo_db_conf):
-        if l.startswith('bind_ip'):
-            ip = l.split('=')[1].strip()
-        elif l.startswith('port'):
-            port = int(l.split('=')[1].strip())
+    with g_settings.paths.mongodb_config_file.value.open(encoding='utf-8') as f:
+        for l in f:
+            if l.startswith('bind_ip'):
+                ip = l.split('=')[1].strip()
+            elif l.startswith('port'):
+                port = int(l.split('=')[1].strip())
     return ip, port
 
 
@@ -1039,7 +1022,7 @@ def expire_logfiles(flush=False):
                         os.remove(path)
 
     except Exception as e:
-        if opt_debug:
+        if g_settings.options.debug:
             raise
         logger.exception("Error expiring log files: %s" % e)
 
@@ -1114,7 +1097,7 @@ def get_event_history_from_file(query):
             # then we skip this file. It cannot contain
             # any useful entry for us.
             if len(time_filters):
-                if opt_debug:
+                if g_settings.options.debug:
                     logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue  # skip this file
 
@@ -1289,7 +1272,7 @@ class EventServer(ECServerThread):
 
     def __init__(self):
         super(EventServer, self).__init__(name="EventServer",
-                                          profiling_enabled=opt_profile_event)
+                                          profiling_enabled=g_settings.options.profile_event)
         self._syslog = None
         self._syslog_tcp = None
         self._snmptrap = None
@@ -1401,66 +1384,62 @@ class EventServer(ECServerThread):
         self.logger.info("Created FIFO '%s' for receiving events" % g_pipe_path)
 
     def open_syslog(self):
-        if opt_syslog:
-            try:
-                if opt_syslog_fd is not None:
-                    self._syslog = socket.fromfd(opt_syslog_fd, socket.AF_INET, socket.SOCK_DGRAM)
-                    os.close(opt_syslog_fd)
-                    self.logger.info("Opened builtin syslog server on inherited filedescriptor %d" % opt_syslog_fd)
-
-                else:
-                    self._syslog = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                    self._syslog.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._syslog.bind(("0.0.0.0", 514))
-                    self.logger.info("Opened builtin syslog server on UDP port 514")
-            except Exception as e:
-                raise Exception("Cannot start builtin syslog server: %s" % e)
+        endpoint = g_settings.options.syslog_udp
+        try:
+            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+                self._syslog = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
+                os.close(endpoint.value)
+                self.logger.info("Opened builtin syslog server on inherited filedescriptor %d" % endpoint.value)
+            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+                self._syslog = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self._syslog.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._syslog.bind(("0.0.0.0", endpoint.value))
+                self.logger.info("Opened builtin syslog server on UDP port %d" % endpoint.value)
+        except Exception as e:
+            raise Exception("Cannot start builtin syslog server: %s" % e)
 
     def open_syslog_tcp(self):
-        if opt_syslog_tcp:
-            try:
-                if opt_syslog_tcp_fd is not None:
-                    self._syslog_tcp = socket.fromfd(opt_syslog_tcp_fd, socket.AF_INET, socket.SOCK_STREAM)
-                    self._syslog_tcp.listen(20)
-                    os.close(opt_syslog_tcp_fd)
-                    self.logger.info("Opened builtin syslog-tcp server on inherited filedescriptor %d" %
-                                     opt_syslog_tcp_fd)
-                else:
-                    self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._syslog_tcp.bind(("0.0.0.0", 514))
-                    self._syslog_tcp.listen(20)
-                    self.logger.info("Opened builtin syslog-tcp server on TCP port 514")
-            except Exception as e:
-                raise Exception("Cannot start builtin syslog-tcp server: %s" % e)
+        endpoint = g_settings.options.syslog_tcp
+        try:
+            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+                self._syslog_tcp = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_STREAM)
+                self._syslog_tcp.listen(20)
+                os.close(endpoint.value)
+                self.logger.info("Opened builtin syslog-tcp server on inherited filedescriptor %d" % endpoint.value)
+            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+                self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._syslog_tcp.bind(("0.0.0.0", endpoint.value))
+                self._syslog_tcp.listen(20)
+                self.logger.info("Opened builtin syslog-tcp server on TCP port %d" % endpoint.value)
+        except Exception as e:
+            raise Exception("Cannot start builtin syslog-tcp server: %s" % e)
 
     def open_snmptrap(self):
-        if opt_snmptrap:
-            try:
-                if opt_snmptrap_fd is not None:
-                    self._snmptrap = socket.fromfd(opt_snmptrap_fd, socket.AF_INET, socket.SOCK_DGRAM)
-                    os.close(opt_snmptrap_fd)
-                    self.logger.info("Opened builtin snmptrap server on inherited filedescriptor %d" % opt_snmptrap_fd)
-
-                else:
-                    self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                    self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._snmptrap.bind(("0.0.0.0", 162))
-                    self.logger.info("Opened builtin snmptrap server on UDP port 162")
-            except Exception as e:
-                raise Exception("Cannot start builtin snmptrap server: %s" % e)
+        endpoint = g_settings.options.snmptrap_udp
+        try:
+            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+                self._snmptrap = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
+                os.close(endpoint.value)
+                self.logger.info("Opened builtin snmptrap server on inherited filedescriptor %d" % endpoint.value)
+            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+                self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._snmptrap.bind(("0.0.0.0", endpoint.value))
+                self.logger.info("Opened builtin snmptrap server on UDP port %d" % endpoint.value)
+        except Exception as e:
+            raise Exception("Cannot start builtin snmptrap server: %s" % e)
 
     def open_eventsocket(self):
-        if g_eventsocket_path:
-            if os.path.exists(g_eventsocket_path):
-                os.remove(g_eventsocket_path)
-            self._eventsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self._eventsocket.bind(g_eventsocket_path)
-            os.chmod(g_eventsocket_path, 0o664)
-            self._eventsocket.listen(g_config['eventsocket_queue_len'])
-            self.logger.info("Opened UNIX socket '%s' for receiving events" % g_eventsocket_path)
-        else:
-            self._eventsocket = None
+        path = g_settings.paths.event_socket.value
+        if path.exists():
+            path.unlink()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._eventsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self._eventsocket.bind(str(path))
+        path.chmod(0o664)
+        self._eventsocket.listen(g_config['eventsocket_queue_len'])
+        self.logger.info("Opened UNIX socket '%s' for receiving events" % path)
 
     def open_pipe(self):
         # Beware: we must open the pipe also for writing. Otherwise
@@ -1475,7 +1454,7 @@ class EventServer(ECServerThread):
             builder = MibBuilder()  # manages python MIB modules
 
             # load MIBs from our compiled MIB and default MIB paths
-            builder.setMibSources(*[DirMibSource(g_compiled_mibs_dir)] + list(builder.getMibSources()))
+            builder.setMibSources(*[DirMibSource(str(g_settings.paths.compiled_mibs_dir.value))] + list(builder.getMibSources()))
 
             # Indicate we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = True
@@ -1490,7 +1469,7 @@ class EventServer(ECServerThread):
             # This object maintains various indices built from MIBs data
             self._mib_resolver = MibViewController(builder)
         except SmiError as e:
-            if opt_debug:
+            if g_settings.options.debug:
                 raise
             self.logger.info("Exception while loading MIB modules. Proceeding without modules!")
             self.logger.exception("Exception: %s" % e)
@@ -1779,7 +1758,7 @@ class EventServer(ECServerThread):
         # In replication slave mode (when not took over), ignore all events
         if not is_replication_slave() or g_slave_status["mode"] != "sync":
             handler_func(data)
-        elif opt_debug:
+        elif g_settings.options.debug:
             self.logger.info("Replication: we are in slave mode, ignoring event")
         elapsed = time.time() - before
         g_perfcounters.count_time("processing", elapsed)
@@ -1871,7 +1850,7 @@ class EventServer(ECServerThread):
                         elapsed_secs = now - last_token
                         new_tokens = int(elapsed_secs / secs_per_token)
                         if new_tokens:
-                            if opt_debug:
+                            if g_settings.options.debug:
                                 self.logger.info("Rule %s/%s, event %d: got %d new tokens" %
                                                  (rule["pack"], rule["id"], event["id"], new_tokens))
                             event["count"] = max(0, event["count"] - new_tokens)
@@ -2132,7 +2111,7 @@ class EventServer(ECServerThread):
                                         rule['state'][1][key] = value
 
                     except Exception as e:
-                        if opt_debug:
+                        if g_settings.options.debug:
                             raise
                         rule["disabled"] = True
                         count_disabled += 1
@@ -2958,7 +2937,7 @@ class EventServer(ECServerThread):
                 event["pid"] and ("[%s]" % event["pid"]) or "",
                 event["text"]))
         except Exception:
-            if opt_debug:
+            if g_settings.options.debug:
                 raise
             # Better silently ignore errors. We could have run out of
             # diskspace and make things worse by logging that we could
@@ -3544,7 +3523,7 @@ class StatusTableStatus(StatusTable):
 class StatusServer(ECServerThread):
     def __init__(self):
         super(StatusServer, self).__init__(name="StatusServer",
-                                           profiling_enabled=opt_profile_status)
+                                           profiling_enabled=g_settings.options.profile_status)
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
@@ -3562,12 +3541,14 @@ class StatusServer(ECServerThread):
         self.open_tcp_socket()
 
     def open_unix_socket(self):
-        if os.path.exists(g_socket_path):
-            os.remove(g_socket_path)
+        path = g_settings.paths.unix_socket.value
+        if path.exists():
+            path.unlink()
+        path.parent.mkdir(parents=True, exist_ok=True)
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self._socket.bind(g_socket_path)
+        self._socket.bind(str(path))
         # Make sure that socket is group writable
-        os.chmod(g_socket_path, 0o664)
+        path.chmod(0o664)
         self._socket.listen(g_config['socket_queue_len'])
         self._unix_socket_queue_len = g_config['socket_queue_len']  # detect changes in config
 
@@ -3586,7 +3567,7 @@ class StatusServer(ECServerThread):
                 self._tcp_socket.listen(g_config['socket_queue_len'])
                 self.logger.info("Going to listen for status queries on TCP port %d" % self._tcp_port)
             except Exception as e:
-                if opt_debug:
+                if g_settings.options.debug:
                     raise
                 self.logger.exception("Cannot listen on TCP socket port %d: %s" %
                                       (self._tcp_port, e))
@@ -3646,7 +3627,7 @@ class StatusServer(ECServerThread):
                     g_perfcounters.count("connects")
                     if addr_info:
                         allow_commands = self._tcp_allow_commands
-                        if opt_debug:
+                        if g_settings.options.debug:
                             self.logger.info("Handle status connection from %s:%d" % addr_info)
                         if self._tcp_access_list is not None and addr_info[0] not in \
                            self._tcp_access_list:
@@ -3803,7 +3784,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
-        cmk.log.open_log(g_logfile_path)
+        cmk.log.open_log(str(g_settings.paths.log_file.value))
         self.logger.info("Opened new logfile")
 
     # Erase our current state and history!
@@ -3861,7 +3842,7 @@ class StatusServer(ECServerThread):
         # Last time our slave got a config update
         try:
             last_update = int(argument)
-            if opt_debug:
+            if g_settings.options.debug:
                 self.logger.info("Replication: sync request from %s, last update %d seconds ago" % (
                     client_ip, time.time() - last_update))
 
@@ -3931,7 +3912,7 @@ def run_eventd():
                 terminate()
         except Exception as e:
             logger.exception("Exception in main thread:\n%s" % e)
-            if opt_debug:
+            if g_settings.options.debug:
                 raise
             time.sleep(1)
 
@@ -4460,7 +4441,7 @@ def do_event_action(action, event, user=""):
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:
-        if opt_debug:
+        if g_settings.options.debug:
             raise
         logger.exception("Error during execution of action %s" % action["id"])
 
@@ -4993,7 +4974,7 @@ def load_configuration():
             exec(f, g_config)
 
     # If not set by command line, set the log level by configuration
-    if opt_verbose == 0:
+    if g_settings.options.verbosity == 0:
         # Transform old normal/verbose config
         if g_config["log_level"] in (0, 1):
             log_level = cmk.log.INFO if g_config["log_level"] == 0 else cmk.log.VERBOSE
@@ -5060,47 +5041,6 @@ def snmptrap_translation_enabled():
 
 
 #.
-#   .--Help & Usage--------------------------------------------------------.
-#   |      _   _      _          ___     _   _                             |
-#   |     | | | | ___| |_ __    ( _ )   | | | |___  __ _  __ _  ___        |
-#   |     | |_| |/ _ \ | '_ \   / _ \/\ | | | / __|/ _` |/ _` |/ _ \       |
-#   |     |  _  |  __/ | |_) | | (_>  < | |_| \__ \ (_| | (_| |  __/       |
-#   |     |_| |_|\___|_| .__/   \___/\/  \___/|___/\__,_|\__, |\___|       |
-#   |                  |_|                               |___/             |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-def usage():
-    sys.stdout.write("""Usage: mkeventd [OPTIONS]
-
-   -v, --verbose        Enable verbose output
-   -g, --foreground     Do not daemonize, run in foreground
-   --debug              Enable debug mode (let exceptions through)
-   --syslog             Enable builtin UDP syslog server
-   --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
-   --syslog-tcp         Enable builtin TCP syslog server
-   --syslog-tcp-fd FD   Do not open TCP port 514, but inherit it via this FD
-   --snmptrap           Enable builtin snmptrap server
-   --snmptrap-fd FD     Do not open UDP port 162, but inherit it via this FD
-   --profile-status     Create Python profile for status thread
-   --profile-event      Create Python profile for event thread
-
-""")
-    sys.stdout.write("""
-The following paths are used by the Event Console:
-
-  Unix socket:      %(g_socket_path)s
-  Event socket:     %(g_eventsocket_path)s
-  Event Pipe:       %(g_pipe_path)s
-  PID file:         %(g_pid_file)s
-  Log file:         %(g_logfile_path)s
-  Status dir:       %(g_state_dir)s
-
-""" % globals())
-
-
-#.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -5122,52 +5062,17 @@ g_terminate_main_event = threading.Event()
 if __name__ == "__main__":
     os.unsetenv("LANG")
 
-    short_options = "hvVg"
-    long_options = ["help", "version", "verbose", "debug", "foreground",
-                    "profile-status", "profile-event",
-                    "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd="]
+    # TODO(sp) Putting the settings into a global variable is a temporary hack!
+    g_settings = cmk.ec.settings.settings(cmk.__version__,
+                                          pathlib.Path(cmk.paths.omd_root),
+                                          pathlib.Path(cmk.paths.default_config_dir),
+                                          sys.argv)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-
-        # first parse modifers
-        for o, a in opts:
-            if o in ['-v', '--verbose']:
-                opt_verbose += 1
-            elif o in ['-d', '--debug']:
-                opt_debug = True
-            elif o in ['-g', '--foreground']:
-                opt_foreground = True
-            elif o == '--syslog':
-                opt_syslog = True
-            elif o == '--syslog-fd':
-                opt_syslog_fd = int(a)
-            elif o == '--syslog-tcp':
-                opt_syslog_tcp = True
-            elif o == '--syslog-tcp-fd':
-                opt_syslog_tcp_fd = int(a)
-            elif o == '--snmptrap':
-                opt_snmptrap = True
-            elif o == '--snmptrap-fd':
-                opt_snmptrap_fd = int(a)
-            elif o == '--profile-status':
-                opt_profile_status = True
-            elif o == '--profile-event':
-                opt_profile_event = True
-
         cmk.log.open_log(sys.stderr)
-        cmk.log.set_verbosity(opt_verbose)
+        cmk.log.set_verbosity(g_settings.options.verbosity)
 
-        # now handle action options
-        for o, a in opts:
-            if o in ['-h', '--help']:
-                usage()
-                sys.exit(0)
-            elif o in ['-V', '--version']:
-                sys.stdout.write("mkeventd version %s\n" % cmk.__version__)
-                sys.exit(0)
-
-        if opt_snmptrap:
+        if g_settings.options.snmptrap_udp is not None:
             # Needed for receiving traps
             from pysnmp.entity import engine as snmp_engine
             from pysnmp.entity import config as snmp_config
@@ -5181,28 +5086,26 @@ if __name__ == "__main__":
             from pysnmp.smi.error import SmiError
             from pyasn1.error import ValueConstraintError
 
-        if not opt_foreground:
-            cmk.log.open_log(g_logfile_path)
+        g_settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
+        if not g_settings.options.foreground:
+            cmk.log.open_log(str(g_settings.paths.log_file.value))
 
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting" % cmk.__version__)
 
         load_configuration()
 
-        if os.path.exists(g_pid_file):
-            old_pid = int(file(g_pid_file).read())
+        pid_path = g_settings.paths.pid_file.value
+        if pid_path.exists():
+            with pid_path.open(encoding='utf-8') as f:
+                old_pid = int(f.read())
             if process_exists(old_pid):
-                bail_out("Old PID file %s still existing and mkeventd still running with PID %d." %
-                         (g_pid_file, old_pid))
-            os.remove(g_pid_file)
-            logger.info("Removed orphaned PID file %s (process %d not running anymore)." % (g_pid_file, old_pid))
+                bail_out("Old PID file %s still existing and mkeventd still running with PID %d." % (pid_path, old_pid))
+            pid_path.unlink()
+            logger.info("Removed orphaned PID file %s (process %d not running anymore)." % (pid_path, old_pid))
 
         # Make sure paths exist
-        make_parentdirs(g_socket_path)
-        if g_eventsocket_path:
-            make_parentdirs(g_eventsocket_path)
         make_parentdirs(g_pipe_path)
-        make_parentdirs(g_logfile_path)
         make_parentdirs(g_state_dir + "/state")
 
         # First do all things that might fail, before daemonizing
@@ -5219,12 +5122,12 @@ if __name__ == "__main__":
 
         g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 
-        if not opt_foreground:
-            make_parentdirs(g_pid_file)
+        if not g_settings.options.foreground:
+            pid_path.parent.mkdir(parents=True, exist_ok=True)
             cmk.daemon.daemonize()
             logger.info("Daemonized with PID %d." % os.getpid())
 
-        cmk.daemon.lock_with_pid_file(g_pid_file)
+        cmk.daemon.lock_with_pid_file(str(pid_path))
 
         # Install signal hander
         signal.signal(signal.SIGHUP, signal_handler)
@@ -5253,17 +5156,19 @@ if __name__ == "__main__":
         g_event_status.save_status()
 
         logger.verbose("Cleaning up sockets")
-        os.remove(g_socket_path)
-        if g_eventsocket_path:
-            os.remove(g_eventsocket_path)
+        g_settings.paths.unix_socket.value.unlink()
+        g_settings.paths.event_socket.value.unlink()
 
         logger.verbose("Output hash stats")
         g_event_server.output_hash_stats()
 
         logger.verbose("Closing fds which might be still open")
-        for fd in [opt_syslog_fd, opt_syslog_tcp_fd, opt_snmptrap_fd]:
+        for fd in [g_settings.options.syslog_udp,
+                   g_settings.options.syslog_tcp,
+                   g_settings.options.snmptrap_udp]:
             try:
-                os.close(fd)
+                if isinstance(fd, cmk.ec.settings.FileDescriptor):
+                    os.close(fd.value)
             except Exception:
                 pass
 
@@ -5271,13 +5176,13 @@ if __name__ == "__main__":
         sys.exit(0)
 
     except Exception:
-        if opt_debug:
+        if g_settings.options.debug:
             raise
         bail_out(traceback.format_exc())
 
     finally:
-        if cmk.store.have_lock(g_pid_file):
+        if cmk.store.have_lock(str(pid_path)):
             try:
-                os.remove(g_pid_file)
+                pid_path.unlink()
             except OSError:
                 pass

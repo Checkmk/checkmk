@@ -67,8 +67,8 @@ def status_server(settings):
 
 
 @pytest.fixture(scope="function")
-def event_status(settings):
-    mkeventd.g_event_status = mkeventd.EventStatus(settings)
+def event_status():
+    mkeventd.g_event_status = mkeventd.EventStatus()
     return mkeventd.g_event_status
 
 

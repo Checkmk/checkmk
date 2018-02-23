@@ -77,8 +77,6 @@ logger = cmk.log.get_logger("mkeventd")
 
 # TODO(sp) Use cmk.ec.settings
 g_state_dir = os.path.join(cmk.paths.omd_root, "var/mkeventd")
-g_main_config_path = os.path.join(cmk.paths.default_config_dir, "mkeventd.mk")
-g_config_dir = os.path.join(cmk.paths.default_config_dir, "mkeventd.d")
 
 
 # Basic settings, can be changed with configuration file (at
@@ -4962,18 +4960,11 @@ def load_configuration():
     global g_config, g_last_config_reload
     g_config = cmk.event_console.default_config()
 
-    if not os.path.exists(g_main_config_path):
-        bail_out("Main configuration file %s missing." % g_main_config_path)
-
-    config_files = (
-        os.path.join(dirpath, filename)
-        for dirpath, _dirnames, filenames in os.walk(g_config_dir)
-        for filename in filenames
-        if filename.endswith(".mk")
-    )
-
-    for path in [g_main_config_path] + sorted(config_files):
-        with open(path) as f:
+    config_path = g_settings.paths.main_config_file.value
+    if not config_path.exists():
+        bail_out("Main configuration file %s missing." % config_path)
+    for path in [config_path] + sorted(g_settings.paths.config_dir.value.glob('**/*.mk')):
+        with open(str(path)) as f:
             exec(f, g_config)
 
     # If not set by command line, set the log level by configuration

@@ -1,0 +1,13 @@
+Title: Host- and service state filters were not set when adding a filtered view to a dashboard
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1519396855
+
+The filters for filtering a view by the state of hosts or services were not correctly set in
+view dashlets when the dashlets were created by adding it from a manually filtered existing
+view.

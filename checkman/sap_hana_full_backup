@@ -10,5 +10,8 @@ description:
  Moveover the check reports the duration of the backup and
  the how many days the last backup was executed.
 
+item:
+ The instance name.
+
 inventory:
  One service is created.

@@ -25,37 +25,45 @@
 # Boston, MA 02110-1301 USA.
 
 
-# TODO memory simple for items
+# TODO WATO group 'memory_simple' for items
 
 
 def parse_sap_hana_mem(info):
     pparsed = {}
     section = None
+    instance = ""
     for line in info:
         if line[0] in ["[[[resident]]]", "[[[database]]]"]:
             section = line[0][3:-3]
             continue
-        if section is not None:
-            instance = line[0].replace('"', '')
-            pparsed.setdefault(instance, {})
-            # all memory values in MB
-            if section == 'resident':
-                # used
-                data = float(line[1]) * 1024**2
-            elif section == 'database':
-                # used, max, resident_max
-                data = map(lambda x: float(x) * 1024**2, line[1:])
-            else:
-                continue
-            pparsed[instance].setdefault(section, data)
+
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance = line[0][3:-3]
+            continue
+
+        if section is None:
+            continue
+
+        line = [x.replace('"', '').strip() for x in line]
+        inst_data = pparsed.setdefault("%s %s" % (instance, line[0]), {})
+        # all memory values in MB
+        if section == 'resident':
+            # used
+            data = float(line[1]) * 1024**2
+        elif section == 'database':
+            # used, max, resident_max
+            data = map(lambda x: float(x) * 1024**2, line[1:])
+        else:
+            continue
+        inst_data.setdefault(section, data)
 
     parsed = {}
     for instance, attrs in pparsed.iteritems():
-        parsed.setdefault(instance, {})
-        db_attrs = attrs['database']
-        parsed[instance].setdefault('database', db_attrs[:2])
-        parsed[instance].setdefault('resident', [attrs['resident'], db_attrs[-1]])
-
+        inst_data = parsed.setdefault(instance, {})
+        resident_used = attrs['resident']
+        db_used, db_max, resident_max = attrs['database']
+        inst_data.setdefault('database', [db_used, db_max])
+        inst_data.setdefault('resident', [resident_used, resident_max])
     return parsed
 
 
@@ -97,7 +105,7 @@ check_info['sap_hana_mem'] = {
     'parse_function'        : parse_sap_hana_mem,
     'inventory_function'    : inventory_sap_hana_mem_resident,
     'check_function'        : check_sap_hana_mem_resident,
-    'service_description'   : 'SAP HANA Resident Memory',
+    'service_description'   : 'SAP HANA Resident Memory %s',
     'includes'              : ['memory.include'],
     #'group'                 : 'memory_simple',
     'has_perfdata'	        : True,
@@ -132,7 +140,7 @@ def check_sap_hana_mem_db(item, params, parsed):
 check_info['sap_hana_mem.database'] = {
     'inventory_function'    : inventory_sap_hana_mem_db,
     'check_function'        : check_sap_hana_mem_db,
-    'service_description'   : 'SAP HANA Used Memory',
+    'service_description'   : 'SAP HANA Used Memory %s',
     'includes'              : ['memory.include'],
     #'group'                 : 'memory_simple',
     'has_perfdata'	        : True,

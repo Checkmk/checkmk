@@ -7,6 +7,8 @@ import ast
 import pathlib2 as pathlib
 from testlib import web, ec, cmk_path, CMKEventConsole
 
+import cmk.ec.settings
+
 #
 # UNIT TESTS
 #

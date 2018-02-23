@@ -75,7 +75,22 @@ logger = cmk.log.get_logger("mkeventd")
 #   |  Global declarations and defaults settings                           |
 #   '----------------------------------------------------------------------'
 
-# TODO(sp) Use cmk.ec.settings
+# TODO(sp) Turn these helper functions into Paths fields where they belong.
+def history_path(settings):
+    return settings.paths.state_dir.value / 'history'
+
+def master_config_path(settings):
+    return settings.paths.state_dir.value / 'master_config'
+
+def slave_status_path(settings):
+    return settings.paths.state_dir.value / 'slave_status'
+
+def spool_path(settings):
+    return settings.paths.state_dir.value / 'spool'
+
+def status_path(settings):
+    return settings.paths.state_dir.value / 'status'
+
 g_state_dir = os.path.join(cmk.paths.omd_root, "var/mkeventd")
 
 
@@ -992,7 +1007,8 @@ def current_history_period():
 
 # Delete old log files
 def expire_logfiles(flush=False):
-    log_dir = g_state_dir + "/history"
+    # TODO(sp) Use pathlib facilities below
+    log_dir = str(history_path(g_settings))
     if not os.path.exists(log_dir):
         return  # No historic files to delete yet.
 
@@ -1040,7 +1056,8 @@ def flush_event_history_files():
 def get_event_history_from_file(query):
     filters, limit = query.filters, query.limit
     history_entries = []
-    log_dir = g_state_dir + "/history"
+    # TODO(sp) Use pathlib facilities below
+    log_dir = str(history_path(g_settings))
     if not os.path.exists(log_dir):
         return []
 
@@ -1737,7 +1754,8 @@ class EventServer(ECServerThread):
                                           (data[1][0]))
 
             # check whether or not spool files are available
-            spool_dir = g_state_dir + "/spool"
+            # TODO(sp) Use pathlib facilities below
+            spool_dir = str(spool_path(g_settings))
             if os.path.exists(spool_dir):
                 spool_files = [f for f in os.listdir(spool_dir) if f[0] != '.']
                 if spool_files:
@@ -3795,8 +3813,8 @@ class StatusServer(ECServerThread):
         g_event_status.save_status()
         if is_replication_slave():
             try:
-                os.remove(g_state_dir + "/master_config")
-                os.remove(g_state_dir + "/slave_status")
+                master_config_path(self.settings).unlink()
+                slave_status_path(self.settings).unlink()
                 load_slave_status()
             except Exception:
                 pass
@@ -4017,14 +4035,14 @@ class EventStatus(object):
     def save_status(self):
         now = time.time()
         status = self.pack_status()
-        path = g_state_dir + "/status"
-        # Belive it or not: cPickle is more than two times slower than repr()
-        with file(path + ".new", "w") as f:
+        path = status_path(g_settings)
+        path_new = path.parent / (path.name + '.new')
+        # Believe it or not: cPickle is more than two times slower than repr()
+        with path_new.open(mode='wb') as f:
             f.write(repr(status) + "\n")
-            fd = f.fileno()
             f.flush()
-            os.fsync(fd)
-        os.rename(path + ".new", path)
+            os.fsync(f.fileno())
+        path_new.rename(path)
         elapsed = time.time() - now
         self.logger.verbose("Saved event state to %s in %.3fms." % (path, elapsed * 1000))
 
@@ -4037,10 +4055,10 @@ class EventStatus(object):
         self.save_status()
 
     def load_status(self):
-        path = g_state_dir + "/status"
-        if os.path.exists(path):
+        path = status_path(g_settings)
+        if path.exists():
             try:
-                status = ast.literal_eval(file(path).read())
+                status = ast.literal_eval(path.read_bytes())
                 self._next_event_id = status["next_event_id"]
                 self._events = status["events"]
                 self._rule_stats = status["rule_stats"]
@@ -4860,19 +4878,20 @@ def replication_update_state(new_state):
 
 
 def save_master_config(new_state):
-    path = g_state_dir + "/master_config"
-    file(path + ".new", "w").write(repr({
+    path = master_config_path(g_settings)
+    path_new = path.parent / (path.name + '.new')
+    path_new.write_bytes(repr({
         "rules": new_state["rules"],
         "rule_packs": new_state["rule_packs"],
         "actions": new_state["actions"],
-    }) + "\n")
-    os.rename(path + ".new", path)
+        }) + "\n")
+    path_new.rename(path)
 
 
 def load_master_config():
-    path = g_state_dir + "/master_config"
+    path = master_config_path(g_settings)
     try:
-        config = ast.literal_eval(file(path).read())
+        config = ast.literal_eval(path.read_bytes())
         g_config["rules"] = config["rules"]
         g_config["rule_packs"] = config.get("rule_packs", [])
         g_config["actions"] = config["actions"]
@@ -4912,8 +4931,7 @@ def get_state_from_master():
 
 
 def save_slave_status():
-    path = g_state_dir + "/slave_status"
-    file(path, "w").write(repr(g_slave_status) + "\n")
+    slave_status_path(g_settings).write_bytes(repr(g_slave_status) + "\n")
 
 
 # Load the current replication slave status. If we are in
@@ -4921,10 +4939,10 @@ def save_slave_status():
 # if not, then this variable will be missing and also the file
 def load_slave_status():
     global g_slave_status
-    path = g_state_dir + "/slave_status"
+    path = slave_status_path(g_settings)
     if is_replication_slave():
         try:
-            g_slave_status = ast.literal_eval(file(path).read())
+            g_slave_status = ast.literal_eval(path.read_bytes())
         except Exception:
             g_slave_status = {
                 "last_sync": 0,  # Time of last successful sync
@@ -4936,8 +4954,8 @@ def load_slave_status():
 
     # Remove slave status if we are (no longer) a slave
     else:
-        if os.path.exists(path):
-            os.remove(path)
+        if path.exists():
+            path.unlink()
         try:
             del g_slave_status
         except Exception:
@@ -5091,8 +5109,7 @@ if __name__ == "__main__":
 
         pid_path = g_settings.paths.pid_file.value
         if pid_path.exists():
-            with pid_path.open(encoding='utf-8') as f:
-                old_pid = int(f.read())
+            old_pid = int(pid_path.read_text(encoding='utf-8'))
             if process_exists(old_pid):
                 bail_out("Old PID file %s still existing and mkeventd still running with PID %d." % (pid_path, old_pid))
             pid_path.unlink()
@@ -5100,7 +5117,7 @@ if __name__ == "__main__":
 
         # Make sure paths exist
         g_settings.paths.event_pipe.value.parent.mkdir(parents=True, exist_ok=True)
-        make_parentdirs(g_state_dir + "/state")
+        g_settings.paths.state_dir.value.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
         g_perfcounters = Perfcounters()

@@ -4,6 +4,7 @@
 import pytest
 import time
 import ast
+import pathlib2 as pathlib
 from testlib import web, ec, cmk_path, CMKEventConsole
 
 #
@@ -43,19 +44,26 @@ class FakeStatusSocket(object):
 
 
 @pytest.fixture(scope="function")
+def settings():
+    mkeventd.g_settings = cmk.ec.settings.settings(
+        '1.2.3i45', pathlib.Path('/omd/sites/foo'), pathlib.Path('/omd/sites/foo/etc/check_mk'), [])
+    return mkeventd.g_settings
+
+
+@pytest.fixture(scope="function")
 def config():
     mkeventd.load_configuration()
 
 
 @pytest.fixture(scope="function")
-def status_server():
-    mkeventd.g_status_server = mkeventd.StatusServer()
+def status_server(settings):
+    mkeventd.g_status_server = mkeventd.StatusServer(settings)
     return mkeventd.g_status_server
 
 
 @pytest.fixture(scope="function")
-def event_status():
-    mkeventd.g_event_status = mkeventd.EventStatus()
+def event_status(settings):
+    mkeventd.g_event_status = mkeventd.EventStatus(settings)
     return mkeventd.g_event_status
 
 

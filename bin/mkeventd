@@ -476,8 +476,8 @@ class MKClientError(Exception):
 #   | Generic SNMP-Trap processing functions                               |
 #   '----------------------------------------------------------------------'
 
-def initialize_snmptrap_handling():
-    if g_settings.options.snmptrap_udp is None:
+def initialize_snmptrap_handling(settings):
+    if settings.options.snmptrap_udp is None:
         return
 
     initialize_snmptrap_engine()
@@ -563,7 +563,7 @@ g_timeperiods = None
 g_last_timeperiod_update = 0
 
 
-def update_timeperiods():
+def update_timeperiods(settings):
     global g_timeperiods, g_last_timeperiod_update
 
     if g_timeperiods is not None and int(time.time()) / 60 == g_last_timeperiod_update:
@@ -577,12 +577,12 @@ def update_timeperiods():
         g_last_timeperiod_update = int(time.time()) / 60
     except Exception as e:
         logger.exception("Cannot update timeperiod information: %s" % e)
-        if g_settings.options.debug:
+        if settings.options.debug:
             raise
 
 
-def check_timeperiod(tpname):
-    update_timeperiods()
+def check_timeperiod(settings, tpname):
+    update_timeperiods(settings)
     if not g_timeperiods:
         logger.warning("No timeperiod information. Assuming %s active" % tpname)
         return True
@@ -1385,7 +1385,7 @@ class EventServer(ECServerThread):
         ]
 
     def create_pipe(self):
-        path = g_settings.paths.event_pipe.value
+        path = self.settings.paths.event_pipe.value
         try:
             if not path.is_fifo():
                 path.unlink()
@@ -1464,7 +1464,7 @@ class EventServer(ECServerThread):
         # select() will trigger even if there is no data. A good article
         # about this is here:
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
-        return os.open(str(g_settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
+        return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
     def load_mibs(self):
         try:
@@ -1755,7 +1755,7 @@ class EventServer(ECServerThread):
 
             # check whether or not spool files are available
             # TODO(sp) Use pathlib facilities below
-            spool_dir = str(spool_path(g_settings))
+            spool_dir = str(spool_path(self.settings))
             if os.path.exists(spool_dir):
                 spool_files = [f for f in os.listdir(spool_dir) if f[0] != '.']
                 if spool_files:
@@ -2464,7 +2464,7 @@ class EventServer(ECServerThread):
         return True
 
     def event_rule_matches_timeperiod(self, rule, event):
-        if "match_timeperiod" in rule and not check_timeperiod(rule["match_timeperiod"]):
+        if "match_timeperiod" in rule and not check_timeperiod(self.settings, rule["match_timeperiod"]):
             if g_config["debug_rules"]:
                 self.logger.info("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
             return False
@@ -3787,7 +3787,7 @@ class StatusServer(ECServerThread):
         # lock_eventstatus too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
         # process_raw_lines("%s" % ";".join(arguments))
-        with file(str(g_settings.paths.event_pipe.value), "w") as pipe:
+        with file(str(self.settings.paths.event_pipe.value), "w") as pipe:
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
     def handle_command_changestate(self, arguments):
@@ -3799,7 +3799,7 @@ class StatusServer(ECServerThread):
         log_event_history(event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
-        reload_configuration()
+        reload_configuration(self.settings)
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3815,7 +3815,7 @@ class StatusServer(ECServerThread):
             try:
                 master_config_path(self.settings).unlink()
                 slave_status_path(self.settings).unlink()
-                load_slave_status()
+                load_slave_status(self.settings)
             except Exception:
                 pass
         self.logger.info("Flushed current status and historic events.")
@@ -3854,7 +3854,7 @@ class StatusServer(ECServerThread):
             raise MKClientError("Invalid target mode '%s': allowed are only 'sync' and 'takeover'" %
                                 new_mode)
         g_slave_status["mode"] = new_mode
-        save_slave_status()
+        save_slave_status(self.settings)
         self.logger.info("Switched replication mode to '%s' by external command." % new_mode)
 
     def handle_replicate(self, argument, client_ip):
@@ -3920,12 +3920,12 @@ def run_eventd(settings):
 
             # Beware: replication might be turned on during this loop!
             if is_replication_slave() and now > next_replication:
-                replication_pull()
+                replication_pull(settings)
                 next_replication = now + g_config["replication"]["interval"]
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                reload_configuration()
+                reload_configuration(settings)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 terminate()
@@ -3955,8 +3955,9 @@ def run_eventd(settings):
 
 class EventStatus(object):
 
-    def __init__(self):
+    def __init__(self, settings):
         self.logger = logger.getChild("EventStatus")
+        self.settings = settings
         self.flush()
 
     def flush(self):
@@ -4035,7 +4036,7 @@ class EventStatus(object):
     def save_status(self):
         now = time.time()
         status = self.pack_status()
-        path = status_path(g_settings)
+        path = status_path(self.settings)
         path_new = path.parent / (path.name + '.new')
         # Believe it or not: cPickle is more than two times slower than repr()
         with path_new.open(mode='wb') as f:
@@ -4055,7 +4056,7 @@ class EventStatus(object):
         self.save_status()
 
     def load_status(self):
-        path = status_path(g_settings)
+        path = status_path(self.settings)
         if path.exists():
             try:
                 status = ast.literal_eval(path.read_bytes())
@@ -4795,7 +4796,7 @@ def replication_send(last_update):
         return response
 
 
-def replication_pull():
+def replication_pull(settings):
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -4818,7 +4819,7 @@ def replication_pull():
 
                 try:
                     new_state = get_state_from_master()
-                    replication_update_state(new_state)
+                    replication_update_state(settings, new_state)
                     if repl_settings.get("logging"):
                         logger.info("Successfully synchronized with master")
                     g_slave_status["last_sync"] = now
@@ -4859,17 +4860,17 @@ def replication_pull():
                                             offline)
                                 g_slave_status["mode"] = "takeover"
 
-                save_slave_status()
+                save_slave_status(settings)
 
                 # Compute statistics of the average time needed for a sync
                 g_perfcounters.count_time("sync", time.time() - now)
 
 
-def replication_update_state(new_state):
+def replication_update_state(settings, new_state):
 
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
-        save_master_config(new_state)
+        save_master_config(settings, new_state)
         g_event_server.compile_rules(new_state["rules"], new_state.get("rule_packs", []))
         g_config["actions"] = new_state["actions"]
 
@@ -4877,8 +4878,8 @@ def replication_update_state(new_state):
     g_event_status.unpack_status(new_state["status"])
 
 
-def save_master_config(new_state):
-    path = master_config_path(g_settings)
+def save_master_config(settings, new_state):
+    path = master_config_path(settings)
     path_new = path.parent / (path.name + '.new')
     path_new.write_bytes(repr({
         "rules": new_state["rules"],
@@ -4888,8 +4889,8 @@ def save_master_config(new_state):
     path_new.rename(path)
 
 
-def load_master_config():
-    path = master_config_path(g_settings)
+def load_master_config(settings):
+    path = master_config_path(settings)
     try:
         config = ast.literal_eval(path.read_bytes())
         g_config["rules"] = config["rules"]
@@ -4930,16 +4931,16 @@ def get_state_from_master():
         raise Exception("Cannot connect to event daemon: %s" % e)
 
 
-def save_slave_status():
-    slave_status_path(g_settings).write_bytes(repr(g_slave_status) + "\n")
+def save_slave_status(settings):
+    slave_status_path(settings).write_bytes(repr(g_slave_status) + "\n")
 
 
 # Load the current replication slave status. If we are in
 # replication mode then after this call g_slave_status will be set.
 # if not, then this variable will be missing and also the file
-def load_slave_status():
+def load_slave_status(settings):
     global g_slave_status
-    path = slave_status_path(g_settings)
+    path = slave_status_path(settings)
     if is_replication_slave():
         try:
             g_slave_status = ast.literal_eval(path.read_bytes())
@@ -4950,7 +4951,7 @@ def load_slave_status():
                 "mode": "sync",
                 "average_sync_time": None,
             }
-            save_slave_status()
+            save_slave_status(settings)
 
     # Remove slave status if we are (no longer) a slave
     else:
@@ -4974,19 +4975,19 @@ def load_slave_status():
 #   |  Loading of the configuration files                                  |
 #   '----------------------------------------------------------------------'
 
-def load_configuration():
+def load_configuration(settings):
     global g_config, g_last_config_reload
     g_config = cmk.event_console.default_config()
 
-    config_path = g_settings.paths.main_config_file.value
+    config_path = settings.paths.main_config_file.value
     if not config_path.exists():
         bail_out("Main configuration file %s missing." % config_path)
-    for path in [config_path] + sorted(g_settings.paths.config_dir.value.glob('**/*.mk')):
+    for path in [config_path] + sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path)) as f:
             exec(f, g_config)
 
     # If not set by command line, set the log level by configuration
-    if g_settings.options.verbosity == 0:
+    if settings.options.verbosity == 0:
         # Transform old normal/verbose config
         if g_config["log_level"] in (0, 1):
             log_level = cmk.log.INFO if g_config["log_level"] == 0 else cmk.log.VERBOSE
@@ -5014,11 +5015,11 @@ def load_configuration():
 
     # Are we a replication slave? Parts of the configuration
     # will be overridden by values from the master.
-    load_slave_status()
+    load_slave_status(settings)
     if is_replication_slave():
         logger.info("Replication: slave configuration, current mode: %s" %
                     g_slave_status["mode"])
-    load_master_config()
+    load_master_config(settings)
 
     # Convert old contact_groups config
     for rule_pack in g_config["rule_packs"]:
@@ -5038,10 +5039,10 @@ def load_configuration():
     g_last_config_reload = time.time()
 
 
-def reload_configuration():
+def reload_configuration(settings):
     with lock_configuration:
-        load_configuration()
-        initialize_snmptrap_handling()
+        load_configuration(settings)
+        initialize_snmptrap_handling(settings)
         g_event_server.reload_configuration()
 
     g_status_server.reload_configuration()
@@ -5105,7 +5106,7 @@ if __name__ == "__main__":
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting" % cmk.__version__)
 
-        load_configuration()
+        load_configuration(g_settings)
 
         pid_path = g_settings.paths.pid_file.value
         if pid_path.exists():
@@ -5121,7 +5122,7 @@ if __name__ == "__main__":
 
         # First do all things that might fail, before daemonizing
         g_perfcounters = Perfcounters()
-        g_event_status = EventStatus()
+        g_event_status = EventStatus(g_settings)
         g_status_server = StatusServer(g_settings)
         g_status_server.open_sockets()
         g_event_server = EventServer(g_settings)
@@ -5129,7 +5130,7 @@ if __name__ == "__main__":
 
         g_event_status.load_status()
 
-        initialize_snmptrap_handling()
+        initialize_snmptrap_handling(g_settings)
 
         g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 

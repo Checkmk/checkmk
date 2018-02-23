@@ -27,12 +27,17 @@
 
 def parse_sap_hana_filesystem(info):
     parsed = []
+    instance = ""
     for line in info:
-        instance, disk_type, used, size = line
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance = line[0][3:-3]
+            continue
+        name, disk_type, used, size = [x.replace('"', '').strip() for x in line]
         used_mb = float(used)
         size_mb = float(size)
         avail_mb = size_mb - used_mb
-        parsed.append(("%s %s" % (instance.replace('"', ''), disk_type), size_mb, avail_mb, 0))
+        itemname = ("%s %s %s" % (instance, name, disk_type)).strip()
+        parsed.append((itemname, size_mb, avail_mb, 0))
     return parsed
 
 
@@ -40,10 +45,11 @@ def inventory_sap_hana_filesystem(parsed):
     return [(line[0], {}) for line in parsed]
 
 
-check_info['sap_hana_filesystem'] = {
-    'parse_function'        : parse_sap_hana_filesystem,
-    'inventory_function'    : inventory_sap_hana_filesystem,
-    'check_function'        : df_check_filesystem_list,
-    'service_description'   : 'SAP HANA Filesystem %s',
-    'includes'              : ['df.include'],
+check_info["sap_hana_filesystem"] = {
+    "parse_function"        : parse_sap_hana_filesystem,
+    "inventory_function"    : inventory_sap_hana_filesystem,
+    "check_function"        : df_check_filesystem_list,
+    "service_description"   : "SAP HANA Filesystem %s",
+    "includes"              : ["df.include", "size_trend.include"],
+    "has_perfdata"          : True,
 }

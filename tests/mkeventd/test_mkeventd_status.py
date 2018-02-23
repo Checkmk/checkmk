@@ -48,7 +48,10 @@ class FakeStatusSocket(object):
 @pytest.fixture(scope="function")
 def settings():
     mkeventd.g_settings = cmk.ec.settings.settings(
-        '1.2.3i45', pathlib.Path('/omd/sites/foo'), pathlib.Path('/omd/sites/foo/etc/check_mk'), [])
+        '1.2.3i45',
+        pathlib.Path('/omd/sites/foo'),
+        pathlib.Path('/omd/sites/foo/etc/check_mk'),
+        ['mkeventd'])
     return mkeventd.g_settings
 
 

@@ -1,0 +1,15 @@
+Title: Restore support for 32 bit Windows
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519390179
+Class: fix
+
+Support for at least older 32 bit Windows versions was accidentally
+dropped in 1.5.0i1. As a result, an error about missing procedure in
+ntdll.dll was shown. Now the support is restored and the Windows agent
+should work correctly also on all 32 bit systems.
+
+

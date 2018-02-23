@@ -76,7 +76,6 @@ logger = cmk.log.get_logger("mkeventd")
 #   '----------------------------------------------------------------------'
 
 # TODO(sp) Use cmk.ec.settings
-g_pipe_path = os.path.join(cmk.paths.omd_root, "tmp/run/mkeventd/events")
 g_state_dir = os.path.join(cmk.paths.omd_root, "var/mkeventd")
 g_main_config_path = os.path.join(cmk.paths.default_config_dir, "mkeventd.mk")
 g_config_dir = os.path.join(cmk.paths.default_config_dir, "mkeventd.d")
@@ -1371,19 +1370,20 @@ class EventServer(ECServerThread):
         ]
 
     def create_pipe(self):
+        path = g_settings.paths.event_pipe.value
         try:
-            if not stat.S_ISFIFO(os.stat(g_pipe_path).st_mode):
-                os.remove(g_pipe_path)
+            if not path.is_fifo():
+                path.unlink()
         except Exception:
             pass
 
-        if not os.path.exists(g_pipe_path):
-            os.mkfifo(g_pipe_path)
+        if not path.exists():
+            os.mkfifo(str(path))
 
         # We want to be able to receive events from all users on the local system
-        os.chmod(g_pipe_path, 0o666)  # nosec
+        path.chmod(0o666)  # nosec
 
-        self.logger.info("Created FIFO '%s' for receiving events" % g_pipe_path)
+        self.logger.info("Created FIFO '%s' for receiving events" % path)
 
     def open_syslog(self):
         endpoint = self.settings.options.syslog_udp
@@ -1449,7 +1449,7 @@ class EventServer(ECServerThread):
         # select() will trigger even if there is no data. A good article
         # about this is here:
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
-        return os.open(g_pipe_path, os.O_RDWR | os.O_NONBLOCK)
+        return os.open(str(g_settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
     def load_mibs(self):
         try:
@@ -3771,7 +3771,7 @@ class StatusServer(ECServerThread):
         # lock_eventstatus too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
         # process_raw_lines("%s" % ";".join(arguments))
-        with file(g_pipe_path, "w") as pipe:
+        with file(str(g_settings.paths.event_pipe.value), "w") as pipe:
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
     def handle_command_changestate(self, arguments):
@@ -5108,7 +5108,7 @@ if __name__ == "__main__":
             logger.info("Removed orphaned PID file %s (process %d not running anymore)." % (pid_path, old_pid))
 
         # Make sure paths exist
-        make_parentdirs(g_pipe_path)
+        g_settings.paths.event_pipe.value.parent.mkdir(parents=True, exist_ok=True)
         make_parentdirs(g_state_dir + "/state")
 
         # First do all things that might fail, before daemonizing
@@ -5151,7 +5151,7 @@ if __name__ == "__main__":
         # to write into the pipe.
         logger.verbose("Cleaning up event pipe")
         pipe = g_event_server.open_pipe()  # Open it
-        os.remove(g_pipe_path)             # Remove pipe
+        g_settings.paths.event_pipe.value.unlink() # Remove pipe
         drain_pipe(pipe)                   # Drain any data
         os.close(pipe)                     # Close pipe
 

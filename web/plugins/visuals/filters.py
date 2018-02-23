@@ -485,21 +485,34 @@ declare_filter(210, FilterQueryDropdown("check_command", _("Service check comman
 class FilterServiceState(Filter):
     def __init__(self, name, title, prefix):
         Filter.__init__(self, name, title,
-                "service", [ prefix + "st0", prefix + "st1", prefix + "st2", prefix + "st3", prefix + "stp" ], [])
+                "service", [ prefix + "_filled", prefix + "st0", prefix + "st1", prefix + "st2", prefix + "st3", prefix + "stp" ], [])
         self.prefix = prefix
 
     def display(self):
         html.begin_checkbox_group()
+        html.hidden_field(self.prefix + "filled", "1", add_var=True)
         for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")), \
                           (self.prefix + "st2", _("CRIT")), (self.prefix + "st3", _("UNKNOWN")),
                           (self.prefix + "stp", _("PEND"))]:
-            html.checkbox(var, True, label=text)
+            html.checkbox(var, True if not self._filter_used() else False, label=text)
         html.end_checkbox_group()
+
+    def _filter_used(self):
+        return html.has_var(self.prefix + "_filled") or html.has_var_prefix(self.prefix + "st")
 
     def filter(self, infoname):
         headers = []
         for i in [0,1,2,3]:
-            if html.get_checkbox(self.prefix + "st%d" % i) == False:
+            check_result = html.get_checkbox(self.prefix + "st%d" % i)
+
+            # When a view is displayed e.g. as a dashlet the unchecked checkboxes are not set in
+            # the HTML variables while the form was not interactively submitted. In this case the
+            # check_result is None intead of False. Since any of the filter variables is set, we
+            # do treat this as if the form was submitted and the checkbox was unchecked.
+            if self._filter_used() and check_result is None:
+                check_result = False
+
+            if check_result == False:
                 if self.prefix == "hd":
                     column = "service_last_hard_state"
                 else:
@@ -507,8 +520,10 @@ class FilterServiceState(Filter):
                 headers.append("Filter: %s = %d\n"
                                "Filter: service_has_been_checked = 1\n"
                                "And: 2\nNegate:\n" % (column, i))
+
         if html.get_checkbox(self.prefix + "stp") == False:
             headers.append("Filter: service_has_been_checked = 1\n")
+
         if len(headers) == 5: # none allowed = all allowed (makes URL building easier)
             return ""
         else:
@@ -520,24 +535,39 @@ declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"),
 class FilterHostState(Filter):
     def __init__(self):
         Filter.__init__(self, "hoststate", _("Host states"),
-                "host", [ "hst0", "hst1", "hst2", "hstp" ], [])
+                "host", [ "hoststate_filled", "hst0", "hst1", "hst2", "hstp" ], [])
 
     def display(self):
         html.begin_checkbox_group()
+        html.hidden_field("hoststate_filled", "1", add_var=True)
         for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")),
                           ("hst2", _("UNREACH")), ("hstp", _("PENDING"))]:
-            html.checkbox(var, True, label=text)
+            html.checkbox(var, True if not self._filter_used() else False, label=text)
         html.end_checkbox_group()
+
+    def _filter_used(self):
+        return html.has_var("hoststate_filled") or html.has_var_prefix("hst")
 
     def filter(self, infoname):
         headers = []
         for i in [0,1,2]:
-            if html.get_checkbox("hst%d" % i) == False:
+            check_result = html.get_checkbox("hst%d" % i)
+
+            # When a view is displayed e.g. as a dashlet the unchecked checkboxes are not set in
+            # the HTML variables while the form was not interactively submitted. In this case the
+            # check_result is None intead of False. Since any of the filter variables is set, we
+            # do treat this as if the form was submitted and the checkbox was unchecked.
+            if self._filter_used() and check_result is None:
+                check_result = False
+
+            if check_result == False:
                 headers.append("Filter: host_state = %d\n"
                                "Filter: host_has_been_checked = 1\n"
                                "And: 2\nNegate:\n" % i)
+
         if html.get_checkbox("hstp") == False:
             headers.append("Filter: host_has_been_checked = 1\n")
+
         if len(headers) == 4: # none allowed = all allowed (makes URL building easier)
             return ""
         else:

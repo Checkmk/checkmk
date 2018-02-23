@@ -265,9 +265,10 @@ class ECLock(object):
 
 
 class ECServerThread(threading.Thread):
-    def __init__(self, name, profiling_enabled):
+    def __init__(self, name, settings, profiling_enabled):
         super(ECServerThread, self).__init__(name=name)
-        self.profiling_enabled = profiling_enabled
+        self.settings = settings
+        self._profiling_enabled = profiling_enabled
         self._terminate_event = threading.Event()
         self.logger = logger.getChild(name)
 
@@ -276,12 +277,12 @@ class ECServerThread(threading.Thread):
 
         while not self._shal_terminate():
             try:
-                with cmk.profile.Profile(enabled=self.profiling_enabled,
+                with cmk.profile.Profile(enabled=self._profiling_enabled,
                                          profile_file=os.path.join(g_state_dir, "%s.profile" % self.name)):
                     self.serve()
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
-                if g_settings.options.debug:
+                if self._settings.options.debug:
                     raise
                 time.sleep(1)
 
@@ -1270,9 +1271,10 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self):
+    def __init__(self, settings):
         super(EventServer, self).__init__(name="EventServer",
-                                          profiling_enabled=g_settings.options.profile_event)
+                                          settings=settings,
+                                          profiling_enabled=settings.options.profile_event)
         self._syslog = None
         self._syslog_tcp = None
         self._snmptrap = None
@@ -1384,7 +1386,7 @@ class EventServer(ECServerThread):
         self.logger.info("Created FIFO '%s' for receiving events" % g_pipe_path)
 
     def open_syslog(self):
-        endpoint = g_settings.options.syslog_udp
+        endpoint = self.settings.options.syslog_udp
         try:
             if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
                 self._syslog = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
@@ -1399,7 +1401,7 @@ class EventServer(ECServerThread):
             raise Exception("Cannot start builtin syslog server: %s" % e)
 
     def open_syslog_tcp(self):
-        endpoint = g_settings.options.syslog_tcp
+        endpoint = self.settings.options.syslog_tcp
         try:
             if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
                 self._syslog_tcp = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_STREAM)
@@ -1416,7 +1418,7 @@ class EventServer(ECServerThread):
             raise Exception("Cannot start builtin syslog-tcp server: %s" % e)
 
     def open_snmptrap(self):
-        endpoint = g_settings.options.snmptrap_udp
+        endpoint = self.settings.options.snmptrap_udp
         try:
             if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
                 self._snmptrap = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
@@ -1431,7 +1433,7 @@ class EventServer(ECServerThread):
             raise Exception("Cannot start builtin snmptrap server: %s" % e)
 
     def open_eventsocket(self):
-        path = g_settings.paths.event_socket.value
+        path = self.settings.paths.event_socket.value
         if path.exists():
             path.unlink()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1454,7 +1456,7 @@ class EventServer(ECServerThread):
             builder = MibBuilder()  # manages python MIB modules
 
             # load MIBs from our compiled MIB and default MIB paths
-            builder.setMibSources(*[DirMibSource(str(g_settings.paths.compiled_mibs_dir.value))] + list(builder.getMibSources()))
+            builder.setMibSources(*[DirMibSource(str(self.settings.paths.compiled_mibs_dir.value))] + list(builder.getMibSources()))
 
             # Indicate we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = True
@@ -1469,7 +1471,7 @@ class EventServer(ECServerThread):
             # This object maintains various indices built from MIBs data
             self._mib_resolver = MibViewController(builder)
         except SmiError as e:
-            if g_settings.options.debug:
+            if self.settings.options.debug:
                 raise
             self.logger.info("Exception while loading MIB modules. Proceeding without modules!")
             self.logger.exception("Exception: %s" % e)
@@ -1758,7 +1760,7 @@ class EventServer(ECServerThread):
         # In replication slave mode (when not took over), ignore all events
         if not is_replication_slave() or g_slave_status["mode"] != "sync":
             handler_func(data)
-        elif g_settings.options.debug:
+        elif self.settings.options.debug:
             self.logger.info("Replication: we are in slave mode, ignoring event")
         elapsed = time.time() - before
         g_perfcounters.count_time("processing", elapsed)
@@ -1850,7 +1852,7 @@ class EventServer(ECServerThread):
                         elapsed_secs = now - last_token
                         new_tokens = int(elapsed_secs / secs_per_token)
                         if new_tokens:
-                            if g_settings.options.debug:
+                            if self.settings.options.debug:
                                 self.logger.info("Rule %s/%s, event %d: got %d new tokens" %
                                                  (rule["pack"], rule["id"], event["id"], new_tokens))
                             event["count"] = max(0, event["count"] - new_tokens)
@@ -2111,7 +2113,7 @@ class EventServer(ECServerThread):
                                         rule['state'][1][key] = value
 
                     except Exception as e:
-                        if g_settings.options.debug:
+                        if self.settings.options.debug:
                             raise
                         rule["disabled"] = True
                         count_disabled += 1
@@ -2937,7 +2939,7 @@ class EventServer(ECServerThread):
                 event["pid"] and ("[%s]" % event["pid"]) or "",
                 event["text"]))
         except Exception:
-            if g_settings.options.debug:
+            if self.settings.options.debug:
                 raise
             # Better silently ignore errors. We could have run out of
             # diskspace and make things worse by logging that we could
@@ -3521,9 +3523,10 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self):
+    def __init__(self, settings):
         super(StatusServer, self).__init__(name="StatusServer",
-                                           profiling_enabled=g_settings.options.profile_status)
+                                           settings=settings,
+                                           profiling_enabled=settings.options.profile_status)
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
@@ -3541,7 +3544,7 @@ class StatusServer(ECServerThread):
         self.open_tcp_socket()
 
     def open_unix_socket(self):
-        path = g_settings.paths.unix_socket.value
+        path = self.settings.paths.unix_socket.value
         if path.exists():
             path.unlink()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -3567,7 +3570,7 @@ class StatusServer(ECServerThread):
                 self._tcp_socket.listen(g_config['socket_queue_len'])
                 self.logger.info("Going to listen for status queries on TCP port %d" % self._tcp_port)
             except Exception as e:
-                if g_settings.options.debug:
+                if self.settings.options.debug:
                     raise
                 self.logger.exception("Cannot listen on TCP socket port %d: %s" %
                                       (self._tcp_port, e))
@@ -3627,7 +3630,7 @@ class StatusServer(ECServerThread):
                     g_perfcounters.count("connects")
                     if addr_info:
                         allow_commands = self._tcp_allow_commands
-                        if g_settings.options.debug:
+                        if self.settings.options.debug:
                             self.logger.info("Handle status connection from %s:%d" % addr_info)
                         if self._tcp_access_list is not None and addr_info[0] not in \
                            self._tcp_access_list:
@@ -3784,7 +3787,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
-        cmk.log.open_log(str(g_settings.paths.log_file.value))
+        cmk.log.open_log(str(self.settings.paths.log_file.value))
         self.logger.info("Opened new logfile")
 
     # Erase our current state and history!
@@ -3842,7 +3845,7 @@ class StatusServer(ECServerThread):
         # Last time our slave got a config update
         try:
             last_update = int(argument)
-            if g_settings.options.debug:
+            if self.settings.options.debug:
                 self.logger.info("Replication: sync request from %s, last update %d seconds ago" % (
                     client_ip, time.time() - last_update))
 
@@ -3863,7 +3866,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd():
+def run_eventd(settings):
     g_status_server.start()
     g_event_server.start()
     now = time.time()
@@ -3912,7 +3915,7 @@ def run_eventd():
                 terminate()
         except Exception as e:
             logger.exception("Exception in main thread:\n%s" % e)
-            if g_settings.options.debug:
+            if settings.options.debug:
                 raise
             time.sleep(1)
 
@@ -5111,9 +5114,9 @@ if __name__ == "__main__":
         # First do all things that might fail, before daemonizing
         g_perfcounters = Perfcounters()
         g_event_status = EventStatus()
-        g_status_server = StatusServer()
+        g_status_server = StatusServer(g_settings)
         g_status_server.open_sockets()
-        g_event_server = EventServer()
+        g_event_server = EventServer(g_settings)
         g_event_server.open_sockets()
 
         g_event_status.load_status()
@@ -5136,7 +5139,7 @@ if __name__ == "__main__":
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd()
+        run_eventd(g_settings)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

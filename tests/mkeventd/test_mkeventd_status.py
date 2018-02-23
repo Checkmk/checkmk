@@ -8,6 +8,7 @@ import pathlib2 as pathlib
 from testlib import web, ec, cmk_path, CMKEventConsole
 
 import cmk.ec.settings
+import cmk.paths
 
 #
 # UNIT TESTS
@@ -49,15 +50,15 @@ class FakeStatusSocket(object):
 def settings():
     mkeventd.g_settings = cmk.ec.settings.settings(
         '1.2.3i45',
-        pathlib.Path('/omd/sites/foo'),
-        pathlib.Path('/omd/sites/foo/etc/check_mk'),
+        pathlib.Path(cmk.paths.omd_root),
+        pathlib.Path(cmk.paths.default_config_dir)
         ['mkeventd'])
     return mkeventd.g_settings
 
 
 @pytest.fixture(scope="function")
-def config():
-    mkeventd.load_configuration()
+def config(settings):
+    mkeventd.load_configuration(settings)
 
 
 @pytest.fixture(scope="function")
@@ -67,8 +68,8 @@ def status_server(settings):
 
 
 @pytest.fixture(scope="function")
-def event_status():
-    mkeventd.g_event_status = mkeventd.EventStatus()
+def event_status(settings):
+    mkeventd.g_event_status = mkeventd.EventStatus(settings)
     return mkeventd.g_event_status
 
 

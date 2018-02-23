@@ -27,6 +27,10 @@
 
 from __future__ import print_function
 
+# For some background about various design decisions below, see the concise
+# but excellent article "Parsing Command Line Arguments" in the FPComplete blog
+# at https://www.fpcomplete.com/blog/2017/12/parsing-command-line-arguments.
+
 # NOTE: pylint/astroid doesn't fully understand typing annotations and the
 # typing module yet, so we may have to suppress some things, see e.g. the
 # issues https://github.com/PyCQA/pylint/issues/1063 for unused-import and

@@ -1,0 +1,11 @@
+Title: Availability: Fixed missing warning about reached logrow limit for BI aggregations
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1519387491
+
+

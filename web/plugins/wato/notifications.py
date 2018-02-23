@@ -27,14 +27,14 @@
 def html_email_parameter_elements():
     elements = [
         ( "from",
-            TextAscii(
+            EmailAddress(
                 title = _("From: Address"),
                 size = 40,
                 allow_empty = False,
             )
         ),
         ( "reply_to",
-            TextAscii(
+            EmailAddress(
                 title = _("Reply-To: Address"),
                 size = 40,
                 allow_empty = False,

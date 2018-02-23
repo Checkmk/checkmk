@@ -629,7 +629,7 @@ class EmailAddress(TextAscii):
         # The "new" top level domains are very unlimited in length. Theoretically they can be
         # up to 63 chars long. But currently the longest is 24 characters. Check this out with:
         # wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
-        self._regex = re.compile('^[A-Z0-9._%+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$', re.I)
+        self._regex = re.compile('^[A-Z0-9._%&+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$', re.I)
         self._make_clickable = kwargs.get("make_clickable", False)
 
     def value_to_text(self, value):
@@ -646,7 +646,7 @@ class EmailAddressUnicode(TextUnicode, EmailAddress):
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, **kwargs)
         EmailAddress.__init__(self, **kwargs)
-        self._regex = re.compile(r'^[$\w._%+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
+        self._regex = re.compile(r'^[\w.%&+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
 
     def validate_value(self, value, varprefix):
         TextUnicode.validate_value(self, value, varprefix)

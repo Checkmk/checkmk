@@ -1,0 +1,14 @@
+Title: omd rm --kill now kills all processes of the site user
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519626013
+Class: fix
+
+Instead of just killing the processes that are currently accessing
+the tmpfs of the site, the "omd rm" command together with the --kill
+option now also kills all processes of the site user. This includes
+open shells or similar that would otherwise make the site removal
+fail in case such processes are open.

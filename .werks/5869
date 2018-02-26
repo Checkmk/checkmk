@@ -1,0 +1,12 @@
+Title: mem.win: Fixed displaying of percentage thresholds in graphs (Regression in 1.4.0p21)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1519659946
+
+The werk #5518 repaired displaying of absolute thresholds, but broke
+displaying of percentage levels in the graphs.

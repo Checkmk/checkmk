@@ -6933,6 +6933,8 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if args is None:
         args = []
 
+    auto_logger = logger.getChild("config.automations")
+
     if timeout:
         args = [ "--timeout", "%d" % timeout ] + args
 
@@ -6946,27 +6948,33 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
         # it garbles the non-HTML response output
         # if config.debug:
         #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % " ".join(cmd))
+        auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     except Exception, e:
         raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (" ".join(cmd), e))
 
     if stdin_data != None:
+        auto_logger.info("STDIN: %r" % stdin_data)
         p.stdin.write(stdin_data)
     else:
+        auto_logger.info("STDIN: %r" % indata)
         p.stdin.write(repr(indata))
 
     p.stdin.close()
     outdata = p.stdout.read()
     exitcode = p.wait()
+    auto_logger.info("FINISHED: %d" % exitcode)
+    auto_logger.debug("OUTPUT: %r" % outdata)
     if exitcode != 0:
-        logger.error("Error running %r (exit code %d)" % (" ".join(cmd), exitcode))
+        auto_logger.error("Error running %r (exit code %d)" %
+                            (subprocess.list2cmdline(cmd), exitcode))
+
         if config.debug:
             raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
                   (" ".join(cmd), exitcode, hilite_errors(outdata)))
         else:
             raise MKGeneralException(hilite_errors(outdata))
-
 
     # On successful "restart" command execute the activate changes hook
     if command in [ 'restart', 'reload' ]:

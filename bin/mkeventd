@@ -79,19 +79,26 @@ logger = cmk.log.get_logger("mkeventd")
 def history_dir(settings):
     return settings.paths.state_dir.value / 'history'
 
-def master_config_path(settings):
+def messages_dir(settings):
+    return settings.paths.state_dir.value / 'messages'
+
+def master_config_file(settings):
     return settings.paths.state_dir.value / 'master_config'
 
-def slave_status_path(settings):
+def slave_status_file(settings):
     return settings.paths.state_dir.value / 'slave_status'
 
-def spool_path(settings):
+def spool_dir(settings):
     return settings.paths.state_dir.value / 'spool'
 
-def status_path(settings):
+def status_file(settings):
     return settings.paths.state_dir.value / 'status'
 
-g_state_dir = os.path.join(cmk.paths.omd_root, "var/mkeventd")
+def status_server_profile(settings):
+    return settings.paths.state_dir.value / 'StatusServer.profile';
+
+def event_server_profile(settings):
+    return settings.paths.state_dir.value / 'EventServer.profile';
 
 
 # Basic settings, can be changed with configuration file (at
@@ -277,10 +284,11 @@ class ECLock(object):
 
 
 class ECServerThread(threading.Thread):
-    def __init__(self, name, settings, profiling_enabled):
+    def __init__(self, name, settings, profiling_enabled, profile_file):
         super(ECServerThread, self).__init__(name=name)
         self.settings = settings
         self._profiling_enabled = profiling_enabled
+        self._profile_file = profile_file
         self._terminate_event = threading.Event()
         self.logger = logger.getChild(name)
 
@@ -290,7 +298,7 @@ class ECServerThread(threading.Thread):
         while not self._shal_terminate():
             try:
                 with cmk.profile.Profile(enabled=self._profiling_enabled,
-                                         profile_file=os.path.join(g_state_dir, "%s.profile" % self.name)):
+                                         profile_file=str(self._profile_file)):
                     self.serve()
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
@@ -319,12 +327,6 @@ def terminate():
 def bail_out(reason):
     logger.error("FATAL ERROR: %s" % reason)
     sys.exit(1)
-
-
-def make_parentdirs(file_path):
-    dir_path = os.path.dirname(file_path)
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
 
 
 def process_exists(pid):
@@ -915,7 +917,7 @@ def log_event_history(settings, event, what, who="", addinfo=""):
     if g_config['archive_mode'] == 'mongodb':
         log_event_history_to_mongodb(settings, event, what, who, addinfo)
     else:
-        log_event_history_to_file(event, what, who, addinfo)
+        log_event_history_to_file(settings, event, what, who, addinfo)
 
 
 # Make a new entry in the event history. Each entry is tab-separated line
@@ -925,7 +927,7 @@ def log_event_history(settings, event, what, who="", addinfo=""):
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
-def log_event_history_to_file(event, what, who, addinfo):
+def log_event_history_to_file(settings, event, what, who, addinfo):
     with lock_logging:
         columns = [
             str(time.time()),
@@ -936,7 +938,7 @@ def log_event_history_to_file(event, what, who, addinfo):
         columns += [quote_tab(event.get(colname[6:], defval))  # drop "event_"
                     for colname, defval in g_status_server.table_events.columns]
 
-        get_logfile("history").write("\t".join(map(to_utf8, columns)) + "\n")
+        get_logfile(history_dir(settings)).write("\t".join(map(to_utf8, columns)) + "\n")
 
 
 def to_utf8(x):
@@ -967,11 +969,9 @@ active_history_period = None
 
 # Get file object to current log file, handle also
 # history and lifetime limit.
-def get_logfile(basename):
+def get_logfile(log_dir):
     global active_history_period
-    log_dir = g_state_dir + "/" + basename
-    make_parentdirs(log_dir + "/foo")
-
+    log_dir.mkdir(parents=True, exist_ok=True)
     # Log into file starting at current history period,
     # but: if a newer logfile exists, use that one. This
     # can happen if you switch the period from daily to
@@ -1266,7 +1266,8 @@ class EventServer(ECServerThread):
     def __init__(self, settings):
         super(EventServer, self).__init__(name="EventServer",
                                           settings=settings,
-                                          profiling_enabled=settings.options.profile_event)
+                                          profiling_enabled=settings.options.profile_event,
+                                          profile_file=event_server_profile(settings))
         self._syslog = None
         self._syslog_tcp = None
         self._snmptrap = None
@@ -1733,7 +1734,7 @@ class EventServer(ECServerThread):
 
             try:
                 # process the first spool file we get
-                spool_file = next(spool_path(self.settings).glob('[!.]*'))
+                spool_file = next(spool_dir(self.settings).glob('[!.]*'))
                 self.process_raw_lines(spool_file.read_bytes())
                 spool_file.unlink()
                 select_timeout = 0  # enable fast processing to process further files
@@ -2920,7 +2921,7 @@ class EventServer(ECServerThread):
 
     def log_message(self, event):
         try:
-            get_logfile("messages").write("%s %s %s%s: %s\n" % (
+            get_logfile(messages_dir(self.settings)).write("%s %s %s%s: %s\n" % (
                 time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),
                 event["host"],
                 event["application"],
@@ -3518,7 +3519,8 @@ class StatusServer(ECServerThread):
     def __init__(self, settings):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
-                                           profiling_enabled=settings.options.profile_status)
+                                           profiling_enabled=settings.options.profile_status,
+                                           profile_file=status_server_profile(settings))
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
@@ -3789,8 +3791,8 @@ class StatusServer(ECServerThread):
         g_event_status.save_status()
         if is_replication_slave():
             try:
-                master_config_path(self.settings).unlink()
-                slave_status_path(self.settings).unlink()
+                master_config_file(self.settings).unlink()
+                slave_status_file(self.settings).unlink()
                 load_slave_status(self.settings)
             except Exception:
                 pass
@@ -4012,7 +4014,7 @@ class EventStatus(object):
     def save_status(self):
         now = time.time()
         status = self.pack_status()
-        path = status_path(self.settings)
+        path = status_file(self.settings)
         path_new = path.parent / (path.name + '.new')
         # Believe it or not: cPickle is more than two times slower than repr()
         with path_new.open(mode='wb') as f:
@@ -4032,7 +4034,7 @@ class EventStatus(object):
         self.save_status()
 
     def load_status(self):
-        path = status_path(self.settings)
+        path = status_file(self.settings)
         if path.exists():
             try:
                 status = ast.literal_eval(path.read_bytes())
@@ -4855,7 +4857,7 @@ def replication_update_state(settings, new_state):
 
 
 def save_master_config(settings, new_state):
-    path = master_config_path(settings)
+    path = master_config_file(settings)
     path_new = path.parent / (path.name + '.new')
     path_new.write_bytes(repr({
         "rules": new_state["rules"],
@@ -4866,7 +4868,7 @@ def save_master_config(settings, new_state):
 
 
 def load_master_config(settings):
-    path = master_config_path(settings)
+    path = master_config_file(settings)
     try:
         config = ast.literal_eval(path.read_bytes())
         g_config["rules"] = config["rules"]
@@ -4908,7 +4910,7 @@ def get_state_from_master():
 
 
 def save_slave_status(settings):
-    slave_status_path(settings).write_bytes(repr(g_slave_status) + "\n")
+    slave_status_file(settings).write_bytes(repr(g_slave_status) + "\n")
 
 
 # Load the current replication slave status. If we are in
@@ -4916,7 +4918,7 @@ def save_slave_status(settings):
 # if not, then this variable will be missing and also the file
 def load_slave_status(settings):
     global g_slave_status
-    path = slave_status_path(settings)
+    path = slave_status_file(settings)
     if is_replication_slave():
         try:
             g_slave_status = ast.literal_eval(path.read_bytes())

@@ -167,7 +167,7 @@ def inventory_veritas_vcs(parsed, item_type):
         yield item_name, None
 
 
-def check_veritas_vcs(item, params, parsed, item_type):
+def check_veritas_vcs(item, _no_params, parsed, item_type):
     if item not in parsed[item_type]:
         return # vanished
 
@@ -220,8 +220,8 @@ def check_veritas_vcs(item, params, parsed, item_type):
 check_info['veritas_vcs'] = {
     'parse_function'       : parse_veritas_vcs,
     'inventory_function'   : lambda parsed: inventory_veritas_vcs(parsed, 'cluster'),
-    'check_function'       : lambda item, params, parsed: \
-                                 check_veritas_vcs(item, params, parsed, "cluster"),
+    'check_function'       : lambda item, _no_params, parsed: \
+                                 check_veritas_vcs(item, _no_params, parsed, "cluster"),
     'service_description'  : 'VCS Cluster %s',
     'node_info'            : True,
 }
@@ -238,8 +238,8 @@ check_info['veritas_vcs'] = {
 
 check_info['veritas_vcs.system'] = {
     'inventory_function'   : lambda parsed: inventory_veritas_vcs(parsed, "system"),
-    'check_function'       : lambda item, params, parsed: \
-                                 check_veritas_vcs(item, params, parsed, "system"),
+    'check_function'       : lambda item, _no_params, parsed: \
+                                 check_veritas_vcs(item, _no_params, parsed, "system"),
     'service_description'  : 'VCS System %s',
     'node_info'            : True,
 }
@@ -256,8 +256,8 @@ check_info['veritas_vcs.system'] = {
 
 check_info['veritas_vcs.servicegroup'] = {
     'inventory_function'   : lambda parsed: inventory_veritas_vcs(parsed, 'group'),
-    'check_function'       : lambda item, params, parsed: \
-                                 check_veritas_vcs(item, params, parsed, 'group'),
+    'check_function'       : lambda item, _no_params, parsed: \
+                                 check_veritas_vcs(item, _no_params, parsed, 'group'),
     'service_description'  : 'VCS Service Group %s',
     'node_info'            : True,
 }
@@ -274,8 +274,8 @@ check_info['veritas_vcs.servicegroup'] = {
 
 check_info['veritas_vcs.resource'] = {
     'inventory_function'   : lambda parsed: inventory_veritas_vcs(parsed, 'resource'),
-    'check_function'       : lambda item, params, parsed: \
-                                 check_veritas_vcs(item, params, parsed, 'resource'),
+    'check_function'       : lambda item, _no_params, parsed: \
+                                 check_veritas_vcs(item, _no_params, parsed, 'resource'),
     'service_description'  : 'VCS Resource %s',
     'node_info'            : True,
 }

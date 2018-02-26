@@ -1,0 +1,10 @@
+Title: Report scheduler: Sending mails manually could be triggered multiple times when reloading the page
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.4.0p26
+Date: 1519644639
+Class: fix
+
+

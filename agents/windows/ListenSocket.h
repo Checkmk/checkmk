@@ -59,7 +59,7 @@ public:
 
 private:
     SOCKET init_listen_socket(int port);
-    bool check_only_from(sockaddr *ip) const;
+    bool check_only_from(const SOCKADDR &ip) const;
     SOCKET RemoveSocketInheritance(SOCKET oldsocket) const;
 
     Logger *_logger;

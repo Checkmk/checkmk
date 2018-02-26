@@ -76,7 +76,7 @@ logger = cmk.log.get_logger("mkeventd")
 #   '----------------------------------------------------------------------'
 
 # TODO(sp) Turn these helper functions into Paths fields where they belong.
-def history_path(settings):
+def history_dir(settings):
     return settings.paths.state_dir.value / 'history'
 
 def master_config_path(settings):
@@ -1007,34 +1007,16 @@ def current_history_period():
 
 # Delete old log files
 def expire_logfiles(settings, flush=False):
-    # TODO(sp) Use pathlib facilities below
-    log_dir = str(history_path(settings))
-    if not os.path.exists(log_dir):
-        return  # No historic files to delete yet.
-
     try:
-        now = time.time()
-        min_mtime = now - g_config["history_lifetime"] * 86400
-
+        days = g_config["history_lifetime"]
+        min_mtime = time.time() - days * 86400
         logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
-                       (g_config["history_lifetime"], cmk.render.date_and_time(min_mtime)))
-
-        for fn in os.listdir(log_dir):
-            if fn.endswith(".log"):
-                path = log_dir + "/" + fn
-
-                if flush:
-                    logger.info("Flushed log file %s" % path)
-                    os.remove(path)
-
-                else:
-                    file_mtime = os.stat(path).st_mtime
-
-                    if file_mtime < min_mtime:
-                        logger.info("Deleting log file %s (age %s)" %
-                                    (path, cmk.render.date_and_time(file_mtime)))
-                        os.remove(path)
-
+                       (days, cmk.render.date_and_time(min_mtime)))
+        for path in history_dir(settings).glob('*.log'):
+            if flush or path.stat().st_mtime < min_mtime:
+                logger.info("Deleting log file %s (age %s)" %
+                            (path, cmk.render.date_and_time(path.stat().st_mtime)))
+                path.unlink()
     except Exception as e:
         if settings.options.debug:
             raise
@@ -1056,9 +1038,7 @@ def flush_event_history_files(settings):
 def get_event_history_from_file(settings, query):
     filters, limit = query.filters, query.limit
     history_entries = []
-    # TODO(sp) Use pathlib facilities below
-    log_dir = str(history_path(settings))
-    if not os.path.exists(log_dir):
+    if not history_dir(settings).exists():
         return []
 
     # Optimization: use grep in order to reduce amount
@@ -1093,14 +1073,11 @@ def get_event_history_from_file(settings, query):
     # already be done by the GUI, so we don't do that twice. Skipping
     # this # will lead into some lines of a single file to be limited in
     # wrong order. But this should be better than before.
-    timestamps = sorted((int(fn[:-4])
-                         for fn in os.listdir(log_dir)
-                         if fn.endswith(".log")),
-                        reverse=True)
-    for ts in timestamps:
+    for ts, path in sorted(((int(str(path.name)[:-4]), path)
+                            for path in history_dir(settings).glob('*.log')),
+                           reverse=True):
         if limit is not None and limit <= 0:
             break
-        path = log_dir + "/%d.log" % ts
         first_entry, last_entry = get_logfile_timespan(path)
         for _unused_name, opfunc, argument in time_filters:
             if opfunc(first_entry, argument):
@@ -1130,7 +1107,7 @@ def parse_history_file(path, query, greptexts, limit):
     # If we have greptexts we pre-filter the file using the extremely
     # fast GNU Grep
     # Revert lines from the log file to have the newer lines processed first
-    cmd = 'tac %s' % quote_shell_string(path)
+    cmd = 'tac %s' % quote_shell_string(str(path))
     if greptexts:
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)  # nosec
@@ -1158,8 +1135,9 @@ def parse_history_file(path, query, greptexts, limit):
 
 def get_logfile_timespan(path):
     try:
-        first_entry = float(file(path).readline().split('\t', 1)[0])
-        last_entry = os.stat(path).st_mtime
+        with path.open() as f:
+            first_entry = float(f.readline().split('\t', 1)[0])
+        last_entry = path.stat().st_mtime
         return first_entry, last_entry
     except Exception:
         return 0.0, 0.0
@@ -1753,20 +1731,14 @@ class EventServer(ECServerThread):
                     self.logger.exception('Exception handling a SNMP trap from "%s". Skipping this one' %
                                           (data[1][0]))
 
-            # check whether or not spool files are available
-            # TODO(sp) Use pathlib facilities below
-            spool_dir = str(spool_path(self.settings))
-            if os.path.exists(spool_dir):
-                spool_files = [f for f in os.listdir(spool_dir) if f[0] != '.']
-                if spool_files:
-                    # progress the first spool file we get
-                    this_path = spool_dir + '/' + spool_files.pop()
-                    self.process_raw_lines(file(this_path).read())
-                    os.remove(this_path)
-                    if spool_files:
-                        select_timeout = 0  # enable fast processing to process further files
-                else:
-                    select_timeout = 1  # restore default select timeout
+            try:
+                # process the first spool file we get
+                spool_file = next(spool_path(self.settings).glob('[!.]*'))
+                self.process_raw_lines(spool_file.read_bytes())
+                spool_file.unlink()
+                select_timeout = 0  # enable fast processing to process further files
+            except StopIteration:
+                select_timeout = 1  # restore default select timeout
 
     # Processes incoming data, just a wrapper between the real data and the
     # handler function to record some statistics etc.

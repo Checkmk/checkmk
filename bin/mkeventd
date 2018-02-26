@@ -75,32 +75,6 @@ logger = cmk.log.get_logger("mkeventd")
 #   |  Global declarations and defaults settings                           |
 #   '----------------------------------------------------------------------'
 
-# TODO(sp) Turn these helper functions into Paths fields where they belong.
-def history_dir(settings):
-    return settings.paths.state_dir.value / 'history'
-
-def messages_dir(settings):
-    return settings.paths.state_dir.value / 'messages'
-
-def master_config_file(settings):
-    return settings.paths.state_dir.value / 'master_config'
-
-def slave_status_file(settings):
-    return settings.paths.state_dir.value / 'slave_status'
-
-def spool_dir(settings):
-    return settings.paths.state_dir.value / 'spool'
-
-def status_file(settings):
-    return settings.paths.state_dir.value / 'status'
-
-def status_server_profile(settings):
-    return settings.paths.state_dir.value / 'StatusServer.profile';
-
-def event_server_profile(settings):
-    return settings.paths.state_dir.value / 'EventServer.profile';
-
-
 # Basic settings, can be changed with configuration file (at
 # least I hope so)
 
@@ -938,7 +912,7 @@ def log_event_history_to_file(settings, event, what, who, addinfo):
         columns += [quote_tab(event.get(colname[6:], defval))  # drop "event_"
                     for colname, defval in g_status_server.table_events.columns]
 
-        get_logfile(history_dir(settings)).write("\t".join(map(to_utf8, columns)) + "\n")
+        get_logfile(settings.paths.history_dir.value).write("\t".join(map(to_utf8, columns)) + "\n")
 
 
 def to_utf8(x):
@@ -983,9 +957,8 @@ def get_logfile(log_dir):
     if active_history_period is None or timestamp > active_history_period:
 
         # Look if newer files exist
-        timestamps = sorted(int(f[:-4])
-                            for f in os.listdir(log_dir)
-                            if f.endswith(".log"))
+        timestamps = sorted(int(str(path.name)[:-4])
+                            for path in log_dir.glob('*.log'))
         if len(timestamps) > 0:
             timestamp = max(timestamps[-1], timestamp)
 
@@ -1012,7 +985,7 @@ def expire_logfiles(settings, flush=False):
         min_mtime = time.time() - days * 86400
         logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
                        (days, cmk.render.date_and_time(min_mtime)))
-        for path in history_dir(settings).glob('*.log'):
+        for path in settings.paths.history_dir.value.glob('*.log'):
             if flush or path.stat().st_mtime < min_mtime:
                 logger.info("Deleting log file %s (age %s)" %
                             (path, cmk.render.date_and_time(path.stat().st_mtime)))
@@ -1038,7 +1011,7 @@ def flush_event_history_files(settings):
 def get_event_history_from_file(settings, query):
     filters, limit = query.filters, query.limit
     history_entries = []
-    if not history_dir(settings).exists():
+    if not settings.paths.history_dir.value.exists():
         return []
 
     # Optimization: use grep in order to reduce amount
@@ -1074,7 +1047,7 @@ def get_event_history_from_file(settings, query):
     # this # will lead into some lines of a single file to be limited in
     # wrong order. But this should be better than before.
     for ts, path in sorted(((int(str(path.name)[:-4]), path)
-                            for path in history_dir(settings).glob('*.log')),
+                            for path in settings.paths.history_dir.value.glob('*.log')),
                            reverse=True):
         if limit is not None and limit <= 0:
             break
@@ -1267,7 +1240,7 @@ class EventServer(ECServerThread):
         super(EventServer, self).__init__(name="EventServer",
                                           settings=settings,
                                           profiling_enabled=settings.options.profile_event,
-                                          profile_file=event_server_profile(settings))
+                                          profile_file=settings.paths.event_server_profile.value)
         self._syslog = None
         self._syslog_tcp = None
         self._snmptrap = None
@@ -1734,7 +1707,7 @@ class EventServer(ECServerThread):
 
             try:
                 # process the first spool file we get
-                spool_file = next(spool_dir(self.settings).glob('[!.]*'))
+                spool_file = next(self.settings.paths.spool_dir.value.glob('[!.]*'))
                 self.process_raw_lines(spool_file.read_bytes())
                 spool_file.unlink()
                 select_timeout = 0  # enable fast processing to process further files
@@ -2921,7 +2894,7 @@ class EventServer(ECServerThread):
 
     def log_message(self, event):
         try:
-            get_logfile(messages_dir(self.settings)).write("%s %s %s%s: %s\n" % (
+            get_logfile(self.settings.paths.messages_dir.value).write("%s %s %s%s: %s\n" % (
                 time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),
                 event["host"],
                 event["application"],
@@ -3520,7 +3493,7 @@ class StatusServer(ECServerThread):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
                                            profiling_enabled=settings.options.profile_status,
-                                           profile_file=status_server_profile(settings))
+                                           profile_file=settings.paths.status_server_profile.value)
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
@@ -3791,8 +3764,8 @@ class StatusServer(ECServerThread):
         g_event_status.save_status()
         if is_replication_slave():
             try:
-                master_config_file(self.settings).unlink()
-                slave_status_file(self.settings).unlink()
+                self.settings.paths.master_config_file.value.unlink()
+                self.settings.paths.slave_status_file.value.unlink()
                 load_slave_status(self.settings)
             except Exception:
                 pass
@@ -4014,7 +3987,7 @@ class EventStatus(object):
     def save_status(self):
         now = time.time()
         status = self.pack_status()
-        path = status_file(self.settings)
+        path = self.settings.paths.status_file.value
         path_new = path.parent / (path.name + '.new')
         # Believe it or not: cPickle is more than two times slower than repr()
         with path_new.open(mode='wb') as f:
@@ -4034,7 +4007,7 @@ class EventStatus(object):
         self.save_status()
 
     def load_status(self):
-        path = status_file(self.settings)
+        path = self.settings.paths.status_file.value
         if path.exists():
             try:
                 status = ast.literal_eval(path.read_bytes())
@@ -4857,7 +4830,7 @@ def replication_update_state(settings, new_state):
 
 
 def save_master_config(settings, new_state):
-    path = master_config_file(settings)
+    path = settings.paths.master_config_file.value
     path_new = path.parent / (path.name + '.new')
     path_new.write_bytes(repr({
         "rules": new_state["rules"],
@@ -4868,7 +4841,7 @@ def save_master_config(settings, new_state):
 
 
 def load_master_config(settings):
-    path = master_config_file(settings)
+    path = settings.paths.master_config_file.value
     try:
         config = ast.literal_eval(path.read_bytes())
         g_config["rules"] = config["rules"]
@@ -4910,7 +4883,7 @@ def get_state_from_master():
 
 
 def save_slave_status(settings):
-    slave_status_file(settings).write_bytes(repr(g_slave_status) + "\n")
+    settings.paths.slave_status_file.value.write_bytes(repr(g_slave_status) + "\n")
 
 
 # Load the current replication slave status. If we are in
@@ -4918,7 +4891,7 @@ def save_slave_status(settings):
 # if not, then this variable will be missing and also the file
 def load_slave_status(settings):
     global g_slave_status
-    path = slave_status_file(settings)
+    path = settings.paths.slave_status_file.value
     if is_replication_slave():
         try:
             g_slave_status = ast.literal_eval(path.read_bytes())
@@ -5097,7 +5070,7 @@ if __name__ == "__main__":
 
         # Make sure paths exist
         settings.paths.event_pipe.value.parent.mkdir(parents=True, exist_ok=True)
-        settings.paths.state_dir.value.mkdir(parents=True, exist_ok=True)
+        settings.paths.status_file.value.parent.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
         g_perfcounters = Perfcounters()

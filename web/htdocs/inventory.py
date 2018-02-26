@@ -39,7 +39,6 @@ import userdb
 import sites
 import cmk.paths
 import cmk.store as store
-import cmk.profile
 from lib import MKException, MKGeneralException, MKAuthException, MKUserError, lqencode
 from cmk.structured_data import StructuredDataTree, Container, Numeration, Attributes
 

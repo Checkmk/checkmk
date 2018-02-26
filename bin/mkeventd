@@ -826,7 +826,7 @@ def log_event_history_to_mongodb(settings, event, what, who, addinfo):
     })
 
 
-def get_event_history_from_mongodb(settings query):
+def get_event_history_from_mongodb(settings, query):
     filters, limit = query.filters, query.limit
 
     history_entries = []

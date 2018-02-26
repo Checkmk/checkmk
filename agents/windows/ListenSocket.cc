@@ -119,26 +119,33 @@ SOCKET ListenSocket::init_listen_socket(int port) {
     SOCKET s = RemoveSocketInheritance(tmp_s);
 
     int addr_size = 0;
-    std::unique_ptr<SOCKADDR> addr(create_sockaddr(&addr_size));
+    SOCKADDR *addr = nullptr;
+    SOCKADDR_IN6 addr6{0};
+    SOCKADDR_IN addr4{0};
 
     int optval = 1;
-    _winapi.setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval,
-                       sizeof(optval));
+    _winapi.setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
+                       reinterpret_cast<const char *>(&optval), sizeof(optval));
     if (_use_ipv6) {
-        ((SOCKADDR_IN6 *)addr.get())->sin6_port = _winapi.htons(port);
-
+        addr6.sin6_port = _winapi.htons(port);
         int v6only = 0;
         if (_winapi.setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&v6only,
                                sizeof(int)) != 0) {
             Notice(_logger) << "failed to disable ipv6 only flag";
             _supports_ipv4 = false;
         }
+        addr = reinterpret_cast<SOCKADDR *>(&addr6);
+        addr->sa_family = AF_INET6;
+        addr_size = sizeof(SOCKADDR_IN6);
     } else {
-        ((SOCKADDR_IN *)addr.get())->sin_port = _winapi.htons(port);
-        ((SOCKADDR_IN *)addr.get())->sin_addr.S_un.S_addr = ADDR_ANY;
+        addr4.sin_port = _winapi.htons(port);
+        addr4.sin_addr.S_un.S_addr = ADDR_ANY;
+        addr = reinterpret_cast<SOCKADDR *>(&addr4);
+        addr->sa_family = AF_INET;
+        addr_size = sizeof(SOCKADDR_IN);
     }
 
-    if (SOCKET_ERROR == _winapi.bind(s, addr.get(), addr_size)) {
+    if (SOCKET_ERROR == _winapi.bind(s, addr, addr_size)) {
         int error_id = _winapi.WSAGetLastError();
         Error(_logger) << "Cannot bind socket to port " << port << ": "
                        << get_win_error_as_string(_winapi, error_id) << " ("
@@ -187,29 +194,12 @@ std::string ListenSocket::readableIP(const sockaddr_storage *addr) {
     return ip_hr;
 }
 
-sockaddr *ListenSocket::create_sockaddr(int *addr_len) const {
-    assert(addr_len != NULL);
-
-    sockaddr *result = NULL;
-    if (_use_ipv6) {
-        result = (sockaddr *)new sockaddr_in6();
-        *addr_len = sizeof(sockaddr_in6);
-    } else {
-        result = (sockaddr *)new sockaddr_in();
-        *addr_len = sizeof(sockaddr_in);
-    }
-    memset((void *)result, 0, *addr_len);
-    result->sa_family = _use_ipv6 ? AF_INET6 : AF_INET;
-
-    return result;
-}
-
 SocketHandle ListenSocket::acceptConnection() const {
     // Loop forever.
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(_socket.get(), &fds);
-    struct timeval timeout;
+    struct timeval timeout{0};
     timeout.tv_sec = 0;
     timeout.tv_usec = 500000;
 
@@ -217,11 +207,23 @@ SocketHandle ListenSocket::acceptConnection() const {
     // never return
     while (1 == _winapi.select(1, &fds, NULL, NULL, &timeout)) {
         int addr_len = 0;
-        std::unique_ptr<sockaddr> remote_addr(create_sockaddr(&addr_len));
-        SOCKET rawSocket =
-            _winapi.accept(_socket.get(), remote_addr.get(), &addr_len);
+        SOCKADDR *remoteAddr = nullptr;
+        SOCKADDR_IN6 addr6{0};
+        SOCKADDR_IN addr4{0};
+
+        if (_use_ipv6) {
+            remoteAddr = reinterpret_cast<SOCKADDR *>(&addr6);
+            remoteAddr->sa_family = AF_INET6;
+            addr_len = sizeof(SOCKADDR_IN6);
+        } else {
+            remoteAddr = reinterpret_cast<SOCKADDR *>(&addr4);
+            remoteAddr->sa_family = AF_INET;
+            addr_len = sizeof(SOCKADDR_IN);
+        }
+
+        SOCKET rawSocket = _winapi.accept(_socket.get(), remoteAddr, &addr_len);
         SocketHandle connection(RemoveSocketInheritance(rawSocket), _winapi);
-        if (connection && check_only_from(remote_addr.get())) {
+        if (connection && check_only_from(remoteAddr)) {
             return connection;
         }
     }

@@ -60,7 +60,6 @@ public:
 private:
     SOCKET init_listen_socket(int port);
     bool check_only_from(sockaddr *ip) const;
-    sockaddr *create_sockaddr(int *addr_len) const;
     SOCKET RemoveSocketInheritance(SOCKET oldsocket) const;
 
     Logger *_logger;

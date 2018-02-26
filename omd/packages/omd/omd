@@ -2816,8 +2816,11 @@ def main_rm(args, options={}):
     reuse = "reuse" in options
     kill = "kill" in options
 
-    if not kill and user_logged_in(g_sitename):
-        bail_out("User '%s' still logged in or running processes." % g_sitename)
+    if user_logged_in(g_sitename):
+        if not kill:
+            bail_out("User '%s' still logged in or running processes." % g_sitename)
+        else:
+            kill_site_user_processes(exclude_current_and_parents=True)
 
     if tmpfs_mounted(g_sitename):
         unmount_tmpfs(g_sitename, kill=kill)

@@ -150,8 +150,8 @@ and group of that site. This - of course - needs root permissions.
 The following options can be used:
 
 The option \fB--kill\fP will automatically kill all processes that
-use the temporary filesystem of the site before unmounting it.
-Otherwise the unmount and the removal of the site will fail.
+either use the temporary filesystem of the site or are running as site
+user. Otherwise the unmount and the removal of the site will fail.
 
 \fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
 

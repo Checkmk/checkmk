@@ -8281,14 +8281,15 @@ class Rule(object):
     def get_mismatch_reasons(self, host_folder, hostname, item):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
         host = host_folder.host(hostname)
+        host_tags = host.tags()
 
         if not self._matches_hostname(hostname):
             yield _("The host name does not match.")
 
         for tag in self.tag_specs:
-            if tag[0] != '/' and tag[0] != '!' and tag not in host.tags():
+            if tag[0] != '/' and tag[0] != '!' and tag not in host_tags:
                 yield _("The host is missing the tag %s") % tag
-            elif tag[0] == '!' and tag[1:] in host.tags():
+            elif tag[0] == '!' and tag[1:] in host_tags:
                 yield _("The host has the tag %s") % tag
 
         if not self.folder.is_transitive_parent_of(host_folder):

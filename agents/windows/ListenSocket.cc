@@ -25,14 +25,48 @@
 #include "ListenSocket.h"
 #include <winsock2.h>
 #include <ws2ipdef.h>
-#include <cassert>
 #include <cstring>
 #include <memory>
+#include <numeric>
 #include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "win_error.h"
 
-static const size_t INET6_ADDRSTRLEN = 46;
+namespace {
+
+const size_t INET6_ADDRSTRLEN = 46;
+
+inline bool familiesEqual(const ipspec &only_from, const SOCKADDR &ip) {
+    return only_from.ipv6 == (ip.sa_family == AF_INET6);
+}
+
+inline bool ipv6Match(const ipspec &only_from, const SOCKADDR &ip) {
+    if (ip.sa_family != AF_INET6) {
+        return false;
+    }
+
+    std::array<size_t, 8> indices;
+    std::iota(indices.begin(), indices.end(), 0);
+    const auto &addrv6 = reinterpret_cast<const sockaddr_in6 &>(ip);
+    return std::all_of(indices.cbegin(), indices.cend(), [&only_from, &addrv6](
+                                                             const size_t i) {
+        return only_from.ip.v6.address[i] ==
+               (addrv6.sin6_addr.u.Word[i] & only_from.ip.v6.netmask[i]);
+    });
+}
+
+inline bool ipv4Match(const ipspec &only_from, const SOCKADDR &ip) {
+    if (ip.sa_family != AF_INET) {
+        return false;
+    }
+    const auto &addrv4 = reinterpret_cast<const sockaddr_in &>(ip);
+    uint32_t significant_bits =
+        addrv4.sin_addr.S_un.S_addr & only_from.ip.v4.netmask;
+
+    return significant_bits == only_from.ip.v4.address;
+}
+
+}  // namespace
 
 ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist,
                            bool supportIPV6, Logger *logger,
@@ -61,42 +95,18 @@ SOCKET ListenSocket::RemoveSocketInheritance(SOCKET oldsocket) const {
     return (SOCKET)newhandle;
 }
 
-bool ListenSocket::check_only_from(sockaddr *ip) const {
-    if (_source_whitelist.size() == 0) return true;  // no restriction set
+bool ListenSocket::check_only_from(const SOCKADDR &ip) const {
+    if (_source_whitelist.empty()) return true;  // no restriction set
 
-    for (only_from_t::const_iterator it_from = _source_whitelist.begin();
-         it_from != _source_whitelist.end(); ++it_from) {
-        const ipspec &only_from = *it_from;
-
-        if (only_from.ipv6 != (ip->sa_family == AF_INET6)) {
-            // test ipv6 address only against ipv6 filter and ipv4 address
+    return std::any_of(
+        _source_whitelist.cbegin(), _source_whitelist.cend(),
+        [&ip](const ipspec &only_from) {
+            // Test ipv6 address only against ipv6 filter and ipv4 address
             // against ipv4 filter.
-            // the only_from list already contains v4->v6 converted addresses
-            continue;
-        }
-
-        if (ip->sa_family == AF_INET6) {
-            bool match = true;
-            sockaddr_in6 *addrv6 = (sockaddr_in6 *)ip;
-            for (int i = 0; i < 8 && match; ++i) {
-                match =
-                    only_from.ip.v6.address[i] ==
-                    (addrv6->sin6_addr.u.Word[i] & only_from.ip.v6.netmask[i]);
-            }
-            if (match) {
-                return true;
-            }
-        } else {
-            uint32_t significant_bits =
-                ((sockaddr_in *)ip)->sin_addr.S_un.S_addr &
-                only_from.ip.v4.netmask;
-
-            if (significant_bits == only_from.ip.v4.address) {
-                return true;
-            }
-        }
-    }
-    return false;
+            // The whitelist already contains v4->v6 converted addresses
+            return familiesEqual(only_from, ip) &&
+                   (ipv6Match(only_from, ip) || ipv4Match(only_from, ip));
+        });
 }
 
 SOCKET ListenSocket::init_listen_socket(int port) {
@@ -223,7 +233,7 @@ SocketHandle ListenSocket::acceptConnection() const {
 
         SOCKET rawSocket = _winapi.accept(_socket.get(), remoteAddr, &addr_len);
         SocketHandle connection(RemoveSocketInheritance(rawSocket), _winapi);
-        if (connection && check_only_from(remoteAddr)) {
+        if (connection && check_only_from(*remoteAddr)) {
             return connection;
         }
     }

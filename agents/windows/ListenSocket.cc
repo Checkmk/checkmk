@@ -63,7 +63,7 @@ SOCKET ListenSocket::RemoveSocketInheritance(SOCKET oldsocket) const {
     return (SOCKET)newhandle;
 }
 
-bool ListenSocket::check_only_from(sockaddr *ip) {
+bool ListenSocket::check_only_from(sockaddr *ip) const {
     if (_source_whitelist.size() == 0) return true;  // no restriction set
 
     for (only_from_t::const_iterator it_from = _source_whitelist.begin();
@@ -189,7 +189,7 @@ std::string ListenSocket::readableIP(const sockaddr_storage *addr) {
     return ip_hr;
 }
 
-sockaddr *ListenSocket::create_sockaddr(int *addr_len) {
+sockaddr *ListenSocket::create_sockaddr(int *addr_len) const {
     assert(addr_len != NULL);
 
     sockaddr *result = NULL;
@@ -206,7 +206,7 @@ sockaddr *ListenSocket::create_sockaddr(int *addr_len) {
     return result;
 }
 
-SOCKET ListenSocket::acceptConnection() {
+SOCKET ListenSocket::acceptConnection() const {
     SOCKET connection;
     // Loop forever.
 

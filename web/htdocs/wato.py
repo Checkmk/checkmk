@@ -12756,12 +12756,14 @@ class ModeEditRuleset(WatoMode):
             if self._hostname:
                 table.cell(_("Ma."))
                 if rule.is_disabled():
-                    reason = _("This rule is disabled")
+                    reasons = [ _("This rule is disabled") ]
                 else:
-                    reason = rule.matches_host_and_item(Folder.current(), self._hostname, self._item)
+                    reasons = list(rule.get_mismatch_reasons(Folder.current(), self._hostname, self._item))
+
+                matches_rule = not reasons
 
                 # Handle case where dict is constructed from rules
-                if reason == True and ruleset.match_type() == "dict":
+                if matches_rule and ruleset.match_type() == "dict":
                     if not rule.value:
                         title = _("This rule matches, but does not define any parameters.")
                         img = 'imatch'
@@ -12778,7 +12780,7 @@ class ModeEditRuleset(WatoMode):
                             img = 'pmatch'
                         match_keys.update(new_keys)
 
-                elif reason == True and (not alread_matched or ruleset.match_type() == "all"):
+                elif matches_rule and (not alread_matched or ruleset.match_type() == "all"):
                     title = _("This rule matches for the host '%s'") % self._hostname
                     if ruleset.item_type():
                         title += _(" and the %s '%s'.") % (ruleset.item_name(), self._item)
@@ -12786,12 +12788,12 @@ class ModeEditRuleset(WatoMode):
                         title += "."
                     img = 'match'
                     alread_matched = True
-                elif reason == True:
+                elif matches_rule:
                     title = _("This rule matches, but is overridden by a previous rule.")
                     img = 'imatch'
                     alread_matched = True
                 else:
-                    title = _("This rule does not match: %s") % reason
+                    title = _("This rule does not match: %s") % " ".join(reasons)
                     img = 'nmatch'
                 html.img("images/icon_rule%s.png" % img, align="absmiddle", title=title, class_="icon")
 
@@ -14701,24 +14703,22 @@ def mode_pattern_editor(phase):
         # Check if this rule applies to the given host/service
         if hostname:
             # If hostname (and maybe filename) try match it
-            reason = rule.matches_host_and_item(Folder.current(), hostname, item)
+            rule_matches = rule.matches_host_and_item(Folder.current(), hostname, item)
         elif item:
             # If only a filename is given
-            reason = rule.matches_item()
+            rule_matches = rule.matches_item()
         else:
             # If no host/file given match all rules
-            reason = True
+            rule_matches = True
 
         match_img = ''
-        if reason == True:
+        if rule_matches:
             # Applies to the given host/service
             reason_class = 'reason'
-            # match_title/match_img are set below per pattern
         else:
             # not matching
             reason_class = 'noreason'
             match_img   = 'nmatch'
-            match_title = reason
 
         html.begin_foldable_container("rule", "%s" % abs_rulenr, True,
                     HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)), indent = False)
@@ -14735,7 +14735,7 @@ def mode_pattern_editor(phase):
         for state, pattern, comment in pattern_list:
             match_class = ''
             disp_match_txt = ''
-            if reason == True:
+            if rule_matches:
                 matched = re.search(pattern, match_txt)
                 if matched:
 
@@ -14761,6 +14761,8 @@ def mode_pattern_editor(phase):
                 else:
                     match_img   = 'nmatch'
                     match_title = _('This logfile pattern does not match the given string.')
+            else:
+                match_title = _('The rule conditions do not match.')
 
             table.row(css=reason_class)
             table.cell(_('Match'))

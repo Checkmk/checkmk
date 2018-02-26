@@ -54,6 +54,7 @@ from lib import *
 from log import logger
 from valuespec import *
 from hashlib import sha256
+from pathlib2 import Path
 
 import config, hooks, userdb, multitar
 import sites
@@ -64,6 +65,8 @@ import cmk.paths
 import cmk.defines
 import cmk.store as store
 import cmk.render as render
+import cmk.ec.defaults
+import cmk.ec.export
 
 
 if cmk.is_managed_edition():
@@ -123,10 +126,13 @@ def load_watolib_plugins():
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
-        global mkeventd_config_dir
-        mkeventd_config_dir = cmk.paths.default_config_dir + "/mkeventd.d/wato/"
-        replication_paths.append(("dir", "mkeventd", mkeventd_config_dir, ["sitespecific.mk"]))
-        backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
+        rule_pack_dir = str(cmk.ec.export.rule_pack_dir())
+        replication_paths.append(("dir", "mkeventd", rule_pack_dir, ["sitespecific.mk"]))
+        backup_paths.append(("dir", "mkeventd", rule_pack_dir))
+
+        mkp_rule_pack_dir = str(cmk.ec.export.mkp_rule_pack_dir())
+        replication_paths.append(("dir", "mkeventd_mkp", mkp_rule_pack_dir))
+        backup_paths.append(("dir", "mkeventd_mkp", mkp_rule_pack_dir))
 
     backup_domains.clear()
 
@@ -423,7 +429,7 @@ class ConfigDomainEventConsole(ConfigDomain):
 
 
     def config_dir(self):
-        return mkeventd_config_dir
+        return str(cmk.ec.export.rule_pack_dir())
 
 
     def activate(self):
@@ -435,8 +441,7 @@ class ConfigDomainEventConsole(ConfigDomain):
 
 
     def default_globals(self):
-        import cmk.event_console
-        return cmk.event_console.default_config()
+        return cmk.ec.defaults.default_config()
 
 
 
@@ -5108,7 +5113,7 @@ class ActivateChangesManager(ActivateChanges):
         # Remove Event Console settings, if this site does not want it (might
         # be removed in some future day)
         if not config.sites[site_id].get("replicate_ec"):
-            paths = [ e for e in paths if e[1] != "mkeventd" ]
+            paths = [ e for e in paths if e[1] not in ["mkeventd", "mkeventd_mkp"] ]
 
         # Remove extensions if site does not want them
         if not config.sites[site_id].get("replicate_mkps"):

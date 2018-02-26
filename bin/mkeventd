@@ -33,21 +33,20 @@
 
 import ast
 import errno
-import socket
+import json
 import os
-import time
-import sys
-import signal
-import threading
+import pathlib2 as pathlib
 import pprint
 import re
 import select
-import subprocess
-import stat
+import signal
+import socket
 import string
+import subprocess
+import sys
+import threading
+import time
 import traceback
-import json
-import pathlib2 as pathlib
 
 # Needed for receiving traps
 from pysnmp.entity import engine as snmp_engine
@@ -63,17 +62,17 @@ from pysnmp.smi.error import SmiError
 from pyasn1.error import ValueConstraintError
 
 import cmk
+import cmk.daemon
+import cmk.defines as defines
+import cmk.ec.defaults
+import cmk.ec.export
 import cmk.ec.settings
 import cmk.log
 import cmk.paths
-import cmk.defines as defines
-import cmk.daemon
-import cmk.event_console
-import cmk.render
 import cmk.profile
-from cmk.regex import regex, is_regex
-
+import cmk.render
 import livestatus
+from cmk.regex import is_regex, regex
 
 logger = cmk.log.get_logger("mkeventd")
 
@@ -4943,7 +4942,8 @@ def load_slave_status(settings):
 
 def load_configuration(settings):
     global g_config, g_last_config_reload
-    g_config = cmk.event_console.default_config()
+    g_config = cmk.ec.defaults.default_config()
+    g_config['MkpRulePackProxy'] = cmk.ec.export.MkpRulePackProxy  # needed for exec
 
     config_path = settings.paths.main_config_file.value
     if not config_path.exists():
@@ -4951,6 +4951,11 @@ def load_configuration(settings):
     for path in [config_path] + sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path)) as f:
             exec(f, g_config)
+
+    try:
+        cmk.ec.export.bind_to_rule_pack_proxies(g_config['rule_packs'], g_config['mkp_rule_packs'])
+    except cmk.ec.export.MkpRulePackBindingError as e:
+        bail_out("%s" % e)
 
     # If not set by command line, set the log level by configuration
     if settings.options.verbosity == 0:

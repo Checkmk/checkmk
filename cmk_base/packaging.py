@@ -36,6 +36,7 @@ from cStringIO import StringIO
 
 import cmk.tty as tty
 import cmk.paths
+import cmk.ec.export
 
 import cmk.log
 logger = cmk.log.get_logger(__name__)
@@ -76,6 +77,10 @@ package_parts = [ (part, title, perm, ldir and ldir or dir) for part, title, per
   ( "lib",           "Libraries",                 0644, None,                          cmk.paths.local_lib_dir),
   ( "mibs",          "SNMP MIBs",                 0644, None,                          cmk.paths.local_mib_dir),
 ]]
+
+config_parts = [
+    ("ec_rule_packs", "Event Console rule packs", 0644, str(cmk.ec.export.mkp_rule_pack_dir())),
+]
 
 package_ignored_files = {
     "lib": [
@@ -257,7 +262,7 @@ def package_create(args):
 
 def package_find(_no_args):
     first = True
-    for part, title, _unused_perm, dir in get_package_parts():
+    for part, title, _unused_perm, dir in get_package_parts() + config_parts:
         files = unpackaged_files_in_dir(part, dir)
         if len(files) > 0:
             if first:
@@ -275,23 +280,28 @@ def package_find(_no_args):
         logger.verbose("No unpackaged files found.")
 
 
+def release_package(pacname):
+    if not pacname or not package_exists(pacname):
+        raise PackageException("Package %s not installed or corrupt." % pacname)
+
+    package = read_package_info(pacname)
+    logger.verbose("Releasing files of package %s into freedom...", pacname)
+    for part, title, _unused_perm, dir_ in get_package_parts() + config_parts:
+        filenames = package["files"].get(part, [])
+        if len(filenames) > 0:
+            logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
+            for f in filenames:
+                logger.verbose("    %s", f)
+            if part == 'ec_rule_packs':
+                cmk.ec.export.release_packaged_rule_packs(filenames)
+    remove_package_info(pacname)
+
+
 def package_release(args):
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P release NAME")
-
     pacname = args[0]
-    if not package_exists(pacname):
-        raise PackageException("No such package %s." % pacname)
-    package = read_package_info(pacname)
-    logger.verbose("Releasing files of package %s into freedom...", pacname)
-    if logger.is_verbose():
-        for part, title, _unused_perm, _unused_dir in get_package_parts():
-            filenames = package["files"].get(part, [])
-            if len(filenames) > 0:
-                logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
-                for f in filenames:
-                    logger.verbose("    %s", f)
-    remove_package_info(pacname)
+    release_package(pacname)
 
 
 def package_exists(pacname):
@@ -305,7 +315,7 @@ def package_pack(args):
 
     # Make sure, user is not in data directories of Check_MK
     abs_curdir = os.path.abspath(os.curdir)
-    for dir in [cmk.paths.var_dir] + [ p[-1] for p in get_package_parts() ]:
+    for dir in [cmk.paths.var_dir] + [ p[-1] for p in get_package_parts() + config_parts ]:
         if abs_curdir == dir or abs_curdir.startswith(dir + "/"):
             raise PackageException("You are in %s!\n"
                                "Please leave the directories of Check_MK before creating\n"
@@ -348,7 +358,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
     tar.addfile(info, info_file)
 
     # Now pack the actual files into sub tars
-    for part, title, _unused_perm, dir in get_package_parts():
+    for part, title, _unused_perm, dir in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
@@ -376,7 +386,7 @@ def package_remove(args):
 
 
 def remove_package(package):
-    for part, title, _unused_perm, dir in get_package_parts():
+    for part, title, _unused_perm, dir in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s", tty.bold, title, tty.normal)
@@ -384,7 +394,10 @@ def remove_package(package):
                 logger.verbose("    %s", fn)
                 try:
                     path = dir + "/" + fn
-                    os.remove(path)
+                    if part == 'ec_rule_packs':
+                        cmk.ec.export.remove_packaged_rule_packs(filenames)
+                    else:
+                        os.remove(path)
                 except Exception, e:
                     if cmk.debug.enabled():
                         raise
@@ -417,7 +430,6 @@ def edit_package(pacname, new_package_info):
     write_package_info(new_package_info)
 
 
-
 # Packaged files must either be unpackaged or already
 # belong to that package
 def validate_package_files(pacname, files):
@@ -439,7 +451,6 @@ def validate_package_files_part(packages, pacname, part, dir, rel_paths):
             for other_rel_path in other_package_info["files"].get(part, []):
                 if other_rel_path == rel_path and other_pacname != pacname:
                     raise PackageException("File %s does already belong to package %s" % (path, other_pacname))
-
 
 
 def package_install(args):
@@ -469,7 +480,7 @@ def install_package(file_name=None, file_object=None):
 
     # Before installing check for conflicts
     keep_files = {}
-    for part, _unused_title, _unused_perm, dir in get_package_parts():
+    for part, _unused_title, _unused_perm, dir in get_package_parts() + config_parts:
         packaged = packaged_files_in_dir(part)
         keep = []
         keep_files[part] = keep
@@ -488,7 +499,7 @@ def install_package(file_name=None, file_object=None):
 
 
     # Now install files, but only unpack files explicitely listed
-    for part, title, perm, dir in get_package_parts():
+    for part, title, perm, dir in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
@@ -521,10 +532,13 @@ def install_package(file_name=None, file_object=None):
                     logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm, perm)
                     os.chmod(path, perm)
 
+            if part == 'ec_rule_packs':
+                cmk.ec.export.add_rule_pack_proxies(filenames)
+
 
     # In case of an update remove files from old_package not present in new one
     if update:
-        for part, title, perm, dir in get_package_parts():
+        for part, title, perm, dir in get_package_parts() + config_parts:
             filenames = old_package["files"].get(part, [])
             keep = keep_files.get(part, [])
             for fn in filenames:
@@ -535,6 +549,10 @@ def install_package(file_name=None, file_object=None):
                         os.remove(path)
                     except Exception, e:
                         logger.error("Error removing %s: %s", path, e)
+
+            if part == 'ec_rule_packs':
+                to_remove = [fn for fn in filenames if fn not in keep]
+                cmk.ec.export.remove_packaged_rule_packs(to_remove, delete_export=False)
 
     # Last but not least install package file
     write_package_info(package)
@@ -584,7 +602,7 @@ def files_in_dir(part, dir, prefix = ""):
         return []
 
     # Handle case where one part-dir lies below another
-    taboo_dirs = [ d for p, _unused_t, _unused_perm, d in get_package_parts() if p != part ]
+    taboo_dirs = [ d for p, _unused_t, _unused_perm, d in get_package_parts() + config_parts if p != part ]
     if dir in taboo_dirs:
         return []
 
@@ -609,27 +627,32 @@ def files_in_dir(part, dir, prefix = ""):
 
 def unpackaged_files():
     unpackaged = {}
-    for part, _unused_title, _unused_perm, dir in get_package_parts():
+    for part, _unused_title, _unused_perm, dir in get_package_parts() + config_parts:
         unpackaged[part] = unpackaged_files_in_dir(part, dir)
     return unpackaged
 
 
 def package_part_info():
     part_info = {}
-    for part, title, perm, dir in get_package_parts():
+    for part, title, perm, dir in get_package_parts() + config_parts:
+        try:
+            files = os.listdir(dir)
+        except OSError:
+            files = []
+
         part_info[part] = {
             "title"      : title,
             "permission" : perm,
             "path"       : dir,
-            "files"      : os.listdir(dir),
+            "files"      : files,
         }
+
     return part_info
 
 
 def unpackaged_files_in_dir(part, dir):
-    all = files_in_dir(part, dir)
-    packed = packaged_files_in_dir(part)
-    return [ f for f in all if f not in packed ]
+    return [f for f in files_in_dir(part, dir)
+            if f not in packaged_files_in_dir(part)]
 
 
 def packaged_files_in_dir(part):

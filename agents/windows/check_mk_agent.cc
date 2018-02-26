@@ -566,7 +566,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
     try {
         sockaddr_storage current_address;
         std::string current_ip;
-        SOCKET current_socket = INVALID_SOCKET;
+        SocketHandle current_socket(s_winapi);
 
         std::unique_ptr<BufferedSocketProxy> out;
         if (*s_config->encrypted_rt) {
@@ -596,10 +596,9 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                 if (data->new_request) {
                     data->new_request = false;
                     // (re-)establish connection if necessary
-                    if (current_socket != INVALID_SOCKET) {
-                        s_winapi.closesocket(current_socket);
-                        out->setSocket(INVALID_SOCKET);
-                    }
+                    current_socket.reset();
+                    out->setSocket(INVALID_SOCKET);
+
                     current_address = data->last_address;
                     if (current_address.ss_family != 0) {
                         int sockaddr_size = 0;
@@ -651,27 +650,27 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                         }
                         current_ip = ListenSocket::readableIP(&current_address);
 
-                        current_socket = s_winapi.socket(
-                            current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
-                        if (current_socket == INVALID_SOCKET) {
+                        current_socket.reset(
+                            s_winapi.socket(current_address.ss_family,
+                                            SOCK_DGRAM, IPPROTO_UDP));
+                        if (!current_socket) {
                             Emergency(logger) << "failed to establish socket: "
                                               << s_winapi.WSAGetLastError();
                             return 1;
                         }
-                        if (s_winapi.connect(current_socket,
+                        if (s_winapi.connect(current_socket.get(),
                                              (const sockaddr *)&current_address,
                                              sockaddr_size) == SOCKET_ERROR) {
                             Emergency(logger) << "failed to connect: "
                                               << s_winapi.WSAGetLastError();
-                            s_winapi.closesocket(current_socket);
-                            current_socket = INVALID_SOCKET;
+                            current_socket.reset();
                         }
-                        out->setSocket(current_socket);
+                        out->setSocket(current_socket.get());
                     }
                 }
 
                 // send data
-                if (current_socket != INVALID_SOCKET) {
+                if (current_socket) {
                     // send data
                     s_winapi.SetEnvironmentVariable("REMOTE_HOST",
                                                     current_ip.c_str());
@@ -689,7 +688,6 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                 }
             }
         }
-        s_winapi.closesocket(current_socket);
 
         return 0;
     } catch (const std::exception &e) {
@@ -744,20 +742,20 @@ void do_adhoc(const Environment &env) {
     }
 
     while (!g_should_terminate) {
-        SOCKET connection = sock.acceptConnection();
+        SocketHandle connection = std::move(sock.acceptConnection());
         if (connection) {
-            out->setSocket(connection);
+            out->setSocket(connection.get());
 
             if (*s_config->encrypted) {
                 out->writeBinary(RT_PROTOCOL_VERSION, 2);
             }
 
-            std::string ip_hr = sock.readableIP(connection);
+            std::string ip_hr = sock.readableIP(connection.get());
             Debug(logger) << "Accepted client connection from " << ip_hr << ".";
             {  // limit lifetime of mutex lock
                 lock_guard<mutex>(thread_data.mutex);
                 thread_data.new_request = true;
-                thread_data.last_address = sock.address(connection);
+                thread_data.last_address = sock.address(connection.get());
                 thread_data.push_until =
                     time(NULL) + *s_config->realtime_timeout;
             }
@@ -770,7 +768,6 @@ void do_adhoc(const Environment &env) {
                 Alert(Logger::getLogger("winagent"))
                     << "unhandled exception: " << e.what();
             }
-            s_winapi.closesocket(connection);
         }
     }
 

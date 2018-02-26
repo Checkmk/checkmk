@@ -40,11 +40,9 @@ ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist,
     : _logger(logger)
     , _winapi(winapi)
     , _use_ipv6(supportIPV6)
-    , _socket(init_listen_socket(port))
+    , _socket(init_listen_socket(port), winapi)
     , _source_whitelist(source_whitelist)
     , _supports_ipv4(true) {}
-
-ListenSocket::~ListenSocket() { _winapi.closesocket(_socket); }
 
 bool ListenSocket::supportsIPV4() const { return _supports_ipv4; }
 
@@ -206,13 +204,11 @@ sockaddr *ListenSocket::create_sockaddr(int *addr_len) const {
     return result;
 }
 
-SOCKET ListenSocket::acceptConnection() const {
-    SOCKET connection;
+SocketHandle ListenSocket::acceptConnection() const {
     // Loop forever.
-
     fd_set fds;
     FD_ZERO(&fds);
-    FD_SET(_socket, &fds);
+    FD_SET(_socket.get(), &fds);
     struct timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 500000;
@@ -222,17 +218,13 @@ SOCKET ListenSocket::acceptConnection() const {
     while (1 == _winapi.select(1, &fds, NULL, NULL, &timeout)) {
         int addr_len = 0;
         std::unique_ptr<sockaddr> remote_addr(create_sockaddr(&addr_len));
-        connection = _winapi.accept(_socket, remote_addr.get(), &addr_len);
-        connection = RemoveSocketInheritance(connection);
-        if (connection != INVALID_SOCKET) {
-            bool allowed = check_only_from(remote_addr.get());
-
-            if (allowed) {
-                return connection;
-            } else {
-                _winapi.closesocket(connection);
-            }
+        SOCKET rawSocket =
+            _winapi.accept(_socket.get(), remote_addr.get(), &addr_len);
+        SocketHandle connection(RemoveSocketInheritance(rawSocket), _winapi);
+        if (connection && check_only_from(remote_addr.get())) {
+            return connection;
         }
     }
-    return 0;
+
+    return SocketHandle(_winapi);
 }

@@ -31,16 +31,26 @@
 class Logger;
 class WinApiAdaptor;
 
+struct SocketHandleTraits {
+    using HandleT = SOCKET;
+    static HandleT invalidValue() { return INVALID_SOCKET; }
+
+    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+        winapi.closesocket(value);
+    }
+};
+
+using SocketHandle = WrappedHandle<SocketHandleTraits>;
+
 class ListenSocket {
 public:
     ListenSocket(int port, const only_from_t &source_whitelist,
                  bool supportIPV6, Logger *logger, const WinApiAdaptor &winapi);
-    ~ListenSocket();
 
     bool supportsIPV4() const;
     bool supportsIPV6() const;
 
-    SOCKET acceptConnection() const;
+    SocketHandle acceptConnection() const;
 
     sockaddr_storage address(SOCKET connection) const;
 
@@ -56,7 +66,7 @@ private:
     Logger *_logger;
     const WinApiAdaptor &_winapi;
     const bool _use_ipv6;
-    SOCKET _socket;
+    SocketHandle _socket;
     const only_from_t _source_whitelist;
     bool _supports_ipv4;
 };

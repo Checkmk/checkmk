@@ -8005,7 +8005,7 @@ class Ruleset(object):
             if rule.is_disabled():
                 continue
 
-            if rule.matches_host_and_item(Folder.current(), hostname, service) != True:
+            if not rule.matches_host_and_item(Folder.current(), hostname, service):
                 continue
 
             if self.match_type() == "all":
@@ -8266,37 +8266,38 @@ class Rule(object):
     def is_ineffective(self):
         hosts = Host.all()
         for host_name, host in hosts.items():
-            reason = self.matches_host_and_item(host.folder(), host_name, NO_ITEM)
-            if reason == True:
+            if self.matches_host_and_item(host.folder(), host_name, NO_ITEM):
                 return False
         return True
 
 
     def matches_host_and_item(self, host_folder, hostname, item):
-        reasons = []
+        """Whether or not the given folder/host/item matches this rule"""
+        for reason in self.get_mismatch_reasons(host_folder, hostname, item):
+            return False
+        return True
+
+
+    def get_mismatch_reasons(self, host_folder, hostname, item):
+        """A generator that provides the reasons why a given folder/host/item not matches this rule"""
         host = host_folder.host(hostname)
 
         if not self._matches_hostname(hostname):
-            reasons.append(_("The host name does not match."))
+            yield _("The host name does not match.")
 
         for tag in self.tag_specs:
             if tag[0] != '/' and tag[0] != '!' and tag not in host.tags():
-                reasons.append(_("The host is missing the tag %s") % tag)
+                yield _("The host is missing the tag %s") % tag
             elif tag[0] == '!' and tag[1:] in host.tags():
-                reasons.append(_("The host has the tag %s") % tag)
+                yield _("The host has the tag %s") % tag
 
         if not self.folder.is_transitive_parent_of(host_folder):
-            reasons.append(_("The rule does not apply to the folder of the host."))
+            yield _("The rule does not apply to the folder of the host.")
 
         if item != NO_ITEM and self.ruleset.item_type():
             if not self.matches_item(item):
-                reasons.append(_("The %s \"%s\" does not match this rule.") %
-                       (self.ruleset.item_name(), item))
-
-        if not reasons:
-            return True
-        else:
-            return " ".join(reasons)
+                yield _("The %s \"%s\" does not match this rule.") % \
+                                      (self.ruleset.item_name(), item)
 
 
     def _matches_hostname(self, hostname):

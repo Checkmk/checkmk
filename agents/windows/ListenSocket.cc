@@ -113,19 +113,10 @@ SOCKET ListenSocket::init_listen_socket(int port) {
         _winapi.socket(_use_ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
     if (tmp_s == INVALID_SOCKET) {
         int error_id = _winapi.WSAGetLastError();
-        if (error_id == WSAEAFNOSUPPORT) {
-            // this will happen on Win2k and WinXP without the ipv6 patch
-            Notice(_logger) << "IPV6 not supported";
-            _use_ipv6 = false;
-            tmp_s = _winapi.socket(AF_INET, SOCK_STREAM, 0);
-        }
-        if (tmp_s == INVALID_SOCKET) {
-            error_id = _winapi.WSAGetLastError();
-            fprintf(stderr, "Cannot create socket: %s (%d)\n",
-                    get_win_error_as_string(_winapi, error_id).c_str(),
-                    error_id);
-            exit(1);
-        }
+        Error(_logger) << "Cannot create socket: "
+                       << get_win_error_as_string(_winapi, error_id) << " ("
+                       << error_id << ")";
+        exit(1);
     }
     SOCKET s = RemoveSocketInheritance(tmp_s);
 
@@ -151,13 +142,14 @@ SOCKET ListenSocket::init_listen_socket(int port) {
 
     if (SOCKET_ERROR == _winapi.bind(s, addr.get(), addr_size)) {
         int error_id = _winapi.WSAGetLastError();
-        fprintf(stderr, "Cannot bind socket to port %d: %s (%d)\n", port,
-                get_win_error_as_string(_winapi, error_id).c_str(), error_id);
+        Error(_logger) << "Cannot bind socket to port " << port << ": "
+                       << get_win_error_as_string(_winapi, error_id) << " ("
+                       << error_id << ")";
         exit(1);
     }
 
     if (SOCKET_ERROR == _winapi.listen(s, 5)) {
-        fprintf(stderr, "Cannot listen to socket\n");
+        Error(_logger) << "Cannot listen to socket";
         exit(1);
     }
 

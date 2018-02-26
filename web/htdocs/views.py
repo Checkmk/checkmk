@@ -805,7 +805,7 @@ class Cell(object):
                 else:
                     txt = img_filename
 
-            txt = html.unescape_attributes(txt)
+            txt = html.escaper.unescape_attributes(txt)
             txt = html.strip_tags(txt)
 
             return css_classes, txt

@@ -912,7 +912,7 @@ def log_event_history_to_file(settings, event, what, who, addinfo):
         columns += [quote_tab(event.get(colname[6:], defval))  # drop "event_"
                     for colname, defval in g_status_server.table_events.columns]
 
-        get_logfile(settings.paths.history_dir.value).write("\t".join(map(to_utf8, columns)) + "\n")
+        get_logfile(settings.paths.history_dir.value).write_bytes("\t".join(map(to_utf8, columns)) + "\n")
 
 
 def to_utf8(x):
@@ -964,7 +964,7 @@ def get_logfile(log_dir):
 
         active_history_period = timestamp
 
-    return file(log_dir + "/%d.log" % timestamp, "a")
+    return log_dir / ("%d.log" % timestamp)
 
 
 # Return timestamp of the beginning of the current history
@@ -2894,7 +2894,7 @@ class EventServer(ECServerThread):
 
     def log_message(self, event):
         try:
-            get_logfile(self.settings.paths.messages_dir.value).write("%s %s %s%s: %s\n" % (
+            get_logfile(self.settings.paths.messages_dir.value).write_bytes("%s %s %s%s: %s\n" % (
                 time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),
                 event["host"],
                 event["application"],

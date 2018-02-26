@@ -35,11 +35,11 @@ static const size_t INET6_ADDRSTRLEN = 46;
 
 ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist,
                            bool supportIPV6, Logger *logger)
-    : _use_ipv6(supportIPV6)
-    , _socket(init_listen_socket(port))
-    , _source_whitelist(source_whitelist)
+    : _logger(logger)
+    , _use_ipv6(supportIPV6)
     , _supports_ipv4(true)
-    , _logger(logger) {}
+    , _socket(init_listen_socket(port))
+    , _source_whitelist(source_whitelist) {}
 
 ListenSocket::~ListenSocket() { closesocket(_socket); }
 

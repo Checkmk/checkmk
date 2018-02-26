@@ -33,12 +33,6 @@
 class Logger;
 
 class ListenSocket {
-    bool _use_ipv6;
-    SOCKET _socket;
-    only_from_t _source_whitelist;
-    bool _supports_ipv4;
-    Logger *_logger;
-
 public:
     ListenSocket(int port, const only_from_t &source_whitelist,
                  bool supportIPV6, Logger *logger);
@@ -58,6 +52,12 @@ private:
     SOCKET init_listen_socket(int port);
     bool check_only_from(sockaddr *ip);
     sockaddr *create_sockaddr(int *addr_len);
+
+    Logger *_logger;
+    bool _use_ipv6;
+    bool _supports_ipv4;
+    SOCKET _socket;
+    const only_from_t _source_whitelist;
 };
 
 #endif  // ListenSocket_h

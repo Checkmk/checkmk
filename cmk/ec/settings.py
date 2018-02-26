@@ -56,7 +56,14 @@ Paths = NamedTuple(
               ('event_pipe', AnnotatedPath),
               ('pid_file', AnnotatedPath),
               ('log_file', AnnotatedPath),
-              ('state_dir', AnnotatedPath),
+              ('history_dir', AnnotatedPath),
+              ('messages_dir', AnnotatedPath),
+              ('master_config_file', AnnotatedPath),
+              ('slave_status_file', AnnotatedPath),
+              ('spool_dir', AnnotatedPath),
+              ('status_file', AnnotatedPath),
+              ('status_server_profile', AnnotatedPath),
+              ('event_server_profile', AnnotatedPath),
               ('compiled_mibs_dir', AnnotatedPath),
               ('mongodb_config_file', AnnotatedPath)])
 
@@ -64,22 +71,33 @@ Paths = NamedTuple(
 def default_paths(omd_root, default_config_dir):
     # type: (Path, Path) -> Paths
     """Returns all default filesystem paths related to the event console"""
+    run_dir = omd_root / 'tmp/run/mkeventd'
+    state_dir = omd_root / 'var/mkeventd'
     return Paths(
-        main_config_file=AnnotatedPath('main configuration',
-                                       default_config_dir / 'mkeventd.mk'),
-        config_dir=AnnotatedPath('configuration directory',
-                                 default_config_dir / 'mkeventd.d'),
-        unix_socket=AnnotatedPath('Unix socket',
-                                  omd_root / 'tmp/run/mkeventd/status'),
-        event_socket=AnnotatedPath('event socket',
-                                   omd_root / 'tmp/run/mkeventd/eventsocket'),
-        event_pipe=AnnotatedPath('event pipe',
-                                 omd_root / 'tmp/run/mkeventd/events'),
-        pid_file=AnnotatedPath('PID file', omd_root / 'tmp/run/mkeventd/pid'),
+        main_config_file=AnnotatedPath(
+            'main configuration', default_config_dir / 'mkeventd.mk'),
+        config_dir=AnnotatedPath(
+            'configuration directory', default_config_dir / 'mkeventd.d'),
+        unix_socket=AnnotatedPath('Unix socket', run_dir / 'status'),
+        event_socket=AnnotatedPath('event socket', run_dir / 'eventsocket'),
+        event_pipe=AnnotatedPath('event pipe', run_dir / 'events'),
+        pid_file=AnnotatedPath('PID file', run_dir / 'pid'),
         log_file=AnnotatedPath('log file', omd_root / 'var/log/mkeventd.log'),
-        state_dir=AnnotatedPath('state directory', omd_root / 'var/mkeventd'),
-        compiled_mibs_dir=AnnotatedPath('compiled MIBs directory',
-                                        omd_root / 'local/share/check_mk/compiled_mibs'),
+        history_dir=AnnotatedPath('history directory', state_dir / 'history'),
+        messages_dir=AnnotatedPath(
+            'messages directory', state_dir / 'messages'),
+        master_config_file=AnnotatedPath(
+            'master configuraion', state_dir / 'master_config'),
+        slave_status_file=AnnotatedPath(
+            'slave status', state_dir / 'slave_status'),
+        spool_dir=AnnotatedPath('spool directory', state_dir / 'spool'),
+        status_file=AnnotatedPath('status file', state_dir / 'status'),
+        status_server_profile=AnnotatedPath(
+            'status server profile', state_dir / 'StatusServer.profile'),
+        event_server_profile=AnnotatedPath(
+            'event server profile', state_dir / 'EventServer.profile'),
+        compiled_mibs_dir=AnnotatedPath(
+            'compiled MIBs directory', omd_root / 'local/share/check_mk/compiled_mibs'),
         mongodb_config_file=AnnotatedPath('MongoDB configuration', omd_root / 'etc/mongodb.conf'))
 
 
@@ -202,8 +220,8 @@ Options = NamedTuple(
 
 # all settings of the event console
 Settings = NamedTuple(
-    'Setting', [('paths', Paths),
-                ('options', Options)])
+    'Settings', [('paths', Paths),
+                 ('options', Options)])
 
 
 def settings(version, omd_root, default_config_dir, argv):

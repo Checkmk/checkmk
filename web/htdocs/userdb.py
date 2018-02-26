@@ -925,50 +925,41 @@ def convert_idle_timeout(value):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-# TODO: Use store. methods. Don't initialize strucutres on corrupted files.
 def load_roles():
-    # Fake builtin roles into user roles.
-    builtin_role_names = {  # Default names for builtin roles
+    roles = store.load_from_mk_file(multisite_dir + "roles.mk", "roles",
+                                    default=_get_builtin_roles())
+
+    # Make sure that "general." is prefixed to the general permissions
+    # (due to a code change that converted "use" into "general.use", etc.
+    # TODO: Can't we drop this? This seems to be from very early days of the GUI
+    for role in roles.values():
+        for pname, pvalue in role["permissions"].items():
+            if "." not in pname:
+                del role["permissions"][pname]
+                role["permissions"]["general." + pname] = pvalue
+
+    # Reflect the data in the roles dict kept in the config module needed
+    # for instant changes in current page while saving modified roles.
+    # Otherwise the hooks would work with old data when using helper
+    # functions from the config module
+    # TODO: load_roles() should not update global structures
+    config.roles.update(roles)
+
+    return roles
+
+
+def _get_builtin_roles():
+    """Returns a role dictionary containing the bultin default roles"""
+    builtin_role_names = {
         "admin" : _("Administrator"),
         "user"  : _("Normal monitoring user"),
         "guest" : _("Guest user"),
     }
-    roles = dict([(id, {
+    return dict([(id, {
          "alias" : builtin_role_names.get(id, id),
          "permissions" : {}, # use default everywhere
          "builtin": True})
                   for id in config.builtin_role_ids ])
-
-    filename = multisite_dir + "roles.mk"
-    try:
-        vars = { "roles" : roles }
-        execfile(filename, vars, vars)
-        # Make sure that "general." is prefixed to the general permissions
-        # (due to a code change that converted "use" into "general.use", etc.
-        for role in roles.values():
-            for pname, pvalue in role["permissions"].items():
-                if "." not in pname:
-                    del role["permissions"][pname]
-                    role["permissions"]["general." + pname] = pvalue
-
-        # Reflect the data in the roles dict kept in the config module needed
-        # for instant changes in current page while saving modified roles.
-        # Otherwise the hooks would work with old data when using helper
-        # functions from the config module
-        config.roles.update(vars['roles'])
-
-        return vars["roles"]
-
-    except IOError:
-        return roles # Use empty structure, not existing file is ok!
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        else:
-            auth_logger.error('load_roles: Problem while loading roles (%s - %s). '
-                     'Initializing structure...' % (filename, e))
-        return roles
 
 #.
 #   .-Groups---------------------------------------------------------------.
@@ -981,52 +972,47 @@ def load_roles():
 #   +----------------------------------------------------------------------+
 # TODO: Contact groups are fine here, but service / host groups?
 
-# TODO: Use store. methods. Don't initialize strucutres on corrupted files.
 def load_group_information():
-    try:
-        # Load group information from Check_MK world
-        vars = {}
-        for what in ["host", "service", "contact" ]:
-            vars["define_%sgroups" % what] = {}
+    cmk_base_groups = _load_cmk_base_groups()
+    gui_groups = _load_gui_groups()
 
-        filename = root_dir + "groups.mk"
-        try:
-            execfile(filename, vars, vars)
-        except IOError:
-            return {} # skip on not existing file
+    # Merge information from Check_MK and Multisite worlds together
+    groups = {}
+    for what in ["host", "service", "contact" ]:
+        groups[what] = {}
+        for id, alias in cmk_base_groups['define_%sgroups' % what].items():
+            groups[what][id] = {
+                'alias': alias
+            }
 
-        # Now load information from the Web world
-        multisite_vars = {}
-        for what in ["host", "service", "contact" ]:
-            multisite_vars["multisite_%sgroups" % what] = {}
+            if id in gui_groups['multisite_%sgroups' % what]:
+                groups[what][id].update(gui_groups['multisite_%sgroups' % what][id])
 
-        filename = multisite_dir + "groups.mk"
-        try:
-            execfile(filename, multisite_vars, multisite_vars)
-        except IOError:
-            pass
+    return groups
 
-        # Merge information from Check_MK and Multisite worlds together
-        groups = {}
-        for what in ["host", "service", "contact" ]:
-            groups[what] = {}
-            for id, alias in vars['define_%sgroups' % what].items():
-                groups[what][id] = {
-                    'alias': alias
-                }
-                if id in multisite_vars['multisite_%sgroups' % what]:
-                    groups[what][id].update(multisite_vars['multisite_%sgroups' % what][id])
 
-        return groups
+def _load_cmk_base_groups():
+    """Load group information from Check_MK world"""
+    group_specs = {
+        "define_hostgroups": {},
+        "define_servicegroups": {},
+        "define_contactgroups": {},
+    }
+    for what in ["host", "service", "contact" ]:
+        group_specs["define_%sgroups" % what] = {}
 
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        else:
-            auth_logger.error('load_group_information: Problem while loading groups (%s - %s). '
-                     'Initializing structure...' % (filename, e))
-        return {}
+    return store.load_mk_file(root_dir + "groups.mk", default=group_specs)
+
+
+def _load_gui_groups():
+    # Now load information from the Web world
+    group_specs = {
+        "multisite_hostgroups": {},
+        "multisite_servicegroups": {},
+        "multisite_contactgroups": {},
+    }
+
+    return store.load_mk_file(multisite_dir + "groups.mk", default=group_specs)
 
 
 class GroupChoice(DualListChoice):

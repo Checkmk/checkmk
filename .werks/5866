@@ -1,0 +1,13 @@
+Title: Fixed performance issue on ruleset search and discovery page with a large number of rules
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519639736
+Class: fix
+
+When rule matching was analyzed in WATO, which is done for example on the ruleset rule listing
+page, on the analyze rulset page of hosts or on the service discovery page, a time consuming
+match function needs to be called. This function has now been optimizied which should result in
+a more performant processing of these pages with a larger number of rules.

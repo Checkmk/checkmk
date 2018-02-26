@@ -729,9 +729,9 @@ g_mongo_conn = None
 g_mongo_db = None
 
 
-def mongodb_local_connection_opts():
+def mongodb_local_connection_opts(settings):
     ip, port = None, None
-    with g_settings.paths.mongodb_config_file.value.open(encoding='utf-8') as f:
+    with settings.paths.mongodb_config_file.value.open(encoding='utf-8') as f:
         for l in f:
             if l.startswith('bind_ip'):
                 ip = l.split('=')[1].strip()
@@ -740,11 +740,11 @@ def mongodb_local_connection_opts():
     return ip, port
 
 
-def connect_mongodb():
+def connect_mongodb(settings):
     global g_mongo_conn, g_mongo_db
     if Connection is None:
         raise Exception('Could not initialize MongoDB (Python-Modules are missing)')
-    g_mongo_conn = Connection(*mongodb_local_connection_opts())
+    g_mongo_conn = Connection(*mongodb_local_connection_opts(settings))
     g_mongo_db = g_mongo_conn.__getitem__(os.environ['OMD_SITE'])
 
 
@@ -760,18 +760,18 @@ def get_mongodb_max_history_age():
         return result['dt_-1']['expireAfterSeconds']
 
 
-def update_mongodb_indexes():
+def update_mongodb_indexes(settings):
     if not g_mongo_conn:
-        connect_mongodb()
+        connect_mongodb(settings)
     result = g_mongo_db.ec_archive.index_information()
 
     if 'time_-1' not in result:
         g_mongo_db.ec_archive.ensure_index([('time', DESCENDING)])
 
 
-def update_mongodb_history_lifetime():
+def update_mongodb_history_lifetime(settings):
     if not g_mongo_conn:
-        connect_mongodb()
+        connect_mongodb(settings)
 
     if get_mongodb_max_history_age() == g_config['history_lifetime'] * 86400:
         return  # do not update already correct index
@@ -807,9 +807,9 @@ def mongodb_next_id(name, first_id=0):
         return ret['seq']
 
 
-def log_event_history_to_mongodb(event, what, who, addinfo):
+def log_event_history_to_mongodb(settings, event, what, who, addinfo):
     if not g_mongo_conn:
-        connect_mongodb()
+        connect_mongodb(settings)
     # We converted _id to be an auto incrementing integer. This makes the unique
     # index compatible to history_line of the file (which is handled as integer)
     # within mkeventd. It might be better to use the ObjectId() of MongoDB, but
@@ -826,13 +826,13 @@ def log_event_history_to_mongodb(event, what, who, addinfo):
     })
 
 
-def get_event_history_from_mongodb(query):
+def get_event_history_from_mongodb(settings query):
     filters, limit = query.filters, query.limit
 
     history_entries = []
 
     if not g_mongo_conn:
-        connect_mongodb()
+        connect_mongodb(settings)
 
     # Construct the mongodb filtering specification. We could fetch all information
     # and do filtering on this data, but this would be way too inefficient.
@@ -908,12 +908,12 @@ def get_event_history_from_mongodb(query):
 #   | Functions for logging the history of events                          |
 #   '----------------------------------------------------------------------'
 
-def log_event_history(event, what, who="", addinfo=""):
+def log_event_history(settings, event, what, who="", addinfo=""):
     if g_config["debug_rules"]:
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
     if g_config['archive_mode'] == 'mongodb':
-        log_event_history_to_mongodb(event, what, who, addinfo)
+        log_event_history_to_mongodb(settings, event, what, who, addinfo)
     else:
         log_event_history_to_file(event, what, who, addinfo)
 
@@ -1006,9 +1006,9 @@ def current_history_period():
 
 
 # Delete old log files
-def expire_logfiles(flush=False):
+def expire_logfiles(settings, flush=False):
     # TODO(sp) Use pathlib facilities below
-    log_dir = str(history_path(g_settings))
+    log_dir = str(history_path(settings))
     if not os.path.exists(log_dir):
         return  # No historic files to delete yet.
 
@@ -1036,28 +1036,28 @@ def expire_logfiles(flush=False):
                         os.remove(path)
 
     except Exception as e:
-        if g_settings.options.debug:
+        if settings.options.debug:
             raise
         logger.exception("Error expiring log files: %s" % e)
 
 
-def flush_event_history():
+def flush_event_history(settings):
     if g_config['archive_mode'] == 'mongodb':
         flush_event_history_mongodb()
     else:
-        flush_event_history_files()
+        flush_event_history_files(settings)
 
 
-def flush_event_history_files():
+def flush_event_history_files(settings):
     with lock_logging:
-        expire_logfiles(True)
+        expire_logfiles(settings, True)
 
 
-def get_event_history_from_file(query):
+def get_event_history_from_file(settings, query):
     filters, limit = query.filters, query.limit
     history_entries = []
     # TODO(sp) Use pathlib facilities below
-    log_dir = str(history_path(g_settings))
+    log_dir = str(history_path(settings))
     if not os.path.exists(log_dir):
         return []
 
@@ -1112,7 +1112,7 @@ def get_event_history_from_file(query):
             # then we skip this file. It cannot contain
             # any useful entry for us.
             if len(time_filters):
-                if g_settings.options.debug:
+                if settings.options.debug:
                     logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue  # skip this file
 
@@ -1801,7 +1801,7 @@ class EventServer(ECServerThread):
 
         if g_config['archive_mode'] != 'mongodb':
             with lock_logging:
-                expire_logfiles()
+                expire_logfiles(settings)
 
     # For all events that have been created in a host downtime check the host
     # whether or not it is still in downtime. In case the downtime has ended
@@ -1844,14 +1844,14 @@ class EventServer(ECServerThread):
                     self.logger.info("Deleting orphaned event %d created by obsolete rule %s" %
                                      (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    log_event_history(event, "ORPHANED")
+                    log_event_history(self.settings, event, "ORPHANED")
                     events_to_delete.append(nr)
 
                 elif "count" not in rule and "expect" not in rule:
                     self.logger.info("Count-based event %d belonging to rule %s: rule does not "
                                      "count/expect anymore. Deleting event." % (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    log_event_history(event, "NOCOUNT")
+                    log_event_history(self.settings, event, "NOCOUNT")
                     events_to_delete.append(nr)
 
                 # handle counting
@@ -1877,7 +1877,7 @@ class EventServer(ECServerThread):
                                 self.logger.info("Rule %s/%s, event %d: again without allowed rate, dropping event" %
                                                  (rule["pack"], rule["id"], event["id"]))
                                 event["phase"] = "closed"
-                                log_event_history(event, "COUNTFAILED")
+                                log_event_history(self.settings, event, "COUNTFAILED")
                                 events_to_delete.append(nr)
 
                     else:  # algorithm 'interval'
@@ -1886,7 +1886,7 @@ class EventServer(ECServerThread):
                                              "Resetting to zero." % (rule["pack"], rule["id"], event["count"],
                                                                      count["count"], count["period"]))
                             event["phase"] = "closed"
-                            log_event_history(event, "COUNTFAILED")
+                            log_event_history(self.settings, event, "COUNTFAILED")
                             events_to_delete.append(nr)
 
             # Handle delayed actions
@@ -1895,12 +1895,12 @@ class EventServer(ECServerThread):
                 if now >= delay_until:
                     self.logger.info("Delayed event %d of rule %s is now activated." % (event["id"], event["rule_id"]))
                     event["phase"] = "open"
-                    log_event_history(event, "DELAYOVER")
+                    log_event_history(self.settings, event, "DELAYOVER")
                     if rule:
-                        event_has_opened(rule, event)
+                        event_has_opened(self.settings, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
-                            log_event_history(event, "AUTODELETE")
+                            log_event_history(self.settings, event, "AUTODELETE")
                             events_to_delete.append(nr)
 
                     else:
@@ -1915,7 +1915,7 @@ class EventServer(ECServerThread):
                         events_to_delete.append(nr)
                         self.logger.info("Livetime of event %d (rule %s) exceeded. Deleting event." %
                                          (event["id"], event["rule_id"]))
-                        log_event_history(event, "EXPIRED")
+                        log_event_history(self.settings, event, "EXPIRED")
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
         for nr in events_to_delete[::-1]:
@@ -1969,7 +1969,7 @@ class EventServer(ECServerThread):
                             self.logger.info("Rule %s/%s has reached %d occurrances (%d required). "
                                              "Starting next period." %
                                              (rule["pack"], rule["id"], event["count"], expected_count))
-                            log_event_history(event, "COUNTREACHED")
+                            log_event_history(self.settings, event, "COUNTREACHED")
                         # Counting event is no longer needed.
                         events_to_delete.append(nr)
                         break
@@ -2011,7 +2011,7 @@ class EventServer(ECServerThread):
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
             self.rewrite_event(rule, merge_event, ())
-            log_event_history(merge_event, "COUNTFAILED")
+            log_event_history(self.settings, merge_event, "COUNTFAILED")
         else:
             # Create artifical event from scratch. Make sure that all important
             # fields are defined.
@@ -2036,11 +2036,11 @@ class EventServer(ECServerThread):
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
             g_event_status.new_event(event)
-            log_event_history(event, "COUNTFAILED")
-            event_has_opened(rule, event)
+            log_event_history(self.settings, event, "COUNTFAILED")
+            event_has_opened(self.settings, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
-                log_event_history(event, "AUTODELETE")
+                log_event_history(self.settings, event, "AUTODELETE")
                 g_event_status.remove_event(event)
 
     def reload_configuration(self):
@@ -2304,13 +2304,13 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                event_has_opened(rule, existing_event)
+                                event_has_opened(self.settings, rule, existing_event)
 
-                            log_event_history(existing_event, "COUNTREACHED")
+                            log_event_history(self.settings, existing_event, "COUNTREACHED")
 
                             if "delay" not in rule and rule.get("autodelete"):
                                 existing_event["phase"] = "closed"
-                                log_event_history(existing_event, "AUTODELETE")
+                                log_event_history(self.settings, existing_event, "AUTODELETE")
                                 with lock_eventstatus:
                                     g_event_status.remove_event(existing_event)
                     elif "expect" in rule:
@@ -2326,10 +2326,10 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                event_has_opened(rule, event)
+                                event_has_opened(self.settings, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
-                                    log_event_history(event, "AUTODELETE")
+                                    log_event_history(self.settings, event, "AUTODELETE")
                                     with lock_eventstatus:
                                         g_event_status.remove_event(event)
                     return
@@ -3500,11 +3500,15 @@ class StatusTableHistory(StatusTable):
         ("history_addinfo", ""),
     ] + StatusTableEvents.columns
 
+    def __init__(self, settings):
+        super(StatusTableHistory, self).__init__()
+        self.settings = settings
+
     def _enumerate(self, query):
         if g_config['archive_mode'] == 'mongodb':
-            return get_event_history_from_mongodb(query)
+            return get_event_history_from_mongodb(settings, query)
         else:
-            return get_event_history_from_file(query)
+            return get_event_history_from_file(settings, query)
 
 
 class StatusTableRules(StatusTable):
@@ -3548,7 +3552,7 @@ class StatusServer(ECServerThread):
         self._reopen_sockets = False
 
         self.table_events = StatusTableEvents()
-        self.table_history = StatusTableHistory()
+        self.table_history = StatusTableHistory(settings)
         self.table_rules = StatusTableRules()
         self.table_status = StatusTableStatus()
 
@@ -3779,7 +3783,7 @@ class StatusServer(ECServerThread):
         if int(acknowledged) and event["phase"] not in ["open", "ack"]:
             raise MKClientError("You cannot acknowledge an event that is not open.")
         event["phase"] = int(acknowledged) and "ack" or "open"
-        log_event_history(event, "UPDATE", user)
+        log_event_history(self.settings, event, "UPDATE", user)
 
     def handle_command_create(self, arguments):
         # Would rather use g_event_server.process_raw_line(), but we are already
@@ -3796,7 +3800,7 @@ class StatusServer(ECServerThread):
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         event["state"] = int(newstate)
-        log_event_history(event, "CHANGESTATE", user)
+        log_event_history(self.settings, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
         reload_configuration(self.settings)
@@ -3808,7 +3812,7 @@ class StatusServer(ECServerThread):
 
     # Erase our current state and history!
     def handle_command_flush(self):
-        flush_event_history()
+        flush_event_history(self.settings)
         g_event_status.flush()
         g_event_status.save_status()
         if is_replication_slave():
@@ -3844,7 +3848,7 @@ class StatusServer(ECServerThread):
                     raise MKClientError("The action '%s' is not defined. After adding new commands please "
                                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = g_config["action"][action_id]
-            do_event_action(action, event, user)
+            do_event_action(self.settings, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -4112,14 +4116,14 @@ class EventStatus(object):
         self._events.append(event)
         self.num_existing_events += 1
         self._count_event_add(event)
-        log_event_history(event, "NEW")
+        log_event_history(self.settings, event, "NEW")
 
     def archive_event(self, event):
         g_perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         event["phase"] = "closed"
-        log_event_history(event, "ARCHIVED")
+        log_event_history(self.settings, event, "ARCHIVED")
 
     def remove_event(self, event):
         try:
@@ -4188,7 +4192,7 @@ class EventStatus(object):
                         event["time"] = new_event["time"]
                         event["last"] = new_event["time"]
                         event["priority"] = new_event["priority"]
-                        log_event_history(event, "CANCELLED")
+                        log_event_history(self.settings, event, "CANCELLED")
                         actions = rule.get("cancel_actions", [])
                         if actions:
                             if previous_phase != "open" \
@@ -4197,7 +4201,7 @@ class EventStatus(object):
                                                  "is not 'open' but '%s'" %
                                                  (event["id"], previous_phase))
                             else:
-                                do_event_actions(actions, event, is_cancelling=True)
+                                do_event_actions(self.settings, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -4353,7 +4357,7 @@ class EventStatus(object):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
                 event["phase"] = "closed"
-                log_event_history(event, "DELETE", user)
+                log_event_history(self.settings, event, "DELETE", user)
                 self._remove_event_by_nr(nr)
                 return
         raise MKClientError("No event with id %s" % event_id)
@@ -4378,7 +4382,7 @@ class EventStatus(object):
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
-def event_has_opened(rule, event):
+def event_has_opened(settings, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -4390,12 +4394,12 @@ def event_has_opened(rule, event):
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(rule.get("actions", []), event, is_cancelling=False)
+    do_event_actions(settings, rule.get("actions", []), event, is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(actions, event, is_cancelling):
+def do_event_actions(settings, actions, event, is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event, is_cancelling=is_cancelling)
@@ -4408,7 +4412,7 @@ def do_event_actions(actions, event, is_cancelling):
             else:
                 logger.info("Going to execute action '%s' on event %d" %
                             (action["title"], event["id"]))
-                do_event_action(action, event)
+                do_event_action(settings, action, event)
 
 
 # Rule actions are currently done synchronously. Actions should
@@ -4441,7 +4445,7 @@ def escape_null_bytes(s):
     return s.replace("\000", "\\000")
 
 
-def do_event_action(action, event, user=""):
+def do_event_action(settings, action, event, user=""):
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return
@@ -4454,14 +4458,14 @@ def do_event_action(action, event, user=""):
             body = escape_null_bytes(substitute_event_tags(settings["body"], event))
 
             send_email(to, subject, body)
-            log_event_history(event, "EMAIL", user, "%s|%s" % (to, subject))
+            log_event_history(settings, event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
             execute_script(escape_null_bytes(substitute_event_tags(settings["script"], get_quoted_event(event))), event)
-            log_event_history(event, "SCRIPT", user, action['id'])
+            log_event_history(settings, event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:
-        if g_settings.options.debug:
+        if settings.options.debug:
             raise
         logger.exception("Error during execution of action %s" % action["id"])
 
@@ -5010,8 +5014,8 @@ def load_configuration(settings):
 
     # Configure the auto deleting indexes in the DB when mongodb is enabled
     if g_config['archive_mode'] == 'mongodb':
-        update_mongodb_indexes()
-        update_mongodb_history_lifetime()
+        update_mongodb_indexes(settings)
+        update_mongodb_history_lifetime(settings)
 
     # Are we a replication slave? Parts of the configuration
     # will be overridden by values from the master.
@@ -5073,19 +5077,20 @@ lock_logging = ECLock("history")
 g_terminate_main_event = threading.Event()
 
 if __name__ == "__main__":
+    # TODO(sp) Move all the stuff below in to a function so we don't have to
+    # pollute the global namspace like hell.
     os.unsetenv("LANG")
 
-    # TODO(sp) Putting the settings into a global variable is a temporary hack!
-    g_settings = cmk.ec.settings.settings(cmk.__version__,
-                                          pathlib.Path(cmk.paths.omd_root),
-                                          pathlib.Path(cmk.paths.default_config_dir),
-                                          sys.argv)
+    settings = cmk.ec.settings.settings(cmk.__version__,
+                                        pathlib.Path(cmk.paths.omd_root),
+                                        pathlib.Path(cmk.paths.default_config_dir),
+                                        sys.argv)
 
     try:
         cmk.log.open_log(sys.stderr)
-        cmk.log.set_verbosity(g_settings.options.verbosity)
+        cmk.log.set_verbosity(settings.options.verbosity)
 
-        if g_settings.options.snmptrap_udp is not None:
+        if settings.options.snmptrap_udp is not None:
             # Needed for receiving traps
             from pysnmp.entity import engine as snmp_engine
             from pysnmp.entity import config as snmp_config
@@ -5099,16 +5104,16 @@ if __name__ == "__main__":
             from pysnmp.smi.error import SmiError
             from pyasn1.error import ValueConstraintError
 
-        g_settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
-        if not g_settings.options.foreground:
-            cmk.log.open_log(str(g_settings.paths.log_file.value))
+        settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
+        if not settings.options.foreground:
+            cmk.log.open_log(str(settings.paths.log_file.value))
 
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting" % cmk.__version__)
 
-        load_configuration(g_settings)
+        load_configuration(settings)
 
-        pid_path = g_settings.paths.pid_file.value
+        pid_path = settings.paths.pid_file.value
         if pid_path.exists():
             old_pid = int(pid_path.read_text(encoding='utf-8'))
             if process_exists(old_pid):
@@ -5117,24 +5122,24 @@ if __name__ == "__main__":
             logger.info("Removed orphaned PID file %s (process %d not running anymore)." % (pid_path, old_pid))
 
         # Make sure paths exist
-        g_settings.paths.event_pipe.value.parent.mkdir(parents=True, exist_ok=True)
-        g_settings.paths.state_dir.value.mkdir(parents=True, exist_ok=True)
+        settings.paths.event_pipe.value.parent.mkdir(parents=True, exist_ok=True)
+        settings.paths.state_dir.value.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
         g_perfcounters = Perfcounters()
-        g_event_status = EventStatus(g_settings)
-        g_status_server = StatusServer(g_settings)
+        g_event_status = EventStatus(settings)
+        g_status_server = StatusServer(settings)
         g_status_server.open_sockets()
-        g_event_server = EventServer(g_settings)
+        g_event_server = EventServer(settings)
         g_event_server.open_sockets()
 
         g_event_status.load_status()
 
-        initialize_snmptrap_handling(g_settings)
+        initialize_snmptrap_handling(settings)
 
         g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 
-        if not g_settings.options.foreground:
+        if not settings.options.foreground:
             pid_path.parent.mkdir(parents=True, exist_ok=True)
             cmk.daemon.daemonize()
             logger.info("Daemonized with PID %d." % os.getpid())
@@ -5148,7 +5153,7 @@ if __name__ == "__main__":
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(g_settings)
+        run_eventd(settings)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)
@@ -5160,7 +5165,7 @@ if __name__ == "__main__":
         # to write into the pipe.
         logger.verbose("Cleaning up event pipe")
         pipe = g_event_server.open_pipe()  # Open it
-        g_settings.paths.event_pipe.value.unlink() # Remove pipe
+        settings.paths.event_pipe.value.unlink() # Remove pipe
         drain_pipe(pipe)                   # Drain any data
         os.close(pipe)                     # Close pipe
 
@@ -5168,16 +5173,16 @@ if __name__ == "__main__":
         g_event_status.save_status()
 
         logger.verbose("Cleaning up sockets")
-        g_settings.paths.unix_socket.value.unlink()
-        g_settings.paths.event_socket.value.unlink()
+        settings.paths.unix_socket.value.unlink()
+        settings.paths.event_socket.value.unlink()
 
         logger.verbose("Output hash stats")
         g_event_server.output_hash_stats()
 
         logger.verbose("Closing fds which might be still open")
-        for fd in [g_settings.options.syslog_udp,
-                   g_settings.options.syslog_tcp,
-                   g_settings.options.snmptrap_udp]:
+        for fd in [settings.options.syslog_udp,
+                   settings.options.syslog_tcp,
+                   settings.options.snmptrap_udp]:
             try:
                 if isinstance(fd, cmk.ec.settings.FileDescriptor):
                     os.close(fd.value)
@@ -5188,7 +5193,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     except Exception:
-        if g_settings.options.debug:
+        if settings.options.debug:
             raise
         bail_out(traceback.format_exc())
 

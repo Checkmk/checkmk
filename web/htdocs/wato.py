@@ -948,7 +948,8 @@ def show_host_actions(host):
         html.icon_button(host.services_url(), msg, image)
 
     if not host.locked():
-        if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
+        if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts") \
+           and host.folder().choices_for_moving_host():
             show_move_to_folder_action(host)
 
         if config.user.may("wato.manage_hosts"):
@@ -1069,7 +1070,8 @@ def host_bulk_move_to_folder_combo(folder, top):
     choices = folder.choices_for_moving_host()
     if len(choices):
         choices = [("@", _("(select target folder)"))] + choices
-        html.button("_bulk_move", _("Move:"))
+        html.button("_bulk_move", _("Move to:"))
+        html.write("&nbsp;")
         field_name = 'bulk_moveto'
         if top:
             field_name = '_top_bulk_moveto'
@@ -1078,8 +1080,6 @@ def host_bulk_move_to_folder_combo(folder, top):
         html.dropdown(field_name, choices, deflt="@",
                       onchange = "update_bulk_moveto(this.value)",
                       class_ = 'bulk_moveto')
-    else:
-        html.write_text(_("No valid target folder."))
 
 
 def move_to_imported_folders(host_names_to_move):

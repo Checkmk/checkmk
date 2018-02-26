@@ -1,0 +1,15 @@
+Title: cmk-update-agent: prevent saving state file to wrong directory on windows
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1519657314
+Class: fix
+
+The Agent Updater would accidently save its cmk-update-agent.state to C:\etc if this directory was existant.
+This could lead to an implausible update state. Virtually the Agent Updater would lose its registration information.
+
+After an update or a manual reinstallation to a newly baked agent, a new registration might be required. 
+
+However, you might want to delete the cmk-update-agent.state located at C:\etc after the problem has been fixed.

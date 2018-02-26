@@ -51,7 +51,7 @@ def settings():
     mkeventd.g_settings = cmk.ec.settings.settings(
         '1.2.3i45',
         pathlib.Path(cmk.paths.omd_root),
-        pathlib.Path(cmk.paths.default_config_dir)
+        pathlib.Path(cmk.paths.default_config_dir),
         ['mkeventd'])
     return mkeventd.g_settings
 

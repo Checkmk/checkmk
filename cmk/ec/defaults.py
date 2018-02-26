@@ -24,16 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""Utility module for common code between the Event Console and other parts
-of Check_MK. At the moment the GUI is accessing this module for gathering
-the default configuration."""
 
 import cmk.log
 
+
+def default_rule_pack(rules):
+    return {
+        "id"       : "default",
+        "title"    : _("Default rule pack"),
+        "rules"    : rules,
+        "disabled" : False,
+    }
+
+
 def default_config():
     return {
-        "rules":          [], # old pre 1.2.7i1 format. Only used if rule_packs is empty
-        "rule_packs":     [], # new format with rule packages
+        "rules":          [],  # old pre 1.2.7i1 format. Only used if rule_packs is empty
+        "rule_packs":     [],  # new format with rule packages
+        "mkp_rule_packs": {},  # rule packs provided by MKPs and referenced in rule_packs
         "actions":        [],
         "debug_rules":    False,
         "rule_optimizer": True,
@@ -80,5 +88,3 @@ def default_config():
             }
         },
     }
-
-

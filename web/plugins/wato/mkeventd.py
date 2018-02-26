@@ -29,11 +29,11 @@ import mkeventd
 import zipfile
 import cStringIO
 import cmk.paths
-import cmk.store as store
+import cmk.ec.export as ec
+import cmk.ec.defaults
 
 mkeventd_enabled = config.mkeventd_enabled
 
-mkeventd_config_dir  = cmk.paths.default_config_dir + "/mkeventd.d/wato/"
 mkeventd_status_file = cmk.paths.omd_root + "/var/mkeventd/status"
 
 #.
@@ -249,25 +249,50 @@ class RuleState(CascadingDropdown):
         CascadingDropdown.__init__(self, choices = choices, **kwargs)
 
 
-def vs_mkeventd_rule_pack():
-    elements = [
-        ("id", ID(
-            title = _("Rule pack ID"),
-            help = _("A unique ID of this rule pack."),
-            allow_empty = False,
-            size = 12,
-        )),
-        ("title", TextUnicode(
-            title = _("Title"),
-            help = _("A descriptive title for this rule pack"),
-            allow_empty = False,
-            size = 64,
-        )),
+def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
+    elements = []
+    if fixed_id:
+        elements.append(
+            ("id", FixedValue(
+                title = _("Rule pack ID"),
+                value = fixed_id,
+                help = _("The ID of an exported rule pack cannot be modified."),
+            ))
+        )
+    else:
+        elements.append(
+            ("id", ID(
+                title = _("Rule pack ID"),
+                help = _("A unique ID of this rule pack."),
+                allow_empty = False,
+                size = 12,
+            ))
+        )
+
+    if fixed_title:
+        elements.append(
+            ("title", FixedValue(
+                title = _("Title"),
+                value = fixed_title,
+                help = _("The title of an exported rule pack cannot be modified."),
+            ))
+        )
+    else:
+        elements.append(
+            ("title", TextUnicode(
+                title = _("Title"),
+                help = _("A descriptive title for this rule pack"),
+                allow_empty = False,
+                size = 64,
+            )),
+        )
+
+    elements.append(
         ("disabled", Checkbox(
             title = _("Disable"),
             label = _("Currently disable execution of all rules in the pack"),
         )),
-    ]
+    )
 
     if cmk.is_managed_edition():
         elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
@@ -280,7 +305,7 @@ def vs_mkeventd_rule_pack():
     )
 
 
-def vs_mkeventd_rule(rule_pack):
+def vs_mkeventd_rule(customer=None):
     elements = [
         ( "id",
           ID(
@@ -293,13 +318,13 @@ def vs_mkeventd_rule(rule_pack):
     ] + rule_option_elements()
 
     if cmk.is_managed_edition():
-        if "customer" in rule_pack:
+        if customer:
             # Enforced by rule pack
             elements += [
                 ("customer", FixedValue(
-                    rule_pack["customer"],
+                    customer,
                     title = _("Customer"),
-                    totext = "%s (%s)" % (managed.get_customer_name_by_id(rule_pack["customer"]),
+                    totext = "%s (%s)" % (managed.get_customer_name_by_id(customer),
                                           _("Set by rule pack")),
                 )),
             ]
@@ -960,26 +985,10 @@ vs_mkeventd_event = Dictionary(
 #   '----------------------------------------------------------------------'
 
 def load_mkeventd_rules():
-    filename = mkeventd_config_dir + "rules.mk"
-    if not os.path.exists(filename):
-        return [], []
-
     # Old versions define rules. We convert this into
     # rule_packs but keep the old rule intact so the
     # user can switch back to his old configuration.
-    vars = { "rules" : [], "rule_packs" : [] }
-    execfile(filename, vars, vars)
-
-    # Convert some data fields into a new format
-    for rule in vars["rules"]:
-        if "livetime" in rule:
-            livetime = rule["livetime"]
-            if type(livetime) != tuple:
-                rule["livetime"] = ( livetime, ["open"] )
-
-    # Convert old plain rules into a list of one rule pack
-    if vars["rules"] and not vars["rule_packs"]:
-        vars["rule_packs"] = [default_rule_pack(vars["rules"])]
+    rules, rule_packs = ec.load_rule_packs()
 
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
@@ -989,7 +998,7 @@ def load_mkeventd_rules():
         rule_stats.setdefault(rule_id, 0)
         rule_stats[rule_id] += count
 
-    for rule_pack in vars["rule_packs"]:
+    for rule_pack in rule_packs:
         pack_hits = 0
         for rule in rule_pack["rules"]:
             hits = rule_stats.get(rule["id"], 0)
@@ -998,7 +1007,7 @@ def load_mkeventd_rules():
         rule_pack["hits"] = pack_hits
 
     # Migrate old contact_group key (+ add False for notify option)
-    for rule_pack in vars["rule_packs"]:
+    for rule_pack in rule_packs:
         for rule in rule_pack["rules"]:
             if type(rule.get("contact_groups")) == list:
                 rule["contact_groups"] = {
@@ -1008,42 +1017,21 @@ def load_mkeventd_rules():
                 }
 
     # Return old rules also, for easy rolling back to old config
-    return vars["rules"], vars["rule_packs"]
-
-
-def default_rule_pack(rules):
-    return {
-        "id"       : "default",
-        "title"    : _("Default rule pack"),
-        "rules"    : rules,
-        "disabled" : False,
-    }
+    return rules, rule_packs
 
 
 def save_mkeventd_rules(legacy_rules, rule_packs):
-    output = generate_mkeventd_rules_file_content(legacy_rules, rule_packs)
-    make_nagios_directory(cmk.paths.default_config_dir + "/mkeventd.d")
-    make_nagios_directory(mkeventd_config_dir)
-    store.save_file(mkeventd_config_dir + "rules.mk", output)
+    make_nagios_directories(str(ec.rule_pack_dir()))
+    ec.save_rule_packs(legacy_rules, rule_packs, config.mkeventd_pprint_rules)
 
 
-def generate_mkeventd_rules_file_content(legacy_rules, rule_packs):
-    output = "# Written by WATO\n# encoding: utf-8\n\n"
-
-    if config.mkeventd_pprint_rules:
-        legacy_rules_text = pprint.pformat(legacy_rules)
-        rule_packs_text   = pprint.pformat(rule_packs)
-    else:
-        legacy_rules_text = repr(legacy_rules)
-        rule_packs_text   = repr(rule_packs)
-
-    output += "rules += \\\n%s\n\n" % legacy_rules_text
-    output += "rule_packs += \\\n%s\n" % rule_packs_text
-    return output
+def export_mkp_rule_pack(rule_pack):
+    make_nagios_directories(str(ec.mkp_rule_pack_dir()))
+    ec.export_rule_pack(rule_pack, config.mkeventd_pprint_rules)
 
 
 def save_mkeventd_sample_config():
-    save_mkeventd_rules([], [default_rule_pack([])])
+    save_mkeventd_rules([], [cmk.ec.defaults.default_rule_pack([])])
 
 
 #.
@@ -1120,7 +1108,6 @@ def mode_mkeventd_rule_packs(phase):
             elif c == False:
                 return ""
 
-
         # Move rule packages
         elif html.has_var("_move"):
             from_pos = html.get_integer_input("_move")
@@ -1130,6 +1117,51 @@ def mode_mkeventd_rule_packs(phase):
             rule_packs[to_pos:to_pos] = [rule_pack]
             save_mkeventd_rules(legacy_rules, rule_packs)
             add_ec_change("move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"])
+
+        # Export rule pack
+        elif html.has_var("_export"):
+            nr = html.get_integer_input("_export")
+            try:
+                rule_pack = rule_packs[nr]
+            except KeyError:
+                raise MKUserError("_export", _("The requested rule pack does not exist"))
+
+            export_mkp_rule_pack(rule_pack)
+            rule_packs[nr] = ec.MkpRulePackProxy(rule_pack['id'])
+            save_mkeventd_rules(legacy_rules, rule_packs)
+            add_ec_change("export-rule-pack", _("Made rule pack %s available for MKP export") % rule_pack["id"])
+
+        # Make rule pack non-exportable
+        elif html.has_var("_dissolve"):
+            nr = html.get_integer_input("_dissolve")
+            try:
+                rule_packs[nr] = rule_packs[nr].rule_pack
+            except KeyError:
+                raise MKUserError("_dissolve", _("The requested rule pack does not exist"))
+            save_mkeventd_rules(legacy_rules, rule_packs)
+            ec.remove_exported_rule_pack(rule_packs[nr]["id"])
+            add_ec_change("dissolve-rule-pack", _("Removed rule_pack %s from MKP export") % rule_packs[nr]["id"])
+
+        # Reset to rule pack provided via MKP
+        elif html.has_var("_reset"):
+            nr = html.get_integer_input("_reset")
+            try:
+                rule_packs[nr] = ec.MkpRulePackProxy(rule_packs[nr]['id'])
+            except KeyError:
+                raise MKUserError("_reset", _("The requested rule pack does not exist"))
+            save_mkeventd_rules(legacy_rules, rule_packs)
+            add_ec_change("reset-rule-pack", _("Resetted the rules of rule pack %s to the ones provided via MKP") % rule_packs[nr].id_)
+
+        # Synchronize modified rule pack with MKP
+        elif html.has_var("_synchronize"):
+            nr = html.get_integer_input("_synchronize")
+            export_mkp_rule_pack(rule_packs[nr])
+            try:
+                rule_packs[nr] = ec.MkpRulePackProxy(rule_packs[nr]['id'])
+            except KeyError:
+                raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
+            save_mkeventd_rules(legacy_rules, rule_packs)
+            add_ec_change("synchronize-rule-pack", _("Synchronized MKP with the modified rule pack %s") % rule_packs[nr].id_)
 
         return
 
@@ -1164,35 +1196,64 @@ def mode_mkeventd_rule_packs(phase):
         html.message(_("Found no rules packs."))
         return
 
+    package_info = watolib.check_mk_local_automation("get-package-info")
+    id_to_mkp  = ec.rule_pack_id_to_mkp(package_info)
+
     have_match = False
     table.begin(css="ruleset", limit=None, sortable=False, title=title)
     for nr, rule_pack in enumerate(rule_packs):
-        if rule_pack["id"] in found_packs:
+        id_ = rule_pack['id']
+        type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
+
+        if id_ in found_packs:
             css_matches_search = "matches_search"
         else:
             css_matches_search = None
 
         table.row(css=css_matches_search)
-        delete_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)])
-        drag_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
+        table.cell(_("Actions"), css="buttons")
+
         edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
-        # Cloning does not work. Rule IDs would not be unique. So drop it for a while
+        html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
+
+        # Cloning does not work until we have unique IDs
         # clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
-        rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", rule_pack["id"])]
-        if found_packs.get(rule_pack["id"]):
+        # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
+
+        drag_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
+        html.element_dragger_url("tr", base_url=drag_url)
+
+        if type_ == ec.RulePackType.internal:
+            delete_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)])
+            html.icon_button(delete_url, _("Delete this rule pack"), "delete")
+        elif type_ == ec.RulePackType.exported:
+            dissolve_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_dissolve", nr)])
+            html.icon_button(dissolve_url, _("Remove this rule pack from the Extension Packages module"), "release_mkp_yellow")
+        elif type_ == ec.RulePackType.modified_mkp:
+            reset_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_reset", nr)])
+            html.icon_button(reset_url, _("Reset rule pack to the MKP version"), "release_mkp")
+            sync_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_synchronize", nr)])
+            html.icon_button(sync_url, _("Synchronize MKP with modified version"), "sync_mkp")
+
+        rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
+        if found_packs.get(id_):
             rules_url_vars.append(("search", search_expression))
         rules_url  = html.makeuri_contextless(rules_url_vars)
-
-        table.cell(_("Actions"), css="buttons")
-        html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
-        # Cloning does not work until we have unique IDs
-        # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
-        html.element_dragger_url("tr", base_url=drag_url)
-        html.icon_button(delete_url, _("Delete this rule pack"), "delete")
         html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
 
-        # Icon for disabling
+        if type_ == ec.RulePackType.internal:
+            export_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_export", nr)])
+            html.icon_button(export_url, _("Make this rule pack available in the Exension Packages module"), "cached")
+
+        # Icons for mkp export and disabling
         table.cell("", css="buttons")
+        if type_ == ec.RulePackType.unmodified_mkp:
+            html.icon(_("This rule pack is provided via the MKP %s.") % id_to_mkp[id_], "mkps")
+        elif type_ == ec.RulePackType.exported:
+            html.icon(_("This is rule pack can be packaged with the Extension Packages module."), "package")
+        elif type_ == ec.RulePackType.modified_mkp:
+            html.icon(_("This rule pack is modified. Originally it was provided via the MKP %s.") % id_to_mkp[id_], "new_mkp")
+
         if rule_pack["disabled"]:
             html.icon(_("This rule pack is currently disabled. None of its rules will be applied."), "disabled")
 
@@ -1242,7 +1303,7 @@ def mode_mkeventd_rule_packs(phase):
                         have_match = True
             html.icon(msg, icon)
 
-        table.cell(_("ID"), rule_pack["id"])
+        table.cell(_("ID"), id_)
         table.cell(_("Title"), html.render_text(rule_pack["title"]))
 
         if cmk.is_managed_edition():
@@ -1336,15 +1397,33 @@ def mode_mkeventd_rules(phase):
         return
 
     if phase == "action":
+        package_info = watolib.check_mk_local_automation("get-package-info")
+        id_to_mkp = ec.rule_pack_id_to_mkp(package_info)
+        type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
+
         if html.var("_move_to"):
             if html.check_transaction():
                 for move_nr, rule in enumerate(rules):
                     move_var = "_move_to_%s" % rule["id"]
                     if html.var(move_var):
                         other_pack_nr, other_pack = rule_pack_with_id(rule_packs, html.var(move_var))
-                        other_pack["rules"][0:0] = [ rule ]
-                        del rule_pack["rules"][move_nr]
+
+                        other_type_ = ec.RulePackType.type_of(other_pack, id_to_mkp)
+                        if other_type_ == ec.RulePackType.unmodified_mkp:
+                            ec.override_rule_pack_proxy(other_pack_nr, rule_packs)
+
+                        if type_ == ec.RulePackType.unmodified_mkp:
+                            ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
+
+                        rule_packs[other_pack_nr]["rules"][0:0] = [ rule ]
+                        del rule_packs[rule_pack_nr]["rules"][move_nr]
+
                         save_mkeventd_rules(legacy_rules, rule_packs)
+                        if other_type_ == ec.RulePackType.exported:
+                            export_mkp_rule_pack(other_pack)
+                        if type_ == ec.RulePackType.exported:
+                            export_mkp_rule_pack(rule_pack)
+
                         add_ec_change("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
                         return None, html.render_text(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
 
@@ -1360,8 +1439,15 @@ def mode_mkeventd_rules(phase):
                                (rule["id"], rule.get("description","")))
             if c:
                 add_ec_change("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
+                if type_ == ec.RulePackType.unmodified_mkp:
+                    ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
+                    rules = rule_packs[rule_pack_nr]['rules']
+
                 del rules[nr]
+
                 save_mkeventd_rules(legacy_rules, rule_packs)
+                if type_ == ec.RulePackType.exported:
+                    export_mkp_rule_pack(rule_pack)
             elif c == False:
                 return ""
             else:
@@ -1371,10 +1457,19 @@ def mode_mkeventd_rules(phase):
             if html.has_var("_move"):
                 from_pos = html.get_integer_input("_move")
                 to_pos = html.get_integer_input("_index")
+
+                if type_ == ec.RulePackType.unmodified_mkp:
+                    ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
+                    rules = rule_packs[rule_pack_nr]['rules']
+
                 rule = rules[from_pos]
                 del rules[from_pos] # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
+
                 save_mkeventd_rules(legacy_rules, rule_packs)
+                if type_ == ec.RulePackType.exported:
+                    export_mkp_rule_pack(rule_pack)
+
                 add_ec_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return
 
@@ -1547,9 +1642,6 @@ def filter_mkeventd_rules(search_expression, rule_pack):
 def mode_mkeventd_edit_rule_pack(phase):
     legacy_rules, rule_packs = load_mkeventd_rules()
     edit_nr = int(html.var("edit", -1)) # missing -> new rule pack
-    # Cloning currently not supported. Rule IDs wouldn't be unique!
-    # clone_nr = int(html.var("clone", -1)) # Only needed in 'new' mode
-    clone_nr = -1
     new = edit_nr < 0
 
     if phase == "title":
@@ -1572,21 +1664,23 @@ def mode_mkeventd_edit_rule_pack(phase):
         return
 
     if new:
-        ### if clone_nr >= 0:
-        ###     rule_pack = {}
-        ###     rule_pack.update(rule_packs[clone_nr])
-        ### else:
         rule_pack = { "rules" : [], }
     else:
         rule_pack = rule_packs[edit_nr]
 
-    vs = vs_mkeventd_rule_pack()
+    package_info = watolib.check_mk_local_automation("get-package-info")
+    type_ = ec.RulePackType.type_of(rule_pack, ec.rule_pack_id_to_mkp(package_info))
+
+    if type_ == ec.RulePackType.internal:
+        vs = vs_mkeventd_rule_pack()
+    else:
+        vs = vs_mkeventd_rule_pack(fixed_id=rule_pack['id'], fixed_title=rule_pack['title'])
 
     if phase == "action":
         if not html.check_transaction():
             return "mkeventd_rule_packs"
 
-        if not new: #  or clone_nr >= 0:
+        if not new:
             existing_rules = rule_pack["rules"]
         else:
             existing_rules = []
@@ -1603,9 +1697,13 @@ def mode_mkeventd_edit_rule_pack(phase):
                     raise MKUserError("rule_pack_p_id", _("A rule pack with this ID already exists."))
 
         if new:
-            rule_packs = [ rule_pack ] + rule_packs
+            rule_packs = [rule_pack] + rule_packs
         else:
-            rule_packs[edit_nr] = rule_pack
+            if type_ == ec.RulePackType.internal or type_ == ec.RulePackType.modified_mkp:
+                rule_packs[edit_nr] = rule_pack
+            else:
+                rule_packs[edit_nr].rule_pack = rule_pack
+                export_mkp_rule_pack(rule_pack)
 
         save_mkeventd_rules(legacy_rules, rule_packs)
 
@@ -1641,8 +1739,7 @@ def mode_mkeventd_edit_rule(phase):
         for nr, pack in enumerate(rule_packs):
             for rnr, rule in enumerate(pack["rules"]):
                 if rule_id == rule["id"]:
-                    rule_pack_nr = nr
-                    rule_pack = pack
+                    rule_pack_nr, rule_pack = nr, pack
                     html.set_var("edit", str(rnr))
                     html.set_var("rule_pack", pack["id"])
                     break
@@ -1652,7 +1749,7 @@ def mode_mkeventd_edit_rule(phase):
 
     rules = rule_pack["rules"]
 
-    vs = vs_mkeventd_rule(rule_pack)
+    vs = vs_mkeventd_rule(rule_pack.get('customer'))
 
     edit_nr = int(html.var("edit", -1)) # missing -> new rule
     clone_nr = int(html.var("clone", -1)) # Only needed in 'new' mode
@@ -1740,6 +1837,12 @@ def mode_mkeventd_edit_rule(phase):
             except KeyError:
                 pass
 
+        package_info = watolib.check_mk_local_automation("get-package-info")
+        type_ = ec.RulePackType.type_of(rule_pack, ec.rule_pack_id_to_mkp(package_info))
+        if type_ == ec.RulePackType.unmodified_mkp:
+            ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
+            rules = rule_packs[rule_pack_nr]['rules']
+
         if new and clone_nr >= 0:
             rules[clone_nr:clone_nr] = [ rule ]
         elif new:
@@ -1748,6 +1851,9 @@ def mode_mkeventd_edit_rule(phase):
             rules[edit_nr] = rule
 
         save_mkeventd_rules(legacy_rules, rule_packs)
+        if type_ == ec.RulePackType.exported:
+            export_mkp_rule_pack(rule_pack)
+
         if new:
             add_ec_change("new-rule", _("Created new event correlation rule with id %s") % rule["id"])
         else:

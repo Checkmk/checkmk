@@ -1,0 +1,69 @@
+Title: Export of rule packs in MKP packages
+Level: 2
+Component: ec
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i4
+Date: 1519662015
+Class: feature
+
+Rule packs of the Event Console can now be exported in MKP packages, i.e. they
+can be downloaded, versioned, and shared with other Check_MK installations.
+This is e.g. useful in setups with independent instances where rule packs can
+now be defined centrally in one instance and distributed to other instances as
+predefined packages. For distributed instances the primary mechanism to
+synchronize rule packs remains the synchronization via WATO.
+
+To export a rule pack it has to be made exportable by clicking on the
+corresponding action in the rule pack overview of the WATO module Event
+Console. After that the rule pack is available for MKP export in the WATO
+module Extension Packages, i.e. it can be seen in the packaged files when a
+package is created or edited. If a rule pack is exported in a MKP it cannot be
+deleted directly in the WATO module Event Console anymore and it's ID and title
+cannot be changed. The rules of the rule pack can still be modified via the
+edit rules menu. If a rule of a MKP rule pack is modified, deleted or a new
+rule is created the MKP rule pack becomes a modified MKP rule pack. This means
+that the modified version of the rule pack becomes valid, but the exported MKP
+rule pack remains unchanged. To synchronize the MKP rule pack with the modified
+MKP rule pack there are two options: the modified rule pack can be resetted to
+the MKP version or the MKP can be updated by the modified version. Both options
+are available via the corresponding action of the rule pack in the WATO module
+Event Console.
+
+If a MKP including Event Console rule packs is uploaded to a site the included
+rule packs will be added to the end of the existing rule packs. They can be
+moved freely between the existing rule packs without changing the MKP.
+Furthermore, rule packs provided in a MKP can be enabled and disabled without
+restrictions. Note however that the information if a rule pack is enabled or
+disabled is persisted in the MKP. This makes it possible to ship e.g. three
+rule packs for different versions of a software which are disabled by default.
+After uploading the MKP the rule pack for a specific version can be activated.
+If a MKP with exported rule packs is deleted the rule packs provided by that
+MKP are deleted as well. To keel the rule packs and to remove the MKP the MKP
+has to be dissolved. As a result the rule packs that were provided by that MKP
+are still available. After dissolving a MKP the rule packs will be exportable.
+
+In a distributed monitoring setup there are the two existing options "Replicate
+Event Console configuration to this site" and "Replicate extensions (MKPs and
+files in ~/local/)" which have an impact on exportable and exported rule packs.
+By enabling the replication of the event console configuration all Event
+Console rule packs are synchronized with slave sites, but only by enabling the
+replication of MKPs the MKP information of rule packs is synchronized. This has
+an implication on the representation and behaviour of rule packs of a slave
+sites if the WATO configuration of the slave site is enabled. If for example
+only the replication of the event console configuration is enabled the slave
+site will show a synchronized MKP rule pack as exportable but not as a rule
+pack provided by a MKP. Therefore, rule packs can be provided by the master and
+bundled in MKPs by the slave site. If the rule pack export is used it is not
+advisable to use the MKP replication without the replication of the Event
+Console configuration because the rule packs are provided to the slave in .mk
+files, but they WILL NOT be recognized by the Event Console. The preferred
+method to share only specific rule packs is to disable both replication options
+and to upload MKPs containing these rule packs to the corresponding slave
+sites.
+
+To avoid errors in a distributed monitoring setup the rule pack export SHOULD
+only be used when ALL slave sites support the MKP rule pack export. If a slave
+site does not support the rule pack export either the replication of the Event
+Console configuration should be disabled for that site or the export of rule
+packs should not be used at all.

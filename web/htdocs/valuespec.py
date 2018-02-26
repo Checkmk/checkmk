@@ -43,6 +43,7 @@ import ipaddress
 from lib import *
 import cmk.defines as defines
 from Cryptodome.PublicKey import RSA
+from UserDict import DictMixin
 
 try:
     import simplejson as json
@@ -3392,13 +3393,13 @@ class Dictionary(ValueSpec):
     def render_input(self, varprefix, value, form=None):
         self.classtype_info()
         value = self.migrate(value)
-        if type(value) != dict:
-            value = {} # makes code simpler in complain phase
-        if form == True:
+        if not isinstance(value, (dict, DictMixin)):
+            value = {}  # makes code simpler in complain phase
+        if form is True:
             self.render_input_form(varprefix, value)
-        elif self._render == "form" and form == None:
+        elif self._render == "form" and form is None:
             self.render_input_form(varprefix, value)
-        elif self._render == "form_part" and form == None:
+        elif self._render == "form_part" and form is None:
             self.render_input_form(varprefix, value, as_part=True)
         else:
             self.render_input_normal(varprefix, value, self._render == "oneline")

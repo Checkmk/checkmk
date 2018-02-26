@@ -24,12 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, config, re, time, livestatus
 import ast
+import re
+import socket
+import time
+from pathlib2 import Path
 
+import config
+import livestatus
 import sites
 from lib import *
 import cmk.paths
+import cmk.ec.settings
+import cmk.ec.export
+import cmk.store
 
 if cmk.is_managed_edition():
     import managed
@@ -114,11 +122,13 @@ action_whats = {
   "CHANGESTATE"  : _("State of event changed by user"),
 }
 
+
 def service_levels():
     try:
         return config.mkeventd_service_levels
     except:
         return [(0, "(no service level)")]
+
 
 def action_choices(omit_hidden = False):
     # The possible actions are configured in mkeventd.mk,
@@ -130,6 +140,7 @@ def action_choices(omit_hidden = False):
              for a in eventd_configuration().get("actions", [])
              if not omit_hidden or not a.get("hidden") ]
 
+
 cached_config = None
 def eventd_configuration():
     global cached_config
@@ -137,18 +148,18 @@ def eventd_configuration():
         return cached_config[1]
 
     config = {
-        "rules"                 : [],
-        "rule_packs"            : [],
-        "debug_rules"           : False,
+        "MkpRulePackProxy": cmk.ec.export.MkpRulePackProxy,
+        "rules": [],
+        "rule_packs": [],
+        "mkp_rule_packs": {},
+        "debug_rules": False,
     }
-    main_file = cmk.paths.default_config_dir + "/mkeventd.mk"
-    list_of_files = reduce(lambda a,b: a+b,
-         [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
-             for d, sb, fs in os.walk(cmk.paths.default_config_dir + "/mkeventd.d" ) ], [])
 
-    list_of_files.sort()
-    for path in [ main_file ] + list_of_files:
-        execfile(path, config, config)
+    ec_paths = cmk.ec.settings.default_paths(Path(cmk.paths.omd_root),
+                                             Path(cmk.paths.default_config_dir))
+    for path in [ec_paths.main_config_file.value] + sorted(ec_paths.config_dir.value.glob('**/*.mk')):
+        cmk.store.load_mk_file(str(path), config)
+
     cached_config = (html, config)
     return config
 

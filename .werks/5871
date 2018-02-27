@@ -1,0 +1,16 @@
+Title: Improved service view rendering performance when showing perfometers
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1519744948
+
+When displaying service views which conain the "Perf-O-Meter" painter, the rendering
+of the page, especially with a larger number of rows (>1000), could take a lot of time
+(multiple seconds) for rendering.
+
+This was caused by an unoptimized perfometer rendering/selection algorithm. A workaround
+with older versions is to remove the Perf-O-Meter painter from the views.

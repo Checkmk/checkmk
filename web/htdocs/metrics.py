@@ -34,6 +34,7 @@
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 import math, time, colorsys, shlex, operator, random
+import string
 import config, pagetypes, table
 import sites
 import traceback
@@ -93,7 +94,6 @@ def load_plugins(force):
     global graph_info      ; graph_info      = AutomaticDict("manual_graph_template")
 
     load_web_plugins("metrics", globals())
-    loaded_with_language = current_language
 
     fixup_graph_info()
     fixup_unit_info()
@@ -113,15 +113,16 @@ def fixup_unit_info():
         unit.setdefault("description", unit["title"])
 
 
+def fixup_perfometer_info():
+    _convert_legacy_tuple_perfometers(perfometer_info)
+    _precalculate_some_perfometer_caches(perfometer_info)
+
+
 # During implementation of the metric system the perfometers were first defined using
 # tuples. This has been replaced with a dict based syntax. This function converts the
 # old known formats from tuple to dict.
 # All shipped perfometers have been converted to the dict format with 1.5.0i3.
 # TODO: Remove this one day.
-def fixup_perfometer_info():
-    _convert_legacy_tuple_perfometers(perfometer_info)
-
-
 def _convert_legacy_tuple_perfometers(perfometers):
     for index, perfometer in reversed(list(enumerate(perfometers))):
         if type(perfometer) == dict:
@@ -155,6 +156,72 @@ def _convert_legacy_tuple_perfometers(perfometers):
         else:
             logger.warning(_("Could not convert perfometer to dict format: %r. Ignoring this one.") % perfometer)
             perfometers.pop(index)
+
+
+def _precalculate_some_perfometer_caches(perfometers):
+    for perfometer in perfometers:
+        # Precalculate the list of metric expressions of the perfometers
+        required_expressions = _perfometer_expressions(perfometer)
+
+        # And also precalculate the trivial metric names that can later be used to filter
+        # perfometers without the need to evaluate the expressions.
+        required_trivial_metric_names = _required_trivial_metric_names(required_expressions)
+
+        perfometer["_required"] = required_expressions
+        perfometer["_required_names"] = required_trivial_metric_names
+
+
+def _perfometer_expressions(perfometer):
+    """Returns all metric expressions of a perfometer
+    This is used for checking which perfometer can be displayed for a given service later.
+    """
+    required = []
+
+    if perfometer["type"] == "linear":
+        required += perfometer["segments"][:]
+
+    elif perfometer["type"] == "logarithmic":
+        required.append(perfometer["metric"])
+
+    elif perfometer["type"] in ("stacked", "dual"):
+        if "perfometers" not in perfometer:
+            raise MKGeneralException(_("Perfometers of type 'stacked' and 'dual' need "
+                        "the element 'perfometers' (%r)") % perfometer)
+
+        for sub_perfometer in perfometer["perfometers"]:
+            required += _perfometer_expressions(sub_perfometer)
+
+    else:
+        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
+
+
+    if "label" in perfometer and perfometer["label"] != None:
+        required.append(perfometer["label"][0])
+    if "total" in perfometer:
+        required.append(perfometer["total"])
+
+    return required
+
+
+def _required_trivial_metric_names(required_expressions):
+    """Extract the trivial metric names from a list of expressions.
+    Ignores numeric parts. Returns None in case there is a non trivial
+    metric found. This means the trivial filtering can not be used.
+    """
+    required_metric_names = set()
+
+    allowed_chars = string.ascii_letters + string.digits + "_"
+
+    for entry in required_expressions:
+        if type(entry) in [ str, unicode ]:
+            if any(char not in allowed_chars for char in entry):
+                # Found a non trivial metric expression. Totally skip this mechanism
+                return None
+
+            required_metric_names.add(entry)
+
+    return required_metric_names
+
 
 #.
 #   .--Constants-----------------------------------------------------------.
@@ -824,10 +891,11 @@ class Perfometers(object):
         return perfometers
 
 
-    # TODO: We will run into a performance problem here when we
-    # have more and more Perf-O-Meter definitions.
     def _perfometer_possible(self, perfometer, translated_metrics):
-        for req in self._get_perfometer_expressions(perfometer, translated_metrics):
+        if self._skip_perfometer_by_trivial_metrics(perfometer["_required_names"], translated_metrics):
+            return False
+
+        for req in perfometer["_required"]:
             try:
                 evaluate(req, translated_metrics)
             except:
@@ -844,34 +912,20 @@ class Perfometers(object):
         return True
 
 
-    def _get_perfometer_expressions(self, perfometer, translated_metrics):
-        required = []
+    def _skip_perfometer_by_trivial_metrics(self, required_metric_names, translated_metrics):
+        """Whether or not a perfometer can be skipped by simple metric name matching instead of expression evaluation
 
-        if perfometer["type"] == "linear":
-            required = perfometer["segments"][:]
+        Performance optimization: Try to reduce the amount of perfometers to evaluate by
+        comparing the strings in the "required" metrics with the translated metrics.
+        We only look at the simple "requried expressions" that don't make use of formulas.
+        In case there is a formula, we can not skip the perfometer and have to evaluate
+        it.
+        """
+        if required_metric_names is None:
+            return False
 
-        elif perfometer["type"] == "logarithmic":
-            required = [ perfometer["metric"] ]
-
-        elif perfometer["type"] in ("stacked", "dual"):
-            if "perfometers" not in perfometer:
-    	        raise MKGeneralException(_("Perfometers of type 'stacked' and 'dual' need "
-                            "the element 'perfometers' (%r)") % perfometer)
-
-            for sub_perfometer in perfometer["perfometers"]:
-                required += self._get_perfometer_expressions(sub_perfometer, translated_metrics)
-
-        else:
-            raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
-
-
-        if "label" in perfometer and perfometer["label"] != None:
-            required.append(perfometer["label"][0])
-
-        if "total" in perfometer:
-            required.append(perfometer["total"])
-
-        return required
+        available_metric_names = set(translated_metrics.keys())
+        return not required_metric_names.issubset(available_metric_names)
 
 
 

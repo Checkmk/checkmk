@@ -1,0 +1,12 @@
+Title: cmk-update-agent: Adapt logging for permission check on windows
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.4.0p26
+Date: 1519723431
+Class: feature
+
+When manually run, the agent updater did report some confusing debug output
+regarding some permission checks. These messages were informational only and
+used for debugging. Their loglevel has been changed to very verbose.

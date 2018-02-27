@@ -220,52 +220,36 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
     }
 }
 
-uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
+uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
                                          uint64_t previouslyReadId,
                                          EventlogLevel level,
                                          bool hideContext) {
-    Debug(_logger) << " - event log \"" << logname << "\":";
+    const auto getState = [](const IEventLogRecord &record,
+                             EventlogLevel level) {
+        return getEventState(record, level).second;
+    };
+    uint64_t lastReadId = 0;
+    EventlogLevel worstState{EventlogLevel::All};
 
-    try {
-        std::unique_ptr<IEventLog> log(open_eventlog(
-            to_utf16(logname, _winapi), *_vista_api, _logger, _winapi));
-        {
-            Debug(_logger) << "   . successfully opened event log";
-            out << "[[[" << logname << "]]]\n";
+    // first pass - determine if there are records above level
+    std::tie(lastReadId, worstState) =
+        processEventLog(log, previouslyReadId, level, getState);
+    Debug(_logger) << "    . worst state: " << static_cast<int>(worstState);
 
-            const auto getState = [](const IEventLogRecord &record,
-                                     EventlogLevel level) {
-                return getEventState(record, level).second;
-            };
-            uint64_t lastReadId = 0;
-            EventlogLevel worstState{EventlogLevel::All};
-
-            // first pass - determine if there are records above level
-            std::tie(lastReadId, worstState) =
-                processEventLog(*log, previouslyReadId, level, getState);
-            Debug(_logger) << "    . worst state: " << static_cast<int>(worstState);
-
-            // second pass - if there were, print everything
-            if (worstState >= level) {
-                const auto outputRecord = [&out, hideContext](
-                    const IEventLogRecord &record, EventlogLevel level) {
-                    return outputEventlogRecord(out, record, level,
-                                                hideContext);
-                };
-                processEventLog(*log, previouslyReadId, level, outputRecord);
-            }
-            // Return the last entry number. We need to fetch the last record ID
-            // separately if INT_MAX was used as seek offset and no new entries
-            // were read.
-            return (std::numeric_limits<uint64_t>::max() == lastReadId)
-                       ? log->getLastRecordId()
-                       : lastReadId;
-        }
-    } catch (const std::exception &e) {
-        Error(_logger) << "failed to read event log: " << e.what() << std::endl;
-        out << "[[[" << logname << ":missing]]]\n";
-        return previouslyReadId;
+    // second pass - if there were, print everything
+    if (worstState >= level) {
+        const auto outputRecord = [&out, hideContext](
+            const IEventLogRecord &record, EventlogLevel level) {
+            return outputEventlogRecord(out, record, level, hideContext);
+        };
+        processEventLog(log, previouslyReadId, level, outputRecord);
     }
+    // Return the last entry number. We need to fetch the last record ID
+    // separately if INT_MAX was used as seek offset and no new entries
+    // were read.
+    return (std::numeric_limits<uint64_t>::max() == lastReadId)
+               ? log.getLastRecordId()
+               : lastReadId;
 }
 
 // Keeps memory of an event log we have found. It
@@ -372,6 +356,24 @@ std::pair<EventlogLevel, bool> SectionEventlog::readConfig(
                : std::make_pair(EventlogLevel::Warn, false);
 }
 
+std::unique_ptr<IEventLog> SectionEventlog::openEventlog(
+    const std::string &logname, std::ostream &out) const {
+    Debug(_logger) << " - event log \"" << logname << "\":";
+
+    try {
+        std::unique_ptr<IEventLog> log(open_eventlog(
+            to_utf16(logname.c_str(), _winapi), *_vista_api, _logger, _winapi));
+
+        Debug(_logger) << "   . successfully opened event log";
+        out << "[[[" << logname << "]]]\n";
+        return log;
+    } catch (const std::exception &e) {
+        Error(_logger) << "failed to read event log: " << e.what() << std::endl;
+        out << "[[[" << logname << ":missing]]]\n";
+        return nullptr;
+    }
+}
+
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
 bool SectionEventlog::produceOutputInner(std::ostream &out) {
@@ -394,9 +396,11 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
                 std::tie(level, hideContext) = readConfig(state);
 
                 if (level != EventlogLevel::Off) {
-                    state.record_no =
-                        outputEventlog(out, state.name.c_str(), state.record_no,
-                                       level, hideContext);
+                    const auto log = openEventlog(state.name, out);
+                    if (log) {
+                        state.record_no = outputEventlog(
+                            out, *log, state.record_no, level, hideContext);
+                    }
                 }
             }
         }

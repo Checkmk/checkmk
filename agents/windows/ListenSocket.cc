@@ -30,6 +30,7 @@
 #include <numeric>
 #include "Logger.h"
 #include "WinApiAdaptor.h"
+#include "stringutil.h"
 #include "win_error.h"
 
 namespace {
@@ -179,29 +180,28 @@ sockaddr_storage ListenSocket::address(SOCKET connection) const {
 }
 
 std::string ListenSocket::readableIP(SOCKET connection) const {
-    sockaddr_storage addr;
-    int addrlen = sizeof(sockaddr_storage);
-    _winapi.getpeername(connection, (sockaddr *)&addr, &addrlen);
-    return readableIP(&addr);
+    return readableIP(address(connection));
 }
 
-std::string ListenSocket::readableIP(const sockaddr_storage *addr) {
-    char ip_hr[INET6_ADDRSTRLEN];
-
-    if (addr->ss_family == AF_INET) {
-        sockaddr_in *s = (sockaddr_in *)addr;
-        u_char *ip = (u_char *)&s->sin_addr;
-        snprintf(ip_hr, INET6_ADDRSTRLEN, "%u.%u.%u.%u", ip[0], ip[1], ip[2],
-                 ip[3]);
-    } else if (addr->ss_family == AF_INET6) {  // AF_INET6
-        sockaddr_in6 *s = (sockaddr_in6 *)addr;
-        uint16_t *ip = s->sin6_addr.u.Word;
-        snprintf(ip_hr, INET6_ADDRSTRLEN, "%x:%x:%x:%x:%x:%x:%x:%x", ip[0],
-                 ip[1], ip[2], ip[3], ip[4], ip[5], ip[6], ip[7]);
-    } else {
-        snprintf(ip_hr, INET6_ADDRSTRLEN, "None");
+std::string ListenSocket::readableIP(const sockaddr_storage &addr) {
+    switch (addr.ss_family) {
+        case AF_INET: {
+            const auto &s = reinterpret_cast<const sockaddr_in &>(addr);
+            auto const *ip = reinterpret_cast<u_char const *>(&s.sin_addr);
+            std::array<unsigned short, 4> uints;
+            std::transform(ip, ip + 4, uints.begin(), [](u_char u) {
+                return static_cast<unsigned short>(u);
+            });
+            return join(uints.cbegin(), uints.cend(), ".");
+        }
+        case AF_INET6: {
+            const auto &s = reinterpret_cast<const sockaddr_in6 &>(addr);
+            uint16_t const *ip = s.sin6_addr.u.Word;
+            return join(ip, ip + 8, ":", std::ios::hex);
+        }
+        default:
+            return "None";
     }
-    return ip_hr;
 }
 
 SocketHandle ListenSocket::acceptConnection() const {
@@ -209,9 +209,7 @@ SocketHandle ListenSocket::acceptConnection() const {
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(_socket.get(), &fds);
-    struct timeval timeout{0};
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 500000;
+    TIMEVAL timeout = {0, 500000};
 
     // FIXME: every failed connect resets the timeout so technically this may
     // never return

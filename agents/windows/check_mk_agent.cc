@@ -648,7 +648,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                                 sockaddr_size = sizeof(sockaddr_in6);
                             }
                         }
-                        current_ip = ListenSocket::readableIP(&current_address);
+                        current_ip = ListenSocket::readableIP(current_address);
 
                         current_socket.reset(
                             s_winapi.socket(current_address.ss_family,

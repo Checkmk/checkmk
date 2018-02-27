@@ -90,7 +90,7 @@ $(PYTHON_PACKAGES): $(BUILD_DIR)/drive_c/Python27/python.exe
 	cd pip && \
 	wine c:\\Python27\\python.exe -m pip download --no-deps $($@) && \
 	mkdir -p $(CURDIR)/src/pip && \
-	cp -r * $(CURDIR)/src/pip
+	cp --no-clobber -r * $(CURDIR)/src/pip
 
 new_packages: $(BUILD_DIR)/drive_c/Python27/python.exe
 	# Use this target to obtain the newest versions of the needed packages.

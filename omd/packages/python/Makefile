@@ -81,6 +81,7 @@ install: bin/gcc bin/g++
 	    $(DESTDIR)$(OMD_ROOT)/bin/pydoc \
 	    $(DESTDIR)$(OMD_ROOT)/bin/python2.7-config \
 	    $(DESTDIR)$(OMD_ROOT)/bin/2to3
+	install -m 644 sitecustomize.py $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
 
 skel:
 

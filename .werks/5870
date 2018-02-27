@@ -1,0 +1,16 @@
+Title: Removed PYTHONPATH from site environment
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519720796
+Class: fix
+
+The PYTHONPATH environment variable which was set by omd and .profile for all processes
+in the site was confusing external Python based tools like for example gdb or the command
+not found helpers of Ubuntu. This resulted in confusing stack traces.
+
+The PYTHONPATH needed to be set in previous versions to make the python environment know
+about the site specific python module paths (lib/python, local/lib/python). These paths
+are now set using standard mechanisms of python (lib/python2.7/sitecustomize.py).

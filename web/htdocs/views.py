@@ -804,6 +804,9 @@ class Cell(object):
                 else:
                     txt = img_filename
 
+            if isinstance(txt, HTML):
+                txt = "%s" % txt
+
             txt = html.unescape_attributes(txt)
             txt = html.strip_tags(txt)
 

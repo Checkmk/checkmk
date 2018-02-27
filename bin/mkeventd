@@ -49,6 +49,19 @@ import traceback
 import json
 import pathlib2 as pathlib
 
+# Needed for receiving traps
+from pysnmp.entity import engine as snmp_engine
+from pysnmp.entity import config as snmp_config
+from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
+from pysnmp.proto.api import v2c as snmp_v2c, v1 as snmp_v1
+
+# Needed for trap translation
+from pysnmp.smi.builder import MibBuilder, DirMibSource
+from pysnmp.smi.view import MibViewController
+from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
+from pysnmp.smi.error import SmiError
+from pyasn1.error import ValueConstraintError
+
 import cmk
 import cmk.ec.settings
 import cmk.log
@@ -5036,20 +5049,6 @@ if __name__ == "__main__":
     try:
         cmk.log.open_log(sys.stderr)
         cmk.log.set_verbosity(settings.options.verbosity)
-
-        if settings.options.snmptrap_udp is not None:
-            # Needed for receiving traps
-            from pysnmp.entity import engine as snmp_engine
-            from pysnmp.entity import config as snmp_config
-            from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
-            from pysnmp.proto.api import v2c as snmp_v2c, v1 as snmp_v1
-
-            # Needed for trap translation
-            from pysnmp.smi.builder import MibBuilder, DirMibSource
-            from pysnmp.smi.view import MibViewController
-            from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
-            from pysnmp.smi.error import SmiError
-            from pyasn1.error import ValueConstraintError
 
         settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
         if not settings.options.foreground:

@@ -120,11 +120,13 @@ protected:
 private:
     uint64_t outputEventlog(std::ostream &out, const char *logname,
                             uint64_t previouslyReadId, int level,
-                            int hideContext);
+                            bool hideContext);
     void registerEventlog(const char *logname);
     bool find_eventlogs(std::ostream &out);
     void loadEventlogOffsets(const std::string &statefile);
     void saveEventlogOffsets(const std::string &statefile);
+    void readHintOffsets();
+    std::pair<int, bool> readConfig(const eventlog_file_state &state) const;
 
     Configurable<bool> _send_initial;
     Configurable<bool> _vista_api;

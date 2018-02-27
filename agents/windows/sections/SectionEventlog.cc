@@ -75,7 +75,7 @@ const char *level_name(int level_id) {
 // The int return value is there just for convenience, actually we are not
 // interested in the state int value at this point any more.
 int outputEventlogRecord(std::ostream &out, const IEventLogRecord &event,
-                         int level, int hide_context) {
+                         int level, bool hide_context) {
     char type_char;
     int this_state;
     std::tie(type_char, this_state) = getEventState(event, level);
@@ -236,7 +236,7 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
 
 uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
                                          uint64_t previouslyReadId, int level,
-                                         int hideContext) {
+                                         bool hideContext) {
     Debug(_logger) << " - event log \"" << logname << "\":";
 
     try {
@@ -354,6 +354,36 @@ void SectionEventlog::postprocessConfig() {
     loadEventlogOffsets(_env.eventlogStatefile());
 }
 
+void SectionEventlog::readHintOffsets() {
+    // Special handling on startup (first_run)
+    // The last processed record number of each eventlog is stored in the
+    // file eventstate.txt
+    if (_first_run && !*_send_initial) {
+        for (auto &state : _state) {
+            auto it = std::find_if(
+                _hints.cbegin(), _hints.cend(),
+                [&state](const auto &hint) { return state.name == hint.name; });
+            // If there is no entry for the given eventlog we start at the
+            // end
+            state.record_no =
+                it != _hints.cend() ? it->record_no : uint64limits::max();
+        }
+    }
+}
+
+std::pair<int, bool> SectionEventlog::readConfig(
+    const eventlog_file_state &state) const {
+    // Get the configuration of that log file (which messages to
+    // send)
+    auto it = std::find_if(
+        _config->cbegin(), _config->cend(), [&state](const auto &config) {
+            return config.name == "*" || ci_equal(config.name, state.name);
+        });
+    return it != _config->cend()
+               ? std::make_pair(it->level, it->hide_context != 0)
+               : std::make_pair(1, false);
+}
+
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
 bool SectionEventlog::produceOutputInner(std::ostream &out) {
@@ -365,47 +395,20 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
     // not been processed.
 
     if (find_eventlogs(out)) {
-        // Special handling on startup (first_run)
-        // The last processed record number of each eventlog is stored in the
-        // file eventstate.txt
-        if (_first_run && !*_send_initial) {
-            for (auto &state : _state) {
-                bool found_hint = false;
-                for (const auto &hint : _hints) {
-                    if (state.name == hint.name) {
-                        state.record_no = hint.record_no;
-                        found_hint = true;
-                        break;
-                    }
-                }
-                // If there is no entry for the given eventlog we start at the
-                // end
-                if (!found_hint) {
-                    state.record_no = uint64limits::max();
-                }
-            }
-        }
+        readHintOffsets();
 
         for (auto &state : _state) {
             if (!state.newly_discovered)  // not here any more!
                 out << "[[[" << state.name << ":missing]]]\n";
             else {
-                // Get the configuration of that log file (which messages to
-                // send)
                 int level = 1;
-                int hide_context = 0;
-                for (const eventlog_config_entry &config : *_config) {
-                    if ((config.name == "*") ||
-                        ci_equal(config.name, state.name)) {
-                        level = config.level;
-                        hide_context = config.hide_context;
-                        break;
-                    }
-                }
+                bool hideContext = false;
+                std::tie(level, hideContext) = readConfig(state);
+
                 if (level != -1) {
                     state.record_no =
                         outputEventlog(out, state.name.c_str(), state.record_no,
-                                       level, hide_context);
+                                       level, hideContext);
                 }
             }
         }

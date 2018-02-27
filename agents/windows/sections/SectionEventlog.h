@@ -135,7 +135,7 @@ protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 
 private:
-    uint64_t outputEventlog(std::ostream &out, const char *logname,
+    uint64_t outputEventlog(std::ostream &out, IEventLog &log,
                             uint64_t previouslyReadId, EventlogLevel level,
                             bool hideContext);
     void registerEventlog(const char *logname);
@@ -145,6 +145,8 @@ private:
     void readHintOffsets();
     std::pair<EventlogLevel, bool> readConfig(
         const eventlog_file_state &state) const;
+    std::unique_ptr<IEventLog> openEventlog(const std::string &logname,
+                                            std::ostream &out) const;
 
     Configurable<bool> _send_initial;
     Configurable<bool> _vista_api;

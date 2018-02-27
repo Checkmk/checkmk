@@ -111,6 +111,11 @@ std::pair<uint64_t, EventlogLevel> processEventLog(
     return {lastRecordId, worstState};
 }
 
+inline std::ostream &operator<<(std::ostream &out,
+                                const eventlog_file_state &state) {
+    return out << state.name << "|" << state.record_no;
+}
+
 }  // namespace
 
 eventlog_hint_t parseStateLine(const std::string &line) {
@@ -210,7 +215,7 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
         EventlogLevel level{EventlogLevel::Warn};
         std::tie(level, std::ignore) = readConfig(state);
         if (level != EventlogLevel::Off) {
-            ofs << state.name << "|" << state.record_no << std::endl;
+            ofs << state << std::endl;
         }
     }
 }

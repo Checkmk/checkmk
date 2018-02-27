@@ -31,7 +31,6 @@ build: check-python
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	cd $(DIR) ; \
 	./configure $(CONFIGUREOPTS) ; \
-	echo '#define OMD_VERSION "$(OMD_VERSION)"' > src/omd_version.h ; \
 	$(MAKE) all
 
 install:

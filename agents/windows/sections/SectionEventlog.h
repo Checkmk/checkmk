@@ -31,18 +31,35 @@
 
 class WinApiAdaptor;
 
+enum class EventlogLevel { Off = -1, All, Warn, Crit };
+
+inline std::ostream &operator<<(std::ostream &os, const EventlogLevel &l) {
+    switch (l) {
+        case EventlogLevel::Off:
+            return os << "off";
+        case EventlogLevel::All:
+            return os << "all";
+        case EventlogLevel::Warn:
+            return os << "warn";
+        case EventlogLevel::Crit:
+            return os << "crit";
+        default:
+            return os << "invalid";
+    }
+}
+
 // Configuration entries from [logwatch] for individual logfiles
 struct eventlog_config_entry {
-    eventlog_config_entry(int level, int hide_context, const char *name,
-                          bool vista_api)
+    eventlog_config_entry(const std::string &name, EventlogLevel level,
+                          bool hide_context, bool vista_api)
         : name(name)
         , level(level)
         , hide_context(hide_context)
         , vista_api(vista_api) {}
 
     std::string name;
-    int level;
-    int hide_context;
+    EventlogLevel level;
+    bool hide_context;
     bool vista_api;
 };
 
@@ -119,14 +136,15 @@ protected:
 
 private:
     uint64_t outputEventlog(std::ostream &out, const char *logname,
-                            uint64_t previouslyReadId, int level,
+                            uint64_t previouslyReadId, EventlogLevel level,
                             bool hideContext);
     void registerEventlog(const char *logname);
     bool find_eventlogs(std::ostream &out);
     void loadEventlogOffsets(const std::string &statefile);
     void saveEventlogOffsets(const std::string &statefile);
     void readHintOffsets();
-    std::pair<int, bool> readConfig(const eventlog_file_state &state) const;
+    std::pair<EventlogLevel, bool> readConfig(
+        const eventlog_file_state &state) const;
 
     Configurable<bool> _send_initial;
     Configurable<bool> _vista_api;

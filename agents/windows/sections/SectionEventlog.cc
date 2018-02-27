@@ -37,47 +37,34 @@ namespace {
 
 using uint64limits = std::numeric_limits<uint64_t>;
 
-std::pair<char, int> getEventState(const IEventLogRecord &event, int level) {
+std::pair<char, EventlogLevel> getEventState(const IEventLogRecord &event,
+                                             EventlogLevel level) {
     switch (event.level()) {
         case IEventLogRecord::Level::Error:
-            return {'C', 2};
+            return {'C', EventlogLevel::Crit};
         case IEventLogRecord::Level::Warning:
-            return {'W', 1};
+            return {'W', EventlogLevel::Warn};
         case IEventLogRecord::Level::Information:
         case IEventLogRecord::Level::AuditSuccess:
         case IEventLogRecord::Level::Success:
-            if (level == 0)
-                return {'O', 0};
+            if (level == EventlogLevel::All)
+                return {'O', level};
             else
-                return {'.', 0};
+                return {'.', level};
         case IEventLogRecord::Level::AuditFailure:
-            return {'C', 2};
+            return {'C', EventlogLevel::Crit};
         default:
-            return {'u', 1};
-    }
-}
-
-const char *level_name(int level_id) {
-    switch (level_id) {
-        case -1:
-            return "off";
-        case 0:
-            return "all";
-        case 1:
-            return "warn";
-        case 2:
-            return "crit";
-        default:
-            return "invalid";
+            return {'u', EventlogLevel::Warn};
     }
 }
 
 // The int return value is there just for convenience, actually we are not
 // interested in the state int value at this point any more.
-int outputEventlogRecord(std::ostream &out, const IEventLogRecord &event,
-                         int level, bool hide_context) {
-    char type_char;
-    int this_state;
+EventlogLevel outputEventlogRecord(std::ostream &out,
+                                   const IEventLogRecord &event,
+                                   EventlogLevel level, bool hide_context) {
+    char type_char{'\0'};
+    EventlogLevel this_state{EventlogLevel::All};
     std::tie(type_char, this_state) = getEventState(event, level);
 
     if (hide_context && (type_char == '.')) {
@@ -101,13 +88,14 @@ int outputEventlogRecord(std::ostream &out, const IEventLogRecord &event,
     return this_state;
 }
 
-std::pair<uint64_t, int> processEventLog(
-    IEventLog &log, uint64_t previouslyReadId, int level,
-    const std::function<int(const IEventLogRecord &, int)> &processFunc) {
+std::pair<uint64_t, EventlogLevel> processEventLog(
+    IEventLog &log, uint64_t previouslyReadId, EventlogLevel level,
+    const std::function<EventlogLevel(const IEventLogRecord &, EventlogLevel)>
+        &processFunc) {
     // we must seek past the previously read event - if there was one
     const uint64_t seekPosition =
         previouslyReadId + (uint64limits::max() == previouslyReadId ? 0 : 1);
-    int worstState = 0;
+    EventlogLevel worstState{EventlogLevel::All};
     uint64_t lastRecordId = previouslyReadId;
     // WARNING:
     // seek implementations for pre-Vista and post-Vista are completely
@@ -150,29 +138,27 @@ eventlog_config_entry from_string<eventlog_config_entry>(
     std::stringstream str(value);
 
     bool hide_context = false;
-    int level = 0;
+    EventlogLevel level{EventlogLevel::All};
 
     std::string entry;
     while (std::getline(str, entry, ' ')) {
         if (entry == "nocontext")
-            hide_context = 1;
+            hide_context = true;
         else if (entry == "off")
-            level = -1;
+            level = EventlogLevel::Off;
         else if (entry == "all")
-            level = 0;
+            level = EventlogLevel::All;
         else if (entry == "warn")
-            level = 1;
+            level = EventlogLevel::Warn;
         else if (entry == "crit")
-            level = 2;
+            level = EventlogLevel::Crit;
         else {
-            fprintf(stderr,
-                    "Invalid log level '%s'.\r\n"
-                    "Allowed are off, all, warn and crit.\r\n",
-                    entry.c_str());
+            std::cerr << "Invalid log level '" << entry << "'." << std::endl
+                      << "Allowed are off, all, warn and crit." << std::endl;
         }
     }
 
-    return eventlog_config_entry(level, hide_context ? 1 : 0, "", false);
+    return eventlog_config_entry("", level, hide_context, false);
 }
 
 std::ostream &operator<<(std::ostream &out, const eventlog_config_entry &val) {
@@ -180,7 +166,7 @@ std::ostream &operator<<(std::ostream &out, const eventlog_config_entry &val) {
     if (val.hide_context) {
         out << "nocontext ";
     }
-    out << level_name(val.level);
+    out << val.level;
     return out;
 }
 
@@ -221,21 +207,17 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
     }
 
     for (const auto &state : _state) {
-        int level = 1;
-        for (const auto &config : *_config) {
-            if ((config.name == "*") || ci_equal(config.name, state.name)) {
-                level = config.level;
-                break;
-            }
-        }
-        if (level != -1) {
+        EventlogLevel level{EventlogLevel::Warn};
+        std::tie(level, std::ignore) = readConfig(state);
+        if (level != EventlogLevel::Off) {
             ofs << state.name << "|" << state.record_no << std::endl;
         }
     }
 }
 
 uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
-                                         uint64_t previouslyReadId, int level,
+                                         uint64_t previouslyReadId,
+                                         EventlogLevel level,
                                          bool hideContext) {
     Debug(_logger) << " - event log \"" << logname << "\":";
 
@@ -246,21 +228,22 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, const char *logname,
             Debug(_logger) << "   . successfully opened event log";
             out << "[[[" << logname << "]]]\n";
 
-            const auto getState = [](const IEventLogRecord &record, int level) {
+            const auto getState = [](const IEventLogRecord &record,
+                                     EventlogLevel level) {
                 return getEventState(record, level).second;
             };
             uint64_t lastReadId = 0;
-            int worstState = 0;
+            EventlogLevel worstState{EventlogLevel::All};
 
             // first pass - determine if there are records above level
             std::tie(lastReadId, worstState) =
                 processEventLog(*log, previouslyReadId, level, getState);
-            Debug(_logger) << "    . worst state: " << worstState;
+            Debug(_logger) << "    . worst state: " << static_cast<int>(worstState);
 
             // second pass - if there were, print everything
             if (worstState >= level) {
                 const auto outputRecord = [&out, hideContext](
-                    const IEventLogRecord &record, int level) {
+                    const IEventLogRecord &record, EventlogLevel level) {
                     return outputEventlogRecord(out, record, level,
                                                 hideContext);
                 };
@@ -371,7 +354,7 @@ void SectionEventlog::readHintOffsets() {
     }
 }
 
-std::pair<int, bool> SectionEventlog::readConfig(
+std::pair<EventlogLevel, bool> SectionEventlog::readConfig(
     const eventlog_file_state &state) const {
     // Get the configuration of that log file (which messages to
     // send)
@@ -381,7 +364,7 @@ std::pair<int, bool> SectionEventlog::readConfig(
         });
     return it != _config->cend()
                ? std::make_pair(it->level, it->hide_context != 0)
-               : std::make_pair(1, false);
+               : std::make_pair(EventlogLevel::Warn, false);
 }
 
 // The output of this section is compatible with
@@ -401,11 +384,11 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
             if (!state.newly_discovered)  // not here any more!
                 out << "[[[" << state.name << ":missing]]]\n";
             else {
-                int level = 1;
+                EventlogLevel level{EventlogLevel::Warn};
                 bool hideContext = false;
                 std::tie(level, hideContext) = readConfig(state);
 
-                if (level != -1) {
+                if (level != EventlogLevel::Off) {
                     state.record_no =
                         outputEventlog(out, state.name.c_str(), state.record_no,
                                        level, hideContext);

@@ -58,21 +58,17 @@ std::pair<char, EventlogLevel> getEventState(const IEventLogRecord &event,
     }
 }
 
-// The int return value is there just for convenience, actually we are not
-// interested in the state int value at this point any more.
-EventlogLevel outputEventlogRecord(std::ostream &out,
-                                   const IEventLogRecord &event,
-                                   EventlogLevel level, bool hide_context) {
-    char type_char{'\0'};
-    EventlogLevel this_state{EventlogLevel::All};
-    std::tie(type_char, this_state) = getEventState(event, level);
-
-    if (hide_context && (type_char == '.')) {
-        return this_state;
+inline bool isToBeOutput(char type_char, bool hide_context) {
+    if (!hide_context) {
+        return true;
     }
 
+    return type_char != '.';
+}
+
+std::ostream &operator<<(std::ostream &out, const IEventLogRecord &event) {
     // convert UNIX timestamp to local time
-    time_t time_generated = (time_t)event.timeGenerated();
+    time_t time_generated = static_cast<time_t>(event.timeGenerated());
     struct tm *t = localtime(&time_generated);
     char timestamp[64];
     strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
@@ -81,11 +77,9 @@ EventlogLevel outputEventlogRecord(std::ostream &out,
     std::string source_name = to_utf8(event.source());
     std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
-    out << type_char << " " << timestamp << " " << event.eventQualifiers()
-        << "." << event.eventId() << " " << source_name << " "
-        << Utf8(event.message()) << "\n";
-
-    return this_state;
+    return out << timestamp << " " << event.eventQualifiers() << "."
+               << event.eventId() << " " << source_name << " "
+               << Utf8(event.message()) << "\n";
 }
 
 std::pair<uint64_t, EventlogLevel> processEventLog(
@@ -240,9 +234,16 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
     if (worstState >= level) {
         const auto outputRecord = [&out, hideContext](
             const IEventLogRecord &record, EventlogLevel level) {
-            return outputEventlogRecord(out, record, level, hideContext);
+            char type_char{'\0'};
+            EventlogLevel dummy{EventlogLevel::Off};
+            std::tie(type_char, dummy) = getEventState(record, level);
+            if (isToBeOutput(type_char, hideContext)) {
+                out << type_char << " " << record;
+            }
+            return dummy;  // Dummy return value, ignored by caller
         };
-        processEventLog(log, previouslyReadId, level, outputRecord);
+        std::tie(lastReadId, std::ignore) =
+            processEventLog(log, previouslyReadId, level, outputRecord);
     }
     // Return the last entry number. We need to fetch the last record ID
     // separately if INT_MAX was used as seek offset and no new entries

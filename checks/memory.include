@@ -34,7 +34,7 @@ def check_memory_simple(used, total, params):
 
 
     perc_used = (float(used) / total) * 100
-    infotext = "Memory usage: %s (Used: %s, Total: %s)" % (
+    infotext = "Usage: %s (Used: %s, Total: %s)" % (
                get_percent_human_readable(perc_used),
                get_bytes_human_readable(used),
                get_bytes_human_readable(total))

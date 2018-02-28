@@ -90,7 +90,6 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
 # Files that are checked for trailing spaces
 HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* \
                       $$(find -name Makefile) livestatus/src/*.{cc,h} \
-                      agents/windows/*.cc \
                       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
                       doc/helpers/* scripts/setup.sh scripts/autodetect.py \
                       $$(find pnp-templates -type f -name "*.php") \

@@ -50,7 +50,7 @@ mkeventd_status_file = cmk.paths.omd_root + "/var/mkeventd/status"
 _help_list = [("$ID$",            _("Event ID")),
               ("$COUNT$",         _("Number of occurrances")),
               ("$TEXT$",          _("Message text")),
-              ("$FIRST$",         _("Time of the first occurrance (time stamp)")),
+              ("$FIRST$",         _("Time of the first occurrence (time stamp)")),
               ("$LAST$",          _("Time of the most recent occurrance")),
               ("$COMMENT$",       _("Event comment")),
               ("$SL$",            _("Service Level")),

@@ -31,97 +31,67 @@
 
 class WinApiAdaptor;
 
-enum class EventlogLevel { Off = -1, All, Warn, Crit };
+namespace eventlog {
 
-inline std::ostream &operator<<(std::ostream &os, const EventlogLevel &l) {
-    switch (l) {
-        case EventlogLevel::Off:
-            return os << "off";
-        case EventlogLevel::All:
-            return os << "all";
-        case EventlogLevel::Warn:
-            return os << "warn";
-        case EventlogLevel::Crit:
-            return os << "crit";
-        default:
-            return os << "invalid";
-    }
-}
+enum class Level { Off = -1, All, Warn, Crit };
+
+std::ostream &operator<<(std::ostream &os, const Level &l);
 
 // Configuration entries from [logwatch] for individual logfiles
-struct eventlog_config_entry {
-    eventlog_config_entry(const std::string &name, EventlogLevel level,
-                          bool hide_context, bool vista_api)
+struct config {
+    config(const std::string &name, Level level, bool hide_context,
+           bool vista_api)
         : name(name)
         , level(level)
         , hide_context(hide_context)
         , vista_api(vista_api) {}
 
     std::string name;
-    EventlogLevel level;
+    Level level;
     bool hide_context;
     bool vista_api;
 };
 
-template <>
-eventlog_config_entry from_string<eventlog_config_entry>(
-    const WinApiAdaptor &winapi, const std::string &value);
-
-std::ostream &operator<<(std::ostream &out, const eventlog_config_entry &val);
+std::ostream &operator<<(std::ostream &out, const config &val);
 
 // Our memory of what event logs we know and up to
 // which record entry we have seen its messages so
 // far.
-struct eventlog_file_state {
-    eventlog_file_state(const char *name)
-        : name(name), newly_discovered(true) {}
+struct state {
+    state(const char *name) : name(name), newly_discovered(true) {}
     std::string name;
     uint64_t record_no;
     bool newly_discovered;
 };
 
-struct eventlog_hint_t {
-    eventlog_hint_t(const std::string &name_, uint64_t record_no_)
+struct hint {
+    hint(const std::string &name_, uint64_t record_no_)
         : name(name_), record_no(record_no_) {}
     std::string name;
     uint64_t record_no;
 };
 
-using eventlog_config_t = std::vector<eventlog_config_entry>;
-using eventlog_state_t = std::vector<eventlog_file_state>;
-using eventlog_hints_t = std::vector<eventlog_hint_t>;
+using Configs = std::vector<config>;
+using States = std::vector<state>;
+using Hints = std::vector<hint>;
 
-class EventlogConfigurable
-    : public ListConfigurable<eventlog_config_t,
-                              BlockMode::Nop<eventlog_config_t>,
-                              AddMode::PriorityAppend<eventlog_config_t>> {
-    using SuperT =
-        ListConfigurable<eventlog_config_t, BlockMode::Nop<eventlog_config_t>,
-                         AddMode::PriorityAppend<eventlog_config_t>>;
+class Configurable : public ListConfigurable<Configs, BlockMode::Nop<Configs>,
+                                             AddMode::PriorityAppend<Configs>> {
+    using SuperT = ListConfigurable<Configs, BlockMode::Nop<Configs>,
+                                    AddMode::PriorityAppend<Configs>>;
 
 public:
-    EventlogConfigurable(Configuration &config, const char *section,
-                         const char *key, const WinApiAdaptor &winapi)
+    Configurable(Configuration &config, const char *section, const char *key,
+                 const WinApiAdaptor &winapi)
         : SuperT(config, section, key, winapi) {}
 
     virtual void feed(const std::string &var,
-                      const std::string &value) override {
-        eventlog_config_entry entry =
-            from_string<eventlog_config_entry>(_winapi, value);
-        const auto tokens = tokenize(var, " ");
-
-        if (tokens.size() < 2) {
-            std::cerr << "Invalid eventlog logname entry: '" << var << "'"
-                      << std::endl;
-        }
-
-        entry.name = join(std::next(tokens.cbegin()), tokens.cend(), " ");
-        entry.vista_api = (tokens[0] == "logname");
-        add(entry);
-    }
+                      const std::string &value) override;
 };
 
-eventlog_hint_t parseStateLine(const std::string &line);
+}  // namespace eventlog
+
+eventlog::hint parseStateLine(const std::string &line);
 
 class SectionEventlog : public Section {
 public:
@@ -134,24 +104,23 @@ protected:
 
 private:
     uint64_t outputEventlog(std::ostream &out, IEventLog &log,
-                            uint64_t previouslyReadId, EventlogLevel level,
+                            uint64_t previouslyReadId, eventlog::Level level,
                             bool hideContext);
     void registerEventlog(const char *logname);
     bool find_eventlogs(std::ostream &out);
     void saveEventlogOffsets(const std::string &statefile);
     void readHintOffsets();
-    std::pair<EventlogLevel, bool> readConfig(
-        const eventlog_file_state &state) const;
+    std::pair<eventlog::Level, bool> readConfig(
+        const eventlog::state &state) const;
     std::unique_ptr<IEventLog> openEventlog(const std::string &logname,
                                             std::ostream &out) const;
-    void handleExistingLog(std::ostream &out, eventlog_file_state &state);
+    void handleExistingLog(std::ostream &out, eventlog::state &state);
 
     Configurable<bool> _send_initial;
     Configurable<bool> _vista_api;
-    EventlogConfigurable _config;
-    const eventlog_hints_t _hints;
-    eventlog_state_t _state;
-    bool _records_loaded = false;
+    eventlog::Configurable _config;
+    const eventlog::Hints _hints;
+    eventlog::States _states;
     bool _first_run = true;
 };
 

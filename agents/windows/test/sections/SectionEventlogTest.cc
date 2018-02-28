@@ -5,9 +5,13 @@
 
 using namespace ::testing;
 
-bool operator==(const eventlog_hint_t &h1, const eventlog_hint_t &h2) {
+namespace eventlog {
+
+bool operator==(const hint &h1, const hint &h2) {
     return h1.name == h2.name && h1.record_no == h2.record_no;
 }
+
+} // namespace eventlog
 
 /* Contents of an example eventstate.txt:
 Application|19881
@@ -21,7 +25,7 @@ Windows PowerShell|240
 
 TEST(wa_SectionEventlogTest, parseStateLine_Application_valid) {
     char line[] = "Application|19881";
-    const eventlog_hint_t expected{"Application", 19881};
+    const eventlog::hint expected{"Application", 19881};
     ASSERT_EQ(expected, parseStateLine(line));
 }
 
@@ -48,13 +52,13 @@ TEST(wa_SectionEventlogTest, parseStateLine_Application_invalid_separator) {
 
 TEST(wa_SectionEventlogTest, parseStateLine_Internet_Explorer_zero_valid) {
     char line[] = "Internet Explorer|0";
-    const eventlog_hint_t expected{"Internet Explorer", 0};
+    const eventlog::hint expected{"Internet Explorer", 0};
     ASSERT_EQ(expected, parseStateLine(line));
 }
 
 TEST(wa_SectionEventlogTest, parseStateLine_Internet_Explorer_negative) {
     char line[] = "Internet Explorer|-1";
-    const eventlog_hint_t expected{
+    const eventlog::hint expected{
         "Internet Explorer", std::numeric_limits<unsigned long long>::max()};
     ASSERT_EQ(expected, parseStateLine(line));
 }

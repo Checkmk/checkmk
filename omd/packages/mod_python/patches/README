@@ -32,6 +32,9 @@
 0009
    Makes logging of mod_python work again with current apache versions.
 
+0010
+   Fixes broken "import module"-caches when using multiple threads
+
 The other patches are taken with thanks from the FEDORA mod_python
 package and fix compile problems and RedHat 6.1 (and probably
 other distros as well).

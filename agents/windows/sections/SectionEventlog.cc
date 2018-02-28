@@ -123,6 +123,22 @@ inline bool hasPreviousState(eventlog_file_state &state) {
     return uint64limits::max() != state.record_no;
 }
 
+eventlog_hints_t loadEventlogOffsets(const std::string &statefile,
+                                     Logger *logger) {
+    eventlog_hints_t hints;
+    std::ifstream ifs(statefile);
+    std::string line;
+    while (std::getline(ifs, line)) {
+        try {
+            hints.push_back(parseStateLine(line));
+        } catch (const StateParseError &e) {
+            Error(logger) << e.what();
+        }
+    }
+
+    return hints;
+}
+
 }  // namespace
 
 eventlog_hint_t parseStateLine(const std::string &line) {
@@ -187,27 +203,13 @@ SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
     : Section("logwatch", "logwatch", config.getEnvironment(), logger, winapi)
     , _send_initial(config, "logwatch", "sendall", false, winapi)
     , _vista_api(config, "logwatch", "vista_api", false, winapi)
-    , _config(config, "logwatch", "logname", winapi) {
+    , _config(config, "logwatch", "logname", winapi)
+    , _hints(loadEventlogOffsets(_env.eventlogStatefile(), logger)) {
     // register a second key-name
     config.reg("logwatch", "logfile", &_config);
 }
 
 SectionEventlog::~SectionEventlog() {}
-
-void SectionEventlog::loadEventlogOffsets(const std::string &statefile) {
-    if (!_records_loaded) {
-        std::ifstream ifs(statefile);
-        std::string line;
-        while (std::getline(ifs, line)) {
-            try {
-                _hints.push_back(parseStateLine(line));
-            } catch (const StateParseError &e) {
-                Error(_logger) << e.what();
-            }
-        }
-        _records_loaded = true;
-    }
-}
 
 void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
     std::ofstream ofs(statefile);
@@ -330,10 +332,6 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
     }
 
     return success;
-}
-
-void SectionEventlog::postprocessConfig() {
-    loadEventlogOffsets(_env.eventlogStatefile());
 }
 
 void SectionEventlog::readHintOffsets() {

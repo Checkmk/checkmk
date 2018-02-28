@@ -129,8 +129,6 @@ public:
                     const WinApiAdaptor &winapi);
     virtual ~SectionEventlog();
 
-    virtual void postprocessConfig() override;
-
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 
@@ -140,7 +138,6 @@ private:
                             bool hideContext);
     void registerEventlog(const char *logname);
     bool find_eventlogs(std::ostream &out);
-    void loadEventlogOffsets(const std::string &statefile);
     void saveEventlogOffsets(const std::string &statefile);
     void readHintOffsets();
     std::pair<EventlogLevel, bool> readConfig(
@@ -152,7 +149,7 @@ private:
     Configurable<bool> _send_initial;
     Configurable<bool> _vista_api;
     EventlogConfigurable _config;
-    eventlog_hints_t _hints;
+    const eventlog_hints_t _hints;
     eventlog_state_t _state;
     bool _records_loaded = false;
     bool _first_run = true;

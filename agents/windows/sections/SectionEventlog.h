@@ -147,6 +147,7 @@ private:
         const eventlog_file_state &state) const;
     std::unique_ptr<IEventLog> openEventlog(const std::string &logname,
                                             std::ostream &out) const;
+    void handleExistingLog(std::ostream &out, eventlog_file_state &state);
 
     Configurable<bool> _send_initial;
     Configurable<bool> _vista_api;

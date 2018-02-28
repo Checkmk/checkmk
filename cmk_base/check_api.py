@@ -119,6 +119,7 @@ def _get_check_context():
 #   '----------------------------------------------------------------------'
 
 # TODO: Move imports directly to checks?
+import collections
 import fnmatch
 import math
 import re

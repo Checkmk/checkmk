@@ -97,7 +97,6 @@ class SectionEventlog : public Section {
 public:
     SectionEventlog(Configuration &config, Logger *logger,
                     const WinApiAdaptor &winapi);
-    virtual ~SectionEventlog();
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;

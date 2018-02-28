@@ -241,8 +241,6 @@ SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
     config.reg("logwatch", "logfile", &_config);
 }
 
-SectionEventlog::~SectionEventlog() {}
-
 void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
     std::ofstream ofs(statefile);
 

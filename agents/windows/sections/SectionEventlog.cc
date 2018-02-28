@@ -110,6 +110,19 @@ inline std::ostream &operator<<(std::ostream &out,
     return out << state.name << "|" << state.record_no;
 }
 
+inline bool handleMissingLog(std::ostream &out,
+                             const eventlog_file_state &state) {
+    bool missing = !state.newly_discovered;
+    if (missing) {
+        out << "[[[" << state.name << ":missing]]]\n";
+    }
+    return missing;
+}
+
+inline bool hasPreviousState(eventlog_file_state &state) {
+    return uint64limits::max() != state.record_no;
+}
+
 }  // namespace
 
 eventlog_hint_t parseStateLine(const std::string &line) {
@@ -245,12 +258,8 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
         std::tie(lastReadId, std::ignore) =
             processEventLog(log, previouslyReadId, level, outputRecord);
     }
-    // Return the last entry number. We need to fetch the last record ID
-    // separately if INT_MAX was used as seek offset and no new entries
-    // were read.
-    return (std::numeric_limits<uint64_t>::max() == lastReadId)
-               ? log.getLastRecordId()
-               : lastReadId;
+
+    return lastReadId;
 }
 
 // Keeps memory of an event log we have found. It
@@ -375,6 +384,29 @@ std::unique_ptr<IEventLog> SectionEventlog::openEventlog(
     }
 }
 
+void SectionEventlog::handleExistingLog(std::ostream &out,
+                                        eventlog_file_state &state) {
+    EventlogLevel level{EventlogLevel::Warn};
+    bool hideContext = false;
+    std::tie(level, hideContext) = readConfig(state);
+
+    if (level == EventlogLevel::Off) return;
+
+    if (const auto log = openEventlog(state.name, out)) {
+        if (hasPreviousState(state)) {
+            // The last processed eventlog record will serve as previous state
+            // (= saved offset) for the next call.
+            state.record_no =
+                outputEventlog(out, *log, state.record_no, level, hideContext);
+        } else {
+            // We just started monitoring this log. There was no previous state
+            // saved. Just save the last record, it will serve as saved previous
+            // state (= offset) for the next call.
+            state.record_no = log->getLastRecordId();
+        }
+    }
+}
+
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
 bool SectionEventlog::produceOutputInner(std::ostream &out) {
@@ -389,22 +421,12 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
         readHintOffsets();
 
         for (auto &state : _state) {
-            if (!state.newly_discovered)  // not here any more!
-                out << "[[[" << state.name << ":missing]]]\n";
-            else {
-                EventlogLevel level{EventlogLevel::Warn};
-                bool hideContext = false;
-                std::tie(level, hideContext) = readConfig(state);
-
-                if (level != EventlogLevel::Off) {
-                    const auto log = openEventlog(state.name, out);
-                    if (log) {
-                        state.record_no = outputEventlog(
-                            out, *log, state.record_no, level, hideContext);
-                    }
-                }
+            if (!handleMissingLog(out, state)) {
+                handleExistingLog(out, state);
             }
         }
+        // The offsets are persisted in file after each run as we never know
+        // when the agent will be stopped.
         saveEventlogOffsets(_env.eventlogStatefile());
     }
     _first_run = false;

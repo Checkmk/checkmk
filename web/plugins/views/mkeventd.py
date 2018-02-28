@@ -211,7 +211,7 @@ if mkeventd_enabled:
     }
 
     multisite_painters["event_first"] = {
-        "title"   : _("Time of first occurrance of this serial"),
+        "title"   : _("Time of first occurrence of this serial"),
         "short"   : _("First"),
         "columns" : ["event_first"],
         "options" : [ "ts_format", "ts_date" ],

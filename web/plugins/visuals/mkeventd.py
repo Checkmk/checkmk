@@ -163,7 +163,7 @@ if mkeventd_enabled:
     declare_filter(209, EventFilterState("event", "event_priority", _("Syslog Priority"), mkeventd.syslog_priorities))
     declare_filter(225, EventFilterState("history", "history_what", _("History action type"), [(k,k) for k in mkeventd.action_whats.keys()]))
 
-    declare_filter(220, FilterTime("event",   "event_first",  _("First occurrance of event"),      "event_first", ))
+    declare_filter(220, FilterTime("event",   "event_first",  _("First occurrence of event"),      "event_first", ))
     declare_filter(221, FilterTime("event",   "event_last",   _("Last occurrance of event"),       "event_last",  ))
     declare_filter(222, FilterTime("history", "history_time", _("Time of entry in event history"), "history_time",))
 

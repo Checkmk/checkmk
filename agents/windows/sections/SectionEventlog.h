@@ -60,7 +60,7 @@ std::ostream &operator<<(std::ostream &out, const config &val);
 struct state {
     state(const char *name) : name(name), newly_discovered(true) {}
     std::string name;
-    uint64_t record_no;
+    uint64_t record_no{0};
     bool newly_discovered;
 };
 

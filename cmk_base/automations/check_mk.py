@@ -1080,7 +1080,7 @@ class AutomationDiagHost(Automation):
                         source.set_port(agent_port)
                         source.set_timeout(tcp_connect_timeout)
 
-                    output += source.run_raw(hostname, ipaddress)
+                    output += source.run_raw()
 
                 return 0, output
 

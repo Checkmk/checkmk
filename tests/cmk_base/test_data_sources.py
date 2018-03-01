@@ -110,7 +110,7 @@ def _patch_data_source_run(monkeypatch, **kwargs):
     }
     defaults.update(kwargs)
 
-    def run(self, hostname, ipaddress, get_raw_data=False):
+    def run(self, hostname=None, ipaddress=None, get_raw_data=False):
         assert self._may_use_cache_file == defaults["_may_use_cache_file"]
         assert self._no_cache == defaults["_no_cache"]
         assert self._max_cachefile_age == defaults["_max_cachefile_age"]
@@ -477,7 +477,7 @@ def test_data_sources_of_hosts(clear_config_caches, monkeypatch):
     config.collect_hosttags()
 
     for hostname, host_attrs in hosts:
-        sources = cmk_base.data_sources.DataSources(hostname)
+        sources = cmk_base.data_sources.DataSources(hostname, "127.0.0.1")
         source_names = [ s.__class__.__name__ for s in sources.get_data_sources() ]
         assert host_attrs["sources"] == source_names, \
             "Wrong sources for %s" % hostname

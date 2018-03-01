@@ -566,7 +566,7 @@ class CheckMKAgentDataSource(DataSource):
 
 
 
-class ManagementBoardDataSource(object):
+class ManagementBoardDataSource(DataSource):
     """Abstract base class for all data sources that work with the management board configuration"""
     _for_mgmt_board = True
 

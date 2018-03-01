@@ -33,7 +33,7 @@
 namespace wmi {
 class Helper;
 class Result;
-}
+}  // namespace wmi
 
 class SectionWinperf : public Section {
     typedef unsigned long DWORD;

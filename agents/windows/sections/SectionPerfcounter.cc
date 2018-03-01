@@ -89,7 +89,7 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
             value_map[i] = std::vector<std::wstring>();
         }
 
-        for (const PerfCounter &counter : counter_object.counters()) {
+        for (const auto &counter : counter_object.counters()) {
             int idx = 0;
             for (ULONGLONG value : counter.values(instances)) {
                 value_map[idx++].push_back(std::to_wstring(value));
@@ -98,14 +98,13 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
 
         out << "instance," << Utf8(join(counter_object.counterNames(), L","))
             << "\n";
-        for (const auto &instance_values : value_map) {
+        for (const auto & [ index, values ] : value_map) {
             std::wstring instance_name = L"\"\"";
-            if (static_cast<size_t>(instance_values.first) <
-                instance_names.size()) {
-                instance_name = instance_names[instance_values.first];
+            if (static_cast<size_t>(index) < instance_names.size()) {
+                instance_name = instance_names[index];
             }
-            out << Utf8(instance_name) << ","
-                << Utf8(join(instance_values.second, L",")) << "\n";
+            out << Utf8(instance_name) << "," << Utf8(join(values, L","))
+                << "\n";
         }
     } catch (const std::exception &e) {
         Error(_logger) << "Exception: " << e.what();

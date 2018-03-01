@@ -47,7 +47,7 @@ bool SectionMem::produceOutputInner(std::ostream &out) {
     // SwapTotal:     1048568 kB
     // SwapFree:      1043732 kB
 
-    for (const auto &kv : {
+    for (const auto & [ label, value ] : {
              KVPair("MemTotal:", stat.ullTotalPhys),
              KVPair("MemFree:", stat.ullAvailPhys),
              KVPair("SwapTotal:", stat.ullTotalPageFile - stat.ullTotalPhys),
@@ -58,8 +58,7 @@ bool SectionMem::produceOutputInner(std::ostream &out) {
              KVPair("VirtualFree:", stat.ullAvailVirtual),
 
          }) {
-        out << std::setw(15) << std::left << kv.first << (kv.second / 1024)
-            << " kB\n";
+        out << std::setw(15) << std::left << label << (value / 1024) << " kB\n";
     }
     return true;
 }

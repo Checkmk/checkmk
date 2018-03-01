@@ -64,6 +64,6 @@ public:
     /**
      * Ensure the Open Hardware Monitor is running (if it's available).
      * Return true if it was already running or was successfully started.
-    **/
+     **/
     bool startProcess();
 };

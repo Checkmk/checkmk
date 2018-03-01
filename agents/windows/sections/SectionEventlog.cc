@@ -251,7 +251,8 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
     }
 
     for (const auto &state : _states) {
-        eventlog::Level level{eventlog::Level::Warn};
+        // TODO: use structured binding once [[maybe_unused]] supported by gcc
+        auto level{eventlog::Level::Off};
         std::tie(level, std::ignore) = readConfig(state);
         if (level != eventlog::Level::Off) {
             ofs << state << std::endl;
@@ -267,21 +268,18 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
                              eventlog::Level level) {
         return getEventState(record, level).second;
     };
-    uint64_t lastReadId = 0;
-    eventlog::Level worstState{eventlog::Level::All};
 
     // first pass - determine if there are records above level
-    std::tie(lastReadId, worstState) =
+    auto [lastReadId, worstState] =
         processEventLog(log, previouslyReadId, level, getState);
     Debug(_logger) << "    . worst state: " << static_cast<int>(worstState);
 
     // second pass - if there were, print everything
     if (worstState >= level) {
         const auto outputRecord = [&out, hideContext](
-            const IEventLogRecord &record, eventlog::Level level) {
-            char type_char{'\0'};
-            eventlog::Level dummy{eventlog::Level::Off};
-            std::tie(type_char, dummy) = getEventState(record, level);
+                                      const IEventLogRecord &record,
+                                      eventlog::Level level) {
+            const auto [type_char, dummy] = getEventState(record, level);
             if (isToBeOutput(type_char, hideContext)) {
                 out << type_char << " " << record;
             }
@@ -332,8 +330,7 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
                                            NULL, NULL, NULL);
             if (r == ERROR_SUCCESS) {
                 registerEventlog(buffer);
-            }
-            else if (r != ERROR_MORE_DATA) {
+            } else if (r != ERROR_MORE_DATA) {
                 if (r != ERROR_NO_MORE_ITEMS) {
                     out << "ERROR: Cannot enumerate over event logs: error "
                            "code "
@@ -413,9 +410,7 @@ std::unique_ptr<IEventLog> SectionEventlog::openEventlog(
 
 void SectionEventlog::handleExistingLog(std::ostream &out,
                                         eventlog::state &state) {
-    eventlog::Level level{eventlog::Level::Warn};
-    bool hideContext = false;
-    std::tie(level, hideContext) = readConfig(state);
+    const auto [level, hideContext] = readConfig(state);
 
     if (level == eventlog::Level::Off) return;
 

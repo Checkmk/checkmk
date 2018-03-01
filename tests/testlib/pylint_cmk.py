@@ -38,9 +38,11 @@ def add_file(f, path):
 
 
 def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
-    pylint_args = os.environ.get("PYLINT_ARGS", "")
-    if pylint_args:
-        pylint_args += " "
+    args = os.environ.get("PYLINT_ARGS", "")
+    if args:
+        pylint_args = args.split(" ")
+    else:
+        pylint_args = []
 
     pylint_cfg = repo_path() + "/pylintrc"
 
@@ -49,10 +51,14 @@ def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
         print "Nothing to do..."
         return 0 # nothing to do
 
+    cmd = [
+        "python", "-m", "pylint",
+        "--rcfile", pylint_cfg,
+    ] + pylint_args + check_files
+
     os.putenv("TEST_PATH", repo_path() + "/tests")
-    cmd = "pylint --rcfile=\"%s\" %s%s" % (pylint_cfg, pylint_args, " ".join(check_files))
-    print("Running pylint with: %s" % cmd)
-    p = subprocess.Popen(cmd, shell=True, cwd=base_path)
+    print("Running pylint in '%s' with: %s" % (base_path, subprocess.list2cmdline(cmd)))
+    p = subprocess.Popen(cmd, shell=False, cwd=base_path)
     exit_code = p.wait()
     print("Finished with exit code: %d" % exit_code)
 

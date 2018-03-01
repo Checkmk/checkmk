@@ -10,6 +10,7 @@ import tempfile
 
 from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
 from pylint.utils import Message
+from pylint.lint import Run
 
 from testlib import repo_path, cmk_path, cmc_path, cme_path
 
@@ -39,8 +40,6 @@ def add_file(f, path):
 
 def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
     pylint_args = os.environ.get("PYLINT_ARGS", "")
-    if pylint_args:
-        pylint_args += " "
 
     pylint_cfg = repo_path() + "/pylintrc"
 
@@ -50,10 +49,25 @@ def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
         return 0 # nothing to do
 
     os.putenv("TEST_PATH", repo_path() + "/tests")
-    cmd = "pylint --rcfile=\"%s\" %s%s" % (pylint_cfg, pylint_args, " ".join(check_files))
-    print("Running pylint with: %s" % cmd)
-    p = subprocess.Popen(cmd, shell=True, cwd=base_path)
-    exit_code = p.wait()
+
+    args = []
+    if pylint_args:
+        args += pylint_args.split(" ")
+
+    args += [ "--rcfile=%s" % pylint_cfg ]
+    args += check_files
+
+    print("Running pylint in %r with args: %r" % (base_path, args))
+
+    try:
+        orig_wd = os.getcwd()
+        os.chdir(base_path)
+
+        run = Run(args, exit=False)
+        exit_code = run.linter.msg_status
+    finally:
+        os.chdir(orig_wd)
+
     print("Finished with exit code: %d" % exit_code)
 
     #if exit_code == 0 and cleanup_test_dir:

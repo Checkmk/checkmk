@@ -1,0 +1,14 @@
+Title: Do not bake VANILLA/GENERIC implicit when bake for list of hosts
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i4
+Date: 1519854141
+Class: fix
+
+When the agent bakery is invoked with "cmk -A HOST1" to bake the agents
+for the host with the name HOST1, previous Check_Mk versions were baking
+the VANILLA and GENERIC agents in addition to the given host. This has
+been changed. Now the bakery only bakes the agents for the hosts the
+user requested with the call.

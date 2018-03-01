@@ -82,6 +82,60 @@ std::ostream &operator<<(std::ostream &out, const IEventLogRecord &event) {
                << Utf8(event.message()) << "\n";
 }
 
+eventlog::States loadEventlogOffsets(const std::string &statefile, bool sendall,
+                                     Logger *logger) {
+    eventlog::States states;
+    std::ifstream ifs(statefile);
+    std::string line;
+
+    while (std::getline(ifs, line)) {
+        try {
+            auto state = parseStateLine(line);
+            if (sendall) state.record_no = 0;
+            states.push_back(state);
+        } catch (const StateParseError &e) {
+            Error(logger) << e.what();
+        }
+    }
+
+    std::sort(states.begin(), states.end(),
+              [](const auto &s1, const auto &s2) { return s1.name < s2.name; });
+    return states;
+}
+
+// Keeps memory of an event log we have found. It
+// might already be known and will not be stored twice.
+void registerEventlog(const std::string &logname, bool sendall,
+                      eventlog::States &states) {
+    // check if we already know this one...
+    for (auto &state : states) {
+        if (ci_equal(state.name, logname)) {
+            state.newly_discovered = true;
+            return;
+        }
+    }
+
+    // yet unknown. register it.
+    states.push_back(
+        eventlog::state(logname, sendall ? 0 : uint64limits::max()));
+}
+
+bool handleFindResult(const FindResult &result, bool sendall,
+                      eventlog::States &states, std::ostream &out) {
+    if (const auto & [ r, logname ] = result; r == ERROR_SUCCESS) {
+        registerEventlog(logname, sendall, states);
+    } else if (r != ERROR_MORE_DATA) {
+        if (r != ERROR_NO_MORE_ITEMS) {
+            out << "ERROR: Cannot enumerate over event logs: error "
+                   "code "
+                << r << "\n";
+            return false;
+        }
+    }
+
+    return true;
+}
+
 std::pair<uint64_t, eventlog::Level> processEventLog(
     IEventLog &log, uint64_t previouslyReadId, eventlog::Level level,
     const std::function<eventlog::Level(const IEventLogRecord &,
@@ -120,22 +174,6 @@ inline bool handleMissingLog(std::ostream &out, const eventlog::state &state) {
 
 inline bool hasPreviousState(eventlog::state &state) {
     return uint64limits::max() != state.record_no;
-}
-
-eventlog::Hints loadEventlogOffsets(const std::string &statefile,
-                                    Logger *logger) {
-    eventlog::Hints hints;
-    std::ifstream ifs(statefile);
-    std::string line;
-    while (std::getline(ifs, line)) {
-        try {
-            hints.push_back(parseStateLine(line));
-        } catch (const StateParseError &e) {
-            Error(logger) << e.what();
-        }
-    }
-
-    return hints;
 }
 
 }  // namespace
@@ -213,7 +251,7 @@ void Configurable::feed(const std::string &var, const std::string &value) {
 
 }  // namespace eventlog
 
-eventlog::hint parseStateLine(const std::string &line) {
+eventlog::state parseStateLine(const std::string &line) {
     /* Example: line = "System|1234" */
     const auto tokens = tokenize(line, "\\|");
 
@@ -224,7 +262,7 @@ eventlog::hint parseStateLine(const std::string &line) {
     }
 
     try {
-        return {tokens[0], std::stoull(tokens[1])};
+        return {tokens[0], std::stoull(tokens[1]), false};
     } catch (const std::invalid_argument &) {
         throw StateParseError{std::string("Invalid state line: ") + line};
     }
@@ -233,15 +271,15 @@ eventlog::hint parseStateLine(const std::string &line) {
 SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
     : Section("logwatch", "logwatch", config.getEnvironment(), logger, winapi)
-    , _send_initial(config, "logwatch", "sendall", false, winapi)
+    , _sendall(config, "logwatch", "sendall", false, winapi)
     , _vista_api(config, "logwatch", "vista_api", false, winapi)
-    , _config(config, "logwatch", "logname", winapi)
-    , _hints(loadEventlogOffsets(_env.eventlogStatefile(), logger)) {
+    , _config(config, "logwatch", "logname", winapi) {
     // register a second key-name
     config.reg("logwatch", "logfile", &_config);
 }
 
-void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
+void SectionEventlog::saveEventlogOffsets(const std::string &statefile,
+                                          const eventlog::States &states) {
     std::ofstream ofs(statefile);
 
     if (!ofs) {
@@ -250,7 +288,7 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
         return;
     }
 
-    for (const auto &state : _states) {
+    for (const auto &state : states) {
         // TODO: use structured binding once [[maybe_unused]] supported by gcc
         auto level{eventlog::Level::Off};
         std::tie(level, std::ignore) = readConfig(state);
@@ -292,27 +330,6 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
     return lastReadId;
 }
 
-void SectionEventlog::initStates() {
-    for (auto &state : _states) {
-        state.newly_discovered = false;
-    }
-}
-
-// Keeps memory of an event log we have found. It
-// might already be known and will not be stored twice.
-void SectionEventlog::registerEventlog(const std::string &logname) {
-    // check if we already know this one...
-    for (auto &state : _states) {
-        if (ci_equal(state.name, logname)) {
-            state.newly_discovered = true;
-            return;
-        }
-    }
-
-    // yet unknown. register it.
-    _states.push_back(eventlog::state(logname));
-}
-
 FindResult SectionEventlog::findLog(const HKeyHandle &hKey, DWORD index) const {
     std::array<char, 128> buffer{};
     DWORD len = static_cast<DWORD>(buffer.size());
@@ -321,28 +338,12 @@ FindResult SectionEventlog::findLog(const HKeyHandle &hKey, DWORD index) const {
             buffer.data()};
 }
 
-bool SectionEventlog::handleFindResult(const FindResult &result,
-                                       std::ostream &out) {
-    if (const auto & [ r, logname ] = result; r == ERROR_SUCCESS) {
-        registerEventlog(logname);
-    } else if (r != ERROR_MORE_DATA) {
-        if (r != ERROR_NO_MORE_ITEMS) {
-            out << "ERROR: Cannot enumerate over event logs: error "
-                   "code "
-                << r << "\n";
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void SectionEventlog::registerVistaStyleLogs() {
+void SectionEventlog::registerVistaStyleLogs(eventlog::States &states) {
     // enable the vista-style logs if that api is enabled
     if (*_vista_api) {
         for (const auto &eventlog : *_config) {
             if (eventlog.vista_api) {
-                registerEventlog(eventlog.name);
+                registerEventlog(eventlog.name, *_sendall, states);
             }
         }
     }
@@ -350,9 +351,8 @@ void SectionEventlog::registerVistaStyleLogs() {
 
 /* Look into the registry in order to find out, which
    event logs are available. */
-bool SectionEventlog::find_eventlogs(std::ostream &out) {
-    initStates();
-
+bool SectionEventlog::find_eventlogs(std::ostream &out,
+                                     eventlog::States &states) {
     const std::string regpath{"SYSTEM\\CurrentControlSet\\Services\\Eventlog"};
     HKEY key = nullptr;
     bool success = true;
@@ -364,7 +364,8 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
         for (DWORD i = 0; r == ERROR_SUCCESS || r == ERROR_MORE_DATA; ++i) {
             const auto result = findLog(hKey, i);
             r = result.first;
-            success = handleFindResult(result, out) && success;
+            success = handleFindResult(result, *_sendall, states, out) &&
+                      success;
         }
     } else {
         success = false;
@@ -373,25 +374,8 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
             << " for enumeration: error code " << lastError << "\n";
     }
 
-    registerVistaStyleLogs();
+    registerVistaStyleLogs(states);
     return success;
-}
-
-void SectionEventlog::readHintOffsets() {
-    // Special handling on startup (first_run)
-    // The last processed record number of each eventlog is stored in the
-    // file eventstate.txt
-    if (_first_run && !*_send_initial) {
-        for (auto &state : _states) {
-            auto it = std::find_if(
-                _hints.cbegin(), _hints.cend(),
-                [&state](const auto &hint) { return state.name == hint.name; });
-            // If there is no entry for the given eventlog we start at the
-            // end
-            state.record_no =
-                it != _hints.cend() ? it->record_no : uint64limits::max();
-        }
-    }
 }
 
 std::pair<eventlog::Level, bool> SectionEventlog::readConfig(
@@ -456,18 +440,18 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
     // is skipped to the end. Historic messages are
     // not been processed.
 
-    if (find_eventlogs(out)) {
-        readHintOffsets();
-
-        for (auto &state : _states) {
+    if (auto states = loadEventlogOffsets(_env.eventlogStatefile(),
+                                          *_sendall, _logger);
+        find_eventlogs(out, states)) {
+        for (auto &state : states) {
             if (!handleMissingLog(out, state)) {
                 handleExistingLog(out, state);
             }
         }
         // The offsets are persisted in file after each run as we never know
         // when the agent will be stopped.
-        saveEventlogOffsets(_env.eventlogStatefile());
+        saveEventlogOffsets(_env.eventlogStatefile(), states);
     }
-    _first_run = false;
+
     return true;
 }

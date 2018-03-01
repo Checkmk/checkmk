@@ -40,6 +40,10 @@ from cmk_base.exceptions import MKAgentError
 
 from cmk_base.modes import modes, Mode, Option, keepalive_option
 
+# TODO: Investigate all modes and try to find out whether or not we can
+# set needs_checks=False for them. This would save a lot of IO/time for
+# these modes.
+
 #.
 #   .--General options-----------------------------------------------------.
 #   |       ____                           _               _               |

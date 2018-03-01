@@ -98,6 +98,7 @@ def load_plugins(force):
     fixup_graph_info()
     fixup_unit_info()
     fixup_perfometer_info()
+    loaded_with_language = current_language
 
 
 def fixup_graph_info():

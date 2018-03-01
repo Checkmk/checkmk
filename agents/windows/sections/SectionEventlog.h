@@ -58,7 +58,7 @@ std::ostream &operator<<(std::ostream &out, const config &val);
 // which record entry we have seen its messages so
 // far.
 struct state {
-    state(const char *name) : name(name), newly_discovered(true) {}
+    state(const std::string &name) : name(name), newly_discovered(true) {}
     std::string name;
     uint64_t record_no{0};
     bool newly_discovered;
@@ -105,7 +105,7 @@ private:
     uint64_t outputEventlog(std::ostream &out, IEventLog &log,
                             uint64_t previouslyReadId, eventlog::Level level,
                             bool hideContext);
-    void registerEventlog(const char *logname);
+    void registerEventlog(const std::string &logname);
     bool find_eventlogs(std::ostream &out);
     void saveEventlogOffsets(const std::string &statefile);
     void readHintOffsets();

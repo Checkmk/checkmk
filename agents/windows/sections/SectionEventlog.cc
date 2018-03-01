@@ -296,7 +296,7 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
 
 // Keeps memory of an event log we have found. It
 // might already be known and will not be stored twice.
-void SectionEventlog::registerEventlog(const char *logname) {
+void SectionEventlog::registerEventlog(const std::string &logname) {
     // check if we already know this one...
     for (auto &state : _states) {
         if (ci_equal(state.name, logname)) {
@@ -316,11 +316,9 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
         state.newly_discovered = false;
     }
 
-    char regpath[128];
-    snprintf(regpath, sizeof(regpath),
-             "SYSTEM\\CurrentControlSet\\Services\\Eventlog");
+    const std::string regpath{"SYSTEM\\CurrentControlSet\\Services\\Eventlog"};
     HKEY key = nullptr;
-    DWORD ret = _winapi.RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath, 0,
+    DWORD ret = _winapi.RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
                                      KEY_ENUMERATE_SUB_KEYS, &key);
     HKeyHandle hKey{key, _winapi};
     bool success = true;
@@ -332,8 +330,9 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
             len = sizeof(buffer);
             DWORD r = _winapi.RegEnumKeyEx(hKey.get(), i, buffer, &len, NULL,
                                            NULL, NULL, NULL);
-            if (r == ERROR_SUCCESS)
+            if (r == ERROR_SUCCESS) {
                 registerEventlog(buffer);
+            }
             else if (r != ERROR_MORE_DATA) {
                 if (r != ERROR_NO_MORE_ITEMS) {
                     out << "ERROR: Cannot enumerate over event logs: error "
@@ -356,7 +355,7 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
     if (*_vista_api) {
         for (const auto &eventlog : *_config) {
             if (eventlog.vista_api) {
-                registerEventlog(eventlog.name.c_str());
+                registerEventlog(eventlog.name);
             }
         }
     }

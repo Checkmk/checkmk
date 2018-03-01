@@ -1,0 +1,23 @@
+Title: IPMI Management board
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1519903894
+Class: feature
+
+The management board of hosts can now be configured to be monitored via IPMI
+as alternative to the previous SNMP monitoring.
+
+To configure the IPMI management board for a host, you need to edit the
+host configuration. Set the addresss of the management board, choose IPMI
+as management board protocol and specify the IPMI credentials.
+After this, you should be able to find new services named "Management interface: ..."
+using the service discovery.
+
+To make your configuration a bit less explicit, you can specify the IPMI protocol
+and credentials on folders instead of specifying it explicit for each host.
+Another option is to use the ruleset "Management board config" to configure the
+credentials. But you will have to set at least the protocol on host/folders and
+the management board address for each host.

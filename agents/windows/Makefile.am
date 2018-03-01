@@ -11,7 +11,7 @@ LD_COMMON = -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -
 
 check_mk_agent_LDADD = check_mk_agent.res libcheck_mk_agent.a $(LD_COMMON)
 
-WindowsAgentTest_CPPFLAGS = -I$(top_srcdir)/sections -I$(top_srcdir)/test
+WindowsAgentTest_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/sections -I$(top_srcdir)/test
 WindowsAgentTest_LDADD = libcheck_mk_agent.a -lgtest -lgmock $(LD_COMMON)
 
 wmitest_LDADD = $(LD_COMMON)

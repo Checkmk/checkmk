@@ -434,11 +434,11 @@ void SectionEventlog::handleExistingLog(std::ostream &out,
 // the logwatch agent for Linux and UNIX
 bool SectionEventlog::produceOutputInner(std::ostream &out) {
     Debug(_logger) << "SectionEventlog::produceOutputInner";
-    // This agent remembers the record numbers
+    // The agent reads from a state file the record numbers
     // of the event logs up to which messages have
-    // been processed. When started, the eventlog
-    // is skipped to the end. Historic messages are
-    // not been processed.
+    // been processed. When no state information is available,
+    // the eventlog is skipped to the end (unless the sendall config
+    // option is used). Historic messages are not been processed.
 
     if (auto states = loadEventlogOffsets(_env.eventlogStatefile(),
                                           *_sendall, _logger);
@@ -448,8 +448,7 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
                 handleExistingLog(out, state);
             }
         }
-        // The offsets are persisted in file after each run as we never know
-        // when the agent will be stopped.
+        // The offsets are persisted in a state file.
         saveEventlogOffsets(_env.eventlogStatefile(), states);
     }
 

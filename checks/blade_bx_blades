@@ -24,29 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_blade_bx_blades(item, no_params, info):
-    blade_status_codes = { 1 : "Unknown", 2 : "OK", 3 : "not-present", 4 : "Error", 5 : "Critical", 6 : "Standby" }
-    for blade_id, blade_status, blade_serial, blade_name  in info:
-        state = 0
-        blade_status = saveint(blade_status)
-        if blade_id == item:
-            if blade_status == 4  or blade_status == 5:
-                state = 2
 
-            return (state, "Blade %s %s %s Status %s " % (blade_id, blade_name, blade_serial, blade_status_codes.get(blade_status, 1)))
+def inventory_blade_bx_blades(info):
+    for id_, status, serial, name  in info:
+        if status != "3": # blade not present
+            yield id_, None
 
-    return (3, "no data for '%s' in SNMP info" % item)
+
+def check_blade_bx_blades(item, _no_params, info):
+    status_codes = {
+        "1": (3, "unknown"),
+        "2": (0, "OK"),
+        "3": (3, "not present"),
+        "4": (2, "error"),
+        "5": (2, "critical"),
+        "6": (0, "standby"),
+    }
+
+    for id_, status, serial, name  in info:
+        if id_ == item:
+            state, state_readable = status_codes[status]
+            if name:
+                name_info = "[%s, Serial: %s]" % (name, serial)
+            else:
+                name_info = "[Serial: %s]" % serial
+            return state, "%s Status: %s" % (name_info, state_readable)
+
 
 check_info['blade_bx_blades'] = {
-    "check_function" : check_blade_bx_blades,
-    "inventory_function" : lambda info: [ (line[0], None) for line in info if int(line[1]) != 3] ,
-    "service_description" : "Blade %s",
-    "snmp_info" : (".1.3.6.1.4.1.7244.1.1.1.4.2.1.1", [
-                                                      1, # bladeId
-                                                      2, # bladestatus
-                                                      5, # Serialnumber
-                                                      21, # Name
-   ]),
-   "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
-                            or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
+    "inventory_function"    : inventory_blade_bx_blades,
+    "check_function"        : check_blade_bx_blades,
+    "service_description"   : "Blade %s",
+    "snmp_info"             : (".1.3.6.1.4.1.7244.1.1.1.4.2.1.1", [
+                                    1,  # bladeId
+                                    2,  # bladestatus
+                                    5,  # Serialnumber
+                                    21, # Name
+                              ]),
+   "snmp_scan_function"     : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
+                                  or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
 }

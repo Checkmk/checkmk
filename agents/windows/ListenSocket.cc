@@ -49,11 +49,12 @@ inline bool ipv6Match(const ipspec &only_from, const SOCKADDR &ip) {
     std::array<size_t, 8> indices;
     std::iota(indices.begin(), indices.end(), 0);
     const auto &addrv6 = reinterpret_cast<const sockaddr_in6 &>(ip);
-    return std::all_of(indices.cbegin(), indices.cend(), [&only_from, &addrv6](
-                                                             const size_t i) {
-        return only_from.ip.v6.address[i] ==
-               (addrv6.sin6_addr.u.Word[i] & only_from.ip.v6.netmask[i]);
-    });
+    return std::all_of(
+        indices.cbegin(), indices.cend(),
+        [&only_from, &addrv6](const size_t i) {
+            return only_from.ip.v6.address[i] ==
+                   (addrv6.sin6_addr.u.Word[i] & only_from.ip.v6.netmask[i]);
+        });
 }
 
 inline bool ipv4Match(const ipspec &only_from, const SOCKADDR &ip) {

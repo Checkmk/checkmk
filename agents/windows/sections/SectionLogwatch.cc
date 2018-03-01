@@ -210,8 +210,9 @@ void SectionLogwatch::updateOrCreateLogwatchTextfile(
     condition_patterns_t &patterns) {
     auto it = findLogwatchTextfile(full_filename);
     auto &textfile =
-        (it != _textfiles.end()) ? *it : addNewLogwatchTextfile(
-                                             full_filename, token, patterns);
+        (it != _textfiles.end())
+            ? *it
+            : addNewLogwatchTextfile(full_filename, token, patterns);
     updateLogwatchTextfile(textfile);
 }
 
@@ -251,7 +252,7 @@ void SectionLogwatch::processGlobExpression(glob_token &glob_token,
             }
         } else {
             // non-rotated: each match is a separate log
-            for (const FileEntryType &ent : matches) {
+            for (const auto &ent : matches) {
                 updateOrCreateLogwatchTextfile(ent.first.c_str(), glob_token,
                                                patterns);
             }
@@ -519,7 +520,7 @@ std::vector<std::string> SectionLogwatch::sortedByTime(
                   return _winapi.CompareFileTime(&lhs.second, &rhs.second) < 0;
               });
     std::vector<std::string> result;
-    for (const FileEntryType &ent : sorted) {
+    for (const auto &ent : sorted) {
         result.push_back(ent.first);
     }
     return result;

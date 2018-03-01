@@ -182,8 +182,8 @@ public:
 
     virtual void output(const std::string &key,
                         std::ostream &out) const override {
-        for (const std::pair<std::string, DataT> &data : this->values()) {
-            out << key << " " << data.first << " = " << data.second << "\n";
+        for (const auto & [ var, value ] : this->values()) {
+            out << key << " " << var << " = " << value << "\n";
         }
     }
 

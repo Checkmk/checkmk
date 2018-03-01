@@ -435,9 +435,8 @@ uint64_t EventLogVista::getLastRecordId() {
 
     EVT_HANDLE event_handle = nullptr;
     DWORD num_events = 0;
-    if (_evt.next &&
-        _evt.next(logHandle.get(), 1, &event_handle, INFINITE, 0,
-                  &num_events)) {
+    if (_evt.next && _evt.next(logHandle.get(), 1, &event_handle, INFINITE, 0,
+                               &num_events)) {
         EventHandleVista event(event_handle, _evt);
 
         return EventLogRecordVista(event.get(), _evt, _render_context.get(),

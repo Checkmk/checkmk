@@ -449,27 +449,27 @@ bool SectionPluginGroup::produceOutputInner(std::ostream &out) {
 }
 
 int SectionPluginGroup::getTimeout(const std::string &name) const {
-    for (const auto &cfg : *_timeout) {
-        if (globmatch(cfg.first.c_str(), name.c_str())) {
-            return cfg.second;
+    for (const auto & [ plugin, timeout ] : *_timeout) {
+        if (globmatch(plugin.c_str(), name.c_str())) {
+            return timeout;
         }
     }
     return _type == PLUGIN ? DEFAULT_PLUGIN_TIMEOUT : DEFAULT_LOCAL_TIMEOUT;
 }
 
 int SectionPluginGroup::getCacheAge(const std::string &name) const {
-    for (const auto &cfg : *_cache_age) {
-        if (globmatch(cfg.first.c_str(), name.c_str())) {
-            return cfg.second;
+    for (const auto & [ plugin, age ] : *_cache_age) {
+        if (globmatch(plugin.c_str(), name.c_str())) {
+            return age;
         }
     }
     return 0;
 }
 
 int SectionPluginGroup::getMaxRetries(const std::string &name) const {
-    for (const auto &cfg : *_retry_count) {
-        if (globmatch(cfg.first.c_str(), name.c_str())) {
-            return cfg.second;
+    for (const auto & [ plugin, count ] : *_retry_count) {
+        if (globmatch(plugin.c_str(), name.c_str())) {
+            return count;
         }
     }
     return 0;
@@ -477,9 +477,9 @@ int SectionPluginGroup::getMaxRetries(const std::string &name) const {
 
 script_execution_mode SectionPluginGroup::getExecutionMode(
     const std::string &name) const {
-    for (const auto &cfg : *_execution_mode) {
-        if (globmatch(cfg.first.c_str(), name.c_str())) {
-            return cfg.second;
+    for (const auto & [ plugin, mode ] : *_execution_mode) {
+        if (globmatch(plugin.c_str(), name.c_str())) {
+            return mode;
         }
     }
     return *_default_execution_mode;

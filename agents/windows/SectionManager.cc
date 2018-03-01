@@ -223,18 +223,16 @@ void SectionManager::loadStaticSections(Configuration &config,
 
     addSection(new SectionPluginGroup(config, _env.localDirectory(), LOCAL,
                                       _script_statistics, _logger, _winapi));
-    for (const auto &include : *_script_local_includes) {
-        addSection(new SectionPluginGroup(config, include.second, LOCAL,
-                                          _script_statistics, _logger, _winapi,
-                                          include.first));
+    for (const auto & [ user, path ] : *_script_local_includes) {
+        addSection(new SectionPluginGroup(
+            config, path, LOCAL, _script_statistics, _logger, _winapi, user));
     }
 
     addSection(new SectionPluginGroup(config, _env.pluginsDirectory(), PLUGIN,
                                       _script_statistics, _logger, _winapi));
-    for (const auto &include : *_script_plugin_includes) {
-        addSection(new SectionPluginGroup(config, include.second, PLUGIN,
-                                          _script_statistics, _logger, _winapi,
-                                          include.first));
+    for (const auto & [ user, path ] : *_script_plugin_includes) {
+        addSection(new SectionPluginGroup(
+            config, path, PLUGIN, _script_statistics, _logger, _winapi, user));
     }
 
     addSection(new SectionSpool(_env, _logger, _winapi));

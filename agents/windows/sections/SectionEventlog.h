@@ -58,22 +58,18 @@ std::ostream &operator<<(std::ostream &out, const config &val);
 // which record entry we have seen its messages so
 // far.
 struct state {
-    state(const std::string &name) : name(name), newly_discovered(true) {}
-    std::string name;
-    uint64_t record_no{0};
-    bool newly_discovered;
-};
-
-struct hint {
-    hint(const std::string &name_, uint64_t record_no_)
-        : name(name_), record_no(record_no_) {}
+    state(const std::string &name_, uint64_t record_no_ = 0,
+          bool newly_discovered_ = true)
+        : name(name_)
+        , record_no(record_no_)
+        , newly_discovered(newly_discovered_) {}
     std::string name;
     uint64_t record_no;
+    bool newly_discovered;
 };
 
 using Configs = std::vector<config>;
 using States = std::vector<state>;
-using Hints = std::vector<hint>;
 
 class Configurable : public ListConfigurable<Configs, BlockMode::Nop<Configs>,
                                              AddMode::PriorityAppend<Configs>> {
@@ -91,7 +87,7 @@ public:
 
 }  // namespace eventlog
 
-eventlog::hint parseStateLine(const std::string &line);
+eventlog::state parseStateLine(const std::string &line);
 
 using FindResult = std::pair<DWORD, std::string>;
 
@@ -107,26 +103,20 @@ private:
     uint64_t outputEventlog(std::ostream &out, IEventLog &log,
                             uint64_t previouslyReadId, eventlog::Level level,
                             bool hideContext);
-    void initStates();
-    void registerEventlog(const std::string &logname);
     FindResult findLog(const HKeyHandle &hKey, DWORD index) const;
-    bool handleFindResult(const FindResult &result, std::ostream &out);
-    void registerVistaStyleLogs();
-    bool find_eventlogs(std::ostream &out);
-    void saveEventlogOffsets(const std::string &statefile);
-    void readHintOffsets();
+    void registerVistaStyleLogs(eventlog::States &states);
+    bool find_eventlogs(std::ostream &out, eventlog::States &states);
+    void saveEventlogOffsets(const std::string &statefile,
+                             const eventlog::States &states);
     std::pair<eventlog::Level, bool> readConfig(
         const eventlog::state &state) const;
     std::unique_ptr<IEventLog> openEventlog(const std::string &logname,
                                             std::ostream &out) const;
     void handleExistingLog(std::ostream &out, eventlog::state &state);
 
-    Configurable<bool> _send_initial;
+    Configurable<bool> _sendall;
     Configurable<bool> _vista_api;
     eventlog::Configurable _config;
-    const eventlog::Hints _hints;
-    eventlog::States _states;
-    bool _first_run = true;
 };
 
 #endif  // SectionEventlog_h

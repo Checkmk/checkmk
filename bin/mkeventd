@@ -946,7 +946,7 @@ def quote_tab(col):
         col = "\1" + "\1".join([quote_tab(e) for e in col])
     elif col is None:
         col = "\2"
-    elif col is unicode:
+    elif ty is unicode:
         col = col.encode("utf-8")
 
     return col.replace("\t", " ")

@@ -354,7 +354,7 @@ def mode_dump_agent(hostname):
 
         for source in sources.get_data_sources():
             if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
-                output += source.run_raw(hostname, ipaddress)
+                output += source.run_raw()
 
         # Show errors of problematic data sources
         for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():

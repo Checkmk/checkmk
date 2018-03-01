@@ -446,45 +446,49 @@ class WatoWebApiMode(WatoMode):
 #   | Mode for showing a folder, bulk actions on hosts.                    |
 #   '----------------------------------------------------------------------'
 
-def mode_folder(phase):
-    folder = watolib.Folder.current()
+class ModeFolder(WatoMode):
+    def __init__(self):
+        super(ModeFolder, self).__init__()
+        self._folder = watolib.Folder.current()
 
-    if phase == "title":
-        return folder.title()
 
-    elif phase == "buttons":
+    def title(self):
+        return self._folder.title()
+
+
+    def buttons(self):
         global_buttons()
-        if folder.is_disk_folder():
+        if self._folder.is_disk_folder():
             if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
                 html.context_button(_("Rulesets"),        watolib.folder_preserving_link([("mode", "ruleeditor")]), "rulesets")
                 html.context_button(_("Manual Checks"),   watolib.folder_preserving_link([("mode", "static_checks")]), "static_checks")
-            if folder.may("read"):
-                html.context_button(_("Folder Properties"), folder.edit_url(backfolder=folder), "edit")
-            if not folder.locked_subfolders() and config.user.may("wato.manage_folders") and folder.may("write"):
-                html.context_button(_("New folder"),        folder.url([("mode", "newfolder")]), "newfolder")
-            if not folder.locked_hosts() and config.user.may("wato.manage_hosts") and folder.may("write"):
-                html.context_button(_("New host"),    folder.url([("mode", "newhost")]), "new")
-                html.context_button(_("New cluster"), folder.url([("mode", "newcluster")]), "new_cluster")
-                html.context_button(_("Bulk import"), folder.url([("mode", "bulk_import")]), "bulk_import")
+            if self._folder.may("read"):
+                html.context_button(_("Folder Properties"), self._folder.edit_url(backfolder=self._folder), "edit")
+            if not self._folder.locked_subfolders() and config.user.may("wato.manage_folders") and self._folder.may("write"):
+                html.context_button(_("New folder"),        self._folder.url([("mode", "newfolder")]), "newfolder")
+            if not self._folder.locked_hosts() and config.user.may("wato.manage_hosts") and self._folder.may("write"):
+                html.context_button(_("New host"),    self._folder.url([("mode", "newhost")]), "new")
+                html.context_button(_("New cluster"), self._folder.url([("mode", "newcluster")]), "new_cluster")
+                html.context_button(_("Bulk import"), self._folder.url([("mode", "bulk_import")]), "bulk_import")
             if config.user.may("wato.services"):
-                html.context_button(_("Bulk discovery"), folder.url([("mode", "bulkinventory"), ("all", "1")]),
+                html.context_button(_("Bulk discovery"), self._folder.url([("mode", "bulkinventory"), ("all", "1")]),
                             "inventory")
             if config.user.may("wato.rename_hosts"):
-                html.context_button(_("Bulk renaming"), folder.url([("mode", "bulk_rename_host")]), "rename_host")
+                html.context_button(_("Bulk renaming"), self._folder.url([("mode", "bulk_rename_host")]), "rename_host")
             html.context_button(_("Custom attributes"), watolib.folder_preserving_link([("mode", "host_attrs")]), "custom_attr")
-            if not folder.locked_hosts() and config.user.may("wato.parentscan") and folder.may("write"):
-                html.context_button(_("Parent scan"), folder.url([("mode", "parentscan"), ("all", "1")]),
+            if not self._folder.locked_hosts() and config.user.may("wato.parentscan") and self._folder.may("write"):
+                html.context_button(_("Parent scan"), self._folder.url([("mode", "parentscan"), ("all", "1")]),
                             "parentscan")
             folder_status_button()
             if config.user.may("wato.random_hosts"):
-                html.context_button(_("Random Hosts"), folder.url([("mode", "random_hosts")]), "random")
+                html.context_button(_("Random Hosts"), self._folder.url([("mode", "random_hosts")]), "random")
             html.context_button(_("Search"), watolib.folder_preserving_link([("mode", "search")]), "search")
         else:
-            html.context_button(_("Back"), folder.parent().url(), "back")
-            html.context_button(_("Refine Search"), folder.url([("mode", "search")]), "search")
+            html.context_button(_("Back"), self._folder.parent().url(), "back")
+            html.context_button(_("Refine Search"), self._folder.url([("mode", "search")]), "search")
 
 
-    elif phase == "action":
+    def action(self):
         if html.var("_search"): # just commit to search form
             return
 
@@ -492,7 +496,7 @@ def mode_folder(phase):
 
         if html.var("_delete_folder"):
             if html.transaction_valid():
-                return delete_subfolder_after_confirm(folder, html.var("_delete_folder"))
+                return self._delete_subfolder_after_confirm(html.var("_delete_folder"))
             return
 
         elif html.has_var("_move_folder_to"):
@@ -501,7 +505,6 @@ def mode_folder(phase):
                 target_folder = watolib.Folder.folder(html.var("_move_folder_to"))
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return
-
 
         ### Operations on HOSTS
 
@@ -539,7 +542,7 @@ def mode_folder(phase):
 
         # Deletion
         if html.var("_bulk_delete"):
-            return delete_hosts_after_confirm(selected_host_names)
+            return self._delete_hosts_after_confirm(selected_host_names)
 
         # Move
         elif html.var("_bulk_move"):
@@ -552,7 +555,7 @@ def mode_folder(phase):
 
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
-            return move_to_imported_folders(selected_host_names)
+            return self._move_to_imported_folders(selected_host_names)
 
         elif html.var("_bulk_edit"):
             return "bulkedit"
@@ -560,405 +563,521 @@ def mode_folder(phase):
         elif html.var("_bulk_cleanup"):
             return "bulkcleanup"
 
-    else:
-        folder.show_breadcrump()
 
-        if not folder.may("read"):
+    def _delete_subfolder_after_confirm(self, subfolder_name):
+        subfolder = self._folder.subfolder(subfolder_name)
+        msg = _("Do you really want to delete the folder %s?") % subfolder.title()
+        if not config.wato_hide_filenames:
+            msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
+        num_hosts = subfolder.num_hosts_recursively()
+        if num_hosts:
+            msg += _(" The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
+        c = wato_confirm(_("Confirm folder deletion"), msg)
+
+        if c:
+            self._folder.delete_subfolder(subfolder_name)
+            return "folder"
+        elif c == False: # not yet confirmed
+            return ""
+        else:
+            return None # browser reload
+
+
+    def page(self):
+        self._folder.show_breadcrump()
+
+        if not self._folder.may("read"):
             html.message(html.render_img("images/icon_autherr.png", class_="authicon")
-                         + " "  + folder.reason_why_may_not("read"))
+                         + " "  + self._folder.reason_why_may_not("read"))
 
-        folder.show_locking_information()
-        show_subfolders_of(folder)
-        if folder.may("read"):
-            show_hosts(folder)
+        self._folder.show_locking_information()
+        self._show_subfolders_of()
+        if self._folder.may("read"):
+            self._show_hosts()
 
-        if not folder.has_hosts():
-            if folder.is_search_folder():
+        if not self._folder.has_hosts():
+            if self._folder.is_search_folder():
                 html.message(_("No matching hosts found."))
-            elif not folder.has_subfolders() and folder.may("write"):
-                show_empty_folder_menu(folder)
+            elif not self._folder.has_subfolders() and self._folder.may("write"):
+                self._show_empty_folder_menu()
 
 
-def delete_subfolder_after_confirm(folder, subfolder_name):
-    subfolder = folder.subfolder(subfolder_name)
-    msg = _("Do you really want to delete the folder %s?") % subfolder.title()
-    if not config.wato_hide_filenames:
-        msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
-    num_hosts = subfolder.num_hosts_recursively()
-    if num_hosts:
-        msg += _(" The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
-    c = wato_confirm(_("Confirm folder deletion"), msg)
+    def _show_empty_folder_menu(self):
+        menu_items = []
 
-    if c:
-        folder.delete_subfolder(subfolder_name)
-        return "folder"
-    elif c == False: # not yet confirmed
-        return ""
-    else:
-        return None # browser reload
+        if not self._folder.locked_hosts():
+            menu_items.extend([
+            ("newhost", _("Create new host"), "new", "hosts",
+              _("Add a new host to the monitoring (agent must be installed)")),
+            ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
+              _("Use Check_MK clusters if an item can move from one host "
+                "to another at runtime"))])
 
+        if not self._folder.locked_subfolders():
+            menu_items.extend([
+            ("newfolder", _("Create new folder"), "newfolder", "hosts",
+              _("Folders group your hosts, can inherit attributes and can have permissions."))
+            ])
 
-def show_empty_folder_menu(folder):
-    menu_items = []
-
-    if not folder.locked_hosts():
-        menu_items.extend([
-        ("newhost", _("Create new host"), "new", "hosts",
-          _("Add a new host to the monitoring (agent must be installed)")),
-        ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
-          _("Use Check_MK clusters if an item can move from one host "
-            "to another at runtime"))])
-
-    if not folder.locked_subfolders():
-        menu_items.extend([
-        ("newfolder", _("Create new folder"), "newfolder", "hosts",
-          _("Folders group your hosts, can inherit attributes and can have permissions."))
-        ])
-
-    MainMenu(menu_items).show()
+        MainMenu(menu_items).show()
 
 
-def show_subfolders_of(folder):
-    if folder.has_subfolders():
-        html.open_div(class_="folders") # This won't hurt even if there are no visible subfolders
-        for subfolder in folder.visible_subfolders_sorted_by_title():
-            show_subfolder(subfolder)
+    def _show_subfolders_of(self):
+        if self._folder.has_subfolders():
+            html.open_div(class_="folders") # This won't hurt even if there are no visible subfolders
+            for subfolder in self._folder.visible_subfolders_sorted_by_title():
+                self._show_subfolder(subfolder)
+            html.close_div()
+            html.div('', class_="folder_foot")
+
+
+    def _show_subfolder(self, subfolder):
+        html.open_div(class_=["floatfolder", "unlocked" if subfolder.may("read") else "locked"],
+                      id_="folder_%s" % subfolder.name(),
+                      onclick="wato_open_folder(event, \'%s\');" % subfolder.url())
+        self._show_subfolder_hoverarea(subfolder)
+        self._show_subfolder_infos(subfolder)
+        self._show_subfolder_title(subfolder)
+        html.close_div() # floatfolder
+
+
+    def _show_subfolder_hoverarea(self, subfolder):
+        # Only make folder openable when permitted to edit
+        if subfolder.may("read"):
+            html.open_div(class_="hoverarea", onmouseover="wato_toggle_folder(event, this, true);",
+                                              onmouseout="wato_toggle_folder(event, this, false);")
+            self._show_subfolder_buttons(subfolder)
+            html.close_div() # hoverarea
+        else:
+            html.img("images/icon_autherr.png", class_=["icon", "autherr"],
+                     title=html.strip_tags(subfolder.reason_why_may_not("read")))
+            html.div('', class_="hoverarea")
+
+
+    def _show_subfolder_title(self, subfolder):
+        title = subfolder.title()
+        if not config.wato_hide_filenames:
+            title += ' (%s)' % subfolder.name()
+
+        html.open_div(class_="title", title=title)
+        if subfolder.may("read"):
+            html.a(subfolder.title(), href=subfolder.url())
+        else:
+            html.write_text(subfolder.title())
         html.close_div()
-        html.div('', class_="folder_foot")
 
 
-def show_subfolder(subfolder):
-    html.open_div(class_=["floatfolder", "unlocked" if subfolder.may("read") else "locked"],
-                  id_="folder_%s" % subfolder.name(),
-                  onclick="wato_open_folder(event, \'%s\');" % subfolder.url())
-    show_subfolder_hoverarea(subfolder)
-    show_subfolder_infos(subfolder)
-    show_subfolder_title(subfolder)
-    html.close_div() # floatfolder
+    def _show_subfolder_buttons(self, subfolder):
+        self._show_subfolder_edit_button(subfolder)
+
+        if not subfolder.locked_subfolders() and not subfolder.locked():
+            if subfolder.may("write") and config.user.may("wato.manage_folders"):
+                self._show_move_to_folder_action(subfolder)
+                self._show_subfolder_delete_button(subfolder)
 
 
-def show_subfolder_hoverarea(subfolder):
-    # Only make folder openable when permitted to edit
-    if subfolder.may("read"):
-        html.open_div(class_="hoverarea", onmouseover="wato_toggle_folder(event, this, true);",
-                                          onmouseout="wato_toggle_folder(event, this, false);")
-        show_subfolder_buttons(subfolder)
-        html.close_div() # hoverarea
-    else:
-        html.img("images/icon_autherr.png", class_=["icon", "autherr"],
-                 title=html.strip_tags(subfolder.reason_why_may_not("read")))
-        html.div('', class_="hoverarea")
-
-
-def show_subfolder_title(subfolder):
-    title = subfolder.title()
-    if not config.wato_hide_filenames:
-        title += ' (%s)' % subfolder.name()
-
-    html.open_div(class_="title", title=title)
-    if subfolder.may("read"):
-        html.a(subfolder.title(), href=subfolder.url())
-    else:
-        html.write_text(subfolder.title())
-    html.close_div()
-
-
-def show_subfolder_buttons(subfolder):
-    show_subfolder_edit_button(subfolder)
-
-    if not subfolder.locked_subfolders() and not subfolder.locked():
-        if subfolder.may("write") and config.user.may("wato.manage_folders"):
-            show_move_to_folder_action(subfolder)
-            show_subfolder_delete_button(subfolder)
-
-
-def show_subfolder_edit_button(subfolder):
-    html.icon_button(
-        subfolder.edit_url(subfolder.parent()),
-        _("Edit the properties of this folder"),
-        "edit",
-        id = 'edit_' + subfolder.name(),
-        cssclass = 'edit',
-        style = 'display:none',
-    )
-
-
-def show_subfolder_delete_button(subfolder):
-    html.icon_button(
-        make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
-        _("Delete this folder"),
-        "delete",
-        id = 'delete_' + subfolder.name(),
-        cssclass = 'delete',
-        style = 'display:none',
-    )
-
-
-def show_subfolder_infos(subfolder):
-    html.open_div(class_="infos")
-    html.open_div(class_="infos_content")
-    groups = userdb.load_group_information().get("contact", {})
-    permitted_groups, folder_contact_groups, use_for_services = subfolder.groups()
-    for num, pg in enumerate(permitted_groups):
-        cgalias = groups.get(pg, {'alias': pg})['alias']
-        html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
-        html.write_text(' %s' % cgalias)
-        html.br()
-        if num > 1 and len(permitted_groups) > 4:
-            html.write_text(_('<i>%d more contact groups</i><br>') % (len(permitted_groups) - num - 1))
-            break
-
-    num_hosts = subfolder.num_hosts_recursively()
-    if num_hosts == 1:
-        html.write_text(_("1 Host"))
-    elif num_hosts > 0:
-        html.write_text("%d %s" % (num_hosts, _("Hosts")))
-    else:
-        html.i(_("(no hosts)"))
-    html.close_div()
-    html.close_div()
-
-
-def show_hosts(folder):
-    if not folder.has_hosts():
-        return
-
-    show_checkboxes = html.var('show_checkboxes', '0') == '1'
-
-    hostnames = folder.hosts().keys()
-    hostnames.sort(cmp = lambda a, b: cmp(num_split(a), num_split(b)))
-    search_text = html.var("search")
-
-    # Helper function for showing bulk actions. This is needed at the bottom
-    # of the table of hosts and - if there are more than just a few - also
-    # at the top of the table.
-    search_shown = False
-    def bulk_actions(at_least_one_imported, top, withsearch, colspan, show_checkboxes):
-        table.row(collect_headers=False, fixed=True)
-        table.cell(css="bulksearch", colspan=3)
-
-        if not show_checkboxes:
-            onclick_uri = html.makeuri([('show_checkboxes', '1'), ('selection', weblib.selection_id())])
-            checkbox_title = _('Show Checkboxes and bulk actions')
-        else:
-            onclick_uri = html.makeuri([('show_checkboxes', '0')])
-            checkbox_title = _('Hide Checkboxes and bulk actions')
-
-        html.toggle_button("checkbox_on", show_checkboxes, "checkbox",
-            help=checkbox_title,
-            onclick="location.href=\'%s\'" % onclick_uri,
-            is_context_button=False)
-
-        if withsearch:
-            html.text_input("search")
-            html.button("_search", _("Search"))
-            html.set_focus("search")
-        table.cell(css="bulkactions", colspan=colspan-3)
-        html.write_text(' ' + _("Selected hosts:\n"))
-
-        if not folder.locked_hosts():
-            if config.user.may("wato.manage_hosts"):
-                html.button("_bulk_delete", _("Delete"))
-            if config.user.may("wato.edit_hosts"):
-                html.button("_bulk_edit", _("Edit"))
-                html.button("_bulk_cleanup", _("Cleanup"))
-        if config.user.may("wato.services"):
-            html.button("_bulk_inventory", _("Discovery"))
-        if not folder.locked_hosts():
-            if config.user.may("wato.parentscan"):
-                html.button("_parentscan", _("Parentscan"))
-            if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
-                host_bulk_move_to_folder_combo(folder, top)
-                if at_least_one_imported:
-                    html.button("_bulk_movetotarget", _("Move to Target Folders"))
-
-    # Show table of hosts in this folder
-    html.begin_form("hosts", method = "POST")
-    table.begin("hosts", title=_("Hosts"), searchable=False)
-
-    # Remember if that host has a target folder (i.e. was imported with
-    # a folder information but not yet moved to that folder). If at least
-    # one host has a target folder, then we show an additional bulk action.
-    at_least_one_imported = False
-    more_than_ten_items = False
-    for num, hostname in enumerate(hostnames):
-        if search_text and (search_text.lower() not in hostname.lower()):
-            continue
-
-        host = folder.host(hostname)
-        effective = host.effective_attributes()
-
-        if effective.get("imported_folder"):
-            at_least_one_imported = True
-
-        if num == 11:
-            more_than_ten_items = True
-
-
-    # Compute colspan for bulk actions
-    colspan = 6
-    for attr, topic in watolib.all_host_attributes():
-        if attr.show_in_table():
-            colspan += 1
-    if not folder.locked_hosts() and config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
-        colspan += 1
-    if show_checkboxes:
-        colspan += 1
-    if folder.is_search_folder():
-        colspan += 1
-
-    # Add the bulk action buttons also to the top of the table when this
-    # list shows more than 10 rows
-    if more_than_ten_items and \
-        (config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts")):
-        bulk_actions(at_least_one_imported, True, True, colspan, show_checkboxes)
-        search_shown = True
-
-    contact_group_names = userdb.load_group_information().get("contact", {})
-    def render_contact_group(c):
-        display_name = contact_group_names.get(c, {'alias': c})['alias']
-        return html.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
-
-    host_errors = folder.host_validation_errors()
-    rendered_hosts = []
-
-    # Now loop again over all hosts and display them
-    for hostname in hostnames:
-        if search_text and (search_text.lower() not in hostname.lower()):
-            continue
-
-        host = folder.host(hostname)
-        rendered_hosts.append(hostname)
-        effective = host.effective_attributes()
-
-        table.row()
-
-        # Column with actions (buttons)
-
-        if show_checkboxes:
-            table.cell(html.render_input("_toggle_group", type_="button",
-                        class_="checkgroup", onclick="toggle_all_rows();",
-                        value='X'), sortable=False, css="checkbox")
-            # Use CSS class "failed" in order to provide information about
-            # selective toggling inventory-failed hosts for Javascript
-            html.input(name="_c_%s" % hostname, type_="checkbox", value=colspan,
-                       class_="failed" if host.discovery_failed() else None)
-            html.label("", "_c_%s" % hostname)
-
-        table.cell(_("Actions"), css="buttons", sortable=False)
-        show_host_actions(host)
-
-        # Hostname with link to details page (edit host)
-        table.cell(_("Hostname"))
-        errors = host_errors.get(hostname,[]) + host.validation_errors()
-        if errors:
-            msg = _("Warning: This host has an invalid configuration: ")
-            msg += ", ".join(errors)
-            html.icon(msg, "validation_error")
-            html.nbsp()
-
-        if host.is_offline():
-            html.icon(_("This host is disabled"), "disabled")
-            html.nbsp()
-
-        if host.is_cluster():
-            html.icon(_("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
-            html.nbsp()
-
-        html.a(hostname, href=host.edit_url())
-
-        # Show attributes
-        for attr, topic in watolib.all_host_attributes():
-            if attr.show_in_table():
-                attrname = attr.name()
-                if attrname in host.attributes():
-                    tdclass, tdcontent = attr.paint(host.attributes()[attrname], hostname)
-                else:
-                    tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
-                    tdclass += " inherited"
-                table.cell(attr.title(), html.attrencode(tdcontent), css=tdclass)
-
-        # Am I authorized?
-        reason = host.reason_why_may_not("read")
-        if not reason:
-            icon = "authok"
-            title = _("You have permission to this host.")
-        else:
-            icon = "autherr"
-            title = html.strip_tags(reason)
-
-        table.cell(_('Auth'), html.render_icon(icon, title), sortable=False)
-
-        # Permissions and Contact groups - through complete recursion and inhertance
-        permitted_groups, host_contact_groups, use_for_services = host.groups()
-        table.cell(_("Permissions"), HTML(", ").join(map(render_contact_group, permitted_groups)))
-        table.cell(_("Contact Groups"), HTML(", ").join(map(render_contact_group, host_contact_groups)))
-
-        if not config.wato_hide_hosttags:
-            # Raw tags
-            #
-            # Optimize wraps:
-            # 1. add <nobr> round the single tags to prevent wrap within tags
-            # 2. add "zero width space" (&#8203;)
-            tag_title = "|".join([ '%s' % t for t in host.tags() ])
-            table.cell(_("Tags"), help=tag_title, css="tag-ellipsis")
-            html.write("<b style='color: #888;'>|</b>&#8203;".join([ '<nobr>%s</nobr>' % t for t in host.tags() ]))
-
-        # Located in folder
-        if folder.is_search_folder():
-            table.cell(_("Folder"))
-            html.a(host.folder().alias_path(), href=host.folder().url())
-
-    if config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts"):
-        bulk_actions(at_least_one_imported, False, not search_shown, colspan, show_checkboxes)
-
-    table.end()
-    html.hidden_fields()
-    html.end_form()
-
-    selected = weblib.get_rowselection('wato-folder-/' + folder.path())
-
-    row_count = len(rendered_hosts)
-    headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
-    html.javascript("update_headinfo('%s');" % headinfo)
-
-    if show_checkboxes:
-        html.javascript(
-            'g_page_id = "wato-folder-%s";\n'
-            'g_selection = "%s";\n'
-            'g_selected_rows = %s;\n'
-            'init_rowselect();' % ('/' + folder.path(), weblib.selection_id(), json.dumps(selected))
+    def _show_subfolder_edit_button(self, subfolder):
+        html.icon_button(
+            subfolder.edit_url(subfolder.parent()),
+            _("Edit the properties of this folder"),
+            "edit",
+            id = 'edit_' + subfolder.name(),
+            cssclass = 'edit',
+            style = 'display:none',
         )
 
 
-def show_host_actions(host):
-    html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
-    if config.user.may("wato.rulesets"):
-        html.icon_button(host.params_url(), _("View the rule based parameters of this host"), "rulesets")
+    def _show_subfolder_delete_button(self, subfolder):
+        html.icon_button(
+            make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
+            _("Delete this folder"),
+            "delete",
+            id = 'delete_' + subfolder.name(),
+            cssclass = 'delete',
+            style = 'display:none',
+        )
 
-    if host.may('read'):
-        if config.user.may("wato.services"):
-            msg = _("Edit the services of this host, do a service discovery")
+
+    def _show_subfolder_infos(self, subfolder):
+        html.open_div(class_="infos")
+        html.open_div(class_="infos_content")
+        groups = userdb.load_group_information().get("contact", {})
+        permitted_groups, folder_contact_groups, use_for_services = subfolder.groups()
+        for num, pg in enumerate(permitted_groups):
+            cgalias = groups.get(pg, {'alias': pg})['alias']
+            html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
+            html.write_text(' %s' % cgalias)
+            html.br()
+            if num > 1 and len(permitted_groups) > 4:
+                html.write_text(_('<i>%d more contact groups</i><br>') % (len(permitted_groups) - num - 1))
+                break
+
+        num_hosts = subfolder.num_hosts_recursively()
+        if num_hosts == 1:
+            html.write_text(_("1 Host"))
+        elif num_hosts > 0:
+            html.write_text("%d %s" % (num_hosts, _("Hosts")))
         else:
-            msg = _("Display the services of this host")
-        image =  "services"
-        if host.discovery_failed():
-            image = "inventory_failed"
-            msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
-        html.icon_button(host.services_url(), msg, image)
-
-    if not host.locked():
-        if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts") \
-           and host.folder().choices_for_moving_host():
-            show_move_to_folder_action(host)
-
-        if config.user.may("wato.manage_hosts"):
-            if config.user.may("wato.clone_hosts"):
-                html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
-            delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
-            html.icon_button(delete_url, _("Delete this host"), "delete")
+            html.i(_("(no hosts)"))
+        html.close_div()
+        html.close_div()
 
 
+    def _show_move_to_folder_action(self, obj):
+        if isinstance(obj, watolib.Host):
+            what = "host"
+            what_title = _("host")
+            ident = obj.name()
+            style = None
+        else:
+            what = "folder"
+            what_title = _("folder")
+            ident = obj.path()
+            style = "display:none"
+
+        html.popup_trigger(
+            html.render_icon("move", help=_("Move this %s to another folder") % what_title,
+                             cssclass="iconbutton"),
+            ident="move_"+obj.name(),
+            what="move_to_folder",
+            url_vars=[
+                ("what", what),
+                ("ident", ident),
+                ("back_url", html.makeactionuri([])),
+            ],
+            style=style,
+        )
+
+
+    def _show_hosts(self):
+        if not self._folder.has_hosts():
+            return
+
+        show_checkboxes = html.var('show_checkboxes', '0') == '1'
+
+        hostnames = self._folder.hosts().keys()
+        hostnames.sort(cmp = lambda a, b: cmp(num_split(a), num_split(b)))
+        search_text = html.var("search")
+
+        # Helper function for showing bulk actions. This is needed at the bottom
+        # of the table of hosts and - if there are more than just a few - also
+        # at the top of the table.
+        search_shown = False
+        def bulk_actions(at_least_one_imported, top, withsearch, colspan, show_checkboxes):
+            table.row(collect_headers=False, fixed=True)
+            table.cell(css="bulksearch", colspan=3)
+
+            if not show_checkboxes:
+                onclick_uri = html.makeuri([('show_checkboxes', '1'), ('selection', weblib.selection_id())])
+                checkbox_title = _('Show Checkboxes and bulk actions')
+            else:
+                onclick_uri = html.makeuri([('show_checkboxes', '0')])
+                checkbox_title = _('Hide Checkboxes and bulk actions')
+
+            html.toggle_button("checkbox_on", show_checkboxes, "checkbox",
+                help=checkbox_title,
+                onclick="location.href=\'%s\'" % onclick_uri,
+                is_context_button=False)
+
+            if withsearch:
+                html.text_input("search")
+                html.button("_search", _("Search"))
+                html.set_focus("search")
+            table.cell(css="bulkactions", colspan=colspan-3)
+            html.write_text(' ' + _("Selected hosts:\n"))
+
+            if not self._folder.locked_hosts():
+                if config.user.may("wato.manage_hosts"):
+                    html.button("_bulk_delete", _("Delete"))
+                if config.user.may("wato.edit_hosts"):
+                    html.button("_bulk_edit", _("Edit"))
+                    html.button("_bulk_cleanup", _("Cleanup"))
+            if config.user.may("wato.services"):
+                html.button("_bulk_inventory", _("Discovery"))
+            if not self._folder.locked_hosts():
+                if config.user.may("wato.parentscan"):
+                    html.button("_parentscan", _("Parentscan"))
+                if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
+                    self._host_bulk_move_to_folder_combo(top)
+                    if at_least_one_imported:
+                        html.button("_bulk_movetotarget", _("Move to Target Folders"))
+
+        # Show table of hosts in this folder
+        html.begin_form("hosts", method = "POST")
+        table.begin("hosts", title=_("Hosts"), searchable=False)
+
+        # Remember if that host has a target folder (i.e. was imported with
+        # a folder information but not yet moved to that folder). If at least
+        # one host has a target folder, then we show an additional bulk action.
+        at_least_one_imported = False
+        more_than_ten_items = False
+        for num, hostname in enumerate(hostnames):
+            if search_text and (search_text.lower() not in hostname.lower()):
+                continue
+
+            host = self._folder.host(hostname)
+            effective = host.effective_attributes()
+
+            if effective.get("imported_folder"):
+                at_least_one_imported = True
+
+            if num == 11:
+                more_than_ten_items = True
+
+
+        # Compute colspan for bulk actions
+        colspan = 6
+        for attr, topic in watolib.all_host_attributes():
+            if attr.show_in_table():
+                colspan += 1
+        if not self._folder.locked_hosts() and config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
+            colspan += 1
+        if show_checkboxes:
+            colspan += 1
+        if self._folder.is_search_folder():
+            colspan += 1
+
+        # Add the bulk action buttons also to the top of the table when this
+        # list shows more than 10 rows
+        if more_than_ten_items and \
+            (config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts")):
+            bulk_actions(at_least_one_imported, True, True, colspan, show_checkboxes)
+            search_shown = True
+
+        contact_group_names = userdb.load_group_information().get("contact", {})
+        def render_contact_group(c):
+            display_name = contact_group_names.get(c, {'alias': c})['alias']
+            return html.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
+
+        host_errors = self._folder.host_validation_errors()
+        rendered_hosts = []
+
+        # Now loop again over all hosts and display them
+        for hostname in hostnames:
+            if search_text and (search_text.lower() not in hostname.lower()):
+                continue
+
+            host = self._folder.host(hostname)
+            rendered_hosts.append(hostname)
+            effective = host.effective_attributes()
+
+            table.row()
+
+            # Column with actions (buttons)
+
+            if show_checkboxes:
+                table.cell(html.render_input("_toggle_group", type_="button",
+                            class_="checkgroup", onclick="toggle_all_rows();",
+                            value='X'), sortable=False, css="checkbox")
+                # Use CSS class "failed" in order to provide information about
+                # selective toggling inventory-failed hosts for Javascript
+                html.input(name="_c_%s" % hostname, type_="checkbox", value=colspan,
+                           class_="failed" if host.discovery_failed() else None)
+                html.label("", "_c_%s" % hostname)
+
+            table.cell(_("Actions"), css="buttons", sortable=False)
+            self._show_host_actions(host)
+
+            # Hostname with link to details page (edit host)
+            table.cell(_("Hostname"))
+            errors = host_errors.get(hostname,[]) + host.validation_errors()
+            if errors:
+                msg = _("Warning: This host has an invalid configuration: ")
+                msg += ", ".join(errors)
+                html.icon(msg, "validation_error")
+                html.nbsp()
+
+            if host.is_offline():
+                html.icon(_("This host is disabled"), "disabled")
+                html.nbsp()
+
+            if host.is_cluster():
+                html.icon(_("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
+                html.nbsp()
+
+            html.a(hostname, href=host.edit_url())
+
+            # Show attributes
+            for attr, topic in watolib.all_host_attributes():
+                if attr.show_in_table():
+                    attrname = attr.name()
+                    if attrname in host.attributes():
+                        tdclass, tdcontent = attr.paint(host.attributes()[attrname], hostname)
+                    else:
+                        tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
+                        tdclass += " inherited"
+                    table.cell(attr.title(), html.attrencode(tdcontent), css=tdclass)
+
+            # Am I authorized?
+            reason = host.reason_why_may_not("read")
+            if not reason:
+                icon = "authok"
+                title = _("You have permission to this host.")
+            else:
+                icon = "autherr"
+                title = html.strip_tags(reason)
+
+            table.cell(_('Auth'), html.render_icon(icon, title), sortable=False)
+
+            # Permissions and Contact groups - through complete recursion and inhertance
+            permitted_groups, host_contact_groups, use_for_services = host.groups()
+            table.cell(_("Permissions"), HTML(", ").join(map(render_contact_group, permitted_groups)))
+            table.cell(_("Contact Groups"), HTML(", ").join(map(render_contact_group, host_contact_groups)))
+
+            if not config.wato_hide_hosttags:
+                # Raw tags
+                #
+                # Optimize wraps:
+                # 1. add <nobr> round the single tags to prevent wrap within tags
+                # 2. add "zero width space" (&#8203;)
+                tag_title = "|".join([ '%s' % t for t in host.tags() ])
+                table.cell(_("Tags"), help=tag_title, css="tag-ellipsis")
+                html.write("<b style='color: #888;'>|</b>&#8203;".join([ '<nobr>%s</nobr>' % t for t in host.tags() ]))
+
+            # Located in folder
+            if self._folder.is_search_folder():
+                table.cell(_("Folder"))
+                html.a(host.folder().alias_path(), href=host.folder().url())
+
+        if config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts"):
+            bulk_actions(at_least_one_imported, False, not search_shown, colspan, show_checkboxes)
+
+        table.end()
+        html.hidden_fields()
+        html.end_form()
+
+        selected = weblib.get_rowselection('wato-folder-/' + self._folder.path())
+
+        row_count = len(rendered_hosts)
+        headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
+        html.javascript("update_headinfo('%s');" % headinfo)
+
+        if show_checkboxes:
+            html.javascript(
+                'g_page_id = "wato-folder-%s";\n'
+                'g_selection = "%s";\n'
+                'g_selected_rows = %s;\n'
+                'init_rowselect();' % ('/' + self._folder.path(), weblib.selection_id(), json.dumps(selected))
+            )
+
+
+    def _show_host_actions(self, host):
+        html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
+        if config.user.may("wato.rulesets"):
+            html.icon_button(host.params_url(), _("View the rule based parameters of this host"), "rulesets")
+
+        if host.may('read'):
+            if config.user.may("wato.services"):
+                msg = _("Edit the services of this host, do a service discovery")
+            else:
+                msg = _("Display the services of this host")
+            image =  "services"
+            if host.discovery_failed():
+                image = "inventory_failed"
+                msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
+            html.icon_button(host.services_url(), msg, image)
+
+        if not host.locked():
+            if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts") \
+               and host.folder().choices_for_moving_host():
+                self._show_move_to_folder_action(host)
+
+            if config.user.may("wato.manage_hosts"):
+                if config.user.may("wato.clone_hosts"):
+                    html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
+                delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
+                html.icon_button(delete_url, _("Delete this host"), "delete")
+
+
+    def _delete_hosts_after_confirm(self, host_names):
+        c = wato_confirm(_("Confirm deletion of %d hosts") % len(host_names),
+                         _("Do you really want to delete the %d selected hosts?") % len(host_names))
+        if c:
+            self._folder.delete_hosts(host_names)
+            return "folder", _("Successfully deleted %d hosts") % len(host_names)
+        elif c == False: # not yet confirmed
+            return ""
+        else:
+            return None # browser reload
+
+
+    # FIXME: Cleanup
+    def _host_bulk_move_to_folder_combo(self, top):
+        choices = self._folder.choices_for_moving_host()
+        if len(choices):
+            choices = [("@", _("(select target folder)"))] + choices
+            html.button("_bulk_move", _("Move to:"))
+            html.write("&nbsp;")
+            field_name = 'bulk_moveto'
+            if top:
+                field_name = '_top_bulk_moveto'
+                if html.has_var('bulk_moveto'):
+                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+            html.dropdown(field_name, choices, deflt="@",
+                          onchange = "update_bulk_moveto(this.value)",
+                          class_ = 'bulk_moveto')
+
+
+    def _move_to_imported_folders(self, host_names_to_move):
+        c = wato_confirm(
+                  _("Confirm moving hosts"),
+                  _('You are going to move the selected hosts to folders '
+                    'representing their original folder location in the system '
+                    'you did the import from. Please make sure that you have '
+                    'done an <b>inventory</b> before moving the hosts.'))
+        if c == False: # not yet confirmed
+            return ""
+        elif not c:
+            return None # browser reload
+
+        # Create groups of hosts with the same target folder
+        target_folder_names = {}
+        for host_name in host_names_to_move:
+            host = self._folder.host(host_name)
+            imported_folder_name = host.attribute('imported_folder')
+            if imported_folder_name == None:
+                continue
+            target_folder_names.setdefault(imported_folder_name, []).append(host_name)
+
+            # Remove target folder information, now that the hosts are
+            # at their target position.
+            host.remove_attribute('imported_folder')
+
+        # Now handle each target folder
+        for imported_folder, host_names in target_folder_names.items():
+            # Next problem: The folder path in imported_folder refers
+            # to the Alias of the folders, not to the internal file
+            # name. And we need to create folders not yet existing.
+            target_folder = self._create_target_folder_from_aliaspath(imported_folder)
+            self._folder.move_hosts(host_names, target_folder)
+
+        return None, _("Successfully moved hosts to their original folder destinations.")
+
+
+    def _create_target_folder_from_aliaspath(self, aliaspath):
+        # The alias path is a '/' separated path of folder titles.
+        # An empty path is interpreted as root path. The actual file
+        # name is the host list with the name "Hosts".
+        if aliaspath == "" or aliaspath == "/":
+            folder = watolib.Folder.root_folder()
+        else:
+            parts = aliaspath.strip("/").split("/")
+            folder = watolib.Folder.root_folder()
+            while len(parts) > 0:
+                # Look in current folder for subfolder with the target name
+                subfolder = folder.subfolder_by_title(parts[0])
+                if subfolder:
+                    folder = subfolder
+                else:
+                    name = watolib.create_wato_foldername(parts[0], folder)
+                    folder = folder.create_subfolder(name, parts[0], {})
+                parts = parts[1:]
+
+        return folder
+
+
+
+# TODO: Move to WatoHostFolderMode() once mode_edit_host has been migrated
 def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
@@ -972,20 +1091,9 @@ def delete_host_after_confirm(delname):
         return None # browser reload
 
 
-def delete_hosts_after_confirm(host_names):
-    c = wato_confirm(_("Confirm deletion of %d hosts") % len(host_names),
-                     _("Do you really want to delete the %d selected hosts?") % len(host_names))
-    if c:
-        watolib.Folder.current().delete_hosts(host_names)
-        return "folder", _("Successfully deleted %d hosts") % len(host_names)
-    elif c == False: # not yet confirmed
-        return ""
-    else:
-        return None # browser reload
-
-
 # Create list of all hosts that are select with checkboxes in the current file.
 # This is needed for bulk operations.
+# TODO: Move to mode class
 def get_hostnames_from_checkboxes(filterfunc = None):
     show_checkboxes = html.var("show_checkboxes") == "1"
     if show_checkboxes:
@@ -1002,38 +1110,14 @@ def get_hostnames_from_checkboxes(filterfunc = None):
     return selected_host_names
 
 
+# TODO: Move to mode class
 def get_hosts_from_checkboxes(filterfunc = None):
     folder = watolib.Folder.current()
     return [ folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc) ]
 
 
-def show_move_to_folder_action(obj):
-    if isinstance(obj, watolib.Host):
-        what = "host"
-        what_title = _("host")
-        ident = obj.name()
-        style = None
-    else:
-        what = "folder"
-        what_title = _("folder")
-        ident = obj.path()
-        style = "display:none"
-
-    html.popup_trigger(
-        html.render_icon("move", help=_("Move this %s to another folder") % what_title,
-                         cssclass="iconbutton"),
-        ident="move_"+obj.name(),
-        what="move_to_folder",
-        url_vars=[
-            ("what", what),
-            ("ident", ident),
-            ("back_url", html.makeactionuri([])),
-        ],
-        style=style,
-    )
-
-
 # Renders the popup menu contents for either moving a host or a folder to another folder
+# TODO: Create webservice mode
 def ajax_popup_move_to_folder():
     what     = html.var("what")
     ident    = html.var("ident")
@@ -1064,80 +1148,6 @@ def ajax_popup_move_to_folder():
     else:
         html.write_text(_("No valid target folder."))
 
-
-# FIXME: Cleanup
-def host_bulk_move_to_folder_combo(folder, top):
-    choices = folder.choices_for_moving_host()
-    if len(choices):
-        choices = [("@", _("(select target folder)"))] + choices
-        html.button("_bulk_move", _("Move to:"))
-        html.write("&nbsp;")
-        field_name = 'bulk_moveto'
-        if top:
-            field_name = '_top_bulk_moveto'
-            if html.has_var('bulk_moveto'):
-                html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-        html.dropdown(field_name, choices, deflt="@",
-                      onchange = "update_bulk_moveto(this.value)",
-                      class_ = 'bulk_moveto')
-
-
-def move_to_imported_folders(host_names_to_move):
-    c = wato_confirm(
-              _("Confirm moving hosts"),
-              _('You are going to move the selected hosts to folders '
-                'representing their original folder location in the system '
-                'you did the import from. Please make sure that you have '
-                'done an <b>inventory</b> before moving the hosts.'))
-    if c == False: # not yet confirmed
-        return ""
-    elif not c:
-        return None # browser reload
-
-    # Create groups of hosts with the same target folder
-    target_folder_names = {}
-    for host_name in host_names_to_move:
-        host = watolib.Folder.current().host(host_name)
-        imported_folder_name = host.attribute('imported_folder')
-        if imported_folder_name == None:
-            continue
-        target_folder_names.setdefault(imported_folder_name, []).append(host_name)
-
-        # Remove target folder information, now that the hosts are
-        # at their target position.
-        host.remove_attribute('imported_folder')
-
-    # Now handle each target folder
-    for imported_folder, host_names in target_folder_names.items():
-        # Next problem: The folder path in imported_folder refers
-        # to the Alias of the folders, not to the internal file
-        # name. And we need to create folders not yet existing.
-        target_folder = create_target_folder_from_aliaspath(imported_folder)
-        watolib.Folder.current().move_hosts(host_names, target_folder)
-
-    return None, _("Successfully moved hosts to their original folder destinations.")
-
-
-def create_target_folder_from_aliaspath(aliaspath):
-    # The alias path is a '/' separated path of folder titles.
-    # An empty path is interpreted as root path. The actual file
-    # name is the host list with the name "Hosts".
-    if aliaspath == "" or aliaspath == "/":
-        folder = watolib.Folder.root_folder()
-    else:
-        parts = aliaspath.strip("/").split("/")
-        folder = watolib.Folder.root_folder()
-        while len(parts) > 0:
-            # Look in current folder for subfolder with the target name
-            subfolder = folder.subfolder_by_title(parts[0])
-            if subfolder:
-                folder = subfolder
-            else:
-                name = watolib.create_wato_foldername(parts[0], folder)
-                folder = folder.create_subfolder(name, parts[0], {})
-            parts = parts[1:]
-
-    return folder
 
 #.
 #   .--Edit Folder---------------------------------------------------------.
@@ -17809,7 +17819,7 @@ def monitoring_macro_help():
 modes = {
    # ident,               permissions, handler function
    "main"               : ([], ModeMain),
-   "folder"             : (["hosts"], mode_folder),
+   "folder"             : (["hosts"], ModeFolder),
    "newfolder"          : (["hosts", "manage_folders"], lambda phase: mode_editfolder(phase, True)),
    "editfolder"         : (["hosts" ], lambda phase: mode_editfolder(phase, False)),
    "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=False)),

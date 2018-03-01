@@ -575,7 +575,7 @@ class ModeFolder(WatoMode):
         c = wato_confirm(_("Confirm folder deletion"), msg)
 
         if c:
-            self._folder.delete_subfolder(subfolder_name)
+            self._folder.delete_subfolder(subfolder_name) # pylint: disable=no-member
             return "folder"
         elif c == False: # not yet confirmed
             return ""
@@ -625,7 +625,7 @@ class ModeFolder(WatoMode):
     def _show_subfolders_of(self):
         if self._folder.has_subfolders():
             html.open_div(class_="folders") # This won't hurt even if there are no visible subfolders
-            for subfolder in self._folder.visible_subfolders_sorted_by_title():
+            for subfolder in self._folder.visible_subfolders_sorted_by_title(): # pylint: disable=no-member
                 self._show_subfolder(subfolder)
             html.close_div()
             html.div('', class_="folder_foot")

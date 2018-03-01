@@ -292,6 +292,12 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
     return lastReadId;
 }
 
+void SectionEventlog::initStates() {
+    for (auto &state : _states) {
+        state.newly_discovered = false;
+    }
+}
+
 // Keeps memory of an event log we have found. It
 // might already be known and will not be stored twice.
 void SectionEventlog::registerEventlog(const std::string &logname) {
@@ -307,47 +313,31 @@ void SectionEventlog::registerEventlog(const std::string &logname) {
     _states.push_back(eventlog::state(logname));
 }
 
-/* Look into the registry in order to find out, which
-   event logs are available. */
-bool SectionEventlog::find_eventlogs(std::ostream &out) {
-    for (auto &state : _states) {
-        state.newly_discovered = false;
-    }
+FindResult SectionEventlog::findLog(const HKeyHandle &hKey, DWORD index) const {
+    std::array<char, 128> buffer{};
+    DWORD len = static_cast<DWORD>(buffer.size());
+    return {_winapi.RegEnumKeyEx(hKey.get(), index, buffer.data(), &len,
+                                 nullptr, nullptr, nullptr, nullptr),
+            buffer.data()};
+}
 
-    const std::string regpath{"SYSTEM\\CurrentControlSet\\Services\\Eventlog"};
-    HKEY key = nullptr;
-    DWORD ret = _winapi.RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
-                                     KEY_ENUMERATE_SUB_KEYS, &key);
-    HKeyHandle hKey{key, _winapi};
-    bool success = true;
-    if (ret == ERROR_SUCCESS) {
-        DWORD i = 0;
-        char buffer[128];
-        DWORD len;
-        while (true) {
-            len = sizeof(buffer);
-            DWORD r = _winapi.RegEnumKeyEx(hKey.get(), i, buffer, &len, NULL,
-                                           NULL, NULL, NULL);
-            if (r == ERROR_SUCCESS) {
-                registerEventlog(buffer);
-            } else if (r != ERROR_MORE_DATA) {
-                if (r != ERROR_NO_MORE_ITEMS) {
-                    out << "ERROR: Cannot enumerate over event logs: error "
-                           "code "
-                        << r << "\n";
-                    success = false;
-                }
-                break;
-            }
-            i++;
+bool SectionEventlog::handleFindResult(const FindResult &result,
+                                       std::ostream &out) {
+    if (const auto & [ r, logname ] = result; r == ERROR_SUCCESS) {
+        registerEventlog(logname);
+    } else if (r != ERROR_MORE_DATA) {
+        if (r != ERROR_NO_MORE_ITEMS) {
+            out << "ERROR: Cannot enumerate over event logs: error "
+                   "code "
+                << r << "\n";
+            return false;
         }
-    } else {
-        success = false;
-        const auto lastError = _winapi.GetLastError();
-        out << "ERROR: Cannot open registry key " << regpath
-            << " for enumeration: error code " << lastError << "\n";
     }
 
+    return true;
+}
+
+void SectionEventlog::registerVistaStyleLogs() {
     // enable the vista-style logs if that api is enabled
     if (*_vista_api) {
         for (const auto &eventlog : *_config) {
@@ -356,7 +346,34 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
             }
         }
     }
+}
 
+/* Look into the registry in order to find out, which
+   event logs are available. */
+bool SectionEventlog::find_eventlogs(std::ostream &out) {
+    initStates();
+
+    const std::string regpath{"SYSTEM\\CurrentControlSet\\Services\\Eventlog"};
+    HKEY key = nullptr;
+    bool success = true;
+
+    if (DWORD r = _winapi.RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
+                                       KEY_ENUMERATE_SUB_KEYS, &key);
+        r == ERROR_SUCCESS) {
+        HKeyHandle hKey{key, _winapi};
+        for (DWORD i = 0; r == ERROR_SUCCESS || r == ERROR_MORE_DATA; ++i) {
+            const auto result = findLog(hKey, i);
+            r = result.first;
+            success = handleFindResult(result, out) && success;
+        }
+    } else {
+        success = false;
+        const auto lastError = _winapi.GetLastError();
+        out << "ERROR: Cannot open registry key " << regpath
+            << " for enumeration: error code " << lastError << "\n";
+    }
+
+    registerVistaStyleLogs();
     return success;
 }
 

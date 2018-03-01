@@ -93,6 +93,8 @@ public:
 
 eventlog::hint parseStateLine(const std::string &line);
 
+using FindResult = std::pair<DWORD, std::string>;
+
 class SectionEventlog : public Section {
 public:
     SectionEventlog(Configuration &config, Logger *logger,
@@ -105,7 +107,11 @@ private:
     uint64_t outputEventlog(std::ostream &out, IEventLog &log,
                             uint64_t previouslyReadId, eventlog::Level level,
                             bool hideContext);
+    void initStates();
     void registerEventlog(const std::string &logname);
+    FindResult findLog(const HKeyHandle &hKey, DWORD index) const;
+    bool handleFindResult(const FindResult &result, std::ostream &out);
+    void registerVistaStyleLogs();
     bool find_eventlogs(std::ostream &out);
     void saveEventlogOffsets(const std::string &statefile);
     void readHintOffsets();

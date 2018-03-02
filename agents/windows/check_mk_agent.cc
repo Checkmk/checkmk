@@ -63,6 +63,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -132,7 +133,8 @@ static const char RT_PROTOCOL_VERSION[2] = {'0', '0'};
 // Forward declarations of functions
 void listen_tcp_loop(const Environment &env);
 void output_data(OutputProxy &out, const Environment &env, bool realtime,
-                 bool section_flush);
+                 bool section_flush,
+                 const std::optional<std::string> &remoteIP);
 void RunImmediate(const char *mode, int argc, char **argv);
 
 //  .----------------------------------------------------------------------.
@@ -518,7 +520,7 @@ void usage() {
 
 void outputFileBase(const Environment &env, FILE *file) {
     FileOutputProxy dummy(file);
-    output_data(dummy, env, false, *s_config->section_flush);
+    output_data(dummy, env, false, *s_config->section_flush, std::nullopt);
 }
 
 void do_debug(const Environment &env) {
@@ -674,7 +676,8 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                         out->writeBinary(RT_PROTOCOL_VERSION, 2);
                     }
                     out->writeBinary(timestamp, 10);
-                    output_data(*out, data->env, true, false);
+                    output_data(*out, data->env, true, false,
+                                std::optional(current_ip));
                 }
             }
         }
@@ -754,7 +757,8 @@ void do_adhoc(const Environment &env) {
             s_winapi.SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
             s_winapi.SetEnvironmentVariable("REMOTE", ip_hr.c_str());
             try {
-                output_data(*out, env, false, *s_config->section_flush);
+                output_data(*out, env, false, *s_config->section_flush,
+                            std::optional(ip_hr));
             } catch (const std::exception &e) {
                 Alert(Logger::getLogger("winagent"))
                     << "unhandled exception: " << e.what();
@@ -778,7 +782,8 @@ void do_adhoc(const Environment &env) {
 }
 
 void output_data(OutputProxy &out, const Environment &env, bool realtime,
-                 bool section_flush) {
+                 bool section_flush,
+                 const std::optional<std::string> &remoteIP) {
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
 
@@ -787,13 +792,13 @@ void output_data(OutputProxy &out, const Environment &env, bool realtime,
                             [](Section *section) { section->startIfAsync(); });
 
     // output sections
-    foreach_enabled_section(realtime,
-                            [&out, &env, section_flush](Section *section) {
-                                std::stringstream str;
-                                section->produceOutput(str);
-                                out.output("%s", str.str().c_str());
-                                if (section_flush) out.flush(false);
-                            });
+    foreach_enabled_section(
+        realtime, [&out, &env, section_flush, &remoteIP](Section *section) {
+            std::stringstream str;
+            section->produceOutput(str, remoteIP);
+            out.output("%s", str.str().c_str());
+            if (section_flush) out.flush(false);
+        });
 
     // Send remaining data in out buffer
     out.flush(true);

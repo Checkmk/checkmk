@@ -425,7 +425,7 @@ std::vector<HANDLE> SectionPluginGroup::stopAsync() {
     return result;
 }
 
-bool SectionPluginGroup::produceOutputInner(std::ostream &out) {
+bool SectionPluginGroup::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionPluginGroup::produceOutputInner";
     // gather the data for the sync sections
     collectData(SYNC);

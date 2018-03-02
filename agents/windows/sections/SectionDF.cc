@@ -109,7 +109,7 @@ void SectionDF::output_mountpoints(std::ostream &out, char *volid) {
     }
 }
 
-bool SectionDF::produceOutputInner(std::ostream &out) {
+bool SectionDF::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionDF::produceOutputInner";
     char buffer[4096];
     DWORD len = _winapi.GetLogicalDriveStrings(sizeof(buffer), buffer);

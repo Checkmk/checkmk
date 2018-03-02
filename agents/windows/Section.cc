@@ -69,11 +69,13 @@ Section *Section::withRealtimeSupport() {
     return this;
 }
 
-bool Section::produceOutput(std::ostream &out, bool nested) {
+bool Section::produceOutput(std::ostream &out,
+                            const std::optional<std::string> &remoteIP,
+                            bool nested) {
     Debug(_logger) << "<<<" << _outputName << ">>>";
 
     std::string output;
-    bool res = generateOutput(output);
+    bool res = generateOutput(output, remoteIP);
 
     if (res) {
         const char *left_bracket = nested ? "[" : "<<<";
@@ -98,9 +100,10 @@ bool Section::produceOutput(std::ostream &out, bool nested) {
     return res;
 }
 
-bool Section::generateOutput(std::string &buffer) {
+bool Section::generateOutput(std::string &buffer,
+                             const std::optional<std::string> &remoteIP) {
     std::ostringstream inner;
-    bool res = produceOutputInner(inner);
+    bool res = produceOutputInner(inner, remoteIP);
     buffer = inner.str();
     return res;
 }

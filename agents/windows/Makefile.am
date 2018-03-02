@@ -113,6 +113,7 @@ WindowsAgentTest_SOURCES = \
         test/ConfigurationTest.cc \
         test/EnvironmentTest.cc \
         test/EventLogVistaTest.cc \
+        test/MockEnvironment.cc \
         test/MockLogger.cc \
         test/MockWinApi.cc \
         test/RotatingFileHandlerTest.cc \

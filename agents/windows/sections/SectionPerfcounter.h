@@ -58,7 +58,7 @@ public:
     SectionPerfcounter *withToggleIfMissing();
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out) override;
+    virtual bool produceOutputInner(std::ostream &out, const std::optional<std::string> &) override;
 
 private:
     bool _toggle_if_missing{false};

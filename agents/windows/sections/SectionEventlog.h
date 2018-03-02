@@ -89,6 +89,9 @@ public:
 
 eventlog::state parseStateLine(const std::string &line);
 
+std::optional<std::string> getIPSpecificStatefileName(
+    const Environment &env, const std::optional<std::string> &remoteIP);
+
 using FindResult = std::pair<DWORD, std::string>;
 
 class SectionEventlog : public Section {
@@ -97,7 +100,8 @@ public:
                     const WinApiAdaptor &winapi);
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out) override;
+    virtual bool produceOutputInner(
+        std::ostream &out, const std::optional<std::string> &remoteIP) override;
 
 private:
     uint64_t outputEventlog(std::ostream &out, IEventLog &log,

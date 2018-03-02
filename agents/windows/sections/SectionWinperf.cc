@@ -40,7 +40,7 @@ SectionWinperf *SectionWinperf::withBase(unsigned int base) {
     return this;
 }
 
-bool SectionWinperf::produceOutputInner(std::ostream &out) {
+bool SectionWinperf::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionWinperf::produceOutputInner";
     try {
         PerfCounterObject counterObject(_base, _winapi, _logger);

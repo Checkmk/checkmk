@@ -6,7 +6,7 @@ import pytest
 import re
 import subprocess
 import sys
-import telnetlib # nosec
+import telnetlib  # nosec
 
 # To use another host for running the tests, replace this IP address.
 remote_ip = '10.1.2.30'
@@ -71,7 +71,7 @@ def actual_output(write_config, wait_agent):
             p = subprocess.Popen([agent_exe, 'adhoc'])
             # Override wait_agent in tests to wait for async processes to start.
             wait_agent()
-            telnet = telnetlib.Telnet(host, port) # nosec
+            telnet = telnetlib.Telnet(host, port)  # nosec
             yield telnet.read_all().splitlines()
         finally:
             try:

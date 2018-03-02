@@ -54,7 +54,7 @@ SectionGroup *SectionGroup::withNestedSubtables() {
     return this;
 }
 
-bool SectionGroup::produceOutputInner(std::ostream &out) {
+bool SectionGroup::produceOutputInner(std::ostream &out, const std::optional<std::string> &remoteIP) {
     Debug(_logger) << "SectionGroup::produceOutputInner";
     time_t now = time(nullptr);
     if (_disabled_until > now) {
@@ -64,14 +64,14 @@ bool SectionGroup::produceOutputInner(std::ostream &out) {
     bool all_failed = true;
 
     for (const auto &table : _subsections) {
-        if (table->produceOutput(out, _nested)) {
+        if (table->produceOutput(out, remoteIP, _nested)) {
             all_failed = false;
         }
     }
 
     if (!all_failed) {
         for (const auto &table : _dependent_subsections) {
-            if (table->produceOutput(out, _nested)) {
+            if (table->produceOutput(out, remoteIP, _nested)) {
                 all_failed = false;
             }
         }

@@ -197,7 +197,7 @@ public:
     virtual ~SectionLogwatch();
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out) override;
+    virtual bool produceOutputInner(std::ostream &out, const std::optional<std::string> &) override;
 
 private:
     void init();

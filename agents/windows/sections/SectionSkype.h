@@ -35,7 +35,7 @@ public:
                  const WinApiAdaptor &winapi);
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out) override;
+    virtual bool produceOutputInner(std::ostream &out, const std::optional<std::string> &remoteIP) override;
 
 private:
     // Use a single counter name -> base no. map. Fill lazily when first needed.

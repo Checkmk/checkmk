@@ -43,7 +43,7 @@ SectionUptime::SectionUptime(const Environment &env, Logger *logger,
     }
 }
 
-bool SectionUptime::produceOutputInner(std::ostream &out) {
+bool SectionUptime::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionUptime::produceOutputInner";
     if (GetTickCount64_dyn != nullptr) {
         out << outputTickCount64();

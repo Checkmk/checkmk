@@ -40,19 +40,16 @@ class StringColumn;
 class StringFilter : public ColumnFilter {
 public:
     StringFilter(const StringColumn &column, RelationalOperator relOp,
-                 std::string value);
+                 const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     const std::string *stringValueRestrictionFor(
         const std::string &column_name) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;
-    std::string columnName() const override;
 
 private:
     const StringColumn &_column;
-    const RelationalOperator _relOp;
-    const std::string _value;
     std::shared_ptr<RegExp> _regExp;
 };
 

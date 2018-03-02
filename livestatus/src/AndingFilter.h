@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <iosfwd>
 #include <memory>
 #include <string>
 #include <vector>
@@ -39,8 +40,11 @@ class Row;
 
 class AndingFilter : public Filter {
 public:
-    explicit AndingFilter(std::vector<std::unique_ptr<Filter>> subfilters)
-        : _subfilters(std::move(subfilters)) {}
+    AndingFilter(std::string header, std::string negated_header,
+                 std::vector<std::unique_ptr<Filter>> subfilters)
+        : _header(std::move(header))
+        , _negated_header(std::move(negated_header))
+        , _subfilters(std::move(subfilters)) {}
     void accept(FilterVisitor &v) const override;
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
@@ -56,7 +60,11 @@ public:
     auto end() const { return _subfilters.end(); }
 
 private:
+    std::string _header;
+    std::string _negated_header;
     std::vector<std::unique_ptr<Filter>> _subfilters;
+
+    std::ostream &print(std::ostream &os) const override;
 };
 
 #endif  // AndingFilter_h

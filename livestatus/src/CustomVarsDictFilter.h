@@ -45,12 +45,9 @@ public:
                  std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;
-    std::string columnName() const override;
 
 private:
     const CustomVarsDictColumn &_column;
-    const RelationalOperator _relOp;
-    std::string _value;
     std::shared_ptr<RegExp> _regExp;
     std::string _ref_string;
     std::string _ref_varname;

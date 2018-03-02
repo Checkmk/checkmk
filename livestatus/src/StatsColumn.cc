@@ -52,7 +52,7 @@ StatsColumnOp::StatsColumnOp(AggregationFactory factory, Column *column)
     : _factory(std::move(factory))
     , _column(column)
     , _filter(std::make_unique<AndingFilter>(
-          std::vector<std::unique_ptr<Filter>>())) {}
+          "StatsAnd", "StatsOr", std::vector<std::unique_ptr<Filter>>())) {}
 
 std::unique_ptr<Filter> StatsColumnOp::stealFilter() {
     throw std::runtime_error("not a counting aggregator");

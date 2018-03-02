@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstdint>
+#include <iosfwd>
 #include <memory>
 #include <string>
 #include "contact_fwd.h"
@@ -49,6 +50,13 @@ public:
                                  std::chrono::seconds timezone_offset) const;
     virtual std::unique_ptr<Filter> copy() const = 0;
     virtual std::unique_ptr<Filter> negate() const = 0;
+
+    friend std::ostream &operator<<(std::ostream &os, const Filter &filter) {
+        return filter.print(os);
+    }
+
+private:
+    virtual std::ostream &print(std::ostream &os) const = 0;
 };
 
 #endif  // Filter_h

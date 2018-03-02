@@ -115,9 +115,13 @@ private:
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, LogicalOperator op, FilterStack &filters);
+    void parseAndOrLine(const std::string &header,
+                        const std::string &negated_header, char *line,
+                        LogicalOperator op, FilterStack &filters);
     void parseNegateLine(char *line, FilterStack &filters);
-    void parseStatsAndOrLine(char *line, LogicalOperator op);
+    void parseStatsAndOrLine(const std::string &header,
+                             const std::string &negated_header, char *line,
+                             LogicalOperator op);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);
     void parseColumnHeadersLine(char *line);

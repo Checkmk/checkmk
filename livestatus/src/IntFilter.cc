@@ -32,17 +32,14 @@
 
 IntFilter::IntFilter(const IntColumn &column, RelationalOperator relOp,
                      const std::string &value)
-    : _column(column)
-    , _relOp(relOp)
-    , _value(value)
+    : ColumnFilter(column, relOp, value)
+    , _column(column)
     , _ref_value(atoi(value.c_str())) {}
-
-std::string IntFilter::columnName() const { return _column.name(); }
 
 bool IntFilter::accepts(Row row, const contact *auth_user,
                         std::chrono::seconds /*timezone_offset*/) const {
     int32_t act_value = _column.getValue(row, auth_user);
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::equal:
             return act_value == _ref_value;
         case RelationalOperator::not_equal:
@@ -84,7 +81,7 @@ void IntFilter::findIntLimits(const std::string &column_name, int *lower,
     /* [lower, upper[ is some interval. This filter might restrict that interval
        to a smaller interval.
      */
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::equal:
             if (_ref_value >= *lower && _ref_value < *upper) {
                 *lower = _ref_value;
@@ -127,7 +124,7 @@ void IntFilter::findIntLimits(const std::string &column_name, int *lower,
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
             Emergency(_column.logger())
-                << "Invalid relational operator " << _relOp
+                << "Invalid relational operator " << oper()
                 << " in IntFilter::findIntLimits";
             return;
     }
@@ -148,7 +145,7 @@ bool IntFilter::optimizeBitmask(
     // filter.
     uint32_t bit = 1 << _ref_value;
 
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::equal:
             *mask &= bit;  // bit must be set
             return true;
@@ -186,7 +183,7 @@ bool IntFilter::optimizeBitmask(
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
             Emergency(_column.logger())
-                << "Invalid relational operator " << _relOp
+                << "Invalid relational operator " << oper()
                 << " in IntFilter::optimizeBitmask";
             return false;
     }
@@ -199,5 +196,5 @@ std::unique_ptr<Filter> IntFilter::copy() const {
 
 std::unique_ptr<Filter> IntFilter::negate() const {
     return std::make_unique<IntFilter>(
-        _column, negateRelationalOperator(_relOp), _value);
+        _column, negateRelationalOperator(oper()), value());
 }

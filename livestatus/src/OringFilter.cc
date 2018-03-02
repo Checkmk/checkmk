@@ -25,6 +25,7 @@
 #include "OringFilter.h"
 #include <iterator>
 #include <memory>
+#include <ostream>
 #include "AndingFilter.h"
 #include "Filter.h"
 #include "FilterVisitor.h"
@@ -90,7 +91,8 @@ std::unique_ptr<Filter> OringFilter::copy() const {
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->copy(); });
-    return std::make_unique<OringFilter>(std::move(filters));
+    return std::make_unique<OringFilter>(_header, _negated_header,
+                                         std::move(filters));
 }
 
 std::unique_ptr<Filter> OringFilter::negate() const {
@@ -98,5 +100,13 @@ std::unique_ptr<Filter> OringFilter::negate() const {
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->negate(); });
-    return std::make_unique<AndingFilter>(std::move(filters));
+    return std::make_unique<AndingFilter>(_negated_header, _header,
+                                          std::move(filters));
+}
+
+std::ostream &OringFilter::print(std::ostream &os) const {
+    for (const auto &filter : _subfilters) {
+        os << *filter;
+    }
+    return os << _header << ": " << _subfilters.size() << "\n";
 }

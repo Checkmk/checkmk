@@ -1,0 +1,10 @@
+Title: fileinfo_groups: Increased size of input fields
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1520004493
+Class: fix
+
+

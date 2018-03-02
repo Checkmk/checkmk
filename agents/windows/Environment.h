@@ -35,39 +35,39 @@ class Environment {
 public:
     Environment(bool use_cwd, bool with_stderr, Logger *logger,
                 const WinApiAdaptor &winapi);
-    ~Environment();
+    virtual ~Environment();
 
     // TODO: this is an evil hack, but currently there is at least one global
     // function that requires access to the env that isn't easily refactored
     static Environment *instance();
 
-    std::string hostname() const { return _hostname; }
+    virtual std::string hostname() const { return _hostname; }
 
-    std::string currentDirectory() const { return _current_directory; }
-    std::string agentDirectory() const { return _agent_directory; }
+    virtual std::string currentDirectory() const { return _current_directory; }
+    virtual std::string agentDirectory() const { return _agent_directory; }
 
-    std::string pluginsDirectory() const { return _plugins_directory; }
-    std::string configDirectory() const { return _config_directory; }
-    std::string localDirectory() const { return _local_directory; }
-    std::string spoolDirectory() const { return _spool_directory; }
-    std::string stateDirectory() const { return _state_directory; }
-    std::string tempDirectory() const { return _temp_directory; }
-    std::string logDirectory() const { return _log_directory; }
-    std::string binDirectory() const { return _bin_directory; }
+    virtual std::string pluginsDirectory() const { return _plugins_directory; }
+    virtual std::string configDirectory() const { return _config_directory; }
+    virtual std::string localDirectory() const { return _local_directory; }
+    virtual std::string spoolDirectory() const { return _spool_directory; }
+    virtual std::string stateDirectory() const { return _state_directory; }
+    virtual std::string tempDirectory() const { return _temp_directory; }
+    virtual std::string logDirectory() const { return _log_directory; }
+    virtual std::string binDirectory() const { return _bin_directory; }
 
-    std::string logwatchStatefile() const { return _logwatch_statefile; }
-    std::string eventlogStatefile() const { return _eventlog_statefile; }
+    virtual std::string logwatchStatefile() const { return _logwatch_statefile; }
+    virtual std::string eventlogStatefile() const { return _eventlog_statefile; }
 
-    const JobHandle<0> &workersJobObject() const { return _workers_job_object; }
+    virtual const JobHandle<0> &workersJobObject() const { return _workers_job_object; }
 
-    bool withStderr() const { return _with_stderr; }
+    virtual bool withStderr() const { return _with_stderr; }
 
-    bool isWinNt() const;
+    virtual bool isWinNt() const;
 
     // return windows version as a combined value, with major version in the
     // upper 8 bits
     // and minor in the lower bits, i.e. 0x0501 for windows xp (32-bit)
-    uint16_t winVersion() const;
+    virtual uint16_t winVersion() const;
 
 private:
     std::string determineHostname() const;

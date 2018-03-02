@@ -682,11 +682,6 @@ class FilterNagiosExpression(FilterTristate):
     def filter_code(self, infoname, positive):
         return positive and self.pos or self.neg
 
-
-declare_filter(120, FilterNagiosExpression("host", "summary_host", _("Is summary host"),
-            "Filter: host_custom_variable_names >= _REALNAME\n",
-            "Filter: host_custom_variable_names < _REALNAME\n"))
-
 declare_filter(250, FilterNagiosFlag("service",       "service_process_performance_data", _("Processes performance data")))
 declare_filter(251, FilterNagiosExpression("service", "has_performance_data",             _("Has performance data"),
             "Filter: service_perf_data != \n",

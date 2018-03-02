@@ -264,29 +264,6 @@ multisite_icons_and_actions['status_acknowledged'] = {
 }
 
 #.
-#   .--Real-Host-----------------------------------------------------------.
-#   |             ____            _       _   _           _                |
-#   |            |  _ \ ___  __ _| |     | | | | ___  ___| |_              |
-#   |            | |_) / _ \/ _` | |_____| |_| |/ _ \/ __| __|             |
-#   |            |  _ <  __/ (_| | |_____|  _  | (_) \__ \ |_              |
-#   |            |_| \_\___|\__,_|_|     |_| |_|\___/|___/\__|             |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-def paint_realhost_link_image(what, row, tags, host_custom_vars):
-    # Link to detail host if this is a summary host
-    if "_REALNAME" in host_custom_vars:
-        newrow = row.copy()
-        newrow["host_name"] = host_custom_vars["_REALNAME"]
-        return 'detail', _("Detailed host infos"), url_to_view(newrow, 'host')
-
-multisite_icons_and_actions['realhost'] = {
-    'paint':           paint_realhost_link_image,
-}
-
-#.
 #   .--Perfgraph-----------------------------------------------------------.
 #   |           ____            __                       _                 |
 #   |          |  _ \ ___ _ __ / _| __ _ _ __ __ _ _ __ | |__              |

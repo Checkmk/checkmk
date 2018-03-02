@@ -1,0 +1,12 @@
+Title: Improved diagnose logging for WATO integrated Git
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1519993446
+Class: fix
+
+Set the user interface logging to debug to get detailed information
+about the WATO integrated git logic. The entries are written to
+the var/log/web.log file.

@@ -8281,6 +8281,7 @@ def unlock_exclusive():
 
 def git_command(args):
     command = [ "git" ] + [ a.encode("utf-8") for a in args ]
+    logger.debug("GIT: Execute %s" % subprocess.list2cmdline(command))
     try:
         p = subprocess.Popen(command, cwd=cmk.paths.default_config_dir,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -8306,6 +8307,7 @@ def do_git_commit():
     author = "%s <%s>" % (config.user.id, config.user.email)
     git_dir = cmk.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
+        logger.debug("GIT: Initializing")
         git_command(["init"])
 
         # Set git repo global user/mail. seems to be needed to prevent warning message
@@ -8320,10 +8322,12 @@ def do_git_commit():
                                     _("Initialized GIT for Check_MK")])
 
     if git_has_pending_changes():
+        logger.debug("GIT: Found pending changes - Update gitignore file")
         write_gitignore_files()
 
     # Writing the gitignore files might have reverted the change. So better re-check.
     if git_has_pending_changes():
+        logger.debug("GIT: Still has pending changes")
         git_add_files()
 
         message = ", ".join(g_git_messages)

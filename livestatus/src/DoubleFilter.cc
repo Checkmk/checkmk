@@ -32,15 +32,14 @@
 
 DoubleFilter::DoubleFilter(const DoubleColumn &column, RelationalOperator relOp,
                            const std::string &value)
-    : _column(column)
-    , _relOp(relOp)
-    , _value(value)
+    : ColumnFilter(column, relOp, value)
+    , _column(column)
     , _ref_value(atof(value.c_str())) {}
 
 bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
                            std::chrono::seconds /* timezone_offset */) const {
     double act_value = _column.getValue(row);
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::equal:
             return act_value == _ref_value;
         case RelationalOperator::not_equal:
@@ -60,7 +59,7 @@ bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
             Informational(_column.logger())
-                << "Sorry. Operator " << _relOp
+                << "Sorry. Operator " << oper()
                 << " for float columns not implemented.";
             return false;
     }
@@ -73,7 +72,5 @@ std::unique_ptr<Filter> DoubleFilter::copy() const {
 
 std::unique_ptr<Filter> DoubleFilter::negate() const {
     return std::make_unique<DoubleFilter>(
-        _column, negateRelationalOperator(_relOp), _value);
+        _column, negateRelationalOperator(oper()), value());
 }
-
-std::string DoubleFilter::columnName() const { return _column.name(); }

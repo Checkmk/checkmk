@@ -35,13 +35,13 @@
 CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsDictColumn &column,
                                            RelationalOperator relOp,
                                            const std::string &value)
-    : _column(column), _relOp(relOp), _value(value) {
+    : ColumnFilter(column, relOp, value), _column(column) {
     // Filter for custom_variables:
     //    Filter: custom_variables = PATH /hirni.mk
     // The variable name is part of the value and separated with spaces
     std::tie(_ref_varname, _ref_string) = mk::nextField(value);
     _ref_string = mk::lstrip(_ref_string);
-    _regExp = makeRegExpFor(_relOp, _ref_string);
+    _regExp = makeRegExpFor(oper(), _ref_string);
 }
 
 bool CustomVarsDictFilter::accepts(
@@ -50,7 +50,7 @@ bool CustomVarsDictFilter::accepts(
     auto cvm = _column.getValue(row);
     auto it = cvm.find(_ref_varname);
     auto act_string = it == cvm.end() ? "" : it->second;
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::equal_icase:
             return _regExp->match(_ref_string);
@@ -82,7 +82,5 @@ std::unique_ptr<Filter> CustomVarsDictFilter::copy() const {
 
 std::unique_ptr<Filter> CustomVarsDictFilter::negate() const {
     return std::make_unique<CustomVarsDictFilter>(
-        _column, negateRelationalOperator(_relOp), _value);
+        _column, negateRelationalOperator(oper()), value());
 }
-
-std::string CustomVarsDictFilter::columnName() const { return _column.name(); }

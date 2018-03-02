@@ -23,23 +23,21 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringFilter.h"
-#include <algorithm>
 #include "Filter.h"
 #include "RegExp.h"
 #include "Row.h"
 #include "StringColumn.h"
 
 StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
-                           std::string value)
-    : _column(column)
-    , _relOp(relOp)
-    , _value(std::move(value))
-    , _regExp(makeRegExpFor(_relOp, _value)) {}
+                           const std::string &value)
+    : ColumnFilter(column, relOp, value)
+    , _column(column)
+    , _regExp(makeRegExpFor(relOp, value)) {}
 
 bool StringFilter::accepts(Row row, const contact * /* auth_user */,
                            std::chrono::seconds /* timezone_offset */) const {
     std::string act_string = _column.getValue(row);
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::equal_icase:
             return _regExp->match(act_string);
@@ -54,22 +52,22 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
             return !_regExp->search(act_string);
             // FIXME: The cases below are nonsense for UTF-8...
         case RelationalOperator::less:
-            return act_string < _value;
+            return act_string < value();
         case RelationalOperator::greater_or_equal:
-            return act_string >= _value;
+            return act_string >= value();
         case RelationalOperator::greater:
-            return act_string > _value;
+            return act_string > value();
         case RelationalOperator::less_or_equal:
-            return act_string <= _value;
+            return act_string <= value();
     }
     return false;  // unreachable
 }
 
 const std::string *StringFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::equal:
-            return column_name == columnName() ? &_value : nullptr;
+            return column_name == columnName() ? valuePtr() : nullptr;
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
@@ -92,7 +90,5 @@ std::unique_ptr<Filter> StringFilter::copy() const {
 
 std::unique_ptr<Filter> StringFilter::negate() const {
     return std::make_unique<StringFilter>(
-        _column, negateRelationalOperator(_relOp), _value);
+        _column, negateRelationalOperator(oper()), value());
 }
-
-std::string StringFilter::columnName() const { return _column.name(); }

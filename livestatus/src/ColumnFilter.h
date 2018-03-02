@@ -26,14 +26,32 @@
 #define ColumnFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <ostream>
 #include "Column.h"
 #include "Filter.h"
 #include "FilterVisitor.h"
 
 class ColumnFilter : public Filter {
 public:
+    ColumnFilter(const Column &column, RelationalOperator relOp,
+                 std::string value)
+        : _column(column), _relOp(relOp), _value(std::move(value)) {}
+    std::string columnName() const { return _column.name(); }
+    RelationalOperator oper() const { return _relOp; }
+    std::string value() const { return _value; }
+    // TODO(sp) Remove this when we use std::optional.
+    const std::string *valuePtr() const { return &_value; }
     void accept(FilterVisitor &v) const override { v.visit(*this); }
-    virtual std::string columnName() const = 0;
+
+private:
+    const Column &_column;
+    const RelationalOperator _relOp;
+    const std::string _value;
+
+    std::ostream &print(std::ostream &os) const override {
+        return os << "Filter: " << columnName() << " " << oper() << " "
+                  << value() << "\n";
+    }
 };
 
 #endif  // ColumnFilter_h

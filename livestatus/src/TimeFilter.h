@@ -53,12 +53,9 @@ public:
 
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;
-    std::string columnName() const override;
 
 private:
     const TimeColumn &_column;
-    const RelationalOperator _relOp;
-    const std::string _value;
     const int32_t _ref_value;
 };
 

@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ListFilter.h"
-#include <algorithm>
 #include <sstream>
 #include <string>
 #include "Filter.h"
@@ -58,17 +57,16 @@ RelationalOperator relOpForElement(RelationalOperator relOp) {
 }  // namespace
 
 ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
-                       std::string value)
-    : _column(column)
-    , _relOp(relOp)
-    , _value(std::move(value))
-    , _regExp(makeRegExpFor(relOpForElement(_relOp), _value)) {}
+                       const std::string &value)
+    : ColumnFilter(column, relOp, value)
+    , _column(column)
+    , _regExp(makeRegExpFor(relOpForElement(relOp), value)) {}
 
 bool ListFilter::accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const {
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::equal:
-            if (!_value.empty()) {
+            if (!value().empty()) {
                 Informational(_column.logger())
                     << "Sorry, equality for lists implemented only for emptiness";
                 return false;
@@ -76,7 +74,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
             return !any(row, auth_user, timezone_offset,
                         [](const std::string &) { return true; });
         case RelationalOperator::not_equal:
-            if (!_value.empty()) {
+            if (!value().empty()) {
                 Informational(_column.logger())
                     << "Sorry, inequality for lists implemented only for emptiness";
                 return false;
@@ -106,7 +104,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
             Informational(_column.logger())
-                << "Sorry. Operator " << _relOp
+                << "Sorry. Operator " << oper()
                 << " for list columns not implemented.";
             return false;
     }
@@ -115,9 +113,9 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
 
 const std::string *ListFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
-    switch (_relOp) {
+    switch (oper()) {
         case RelationalOperator::greater_or_equal:
-            return column_name == columnName() ? &_value : nullptr;
+            return column_name == columnName() ? valuePtr() : nullptr;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:
@@ -140,7 +138,5 @@ std::unique_ptr<Filter> ListFilter::copy() const {
 
 std::unique_ptr<Filter> ListFilter::negate() const {
     return std::make_unique<ListFilter>(
-        _column, negateRelationalOperator(_relOp), _value);
+        _column, negateRelationalOperator(oper()), value());
 }
-
-std::string ListFilter::columnName() const { return _column.name(); }

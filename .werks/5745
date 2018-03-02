@@ -1,0 +1,15 @@
+Title: handle deferred notification properly
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p27
+Date: 1520006666
+
+After the first retry deferred notification did not respect the cooldown time
+defined in the global settings anymore. Furthermore the counting of the
+configured retries was not done properly. If e.g. a retry count of one was
+specified actually three retries were performed. These two issues have now
+been fixed.

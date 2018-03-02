@@ -30,6 +30,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include "WinApiAdaptor.h"
@@ -77,7 +78,9 @@ public:
     virtual bool isEnabled() const { return true; }
     virtual bool realtimeSupport() const { return _realtime_support; }
 
-    bool produceOutput(std::ostream &out, bool nested = false);
+    bool produceOutput(std::ostream &out,
+                       const std::optional<std::string> &remoteIP,
+                       bool nested = false);
     std::string outputName() const { return _outputName; }
     std::string configName() const { return _configName; }
 
@@ -85,8 +88,10 @@ protected:
     char separator() const { return _separator; }
 
 private:
-    virtual bool produceOutputInner(std::ostream &out) = 0;
-    bool generateOutput(std::string &buffer);
+    virtual bool produceOutputInner(
+        std::ostream &out, const std::optional<std::string> &remoteIP) = 0;
+    bool generateOutput(std::string &buffer,
+                        const std::optional<std::string> &remoteIP);
 
 protected:
     const std::string _outputName;

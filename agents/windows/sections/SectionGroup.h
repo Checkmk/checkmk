@@ -60,7 +60,7 @@ public:
     SectionGroup *withToggleIfMissing();
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out) override;
+    virtual bool produceOutputInner(std::ostream &out, const std::optional<std::string> &remoteIP) override;
 
 private:
     std::vector<std::unique_ptr<Section>> _subsections;

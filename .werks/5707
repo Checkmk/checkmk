@@ -1,0 +1,21 @@
+Title: Windows: allow eventlog monitoring from multiple hosts
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520438121
+Class: feature
+
+Until now, Windows eventlogs could be monitored only from one host (Check_MK
+site). Attempting to contact one single Windows agent from multiple hosts lead
+to lost eventlog entries as all hosts shared one common state file for storing
+the offsets of so far read eventlog entries.
+
+Now the offsets are store in host-IP-specific state files, allowing hosts with
+different IP addresses to monitor one single Windows system without loosing
+eventlog entries. Note: multiple Check_MK sites running under the one and same
+IP address will still suffer from lost eventlog entries as the offsets are
+stored per IP address.
+
+

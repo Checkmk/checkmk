@@ -38,7 +38,7 @@ public:
                     const WinApiAdaptor &winapi);
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out) override;
+    virtual bool produceOutputInner(std::ostream &out, const std::optional<std::string> &) override;
 
 private:
     void get_directories(const std::string base_path);

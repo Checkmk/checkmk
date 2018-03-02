@@ -78,7 +78,7 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
         counterName, counterName, _env, _nameNumberMap, _logger, _winapi));
 }
 
-bool SectionSkype::produceOutputInner(std::ostream &out) {
+bool SectionSkype::produceOutputInner(std::ostream &out, const std::optional<std::string> &remoteIP) {
     Debug(_logger) << "SectionSkype::produceOutputInner";
     LARGE_INTEGER Counter, Frequency;
     _winapi.QueryPerformanceCounter(&Counter);
@@ -87,5 +87,5 @@ bool SectionSkype::produceOutputInner(std::ostream &out) {
     out << "sampletime," << Counter.QuadPart << "," << Frequency.QuadPart
         << "\n";
 
-    return SectionGroup::produceOutputInner(out);
+    return SectionGroup::produceOutputInner(out, remoteIP);
 }

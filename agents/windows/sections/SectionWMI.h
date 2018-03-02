@@ -45,7 +45,7 @@ public:
 protected:
     void suspend(int duration);
 
-    virtual bool produceOutputInner(std::ostream &out) override;
+    virtual bool produceOutputInner(std::ostream &out, const std::optional<std::string> &) override;
 
 private:
     void outputTable(std::ostream &out, wmi::Result &data);

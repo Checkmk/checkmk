@@ -78,7 +78,7 @@ void SectionMRPE::updateIncludes() {
     }
 }
 
-bool SectionMRPE::produceOutputInner(std::ostream &out) {
+bool SectionMRPE::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionMRPE::produceOutputInner";
     updateIncludes();
 

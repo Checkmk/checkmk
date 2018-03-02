@@ -18,14 +18,19 @@ except ImportError:
     if platform.system() == 'Windows':
         raise
 
-state_pattern = re.compile(r'^(?P<logtype>[^\|]+)\|(?P<record>\d+)$')
-section = 'logwatch'
-testlog = 'Application'
-testsource = 'Test source'
-testeventtype = 'Warning'
-testdescription = 'Something might happen!'
-tolerance = 10
-testids = range(1, 3)
+
+class Globals:
+    local_statefile = 'eventstate.txt'
+    state_pattern = re.compile(r'^(?P<logtype>[^\|]+)\|(?P<record>\d+)$')
+    section = 'logwatch'
+    statedir = os.path.join(remotedir, 'state')
+    statefile = 'eventstate___1.txt'
+    testlog = 'Application'
+    testsource = 'Test source'
+    testeventtype = 'Warning'
+    testdescription = 'Something might happen!'
+    tolerance = 10
+    testids = range(1, 3)
 
 
 def generate_logs():
@@ -42,7 +47,10 @@ def generate_logs():
                     break
 
 
-logs = list(generate_logs())
+# Windows SSH agent and COM spoil tests by omitting occasional events to
+# Security and System logs. Ignore those logs as they are too unstable during a
+# test run.
+logs = list(l for l in generate_logs() if l != "Security" and l != "System")
 
 
 @contextlib.contextmanager
@@ -63,7 +71,7 @@ def get_last_record(logtype):
 
 
 def get_log_state(line):
-    m = state_pattern.match(line)
+    m = Globals.state_pattern.match(line)
     if m is None:
         return None, None
     return m.group('logtype'), int(m.group('record'))
@@ -76,16 +84,16 @@ def logtitle(log):
 def create_event(eventid):
     if platform.system() == 'Windows':
         cmd = [
-            'eventcreate.exe', '/l', testlog, '/t', testeventtype, '/so',
-            testsource, '/id',
-            '%d' % eventid, '/d', testdescription
+            'eventcreate.exe', '/l', Globals.testlog, '/t',
+            Globals.testeventtype, '/so', Globals.testsource, '/id',
+            '%d' % eventid, '/d', Globals.testdescription
         ]
         assert_subprocess(cmd)
 
 
 @pytest.fixture
 def create_events():
-    for i in testids:
+    for i in Globals.testids:
         create_event(i)
 
 
@@ -96,11 +104,15 @@ def testfile():
 
 @pytest.fixture(params=['yes', 'no'], ids=['vista_api=yes', 'vista_api=no'])
 def testconfig(request, config):
-    config.set("global", "sections", section)
+    config.set("global", "sections", Globals.section)
     config.set("global", "crash_debug", "yes")
-    config.add_section(section)
-    config.set(section, "vista_api", request.param)
-    config.set(section, "logfile %s" % testlog, "warn")
+    config.add_section(Globals.section)
+    config.set(Globals.section, "vista_api", request.param)
+    config.set(Globals.section, "logfile %s" % Globals.testlog, "warn")
+    # Ignore security and system logs as SSH agent and COM may emit something
+    # there while tests run
+    config.set(Globals.section, "logfile Security", "off")
+    config.set(Globals.section, "logfile System", "off")
 
     return config
 
@@ -108,7 +120,8 @@ def testconfig(request, config):
 @pytest.fixture
 def expected_output_no_events():
     if platform.system() == 'Windows':
-        return [re.escape(r'<<<%s>>>' % section)] + [logtitle(l) for l in logs]
+        return [re.escape(r'<<<%s>>>' % Globals.section)
+                ] + [logtitle(l) for l in logs]
 
 
 @pytest.fixture
@@ -116,11 +129,11 @@ def expected_output_application_events():
     if platform.system() == 'Windows':
         split_index = logs.index('Application') + 1
         return chain(
-            [re.escape(r'<<<%s>>>' % section)],
+            [re.escape(r'<<<%s>>>' % Globals.section)],
             [logtitle(l) for l in logs[:split_index]], [
                 r'W \w{3} \d{2} \d{2}\:\d{2}:\d{2} 0\.%d %s %s' %
-                (i, testsource.replace(' ', '_'), testdescription)
-                for i in testids
+                (i, Globals.testsource.replace(' ', '_'),
+                 Globals.testdescription) for i in Globals.testids
             ],
             repeat(r'|'.join(
                 [logtitle(l) for l in logs[split_index:]] +
@@ -136,22 +149,22 @@ def last_records():
 def no_statefile():
     if platform.system() == 'Windows':
         try:
-            os.unlink(os.path.join(remotedir, 'state', 'eventstate.txt'))
+            os.unlink(os.path.join(Globals.statedir, 'eventstate.txt'))
         except OSError:
             # eventstate.txt may not exist if this is the first test to be run
             pass
     yield
 
 
-@pytest.fixture
-def with_statefile():
+@pytest.fixture(params=[Globals.local_statefile, Globals.statefile])
+def with_statefile(request):
     if platform.system() == 'Windows':
-        statedir = os.path.join(remotedir, 'state')
         try:
-            os.mkdir(statedir)
+            os.mkdir(Globals.statedir)
         except OSError:
             pass  # Directory may already exist.
-        with open(os.path.join(statedir, 'eventstate.txt'), 'w') as statefile:
+        with open(os.path.join(Globals.statedir, request.param),
+                  'w') as statefile:
             eventstate = {
                 logtype: get_last_record(logtype)
                 for logtype in logs
@@ -166,14 +179,14 @@ def verify_eventstate():
     yield
     if platform.system() == 'Windows':
         expected_eventstate = last_records()
-        with open(os.path.join(remotedir, 'state',
-                               'eventstate.txt')) as statefile:
+        with open(os.path.join(Globals.statedir,
+                               Globals.statefile)) as statefile:
             actual_eventstate = dict(get_log_state(line) for line in statefile)
         for (expected_log, expected_state), (actual_log, actual_state) in zip(
                 sorted(expected_eventstate.items()),
                 sorted(actual_eventstate.items())):
             assert expected_log == actual_log
-            state_tolerance = 0 if expected_log == testlog else tolerance
+            state_tolerance = 0 if expected_log == Globals.testlog else Globals.tolerance
             assert math.fabs(
                 expected_state - actual_state) <= state_tolerance, (
                     "expected state for log '%s' is %d, actual state %d, "
@@ -195,5 +208,5 @@ def test_section_eventlog__application_warnings(
         request, testconfig, expected_output_application_events, actual_output,
         testfile):
     # request.node.name gives test name
-    remotetest(expected_output_application_events, actual_output,
-               testfile, request.node.name)
+    remotetest(expected_output_application_events, actual_output, testfile,
+               request.node.name)

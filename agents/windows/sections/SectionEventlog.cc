@@ -27,11 +27,14 @@
 #include <inttypes.h>
 #include <cstring>
 #include <ctime>
+#include <experimental/filesystem>
 #include <fstream>
 #include "Environment.h"
 #include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "stringutil.h"
+
+namespace fs = std::experimental::filesystem;
 
 namespace {
 
@@ -82,25 +85,32 @@ std::ostream &operator<<(std::ostream &out, const IEventLogRecord &event) {
                << Utf8(event.message()) << "\n";
 }
 
-eventlog::States loadEventlogOffsets(const std::string &statefile, bool sendall,
-                                     Logger *logger) {
-    eventlog::States states;
-    std::ifstream ifs(statefile);
-    std::string line;
+eventlog::States loadEventlogOffsets(const std::vector<std::string> &statefiles,
+                                     bool sendall, Logger *logger) {
+    for (const auto &statefile : statefiles) {
+        eventlog::States states;
+        std::ifstream ifs(statefile);
+        std::string line;
 
-    while (std::getline(ifs, line)) {
-        try {
-            auto state = parseStateLine(line);
-            if (sendall) state.record_no = 0;
-            states.push_back(state);
-        } catch (const StateParseError &e) {
-            Error(logger) << e.what();
+        while (std::getline(ifs, line)) {
+            try {
+                auto state = parseStateLine(line);
+                if (sendall) state.record_no = 0;
+                states.push_back(state);
+            } catch (const StateParseError &e) {
+                Error(logger) << e.what();
+            }
+        }
+
+        std::sort(
+            states.begin(), states.end(),
+            [](const auto &s1, const auto &s2) { return s1.name < s2.name; });
+        if (!states.empty()) {
+            return states;
         }
     }
 
-    std::sort(states.begin(), states.end(),
-              [](const auto &s1, const auto &s2) { return s1.name < s2.name; });
-    return states;
+    return {};
 }
 
 // Keeps memory of an event log we have found. It
@@ -268,6 +278,22 @@ eventlog::state parseStateLine(const std::string &line) {
     }
 }
 
+std::optional<std::string> getIPSpecificStatefileName(
+    const Environment &env, const std::optional<std::string> &remoteIP) {
+    if (!remoteIP) return std::nullopt;
+
+    const auto statefile = fs::path(env.eventlogStatefile());
+    const auto parentPath = statefile.parent_path();
+    const auto stem = statefile.stem();
+    const auto extension = statefile.extension();
+    auto ipString = remoteIP.value();
+    std::transform(ipString.cbegin(), ipString.cend(), ipString.begin(),
+                   [](unsigned char c) { return std::isalnum(c) ? c : '_'; });
+
+    return std::make_optional((parentPath / stem).string() + "_" + ipString +
+                              extension.string());
+}
+
 SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
     : Section("logwatch", "logwatch", config.getEnvironment(), logger, winapi)
@@ -364,8 +390,8 @@ bool SectionEventlog::find_eventlogs(std::ostream &out,
         for (DWORD i = 0; r == ERROR_SUCCESS || r == ERROR_MORE_DATA; ++i) {
             const auto result = findLog(hKey, i);
             r = result.first;
-            success = handleFindResult(result, *_sendall, states, out) &&
-                      success;
+            success =
+                handleFindResult(result, *_sendall, states, out) && success;
         }
     } else {
         success = false;
@@ -432,7 +458,8 @@ void SectionEventlog::handleExistingLog(std::ostream &out,
 
 // The output of this section is compatible with
 // the logwatch agent for Linux and UNIX
-bool SectionEventlog::produceOutputInner(std::ostream &out) {
+bool SectionEventlog::produceOutputInner(
+    std::ostream &out, const std::optional<std::string> &remoteIP) {
     Debug(_logger) << "SectionEventlog::produceOutputInner";
     // The agent reads from a state file the record numbers
     // of the event logs up to which messages have
@@ -440,8 +467,16 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
     // the eventlog is skipped to the end (unless the sendall config
     // option is used). Historic messages are not been processed.
 
-    if (auto states = loadEventlogOffsets(_env.eventlogStatefile(),
-                                          *_sendall, _logger);
+    std::vector<std::string> statefiles;
+
+    if (const auto ipSpecificName = getIPSpecificStatefileName(_env, remoteIP);
+        ipSpecificName) {
+        statefiles.push_back(ipSpecificName.value());
+    }
+
+    statefiles.push_back(_env.eventlogStatefile());
+
+    if (auto states = loadEventlogOffsets(statefiles, *_sendall, _logger);
         find_eventlogs(out, states)) {
         for (auto &state : states) {
             if (!handleMissingLog(out, state)) {
@@ -449,7 +484,8 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
             }
         }
         // The offsets are persisted in a state file.
-        saveEventlogOffsets(_env.eventlogStatefile(), states);
+        const auto &statefile = statefiles.front();
+        saveEventlogOffsets(statefile, states);
     }
 
     return true;

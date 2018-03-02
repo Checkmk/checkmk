@@ -1348,6 +1348,7 @@ modes.register(Mode(
     long_option="notify",
     handler_function=mode_notify,
     needs_config=False,
+    needs_checks=False,
     argument=True,
     argument_descr="MODE",
     argument_optional=True,

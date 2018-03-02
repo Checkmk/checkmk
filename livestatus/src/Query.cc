@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Query.h"
+#include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <cmath>
@@ -240,6 +241,7 @@ void Query::parseAndOrLine(const std::string &header,
         subfilters.push_back(std::move(filters.back()));
         filters.pop_back();
     }
+    std::reverse(subfilters.begin(), subfilters.end());
     filters.push_back(
         makeFilter(header, negated_header, op, std::move(subfilters)));
 }
@@ -272,6 +274,7 @@ void Query::parseStatsAndOrLine(const std::string &header,
         subfilters.push_back(_stats_columns.back()->stealFilter());
         _stats_columns.pop_back();
     }
+    std::reverse(subfilters.begin(), subfilters.end());
     _stats_columns.push_back(std::make_unique<StatsColumnCount>(
         makeFilter(header, negated_header, op, std::move(subfilters))));
 }

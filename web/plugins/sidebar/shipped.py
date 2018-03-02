@@ -281,11 +281,6 @@ def render_hosts(mode):
     query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100\n"
     view = "host"
 
-    if mode == "summary":
-        query += "Filter: custom_variable_names >= _REALNAME\n"
-    else:
-        query += "Filter: custom_variable_names < _REALNAME\n"
-
     if mode == "problems":
         view = "problemsofhost"
         # Exclude hosts and services in downtime
@@ -358,16 +353,6 @@ sidebar_snapins["hosts"] = {
     "styles" : snapin_allhosts_styles,
 }
 
-sidebar_snapins["summary_hosts"] = {
-    "title" : _("Summary Hosts"),
-    "description" : _("A summary state of all summary hosts (summary hosts hold "
-                      "aggregated service states and are a feature of Check_MK)"),
-    "render" : lambda: render_hosts("summary"),
-    "allowed" : [],
-    "refresh" : True,
-    "styles" : snapin_allhosts_styles,
-}
-
 sidebar_snapins["problem_hosts"] = {
     "title" : _("Problem Hosts"),
     "description" : _("A summary state of all hosts that have a problem, with "
@@ -392,7 +377,6 @@ def render_hostmatrix():
     sites.live().set_prepend_site(True)
     query = "GET hosts\n" \
             "Columns: name state has_been_checked worst_service_state scheduled_downtime_depth\n" \
-            "Filter: custom_variable_names < _REALNAME\n" \
             "Limit: 901\n"
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
@@ -590,8 +574,7 @@ def get_tactical_overview_data(extra_filter_headers):
         "Stats: host_staleness >= %s\n" % configured_staleness_threshold + \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n" \
-        "Filter: custom_variable_names < _REALNAME\n" + \
-        extra_filter_headers
+        + extra_filter_headers
 
     service_query = \
         "GET services\n" \
@@ -611,8 +594,7 @@ def get_tactical_overview_data(extra_filter_headers):
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: service_scheduled_downtime_depth = 0\n" \
         "StatsAnd: 3\n" \
-        "Filter: host_custom_variable_names < _REALNAME\n" + \
-        extra_filter_headers
+        + extra_filter_headers
 
     # In case the user is not allowed to see unrelated events
     ec_filters = ""

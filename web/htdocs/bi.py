@@ -138,7 +138,7 @@ def load_services(only_hosts):
     g_services_by_hostname = {}
 
     # Create optional host filter
-    filter_txt = 'Filter: custom_variable_names < _REALNAME\n' # drop summary hosts
+    filter_txt = ''
     if only_hosts:
         # Only fetch the requested hosts
         host_filter = []
@@ -685,7 +685,6 @@ class BISitedataManager(object):
 
 
     def _query_data(self, only_sites):
-        filter_txt = 'Filter: custom_variable_names < _REALNAME\n' # drop summary hosts
         try:
             sites.live().set_only_sites(only_sites)
             sites.live().set_prepend_site(True)
@@ -693,7 +692,6 @@ class BISitedataManager(object):
 
             data = sites.live().query(
                 "GET hosts\n"
-                +filter_txt+
                 "Columns: name custom_variable_names custom_variable_values "
                 "services childs parents alias\n"
                 "Cache: reload\n"

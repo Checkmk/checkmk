@@ -21,10 +21,14 @@ pytest_options = --maxfail=10
 pytest_jenkins = $(pytest_options) --junitxml=$(bindir)/junit.xml
 
 build_version: $(check_mk_agent_SOURCES:.cc=.o)
+	echo "BUILD VERSION ls 1: $$(ls -al $(VPATH))"
+	echo "BUILD VERSION 1: $$(cat $(VPATH)/build_version)"
 	echo $$(( $$(cat $(VPATH)/build_version) + 1 )) > $(VPATH)/build_version
+	echo "BUILD VERSION 2: $$(cat $(VPATH)/build_version)"
+	echo "BUILD VERSION ls 2: $$(ls -al $(VPATH))"
 
 check_mk_agent.rc: $(VPATH)/check_mk_agent.rc.in build_version
-	echo "BUILD VERSION: $$(cat $(VPATH)/build_version)"
+	echo "BUILD VERSION 3: $$(cat $(VPATH)/build_version)"
 	sed -e "s/%VERSION%/$(VERSION)/g" \
 	    -e "s/%YEAR%/$$(date +%Y)/g" \
 	    -e "s/%BUILD_VERSION%/$$(cat $(VPATH)/build_version)/g" $< > $@

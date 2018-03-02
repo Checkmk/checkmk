@@ -1,0 +1,15 @@
+Title: Git: Fixed error "git add --all ... is outside repository" with older git versions
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1519993814
+Class: fix
+
+When using older git versions (saw this with 1.7.1) an error could occur when enabling the
+git integration of WATO. This was caused by an incompatibility with the "git add" command
+used by WATO. It used absolute paths to add the new files that should be added to git instead
+of relative paths to the current working directory.
+
+This issue was present in all 1.4.0 releases.

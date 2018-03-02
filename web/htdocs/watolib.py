@@ -8281,7 +8281,7 @@ def unlock_exclusive():
 
 def git_command(args):
     command = [ "git" ] + [ a.encode("utf-8") for a in args ]
-    logger.debug("GIT: Execute %s" % subprocess.list2cmdline(command))
+    logger.debug("GIT: Execute in %s: %s" % (cmk.paths.default_config_dir, subprocess.list2cmdline(command)))
     try:
         p = subprocess.Popen(command, cwd=cmk.paths.default_config_dir,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -8338,8 +8338,9 @@ def do_git_commit():
 
 
 def git_add_files():
-    git_command(["add", "--all", ".gitignore"]
-                 + glob.glob("%s/*.d/wato" % cmk.paths.default_config_dir))
+    path_pattern = os.path.join(cmk.paths.default_config_dir, "*.d/wato")
+    rel_paths = [ os.path.relpath(p, cmk.paths.default_config_dir) for p in glob.glob(path_pattern) ]
+    git_command(["add", "--all", ".gitignore"] + rel_paths)
 
 
 def git_has_pending_changes():

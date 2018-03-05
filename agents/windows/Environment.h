@@ -55,10 +55,16 @@ public:
     virtual std::string logDirectory() const { return _log_directory; }
     virtual std::string binDirectory() const { return _bin_directory; }
 
-    virtual std::string logwatchStatefile() const { return _logwatch_statefile; }
-    virtual std::string eventlogStatefile() const { return _eventlog_statefile; }
+    virtual std::string logwatchStatefile() const {
+        return _logwatch_statefile;
+    }
+    virtual std::string eventlogStatefile() const {
+        return _eventlog_statefile;
+    }
 
-    virtual const JobHandle<0> &workersJobObject() const { return _workers_job_object; }
+    virtual const JobHandle<0> &workersJobObject() const {
+        return _workers_job_object;
+    }
 
     virtual bool withStderr() const { return _with_stderr; }
 

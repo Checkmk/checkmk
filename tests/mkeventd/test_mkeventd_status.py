@@ -9,13 +9,11 @@ from testlib import web, ec, cmk_path, CMKEventConsole
 
 import cmk.ec.settings
 import cmk.paths
+import cmk.ec.main
 
 #
 # UNIT TESTS
 #
-
-import imp
-mkeventd = imp.load_source("mkeventd", "%s/bin/mkeventd" % cmk_path())
 
 def test_mkeventd_unit():
     assert mkeventd
@@ -48,35 +46,35 @@ class FakeStatusSocket(object):
 
 @pytest.fixture(scope="function")
 def settings():
-    mkeventd.g_settings = cmk.ec.settings.settings(
+    cmk.ec.main.g_settings = cmk.ec.settings.settings(
         '1.2.3i45',
         pathlib.Path(cmk.paths.omd_root),
         pathlib.Path(cmk.paths.default_config_dir),
         ['mkeventd'])
-    return mkeventd.g_settings
+    return cmk.ec.main.g_settings
 
 
 @pytest.fixture(scope="function")
 def config(settings):
-    mkeventd.load_configuration(settings)
+    cmk.ec.main.load_configuration(settings)
 
 
 @pytest.fixture(scope="function")
 def status_server(settings):
-    mkeventd.g_status_server = mkeventd.StatusServer(settings)
-    return mkeventd.g_status_server
+    cmk.ec.main.g_status_server = cmk.ec.main.StatusServer(settings)
+    return cmk.ec.main.g_status_server
 
 
 @pytest.fixture(scope="function")
 def event_status(settings):
-    mkeventd.g_event_status = mkeventd.EventStatus(settings)
-    return mkeventd.g_event_status
+    cmk.ec.main.g_event_status = cmk.ec.main.EventStatus(settings)
+    return cmk.ec.main.g_event_status
 
 
 @pytest.fixture(scope="function")
 def perfcounters():
-    mkeventd.g_perfcounters = mkeventd.Perfcounters()
-    return mkeventd.g_perfcounters
+    cmk.ec.main.g_perfcounters = cmk.ec.main.Perfcounters()
+    return cmk.ec.main.g_perfcounters
 
 
 def test_handle_client(status_server, event_status):

@@ -44,7 +44,6 @@ def parse_ra32e_sensors(info):
     parsed = {
         'temperature': {},
         'humidity': {},
-        'heatindex': {},
         'voltage': {},
         'power': {},
     }

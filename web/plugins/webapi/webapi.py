@@ -838,7 +838,9 @@ class APICallHosttags(APICallCollection):
         new_tags.update(changed_hosttags_config.get_tag_ids_with_group_prefix())
 
         # Remove the builtin hoststags from the list of used_tags
-        for tag_group_id, tag_group__title, tags in watolib.builtin_host_tags:
+        for builtin_tag_group in watolib.builtin_host_tags:
+            tag_group_id = builtin_tag_group[0]
+            tags         = builtin_tag_group[2]
             for tag_id, tag_title, aux_tags in tags:
                 used_tags.discard("%s/%s" % (tag_group_id, tag_id))
                 used_tags.discard(tag_id)

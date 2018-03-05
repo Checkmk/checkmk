@@ -1,0 +1,10 @@
+Title: Tag condition editor could show wrong tag selection after submission
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1520249655
+Class: fix
+
+

@@ -813,6 +813,7 @@ class WithPermissionsAndAttributes(WithPermissions):
     def __init__(self):
         super(WithPermissionsAndAttributes, self).__init__()
         self._attributes = {}
+        self._effective_attributes = None
 
     # .--------------------------------------------------------------------.
     # | ATTRIBUTES                                                         |
@@ -844,6 +845,22 @@ class WithPermissionsAndAttributes(WithPermissions):
 
     def remove_attribute(self, attrname):
         del self.attributes()[attrname]
+
+
+    def drop_caches(self):
+        self._effective_attributes = None
+
+
+    def _cache_effective_attributes(self, effective):
+        self._effective_attributes = effective.copy()
+
+
+    def _get_cached_effective_attributes(self):
+        if self._effective_attributes is None:
+            raise KeyError("Not cached")
+        else:
+            return self._effective_attributes.copy()
+
 
 
 #.
@@ -1195,7 +1212,6 @@ class CREFolder(BaseFolder):
         self._subfolders = {}
 
         self._choices_for_moving_host = None
-        self._effective_attributes    = None
 
         self._root_dir = root_dir
         if self._root_dir:
@@ -1418,6 +1434,13 @@ class CREFolder(BaseFolder):
         self.need_permission("write")
         if self._hosts != None:
             self._save_hosts_file()
+
+            # Clean up caches of all hosts in this folder, just to be sure. We could also
+            # check out all call sites of save_hosts() and partially drop the caches of
+            # individual hosts to optimize this.
+            for host in self._hosts.values():
+                host.drop_caches()
+
         call_hook_hosts_changed(self)
 
 
@@ -1672,11 +1695,14 @@ class CREFolder(BaseFolder):
 
 
     def drop_caches(self):
+        super(CREFolder, self).drop_caches()
         self._choices_for_moving_host = None
-        self._effective_attributes    = None
 
         for subfolder in self._subfolders.values():
             subfolder.drop_caches()
+
+        for host in self._hosts.values():
+            host.drop_caches()
 
 
     # .-----------------------------------------------------------------------.
@@ -1880,8 +1906,10 @@ class CREFolder(BaseFolder):
 
 
     def effective_attributes(self):
-        if self._effective_attributes != None:
-            return self._effective_attributes.copy() # cached :-)
+        try:
+            return self._get_cached_effective_attributes() # cached :-)
+        except KeyError:
+            pass
 
         effective = {}
         for folder in self.parent_folder_chain():
@@ -1894,8 +1922,7 @@ class CREFolder(BaseFolder):
             if attrname not in effective:
                 effective.setdefault(attrname, host_attribute.default_value())
 
-        self._effective_attributes = effective.copy()
-
+        self._cache_effective_attributes(effective)
         return effective
 
 
@@ -2702,10 +2729,16 @@ class CREHost(WithPermissionsAndAttributes):
         self._name = host_name
         self._attributes = attributes
         self._cluster_nodes = cluster_nodes
+        self._cached_host_tags = None
 
 
     def __repr__(self):
         return "Host(%r)" % (self._name)
+
+
+    def drop_caches(self):
+        super(CREHost, self).drop_caches()
+        self._cached_host_tags = None
 
 
     # .--------------------------------------------------------------------.
@@ -2760,6 +2793,9 @@ class CREHost(WithPermissionsAndAttributes):
         # Compute tags from settings of each individual tag. We've got
         # the current value for each individual tag. Also other attributes
         # can set tags (e.g. the SiteAttribute)
+        if self._cached_host_tags is not None:
+            return self._cached_host_tags # Cached :-)
+
         tags = set([])
         effective = self.effective_attributes()
         for attr, topic in all_host_attributes():
@@ -2773,6 +2809,7 @@ class CREHost(WithPermissionsAndAttributes):
         if "no-snmp" in tags and "no-agent" in tags:
             tags.add("ping")
 
+        self._cached_host_tags = tags
         return tags
 
 
@@ -2800,8 +2837,14 @@ class CREHost(WithPermissionsAndAttributes):
 
 
     def effective_attributes(self):
+        try:
+            return self._get_cached_effective_attributes() # cached :-)
+        except KeyError:
+            pass
+
         effective = self.folder().effective_attributes()
         effective.update(self.attributes())
+        self._cache_effective_attributes(effective)
         return effective
 
 
@@ -8302,15 +8345,15 @@ class Rule(object):
         if not self._matches_hostname(hostname):
             yield _("The host name does not match.")
 
-        if not self.folder.is_transitive_parent_of(host_folder):
-            yield _("The rule does not apply to the folder of the host.")
-
         host_tags = host.tags()
         for tag in self.tag_specs:
             if tag[0] != '/' and tag[0] != '!' and tag not in host_tags:
                 yield _("The host is missing the tag %s") % tag
             elif tag[0] == '!' and tag[1:] in host_tags:
                 yield _("The host has the tag %s") % tag
+
+        if not self.folder.is_transitive_parent_of(host_folder):
+            yield _("The rule does not apply to the folder of the host.")
 
         if item != NO_ITEM and self.ruleset.item_type():
             if not self.matches_item(item):

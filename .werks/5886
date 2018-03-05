@@ -1,0 +1,13 @@
+Title: Improved performane of "ineffective ruleset" searching
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1520257450
+
+Pages that do analyze the matching of rules on folders / hosts were
+not performing good when having a lot of rules and match objects
+configured. This has been improved by introducing some internal caches.

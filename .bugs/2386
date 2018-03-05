@@ -1,7 +1,0 @@
-Title: compiled MIB files (py, pyc) must not be put under local/ but below var/
-Component: wato
-State: open
-Date: 2015-11-06 16:19:39
-Targetversion: future
-Class: bug
-

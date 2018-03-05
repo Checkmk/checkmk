@@ -1,9 +1,0 @@
-Title: hpux_mem check implementation
-Component: checks
-State: open
-Date: 2011-10-21 13:09:21
-Targetversion: 1.2.0
-Class: feature
-
-There is a agent section outputting the memory information for HP-UX, but no
-check that is currently processing it. 

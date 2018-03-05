@@ -1,9 +1,0 @@
-Title: Popup menu for actions on host/services looks nasty in case of an error
-Component: multisite
-State: open
-Date: 2016-02-26 10:00:51
-Targetversion: 1.2.8
-Class: nastiness
-
-If you click on the action menu (e.g. for reschedule) and the service meanwhile
-vanished, then you get a really nasty error message.

@@ -1,9 +1,0 @@
-Title: Rule-Editor: autocompletion for explicit hosts
-Component: wato
-State: open
-Date: 2011-12-07 14:11:27
-Targetversion: future
-Class: feature
-
-When editing explicit host exceptions we could provide
-an autocompletion for actually existing hosts.

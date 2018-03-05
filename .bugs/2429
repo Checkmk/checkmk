@@ -1,9 +1,0 @@
-Title: Service crontab survives hard crash of server
-Component: core
-State: open
-Date: 2016-03-15 17:04:31
-Targetversion: 1.2.8
-Class: nastiness
-
-We should run an own cron daemon in each site. This
-needs patches to cron.

@@ -1,8 +1,0 @@
-Title: Sort servicedescriptions and hostname numerically
-Component: multisite
-State: open
-Date: 2011-02-15 10:25:37
-Class: feature
-
-It could be possible to write a sorter that automatically
-sorts host7 before host10.

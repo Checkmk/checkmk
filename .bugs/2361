@@ -1,8 +1,0 @@
-Title: User without the permission "Use Check_MK sidebar" has a white bar on the left
-Component: multisite
-State: open
-Date: 2015-08-31 16:30:26
-Targetversion: 1.2.7
-Class: nastiness
-
-If a user logs in who doesn't have the permission "Use Check_MK sidebar", the page is displayed with a huge white bar where the sidebar is supposed to be. This looks hideous. What's more: He also doesn't have a logout button or the button to his profile that would allow him to change his password.

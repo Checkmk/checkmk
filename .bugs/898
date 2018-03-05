@@ -1,9 +1,0 @@
-Title: Make "site" infos available e.g. as group header in "Events ..." views
-Component: ec
-State: open
-Date: 2013-02-07 16:27:32
-Targetversion: 1.2.2
-Class: cleanup
-
-The hostname and so on are available and filled, the "site" info can be selected
-for the view, but there is no data rendered for the site. Should be added.

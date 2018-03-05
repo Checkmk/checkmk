@@ -1,9 +1,0 @@
-Title: WATO CSV-Import: Header "None" in case of no header
-Component: wato
-State: open
-Date: 2016-03-18 11:33:25
-Targetversion: 1.2.8
-Class: nastiness
-
-If no header line has been selected, then the header should not be displayed at all,
-instead of "None".

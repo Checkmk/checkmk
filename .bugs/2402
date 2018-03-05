@@ -1,9 +1,0 @@
-Title: Fix spelling mistakes
-Component: docu
-State: open
-Date: 2015-11-06 13:38:47
-Targetversion: future
-Class: cleanup
-
-There are quite a few spelling mistakes in the code (varible names, comments, ...)
-These can be found quickly with the tool codespell but fixing them could take a while

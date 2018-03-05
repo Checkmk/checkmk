@@ -1,7 +1,0 @@
-Title: Make mkeventd network ports configurable
-Component: ec
-State: open
-Date: 2016-01-26 14:36:57
-Targetversion: future
-Class: feature
-

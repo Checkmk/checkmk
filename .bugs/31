@@ -1,8 +1,0 @@
-Title: Kommando für Custom Notification
-Component: multisite
-State: open
-Date: 2010-12-21 20:46:23
-Class: feature
-
-Beim normalen Nagios gibts das auch. Dazu Checkboxen für "force"
-und für "broadcast".

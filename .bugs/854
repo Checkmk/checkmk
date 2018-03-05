@@ -1,9 +1,0 @@
-Title: mknotifyd.connection: Change behavior in case of no information of spooler
-Component: checks
-State: open
-Date: 2015-09-24 17:03:18
-Targetversion: 1.2.7
-Class: nastiness
-
-Currently the checks goes unknown in case missing information for spooler. 
-There should maybe be Crit, because this happens in the case that mknotifd currently don't have connection to a spooler.

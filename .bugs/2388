@@ -1,9 +1,0 @@
-Title: Omd versions lists incomplete installed versions
-Component: core
-State: open
-Date: 2015-10-08 12:20:01
-Targetversion: future
-Class: todo
-
-If the command omd versions is executed it will show incomplete installations of versions.
-There should be a filter to show only the working versions.

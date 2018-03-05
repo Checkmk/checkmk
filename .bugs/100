@@ -1,9 +1,0 @@
-Title: Set unknown IP addresses to a configurable one
-Component: core
-State: open
-Date: 2011-01-24 14:10:18
-Class: feature
-
-fallback_ipaddress = "127.0.0.1" ==> All non-DNS-resolvable IP
-addresses will automatically be set to 127.0.0.1 (use this with
-caution). Usefull for quick tests.

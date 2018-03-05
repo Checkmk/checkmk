@@ -1,9 +1,0 @@
-Title: Livestatus: table log: EXTERNAL_COMMAND should get host info
-Component: livestatus
-State: open
-Date: 2011-09-08 09:29:57
-Class: feature
-
-The table log could parse the external command entries and assign
-them to the correct host and service. This needs a complete list
-of all known external commands :-(.

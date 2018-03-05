@@ -1,9 +1,0 @@
-Title: Automatisch dummy IP-Adresse nehmen bei DNS-Problem
-Component: core
-State: open
-Date: 2010-12-21 22:28:59
-Class: feature
-
-Wenn eine IP-Adresse nicht aufgelöst werden kann, sollte stattdessen eine
-(konfigurierbare) Dummyadresse verwendet werden. Sonst scheitert check_mk -O,
-wenn ein DNS-Eintrag verschwindet.

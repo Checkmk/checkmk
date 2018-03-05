@@ -1,9 +1,0 @@
-Title: CPU Check: Schwellwerte nicht automatisch gegen 15 Minuten Wert prüfen
-Component: checks
-State: open
-Date: 2011-12-13 13:57:51
-Targetversion: 1.1.13i1
-Class: feature
-
-Der CPU Check prüft die angegebenen Werte momentan immer gegen die 15 Minuten Mittelwerte
-Das ist nicht in allen Fällen so gewünscht. Das muss konfigurierbar sein.

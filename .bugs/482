@@ -1,8 +1,0 @@
-Title: Make cmk --checks=local -v Localhost work
-Component: core
-State: open
-Date: 2011-12-07 09:37:54
-Targetversion: 1.2.0
-Class: feature
-
-The normal Check_MK call should honor the --checks option.

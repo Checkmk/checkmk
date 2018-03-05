@@ -1,8 +1,0 @@
-Title: make snmp options available
-Component: core
-State: open
-Date: 2011-10-21 10:41:56
-Class: feature
-
-expose snmp timeouts and snmp retry options as configurable parameters. 
-make it possible to set it rule based & from wato

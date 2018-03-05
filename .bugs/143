@@ -1,9 +1,0 @@
-Title: Hosttags: admin should be able to force selection
-Component: wato
-State: open
-Date: 2011-02-16 15:41:09
-Class: feature
-
-We could let the admin choose to force the user
-to do a selection of a tag. That way he cannot
-just save and use the defaults but must think first.

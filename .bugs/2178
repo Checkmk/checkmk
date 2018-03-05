@@ -1,8 +1,0 @@
-Title: new helper function for checks: render_levels(warn, crit, what = "upper", unit = "")
-Component: checks
-State: open
-Date: 2015-11-17 16:19:35
-Targetversion: future
-Class: feature
-
-This function will streamline the numerous check output variations.

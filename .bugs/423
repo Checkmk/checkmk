@@ -1,9 +1,0 @@
-Title: multisite - make service/host alias text visible as hover text
-Component: multisite
-State: open
-Date: 2011-10-21 11:46:40
-Class: phantasm
-
-Requested by one user and example code sent to list by jason humes. 
-"but here is the code to get hovertext for host and service icons to be pulled from the host/service definitions 'icon_image_alt' field which you can use main.mk to populate the same as you do 'icon_image'.
-"

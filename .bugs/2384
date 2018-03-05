@@ -1,9 +1,0 @@
-Title: Dropdown in view editor for column selection is nasty
-Component: multisite
-State: open
-Date: 2015-11-01 11:02:49
-Targetversion: future
-Class: nastiness
-
-At least put a prefix to each column name with the name of the info
-(Host, Service, Event, ...)

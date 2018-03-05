@@ -1,7 +1,0 @@
-Title: Bogus exception "Invalid credentials" when logging in with invalid credentials
-Component: multisite
-State: open
-Date: 2016-07-27 15:39:35
-Targetversion: 1.2.8
-Class: nastiness
-

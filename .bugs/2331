@@ -1,8 +1,0 @@
-Title: create check to detect failed systemd services
-Component: checks
-State: open
-Date: 2016-02-17 14:53:37
-Targetversion: future
-Class: feature
-
-Create check that analyzes output of "systemctl --failed" to automatically detect failed services.

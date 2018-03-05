@@ -1,9 +1,0 @@
-Title: BI Aggregation tree is not rendered in PDF reports
-Component: multisite
-State: open
-Date: 2016-03-01 11:16:33
-Targetversion: 1.2.9
-Class: todo
-
-The content of the BI tree state is only shown as text. The HTML tags are
-stripped of the painter.

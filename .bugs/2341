@@ -1,8 +1,0 @@
-Title: Add missing X for disabling of active checks in WATO
-Component: wato
-State: open
-Date: 2015-09-07 13:56:44
-Targetversion: 1.2.7
-Class: nastiness
-
-Active checks *can* be disable via "Disabled Services" and should get the red cross.

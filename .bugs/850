@@ -1,8 +1,0 @@
-Title: [AWato Hosts: Position of Icons for Bulk operations
-Component: wato
-State: open
-Date: 2015-08-10 15:28:19
-Targetversion: 1.2.7
-Class: nastiness
-
-Depending on the number of hosts in a folder, the buttons for Delete/ Edit/ Cleanup etc. are on the upper or the lower of the table. This is perplexing and not realy reasonable.

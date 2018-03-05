@@ -1,9 +1,0 @@
-Title: Master Control should be renamed in order to make things clearer
-Component: multisite
-State: open
-Date: 2015-06-02 11:04:37
-Targetversion: future
-Class: nastiness
-
-The Event Console and other components are not controlled hereby. If
-you disable notifications then EC notifications stay enabled.

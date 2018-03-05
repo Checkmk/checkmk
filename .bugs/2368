@@ -1,8 +1,0 @@
-Title: reporting: preview with an arbitrary graph
-Component: multisite
-State: open
-Date: 2015-09-11 17:21:49
-Targetversion: future
-Class: phantasm
-
-Add an arbitrary graph in the preview of a reporting template to see how this template could look like

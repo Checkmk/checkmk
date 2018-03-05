@@ -1,8 +1,0 @@
-Title: Services marked as vanished even if they have been disabled previously
-Component: checks
-State: open
-Date: 2018-02-05 15:12:29
-Targetversion: 1.4.0
-Class: nastiness
-
-Even if a service has been disabled previously it will be marked as vanished and the service "Check_MK Discovery" will change to WARN. The expected behaviour would be to silently dissappear these disabled services.

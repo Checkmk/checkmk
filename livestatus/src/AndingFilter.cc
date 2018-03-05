@@ -78,8 +78,7 @@ std::unique_ptr<Filter> AndingFilter::copy() const {
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->copy(); });
-    return std::make_unique<AndingFilter>(_header, _negated_header,
-                                          std::move(filters));
+    return std::make_unique<AndingFilter>(_op, std::move(filters));
 }
 
 std::unique_ptr<Filter> AndingFilter::negate() const {
@@ -87,13 +86,12 @@ std::unique_ptr<Filter> AndingFilter::negate() const {
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->negate(); });
-    return std::make_unique<OringFilter>(_negated_header, _header,
-                                         std::move(filters));
+    return std::make_unique<OringFilter>(dual(_op), std::move(filters));
 }
 
 std::ostream &AndingFilter::print(std::ostream &os) const {
     for (const auto &filter : _subfilters) {
         os << *filter;
     }
-    return os << _header << ": " << _subfilters.size() << "\n";
+    return os << _op << ": " << _subfilters.size() << "\n";
 }

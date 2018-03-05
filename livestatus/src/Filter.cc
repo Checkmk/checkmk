@@ -23,6 +23,43 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Filter.h"
+#include <ostream>
+
+LogicalOperator dual(LogicalOperator op) {
+    switch (op) {
+        case LogicalOperator::and_:
+            return LogicalOperator::or_;
+        case LogicalOperator::or_:
+            return LogicalOperator::and_;
+        case LogicalOperator::stats_and:
+            return LogicalOperator::stats_or;
+        case LogicalOperator::stats_or:
+            return LogicalOperator::stats_and;
+        case LogicalOperator::wait_condition_and:
+            return LogicalOperator::wait_condition_or;
+        case LogicalOperator::wait_condition_or:
+            return LogicalOperator::wait_condition_and;
+    }
+    return LogicalOperator::and_;  // unreachable, make the compiler happy
+}
+
+std::ostream &operator<<(std::ostream &os, const LogicalOperator &op) {
+    switch (op) {
+        case LogicalOperator::and_:
+            return os << "And";
+        case LogicalOperator::or_:
+            return os << "Or";
+        case LogicalOperator::stats_and:
+            return os << "StatsAnd";
+        case LogicalOperator::stats_or:
+            return os << "StatsOr";
+        case LogicalOperator::wait_condition_and:
+            return os << "WaitConditionAnd";
+        case LogicalOperator::wait_condition_or:
+            return os << "WaitConditionOr";
+    }
+    return os;  // unreachable, make the compiler happy
+}
 
 Filter::~Filter() = default;
 

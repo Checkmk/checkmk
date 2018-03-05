@@ -382,11 +382,7 @@ clean:
 	       ChangeLog
 
 mrproper:
-	git clean -d --force -x \
-            --exclude='\.bugs/.last' \
-            --exclude='\.bugs/.my_ids' \
-            --exclude='\.werks/.last' \
-            --exclude='\.werks/.my_ids'
+	git clean -d --force -x --exclude='\.werks/.last' --exclude='\.werks/.my_ids'
 
 setup:
 	sudo apt-get install \

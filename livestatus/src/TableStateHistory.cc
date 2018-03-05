@@ -45,12 +45,12 @@
 #include "OffsetSStringColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
+#include "OringFilter.h"  // IWYU pragma: keep
 #include "Query.h"
 #include "Row.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-class OringFilter;
 
 #ifdef CMC
 // This seems to be an IWYU bug: If we remove the includes as suggested, we
@@ -239,8 +239,6 @@ LogEntry *TableStateHistory::getNextLogentry() {
     return _it_entries->second.get();
 }
 
-// TODO(sp) IsObjectFilter in TableCachedStatehist recurses into sub-filters,
-// while we don't. Is this really intentional?
 namespace {
 class IsObjectFilter : public FilterVisitor {
 public:
@@ -252,8 +250,25 @@ public:
                      mk::starts_with(column_name, "service_");
         }
     }
-    void visit(const AndingFilter & /*unused*/) override {}
-    void visit(const OringFilter & /*unused*/) override {}
+
+    // TODO(sp): Handling and/or the same way looks suspicious...
+    void visit(const AndingFilter &f) override {
+        for (const auto &sub_filter : f) {
+            if (!_value) {
+                return;
+            }
+            sub_filter->accept(*this);
+        }
+    }
+
+    void visit(const OringFilter &f) override {
+        for (const auto &sub_filter : f) {
+            if (!_value) {
+                return;
+            }
+            sub_filter->accept(*this);
+        }
+    }
 
     bool _value = true;
 };
@@ -281,11 +296,14 @@ private:
 };
 }  // namespace
 
-void TableStateHistory::answerQuery(Query *query) {
-    // Create a partial filter, that contains only such filters that check
-    // attributes of current hosts and services
+// Create a partial filter, that contains only such filters that check
+// attributes of current hosts and services
+
+// static
+std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
+    const AndingFilter &f) {
     std::vector<std::unique_ptr<Filter>> subfilters;
-    for (const auto &filter : *query->filter()) {
+    for (const auto &filter : f) {
         IsObjectFilter is_obj;
         filter->accept(is_obj);
         if (is_obj._value) {
@@ -293,8 +311,12 @@ void TableStateHistory::answerQuery(Query *query) {
         }
     }
     std::reverse(subfilters.begin(), subfilters.end());
-    AndingFilter object_filter(LogicalOperator::and_, std::move(subfilters));
+    return std::make_unique<AndingFilter>(LogicalOperator::and_,
+                                          std::move(subfilters));
+}
 
+void TableStateHistory::answerQuery(Query *query) {
+    auto object_filter = createPartialFilter(*query->filter());
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
     if (!_log_cache->logCachePreChecks()) {
         return;
@@ -464,9 +486,9 @@ void TableStateHistory::answerQuery(Query *query) {
                     // filtered out.  Note: we currently do not filter out hosts
                     // since they might be needed for service states
                     if (!entry->_svc_desc.empty()) {
-                        if (!object_filter.accepts(Row(state),
-                                                   query->authUser(),
-                                                   query->timezoneOffset())) {
+                        if (!object_filter->accepts(Row(state),
+                                                    query->authUser(),
+                                                    query->timezoneOffset())) {
                             object_blacklist.insert(key);
                             delete state;
                             continue;

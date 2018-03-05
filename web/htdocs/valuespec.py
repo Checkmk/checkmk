@@ -4608,18 +4608,17 @@ class SiteChoice(DropdownChoice):
             return False
 
         import config
-        default_site = config.default_site()
-        authorized_site_ids = map(lambda x: x[0], config.user.authorized_sites(unfiltered_sites=config.configured_sites()))
-        if default_site and default_site in authorized_site_ids:
-            return default_site
 
-        return self.canonical_value()
+        default_value = config.site_attribute_default_value()
+        if default_value:
+            return default_value
+        else:
+            return self.canonical_value()
 
 
     def _site_choices(self):
         import config
-        authorized_site_ids = map(lambda x: x[0], config.user.authorized_sites(unfiltered_sites=config.configured_sites()))
-        return config.site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
+        return config.site_attribute_choices()
 
 
 class TimeperiodSelection(DropdownChoice):

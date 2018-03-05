@@ -606,6 +606,10 @@ def user_notification_rules():
             # is handled by WATO. Contact specific rules are a
             # WATO-only feature anyway...
             user_rules.append(rule)
+
+            if "authorized_sites" in config.contacts[contactname] and not "match_site" in rule:
+                rule["match_site"] = config.contacts[contactname]["authorized_sites"]
+
     notify_log_debug("Found %d user specific rules" % len(user_rules))
     return user_rules
 

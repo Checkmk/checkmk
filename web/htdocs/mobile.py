@@ -312,8 +312,7 @@ def render_view(view, rows, datasource, group_painters, painters,
               html.write(_("No hosts/services found."))
           else:
               try:
-                  # TODO: special limit for mobile UI
-                  html.check_limit(rows, views.get_limit())
+                  views.check_limit(rows, views.get_limit())
                   layout["render"](rows, view, group_painters, painters, num_columns,
                                   show_checkboxes and not html.do_actions())
               except Exception, e:

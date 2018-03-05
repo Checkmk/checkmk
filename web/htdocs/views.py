@@ -1898,7 +1898,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if not has_done_actions:
         # Limit exceeded? Show warning
         if display_options.enabled(display_options.W):
-            html.check_limit(rows, get_limit())
+            check_limit(rows, get_limit())
         layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
         headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
@@ -1959,6 +1959,23 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         if display_options.enabled(display_options.H):
             html.body_end()
+
+
+def check_limit(rows, limit):
+    count = len(rows)
+    if limit != None and count >= limit + 1:
+        text = _("Your query produced more than %d results. ") % limit
+        if html.var("limit", "soft") == "soft" and config.user.may("general.ignore_soft_limit"):
+            text += '<a href="%s">%s</a>' % \
+                         (html.makeuri([("limit", "hard")]), _('Repeat query and allow more results.'))
+        elif html.var("limit") == "hard" and config.user.may("general.ignore_hard_limit"):
+            text += '<a href="%s">%s</a>' % \
+                         (html.makeuri([("limit", "none")]), _('Repeat query without limit.'))
+        text += " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
+        html.show_warning(text)
+        del rows[limit:]
+        return False
+    return True
 
 
 def do_table_join(master_ds, master_rows, master_filters, join_cells, join_columns, only_sites):

@@ -3432,7 +3432,7 @@ def table(columns, add_headers, only_sites, limit, filters):
 
             row["aggr_group"] = group
             rows.append(row)
-            if not html.check_limit(rows, limit):
+            if not views.check_limit(rows, limit):
                 return rows
 
     return rows
@@ -3573,7 +3573,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             row.update(new_row)
             row["aggr_group"] = group
             rows.append(row)
-            if not html.check_limit(rows, limit):
+            if not views.check_limit(rows, limit):
                 return rows
 
 

@@ -15,10 +15,6 @@ import cmk.ec.main
 # UNIT TESTS
 #
 
-def test_mkeventd_unit():
-    assert mkeventd
-
-
 class FakeStatusSocket(object):
     def __init__(self, query):
         self._query = query

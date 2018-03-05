@@ -12307,7 +12307,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
 
     def _get_taggroups_valuespec(self):
-        host_tags, aux_tags = self._untainted_hosttags_config.get_legacy_format()
+        aux_tags = watolib.get_effective_aux_tags(self._untainted_hosttags_config.get_legacy_format()[1])
 
         return ListOf(
             Tuple(

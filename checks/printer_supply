@@ -66,16 +66,16 @@ check_config_variables.append("printer_supply_some_remaining_status")
 def printer_supply_fix_infos(info):
     colors = []
     new_info = []
-    for index, line in enumerate(info):
-        line_0 = line[0] # give chance for latin1->utf8 decoding
+    for index, (description, max_capacity, level, class_, color) in enumerate(info):
+        # give chance for latin1->utf8 decoding
+        line_0 = description
 
         # For toners or drum units add the color (if available)
         if line_0.startswith('Toner Cartridge') \
            or line_0.startswith('Image Drum Unit'):
-            if line[4]:
-                colors += [ line[4] ]
-                color = line[4]
-            elif line[4] == '' and colors:
+            if color:
+                colors += [ color ]
+            elif color == '' and colors:
                 color = colors[index - len(colors)]
             else:
                 color = None
@@ -85,24 +85,61 @@ def printer_supply_fix_infos(info):
         if " S/N:" in line_0:
             line_0 = line_0[:line_0.find(" S/N:")]
 
-        new_info.append([line_0] + line[1:])
+        new_info.append([line_0, max_capacity, level, class_, color])
     return new_info
 
 
 def inventory_printer_supply(info):
     # Ignore devices which show -2 for current value and -2 for max value -> useless
     # Also fix trailing zero bytes (seen on HP Jetdirect 143)
-    return [ (line[0].rstrip('\0'), {})
-             for line in printer_supply_fix_infos(info)
-             if not (line[1] == '-2' and line[2] == '-2') and line[2] and len(line[1]) > 0 ] # ignore useless devices
+    return [(description.rstrip('\0'), {})
+            for description, max_capacity, level, class_, color in printer_supply_fix_infos(info)
+            # ignore useless devices
+            if not (max_capacity == '-2' and level == '-2') and level and len(max_capacity) > 0 ]
 
 
 def check_printer_supply(item, params, info):
-    for line in printer_supply_fix_infos(info):
-        if line[0].rstrip('\0') == item:
-            maxlevel  = int(line[1])
-            current   = saveint(line[2])
+    if type(params) == tuple:
+        if len(params) == 2:
+            params = { "levels" : params }
+        else:
+            params = {
+                "levels" : params[:2],
+                "upturn_toner" : params[2],
+            }
 
+    for description, max_capacity, level, class_, color in printer_supply_fix_infos(info):
+        if description.rstrip('\0') == item:
+            max_capacity = int(max_capacity)
+            level = saveint(level)
+
+            color_info = ""
+            if color and color.lower() not in item.lower():
+                color_info = "[%s] " % color
+
+            # Assume 100% as maximum when 0 is reported
+            # Saw some toner cartridge reporting value=0 and max_capacity=0 on empty toner
+            if max_capacity == 0:
+                max_capacity = 100
+
+            warn, crit = params["levels"]
+            perfdata = [("pages", level, warn / 100.0 * max_capacity,
+                        crit / 100.0 * max_capacity, 0, max_capacity)]
+
+            # handle cases with partial data
+            if max_capacity == -2 or level in [ -3, -2, -1 ]: # no percentage possible
+                if level == -1 or max_capacity == -1:
+                    return 0, "%sThere are no restrictions on this supply" % color_info
+                elif level == -3:
+                    return params.get("some_remaining", printer_supply_some_remaining_status),\
+                            "%sSome remaining" % color_info, perfdata
+                elif level == -2:
+                    return 3, "%s Unknown level" % color_info
+                elif max_capacity == -2:
+                    # no percentage possible. We compare directly against levels
+                    return 0, "%sLevel: %d" % (color_info, level), [("pages", level)]
+
+            leftperc = 100.0 * float(level) / max_capacity
             # When unit type is
             # 1 = other
             # 3 = supplyThatIsConsumed
@@ -111,59 +148,23 @@ def check_printer_supply(item, params, info):
             # but when the remaining space if this supply is a receptacle
             #
             # This table can be missing on some devices. Assume type 3 in this case.
-            if line[3] == '':
-                unit_type = 3
-            else:
-                unit_type = int(line[3])
-
-            if type(params) == tuple:
-                if len(params) == 2:
-                    params = { "levels" : params }
-                else:
-                    params = {
-                        "levels" : params[:2],
-                        "upturn_toner" : params[2],
-                    }
-
-            warn, crit = params["levels"]
-            upturn = params.get("upturn_toner", False)
-
-            # Assume 100% as maximum when 0 is reported
-            # Saw some toner cartridge reporting value=0 and maxlevel=0 on empty toner
-            if maxlevel == 0:
-                maxlevel = 100
-
-            perfdata = [ ("pages", current, warn / 100.0 * maxlevel, crit / 100.0 * maxlevel, 0, maxlevel ) ]
-
-            # handle cases with partial data
-            if maxlevel == -2 or current in [ -3, -2, -1 ]: # no percentage possible
-                if current == -1 or maxlevel == -1:
-                    return (0, "there are no restrictions on this supply")
-                elif current == -3:
-                    state = params.get("some_remaining", printer_supply_some_remaining_status)
-                    return state, "Some remaining", perfdata
-                elif current == -2:
-                    return (3, "current level is unknown")
-                elif maxlevel == -2:
-                    # no percentage possible. We compare directly against levels
-                    return (0, "current level is %d" % current, [("pages", current)])
-
-            leftperc = 100.0 * float(current) / maxlevel
-
-            if unit_type == 4:
+            if class_ == '4':
                 leftperc = 100 - leftperc
+
             # Some printers handle the used / remaining material differently
             # With the upturn option we can toggle the point of view (again)
-            if upturn:
+            if params.get("upturn_toner", False):
                 leftperc = 100 - leftperc
 
-            infotext = "%.0f%% (warn/crit at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
+            infotext = "%sRemaining: %.0f%%" % (color_info, leftperc)
+            state = 0
             if leftperc <= crit:
-                return (2, infotext, perfdata)
+                state = 2
             elif leftperc <= warn:
-                return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
+                state = 1
+            if state:
+                infotext += " (warn/crit at %.0f%%/%.0f%%)" % (warn, crit)
+            return state, infotext, perfdata
 
 
 check_info["printer_supply"] = {

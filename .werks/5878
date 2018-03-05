@@ -1,0 +1,10 @@
+Title: Fixes sorting of host tag groups
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520231638
+Class: fix
+
+The sorting of the WATO host tags was broken in the 1.5 releases.

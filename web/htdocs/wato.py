@@ -11802,7 +11802,6 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
     def __init__(self):
         super(ModeHostTags, self).__init__()
         self._hosttags, self._auxtags = self._load_hosttags()
-        self._effective_tag_groups = watolib.get_effective_tag_groups(self._hosttags)
 
 
     def title(self):
@@ -11931,11 +11930,13 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                     empty_text = _("You haven't defined any tag groups yet."),
                     searchable = False, sortable = False)
 
-        if not self._effective_tag_groups:
+        effective_tag_groups = self._get_effective_tag_groups()
+
+        if not effective_tag_groups:
             table.end()
             return
 
-        for nr, entry in enumerate(self._effective_tag_groups):
+        for nr, entry in enumerate(effective_tag_groups):
             tag_id, title, choices = entry[:3] # fourth: tag dependency information
             topic, title = map(_u, watolib.parse_hosttag_title(title))
             table.row()
@@ -11950,11 +11951,14 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 else:
                     html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
                                 _("Move this tag group one position up"), "up")
-                if nr == len(self._effective_tag_groups) - 1:
+
+                if nr == len(effective_tag_groups) - 1 \
+                   or watolib.is_builtin_host_tag_group(effective_tag_groups[nr+1][0]):
                     html.empty_icon_button()
                 else:
                     html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
                                 _("Move this tag group one position down"), "down")
+
                 html.icon_button(edit_url,   _("Edit this tag group"), "edit")
                 html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
@@ -11980,6 +11984,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                     searchable = False)
 
         aux_tags = watolib.get_effective_aux_tags(self._auxtags)
+        effective_tag_groups = self._get_effective_tag_groups()
 
         if not aux_tags:
             table.end()
@@ -12001,8 +12006,12 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
             table.text_cell(_("Title"), _u(title))
             table.text_cell(_("Topic"), _u(topic) or '')
             table.text_cell(_("Tags using this auxiliary tag"),
-                            ", ".join(self._get_tags_using_aux_tag(self._effective_tag_groups, tag_id)))
+                            ", ".join(self._get_tags_using_aux_tag(effective_tag_groups, tag_id)))
         table.end()
+
+
+    def _get_effective_tag_groups(self):
+        return watolib.get_effective_tag_groups(self._hosttags)
 
 
     def _get_tags_using_aux_tag(self, tag_groups, aux_tag):

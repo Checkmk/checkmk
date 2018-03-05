@@ -654,7 +654,7 @@ def dashlet_view(nr, dashlet):
 
     is_reload = html.has_var("_reload")
 
-    display_options = "SIXL"
+    display_options = "SIXLW"
     if not is_reload:
         display_options += "HR"
 

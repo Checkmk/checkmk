@@ -11819,7 +11819,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
         del_id = html.var("_delete")
         if del_id:
             operations = None
-            for e in self.tag_groups:
+            for e in self._hosttags:
                 if e[0] == del_id:
                     # In case of tag group deletion, the operations is a pair of tag_id
                     # and list of choice-ids.

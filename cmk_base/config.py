@@ -70,9 +70,18 @@ def register(name, default_value):
     setattr(default_config, name, default_value)
 
 
-# Add configuration variables registered by checks to config module
 def add_check_variables(check_variables):
+    """Add configuration variables registered by checks to config module"""
     default_config.__dict__.update(check_variables)
+
+
+def clear_check_variable_names(check_variable_names):
+    """Remove previously registered check variables from the config module"""
+    for varname in check_variable_names:
+        try:
+            delattr(default_config, varname)
+        except AttributeError:
+            pass
 
 
 # Load user configured values of check related configuration variables
@@ -88,10 +97,7 @@ def set_check_variables_for_checks():
     for varname in cmk_base.checks.check_variable_names():
         cmk_base.checks.set_check_variable(varname, global_dict.pop(varname))
 
-        try:
-            delattr(default_config, varname)
-        except AttributeError:
-            pass
+    clear_check_variable_names(cmk_base.checks.check_variable_names())
 
 
 #.

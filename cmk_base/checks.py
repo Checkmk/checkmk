@@ -104,6 +104,7 @@ def get_plugin_paths(*dirs):
 # normal structure, then only the file in local/ must be read!
 def load_checks(filelist):
     # Initialize some data structures which are populated while loading the checks
+    config.clear_check_variable_names(_check_variables.keys())
     _check_variables.clear()
 
     cmk_global_vars = set(config.get_variable_names())

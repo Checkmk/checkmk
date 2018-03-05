@@ -258,23 +258,6 @@ class html_mod_python(htmllib.html):
     def set_content_type(self, ty):
         self.req.content_type = ty
 
-    def check_limit(self, rows, limit):
-        count = len(rows)
-        if limit != None and count >= limit + 1:
-            text = _("Your query produced more than %d results. ") % limit
-            if self.var("limit", "soft") == "soft" and config.user.may("general.ignore_soft_limit"):
-                text += '<a href="%s">%s</a>' % \
-                             (self.makeuri([("limit", "hard")]), _('Repeat query and allow more results.'))
-            elif self.var("limit") == "hard" and config.user.may("general.ignore_hard_limit"):
-                text += '<a href="%s">%s</a>' % \
-                             (self.makeuri([("limit", "none")]), _('Repeat query without limit.'))
-            text += " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
-            self.show_warning(text)
-            del rows[limit:]
-            return False
-        return True
-
-
     def load_transids(self, lock = False):
         return config.user.load_file("transids", [], lock)
 

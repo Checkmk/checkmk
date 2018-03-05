@@ -3428,7 +3428,7 @@ class Dictionary(ValueSpec):
                 if self._columns == 2:
                     label += ":"
                     colon_printed = True
-                html.checkbox("%s_USE" % vp, param in value, label=label,
+                html.checkbox("%s_USE" % vp, visible, label=label,
                               onclick="valuespec_toggle_option(this, %r)" % div_id)
             else:
                 visible = True

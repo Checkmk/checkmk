@@ -87,9 +87,12 @@ private:
     Table &_table;
     bool _keepalive;
     using FilterStack = std::vector<std::unique_ptr<Filter>>;
+    // TODO(sp) This should really use Filter instead of AndingFilter, but
+    // TableStateHistory::answerQuery and TableCachedStatehist::answerQuery rely
+    // on the current state of affairs in a *very* dubious way...
     std::unique_ptr<AndingFilter> _filter;
     contact *_auth_user;
-    std::unique_ptr<AndingFilter> _wait_condition;
+    std::unique_ptr<Filter> _wait_condition;
     std::chrono::milliseconds _wait_timeout;
     Triggers::Kind _wait_trigger;
     Row _wait_object;

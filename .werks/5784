@@ -1,0 +1,10 @@
+Title: WATO Web-API: fixed broken update of host tags
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520242609
+Class: fix
+
+The updating of host tags was no longer working due the recent changes in the host datasource management.

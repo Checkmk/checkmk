@@ -1,0 +1,12 @@
+Title: jolokia_generic.string: Fix broken parameter handling
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1520250977
+Class: fix
+
+Previously, any strings against which to match would be ignored. This has been fixed.
+
+Thanks to Alexander Hotz for the patch!

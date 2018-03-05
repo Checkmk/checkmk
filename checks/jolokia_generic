@@ -64,7 +64,7 @@ def check_jolokia_generic_string(item, params, parsed):
     value = parsed[item]["value"]
     default_status = params.get("default_status", 0)
 
-    search_strings = params.get("search_strings", [])
+    search_strings = params.get("match_strings", [])
     for search_string, status in search_strings:
         if search_string in value:
             return status, "%s: %s matches" % (value, search_string)

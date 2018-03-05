@@ -35,6 +35,19 @@
 class FilterVisitor;
 class Row;
 
+enum class LogicalOperator {
+    and_,
+    or_,
+    stats_and,
+    stats_or,
+    wait_condition_and,
+    wait_condition_or
+};
+
+LogicalOperator dual(LogicalOperator op);
+
+std::ostream &operator<<(std::ostream &os, const LogicalOperator &op);
+
 class Filter {
 public:
     virtual ~Filter();

@@ -36,6 +36,7 @@
 #include <unordered_set>
 #include <vector>
 #include "AndingFilter.h"
+#include "Filter.h"
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
 #include "Row.h"
@@ -45,7 +46,6 @@
 #include "data_encoding.h"
 class Aggregator;
 class Column;
-class Filter;
 class Logger;
 class OutputBuffer;
 class Table;
@@ -78,8 +78,6 @@ public:
     const std::unordered_set<std::shared_ptr<Column>> &allColumns() const {
         return _all_columns;
     }
-
-    enum class LogicalOperator { and_, or_ };
 
 private:
     const Encoding _data_encoding;
@@ -115,13 +113,9 @@ private:
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(const std::string &header,
-                        const std::string &negated_header, char *line,
-                        LogicalOperator op, FilterStack &filters);
+    void parseAndOrLine(char *line, LogicalOperator op, FilterStack &filters);
     void parseNegateLine(char *line, FilterStack &filters);
-    void parseStatsAndOrLine(const std::string &header,
-                             const std::string &negated_header, char *line,
-                             LogicalOperator op);
+    void parseStatsAndOrLine(char *line, LogicalOperator op);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);
     void parseColumnHeadersLine(char *line);

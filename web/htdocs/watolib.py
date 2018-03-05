@@ -7086,18 +7086,18 @@ def render_condition_editor(tag_specs, varprefix=""):
     # Show dropdown with "is/isnot/ignore" and beginning
     # of div that is switched visible by is/isnot
     def tag_condition_dropdown(tagtype, deflt, id):
-
         html.open_td()
+        dropdown_id = varprefix + tagtype + "_" + id
         onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % (varprefix, id)
         choices = [("ignore", _("ignore")),
                    ("is",     _("is")),
                    ("isnot",  _("isnot"))]
-        html.dropdown(varprefix + tagtype + "_" + id, choices, deflt=deflt, onchange=onchange)
+        html.dropdown(dropdown_id, choices, deflt=deflt, onchange=onchange)
         html.close_td()
 
         html.open_td(class_="tag_sel")
         if html.form_submitted():
-            div_is_open = html.var(tagtype + "_" + id, "ignore") != "ignore"
+            div_is_open = html.var(dropdown_id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
         html.open_div(id_="%stag_sel_%s" % (varprefix, id), style="display: none;" if not div_is_open else None)

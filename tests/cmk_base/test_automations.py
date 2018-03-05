@@ -2,6 +2,7 @@ import pytest
 import subprocess
 
 from testlib import web, repo_path
+import re
 import ast
 
 
@@ -129,7 +130,7 @@ def test_registered_automations(site):
 #   '----------------------------------------------------------------------'
 
 def _execute_automation(site, cmd, args=None, stdin=None,
-                        expect_stdout=None, expect_stderr="", expect_exit_code=0,
+                        expect_stdout=None, expect_stderr="", expect_stderr_pattern="", expect_exit_code=0,
                         parse_data=True):
     if args is None:
         args = []
@@ -144,7 +145,12 @@ def _execute_automation(site, cmd, args=None, stdin=None,
     stdout, stderr = p.communicate(stdin)
 
     assert p.wait() == expect_exit_code, "Output: %r, Error: %r" % (stdout, stderr)
-    assert stderr == expect_stderr
+
+    if expect_stderr_pattern:
+        assert re.match(expect_stderr_pattern, stderr) is not None
+    else:
+        assert stderr == expect_stderr
+
     if expect_stdout != None:
         assert stdout == expect_stdout
 
@@ -237,7 +243,9 @@ def test_automation_analyse_service_no_check(test_cfg, site):
 def test_automation_try_discovery_not_existing_host(test_cfg, site):
     data = _execute_automation(site, "try-inventory",
         args=["xxx-not-existing-host"],
-        expect_stderr="Failed to lookup IPv4 address of xxx-not-existing-host via DNS: [Errno -2] Name or service not known\n",
+        expect_stderr_pattern="Failed to lookup IPv4 address of xxx-not-existing-host " \
+                              "via DNS: (\[Errno -2\] Name or service not known"
+                              "|\[Errno -3\] Temporary failure in name resolution)\n",
         expect_stdout="",
         expect_exit_code=2,
         parse_data=False,

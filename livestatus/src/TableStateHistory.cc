@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStateHistory.h"
+#include <algorithm>
 #include <ctime>
-#include <deque>
 #include <memory>
 #include <mutex>
 #include <ostream>
@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include "AndingFilter.h"
 #include "Column.h"
 #include "ColumnFilter.h"
 #include "Filter.h"
@@ -50,7 +51,6 @@
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-class AndingFilter;
 class OringFilter;
 
 #ifdef CMC
@@ -285,16 +285,18 @@ private:
 void TableStateHistory::answerQuery(Query *query) {
     // Create a partial filter, that contains only such filters that check
     // attributes of current hosts and services
-    std::deque<Filter *> object_filter;
+    std::vector<std::unique_ptr<Filter>> subfilters;
     if (core()->stateHistoryFilteringEnabled()) {
         for (const auto &filter : *query->filter()) {
             IsObjectFilter is_obj;
             filter->accept(is_obj);
             if (is_obj._value) {
-                object_filter.push_back(filter.get());
+                subfilters.push_back(filter->copy());
             }
         }
     }
+    std::reverse(subfilters.begin(), subfilters.end());
+    AndingFilter object_filter(LogicalOperator::and_, std::move(subfilters));
 
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
     if (!_log_cache->logCachePreChecks()) {
@@ -465,16 +467,9 @@ void TableStateHistory::answerQuery(Query *query) {
                     // filtered out.  Note: we currently do not filter out hosts
                     // since they might be needed for service states
                     if (!entry->_svc_desc.empty()) {
-                        bool filtered_out = false;
-                        for (auto filter : object_filter) {
-                            if (!filter->accepts(Row(state), query->authUser(),
-                                                 query->timezoneOffset())) {
-                                filtered_out = true;
-                                break;
-                            }
-                        }
-
-                        if (filtered_out) {
+                        if (!object_filter.accepts(Row(state),
+                                                   query->authUser(),
+                                                   query->timezoneOffset())) {
                             object_blacklist.insert(key);
                             delete state;
                             continue;

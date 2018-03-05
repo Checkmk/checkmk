@@ -766,6 +766,14 @@ SOCKET WinApi::socket(int af, int type, int protocol) const {
     return ::socket(af, type, protocol);
 }
 
+INT WinApi::WSAAddressToString(LPSOCKADDR lpsaAddress, DWORD dwAddressLength,
+                               LPWSAPROTOCOL_INFO lpProtocolInfo,
+                               LPSTR lpszAddressString,
+                               LPDWORD lpdwAddressStringLength) const {
+    return ::WSAAddressToStringA(lpsaAddress, dwAddressLength, lpProtocolInfo,
+                                 lpszAddressString, lpdwAddressStringLength);
+}
+
 int WinApi::WSACleanup(void) const { return ::WSACleanup(); }
 
 int WinApi::WSAGetLastError(void) const { return ::WSAGetLastError(); }

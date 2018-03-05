@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <winnt.h>
 #include <winsvc.h>
+#include <ws2ipdef.h>
 #include <ws2spi.h>
 #include <cstdarg>
 #include <cstddef>
@@ -48,6 +49,7 @@
 #undef SetEnvironmentVariable
 #undef StartServiceCtrlDispatcher
 #undef SymFromAddr
+#undef WSAAddressToString
 #undef ZeroMemory
 
 class WinApiAdaptor {
@@ -406,6 +408,11 @@ public:
     virtual int setsockopt(SOCKET s, int level, int optname, const char *optval,
                            int optlen) const = 0;
     virtual SOCKET socket(int af, int type, int protocol) const = 0;
+    virtual INT WSAAddressToString(LPSOCKADDR lpsaAddress,
+                                   DWORD dwAddressLength,
+                                   LPWSAPROTOCOL_INFO lpProtocolInfo,
+                                   LPSTR lpszAddressString,
+                                   LPDWORD lpdwAddressStringLength) const = 0;
     virtual int WSACleanup(void) const = 0;
     virtual int WSAGetLastError(void) const = 0;
     virtual int WSAStartup(WORD wVersionRequested,

@@ -371,6 +371,10 @@ public:
     virtual int setsockopt(SOCKET s, int level, int optname, const char *optval,
                            int optlen) const override;
     virtual SOCKET socket(int af, int type, int protocol) const override;
+    virtual INT WSAAddressToString(
+        LPSOCKADDR lpsaAddress, DWORD dwAddressLength,
+        LPWSAPROTOCOL_INFO lpProtocolInfo, LPSTR lpszAddressString,
+        LPDWORD lpdwAddressStringLength) const override;
     virtual int WSACleanup(void) const override;
     virtual int WSAGetLastError(void) const override;
     virtual int WSAStartup(WORD wVersionRequested,

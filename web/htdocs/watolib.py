@@ -1701,8 +1701,9 @@ class CREFolder(BaseFolder):
         for subfolder in self._subfolders.values():
             subfolder.drop_caches()
 
-        for host in self._hosts.values():
-            host.drop_caches()
+        if self._hosts is not None:
+            for host in self._hosts.values():
+                host.drop_caches()
 
 
     # .-----------------------------------------------------------------------.

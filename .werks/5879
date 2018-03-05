@@ -1,0 +1,13 @@
+Title: Dashboard: View dashlets were not applying row limits
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1520241957
+
+The row limits of the views were not applied in the dashlets. This could result
+in long load times caused by very large views. The view dashlets are now limited
+exactly like when viewing the dedicated views.

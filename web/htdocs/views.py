@@ -1965,12 +1965,16 @@ def check_limit(rows, limit):
     count = len(rows)
     if limit != None and count >= limit + 1:
         text = _("Your query produced more than %d results. ") % limit
+
         if html.var("limit", "soft") == "soft" and config.user.may("general.ignore_soft_limit"):
-            text += '<a href="%s">%s</a>' % \
-                         (html.makeuri([("limit", "hard")]), _('Repeat query and allow more results.'))
+            text += html.render_a(_('Repeat query and allow more results.'),
+                                  target="_self",
+                                  href=html.makeuri([("limit", "hard")]))
         elif html.var("limit") == "hard" and config.user.may("general.ignore_hard_limit"):
-            text += '<a href="%s">%s</a>' % \
-                         (html.makeuri([("limit", "none")]), _('Repeat query without limit.'))
+            text += html.render_a(_('Repeat query without limit.'),
+                                  target="_self",
+                                  href=html.makeuri([("limit", "none")]))
+
         text += " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
         html.show_warning(text)
         del rows[limit:]

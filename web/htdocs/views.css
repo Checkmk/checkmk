@@ -32,6 +32,12 @@ body.main.dashlet {
     padding: 0px;
 }
 
+body.main.dashlet div.warning {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: 0;
+}
+
 /*-------------------------------------------------------------------------.
 |  _____     _            ___      ___        _   _                        |
 | |_   _|_ _| |__  ___   ( _ )    / _ \ _ __ | |_(_) ___  _ __  ___        |

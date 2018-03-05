@@ -1,0 +1,10 @@
+Title: Dashboards: Fixed broken links in views provider columns
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cme
+Version: 1.4.0p27
+Date: 1520248062
+Class: fix
+
+The links were opening wrong pages when clicking on it.

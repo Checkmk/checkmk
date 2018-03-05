@@ -7,4 +7,5 @@ Version: 1.5.0i4
 Date: 1520251998
 Class: fix
 
-
+The customized agent tag group was handled as internal tag group. For this reason
+the user could not "uncustomize" it.

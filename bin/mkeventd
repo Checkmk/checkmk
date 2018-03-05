@@ -5043,9 +5043,8 @@ lock_logging = ECLock("history")
 
 g_terminate_main_event = threading.Event()
 
-if __name__ == "__main__":
-    # TODO(sp) Move all the stuff below in to a function so we don't have to
-    # pollute the global namspace like hell.
+
+def main():
     os.unsetenv("LANG")
 
     settings = cmk.ec.settings.settings(cmk.__version__,
@@ -5079,6 +5078,7 @@ if __name__ == "__main__":
         settings.paths.status_file.value.parent.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
+        global g_perfcounters, g_event_status, g_status_server, g_event_server
         g_perfcounters = Perfcounters()
         g_event_status = EventStatus(settings)
         g_status_server = StatusServer(settings)
@@ -5156,3 +5156,7 @@ if __name__ == "__main__":
                 pid_path.unlink()
             except OSError:
                 pass
+
+
+if __name__ == "__main__":
+    main()

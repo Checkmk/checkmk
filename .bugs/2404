@@ -1,8 +1,0 @@
-Title: Trying to remove rule-based downtime from host/service view gives no hint that this won't work
-Component: multisite
-State: open
-Date: 2015-12-15 09:43:09
-Targetversion: future
-Class: nastiness
-
-When one clicks on the half-moon on a host in downtime and then clicks on the hammer icon and then "Remove", the dialog will ask for confirmation deleting downtimes even when those have been scheduled via configuration. Clicking "Yes" prompts "Successfully sent 2 commands.". It would be nicer if the UI would immediately make it visible that rule-based downtimes aren't going to be removed this way.

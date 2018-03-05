@@ -1,9 +1,0 @@
-Title: Dashboards: Make a copy of a dashlet
-Component: multisite
-State: open
-Date: 2015-10-29 08:49:42
-Targetversion: future
-Class: feature
-
-Avoiding hundred of clicks it would be nice to be able to make a copy of an existing dashlet, e.g.
-performance graphs.

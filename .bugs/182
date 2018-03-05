@@ -1,9 +1,0 @@
-Title: extend oracle monitoring documentation to handle the windows plugin
-Component: docu
-State: open
-Date: 2011-03-17 14:26:18
-Class: feature
-
-Es gibt nun auch ein Agent Plugin für Oracle auf Windows. Das produziert die gleichen Ausgaben,
-wie das Agent Plugin für Linux. Das sollte in der Oracle Monitoring Doku erwähnt werden und die
-Installation noch kurz gesondert behandelt werden.

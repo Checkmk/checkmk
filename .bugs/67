@@ -1,7 +1,0 @@
-Title: Neue Tabelle mit escalations
-Component: livestatus
-State: open
-Date: 2010-12-21 22:27:55
-Class: feature
-
-Eigene Tabelle, angereichert um hosts, services und contacts

@@ -1,8 +1,0 @@
-Title: Action limit similar to query limit
-Component: multisite
-State: open
-Date: 2011-02-16 11:17:57
-Class: feature
-
-Similar to soft_query_limit could we implement a limit on
-the maximum number of Nagios commands performed at once.

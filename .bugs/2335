@@ -1,9 +1,0 @@
-Title: Trailing backslash in Quicksearch creates nasty exception
-Component: multisite
-State: open
-Date: 2015-06-01 16:28:34
-Targetversion: future
-Class: nastiness
-
-Try e.g. searching for FOO\. This will show a nasty exception that
-garbles the layout of the quicksearch snapin.

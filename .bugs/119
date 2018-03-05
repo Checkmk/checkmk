@@ -1,8 +1,0 @@
-Title: Support host name containing spaces
-Component: multisite
-State: open
-Date: 2011-01-31 09:21:15
-Class: feature
-
-It's reported that host names containing spaces do not work.
-We do not know in which aspect they do not work. Need to try.

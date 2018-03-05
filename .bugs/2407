@@ -1,9 +1,0 @@
-Title: Windows Agent: When overwriting a file (esp. state files) use an intermediate file to prevent data loss
-Component: checks
-State: open
-Date: 2016-05-04 09:08:21
-Targetversion: 1.2.9
-Class: nastiness
-
-Currently, while the agent writes to file, that file is in an inconsistent state and should the agent be killed or crashes in just that moment, or if the data being written is broken/incomplete, we have data loss.
-Instead, we should write to an intermediate file first and only after a successful write, exchange the two filesmoving the old file away, moving the new file in and only then delete the old file.

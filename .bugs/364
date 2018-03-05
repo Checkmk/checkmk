@@ -1,9 +1,0 @@
-Title: Make links targets controllable via URL parameter
-Component: multisite
-State: open
-Date: 2011-09-07 17:13:09
-Class: feature
-
-We could add URL parameters that control the target-tag in links,
-such that either internal, external or both links can be directed
-to certain frames (e.g. external links to _parent).

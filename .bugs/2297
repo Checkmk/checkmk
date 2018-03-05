@@ -1,8 +1,0 @@
-Title: Harmonize Export Functions
-Component: multisite
-State: open
-Date: 2015-03-20 12:58:26
-Targetversion: future
-Class: cleanup
-
-The csv-Export Feature can be reached with a small icon on the lower left of a view. In contrast, there is the PDF Export feature, which is a button oat the top.This could be unified (same location of buttons). Also, when a csv or pdf export is not available, these buttons should not be available. 

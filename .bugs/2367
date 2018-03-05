@@ -1,8 +1,0 @@
-Title: sort by perfometers in multisite
-Component: multisite
-State: open
-Date: 2015-09-11 17:12:30
-Targetversion: future
-Class: phantasm
-
-In multisite if you use quick search to get a type of service and you want to sort by the perfometer values

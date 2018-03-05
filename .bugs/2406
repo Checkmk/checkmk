@@ -1,8 +1,0 @@
-Title: If var_dir is configured incorrectly, logging in notify helper (or other check_mk tools) doesn't work
-Component: core
-State: open
-Date: 2016-04-07 13:45:58
-Targetversion: future
-Class: nastiness
-
-Currently, if var_dir is invalid for any reason (which will actually happen if no defaults file is specified on the command line) then check_mk can't log any problems, including the fact that it's configuration is invalid. A fallback mechanism should be established to reliably report problems under all circumstances.

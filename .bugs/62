@@ -1,9 +1,0 @@
-Title: SNMP-Checks: konstante Daten cachen
-Component: core
-State: open
-Date: 2010-12-21 22:21:29
-Class: feature
-
-Idee: Bei SNMP-Checks gibt es manchmal Daten, die sich dynamisch nicht ändern
-(z.B. Interfacenamen, etc.). Man könnte diese Daten cachen, so dass sie
-nicht jedes mal geholt werden, sondern z.B. nur alle 10 Minuten.

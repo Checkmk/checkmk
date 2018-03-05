@@ -1,9 +1,0 @@
-Title: Global WATO search in WATO snapin
-Component: wato
-State: open
-Date: 2016-04-06 17:09:08
-Targetversion: future
-Class: todo
-
-There you should be able to search hosts, folders, global settings,
-rule sets and other stuff from WATO.

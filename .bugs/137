@@ -1,8 +1,0 @@
-Title: HREF target customizable for bookmarks and custom links
-Component: multisite
-State: open
-Date: 2011-02-15 15:11:36
-Class: feature
-
-We could have bookmarks and custom links make the target customizable
-Currently it's "main". It could also be "blank" or ?

@@ -1,9 +1,0 @@
-Title: Multisite Audit: Log Multisite commands into core history
-Component: multisite
-State: open
-Date: 2015-06-29 09:36:48
-Targetversion: future
-Class: feature
-
-If the commands are logged into the monitoring log it is easier to access them from the
-global logfile view.

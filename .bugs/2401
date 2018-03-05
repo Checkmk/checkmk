@@ -1,8 +1,0 @@
-Title: Manpage for check_mk binary
-Component: docu
-State: open
-Date: 2015-11-06 13:27:20
-Targetversion: future
-Class: todo
-
-There should be a manpage for the check_mk binary, preferrably generated from the usage output so that only one document has to be kept up-to-date

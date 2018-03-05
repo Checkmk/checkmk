@@ -1,8 +1,0 @@
-Title: Link vom Detail-Host zum Summary-Host
-Component: multisite
-State: open
-Date: 2010-12-21 20:43:21
-Class: feature
-
-Umgekehrt ist der Link doch auch schon da. Evtl. muss man dafür ein
-Host-Tag einbauen, dass analog zu REALHOST funktioniert. 

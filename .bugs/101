@@ -1,9 +1,0 @@
-Title: Filter for IP addresses
-Component: multisite
-State: open
-Date: 2011-01-24 14:36:10
-Class: feature
-
-The hosts view has not yet a filter for an IP address.
-Add one and make it per default visible in the all hosts
-view.

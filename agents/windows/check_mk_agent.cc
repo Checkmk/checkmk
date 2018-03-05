@@ -632,24 +632,14 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                                 sockaddr_size = sizeof(sockaddr_in);
                                 memcpy(&current_address, &temp, sockaddr_size);
                             } else {
-                                // FIXME: for reasons I don't understand, the
-                                // v6-address we get from getpeername has all
-                                // words flipped. why? is this safe or will it
-                                // break on some systems?
-                                for (int i = 0; i < 16; i += 2) {
-                                    BYTE temp = addrv6->sin6_addr.u.Byte[i];
-                                    addrv6->sin6_addr.u.Byte[i] =
-                                        addrv6->sin6_addr.u.Byte[i + 1];
-                                    addrv6->sin6_addr.u.Byte[i + 1] = temp;
-                                }
-
                                 addrv6->sin6_port =
                                     s_winapi.htons(*s_config->realtime_port);
                                 sockaddr_size = sizeof(sockaddr_in6);
                             }
                         }
-                        current_ip = ListenSocket::readableIP(current_address);
-
+                        current_ip =
+                            IPAddrToString(current_address, logger, s_winapi);
+                        Debug(logger) << "current_ip = " << current_ip;
                         current_socket.reset(
                             s_winapi.socket(current_address.ss_family,
                                             SOCK_DGRAM, IPPROTO_UDP));
@@ -750,7 +740,8 @@ void do_adhoc(const Environment &env) {
                 out->writeBinary(RT_PROTOCOL_VERSION, 2);
             }
 
-            std::string ip_hr = sock.readableIP(connection.get());
+            const sockaddr_storage addr = sock.address(connection.get());
+            std::string ip_hr = IPAddrToString(addr, logger, s_winapi);
             Debug(logger) << "Accepted client connection from " << ip_hr << ".";
             {  // limit lifetime of mutex lock
                 lock_guard<mutex>(thread_data.mutex);

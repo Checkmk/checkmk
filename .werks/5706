@@ -1,0 +1,22 @@
+Title: Windows agent: fix endianness of IP addresses
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i4
+Date: 1520326089
+Class: fix
+
+The string conversion of IP addresses was falsely done manually in
+network byte order, resulting in incorrect ouput for IPv6 addresses.
+Now the conversion is done correctly.
+
+This fix will shortly break the compatibility of logwatch state files
+stored by the mk_logwatch plugin of previous versions of the Windows
+agent as they use the remote IP address(es) of the monitoring host(s).
+When upgrading to the new agent, those log entries that are created
+exactly after stopping the old agent but before starting the new agent
+will be lost in monitoring. After starting the new agent, monitoring
+should work as before.
+
+

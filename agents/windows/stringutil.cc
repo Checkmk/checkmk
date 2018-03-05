@@ -1,10 +1,13 @@
 #include "stringutil.h"
+#include <ws2tcpip.h>
 #include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <optional>
+#include "Logger.h"
 #include "WinApiAdaptor.h"
+#include "win_error.h"
 
 #ifdef _WIN32
 #endif
@@ -245,4 +248,132 @@ void netmaskFromPrefixIPv4(int bits, uint32_t &netmask) {
     t[2] = s[1];
     t[1] = s[2];
     t[0] = s[3];
+}
+
+std::string IPAddrToString(const sockaddr_storage &addr, Logger *logger,
+                           const WinApiAdaptor &winapi) {
+    std::vector<char> buffer(INET6_ADDRSTRLEN);
+    unsigned short family = addr.ss_family;
+    sockaddr const *inputAddr = nullptr;
+    DWORD length = 0;
+
+    switch (family) {
+        case AF_INET: {
+            const auto &s = reinterpret_cast<const sockaddr_in &>(addr);
+            inputAddr = reinterpret_cast<sockaddr const *>(&s);
+            length = sizeof(sockaddr_in);
+            break;
+        }
+        case AF_INET6: {
+            const auto &s = reinterpret_cast<const sockaddr_in6 &>(addr);
+            inputAddr = reinterpret_cast<sockaddr const *>(&s);
+            length = sizeof(sockaddr_in6);
+            break;
+        }
+    }
+
+    DWORD size = buffer.size();
+    if (winapi.WSAAddressToString(const_cast<sockaddr *>(inputAddr), length,
+                                  nullptr, buffer.data(),
+                                  &size) == SOCKET_ERROR) {
+        int errorId = winapi.WSAGetLastError();
+        Error(logger) << "Cannot convert IPv" << (family == AF_INET ? "4" : "6")
+                      << " address to string: "
+                      << get_win_error_as_string(winapi, errorId) << " ("
+                      << errorId << ")";
+    }
+
+    return extractIPAddress(buffer.data());
+}
+
+namespace {
+
+using OptionalString = std::optional<std::string>;
+using MatchFunc = std::function<OptionalString(const std::string &)>;
+
+const std::string ipv4seg{"[[:digit:]]{1,3}"};
+const std::string ipv4startSeg{"[1-9][[:digit:]]{0,2}"};
+const std::string ipv4addr{"(" + ipv4startSeg + "(\\." + ipv4seg + "){3})"};
+const std::string ipv6seg{"[0-9a-fA-F]{1,4}"};
+const std::string port{"[[:digit:]]+"};
+const std::regex ipv4{"^" + ipv4addr + "(:" + port + ")?$"};
+
+OptionalString matchIPv4(const std::string &inputAddr) {
+    std::smatch match;
+
+    if (std::regex_match(inputAddr, match, ipv4) && match.size() >= 2) {
+        return std::optional(match[1].str());
+    }
+
+    return std::nullopt;
+}
+
+OptionalString matchIPv6Mapped(const std::string &inputAddr) {
+    const std::string ipv6addrMapped{"::(ffff(:0)?:)?(" + ipv4addr + ")"};
+    const std::regex ipv6mapped{
+        "^\\[?" + ipv6addrMapped + "(\\]:" + port + ")?$"};
+    std::smatch match;
+
+    if (std::regex_match(inputAddr, match, ipv6mapped) && match.size() >= 2) {
+        std::smatch subMatch;
+        for (const auto &m : match) {
+            const auto subString{m.str()};
+            if (std::regex_match(subString, subMatch, ipv4)) {
+                return std::optional(subMatch.str());
+            }
+        }
+    }
+
+    return std::nullopt;
+}
+
+OptionalString matchIPv6(const std::string &inputAddr) {
+    const std::string ipv6addr{"("
+            + ipv6seg + "(:" + ipv6seg + "){7}"
+            + "|(" + ipv6seg + ":){1,7}:"
+            + "|(" + ipv6seg + ":){1,6}:" + ipv6seg
+            + "|(" + ipv6seg + ":){1,5}(:" + ipv6seg + "){1,2}"
+            + "|(" + ipv6seg + ":){1,4}(:" + ipv6seg + "){1,3}"
+            + "|(" + ipv6seg + ":){1,3}(:" + ipv6seg + "){1,4}"
+            + "|(" + ipv6seg + ":){1,2}(:" + ipv6seg + "){1,5}"
+            + "|" + ipv6seg + ":(:" + ipv6seg + "){1,6}"
+            + "|:(:" + ipv6seg + "){1,7}"
+            + "|::"
+            + ")"};
+    const std::regex ipv6{"^\\[?" + ipv6addr + "(\\]:" + port + ")?$"};
+    std::smatch match;
+
+    if (std::regex_match(inputAddr, match, ipv6) && match.size() >= 2) {
+        return std::optional(match[1].str());
+    }
+
+    return std::nullopt;
+}
+
+OptionalString matchIPv6Embedded(const std::string &inputAddr) {
+    const std::string ipv6addrEmbedded{std::string{"("}
+            + "(" + ipv6seg  + ":){1,4}:" + ipv4addr
+            + ")"};
+    const std::regex ipv6embedded{
+        "^\\[?" + ipv6addrEmbedded + "(\\]:" + port + ")?$"};
+    std::smatch match;
+
+    if (std::regex_match(inputAddr, match, ipv6embedded) && match.size() >= 2) {
+        return std::optional(match[1].str());
+    }
+
+    return std::nullopt;
+}
+
+} // namespace
+
+std::string extractIPAddress(const std::string &inputAddr) {
+    for (const MatchFunc &func : {
+            matchIPv4, matchIPv6Mapped, matchIPv6, matchIPv6Embedded}) {
+        if (const auto match = func(inputAddr)) {
+            return match.value();
+        }
+    }
+
+    return inputAddr;  // no match, return original input
 }

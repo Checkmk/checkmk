@@ -180,31 +180,6 @@ sockaddr_storage ListenSocket::address(SOCKET connection) const {
     return addr;
 }
 
-std::string ListenSocket::readableIP(SOCKET connection) const {
-    return readableIP(address(connection));
-}
-
-std::string ListenSocket::readableIP(const sockaddr_storage &addr) {
-    switch (addr.ss_family) {
-        case AF_INET: {
-            const auto &s = reinterpret_cast<const sockaddr_in &>(addr);
-            auto const *ip = reinterpret_cast<u_char const *>(&s.sin_addr);
-            std::array<unsigned short, 4> uints;
-            std::transform(ip, ip + 4, uints.begin(), [](u_char u) {
-                return static_cast<unsigned short>(u);
-            });
-            return join(uints.cbegin(), uints.cend(), ".");
-        }
-        case AF_INET6: {
-            const auto &s = reinterpret_cast<const sockaddr_in6 &>(addr);
-            uint16_t const *ip = s.sin6_addr.u.Word;
-            return join(ip, ip + 8, ":", std::ios::hex);
-        }
-        default:
-            return "None";
-    }
-}
-
 SocketHandle ListenSocket::acceptConnection() const {
     // Loop forever.
     fd_set fds;

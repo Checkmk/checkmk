@@ -403,6 +403,11 @@ public:
     MOCK_CONST_METHOD5(setsockopt, int(SOCKET s, int level, int optname,
                                        const char *optval, int optlen));
     MOCK_CONST_METHOD3(socket, SOCKET(int af, int type, int protocol));
+    MOCK_CONST_METHOD5(WSAAddressToString,
+                       INT(LPSOCKADDR lpsaAddress, DWORD dwAddressLength,
+                           LPWSAPROTOCOL_INFO lpProtocolInfo,
+                           LPSTR lpszAddressString,
+                           LPDWORD lpdwAddressStringLength));
     MOCK_CONST_METHOD0(WSACleanup, int(void));
     MOCK_CONST_METHOD0(WSAGetLastError, int(void));
     MOCK_CONST_METHOD2(WSAStartup,

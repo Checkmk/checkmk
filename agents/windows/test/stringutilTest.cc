@@ -219,3 +219,195 @@ TEST(wa_stringutilTest, ci_equal__unequal) {
     const std::string s2{"aSdFgH"};
     ASSERT_FALSE(ci_equal(s1, s2));
 }
+
+TEST(wa_stringutilTest, extractIPAddress_IPv4_with_port) {
+    const std::string input{"10.1.2.3:456"};
+    const std::string expected{"10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv4_without_port) {
+    const std::string input{"10.1.2.3"};
+    const std::string expected{"10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6mapped_with_port_1) {
+    const std::string input{"[::10.1.2.3]:456"};
+    const std::string expected{"10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6mapped_without_port_1) {
+    const std::string input{"::10.1.2.3"};
+    const std::string expected{"10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6mapped_with_port_2) {
+    const std::string input{"[::ffff:10.1.2.3]:456"};
+    const std::string expected{"10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6mapped_without_port_2) {
+    const std::string input{"::ffff:10.1.2.3"};
+    const std::string expected{"10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6mapped_with_port_3) {
+    const std::string input{"[::ffff:0:10.1.2.3]:456"};
+    const std::string expected{"10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6mapped_without_port_3) {
+    const std::string input{"::ffff:0:10.1.2.3"};
+    const std::string expected{"10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_all_segments_with_port) {
+    const std::string input{"[ab:cd:ef:12:34:56:78:90]:12"};
+    const std::string expected{"ab:cd:ef:12:34:56:78:90"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_all_segments_without_port) {
+    const std::string input{"ab:cd:ef:12:34:56:78:90"};
+    const std::string expected{"ab:cd:ef:12:34:56:78:90"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_7_segments_with_port_1) {
+    const std::string input{"[ab:cd:ef:12:34:56:78::]:12"};
+    const std::string expected{"ab:cd:ef:12:34:56:78::"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_7_segments_without_port_1) {
+    const std::string input{"ab:cd:ef:12:34:56:78::"};
+    const std::string expected{"ab:cd:ef:12:34:56:78::"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_7_segments_with_port_2) {
+    const std::string input{"[ab:cd:ef:12:34:56::78]:12"};
+    const std::string expected{"ab:cd:ef:12:34:56::78"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_7_segments_without_port_2) {
+    const std::string input{"ab:cd:ef:12:34:56::78"};
+    const std::string expected{"ab:cd:ef:12:34:56::78"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_7_segments_with_port_3) {
+    const std::string input{"[ab::ef:12:34:56:78:90]:12"};
+    const std::string expected{"ab::ef:12:34:56:78:90"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_7_segments_without_port_3) {
+    const std::string input{"ab::ef:12:34:56:78:90"};
+    const std::string expected{"ab::ef:12:34:56:78:90"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_3_segments_with_port) {
+    const std::string input{"[ab:cd::90]:12"};
+    const std::string expected{"ab:cd::90"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_3_segments_without_port) {
+    const std::string input{"ab:cd::90"};
+    const std::string expected{"ab:cd::90"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_one_segment_start_with_port) {
+    const std::string input{"[ab::]:12"};
+    const std::string expected{"ab::"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_one_segment_start_without_port) {
+    const std::string input{"ab::"};
+    const std::string expected{"ab::"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_one_segment_end_with_port) {
+    const std::string input{"[::90]:12"};
+    const std::string expected{"::90"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_one_segment_end_without_port) {
+    const std::string input{"::90"};
+    const std::string expected{"::90"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_no_segments_with_port) {
+    const std::string input{"[::]:12"};
+    const std::string expected{"::"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6_no_segments_without_port) {
+    const std::string input{"::"};
+    const std::string expected{"::"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6embedded_4_segments_with_port) {
+    const std::string input{"[ab:cd:ef:12::10.1.2.3]:456"};
+    const std::string expected{"ab:cd:ef:12::10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6embedded_4_segments_without_port) {
+    const std::string input{"ab:cd:ef:12::10.1.2.3"};
+    const std::string expected{"ab:cd:ef:12::10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6embedded_3_segments_with_port) {
+    const std::string input{"[ab:cd:ef::10.1.2.3]:456"};
+    const std::string expected{"ab:cd:ef::10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6embedded_3_segments_without_port) {
+    const std::string input{"ab:cd:ef::10.1.2.3"};
+    const std::string expected{"ab:cd:ef::10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6embedded_2_segments_with_port) {
+    const std::string input{"[ab:cd::10.1.2.3]:456"};
+    const std::string expected{"ab:cd::10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6embedded_2_segments_without_port) {
+    const std::string input{"ab:cd::10.1.2.3"};
+    const std::string expected{"ab:cd::10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6embedded_1_segment_with_port) {
+    const std::string input{"[ab::10.1.2.3]:456"};
+    const std::string expected{"ab::10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}
+
+TEST(wa_stringutilTest, extractIPAddress_IPv6embedded_1_segment_without_port) {
+    const std::string input{"ab::10.1.2.3"};
+    const std::string expected{"ab::10.1.2.3"};
+    ASSERT_EQ(expected, extractIPAddress(input));
+}

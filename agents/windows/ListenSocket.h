@@ -54,9 +54,6 @@ public:
 
     sockaddr_storage address(SOCKET connection) const;
 
-    std::string readableIP(SOCKET connection) const;
-    static std::string readableIP(const sockaddr_storage &address);
-
 private:
     SOCKET init_listen_socket(int port);
     bool check_only_from(const SOCKADDR &ip) const;

@@ -39,7 +39,9 @@ using std::regex_match;
 using std::smatch;
 using std::sregex_token_iterator;
 
+class Logger;
 class WinApiAdaptor;
+struct sockaddr_storage;
 
 inline void ltrim(std::string &s) {
     s.erase(s.begin(), std::find_if(s.cbegin(), s.cend(),
@@ -198,6 +200,31 @@ inline bool isPathRelative(const std::string &path) {
                            return !regex_search(path, match, re);
                        });
 }
+
+/**
+ * Convert a valid IP address to a textual representation, omitting
+ * possible port indication bound to socket address. Both IPv4 and IPv6
+ * addresses are supported. For IPv4-mapped IPv6 addresses the corresponding
+ * IPv4 address is returned.
+ *
+ * @param[in] addr    The IP address to be converted
+ * @param[in] logger  Pointer to a logger instance
+ * @param[in] winapi  Reference to WinAPI instance
+ * @return            The string representation of the IP address
+ */
+std::string IPAddrToString(const sockaddr_storage &addr, Logger *logger,
+                           const WinApiAdaptor &winapi);
+
+/**
+ * Extract the actual IP address out of a string representation possibly
+ * containing also the port. Supports both IPv4 and IPv6 addresses. For
+ * IPv4-mapped IPv6 addresses the corresponding IPv4 address is extracted.
+ *
+ * @param[in] inputAddr    The textual representation of an IP address, possibly
+ *                         containing also the port number
+ * @return                 The extracted IP address as a string
+ */
+std::string extractIPAddress(const std::string &inputAddr);
 
 // to_string and to_wstring supplied in C++11 but not before
 #if _cplusplus < 201103L

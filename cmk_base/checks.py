@@ -106,6 +106,8 @@ def load_checks(filelist):
     # Initialize some data structures which are populated while loading the checks
     _check_variables.clear()
 
+    cmk_global_vars = set(config.get_variable_names())
+
     loaded_files = set()
     check_variable_defaults = {}
     ignored_variable_types = [ type(lambda: None), type(os) ]
@@ -164,6 +166,11 @@ def load_checks(filelist):
         # Save check variables for e.g. after config loading that the config can
         # be added to the check contexts
         for varname, value in new_check_vars.items():
+            # Do not allow checks to override Check_MK builtin global variables. Silently
+            # skip them here. The variables will only be locally available to the checks.
+            if varname in cmk_global_vars:
+                continue
+
             if varname[0] != '_' and type(value) not in ignored_variable_types:
                 check_variable_defaults[varname] = value
 

@@ -1,0 +1,15 @@
+Title: Protect against checks overriding Check_MK internal config variables
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520260398
+Class: fix
+
+When a check declares a Check_MK internal configuration variable in it's global
+namespace, for example "service_descriptions", it was overrding Check_MK internal
+configuration variables with this statement in previous Check_MK versions.
+
+Check_MK now prevents the checks from overriding already known configuration
+variables.

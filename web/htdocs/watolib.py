@@ -6152,6 +6152,16 @@ def configured_aux_tags():
 
 
 def is_builtin_host_tag_group(tag_group_id):
+    # Special handling for the agent tag group. It was a tag group created with
+    # the sample WATO configuration until version 1.5x. This means users could've
+    # customized the group. In case we find such a customization we treat it as
+    # not builtin tag group.
+    if tag_group_id == "agent":
+        for tag_group in config.wato_host_tags:
+            if tag_group[0] == tag_group_id:
+                return False
+        return True
+
     for tag_group in builtin_host_tags:
         if tag_group[0] == tag_group_id:
             return True

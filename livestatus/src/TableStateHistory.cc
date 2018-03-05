@@ -40,7 +40,6 @@
 #include "HostServiceState.h"
 #include "LogEntry.h"
 #include "Logger.h"
-#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
@@ -286,13 +285,11 @@ void TableStateHistory::answerQuery(Query *query) {
     // Create a partial filter, that contains only such filters that check
     // attributes of current hosts and services
     std::vector<std::unique_ptr<Filter>> subfilters;
-    if (core()->stateHistoryFilteringEnabled()) {
-        for (const auto &filter : *query->filter()) {
-            IsObjectFilter is_obj;
-            filter->accept(is_obj);
-            if (is_obj._value) {
-                subfilters.push_back(filter->copy());
-            }
+    for (const auto &filter : *query->filter()) {
+        IsObjectFilter is_obj;
+        filter->accept(is_obj);
+        if (is_obj._value) {
+            subfilters.push_back(filter->copy());
         }
     }
     std::reverse(subfilters.begin(), subfilters.end());

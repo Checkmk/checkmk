@@ -7972,6 +7972,7 @@ def vs_notification_rule(userid = None):
         validate = validate_notification_rule,
     )
 
+
 def simple_host_rule_match_conditions():
     return [
         ( "match_site",
@@ -7979,7 +7980,7 @@ def simple_host_rule_match_conditions():
               title = _("Match site"),
               help = _("This condition makes the rule match only notifications that have been "
                        "created on the selected sites."),
-              choices = config.site_choices,
+              choices = config.site_attribute_choices,
           ),
         ),
         ( "match_folder",

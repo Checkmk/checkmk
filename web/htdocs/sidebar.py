@@ -695,7 +695,8 @@ def search_open():
     url = generate_search_results(q)
     html.http_redirect(url)
 
-
+class TooManyRowsError(MKException):
+    pass
 
 class LivestatusSearchBase(object):
     def _build_url(self, url_params, restore_regex = False):
@@ -987,13 +988,20 @@ class LivestatusQuicksearch(LivestatusSearchBase):
 
 
     def generate_dropdown_results(self):
-        self._query_data()
+        try:
+            self._query_data()
+        except TooManyRowsError, e:
+            html.show_warning(e)
+
         self._evaluate_results()
         self._render_dropdown_elements()
 
 
     def generate_search_url(self):
-        self._query_data()
+        try:
+            self._query_data()
+        except TooManyRowsError:
+            pass
 
         # Generate a search page for the topmost search_object with results
         url_params = []
@@ -1047,7 +1055,6 @@ class LivestatusQuicksearch(LivestatusSearchBase):
 
     # Collect the raw data from livestatus
     def _conduct_search(self):
-        too_much_rows = False
         total_rows = 0
         for idx, search_object in enumerate(self._search_objects):
             search_object.do_query()
@@ -1055,12 +1062,10 @@ class LivestatusQuicksearch(LivestatusSearchBase):
 
             if total_rows > config.quicksearch_dropdown_limit:
                 search_object.remove_rows_from_end(total_rows - config.quicksearch_dropdown_limit)
-                too_much_rows = True
-                break
+                raise TooManyRowsError(_("More than %d results") % config.quicksearch_dropdown_limit)
 
             if search_object.row_limit_exceeded():
-                too_much_rows = True
-                break
+                raise TooManyRowsError(_("More than %d results") % config.quicksearch_dropdown_limit)
 
             if search_object.num_rows() > 0 and search_object.get_filter_behaviour() != "continue":
                 if search_object.get_filter_behaviour() == "finished_distinct":
@@ -1068,9 +1073,6 @@ class LivestatusQuicksearch(LivestatusSearchBase):
                     for i in range(idx-1, -1, -1):
                         self._search_objects[i].remove_rows_from_end(config.quicksearch_dropdown_limit)
                 break
-
-        if too_much_rows:
-            html.show_warning(_("More than %d results") % config.quicksearch_dropdown_limit)
 
 
     # Generates elements out of the raw data

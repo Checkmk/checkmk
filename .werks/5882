@@ -1,0 +1,13 @@
+Title: Agent bakery host selection was showing wrong settings after saving
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p27
+Date: 1520249710
+Class: fix
+
+On the configuration page of the Automatic agent updates, there is a condition
+configuration. When saving new conditions, for example host tag conditions, these
+conditions were not shown correctly on the page right after saving. When browsing
+away and opening the page again, the correct settings were shown.

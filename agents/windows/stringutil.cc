@@ -302,10 +302,10 @@ OptionalString matchBase(const std::string &input, const std::regex &reg) {
     std::smatch match;
 
     if (std::regex_match(input, match, reg) && match.size() >= 2) {
-        return std::optional(match[1].str());
+        return {match[1].str()};
     }
 
-    return std::nullopt;
+    return {};
 }
 
 OptionalString matchIPv4(const std::string &inputAddr) {
@@ -328,7 +328,7 @@ OptionalString matchIPv6Mapped(const std::string &inputAddr) {
         }
     }
 
-    return std::nullopt;
+    return {};
 }
 
 OptionalString matchIPv6(const std::string &inputAddr) {

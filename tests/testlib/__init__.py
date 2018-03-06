@@ -354,7 +354,9 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            with lockfile.FileLock("/tmp/cmk-test-create-site.lock"):
+            print("Getting site create lock (/tmp/cmk-test-create-site.lock)...")
+            with lockfile.FileLock("/tmp/cmk-test-create-site"):
+                print("Have site create lock")
                 p = subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
                                       "-V", self.version.version_directory(),
                                       "create",

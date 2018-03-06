@@ -298,14 +298,18 @@ const std::string ipv6seg{"[0-9a-fA-F]{1,4}"};
 const std::string port{"[[:digit:]]+"};
 const std::regex ipv4{"^" + ipv4addr + "(:" + port + ")?$"};
 
-OptionalString matchIPv4(const std::string &inputAddr) {
+OptionalString matchBase(const std::string &input, const std::regex &reg) {
     std::smatch match;
 
-    if (std::regex_match(inputAddr, match, ipv4) && match.size() >= 2) {
+    if (std::regex_match(input, match, reg) && match.size() >= 2) {
         return std::optional(match[1].str());
     }
 
     return std::nullopt;
+}
+
+OptionalString matchIPv4(const std::string &inputAddr) {
+    return matchBase(inputAddr, ipv4);
 }
 
 OptionalString matchIPv6Mapped(const std::string &inputAddr) {
@@ -318,8 +322,8 @@ OptionalString matchIPv6Mapped(const std::string &inputAddr) {
         std::smatch subMatch;
         for (const auto &m : match) {
             const auto subString{m.str()};
-            if (std::regex_match(subString, subMatch, ipv4)) {
-                return std::optional(subMatch.str());
+            if (const auto subMatch = matchBase(subString, ipv4)) {
+                return subMatch;
             }
         }
     }
@@ -341,13 +345,8 @@ OptionalString matchIPv6(const std::string &inputAddr) {
             + "|::"
             + ")"};
     const std::regex ipv6{"^\\[?" + ipv6addr + "(\\]:" + port + ")?$"};
-    std::smatch match;
 
-    if (std::regex_match(inputAddr, match, ipv6) && match.size() >= 2) {
-        return std::optional(match[1].str());
-    }
-
-    return std::nullopt;
+    return matchBase(inputAddr, ipv6);
 }
 
 OptionalString matchIPv6Embedded(const std::string &inputAddr) {
@@ -356,13 +355,8 @@ OptionalString matchIPv6Embedded(const std::string &inputAddr) {
             + ")"};
     const std::regex ipv6embedded{
         "^\\[?" + ipv6addrEmbedded + "(\\]:" + port + ")?$"};
-    std::smatch match;
 
-    if (std::regex_match(inputAddr, match, ipv6embedded) && match.size() >= 2) {
-        return std::optional(match[1].str());
-    }
-
-    return std::nullopt;
+    return matchBase(inputAddr, ipv6embedded);
 }
 
 } // namespace

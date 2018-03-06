@@ -543,7 +543,7 @@ def mode_folder(phase):
         folder.show_breadcrump()
 
         if not folder.may("read"):
-            html.message(HTML('<img class=authicon src="images/icon_autherr.png"> %s' % html.attrencode(folder.reason_why_may_not("read"))))
+            html.message(html.render_icon("autherr", cssclass="authicon") + folder.reason_why_may_not("read"))
 
         folder.show_locking_information()
         show_subfolders_of(folder)

@@ -2451,10 +2451,10 @@ if mkeventd_enabled:
          "slave. It allows a manual switch between sync and takeover mode."),
          ["admin"])
 
-    modules.append(
-      ( "mkeventd_rule_packs",  _("Event Console"), "mkeventd", "mkeventd.edit",
+    register_modules(
+      WatoModule( "mkeventd_rule_packs",  _("Event Console"), "mkeventd", "mkeventd.edit",
       _("Manage event classification and correlation rules for the "
-        "Event Console")))
+        "Event Console"), 68))
 
 
 #.

@@ -24,10 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-modules.append(
-  ( "background_jobs_overview",  _("Background Jobs"), "background_jobs", "background_jobs.manage_jobs",
-  _("Manage background jobs")))
-
+register_modules(WatoModule(
+    mode_or_url="background_jobs_overview",
+    title=_("Background Jobs"),
+    icon="background_jobs",
+    permission="background_jobs.manage_jobs",
+    description=_("Manage longer running tasks in the Check_MK GUI"),
+    sort_index=90,
+))
 
 class ModeBackgroundJobsOverview(WatoMode):
     def __init__(self):

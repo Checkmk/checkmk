@@ -48,15 +48,16 @@ def render_wato(mini):
         html.icon_button("wato.py", _("Main Menu"), "home", target="main")
     else:
         iconlink(_("Main Menu"), "wato.py", "home")
-    for mode, title, icon, permission, help in wato.modules:
-        if permission and "." not in permission:
-            permission = "wato." + permission
-        if not permission or config.user.may(permission) or config.user.may("wato.seeall"):
-            url = "wato.py?mode=%s" % mode
-            if mini:
-                html.icon_button(url, title, icon, target="main", ty="icon")
-            else:
-                iconlink(title, url, icon)
+
+    for module in wato.get_modules():
+        if not module.may_see():
+            continue
+
+        url = module.get_url()
+        if mini:
+            html.icon_button(url, module.title, module.icon, target="main", ty="icon")
+        else:
+            iconlink(module.title, url, module.icon)
 
     num_pending = watolib.get_number_of_pending_changes()
     if num_pending:

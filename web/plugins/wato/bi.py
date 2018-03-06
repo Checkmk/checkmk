@@ -1372,14 +1372,14 @@ class ModeBIRules(ModeBI):
         self.must_be_contact_for_pack()
         if not self._pack["aggregations"] and not self._pack["rules"]:
             menu = MainMenu()
-            menu.add_item(
+            menu.add_item(MenuItem(
                 mode_or_url = self.url_to_pack([("mode", "bi_edit_rule")]),
                 title = _("Create aggregation rule"),
                 icon = "new",
                 permission = "bi_rules",
-                subtitle = _("Rules are the nodes in BI aggregations. "
+                description = _("Rules are the nodes in BI aggregations. "
                              "Each aggregation has one rule as its root."),
-            )
+            ))
             menu.show()
             return
 
@@ -2103,6 +2103,11 @@ config.declare_permission("wato.bi_admin",
     _("Business Intelligence Administration"),
     _("Edit all rules and aggregations for Business Intelligence, create, modify and delete rule packs."),
      [ "admin" ])
+
+
+register_modules(WatoModule("bi_packs", _("Business Intelligence"), "aggr", "bi_rules",
+      _("Configuration of Check_MK's Business Intelligence component."), 70))
+
 
 modes.update({
     "bi_packs"           : (["bi_rules"], ModeBIPacks),

@@ -2042,7 +2042,7 @@ class CREFolder(BaseFolder):
         if html.var("debug") == "1":
             add_vars.append(("debug", "1"))
         url_vars += add_vars
-        return html.makeuri_contextless(url_vars)
+        return html.makeuri_contextless(url_vars, filename="wato.py")
 
 
     def edit_url(self, backfolder=None):
@@ -2600,7 +2600,7 @@ class SearchFolder(BaseFolder):
             if varname.startswith("host_search_") \
                 or varname.startswith("_change"):
                 url_vars.append((varname, value))
-        return self.parent().url(url_vars)
+        return self.parent().url(url_vars, filename="wato.py")
 
 
 

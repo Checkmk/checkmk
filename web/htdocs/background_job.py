@@ -311,6 +311,10 @@ class BackgroundJob(object):
         return self._job_id
 
 
+    def get_title(self):
+        return self._jobstatus.get_status().get("title", _("Background job"))
+
+
     def get_work_dir(self):
         return self._work_dir
 

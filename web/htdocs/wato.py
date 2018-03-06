@@ -1591,7 +1591,7 @@ def mode_bulk_rename_host(phase):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         host_renaming_job = RenameHostsBackgroundJob()
         if host_renaming_job.is_available():
-            html.context_button(_("Previous results"), html.makeuri([
+            html.context_button(_("Last result"), html.makeuri([
                 ("mode", "background_job_details"),
                 ("job_id", host_renaming_job.get_job_id()),
                 ("back_url", html.makeuri([])),
@@ -1858,7 +1858,7 @@ def mode_rename_host(phase):
 
         host_renaming_job = RenameHostsBackgroundJob()
         if host_renaming_job.is_available():
-            html.context_button(_("Previous results"), html.makeuri([
+            html.context_button(_("Last result"), html.makeuri([
                 ("mode", "background_job_details"),
                 ("job_id", host_renaming_job.get_job_id()),
                 ("back_url", html.makeuri([])),

@@ -1,0 +1,10 @@
+Title: cisco_mem, cisco_mem_asa, cisco_mem_asa64: No longer crash when total memory is reported as 0.
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1520339353
+Class: fix
+
+The state in case of 0 total memory is still UNKNOWN, but the error message is more helpful.

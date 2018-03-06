@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <string>
 #include "contact_fwd.h"
 class FilterVisitor;
@@ -54,7 +55,7 @@ public:
     virtual void accept(FilterVisitor &) const = 0;
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
-    virtual const std::string *stringValueRestrictionFor(
+    virtual std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
     virtual void findIntLimits(const std::string &column_name, int *lower,
                                int *upper,

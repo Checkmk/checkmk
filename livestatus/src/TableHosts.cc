@@ -24,6 +24,7 @@
 
 #include "TableHosts.h"
 #include <memory>
+#include <optional>
 #include <ostream>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
@@ -644,7 +645,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
 void TableHosts::answerQuery(Query *query) {
     // do we know the host group?
-    if (const std::string *value = query->stringValueRestrictionFor("groups")) {
+    if (auto value = query->stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
         if (hostgroup *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {

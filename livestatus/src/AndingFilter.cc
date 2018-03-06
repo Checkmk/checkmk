@@ -43,14 +43,14 @@ bool AndingFilter::accepts(Row row, const contact *auth_user,
     return true;
 }
 
-const std::string *AndingFilter::stringValueRestrictionFor(
+std::optional<std::string> AndingFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
     for (const auto &filter : _subfilters) {
         if (auto value = filter->stringValueRestrictionFor(column_name)) {
-            return value;
+            return {value};
         }
     }
-    return nullptr;
+    return {};
 }
 
 void AndingFilter::findIntLimits(const std::string &colum_nname, int *lower,

@@ -32,6 +32,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -68,7 +69,7 @@ public:
     const contact *authUser() const { return _auth_user; }
     std::chrono::seconds timezoneOffset() const { return _timezone_offset; }
 
-    const std::string *stringValueRestrictionFor(
+    std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
     void findIntLimits(const std::string &column_name, int *lower,
                        int *upper) const;

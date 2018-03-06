@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include "ColumnFilter.h"
@@ -45,7 +46,7 @@ public:
                const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
-    const std::string *stringValueRestrictionFor(
+    std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;

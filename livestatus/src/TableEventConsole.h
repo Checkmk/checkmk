@@ -59,17 +59,15 @@ public:
     };
 
 protected:
-    // TODO(sp) Use std::optional<std::string> here.
-    static bool getRaw(Row row, const Column &column, std::string &result) {
+    static std::string getRaw(Row row, const Column &column,
+                              const std::string &default_value) {
         if (auto r = column.columnData<ECRow>(row)) {
             auto it = r->_map.find(column.name());
-            if (it == r->_map.end()) {
-                return false;
+            if (it != r->_map.end()) {
+                return it->second;
             }
-            result = it->second;
-            return true;
         }
-        return false;
+        return default_value;
     }
 
     struct StringEventConsoleColumn : public StringColumn {
@@ -78,8 +76,7 @@ protected:
             : StringColumn(name, description, -1, -1, -1, 0) {}
 
         std::string getValue(Row row) const override {
-            std::string result;
-            return getRaw(row, *this, result) ? result : "";
+            return getRaw(row, *this, "");
         }
     };
 
@@ -90,10 +87,7 @@ protected:
 
         int32_t getValue(Row row,
                          const contact * /* auth_user */) const override {
-            std::string result;
-            return getRaw(row, *this, result)
-                       ? static_cast<int32_t>(atol(result.c_str()))
-                       : 0;
+            return static_cast<int32_t>(atol(getRaw(row, *this, "0").c_str()));
         }
     };
 
@@ -103,8 +97,7 @@ protected:
             : DoubleColumn(name, description, -1, -1, -1, 0) {}
 
         double getValue(Row row) const override {
-            std::string result;
-            return getRaw(row, *this, result) ? atof(result.c_str()) : 0;
+            return atof(getRaw(row, *this, "0").c_str());
         }
     };
 
@@ -116,11 +109,9 @@ protected:
     private:
         std::chrono::system_clock::time_point getRawValue(
             Row row) const override {
-            std::string result;
             return std::chrono::system_clock::from_time_t(
-                getRaw(row, *this, result)
-                    ? static_cast<std::time_t>(atof(result.c_str()))
-                    : 0);
+                static_cast<std::time_t>(
+                    atof(getRaw(row, *this, "0").c_str())));
         }
     };
 
@@ -132,17 +123,13 @@ protected:
         std::vector<std::string> getValue(
             Row row, const contact * /*auth_user*/,
             std::chrono::seconds /*timezone_offset*/) const override {
-            std::string result;
-            return getRaw(row, *this, result) && !result.empty() &&
-                           result != "\002"
-                       ? mk::split(result.substr(1), '\001')
-                       : std::vector<std::string>();
+            auto result = getRaw(row, *this, "");
+            return result.empty() || result == "\002"
+                       ? std::vector<std::string>()
+                       : mk::split(result.substr(1), '\001');
         }
 
-        bool isNone(Row row) const {
-            std::string result;
-            return getRaw(row, *this, result) && result == "\002";
-        }
+        bool isNone(Row row) const { return getRaw(row, *this, "") == "\002"; }
     };
 
     bool isAuthorizedForEvent(Row row, const contact *ctc) const;

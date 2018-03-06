@@ -1,0 +1,119 @@
+Title: site_object_counts: New check which collects information about the amount of different host types or used check commands of OMD sites
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520331000
+Class: feature
+
+To make this check work please install the {{mk_site_object_counts}}
+agent plugin and specify host tags or check commands within the
+{{site_object_counts.cfg}} configration file. The following options
+are available:
+<table>
+<tr><td>{TAGS}</td><td>global host tags</td></tr>
+<tr><td>{SERVICE_CHECK_COMMANDS}</td><td>global check commands</td></tr>
+<tr><td>{SITES}</td><td>restriction to specified sites</td></tr>
+<tr><td>{TAGS_$SITENAME}</td><td>site specific host tags</td></tr>
+<tr><td>{SERVICE_CHECK_COMMANDS_$SITENAME}</td><td>site specific check commands</td></tr>
+</table>
+
+The agent plugin is executed if and only if OMD is installed and there's
+a configuration file. Sites which provide an opened Livestatus socket
+{/omd/sites/$SITENAME/tmp/run/live} are taken into account.
+
+Without the restrictive option {SITES} all sites on that server are
+considered which satisfy above conditions.
+
+If more than one value is assigned they have to be separated by one space, eg.
+<ul>
+<li>{TAGS=prod snmp}</li>
+<li>{SERVICE_CHECK_COMMANDS_sitename=kernel lnx_if}</li>
+<ul>
+
+
+H3:Example 1
+
+F+:site_object_counts.cfg
+TAGS=snmp
+SERVICE_CHECK_COMMANDS=if
+F-:
+
+With this configuration the agent plugin returns the amount of all SNMP hosts
+and the amount of all interface services of the type {if} of all sites.
+
+
+H3:Example 2
+
+F+:site_object_counts.cfg
+SITES=site_a site_b
+TAGS=snmp
+SERVICE_CHECK_COMMANDS=if
+F-:
+
+With this configuration the agent plugin returns the amount of all SNMP hosts
+and the amount of all interface services of the type {if} of the sites
+{site_a} and {site_b}.
+
+
+H3:Example 3
+
+F+:site_object_counts.cfg
+TAGS_site_a=snmp
+SERVICE_CHECK_COMMANDS_site_a=if
+TAGS_site_b=agent
+SERVICE_CHECK_COMMANDS_site_b=lnx_if
+F-:
+
+With this configuration the agent plugin returns
+<ul>
+<li>the amount of all SNMP hosts and the amount of all interface services
+of the type {if} of the site {site_a} and</li>
+<li>the amount of all agent-based hosts and the amount of all Linux interface
+services of the type {lnx_if} of the site {site_b}.</li>
+</ul>
+
+
+H3:Example 4
+
+F+:site_object_counts.cfg
+TAGS=prod
+SERVICE_CHECK_COMMANDS=omd_apache omd_status
+TAGS_site_a=snmp
+SERVICE_CHECK_COMMANDS_site_a=if
+TAGS_site_b=agent
+SERVICE_CHECK_COMMANDS_site_b=lnx_if
+F-:
+
+With this configuration the agent plugin returns
+<ul>
+<li>the amount of all productive hosts and services of type {omd_apache} and
+{omd_status} of all sites.</li>
+<li>additionaly the amount of all SNMP hosts and the amount of all interface
+services of the type {if} of the site {site_a} and</li>
+<li>additionaly the amount of all agent-based hosts and the amount of all
+Linux interface services of the type {lnx_if} of the site {site_b}.</li>
+</ul>
+
+H3:Example 5
+
+F+:site_object_counts.cfg
+SITES=site_a site_b site_c
+TAGS=prod
+SERVICE_CHECK_COMMANDS=omd_apache omd_status
+TAGS_site_a=snmp
+SERVICE_CHECK_COMMANDS_site_a=if
+TAGS_site_b=agent
+SERVICE_CHECK_COMMANDS_site_b=lnx_if
+F-:
+
+With this configuration the agent plugin returns
+<ul>
+<li>the amount of all productive hosts and services of type {omd_apache} and
+{omd_status} of the sites {site_a}, {site_b} and {site_c}.</li>
+<li>additionaly the amount of all SNMP hosts and the amount of all interface
+services of the type {if} of the site {site_a} and</li>
+<li>additionaly the amount of all agent-based hosts and the amount of all
+Linux interface services of the type {lnx_if} of the site {site_b}.</li>
+</ul>

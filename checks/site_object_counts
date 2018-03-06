@@ -1,0 +1,101 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# <<<site_object_counts:sep(124)>>>
+# [[[heute]]]
+# Tags|snmp;prod|1;1
+# Check commands|kernel;mem.linux|4;1
+# [[[ostable]]]
+# Tags|snmp;prod|1;1
+# Check commands|kernel;mem.linux|4;1
+# {u'heute': {u'Check commands': {u'kernel': 4, u'mem.linux': 1},
+#             u'Tags': {u'prod': 1, u'snmp': 1}},
+#  u'stable': {}}
+
+
+def parse_site_object_counts(info):
+    parsed = {}
+    site_objects = None
+    for line in info:
+        line0 = line[1]
+        if line0.startswith("[[[") and line0.endswith("]]]"):
+            site = line0[3:-3]
+            site_objects = parsed.setdefault("%s/%s" % (site, line[0]), {})
+            continue
+
+        _, type_, header, data = line
+        if site_objects is not None and data:
+            site_objects.setdefault(type_, dict(zip(header.split(),
+                                           map(int, data.split(";")))))
+    return parsed
+
+
+def inventory_site_object_counts(parsed):
+    if parsed:
+        return [(None, {})]
+
+
+def check_site_object_counts(item, params, parsed):
+    if not parsed:
+        return
+
+    summary = {}
+    details = []
+    for site, data in parsed.iteritems():
+        site_infos = []
+        for type_, type_data in data.iteritems():
+            summary_of_type = summary.setdefault(type_, {})
+            data_info = []
+            for k,v in type_data.iteritems():
+                summary_of_type.setdefault(k, 0)
+                summary_of_type[k] += v
+                data_info.append("%s %s" % (v, k))
+            site_infos.append("%s: %s" % (type_.title(), ", ".join(data_info)))
+        details.append("[%s] %s" % (site, ", ".join(site_infos)))
+
+    infotexts = []
+    perfdata = []
+    for type_, data in summary.iteritems():
+        type_infos = []
+        for k,v in data.iteritems():
+            perfdata.append((("%s %s" % (type_, k)).lower()\
+                                                   .replace(" ", "_")\
+                                                   .replace(".", "_"), v))
+            type_infos.append("%s %s" % (v, k))
+        infotexts.append("%s: %s" % (type_.title(), ", ".join(type_infos)))
+
+    return 0, "[Summary] %s\n%s" % (", ".join(infotexts), "\n".join(details)), perfdata
+
+
+check_info['site_object_counts'] = {
+    'parse_function'        : parse_site_object_counts,
+    'inventory_function'    : inventory_site_object_counts,
+    'check_function'        : check_site_object_counts,
+    'service_description'   : 'OMD objects', # Leave 'OMD' to be consistent (OMD %s apache,...)
+    'has_perfdata'          : True,
+    'node_info'             : True,
+}

@@ -43,6 +43,10 @@ import cmk_base.check_api as check_api
 # TODO: Cleanup access to check_info[] -> replace it by different function calls
 # like for example check_exists(...)
 
+# BE AWARE: sync these global data structures with
+#           _initialize_data_structures()
+# TODO: Refactor this.
+
 _check_contexts                     = {} # The checks are loaded into this dictionary. Each check
                                          # has a separate sub-dictionary, named by the check name.
                                          # It is populated with the includes and the check itself.
@@ -64,6 +68,8 @@ special_agent_info                 = {}
 # (if available) read from the config and applied to the checks module after
 # reading in the configuration of the user.
 _check_variables                    = {}
+# keeps the default values of all the check variables
+_check_variable_defaults            = {}
 
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
@@ -86,8 +92,27 @@ service_rule_groups = set([
 
 # Load all checks and includes
 def load():
+    _initialize_data_structures()
     filelist = get_plugin_paths(cmk.paths.local_checks_dir, cmk.paths.checks_dir)
     load_checks(filelist)
+
+
+def _initialize_data_structures():
+    """Initialize some data structures which are populated while loading the checks"""
+    _check_variables.clear()
+    _check_variable_defaults.clear()
+
+    _check_contexts.clear()
+    check_info.clear()
+    check_includes.clear()
+    precompile_params.clear()
+    check_default_levels.clear()
+    factory_settings.clear()
+    del check_config_variables[:]
+    snmp_info.clear()
+    snmp_scan_functions.clear()
+    active_check_info.clear()
+    special_agent_info.clear()
 
 
 def get_plugin_paths(*dirs):
@@ -103,14 +128,9 @@ def get_plugin_paths(*dirs):
 # If a check or check.include is both found in local/ and in the
 # normal structure, then only the file in local/ must be read!
 def load_checks(filelist):
-    # Initialize some data structures which are populated while loading the checks
-    config.clear_check_variable_names(_check_variables.keys())
-    _check_variables.clear()
-
     cmk_global_vars = set(config.get_variable_names())
 
     loaded_files = set()
-    check_variable_defaults = {}
     ignored_variable_types = [ type(lambda: None), type(os) ]
     for f in filelist:
         if f[0] == "." or f[-1] == "~":
@@ -161,8 +181,9 @@ def load_checks(filelist):
                 default_levels_varname = check_info[check_plugin_name].get("default_levels_variable")
 
             if default_levels_varname:
-                new_check_vars[default_levels_varname] = \
-                    factory_settings.get(default_levels_varname, {})
+                # Add the initial configuration to the check context to have a consistent state
+                check_context[default_levels_varname] = factory_settings.get(default_levels_varname, {})
+                new_check_vars[default_levels_varname] = check_context[default_levels_varname]
 
         # Save check variables for e.g. after config loading that the config can
         # be added to the check contexts
@@ -173,13 +194,11 @@ def load_checks(filelist):
                 continue
 
             if varname[0] != '_' and type(value) not in ignored_variable_types:
-                check_variable_defaults[varname] = value
+                _check_variable_defaults[varname] = value
 
                 # Keep track of which variable needs to be set to which context
                 context_ident_list = _check_variables.setdefault(varname, [])
                 context_ident_list += new_checks
-
-    config.add_check_variables(check_variable_defaults)
 
     # Now convert check_info to new format.
     convert_check_info()
@@ -298,18 +317,35 @@ def check_variable_names():
     return _check_variables.keys()
 
 
-# Some variables are accessed from the generic Check_MK code. E.g. during
-# constructing the parameters of a check before executing the check function,
-# or during loading of the configuration and the autochecks.
-# Some variables are accessed by the discovery function during discovery.
-# So store the variables in the global context of this module and the checks
-# context.
-# TODO: This could eventually be cleaned up when compute_check_parameters()
-#       would use the checks context.
-def set_check_variable(varname, value):
-    globals()[varname] = value
-    for context_ident in _check_variables[varname]:
-        _check_contexts[context_ident][varname] = value
+def get_check_variable_defaults():
+    """Returns the check variable default settings. These are the settings right
+    after loading the checks."""
+    return _check_variable_defaults
+
+
+def set_check_variables(check_variables):
+    """Update the check related config variables in the relevant check contexts"""
+    for varname, value in check_variables.items():
+        for context_ident in _check_variables[varname]:
+            _check_contexts[context_ident][varname] = value
+
+
+def get_check_variables():
+    """Returns the currently effective check variable settings
+
+    Since the variables are only stored in the individual check contexts and not stored
+    in a central place, this function needs to collect the values from the check contexts.
+    We assume a single variable has the same value in all relevant contexts, which means
+    that it is enough to get the variable from the first context."""
+    check_config = {}
+    for varname, context_ident_list in _check_variables.items():
+        check_config[varname] = _check_contexts[context_ident_list[0]][varname]
+    return check_config
+
+
+def get_check_context(check_plugin_name):
+    """Returns the context dictionary of the given check plugin"""
+    return _check_contexts[check_plugin_name]
 
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
@@ -535,9 +571,6 @@ def compute_check_parameters(host, checktype, item, params):
 def _update_with_default_check_parameters(checktype, params):
     # Handle dictionary based checks
     def_levels_varname = check_info[checktype].get("default_levels_variable")
-    # TODO: Can we skip this?
-    #if def_levels_varname:
-    #    vars_before_config.add(def_levels_varname)
 
     # Handle case where parameter is None but the type of the
     # default value is a dictionary. This is for example the
@@ -563,8 +596,9 @@ def _update_with_default_check_parameters(checktype, params):
             new_params = {}
 
         # Merge user's default settings onto it
-        if def_levels_varname and def_levels_varname in globals():
-            def_levels = globals()[def_levels_varname]
+        check_context = _check_contexts[checktype]
+        if def_levels_varname and def_levels_varname in check_context:
+            def_levels = check_context[def_levels_varname]
             if type(def_levels) == dict:
                 new_params.update(def_levels)
 

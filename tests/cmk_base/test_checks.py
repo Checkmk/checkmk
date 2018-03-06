@@ -7,7 +7,7 @@ import cmk_base.checks as checks
 import cmk_base.discovery as discovery
 
 def test_load_checks():
-    reload(checks)
+    checks._initialize_data_structures()
     assert checks.check_info == {}
     checks.load()
     assert len(checks.check_info) > 1000
@@ -110,7 +110,7 @@ check_info["test_check_1"] = {
     checks.load_checks(["%s/%s" % (site.root, test_check_path)])
 
     # Verify that the default variable is in the check context and
-    # not in the global checks module context
+    # not in the global checks module context.
     assert "test_check_1_default_levels" not in checks.__dict__
     assert "test_check_1" in checks._check_contexts
     assert "test_check_1_default_levels" in checks._check_contexts["test_check_1"]
@@ -245,7 +245,9 @@ check_info["test_check_3"] = {
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context
+    assert "test_check_3_default_levels" not in checks.__dict__
     assert "test_check_3" in checks._check_contexts
+    assert "test_check_3_default_levels" in checks._check_contexts["test_check_3"]
 
     web.discover_services("modes-test-host")
 

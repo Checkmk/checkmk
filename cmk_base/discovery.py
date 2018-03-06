@@ -1123,8 +1123,10 @@ def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_
 
 # Translates a parameter string (read from autochecks) to it's final value
 # (according to the current configuration)
-def resolve_paramstring(paramstring):
-    return eval(paramstring, checks.__dict__, checks.__dict__)
+def resolve_paramstring(check_plugin_name, paramstring):
+    check_context = checks.get_check_context(check_plugin_name)
+    # TODO: Can't we simply access check_context[paramstring]?
+    return eval(paramstring, check_context, check_context)
 
 
 # Get the list of service of a host or cluster and guess the current state of
@@ -1154,7 +1156,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # apply check_parameters
             try:
                 if type(paramstring) == str:
-                    params = resolve_paramstring(paramstring)
+                    params = resolve_paramstring(check_plugin_name, paramstring)
                 else:
                     params = paramstring
             except Exception:
@@ -1227,7 +1229,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             perfdata = []
 
         if check_source == "active":
-            params = resolve_paramstring(paramstring)
+            params = resolve_paramstring(check_plugin_name, paramstring)
 
         if check_source in [ "legacy", "active", "custom" ]:
             checkgroup = None
@@ -1272,9 +1274,10 @@ def read_autochecks_of(hostname, world="config"):
 
     if not os.path.exists(filepath):
        return []
+
+    check_config = checks.get_check_variables()
     try:
-        autochecks_raw = eval(file(filepath).read(),
-                              checks.__dict__, checks.__dict__)
+        autochecks_raw = eval(file(filepath).read(), check_config, check_config)
     except SyntaxError,e:
         console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
         if cmk.debug.enabled():

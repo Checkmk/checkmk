@@ -314,8 +314,8 @@ OptionalString matchIPv4(const std::string &inputAddr) {
 
 OptionalString matchIPv6Mapped(const std::string &inputAddr) {
     const std::string ipv6addrMapped{"::(ffff(:0)?:)?(" + ipv4addr + ")"};
-    const std::regex ipv6mapped{
-        "^\\[?" + ipv6addrMapped + "(\\]:" + port + ")?$"};
+    const std::regex ipv6mapped{"^\\[?" + ipv6addrMapped + "(\\]:" + port +
+                                ")?$"};
     std::smatch match;
 
     if (std::regex_match(inputAddr, match, ipv6mapped) && match.size() >= 2) {
@@ -332,38 +332,38 @@ OptionalString matchIPv6Mapped(const std::string &inputAddr) {
 }
 
 OptionalString matchIPv6(const std::string &inputAddr) {
-    const std::string ipv6addr{"("
-            + ipv6seg + "(:" + ipv6seg + "){7}"
-            + "|(" + ipv6seg + ":){1,7}:"
-            + "|(" + ipv6seg + ":){1,6}:" + ipv6seg
-            + "|(" + ipv6seg + ":){1,5}(:" + ipv6seg + "){1,2}"
-            + "|(" + ipv6seg + ":){1,4}(:" + ipv6seg + "){1,3}"
-            + "|(" + ipv6seg + ":){1,3}(:" + ipv6seg + "){1,4}"
-            + "|(" + ipv6seg + ":){1,2}(:" + ipv6seg + "){1,5}"
-            + "|" + ipv6seg + ":(:" + ipv6seg + "){1,6}"
-            + "|:(:" + ipv6seg + "){1,7}"
-            + "|::"
-            + ")"};
+    const std::string ipv6addr{
+        "(" +                                                //
+        ipv6seg + "(:" + ipv6seg + "){7}" +                  //
+        "|(" + ipv6seg + ":){1,7}:" +                        //
+        "|(" + ipv6seg + ":){1,6}:" + ipv6seg +              //
+        "|(" + ipv6seg + ":){1,5}(:" + ipv6seg + "){1,2}" +  //
+        "|(" + ipv6seg + ":){1,4}(:" + ipv6seg + "){1,3}" +  //
+        "|(" + ipv6seg + ":){1,3}(:" + ipv6seg + "){1,4}" +  //
+        "|(" + ipv6seg + ":){1,2}(:" + ipv6seg + "){1,5}" +  //
+        "|" + ipv6seg + ":(:" + ipv6seg + "){1,6}" +         //
+        "|:(:" + ipv6seg + "){1,7}" +                        //
+        "|::" +                                              //
+        ")"};
     const std::regex ipv6{"^\\[?" + ipv6addr + "(\\]:" + port + ")?$"};
 
     return matchBase(inputAddr, ipv6);
 }
 
 OptionalString matchIPv6Embedded(const std::string &inputAddr) {
-    const std::string ipv6addrEmbedded{std::string{"("}
-            + "(" + ipv6seg  + ":){1,4}:" + ipv4addr
-            + ")"};
-    const std::regex ipv6embedded{
-        "^\\[?" + ipv6addrEmbedded + "(\\]:" + port + ")?$"};
+    const std::string ipv6addrEmbedded{std::string{"("} + "(" + ipv6seg +
+                                       ":){1,4}:" + ipv4addr + ")"};
+    const std::regex ipv6embedded{"^\\[?" + ipv6addrEmbedded + "(\\]:" + port +
+                                  ")?$"};
 
     return matchBase(inputAddr, ipv6embedded);
 }
 
-} // namespace
+}  // namespace
 
 std::string extractIPAddress(const std::string &inputAddr) {
-    for (const MatchFunc &func : {
-            matchIPv4, matchIPv6Mapped, matchIPv6, matchIPv6Embedded}) {
+    for (const MatchFunc &func :
+         {matchIPv4, matchIPv6Mapped, matchIPv6, matchIPv6Embedded}) {
         if (const auto match = func(inputAddr)) {
             return match.value();
         }

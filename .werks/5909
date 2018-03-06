@@ -1,0 +1,15 @@
+Title: fortigate_sessions, fortigate_cpu: Fixed duplicated discovery if needed information is at two places
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p27
+Date: 1520356129
+
+Fortigate changed obviously the location of information for cpu utilization
+and sessions in the past. We support these by using two different check
+plugins. With this fix the service discovery does not create duplicated
+services anymore if both paths are present on the device. Instead the newer
+path will be preferred.

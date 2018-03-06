@@ -802,7 +802,7 @@ class WithPermissions(object):
             self.user_needs_permission(user_id, how)
             return False
         except MKAuthException, e:
-            return "%s" % e
+            return HTML("%s" % e)
 
 
 

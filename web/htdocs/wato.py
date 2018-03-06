@@ -629,8 +629,8 @@ class ModeFolder(WatoMode):
         self._folder.show_breadcrump()
 
         if not self._folder.may("read"):
-            html.message(html.render_img("images/icon_autherr.png", class_="authicon")
-                         + " "  + self._folder.reason_why_may_not("read"))
+            html.message(html.render_icon("autherr", cssclass="authicon")
+                         + " " + self._folder.reason_why_may_not("read"))
 
         self._folder.show_locking_information()
         self._show_subfolders_of()

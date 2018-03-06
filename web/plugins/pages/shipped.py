@@ -46,6 +46,7 @@ import werks
 import inventory
 import notifications
 import valuespec
+import gui_background_job
 
 # map URLs to page rendering functions
 register_handlers({

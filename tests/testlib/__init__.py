@@ -203,7 +203,9 @@ class CMKVersion(object):
             time.sleep(1)
 
         # Improve the protection against other test runs installing packages
-        with lockfile.FileLock("/tmp/cmk-test-install-version.lock"):
+        print("Getting install file lock (/tmp/cmk-test-install-version.lock)...")
+        with lockfile.FileLock("/tmp/cmk-test-install-version"):
+            print("Have install file lock")
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % temp_package_path
             print(cmd)
             sys.stdout.flush()
@@ -441,7 +443,10 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            with lockfile.FileLock("/tmp/cmk-test-create-site.lock"):
+            print("Getting site create lock (/tmp/cmk-test-create-site.lock)...")
+            with lockfile.FileLock("/tmp/cmk-test-create-site"):
+                print("Have site create lock")
+
                 print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
                 p = subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
                                       "-V", self.version.version_directory(),

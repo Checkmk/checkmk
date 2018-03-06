@@ -1,0 +1,13 @@
+Title: cisco_mem_asa64: Fix incorrect labelling of graph
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1520330136
+
+Previously, the performance value would be incorrectly displayed
+as absolute usage in the GUI, when it is in fact relative.
+This has been fixed.

@@ -6194,31 +6194,60 @@ class MainMenu(object):
         self._columns = columns
 
 
-    def add_item(self, mode_or_url, title, icon, permission, subtitle):
-        self._items.append((mode_or_url, title, icon, permission, subtitle))
+    def add_item(self, item):
+        self._items.append(item)
 
 
     def show(self):
         html.open_div(class_="mainmenu")
-        for nr, (mode_or_url, title, icon, permission, subtitle) in enumerate(self._items):
-            if permission:
-                if "." not in permission:
-                    permission = "wato." + permission
-                if not config.user.may(permission) and not config.user.may("wato.seeall"):
-                    continue
+        for nr, item in enumerate(self._items):
+            if not item.may_see():
+                continue
 
-            if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
-                url = mode_or_url
-            else:
-                url = watolib.folder_preserving_link([("mode", mode_or_url)])
-
-            html.open_a(href=url, onfocus="if (this.blur) this.blur();")
-            html.icon(title, icon)
-            html.div(title, class_="title")
-            html.div(subtitle, class_="subtitle")
+            html.open_a(href=item.get_url(), onfocus="if (this.blur) this.blur();")
+            html.icon(item.title, item.icon)
+            html.div(item.title, class_="title")
+            html.div(item.description, class_="subtitle")
             html.close_a()
 
         html.close_div()
+
+
+class MenuItem(object):
+    def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20):
+        self.mode_or_url = mode_or_url
+        self.title = title
+        self.icon = icon
+        self.permission = permission
+        self.description = description
+        self.sort_index = sort_index
+
+
+    def may_see(self):
+        """Whether or not the currently logged in user is allowed to see this module"""
+        if self.permission is None:
+            return True
+
+        if "." not in self.permission:
+            permission = "wato." + self.permission
+        else:
+            permission = self.permission
+
+        return config.user.may(permission) or config.user.may("wato.seeall")
+
+
+    def get_url(self):
+        mode_or_url = self.mode_or_url
+        if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
+            return mode_or_url
+        else:
+            return watolib.folder_preserving_link([("mode", mode_or_url)])
+
+
+    def __repr__(self):
+        return "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)" % \
+            (self.__class__.__name__, self.mode_or_url, self.title, self.icon, self.permission, self.description, self.sort_index)
+
 
 #.
 #   .--LDAP Config---------------------------------------------------------.
@@ -7437,10 +7466,12 @@ class ModeGroups(WatoMode):
 
 
     def page(self):
+        if not self._groups:
+            self._page_no_groups()
+            return
+
         sorted_groups = self._groups.items()
         sorted_groups.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
-        if len(sorted_groups) == 0:
-            return self._page_no_groups()
 
         self._collect_additional_data()
 
@@ -7564,6 +7595,18 @@ class ModeHostgroups(ModeGroups):
         return _("Host Groups")
 
 
+    def _page_no_groups(self):
+        menu = MainMenu()
+        menu.add_item(MenuItem(
+            mode_or_url="edit_host_group",
+            title=_("Create new host group"),
+            icon="new",
+            permission="groups",
+            description=_("Host groups are used for visualization and filtering of host"),
+        ))
+        menu.show()
+
+
     def buttons(self):
         super(ModeHostgroups, self).buttons()
         html.context_button(_("Service groups"), watolib.folder_preserving_link([("mode", "service_groups")]), "hostgroups")
@@ -7577,6 +7620,18 @@ class ModeServicegroups(ModeGroups):
 
     def title(self):
         return _("Service Groups")
+
+
+    def _page_no_groups(self):
+        menu = MainMenu()
+        menu.add_item(MenuItem(
+            mode_or_url="edit_service_group",
+            title=_("Create new service group"),
+            icon="new",
+            permission="groups",
+            description=_("Service groups are used for visualization and filtering of services"),
+        ))
+        menu.show()
 
 
     def buttons(self):
@@ -7605,13 +7660,13 @@ class ModeContactgroups(ModeGroups):
 
     def _page_no_groups(self):
         menu = MainMenu()
-        menu.add_item(
+        menu.add_item(MenuItem(
             mode_or_url="edit_contact_group",
             title=_("Create new contact group"),
             icon="new",
             permission="users",
-            subtitle=_("Contact groups are needed for assigning hosts and services to people (contacts)")
-        )
+            description=_("Contact groups are needed for assigning hosts and services to people (contacts)")
+        ))
         menu.show()
 
 
@@ -12760,13 +12815,13 @@ class ModeRuleEditor(WatoMode):
             else:
                 help_text = None
 
-            menu.add_item(
+            menu.add_item(MenuItem(
                 mode_or_url=url,
                 title=rulegroup.title,
                 icon=icon,
                 permission="rulesets",
-                subtitle=help_text
-            )
+                description=help_text
+            ))
         menu.show()
 
 
@@ -15844,12 +15899,13 @@ class ModeCheckPlugins(WatoMode):
         else:
             menu = MainMenu()
             for topic, has_second_level, title, helptext in self._man_page_catalog_topics():
-                menu.add_item(
+                menu.add_item(MenuItem(
                     mode_or_url=html.makeuri([("topic", topic)]),
                     title=title,
                     icon="plugins_" + topic,
                     permission=None,
-                    subtitle=helptext)
+                    description=helptext
+                ))
             menu.show()
 
 
@@ -15950,13 +16006,13 @@ class ModeCheckPlugins(WatoMode):
                 title = self._titles.get(path_comp, path_comp)
                 helptext = self._get_check_plugin_stats(subnode)
 
-                menu.add_item(
+                menu.add_item(MenuItem(
                     mode_or_url=url,
                     title=title,
                     icon="check_plugins",
                     permission=None,
-                    subtitle=helptext,
-                )
+                    description=helptext,
+                ))
             menu.show()
 
         else:
@@ -18343,8 +18399,18 @@ def load_plugins(force):
 
 
 def get_modules():
-    return modules
+    return sorted(modules, key=lambda m: (m.sort_index, m.title))
 
+class WatoModule(MenuItem):
+    pass
+
+
+def register_modules(*args):
+    """Register one or more top level modules to Check_MK WATO.
+    The registered modules are displayed in the navigation of WATO."""
+    for arg in args:
+        assert isinstance(arg, WatoModule)
+    modules.extend(args)
 
 #.
 #   .--External API--------------------------------------------------------.

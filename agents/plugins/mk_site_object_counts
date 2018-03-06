@@ -1,0 +1,138 @@
+#!/bin/bash
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+#   .--queries-------------------------------------------------------------.
+#   |                                        _                             |
+#   |                   __ _ _   _  ___ _ __(_) ___  ___                   |
+#   |                  / _` | | | |/ _ \ '__| |/ _ \/ __|                  |
+#   |                 | (_| | |_| |  __/ |  | |  __/\__ \                  |
+#   |                  \__, |\__,_|\___|_|  |_|\___||___/                  |
+#   |                     |_|                                              |
+#   '----------------------------------------------------------------------'
+
+
+function get_tag_stats () {
+    local socket="$1"
+    local site="$2"
+    local header="$3"
+    local tags=($(echo "$header" | tr ' ' '\n'))
+    if [ -n "$tags" ] && [ -S "$socket" ];
+    then
+        local tags_query="GET hosts\n"
+        for tag in "${tags[@]}";
+        do
+            tags_query="${tags_query}Stats: custom_variables ~ TAGS ${tag}\n"
+        done
+        echo "Tags|$header|$(echo -e "${tags_query}" | \
+                             waitmax 3 /omd/sites/${site}/bin/unixcat ${socket})"
+    fi
+}
+
+
+function get_check_command_stats () {
+    local socket="$1"
+    local site="$2"
+    local header="$3"
+    local service_check_commands=($(echo "$header" | tr ' ' '\n'))
+    if [ -n "$service_check_commands" ] && [ -S "$socket" ];
+    then
+        local service_check_commands_query="GET services\n"
+        for service_check_command in "${service_check_commands[@]}";
+        do
+            service_check_commands_query="${service_check_commands_query}Stats: check_command ~~ ${service_check_command}$\n"
+        done
+        echo "Service check commands|$header|$(echo -e "${service_check_commands_query}" | \
+                                       waitmax 3 /omd/sites/${site}/bin/unixcat ${socket})"
+    fi
+}
+
+
+#.
+#   .--main----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+if [ -e "$MK_CONFDIR/site_object_counts.cfg" ];
+then
+    . $MK_CONFDIR/site_object_counts.cfg
+fi
+
+
+if type omd >/dev/null;
+then
+    echo "<<<site_object_counts:sep(124)>>>"
+    if [ -n "$SITES" ];
+    then
+        sites=($(echo "$SITES" | tr ' ' '\n'))
+    else
+        sites=($(omd sites | cut -d' ' -f1))
+    fi
+
+    if [ -n "$TAGS" ];
+    then
+        tags="$TAGS"
+    fi
+
+    if [ -n "$SERVICE_CHECK_COMMANDS" ];
+    then
+        service_check_commands="$SERVICE_CHECK_COMMANDS"
+    fi
+
+    for site in "${sites[@]}";
+    do
+        site_tags="TAGS_$site"
+        site_tags=${!site_tags}
+        if [ -n "$tags" ] && [ -n "$site_tags" ];
+        then
+            site_tags="$tags $site_tags"
+        elif [ -n "$tags" ];
+        then
+            site_tags="$tags"
+        fi
+
+        site_service_check_commands="SERVICE_CHECK_COMMANDS_$site"
+        site_service_check_commands=${!site_service_check_commands}
+        if [ -n "$service_check_commands" ] && [ -n "$site_service_check_commands" ];
+        then
+            site_service_check_commands="$service_check_commands $site_service_check_commands"
+        elif [ -n "$service_check_commands" ];
+        then
+            site_service_check_commands="$service_check_commands"
+        fi
+
+        socket="/omd/sites/${site}/tmp/run/live"
+
+        echo "[[[$site]]]"
+        get_tag_stats "$socket" "$site" "$site_tags"
+        get_check_command_stats "$socket" "$site" "$site_service_check_commands"
+    done
+fi

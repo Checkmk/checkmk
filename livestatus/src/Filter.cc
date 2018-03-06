@@ -63,9 +63,9 @@ std::ostream &operator<<(std::ostream &os, const LogicalOperator &op) {
 
 Filter::~Filter() = default;
 
-const std::string *Filter::stringValueRestrictionFor(
+std::optional<std::string> Filter::stringValueRestrictionFor(
     const std::string & /* column_name */) const {
-    return nullptr;
+    return {};
 }
 
 void Filter::findIntLimits(const std::string & /* column_name */,

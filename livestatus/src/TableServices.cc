@@ -24,6 +24,7 @@
 
 #include "TableServices.h"
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <utility>
 #include "AttributeListAsIntColumn.h"
@@ -468,8 +469,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
 
 void TableServices::answerQuery(Query *query) {
     // do we know the host?
-    if (const std::string *value =
-            query->stringValueRestrictionFor("host_name")) {
+    if (auto value = query->stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
         // Older Nagios headers are not const-correct... :-P
         if (host *host = find_host(const_cast<char *>(value->c_str()))) {
@@ -484,7 +484,7 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // do we know the service group?
-    if (const std::string *value = query->stringValueRestrictionFor("groups")) {
+    if (auto value = query->stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
         if (servicegroup *sg =
                 find_servicegroup(const_cast<char *>(value->c_str()))) {
@@ -498,8 +498,7 @@ void TableServices::answerQuery(Query *query) {
     }
 
     // do we know the host group?
-    if (const std::string *value =
-            query->stringValueRestrictionFor("host_groups")) {
+    if (auto value = query->stringValueRestrictionFor("host_groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
         if (hostgroup *hg =
                 find_hostgroup(const_cast<char *>(value->c_str()))) {

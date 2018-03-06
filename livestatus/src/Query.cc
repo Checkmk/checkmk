@@ -725,7 +725,7 @@ void Query::finish(QueryRenderer &q) {
     }
 }
 
-const std::string *Query::stringValueRestrictionFor(
+std::optional<std::string> Query::stringValueRestrictionFor(
     const std::string &column_name) const {
     return _filter->stringValueRestrictionFor(column_name);
 }

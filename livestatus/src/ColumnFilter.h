@@ -39,8 +39,6 @@ public:
     std::string columnName() const { return _column.name(); }
     RelationalOperator oper() const { return _relOp; }
     std::string value() const { return _value; }
-    // TODO(sp) Remove this when we use std::optional.
-    const std::string *valuePtr() const { return &_value; }
     void accept(FilterVisitor &v) const override { v.visit(*this); }
 
 private:

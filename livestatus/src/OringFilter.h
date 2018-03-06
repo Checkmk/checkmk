@@ -31,6 +31,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include "Filter.h"
@@ -46,7 +47,7 @@ public:
     void accept(FilterVisitor &v) const override;
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
-    const std::string *stringValueRestrictionFor(
+    std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
     void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
                        std::chrono::seconds timezone_offset) const override;

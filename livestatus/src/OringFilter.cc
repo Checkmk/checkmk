@@ -43,18 +43,18 @@ bool OringFilter::accepts(Row row, const contact *auth_user,
     return false;
 }
 
-const std::string *OringFilter::stringValueRestrictionFor(
+std::optional<std::string> OringFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
-    const std::string *restriction = nullptr;
+    std::optional<std::string> restriction;
     for (const auto &filter : _subfilters) {
         if (auto current = filter->stringValueRestrictionFor(column_name)) {
-            if (restriction == nullptr) {
+            if (!restriction) {
                 restriction = current;  // First restriction? Take it.
-            } else if (*restriction != *current) {
-                return nullptr;  // Different restrictions? Give up.
+            } else if (restriction != current) {
+                return {};  // Different restrictions? Give up.
             }
         } else {
-            return nullptr;  // No restriction for subfilter? Give up.
+            return {};  // No restriction for subfilter? Give up.
         }
     }
     return restriction;

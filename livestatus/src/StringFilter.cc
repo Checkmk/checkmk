@@ -63,11 +63,15 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
     return false;  // unreachable
 }
 
-const std::string *StringFilter::stringValueRestrictionFor(
+std::optional<std::string> StringFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
     switch (oper()) {
         case RelationalOperator::equal:
-            return column_name == columnName() ? valuePtr() : nullptr;
+            if (column_name == columnName()) {
+                return {value()};
+            } else {
+                return {};
+            }
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
@@ -79,9 +83,9 @@ const std::string *StringFilter::stringValueRestrictionFor(
         case RelationalOperator::greater_or_equal:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            return nullptr;
+            return {};
     }
-    return nullptr;  // unreachable
+    return {};  // unreachable
 }
 
 std::unique_ptr<Filter> StringFilter::copy() const {

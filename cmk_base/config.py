@@ -70,12 +70,13 @@ def register(name, default_value):
     setattr(default_config, name, default_value)
 
 
-def add_check_variables(check_variables):
+def _add_check_variables_to_default_config():
     """Add configuration variables registered by checks to config module"""
-    default_config.__dict__.update(check_variables)
+    import cmk_base.checks
+    default_config.__dict__.update(cmk_base.checks.get_check_variable_defaults())
 
 
-def clear_check_variable_names(check_variable_names):
+def _clear_check_variables_from_default_config(check_variable_names):
     """Remove previously registered check variables from the config module"""
     for varname in check_variable_names:
         try:
@@ -93,11 +94,16 @@ def clear_check_variable_names(check_variable_names):
 # And also remove it from the default config (in case it was present)
 def set_check_variables_for_checks():
     import cmk_base.checks
-    global_dict = globals()
-    for varname in cmk_base.checks.check_variable_names():
-        cmk_base.checks.set_check_variable(varname, global_dict.pop(varname))
 
-    clear_check_variable_names(cmk_base.checks.check_variable_names())
+    global_dict = globals()
+    check_variable_names = cmk_base.checks.check_variable_names()
+
+    check_variables = {}
+    for varname in check_variable_names:
+        check_variables[varname] = global_dict.pop(varname)
+
+    cmk_base.checks.set_check_variables(check_variables)
+    _clear_check_variables_from_default_config(check_variable_names)
 
 
 #.
@@ -113,8 +119,8 @@ def set_check_variables_for_checks():
 #   '----------------------------------------------------------------------'
 
 def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
+    _add_check_variables_to_default_config()
     load_default_config()
-    _initialize_default_levels_variables()
 
     vars_before_config = all_nonfunction_vars()
 
@@ -132,14 +138,6 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
 
     verify_non_invalid_variables(vars_before_config)
     verify_snmp_communities_type()
-
-
-# Initialize dictionary-type default levels variables registered by checks
-def _initialize_default_levels_variables():
-    for check in cmk_base.checks.check_info.values():
-        def_var = check.get("default_levels_variable")
-        if def_var:
-            globals()[def_var] = {}
 
 
 def _load_config(with_conf_d, exclude_parents_mk):

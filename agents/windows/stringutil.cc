@@ -319,7 +319,6 @@ OptionalString matchIPv6Mapped(const std::string &inputAddr) {
     std::smatch match;
 
     if (std::regex_match(inputAddr, match, ipv6mapped) && match.size() >= 2) {
-        std::smatch subMatch;
         for (const auto &m : match) {
             const auto subString{m.str()};
             if (const auto subMatch = matchBase(subString, ipv4)) {

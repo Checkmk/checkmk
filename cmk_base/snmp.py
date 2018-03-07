@@ -595,7 +595,7 @@ def _save_snmpwalk_cache(hostname, fetchoid, rowinfo):
 
 
 def _snmpwalk_cache_path(hostname, fetchoid):
-    return os.path.join(cmk.paths.var_dir, hostname, fetchoid)
+    return os.path.join(cmk.paths.var_dir, "snmp_cache", hostname, fetchoid)
 
 
 def _get_stored_snmpwalk(hostname, oid):

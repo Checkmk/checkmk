@@ -1,0 +1,11 @@
+Title: Created wrong SNMP cache folder 'var/check_mk/HOST'
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520425659
+Class: fix
+
+The right folder for SNMP cache data is 'var/check_mk/snmp_cache/HOST'.
+This was introduced with Check_MK version 1.5.0i2. Fixed that!

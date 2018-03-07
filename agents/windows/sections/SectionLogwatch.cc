@@ -333,8 +333,7 @@ SectionLogwatch::processTextfileUnicode(ifstream &file,
             const auto &pattern = *it_patt;
             Debug(_logger) << "glob_pattern: " << pattern.glob_pattern
                            << ", state: " << pattern.state;
-            if (globmatch(pattern.glob_pattern.c_str(),
-                          output_buffer.c_str())) {
+            if (globmatch(pattern.glob_pattern, output_buffer)) {
                 if (!write_output &&
                     (pattern.state == 'C' || pattern.state == 'W' ||
                      pattern.state == 'O')) {
@@ -396,7 +395,7 @@ SectionLogwatch::processTextfileDefault(ifstream &file,
 
         char state = '.';
         for (const auto &pattern : textfile.patterns.get()) {
-            if (globmatch(pattern.glob_pattern.c_str(), line.c_str())) {
+            if (globmatch(pattern.glob_pattern, line)) {
                 if (!write_output &&
                     (pattern.state == 'C' || pattern.state == 'W' ||
                      pattern.state == 'O')) {

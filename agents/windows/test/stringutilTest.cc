@@ -220,6 +220,218 @@ TEST(wa_stringutilTest, ci_equal__unequal) {
     ASSERT_FALSE(ci_equal(s1, s2));
 }
 
+// Tests for char version of globmatch:
+
+TEST(wa_stringutilTest, globmatch_exact_word) {
+    ASSERT_TRUE(globmatch(std::string{"hello"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_string_longer) {
+    ASSERT_FALSE(globmatch(std::string{"hello"}, std::string{"hello!"}));
+}
+
+TEST(wa_stringutilTest, globmatch_different_words) {
+    ASSERT_FALSE(globmatch(std::string{"hello"}, std::string{"hi"}));
+}
+
+TEST(wa_stringutilTest, globmatch_question_mark_begin) {
+    ASSERT_TRUE(globmatch(std::string{"?ello"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_question_mark_middle) {
+    ASSERT_TRUE(globmatch(std::string{"he?lo"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_question_mark_end) {
+    ASSERT_TRUE(globmatch(std::string{"hell?"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_question_marks_begin) {
+    ASSERT_TRUE(globmatch(std::string{"??llo"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_question_marks_middle_1) {
+    ASSERT_TRUE(globmatch(std::string{"he??o"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_question_marks_middle_2) {
+    ASSERT_TRUE(globmatch(std::string{"h?l?o"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_question_marks_end) {
+    ASSERT_TRUE(globmatch(std::string{"hell?"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_middle) {
+    ASSERT_TRUE(globmatch(std::string{"h*o"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_asterisks_middle) {
+    ASSERT_TRUE(globmatch(std::string{"h******o"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_asterisks_question_mark_middle) {
+    ASSERT_TRUE(globmatch(std::string{"h***?***o"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_begin) {
+    ASSERT_TRUE(globmatch(std::string{"*o"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_end) {
+    ASSERT_TRUE(globmatch(std::string{"h*"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_empty_pattern) {
+    ASSERT_FALSE(globmatch(std::string{""}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_both_empty) {
+    ASSERT_TRUE(globmatch(std::string{""}, std::string{""}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_pattern_empty_string) {
+    ASSERT_TRUE(globmatch(std::string{"*"}, std::string{""}));
+}
+
+TEST(wa_stringutilTest, globmatch_match_all) {
+    ASSERT_TRUE(globmatch(std::string{"*"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_match_single_char_string) {
+    ASSERT_FALSE(globmatch(std::string{"?"}, std::string{""}));
+}
+
+TEST(wa_stringutilTest, globmatch_exact_word_case_diff) {
+    ASSERT_TRUE(globmatch(std::string{"hello"}, std::string{"HELLO"}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_question_mark_case_diff) {
+    ASSERT_TRUE(globmatch(std::string{"h*L?"}, std::string{"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_Windows_path) {
+    ASSERT_TRUE(globmatch(std::string{"d:\\log\\sample_*.txt"},
+                          std::string{"D:\\log\\sample_file.txt"}));
+}
+
+TEST(wa_stringutilTest, globmatch_Windows_path_with_space) {
+    ASSERT_TRUE(globmatch(std::string{"d:\\logs and stuff\\sample_*.txt"},
+                          std::string{"D:\\Logs and Stuff\\sample_file.txt"}));
+}
+
+TEST(wa_stringutilTest, globmatch_special_characters) {
+    ASSERT_TRUE(
+        globmatch(std::string{"$()+.[]^{|}"}, std::string{"$()+.[]^{|}"}));
+}
+
+// Tests for wchar_t version of globmatch:
+
+TEST(wa_stringutilTest, globmatch_exact_word_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"hello"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_string_longer_wchar_t) {
+    ASSERT_FALSE(globmatch(std::wstring{L"hello"}, std::wstring{L"hello!"}));
+}
+
+TEST(wa_stringutilTest, globmatch_different_words_wchar_t) {
+    ASSERT_FALSE(globmatch(std::wstring{L"hello"}, std::wstring{L"hi"}));
+}
+
+TEST(wa_stringutilTest, globmatch_question_mark_begin_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"?ello"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_question_mark_middle_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"he?lo"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_question_mark_end_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"hell?"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_question_marks_begin_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"??llo"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_question_marks_middle_1_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"he??o"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_question_marks_middle_2_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"h?l?o"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_question_marks_end_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"hell?"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_middle_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"h*o"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_several_asterisks_middle_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"h******o"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest,
+     globmatch_several_asterisks_question_mark_middle_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"h***?***o"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_begin_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"*o"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_end_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"h*"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_empty_pattern_wchar_t) {
+    ASSERT_FALSE(globmatch(std::wstring{L""}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_both_empty_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L""}, std::wstring{L""}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_pattern_empty_string_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"*"}, std::wstring{L""}));
+}
+
+TEST(wa_stringutilTest, globmatch_match_all_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"*"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_match_single_char_string_wchar_t) {
+    ASSERT_FALSE(globmatch(std::wstring{L"?"}, std::wstring{L""}));
+}
+
+TEST(wa_stringutilTest, globmatch_exact_word_case_diff_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"hello"}, std::wstring{L"HELLO"}));
+}
+
+TEST(wa_stringutilTest, globmatch_asterisk_question_mark_case_diff_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"h*L?"}, std::wstring{L"hello"}));
+}
+
+TEST(wa_stringutilTest, globmatch_Windows_path_wchar_t) {
+    ASSERT_TRUE(globmatch(std::wstring{L"d:\\log\\sample_*.txt"},
+                          std::wstring{L"D:\\log\\sample_file.txt"}));
+}
+
+TEST(wa_stringutilTest, globmatch_Windows_path_with_space_wchar_t) {
+    ASSERT_TRUE(
+        globmatch(std::wstring{L"d:\\logs and stuff\\sample_*.txt"},
+                  std::wstring{L"D:\\Logs and Stuff\\sample_file.txt"}));
+}
+
+TEST(wa_stringutilTest, globmatch_special_characters_wchar_t) {
+    ASSERT_TRUE(
+        globmatch(std::wstring{L"$()+.[]^{|}"}, std::wstring{L"$()+.[]^{|}"}));
+}
+
 TEST(wa_stringutilTest, extractIPAddress_IPv4_with_port) {
     const std::string input{"10.1.2.3:456"};
     const std::string expected{"10.1.2.3"};

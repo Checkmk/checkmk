@@ -138,10 +138,98 @@ inline std::ostream &operator<<(std::ostream &os, const Utf8 &u) {
 // case insensitive compare
 bool ci_equal(const std::string &lhs, const std::string &rhs);
 
+// clang-format off
+// Start-of-line char: '^' or L'^'
+template <class CharT> inline CharT sol();
+template <> char sol<char>();
+template <> wchar_t sol<wchar_t>();
+
+// End-of-line char: '$' or L'$'
+template <class CharT> inline CharT eol();
+template <> char eol<char>();
+template <> wchar_t eol<wchar_t>();
+
+// Any single char: '.' or L'.'
+template <class CharT> inline CharT anyS();
+template <> char anyS<char>();
+template <> wchar_t anyS<wchar_t>();
+
+// Any single char in glob patterns: '?' or L'?'
+template <class CharT> inline CharT anySGlob();
+template <> char anySGlob<char>();
+template <> wchar_t anySGlob<wchar_t>();
+
+// Any number of chars: '*' or L'*'
+template <class CharT> inline CharT anyN();
+template <> char anyN<char>();
+template <> wchar_t anyN<wchar_t>();
+
+// Escape char: '\\' or L'\\'
+template <class CharT> inline CharT esc();
+template <> char esc<char>();
+template <> wchar_t esc<wchar_t>();
+
+// Is given character one of the regex special characters: 
+template <class CharT> inline bool needsEscape(CharT c);
+template <> bool needsEscape<char>(char c);
+template <> bool needsEscape<wchar_t>(wchar_t c);
+
+namespace rconst = std::regex_constants;
+template <class CharT> using StringT = std::basic_string<CharT>;
+template <class CharT> using RegexT = std::basic_regex<CharT>;
+// clang-format on
+
+template <class CharT>
+using MatchT = std::match_results<typename StringT<CharT>::const_iterator>;
+
+template <class CharT>
+inline void escape(StringT<CharT> &rPatt) {
+    // Escape special characters (apart from '*' and '?')
+    for (size_t pos = 0; pos != rPatt.size(); ++pos) {
+        if (needsEscape(rPatt[pos])) {
+            rPatt.insert(pos++, 1, esc<CharT>());
+        }
+    }
+}
+
+template <class CharT>
+inline void globCharReplace(StringT<CharT> &rPatt) {
+    // Regex needs '.' instead of glob '?'
+    std::replace(rPatt.begin(), rPatt.end(), anySGlob<CharT>(), anyS<CharT>());
+
+    // Regex needs '.*' instead of glob '*'
+    for (auto pos = rPatt.find(anyN<CharT>()); pos != StringT<CharT>::npos;
+         pos = rPatt.find(anyN<CharT>(), pos)) {
+        rPatt.insert(pos, 1, anyS<CharT>());
+        pos += 2;
+    }
+}
+
+template <class CharT>
+inline RegexT<CharT> globToRegex(const StringT<CharT> &glob) {
+    const auto escCnt = std::count_if(glob.cbegin(), glob.cend(), [](CharT c) {
+        return c == anyN<CharT>() || needsEscape<CharT>(c);
+    });
+    StringT<CharT> rPatt;
+    rPatt.reserve(glob.size() + escCnt + 2);
+    std::copy(glob.cbegin(), glob.cend(), std::back_inserter(rPatt));
+    escape<CharT>(rPatt);
+    rPatt.insert(0, 1, sol<CharT>());
+    rPatt.push_back(eol<CharT>());
+    globCharReplace<CharT>(rPatt);
+
+    return RegexT<CharT>{rPatt, rconst::ECMAScript | rconst::icase};
+}
+
 // Do a simple pattern matching with the jokers * and ?.
 // This is case insensitive (windows-like).
-bool globmatch(const char *pattern, const char *astring);
-bool globmatch(const wchar_t *pattern, const wchar_t *astring);
+template <class CharT>
+inline bool globmatch(const StringT<CharT> &glob,
+                      const StringT<CharT> &target) {
+    const auto reg = globToRegex(glob);
+    MatchT<CharT> match;
+    return std::regex_match(target, match, reg);
+}
 
 std::string replaceAll(const std::string &str, const std::string &from,
                        const std::string &to);

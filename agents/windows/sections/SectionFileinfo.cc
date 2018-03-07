@@ -78,7 +78,7 @@ void SectionFileinfo::determine_filepaths_full_search(
     std::string base_path, std::string search_pattern) {
     get_directories(base_path);
     for (const auto &entry : _temp_files) {
-        if (globmatch(search_pattern.c_str(), entry.c_str())) {
+        if (globmatch(search_pattern, entry)) {
             _found_files.push_back(entry);
         }
     }

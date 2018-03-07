@@ -71,91 +71,33 @@ bool ci_equal(const std::string &lhs, const std::string &rhs) {
                       ci_compare_pred);
 }
 
-bool globmatch(const char *pattern, const char *astring) {
-    const char *p = pattern;
-    const char *s = astring;
-    while (*s) {
-        if (!*p) return false;  // pattern too short
+// clang-format off
+template <> char sol<char>() { return '^'; }
+template <> wchar_t sol<wchar_t>() { return L'^'; }
 
-        // normal character-wise match
-        if (tolower(*p) == tolower(*s) || *p == '?') {
-            p++;
-            s++;
-        }
+template <> char eol<char>() { return '$'; }
+template <> wchar_t eol<wchar_t>() { return L'$'; }
 
-        // non-matching charactetr
-        else if (*p != '*')
-            return false;
+template <> char anyS<char>() { return '.'; }
+template <> wchar_t anyS<wchar_t>() { return L'.'; }
 
-        else {  // check *
-            // If there is more than one asterisk in the pattern,
-            // we need to try out several variants. We do this
-            // by backtracking (smart, eh?)
-            int maxlength = strlen(s);
-            // replace * by a sequence of ?, at most the rest length of s
-            char *subpattern = (char *)malloc(strlen(p) + maxlength + 1);
-            bool match = false;
-            for (int i = 0; i <= maxlength; i++) {
-                for (int x = 0; x < i; x++) subpattern[x] = '?';
-                strcpy(subpattern + i, p + 1);  // omit leading '*'
-                if (globmatch(subpattern, s)) {
-                    match = true;
-                    break;
-                }
-            }
-            free(subpattern);
-            return match;
-        }
-    }
+template <> char anySGlob<char>() { return '?'; }
+template <> wchar_t anySGlob<wchar_t>() { return L'?'; }
 
-    // string has ended, pattern not. Pattern must only
-    // contain * now if it wants to match
-    while (*p == '*') p++;
-    return *p == 0;
+template <> char anyN<char>() { return '*'; }
+template <> wchar_t anyN<wchar_t>() { return L'*'; }
+
+template <> char esc<char>() { return '\\'; }
+template <> wchar_t esc<wchar_t>() { return L'\\'; }
+// clang-format on
+
+template <>
+bool needsEscape<char>(char c) {
+    return std::string{"$()+.[]^{|}\\"}.find(c) != std::string::npos;
 }
-
-bool globmatch(const wchar_t *pattern, const wchar_t *astring) {
-    const wchar_t *p = pattern;
-    const wchar_t *s = astring;
-    while (*s) {
-        if (!*p) return false;  // pattern too short
-
-        // normal character-wise match
-        if (towlower(*p) == towlower(*s) || *p == L'?') {
-            p++;
-            s++;
-        }
-
-        // non-matching charactetr
-        else if (*p != L'*')
-            return false;
-
-        else {  // check *
-            // If there is more than one asterisk in the pattern,
-            // we need to try out several variants. We do this
-            // by backtracking (smart, eh?)
-            int maxlength = wcslen(s);
-            // replace * by a sequence of ?, at most the rest length of s
-            wchar_t *subpattern = (wchar_t *)malloc(
-                (wcslen(p) + maxlength + 1) * sizeof(wchar_t));
-            bool match = false;
-            for (int i = 0; i <= maxlength; i++) {
-                for (int x = 0; x < i; x++) subpattern[x] = L'?';
-                wcscpy(subpattern + i, p + 1);  // omit leading '*'
-                if (globmatch(subpattern, s)) {
-                    match = true;
-                    break;
-                }
-            }
-            free(subpattern);
-            return match;
-        }
-    }
-
-    // string has ended, pattern not. Pattern must only
-    // contain * now if it wants to match
-    while (*p == L'*') p++;
-    return *p == 0;
+template <>
+bool needsEscape<wchar_t>(wchar_t c) {
+    return std::wstring{L"$()+.[]^{|}\\"}.find(c) != std::wstring::npos;
 }
 
 std::string replaceAll(const std::string &str, const std::string &from,

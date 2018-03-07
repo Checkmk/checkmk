@@ -55,7 +55,10 @@ class DataSource(object):
     #       a single DataSources() object during processing first. Then we
     #       can change these class attributes to object attributes.
     #
-    # Set by the user via command line to prevent using cached information at all
+    # Set by the user via command line to prevent using cached information at all.
+    # Is also set by inventory for SNMP checks to handle the special situation that
+    # the inventory is not allowed to use the regular checking based SNMP data source
+    # cache.
     _no_cache = False
     # Set by the code in different situations where we recommend, but not enforce,
     # to use the cache. The user can always use "--cache" to override this.

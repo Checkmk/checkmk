@@ -1,0 +1,16 @@
+Title: Fixed some report table layout problems
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.4.0p27
+Date: 1520416971
+Class: fix
+
+The following problems have been fixed:
+
+<ul>
+<li>Single dataset tables: (host/service details) had no top border</li>
+<li>Single dataset tables: Disable row shading now also works for left headers</li>
+<li>Graph columns were adding emtpy space after the graph column</li>
+</ul>

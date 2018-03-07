@@ -649,15 +649,15 @@ class ModeFolder(WatoMode):
 
         if not self._folder.locked_hosts():
             menu_items.extend([
-            ("newhost", _("Create new host"), "new", "hosts",
+            MenuItem("newhost", _("Create new host"), "new", "hosts",
               _("Add a new host to the monitoring (agent must be installed)")),
-            ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
+            MenuItem("newcluster", _("Create new cluster"), "new_cluster", "hosts",
               _("Use Check_MK clusters if an item can move from one host "
                 "to another at runtime"))])
 
         if not self._folder.locked_subfolders():
             menu_items.extend([
-            ("newfolder", _("Create new folder"), "newfolder", "hosts",
+            MenuItem("newfolder", _("Create new folder"), "newfolder", "hosts",
               _("Folders group your hosts, can inherit attributes and can have permissions."))
             ])
 
@@ -12050,9 +12050,9 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
     def page(self):
         if not self._hosttags + self._auxtags:
             MainMenu([
-                ("edit_hosttag", _("Create new tag group"), "new", "hosttags",
+                MenuItem("edit_hosttag", _("Create new tag group"), "new", "hosttags",
                     _("Each host tag group will create one dropdown choice in the host configuration.")),
-                ("edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
+                MenuItem("edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
                     _("You can have these tags automatically added if certain primary tags are set.")),
                 ]).show()
 

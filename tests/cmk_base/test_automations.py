@@ -283,17 +283,23 @@ def test_automation_set_autochecks(test_cfg, site):
         ("uptime", None) : None,
     }
 
-    data = _execute_automation(site, "set-autochecks",
-            args=["blablahost"], stdin=repr(new_items))
-    assert data == None
+    try:
+        data = _execute_automation(site, "set-autochecks",
+                args=["blablahost"], stdin=repr(new_items))
+        assert data == None
 
-    data = _execute_automation(site, "get-autochecks",
-            args=["blablahost"])
+        data = _execute_automation(site, "get-autochecks",
+                args=["blablahost"])
 
-    assert sorted(data) == sorted([
-        ('df', u'xxx', 'bla', "'bla'"),
-        ('uptime', None, None, 'None')
-    ])
+        assert sorted(data) == sorted([
+            ('df', u'xxx', 'bla', "'bla'"),
+            ('uptime', None, None, 'None')
+        ])
+
+        assert site.file_exists("var/check_mk/autochecks/blablahost.mk")
+    finally:
+        if site.file_exists("var/check_mk/autochecks/blablahost.mk"):
+            site.delete_file("var/check_mk/autochecks/blablahost.mk")
 
 
 def test_automation_update_dns_cache(test_cfg, site, web):

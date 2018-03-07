@@ -1,0 +1,13 @@
+Title: Fixed column layout of host/service report tables (smaller titles)
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p27
+Date: 1520413929
+
+The title and content columns of the single host/service reports were
+using the same width which looked bad, especially for pages that contain
+graphs.

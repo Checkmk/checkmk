@@ -20,18 +20,23 @@ pytest = /usr/bin/env pytest
 pytest_options = --maxfail=10
 pytest_jenkins = $(pytest_options) --junitxml=$(bindir)/junit.xml
 
+# Prevent race condition between parallel 32 and 64 bit builds by protecting
+# access to build_version through a lock file.
 build_version: $(check_mk_agent_SOURCES:.cc=.o)
-	echo "BUILD VERSION ls 1: $$(ls -al $(VPATH))"
-	echo "BUILD VERSION 1: $$(cat $(VPATH)/build_version)"
-	echo $$(( $$(cat $(VPATH)/build_version) + 1 )) > $(VPATH)/build_version
-	echo "BUILD VERSION 2: $$(cat $(VPATH)/build_version)"
-	echo "BUILD VERSION ls 2: $$(ls -al $(VPATH))"
+	( \
+        flock -e 200 ; \
+        echo $$(( $$(cat $(VPATH)/build_version) + 1 )) > $(VPATH)/build_version \
+    ) 200>/var/lock/build_version.lock
 
+# Prevent race condition between parallel 32 and 64 bit builds by protecting
+# access to build_version through a lock file.
 check_mk_agent.rc: $(VPATH)/check_mk_agent.rc.in build_version
-	echo "BUILD VERSION 3: $$(cat $(VPATH)/build_version)"
-	sed -e "s/%VERSION%/$(VERSION)/g" \
-	    -e "s/%YEAR%/$$(date +%Y)/g" \
-	    -e "s/%BUILD_VERSION%/$$(cat $(VPATH)/build_version)/g" $< > $@
+	( \
+        flock -e 200 ; \
+        sed -e "s/%VERSION%/$(VERSION)/g" \
+            -e "s/%YEAR%/$$(date +%Y)/g" \
+            -e "s/%BUILD_VERSION%/$$(cat $(VPATH)/build_version)/g" $< > $@ \
+    ) 200>/var/lock/build_version.lock
 
 check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 	cp $(VPATH)/check_mk_agent.ico check_mk_agent.ico

@@ -1,0 +1,10 @@
+Title: Tables: Fixed backgrounds not filling whole table cells
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.4.0p27
+Date: 1520416084
+Class: fix
+
+This also fixes some unintended spacing between cell contents.

@@ -215,6 +215,7 @@ def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")
             source.set_do_snmp_scan(True)
+            source.disable_data_source_cache()
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
             source.set_check_plugin_name_filter(_gather_snmp_check_plugin_names_inventory)

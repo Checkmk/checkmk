@@ -71,6 +71,19 @@ bool ci_equal(const std::string &lhs, const std::string &rhs) {
                       ci_compare_pred);
 }
 
+bool ci_compare(const std::string &lhs, const std::string &rhs) {
+    for (auto ri = lhs.cbegin(), li = rhs.cbegin();
+         ri != lhs.cend() && li != rhs.cend(); ++ri, ++li) {
+        auto l1 = std::tolower(*ri), l2 = std::tolower(*li);
+        if (l1 != l2) {
+            return l1 < l2;
+        }
+    }
+
+    // If equal until here, lhs < rhs iff lhs shorter than rhs.
+    return lhs.size() < rhs.size();
+}
+
 // clang-format off
 template <> char sol<char>() { return '^'; }
 template <> wchar_t sol<wchar_t>() { return L'^'; }

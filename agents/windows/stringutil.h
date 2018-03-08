@@ -135,8 +135,11 @@ inline std::ostream &operator<<(std::ostream &os, const Utf8 &u) {
     return os << to_utf8(u._value);
 }
 
-// case insensitive compare
+// case insensitive equality check
 bool ci_equal(const std::string &lhs, const std::string &rhs);
+
+// case insensitive compare function (e. g. for std::sort)
+bool ci_compare(const std::string &lhs, const std::string &rhs);
 
 // clang-format off
 // Start-of-line char: '^' or L'^'

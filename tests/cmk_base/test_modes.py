@@ -582,7 +582,7 @@ def test_inventory_as_check(test_cfg, site):
     stdout, stderr = p.communicate()
     assert p.wait() == 0
     assert stderr == ""
-    assert stdout.startswith("OK - found ")
+    assert stdout.startswith("OK - [Inventory] Found ")
 
 
 #.

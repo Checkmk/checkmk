@@ -145,6 +145,7 @@ def load_checks(filelist):
 
             known_vars = check_context.keys()
             known_checks = check_info.keys()
+            known_active_checks = active_check_info.keys()
 
             load_check_includes(f, check_context)
 
@@ -159,9 +160,13 @@ def load_checks(filelist):
                 continue
 
         new_checks = set(check_info.keys()).difference(known_checks)
+        new_active_checks = set(active_check_info.keys()).difference(known_active_checks)
 
         # Now store the check context for all checks found in this file
         for check_plugin_name in new_checks:
+            _check_contexts[check_plugin_name] = check_context
+
+        for check_plugin_name in new_active_checks:
             _check_contexts[check_plugin_name] = check_context
 
         # Collect all variables that the check file did introduce compared to the
@@ -199,6 +204,7 @@ def load_checks(filelist):
                 # Keep track of which variable needs to be set to which context
                 context_ident_list = _check_variables.setdefault(varname, [])
                 context_ident_list += new_checks
+                context_ident_list += new_active_checks
 
     # Now convert check_info to new format.
     convert_check_info()

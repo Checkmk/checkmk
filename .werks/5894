@@ -1,0 +1,12 @@
+Title: Fixed possible exception on service discovery page for SNMP hosts
+Level: 1
+Component: inline-snmp
+Compatible: compat
+Edition: cee
+Version: 1.5.0i4
+Date: 1520510916
+Class: fix
+
+When inline SNMP is used it might happen that the service discovery page
+shows an error "Exception TypeError: "'NoneType' object is not callable" instead
+of the table of services.

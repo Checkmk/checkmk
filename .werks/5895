@@ -1,0 +1,11 @@
+Title: mgmt_ipmi_firmware: New inventory plugin to gather the IPMI board firmware version
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520512605
+Class: feature
+
+This inventory plugin adds the path "Hardware/Management Interface" to the HW-/SW inventory
+tree when using IPMI management board monitoring.

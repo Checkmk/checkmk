@@ -43,12 +43,16 @@
 inventory_mssql_counters_rules = []
 
 
+#TODO if not counters: raise
+
+
 def inventory_mssql_counters_generic(parsed, want_counters, dflt=None):
     want_counters = set(want_counters)
-    for (obj, instance), counters in parsed.iteritems():
-        if not set(want_counters).intersection(set(counters.keys())):
-            continue
-        yield "%s %s" % (obj, instance), dflt
+    for (obj, instance), node_data in parsed.iteritems():
+        for counters in node_data.values():
+            if not want_counters.intersection(counters.keys()):
+                continue
+            yield "%s %s" % (obj, instance), dflt
 
 
 #   .--main----------------------------------------------------------------.
@@ -75,6 +79,8 @@ def inventory_mssql_counters_generic(parsed, want_counters, dflt=None):
 def parse_mssql_counters_base(info):
     parsed = {}
     for line in info:
+        node_name = line[0]
+        line = line[1:]
         if len(line) < 3:
             continue
 
@@ -107,7 +113,8 @@ def parse_mssql_counters_base(info):
                 except ValueError:
                     pass
 
-        data = parsed.setdefault((obj, instance), {})
+        data = parsed.setdefault((obj, instance), {})\
+                     .setdefault(node_name, {})
         data.setdefault(counter, values)
     return parsed
 
@@ -125,6 +132,7 @@ check_info['mssql_counters'] = {
     'inventory_function'    : inventory_mssql_counters_base,
     'check_function'        : check_mssql_counters_base,
     'service_description'   : "MSSQL",
+    'node_info'             : True,
 }
 
 #.
@@ -148,45 +156,51 @@ def inventory_mssql_counters_cache_hits(parsed, want_counters):
     add_zero_based_services = host_extra_conf_merged(host_name(), inventory_mssql_counters_rules)\
                               .get('add_zero_based_services', False)
 
-    for (obj, instance), counters in parsed.iteritems():
-        for counter in counters:
-            if counter not in want_counters:
-                continue
+    for (obj, instance), node_data in parsed.iteritems():
+        for counters in node_data.values():
+            for counter in counters.keys():
+                if counter not in want_counters:
+                    continue
 
-            if counters.get('%s_base' % counter, 0.0) == 0.0 \
-               and not add_zero_based_services:
-                continue
+                if counters.get('%s_base' % counter, 0.0) == 0.0 \
+                   and not add_zero_based_services:
+                    continue
 
-            yield "%s %s %s" % (obj, instance, counter), None
+                yield "%s %s %s" % (obj, instance, counter), None
 
 
 def check_mssql_counters_cache_hits(item, params, parsed):
     obj, instance, counter = item.split()
-    counters = parsed.get((obj, instance), {})
-    value = counters.get(counter)
-    base = counters.get("%s_base" % counter, 0)
+    node_data = parsed.get((obj, instance), {})
 
-    if value is None or base is None:
-        # Assume general connection problem to the database, which is reported
-        # by the "X Instance" service and skip this check.
-        raise MKCounterWrapped("Failed to connect to database")
+    for node_name, counters in node_data.iteritems():
+        value = counters.get(counter)
+        base = counters.get("%s_base" % counter, 0)
 
-    if base == 0:
-        base = 1
-    perc = 100.0 * value / base
+        if value is None or base is None:
+            # Assume general connection problem to the database, which is reported
+            # by the "X Instance" service and skip this check.
+            raise MKCounterWrapped("Failed to connect to database")
 
-    infotext = get_percent_human_readable(perc)
-    state = 0
-    if params:
-        #TODO: Previously params=None(=dflt) in inventory_mssql_counters
-        warn, crit = params
-        if perc <= crit:
-            state = 2
-        elif perc <= warn:
-            state = 1
-        if state:
-            infotext += " (warn/crit below %s/%s)" % (warn, crit)
-    return state, infotext, [(counter, perc)]
+        if base == 0:
+            base = 1
+        perc = 100.0 * value / base
+
+        node_info = ""
+        if node_name:
+            node_info = "[%s] " % node_name
+        infotext = "%s%s" % (node_info, get_percent_human_readable(perc))
+        state = 0
+        if params:
+            #TODO: Previously params=None(=dflt) in inventory_mssql_counters
+            warn, crit = params
+            if perc <= crit:
+                state = 2
+            elif perc <= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit below %s/%s)" % (warn, crit)
+        yield state, infotext, [(counter, perc)]
 
 
 check_info['mssql_counters.cache_hits'] = {
@@ -195,6 +209,7 @@ check_info['mssql_counters.cache_hits'] = {
     'check_function'        : check_mssql_counters_cache_hits,
     'service_description'   : "MSSQL %s",
     'has_perfdata'          : True,
+    'node_info'             : True,
 }
 
 #.
@@ -211,28 +226,35 @@ check_info['mssql_counters.cache_hits'] = {
 
 def check_mssql_counters_transactions(item, params, parsed):
     obj, instance = item.split()
-    counters = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance), {})
 
-    if not counters:
+    if not any(node_data.values()):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    now = counters.get('utc_time')
-    if now is None:
-        now = time.time()
+    for node_name, counters in node_data.iteritems():
+        now = counters.get('utc_time')
+        if now is None:
+            now = time.time()
 
-    for counter_key, title in [
-        ('transactions/sec', 'Transactions'),
-        ('write_transactions/sec', 'Write Transactions'),
-        ('tracked_transactions/sec', 'Tracked Transactions'),
-    ]:
-        value = counters.get(counter_key)
-        if value is None:
-            continue
+        node_info = ""
+        if node_name:
+            node_info = "[%s] " % node_name
 
-        rate = get_rate("mssql_counters.transactions.%s.%s" % (item, counter_key), now, value)
-        yield 0, "%s: %.1f/s" % (title, rate), [(counter_key, rate)]
+        for counter_key, title in [
+            ('transactions/sec', 'Transactions'),
+            ('write_transactions/sec', 'Write Transactions'),
+            ('tracked_transactions/sec', 'Tracked Transactions'),
+        ]:
+            value = counters.get(counter_key)
+            if value is None:
+                continue
+
+            rate = get_rate("mssql_counters.transactions.%s.%s" % (item, counter_key), now, value)
+            infotext = "%s%s: %.1f/s" % (node_info, title, rate)
+            node_info = ""
+            yield 0, infotext, [(counter_key, rate)]
 
 
 check_info['mssql_counters.transactions'] = {
@@ -241,46 +263,53 @@ check_info['mssql_counters.transactions'] = {
     'check_function'        : check_mssql_counters_transactions,
     'service_description'   : "MSSQL %s Transactions",
     'has_perfdata'          : True,
+    'node_info'             : True,
 }
 
 #   ---locks----------------------------------------------------------------
 
 def check_mssql_counters_locks(item, params, parsed):
     obj, instance = item.split()
-    counters = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance), {})
 
-    if not counters:
+    if not any(node_data.values()):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    now = counters.get('utc_time')
-    if now is None:
-        now = time.time()
+    for node_name, counters in node_data.iteritems():
+        now = counters.get('utc_time')
+        if now is None:
+            now = time.time()
 
-    for counter_key, title in [
-        ('lock_requests/sec', 'Requests'),
-        ('lock_timeouts/sec', 'Timeouts'),
-        ('number_of_deadlocks/sec', 'Deadlocks'),
-        ('lock_waits/sec', 'Waits'),
-    ]:
-        value = counters.get(counter_key)
-        if value is None:
-            continue
+        node_info = ""
+        if node_name:
+            node_info = "[%s] " % node_name
 
-        rate = get_rate("mssql_counters.locks.%s.%s" % (item, counter_key), now, value)
-        infotext = "%s: %.1f/s" % (title, rate)
+        for counter_key, title in [
+            ('lock_requests/sec', 'Requests'),
+            ('lock_timeouts/sec', 'Timeouts'),
+            ('number_of_deadlocks/sec', 'Deadlocks'),
+            ('lock_waits/sec', 'Waits'),
+        ]:
+            value = counters.get(counter_key)
+            if value is None:
+                continue
 
-        state = 0
-        warn, crit = params.get(counter_key, (None, None))
-        if crit is not None and rate >= crit:
-            state = 2
-        elif warn is not None and rate >= warn:
-            state = 1
-        if state:
-            infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
+            rate = get_rate("mssql_counters.locks.%s.%s" % (item, counter_key), now, value)
+            infotext = "%s%s: %.1f/s" % (node_info, title, rate)
+            node_info = ""
 
-        yield state, infotext, [(counter_key, rate, warn, crit)]
+            state = 0
+            warn, crit = params.get(counter_key, (None, None))
+            if crit is not None and rate >= crit:
+                state = 2
+            elif warn is not None and rate >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
+
+            yield state, infotext, [(counter_key, rate, warn, crit)]
 
 
 check_info['mssql_counters.locks'] = {
@@ -291,48 +320,54 @@ check_info['mssql_counters.locks'] = {
     'service_description'   : "MSSQL %s Locks",
     'has_perfdata'          : True,
     'group'                 : 'mssql_counters_locks',
+    'node_info'             : True,
 }
 
 #   ---sql stats------------------------------------------------------------
 
 def inventory_mssql_counters_sqlstats(parsed, want_counters, dflt=None):
-    for (obj, instance), counters in parsed.iteritems():
-        for counter in counters:
-            if counter not in want_counters:
-                continue
-            yield "%s %s %s" % (obj, instance, counter), dflt
+    for (obj, instance), node_data in parsed.iteritems():
+        for counters in node_data.values():
+            for counter in counters:
+                if counter not in want_counters:
+                    continue
+                yield "%s %s %s" % (obj, instance, counter), dflt
 
 
 def check_mssql_counters_sqlstats(item, params, parsed):
     obj, instance, counter = item.split()
-    counters = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance), {})
 
-    if not counters:
+    if not any(node_data.values()):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    value = counters.get(counter)
-    if value is None:
-        return
+    for node_name, counters in node_data.iteritems():
+        value = counters.get(counter)
+        if value is None:
+            return
 
-    now = counters.get('utc_time')
-    if now is None:
-        now = time.time()
+        now = counters.get('utc_time')
+        if now is None:
+            now = time.time()
 
-    rate = get_rate("mssql_counters.sqlstats.%s.%s" % (item, counter), now, value)
-    infotext = "%.1f/sec" % rate
+        rate = get_rate("mssql_counters.sqlstats.%s.%s" % (item, counter), now, value)
+        node_info = ""
+        if node_name:
+            node_info = "[%s] " % node_name
+        infotext = "%s%.1f/sec" % (node_info, rate)
 
-    state = 0
-    warn, crit = params.get(counter, (None, None))
-    if crit is not None and rate >= crit:
-        state = 2
-    elif warn is not None and rate >= warn:
-        state = 1
-    if state:
-        infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
+        state = 0
+        warn, crit = params.get(counter, (None, None))
+        if crit is not None and rate >= crit:
+            state = 2
+        elif warn is not None and rate >= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
 
-    return state, infotext, [(counter, rate, warn, crit)]
+        yield state, infotext, [(counter, rate, warn, crit)]
 
 
 check_info["mssql_counters.sqlstats"] = {
@@ -343,45 +378,52 @@ check_info["mssql_counters.sqlstats"] = {
     "service_description"   : "MSSQL %s",
     "has_perfdata"          : True,
     "group"                 : "mssql_stats",
+    'node_info'             : True,
 }
 
 #   ---page activity--------------------------------------------------------
 
 def check_mssql_counters_pageactivity(item, params, parsed):
     obj, instance = item.split()
-    counters = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance), {})
 
-    if not counters:
+    if not any(node_data.values()):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    now = counters.get('utc_time')
-    if now is None:
-        now = time.time()
+    for node_name, counters in node_data.iteritems():
+        now = counters.get('utc_time')
+        if now is None:
+            now = time.time()
 
-    for counter_key, title in  [
-        ("page_reads/sec", "Reads"),
-        ("page_writes/sec", "Writes"),
-        ("page_lookups/sec", "Lookups")
-    ]:
-        value = counters.get(counter_key)
-        if value is None:
-            continue
+        node_info = ""
+        if node_name:
+            node_info = "[%s] " % node_name
 
-        rate = get_rate("mssql_counters.pageactivity.%s.%s" % (item, counter_key), now, value)
-        infotext = "%s: %.1f/s" % (title, rate)
+        for counter_key, title in  [
+            ("page_reads/sec", "Reads"),
+            ("page_writes/sec", "Writes"),
+            ("page_lookups/sec", "Lookups")
+        ]:
+            value = counters.get(counter_key)
+            if value is None:
+                continue
 
-        state = 0
-        warn, crit = params.get(counter_key, (None, None))
-        if crit is not None and rate >= crit:
-            state = 2
-        elif warn is not None and rate >= warn:
-            state = 1
-        if state:
-            infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
+            rate = get_rate("mssql_counters.pageactivity.%s.%s" % (item, counter_key), now, value)
+            infotext = "%s%s: %.1f/s" % (node_info, title, rate)
+            node_info = ""
 
-        yield state, infotext, [(counter_key, rate, warn, crit)]
+            state = 0
+            warn, crit = params.get(counter_key, (None, None))
+            if crit is not None and rate >= crit:
+                state = 2
+            elif warn is not None and rate >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
+
+            yield state, infotext, [(counter_key, rate, warn, crit)]
 
 
 check_info['mssql_counters.pageactivity'] = {
@@ -392,60 +434,69 @@ check_info['mssql_counters.pageactivity'] = {
     'service_description'   : "MSSQL %s Page Activity",
     'has_perfdata'          : True,
     'group'                 : "mssql_page_activity",
+    'node_info'             : True,
 }
 
 #   ---locks per batch------------------------------------------------------
 
 def inventory_mssql_counters_locks_per_batch(parsed):
-    db_names = [obj.split(":")[0]
-                for (obj, instance), data in parsed.iteritems()
-                if ":" in obj]
+    db_names = [(obj.split(":")[0], node_name)
+                for (obj, instance), node_data in parsed.iteritems()
+                if ":" in obj for node_name in node_data]
 
-    for db_name in db_names:
-        if "lock_requests/sec" in parsed.get(("%s:Locks" % db_name, "_Total"), {}) \
-           and "batch_requests/sec" in parsed.get(("%s:SQL_Statistics" % db_name, "None")):
+    for db_name, node_name in db_names:
+        if "lock_requests/sec" in parsed.get(("%s:Locks" % db_name, "_Total"), {})\
+                                        .get(node_name, {}) \
+           and "batch_requests/sec" in parsed.get(("%s:SQL_Statistics" % db_name, "None"))\
+                                             .get(node_name, {}):
             yield db_name, {}
 
 
 def check_mssql_counters_locks_per_batch(item, params, parsed):
-    data_locks = parsed.get(("%s:Locks" % item, "_Total"), {})
-    data_stats = parsed.get(("%s:SQL_Statistics" % item, "None"), {})
+    data_locks_data = parsed.get(("%s:Locks" % item, "_Total"), {})
+    data_stats_data = parsed.get(("%s:SQL_Statistics" % item, "None"), {})
 
-    if not (data_locks or data_stats):
+    if not any(data_locks_data.values() + data_stats_data.values()):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    now = data_locks.get('utc_time', data_stats.get('utc_time'))
-    if now is None:
-        now = time.time()
+    for node_name in set(data_locks_data.keys() + data_stats_data.keys()):
+        data_locks = data_locks_data[node_name]
+        data_stats = data_stats_data[node_name]
+        now = data_locks.get('utc_time', data_stats.get('utc_time'))
+        if now is None:
+            now = time.time()
 
-    locks = data_locks["lock_requests/sec"]
-    batches = data_stats["batch_requests/sec"]
+        locks = data_locks["lock_requests/sec"]
+        batches = data_stats["batch_requests/sec"]
 
-    lock_rate = get_rate("mssql_counters_locks_per_batch.%s.locks" % item, now, locks)
-    batch_rate = get_rate("mssql_counters_locks_per_batch.%s.batches" % item, now, batches)
+        lock_rate = get_rate("mssql_counters_locks_per_batch.%s.locks" % item, now, locks)
+        batch_rate = get_rate("mssql_counters_locks_per_batch.%s.batches" % item, now, batches)
 
-    if batch_rate == 0:
-        lock_per_batch = 0
-    else:
-        lock_per_batch = lock_rate / batch_rate
+        if batch_rate == 0:
+            lock_per_batch = 0
+        else:
+            lock_per_batch = lock_rate / batch_rate
 
-    infotext = "%.1f" % lock_per_batch
-    state = 0
+        node_info = ""
+        if node_name:
+            node_info = "[%s] " % node_name
+        infotext = "%s%.1f" % (node_info, lock_per_batch)
+        state = 0
 
-    if params:
-        warn, crit = params
-        if lock_per_batch >= crit:
-            state = 2
-        elif lock_per_batch >= warn:
-            state = 1
-        if state:
-            infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
-    else:
-        warn, crit = None, None
+        if params:
+            warn, crit = params
+            if lock_per_batch >= crit:
+                state = 2
+            elif lock_per_batch >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
+        else:
+            warn, crit = None, None
 
-    return state, infotext, [("locks_per_batch", lock_per_batch, warn, crit)]
+        yield state, infotext, [("locks_per_batch", lock_per_batch, warn, crit)]
 
 
 check_info["mssql_counters.locks_per_batch"] = {
@@ -454,6 +505,7 @@ check_info["mssql_counters.locks_per_batch"] = {
     "service_description"   : "MSSQL %s Locks per Batch",
     "has_perfdata"          : True,
     "group"                 : "mssql_stats",
+    'node_info'             : True,
 }
 
 #.
@@ -469,9 +521,9 @@ check_info["mssql_counters.locks_per_batch"] = {
 
 def check_mssql_file_sizes(item, params, parsed):
     obj, instance = item.split()
-    counters = parsed.get((obj, instance), {})
+    node_data = parsed.get((obj, instance), {})
 
-    if not counters:
+    if not any(node_data.values()):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -479,30 +531,36 @@ def check_mssql_file_sizes(item, params, parsed):
     if not params:
         params = {}
 
-    for counters_key, key, title in [
-        ("data_file(s)_size_(kb)",     "data_files",     "Data Files"),
-        ("log_file(s)_size_(kb)",      "log_files",      "Log Files total"),
-        ("log_file(s)_used_size_(kb)", "log_files_used", "Log files Used"),
-    ]:
-        val_bytes = counters.get(counters_key)
-        if val_bytes is None:
-            continue
+    for node_name, counters in node_data.iteritems():
+        node_info = ""
+        if node_name:
+            node_info = "[%s] " % node_name
 
-        val_bytes = val_bytes * 1024
-        infotext = "%s: %s" % (title, get_bytes_human_readable(val_bytes))
+        for counters_key, key, title in [
+            ("data_file(s)_size_(kb)",     "data_files",     "Data Files"),
+            ("log_file(s)_size_(kb)",      "log_files",      "Log Files total"),
+            ("log_file(s)_used_size_(kb)", "log_files_used", "Log files Used"),
+        ]:
+            val_bytes = counters.get(counters_key)
+            if val_bytes is None:
+                continue
 
-        state = 0
-        warn, crit = params.get(key, (None, None))
-        if crit is not None and val_bytes >= crit:
-            state = 2
-        elif warn is not None and val_bytes >= warn:
-            state = 1
-        if state:
-            infotext += " (warn/crit at %s/%s)" % (
-                        get_bytes_human_readable(warn),
-                        get_bytes_human_readable(crit))
+            val_bytes = val_bytes * 1024
+            infotext = "%s%s: %s" % (node_info, title, get_bytes_human_readable(val_bytes))
+            node_info = ""
 
-        yield state, infotext, [(key, val_bytes, warn, crit)]
+            state = 0
+            warn, crit = params.get(key, (None, None))
+            if crit is not None and val_bytes >= crit:
+                state = 2
+            elif warn is not None and val_bytes >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %s/%s)" % (
+                            get_bytes_human_readable(warn),
+                            get_bytes_human_readable(crit))
+
+            yield state, infotext, [(key, val_bytes, warn, crit)]
 
 
 check_info['mssql_counters.file_sizes'] = {
@@ -513,4 +571,5 @@ check_info['mssql_counters.file_sizes'] = {
     'service_description'   : "MSSQL %s File Sizes",
     'has_perfdata'          : True,
     'group'                 : "mssql_file_sizes",
+    'node_info'             : True,
 }

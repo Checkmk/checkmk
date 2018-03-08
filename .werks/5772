@@ -1,0 +1,10 @@
+Title: mssql_counters.transactions,mssql_counters.pageactivity,mssql_counters.locks are cluster aware
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520506718
+Class: feature
+
+

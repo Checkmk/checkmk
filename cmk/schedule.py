@@ -29,86 +29,142 @@
 # by a period specification as produced by the SchedulePeriod() valuespec
 # and a timeofday specification which is a two element tuple of hours and minutes
 
+import abc
+import datetime
 import time
 
-
-def last_scheduled_time(period, timeofday):
-    return __scheduled_time(period, timeofday, "last")
-
-
-def next_scheduled_time(period, timeofday):
-    return __scheduled_time(period, timeofday, "next")
+from dateutil.relativedelta import relativedelta
+from dateutil.rrule import rrule, DAILY, WEEKLY, MONTHLY
 
 
-def __scheduled_time(period, timeofday, how):
-    if how == "last":
-        comp = lambda a, b: a > b
-        add = 1
-    elif how == "next":
-        comp = lambda a, b: a < b
-        add = -1
-    else:
-        raise NotImplementedError()
+class Schedule:
+    """
+    Abstract base class for schedules. A default implementation
+    for the last and next event at a given datetime are provided.
+    Subclasses have to define the class attribute _delta and the
+    instance attribute _rule.
+    """
+    __metaclass__ = abc.ABCMeta
 
-    now = time.time()
+    @abc.abstractproperty
+    def rule(self):
+        pass
 
-    year, month, mday, hour, minute, second, wday = range(7)
+    @abc.abstractproperty
+    def delta(self):
+        pass
 
-    # Get the current time according to our timezone
-    brokentime = list(time.localtime(now))
+    def next(self, time):
+        return self.rule.replace(dtstart=time).after(time)
 
-    # Enter the time of the day into the struct
-    brokentime[hour]   = timeofday[0] # hours
-    brokentime[minute] = timeofday[1] # minutes
-    brokentime[second] = 0            # seconds
+    def last(self, time):
+        from_ = time + relativedelta(**self.delta)
+        return self.rule.replace(dtstart=from_, until=time).before(time)
+
+
+class DaySchedule(Schedule):
+    """
+    A daily schedule.
+    """
+    def __init__(self, timeofday):
+        self._rule = rrule(DAILY, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
+
+    @property
+    def rule(self):
+        return self._rule
+
+    @property
+    def delta(self):
+        return {"days": -1}
+
+
+class WeekSchedule(Schedule):
+    """
+    A weekly schedule.
+    """
+    def __init__(self, weekday, timeofday):
+        if not 0 <= weekday <= 6:
+            raise ValueError('weekday must be between 0 and 6')
+        self._rule = rrule(WEEKLY, byweekday=weekday, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
+
+    @property
+    def rule(self):
+        return self._rule
+
+    @property
+    def delta(self):
+        return {"weeks": -1}
+
+
+class StartMonthSchedule(Schedule):
+    """
+    A monthly schedule initialized relatively to the first day of the month.
+    """
+    def __init__(self, day, timeofday):
+        if not 1 <= day <= 31:
+            raise ValueError('day must be between 1 and 31')
+        self._rule = rrule(MONTHLY, bymonthday=day, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
+
+    @property
+    def rule(self):
+        return self._rule
+
+    @property
+    def delta(self):
+        return {"months": -2}
+
+
+class EndMonthSchedule(Schedule):
+    """
+    A monthly schedule initialized relatively to the last day of the month.
+    """
+    def __init__(self, days_from_end, timeofday):
+        if not 1 <= days_from_end <= 31:
+            raise ValueError('days_from_end must be between 1 and 31')
+        day = -days_from_end
+        self._rule = rrule(MONTHLY, bymonthday=day, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
+
+    @property
+    def rule(self):
+        return self._rule
+
+    @property
+    def delta(self):
+        return {"months": -2}
+
+
+def _get_schedule(period, timeofday):
+    """
+    Returns a schedule instance for a given period and timeofday.
+    """
+    t = datetime.time(*timeofday)
 
     if period == "day":
-        ref_time = time.mktime(brokentime)
-        if comp(ref_time, now): # in the future: substract one day
-            ref_time -= 24 * 3600 * add
-
+        schedule = DaySchedule(t)
     elif period[0] == "week":
-        ref_time = time.mktime(brokentime)
-        daydiff = period[1] - brokentime[wday] # wday
-        ref_time += daydiff * 24 * 3600
-        if comp(ref_time, now): # in the future: substract one week
-            ref_time -= 7 * 24 * 3600 * add
-
+        weekday = period[1]
+        schedule = WeekSchedule(weekday, t)
     elif period[0] == "month_begin":
-        brokentime[mday] = period[1] # mday
-        ref_time = time.mktime(brokentime)
-        if comp(ref_time, now): # in the future: go back to previous month
-            brokentime[month] -= 1 * add
-            if brokentime[month] == 0:
-                brokentime[month] = 12
-                brokentime[year] -= 1
-            elif brokentime[month] == 13:
-                brokentime[month] = 1
-                brokentime[year] += 1
-            ref_time = time.mktime(brokentime)
-
+        day = period[1]
+        schedule = StartMonthSchedule(day, t)
     elif period[0] == "month_end":
-        minus_mday = period[1]
-        # Find last day in this month.
-        brokentime[mday] = 1
-        brokentime[month] += 1
-        if brokentime[month] == 13:
-            brokentime[month] = 1
-            brokentime[year] += 1
-        ref_time = time.mktime(brokentime) - minus_mday * 24 * 3600
-        if comp(ref_time, now): # switch to previous/next month
-            brokentime = list(time.localtime(ref_time))
-            brokentime[mday] = 1
-            if how == "next":
-                brokentime[month] += 1
-                if brokentime[month] == 13:
-                    brokentime[year] += 1
+        days_from_end = period[1]
+        schedule = EndMonthSchedule(days_from_end, t)
+    else:
+        raise ValueError('Unknown period')
 
-            ref_time = time.mktime(brokentime) - minus_mday * 24 * 3600 * add
+    return schedule
 
-    # Due to the date shift a change in the timezone could have
-    # happened. Make sure hour is correctly set again
-    brokentime = list(time.localtime(ref_time))
-    brokentime[hour] = timeofday[0]
-    ref_time = time.mktime(brokentime)
-    return ref_time
+
+def last_scheduled_time(period, timeofday, dt=None):
+    if dt is None:
+        dt = datetime.datetime.today()
+    schedule = _get_schedule(period, timeofday)
+    return time.mktime(schedule.last(dt).timetuple())
+
+
+def next_scheduled_time(period, timeofday, dt=None):
+    if dt is None:
+        dt = datetime.datetime.today()
+    schedule = _get_schedule(period, timeofday)
+    return time.mktime(schedule.next(dt).timetuple())

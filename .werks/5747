@@ -1,0 +1,13 @@
+Title: fix daylight saving time error
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.5.0i4
+Date: 1520520136
+Class: fix
+
+When the actual time was inside/outside the daylight saving time and a report
+was outside/inside the daylight saving time the calculated time for the last
+or next scheduled reports was off by 1h. This is fixed now by using the
+dateutil library internally.

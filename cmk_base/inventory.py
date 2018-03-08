@@ -121,13 +121,13 @@ def do_inv_check(options, hostname):
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        old_timestamp, inventory_tree = do_inv_for(hostname, ipaddress)
-        if inventory_tree.is_empty():
-            console.output("OK - Found no data\n")
+        old_timestamp, inventory_tree, status_data_tree = do_inv_for(hostname, ipaddress)
+        if inventory_tree.is_empty() and status_data_tree.is_empty():
+            console.output("OK - [Inventory/Status data] Found no data\n")
             return 0
 
         infotexts = []
-        infotexts.append("found %d entries" % inventory_tree.count_entries())
+        infotexts.append("[Inventory] Found %d entries" % inventory_tree.count_entries())
         state = 0
         if not inventory_tree.has_edge("software") and _inv_sw_missing:
             infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
@@ -159,7 +159,11 @@ def do_inv_check(options, hostname):
             for exc in exceptions:
                 infotexts.append("%s" % exc)
 
-        console.output("%s - %s\n" % (defines.short_service_state_name(state), ", ".join(infotexts)))
+        infotext = ", ".join(infotexts)
+        if not status_data_tree.is_empty():
+            infotext += " [Status data] Found %s entries" % status_data_tree.count_entries()
+
+        console.output("%s - %s\n" % (defines.short_service_state_name(state), infotext))
         return state
 
     except Exception, e:
@@ -197,7 +201,7 @@ def do_inv_for(hostname, ipaddress):
                 (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
 
     _run_inventory_export_hooks(hostname, inventory_tree)
-    return old_timestamp, inventory_tree
+    return old_timestamp, inventory_tree, status_data_tree
 
 
 def _do_inv_for_cluster(hostname, inventory_tree):

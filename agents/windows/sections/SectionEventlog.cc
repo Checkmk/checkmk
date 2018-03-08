@@ -485,7 +485,10 @@ bool SectionEventlog::produceOutputInner(
                 handleExistingLog(out, state);
             }
         }
-        // The offsets are persisted in a state file.
+        // The offsets are persisted in a statefile.
+        // Always use the first available statefile name. In case of a TCP/IP
+        // connection, this is the host-IP-specific statefile, and in case of
+        // non-TCP (test / debug run etc.) the general eventstate.txt.
         const auto &statefile = statefiles.front();
         saveEventlogOffsets(statefile, states);
     }

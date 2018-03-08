@@ -5,24 +5,14 @@ SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-echo "Installing to site \"$SITE\"..."
+VERSION=$(sed -n 's/VERSION.*= \(.*\)/\1/p' Makefile)
 
-if [ ! -d net-snmp-5.7.3 ]; then
+echo "Compile net-snmp..."
+if [ ! -d net-snmp-$VERSION ]; then
     make
-    cd net-snmp-5.7.3
 else
-    cd net-snmp-5.7.3
-    make || exit 1
+    make -C net-snmp-$VERSION || exit 1
 fi
 
-cd python
-sudo PYTHONPATH=$PYTHONPATH:$ROOT/lib/python \
-    python setup.py install --home=$ROOT \
-                --prefix='' \
-                --install-platlib=$ROOT/lib/python \
-                --install-purelib=$ROOT/lib/python
-
-cd ..
-
-sudo install -m 755 apps/.libs/snmp{bulkwalk,walk,get} $ROOT/bin
-sudo install -m 644 snmplib/.libs/libnetsnmp.* $ROOT/lib
+echo "Installing to site \"$SITE\"..."
+sudo make install OMD_ROOT=$ROOT

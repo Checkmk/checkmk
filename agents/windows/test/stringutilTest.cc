@@ -193,31 +193,61 @@ TEST(wa_stringutilTest, isPathRelative_relative_with_whitespace_quotes_unix) {
 TEST(wa_stringutilTest, ci_equal__equal_cases_equal) {
     const std::string s1{"asdfgh"};
     const std::string s2{s1};
-    ASSERT_TRUE(ci_equal(s1, s2));
+    ASSERT_TRUE(ci_equal(s1, s2)) << "Expected " << s1 << " == " << s2;
 }
 
 TEST(wa_stringutilTest, ci_equal__equal_cases_unequal) {
     const std::string s1{"asdfgh§$"};
     const std::string s2{"aSdFgH§$"};
-    ASSERT_TRUE(ci_equal(s1, s2));
+    ASSERT_TRUE(ci_equal(s1, s2)) << "Expected " << s1 << " == " << s2;
 }
 
 TEST(wa_stringutilTest, ci_equal__unequal_first_shorter) {
     const std::string s1{"asdfgh"};
     const std::string s2{"aSdFgH§$"};
-    ASSERT_FALSE(ci_equal(s1, s2));
+    ASSERT_FALSE(ci_equal(s1, s2)) << "Expected " << s1 << " != " << s2;
 }
 
 TEST(wa_stringutilTest, ci_equal__unequal_first_longer) {
     const std::string s1{"asdfgh§$"};
     const std::string s2{"aSdFgH"};
-    ASSERT_FALSE(ci_equal(s1, s2));
+    ASSERT_FALSE(ci_equal(s1, s2)) << "Expected " << s1 << " != " << s2;
 }
 
 TEST(wa_stringutilTest, ci_equal__unequal) {
     const std::string s1{"asdfg$"};
     const std::string s2{"aSdFgH"};
-    ASSERT_FALSE(ci_equal(s1, s2));
+    ASSERT_FALSE(ci_equal(s1, s2)) << "Expected " << s1 << " != " << s2;
+}
+
+TEST(wa_stringutilTest, ci_compare__equal) {
+    const std::string s1{"asdfgh"};
+    const std::string s2{"aSdFgH"};
+    ASSERT_FALSE(ci_compare(s1, s2)) << "Expected " << s1 << " == " << s2;
+}
+
+TEST(wa_stringutilTest, ci_compare__true) {
+    const std::string s1{"asdfgg"};
+    const std::string s2{"aSdFgH"};
+    ASSERT_TRUE(ci_compare(s1, s2)) << "Expected " << s1 << " < " << s2;
+}
+
+TEST(wa_stringutilTest, ci_compare__false) {
+    const std::string s1{"asdfgH"};
+    const std::string s2{"aSdFgg"};
+    ASSERT_FALSE(ci_compare(s1, s2)) << "Expected " << s1 << " > " << s2;
+}
+
+TEST(wa_stringutilTest, ci_compare__first_shorter) {
+    const std::string s1{"asdfg"};
+    const std::string s2{"aSdFgg"};
+    ASSERT_TRUE(ci_compare(s1, s2)) << "Expected " << s1 << " < " << s2;
+}
+
+TEST(wa_stringutilTest, ci_compare__second_shorter) {
+    const std::string s1{"aSdfgh"};
+    const std::string s2{"asdFg"};
+    ASSERT_FALSE(ci_compare(s1, s2)) << "Expected " << s1 << " > " << s2;
 }
 
 // Tests for char version of globmatch:

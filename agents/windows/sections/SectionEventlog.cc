@@ -102,9 +102,11 @@ eventlog::States loadEventlogOffsets(const std::vector<std::string> &statefiles,
             }
         }
 
-        std::sort(
-            states.begin(), states.end(),
-            [](const auto &s1, const auto &s2) { return s1.name < s2.name; });
+        std::sort(states.begin(), states.end(),
+                  [](const auto &s1, const auto &s2) {
+                      return ci_compare(s1.name, s2.name);
+                  });
+
         if (!states.empty()) {
             return states;
         }

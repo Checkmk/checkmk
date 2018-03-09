@@ -30,8 +30,10 @@
 # last entry: db creation time 'ddmmyyyyhh24mi'
 
 
-def inv_oracle_instance(info):
-    node = inv_tree_list("software.applications.oracle.instance:")
+def inv_oracle_instance(info, inventory_tree, status_data_tree):
+    path = "software.applications.oracle.instance:"
+    inv_node = inventory_tree.get_list(path)
+    status_node = status_data_tree.get_list(path)
     for line in info:
         db_creation_time = None
         if len(line) == 6:
@@ -49,13 +51,18 @@ def inv_oracle_instance(info):
         else:
             continue
 
-        node.append({
+        inv_node.append({
             "sid"              : sid,
             "version"          : version,
             "openmode"         : openmode,
             "logmode"          : logmode,
             "logins"           : logins,
             "db_creation_time" : db_creation_time,
+        })
+
+        status_node.append({
+            "sid"       : sid,
+            "db_uptime" : up_seconds,
         })
 
 

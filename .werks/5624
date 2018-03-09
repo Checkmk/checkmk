@@ -1,4 +1,4 @@
-Title: oracle_performance, oracle_tablespaces: Inventory plugins provide status data
+Title: oracle_instance, oracle_performance, oracle_tablespaces: Inventory plugins provide status data
 Level: 1
 Component: inv
 Compatible: compat

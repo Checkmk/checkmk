@@ -1,0 +1,23 @@
+Title: Improved output of Check_MK services
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520584871
+Class: fix
+
+<ul>
+<li>The result of the different data sources was not visible to the user
+in the Check_MK service.</li>
+<li>The Check_MK service is now showing individual status information
+about each data source (e.g. the agent version).</li>
+<li>The Check_MK HW/SW Inventory and Check_MK Discovery services are
+only showing data source related details in case a problem happened
+for a data source.</li>
+<li>The states of Check_MK, Check_MK Discovery and Check_MK HW/SW Inventory
+are now working in the same way (and all respect the "Check_MK service" ruleset)
+settings. This makes e.g. the Check_MK Discovery service result in CRIT states
+e.g. in case of agent communication errors when there is no cache file present
+where it previously only reported a WARN state.</li>
+</ul>

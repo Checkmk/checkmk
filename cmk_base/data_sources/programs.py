@@ -160,8 +160,8 @@ class DSProgramDataSource(ProgramDataSource):
 
 class SpecialAgentDataSource(ProgramDataSource):
     def __init__(self, hostname, ipaddress, special_agent_id, params):
-        super(SpecialAgentDataSource, self).__init__(hostname, ipaddress)
         self._special_agent_id = special_agent_id
+        super(SpecialAgentDataSource, self).__init__(hostname, ipaddress)
         self._params = params
 
 

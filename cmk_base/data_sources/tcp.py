@@ -32,7 +32,7 @@ import subprocess
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
-from cmk_base.exceptions import MKAgentError
+from cmk_base.exceptions import MKAgentError, MKEmptyAgentData
 
 from .abstract import DataSource, CheckMKAgentDataSource
 
@@ -120,7 +120,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         output = ''.join(output)
 
         if len(output) == 0: # may be caused by xinetd not allowing our address
-            raise MKAgentError("Empty output from agent at TCP port %d" % port)
+            raise MKEmptyAgentData("Empty output from agent at TCP port %d" % port)
 
         elif len(output) < 16:
             raise MKAgentError("Too short output from agent: %r" % output)

@@ -1304,13 +1304,11 @@ class AutomationGetAgentOutput(Automation):
                 info = agent_output
 
                 # Optionally show errors of problematic data sources
-                errors = data_sources.get_data_source_errors_of_host(hostname, ipaddress)
-                if errors:
-                    success = False
-
-                    for data_source, exceptions in errors.items():
-                        for exc in exceptions:
-                            output += "%s\n" % exc
+                for source in sources.get_data_sources():
+                    source_state, source_output, source_perfdata = source.get_summary_result()
+                    if source_state != 0:
+                        success = False
+                        output += "[%s] %s\n" % (source.id(), source_output)
             else:
                 path = cmk.paths.snmpwalks_dir + "/" + hostname
                 snmp.do_snmpwalk_on({}, hostname, path)

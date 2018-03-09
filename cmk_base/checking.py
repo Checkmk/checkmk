@@ -46,8 +46,7 @@ import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
 import cmk_base.core as core
 import cmk_base.check_table as check_table
-from cmk_base.exceptions import MKTimeout, MKSkipCheck, MKAgentError, \
-                                MKSNMPError, MKParseFunctionError
+from cmk_base.exceptions import MKTimeout, MKParseFunctionError
 
 try:
     import cmk_base.cee.keepalive as keepalive
@@ -85,71 +84,32 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
     # Exit state in various situations is configurable since 1.2.3i1
     exit_spec = config.exit_code_spec(hostname)
 
+    state, output, perfdata = 0, [], []
     try:
         item_state.load(hostname)
-        cmk_info, num_success, missing_sections = \
-            do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names)
 
-        agent_version = cmk_info["version"]
-        agent_os = cmk_info.get("agentos")
+        sources = data_sources.DataSources(hostname, ipaddress)
+
+        num_success, missing_sections = \
+            _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names)
 
         if _submit_to_core:
             item_state.save(hostname)
 
-        # Add errors of problematic data sources to problems list
-        problems = []
-        for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
-            for exc in exceptions:
-                problems.append("%s" % exc)
+        for source in sources.get_data_sources():
+            source_state, source_output, source_perfdata = source.get_summary_result()
+            if source_output != "":
+                state = max(state, source_state)
+                output.append("[%s] %s" % (source.id(), source_output))
+                perfdata.extend(source_perfdata)
 
-        if problems:
-            problems_txt = ", ".join(problems)
-            output = "%s, " % problems_txt
-
-            if problems_txt == "Empty output from agent":
-                status = exit_spec.get("empty_output", 2)
-            else:
-                status = exit_spec.get("connection", 2)
-
-        elif missing_sections and num_success > 0:
-            output = "Missing agent sections: %s - " % ", ".join(missing_sections)
-            status = exit_spec.get("missing_sections", 1)
+        if missing_sections and num_success > 0:
+            output.append("Missing agent sections: %s" % ", ".join(missing_sections))
+            state = max(state, exit_spec.get("missing_sections", 1))
 
         elif missing_sections:
-            output = "Got no information from host, "
-            status = exit_spec.get("empty_output", 2)
-
-        elif expected_version and agent_version \
-             and not _is_expected_agent_version(agent_version, expected_version):
-            # expected version can either be:
-            # a) a single version string
-            # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
-            #    (the dict keys are optional)
-            if type(expected_version) == tuple and expected_version[0] == 'at_least':
-                expected = 'at least'
-                if 'daily_build' in expected_version[1]:
-                    expected += ' build %s' % expected_version[1]['daily_build']
-                if 'release' in expected_version[1]:
-                    if 'daily_build' in expected_version[1]:
-                        expected += ' or'
-                    expected += ' release %s' % expected_version[1]['release']
-            else:
-                expected = expected_version
-            output = "unexpected agent version %s (should be %s), " % (agent_version, expected)
-            status = exit_spec.get("wrong_version", 1)
-
-        elif config.agent_min_version and agent_version < config.agent_min_version:
-            output = "old plugin version %s (should be at least %s), " % (agent_version, config.agent_min_version)
-            status = exit_spec.get("wrong_version", 1)
-
-        else:
-            output = ""
-            status = 0
-
-        if not config.is_cluster(hostname) and agent_version != None:
-            output += "Agent version %s, " % agent_version
-        if not config.is_cluster(hostname) and agent_os != None:
-            output += "Agent OS %s, " % agent_os
+            output.append("Got no information from host")
+            state = max(state, exit_spec.get("empty_output", 2))
 
     except MKTimeout:
         raise
@@ -157,86 +117,52 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
     except MKGeneralException, e:
         if cmk.debug.enabled():
             raise
-        output = "%s, " % e
-        status = exit_spec.get("exception", 3)
+        output.append("%s" % e)
+        state = max(state, exit_spec.get("exception", 3))
 
     if _checkresult_file_fd != None:
         _close_checkresult_file()
+
+    if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
+        import cmk_base.cee.inline_snmp
+        cmk_base.cee.inline_snmp.save_snmp_stats()
 
     cpu_tracking.end()
     phase_times = cpu_tracking.get_times()
     total_times = phase_times["TOTAL"]
     run_time = total_times[4]
 
+    output.append("execution time %.1f sec" % run_time)
     if config.check_mk_perfdata_with_times:
-        output += "execution time %.1f sec|execution_time=%.3f user_time=%.3f "\
-                  "system_time=%.3f children_user_time=%.3f children_system_time=%.3f" %\
-                (run_time, run_time, total_times[0], total_times[1], total_times[2], total_times[3])
+        perfdata += [
+            "execution_time=%.3f" % run_time,
+            "user_time=%.3f" % total_times[0],
+            "system_time=%.3f" % total_times[1],
+            "children_user_time=%.3f" % total_times[2],
+            "children_system_time=%.3f" % total_times[3],
+        ]
 
         for phase, times in phase_times.items():
             if phase in [ "agent", "snmp", "ds" ]:
                 t = times[4] - sum(times[:4]) # real time - CPU time
-                output += " cmk_time_%s=%.3f" % (phase, t)
-        output += "\n"
+                perfdata.append("cmk_time_%s=%.3f" % (phase, t))
     else:
-        output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
+        perfdata.append("execution_time=%.3f" % run_time)
 
-    if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
-        import cmk_base.cee.inline_snmp
-        cmk_base.cee.inline_snmp.save_snmp_stats()
+    output_txt = "%s - %s | %s\n" % (defines.short_service_state_name(state), ", ".join(output), " ".join(perfdata))
 
     if _in_keepalive_mode():
-        keepalive.add_keepalive_active_check_result(hostname, output)
-        console.verbose(output)
+        keepalive.add_keepalive_active_check_result(hostname, output_txt)
+        console.verbose(output_txt)
     else:
-        console.output(defines.short_service_state_name(status) + " - " + output.encode('utf-8'))
+        console.output(output_txt)
 
-    return status
-
-
-def _is_expected_agent_version(agent_version, expected_version):
-    try:
-        if agent_version in [ '(unknown)', None, 'None' ]:
-            return False
-
-        if type(expected_version) == str and expected_version != agent_version:
-            return False
-
-        elif type(expected_version) == tuple and expected_version[0] == 'at_least':
-            spec = expected_version[1]
-            if cmk_base.utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
-                expected = int(spec['daily_build'].replace('.', ''))
-
-                branch = cmk_base.utils.branch_of_daily_build(agent_version)
-                if branch == "master":
-                    agent = int(agent_version.replace('.', ''))
-
-                else: # branch build (e.g. 1.2.4-2014.06.01)
-                    agent = int(agent_version.split('-')[1].replace('.', ''))
-
-                if agent < expected:
-                    return False
-
-            elif 'release' in spec:
-                if cmk_base.utils.is_daily_build_version(agent_version):
-                    return False
-
-                if cmk_base.utils.parse_check_mk_version(agent_version) \
-                    < cmk_base.utils.parse_check_mk_version(spec['release']):
-                    return False
-
-        return True
-    except Exception, e:
-        if cmk.debug.enabled():
-            raise
-        raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
-                (agent_version, expected_version, e))
+    return state
 
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fetch_agent_version=True):
-    cmk_info = { "version" : "(unknown)" }
+def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names=None):
     num_success, missing_sections = 0, set()
 
     checks.set_hostname(hostname)
@@ -249,7 +175,6 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fet
     if only_check_plugin_names is None:
         only_check_plugin_names = list(set([ e[0] for e in table ]))
 
-    sources = data_sources.DataSources(hostname, ipaddress)
     sources.enforce_check_plugin_names(only_check_plugin_names)
 
     # Gather the data from the sources
@@ -265,24 +190,10 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_plugin_names=None, fet
         else:
             missing_sections.add(checks.section_name_of(check_plugin_name))
 
-    if fetch_agent_version:
-        if config.is_tcp_host(hostname):
-            section_content = multi_host_sections.get_section_content(hostname, ipaddress,
-                                                        "check_mk", for_discovery=False) or []
-
-            for line in section_content:
-                value = " ".join(line[1:]) if len(line) > 1 else None
-                cmk_info[line[0][:-1].lower()] = value
-
-        else:
-            cmk_info["version"] = None
-    else:
-        cmk_info["version"] = None
-
-    _do_status_data_inventory(hostname, multi_host_sections, ipaddress)
+    _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
 
     missing_section_list = sorted(list(missing_sections))
-    return cmk_info, num_success, missing_section_list
+    return num_success, missing_section_list
 
 
 def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description):
@@ -406,7 +317,7 @@ def _determine_check_params(params):
         return params
 
 
-def _do_status_data_inventory(hostname, multi_host_sections, ipaddress):
+def _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
     if checks.do_status_data_inventory_for(hostname):
         import cmk_base.inventory as inventory
         import cmk_base.inventory_plugins as inventory_plugins
@@ -419,7 +330,7 @@ def _do_status_data_inventory(hostname, multi_host_sections, ipaddress):
                 do_inv = True
                 break
         if do_inv:
-            inventory.do_inv_for(hostname, ipaddress)
+            inventory.do_inv_for(sources, hostname, ipaddress)
 
 
 def is_manual_check(hostname, check_plugin_name, item):

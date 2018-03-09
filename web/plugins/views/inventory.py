@@ -698,13 +698,14 @@ inventory_displayhints.update({
 
     ".software.applications.oracle.instance:"                   : { "title"    : _("Instances"),
                                                                     "keyorder" : [ "sid", "version", "openmode", "logmode",
-                                                                                   "logins", "db_creation_time" ],
+                                                                                   "logins", "db_uptime", "db_creation_time" ],
                                                                     "view"     : "invorainstance_of_host" },
     ".software.applications.oracle.instance:*.sid"              : { "title" : _("SID"), },
     ".software.applications.oracle.instance:*.version"          : { "title" : _("Version"), },
     ".software.applications.oracle.instance:*.openmode"         : { "title" : _("Open mode"), },
     ".software.applications.oracle.instance:*.logmode"          : { "title" : _("Log mode"), },
     ".software.applications.oracle.instance:*.logins"           : { "title" : _("Logins"), },
+    ".software.applications.oracle.instance:*.db_uptime"        : { "title" : _("Uptime"), "paint" : "age" },
     ".software.applications.oracle.instance:*.db_creation_time" : { "title" : _("Creation time"), "paint" : "date_and_time" },
 
     ".software.applications.oracle.dataguard_stats:"             : { "title"    : _("Dataguard statistics"),
@@ -721,12 +722,28 @@ inventory_displayhints.update({
     ".software.applications.oracle.recovery_area:*.sid"       : { "title" : _("SID"), },
     ".software.applications.oracle.recovery_area:*.flashback" : { "title" : _("Flashback"), },
 
-    ".software.applications.oracle.performance:" : { "title"    : _("Performance"),
-                                                     "keyorder" : [ "sid", "sga_info", "sga_size" ],
-                                                     "view": "invoraperformance_of_host"},
-    ".software.applications.oracle.performance:*.sid"      : { "title" : _("SID"), },
-    ".software.applications.oracle.performance:*.sga_info" : { "title" : _("SGA info"), },
-    ".software.applications.oracle.performance:*.sga_size" : { "title" : _("SGA size"), "paint" : "size" },
+    ".software.applications.oracle.sga:"                        : { "title"    : _("SGA Info"),
+                                                                    "keyorder" : [ "sid", "fixed_size", "redo_buffer", "buf_cache_size",
+                                                                                   "in_mem_area_size", "shared_pool_size", "large_pool_size",
+                                                                                   "java_pool_size", "streams_pool_size", "shared_io_pool_size",
+                                                                                   "data_trans_cache_size", "granule_size", "max_size",
+                                                                                   "start_oh_shared_pool", "free_mem_avail" ],
+                                                                    "view"     : "invorasga_of_host" },
+    ".software.applications.oracle.sga:*.sid"                   : { "title" : _("SID"), },
+    ".software.applications.oracle.sga:*.fixed_size"            : { "title" : _("Fixed size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.max_size"              : { "title" : _("Maximum size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.redo_buffer"           : { "title" : _("Redo buffers"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.buf_cache_size"        : { "title" : _("Buffer cache size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.in_mem_area_size"      : { "title" : _("In-memory area"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.shared_pool_size"      : { "title" : _("Shared pool size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.large_pool_size"       : { "title" : _("Large pool size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.java_pool_size"        : { "title" : _("Java pool size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.streams_pool_size"     : { "title" : _("Streams pool size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.shared_io_pool_size"   : { "title" : _("Shared pool size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.data_trans_cache_size" : { "title" : _("Data transfer cache size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.granule_size"          : { "title" : _("Granule size"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.start_oh_shared_pool"  : { "title" : _("Startup overhead in shared pool"), "paint" : "size" },
+    ".software.applications.oracle.sga:*.free_mem_avail"        : { "title" : _("Free SGA memory available"), "paint" : "size" },
 
     ".software.applications.oracle.tablespaces:"                 : { "title"    : _("Tablespaces"),
                                                                      "keyorder" : ["sid", "name", "version", "type", "autoextensible",
@@ -1095,7 +1112,7 @@ declare_invtable_view("invorainstance",       ".software.applications.oracle.ins
 declare_invtable_view("invorarecoveryarea",   ".software.applications.oracle.recovery_area:",   _("Oracle recovery area"),       _("Oracle recovery areas"))
 declare_invtable_view("invoradataguardstats", ".software.applications.oracle.dataguard_stats:", _("Oracle dataguard statistic"), _("Oracle dataguard statistics"))
 declare_invtable_view("invoratablespace",     ".software.applications.oracle.tablespaces:",     _("Oracle tablespace"),          _("Oracle tablespaces"))
-declare_invtable_view("invoraperformance",    ".software.applications.oracle.performance:",     _("Oracle performance"),         _("Oracle performance"))
+declare_invtable_view("invorasga",            ".software.applications.oracle.sga:",             _("Oracle performance"),         _("Oracle performance"))
 
 
 # This would also be possible. But we muss a couple of display and filter hints.

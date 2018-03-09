@@ -24,14 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk_base.config as config
-import cmk_base.checks as checks
-
-from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource
-
 import pyghmi.ipmi.command as ipmi_cmd
 import pyghmi.ipmi.sdr as ipmi_sdr
 import pyghmi.constants as ipmi_const
+from pyghmi.exceptions import IpmiException
+
+import cmk.debug
+
+import cmk_base.config as config
+import cmk_base.checks as checks
+from cmk_base.exceptions import MKAgentError
+
+from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource
 
 
 class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
@@ -61,19 +65,41 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
 
     def _execute(self):
+        try:
+            connection = self._create_ipmi_connection()
+
+            output = ""
+            output += self._fetch_ipmi_sensors_section(connection)
+            output += self._fetch_ipmi_firmware_section(connection)
+
+            return output
+        except Exception, e:
+            if cmk.debug.enabled():
+                raise
+
+            # Improve bad exceptions thrown by pyghmi e.g. in case of connection issues
+            if type(e) == IpmiException and "%s" % e == "None":
+                raise MKAgentError("IPMI communication failed")
+            else:
+                raise
+
+
+    def _create_ipmi_connection(self):
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
         credentials = self._credentials()
 
-        cmd = ipmi_cmd.Command(bmc=self._ipaddress,
+        return ipmi_cmd.Command(bmc=self._ipaddress,
                                userid=credentials["username"],
                                password=credentials["password"])
 
+
+    def _fetch_ipmi_sensors_section(self, connection):
         self._logger.debug("[%s] Fetching sensor data via UDP from %s:623" % (self.id(), self._ipaddress))
-        sdr = ipmi_sdr.SDR(cmd)
+        sdr = ipmi_sdr.SDR(connection)
         sensors = []
         for number in sdr.get_sensor_numbers():
-            rsp = cmd.raw_command(command=0x2d, netfn=4, data=(number,))
+            rsp = connection.raw_command(command=0x2d, netfn=4, data=(number,))
             if 'error' in rsp:
                 continue
 
@@ -108,10 +134,14 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         output = "<<<mgmt_ipmi_sensors:sep(124)>>>\n" \
                + "".join([ "|".join(sensor) + "\n"  for sensor in sensors ])
 
+        return output
+
+
+    def _fetch_ipmi_firmware_section(self, connection):
         self._logger.debug("[%s] Fetching firmware information via UDP from %s:623" % (self.id(), self._ipaddress))
 
-        output += "<<<mgmt_ipmi_firmware:sep(124)>>>\n"
-        for entity_name, attributes in cmd.get_firmware():
+        output = "<<<mgmt_ipmi_firmware:sep(124)>>>\n"
+        for entity_name, attributes in connection.get_firmware():
             for attribute_name, value in attributes.items():
                output += "%s|%s|%s\n" % (entity_name, attribute_name, value)
 

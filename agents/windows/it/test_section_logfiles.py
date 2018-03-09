@@ -8,25 +8,24 @@ import pytest
 from remote import (actual_output, config, remotedir, remotetest,
                     run_subprocess, wait_agent, write_config)
 
-section = 'logfiles'
-testlog1 = os.path.join(remotedir, 'test1.log')
-testlog2 = os.path.join(remotedir, 'test2.log')
-testentry1 = 'foobar'
-testentry2 = 'error'
-state_pattern = re.compile(
-    r'^(?P<logfile>[^\|]+)\|(?P<inode>\d+)\|(?P<size>\d+)\|(?P<offset>\d+)')
-fileid_pattern = re.compile(r'^.*\:\s*(?P<fileid>0x[0-9a-fA-F]+)')
 
 # ugly hacks to get to know the config param and utf encoding in use:
-
-
 class Globals(object):
     config_param_in_use = None
     utf_encoding = None
+    section = 'logfiles'
+    testlog1 = os.path.join(remotedir, 'test1.log')
+    testlog2 = os.path.join(remotedir, 'test2.log')
+    testentry1 = 'foobar'
+    testentry2 = 'error'
+    state_pattern = re.compile(
+        r'^(?P<logfile>[^\|]+)\|(?P<inode>\d+)\|(?P<size>\d+)\|(?P<offset>\d+)'
+    )
+    fileid_pattern = re.compile(r'^.*\:\s*(?P<fileid>0x[0-9a-fA-F]+)')
 
 
 def get_log_state(line):
-    m = state_pattern.match(line)
+    m = Globals.state_pattern.match(line)
     if m is None:
         return None, (None, None, None)
     return m.group('logfile'), (int(m.group('inode')), int(m.group('size')),
@@ -42,7 +41,7 @@ def get_fileid(filename):
     if stderr:
         sys.stderr.write(stderr)
     assert exit_code == 0, "'%s' failed" % ' '.join(cmd)
-    m = fileid_pattern.match(stdout)
+    m = Globals.fileid_pattern.match(stdout)
     assert m is not None, "'%s' does not match fileid pattern" % stdout
     return int(m.group('fileid'), base=16)
 
@@ -64,13 +63,13 @@ def testfile():
 
 @pytest.fixture(params=['default', 'from_start', 'rotated', 'nocontext'])
 def testconfig(request, config):
-    config.set("global", "sections", section)
+    config.set("global", "sections", Globals.section)
     config.set("global", "crash_debug", "yes")
-    config.add_section(section)
+    config.add_section(Globals.section)
     Globals.config_param_in_use = request.param
     tag = '' if request.param == 'default' else '%s ' % request.param
-    config.set(section, "textfile", "%s%s|%s%s" % (tag, testlog1, tag,
-                                                   testlog2))
+    config.set(Globals.section, "textfile",
+               "%s%s|%s%s" % (tag, Globals.testlog1, tag, Globals.testlog2))
     return config
 
 
@@ -80,38 +79,54 @@ def testconfig(request, config):
 ])
 def testconfig_glob(request, testconfig):
     entry = {
-        'no_glob': testentry2,
-        'star_begin': '*' + testentry2[2:],
-        'star_end': testentry2[:3] + '*',
-        'star_middle': testentry2[:2] + '*' + testentry2[-1:],
-        'question_begin': '?' + testentry2[1:],
-        'question_end': testentry2[:-1] + '?',
-        'question_middle': testentry2[:2] + '?' + testentry2[3:]
+        'no_glob': Globals.testentry2,
+        'star_begin': '*' + Globals.testentry2[2:],
+        'star_end': Globals.testentry2[:3] + '*',
+        'star_middle': Globals.testentry2[:2] + '*' + Globals.testentry2[-1:],
+        'question_begin': '?' + Globals.testentry2[1:],
+        'question_end': Globals.testentry2[:-1] + '?',
+        'question_middle':
+        Globals.testentry2[:2] + '?' + Globals.testentry2[3:]
     }[request.param]
-    testconfig.set(section, "crit", entry)
+    testconfig.set(Globals.section, "crit", entry)
     return testconfig
 
 
 @pytest.fixture
 def expected_output_no_statefile():
-    expected_output = [re.escape(r'<<<logwatch>>>'), logtitle(testlog1)]
+    expected_output = [
+        re.escape(r'<<<logwatch>>>'),
+        logtitle(Globals.testlog1)
+    ]
     if Globals.config_param_in_use == 'from_start':
-        expected_output += [r'\. %s' % testentry1, r'C %s' % testentry2]
-    expected_output.append(logtitle(testlog2))
+        expected_output += [
+            r'\. %s' % Globals.testentry1,
+            r'C %s' % Globals.testentry2
+        ]
+    expected_output.append(logtitle(Globals.testlog2))
     if Globals.config_param_in_use == 'from_start':
-        expected_output += [r'\. %s' % testentry1, r'C %s' % testentry2]
+        expected_output += [
+            r'\. %s' % Globals.testentry1,
+            r'C %s' % Globals.testentry2
+        ]
     return expected_output
 
 
 @pytest.fixture
 def expected_output_with_statefile():
-    expected_output = [re.escape(r'<<<logwatch>>>'), logtitle(testlog1)]
+    expected_output = [
+        re.escape(r'<<<logwatch>>>'),
+        logtitle(Globals.testlog1)
+    ]
     if Globals.config_param_in_use != 'nocontext':
-        expected_output.append(r'\. %s' % testentry1)
-    expected_output += [r'C %s' % testentry2, logtitle(testlog2)]
+        expected_output.append(r'\. %s' % Globals.testentry1)
+    expected_output += [
+        r'C %s' % Globals.testentry2,
+        logtitle(Globals.testlog2)
+    ]
     if Globals.config_param_in_use != 'nocontext':
-        expected_output.append(r'\. %s' % testentry1)
-    expected_output.append(r'C %s' % testentry2)
+        expected_output.append(r'\. %s' % Globals.testentry1)
+    expected_output.append(r'C %s' % Globals.testentry2)
     return expected_output
 
 
@@ -134,7 +149,7 @@ def with_statefile():
         filesize = 2 if Globals.utf_encoding == 'utf-16' else 0
         with open(os.path.join(remotedir, 'state', 'logstate.txt'),
                   'w') as statefile:
-            for logfile in [testlog1, testlog2]:
+            for logfile in [Globals.testlog1, Globals.testlog2]:
                 fileid = get_fileid(logfile)
                 file_state = [
                     str(item)
@@ -150,7 +165,7 @@ def verify_logstate():
     if platform.system() == 'Windows':
         expected_logstate = {
             logfile: get_file_state(logfile)
-            for logfile in [testlog1, testlog2]
+            for logfile in [Globals.testlog1, Globals.testlog2]
         }
         with open(os.path.join(remotedir, 'state',
                                'logstate.txt')) as statefile:
@@ -174,13 +189,16 @@ def verify_logstate():
 def manage_logfiles(request):
     Globals.utf_encoding = request.param
     if platform.system() == 'Windows':
-        for log in [testlog1, testlog2]:
+        for log in [Globals.testlog1, Globals.testlog2]:
             with io.open(log, 'w', encoding=request.param) as logfile:
-                for entry in [unicode(testentry1), unicode(testentry2)]:
+                for entry in [
+                        unicode(Globals.testentry1),
+                        unicode(Globals.testentry2)
+                ]:
                     logfile.write('%s\r\n' % entry)
     yield
     if platform.system() == 'Windows':
-        for log in [testlog1, testlog2]:
+        for log in [Globals.testlog1, Globals.testlog2]:
             os.unlink(log)
 
 
@@ -189,8 +207,8 @@ def test_section_logfiles__new_file(request, testconfig_glob,
                                     expected_output_no_statefile,
                                     actual_output, testfile):
     # request.node.name gives test name
-    remotetest(expected_output_no_statefile, actual_output,
-               testfile, request.node.name)
+    remotetest(expected_output_no_statefile, actual_output, testfile,
+               request.node.name)
 
 
 @pytest.mark.usefixtures("with_statefile")
@@ -198,5 +216,5 @@ def test_section_logfiles__new_entries_in_log(request, testconfig_glob,
                                               expected_output_with_statefile,
                                               actual_output, testfile):
     # request.node.name gives test name
-    remotetest(expected_output_with_statefile, actual_output,
-               testfile, request.node.name)
+    remotetest(expected_output_with_statefile, actual_output, testfile,
+               request.node.name)

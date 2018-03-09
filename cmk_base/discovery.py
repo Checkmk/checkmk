@@ -1009,6 +1009,14 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
     # Create a dict from check_plugin_name/item to check_source/paramstring
     services = {}
 
+    # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
+    # we've already discovered the right check plugin names.
+    # _discover_services(..) would discover check plugin names again.
+    # In order to avoid a second discovery (SNMP data source would do
+    # another SNMP scan) we enforce this selection to be used.
+    check_plugin_names = multi_host_sections.get_check_plugin_names()
+    sources.enforce_check_plugin_names(check_plugin_names)
+
     # Handle discovered services -> "new"
     new_items = _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error)
     for check_plugin_name, item, paramstring in new_items:

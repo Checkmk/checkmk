@@ -40,8 +40,8 @@ import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.piggyback as piggyback
 import cmk_base.checks as checks
-import cmk_base.ip_lookup as ip_lookup
-from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKDataSourceError, MKSNMPError, \
+import cmk_base.check_api as check_api
+from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKEmptyAgentData, MKSNMPError, \
                                 MKParseFunctionError, MKTimeout
 
 from .host_sections import HostSections
@@ -76,6 +76,10 @@ class DataSource(object):
         self._max_cachefile_age = None
         self._enforced_check_plugin_names = None
 
+        # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
+        self._exception = None
+        self._host_sections = None
+
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):
         """Wrapper for self._execute() that unifies several things:
@@ -84,8 +88,11 @@ class DataSource(object):
         b) Caching of raw data
         c) CPU tracking
 
-        Exceptions: All exceptions except MKTimeout are wrapped into
-        MKDataSourceError exceptions.
+        Exceptions: All exceptions are caught and written to self._exception. The caller
+        should use self.get_summary_result() to get the summary result of this data source
+        which also includes information about the happed exception. In case the --debug
+        mode is enabled, the exceptions are raised. self._exception is re-initialized
+        to None when this method is called.
 
         Both hostname and ipaddress are optional, used for virtual
         Check_MK clusters."""
@@ -94,6 +101,9 @@ class DataSource(object):
             self._hostname = hostname
         if ipaddress is not None:
             self._ipaddress = ipaddress
+
+        self._exception = None
+        self._cmk_section = None
 
         try:
             cpu_tracking.push_phase(self._cpu_tracking_id())
@@ -111,15 +121,19 @@ class DataSource(object):
             # Add information from previous persisted infos
             host_sections = self._update_info_with_persisted_sections(host_sections)
 
+            self._host_sections = host_sections
             return host_sections
-        except MKTimeout, e:
-            raise
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            raise MKDataSourceError(self.name(), e)
+            self._exception = e
         finally:
             cpu_tracking.pop_phase()
+
+        if get_raw_data:
+            return ""
+        else:
+            return HostSections()
 
 
     def _get_raw_data(self):
@@ -290,10 +304,10 @@ class DataSource(object):
 
     def _verify_ipaddress(self):
         if not self._ipaddress:
-            raise MKGeneralException("Host as no IP address configured.")
+            raise MKAgentError("Host as no IP address configured.")
 
         if self._ipaddress in [ "0.0.0.0", "::" ]:
-            raise MKGeneralException("Failed to lookup IP address and no explicit IP address configured")
+            raise MKAgentError("Failed to lookup IP address and no explicit IP address configured")
 
 
     def set_max_cachefile_age(self, max_cachefile_age):
@@ -318,6 +332,53 @@ class DataSource(object):
     @classmethod
     def set_may_use_cache_file(cls, state=True):
         cls._may_use_cache_file = state
+
+
+    # TODO: Refactor the returned data of this method and self._summary_result()
+    # to some wrapped object like CheckResult(...)
+    def get_summary_result(self):
+        """Returns a three element tuple of state, output and perfdata (list) that summarizes
+        the execution result of this data source.
+
+        This is e.g. used for the output of the "Check_MK", "Check_MK Discovery" or
+        "Check_MK HW/SW Inventory" services."""
+
+        if not self._exception:
+            return self._summary_result()
+
+        exit_spec = config.exit_code_spec(self._hostname)
+        exc_msg = "%s" % self._exception
+
+        if isinstance(self._exception, MKEmptyAgentData):
+            status = exit_spec.get("empty_output", 2)
+
+        elif isinstance(self._exception, MKAgentError) \
+           or isinstance(self._exception, MKSNMPError):
+            status = exit_spec.get("connection", 2)
+
+        elif isinstance(self._exception, MKTimeout):
+            status = exit_spec.get("timeout", 2)
+
+        else:
+            status = exit_spec.get("exception", 3)
+
+        return status, exc_msg + check_api.state_markers[status], []
+
+
+    def _summary_result(self):
+        """Produce a source specific summary result in case no exception occured.
+
+        When an exception occured while processing a data source, the generic
+        self.get_summary_result() will handle this.
+
+        The default is to return empty summary information, which will then be
+        ignored by the code that processes the summary result."""
+        return 0, "Success", []
+
+
+    def exception(self):
+        """Provides exceptions happened during last self.run() call or None"""
+        return self._exception
 
 
     #.
@@ -566,6 +627,105 @@ class CheckMKAgentDataSource(DataSource):
                 section_content.append(line.split(separator))
 
         return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)
+
+
+    # TODO: refactor
+    def _summary_result(self):
+        expected_version = config.agent_target_version(self._hostname)
+        exit_spec = config.exit_code_spec(self._hostname)
+
+        agent_info = self._get_agent_info()
+        agent_version = agent_info["version"]
+
+        status, output, perfdata = 0, [], []
+
+        if not config.is_cluster(self._hostname) and agent_version != None:
+            output.append("Version: %s" % agent_version)
+
+        if not config.is_cluster(self._hostname) and agent_info["agentos"] != None:
+            output.append("OS: %s" % agent_info["agentos"])
+
+        if expected_version and agent_version \
+             and not self._is_expected_agent_version(agent_version, expected_version):
+            # expected version can either be:
+            # a) a single version string
+            # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
+            #    (the dict keys are optional)
+            if type(expected_version) == tuple and expected_version[0] == 'at_least':
+                expected = 'at least'
+                if 'daily_build' in expected_version[1]:
+                    expected += ' build %s' % expected_version[1]['daily_build']
+                if 'release' in expected_version[1]:
+                    if 'daily_build' in expected_version[1]:
+                        expected += ' or'
+                    expected += ' release %s' % expected_version[1]['release']
+            else:
+                expected = expected_version
+            output.append("unexpected agent version %s (should be %s), " % (agent_version, expected))
+            status = exit_spec.get("wrong_version", 1)
+
+        elif config.agent_min_version and agent_version < config.agent_min_version:
+            output.append("old plugin version %s (should be at least %s), " % (agent_version, config.agent_min_version))
+            status = exit_spec.get("wrong_version", 1)
+
+        return status, ", ".join(output), []
+
+
+    def _get_agent_info(self):
+        agent_info = {
+            "version" : "unknown",
+            "agentos" : "unknown",
+        }
+
+        if self._host_sections is None:
+            return agent_info
+
+        cmk_section = self._host_sections.sections.get("check_mk")
+        if cmk_section:
+            for line in cmk_section:
+                value = " ".join(line[1:]) if len(line) > 1 else None
+                agent_info[line[0][:-1].lower()] = value
+
+        return agent_info
+
+
+    def _is_expected_agent_version(self, agent_version, expected_version):
+        try:
+            if agent_version in [ '(unknown)', None, 'None' ]:
+                return False
+
+            if type(expected_version) == str and expected_version != agent_version:
+                return False
+
+            elif type(expected_version) == tuple and expected_version[0] == 'at_least':
+                spec = expected_version[1]
+                if cmk_base.utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
+                    expected = int(spec['daily_build'].replace('.', ''))
+
+                    branch = cmk_base.utils.branch_of_daily_build(agent_version)
+                    if branch == "master":
+                        agent = int(agent_version.replace('.', ''))
+
+                    else: # branch build (e.g. 1.2.4-2014.06.01)
+                        agent = int(agent_version.split('-')[1].replace('.', ''))
+
+                    if agent < expected:
+                        return False
+
+                elif 'release' in spec:
+                    if cmk_base.utils.is_daily_build_version(agent_version):
+                        return False
+
+                    if cmk_base.utils.parse_check_mk_version(agent_version) \
+                        < cmk_base.utils.parse_check_mk_version(spec['release']):
+                        return False
+
+            return True
+        except Exception, e:
+            if cmk.debug.enabled():
+                raise
+            raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
+                    (agent_version, expected_version, e))
 
 
 

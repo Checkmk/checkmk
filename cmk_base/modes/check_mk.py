@@ -361,17 +361,16 @@ def mode_dump_agent(hostname):
                 output += source.run_raw()
 
         # Show errors of problematic data sources
-        for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
-            for exc in exceptions:
-                console.error("ERROR: %s" % exc)
+        has_errors = False
+        for source in sources.get_data_sources():
+            source_state, source_output, source_perfdata = source.get_summary_result()
+            if source_state != 0:
+                console.error("ERROR [%s]: %s" % (source.id(), source_output))
+                has_errors = True
 
         console.output(output)
-    except MKAgentError, e:
-        raise MKBailOut("Problem contacting agent: %s" % e)
-    except MKGeneralException, e:
-        raise MKBailOut("General problem: %s" % e)
-    except socket.gaierror, e:
-        raise MKBailOut("Network error: %s" % e)
+        if has_errors:
+            sys.exit(1)
     except Exception, e:
         if cmk.debug.enabled():
             raise

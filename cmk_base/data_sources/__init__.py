@@ -63,11 +63,6 @@ from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
 from .host_sections import HostSections, MultiHostSections
 
-# TODO: Refactor this to the DataSources() object. To be able to do this we need to refactor
-# several call sites first to work only with a single DataSources() object during processing
-# of a call.
-g_data_source_errors = {}
-
 # TODO: Cluster with different data sources, eg. TCP node and SNMP node:
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
@@ -240,10 +235,9 @@ class DataSources(object):
         HostSections() entry for each related node.
 
         Communication errors are not raised through by this functions. All agent related errors are
-        stored in the g_data_source_errors construct which can be accessed by the caller to get
-        the errors of each data source. The caller should do this, e.g. using
-        data_sources.get_data_source_errors_of_host() and transparently display the errors to the
-        users.
+        caught by the source.run() method and saved in it's _exception attribute. The caller should
+        use source.get_summary_result() to get the state, output and perfdata of the agent excecution
+        or source.exception() to get the exception object.
         """
 
         # First abstract clusters/nodes/hosts
@@ -283,35 +277,3 @@ class DataSources(object):
             cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_raw_data)
 
         return multi_host_sections
-
-
-#.
-#   .--Misc.---------------------------------------------------------------.
-#   |                         __  __ _                                     |
-#   |                        |  \/  (_)___  ___                            |
-#   |                        | |\/| | / __|/ __|                           |
-#   |                        | |  | | \__ \ (__ _                          |
-#   |                        |_|  |_|_|___/\___(_)                         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Different helper functions                                           |
-#   '----------------------------------------------------------------------'
-
-def cleanup_host_caches():
-    g_data_source_errors.clear()
-
-
-def add_data_source_error(hostname, ipaddress, data_source, e):
-    g_data_source_errors.setdefault(hostname, {}).setdefault(data_source.name(hostname, ipaddress), []).append(e)
-
-
-def has_data_source_errors(hostname, ipaddress, data_source):
-    return bool(get_data_source_errors(hostname, ipaddress, data_source))
-
-
-def get_data_source_errors(hostname, ipaddress, data_source):
-    return g_data_source_errors.get(hostname, {}).get(data_source.name(hostname, ipaddress))
-
-
-def get_data_source_errors_of_host(hostname, ipaddress):
-    return g_data_source_errors.get(hostname, {})

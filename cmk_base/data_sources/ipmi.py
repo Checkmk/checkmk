@@ -116,3 +116,19 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                output += "%s|%s|%s\n" % (entity_name, attribute_name, value)
 
         return output
+
+
+    def _summary_result(self):
+        return 0, "Version: %s" % self._get_ipmi_version(), []
+
+
+    def _get_ipmi_version(self):
+        section = self._host_sections.sections.get("mgmt_ipmi_firmware")
+        if not section:
+            return "unknown"
+
+        for line in section:
+            if line[0] == "BMC Version" and line[1] == "version":
+                return line[2]
+
+        return "unknown"

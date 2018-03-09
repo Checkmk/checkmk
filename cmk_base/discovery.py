@@ -125,8 +125,14 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             if cmk.debug.enabled():
                 raise
             console.verbose(" -> Failed: %s\n" % e)
+        finally:
+            if sources:
+                for source in sources.get_data_sources():
+                    source_state, source_output, source_perfdata = source.get_summary_result()
+                    if source_state != 0:
+                        console.verbose(" -> [%s] %s\n" % (source.id(), source_output))
 
-        cmk_base.utils.cleanup_globals()
+            cmk_base.utils.cleanup_globals()
 
     # Check whether or not the cluster host autocheck files are still
     # existant. Remove them. The autochecks are only stored in the nodes
@@ -297,6 +303,9 @@ def check_discovery(hostname, ipaddress):
     params = discovery_check_parameters(hostname) or \
              default_discovery_check_parameters()
 
+    exit_spec = config.exit_code_spec(hostname)
+
+    status, infotexts, long_infotexts = 0, [], []
     try:
         # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
         # ipaddress is always None
@@ -322,10 +331,6 @@ def check_discovery(hostname, ipaddress):
 
         services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error="raise")
 
-        # generate status and infotext
-        status = 0
-        infotexts = []
-        long_infotexts = []
         need_rediscovery = False
 
         params_rediscovery = params.get("inventory_rediscovery", {})
@@ -388,34 +393,26 @@ def check_discovery(hostname, ipaddress):
         if need_rediscovery:
             infotexts.append("rediscovery scheduled")
 
-        # Add data source errors to infotexts
-        for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
-            for exc in exceptions:
-                infotexts.append("%s" % exc)
-
-        output = ", ".join(infotexts)
-        if long_infotexts:
-            output += "\n" + "\n".join(long_infotexts)
-        output += "\n"
-
-    except (MKSNMPError, MKAgentError, MKGeneralException), e:
-        output = "Discovery failed: %s\n" % e
-        # Honor rule settings for "Status of the Check_MK service". In case of
-        # a problem we assume a connection error here.
-        spec = config.exit_code_spec(hostname)
-        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
-            what = "connection"
-        else:
-            what = "exception"
-        status = spec.get(what, 1)
+        # Add data source information to check results
+        for source in sources.get_data_sources():
+            source_state, source_output, source_perfdata = source.get_summary_result()
+            # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
+            if source_state != 0:
+                status = max(status, source_state)
+                infotexts.append("[%s] %s" % (source.id(), source_output))
 
     except MKTimeout:
         if _in_keepalive_mode():
             raise
         else:
-            output = "Discovery failed: Timed out\n"
-            spec = config.exit_code_spec(hostname)
-            status = spec.get("timeout", 2)
+            infotexts.append("Timed out")
+            status = max(status, exit_spec.get("timeout", 2))
+
+    except MKGeneralException, e:
+        if cmk.debug.enabled():
+            raise
+        infotexts.append("%s" % e)
+        status = max(status, exit_spec.get("exception", 3))
 
     except SystemExit:
         raise
@@ -423,24 +420,24 @@ def check_discovery(hostname, ipaddress):
     except Exception, e:
         if cmk.debug.enabled():
             raise
-        output = cmk_base.crash_reporting.create_crash_dump(hostname, "discovery", None,
-                                                False, None, "Check_MK Discovery", [])\
-            .replace("Crash dump:\n", "Crash dump:\\n")
-        # Honor rule settings for "Status of the Check_MK service". In case of
-        # a problem we assume a connection error here.
-        spec = config.exit_code_spec(hostname)
-        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
-            what = "connection"
-        else:
-            what = "exception"
-        status = spec.get(what, 3)
+        crash_output = cmk_base.crash_reporting.create_crash_dump(hostname, "discovery", None,
+                                                False, None, "Check_MK Discovery", [])
+        infotexts = [
+            crash_output.replace("Crash dump:\n", "Crash dump:\\n")
+        ]
+        status = max(status, exit_spec.get("exception", 3))
+
+    output_txt = "%s - %s" % (defines.short_service_state_name(status),  ", ".join(infotexts))
+    if long_infotexts:
+        output_txt += "\n" + "\n".join(long_infotexts)
+    output_txt += "\n"
 
     if _in_keepalive_mode():
-        keepalive.add_keepalive_active_check_result(hostname, output)
-        return status
+        keepalive.add_keepalive_active_check_result(hostname, output_txt)
     else:
-        console.output(defines.short_service_state_name(status) + " - " + output)
-        return status
+        console.output(output_txt)
+
+    return status
 
 
 # Compute the parameters for the discovery check for a host. Note:

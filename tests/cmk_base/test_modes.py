@@ -1,4 +1,5 @@
 import pytest
+import re
 import subprocess
 
 from testlib import web, repo_path
@@ -183,9 +184,9 @@ def test_dump_agent_error(test_cfg, site):
     for opt in [ "--dump-agent", "-d" ]:
         p = site.execute(["cmk", opt, "modes-test-host4"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        assert p.returncode == 3
+        assert p.returncode == 1
         assert stdout == ""
-        assert "Problem contacting agent" in stderr
+        assert "[agent]: Agent exited " in stderr
 
         if output_long == None:
             output_long = stdout
@@ -551,7 +552,7 @@ def test_inventory_verbose(test_cfg, site):
         stdout, stderr = p.communicate()
         assert p.wait() == 0
         assert stderr == ""
-        assert stdout.startswith("Doing HW/SW inventory for modes-test-host;")
+        assert stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
         assert "check_mk " in stdout
         assert "lnx_if " in stdout
         assert "mem " in stdout
@@ -571,9 +572,9 @@ def test_inventory_as_check_unknown_host(test_cfg, site):
     p = site.execute(["cmk", "--inventory-as-check", "xyz."],
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
-    assert p.wait() == 1
+    assert stdout.startswith("CRIT - Failed to lookup IPv4 address of")
     assert stderr == ""
-    assert stdout.startswith("WARN - Inventory failed: Failed to lookup IPv4 address of")
+    assert p.wait() == 2
 
 
 def test_inventory_as_check(test_cfg, site):
@@ -582,7 +583,7 @@ def test_inventory_as_check(test_cfg, site):
     stdout, stderr = p.communicate()
     assert p.wait() == 0
     assert stderr == ""
-    assert stdout.startswith("OK - [Inventory] Found ")
+    assert re.match("OK - Found \d+ inventory entries", stdout)
 
 
 #.
@@ -632,9 +633,9 @@ def test_check_discovery_host(test_cfg, site):
     p = site.execute(["cmk", "--check-discovery", "xyz."],
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
-    assert p.wait() == 1
+    assert stdout.startswith("CRIT - Failed to lookup IPv4 address")
     assert stderr == ""
-    assert stdout.startswith("WARN - Discovery failed: Failed to lookup IPv4 address")
+    assert p.wait() == 2
 
 
 def test_check_discovery(test_cfg, site):
@@ -671,7 +672,7 @@ def test_check(test_cfg, site):
         p = site.execute(["cmk" ] + opt + [ "modes-test-host"], stdout=subprocess.PIPE)
         assert p.wait() == 0
         output = p.stdout.read()
-        assert output.startswith("OK - Agent version")
+        assert output.startswith("OK - [agent] Version:")
 
 
 def test_check_verbose_perfdata(test_cfg, site):
@@ -680,7 +681,7 @@ def test_check_verbose_perfdata(test_cfg, site):
     output = p.stdout.read()
     assert "Temperature Zone 0" in output
     assert "temp=32.4;" in output
-    assert "OK - Agent version" in output
+    assert "OK - [agent] Version:" in output
 
 
 def test_check_verbose_only_check(test_cfg, site):
@@ -689,7 +690,7 @@ def test_check_verbose_only_check(test_cfg, site):
     output = p.stdout.read()
     assert "Temperature Zone 0" not in output
     assert "Interface 2" in output
-    assert "OK - Agent version" in output
+    assert "OK - [agent] Version:" in output
 
 #.
 #   .--version-------------------------------------------------------------.

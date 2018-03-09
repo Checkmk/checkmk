@@ -89,7 +89,8 @@ def do_inv(hostnames):
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-            do_inv_for(hostname, ipaddress)
+            sources = data_sources.DataSources(hostname, ipaddress)
+            do_inv_for(sources, hostname, ipaddress)
             console.verbose(" OK\n")
         except Exception, e:
             if cmk.debug.enabled():
@@ -98,9 +99,11 @@ def do_inv(hostnames):
             console.verbose(" Failed: %s\n" % e)
             errors.append("Failed to inventorize %s: %s" % (hostname, e))
         finally:
-            for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
-                for exc in exceptions:
-                    errors.append("%s" % exc)
+            if sources:
+                for source in sources.get_data_sources():
+                    source_state, source_output, source_perfdata = source.get_summary_result()
+                    if source_state != 0:
+                        errors.append("%s" % source_output)
 
             cmk_base.utils.cleanup_globals()
 
@@ -121,49 +124,54 @@ def do_inv_check(options, hostname):
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        old_timestamp, inventory_tree, status_data_tree = do_inv_for(hostname, ipaddress)
+        state, infotexts = 0, []
+
+        sources = data_sources.DataSources(hostname, ipaddress)
+        old_timestamp, inventory_tree, status_data_tree = do_inv_for(sources, hostname, ipaddress)
+
         if inventory_tree.is_empty() and status_data_tree.is_empty():
-            console.output("OK - [Inventory/Status data] Found no data\n")
-            return 0
+            infotexts.append("Found no data")
 
-        infotexts = []
-        infotexts.append("[Inventory] Found %d entries" % inventory_tree.count_entries())
-        state = 0
-        if not inventory_tree.has_edge("software") and _inv_sw_missing:
-            infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
-            state = _inv_sw_missing
+        else:
+            infotexts.append("Found %d inventory entries" % inventory_tree.count_entries())
 
-        if old_timestamp:
-            path = "%s/%s/%d" % (inventory_archive_dir, hostname, old_timestamp)
-            old_tree = StructuredDataTree().load_from(path)
+            if not inventory_tree.has_edge("software") and _inv_sw_missing:
+                infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
+                state = _inv_sw_missing
 
-            if not old_tree.is_equal(inventory_tree, edges=["software"]):
-                infotext = "software changes"
-                if _inv_sw_changes:
-                    state = _inv_sw_changes
-                    infotext += check_api.state_markers[_inv_sw_changes]
-                infotexts.append(infotext)
+            if old_timestamp:
+                path = "%s/%s/%d" % (inventory_archive_dir, hostname, old_timestamp)
+                old_tree = StructuredDataTree().load_from(path)
 
-            if not old_tree.is_equal(inventory_tree, edges=["hardware"]):
-                infotext = "hardware changes"
-                if state == 2 or _inv_hw_changes == 2:
-                    state = 2
-                else:
-                    state = max(state, _inv_sw_changes)
-                if _inv_hw_changes:
-                    infotext += check_api.state_markers[_inv_hw_changes]
+                if not old_tree.is_equal(inventory_tree, edges=["software"]):
+                    infotext = "software changes"
+                    if _inv_sw_changes:
+                        state = _inv_sw_changes
+                        infotext += check_api.state_markers[_inv_sw_changes]
+                    infotexts.append(infotext)
 
-                infotexts.append(infotext)
+                if not old_tree.is_equal(inventory_tree, edges=["hardware"]):
+                    infotext = "hardware changes"
+                    if state == 2 or _inv_hw_changes == 2:
+                        state = 2
+                    else:
+                        state = max(state, _inv_sw_changes)
+                    if _inv_hw_changes:
+                        infotext += check_api.state_markers[_inv_hw_changes]
 
-        for data_source, exceptions in data_sources.get_data_source_errors_of_host(hostname, ipaddress).items():
-            for exc in exceptions:
-                infotexts.append("%s" % exc)
+                    infotexts.append(infotext)
 
-        infotext = ", ".join(infotexts)
-        if not status_data_tree.is_empty():
-            infotext += " [Status data] Found %s entries" % status_data_tree.count_entries()
+            if not status_data_tree.is_empty():
+                infotexts.append("Found %s status entries" % status_data_tree.count_entries())
 
-        console.output("%s - %s\n" % (defines.short_service_state_name(state), infotext))
+        for source in sources.get_data_sources():
+            source_state, source_output, source_perfdata = source.get_summary_result()
+            # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
+            if source_state != 0:
+                state = max(source_state, state)
+                infotexts.append("[%s] %s" % (source.id(), source_output))
+
+        console.output("%s - %s\n" % (defines.short_service_state_name(state), ", ".join(infotexts)))
         return state
 
     except Exception, e:
@@ -174,7 +182,7 @@ def do_inv_check(options, hostname):
         return _inv_fail_status
 
 
-def do_inv_for(hostname, ipaddress):
+def do_inv_for(sources, hostname, ipaddress):
     console.verbose("Doing HW/SW inventory for %s;\n" % hostname)
 
     _initialize_inventory_tree()
@@ -187,7 +195,7 @@ def do_inv_for(hostname, ipaddress):
         _do_inv_for_cluster(hostname, inventory_tree)
     else:
         node["is_cluster"] = False
-        _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree)
+        _do_inv_for_realhost(sources, hostname, ipaddress, inventory_tree, status_data_tree)
 
     inventory_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname, inventory_tree)
@@ -212,9 +220,7 @@ def _do_inv_for_cluster(hostname, inventory_tree):
         })
 
 
-def _do_inv_for_realhost(hostname, ipaddress, inventory_tree, status_data_tree):
-    sources = data_sources.DataSources(hostname, ipaddress)
-
+def _do_inv_for_realhost(sources, hostname, ipaddress, inventory_tree, status_data_tree):
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")

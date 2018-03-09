@@ -29,6 +29,8 @@ import signal
 import socket
 import subprocess
 
+import cmk.debug
+
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
@@ -115,6 +117,10 @@ class TCPDataSource(CheckMKAgentDataSource):
                     output.append(data)
                 else:
                     break
+        except socket.error, e:
+            if cmk.debug.enabled():
+                raise
+            raise MKAgentError("Communication failed: %s" % e)
         finally:
             s.close()
         output = ''.join(output)

@@ -1,0 +1,13 @@
+Title: Agent connection errors are now treated as connection errors again
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520585593
+Class: fix
+
+Agent connection related issues are now treated as connection issues
+again by the "Check_MK" service. Connection errors result in CRITICAL
+states instead of UNKNOWN. This is also relevant when one uses the
+ruleset "Status of the Check_MK service" to override the default states.

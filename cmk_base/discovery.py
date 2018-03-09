@@ -319,15 +319,8 @@ def check_discovery(hostname, ipaddress):
                                              do_snmp_scan=params["inventory_check_do_scan"],
                                              on_error="raise")
 
-        try:
-            multi_host_sections = _get_host_sections_for_discovery(sources,
+        multi_host_sections = _get_host_sections_for_discovery(sources,
                                   use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
-        except socket.gaierror, e:
-            # TODO: Seems to be the wrong place for this execption handling
-            if e[0] == -2 and cmk.debug.disabled():
-                # Don't crash on unknown host name, it may be provided by the user
-                raise MKAgentError(e[1])
-            raise
 
         services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error="raise")
 

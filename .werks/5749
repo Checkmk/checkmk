@@ -1,0 +1,11 @@
+Title: tcp_conn_stats: use ss by default if present otherwise fall back to cat /proc/net/tcp
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p27
+Date: 1520606516
+
+

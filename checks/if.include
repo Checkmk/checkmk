@@ -288,7 +288,7 @@ def inventory_if_common(info, has_nodeinfo = False):
         return []
 
     settings_sets = host_extra_conf(host_name(), inventory_if_rules)
-    global_seen   = set()
+    seen_indicies = set()
     pre_inventory = []
 
     if not settings_sets:
@@ -318,7 +318,6 @@ def inventory_if_common(info, has_nodeinfo = False):
         # Allow main check to set no port type (e.g. hitachi_hnas_fc_if)
         porttypes.append("")
         pre_inventory_groups = []
-        local_seen  = set()
         have_groups = {}
 
         # Determine whether single, grouped or both
@@ -412,7 +411,7 @@ def inventory_if_common(info, has_nodeinfo = False):
                 is_only_in_group = True
 
             # Prepare single interfaces
-            if not is_only_in_group and ifIndex not in global_seen and \
+            if not is_only_in_group and ifIndex not in seen_indicies and \
                ifType in porttypes and ifOperStatus in portstates and \
                port_match(ifAlias, match_alias) and port_match(ifDescr, match_desc):
                 params = {}
@@ -421,10 +420,8 @@ def inventory_if_common(info, has_nodeinfo = False):
 
                 if ifSpeed != "" and if_inventory_monitor_speed:
                     params["speed"] = int(ifSpeed)
-                local_seen.add(ifIndex)
+                seen_indicies.add(ifIndex)
                 pre_inventory.append((item, "%r" % params, int(ifIndex)))
-
-        global_seen = global_seen.union(local_seen)
 
         # Create pseudo interfaces out of groups
         # On cluster groups we have no 'interfaces' key

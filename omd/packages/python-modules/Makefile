@@ -47,6 +47,7 @@ MODULES += Pillow-5.0.0.tar.gz # needed by reportlab (pillow>=2.4.0)
 MODULES += pip-9.0.1.tar.gz # needed by reportlab (pip>=1.4.1)
 MODULES += reportlab-3.4.0.tar.gz # needed by reporting
 MODULES += PyPDF2-1.26.0.tar.gz # needed by reporting
+MODULES += python-dateutil-2.6.1.tar.gz # Added for scheduling (cmk/schedule.py)
 
 MODULES += npyscreen-4.10.5.tar.gz # needed for mkbench
 MODULES += psutil-5.4.3.tar.gz # needed for mkbench

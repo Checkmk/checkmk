@@ -746,7 +746,7 @@ def gather_snmp_check_plugin_names(access_data, on_error, do_snmp_scan, for_inve
         if on_error == "raise":
             raise
         elif on_error == "warn":
-            console.error("SNMP scan failed: %s" % e)
+            console.error("SNMP scan failed: %s\n" % e)
 
     return list(check_plugin_names)
 

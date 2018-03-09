@@ -1,0 +1,14 @@
+Title: cisco_cpu, cisco_nexus_cpu: improve snmp_scan_functions
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.4.0p27
+Date: 1520592742
+
+Exclude "NX-OS" systems explicitly in cisco_cpu and remove the
+check for 1.3.6.1.4.1.9.9.109.1.1.1.1.* in cisco_nexus_cpu.
+
+Thanks to Ricardo Fribeiro for the patch.

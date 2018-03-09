@@ -40,7 +40,7 @@ pytestmark = pytest.mark.checks
     ([["1", "EINS", "6", "10", "2"] + 13*["0"] + ["EINS-ALIAS", "00:00:00:00:00:00"]], [], 0),
     ([["1", "EINS", "00000", "10", "1"] + 13*["0"] + ["EINS-ALIAS", "00:00:00:00:00:00"]], [], 0),
     ([["1", "EINS", "6", "10", "1"] + 13*["0"] + ["EINS-ALIAS", "00:00:00:00:00:00"],
-      ["1", "EINS-DUPLICATE", "6", "10", "1"] + 13*["0",] + ["EINS-ALIAS-DUPLICATE", "00:00:00:00:00:00"]], [], 2),
+      ["1", "EINS-DUPLICATE", "6", "10", "1"] + 13*["0",] + ["EINS-ALIAS-DUPLICATE", "00:00:00:00:00:00"]], [], 1),
 ])
 def test_if_inventory_if_common_count_interfaces(check_manager, monkeypatch, info, inventory_if_rules, result):
     check = check_manager.get_check("if")

@@ -60,6 +60,14 @@ class CMKLogger(_logging.getLoggerClass()):
         return self.isEnabledFor(DEBUG)
 
 
+    def set_format(self, fmt):
+        handler = _logging.StreamHandler(stream=sys.stdout)
+        handler.setFormatter(get_formatter(fmt))
+
+        del self.handlers[:] # Remove all previously existing handlers
+        self.addHandler(handler)
+
+
 _logging.setLoggerClass(CMKLogger)
 
 
@@ -166,21 +174,21 @@ class LogMixin(object):
     Makes a logger available via "self.logger" for objects and
     "self.cls_logger" for the class.
     """
-    _parent_logger = None
-    _logger        = None
-    _cls_logger    = None
+    __parent_logger = None
+    __logger        = None
+    __cls_logger    = None
 
     @property
-    def logger(self):
-        if not self._logger:
-            parent = self._parent_logger or logger
-            self._logger = parent.getChild('.'.join([self.__class__.__name__]))
-        return self._logger
+    def _logger(self):
+        if not self.__logger:
+            parent = self.__parent_logger or logger
+            self.__logger = parent.getChild('.'.join([self.__class__.__name__]))
+        return self.__logger
 
 
     @classmethod
-    def cls_logger(cls):
-        if not cls._cls_logger:
-            parent = cls._parent_logger or logger
-            cls._cls_logger = parent.getChild('.'.join([cls.__name__]))
-        return cls._cls_logger
+    def _cls_logger(cls):
+        if not cls.__cls_logger:
+            parent = cls.__parent_logger or logger
+            cls.__cls_logger = parent.getChild('.'.join([cls.__name__]))
+        return cls.__cls_logger

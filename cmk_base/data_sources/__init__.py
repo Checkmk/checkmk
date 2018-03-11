@@ -239,6 +239,7 @@ class DataSources(object):
         use source.get_summary_result() to get the state, output and perfdata of the agent excecution
         or source.exception() to get the exception object.
         """
+        console.step("Fetching data")
 
         # First abstract clusters/nodes/hosts
         hosts = []

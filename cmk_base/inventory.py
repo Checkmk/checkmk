@@ -81,8 +81,8 @@ def do_inv(hostnames):
     _ensure_directory(inventory_output_dir)
     _ensure_directory(inventory_archive_dir)
 
-    errors = []
     for hostname in hostnames:
+        console.section_begin(hostname)
         try:
             if config.is_cluster(hostname):
                 ipaddress = None
@@ -91,24 +91,13 @@ def do_inv(hostnames):
 
             sources = data_sources.DataSources(hostname, ipaddress)
             do_inv_for(sources, hostname, ipaddress)
-            console.verbose(" OK\n")
         except Exception, e:
             if cmk.debug.enabled():
                 raise
 
-            console.verbose(" Failed: %s\n" % e)
-            errors.append("Failed to inventorize %s: %s" % (hostname, e))
+            console.section_error("%s" % e)
         finally:
-            if sources:
-                for source in sources.get_data_sources():
-                    source_state, source_output, source_perfdata = source.get_summary_result()
-                    if source_state != 0:
-                        errors.append("%s" % source_output)
-
             cmk_base.utils.cleanup_globals()
-
-    if errors:
-        raise MKGeneralException("\n".join(errors))
 
 
 def do_inv_check(options, hostname):
@@ -177,14 +166,12 @@ def do_inv_check(options, hostname):
     except Exception, e:
         if cmk.debug.enabled():
             raise
-        console.output("%s - Inventory failed: %s\n" %
+        console.output("%s - %s\n" %
             (defines.short_service_state_name(_inv_fail_status), e))
         return _inv_fail_status
 
 
 def do_inv_for(sources, hostname, ipaddress):
-    console.verbose("Doing HW/SW inventory for %s;\n" % hostname)
-
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
@@ -199,16 +186,19 @@ def do_inv_for(sources, hostname, ipaddress):
 
     inventory_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname, inventory_tree)
-    console.verbose(" %s%s%d%s entries;" %
+
+    _run_inventory_export_hooks(hostname, inventory_tree)
+
+    console.section_success("Found %s%s%d%s inventory entries" %
             (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
 
     if not status_data_tree.is_empty():
         status_data_tree.normalize_nodes()
         _save_status_data_tree(hostname, status_data_tree)
-        console.verbose(" Status data inventory: %s%s%d%s entries;" %
+
+        console.section_success("Found %s%s%d%s status entries" %
                 (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
 
-    _run_inventory_export_hooks(hostname, inventory_tree)
     return old_timestamp, inventory_tree, status_data_tree
 
 
@@ -232,8 +222,9 @@ def _do_inv_for_realhost(sources, hostname, ipaddress, inventory_tree, status_da
 
     multi_host_sections = sources.get_host_sections()
 
-    console.verbose("Execute inventory plugins;")
+    console.step("Executing inventory plugins")
     import cmk_base.inventory_plugins
+    console.verbose("Plugins:")
     for section_name, plugin in cmk_base.inventory_plugins.inv_info.items():
         section_content = multi_host_sections.get_section_content(hostname, ipaddress,
                                                                   section_name, for_discovery=False)
@@ -268,7 +259,7 @@ def _do_inv_for_realhost(sources, hostname, ipaddress, inventory_tree, status_da
         else:
             args = [section_content]
         inv_function(*args, **kwargs)
-    console.verbose(";")
+    console.verbose("\n")
 
 
 def _gather_snmp_check_plugin_names_inventory(access_data, on_error, do_snmp_scan, for_mgmt_board=False):
@@ -335,12 +326,12 @@ def _save_inventory_tree(hostname, inventory_tree):
     if inventory_tree:
         old_tree = StructuredDataTree().load_from(filepath)
         if old_tree.is_equal(inventory_tree):
-            console.verbose(" unchanged;")
+            console.verbose("Inventory was unchanged\n")
         else:
             if old_tree.is_empty():
-                console.verbose(" new;")
+                console.verbose("New inventory tree\n")
             else:
-                console.verbose(" changed;")
+                console.verbose("Inventory tree has changed\n")
                 old_time = os.stat(filepath).st_mtime
                 arcdir = "%s/%s" % (inventory_archive_dir, hostname)
                 if not os.path.exists(arcdir):
@@ -374,15 +365,24 @@ def _save_status_data_tree(hostname, status_data_tree):
 
 def _run_inventory_export_hooks(hostname, inventory_tree):
     import cmk_base.inventory_plugins
+    hooks = []
     for hookname, ruleset in config.inv_exports.items():
         entries = rulesets.host_extra_conf(hostname, ruleset)
         if entries:
-            console.verbose(" running %s%s%s%s;" % (tty.blue, tty.bold, hookname, tty.normal))
-            params = entries[0]
-            try:
-                cmk_base.inventory_plugins.inv_export[hookname]["export_function"](hostname, params, inventory_tree.get_raw_tree())
-            except Exception, e:
-                if cmk.debug.enabled():
-                    raise
-                raise MKGeneralException("Failed to execute export hook %s: %s" % (
-                    hookname, e))
+            hooks.append(hookname, entries[0])
+
+    if not hooks:
+        return
+
+    console.step("Execute inventory export hooks")
+    for hookname, params in hooks:
+        console.verbose("Execute export hook: %s%s%s%s" %
+                            (tty.blue, tty.bold, hookname, tty.normal))
+        try:
+            func = cmk_base.inventory_plugins.inv_export[hookname]["export_function"]
+            func(hostname, params, inventory_tree.get_raw_tree())
+        except Exception, e:
+            if cmk.debug.enabled():
+                raise
+            raise MKGeneralException("Failed to execute export hook %s: %s" % (
+                hookname, e))

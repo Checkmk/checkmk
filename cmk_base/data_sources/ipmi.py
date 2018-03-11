@@ -95,7 +95,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
 
     def _fetch_ipmi_sensors_section(self, connection):
-        self._logger.debug("[%s] Fetching sensor data via UDP from %s:623" % (self.id(), self._ipaddress))
+        self._logger.debug("Fetching sensor data via UDP from %s:623" % (self._ipaddress))
         sdr = ipmi_sdr.SDR(connection)
         sensors = []
         for number in sdr.get_sensor_numbers():
@@ -138,7 +138,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
 
     def _fetch_ipmi_firmware_section(self, connection):
-        self._logger.debug("[%s] Fetching firmware information via UDP from %s:623" % (self.id(), self._ipaddress))
+        self._logger.debug("Fetching firmware information via UDP from %s:623" % (self._ipaddress))
 
         output = "<<<mgmt_ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in connection.get_firmware():

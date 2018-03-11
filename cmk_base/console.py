@@ -31,6 +31,7 @@ import sys
 
 import cmk.tty as tty
 import cmk.log
+
 logger = cmk.log.get_logger("base")
 
 #
@@ -83,3 +84,23 @@ def warning(text, *args, **kwargs):
 
 def error(text, *args):
     output(text, *args, stream=sys.stderr)
+
+
+def section_begin(text, *args, **kwargs):
+    verbose(tty.bold + text + tty.normal + ":\n")
+
+
+def section_success(text):
+    verbose("%sSUCCESS%s - %s\n" % (tty.green, tty.normal, text))
+
+
+def section_error(text):
+    verbose("%sERROR%s - %s\n" % (tty.red, tty.normal, text))
+
+
+def step(text):
+    verbose("%s+%s %s\n" % (tty.yellow, tty.normal, text.upper()))
+
+
+def step_error(text):
+    verbose(text + "\n")

@@ -28,9 +28,12 @@ import os
 import socket
 import time
 
+import cmk.log
+
 import cmk.debug
 import cmk.paths
 import cmk.store as store
+import cmk.tty as tty
 import cmk.cpu_tracking as cpu_tracking
 from cmk.exceptions import MKGeneralException
 
@@ -72,13 +75,22 @@ class DataSource(object):
         super(DataSource, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
-        self._logger = console.logger
         self._max_cachefile_age = None
         self._enforced_check_plugin_names = None
+
+        self._logger = console.logger.getChild("data_source.%s" % self.id())
+        self._setup_logger()
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception = None
         self._host_sections = None
+
+
+    def _setup_logger(self):
+        """Add the source log prefix to the class logger"""
+        self._logger.propagate = False
+        self._logger.set_format(" %s[%s%s%s]%s %%(message)s" %
+                    (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
 
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):
@@ -124,6 +136,7 @@ class DataSource(object):
             self._host_sections = host_sections
             return host_sections
         except Exception, e:
+            self._logger.verbose("ERROR: %s" % e)
             if cmk.debug.enabled():
                 raise
             self._exception = e
@@ -148,13 +161,13 @@ class DataSource(object):
         """
         raw_data = self._read_cache_file()
         if raw_data:
-            self._logger.verbose("[%s] Use cached data" % self.id())
+            self._logger.verbose("Use cached data")
             return raw_data, True
 
         elif raw_data is None and config.simulation_mode:
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
 
-        self._logger.verbose("[%s] Execute data source" % self.id())
+        self._logger.verbose("Execute data source")
         raw_data = self._execute()
         self._write_cache_file(raw_data)
         return raw_data, False
@@ -182,31 +195,31 @@ class DataSource(object):
         cachefile = self._cache_file_path()
 
         if not os.path.exists(cachefile):
-            self._logger.debug("[%s] Not using cache (Does not exist)" % self.id())
+            self._logger.debug("Not using cache (Does not exist)")
             return
 
         if self._no_cache:
-            self._logger.debug("[%s] Not using cache (Cache usage disabled)" % self.id())
+            self._logger.debug("Not using cache (Cache usage disabled)")
             return
 
         if not self._may_use_cache_file and not config.simulation_mode:
-            self._logger.debug("[%s] Not using cache (Don't try it)" % self.id())
+            self._logger.debug("Not using cache (Don't try it)")
             return
 
         may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
         if not may_use_outdated and cmk_base.utils.cachefile_age(cachefile) > self._max_cachefile_age:
-            self._logger.debug("[%s] Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
-                             (self.id(), cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
+            self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
+                             (cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
             return
 
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
         result = open(cachefile).read()
         if not result:
-            self._logger.debug("[%s] Not using cache (Empty)" % self.id())
+            self._logger.debug("Not using cache (Empty)")
             return
 
-        self._logger.verbose("[%s] Using data from cache file %s" % (self.id(), cachefile))
+        self._logger.verbose("Using data from cache file %s" % (cachefile))
         return self._from_cache_file(result)
 
 
@@ -224,7 +237,7 @@ class DataSource(object):
         except Exception, e:
             raise MKGeneralException("Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
 
-        self._logger.verbose("[%s] Write data to cache file %s" % (self.id(), cachefile))
+        self._logger.verbose("Write data to cache file %s" % (cachefile))
         try:
             store.save_file(cachefile, self._to_cache_file(raw_data))
         except Exception, e:
@@ -409,7 +422,7 @@ class DataSource(object):
                 raise
 
         store.save_data_to_file(file_path, persisted_sections, pretty=False)
-        self._logger.debug("[%s] Stored persisted sections: %s" % (self.id(), ", ".join(persisted_sections.keys())))
+        self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections.keys())))
 
 
     def _update_info_with_persisted_sections(self, host_sections):
@@ -425,10 +438,10 @@ class DataSource(object):
 
             # Don't overwrite sections that have been received from the source with this call
             if section_name not in host_sections.sections:
-                self._logger.debug("[%s] Using persisted section %r" % (self.id(), section_name))
+                self._logger.debug("Using persisted section %r" % (section_name))
                 host_sections.add_cached_section(section_name, section_info, persisted_from, persisted_until)
             else:
-                self._logger.debug("[%s] Skipping persisted section %r" % (self.id(), section_name))
+                self._logger.debug("Skipping persisted section %r" % (section_name))
 
         return host_sections
 
@@ -440,9 +453,9 @@ class DataSource(object):
         persisted_sections = self._filter_outdated_persisted_sections(persisted_sections)
 
         if not persisted_sections:
-            self._logger.debug("[%s] No persisted sections loaded" % (self.id()))
+            self._logger.debug("No persisted sections loaded")
         else:
-            self._logger.debug("[%s] Loaded persisted sections: %s" % (self.id(), ", ".join(persisted_sections.keys())))
+            self._logger.debug("Loaded persisted sections: %s" % (", ".join(persisted_sections.keys())))
 
         return persisted_sections
 
@@ -460,8 +473,8 @@ class DataSource(object):
                 persisted_until = entry[1]
 
             if not self._use_outdated_persisted_sections and now > persisted_until:
-                self._logger.debug("[%s] Persisted section %s is outdated by %d seconds. Deleting it." %
-                                                       (self.id(), section_name, now - persisted_until))
+                self._logger.debug("Persisted section %s is outdated by %d seconds. Deleting it." %
+                                                       (section_name, now - persisted_until))
                 del persisted_sections[section_name]
                 modified = True
 

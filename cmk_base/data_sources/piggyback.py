@@ -52,7 +52,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
         Special for piggyback: No caching of raw data
         """
-        self._logger.verbose("[%s] Execute data source" % self.id())
+        self._logger.verbose("Execute data source")
         return self._execute(), False
 
 

@@ -79,11 +79,11 @@ _marked_host_discovery_timeout = 120
 def do_discovery(hostnames, check_plugin_names, only_new):
     use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
     if not hostnames:
-        console.verbose("Discovering services on all hosts:\n")
+        console.verbose("Discovering services on all hosts\n")
         hostnames = config.all_active_realhosts()
         use_caches = True
     else:
-        console.verbose("Discovering services on %s:\n" % ", ".join(hostnames))
+        console.verbose("Discovering services on: %s\n" % ", ".join(hostnames))
 
     # For clusters add their nodes to the list. Clusters itself
     # cannot be discovered but the user is allowed to specify
@@ -102,8 +102,9 @@ def do_discovery(hostnames, check_plugin_names, only_new):
 
     # Now loop through all hosts
     for hostname in hostnames:
+        console.section_begin(hostname)
+
         try:
-            console.verbose(tty.bold + hostname + tty.normal + ":\n")
             if cmk.debug.enabled():
                 on_error = "raise"
             else:
@@ -120,18 +121,12 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
             _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names, only_new, on_error)
-            console.verbose("\n")
+
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            console.verbose(" -> Failed: %s\n" % e)
+            console.section_error("%s" % e)
         finally:
-            if sources:
-                for source in sources.get_data_sources():
-                    source_state, source_output, source_perfdata = source.get_summary_result()
-                    if source_state != 0:
-                        console.verbose(" -> [%s] %s\n" % (source.id(), source_output))
-
             cmk_base.utils.cleanup_globals()
 
     # Check whether or not the cluster host autocheck files are still
@@ -151,6 +146,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         check_plugin_names = multi_host_sections.get_check_plugin_names()
         sources.enforce_check_plugin_names(check_plugin_names)
 
+    console.step("Executing inventory plugins")
     new_items = _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error=on_error)
 
     if not check_plugin_names and not only_new:
@@ -178,12 +174,13 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         if only_new or (check_plugin_names and check_plugin_name not in check_plugin_names):
             result[(check_plugin_name, item)] = paramstring
 
-    stats = {}
+    stats, num_services = {}, 0
     for check_plugin_name, item, paramstring in new_items:
         if (check_plugin_name, item) not in result:
             result[(check_plugin_name, item)] = paramstring
             stats.setdefault(check_plugin_name, 0)
             stats[check_plugin_name] += 1
+            num_services += 1
 
     final_items = []
     for (check_plugin_name, item), paramstring in result.items():
@@ -193,11 +190,13 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
     found_check_plugin_names = stats.keys()
     found_check_plugin_names.sort()
+
     if found_check_plugin_names:
         for check_plugin_name in found_check_plugin_names:
-            console.verbose("  %s%3d%s %s\n" % (tty.green + tty.bold, stats[check_plugin_name], tty.normal, check_plugin_name))
+            console.verbose("%s%3d%s %s\n" % (tty.green + tty.bold, stats[check_plugin_name], tty.normal, check_plugin_name))
+        console.section_success("Found %d services" % num_services)
     else:
-        console.verbose("  nothing%s\n" % (only_new and " new" or ""))
+        console.section_success("Found nothing%s" % (only_new and " new" or ""))
 
 
 # determine changed services on host.

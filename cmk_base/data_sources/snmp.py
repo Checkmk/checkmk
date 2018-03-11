@@ -198,10 +198,10 @@ class SNMPDataSource(DataSource):
             # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added latera
             if section_name in persisted_sections:
-                self._logger.debug("[%s] %s: Skip fetching data (persisted info exists)" % (self.id(), check_plugin_name))
+                self._logger.debug("%s: Skip fetching data (persisted info exists)" % (check_plugin_name))
                 continue
 
-            self._logger.debug("[%s] %s: Fetching data" % (self.id(), check_plugin_name))
+            self._logger.debug("%s: Fetching data" % (check_plugin_name))
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.

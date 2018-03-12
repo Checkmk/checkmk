@@ -116,6 +116,8 @@ div.floatfilter.double .content {
 div.floatfilter .content > select {
     width: 300px;
 }
+
+div.floatfilter .content > select.neg,
 div.floatfilter .content > select#opthost_group,
 div.floatfilter .content > select#optservice_contact_group,
 div.floatfilter .content > select#opthost_contact_group,

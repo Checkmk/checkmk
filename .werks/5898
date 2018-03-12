@@ -1,0 +1,10 @@
+Title: Improved error handling in case of wrong permissions on init scripts
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520881061
+Class: fix
+
+

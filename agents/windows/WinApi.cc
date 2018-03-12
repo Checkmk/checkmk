@@ -466,13 +466,6 @@ HLOCAL WinApi::LocalAlloc(UINT uFlags, SIZE_T uBytes) const {
 
 HLOCAL WinApi::LocalFree(HLOCAL hMem) const { return ::LocalFree(hMem); }
 
-int WinApi::MultiByteToWideChar(UINT CodePage, DWORD dwFlags,
-                                LPCCH lpMultiByteStr, int cbMultiByte,
-                                LPWSTR lpWideCharStr, int cchWideChar) const {
-    return ::MultiByteToWideChar(CodePage, dwFlags, lpMultiByteStr, cbMultiByte,
-                                 lpWideCharStr, cchWideChar);
-}
-
 HANDLE WinApi::OpenProcess(DWORD dwDesiredAccess, WINBOOL bInheritHandle,
                            DWORD dwProcessId) const {
     return ::OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);

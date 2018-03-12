@@ -246,10 +246,6 @@ public:
     MOCK_CONST_METHOD1(LoadLibraryW, HMODULE(LPCWSTR lpLibFileName));
     MOCK_CONST_METHOD2(LocalAlloc, HLOCAL(UINT uFlags, SIZE_T uBytes));
     MOCK_CONST_METHOD1(LocalFree, HLOCAL(HLOCAL hMem));
-    MOCK_CONST_METHOD6(MultiByteToWideChar,
-                       int(UINT CodePage, DWORD dwFlags, LPCCH lpMultiByteStr,
-                           int cbMultiByte, LPWSTR lpWideCharStr,
-                           int cchWideChar));
     MOCK_CONST_METHOD3(OpenProcess,
                        HANDLE(DWORD dwDesiredAccess, WINBOOL bInheritHandle,
                               DWORD dwProcessId));

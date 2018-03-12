@@ -36,32 +36,6 @@ int parse_boolean(const char *value) {
     return -1;
 }
 
-wstring to_utf16(const char *input, const WinApiAdaptor &winapi) {
-    // TODO: Use std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes
-    // instead of WinAPI MultiByteToWideChar. Unfortunately, from_bytes is
-    // broken in currently known versions of MinGW (or, more precisely,
-    // libstdc++.dll. We need to wait until there is a fix for this available.
-    wstring result;
-    // preflight: how many bytes to we need?
-    int required_size =
-        winapi.MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
-    if (required_size == 0) {
-        // conversion failure. What to do?
-        return wstring();
-    }
-    result.resize(required_size);
-
-    // real conversion
-    winapi.MultiByteToWideChar(CP_UTF8, 0, input, -1, &result[0],
-                               required_size);
-
-    // strip away the zero termination. This is necessary, otherwise the stored
-    // string length in the string is wrong
-    result.resize(required_size - 1);
-
-    return result;
-}
-
 bool ci_compare_pred(unsigned char lhs, unsigned char rhs) {
     return std::tolower(lhs) == std::tolower(rhs);
 }

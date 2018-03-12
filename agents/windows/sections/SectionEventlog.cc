@@ -424,8 +424,8 @@ std::unique_ptr<IEventLog> SectionEventlog::openEventlog(
     Debug(_logger) << " - event log \"" << logname << "\":";
 
     try {
-        std::unique_ptr<IEventLog> log(open_eventlog(
-            to_utf16(logname.c_str(), _winapi), *_vista_api, _logger, _winapi));
+        std::unique_ptr<IEventLog> log(
+            open_eventlog(to_utf16(logname), *_vista_api, _logger, _winapi));
 
         Debug(_logger) << "   . successfully opened event log";
         out << "[[[" << logname << "]]]\n";

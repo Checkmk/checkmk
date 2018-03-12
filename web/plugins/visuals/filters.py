@@ -1194,8 +1194,10 @@ class FilterHostAuxTags(Filter):
     def __init__(self):
         self.count  = 3
         self.prefix = 'host_auxtags'
-        htmlvars    = [ "%s_%d" % (self.prefix, num)
-                        for num in range(self.count) ]
+        htmlvars = []
+        for num in range(self.count):
+            htmlvars.append("%s_%d" % (self.prefix, num))
+            htmlvars.append("%s_%d_neg" % (self.prefix, num))
 
         Filter.__init__(self,
             name     = 'host_auxtags',
@@ -1211,11 +1213,14 @@ class FilterHostAuxTags(Filter):
     def display(self):
         selection = []
         for num in range(self.count):
-            html.dropdown('%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, sorted=True)
+            html.dropdown('%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, sorted=True, class_='neg')
+            html.open_nobr()
+            html.checkbox('%s_%d_neg' % (self.prefix, num), False, label=_("negate"))
+            html.close_nobr()
 
 
-    def host_auxtags_filter(self, tag):
-        return "Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])" % lqencode(tag)
+    def host_auxtags_filter(self, tag, negate):
+        return "Filter: host_custom_variables %s~ TAGS (^|[ ])%s($|[ ])" % (negate, lqencode(tag))
 
 
     def filter(self, infoname):
@@ -1227,7 +1232,9 @@ class FilterHostAuxTags(Filter):
         while html.has_var( '%s_%d' % (self.prefix, num) ):
             this_tag = html.var( '%s_%d' % (self.prefix, num) )
             if this_tag:
-                headers.append( self.host_auxtags_filter( this_tag ) )
+                negate = ("!" if html.get_checkbox('%s_%d_neg' % (self.prefix, num))
+                        else "")
+                headers.append(self.host_auxtags_filter(this_tag, negate))
             num += 1
 
         if headers:

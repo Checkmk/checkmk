@@ -1,0 +1,11 @@
+Title: ups_cps_outphase: Fixed decimal place in current outphase
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520849908
+Class: fix
+
+Fixed computation of the current amperage of the outphase. This bug has been
+introduced directly during the development and is fixed by now.

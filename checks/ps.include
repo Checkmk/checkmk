@@ -437,10 +437,10 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                             except MKCounterWrapped, e:
                                 cputime = 0
 
-                            pcpu = cputime * 100
+                            pcpu = cputime * 100 / cpu_cores
                             process.append(("pid", (pid, "")))
                         else:
-                            pcpu = savefloat(process_info[3])
+                            pcpu = savefloat(process_info[3]) / cpu_cores
                         percent_cpu += pcpu
                         process.append(("cpu usage", (pcpu, "%")))
 

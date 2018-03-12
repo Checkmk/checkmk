@@ -1676,7 +1676,12 @@ def call_init_script(scriptpath, command):
         sys.stderr.write('ERROR: This daemon does not exist.\n')
         return False
 
-    return subprocess.call([scriptpath, command]) in [ 0, 5 ]
+    try:
+        return subprocess.call([scriptpath, command]) in [ 0, 5 ]
+    except OSError, e:
+        sys.stderr.write("ERROR: Failed to run '%s': %s\n" % (scriptpath, e))
+        if e.errno == 13: # [Errno 13] Permission denied
+            return False
 
 
 

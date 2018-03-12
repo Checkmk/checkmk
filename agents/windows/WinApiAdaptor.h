@@ -267,10 +267,6 @@ public:
     virtual HMODULE LoadLibraryW(LPCWSTR lpLibFileName) const = 0;
     virtual HLOCAL LocalAlloc(UINT uFlags, SIZE_T uBytes) const = 0;
     virtual HLOCAL LocalFree(HLOCAL hMem) const = 0;
-    virtual int MultiByteToWideChar(UINT CodePage, DWORD dwFlags,
-                                    LPCCH lpMultiByteStr, int cbMultiByte,
-                                    LPWSTR lpWideCharStr,
-                                    int cchWideChar) const = 0;
     virtual HANDLE OpenProcess(DWORD dwDesiredAccess, WINBOOL bInheritHandle,
                                DWORD dwProcessId) const = 0;
     virtual WINBOOL MoveFile(LPCSTR lpExistingFileName,

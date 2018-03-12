@@ -124,7 +124,11 @@ inline std::string to_utf8(const std::wstring &input) {
     return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(input);
 }
 
-std::wstring to_utf16(const char *input, const WinApiAdaptor &winapi);
+inline std::wstring to_utf16(const std::string &input) {
+    return std::wstring_convert<
+               std::codecvt_utf8<wchar_t, 0x10ffff, std::little_endian>>()
+        .from_bytes(input);
+}
 
 struct Utf8 {
     explicit Utf8(const std::wstring &value) : _value(value) {}

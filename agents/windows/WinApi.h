@@ -220,10 +220,6 @@ public:
     virtual HMODULE LoadLibraryW(LPCWSTR lpLibFileName) const override;
     virtual HLOCAL LocalAlloc(UINT uFlags, SIZE_T uBytes) const override;
     virtual HLOCAL LocalFree(HLOCAL hMem) const override;
-    virtual int MultiByteToWideChar(UINT CodePage, DWORD dwFlags,
-                                    LPCCH lpMultiByteStr, int cbMultiByte,
-                                    LPWSTR lpWideCharStr,
-                                    int cchWideChar) const override;
     virtual HANDLE OpenProcess(DWORD dwDesiredAccess, WINBOOL bInheritHandle,
                                DWORD dwProcessId) const override;
     virtual WINBOOL MoveFile(LPCSTR lpExistingFileName,

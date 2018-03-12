@@ -31,7 +31,7 @@ def parse_ups_cps_outphase(info):
         "voltage"       : float(info[0][0]) / 10,
         "frequency"     : float(info[0][1]) / 10,
         "output_load"   : float(info[0][2]),
-        "current"       : float(info[0][3]),
+        "current"       : float(info[0][3]) / 10,
     }
     return parsed
 

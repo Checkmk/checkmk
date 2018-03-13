@@ -31,17 +31,9 @@
 #include "Logger.h"
 #include "stringutil.h"
 
-SectionCheckMK::SectionCheckMK(Configuration &config,
-                               OnlyFromConfigurable &only_from,
-                               script_statistics_t &script_statistics,
-                               Logger *logger, const WinApiAdaptor &winapi)
-    : Section("check_mk", "check_mk", config.getEnvironment(), logger, winapi)
-    , _crash_debug(config, "global", "crash_debug", false, winapi)
-    , _only_from(only_from)
-    , _info_fields(createInfoFields())
-    , _script_statistics(script_statistics) {}
+namespace {
 
-std::vector<KVPair> SectionCheckMK::createInfoFields() const {
+std::vector<KVPair> createInfoFields(const Environment &env) {
 #ifdef ENVIRONMENT32
     const char *arch = "32bit";
 #else
@@ -53,24 +45,37 @@ std::vector<KVPair> SectionCheckMK::createInfoFields() const {
         {"Version", CHECK_MK_VERSION},
         {"BuildDate", __DATE__},
         {"AgentOS", "windows"},
-        {"Hostname", _env.hostname()},
+        {"Hostname", env.hostname()},
         {"Architecture", arch},
-        {"WorkingDirectory", _env.currentDirectory()},
-        {"ConfigFile", configFileName(false, _env)},
-        {"LocalConfigFile", configFileName(true, _env)},
-        {"AgentDirectory", _env.agentDirectory()},
-        {"PluginsDirectory", _env.pluginsDirectory()},
-        {"StateDirectory", _env.stateDirectory()},
-        {"ConfigDirectory", _env.configDirectory()},
-        {"TempDirectory", _env.tempDirectory()},
-        {"LogDirectory", _env.logDirectory()},
-        {"SpoolDirectory", _env.spoolDirectory()},
-        {"LocalDirectory", _env.localDirectory()}};
+        {"WorkingDirectory", env.currentDirectory()},
+        {"ConfigFile", configFileName(false, env)},
+        {"LocalConfigFile", configFileName(true, env)},
+        {"AgentDirectory", env.agentDirectory()},
+        {"PluginsDirectory", env.pluginsDirectory()},
+        {"StateDirectory", env.stateDirectory()},
+        {"ConfigDirectory", env.configDirectory()},
+        {"TempDirectory", env.tempDirectory()},
+        {"LogDirectory", env.logDirectory()},
+        {"SpoolDirectory", env.spoolDirectory()},
+        {"LocalDirectory", env.localDirectory()}};
 
     return info_fields;
 }
 
-bool SectionCheckMK::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
+}  // namespace
+
+SectionCheckMK::SectionCheckMK(Configuration &config,
+                               OnlyFromConfigurable &only_from,
+                               script_statistics_t &script_statistics,
+                               Logger *logger, const WinApiAdaptor &winapi)
+    : Section("check_mk", "check_mk", config.getEnvironment(), logger, winapi)
+    , _crash_debug(config, "global", "crash_debug", false, winapi)
+    , _only_from(only_from)
+    , _info_fields(createInfoFields(_env))
+    , _script_statistics(script_statistics) {}
+
+bool SectionCheckMK::produceOutputInner(std::ostream &out,
+                                        const std::optional<std::string> &) {
     Debug(_logger) << "SectionCheckMK::produceOutputInner";
     // output static fields
     for (const auto & [ label, value ] : _info_fields) {

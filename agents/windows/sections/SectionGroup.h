@@ -43,8 +43,8 @@ class SectionGroup : public Section {
 public:
     SectionGroup(const std::string &outputName, const std::string &configName,
                  const Environment &env, Logger *logger,
-                 const WinApiAdaptor &winapi);
-    SectionGroup *withNestedSubtables();
+                 const WinApiAdaptor &winapi, bool nested = false, bool show_header = false);
+
     /**
      * add a section that will be printed as part of this group
      **/
@@ -67,7 +67,7 @@ private:
     std::vector<std::unique_ptr<Section>> _dependent_subsections;
     bool _toggle_if_missing{false};
     bool _fail_if_missing{false};
-    bool _nested{false};
+    const bool _nested;
     time_t _disabled_until{0};
 };
 

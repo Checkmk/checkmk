@@ -52,17 +52,13 @@ double current_time(const WinApiAdaptor &winapi) {
 
 Section::Section(const std::string &outputName, const std::string &configName,
                  const Environment &env, Logger *logger,
-                 const WinApiAdaptor &winapi)
+                 const WinApiAdaptor &winapi, bool show_header /* = true */)
     : _outputName(outputName)
     , _configName(configName)
     , _env(env)
     , _logger(logger)
-    , _winapi(winapi) {}
-
-Section *Section::withHiddenHeader(bool hidden) {
-    _show_header = !hidden;
-    return this;
-}
+    , _winapi(winapi)
+    , _show_header(show_header) {}
 
 Section *Section::withRealtimeSupport() {
     _realtime_support = true;

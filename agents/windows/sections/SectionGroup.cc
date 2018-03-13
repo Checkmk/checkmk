@@ -28,10 +28,11 @@
 SectionGroup::SectionGroup(const std::string &outputName,
                            const std::string &configName,
                            const Environment &env, Logger *logger,
-                           const WinApiAdaptor &winapi)
-    : Section(outputName, configName, env, logger, winapi) {
-    withHiddenHeader();
-}
+                           const WinApiAdaptor &winapi,
+                           bool nested /* = false */,
+                           bool show_header /* = false */)
+  : Section(outputName, configName, env, logger, winapi, show_header)
+  , _nested(nested) {}
 
 SectionGroup *SectionGroup::withSubSection(Section *section) {
     _subsections.push_back(std::unique_ptr<Section>(section));
@@ -45,12 +46,6 @@ SectionGroup *SectionGroup::withDependentSubSection(Section *section) {
 
 SectionGroup *SectionGroup::withToggleIfMissing() {
     _toggle_if_missing = true;
-    return this;
-}
-
-SectionGroup *SectionGroup::withNestedSubtables() {
-    withHiddenHeader(false);
-    _nested = true;
     return this;
 }
 

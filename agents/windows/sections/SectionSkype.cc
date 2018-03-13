@@ -30,10 +30,9 @@
 
 SectionSkype::SectionSkype(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
-    : SectionGroup("skype", "skype", env, logger, winapi)
+  : SectionGroup("skype", "skype", env, logger, winapi, true, true)
     , _nameNumberMap(_logger, _winapi) {
     withToggleIfMissing();
-    withNestedSubtables();
     withSeparator(',');
 
     for (const std::string &counterName :

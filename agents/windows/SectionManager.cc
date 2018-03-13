@@ -155,7 +155,7 @@ void SectionManager::loadStaticSections(Configuration &config,
                    ->withToggleIfMissing());
 
     addSection((new SectionGroup("wmi_cpuload", "wmi_cpuload", _env, _logger,
-                                 _winapi, true, true))
+                                 _winapi, true, true, ','))
                    ->withToggleIfMissing()
                    ->withSubSection(
                        (new SectionWMI("system_perf", "system_perf", _env,
@@ -164,11 +164,11 @@ void SectionManager::loadStaticSections(Configuration &config,
                    ->withSubSection(
                        (new SectionWMI("computer_system", "computer_system",
                                        _env, _logger, _winapi))
-                           ->withObject(L"Win32_ComputerSystem"))
-                   ->withSeparator(','));
+                           ->withObject(L"Win32_ComputerSystem")));
 
     addSection(
-        (new SectionGroup("msexch", "msexch", _env, _logger, _winapi))
+        (new SectionGroup("msexch", "msexch", _env, _logger, _winapi, false,
+                          false, ','))
             ->withToggleIfMissing()
             ->withSubSection(
                 (new SectionWMI("msexch_activesync", "msexch_activesync", _env,
@@ -205,8 +205,7 @@ void SectionManager::loadStaticSections(Configuration &config,
                                 "msexch_rpcclientaccess", _env, _logger,
                                 _winapi))
                     ->withObject(
-                        L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"))
-            ->withSeparator(','));
+                        L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess")));
 
     addSection(new SectionSkype(_env, _logger, _winapi));
 

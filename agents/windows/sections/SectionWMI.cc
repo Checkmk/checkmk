@@ -37,9 +37,7 @@
 SectionWMI::SectionWMI(const std::string &outputName,
                        const std::string &configName, const Environment &env,
                        Logger *logger, const WinApiAdaptor &winapi)
-    : Section(outputName, configName, env, logger, winapi) {
-    withSeparator(',');
-}
+    : Section(outputName, configName, env, logger, winapi, true, ',') {}
 
 SectionWMI *SectionWMI::withNamespace(const wchar_t *name) {
     _namespace = name;

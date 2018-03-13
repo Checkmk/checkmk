@@ -342,10 +342,13 @@ def test_structured_data_StructuredDataTree_is_equal(tree_x, tree_y):
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree):
-    tree.save_to("./", "foo", False)
-    loaded_tree = StructuredDataTree().load_from("./foo")
-    assert tree.is_equal(loaded_tree)
+def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmpdir):
+    try:
+        tree.save_to("%s" % tmpdir, "foo", False)
+        loaded_tree = StructuredDataTree().load_from("%s" % tmpdir.join("foo"))
+        assert tree.is_equal(loaded_tree)
+    finally:
+        tmpdir.remove()
 
 
 @pytest.mark.parametrize("tree,result", zip(

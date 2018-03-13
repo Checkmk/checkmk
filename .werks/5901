@@ -1,0 +1,11 @@
+Title: Fixed broken "Check_MK Discovery" service when using Nagios core
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520950461
+Class: fix
+
+Previous 1.5.x releases were using outdated check_mk_templates.cfg which resulted
+in a wrong command being executed for the discovery service.

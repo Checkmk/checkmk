@@ -30,9 +30,9 @@
 #include "Logger.h"
 #include "Row.h"
 
-IntFilter::IntFilter(const IntColumn &column, RelationalOperator relOp,
-                     const std::string &value)
-    : ColumnFilter(column, relOp, value)
+IntFilter::IntFilter(Kind kind, const IntColumn &column,
+                     RelationalOperator relOp, const std::string &value)
+    : ColumnFilter(kind, column, relOp, value)
     , _column(column)
     , _ref_value(atoi(value.c_str())) {}
 
@@ -196,5 +196,5 @@ std::unique_ptr<Filter> IntFilter::copy() const {
 
 std::unique_ptr<Filter> IntFilter::negate() const {
     return std::make_unique<IntFilter>(
-        _column, negateRelationalOperator(oper()), value());
+        kind(), _column, negateRelationalOperator(oper()), value());
 }

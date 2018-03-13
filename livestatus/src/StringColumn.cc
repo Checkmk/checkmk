@@ -36,8 +36,9 @@ void StringColumn::output(Row row, RowRenderer &r,
 }
 
 std::unique_ptr<Filter> StringColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<StringFilter>(*this, relOp, value);
+    Filter::Kind kind, RelationalOperator relOp,
+    const std::string &value) const {
+    return std::make_unique<StringFilter>(kind, *this, relOp, value);
 }
 
 std::unique_ptr<Aggregator> StringColumn::createAggregator(

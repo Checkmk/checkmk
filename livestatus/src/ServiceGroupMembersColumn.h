@@ -31,9 +31,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "Filter.h"
 #include "ListColumn.h"
 #include "opids.h"
-class Filter;
 class MonitoringCore;
 class Row;
 class RowRenderer;
@@ -61,7 +61,8 @@ public:
                 std::chrono::seconds timezone_offset) const override;
 
     std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const override;
+        Filter::Kind kind, RelationalOperator relOp,
+        const std::string &value) const override;
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,

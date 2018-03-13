@@ -30,10 +30,10 @@
 #include <memory>
 #include <string>
 #include "Column.h"
+#include "Filter.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Aggregator;
-class Filter;
 class Row;
 class RowRenderer;
 
@@ -51,7 +51,8 @@ public:
                 std::chrono::seconds timezone_offset) const override;
 
     std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const override;
+        Filter::Kind kind, RelationalOperator relOp,
+        const std::string &value) const override;
 
     std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;

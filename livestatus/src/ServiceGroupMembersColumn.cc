@@ -74,8 +74,9 @@ std::string checkValue(Logger *logger, RelationalOperator relOp,
 }  // namespace
 
 std::unique_ptr<Filter> ServiceGroupMembersColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<ListFilter>(*this, relOp,
+    Filter::Kind kind, RelationalOperator relOp,
+    const std::string &value) const {
+    return std::make_unique<ListFilter>(kind, *this, relOp,
                                         checkValue(logger(), relOp, value));
 }
 

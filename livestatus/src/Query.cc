@@ -126,15 +126,17 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             if (header == "Filter") {
                 parseFilterLine(arguments, filters);
             } else if (header == "Or") {
-                parseAndOrLine(arguments, LogicalOperator::or_, filters);
+                parseAndOrLine(arguments, Filter::Kind::row,
+                               LogicalOperator::or_, filters);
             } else if (header == "And") {
-                parseAndOrLine(arguments, LogicalOperator::and_, filters);
+                parseAndOrLine(arguments, Filter::Kind::row,
+                               LogicalOperator::and_, filters);
             } else if (header == "Negate") {
                 parseNegateLine(arguments, filters);
             } else if (header == "StatsOr") {
-                parseStatsAndOrLine(arguments, LogicalOperator::stats_or);
+                parseStatsAndOrLine(arguments, LogicalOperator::or_);
             } else if (header == "StatsAnd") {
-                parseStatsAndOrLine(arguments, LogicalOperator::stats_and);
+                parseStatsAndOrLine(arguments, LogicalOperator::and_);
             } else if (header == "StatsNegate") {
                 parseStatsNegateLine(arguments);
             } else if (header == "Stats") {
@@ -162,11 +164,11 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "WaitCondition") {
                 parseFilterLine(arguments, wait_conditions);
             } else if (header == "WaitConditionAnd") {
-                parseAndOrLine(arguments, LogicalOperator::wait_condition_and,
-                               wait_conditions);
+                parseAndOrLine(arguments, Filter::Kind::wait_condition,
+                               LogicalOperator::and_, wait_conditions);
             } else if (header == "WaitConditionOr") {
-                parseAndOrLine(arguments, LogicalOperator::wait_condition_or,
-                               wait_conditions);
+                parseAndOrLine(arguments, Filter::Kind::wait_condition,
+                               LogicalOperator::or_, wait_conditions);
             } else if (header == "WaitConditionNegate") {
                 parseNegateLine(arguments, wait_conditions);
             } else if (header == "WaitTrigger") {
@@ -195,10 +197,10 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         _show_column_headers = true;
     }
 
-    _filter = std::make_unique<AndingFilter>(LogicalOperator::and_,
-                                             std::move(filters));
+    _filter =
+        std::make_unique<AndingFilter>(Filter::Kind::row, std::move(filters));
     _wait_condition = std::make_unique<AndingFilter>(
-        LogicalOperator::wait_condition_and, std::move(wait_conditions));
+        Filter::Kind ::wait_condition, std::move(wait_conditions));
 }
 
 void Query::invalidRequest(const std::string &message) const {
@@ -207,23 +209,20 @@ void Query::invalidRequest(const std::string &message) const {
 
 namespace {
 std::unique_ptr<Filter> makeFilter(
-    LogicalOperator op, std::vector<std::unique_ptr<Filter>> subfilters) {
+    Filter::Kind kind, Query::LogicalOperator op,
+    std::vector<std::unique_ptr<Filter>> subfilters) {
     switch (op) {
-        case LogicalOperator::and_:
-        case LogicalOperator::stats_and:
-        case LogicalOperator::wait_condition_and:
-            return std::make_unique<AndingFilter>(op, std::move(subfilters));
+        case Query::LogicalOperator::and_:
+            return std::make_unique<AndingFilter>(kind, std::move(subfilters));
             break;
-        case LogicalOperator::or_:
-        case LogicalOperator::stats_or:
-        case LogicalOperator::wait_condition_or:
-            return std::make_unique<OringFilter>(op, std::move(subfilters));
+        case Query::LogicalOperator::or_:
+            return std::make_unique<OringFilter>(kind, std::move(subfilters));
     }
     return nullptr;  // unreachable
 }
 }  // namespace
 
-void Query::parseAndOrLine(char *line, LogicalOperator op,
+void Query::parseAndOrLine(char *line, Filter::Kind kind, LogicalOperator op,
                            FilterStack &filters) {
     auto number = nextNonNegativeIntegerArgument(&line);
     std::vector<std::unique_ptr<Filter>> subfilters;
@@ -239,7 +238,7 @@ void Query::parseAndOrLine(char *line, LogicalOperator op,
         filters.pop_back();
     }
     std::reverse(subfilters.begin(), subfilters.end());
-    filters.push_back(makeFilter(op, std::move(subfilters)));
+    filters.push_back(makeFilter(kind, op, std::move(subfilters)));
 }
 
 void Query::parseNegateLine(char *line, FilterStack &filters) {
@@ -270,7 +269,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator op) {
     }
     std::reverse(subfilters.begin(), subfilters.end());
     _stats_columns.push_back(std::make_unique<StatsColumnCount>(
-        makeFilter(op, std::move(subfilters))));
+        makeFilter(Filter::Kind::stats, op, std::move(subfilters))));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -418,7 +417,7 @@ void Query::parseStatsLine(char *line) {
         auto relOp = relationalOperatorForName(nextStringArgument(&line));
         auto operand = mk::lstrip(line);
         sc = std::make_unique<StatsColumnCount>(
-            column->createFilter(relOp, operand));
+            column->createFilter(Filter::Kind::stats, relOp, operand));
     } else {
         column = _table.column(nextStringArgument(&line));
         sc = std::make_unique<StatsColumnOp>(it->second, column.get());
@@ -434,7 +433,7 @@ void Query::parseFilterLine(char *line, FilterStack &filters) {
     auto column = _table.column(nextStringArgument(&line));
     auto relOp = relationalOperatorForName(nextStringArgument(&line));
     auto operand = mk::lstrip(line);
-    auto sub_filter = column->createFilter(relOp, operand);
+    auto sub_filter = column->createFilter(Filter::Kind::row, relOp, operand);
     filters.push_back(std::move(sub_filter));
     _all_columns.insert(column);
 }

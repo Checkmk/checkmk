@@ -31,10 +31,10 @@
 #include <string>
 #include <vector>
 #include "AttributeListAsIntColumn.h"
+#include "Filter.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class Filter;
 class Row;
 
 class AttributeListColumn : public ListColumn {
@@ -48,7 +48,8 @@ public:
                            extra_extra_offset, offset) {}
 
     std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const override;
+        Filter::Kind kind, RelationalOperator relOp,
+        const std::string &value) const override;
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,

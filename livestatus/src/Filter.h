@@ -37,22 +37,13 @@
 class Column;
 class Row;
 
-enum class LogicalOperator {
-    and_,
-    or_,
-    stats_and,
-    stats_or,
-    wait_condition_and,
-    wait_condition_or
-};
-
-LogicalOperator dual(LogicalOperator op);
-
-std::ostream &operator<<(std::ostream &os, const LogicalOperator &op);
-
 class Filter {
 public:
+    enum Kind { row, stats, wait_condition };
+
+    explicit Filter(Kind kind) : _kind(kind) {}
     virtual ~Filter();
+    Kind kind() const { return _kind; }
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
     virtual std::unique_ptr<Filter> partialFilter(
@@ -72,6 +63,7 @@ public:
     }
 
 private:
+    const Kind _kind;
     virtual std::ostream &print(std::ostream &os) const = 0;
 };
 

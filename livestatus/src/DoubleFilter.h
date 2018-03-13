@@ -30,16 +30,16 @@
 #include <memory>
 #include <string>
 #include "ColumnFilter.h"
+#include "Filter.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class DoubleColumn;
-class Filter;
 class Row;
 
 class DoubleFilter : public ColumnFilter {
 public:
-    DoubleFilter(const DoubleColumn &column, RelationalOperator relOp,
-                 const std::string &value);
+    DoubleFilter(Kind kind, const DoubleColumn &column,
+                 RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;

@@ -37,7 +37,8 @@ void BlobColumn::output(Row row, RowRenderer& r, const contact* /*auth_user*/,
 }
 
 std::unique_ptr<Filter> BlobColumn::createFilter(
-    RelationalOperator /*unused*/, const std::string& /*unused*/) const {
+    Filter::Kind /*unused*/, RelationalOperator /*unused*/,
+    const std::string& /*unused*/) const {
     throw std::runtime_error("filtering on blob column '" + name() +
                              "' not supported");
 }

@@ -28,9 +28,9 @@
 #include "Row.h"
 #include "StringColumn.h"
 
-StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
-                           const std::string &value)
-    : ColumnFilter(column, relOp, value)
+StringFilter::StringFilter(Kind kind, const StringColumn &column,
+                           RelationalOperator relOp, const std::string &value)
+    : ColumnFilter(kind, column, relOp, value)
     , _column(column)
     , _regExp(makeRegExpFor(relOp, value)) {}
 
@@ -94,5 +94,5 @@ std::unique_ptr<Filter> StringFilter::copy() const {
 
 std::unique_ptr<Filter> StringFilter::negate() const {
     return std::make_unique<StringFilter>(
-        _column, negateRelationalOperator(oper()), value());
+        kind(), _column, negateRelationalOperator(oper()), value());
 }

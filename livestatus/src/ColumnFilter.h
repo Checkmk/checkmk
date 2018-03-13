@@ -37,9 +37,12 @@
 
 class ColumnFilter : public Filter {
 public:
-    ColumnFilter(const Column &column, RelationalOperator relOp,
+    ColumnFilter(Kind kind, const Column &column, RelationalOperator relOp,
                  std::string value)
-        : _column(column), _relOp(relOp), _value(std::move(value)) {}
+        : Filter(kind)
+        , _column(column)
+        , _relOp(relOp)
+        , _value(std::move(value)) {}
     std::string columnName() const { return _column.name(); }
     RelationalOperator oper() const { return _relOp; }
     std::string value() const { return _value; }

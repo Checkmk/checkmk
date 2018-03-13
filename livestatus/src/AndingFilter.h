@@ -42,9 +42,8 @@ class Row;
 
 class AndingFilter : public Filter {
 public:
-    AndingFilter(LogicalOperator op,
-                 std::vector<std::unique_ptr<Filter>> subfilters)
-        : _op(op), _subfilters(std::move(subfilters)) {}
+    AndingFilter(Kind kind, std::vector<std::unique_ptr<Filter>> subfilters)
+        : Filter(kind), _subfilters(std::move(subfilters)) {}
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> partialFilter(
@@ -59,7 +58,6 @@ public:
     std::unique_ptr<Filter> negate() const override;
 
 private:
-    LogicalOperator _op;
     std::vector<std::unique_ptr<Filter>> _subfilters;
 
     std::ostream &print(std::ostream &os) const override;

@@ -32,10 +32,11 @@
 #include "Row.h"
 #include "StringUtils.h"
 
-CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsDictColumn &column,
+CustomVarsDictFilter::CustomVarsDictFilter(Kind kind,
+                                           const CustomVarsDictColumn &column,
                                            RelationalOperator relOp,
                                            const std::string &value)
-    : ColumnFilter(column, relOp, value), _column(column) {
+    : ColumnFilter(kind, column, relOp, value), _column(column) {
     // Filter for custom_variables:
     //    Filter: custom_variables = PATH /hirni.mk
     // The variable name is part of the value and separated with spaces
@@ -82,5 +83,5 @@ std::unique_ptr<Filter> CustomVarsDictFilter::copy() const {
 
 std::unique_ptr<Filter> CustomVarsDictFilter::negate() const {
     return std::make_unique<CustomVarsDictFilter>(
-        _column, negateRelationalOperator(oper()), value());
+        kind(), _column, negateRelationalOperator(oper()), value());
 }

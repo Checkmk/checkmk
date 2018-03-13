@@ -56,9 +56,9 @@ RelationalOperator relOpForElement(RelationalOperator relOp) {
 }
 }  // namespace
 
-ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
-                       const std::string &value)
-    : ColumnFilter(column, relOp, value)
+ListFilter::ListFilter(Kind kind, const ListColumn &column,
+                       RelationalOperator relOp, const std::string &value)
+    : ColumnFilter(kind, column, relOp, value)
     , _column(column)
     , _regExp(makeRegExpFor(relOpForElement(relOp), value)) {}
 
@@ -142,5 +142,5 @@ std::unique_ptr<Filter> ListFilter::copy() const {
 
 std::unique_ptr<Filter> ListFilter::negate() const {
     return std::make_unique<ListFilter>(
-        _column, negateRelationalOperator(oper()), value());
+        kind(), _column, negateRelationalOperator(oper()), value());
 }

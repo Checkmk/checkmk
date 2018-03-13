@@ -30,16 +30,16 @@
 #include <memory>
 #include <string>
 #include "ColumnFilter.h"
+#include "Filter.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class CustomVarsDictColumn;
-class Filter;
 class RegExp;
 class Row;
 
 class CustomVarsDictFilter : public ColumnFilter {
 public:
-    CustomVarsDictFilter(const CustomVarsDictColumn &column,
+    CustomVarsDictFilter(Kind kind, const CustomVarsDictColumn &column,
                          RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;

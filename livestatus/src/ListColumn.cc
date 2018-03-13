@@ -38,8 +38,9 @@ void ListColumn::output(Row row, RowRenderer &r, const contact *auth_user,
 }
 
 std::unique_ptr<Filter> ListColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<ListFilter>(*this, relOp, value);
+    Filter::Kind kind, RelationalOperator relOp,
+    const std::string &value) const {
+    return std::make_unique<ListFilter>(kind, *this, relOp, value);
 }
 
 std::unique_ptr<Aggregator> ListColumn::createAggregator(

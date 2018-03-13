@@ -74,8 +74,9 @@ std::string refValueFor(const std::string &value, Logger *logger) {
 }  // namespace
 
 std::unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<IntFilter>(*this, relOp,
+    Filter::Kind kind, RelationalOperator relOp,
+    const std::string &value) const {
+    return std::make_unique<IntFilter>(kind, *this, relOp,
                                        refValueFor(value, logger()));
 }
 

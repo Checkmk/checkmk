@@ -46,7 +46,7 @@ std::unique_ptr<Filter> AndingFilter::partialFilter(
     std::transform(
         _subfilters.begin(), _subfilters.end(), std::back_inserter(filters),
         [&](const auto &filter) { return filter->partialFilter(predicate); });
-    return std::make_unique<AndingFilter>(_op, std::move(filters));
+    return std::make_unique<AndingFilter>(kind(), std::move(filters));
 }
 
 std::optional<std::string> AndingFilter::stringValueRestrictionFor(
@@ -84,7 +84,7 @@ std::unique_ptr<Filter> AndingFilter::copy() const {
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->copy(); });
-    return std::make_unique<AndingFilter>(_op, std::move(filters));
+    return std::make_unique<AndingFilter>(kind(), std::move(filters));
 }
 
 std::unique_ptr<Filter> AndingFilter::negate() const {
@@ -92,12 +92,23 @@ std::unique_ptr<Filter> AndingFilter::negate() const {
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->negate(); });
-    return std::make_unique<OringFilter>(dual(_op), std::move(filters));
+    return std::make_unique<OringFilter>(kind(), std::move(filters));
 }
 
 std::ostream &AndingFilter::print(std::ostream &os) const {
     for (const auto &filter : _subfilters) {
         os << *filter;
     }
-    return os << _op << ": " << _subfilters.size() << "\n";
+    switch (kind()) {
+        case Kind::row:
+            os << "And";
+            break;
+        case Kind::stats:
+            os << "StatsAnd";
+            break;
+        case Kind::wait_condition:
+            os << "WaitConditionAnd";
+            break;
+    }
+    return os << ": " << _subfilters.size() << "\n";
 }

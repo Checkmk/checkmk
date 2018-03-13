@@ -30,9 +30,9 @@
 #include "Row.h"
 #include "TimeColumn.h"
 
-TimeFilter::TimeFilter(const TimeColumn &column, RelationalOperator relOp,
-                       const std::string &value)
-    : ColumnFilter(column, relOp, value)
+TimeFilter::TimeFilter(Kind kind, const TimeColumn &column,
+                       RelationalOperator relOp, const std::string &value)
+    : ColumnFilter(kind, column, relOp, value)
     , _column(column)
     , _ref_value(atoi(value.c_str())) {}
 
@@ -198,5 +198,5 @@ std::unique_ptr<Filter> TimeFilter::copy() const {
 
 std::unique_ptr<Filter> TimeFilter::negate() const {
     return std::make_unique<TimeFilter>(
-        _column, negateRelationalOperator(oper()), value());
+        kind(), _column, negateRelationalOperator(oper()), value());
 }

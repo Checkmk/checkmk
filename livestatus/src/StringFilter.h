@@ -31,17 +31,17 @@
 #include <optional>
 #include <string>
 #include "ColumnFilter.h"
+#include "Filter.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class Filter;
 class RegExp;
 class Row;
 class StringColumn;
 
 class StringFilter : public ColumnFilter {
 public:
-    StringFilter(const StringColumn &column, RelationalOperator relOp,
-                 const std::string &value);
+    StringFilter(Kind kind, const StringColumn &column,
+                 RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     std::optional<std::string> stringValueRestrictionFor(

@@ -79,6 +79,8 @@ public:
         return _all_columns;
     }
 
+    enum class LogicalOperator { and_, or_ };
+
 private:
     const Encoding _data_encoding;
     const size_t _max_response_size;
@@ -113,7 +115,8 @@ private:
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, LogicalOperator op, FilterStack &filters);
+    void parseAndOrLine(char *line, Filter::Kind kind, LogicalOperator op,
+                        FilterStack &filters);
     void parseNegateLine(char *line, FilterStack &filters);
     void parseStatsAndOrLine(char *line, LogicalOperator op);
     void parseStatsNegateLine(char *line);

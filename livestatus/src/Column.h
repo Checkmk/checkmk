@@ -31,12 +31,12 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include "Filter.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Aggregation;
 class Aggregator;
-class Filter;
 class Logger;
 class RowRenderer;
 
@@ -70,7 +70,8 @@ public:
                         std::chrono::seconds timezone_offset) const = 0;
 
     virtual std::unique_ptr<Filter> createFilter(
-        RelationalOperator relOp, const std::string &value) const = 0;
+        Filter::Kind kind, RelationalOperator relOp,
+        const std::string &value) const = 0;
 
     virtual std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const = 0;

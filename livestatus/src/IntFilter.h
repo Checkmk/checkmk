@@ -31,15 +31,15 @@
 #include <memory>
 #include <string>
 #include "ColumnFilter.h"
+#include "Filter.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class Filter;
 class IntColumn;
 class Row;
 
 class IntFilter : public ColumnFilter {
 public:
-    IntFilter(const IntColumn &column, RelationalOperator relOp,
+    IntFilter(Kind kind, const IntColumn &column, RelationalOperator relOp,
               const std::string &value);
 
     bool accepts(Row row, const contact *auth_user,

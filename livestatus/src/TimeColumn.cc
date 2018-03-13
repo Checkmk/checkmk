@@ -37,8 +37,9 @@ void TimeColumn::output(Row row, RowRenderer &r, const contact * /*auth_user*/,
 }
 
 std::unique_ptr<Filter> TimeColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return std::make_unique<TimeFilter>(*this, relOp, value);
+    Filter::Kind kind, RelationalOperator relOp,
+    const std::string &value) const {
+    return std::make_unique<TimeFilter>(kind, *this, relOp, value);
 }
 
 std::unique_ptr<Aggregator> TimeColumn::createAggregator(

@@ -33,16 +33,16 @@
 #include <string>
 #include <vector>
 #include "ColumnFilter.h"
+#include "Filter.h"
 #include "ListColumn.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class RegExp;
-class Filter;
 
 class ListFilter : public ColumnFilter {
 public:
-    ListFilter(const ListColumn &column, RelationalOperator relOp,
+    ListFilter(Kind kind, const ListColumn &column, RelationalOperator relOp,
                const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;

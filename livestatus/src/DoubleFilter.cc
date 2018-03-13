@@ -30,9 +30,9 @@
 #include "Logger.h"
 #include "Row.h"
 
-DoubleFilter::DoubleFilter(const DoubleColumn &column, RelationalOperator relOp,
-                           const std::string &value)
-    : ColumnFilter(column, relOp, value)
+DoubleFilter::DoubleFilter(Kind kind, const DoubleColumn &column,
+                           RelationalOperator relOp, const std::string &value)
+    : ColumnFilter(kind, column, relOp, value)
     , _column(column)
     , _ref_value(atof(value.c_str())) {}
 
@@ -72,5 +72,5 @@ std::unique_ptr<Filter> DoubleFilter::copy() const {
 
 std::unique_ptr<Filter> DoubleFilter::negate() const {
     return std::make_unique<DoubleFilter>(
-        _column, negateRelationalOperator(oper()), value());
+        kind(), _column, negateRelationalOperator(oper()), value());
 }

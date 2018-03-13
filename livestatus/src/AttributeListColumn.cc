@@ -29,8 +29,9 @@
 #include "Row.h"
 
 std::unique_ptr<Filter> AttributeListColumn::createFilter(
-    RelationalOperator relOp, const std::string &value) const {
-    return _int_view_column.createFilter(relOp, value);
+    Filter::Kind kind, RelationalOperator relOp,
+    const std::string &value) const {
+    return _int_view_column.createFilter(kind, relOp, value);
 }
 
 std::vector<std::string> AttributeListColumn::getValue(

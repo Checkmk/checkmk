@@ -154,19 +154,18 @@ void SectionManager::loadStaticSections(Configuration &config,
                    ->withObject(L"Win32_PerfRawData_NETFramework_NETCLRMemory")
                    ->withToggleIfMissing());
 
-    addSection(
-        (new SectionGroup("wmi_cpuload", "wmi_cpuload", _env, _logger, _winapi))
-            ->withToggleIfMissing()
-            ->withNestedSubtables()
-            ->withSubSection(
-                (new SectionWMI("system_perf", "system_perf", _env, _logger,
-                                _winapi))
-                    ->withObject(L"Win32_PerfRawData_PerfOS_System"))
-            ->withSubSection(
-                (new SectionWMI("computer_system", "computer_system", _env,
-                                _logger, _winapi))
-                    ->withObject(L"Win32_ComputerSystem"))
-            ->withSeparator(','));
+    addSection((new SectionGroup("wmi_cpuload", "wmi_cpuload", _env, _logger,
+                                 _winapi, true, true))
+                   ->withToggleIfMissing()
+                   ->withSubSection(
+                       (new SectionWMI("system_perf", "system_perf", _env,
+                                       _logger, _winapi))
+                           ->withObject(L"Win32_PerfRawData_PerfOS_System"))
+                   ->withSubSection(
+                       (new SectionWMI("computer_system", "computer_system",
+                                       _env, _logger, _winapi))
+                           ->withObject(L"Win32_ComputerSystem"))
+                   ->withSeparator(','));
 
     addSection(
         (new SectionGroup("msexch", "msexch", _env, _logger, _winapi))
@@ -207,7 +206,6 @@ void SectionManager::loadStaticSections(Configuration &config,
                                 _winapi))
                     ->withObject(
                         L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"))
-            ->withHiddenHeader()
             ->withSeparator(','));
 
     addSection(new SectionSkype(_env, _logger, _winapi));

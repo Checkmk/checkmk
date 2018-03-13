@@ -376,7 +376,7 @@ SectionPluginGroup::SectionPluginGroup(
     script_statistics_t &script_statistics, Logger *logger,
     const WinApiAdaptor &winapi, const std::string &user)
     : Section(typeToSection(type), typeToSection(type), config.getEnvironment(),
-              logger, winapi)
+              logger, winapi, type != PLUGIN) // plugin -> no collective header
     , _path(path)
     , _type(type)
     , _user(user)
@@ -390,10 +390,6 @@ SectionPluginGroup::SectionPluginGroup(
     , _retry_count(config, typeToSection(type), "retry_count", _winapi)
     , _execution_mode(config, typeToSection(type), "execution", _winapi)
     , _script_statistics(script_statistics) {
-    if (type == PLUGIN) {
-        // plugins don't have a "collective" header
-        withHiddenHeader();
-    }
 }
 
 SectionPluginGroup::~SectionPluginGroup() { _containers.clear(); }

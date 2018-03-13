@@ -47,12 +47,10 @@ double current_time(const WinApiAdaptor &winapi);
 }  // namespace section_helpers
 
 class Section {
-    friend class SectionGroup;
-
 public:
     Section(const std::string &outputName, const std::string &configName,
-            const Environment &env, Logger *logger,
-            const WinApiAdaptor &winapi);
+            const Environment &env, Logger *logger, const WinApiAdaptor &winapi,
+            bool show_header = true);
 
     virtual ~Section() = default;
 
@@ -61,7 +59,6 @@ public:
         return this;
     }
 
-    Section *withHiddenHeader(bool hidden = true);
     Section *withRealtimeSupport();
 
     virtual void postprocessConfig() {}
@@ -101,7 +98,7 @@ protected:
     const WinApiAdaptor &_winapi;
 
 private:
-    bool _show_header{true};
+    const bool _show_header;
     char _separator{' '};
     bool _realtime_support{false};
 };

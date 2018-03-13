@@ -115,7 +115,10 @@ HEAL_SPACES_IN     := checkman/* cmk_base/* checks/* notifications/* inventory/*
                                  managed/web/plugins/*/*/*.py)
 
 FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
-                      $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
+                      $(wildcard $(addprefix agents/windows/,*.cc *.h)) \
+                      $(wildcard $(addprefix agents/windows/sections/,*.cc *.h)) \
+                      $(wildcard $(addprefix agents/windows/test/,*.cc *.h)) \
+                      $(wildcard $(addprefix agents/windows/test/sections,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \

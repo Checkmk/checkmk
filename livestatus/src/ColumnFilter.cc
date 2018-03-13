@@ -22,20 +22,19 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef FilterVisitor_h
-#define FilterVisitor_h
+#include "ColumnFilter.h"
+#include <vector>
+#include "AndingFilter.h"
 
-#include "config.h"  // IWYU pragma: keep
-class AndingFilter;
-class ColumnFilter;
-class OringFilter;
+std::unique_ptr<Filter> ColumnFilter::partialFilter(
+    std::function<bool(const Column &)> predicate) const {
+    return predicate(_column) ? copy()
+                              : std::make_unique<AndingFilter>(
+                                    LogicalOperator::and_,
+                                    std::vector<std::unique_ptr<Filter>>());
+}
 
-class FilterVisitor {
-public:
-    virtual ~FilterVisitor() = default;
-    virtual void visit(const ColumnFilter &) = 0;
-    virtual void visit(const AndingFilter &) = 0;
-    virtual void visit(const OringFilter &) = 0;
-};
-
-#endif  // FilterVisitor_h
+std::ostream &ColumnFilter::print(std::ostream &os) const {
+    return os << "Filter: " << columnName() << " " << oper() << " " << value()
+              << "\n";
+}

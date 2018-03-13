@@ -26,10 +26,14 @@
 #define ColumnFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <algorithm>
+#include <functional>
+#include <memory>
 #include <ostream>
+#include <string>
 #include "Column.h"
 #include "Filter.h"
-#include "FilterVisitor.h"
+#include "opids.h"
 
 class ColumnFilter : public Filter {
 public:
@@ -39,17 +43,15 @@ public:
     std::string columnName() const { return _column.name(); }
     RelationalOperator oper() const { return _relOp; }
     std::string value() const { return _value; }
-    void accept(FilterVisitor &v) const override { v.visit(*this); }
+    std::unique_ptr<Filter> partialFilter(
+        std::function<bool(const Column &)> predicate) const override;
 
 private:
     const Column &_column;
     const RelationalOperator _relOp;
     const std::string _value;
 
-    std::ostream &print(std::ostream &os) const override {
-        return os << "Filter: " << columnName() << " " << oper() << " "
-                  << value() << "\n";
-    }
+    std::ostream &print(std::ostream &os) const override;
 };
 
 #endif  // ColumnFilter_h

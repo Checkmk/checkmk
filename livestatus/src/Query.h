@@ -36,7 +36,6 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include "AndingFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
@@ -75,7 +74,7 @@ public:
                        int *upper) const;
     void optimizeBitmask(const std::string &column_name,
                          uint32_t *bitmask) const;
-    const AndingFilter *filter() const { return _filter.get(); }
+    const Filter *filter() const { return _filter.get(); }
     const std::unordered_set<std::shared_ptr<Column>> &allColumns() const {
         return _all_columns;
     }
@@ -88,10 +87,7 @@ private:
     Table &_table;
     bool _keepalive;
     using FilterStack = std::vector<std::unique_ptr<Filter>>;
-    // TODO(sp) This should really use Filter instead of AndingFilter, but
-    // TableStateHistory::answerQuery and TableCachedStatehist::answerQuery rely
-    // on the current state of affairs in a *very* dubious way...
-    std::unique_ptr<AndingFilter> _filter;
+    std::unique_ptr<Filter> _filter;
     contact *_auth_user;
     std::unique_ptr<Filter> _wait_condition;
     std::chrono::milliseconds _wait_timeout;

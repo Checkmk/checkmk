@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStateHistory.h"
-#include <algorithm>
 #include <ctime>
 #include <memory>
 #include <mutex>
@@ -32,11 +31,8 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include "AndingFilter.h"
 #include "Column.h"
-#include "ColumnFilter.h"
 #include "Filter.h"
-#include "FilterVisitor.h"
 #include "HostServiceState.h"
 #include "LogEntry.h"
 #include "Logger.h"
@@ -240,39 +236,6 @@ LogEntry *TableStateHistory::getNextLogentry() {
 }
 
 namespace {
-class IsObjectFilter : public FilterVisitor {
-public:
-    void visit(const ColumnFilter &f) override {
-        if (_value) {
-            auto column_name = f.columnName();
-            _value = mk::starts_with(column_name, "current_") ||
-                     mk::starts_with(column_name, "host_") ||
-                     mk::starts_with(column_name, "service_");
-        }
-    }
-
-    // TODO(sp): Handling and/or the same way looks suspicious...
-    void visit(const AndingFilter &f) override {
-        for (const auto &sub_filter : f) {
-            if (!_value) {
-                return;
-            }
-            sub_filter->accept(*this);
-        }
-    }
-
-    void visit(const OringFilter &f) override {
-        for (const auto &sub_filter : f) {
-            if (!_value) {
-                return;
-            }
-            sub_filter->accept(*this);
-        }
-    }
-
-    bool _value = true;
-};
-
 class TimeperiodTransition {
 public:
     explicit TimeperiodTransition(const std::string &str) {
@@ -301,18 +264,12 @@ private:
 
 // static
 std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
-    const AndingFilter &f) {
-    std::vector<std::unique_ptr<Filter>> subfilters;
-    for (const auto &filter : f) {
-        IsObjectFilter is_obj;
-        filter->accept(is_obj);
-        if (is_obj._value) {
-            subfilters.push_back(filter->copy());
-        }
-    }
-    std::reverse(subfilters.begin(), subfilters.end());
-    return std::make_unique<AndingFilter>(LogicalOperator::and_,
-                                          std::move(subfilters));
+    const Filter &f) {
+    return f.partialFilter([](const Column &column) {
+        return mk::starts_with(column.name(), "current_") ||
+               mk::starts_with(column.name(), "host_") ||
+               mk::starts_with(column.name(), "service_");
+    });
 }
 
 void TableStateHistory::answerQuery(Query *query) {

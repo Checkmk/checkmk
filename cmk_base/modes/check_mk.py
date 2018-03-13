@@ -1524,14 +1524,7 @@ def mode_check(options, args):
     if len(args) == 2:
         ipaddress = args[1]
     else:
-        if config.is_cluster(hostname):
-            ipaddress = None
-        else:
-            try:
-                ipaddress = ip_lookup.lookup_ip_address(hostname)
-            except:
-                console.error("Cannot resolve hostname '%s'.\n" % hostname)
-                return 2
+        ipaddress = None
 
     return checking.do_check(hostname, ipaddress, options.get("checks"))
 

@@ -27,6 +27,8 @@
 # TODO: Inherit from cmk.MKGeneralException?
 # TODO: Cleanup self.reason to use .args of standard exceptions
 
+from cmk.exceptions import MKGeneralException as _MKGeneralException
+
 class MKAgentError(Exception):
     def __init__(self, reason):
         super(MKAgentError, self).__init__(reason)
@@ -36,6 +38,9 @@ class MKAgentError(Exception):
     def __str__(self):
         return self.reason
 
+
+class MKIPAddressLookupError(_MKGeneralException):
+    pass
 
 
 class MKEmptyAgentData(MKAgentError):

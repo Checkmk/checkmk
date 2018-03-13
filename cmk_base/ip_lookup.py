@@ -33,7 +33,7 @@ import cmk_base
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
-from cmk.exceptions import MKGeneralException
+from cmk_base.exceptions import MKIPAddressLookupError
 
 _fake_dns          = False
 _enforce_localhost = False
@@ -138,7 +138,7 @@ def cached_dns_lookup(hostname, family):
             return cached_ip
         else:
             cache[cache_id] = None
-            raise MKGeneralException(
+            raise MKIPAddressLookupError(
                 "Failed to lookup IPv%d address of %s via DNS: %s" %
                 (family, hostname, e))
 

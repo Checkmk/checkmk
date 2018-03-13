@@ -308,11 +308,8 @@ def check_discovery(hostname, ipaddress):
     try:
         # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
         # ipaddress is always None
-        if ipaddress is None:
-            if config.is_cluster(hostname):
-                ipaddress = None
-            else:
-                ipaddress = ip_lookup.lookup_ip_address(hostname)
+        if ipaddress is None and not config.is_cluster(hostname):
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
 
         sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names=None,
                                              do_snmp_scan=params["inventory_check_do_scan"],

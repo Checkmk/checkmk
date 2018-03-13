@@ -42,6 +42,7 @@ import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
 import cmk_base.snmp as snmp
+import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
 import cmk_base.core as core
@@ -86,6 +87,12 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
     state, output, perfdata = 0, [], []
     try:
+        # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
+        # address is unknown). When called as non keepalive ipaddress may be None or
+        # is already an address (2nd argument)
+        if ipaddress is None and not config.is_cluster(hostname):
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
+
         item_state.load(hostname)
 
         sources = data_sources.DataSources(hostname, ipaddress)
@@ -113,6 +120,10 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
     except MKTimeout:
         raise
+
+    except MKIPAddressLookupError, e:
+        output.append("%s" % e)
+        state = max(state, exit_spec.get("connection", 2))
 
     except MKGeneralException, e:
         if cmk.debug.enabled():

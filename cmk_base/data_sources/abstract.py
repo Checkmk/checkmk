@@ -45,7 +45,7 @@ import cmk_base.piggyback as piggyback
 import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKEmptyAgentData, MKSNMPError, \
-                                MKParseFunctionError, MKTimeout
+                                MKParseFunctionError, MKTimeout, MKIPAddressLookupError
 
 from .host_sections import HostSections
 
@@ -317,10 +317,10 @@ class DataSource(object):
 
     def _verify_ipaddress(self):
         if not self._ipaddress:
-            raise MKAgentError("Host as no IP address configured.")
+            raise MKIPAddressLookupError("Host as no IP address configured.")
 
         if self._ipaddress in [ "0.0.0.0", "::" ]:
-            raise MKAgentError("Failed to lookup IP address and no explicit IP address configured")
+            raise MKIPAddressLookupError("Failed to lookup IP address and no explicit IP address configured")
 
 
     def set_max_cachefile_age(self, max_cachefile_age):
@@ -366,6 +366,7 @@ class DataSource(object):
             status = exit_spec.get("empty_output", 2)
 
         elif isinstance(self._exception, MKAgentError) \
+           or isinstance(self._exception, MKIPAddressLookupError) \
            or isinstance(self._exception, MKSNMPError):
             status = exit_spec.get("connection", 2)
 

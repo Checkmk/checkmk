@@ -42,7 +42,8 @@ public:
                   const WinApiAdaptor &winapi);
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out, const std::optional<std::string> &) override;
+    virtual bool produceOutputInner(
+        std::ostream &out, const std::optional<std::string> &) override;
 
 private:
     std::string outputTickCount64();

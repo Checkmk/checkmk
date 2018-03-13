@@ -146,9 +146,9 @@ TEST_F(wa_WritableFileTest, areAllFilesWritable_true) {
     EXPECT_CALL(_mockwinapi, FindClose(rawHandle)).Times(globToFile.size());
     {
         const CallArray<4> findNextCalls = {
-            std::make_tuple(1, "baz", FILE_ATTRIBUTE_DIRECTORY),
-            std::make_tuple(0, "", 0),
-            std::make_tuple(1, "quux", 0),
+            std::make_tuple(1, "baz", FILE_ATTRIBUTE_DIRECTORY),  //
+            std::make_tuple(0, "", 0),                            //
+            std::make_tuple(1, "quux", 0),                        //
             std::make_tuple(0, "", 0)};
         InSequence dummy;
         for (const auto &call : findNextCalls) {
@@ -264,8 +264,8 @@ TEST_F(wa_WritableFileTest, areAllFilesWritable_whitelist_failure) {
     EXPECT_CALL(_mockwinapi, FindClose(rawHandle)).Times(globToFile.size());
     {
         const CallArray<3> findNextCalls = {
-            std::make_tuple(1, "baz", FILE_ATTRIBUTE_DIRECTORY),
-            std::make_tuple(0, "", 0),
+            std::make_tuple(1, "baz", FILE_ATTRIBUTE_DIRECTORY),  //
+            std::make_tuple(0, "", 0),                            //
             std::make_tuple(1, "quux", 0)};
         InSequence dummy;
         for (const auto &call : findNextCalls) {

@@ -40,7 +40,8 @@ SectionOHM::SectionOHM(Configuration &config, Logger *logger,
 
 void SectionOHM::startIfAsync() { _ohm_monitor.startProcess(); }
 
-bool SectionOHM::produceOutputInner(std::ostream &out, const std::optional<std::string> &remoteIP) {
+bool SectionOHM::produceOutputInner(
+    std::ostream &out, const std::optional<std::string> &remoteIP) {
     Debug(_logger) << "SectionOHM::produceOutputInner";
     bool res = false;
     try {

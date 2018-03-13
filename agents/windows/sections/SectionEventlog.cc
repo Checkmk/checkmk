@@ -336,8 +336,10 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
     };
 
     // first pass - determine if there are records above level
+    // clang-format off
     auto [lastReadId, worstState] =
         processEventLog(log, previouslyReadId, level, getState);
+    // clang-format on
     Debug(_logger) << "    . worst state: " << static_cast<int>(worstState);
 
     // second pass - if there were, print everything
@@ -345,7 +347,9 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
         const auto outputRecord = [&out, hideContext](
                                       const IEventLogRecord &record,
                                       eventlog::Level level) {
+            // clang-format off
             const auto [type_char, dummy] = getEventState(record, level);
+            // clang-format on
             if (isToBeOutput(type_char, hideContext)) {
                 out << type_char << " " << record;
             }
@@ -439,7 +443,9 @@ std::unique_ptr<IEventLog> SectionEventlog::openEventlog(
 
 void SectionEventlog::handleExistingLog(std::ostream &out,
                                         eventlog::state &state) {
+    // clang-format off
     const auto [level, hideContext] = readConfig(state);
+    // clang-format on
 
     if (level == eventlog::Level::Off) return;
 

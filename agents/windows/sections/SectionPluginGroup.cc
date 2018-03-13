@@ -376,7 +376,7 @@ SectionPluginGroup::SectionPluginGroup(
     script_statistics_t &script_statistics, Logger *logger,
     const WinApiAdaptor &winapi, const std::string &user)
     : Section(typeToSection(type), typeToSection(type), config.getEnvironment(),
-              logger, winapi, type != PLUGIN) // plugin -> no collective header
+              logger, winapi, type != PLUGIN)  // plugin -> no collective header
     , _path(path)
     , _type(type)
     , _user(user)
@@ -389,8 +389,7 @@ SectionPluginGroup::SectionPluginGroup(
     , _cache_age(config, typeToSection(type), "cache_age", _winapi)
     , _retry_count(config, typeToSection(type), "retry_count", _winapi)
     , _execution_mode(config, typeToSection(type), "execution", _winapi)
-    , _script_statistics(script_statistics) {
-}
+    , _script_statistics(script_statistics) {}
 
 SectionPluginGroup::~SectionPluginGroup() { _containers.clear(); }
 
@@ -421,7 +420,8 @@ std::vector<HANDLE> SectionPluginGroup::stopAsync() {
     return result;
 }
 
-bool SectionPluginGroup::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
+bool SectionPluginGroup::produceOutputInner(
+    std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionPluginGroup::produceOutputInner";
     // gather the data for the sync sections
     collectData(SYNC);

@@ -82,7 +82,8 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
     return start_type;
 }
 
-bool SectionServices::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
+bool SectionServices::produceOutputInner(std::ostream &out,
+                                         const std::optional<std::string> &) {
     Debug(_logger) << "SectionServices::produceOutputInner";
     ServiceHandle scm{
         _winapi.OpenSCManager(

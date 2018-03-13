@@ -43,7 +43,8 @@ class SectionGroup : public Section {
 public:
     SectionGroup(const std::string &outputName, const std::string &configName,
                  const Environment &env, Logger *logger,
-                 const WinApiAdaptor &winapi, bool nested = false, bool show_header = false);
+                 const WinApiAdaptor &winapi, bool nested = false,
+                 bool show_header = false);
 
     /**
      * add a section that will be printed as part of this group
@@ -60,7 +61,8 @@ public:
     SectionGroup *withToggleIfMissing();
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out, const std::optional<std::string> &remoteIP) override;
+    virtual bool produceOutputInner(
+        std::ostream &out, const std::optional<std::string> &remoteIP) override;
 
 private:
     std::vector<std::unique_ptr<Section>> _subsections;

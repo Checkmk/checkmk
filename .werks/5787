@@ -1,0 +1,11 @@
+Title: Fixed broken host check command "Always assume to be up"
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.5.0i4
+Date: 1520933763
+Class: fix
+
+Hosts with this host check command always got a ping check assigned instead of the <tt>Always up</tt> state.
+

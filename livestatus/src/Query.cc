@@ -34,6 +34,7 @@
 #include <type_traits>
 #include <utility>
 #include "Aggregator.h"
+#include "AndingFilter.h"
 #include "Column.h"
 #include "Filter.h"
 #include "Logger.h"

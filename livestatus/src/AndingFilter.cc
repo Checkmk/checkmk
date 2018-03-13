@@ -27,11 +27,8 @@
 #include <memory>
 #include <ostream>
 #include "Filter.h"
-#include "FilterVisitor.h"
 #include "OringFilter.h"
 #include "Row.h"
-
-void AndingFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 
 bool AndingFilter::accepts(Row row, const contact *auth_user,
                            std::chrono::seconds timezone_offset) const {
@@ -41,6 +38,15 @@ bool AndingFilter::accepts(Row row, const contact *auth_user,
         }
     }
     return true;
+}
+
+std::unique_ptr<Filter> AndingFilter::partialFilter(
+    std::function<bool(const Column &)> predicate) const {
+    std::vector<std::unique_ptr<Filter>> filters;
+    std::transform(
+        _subfilters.begin(), _subfilters.end(), std::back_inserter(filters),
+        [&](const auto &filter) { return filter->partialFilter(predicate); });
+    return std::make_unique<AndingFilter>(_op, std::move(filters));
 }
 
 std::optional<std::string> AndingFilter::stringValueRestrictionFor(

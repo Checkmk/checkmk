@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <optional>
@@ -36,7 +37,7 @@
 #include <vector>
 #include "Filter.h"
 #include "contact_fwd.h"
-class FilterVisitor;
+class Column;
 class Row;
 
 class OringFilter : public Filter {
@@ -44,9 +45,10 @@ public:
     OringFilter(LogicalOperator op,
                 std::vector<std::unique_ptr<Filter>> subfilters)
         : _op(op), _subfilters(std::move(subfilters)) {}
-    void accept(FilterVisitor &v) const override;
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
+    std::unique_ptr<Filter> partialFilter(
+        std::function<bool(const Column &)> predicate) const override;
     std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
     void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
@@ -55,8 +57,6 @@ public:
                          std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;
-    auto begin() const { return _subfilters.begin(); }
-    auto end() const { return _subfilters.end(); }
 
 private:
     LogicalOperator _op;

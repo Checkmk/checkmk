@@ -32,7 +32,6 @@
 #include "LogCache.h"
 #include "Logfile.h"
 #include "Table.h"
-class AndingFilter;
 class Column;
 class Filter;
 class HostServiceState;
@@ -56,7 +55,7 @@ public:
     void answerQuery(Query *query) override;
     bool isAuthorized(Row row, const contact *ctc) const override;
     std::shared_ptr<Column> column(std::string colname) const override;
-    static std::unique_ptr<Filter> createPartialFilter(const AndingFilter &f);
+    static std::unique_ptr<Filter> createPartialFilter(const Filter &f);
 
 protected:
     bool _abort_query;

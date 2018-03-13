@@ -45,6 +45,7 @@ liblivestatus_a_SOURCES = \
         BlobColumn.cc \
         ClientQueue.cc \
         Column.cc \
+        ColumnFilter.cc \
         ColumnsColumn.cc \
         CommentColumn.cc \
         ContactGroupsColumn.cc \

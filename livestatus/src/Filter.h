@@ -28,12 +28,13 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <optional>
 #include <string>
 #include "contact_fwd.h"
-class FilterVisitor;
+class Column;
 class Row;
 
 enum class LogicalOperator {
@@ -52,9 +53,10 @@ std::ostream &operator<<(std::ostream &os, const LogicalOperator &op);
 class Filter {
 public:
     virtual ~Filter();
-    virtual void accept(FilterVisitor &) const = 0;
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
+    virtual std::unique_ptr<Filter> partialFilter(
+        std::function<bool(const Column &)> predicate) const = 0;
     virtual std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
     virtual void findIntLimits(const std::string &column_name, int *lower,

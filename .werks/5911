@@ -1,0 +1,12 @@
+Title: mem.linux: Fixed Perf-O-Meter displaying wrong usage if swap is used
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520949390
+Class: fix
+
+In 1.5.0 the Perf-O-Meter for Linux memory services has been reworked. However
+it's showing wrong usage if swap is used. In all other cases it is not used
+at all (division by zero). This is now fixed.

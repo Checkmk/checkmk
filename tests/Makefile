@@ -1,32 +1,31 @@
 SHELL=/bin/bash -e
 
-.PHONY: help test test-pylint test-pylint-ci test-bandit test-bandit-ci \
-        test-shellcheck test-shellcheck-ci setup format test-mypy \
+.PHONY: help test-pylint test-integration test-gui-crawl \
+	test-bandit test-shellcheck setup format test-mypy \
         test-pylint-simple
 
 help:
-	@echo "test               - Run integration and git tests"
-	@echo "test-pylint        - Run pylint based tests"
-	@echo "test-pylint-ci     - Run pylint based tests from Jenkins"
-	@echo "test-bandit        - Run bandit (security) tests"
-	@echo "test-bandit-ci     - Run bandit (security) tests from Jenkins"
-	@echo "test-shellcheck    - Run shellcheck tests"
-	@echo "test-shellcheck-ci - Run shellcheck tests from Jenkins"
 	@echo "setup              - Install dependencies"
+	@echo "test-integration   - Run integration tests"
+	@echo "test-pylint        - Run pylint based tests"
+	@echo "test-gui-crawl     - Run GUI crawl test"
+	@echo "test-bandit        - Run bandit (security) tests"
+	@echo "test-shellcheck    - Run shellcheck tests"
 
-test:
-	py.test
+
+test-integration:
+	py.test \
+	    -m "not pylint and not packaging and not git and not html_gentest and not gui_crawl" \
+	    -s \
+	    -vv
+
+
+test-gui-crawl:
+	py.test -s -m gui_crawl
 
 
 test-pylint:
 	py.test -m pylint
-
-
-# HACK: We check the manual pages here, too...
-test-pylint-ci:
-	export TERM="linux" ; \
-	export PYLINT_ARGS="--output-format=cmk_parseable" ; \
-	$(MAKE) test-pylint
 
 
 test-bandit:
@@ -38,7 +37,7 @@ test-bandit:
 		-c "$$CMK_DIR/bandit.yaml" \
 		-r \
 		-lll \
-		$(OUTPUT_ARGS) \
+		$(BANDIT_OUTPUT_ARGS) \
 		"$$CMK_DIR" \
 		$$(grep -l python "$$CMK_DIR"/bin/*) \
 		"$$CMK_DIR"/{checks,inventory}/* \
@@ -47,25 +46,13 @@ test-bandit:
 		"$$ENTERPRISE_DIR"/agents/bakery/*
 
 
-test-bandit-ci:
-	OUTPUT_ARGS="-f xml -o \"$$WORKDIR/bandit_results.xml\"" \
-	    $(MAKE) test-bandit || true
-
-
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \
 	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
 	shellcheck \
-		$(OUTPUT_ARGS) \
+		$(SHELLCHECK_OUTPUT_ARGS) \
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
-
-
-test-shellcheck-ci:
-	OUTPUT_ARGS="-f gcc" \
-	REDIRECT="$$WORKDIR/results.xml" \
-	    $(MAKE) test-shellcheck || true
-
 
 
 setup:

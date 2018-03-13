@@ -54,9 +54,9 @@ import cmk_base.discovery as discovery
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 
-inventory_output_dir  = cmk.paths.var_dir + "/inventory"
-inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
-status_data_dir       = cmk.paths.tmp_dir + "/status_data"
+_inventory_output_dir  = cmk.paths.var_dir + "/inventory"
+_inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
+_status_data_dir       = cmk.paths.tmp_dir + "/status_data"
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -71,8 +71,8 @@ status_data_dir       = cmk.paths.tmp_dir + "/status_data"
 #   '----------------------------------------------------------------------'
 
 def do_inv(hostnames):
-    _ensure_directory(inventory_output_dir)
-    _ensure_directory(inventory_archive_dir)
+    _ensure_directory(_inventory_output_dir)
+    _ensure_directory(_inventory_archive_dir)
 
     for hostname in hostnames:
         console.section_begin(hostname)
@@ -121,7 +121,7 @@ def do_inv_check(hostname, options):
             status = max(status, _inv_sw_missing)
 
         if old_timestamp:
-            path = "%s/%s/%d" % (inventory_archive_dir, hostname, old_timestamp)
+            path = "%s/%s/%d" % (_inventory_archive_dir, hostname, old_timestamp)
             old_tree = StructuredDataTree().load_from(path)
 
             if not old_tree.is_equal(inventory_tree, edges=["software"]):
@@ -299,11 +299,11 @@ def inv_tree_list(path): # TODO Remove one day. Deprecated with version 1.5.0i3?
 
 
 def _save_inventory_tree(hostname, inventory_tree):
-    if not os.path.exists(inventory_output_dir):
-        os.makedirs(inventory_output_dir)
+    if not os.path.exists(_inventory_output_dir):
+        os.makedirs(_inventory_output_dir)
 
     old_time = None
-    filepath = inventory_output_dir + "/" + hostname
+    filepath = _inventory_output_dir + "/" + hostname
     if inventory_tree:
         old_tree = StructuredDataTree().load_from(filepath)
         if old_tree.is_equal(inventory_tree):
@@ -314,11 +314,11 @@ def _save_inventory_tree(hostname, inventory_tree):
             else:
                 console.verbose("Inventory tree has changed\n")
                 old_time = os.stat(filepath).st_mtime
-                arcdir = "%s/%s" % (inventory_archive_dir, hostname)
+                arcdir = "%s/%s" % (_inventory_archive_dir, hostname)
                 if not os.path.exists(arcdir):
                     os.makedirs(arcdir)
                 os.rename(filepath, arcdir + ("/%d" % old_time))
-            inventory_tree.save_to(inventory_output_dir, hostname)
+            inventory_tree.save_to(_inventory_output_dir, hostname)
 
     else:
         if os.path.exists(filepath): # Remove empty inventory files. Important for host inventory icon
@@ -330,12 +330,12 @@ def _save_inventory_tree(hostname, inventory_tree):
 
 
 def _save_status_data_tree(hostname, status_data_tree):
-    if not os.path.exists(status_data_dir):
-        os.makedirs(status_data_dir)
+    if not os.path.exists(_status_data_dir):
+        os.makedirs(_status_data_dir)
 
-    filepath = "%s/%s" % (status_data_dir, hostname)
+    filepath = "%s/%s" % (_status_data_dir, hostname)
     if status_data_tree and not status_data_tree.is_empty():
-        status_data_tree.save_to(status_data_dir, hostname)
+        status_data_tree.save_to(_status_data_dir, hostname)
 
     else:
         if os.path.exists(filepath): # Remove empty status data files.

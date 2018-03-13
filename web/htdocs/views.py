@@ -792,6 +792,8 @@ class Cell(object):
         try:
             row = join_row(row, self)
             css_classes, txt = self.render_content(row)
+            if txt is None:
+                return css_classes, ""
             txt = txt.strip()
 
             # Handle <img...>. Our PDF writer cannot draw arbitrary

@@ -57,8 +57,6 @@ import cmk_base.data_sources as data_sources
 inventory_output_dir  = cmk.paths.var_dir + "/inventory"
 inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
 status_data_dir       = cmk.paths.tmp_dir + "/status_data"
-# TODO: This is not configurable. Drop the flag?
-inventory_pprint_output = False
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -320,7 +318,7 @@ def _save_inventory_tree(hostname, inventory_tree):
                 if not os.path.exists(arcdir):
                     os.makedirs(arcdir)
                 os.rename(filepath, arcdir + ("/%d" % old_time))
-            inventory_tree.save_to(inventory_output_dir, hostname, pretty=inventory_pprint_output)
+            inventory_tree.save_to(inventory_output_dir, hostname)
 
     else:
         if os.path.exists(filepath): # Remove empty inventory files. Important for host inventory icon
@@ -337,7 +335,7 @@ def _save_status_data_tree(hostname, status_data_tree):
 
     filepath = "%s/%s" % (status_data_dir, hostname)
     if status_data_tree and not status_data_tree.is_empty():
-        status_data_tree.save_to(status_data_dir, hostname, pretty=inventory_pprint_output)
+        status_data_tree.save_to(status_data_dir, hostname)
 
     else:
         if os.path.exists(filepath): # Remove empty status data files.

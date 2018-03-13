@@ -535,10 +535,14 @@ multisite_commands.append({
 #   '----------------------------------------------------------------------'
 
 config.declare_permission("action.downtimes",
-        _("Set/Remove Downtimes"),
+        _("Set/Remove downtimes"),
         _("Schedule and remove downtimes on hosts and services"),
         [ "user", "admin" ])
 
+config.declare_permission("action.remove_all_downtimes",
+        _("Remove all downtimes"),
+        _("Allow the user to use the action \"Remove all\" downtimes"),
+        [ "user", "admin" ])
 
 def get_duration_human_readable(secs):
     days, rest  = divmod(secs, 86400)
@@ -633,7 +637,7 @@ def command_downtime(cmdtag, spec, row):
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))
 
-    elif html.var("_down_remove"):
+    elif html.var("_down_remove") and config.user.may("action.remove_all_downtimes"):
         if html.var("_on_hosts"):
             raise MKUserError("_on_hosts", _("The checkbox for setting host downtimes does not work when removing downtimes."))
 
@@ -730,7 +734,7 @@ def paint_downtime_buttons(what):
     html.hr()
     for time_range in config.user_downtime_timeranges:
         html.button("_downrange__%s" % time_range['end'], _u(time_range['title']))
-    if what != "aggr":
+    if what != "aggr" and config.user.may("action.remove_all_downtimes"):
         html.write_text(" &nbsp; - &nbsp;")
         html.button("_down_remove", _("Remove all"))
     html.hr()

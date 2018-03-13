@@ -101,7 +101,6 @@ HEAL_SPACES_IN     := checkman/* cmk_base/* checks/* notifications/* inventory/*
                       doc/helpers/* scripts/setup.sh scripts/autodetect.py \
                       $$(find pnp-templates -type f -name "*.php") \
                       bin/mkeventd bin/*.cc active_checks/* \
-                      check_mk_templates.cfg \
                       agents/check_mk_*agent* agents/*.c \
                       $$(find agents/cfg_examples -type f) \
                       agents/special/agent_* \
@@ -253,7 +252,6 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	  tar czf $(DISTNAME)/special_agent_api.tar.gz $(TAROPTS) -C agents/special/lib cmk_special_agent_api.py \
 	    --exclude ".f12"
 	  rm agents/special/lib/*.pyc
-	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)

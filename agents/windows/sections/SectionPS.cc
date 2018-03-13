@@ -31,11 +31,9 @@
 
 SectionPS::SectionPS(Configuration &config, Logger *logger,
                      const WinApiAdaptor &winapi)
-    : Section("ps", "ps", config.getEnvironment(), logger, winapi)
+    : Section("ps", "ps", config.getEnvironment(), logger, winapi, true, '\t')
     , _use_wmi(config, "ps", "use_wmi", false, winapi)
-    , _full_commandline(config, "ps", "full_path", false, winapi) {
-    withSeparator('\t');
-}
+    , _full_commandline(config, "ps", "full_path", false, winapi) {}
 
 SectionPS::process_entry_t SectionPS::getProcessPerfdata() {
     process_entry_t process_info;

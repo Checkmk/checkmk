@@ -52,9 +52,7 @@ void char_replace(char what, char into, char *in) {
 
 SectionDF::SectionDF(const Environment &env, Logger *logger,
                      const WinApiAdaptor &winapi)
-    : Section("df", "df", env, logger, winapi) {
-    withSeparator('\t');
-}
+    : Section("df", "df", env, logger, winapi, true, '\t') {}
 
 void SectionDF::output_filesystem(std::ostream &out, char *volid) {
     static const int KiloByte = 1024;

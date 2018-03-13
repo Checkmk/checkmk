@@ -50,14 +50,9 @@ class Section {
 public:
     Section(const std::string &outputName, const std::string &configName,
             const Environment &env, Logger *logger, const WinApiAdaptor &winapi,
-            bool show_header = true);
+            bool show_header = true, char separator = ' ');
 
     virtual ~Section() = default;
-
-    Section *withSeparator(char sep) {
-        _separator = sep;
-        return this;
-    }
 
     Section *withRealtimeSupport();
 
@@ -81,9 +76,6 @@ public:
     std::string outputName() const { return _outputName; }
     std::string configName() const { return _configName; }
 
-protected:
-    char separator() const { return _separator; }
-
 private:
     virtual bool produceOutputInner(
         std::ostream &out, const std::optional<std::string> &remoteIP) = 0;
@@ -99,7 +91,7 @@ protected:
 
 private:
     const bool _show_header;
-    char _separator{' '};
+    const char _separator;
     bool _realtime_support{false};
 };
 

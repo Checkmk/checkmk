@@ -60,11 +60,6 @@ status_data_dir       = cmk.paths.tmp_dir + "/status_data"
 # TODO: This is not configurable. Drop the flag?
 inventory_pprint_output = False
 
-_inv_hw_changes  = 0
-_inv_sw_changes  = 0
-_inv_sw_missing  = 0
-_inv_fail_status = 1 # State in case of an error (default: WARN)
-
 #.
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |
@@ -102,11 +97,10 @@ def do_inv(hostnames):
 
 @checking.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
 def do_inv_check(hostname, options):
-    global _inv_hw_changes, _inv_sw_changes, _inv_sw_missing, _inv_fail_status
-    _inv_hw_changes  = options.get("hw-changes", _inv_hw_changes)
-    _inv_sw_changes  = options.get("sw-changes", _inv_sw_changes)
-    _inv_sw_missing  = options.get("sw-missing", _inv_sw_missing)
-    _inv_fail_status = options.get("inv-fail-status", _inv_fail_status)
+    _inv_hw_changes  = options.get("hw-changes", 0)
+    _inv_sw_changes  = options.get("sw-changes", 0)
+    _inv_sw_missing  = options.get("sw-missing", 0)
+    _inv_fail_status = options.get("inv-fail-status", 1) # State in case of an error (default: WARN)
 
     if config.is_cluster(hostname):
         ipaddress = None

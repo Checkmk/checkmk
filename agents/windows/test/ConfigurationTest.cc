@@ -220,7 +220,8 @@ TEST_F(wa_ConfigurationTest, readConfigFile_host_restriction_no_match_print) {
     ASSERT_EQ(std::string(), internal::GetCapturedStdout());
 }
 
-TEST_F(wa_ConfigurationTest, readConfigFile_host_restriction_no_match_print_before_after) {
+TEST_F(wa_ConfigurationTest,
+       readConfigFile_host_restriction_no_match_print_before_after) {
     const std::string testConfig =
         "[global]\r\n"
         "    print = qux quux\r\n"

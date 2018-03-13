@@ -30,7 +30,7 @@
 
 SectionSkype::SectionSkype(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
-  : SectionGroup("skype", "skype", env, logger, winapi, true, true)
+    : SectionGroup("skype", "skype", env, logger, winapi, true, true)
     , _nameNumberMap(_logger, _winapi) {
     withToggleIfMissing();
     withSeparator(',');
@@ -77,7 +77,8 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
         counterName, counterName, _env, _nameNumberMap, _logger, _winapi));
 }
 
-bool SectionSkype::produceOutputInner(std::ostream &out, const std::optional<std::string> &remoteIP) {
+bool SectionSkype::produceOutputInner(
+    std::ostream &out, const std::optional<std::string> &remoteIP) {
     Debug(_logger) << "SectionSkype::produceOutputInner";
     LARGE_INTEGER Counter, Frequency;
     _winapi.QueryPerformanceCounter(&Counter);

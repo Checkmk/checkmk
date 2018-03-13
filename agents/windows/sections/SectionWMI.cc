@@ -97,7 +97,8 @@ void SectionWMI::suspend(int duration) {
     _disabled_until = time(nullptr) + duration;
 }
 
-bool SectionWMI::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
+bool SectionWMI::produceOutputInner(std::ostream &out,
+                                    const std::optional<std::string> &) {
     Debug(_logger) << "SectionWMI::produceOutputInner";
 
     if (_disabled_until > time(nullptr)) {

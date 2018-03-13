@@ -31,8 +31,8 @@ SectionGroup::SectionGroup(const std::string &outputName,
                            const WinApiAdaptor &winapi,
                            bool nested /* = false */,
                            bool show_header /* = false */)
-  : Section(outputName, configName, env, logger, winapi, show_header)
-  , _nested(nested) {}
+    : Section(outputName, configName, env, logger, winapi, show_header)
+    , _nested(nested) {}
 
 SectionGroup *SectionGroup::withSubSection(Section *section) {
     _subsections.push_back(std::unique_ptr<Section>(section));
@@ -49,7 +49,8 @@ SectionGroup *SectionGroup::withToggleIfMissing() {
     return this;
 }
 
-bool SectionGroup::produceOutputInner(std::ostream &out, const std::optional<std::string> &remoteIP) {
+bool SectionGroup::produceOutputInner(
+    std::ostream &out, const std::optional<std::string> &remoteIP) {
     Debug(_logger) << "SectionGroup::produceOutputInner";
     time_t now = time(nullptr);
     if (_disabled_until > now) {

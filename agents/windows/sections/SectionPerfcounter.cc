@@ -64,7 +64,8 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
     return this;
 }
 
-bool SectionPerfcounter::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
+bool SectionPerfcounter::produceOutputInner(
+    std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionPerfcounter::produceOutputInner";
     try {
         const int counterBaseNumber =

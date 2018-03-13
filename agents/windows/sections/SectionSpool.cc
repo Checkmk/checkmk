@@ -36,7 +36,8 @@ SectionSpool::SectionSpool(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
     : Section("spool", "spool", env, logger, winapi, false) {}
 
-bool SectionSpool::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
+bool SectionSpool::produceOutputInner(std::ostream &out,
+                                      const std::optional<std::string> &) {
     Debug(_logger) << "SectionSpool::produceOutputInner";
     // Look for files in the spool directory and append these files to
     // the agent output. The name of the files may begin with a number

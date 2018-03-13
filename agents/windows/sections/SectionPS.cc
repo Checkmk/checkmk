@@ -131,7 +131,8 @@ bool SectionPS::ExtractProcessOwner(const NullHandle &hProcess_i,
     return false;
 }
 
-bool SectionPS::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
+bool SectionPS::produceOutputInner(std::ostream &out,
+                                   const std::optional<std::string> &) {
     Debug(_logger) << "SectionPS::produceOutputInner";
     if (*_use_wmi) {
         return outputWMI(out);

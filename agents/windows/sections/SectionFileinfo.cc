@@ -35,7 +35,8 @@ SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
     withSeparator('|');
 }
 
-bool SectionFileinfo::produceOutputInner(std::ostream &out, const std::optional<std::string> &) {
+bool SectionFileinfo::produceOutputInner(std::ostream &out,
+                                         const std::optional<std::string> &) {
     Debug(_logger) << "SectionFileinfo::produceOutputInner";
     out << std::fixed << std::setprecision(0)
         << section_helpers::current_time(_winapi) << "\n";

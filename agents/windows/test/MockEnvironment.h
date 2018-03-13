@@ -25,7 +25,7 @@ public:
     MOCK_CONST_METHOD0(binDirectory, std::string());
     MOCK_CONST_METHOD0(logwatchStatefile, std::string());
     MOCK_CONST_METHOD0(eventlogStatefile, std::string());
-    MOCK_CONST_METHOD0(workersJobObject, const JobHandle<0>&());
+    MOCK_CONST_METHOD0(workersJobObject, const JobHandle<0> &());
     MOCK_CONST_METHOD0(withStderr, bool());
     MOCK_CONST_METHOD0(isWinNt, bool());
     MOCK_CONST_METHOD0(winVersion, uint16_t());

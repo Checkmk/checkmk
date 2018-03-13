@@ -15,8 +15,8 @@
 
 using hrc = std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
-using std::function;
 using std::chrono::milliseconds;
+using std::function;
 using std::ifstream;
 using std::istreambuf_iterator;
 using std::make_unique;

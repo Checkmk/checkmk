@@ -1259,7 +1259,7 @@ def mode_inventory_as_check(options, hostname):
     import cmk_base.inventory_plugins as inventory_plugins
     inventory_plugins.load()
 
-    return inventory.do_inv_check(options, hostname)
+    return inventory.do_inv_check(hostname, options)
 
 modes.register(Mode(
     long_option="inventory-as-check",

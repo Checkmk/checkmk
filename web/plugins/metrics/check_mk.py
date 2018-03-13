@@ -5721,7 +5721,7 @@ perfometer_info.append({
         "mem_free",
         "swap_free"
     ],
-    "label"       : ("mem_total,mem_used,+,swap_used,/,100,*", "%"),
+    "label"       : ("mem_used,swap_used,+,mem_total,/,100,*", "%"),
 })
 
 perfometer_info.append({

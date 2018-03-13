@@ -1,0 +1,10 @@
+Title: Fixed broken "Check_MK" service when using the Nagios core
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1520949209
+Class: fix
+
+

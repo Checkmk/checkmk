@@ -38,6 +38,7 @@ import cmk.cpu_tracking as cpu_tracking
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
+import cmk_base.crash_reporting
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
@@ -47,7 +48,8 @@ import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
 import cmk_base.core as core
 import cmk_base.check_table as check_table
-from cmk_base.exceptions import MKTimeout, MKParseFunctionError
+from cmk_base.exceptions import MKTimeout, MKParseFunctionError, MKIPAddressLookupError, \
+                                MKAgentError, MKSNMPError
 
 try:
     import cmk_base.cee.keepalive as keepalive
@@ -63,6 +65,63 @@ _checkresult_file_path = None
 _submit_to_core = True
 _show_perfdata  = False
 
+
+def handle_check_mk_check_result(check_plugin_name, description):
+    """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
+    Main purpose: Equalize the exception handling of all such functions"""
+    def wrap(check_func):
+        def wrapped_check_func(hostname, *args, **kwargs):
+            exit_spec = config.exit_code_spec(hostname)
+
+            status, infotexts, long_infotexts, perfdata = 0, [], [], []
+
+            try:
+                status, infotexts, long_infotexts, perfdata = check_func(hostname, *args, **kwargs)
+
+            except SystemExit:
+                raise
+
+            except MKTimeout:
+                if _in_keepalive_mode():
+                    raise
+                else:
+                    infotexts.append("Timed out")
+                    status = max(status, exit_spec.get("timeout", 2))
+
+            except (MKAgentError, MKSNMPError, MKIPAddressLookupError), e:
+                infotexts.append("%s" % e)
+                status = exit_spec.get("connection", 2)
+
+            except MKGeneralException, e:
+                infotexts.append("%s" % e)
+                status = max(status, exit_spec.get("exception", 3))
+
+            except Exception, e:
+                if cmk.debug.enabled():
+                    raise
+                crash_output = cmk_base.crash_reporting.create_crash_dump(hostname, check_plugin_name, None,
+                                                                          False, None, description, [])
+                infotexts.append(crash_output.replace("Crash dump:\n", "Crash dump:\\n"))
+                status = max(status, exit_spec.get("exception", 3))
+
+            # Produce the service check result output
+            output_txt = "%s - %s" % (defines.short_service_state_name(status),  ", ".join(infotexts))
+            if perfdata:
+                output_txt += " | %s" % " ".join(perfdata)
+            if long_infotexts:
+                output_txt += "\n" + "\n".join(long_infotexts)
+            output_txt += "\n"
+
+            if _in_keepalive_mode():
+                keepalive.add_keepalive_active_check_result(hostname, output_txt)
+                console.verbose(output_txt)
+            else:
+                console.output(output_txt)
+
+            return status
+        return wrapped_check_func
+    return wrap
+
 #.
 #   .--Checking------------------------------------------------------------.
 #   |               ____ _               _    _                            |
@@ -75,17 +134,15 @@ _show_perfdata  = False
 #   | Execute the Check_MK checks on hosts                                 |
 #   '----------------------------------------------------------------------'
 
-# This is the main check function - the central entry point
+@handle_check_mk_check_result("mk", "Check_MK")
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
     cpu_tracking.start("busy")
     console.verbose("Check_MK version %s\n" % cmk.__version__)
 
-    expected_version = config.agent_target_version(hostname)
-
     # Exit state in various situations is configurable since 1.2.3i1
     exit_spec = config.exit_code_spec(hostname)
 
-    state, output, perfdata = 0, [], []
+    status, infotexts, long_infotexts, perfdata = 0, [], [], []
     try:
         # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
         # address is unknown). When called as non keepalive ipaddress may be None or
@@ -106,69 +163,48 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         for source in sources.get_data_sources():
             source_state, source_output, source_perfdata = source.get_summary_result()
             if source_output != "":
-                state = max(state, source_state)
-                output.append("[%s] %s" % (source.id(), source_output))
+                status = max(status, source_state)
+                infotexts.append("[%s] %s" % (source.id(), source_output))
                 perfdata.extend(source_perfdata)
 
         if missing_sections and num_success > 0:
-            output.append("Missing agent sections: %s" % ", ".join(missing_sections))
-            state = max(state, exit_spec.get("missing_sections", 1))
+            infotexts.append("Missing agent sections: %s" % ", ".join(missing_sections))
+            status = max(status, exit_spec.get("missing_sections", 1))
 
         elif missing_sections:
-            output.append("Got no information from host")
-            state = max(state, exit_spec.get("empty_output", 2))
+            infotexts.append("Got no information from host")
+            status = max(status, exit_spec.get("empty_output", 2))
 
-    except MKTimeout:
-        raise
+        cpu_tracking.end()
+        phase_times = cpu_tracking.get_times()
+        total_times = phase_times["TOTAL"]
+        run_time = total_times[4]
 
-    except MKIPAddressLookupError, e:
-        output.append("%s" % e)
-        state = max(state, exit_spec.get("connection", 2))
+        infotexts.append("execution time %.1f sec" % run_time)
+        if config.check_mk_perfdata_with_times:
+            perfdata += [
+                "execution_time=%.3f" % run_time,
+                "user_time=%.3f" % total_times[0],
+                "system_time=%.3f" % total_times[1],
+                "children_user_time=%.3f" % total_times[2],
+                "children_system_time=%.3f" % total_times[3],
+            ]
 
-    except MKGeneralException, e:
-        if cmk.debug.enabled():
-            raise
-        output.append("%s" % e)
-        state = max(state, exit_spec.get("exception", 3))
+            for phase, times in phase_times.items():
+                if phase in [ "agent", "snmp", "ds" ]:
+                    t = times[4] - sum(times[:4]) # real time - CPU time
+                    perfdata.append("cmk_time_%s=%.3f" % (phase, t))
+        else:
+            perfdata.append("execution_time=%.3f" % run_time)
 
-    if _checkresult_file_fd != None:
-        _close_checkresult_file()
+        return status, infotexts, long_infotexts, perfdata
+    finally:
+        if _checkresult_file_fd != None:
+            _close_checkresult_file()
 
-    if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
-        import cmk_base.cee.inline_snmp
-        cmk_base.cee.inline_snmp.save_snmp_stats()
-
-    cpu_tracking.end()
-    phase_times = cpu_tracking.get_times()
-    total_times = phase_times["TOTAL"]
-    run_time = total_times[4]
-
-    output.append("execution time %.1f sec" % run_time)
-    if config.check_mk_perfdata_with_times:
-        perfdata += [
-            "execution_time=%.3f" % run_time,
-            "user_time=%.3f" % total_times[0],
-            "system_time=%.3f" % total_times[1],
-            "children_user_time=%.3f" % total_times[2],
-            "children_system_time=%.3f" % total_times[3],
-        ]
-
-        for phase, times in phase_times.items():
-            if phase in [ "agent", "snmp", "ds" ]:
-                t = times[4] - sum(times[:4]) # real time - CPU time
-                perfdata.append("cmk_time_%s=%.3f" % (phase, t))
-    else:
-        perfdata.append("execution_time=%.3f" % run_time)
-
-    output_txt = "%s - %s | %s\n" % (defines.short_service_state_name(state), ", ".join(output), " ".join(perfdata))
-
-    if _in_keepalive_mode():
-        keepalive.add_keepalive_active_check_result(hostname, output_txt)
-        console.verbose(output_txt)
-    else:
-        console.output(output_txt)
-
-    return state
+        if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
+            import cmk_base.cee.inline_snmp
+            cmk_base.cee.inline_snmp.save_snmp_stats()
 
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check

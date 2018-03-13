@@ -39,7 +39,6 @@ import sys
 import cmk
 import cmk.paths
 import cmk.tty as tty
-import cmk.defines as defines
 from cmk.exceptions import MKGeneralException
 from cmk.structured_data import StructuredDataTree
 
@@ -50,6 +49,7 @@ import cmk_base.rulesets as rulesets
 import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 import cmk_base.snmp as snmp
+import cmk_base.checking as checking
 import cmk_base.discovery as discovery
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
@@ -100,75 +100,64 @@ def do_inv(hostnames):
             cmk_base.utils.cleanup_globals()
 
 
-def do_inv_check(options, hostname):
+@checking.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
+def do_inv_check(hostname, options):
     global _inv_hw_changes, _inv_sw_changes, _inv_sw_missing, _inv_fail_status
     _inv_hw_changes  = options.get("hw-changes", _inv_hw_changes)
     _inv_sw_changes  = options.get("sw-changes", _inv_sw_changes)
     _inv_sw_missing  = options.get("sw-missing", _inv_sw_missing)
     _inv_fail_status = options.get("inv-fail-status", _inv_fail_status)
 
-    try:
-        if config.is_cluster(hostname):
-            ipaddress = None
-        else:
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
+    if config.is_cluster(hostname):
+        ipaddress = None
+    else:
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        state, infotexts = 0, []
+    status, infotexts, long_infotexts, perfdata = 0, [], [], []
 
-        sources = data_sources.DataSources(hostname, ipaddress)
-        old_timestamp, inventory_tree, status_data_tree = do_inv_for(sources, hostname, ipaddress)
+    sources = data_sources.DataSources(hostname, ipaddress)
+    old_timestamp, inventory_tree, status_data_tree = do_inv_for(sources, hostname, ipaddress)
 
-        if inventory_tree.is_empty() and status_data_tree.is_empty():
-            infotexts.append("Found no data")
+    if inventory_tree.is_empty() and status_data_tree.is_empty():
+        infotexts.append("Found no data")
 
-        else:
-            infotexts.append("Found %d inventory entries" % inventory_tree.count_entries())
+    else:
+        infotexts.append("Found %d inventory entries" % inventory_tree.count_entries())
 
-            if not inventory_tree.has_edge("software") and _inv_sw_missing:
-                infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
-                state = _inv_sw_missing
+        if not inventory_tree.has_edge("software") and _inv_sw_missing:
+            infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
+            status = max(status, _inv_sw_missing)
 
-            if old_timestamp:
-                path = "%s/%s/%d" % (inventory_archive_dir, hostname, old_timestamp)
-                old_tree = StructuredDataTree().load_from(path)
+        if old_timestamp:
+            path = "%s/%s/%d" % (inventory_archive_dir, hostname, old_timestamp)
+            old_tree = StructuredDataTree().load_from(path)
 
-                if not old_tree.is_equal(inventory_tree, edges=["software"]):
-                    infotext = "software changes"
-                    if _inv_sw_changes:
-                        state = _inv_sw_changes
-                        infotext += check_api.state_markers[_inv_sw_changes]
-                    infotexts.append(infotext)
+            if not old_tree.is_equal(inventory_tree, edges=["software"]):
+                infotext = "software changes"
+                if _inv_sw_changes:
+                    status = max(status, _inv_sw_changes)
+                    infotext += check_api.state_markers[_inv_sw_changes]
+                infotexts.append(infotext)
 
-                if not old_tree.is_equal(inventory_tree, edges=["hardware"]):
-                    infotext = "hardware changes"
-                    if state == 2 or _inv_hw_changes == 2:
-                        state = 2
-                    else:
-                        state = max(state, _inv_sw_changes)
-                    if _inv_hw_changes:
-                        infotext += check_api.state_markers[_inv_hw_changes]
+            if not old_tree.is_equal(inventory_tree, edges=["hardware"]):
+                infotext = "hardware changes"
+                if _inv_hw_changes:
+                    status = max(status, _inv_hw_changes)
+                    infotext += check_api.state_markers[_inv_hw_changes]
 
-                    infotexts.append(infotext)
+                infotexts.append(infotext)
 
-            if not status_data_tree.is_empty():
-                infotexts.append("Found %s status entries" % status_data_tree.count_entries())
+        if not status_data_tree.is_empty():
+            infotexts.append("Found %s status entries" % status_data_tree.count_entries())
 
-        for source in sources.get_data_sources():
-            source_state, source_output, source_perfdata = source.get_summary_result()
-            # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
-            if source_state != 0:
-                state = max(source_state, state)
-                infotexts.append("[%s] %s" % (source.id(), source_output))
+    for source in sources.get_data_sources():
+        source_state, source_output, source_perfdata = source.get_summary_result()
+        # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
+        if source_state != 0:
+            status = max(source_state, status)
+            infotexts.append("[%s] %s" % (source.id(), source_output))
 
-        console.output("%s - %s\n" % (defines.short_service_state_name(state), ", ".join(infotexts)))
-        return state
-
-    except Exception, e:
-        if cmk.debug.enabled():
-            raise
-        console.output("%s - %s\n" %
-            (defines.short_service_state_name(_inv_fail_status), e))
-        return _inv_fail_status
+    return status, infotexts, long_infotexts, perfdata
 
 
 def do_inv_for(sources, hostname, ipaddress):

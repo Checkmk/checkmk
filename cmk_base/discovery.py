@@ -33,7 +33,6 @@ import inspect
 from cmk.regex import regex
 import cmk.tty as tty
 import cmk.paths
-import cmk.defines as defines
 from cmk.exceptions import MKGeneralException
 
 import cmk.store as store
@@ -47,6 +46,7 @@ import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 import cmk_base.item_state as item_state
 import cmk_base.snmp as snmp
+import cmk_base.checking as checking
 import cmk_base.data_sources as data_sources
 import cmk_base.check_table as check_table
 import cmk_base.core as core
@@ -298,135 +298,98 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
 #   |  Active check for checking undiscovered services.                    |
 #   '----------------------------------------------------------------------'
 
+@checking.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def check_discovery(hostname, ipaddress):
     params = discovery_check_parameters(hostname) or \
              default_discovery_check_parameters()
 
-    exit_spec = config.exit_code_spec(hostname)
+    status, infotexts, long_infotexts, perfdata = 0, [], [], []
 
-    status, infotexts, long_infotexts = 0, [], []
-    try:
-        # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
-        # ipaddress is always None
-        if ipaddress is None and not config.is_cluster(hostname):
-            ipaddress = ip_lookup.lookup_ip_address(hostname)
+    # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
+    # ipaddress is always None
+    if ipaddress is None and not config.is_cluster(hostname):
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-        sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names=None,
-                                             do_snmp_scan=params["inventory_check_do_scan"],
-                                             on_error="raise")
+    sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names=None,
+                                         do_snmp_scan=params["inventory_check_do_scan"],
+                                         on_error="raise")
 
-        multi_host_sections = _get_host_sections_for_discovery(sources,
-                                  use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
+    multi_host_sections = _get_host_sections_for_discovery(sources,
+                              use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
 
-        services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error="raise")
+    services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error="raise")
 
-        need_rediscovery = False
+    need_rediscovery = False
 
-        params_rediscovery = params.get("inventory_rediscovery", {})
+    params_rediscovery = params.get("inventory_rediscovery", {})
 
-        if params_rediscovery.get("service_whitelist", []) or\
-                params_rediscovery.get("service_blacklist", []):
-            # whitelist. if none is specified, this matches everything
-            whitelist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))
-            # blacklist. if none is specified, this matches nothing
-            blacklist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
+    if params_rediscovery.get("service_whitelist", []) or\
+            params_rediscovery.get("service_blacklist", []):
+        # whitelist. if none is specified, this matches everything
+        whitelist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))
+        # blacklist. if none is specified, this matches nothing
+        blacklist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
 
-            item_filters = lambda hostname, check_plugin_name, item:\
-                    _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
-        else:
-            item_filters = None
+        item_filters = lambda hostname, check_plugin_name, item:\
+                _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
+    else:
+        item_filters = None
 
-        for check_state, title, params_key, default_state in [
-               ( "new",      "unmonitored", "severity_unmonitored", config.inventory_check_severity ),
-               ( "vanished", "vanished",    "severity_vanished",   0 ),
-            ]:
+    for check_state, title, params_key, default_state in [
+           ( "new",      "unmonitored", "severity_unmonitored", config.inventory_check_severity ),
+           ( "vanished", "vanished",    "severity_vanished",   0 ),
+        ]:
 
-            affected_check_plugin_names = {}
-            count = 0
-            unfiltered = False
-
-            for (check_plugin_name, item), (check_source, _unused_paramstring) in services.items():
-                if check_source == check_state:
-                    count += 1
-                    affected_check_plugin_names.setdefault(check_plugin_name, 0)
-                    affected_check_plugin_names[check_plugin_name] += 1
-
-                    if not unfiltered and\
-                            (item_filters is None or item_filters(hostname, check_plugin_name, item)):
-                        unfiltered = True
-
-                    long_infotexts.append("%s: %s: %s" % (title, check_plugin_name,
-                        config.service_description(hostname, check_plugin_name, item)))
-
-            if affected_check_plugin_names:
-                info = ", ".join([ "%s:%d" % e for e in affected_check_plugin_names.items() ])
-                st = params.get(params_key, default_state)
-                status = cmk_base.utils.worst_service_state(status, st)
-                infotexts.append("%d %s services (%s)%s" % (count, title, info, check_api.state_markers[st]))
-
-                if params.get("inventory_rediscovery", False):
-                    mode = params["inventory_rediscovery"]["mode"]
-                    if unfiltered and\
-                            ((check_state == "new"      and mode in ( 0, 2, 3 )) or
-                             (check_state == "vanished" and mode in ( 1, 2, 3 ))):
-                        need_rediscovery = True
-            else:
-                infotexts.append("no %s services found" % title)
+        affected_check_plugin_names = {}
+        count = 0
+        unfiltered = False
 
         for (check_plugin_name, item), (check_source, _unused_paramstring) in services.items():
-            if check_source == "ignored":
-                long_infotexts.append("ignored: %s: %s" % (check_plugin_name,
-                        config.service_description(hostname, check_plugin_name, item)))
+            if check_source == check_state:
+                count += 1
+                affected_check_plugin_names.setdefault(check_plugin_name, 0)
+                affected_check_plugin_names[check_plugin_name] += 1
 
-        _set_rediscovery_flag(hostname, need_rediscovery)
-        if need_rediscovery:
-            infotexts.append("rediscovery scheduled")
+                if not unfiltered and\
+                        (item_filters is None or item_filters(hostname, check_plugin_name, item)):
+                    unfiltered = True
 
-        # Add data source information to check results
-        for source in sources.get_data_sources():
-            source_state, source_output, source_perfdata = source.get_summary_result()
-            # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
-            if source_state != 0:
-                status = max(status, source_state)
-                infotexts.append("[%s] %s" % (source.id(), source_output))
+                long_infotexts.append("%s: %s: %s" % (title, check_plugin_name,
+                    config.service_description(hostname, check_plugin_name, item)))
 
-    except MKTimeout:
-        if _in_keepalive_mode():
-            raise
+        if affected_check_plugin_names:
+            info = ", ".join([ "%s:%d" % e for e in affected_check_plugin_names.items() ])
+            st = params.get(params_key, default_state)
+            status = cmk_base.utils.worst_service_state(status, st)
+            infotexts.append("%d %s services (%s)%s" % (count, title, info, check_api.state_markers[st]))
+
+            if params.get("inventory_rediscovery", False):
+                mode = params["inventory_rediscovery"]["mode"]
+                if unfiltered and\
+                        ((check_state == "new"      and mode in ( 0, 2, 3 )) or
+                         (check_state == "vanished" and mode in ( 1, 2, 3 ))):
+                    need_rediscovery = True
         else:
-            infotexts.append("Timed out")
-            status = max(status, exit_spec.get("timeout", 2))
+            infotexts.append("no %s services found" % title)
 
-    except MKGeneralException, e:
-        if cmk.debug.enabled():
-            raise
-        infotexts.append("%s" % e)
-        status = max(status, exit_spec.get("exception", 3))
+    for (check_plugin_name, item), (check_source, _unused_paramstring) in services.items():
+        if check_source == "ignored":
+            long_infotexts.append("ignored: %s: %s" % (check_plugin_name,
+                    config.service_description(hostname, check_plugin_name, item)))
 
-    except SystemExit:
-        raise
+    _set_rediscovery_flag(hostname, need_rediscovery)
+    if need_rediscovery:
+        infotexts.append("rediscovery scheduled")
 
-    except Exception, e:
-        if cmk.debug.enabled():
-            raise
-        crash_output = cmk_base.crash_reporting.create_crash_dump(hostname, "discovery", None,
-                                                False, None, "Check_MK Discovery", [])
-        infotexts = [
-            crash_output.replace("Crash dump:\n", "Crash dump:\\n")
-        ]
-        status = max(status, exit_spec.get("exception", 3))
+    # Add data source information to check results
+    for source in sources.get_data_sources():
+        source_state, source_output, source_perfdata = source.get_summary_result()
+        # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
+        if source_state != 0:
+            status = max(status, source_state)
+            infotexts.append("[%s] %s" % (source.id(), source_output))
 
-    output_txt = "%s - %s" % (defines.short_service_state_name(status),  ", ".join(infotexts))
-    if long_infotexts:
-        output_txt += "\n" + "\n".join(long_infotexts)
-    output_txt += "\n"
-
-    if _in_keepalive_mode():
-        keepalive.add_keepalive_active_check_result(hostname, output_txt)
-    else:
-        console.output(output_txt)
-
-    return status
+    return status, infotexts, long_infotexts, perfdata
 
 
 # Compute the parameters for the discovery check for a host. Note:

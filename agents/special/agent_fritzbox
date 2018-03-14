@@ -169,7 +169,7 @@ def get_upnp_info(control, namespace, action):
     # parse the response body
     match = re.search('<u:%sResponse[^>]+>(.*)</u:%sResponse>' % (action, action), contents, re.M | re.S)
     if not match:
-        raise APIError('Response is not parsable')
+        raise Exception('Response is not parsable')
     response = match.group(1)
     matches = re.findall('<([^>]+)>([^<]+)<[^>]+>', response, re.M | re.S)
 

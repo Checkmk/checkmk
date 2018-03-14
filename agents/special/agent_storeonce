@@ -28,7 +28,7 @@ import re
 import sys, getopt
 import requests
 import xml.etree.ElementTree as ET
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from requests.packages.urllib3.exceptions import InsecureRequestWarning # pylint: disable=import-error
 
 def usage():
     sys.stderr.write("""Check_MK StoreOnce
@@ -75,7 +75,7 @@ for o,a in opts:
 
 def query(url):
     if opt_cert == False:
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning) # pylint: disable=no-member
     response     = requests.get(url, auth = (args_dict["username"], args_dict["password"]), verify=opt_cert)
     raw_xml      = response.text
     # Remove namespace nonsense
@@ -86,10 +86,7 @@ def query(url):
 
 output_lines = []
 def output(line):
-    if type(line) not in [str, unicode]:
-        output_lines.append(pprint.pformat(line))
-    else:
-        output_lines.append(line)
+    output_lines.append(line)
 
 
 def process_cluster_info():

@@ -121,9 +121,9 @@ except requests.exceptions.RequestException as e:
     sys.exit(1)
 
 # Status code should be 201.
-if not req.status_code == requests.codes.CREATED:
+if not req.status_code == requests.codes.CREATED: # pylint: disable=no-member
     sys.stderr.write("Wrong status code: %s. Expected: %s \n" % (req.status_code,
-                                                               requests.codes.CREATED))
+                                                               requests.codes.CREATED)) # pylint: disable=no-member
     sys.exit(1)
 else:
     try:
@@ -153,7 +153,7 @@ req = requests.delete("%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-Sessio
                       timeout=10,
                       verify=verify)
 
-if not req.status_code == requests.codes.OK:
+if not req.status_code == requests.codes.OK: # pylint: disable=no-member
     sys.stderr.write("Wrong status code: %s. Expected: %s \n" % (req.status_code,
-                                                               requests.codes.OK))
+                                                               requests.codes.OK)) # pylint: disable=no-member
     sys.exit(1)

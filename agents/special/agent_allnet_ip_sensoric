@@ -86,7 +86,6 @@ class RequestError(Exception):
     pass
 
 def get_allnet_ip_sensoric_info():
-    global g_device, g_version
     url = 'http://%s/xml/sensordata.xml' % (host_address)
 
     headers = {

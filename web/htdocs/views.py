@@ -74,7 +74,7 @@ def load_plugins(force):
     config.declare_permission_section("view", _("Multisite Views"), do_sort = True)
     for name, view in multisite_builtin_views.items():
         config.declare_permission("view.%s" % name,
-                _u(view["title"]),
+                format_view_title(view),
                 "%s - %s" % (name, _u(view["description"])),
                 config.builtin_role_ids)
 
@@ -1057,12 +1057,15 @@ def view_choices(only_with_hidden = False):
     choices = [("", "")]
     for name, view in available_views.items():
         if not only_with_hidden or view['single_infos']:
-            if view.get('mobile', False):
-                title = _('Mobile: ') + _u(view["title"])
-            else:
-                title = _u(view["title"])
+            title = format_view_title(view)
             choices.append(("%s" % name, title))
     return choices
+
+def format_view_title(view):
+    if view.get('mobile', False):
+        return _('Mobile: ') + _u(view["title"])
+    else:
+        return _u(view["title"])
 
 def view_editor_options():
     return [

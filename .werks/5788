@@ -1,0 +1,13 @@
+Title: check_bi_aggr: no longer reports "SubjectAltNameWarning" when initiating connection
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1521037638
+Class: fix
+
+The check_bi_aggr check could output a python warning during ssl certificate checking.
+This has been fixed.
+
+

@@ -29,6 +29,8 @@ import urllib
 import os
 import time
 
+from requests.packages.urllib3.exceptions import SubjectAltNameWarning
+requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
 
 # tell requests not to honour "http(s)_proxy" env variables
 proxies = {

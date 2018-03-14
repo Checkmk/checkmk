@@ -150,7 +150,7 @@ def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
         json_data = conn.read()
 
         if opt_verbose:
-            sys.stderr.write("Result: %s\n\n" % data)
+            sys.stderr.write("Result: %s\n\n" % json_data)
     except Exception, e:
         if opt_debug:
             raise

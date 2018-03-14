@@ -31,7 +31,7 @@
 #include "Row.h"
 
 // static
-std::unique_ptr<AndingFilter> AndingFilter::make(
+std::unique_ptr<Filter> AndingFilter::make(
     Kind kind, std::vector<std::unique_ptr<Filter>> subfilters) {
     return std::make_unique<AndingFilter>(kind, std::move(subfilters),
                                           Secret());

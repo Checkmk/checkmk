@@ -44,7 +44,7 @@ class AndingFilter : public Filter {
     struct Secret {};
 
 public:
-    static std::unique_ptr<AndingFilter> make(
+    static std::unique_ptr<Filter> make(
         Kind kind, std::vector<std::unique_ptr<Filter>> subfilters);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;

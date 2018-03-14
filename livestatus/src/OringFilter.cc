@@ -31,7 +31,7 @@
 #include "Row.h"
 
 // static
-std::unique_ptr<OringFilter> OringFilter::make(
+std::unique_ptr<Filter> OringFilter::make(
     Kind kind, std::vector<std::unique_ptr<Filter>> subfilters) {
     return std::make_unique<OringFilter>(kind, std::move(subfilters), Secret());
 }

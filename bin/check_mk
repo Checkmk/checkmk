@@ -75,20 +75,20 @@ except getopt.GetoptError, err:
 # First load the general modifying options
 modes.process_general_options(opts)
 
-# At least in case the config is needed, the checks are needed too, because
-# the configuration may refer to check config variable names.
-if len(set.intersection(set(modes.non_checks_options()),
-                        [o[0] for o in opts])) == 0:
-    checks.load()
-
-# Read the configuration files (main.mk, autochecks, etc.), but not for
-# certain operation modes that does not need them and should not be harmed
-# by a broken configuration
-if len(set.intersection(set(modes.non_config_options()),
-                        [o[0] for o in opts])) == 0:
-    config.load()
-
 try:
+    # At least in case the config is needed, the checks are needed too, because
+    # the configuration may refer to check config variable names.
+    if len(set.intersection(set(modes.non_checks_options()),
+                            [o[0] for o in opts])) == 0:
+        checks.load()
+
+    # Read the configuration files (main.mk, autochecks, etc.), but not for
+    # certain operation modes that does not need them and should not be harmed
+    # by a broken configuration
+    if len(set.intersection(set(modes.non_config_options()),
+                            [o[0] for o in opts])) == 0:
+        config.load()
+
     # Now find the requested mode and execute it
     done, exit_status = False, 0
     for o, a in opts:

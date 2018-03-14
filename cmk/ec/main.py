@@ -1760,7 +1760,7 @@ class EventServer(ECServerThread):
 
         if g_config['archive_mode'] != 'mongodb':
             with lock_logging:
-                expire_logfiles(settings)
+                expire_logfiles(self.settings)
 
     # For all events that have been created in a host downtime check the host
     # whether or not it is still in downtime. In case the downtime has ended

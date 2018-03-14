@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -44,10 +44,13 @@ import cmk.ec.settings
 
 
 class MkpRulePackBindingError(Exception):
+
+    """Base class for exceptions related to rule pack binding"""
     pass
 
 
 class MkpRulePackProxy(UserDict.DictMixin):
+
     """
     An object of this class represents an entry (i.e. a rule pack) in
     mkp_rule_packs. It is used as a reference to an EC rule pack
@@ -56,6 +59,7 @@ class MkpRulePackProxy(UserDict.DictMixin):
     A newly created instance is not yet connected to a specific rule pack.
     This is achieved via the method bind_to.
     """
+
     def __init__(self, rule_pack_id):
         # Ideally the 'id_' would not be necessary and the proxy object would
         # be bound to it's referenced object upon initialization. Unfortunately,
@@ -77,20 +81,25 @@ class MkpRulePackProxy(UserDict.DictMixin):
         return '%s("%s")' % (self.__class__.__name__, self.id_)
 
     def keys(self):
+        """List of keys of this rule pack"""
         return self.rule_pack.keys()
 
     def bind_to(self, mkp_rule_pack):
+        """Binds this rule pack to the given MKP rule pack"""
         if self.id_ != mkp_rule_pack['id']:
-            raise MkpRulePackBindingError('The IDs of %s and %s cannot be different.' % (self, mkp_rule_pack))
+            raise MkpRulePackBindingError(
+                'The IDs of %s and %s cannot be different.' % (self, mkp_rule_pack))
 
         self.rule_pack = mkp_rule_pack
 
     @property
     def is_bound(self):
+        """Has this rule pack been bound via bind_to()?"""
         return self.rule_pack is not None
 
 
-class RulePackType(Enum):
+class RulePackType(Enum):  # pylint: disable=too-few-public-methods
+
     """
     A class to distinguishes the four kinds of rule pack types:
 
@@ -120,12 +129,11 @@ class RulePackType(Enum):
 
         if not is_proxy and not is_packaged:
             return RulePackType.internal
-        elif is_proxy and not is_packaged:
+        if is_proxy and not is_packaged:
             return RulePackType.exported
-        elif is_proxy and is_packaged:
+        if is_proxy and is_packaged:
             return RulePackType.unmodified_mkp
-        else:
-            return RulePackType.modified_mkp
+        return RulePackType.modified_mkp
 
 
 def rule_pack_dir():
@@ -160,12 +168,13 @@ def read_rule_packs(context):
     for rule in context["rules"]:
         if "livetime" in rule:
             livetime = rule["livetime"]
-            if type(livetime) != tuple:
+            if not isinstance(livetime, tuple):
                 rule["livetime"] = (livetime, ["open"])
 
     # Convert old plain rules into a list of one rule pack
     if context["rules"] and not context["rule_packs"]:
-        context["rule_packs"] = [cmk.ec.defaults.default_rule_pack(context["rules"])]
+        context["rule_packs"] = [
+            cmk.ec.defaults.default_rule_pack(context["rules"])]
 
 
 def read_exported_rule_packs(context):
@@ -291,15 +300,15 @@ def add_rule_pack_proxies(file_names):
     save_rule_packs(legacy_rules, rule_packs)
 
 
-def override_rule_pack_proxy(nr, rule_packs):
+def override_rule_pack_proxy(rule_pack_nr, rule_packs):
     """
     Replaces a MkpRulePackProxy by a working copy of the underlying rule pack.
     """
-    proxy = rule_packs[nr]
+    proxy = rule_packs[rule_pack_nr]
     if not isinstance(proxy, MkpRulePackProxy):
         raise TypeError('Expected an instance of %s got %s' %
                         (MkpRulePackProxy.__name__, proxy.__class__.__name__))
-    rule_packs[nr] = copy.deepcopy(proxy.rule_pack)
+    rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 
 def release_packaged_rule_packs(file_names):
@@ -362,6 +371,7 @@ def rule_pack_id_to_mkp(package_info):
     MKP exists, the value of that mapping is None.
     """
     def mkp_of(rule_pack_file):
+        """Find the MKP for the given file"""
         for mkp, content in package_info.get('installed', {}).iteritems():
             if rule_pack_file in content.get('files', {}).get('ec_rule_packs', []):
                 return mkp

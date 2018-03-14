@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -23,21 +23,32 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
+"""Defaults for rule pack and configuration"""
 
 import cmk.log
 
 
+# Clean this up one day by using the way recommended by gettext.
+# (See https://docs.python.org/2/library/gettext.html). For this we
+# need the path to the locale files here.
+try:
+    _
+except NameError:
+    _ = lambda x: x  # Fake i18n when not available
+
+
 def default_rule_pack(rules):
+    """Returns the default rule pack"""
     return {
-        "id"       : "default",
-        "title"    : _("Default rule pack"),
-        "rules"    : rules,
-        "disabled" : False,
+        "id": "default",
+        "title": _("Default rule pack"),
+        "rules": rules,
+        "disabled": False,
     }
 
 
 def default_config():
+    """Returns the default configuration"""
     return {
         "rules":          [],  # old pre 1.2.7i1 format. Only used if rule_packs is empty
         "rule_packs":     [],  # new format with rule packages
@@ -57,7 +68,7 @@ def default_config():
         "retention_interval":    60,
         "housekeeping_interval": 60,
         "statistics_interval":   5,
-        "history_lifetime":      365, # days
+        "history_lifetime":      365,  # days
         "history_rotation":      "daily",
         "replication":           None,
         "remote_status":         None,

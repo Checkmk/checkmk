@@ -75,7 +75,7 @@ def load_plugins(force):
     for name, view in multisite_builtin_views.items():
         config.declare_permission("view.%s" % name,
                 _u(view["title"]),
-                _u(view["description"]),
+                "%s - %s" % (name, _u(view["description"])),
                 config.builtin_role_ids)
 
     # Make sure that custom views also have permissions

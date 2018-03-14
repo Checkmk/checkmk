@@ -31,6 +31,7 @@ def test_pylint_misc():
         cmk_path() + "/bin",
         cmk_path() + "/notifications",
         cmk_path() + "/agents/plugins",
+        cmk_path() + "/agents/special",
         cmk_path() + "/active_checks",
         cmc_path() + "/agents/plugins",
         cmc_path() + "/bin",

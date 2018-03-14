@@ -158,8 +158,8 @@ else:
 
 if opt_legacy:
     try:
-        from NaElement import *
-        from NaServer import *
+        from NaElement import * # pylint: disable=import-error
+        from NaServer import *  # pylint: disable=import-error
     except Exception, e:
         sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
                          "provided by the NetApp Managability SDK and must be put into "\
@@ -170,12 +170,12 @@ else:
     import base64
     import requests
     try:
-        from requests.packages.urllib3.exceptions import InsecureRequestWarning
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        from requests.packages.urllib3.exceptions import InsecureRequestWarning # pylint: disable=import-error
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
     except:
         pass
 
-    requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
+    requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([ # pylint: disable=no-member
        "DH+3DES",
        "DH+HIGH",
        "ECDH+3DES",
@@ -183,7 +183,6 @@ else:
        "RSA+3DES",
        "RSA+HIGH",
     ])
-
 
 
     try:
@@ -566,17 +565,17 @@ def query_nodes(what, node_attribute = "node-name"):
     global nodes, section_errors
     if opt_legacy:
         if not nodes:
-            node_query = NaElement("system-get-node-info-iter")
-            node_list = server.invoke_elem(node_query)
+            node_query = NaElement("system-get-node-info-iter") # pylint: disable=undefined-variable
+            node_list = server.invoke_elem(node_query)          # pylint: disable=no-member
             nodes = []
             for instance in node_list.child_get("attributes-list").children_get():
                 nodes.append(instance.child_get_string("system-name"))
 
         results = {}
         for node in nodes:
-            query = NaElement(what)
+            query = NaElement(what) # pylint: disable=undefined-variable
             query.child_add_string(node_attribute, node)
-            response = server.invoke_elem(query)
+            response = server.invoke_elem(query) # pylint: disable=no-member
             if response.results_status() == "failed":
                 section_errors.append("In class %s: %s" % (what, response.results_reason()))
                 continue
@@ -670,16 +669,16 @@ def query(what, return_toplevel_node = False):
 def query_counters(what):
     instance_uuids = []
     if opt_legacy:
-        counter_query = NaElement("perf-object-get-instances")
+        counter_query = NaElement("perf-object-get-instances") # pylint: disable=undefined-variable
         counter_query.child_add_string("objectname", what)
 
         # In clustermode there is no "get all" command for performance counters
         # We need to determine the instance names first and add them to the query
         if netapp_mode == "clustermode":
-            instance_query = NaElement("perf-object-instance-list-info-iter")
+            instance_query = NaElement("perf-object-instance-list-info-iter") # pylint: disable=undefined-variable
             instance_query.child_add_string("objectname", what)
 
-            instance_query_response = server.invoke_elem(instance_query)
+            instance_query_response = server.invoke_elem(instance_query)  # pylint: disable=no-member
             instance_list = instance_query_response.child_get("attributes-list")
             if instance_list:
                 for instance_data in instance_list.children_get():
@@ -688,7 +687,7 @@ def query_counters(what):
                     # Nothing to query..
                     return
 
-                instances_to_query = NaElement("instance-uuids")
+                instances_to_query = NaElement("instance-uuids") # pylint: disable=no-member
                 for uuid in instance_uuids:
                     instances_to_query.child_add_string("instance-uuid", uuid)
                 counter_query.child_add(instances_to_query)
@@ -696,7 +695,7 @@ def query_counters(what):
                 return
 
         # Query counters
-        response = server.invoke_elem(counter_query)
+        response = server.invoke_elem(counter_query) # pylint: disable=undefined-variable
         if response.results_status() == "failed":
             section_errors.append("In counter %s: %s" % (what, response.results_reason()))
         else:
@@ -805,7 +804,7 @@ try:
     if opt_legacy:
         if opt_debug:
             print "Running in legacy mode"
-        server = NaServer(host_address,1,8)
+        server = NaServer(host_address,1,8) # pylint: disable=undefined-variable
         server.set_admin_user(user, secret)
         server.set_timeout(opt_timeout)
         server.set_transport_type("HTTPS")
@@ -1004,7 +1003,7 @@ try:
                 for node, entry in cluster_status.items():
                     # Small trick to improve formatting
                     if opt_legacy:
-                        container = NaElement("container")
+                        container = NaElement("container") # pylint: disable=undefined-variable
                         container.child_add(entry)
                     else:
                         container = NetAppNode("container")
@@ -1270,7 +1269,7 @@ try:
         for volume in volumes.children_get():
             # Small trick improve formatting
             if opt_legacy:
-                container = NaElement("container")
+                container = NaElement("container") # pylint: disable=undefined-variable
                 container.child_add(volume)
             else:
                 container = NetAppNode("container")

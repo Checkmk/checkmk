@@ -29,8 +29,8 @@ import getopt, sys, socket, traceback, re, hashlib
 
 import requests
 try:
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning # pylint: disable=import-error
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
 except:
     pass
 

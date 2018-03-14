@@ -218,14 +218,14 @@ def do_output(what, event):
 
 map_events = {
     # Mode     Mask                        Report_filestats (currently unused)
-    "access"   : (pyinotify.IN_ACCESS,     False),
-    "open"     : (pyinotify.IN_OPEN,       False),
-    "create"   : (pyinotify.IN_CREATE,     False),
-    "delete"   : (pyinotify.IN_DELETE,     False),
-    "modify"   : (pyinotify.IN_MODIFY,     False),
-    "movedto"  : (pyinotify.IN_MOVED_TO,   False),
-    "movedfrom": (pyinotify.IN_MOVED_FROM, False),
-    "moveself" : (pyinotify.IN_MOVE_SELF,  False),
+    "access"   : (pyinotify.IN_ACCESS,     False), # pylint: disable=no-member
+    "open"     : (pyinotify.IN_OPEN,       False), # pylint: disable=no-member
+    "create"   : (pyinotify.IN_CREATE,     False), # pylint: disable=no-member
+    "delete"   : (pyinotify.IN_DELETE,     False), # pylint: disable=no-member
+    "modify"   : (pyinotify.IN_MODIFY,     False), # pylint: disable=no-member
+    "movedto"  : (pyinotify.IN_MOVED_TO,   False), # pylint: disable=no-member
+    "movedfrom": (pyinotify.IN_MOVED_FROM, False), # pylint: disable=no-member
+    "moveself" : (pyinotify.IN_MOVE_SELF,  False), # pylint: disable=no-member
 }
 
 class NotifyEventHandler(pyinotify.ProcessEvent):

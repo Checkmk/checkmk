@@ -36,6 +36,7 @@ import pprint
 import UserDict
 from enum import Enum
 from pathlib2 import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple  # pylint: disable=unused-import
 
 import cmk.paths
 import cmk.store
@@ -65,8 +66,8 @@ class MkpRulePackProxy(UserDict.DictMixin):
         # be bound to it's referenced object upon initialization. Unfortunately,
         # this is not possible because the mknotifyd.mk could specify referenced
         # objects as well.
-        self.id_ = rule_pack_id
-        self.rule_pack = None
+        self.id_ = rule_pack_id  # type: str
+        self.rule_pack = None  # type: Dict[str, Any]
 
     def __getitem__(self, key):
         return self.rule_pack[key]
@@ -80,11 +81,22 @@ class MkpRulePackProxy(UserDict.DictMixin):
     def __repr__(self):
         return '%s("%s")' % (self.__class__.__name__, self.id_)
 
+    # __iter__ and __len__ are only defined as a workaround for a buggy entry
+    # in the typeshed
+    def __iter__(self):
+        for k in self.keys():
+            yield k
+
+    def __len__(self):
+        return len(self.keys())
+
     def keys(self):
+        # type: () -> List[str]
         """List of keys of this rule pack"""
         return self.rule_pack.keys()
 
     def bind_to(self, mkp_rule_pack):
+        # type: (Dict[str, Any]) -> None
         """Binds this rule pack to the given MKP rule pack"""
         if self.id_ != mkp_rule_pack['id']:
             raise MkpRulePackBindingError(
@@ -94,6 +106,7 @@ class MkpRulePackProxy(UserDict.DictMixin):
 
     @property
     def is_bound(self):
+        # type: () -> bool
         """Has this rule pack been bound via bind_to()?"""
         return self.rule_pack is not None
 
@@ -121,6 +134,7 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def type_of(rule_pack, id_to_mkp):
+        # type: (Dict[str, Any], Dict[Any, Any]) -> RulePackType
         """
         Returns the type of rule pack for a given rule pack ID to MKP mapping.
         """
@@ -137,6 +151,7 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
 
 
 def rule_pack_dir():
+    # type: () -> Path
     """
     Returns the default WATO directory of the Event Console.
     """
@@ -146,6 +161,7 @@ def rule_pack_dir():
 
 
 def mkp_rule_pack_dir():
+    # type: () -> Path
     """
     Returns the default directory for rule pack exports of the
     Event Console.
@@ -156,6 +172,7 @@ def mkp_rule_pack_dir():
 
 
 def read_rule_packs(context):
+    # type: (Dict[str, Any]) -> None
     """
     Read rule packs from rules.mk into the variable context.
     Context has to be a dict with the keys rules and rule_packs.
@@ -178,6 +195,7 @@ def read_rule_packs(context):
 
 
 def read_exported_rule_packs(context):
+    # type: (Dict[str, Any]) -> Dict[str, Any]
     """
     Read exported rule packs into the variable context. The exported
     rule packs may already be part of an MKP. Context has to be a
@@ -190,6 +208,7 @@ def read_exported_rule_packs(context):
 
 
 def remove_exported_rule_pack(id_):
+    # type: (str) -> None
     """
     Removes the .mk file representing the exported rule pack.
     """
@@ -198,6 +217,7 @@ def remove_exported_rule_pack(id_):
 
 
 def bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
+    # type: (Any, Any) -> None
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.
@@ -214,6 +234,7 @@ def bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
 
 
 def load_rule_packs():
+    # type: () -> Tuple[Any, Any]
     """
     Returns the legacy rules and the rule packs (including MKP rule packs) of
     a site. Proxy objects in the rule packs are already bound to the referenced
@@ -234,6 +255,7 @@ def load_rule_packs():
 
 
 def save_rule_packs(legacy_rules, rule_packs, pretty_print=False, dir_=None):
+    # type: (List[Any], List[Dict[str, Any]], bool, Optional[Path]) -> None
     """
     Saves the given legacy rules and rule packs to rules.mk. By default
     it is saved to the default directory for rule packs. If dir_ is given it
@@ -258,6 +280,7 @@ def save_rule_packs(legacy_rules, rule_packs, pretty_print=False, dir_=None):
 
 
 def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
+    # type: (Dict[str, Any], bool, Optional[Path]) -> None
     """
     Export the representation of a rule pack (i.e. a dict) to a .mk
     file accessible by the WATO module Extension Packages. In case
@@ -288,6 +311,7 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
 
 
 def add_rule_pack_proxies(file_names):
+    # type: (Iterable[str]) -> None
     """
     Adds rule pack proxy objects to the list of rule packs given a list
     of file names. The file names without the file extension are used as
@@ -301,6 +325,7 @@ def add_rule_pack_proxies(file_names):
 
 
 def override_rule_pack_proxy(rule_pack_nr, rule_packs):
+    # type: (str, Dict[str, Any]) -> None
     """
     Replaces a MkpRulePackProxy by a working copy of the underlying rule pack.
     """
@@ -312,6 +337,7 @@ def override_rule_pack_proxy(rule_pack_nr, rule_packs):
 
 
 def release_packaged_rule_packs(file_names):
+    # type: (Iterable[str]) -> None
     """
     This function synchronizes the rule packs in rules.mk and the rule packs
     packaged in a MKP upon release of that MKP. The following cases have
@@ -342,6 +368,7 @@ def release_packaged_rule_packs(file_names):
 
 
 def remove_packaged_rule_packs(file_names, delete_export=True):
+    # type: (Iterable[str], bool) -> None
     """
     This function synchronizes the rule packs in rules.mk and the packaged rule packs
     of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
@@ -364,6 +391,7 @@ def remove_packaged_rule_packs(file_names, delete_export=True):
 
 
 def rule_pack_id_to_mkp(package_info):
+    # type: (Any) -> Dict[str, Any]
     """
     Returns a dictionary of rule pack ID to MKP package for a given package_info.
     The package info has to be in the format defined by cmk_base/packaging.py.
@@ -371,6 +399,7 @@ def rule_pack_id_to_mkp(package_info):
     MKP exists, the value of that mapping is None.
     """
     def mkp_of(rule_pack_file):
+        # type: (str) -> Any
         """Find the MKP for the given file"""
         for mkp, content in package_info.get('installed', {}).iteritems():
             if rule_pack_file in content.get('files', {}).get('ec_rule_packs', []):

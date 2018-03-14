@@ -50,7 +50,7 @@ OPTIONS:
 
 short_options = 'hu:p:'
 long_options  = [
-    'help', 'username=', 'password=', 'debug', 'ucssdk', 'no-cert-check'
+    'help', 'username=', 'password=', 'debug', 'no-cert-check'
 ]
 
 try:
@@ -63,16 +63,12 @@ opt_debug    = False
 opt_username = ""
 opt_password = ""
 opt_verify   = True
-opt_ucssdk   = False
 
 for o,a in opts:
     if o in [ '--debug' ]:
         opt_debug = True
     elif o in [ '-u', '--username' ]:
         opt_username = a
-    elif o in [ '--ucssdk' ]:
-        opt_ucssdk = True
-        from UcsSdk import *
     elif o in [ '-p', '--password' ]:
         opt_password = a
     elif o in [ '--no-cert-check' ]:
@@ -156,21 +152,8 @@ class Server:
         return self.communicate(payload, {"classname": classname})
 
 
-if not opt_ucssdk:
-    handle = Server(host_address)
-    handle.login(opt_username, opt_password)
-else:
-    # Use the UcsSdk to query the data. This loads 35MB(!) of python code...
-    try:
-        handle = UcsHandle()
-        if opt_debug:
-            handle.SetDumpXml() # Debug telegrams
-        handle.Login(host_address, username = opt_username, password = opt_password)
-    except:
-        sys.stderr.write("Cannot connect to UCS Bladecenter. Maybe you provided " \
-                         "the wrong credentials. Please check your connection settings " \
-                         "and try again")
-
+handle = Server(host_address)
+handle.login(opt_username, opt_password)
 
 for entry, fields in [
         ## FANS
@@ -225,28 +208,17 @@ for entry, fields in [
             print entry
             continue
 
-        if not opt_ucssdk:
-            response = handle.get_class(entry)
-            elements = get_pattern('<%(entry)s (.*?)/>' % {"entry": entry}, response)
-            for element in elements:
-                sys.stdout.write("%s\t" % entry)
-                values = []
-                for field in fields:
-                    tmp_field = field[0].lower()+ field[1:] # workaround
-                    value = get_pattern('%s="(.*?)"' % tmp_field, element)[0]
-                    if value:
-                        values.append("%s %s" % (field, value))
-                print "\t".join(values)
-        else:
-            # Use UcsSdk to query the data (used for debugging)
-            for obj in handle.GetManagedObject(None, entry):
-                sys.stdout.write("%s\t" % entry)
-                values = []
-                for field in fields:
-                    value = getattr(obj, field)
-                    if value:
-                        values.append("%s %s" % (field, value))
-                print "\t".join(values)
+        response = handle.get_class(entry)
+        elements = get_pattern('<%(entry)s (.*?)/>' % {"entry": entry}, response)
+        for element in elements:
+            sys.stdout.write("%s\t" % entry)
+            values = []
+            for field in fields:
+                tmp_field = field[0].lower()+ field[1:] # workaround
+                value = get_pattern('%s="(.*?)"' % tmp_field, element)[0]
+                if value:
+                    values.append("%s %s" % (field, value))
+            print "\t".join(values)
     except Exception, e:
         print e
         if opt_debug:

@@ -750,11 +750,15 @@ class Site(object):
     # Check_MK is now the site, so all tests that somehow rely on the environment should be
     # executed this way.
     def switch_to_site_user(self):
-        env_var_str = "VERSION='%s' " % self.version._version
+        env_vars = {
+            "VERSION": self.version._version,
+        }
         for varname in [ "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS", "PYLINT_ARGS"]:
             if varname in os.environ:
-                env_var_str = "%s='%s' " % (varname, os.environ[varname])
+                env_vars[varname] = os.environ[varname]
 
+        env_var_str = " ".join([ "%s=%s" % (k, pipes.quote(v))
+                                 for k, v in env_vars.items() ]) + " "
 
         cmd = env_var_str + subprocess.list2cmdline(["python"] + sys.argv + [ cmk_path() + "/tests" ])
         args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]

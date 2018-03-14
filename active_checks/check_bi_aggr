@@ -29,8 +29,8 @@ import urllib
 import os
 import time
 
-from requests.packages.urllib3.exceptions import SubjectAltNameWarning
-requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
+from requests.packages.urllib3.exceptions import SubjectAltNameWarning # pylint: disable=import-error
+requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)      # pylint: disable=no-member
 
 # tell requests not to honour "http(s)_proxy" env variables
 proxies = {

@@ -32,8 +32,8 @@ import time
 import cmk.password_store
 cmk.password_store.replace_passwords()
 
-from requests.packages.urllib3.exceptions import SubjectAltNameWarning
-requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
+from requests.packages.urllib3.exceptions import SubjectAltNameWarning # pylint: disable=import-error
+requests.packages.urllib3.disable_warnings(SubjectAltNameWarning) # pylint: disable=no-member
 
 # tell requests not to honour "http(s)_proxy" env variables
 proxies = {

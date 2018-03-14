@@ -5310,7 +5310,7 @@ perfometer_info.append({
 })
 
 # TODO total = None?
-perfometer_info.append(("linear", ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_total,mem_used,+,swap_used,/,100,*", "%"))))
+perfometer_info.append(("linear", ( [ "mem_used", "swap_used", "caches", "mem_free", "swap_free" ], None, ("mem_used,swap_used,+,mem_total,/,100,*", "%"))))
 
 perfometer_info.append({
     "type"      : "linear",

@@ -67,7 +67,7 @@ setup:
 # TODO(sp): Proof of concept only for now, do this in a more general way
 PYTHONPATH := $(realpath ..)
 MYPYPATH := $(realpath typeshed)
-FILES_TO_CHECK := $(realpath ../cmk/ec/settings.py)
+FILES_TO_CHECK := $(realpath $(addprefix ../cmk/ec/,defaults.py export.py settings.py))
 
 sanitize: format test-mypy test-pylint-simple
 

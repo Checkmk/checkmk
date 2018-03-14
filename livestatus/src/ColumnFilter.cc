@@ -30,8 +30,8 @@ std::unique_ptr<Filter> ColumnFilter::partialFilter(
     std::function<bool(const Column &)> predicate) const {
     return predicate(_column)
                ? copy()
-               : std::make_unique<AndingFilter>(
-                     kind(), std::vector<std::unique_ptr<Filter>>());
+               : AndingFilter::make(kind(),
+                                    std::vector<std::unique_ptr<Filter>>());
 }
 
 std::ostream &ColumnFilter::print(std::ostream &os) const {

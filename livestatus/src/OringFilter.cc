@@ -30,6 +30,12 @@
 #include "Filter.h"
 #include "Row.h"
 
+// static
+std::unique_ptr<OringFilter> OringFilter::make(
+    Kind kind, std::vector<std::unique_ptr<Filter>> subfilters) {
+    return std::make_unique<OringFilter>(kind, std::move(subfilters), Secret());
+}
+
 bool OringFilter::accepts(Row row, const contact *auth_user,
                           std::chrono::seconds timezone_offset) const {
     for (const auto &filter : _subfilters) {
@@ -46,7 +52,7 @@ std::unique_ptr<Filter> OringFilter::partialFilter(
     std::transform(
         _subfilters.begin(), _subfilters.end(), std::back_inserter(filters),
         [&](const auto &filter) { return filter->partialFilter(predicate); });
-    return std::make_unique<OringFilter>(kind(), std::move(filters));
+    return make(kind(), std::move(filters));
 }
 
 std::optional<std::string> OringFilter::stringValueRestrictionFor(
@@ -97,7 +103,7 @@ std::unique_ptr<Filter> OringFilter::copy() const {
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->copy(); });
-    return std::make_unique<OringFilter>(kind(), std::move(filters));
+    return make(kind(), std::move(filters));
 }
 
 std::unique_ptr<Filter> OringFilter::negate() const {
@@ -105,7 +111,7 @@ std::unique_ptr<Filter> OringFilter::negate() const {
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->negate(); });
-    return std::make_unique<AndingFilter>(kind(), std::move(filters));
+    return AndingFilter::make(kind(), std::move(filters));
 }
 
 std::ostream &OringFilter::print(std::ostream &os) const {

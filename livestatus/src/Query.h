@@ -29,6 +29,7 @@
 #include <chrono>
 #include <cstdint>
 #include <ctime>
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -79,9 +80,10 @@ public:
         return _all_columns;
     }
 
-    enum class LogicalOperator { and_, or_ };
-
 private:
+    using LogicalConnective = std::function<std::unique_ptr<Filter>(
+        Filter::Kind, std::vector<std::unique_ptr<Filter>>)>;
+
     const Encoding _data_encoding;
     const size_t _max_response_size;
     OutputBuffer &_output;
@@ -115,10 +117,11 @@ private:
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, Filter::Kind kind, LogicalOperator op,
+    void parseAndOrLine(char *line, Filter::Kind kind,
+                        const LogicalConnective &connective,
                         FilterStack &filters);
     void parseNegateLine(char *line, FilterStack &filters);
-    void parseStatsAndOrLine(char *line, LogicalOperator op);
+    void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(char *line);
     void parseColumnHeadersLine(char *line);

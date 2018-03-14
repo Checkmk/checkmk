@@ -41,9 +41,11 @@ class Column;
 class Row;
 
 class OringFilter : public Filter {
+    struct Secret {};
+
 public:
-    OringFilter(Kind kind, std::vector<std::unique_ptr<Filter>> subfilters)
-        : Filter(kind), _subfilters(std::move(subfilters)) {}
+    static std::unique_ptr<OringFilter> make(
+        Kind kind, std::vector<std::unique_ptr<Filter>> subfilters);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> partialFilter(
@@ -56,6 +58,12 @@ public:
                          std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;
+
+    // NOTE: This is effectively private, but it can't be declared like this
+    // because of std::make_unique.
+    OringFilter(Kind kind, std::vector<std::unique_ptr<Filter>> subfilters,
+                Secret /*unused*/)
+        : Filter(kind), _subfilters(std::move(subfilters)) {}
 
 private:
     std::vector<std::unique_ptr<Filter>> _subfilters;

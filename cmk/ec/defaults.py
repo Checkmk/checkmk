@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Defaults for rule pack and configuration"""
 
+from typing import Any, AnyStr, Dict, List  # pylint: disable=unused-import
 import cmk.log
 
 
@@ -34,10 +35,14 @@ import cmk.log
 try:
     _
 except NameError:
-    _ = lambda x: x  # Fake i18n when not available
+    # Fake i18n when not available
+    def _(string):
+        # type: (AnyStr) -> AnyStr
+        return string
 
 
 def default_rule_pack(rules):
+    # type: (List[Dict[str, Any]]) -> Dict[str, object]
     """Returns the default rule pack"""
     return {
         "id": "default",
@@ -48,6 +53,7 @@ def default_rule_pack(rules):
 
 
 def default_config():
+    # type: () -> Dict[str, object]
     """Returns the default configuration"""
     return {
         "rules":          [],  # old pre 1.2.7i1 format. Only used if rule_packs is empty

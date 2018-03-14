@@ -492,8 +492,8 @@ class Site(object):
 
         execute("sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
-            (src_version, new_version_name, self.version.version_path()))
+        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd %s/share/omd/omd.info" %
+            (src_version, new_version_name, self.version.version_path(), self.version.version_path()))
 
         # we should use self.version.version_path() in the RPATH, but that is limited to
         # 32 bytes and our versions exceed this limit. We need to use some hack to make

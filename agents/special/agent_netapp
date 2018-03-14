@@ -450,9 +450,14 @@ def create_dict(instances, custom_key = None, is_counter = True):
 
 # Format config as one liner. Might add extra info identified by config_key
 def format_config(instances, prefix, config_key, config_report = "all",
-                  config_scale = {}, config_rename = {},
-                  extra_info = {}, extra_info_report = "all",
+                  config_scale = None, config_rename = None,
+                  extra_info = None, extra_info_report = "all",
                   delimeter = "\t", skip_missing_config_key = False):
+
+
+    config_scale  = {} if config_scale == None else config_scale
+    config_rename = {} if config_rename == None else config_rename
+    extra_info    = {} if extra_info == None else extra_info
 
     result = []
     values = {}
@@ -562,7 +567,7 @@ def output_error_section():
 
 nodes = []
 def query_nodes(what, node_attribute = "node-name"):
-    global nodes, section_errors
+    global nodes
     if opt_legacy:
         if not nodes:
             node_query = NaElement("system-get-node-info-iter") # pylint: disable=undefined-variable
@@ -687,7 +692,7 @@ def query_counters(what):
                     # Nothing to query..
                     return
 
-                instances_to_query = NaElement("instance-uuids") # pylint: disable=no-member
+                instances_to_query = NaElement("instance-uuids") # pylint: disable=undefined-variable
                 for uuid in instance_uuids:
                     instances_to_query.child_add_string("instance-uuid", uuid)
                 counter_query.child_add(instances_to_query)
@@ -695,7 +700,7 @@ def query_counters(what):
                 return
 
         # Query counters
-        response = server.invoke_elem(counter_query) # pylint: disable=undefined-variable
+        response = server.invoke_elem(counter_query) # pylint: disable=no-member
         if response.results_status() == "failed":
             section_errors.append("In counter %s: %s" % (what, response.results_reason()))
         else:

@@ -30,6 +30,7 @@ import socket
 import subprocess
 
 import cmk.debug
+from cmk.exceptions import MKTerminate
 
 import cmk_base.console as console
 import cmk_base.config as config
@@ -117,6 +118,9 @@ class TCPDataSource(CheckMKAgentDataSource):
                     output.append(data)
                 else:
                     break
+        except MKTerminate:
+            raise
+
         except socket.error, e:
             if cmk.debug.enabled():
                 raise

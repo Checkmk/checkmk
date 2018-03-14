@@ -35,7 +35,7 @@ import cmk.paths
 import cmk.store as store
 import cmk.tty as tty
 import cmk.cpu_tracking as cpu_tracking
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTerminate
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -135,6 +135,10 @@ class DataSource(object):
 
             self._host_sections = host_sections
             return host_sections
+
+        except MKTerminate:
+            raise
+
         except Exception, e:
             self._logger.verbose("ERROR: %s" % e)
             if cmk.debug.enabled():

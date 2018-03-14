@@ -31,7 +31,7 @@ import ast
 from collections import OrderedDict
 
 import cmk.paths
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTerminate
 
 import cmk_base
 import cmk_base.utils
@@ -152,6 +152,9 @@ def load_checks(filelist):
             execfile(f, check_context)
             loaded_files.add(file_name)
 
+        except MKTerminate:
+            raise
+
         except Exception, e:
             console.error("Error in plugin file %s: %s\n", f, e)
             if cmk.debug.enabled():
@@ -246,6 +249,9 @@ def load_check_includes(check_file_path, check_context):
         include_file_path = check_include_file_path(include_file_name)
         try:
             execfile(include_file_path, check_context)
+        except MKTerminate:
+            raise
+
         except Exception, e:
             console.error("Error in check include file %s: %s\n", include_file_path, e)
             if cmk.debug.enabled():

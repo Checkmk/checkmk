@@ -24,10 +24,8 @@
 
 #include "IntFilter.h"
 #include <cstdlib>
-#include <ostream>
 #include "Filter.h"
 #include "IntColumn.h"
-#include "Logger.h"
 #include "Row.h"
 
 IntFilter::IntFilter(Kind kind, const IntColumn &column,
@@ -123,9 +121,6 @@ void IntFilter::findIntLimits(const std::string &column_name, int *lower,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(_column.logger())
-                << "Invalid relational operator " << oper()
-                << " in IntFilter::findIntLimits";
             return;
     }
 }
@@ -182,9 +177,6 @@ bool IntFilter::optimizeBitmask(
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(_column.logger())
-                << "Invalid relational operator " << oper()
-                << " in IntFilter::optimizeBitmask";
             return false;
     }
     return false;  // unreachable

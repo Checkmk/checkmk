@@ -1,0 +1,14 @@
+Title: Add contact group contacts of EC rule if host is not a core host
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521126878
+Class: fix
+
+When an event was received that did not belong to a host in the monitoring the
+contacts of the contact groups specified in a Event Console rule were not
+added to the notification context if the option "Host's contact groups have
+precedence" was set in the Event Console rule. Now the contacts of the
+specified contact groups are added even when the option is set.

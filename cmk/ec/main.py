@@ -4587,7 +4587,8 @@ def add_contacts_from_rule(context, event):
     if event.get("contact_groups") is not None and \
        event.get("contact_groups_notify") and (
            "CONTACTS" not in context or
-           event.get("contact_groups_precedence", "host") != "host"):
+           event.get("contact_groups_precedence", "host") != "host" or
+           not event['core_host']):
         add_contact_information_to_context(context, event["contact_groups"])
 
     # "CONTACTS" is allowed to be missing in the context, cmk --notify will

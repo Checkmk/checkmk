@@ -49,8 +49,8 @@ double current_time(const WinApiAdaptor &winapi);
 class Section {
 public:
     Section(const std::string &outputName, const std::string &configName,
-            const Environment &env, Logger *logger, const WinApiAdaptor &winapi,
-            bool show_header = true);
+            const Environment &env, Logger *logger,
+            const WinApiAdaptor &winapi);
 
     virtual ~Section() = default;
 
@@ -73,13 +73,6 @@ public:
     std::string outputName() const { return _outputName; }
     std::string configName() const { return _configName; }
 
-private:
-    virtual unsigned char separator() const { return ' '; }
-    virtual bool produceOutputInner(
-        std::ostream &out, const std::optional<std::string> &remoteIP) = 0;
-    bool generateOutput(std::string &buffer,
-                        const std::optional<std::string> &remoteIP);
-
 protected:
     const std::string _outputName;
     const std::string _configName;
@@ -88,7 +81,12 @@ protected:
     const WinApiAdaptor &_winapi;
 
 private:
-    const bool _show_header;
+    virtual unsigned char separator() const { return ' '; }
+    virtual bool showHeader() const { return true; }
+    virtual bool produceOutputInner(
+        std::ostream &out, const std::optional<std::string> &remoteIP) = 0;
+    bool generateOutput(std::string &buffer,
+                        const std::optional<std::string> &remoteIP);
 };
 
 #endif  // Section_h

@@ -31,7 +31,7 @@
 
 SectionPS::SectionPS(Configuration &config, Logger *logger,
                      const WinApiAdaptor &winapi)
-    : Section("ps", "ps", config.getEnvironment(), logger, winapi, true)
+    : Section("ps", "ps", config.getEnvironment(), logger, winapi)
     , _use_wmi(config, "ps", "use_wmi", false, winapi)
     , _full_commandline(config, "ps", "full_path", false, winapi) {}
 

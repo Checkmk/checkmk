@@ -153,6 +153,8 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
+    // plugin -> no collective header
+    bool showHeader() const override { return _type != PLUGIN; }
     void collectData(script_execution_mode mode);
     void runContainer(script_container *cont);
     void outputContainers(std::ostream &out);

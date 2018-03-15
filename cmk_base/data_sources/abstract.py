@@ -27,6 +27,7 @@
 import os
 import socket
 import time
+import abc
 
 import cmk.log
 
@@ -51,6 +52,7 @@ from .host_sections import HostSections
 
 class DataSource(object):
     """Abstract base class for all data source classes"""
+    __metaclass__ = abc.ABCMeta
 
     _for_mgmt_board = False
 
@@ -182,6 +184,7 @@ class DataSource(object):
         return self.run(get_raw_data=True)
 
 
+    @abc.abstractmethod
     def _execute(self):
         """Fetches the current agent data from the source specified with
         hostname and ipaddress and returns the result as "raw data" that is
@@ -256,6 +259,7 @@ class DataSource(object):
         return raw_data
 
 
+    @abc.abstractmethod
     def _convert_to_sections(self, raw_data):
         """See _execute() for details"""
         raise NotImplementedError()
@@ -283,6 +287,7 @@ class DataSource(object):
         return self._gather_check_plugin_names()
 
 
+    @abc.abstractmethod
     def _gather_check_plugin_names(self):
         raise NotImplementedError()
 
@@ -291,10 +296,12 @@ class DataSource(object):
         self._enforced_check_plugin_names = check_plugin_names
 
 
+    @abc.abstractmethod
     def _cpu_tracking_id(self):
         raise NotImplementedError()
 
 
+    @abc.abstractmethod
     def id(self):
         """Return a unique identifier for this data source type
         It is used to identify the different data source types."""
@@ -314,6 +321,7 @@ class DataSource(object):
         return ":".join([self.id(), self._hostname, self._ipaddress])
 
 
+    @abc.abstractmethod
     def describe(self):
         """Return a short textual description of the datasource"""
         raise NotImplementedError()
@@ -508,6 +516,8 @@ class DataSource(object):
 
 class CheckMKAgentDataSource(DataSource):
     """Abstract base class for all data sources that work with the Check_MK agent data format"""
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, hostname, ipaddress):
         super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
         self._is_main_agent_data_source = False
@@ -749,6 +759,8 @@ class CheckMKAgentDataSource(DataSource):
 
 class ManagementBoardDataSource(DataSource):
     """Abstract base class for all data sources that work with the management board configuration"""
+    __metaclass__ = abc.ABCMeta
+
     _for_mgmt_board = True
 
     def __init__(self, hostname, ipaddress):

@@ -48,6 +48,10 @@ public:
     std::string value() const { return _value; }
     std::unique_ptr<Filter> partialFilter(
         std::function<bool(const Column &)> predicate) const override;
+    bool is_tautology() const override;
+    bool is_contradiction() const override;
+    Filters disjuncts() const override;
+    Filters conjuncts() const override;
 
 private:
     const Column &_column;

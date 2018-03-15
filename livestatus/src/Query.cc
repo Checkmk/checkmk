@@ -210,7 +210,7 @@ void Query::parseAndOrLine(char *line, Filter::Kind kind,
                            const LogicalConnective &connective,
                            FilterStack &filters) {
     auto number = nextNonNegativeIntegerArgument(&line);
-    std::vector<std::unique_ptr<Filter>> subfilters;
+    Filters subfilters;
     for (auto i = 0; i < number; ++i) {
         if (filters.empty()) {
             throw std::runtime_error(
@@ -241,7 +241,7 @@ void Query::parseNegateLine(char *line, FilterStack &filters) {
 void Query::parseStatsAndOrLine(char *line,
                                 const LogicalConnective &connective) {
     auto number = nextNonNegativeIntegerArgument(&line);
-    std::vector<std::unique_ptr<Filter>> subfilters;
+    Filters subfilters;
     for (auto i = 0; i < number; ++i) {
         if (_stats_columns.empty()) {
             throw std::runtime_error(

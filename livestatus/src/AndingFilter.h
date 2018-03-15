@@ -34,7 +34,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 #include "Filter.h"
 #include "contact_fwd.h"
 class Column;
@@ -44,8 +43,7 @@ class AndingFilter : public Filter {
     struct Secret {};
 
 public:
-    static std::unique_ptr<Filter> make(
-        Kind kind, std::vector<std::unique_ptr<Filter>> subfilters);
+    static std::unique_ptr<Filter> make(Kind kind, Filters subfilters);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> partialFilter(
@@ -58,15 +56,18 @@ public:
                          std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;
+    bool is_tautology() const override;
+    bool is_contradiction() const override;
+    Filters disjuncts() const override;
+    Filters conjuncts() const override;
 
     // NOTE: This is effectively private, but it can't be declared like this
     // because of std::make_unique.
-    AndingFilter(Kind kind, std::vector<std::unique_ptr<Filter>> subfilters,
-                 Secret /*unused*/)
+    AndingFilter(Kind kind, Filters subfilters, Secret /*unused*/)
         : Filter(kind), _subfilters(std::move(subfilters)) {}
 
 private:
-    std::vector<std::unique_ptr<Filter>> _subfilters;
+    Filters _subfilters;
 
     std::ostream &print(std::ostream &os) const override;
 };

@@ -26,15 +26,24 @@
 #include <iterator>
 #include <memory>
 #include <ostream>
+#include <vector>
 #include "Filter.h"
 #include "OringFilter.h"
 #include "Row.h"
 
 // static
-std::unique_ptr<Filter> AndingFilter::make(
-    Kind kind, std::vector<std::unique_ptr<Filter>> subfilters) {
-    return std::make_unique<AndingFilter>(kind, std::move(subfilters),
-                                          Secret());
+std::unique_ptr<Filter> AndingFilter::make(Kind kind, Filters subfilters) {
+    Filters filters;
+    for (const auto &filter : subfilters) {
+        if (filter->is_contradiction()) {
+            return OringFilter::make(kind, Filters());
+        }
+        auto conjuncts = filter->conjuncts();
+        filters.insert(filters.end(),
+                       std::make_move_iterator(conjuncts.begin()),
+                       std::make_move_iterator(conjuncts.end()));
+    }
+    return std::make_unique<AndingFilter>(kind, std::move(filters), Secret());
 }
 
 bool AndingFilter::accepts(Row row, const contact *auth_user,
@@ -49,7 +58,7 @@ bool AndingFilter::accepts(Row row, const contact *auth_user,
 
 std::unique_ptr<Filter> AndingFilter::partialFilter(
     std::function<bool(const Column &)> predicate) const {
-    std::vector<std::unique_ptr<Filter>> filters;
+    Filters filters;
     std::transform(
         _subfilters.begin(), _subfilters.end(), std::back_inserter(filters),
         [&](const auto &filter) { return filter->partialFilter(predicate); });
@@ -87,19 +96,33 @@ bool AndingFilter::optimizeBitmask(const std::string &column_name,
 }
 
 std::unique_ptr<Filter> AndingFilter::copy() const {
-    std::vector<std::unique_ptr<Filter>> filters;
-    std::transform(_subfilters.begin(), _subfilters.end(),
-                   std::back_inserter(filters),
-                   [](const auto &filter) { return filter->copy(); });
-    return make(kind(), std::move(filters));
+    return make(kind(), conjuncts());
 }
 
 std::unique_ptr<Filter> AndingFilter::negate() const {
-    std::vector<std::unique_ptr<Filter>> filters;
+    Filters filters;
     std::transform(_subfilters.begin(), _subfilters.end(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->negate(); });
     return OringFilter::make(kind(), std::move(filters));
+}
+
+bool AndingFilter::is_tautology() const { return _subfilters.empty(); }
+
+bool AndingFilter::is_contradiction() const { return false; }
+
+Filters AndingFilter::disjuncts() const {
+    Filters filters;
+    filters.push_back(copy());
+    return filters;
+}
+
+Filters AndingFilter::conjuncts() const {
+    Filters filters;
+    std::transform(_subfilters.begin(), _subfilters.end(),
+                   std::back_inserter(filters),
+                   [](const auto &filter) { return filter->copy(); });
+    return filters;
 }
 
 std::ostream &AndingFilter::print(std::ostream &os) const {

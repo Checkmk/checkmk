@@ -24,9 +24,7 @@
 
 #include "TimeFilter.h"
 #include <cstdlib>
-#include <ostream>
 #include "Filter.h"
-#include "Logger.h"
 #include "Row.h"
 #include "TimeColumn.h"
 
@@ -125,9 +123,6 @@ void TimeFilter::findIntLimits(const std::string &column_name, int *lower,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(_column.logger())
-                << "Invalid relational operator " << oper()
-                << " in TimeFilter::findIntLimits";
             return;
     }
 }
@@ -184,9 +179,6 @@ bool TimeFilter::optimizeBitmask(const std::string &column_name, uint32_t *mask,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(_column.logger())
-                << "Invalid relational operator " << oper()
-                << " in TimeFilter::optimizeBitmask";
             return false;
     }
     return false;  // unreachable

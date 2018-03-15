@@ -31,7 +31,7 @@
 SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
     : Section("fileinfo", "fileinfo", config.getEnvironment(), logger, winapi,
-              true, '|')
+              true)
     , _fileinfo_paths(config, "fileinfo", "path", winapi) {}
 
 bool SectionFileinfo::produceOutputInner(std::ostream &out,

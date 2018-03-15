@@ -52,15 +52,13 @@ double current_time(const WinApiAdaptor &winapi) {
 
 Section::Section(const std::string &outputName, const std::string &configName,
                  const Environment &env, Logger *logger,
-                 const WinApiAdaptor &winapi, bool show_header /* = true */,
-                 char separator /* = ' ' */)
+                 const WinApiAdaptor &winapi, bool show_header /* = true */)
     : _outputName(outputName)
     , _configName(configName)
     , _env(env)
     , _logger(logger)
     , _winapi(winapi)
-    , _show_header(show_header)
-    , _separator(separator) {}
+    , _show_header(show_header) {}
 
 bool Section::produceOutput(std::ostream &out,
                             const std::optional<std::string> &remoteIP,
@@ -77,8 +75,8 @@ bool Section::produceOutput(std::ostream &out,
         if (!output.empty()) {
             if (!_outputName.empty() && _show_header) {
                 out << left_bracket << _outputName;
-                if ((_separator != ' ') && !nested) {
-                    out << ":sep(" << (int)_separator << ")";
+                if (auto sep = separator(); sep != ' ' && !nested) {
+                    out << ":sep(" << static_cast<unsigned>(sep) << ")";
                 }
                 out << right_bracket << "\n";
             }

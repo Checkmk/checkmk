@@ -30,9 +30,9 @@ SectionGroup::SectionGroup(const std::string &outputName,
                            const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi, bool nested,
                            bool show_header, char separator)
-    : Section(outputName, configName, env, logger, winapi, show_header,
-              separator)
-    , _nested(nested) {}
+    : Section(outputName, configName, env, logger, winapi, show_header)
+    , _nested(nested)
+    , _separator(separator) {}
 
 SectionGroup *SectionGroup::withSubSection(Section *section) {
     _subsections.push_back(std::unique_ptr<Section>(section));

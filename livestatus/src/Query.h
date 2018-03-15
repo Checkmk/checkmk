@@ -81,8 +81,8 @@ public:
     }
 
 private:
-    using LogicalConnective = std::function<std::unique_ptr<Filter>(
-        Filter::Kind, std::vector<std::unique_ptr<Filter>>)>;
+    using LogicalConnective =
+        std::function<std::unique_ptr<Filter>(Filter::Kind, Filters)>;
 
     const Encoding _data_encoding;
     const size_t _max_response_size;
@@ -90,7 +90,7 @@ private:
     QueryRenderer *_renderer_query;
     Table &_table;
     bool _keepalive;
-    using FilterStack = std::vector<std::unique_ptr<Filter>>;
+    using FilterStack = Filters;
     std::unique_ptr<Filter> _filter;
     contact *_auth_user;
     std::unique_ptr<Filter> _wait_condition;

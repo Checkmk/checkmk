@@ -35,8 +35,13 @@
 #include <string>
 #include "contact_fwd.h"
 class Column;
+class Filter;
 class Row;
 
+using Filters = std::vector<std::unique_ptr<Filter>>;
+
+/// A propositional formula over column value relations, kept in negation normal
+/// form.
 class Filter {
 public:
     enum Kind { row, stats, wait_condition };
@@ -57,6 +62,20 @@ public:
                                  std::chrono::seconds timezone_offset) const;
     virtual std::unique_ptr<Filter> copy() const = 0;
     virtual std::unique_ptr<Filter> negate() const = 0;
+
+    /// Checks for a *syntactic* tautology.
+    virtual bool is_tautology() const = 0;
+
+    /// Checks for a *syntactic* contradiction.
+    virtual bool is_contradiction() const = 0;
+
+    /// Combining the returned filters with *or* yields a filter equivalent to
+    /// the current one.
+    virtual Filters disjuncts() const = 0;
+
+    /// Combining the returned filters with *and* yields a filter equivalent to
+    /// the current one.
+    virtual Filters conjuncts() const = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const Filter &filter) {
         return filter.print(os);

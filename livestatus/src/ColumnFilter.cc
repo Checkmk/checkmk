@@ -23,15 +23,27 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ColumnFilter.h"
-#include <vector>
 #include "AndingFilter.h"
 
 std::unique_ptr<Filter> ColumnFilter::partialFilter(
     std::function<bool(const Column &)> predicate) const {
-    return predicate(_column)
-               ? copy()
-               : AndingFilter::make(kind(),
-                                    std::vector<std::unique_ptr<Filter>>());
+    return predicate(_column) ? copy() : AndingFilter::make(kind(), Filters());
+}
+
+bool ColumnFilter::is_tautology() const { return false; }
+
+bool ColumnFilter::is_contradiction() const { return false; }
+
+Filters ColumnFilter::disjuncts() const {
+    Filters filters;
+    filters.push_back(copy());
+    return filters;
+}
+
+Filters ColumnFilter::conjuncts() const {
+    Filters filters;
+    filters.push_back(copy());
+    return filters;
 }
 
 std::ostream &ColumnFilter::print(std::ostream &os) const {

@@ -26,7 +26,6 @@
 #include <algorithm>
 #include <ostream>
 #include <stdexcept>
-#include <vector>
 #include "Aggregator.h"
 #include "AndingFilter.h"
 #include "Column.h"
@@ -51,8 +50,7 @@ std::unique_ptr<Aggregator> StatsColumnCount::createAggregator(
 StatsColumnOp::StatsColumnOp(AggregationFactory factory, Column *column)
     : _factory(std::move(factory))
     , _column(column)
-    , _filter(AndingFilter::make(Filter::Kind::stats,
-                                 std::vector<std::unique_ptr<Filter>>())) {}
+    , _filter(AndingFilter::make(Filter::Kind::stats, Filters())) {}
 
 std::unique_ptr<Filter> StatsColumnOp::stealFilter() {
     throw std::runtime_error("not a counting aggregator");

@@ -739,7 +739,6 @@ do
 	       if [ -z "$YES" ] ; then echo ")" ; fi
 	   fi &&
            mkdir -p $DESTDIR$sharedir &&
-           tar xzf $SRCDIR/share.tar.gz -C $DESTDIR$sharedir &&
            mkdir -p $DESTDIR$python_lib_dir &&
            tar xzf $SRCDIR/lib.tar.gz -C $DESTDIR$python_lib_dir &&
            tar xzf $SRCDIR/base.tar.gz -C $DESTDIR$python_lib_dir &&

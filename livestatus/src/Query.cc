@@ -35,6 +35,7 @@
 #include <utility>
 #include "Aggregator.h"
 #include "AndingFilter.h"
+#include "ChronoUtils.h"
 #include "Column.h"
 #include "Filter.h"
 #include "Logger.h"
@@ -713,12 +714,29 @@ void Query::finish(QueryRenderer &q) {
 
 std::optional<std::string> Query::stringValueRestrictionFor(
     const std::string &column_name) const {
-    return _filter->stringValueRestrictionFor(column_name);
+    auto result = _filter->stringValueRestrictionFor(column_name);
+    if (result) {
+        Debug(_logger) << "column " << _table.name() << "." << column_name
+                       << " is restricted to '" << *result << "'";
+    } else {
+        Debug(_logger) << "column " << _table.name() << "." << column_name
+                       << " is unrestricted";
+    }
+    return result;
 }
 
 void Query::findIntLimits(const std::string &column_name, int *lower,
                           int *upper) const {
-    return _filter->findIntLimits(column_name, lower, upper, timezoneOffset());
+    _filter->findIntLimits(column_name, lower, upper, timezoneOffset());
+    // NOTE: Despite of the name of this method, we always use it for time
+    // ranges.
+    Debug(_logger)
+        << "column " << _table.name() << "." << column_name
+        << " is restricted to ["
+        << FormattedTimePoint(std::chrono::system_clock::from_time_t(*lower))
+        << ", "
+        << FormattedTimePoint(std::chrono::system_clock::from_time_t(*upper))
+        << ") resp. [" << *lower << ", " << *upper << ")";
 }
 
 void Query::optimizeBitmask(const std::string &column_name,

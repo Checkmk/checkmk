@@ -1,0 +1,32 @@
+Title: Windows agent crashed with a lot of transport protocols available
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521100568
+Class: fix
+
+Werk #5704 introduced querying the supported IP families (IPv4/IPv6)
+upon agent start. This query makes use of the WinAPI function
+WSCEnumProtocols. This function turned out to contain a severe bug:
+if the protocol buffer passed as in/out parameter is not big enough
+to accommodate all available transport protocols, the function corrupts
+the heap by writing to memory past the buffer. This violates the
+MSDN documentation of WSCEnumProtocols, also the example code attached
+to the documentation is broken.
+
+So far, the bug has only been reported on older 32 bit systems
+(Windows Server 2008). However, the real extent of the problem is not
+known as there are no bug reports about WSCEnumProtocols publicly
+available to determine, if the function is broken in all Windows
+versions or just in some. A key factor is the number of
+configured/supported transport protocols: if the number grows large
+enough, WSCEnumProtocols causes the described buffer overflow.
+
+Now the use of WSCEnumProtocols has been changed so that - on the
+contrary to the documentation in MSDN - the function is always called
+twice to prevent the buffer overflow by allocating the necessary buffer
+only after first querying the necessary buffer size.
+
+

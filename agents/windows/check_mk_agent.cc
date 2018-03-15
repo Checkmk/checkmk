@@ -170,7 +170,6 @@ namespace {
 
 bool do_file = false;
 static FILE *fileout;
-static const DWORD DEFAULT_BUFFER_SIZE = 16384L;
 
 class MillisecondsFormatter : public Formatter {
     void format(ostream &os, const LogRecord &record) override {
@@ -183,17 +182,21 @@ class MillisecondsFormatter : public Formatter {
     }
 };
 
-
 bool supportIPv6() {
     INT iNuminfo = 0;
-    DWORD bufferSize = DEFAULT_BUFFER_SIZE;
-    std::vector<BYTE> protocolInfo(bufferSize, 0);
-    int iErrno = 0;
-    auto lpProtocolInfo = reinterpret_cast<LPWSAPROTOCOL_INFOW>(protocolInfo.data());
+    DWORD bufferSize = 0;
+    std::vector<BYTE> protocolInfo;
+    INT iErrno = NO_ERROR;
+    LPWSAPROTOCOL_INFOW lpProtocolInfo = nullptr;
 
+    // WSCEnumProtocols is broken (nice!). You *must* call it 1st time with null
+    // buffer & bufferSize 0. Otherwise it will corrupt your heap in case the
+    // necessary buffer size exceeds your allocated buffer. Do never ever trust
+    // Microsoft WinAPI documentation!
     while ((iNuminfo = WSCEnumProtocols(nullptr, lpProtocolInfo, &bufferSize, &iErrno)) == SOCKET_ERROR) {
         if (iErrno == WSAENOBUFS) {
             protocolInfo.resize(bufferSize, 0);
+            lpProtocolInfo = reinterpret_cast<LPWSAPROTOCOL_INFOW>(protocolInfo.data());
         } else {
             std::cerr << "WSCEnumProtocols failed with error: " << iErrno << std::endl;
             WSACleanup();

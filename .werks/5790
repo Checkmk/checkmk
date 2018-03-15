@@ -1,0 +1,12 @@
+Title: Fixed broken calculation of correct host check command
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.4.0p27
+Date: 1521126138
+Class: fix
+
+The host check commands <tt>Assume always to be up</tt>, <tt>Use the status of ...</tt> and <tt>TCP connect</tt>
+did not work properly, when the host had no explicit IPv4 address set. This has been fixed.
+

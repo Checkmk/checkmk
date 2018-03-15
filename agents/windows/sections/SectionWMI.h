@@ -49,6 +49,7 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
+    unsigned char separator() const override { return ','; }
     void outputTable(std::ostream &out, wmi::Result &data);
 
     std::wstring _namespace{L"Root\\cimv2"};

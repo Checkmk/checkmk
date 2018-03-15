@@ -65,12 +65,15 @@ protected:
         std::ostream &out, const std::optional<std::string> &remoteIP) override;
 
 private:
+    unsigned char separator() const override { return _separator; }
+
     std::vector<std::unique_ptr<Section>> _subsections;
     std::vector<std::unique_ptr<Section>> _dependent_subsections;
     bool _toggle_if_missing{false};
     bool _fail_if_missing{false};
     const bool _nested;
     time_t _disabled_until{0};
+    const unsigned char _separator;
 };
 
 #endif  // SectionGroup_h

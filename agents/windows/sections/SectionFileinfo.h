@@ -42,6 +42,7 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
+    unsigned char separator() const override { return '|'; }
     void get_directories(const std::string base_path);
     void determine_filepaths(const std::string search_pattern);
     void determine_filepaths_full_search(const std::string base_path,

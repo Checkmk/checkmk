@@ -50,7 +50,7 @@ class Section {
 public:
     Section(const std::string &outputName, const std::string &configName,
             const Environment &env, Logger *logger, const WinApiAdaptor &winapi,
-            bool show_header = true, char separator = ' ');
+            bool show_header = true);
 
     virtual ~Section() = default;
 
@@ -74,6 +74,7 @@ public:
     std::string configName() const { return _configName; }
 
 private:
+    virtual unsigned char separator() const { return ' '; }
     virtual bool produceOutputInner(
         std::ostream &out, const std::optional<std::string> &remoteIP) = 0;
     bool generateOutput(std::string &buffer,
@@ -88,7 +89,6 @@ protected:
 
 private:
     const bool _show_header;
-    const char _separator;
 };
 
 #endif  // Section_h

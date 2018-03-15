@@ -149,8 +149,6 @@ void RunImmediate(const char *mode, int argc, char **argv);
 //  '----------------------------------------------------------------------'
 namespace {
 
-const DWORD DEFAULT_BUFFER_SIZE = 16384L;
-
 class UnpackError : public std::runtime_error {
 public:
     UnpackError(const std::string &what) : std::runtime_error(what) {}
@@ -171,20 +169,24 @@ class MillisecondsFormatter : public Formatter {
 // service stuff. At least, let us *not* make this yet another global variable
 // and access them from other compilation units...
 const WinApi s_winapi;
-
 bool supportIPv6() {
     INT iNuminfo = 0;
-    DWORD bufferSize = DEFAULT_BUFFER_SIZE;
-    std::vector<BYTE> protocolInfo(bufferSize, 0);
-    int iErrno = 0;
-    auto lpProtocolInfo =
-        reinterpret_cast<LPWSAPROTOCOL_INFOW>(protocolInfo.data());
+    DWORD bufferSize = 0;
+    std::vector<BYTE> protocolInfo;
+    INT iErrno = NO_ERROR;
+    LPWSAPROTOCOL_INFOW lpProtocolInfo = nullptr;
 
+    // WSCEnumProtocols is broken (nice!). You *must* call it 1st time with null
+    // buffer & bufferSize 0. Otherwise it will corrupt your heap in case the
+    // necessary buffer size exceeds your allocated buffer. Do never ever trust
+    // Microsoft WinAPI documentation!
     while ((iNuminfo = s_winapi.WSCEnumProtocols(nullptr, lpProtocolInfo,
                                                  &bufferSize, &iErrno)) ==
            SOCKET_ERROR) {
         if (iErrno == WSAENOBUFS) {
             protocolInfo.resize(bufferSize, 0);
+            lpProtocolInfo =
+                reinterpret_cast<LPWSAPROTOCOL_INFOW>(protocolInfo.data());
         } else {
             std::cerr << "WSCEnumProtocols failed with error: " << iErrno
                       << std::endl;

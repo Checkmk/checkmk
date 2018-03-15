@@ -54,8 +54,6 @@ public:
 
     virtual ~Section() = default;
 
-    Section *withRealtimeSupport();
-
     virtual void postprocessConfig() {}
 
     /// TODO please implement me
@@ -66,9 +64,8 @@ public:
      * used by the section. The caller will give the threads a chance
      * to complete
      **/
-    virtual std::vector<HANDLE> stopAsync() { return std::vector<HANDLE>(); }
+    virtual std::vector<HANDLE> stopAsync() { return {}; }
     virtual bool isEnabled() const { return true; }
-    virtual bool realtimeSupport() const { return _realtime_support; }
 
     bool produceOutput(std::ostream &out,
                        const std::optional<std::string> &remoteIP,
@@ -92,7 +89,6 @@ protected:
 private:
     const bool _show_header;
     const char _separator;
-    bool _realtime_support{false};
 };
 
 #endif  // Section_h

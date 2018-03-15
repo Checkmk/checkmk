@@ -62,11 +62,6 @@ Section::Section(const std::string &outputName, const std::string &configName,
     , _show_header(show_header)
     , _separator(separator) {}
 
-Section *Section::withRealtimeSupport() {
-    _realtime_support = true;
-    return this;
-}
-
 bool Section::produceOutput(std::ostream &out,
                             const std::optional<std::string> &remoteIP,
                             bool nested) {

@@ -1024,7 +1024,7 @@ EOF
 	       echo
 	       echo -e "You can access the new Multisite GUI at http://localhost${url_prefix}check_mk/"
            fi ||
-	   echo "ERROR!"
+               ( echo "ERROR!" ; exit 1 )
 	   exit
         ;;
         n|N|no|No|Nein|nein)

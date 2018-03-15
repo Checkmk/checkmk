@@ -821,16 +821,6 @@ do
            mkdir -p $DESTDIR$confdir/multisite.d &&
 	   mkdir -p $DESTDIR$confdir/conf.d &&
 	   echo 'All files in this directory that end with .mk will be read in after main.mk' > $DESTDIR$confdir/conf.d/README &&
-	   mkdir -p $DESTDIR$bindir &&
-	   chmod 755 $DESTDIR$bindir/check_mk &&
-           ln -snf check_mk $DESTDIR$bindir/cmk &&
-	   echo -e "#!/bin/sh\nexec python $bindir/check_mk.py -P "'"$@"' > $DESTDIR$bindir/mkp &&
-           chmod 755 $DESTDIR$bindir/mkp &&
-	   sed -i "s#@BINDIR@#$bindir#g"              $DESTDIR$sharedir/check_mk_templates.cfg &&
-	   sed -i "s#@VARDIR@#$vardir#g"              $DESTDIR$sharedir/check_mk_templates.cfg &&
-	   sed -i "s#@CHECK_ICMP@#$check_icmp_path#g" $DESTDIR$sharedir/check_mk_templates.cfg &&
-	   sed -i "s#@CGIURL@#${url_prefix}nagios/cgi-bin/#g" $DESTDIR$sharedir/check_mk_templates.cfg &&
-	   sed -i "s#@PNPURL@#${url_prefix}pnp4nagios/#g" $DESTDIR$sharedir/check_mk_templates.cfg &&
            mkdir -p "$DESTDIR$nagconfdir"
 	   if [ ! -e $DESTDIR$nagconfdir/check_mk_templates.cfg ] ; then
  	       ln -s $sharedir/check_mk_templates.cfg $DESTDIR$nagconfdir 2>/dev/null
@@ -928,53 +918,6 @@ Please install mod_python and restart Apache."
   </Directory>
 </IfModule>
 EOF
-           elif [ "$OMD_ROOT" ] ; then
-           ln -sfn ../../check_mk/apache-local.conf $OMD_ROOT/etc/apache/conf.d/check_mk.conf
-           cat <<EOF > $OMD_ROOT/etc/check_mk/apache-local.conf
-# Local Apache configuration file for Check_MK
-# This file has been created by a local ./setup.sh of Check_MK
-# within the OMD site $OMD_SITE
-#
-# This shares the check_mk agents delivered with the OMD
-# version via HTTP
-Alias /$OMD_SITE/check_mk/agents $OMD_ROOT/local/share/check_mk/agents
-<Directory $OMD_ROOT/local/share/check_mk/agents>
-  Options +Indexes
-  Order deny,allow
-  allow from all
-</Directory>
-
-<IfModule mod_python.c>
-
-  Alias /$OMD_SITE/check_mk $OMD_ROOT/local/share/check_mk/web/htdocs
-  <Directory $OMD_ROOT/local/share/check_mk/web/htdocs>
-        AddHandler mod_python .py
-        PythonHandler index
-        PythonInterpreter $OMD_SITE
-        DirectoryIndex index.py
-
-        Order deny,allow
-        allow from all
-
-        ErrorDocument 403 "<h1>Authentication Problem</h1>Either you've entered an invalid password or the authentication<br>configuration of your check_mk web pages is incorrect.<br>"
-        ErrorDocument 500 "<h1>Server or Configuration Problem</h1>A Server problem occurred. You'll find details in the error log of Apache. One possible reason is, that the file <tt>$OMD_ROOT/etc/htpasswd</tt> is missing. You can manage that file with <tt>htpasswd</tt> or <tt>htpasswd2</tt>."
-  </Directory>
-  # Automation is done without HTTP Auth
-  <Location "/$OMD_SITE/check_mk/automation.py">
-       Order allow,deny
-       Allow from all
-       Satisfy any
-  </Location>
-</IfModule>
-
-<IfModule !mod_python.c>
-  Alias /$OMD_SITE/check_mk $OMD_ROOT/local/share/check_mk/web/htdocs
-  <Directory $OMD_ROOT/local/share/check_mk/web/htdocs>
-        Deny from all
-        ErrorDocument 403 "<h1>Check_mk: Incomplete Apache2 Installation</h1>You need mod_python in order to run the web interface of check_mk.<br> Please install mod_python and restart Apache."
-  </Directory>
-</IfModule>
-EOF
            fi &&
 	   for d in $DESTDIR$apache_config_dir/../*/*$NAME{,.conf} ; do
 	       if [ -e "$d" ] && ! grep -q "$web_dir/htdocs" $d ; then
@@ -986,8 +929,6 @@ EOF
            # WATO. Also create an empty and Apache-writable auth.serials
            serials_file=$DESTDIR${htpasswd_file%/*}/auth.serials &&
            touch "$serials_file" &&
-           (chown $wwwuser "$serials_file" || true) &&
-           (chown $wwwuser "$htpasswd_file" || true) &&
 	   create_sudo_configuration &&
            if [ "$enable_mkeventd" = yes ]
            then
@@ -999,7 +940,6 @@ EOF
                    install -m 755 bin/mkevent bin/mkeventd $DESTDIR$bindir &&
                    install -m 4754 bin/mkeventd_open514 -g $wwwgroup $DESTDIR$bindir &&
                    mkdir -p $DESTDIR$confdir/mkeventd.d/wato &&
-                   chown $wwwuser.$wwwgroup $DESTDIR$confdir/mkeventd.d/wato &&
                    if [ ! -e "$DESTDIR$confdir/multisite.d/mkeventd.mk" ] ; then
                        mkdir -p $DESTDIR$confdir/multisite.d &&
                        echo 'mkeventd_enabled = True' > $DESTDIR$confdir/multisite.d/mkeventd.mk

@@ -33,6 +33,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 #include "contact_fwd.h"
 class Column;
 class Filter;

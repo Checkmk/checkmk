@@ -66,6 +66,7 @@ protected:
 
 private:
     unsigned char separator() const override { return _separator; }
+    bool showHeader() const override { return _show_header; }
 
     std::vector<std::unique_ptr<Section>> _subsections;
     std::vector<std::unique_ptr<Section>> _dependent_subsections;
@@ -74,6 +75,7 @@ private:
     const bool _nested;
     time_t _disabled_until{0};
     const unsigned char _separator;
+    const bool _show_header;
 };
 
 #endif  // SectionGroup_h

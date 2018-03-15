@@ -376,7 +376,7 @@ SectionPluginGroup::SectionPluginGroup(
     script_statistics_t &script_statistics, Logger *logger,
     const WinApiAdaptor &winapi, const std::string &user)
     : Section(typeToSection(type), typeToSection(type), config.getEnvironment(),
-              logger, winapi, type != PLUGIN)  // plugin -> no collective header
+              logger, winapi)
     , _path(path)
     , _type(type)
     , _user(user)

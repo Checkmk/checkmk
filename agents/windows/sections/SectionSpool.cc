@@ -34,7 +34,7 @@ namespace fs = std::experimental::filesystem;
 
 SectionSpool::SectionSpool(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
-    : Section("spool", "spool", env, logger, winapi, false) {}
+    : Section("spool", "spool", env, logger, winapi) {}
 
 bool SectionSpool::produceOutputInner(std::ostream &out,
                                       const std::optional<std::string> &) {

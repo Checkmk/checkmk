@@ -57,11 +57,6 @@ SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
     : Section(outputName, configName, env, logger, winapi)
     , _nameNumberMap(nameNumberMap) {}
 
-SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
-    _toggle_if_missing = true;
-    return this;
-}
-
 bool SectionPerfcounter::produceOutputInner(
     std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionPerfcounter::produceOutputInner";

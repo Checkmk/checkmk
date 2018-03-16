@@ -745,7 +745,7 @@ def agent_encryption_of(hostname):
     if settings:
         return settings[0]
     else:
-        return {'use_regular': 'disabled',
+        return {'use_regular': 'disable',
                 'use_realtime': 'enforce'}
 
 

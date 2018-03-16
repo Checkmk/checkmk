@@ -135,16 +135,19 @@ class TCPDataSource(CheckMKAgentDataSource):
         elif len(output) < 16:
             raise MKAgentError("Too short output from agent: %r" % output)
 
-        if encryption_settings["use_regular"] == "enforce" and \
-           output.startswith("<<<check_mk>>>"):
+
+        output_is_plaintext = output.startswith("<<<")
+        if encryption_settings["use_regular"] == "enforce" and output_is_plaintext:
             raise MKAgentError("Agent output is plaintext but encryption is enforced by configuration")
 
-        if encryption_settings["use_regular"] != "disabled":
+        if not output_is_plaintext and encryption_settings["use_regular"] in ["enforce", "allow"]:
             try:
-                # currently ignoring version and timestamp
-                #protocol_version = int(output[0:2])
+                # simply check if the protocol is an actual number
+                protocol_version = int(output[0:2])
 
                 output = self._decrypt_package(output[2:], encryption_settings["passphrase"])
+            except ValueError:
+                raise MKAgentError("Unsupported protocol version: %s" % output[:2])
             except Exception, e:
                 if encryption_settings["use_regular"] == "enforce":
                     raise MKAgentError("Failed to decrypt agent output: %s" % e)

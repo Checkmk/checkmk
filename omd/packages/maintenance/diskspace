@@ -149,6 +149,14 @@ def delete_file(path, reason):
     try:
         log('Deleting file (%s): %s' % (reason, path))
         os.unlink(path)
+
+        # Also delete any .info files which are connected to the rrd file
+        if path.endswith(".rrd"):
+            info_path = "%sinfo" % path[:-3]
+            if os.path.exists(info_path):
+                log('Deleting file (%s): %s' % (reason, info_path))
+                os.unlink(info_path)
+
         return True
     except Exception, e:
         error('Error while deleting %s: %s' % (path, e))

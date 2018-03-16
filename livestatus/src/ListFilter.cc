@@ -113,13 +113,12 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
 
 std::optional<std::string> ListFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
+    if (column_name != columnName()) {
+        return {};  // wrong column
+    }
     switch (oper()) {
         case RelationalOperator::greater_or_equal:
-            if (column_name == columnName()) {
-                return {value()};
-            } else {
-                return {};
-            }
+            return {value()};
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:

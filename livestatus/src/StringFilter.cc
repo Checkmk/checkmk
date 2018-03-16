@@ -65,13 +65,12 @@ bool StringFilter::accepts(Row row, const contact * /* auth_user */,
 
 std::optional<std::string> StringFilter::stringValueRestrictionFor(
     const std::string &column_name) const {
+    if (column_name != columnName()) {
+        return {};  // wrong column
+    }
     switch (oper()) {
         case RelationalOperator::equal:
-            if (column_name == columnName()) {
-                return {value()};
-            } else {
-                return {};
-            }
+            return {value()};
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:

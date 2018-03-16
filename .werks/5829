@@ -1,0 +1,15 @@
+Title: Fixed calculation of time ranges when using disjunctions in queries.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521197227
+Class: fix
+
+Disjunctions (Or:, WaitConditionOr:, StatsOr:) were handled like conjuctions
+(And:, WaitConditionAnd:, StatsAnd:) when time ranges were calculated for
+the log and statehist tables. This has been fixed now.
+
+Note that the Check_MK GUI does not create such queries, so only people
+using hand-rolled queries in scripts etc. were affected.

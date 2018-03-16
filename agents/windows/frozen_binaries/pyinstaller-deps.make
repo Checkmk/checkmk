@@ -1,4 +1,4 @@
-.PHONY: new_packages
+.PHONY: new_packages actual_packages
 
 # Python 2.7.13 yields a bug concerning the LoadLibrary() function on windows,
 # see http://bugs.python.org/issue29082 . Use 2.7.12 instead.
@@ -92,6 +92,18 @@ $(PYTHON_PACKAGES): $(BUILD_DIR)/drive_c/Python27/python.exe
 	mkdir -p $(CURDIR)/src/pip && \
 	cp --no-clobber -r * $(CURDIR)/src/pip
 
+current_packages: $(PYTHON_PACKAGES)
+
+src/vcredist_x86.exe:
+	mkdir -p src && \
+	cd src && \
+		curl -O https://download.microsoft.com/download/5/D/8/5D8C65CB-C849-4025-8E95-C3966CAFD8AE/vcredist_x86.exe
+
+download_sources: src/python-$(PYTHON_VERSION).msi current_packages src/vcredist_x86.exe
+
+setup:
+	sudo apt-get install scons upx-ucl wine
+
 new_packages: $(BUILD_DIR)/drive_c/Python27/python.exe
 	# Use this target to obtain the newest versions of the needed packages.
 	# You should update the explicit dependencies afterwars because the automatic
@@ -107,11 +119,3 @@ new_packages: $(BUILD_DIR)/drive_c/Python27/python.exe
 	wine c:\\Python27\\python.exe -m pip download pyOpenSSL && \
 	mkdir -p $(CURDIR)/src/pip && \
 	cp -r * $(CURDIR)/src/pip
-
-src/vcredist_x86.exe:
-	mkdir -p src && \
-	cd src && \
-		curl -O https://download.microsoft.com/download/5/D/8/5D8C65CB-C849-4025-8E95-C3966CAFD8AE/vcredist_x86.exe
-
-setup:
-	sudo apt-get install scons upx-ucl wine

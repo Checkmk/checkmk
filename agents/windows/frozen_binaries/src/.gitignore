@@ -1,4 +1,3 @@
-python-*.msi
 get-pip.py
 pyinstaller
 virtual-wine

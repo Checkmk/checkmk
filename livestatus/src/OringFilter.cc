@@ -24,6 +24,7 @@
 
 #include "OringFilter.h"
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <ostream>
 #include <vector>
@@ -85,9 +86,20 @@ std::optional<std::string> OringFilter::stringValueRestrictionFor(
 void OringFilter::findIntLimits(const std::string &colum_nname, int *lower,
                                 int *upper,
                                 std::chrono::seconds timezone_offset) const {
-    for (const auto &filter : _subfilters) {
-        filter->findIntLimits(colum_nname, lower, upper, timezone_offset);
+    if (_subfilters.empty()) {
+        return;  // NOTE: Ugly special case necessary for correctness!
     }
+    int current_lower = std::numeric_limits<int>::max();
+    int current_upper = std::numeric_limits<int>::min();
+    for (const auto &filter : _subfilters) {
+        int lo = *lower;
+        int up = *upper;
+        filter->findIntLimits(colum_nname, &lo, &up, timezone_offset);
+        current_lower = std::min(current_lower, lo);
+        current_upper = std::max(current_upper, up);
+    }
+    *lower = current_lower;
+    *upper = current_upper;
 }
 
 bool OringFilter::optimizeBitmask(const std::string &column_name,

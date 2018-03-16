@@ -29,10 +29,9 @@ SectionGroup::SectionGroup(const std::string &outputName,
                            const std::string &configName,
                            const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi, bool nested,
-                           bool show_header, char separator)
+                           bool show_header)
     : Section(outputName, configName, env, logger, winapi)
     , _nested(nested)
-    , _separator(separator)
     , _show_header(show_header) {}
 
 SectionGroup *SectionGroup::withSubSection(Section *section) {

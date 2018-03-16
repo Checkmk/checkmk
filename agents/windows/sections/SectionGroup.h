@@ -43,8 +43,7 @@ class SectionGroup : public Section {
 public:
     SectionGroup(const std::string &outputName, const std::string &configName,
                  const Environment &env, Logger *logger,
-                 const WinApiAdaptor &winapi, bool nested, bool show_header,
-                 char separator);
+                 const WinApiAdaptor &winapi, bool nested, bool show_header);
 
     /**
      * add a section that will be printed as part of this group
@@ -65,7 +64,7 @@ protected:
         std::ostream &out, const std::optional<std::string> &remoteIP) override;
 
 private:
-    unsigned char separator() const override { return _separator; }
+    unsigned char separator() const override { return ','; }
     bool showHeader() const override { return _show_header; }
 
     std::vector<std::unique_ptr<Section>> _subsections;
@@ -74,7 +73,6 @@ private:
     bool _fail_if_missing{false};
     const bool _nested;
     time_t _disabled_until{0};
-    const unsigned char _separator;
     const bool _show_header;
 };
 

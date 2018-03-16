@@ -66,63 +66,56 @@ bool IntFilter::accepts(Row row, const contact *auth_user,
     return false;  // unreachable
 }
 
-void IntFilter::findIntLimits(const std::string &column_name, int *lower,
-                              int *upper,
-                              std::chrono::seconds /*timezone_offset*/) const {
+std::optional<int32_t> IntFilter::greatestLowerBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds /* timezone_offset */) const {
     if (column_name != columnName()) {
-        return;  // wrong column
+        return {};  // wrong column
     }
-    if (*lower >= *upper) {
-        return;  // already empty interval
-    }
-
-    /* [lower, upper[ is some interval. This filter might restrict that interval
-       to a smaller interval.
-     */
     switch (oper()) {
         case RelationalOperator::equal:
-            if (_ref_value >= *lower && _ref_value < *upper) {
-                *lower = _ref_value;
-                *upper = _ref_value + 1;
-            } else {
-                *lower = *upper;
-            }
-            return;
-        case RelationalOperator::not_equal:
-            if (_ref_value == *lower) {
-                *lower = *lower + 1;
-            } else if (_ref_value == *upper - 1) {
-                *upper = *upper - 1;
-            }
-            return;
-        case RelationalOperator::less:
-            if (_ref_value < *upper) {
-                *upper = _ref_value;
-            }
-            return;
         case RelationalOperator::greater_or_equal:
-            if (_ref_value > *lower) {
-                *lower = _ref_value;
-            }
-            return;
+            return {_ref_value};
         case RelationalOperator::greater:
-            if (_ref_value >= *lower) {
-                *lower = _ref_value + 1;
-            }
-            return;
+            return {_ref_value + 1};
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:             // superset
+        case RelationalOperator::doesnt_match:        // not superset
+        case RelationalOperator::equal_icase:         // subset
+        case RelationalOperator::not_equal_icase:     // not subset
+        case RelationalOperator::matches_icase:       // contains any
+        case RelationalOperator::doesnt_match_icase:  // contains none of
+        case RelationalOperator::less:
         case RelationalOperator::less_or_equal:
-            if (_ref_value < *upper - 1) {
-                *upper = _ref_value + 1;
-            }
-            return;
-        case RelationalOperator::matches:
-        case RelationalOperator::doesnt_match:
-        case RelationalOperator::equal_icase:
-        case RelationalOperator::not_equal_icase:
-        case RelationalOperator::matches_icase:
-        case RelationalOperator::doesnt_match_icase:
-            return;
+            return {};
     }
+    return {};  // unreachable
+}
+
+std::optional<int32_t> IntFilter::leastUpperBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds /* timezone_offset */) const {
+    if (column_name != columnName()) {
+        return {};  // wrong column
+    }
+    switch (oper()) {
+        case RelationalOperator::equal:
+        case RelationalOperator::less_or_equal:
+            return {_ref_value};
+        case RelationalOperator::less:
+            return {_ref_value - 1};
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:             // superset
+        case RelationalOperator::doesnt_match:        // not superset
+        case RelationalOperator::equal_icase:         // subset
+        case RelationalOperator::not_equal_icase:     // not subset
+        case RelationalOperator::matches_icase:       // contains any
+        case RelationalOperator::doesnt_match_icase:  // contains none of
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+            return {};
+    }
+    return {};  // unreachable
 }
 
 bool IntFilter::optimizeBitmask(

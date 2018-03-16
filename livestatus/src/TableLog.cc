@@ -27,6 +27,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 #include "Column.h"
@@ -128,14 +129,12 @@ void TableLog::answerQuery(Query *query) {
         return;
     }
 
-    int since = 0;
-    int until = time(nullptr) + 1;
-    // Optimize time interval for the query. In log querys
-    // there should always be a time range in form of one
-    // or two filter expressions over time. We use that
-    // to limit the number of logfiles we need to scan and
-    // to find the optimal entry point into the logfile
-    query->findIntLimits("time", &since, &until);
+    // Optimize time interval for the query. In log querys there should always
+    // be a time range in form of one or two filter expressions over time. We
+    // use that to limit the number of logfiles we need to scan and to find the
+    // optimal entry point into the logfile
+    int since = query->greatestLowerBoundFor("time").value_or(0);
+    int until = query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1;
 
     // The second optimization is for log message types.
     // We want to load only those log type that are queried.

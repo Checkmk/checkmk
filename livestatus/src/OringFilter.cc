@@ -24,7 +24,6 @@
 
 #include "OringFilter.h"
 #include <iterator>
-#include <limits>
 #include <memory>
 #include <ostream>
 #include <vector>
@@ -83,23 +82,30 @@ std::optional<std::string> OringFilter::stringValueRestrictionFor(
     return restriction;
 }
 
-void OringFilter::findIntLimits(const std::string &colum_nname, int *lower,
-                                int *upper,
-                                std::chrono::seconds timezone_offset) const {
-    if (_subfilters.empty()) {
-        return;  // NOTE: Ugly special case necessary for correctness!
-    }
-    int current_lower = std::numeric_limits<int>::max();
-    int current_upper = std::numeric_limits<int>::min();
+std::optional<int32_t> OringFilter::greatestLowerBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds timezone_offset) const {
+    std::optional<int32_t> result;
     for (const auto &filter : _subfilters) {
-        int lo = *lower;
-        int up = *upper;
-        filter->findIntLimits(colum_nname, &lo, &up, timezone_offset);
-        current_lower = std::min(current_lower, lo);
-        current_upper = std::max(current_upper, up);
+        if (auto glb =
+                filter->greatestLowerBoundFor(column_name, timezone_offset)) {
+            result = result ? std::min(*result, *glb) : glb;
+        }
     }
-    *lower = current_lower;
-    *upper = current_upper;
+    return result;
+}
+
+std::optional<int32_t> OringFilter::leastUpperBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds timezone_offset) const {
+    std::optional<int32_t> result;
+    for (const auto &filter : _subfilters) {
+        if (auto lub =
+                filter->leastUpperBoundFor(column_name, timezone_offset)) {
+            result = result ? std::max(*result, *lub) : lub;
+        }
+    }
+    return result;
 }
 
 bool OringFilter::optimizeBitmask(const std::string &column_name,

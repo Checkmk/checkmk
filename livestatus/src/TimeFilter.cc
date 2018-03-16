@@ -67,64 +67,58 @@ bool TimeFilter::accepts(Row row, const contact * /*auth_user*/,
     return false;  // unreachable
 }
 
-void TimeFilter::findIntLimits(const std::string &column_name, int *lower,
-                               int *upper,
-                               std::chrono::seconds timezone_offset) const {
+std::optional<int32_t> TimeFilter::greatestLowerBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds timezone_offset) const {
     if (column_name != columnName()) {
-        return;  // wrong column
+        return {};  // wrong column
     }
-    if (*lower >= *upper) {
-        return;  // already empty interval
-    }
-
     int32_t ref_value = _ref_value - timezone_offset.count();
-
-    /* [lower, upper[ is some interval. This filter might restrict that interval
-       to a smaller interval. */
     switch (oper()) {
         case RelationalOperator::equal:
-            if (ref_value >= *lower && ref_value < *upper) {
-                *lower = ref_value;
-                *upper = ref_value + 1;
-            } else {
-                *lower = *upper;
-            }
-            return;
-        case RelationalOperator::not_equal:
-            if (ref_value == *lower) {
-                *lower = *lower + 1;
-            } else if (ref_value == *upper - 1) {
-                *upper = *upper - 1;
-            }
-            return;
-        case RelationalOperator::less:
-            if (ref_value < *upper) {
-                *upper = ref_value;
-            }
-            return;
         case RelationalOperator::greater_or_equal:
-            if (ref_value > *lower) {
-                *lower = ref_value;
-            }
-            return;
+            return {ref_value};
         case RelationalOperator::greater:
-            if (ref_value >= *lower) {
-                *lower = ref_value + 1;
-            }
-            return;
+            return {ref_value + 1};
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:             // superset
+        case RelationalOperator::doesnt_match:        // not superset
+        case RelationalOperator::equal_icase:         // subset
+        case RelationalOperator::not_equal_icase:     // not subset
+        case RelationalOperator::matches_icase:       // contains any
+        case RelationalOperator::doesnt_match_icase:  // contains none of
+        case RelationalOperator::less:
         case RelationalOperator::less_or_equal:
-            if (ref_value < *upper - 1) {
-                *upper = ref_value + 1;
-            }
-            return;
-        case RelationalOperator::matches:
-        case RelationalOperator::doesnt_match:
-        case RelationalOperator::equal_icase:
-        case RelationalOperator::not_equal_icase:
-        case RelationalOperator::matches_icase:
-        case RelationalOperator::doesnt_match_icase:
-            return;
+            return {};
     }
+    return {};  // unreachable
+}
+
+std::optional<int32_t> TimeFilter::leastUpperBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds timezone_offset) const {
+    if (column_name != columnName()) {
+        return {};  // wrong column
+    }
+    int32_t ref_value = _ref_value - timezone_offset.count();
+    switch (oper()) {
+        case RelationalOperator::equal:
+        case RelationalOperator::less_or_equal:
+            return {ref_value};
+        case RelationalOperator::less:
+            return {ref_value - 1};
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:             // superset
+        case RelationalOperator::doesnt_match:        // not superset
+        case RelationalOperator::equal_icase:         // subset
+        case RelationalOperator::not_equal_icase:     // not subset
+        case RelationalOperator::matches_icase:       // contains any
+        case RelationalOperator::doesnt_match_icase:  // contains none of
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+            return {};
+    }
+    return {};  // unreachable
 }
 
 bool TimeFilter::optimizeBitmask(const std::string &column_name, uint32_t *mask,

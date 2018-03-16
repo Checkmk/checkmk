@@ -75,12 +75,30 @@ std::optional<std::string> AndingFilter::stringValueRestrictionFor(
     return {};
 }
 
-void AndingFilter::findIntLimits(const std::string &colum_nname, int *lower,
-                                 int *upper,
-                                 std::chrono::seconds timezone_offset) const {
+std::optional<int32_t> AndingFilter::greatestLowerBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds timezone_offset) const {
+    std::optional<int32_t> result;
     for (const auto &filter : _subfilters) {
-        filter->findIntLimits(colum_nname, lower, upper, timezone_offset);
+        if (auto glb =
+                filter->greatestLowerBoundFor(column_name, timezone_offset)) {
+            result = result ? std::max(*result, *glb) : glb;
+        }
     }
+    return result;
+}
+
+std::optional<int32_t> AndingFilter::leastUpperBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds timezone_offset) const {
+    std::optional<int32_t> result;
+    for (const auto &filter : _subfilters) {
+        if (auto lub =
+                filter->leastUpperBoundFor(column_name, timezone_offset)) {
+            result = result ? std::min(*result, *lub) : lub;
+        }
+    }
+    return result;
 }
 
 bool AndingFilter::optimizeBitmask(const std::string &column_name,

@@ -23,9 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStateHistory.h"
+#include <cstdint>
 #include <ctime>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <ostream>
 #include <set>
 #include <stdexcept>
@@ -289,20 +291,19 @@ void TableStateHistory::answerQuery(Query *query) {
     std::set<HostServiceKey> object_blacklist;
 
     _query = query;
-    _since = 0;
-    _until = time(nullptr) + 1;
 
-    // Optimize time interval for the query. In log querys
-    // there should always be a time range in form of one
-    // or two filter expressions over time. We use that
-    // to limit the number of logfiles we need to scan and
-    // to find the optimal entry point into the logfile
-    _query->findIntLimits("time", &_since, &_until);
-    if (_since == 0) {
+    // Optimize time interval for the query. In log querys there should always
+    // be a time range in form of one or two filter expressions over time. We
+    // use that to limit the number of logfiles we need to scan and to find the
+    // optimal entry point into the logfile
+    if (auto glb = _query->greatestLowerBoundFor("time")) {
+        _since = *glb;
+    } else {
         query->invalidRequest(
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
+    _until = _query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1;
 
     _query_timeframe = _until - _since - 1;
     if (_query_timeframe == 0) {

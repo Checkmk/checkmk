@@ -861,16 +861,18 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
         if len(output) == 0: # may be caused by xinetd not allowing our address
             raise MKAgentError("Empty output from agent at TCP port %d" % port)
 
-        if encryption_settings["use_regular"] == "enforce" and \
-            output.startswith("<<<check_mk>>>"):
+        output_is_plaintext = output.startswith("<<<")
+
+        if encryption_settings["use_regular"] == "enforce" and output_is_plaintext:
             raise MKGeneralException("Agent output is plaintext but encryption is enforced by configuration")
 
-        if encryption_settings["use_regular"] != "disabled":
+        if not output_is_plaintext and encryption_settings["use_regular"] in ["enforce", "allow"]:
             try:
-                # currently ignoring version and timestamp
-                #protocol_version = int(output[0:2])
-
+                # currently ignoring version
+                protocol_version = int(output[0:2])
                 output = decrypt_package(output[2:], encryption_settings["passphrase"])
+            except ValueError:
+                raise MKAgentError("Unsupported protocol version: %s" % output[:2])
             except Exception, e:
                 if encryption_settings["use_regular"] == "enforce":
                     raise MKGeneralException("Failed to decrypt agent output: %s" % e)

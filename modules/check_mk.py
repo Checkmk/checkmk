@@ -2391,7 +2391,7 @@ def agent_encryption_settings(hostname):
     if settings:
         return settings[0]
     else:
-        return {'use_regular': 'disabled',
+        return {'use_regular': 'disable',
                 'use_realtime': 'enforce'}
 
 def snmp_port_of(hostname):

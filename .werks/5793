@@ -1,0 +1,18 @@
+Title: Agent Encryption: No longer trying to decrypt all incoming tcp data when a "Encryption" rule with an arbitrary value was set
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521206167
+Class: fix
+
+The agent output decryption function was incorrectly called for hosts with a specifically "Encryption" rule set.
+In most scenarios the decryption failed, because the plain text was obviously not decrypted correctly.
+The fallback of the decryption error was to use the plain text instead for further processing - this was conincidentally the right bevhaviour.
+
+
+However, sometimes the decryption succeeded, which lead to garbled agent output and missing agent sections.
+
+
+

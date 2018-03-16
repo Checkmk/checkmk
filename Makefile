@@ -47,6 +47,8 @@ DEMO_SUFFIX        :=
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
 
 SHELL              := /bin/bash
+# TODO: Be more strict - Add this:
+#SHELL              := /bin/bash -e -o pipefail
 NAME               := check_mk
 PREFIX             := /usr
 BINDIR             := $(PREFIX)/bin
@@ -193,13 +195,17 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
 	$(MAKE) -C enterprise agents/windows/plugins/cmk-update-agent.exe
 endif
-	@EXCLUDES= ; \
+	@set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
 	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != $(DISTNAME).tar.gz ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
+	    done ; \
+	else \
+	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,src} enterprise/agents/windows/{build64,build}; do \
+		EXCLUDES+=" --exclude $$F" ; \
 	    done ; \
 	fi ; \
 	if [ -d check-mk-$(EDITION)-$(OMD_VERSION) ]; then \
@@ -213,17 +219,14 @@ endif
 	    --exclude .gitignore \
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
-	    --exclude $(DIST_ARCHIVE) \
-	    --exclude enterprise/agents/plugins/{build,src} \
-	    --exclude enterprise/agents/windows/{build64,build} \
 	    $$EXCLUDES \
-	    * .werks .clang* | tar x -C check-mk-$(EDITION)-$(OMD_VERSION) ; \
+	    * .werks .clang* | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
 	if [ -f COMMIT ]; then \
 	    rm COMMIT ; \
-	fi ; \
+	fi
 	tar -cz --wildcards -f $(DIST_ARCHIVE) \
 	    $(TAROPTS) \
-	    check-mk-$(EDITION)-$(OMD_VERSION) ; \
+	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"

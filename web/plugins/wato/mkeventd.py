@@ -1243,7 +1243,7 @@ def mode_mkeventd_rule_packs(phase):
 
         if type_ == ec.RulePackType.internal:
             export_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_export", nr)])
-            html.icon_button(export_url, _("Make this rule pack available in the Exension Packages module"), "cached")
+            html.icon_button(export_url, _("Make this rule pack available in the Extension Packages module"), "cached")
 
         # Icons for mkp export and disabling
         table.cell("", css="buttons")

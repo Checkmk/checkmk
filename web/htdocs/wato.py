@@ -10915,7 +10915,8 @@ def mode_edit_user(phase):
     else:
         forms.section(_("Fallback notifications"), simple=True)
 
-        html.checkbox("fallback_contact", False, label = _("Receive fallback notifications"))
+        html.checkbox("fallback_contact", user.get("fallback_contact", False),
+                      label = _("Receive fallback notifications"))
 
         html.help(_("In case none of your notification rules handles a certain event a notification "
                  "will be sent to this contact. This makes sure that in that case at least <i>someone</i> "

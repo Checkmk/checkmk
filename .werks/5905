@@ -1,0 +1,11 @@
+Title: Configured "Receive fallback notifications" attribute of users was not displayed correctly
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1521206306
+Class: fix
+
+The option was correctly saved for users, but always displayed as "unchecked" checkbox when
+editing a user.

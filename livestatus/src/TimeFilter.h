@@ -29,6 +29,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include "ColumnFilter.h"
 #include "Filter.h"
@@ -45,8 +46,13 @@ public:
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
 
-    void findIntLimits(const std::string &column_name, int *lower, int *upper,
-                       std::chrono::seconds timezone_offset) const override;
+    std::optional<int32_t> greatestLowerBoundFor(
+        const std::string &column_name,
+        std::chrono::seconds timezone_offset) const override;
+
+    std::optional<int32_t> leastUpperBoundFor(
+        const std::string &column_name,
+        std::chrono::seconds timezone_offset) const override;
 
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          std::chrono::seconds timezone_offset) const override;

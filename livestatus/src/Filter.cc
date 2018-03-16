@@ -31,9 +31,17 @@ std::optional<std::string> Filter::stringValueRestrictionFor(
     return {};
 }
 
-void Filter::findIntLimits(const std::string& /* column_name */,
-                           int* /* lower */, int* /* upper */,
-                           std::chrono::seconds /* timezone_offset */) const {}
+std::optional<int32_t> Filter::greatestLowerBoundFor(
+    const std::string& /* column_name */,
+    std::chrono::seconds /* timezone_offset */) const {
+    return {};
+}
+
+std::optional<int32_t> Filter::leastUpperBoundFor(
+    const std::string& /* column_name */,
+    std::chrono::seconds /* timezone_offset */) const {
+    return {};
+}
 
 bool Filter::optimizeBitmask(const std::string& /* column_name */,
                              uint32_t* /* mask */,

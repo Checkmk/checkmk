@@ -50,8 +50,12 @@ public:
         std::function<bool(const Column &)> predicate) const override;
     std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
-    void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
-                       std::chrono::seconds timezone_offset) const override;
+    std::optional<int32_t> greatestLowerBoundFor(
+        const std::string &column_name,
+        std::chrono::seconds timezone_offset) const override;
+    std::optional<int32_t> leastUpperBoundFor(
+        const std::string &column_name,
+        std::chrono::seconds timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> copy() const override;

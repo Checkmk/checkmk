@@ -725,18 +725,36 @@ std::optional<std::string> Query::stringValueRestrictionFor(
     return result;
 }
 
-void Query::findIntLimits(const std::string &column_name, int *lower,
-                          int *upper) const {
-    _filter->findIntLimits(column_name, lower, upper, timezoneOffset());
-    // NOTE: Despite of the name of this method, we always use it for time
-    // ranges.
-    Debug(_logger)
-        << "column " << _table.name() << "." << column_name
-        << " is restricted to ["
-        << FormattedTimePoint(std::chrono::system_clock::from_time_t(*lower))
-        << ", "
-        << FormattedTimePoint(std::chrono::system_clock::from_time_t(*upper))
-        << ") resp. [" << *lower << ", " << *upper << ")";
+std::optional<int32_t> Query::greatestLowerBoundFor(
+    const std::string &column_name) const {
+    auto result = _filter->greatestLowerBoundFor(column_name, timezoneOffset());
+    if (result) {
+        Debug(_logger) << "column " << _table.name() << "." << column_name
+                       << " has greatest lower bound " << *result << " ("
+                       << FormattedTimePoint(
+                              std::chrono::system_clock::from_time_t(*result))
+                       << ")";
+    } else {
+        Debug(_logger) << "column " << _table.name() << "." << column_name
+                       << " has no greatest lower bound";
+    }
+    return result;
+}
+
+std::optional<int32_t> Query::leastUpperBoundFor(
+    const std::string &column_name) const {
+    auto result = _filter->leastUpperBoundFor(column_name, timezoneOffset());
+    if (result) {
+        Debug(_logger) << "column " << _table.name() << "." << column_name
+                       << " has least upper bound " << *result << " ("
+                       << FormattedTimePoint(
+                              std::chrono::system_clock::from_time_t(*result))
+                       << ")";
+    } else {
+        Debug(_logger) << "column " << _table.name() << "." << column_name
+                       << " has least upper bound";
+    }
+    return result;
 }
 
 void Query::optimizeBitmask(const std::string &column_name,

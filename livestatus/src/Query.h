@@ -71,8 +71,10 @@ public:
 
     std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
-    void findIntLimits(const std::string &column_name, int *lower,
-                       int *upper) const;
+    std::optional<int32_t> greatestLowerBoundFor(
+        const std::string &column_name) const;
+    std::optional<int32_t> leastUpperBoundFor(
+        const std::string &column_name) const;
     void optimizeBitmask(const std::string &column_name,
                          uint32_t *bitmask) const;
     const Filter *filter() const { return _filter.get(); }

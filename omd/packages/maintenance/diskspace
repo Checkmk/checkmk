@@ -152,10 +152,10 @@ def delete_file(path, reason):
 
         # Also delete any .info files which are connected to the rrd file
         if path.endswith(".rrd"):
-            info_path = "%sinfo" % path[:-3]
-            if os.path.exists(info_path):
-                log('Deleting file (%s): %s' % (reason, info_path))
-                os.unlink(info_path)
+            path = "%sinfo" % path[:-3]
+            if os.path.exists(path):
+                log('Deleting file (%s): %s' % (reason, path))
+                os.unlink(path)
 
         return True
     except Exception, e:

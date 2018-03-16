@@ -154,7 +154,7 @@ void SectionManager::loadStaticSections(Configuration &config,
                    ->withToggleIfMissing());
 
     addSection((new SectionGroup("wmi_cpuload", "wmi_cpuload", _env, _logger,
-                                 _winapi, true, true, ','))
+                                 _winapi, true, true))
                    ->withToggleIfMissing()
                    ->withSubSection(
                        (new SectionWMI("system_perf", "system_perf", _env,
@@ -167,7 +167,7 @@ void SectionManager::loadStaticSections(Configuration &config,
 
     addSection(
         (new SectionGroup("msexch", "msexch", _env, _logger, _winapi, false,
-                          false, ','))
+                          false))
             ->withToggleIfMissing()
             ->withSubSection(
                 (new SectionWMI("msexch_activesync", "msexch_activesync", _env,

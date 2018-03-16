@@ -30,7 +30,7 @@
 
 SectionSkype::SectionSkype(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
-    : SectionGroup("skype", "skype", env, logger, winapi, true, true, ',')
+    : SectionGroup("skype", "skype", env, logger, winapi, true, true)
     , _nameNumberMap(_logger, _winapi) {
     withToggleIfMissing();
 

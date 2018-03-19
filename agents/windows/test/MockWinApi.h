@@ -222,7 +222,6 @@ public:
                                LPFILETIME lpUserTime));
     MOCK_CONST_METHOD1(GetStartupInfo, VOID(LPSTARTUPINFO lpStartupInfo));
     MOCK_CONST_METHOD1(GetSystemInfo, VOID(LPSYSTEM_INFO lpSystemInfo));
-    MOCK_CONST_METHOD1(GetSystemTime, VOID(LPSYSTEMTIME lpSystemTime));
     MOCK_CONST_METHOD1(GetVersionEx,
                        WINBOOL(LPOSVERSIONINFO lpVersionInformation));
     MOCK_CONST_METHOD8(

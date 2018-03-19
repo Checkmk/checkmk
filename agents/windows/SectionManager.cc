@@ -132,9 +132,9 @@ void SectionManager::loadStaticSections(Configuration &config,
     addSection(new SectionCheckMK(config, only_from, _script_statistics,
                                   _logger, _winapi));
     addSection(new SectionUptime(_env, _logger, _winapi));
-    addSection((new SectionDF(_env, _logger, _winapi)));
+    addSection(new SectionDF(_env, _logger, _winapi));
     addSection(new SectionPS(config, _logger, _winapi));
-    addSection((new SectionMem(_env, _logger, _winapi)));
+    addSection(new SectionMem(_env, _logger, _winapi));
     addSection(new SectionFileinfo(config, _logger, _winapi));
     addSection(new SectionServices(_env, _logger, _winapi));
 

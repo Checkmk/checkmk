@@ -1,0 +1,11 @@
+Title: Fixed missing McAfee AV client baklet for Windows systems
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i4
+Date: 1521452086
+
+

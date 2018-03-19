@@ -1,0 +1,13 @@
+Title: mk_postgres: reduce the amount of psql sessions opened by the plugin
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521648160
+Class: feature
+
+Previously, the number of psql sessions scaled linearly with the number of
+databases. Now the number of psql sessions opened by the plugin is constant.
+Additionally, the sessions of some sections were combined to further
+reduce the total number of psql sessions.

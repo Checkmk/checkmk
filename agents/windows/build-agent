@@ -18,65 +18,67 @@ set -e
 . /$CHROOT_BUILD_DIR/agents/windows/build.sh
 
 parse-args "$@"
-# For some weird reason, saving the target dir for 'cd' in an intermediate
-# variable is necessary to prevent some desktop env's (at least Cinnamon)
-# from opening a fresh file manager window! Please do not ask why...
+
 windowsdir="/$CHROOT_BUILD_DIR/agents/windows"
-cd "$windowsdir"
+(
+    cd "/$CHROOT_BUILD_DIR/agents/windows"
 
-autoreconf --install
+    autoreconf --install
 
-build_archs=(32 64)
+    build_archs=(32 64)
 
-if [[ " $targets " =~ " integrationtest " && "$targets" != integrationtest ]] ; then
-    echo "integrationtest cannot be combined with other targets"
-    exit 1
-fi
+    if [[ " $targets " =~ " integrationtest " && "$targets" != integrationtest ]] ; then
+        echo "integrationtest cannot be combined with other targets"
+        exit 1
+    fi
 
-if [[ " $targets " =~ " check " && "$targets" != check ]] ; then
-    echo "check cannot be combined with other targets"
-    exit 1
-fi
+    if [[ " $targets " =~ " check " && "$targets" != check ]] ; then
+        echo "check cannot be combined with other targets"
+        exit 1
+    fi
 
-if [[ "$targets" == unittest || "$targets" == integrationtest ]] ; then
-    # Only unittest or integrationtest
-    build_archs=()
-elif [[ "$targets" == check ]] ; then
-    build_archs=(64)
-elif [[ " $targets " =~ " unittest " ]] ; then
-    # unittest together with other target(s)
-    targets=${targets/unittest/}
-fi
+    if [[ "$targets" == unittest || "$targets" == integrationtest ]] ; then
+        # Only unittest or integrationtest
+        build_archs=()
+    elif [[ "$targets" == check ]] ; then
+        build_archs=(64)
+    elif [[ " $targets " =~ " unittest " ]] ; then
+        # unittest together with other target(s)
+        targets=${targets/unittest/}
+    fi
 
-# Build 32 and 64 bit in parallel, wait for child processes to terminate.
-children=()
-for arch in "${build_archs[@]}" ; do
-    build $arch &
-    children+=($!)
-done
+    # Build 32 and 64 bit in parallel, wait for child processes to terminate.
+    children=()
+    for arch in "${build_archs[@]}" ; do
+        build $arch &
+        children+=($!)
+    done
 
-for pid in "${children[@]}" ; do
-    # If any subprocess fails, wait for the rest to exit in a controlled way.
-    wait $pid || { wait; exit 1; }
-done
+    for pid in "${children[@]}" ; do
+        # If any subprocess fails, wait for the rest to exit in a controlled way.
+        wait $pid || { wait; exit 1; }
+    done
 
-# If no special targets given, produce msi installer as post-install step.
-if [[ -z "$targets" ]] ; then
-    VERSION=$(grep PACKAGE_VERSION= configure | sed "s/.*\x27\(.*\)\x27/\1/g")
-    cd msibuild
-    make BUILD_VERSION=$(cat ../build_version) CHECK_MK_VERSION=$VERSION
-    chmod +x check_mk_agent.msi
-    mv check_mk_agent.msi ..
-    cd -
-fi
+    # If no special targets given, produce msi installer as post-install step.
+    if [[ -z "$targets" ]] ; then
+        VERSION=$(grep PACKAGE_VERSION= configure | sed "s/.*\x27\(.*\)\x27/\1/g")
+        (
+            cd msibuild
+            make BUILD_VERSION=$(cat ../build_version) CHECK_MK_VERSION=$VERSION
+            chmod +x check_mk_agent.msi
+            mv check_mk_agent.msi ..
+            cd -
+        )
+    fi
 
-if [[ ! "$targets" =~ clean && "$targets" != integrationtest ]] ; then
-    # Run unittest only in 64 bit
-    targets=unittest
-    build 64
-fi
+    if [[ ! "$targets" =~ clean && "$targets" != integrationtest ]] ; then
+        # Run unittest only in 64 bit
+        targets=unittest
+        build 64
+    fi
 
-if [[ " $targets " =~ " integrationtest " ]] ; then
-    targets=integrationtest
-    build 64
-fi
+    if [[ " $targets " =~ " integrationtest " ]] ; then
+        targets=integrationtest
+        build 64
+    fi
+)

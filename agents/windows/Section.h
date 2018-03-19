@@ -65,7 +65,6 @@ public:
      * to complete
      **/
     virtual std::vector<HANDLE> stopAsync() { return {}; }
-    virtual bool isEnabled() const { return true; }
 
     bool produceOutput(std::ostream &out,
                        const std::optional<std::string> &remoteIP,

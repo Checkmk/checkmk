@@ -1,6 +1,6 @@
+#include "SectionEventlog.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "sections/SectionEventlog.h"
 #include "types.h"
 
 using std::string;

@@ -4,14 +4,15 @@ noinst_LIBRARIES = libcheck_mk_agent.a
 noinst_PROGRAMS = MontyPython
 
 AUTOMAKE_OPTIONS = foreign
-AM_CPPFLAGS = -O2 -Wformat=2 -Werror -Wall -fno-rtti -std=c++17 -gdwarf-2 \
-              -DCHECK_MK_VERSION='"$(VERSION)"' -D__USE_MINGW_ANSI_STDIO -DSI_SUPPORT_IOSTREAMS
+AM_CPPFLAGS = -I$(top_srcdir)/sections -O2 -Wformat=2 -Werror -Wall -fno-rtti \
+              -std=c++17 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION)"' \
+              -D__USE_MINGW_ANSI_STDIO -DSI_SUPPORT_IOSTREAMS
 AM_LDFLAGS = -static -static-libgcc -static-libstdc++
 LD_COMMON = -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp -lstdc++fs
 
 check_mk_agent_LDADD = check_mk_agent.res libcheck_mk_agent.a $(LD_COMMON)
 
-WindowsAgentTest_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/sections -I$(top_srcdir)/test
+WindowsAgentTest_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/test
 WindowsAgentTest_LDADD = libcheck_mk_agent.a -lgtest -lgmock $(LD_COMMON)
 
 wmitest_LDADD = $(LD_COMMON)
@@ -75,7 +76,6 @@ libcheck_mk_agent_a_SOURCES = \
         PerfCounter.cc \
         PerfCounterCommon.cc \
         RotatingFileHandler.cc \
-        Section.cc \
         SectionManager.cc \
         SettingsCollector.cc \
         Thread.cc \
@@ -85,6 +85,7 @@ libcheck_mk_agent_a_SOURCES = \
         types.cc \
         win_error.cc \
         wmiHelper.cc \
+        sections/Section.cc \
         sections/SectionCheckMK.cc \
         sections/SectionDF.cc \
         sections/SectionEventlog.cc \

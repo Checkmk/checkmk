@@ -36,8 +36,7 @@ SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
 bool SectionFileinfo::produceOutputInner(std::ostream &out,
                                          const std::optional<std::string> &) {
     Debug(_logger) << "SectionFileinfo::produceOutputInner";
-    out << std::fixed << std::setprecision(0)
-        << section_helpers::current_time(_winapi) << "\n";
+    out << std::fixed << section_helpers::current_time() << "\n";
 
     for (const std::string &path : *_fileinfo_paths) {
         outputFileinfos(out, path.c_str());
@@ -133,8 +132,7 @@ void SectionFileinfo::outputFileinfos(std::ostream &out, const char *path) {
     }
 
     if (!found_file) {
-        out << path << "|missing|" << section_helpers::current_time(_winapi)
-            << "\n";
+        out << path << "|missing|" << section_helpers::current_time() << "\n";
     }
 }
 

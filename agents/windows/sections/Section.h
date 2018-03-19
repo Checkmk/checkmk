@@ -42,7 +42,13 @@ namespace section_helpers {
 
 double file_time(const FILETIME *filetime);
 
-double current_time(const WinApiAdaptor &winapi);
+template <class ToDuration = std::chrono::seconds, class Rep = long long>
+inline Rep current_time() {
+    const std::chrono::duration<Rep> now =
+        std::chrono::duration_cast<ToDuration>(
+            std::chrono::system_clock::now().time_since_epoch());
+    return now.count();
+}
 
 }  // namespace section_helpers
 

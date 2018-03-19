@@ -40,14 +40,6 @@ double file_time(const FILETIME *filetime) {
     return (double(uli.QuadPart) / WINDOWS_TICK) - SEC_TO_UNIX_EPOCH;
 }
 
-double current_time(const WinApiAdaptor &winapi) {
-    SYSTEMTIME systime{0};
-    FILETIME filetime{0};
-    winapi.GetSystemTime(&systime);
-    winapi.SystemTimeToFileTime(&systime, &filetime);
-    return file_time(&filetime);
-}
-
 }  // namespace section_helpers
 
 Section::Section(const std::string &outputName, const std::string &configName,

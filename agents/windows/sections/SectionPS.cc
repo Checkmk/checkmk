@@ -199,8 +199,9 @@ bool SectionPS::outputWMI(std::ostream &out) {
             std::tm t;
             ss >> std::get_time(&t, L"%Y%m%d%H%M%S");
             time_t creation_time = mktime(&t);
-            auto uptime = (ULONGLONG)(
-                (time_t)section_helpers::current_time(_winapi) - creation_time);
+            auto uptime = static_cast<ULONGLONG>(
+                static_cast<time_t>(section_helpers::current_time()) -
+                creation_time);
 
             outputProcess(
                 out, std::stoull(result.get<std::string>(L"VirtualSize")),
@@ -309,7 +310,7 @@ bool SectionPS::outputNative(std::ostream &out) {
             // Uptime
             double ft = section_helpers::file_time(&createTime);
             ULONGLONG uptime =
-                (ULONGLONG)(section_helpers::current_time(_winapi) - ft);
+                static_cast<ULONGLONG>(section_helpers::current_time() - ft);
 
             // Note: CPU utilization is determined out of usermodetime and
             // kernelmodetime

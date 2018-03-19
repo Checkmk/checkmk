@@ -257,25 +257,6 @@ SectionManager *s_sections;
 //  | Global helper functions                                              |
 //  '----------------------------------------------------------------------'
 
-double file_time(const FILETIME *filetime) {
-    static const double SEC_TO_UNIX_EPOCH = 11644473600.0;
-    static const double WINDOWS_TICK = 10000000.0;
-
-    _ULARGE_INTEGER uli;
-    uli.LowPart = filetime->dwLowDateTime;
-    uli.HighPart = filetime->dwHighDateTime;
-
-    return (double(uli.QuadPart) / WINDOWS_TICK) - SEC_TO_UNIX_EPOCH;
-}
-
-double current_time() {
-    SYSTEMTIME systime;
-    FILETIME filetime;
-    GetSystemTime(&systime);
-    SystemTimeToFileTime(&systime, &filetime);
-    return file_time(&filetime);
-}
-
 template <typename T>
 bool in_set(const T &val, const std::set<T> &test_set) {
     return test_set.find(val) != test_set.end();

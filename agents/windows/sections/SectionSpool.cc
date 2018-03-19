@@ -29,9 +29,6 @@
 #include <sys/types.h>
 #include <windows.h>
 
-
-extern double file_time(const FILETIME *filetime);
-
 SectionSpool::SectionSpool(const Environment &env, Logger *logger)
     : Section("spool", "spool", env, logger) {
     withHiddenHeader();
@@ -65,9 +62,10 @@ bool SectionSpool::produceOutputInner(std::ostream &out) {
                 HANDLE h = FindFirstFileEx(path, FindExInfoStandard, &filedata,
                                            FindExSearchNameMatch, NULL, 0);
                 if (h != INVALID_HANDLE_VALUE) {
-                    double mtime = file_time(&(filedata.ftLastWriteTime));
+                    auto mtime =
+                        section_helpers::file_time(filedata.ftLastWriteTime);
                     FindClose(h);
-                    int age = now - mtime;
+                    long long age = now - mtime;
                     if (age > max_age) {
                         Informational(_logger)
                             << "    " << name

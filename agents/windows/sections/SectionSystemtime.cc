@@ -31,7 +31,7 @@ SectionSystemtime::SectionSystemtime(const Environment &env, Logger *logger)
     : Section("systemtime", "systemtime", env, logger) {}
 
 bool SectionSystemtime::produceOutputInner(std::ostream &out) {
-    out << std::fixed << std::setprecision(0) << current_time();
+    out << section_helpers::current_time();
     return true;
 }
 

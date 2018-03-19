@@ -26,9 +26,6 @@
 #include <iomanip>
 #include <sstream>
 
-extern double current_time();
-extern double file_time(const FILETIME *filetime);
-
 SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger)
     : Section("fileinfo", "fileinfo", config.getEnvironment(), logger)
     , _fileinfo_paths(config, "fileinfo", "path")
@@ -38,7 +35,7 @@ SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger)
 
 
 bool SectionFileinfo::produceOutputInner(std::ostream &out) {
-    out << std::fixed << std::setprecision(0) << current_time() << "\n";
+    out << section_helpers::current_time() << "\n";
 
     for (const std::string &path : *_fileinfo_paths) {
         outputFileinfos(out, path.c_str());
@@ -135,7 +132,7 @@ void SectionFileinfo::outputFileinfos(std::ostream &out, const char *path) {
     }
 
     if (!found_file) {
-        out << path << "|missing|" << current_time() << "\n";
+        out << path << "|missing|" << section_helpers::current_time() << "\n";
     }
 }
 
@@ -146,9 +143,8 @@ bool SectionFileinfo::outputFileinfo(std::ostream &out, const std::string filena
     {
         unsigned long long size = (unsigned long long)findData.nFileSizeLow +
                 (((unsigned long long)findData.nFileSizeHigh) << 32);
-        out << filename << "|" << size << "|" << std::fixed
-            << std::setprecision(0) << file_time(&findData.ftLastWriteTime)
-            << "\n";
+        out << filename << "|" << size << "|"
+            << section_helpers::file_time(findData.ftLastWriteTime) << "\n";
         FindClose(findHandle);
         return true;
     }

@@ -32,10 +32,6 @@
 #include "../PerfCounter.h"
 #include "../types.h"
 
-
-extern double file_time(const FILETIME *filetime);
-extern double current_time();
-
 SectionPS::SectionPS(Configuration &config, Logger *logger)
     : Section("ps", "ps", config.getEnvironment(), logger)
     , _use_wmi(config, "ps", "use_wmi", false)
@@ -206,7 +202,8 @@ bool SectionPS::outputWMI(std::ostream &out) {
             std::tm t;
             ss >> std::get_time(&t, L"%Y%m%d%H%M%S");
             time_t creation_time = mktime(&t);
-            auto uptime = (ULONGLONG)((time_t)current_time() - creation_time);
+            auto uptime = static_cast<ULONGLONG>(
+                section_helpers::current_time() - creation_time);
 
             outputProcess(
                 out, std::stoull(result.get<std::string>(L"VirtualSize")),
@@ -311,8 +308,9 @@ bool SectionPS::outputNative(std::ostream &out) {
             }
 
             // Uptime
-            double ft = file_time(&createTime);
-            ULONGLONG uptime = (ULONGLONG)(current_time() - ft);
+            auto ft = section_helpers::file_time(createTime);
+            ULONGLONG uptime =
+                static_cast<ULONGLONG>(section_helpers::current_time() - ft);
 
             // Note: CPU utilization is determined out of usermodetime and
             // kernelmodetime

@@ -22,12 +22,45 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include <windows.h>
 #include <sstream>
 #include "Environment.h"
 #include "Logger.h"
 #include "Section.h"
 
-Section::Section(const std::string &outputName, const std::string &configName, const Environment &env, Logger *logger)
+namespace {
+
+inline FILETIME epochFileTime() {
+    FILETIME ft{0, 0};
+    long long ll = 116444736000000000;
+    ft.dwLowDateTime = static_cast<unsigned long>(ll);
+    ft.dwHighDateTime = ll >> 32;
+    return ft;
+}
+
+}  // namespace
+
+namespace section_helpers {
+
+static const unsigned long WINDOWS_TICK = 10000000;
+
+unsigned long long file_time(const FILETIME &filetime) {
+    _ULARGE_INTEGER uli{0};
+    uli.LowPart = filetime.dwLowDateTime;
+    uli.HighPart = filetime.dwHighDateTime;
+
+    const FILETIME epoch = epochFileTime();
+    ULARGE_INTEGER epochU{0};
+    epochU.LowPart = epoch.dwLowDateTime;
+    epochU.HighPart = epoch.dwHighDateTime;
+
+    return (uli.QuadPart - epochU.QuadPart) / WINDOWS_TICK;
+}
+
+}  // namespace section_helpers
+
+Section::Section(const std::string &outputName, const std::string &configName,
+                 const Environment &env, Logger *logger)
     : _outputName(outputName)
     , _configName(configName)
     , _env(env)

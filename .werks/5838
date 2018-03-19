@@ -1,0 +1,10 @@
+Title: Citrix Netscaler Certificates: check is cluster aware now
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521444854
+Class: fix
+
+

@@ -411,10 +411,6 @@ VOID WinApi::GetSystemInfo(LPSYSTEM_INFO lpSystemInfo) const {
     return ::GetSystemInfo(lpSystemInfo);
 }
 
-VOID WinApi::GetSystemTime(LPSYSTEMTIME lpSystemTime) const {
-    return ::GetSystemTime(lpSystemTime);
-}
-
 WINBOOL WinApi::GetVersionEx(LPOSVERSIONINFO lpVersionInformation) const {
     return ::GetVersionExA(lpVersionInformation);
 }

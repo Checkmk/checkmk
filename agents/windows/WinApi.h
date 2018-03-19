@@ -197,7 +197,6 @@ public:
                                     LPFILETIME lpUserTime) const override;
     virtual VOID GetStartupInfo(LPSTARTUPINFO lpStartupInfo) const override;
     virtual VOID GetSystemInfo(LPSYSTEM_INFO lpSystemInfo) const override;
-    virtual VOID GetSystemTime(LPSYSTEMTIME lpSystemTime) const override;
     virtual WINBOOL GetVersionEx(
         LPOSVERSIONINFO lpVersionInformation) const override;
     virtual WINBOOL GetVolumeInformation(

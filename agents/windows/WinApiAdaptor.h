@@ -245,7 +245,6 @@ public:
                                     LPFILETIME lpUserTime) const = 0;
     virtual VOID GetStartupInfo(LPSTARTUPINFO lpStartupInfo) const = 0;
     virtual VOID GetSystemInfo(LPSYSTEM_INFO lpSystemInfo) const = 0;
-    virtual VOID GetSystemTime(LPSYSTEMTIME lpSystemTime) const = 0;
     virtual WINBOOL GetVersionEx(
         LPOSVERSIONINFO lpVersionInformation) const = 0;
     virtual WINBOOL GetVolumeInformation(

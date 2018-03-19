@@ -1,0 +1,10 @@
+Title: win_reg_uninstall: Fixed transposed month and day fields of dates which caused 'Inventory failed: unconverted data remains'
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.4.0p27
+Date: 1521472345
+Class: fix
+
+

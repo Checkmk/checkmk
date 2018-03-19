@@ -31,25 +31,33 @@
 def inv_win_reg_uninstall(info):
     paclist = inv_tree_list("software.packages:")
     for line in info:
-	if len(line) == 7:
+        if len(line) == 7:
             display_name, publisher, path, pacname, version, estimated_size, date = line
-	    language = ""
-	elif len(line) == 8:
+            language = ""
+        elif len(line) == 8:
             display_name, publisher, path, pacname, version, estimated_size, date, language = line
-	else:
-	    continue
+        else:
+            continue
 
         install_date = None
         if re.match("^20\d{6}", date):
-            install_date = int(time.mktime(time.strptime(date, "%Y%m%d")))
+            # Dates look like '20160930', but we saw also dates like '20132804'
+            # which have transposed month and day fields.
+            try:
+                install_date = int(time.mktime(time.strptime(date, "%Y%m%d")))
+            except ValueError:
+                try:
+                    install_date = int(time.mktime(time.strptime(date, "%Y%d%m")))
+                except ValueError:
+                    pass
 
         size = saveint(estimated_size)
         if size == 0:
             size = None
-	if pacname.startswith("{"):
-	    pacname = display_name
-	if pacname == "":
-	    continue
+        if pacname.startswith("{"):
+            pacname = display_name
+        if pacname == "":
+            continue
 
         entry = {
             "name"            : pacname,

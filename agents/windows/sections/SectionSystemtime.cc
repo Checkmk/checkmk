@@ -33,7 +33,6 @@ SectionSystemtime::SectionSystemtime(const Environment &env, Logger *logger,
 bool SectionSystemtime::produceOutputInner(std::ostream &out,
                                            const std::optional<std::string> &) {
     Debug(_logger) << "SectionSystemtime::produceOutputInner";
-    out << std::fixed << std::setprecision(0)
-        << section_helpers::current_time(_winapi);
+    out << std::fixed << section_helpers::current_time();
     return true;
 }

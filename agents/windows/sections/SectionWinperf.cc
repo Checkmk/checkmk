@@ -50,8 +50,9 @@ bool SectionWinperf::produceOutputInner(std::ostream &out,
             LARGE_INTEGER Frequency;
             _winapi.QueryPerformanceFrequency(&Frequency);
             out << std::fixed << std::setprecision(2)
-                << section_helpers::current_time(_winapi) << " " << _base << " "
-                << Frequency.QuadPart << "\n";
+                << section_helpers::current_time<std::chrono::milliseconds,
+                                                 double>()
+                << " " << _base << " " << Frequency.QuadPart << "\n";
 
             std::vector<PERF_INSTANCE_DEFINITION *> instances =
                 counterObject.instances();

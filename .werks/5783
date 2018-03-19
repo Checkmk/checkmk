@@ -10,7 +10,7 @@ Class: feature
 A new mechanism has been introduced allowing certain tasks to be run as background processes.
 Currently the following areas are included
 <ul>
-<li>Host rennaming</li>
+<li>Host renaming</li>
 <li>Agent baking (Enterprise Edition)</li>
 <li>Report generation (Enterprise Edition)</li>
 </ul>

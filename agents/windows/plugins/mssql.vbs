@@ -366,30 +366,27 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     addOutput(sections("backup"))
     For Each dbName in dbNames.Keys
         RS.Open "USE [master]", CONN
-        RS.Open "select 1 from sys.sysobjects where name = 'dm_hadr_database_replica_states'", CONN
-        If RS.EOF Then
-            RS.Close
-            RS.Open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date," & _
-                       "type, machine_name, " & _
-                       "'True' as is_primary_replica, " &_
-                       "'1' as is_local, " & _
-                       "'' as replica_id " & _
-                    "FROM msdb.dbo.backupset " & _
-                    "WHERE database_name = '" & dbName & "' " & _
-                    "GROUP BY type, machine_name ", CONN
-        Else
-            RS.Close
-            RS.Open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(b.backup_finish_date)), '19700101'), 120) AS last_backup_date, " & _
-                        "b.type, b.machine_name, " & _
-                        "isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '') AS replica_id " & _
-                    "FROM msdb.dbo.backupset b " & _
-                    "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name " & _
-                    "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id " & _
-                    "WHERE database_name = '" & dbName & "' " & _
-                        "AND (rep.is_local is null or rep.is_local = 1) " & _
-                        "AND (rep.is_primary_replica is null or rep.is_primary_replica = 'True') " & _
-                    "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health ", CONN
-        End If
+        RS.Open "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
+				"SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
+				"IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
+				"BEGIN " & _
+					"SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+					"type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id FROM msdb.dbo.backupset " & _
+					"WHERE database_name = ''" & dbName & "'' AND  machine_name = SERVERPROPERTY(''Machinename'') " & _
+					"GROUP BY type, machine_name ' " & _
+				"END " & _
+				"ELSE " & _
+				"BEGIN " & _
+				"SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
+                "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id  " & _
+                "FROM msdb.dbo.backupset b  " & _
+                "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
+                "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
+                "WHERE database_name = ''" & dbName & "'' AND (rep.is_local is null or rep.is_local = 1)  " & _
+                "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
+                "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
+				"END " & _
+				"EXEC (@SQLCommand)" ,CONN
 
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
@@ -515,3 +512,4 @@ Set RS = nothing
 Set CONN = nothing
 Set FSO = nothing
 Set SHO = nothing
+

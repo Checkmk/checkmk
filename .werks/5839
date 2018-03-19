@@ -1,0 +1,10 @@
+Title: MSSQL Plugin: fixed mssql_backups for some SQL server versions and situations (alwayson, cluster)
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521447374
+Class: fix
+
+Thanks to Kris Radebahs for providing the patch!

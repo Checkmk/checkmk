@@ -18,8 +18,11 @@ set -e
 . /$CHROOT_BUILD_DIR/agents/windows/build.sh
 
 parse-args "$@"
-
-cd /$CHROOT_BUILD_DIR/agents/windows
+# For some weird reason, saving the target dir for 'cd' in an intermediate
+# variable is necessary to prevent some desktop env's (at least Cinnamon)
+# from opening a fresh file manager window! Please do not ask why...
+windowsdir="/$CHROOT_BUILD_DIR/agents/windows"
+cd "$windowsdir"
 
 autoreconf --install
 

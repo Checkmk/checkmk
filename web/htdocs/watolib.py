@@ -2600,7 +2600,7 @@ class SearchFolder(BaseFolder):
             if varname.startswith("host_search_") \
                 or varname.startswith("_change"):
                 url_vars.append((varname, value))
-        return self.parent().url(url_vars, filename="wato.py")
+        return self.parent().url(url_vars)
 
 
 

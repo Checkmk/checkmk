@@ -41,7 +41,7 @@ SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
 bool SectionFileinfo::produceOutputInner(std::ostream &out,
                                          const std::optional<std::string> &) {
     Debug(_logger) << "SectionFileinfo::produceOutputInner";
-    out << std::fixed << section_helpers::current_time() << "\n";
+    out << section_helpers::current_time() << "\n";
 
     for (const std::string &path : *_fileinfo_paths) {
         outputFileinfos(out, path.c_str());
@@ -149,7 +149,7 @@ bool SectionFileinfo::outputFileinfo(std::ostream &out,
         out << filename << "|" << fs::file_size(path) << "|";
         const auto timeEntry = chrono::duration_cast<chrono::seconds>(
             fs::last_write_time(path).time_since_epoch());
-        out << std::fixed << std::setprecision(0) << timeEntry.count() << "\n";
+        out << timeEntry.count() << "\n";
         return true;
     } catch (const fs::filesystem_error &e) {
         Error(_logger) << e.what();

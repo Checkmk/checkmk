@@ -31,7 +31,7 @@ tation of rates from two succeeding counter values. This is done
 via the helper function get_rate(). Averaging is another example
 and done by get_average().
 
-While a host is being checked this memory is kept in g_item_state.
+While a host is being checked this memory is kept in _cached_item_states.
 That is a dictionary. The keys are unique to one check type and
 item. The value is free form.
 
@@ -44,6 +44,7 @@ import os
 import traceback
 
 import cmk.paths
+import cmk.store
 from cmk.exceptions import MKGeneralException
 
 # Constants for counters
@@ -51,10 +52,8 @@ SKIP  = None
 RAISE = False
 ZERO  = 0.0
 
-g_item_state        = {}   # storing counters of one host
-g_last_counter_wrap = None #
-g_item_state_prefix = ()
-g_suppress_on_wrap  = True # Suppress check on wrap (raise an exception)
+g_last_counter_wrap  = None #
+g_suppress_on_wrap   = True # Suppress check on wrap (raise an exception)
                            # e.g. do not suppress this check on check_mk -nv
 
 
@@ -66,23 +65,126 @@ class MKCounterWrapped(Exception):
         return self.reason
 
 
+class CachedItemStates(object):
+    def __init__(self):
+        super(CachedItemStates, self).__init__()
+        self.reset()
+
+
+    def clear_all_item_states(self):
+        removed_item_state_keys = self._item_states.keys()
+        self.reset()
+        self._removed_item_state_keys = removed_item_state_keys
+
+
+    def reset(self):
+        # The actual cached data
+        self._item_states       = {}
+        self._item_state_prefix = None
+        self._last_mtime        = None # timestamp of last modification
+        self._removed_item_state_keys = []
+        self._updated_item_states = {}
+
+
+    def load(self, hostname):
+        filename = cmk.paths.counters_dir + "/" + hostname
+        try:
+            # TODO: refactoring. put these two values into a named tuple
+            self._item_states = cmk.store.load_data_from_file(filename, default={}, lock=True)
+            self._last_mtime  = os.stat(filename).st_mtime
+        finally:
+            cmk.store.release_lock(filename)
+
+
+    # TODO: self._last_mtime needs be updated accordingly after the save_data_to_file operation
+    #       right now, the current mechanism is sufficient enough, since the save() function is only
+    #       called as the final operation, just before the lifecycle of the CachedItemState ends
+    def save(self, hostname):
+        """ The job of the save function is to update the item state on disk.
+        It simply returns, if it detects that the data wasn't changed at all since the last loading
+        If the data on disk has been changed in the meantime, the cached data is updated from disk.
+        Afterwards only the actual modifications (update/remove) are applied to the updated cached
+        data before it is written back to disk.
+        """
+        filename = cmk.paths.counters_dir + "/" + hostname
+        if not self._removed_item_state_keys and not self._updated_item_states:
+            return
+
+        try:
+            if not os.path.exists(cmk.paths.counters_dir):
+                os.makedirs(cmk.paths.counters_dir)
+
+            cmk.store.aquire_lock(filename)
+            last_mtime = os.stat(filename).st_mtime
+            if last_mtime != self._last_mtime:
+                self._item_states = cmk.store.load_data_from_file(filename, default={})
+
+                # Remove obsolete keys
+                for key in self._removed_item_state_keys:
+                    try:
+                        del self._item_states[key]
+                    except KeyError:
+                        pass
+
+                # Add updated keys
+                self._item_states.update(self._updated_item_states)
+
+            cmk.store.save_data_to_file(filename, self._item_states, pretty=False)
+        except Exception, e:
+            raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
+        finally:
+            cmk.store.release_lock(filename)
+
+
+    def clear_item_state(self, user_key):
+        key = self.get_unique_item_state_key(user_key)
+        self.remove_full_key(key)
+
+
+    def clear_item_states_by_full_keys(self, full_keys):
+        for key in full_keys:
+            self.remove_full_key(key)
+
+
+    def remove_full_key(self, full_key):
+        try:
+            self._removed_item_state_keys.append(full_key)
+            del self._item_states[full_key]
+        except KeyError:
+            pass
+
+
+    def set_item_state(self, user_key, state):
+        key = self.get_unique_item_state_key(user_key)
+        self._item_states[key] = state
+        self._updated_item_states[key] = state
+
+
+    def set_item_state_prefix(self, args):
+        self._item_prefix = args
+
+
+    def get_item_state(self, user_key, default=None):
+        key = self.get_unique_item_state_key(user_key)
+        return self._item_states.get(key, default)
+
+
+    def get_all_item_states(self):
+        return self._item_states
+
+
+    def get_unique_item_state_key(self, user_key):
+        return self._item_prefix + (user_key,)
+
+_cached_item_states = CachedItemStates()
+
 def load(hostname):
-    global g_item_state
-    filename = cmk.paths.counters_dir + "/" + hostname
-    try:
-        g_item_state = eval(file(filename).read())
-    except:
-        g_item_state = {}
+    _cached_item_states.reset()
+    _cached_item_states.load(hostname)
 
 
 def save(hostname):
-    filename = cmk.paths.counters_dir + "/" + hostname
-    try:
-        if not os.path.exists(cmk.paths.counters_dir):
-            os.makedirs(cmk.paths.counters_dir)
-        file(filename, "w").write("%r\n" % g_item_state)
-    except Exception, e:
-        raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
+    _cached_item_states.save(hostname)
 
 
 def set_item_state(user_key, state):
@@ -90,7 +192,7 @@ def set_item_state(user_key, state):
 
     The user_key is the identifier of the stored value and needs
     to be unique per service."""
-    g_item_state[_unique_item_state_key(user_key)] = state
+    _cached_item_states.set_item_state(user_key, state)
 
 
 def get_item_state(user_key, default=None):
@@ -98,12 +200,12 @@ def get_item_state(user_key, default=None):
 
     Returns None or the given default value in case there
     is currently no such item stored."""
-    return g_item_state.get(_unique_item_state_key(user_key), default)
+    return _cached_item_states.get_item_state(user_key, default)
 
 
 def get_all_item_states():
     """Returns all stored items of the host that is currently being checked."""
-    return g_item_state
+    return _cached_item_states.get_all_item_states()
 
 
 def clear_item_state(user_key):
@@ -112,9 +214,7 @@ def clear_item_state(user_key):
 
     In case the given item does not exist, the function returns
     without modification."""
-    key = _unique_item_state_key(user_key)
-    if key in g_item_state:
-        del g_item_state[key]
+    _cached_item_states.clear_item_state(user_key)
 
 
 def clear_item_states_by_full_keys(full_keys):
@@ -124,26 +224,20 @@ def clear_item_states_by_full_keys(full_keys):
     names specified with set_item_state(). For checks this is
     normally (<check_plugin_name>, <item>, <user_key>).
     """
-    for key in full_keys:
-        try:
-            del g_item_state[key]
-        except KeyError:
-            pass
+    _cached_item_states.clear_item_states_by_full_keys(full_keys)
 
 
 def cleanup_item_states():
     """Clears all stored items of the host that is currently being checked."""
-    global g_item_state
-    g_item_state = {}
+    _cached_item_states.clear_all_item_states()
 
 
 def set_item_state_prefix(*args):
-    global g_item_state_prefix
-    g_item_state_prefix = args
+    _cached_item_states.set_item_state_prefix(args)
 
 
 def _unique_item_state_key(user_key):
-    return g_item_state_prefix + (user_key,)
+    _cached_item_states.get_unique_item_state_key(user_key)
 
 
 def continue_on_counter_wrap():

@@ -43,7 +43,9 @@ std::unique_ptr<Filter> OringFilter::make(Kind kind, Filters subfilters) {
                        std::make_move_iterator(disjuncts.begin()),
                        std::make_move_iterator(disjuncts.end()));
     }
-    return std::make_unique<OringFilter>(kind, std::move(filters), Secret());
+    return filters.size() == 1 ? std::move(filters[0])
+                               : std::make_unique<OringFilter>(
+                                     kind, std::move(filters), Secret());
 }
 
 bool OringFilter::accepts(Row row, const contact *auth_user,

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <bitset>
+#include <cstddef>
 #include <ostream>
 #include <string>
 #include <utility>

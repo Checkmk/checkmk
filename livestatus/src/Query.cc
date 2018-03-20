@@ -757,9 +757,19 @@ std::optional<int32_t> Query::leastUpperBoundFor(
     return result;
 }
 
-void Query::optimizeBitmask(const std::string &column_name,
-                            uint32_t *bitmask) const {
-    _filter->optimizeBitmask(column_name, bitmask, timezoneOffset());
+std::optional<std::bitset<32>> Query::valueSetLeastUpperBoundFor(
+    const std::string &column_name) const {
+    auto result =
+        _filter->valueSetLeastUpperBoundFor(column_name, timezoneOffset());
+    if (result) {
+        Debug(_logger) << "column " << _table.name() << "." << column_name
+                       << " has possible values "
+                       << FormattedBitSet<32>{*result};
+    } else {
+        Debug(_logger) << "column " << _table.name() << "." << column_name
+                       << " has no value set restriction";
+    }
+    return result;
 }
 
 const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(

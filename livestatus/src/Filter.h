@@ -26,6 +26,7 @@
 #define Filter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <bitset>
 #include <chrono>
 #include <cstdint>
 #include <functional>
@@ -62,8 +63,9 @@ public:
     virtual std::optional<int32_t> leastUpperBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const;
-    virtual bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
-                                 std::chrono::seconds timezone_offset) const;
+    virtual std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
+        const std::string &column_name,
+        std::chrono::seconds timezone_offset) const;
     virtual std::unique_ptr<Filter> copy() const = 0;
     virtual std::unique_ptr<Filter> negate() const = 0;
 

@@ -26,6 +26,7 @@
 #define Query_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <bitset>
 #include <chrono>
 #include <cstdint>
 #include <ctime>
@@ -75,8 +76,8 @@ public:
         const std::string &column_name) const;
     std::optional<int32_t> leastUpperBoundFor(
         const std::string &column_name) const;
-    void optimizeBitmask(const std::string &column_name,
-                         uint32_t *bitmask) const;
+    std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
+        const std::string &column_name) const;
     const Filter *filter() const { return _filter.get(); }
     const std::unordered_set<std::shared_ptr<Column>> &allColumns() const {
         return _all_columns;

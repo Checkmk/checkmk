@@ -34,36 +34,41 @@ IntFilter::IntFilter(Kind kind, const IntColumn &column,
     , _column(column)
     , _ref_value(atoi(value.c_str())) {}
 
+namespace {
+bool eval(int32_t x, RelationalOperator op, int32_t y) {
+    switch (op) {
+        case RelationalOperator::equal:
+            return x == y;
+        case RelationalOperator::not_equal:
+            return x != y;
+        case RelationalOperator::matches:  // superset
+            return (x & y) == y;
+        case RelationalOperator::doesnt_match:  // not superset
+            return (x & y) != y;
+        case RelationalOperator::equal_icase:  // subset
+            return (x & y) == x;
+        case RelationalOperator::not_equal_icase:  // not subset
+            return (x & y) != x;
+        case RelationalOperator::matches_icase:  // contains any
+            return (x & y) != 0;
+        case RelationalOperator::doesnt_match_icase:  // contains none of
+            return (x & y) == 0;
+        case RelationalOperator::less:
+            return x < y;
+        case RelationalOperator::greater_or_equal:
+            return x >= y;
+        case RelationalOperator::greater:
+            return x > y;
+        case RelationalOperator::less_or_equal:
+            return x <= y;
+    }
+    return false;
+}
+}  // namespace
+
 bool IntFilter::accepts(Row row, const contact *auth_user,
                         std::chrono::seconds /*timezone_offset*/) const {
-    int32_t act_value = _column.getValue(row, auth_user);
-    switch (oper()) {
-        case RelationalOperator::equal:
-            return act_value == _ref_value;
-        case RelationalOperator::not_equal:
-            return act_value != _ref_value;
-        case RelationalOperator::matches:  // superset
-            return (act_value & _ref_value) == _ref_value;
-        case RelationalOperator::doesnt_match:  // not superset
-            return (act_value & _ref_value) != _ref_value;
-        case RelationalOperator::equal_icase:  // subset
-            return (act_value & _ref_value) == act_value;
-        case RelationalOperator::not_equal_icase:  // not subset
-            return (act_value & _ref_value) != act_value;
-        case RelationalOperator::matches_icase:  // contains any
-            return (act_value & _ref_value) != 0;
-        case RelationalOperator::doesnt_match_icase:  // contains none of
-            return (act_value & _ref_value) == 0;
-        case RelationalOperator::less:
-            return act_value < _ref_value;
-        case RelationalOperator::greater_or_equal:
-            return act_value >= _ref_value;
-        case RelationalOperator::greater:
-            return act_value > _ref_value;
-        case RelationalOperator::less_or_equal:
-            return act_value <= _ref_value;
-    }
-    return false;  // unreachable
+    return eval(_column.getValue(row, auth_user), oper(), _ref_value);
 }
 
 std::optional<int32_t> IntFilter::greatestLowerBoundFor(
@@ -118,61 +123,17 @@ std::optional<int32_t> IntFilter::leastUpperBoundFor(
     return {};  // unreachable
 }
 
-bool IntFilter::optimizeBitmask(
-    const std::string &column_name, uint32_t *mask,
-    std::chrono::seconds /*timezone_offset*/) const {
+std::optional<std::bitset<32>> IntFilter::valueSetLeastUpperBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds /* timezone_offset */) const {
     if (column_name != columnName()) {
-        return false;  // wrong column
+        return {};  // wrong column
     }
-
-    if (_ref_value < 0 || _ref_value > 31) {
-        return true;  // not optimizable by 32bit bit mask
+    std::bitset<32> result;
+    for (int32_t bit = 0; bit < 32; ++bit) {
+        result[bit] = eval(bit, oper(), _ref_value);
     }
-
-    // Our task is to remove those bits from mask that are deselected by the
-    // filter.
-    uint32_t bit = 1 << _ref_value;
-
-    switch (oper()) {
-        case RelationalOperator::equal:
-            *mask &= bit;  // bit must be set
-            return true;
-        case RelationalOperator::not_equal:
-            *mask &= ~bit;  // bit must not be set
-            return true;
-        case RelationalOperator::greater_or_equal:
-            bit >>= 1;
-        // fallthrough
-        case RelationalOperator::greater:
-            while (bit != 0u) {
-                *mask &= ~bit;
-                bit >>= 1;
-            }
-            return true;
-        case RelationalOperator::less_or_equal:
-            if (_ref_value == 31) {
-                return true;
-            }
-            bit <<= 1;
-        // fallthrough
-        case RelationalOperator::less:
-            while (true) {
-                *mask &= ~bit;
-                if (bit == 0x80000000) {
-                    return true;
-                }
-                bit <<= 1;
-            }
-            return true;
-        case RelationalOperator::matches:
-        case RelationalOperator::doesnt_match:
-        case RelationalOperator::equal_icase:
-        case RelationalOperator::not_equal_icase:
-        case RelationalOperator::matches_icase:
-        case RelationalOperator::doesnt_match_icase:
-            return false;
-    }
-    return false;  // unreachable
+    return {result};
 }
 
 std::unique_ptr<Filter> IntFilter::copy() const {

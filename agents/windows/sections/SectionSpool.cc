@@ -24,12 +24,14 @@
 
 #include "SectionSpool.h"
 #include <sys/types.h>
+#include <chrono>
 #include <experimental/filesystem>
 #include "Environment.h"
 #include "Logger.h"
 #include "WinApiAdaptor.h"
 #include "types.h"
 
+namespace chrono = std::chrono;
 namespace fs = std::experimental::filesystem;
 
 SectionSpool::SectionSpool(const Environment &env, Logger *logger,
@@ -43,37 +45,22 @@ bool SectionSpool::produceOutputInner(std::ostream &out,
     // the agent output. The name of the files may begin with a number
     // of digits. If this is the case then it is interpreted as a time
     // in seconds: the maximum allowed age of the file. Outdated files
-    // are simply being ignored.
-    //
-    time_t now = time(0);
-
+    // are simply ignored.
     for (const auto &de : fs::directory_iterator(_env.spoolDirectory())) {
         const auto &path = de.path();
         const auto filename = path.filename().string();
         const int max_age = isdigit(filename[0]) ? atoi(filename.c_str()) : -1;
 
         if (max_age >= 0) {
-            WIN32_FIND_DATA filedata{0};
-            SearchHandle searchHandle{
-                _winapi.FindFirstFileEx(path.string().c_str(),
-                                        FindExInfoStandard, &filedata,
-                                        FindExSearchNameMatch, NULL, 0),
-                _winapi};
-            if (searchHandle) {
-                double mtime =
-                    section_helpers::file_time(&(filedata.ftLastWriteTime));
-                int age = now - mtime;
-                if (age > max_age) {
-                    Informational(_logger)
-                        << "    " << filename
-                        << ": skipping outdated file: age is " << age
-                        << " sec, "
-                        << "max age is " << max_age << " sec.";
-                    continue;
-                }
-            } else {
-                Warning(_logger)
-                    << "    " << filename << ": cannot determine file age";
+            const auto age =
+                chrono::duration_cast<chrono::seconds>(
+                    chrono::system_clock::now() - fs::last_write_time(path))
+                    .count();
+            if (age > max_age) {
+                Informational(_logger)
+                    << "    " << filename << ": skipping outdated file: age is "
+                    << age << " sec, "
+                    << "max age is " << max_age << " sec.";
                 continue;
             }
         }

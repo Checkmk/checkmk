@@ -23,10 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionFileinfo.h"
+#include <chrono>
 #include <cstring>
+#include <experimental/filesystem>
 #include <iomanip>
 #include <sstream>
 #include "Logger.h"
+
+namespace chrono = std::chrono;
+namespace fs = std::experimental::filesystem;
 
 SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
@@ -138,17 +143,16 @@ void SectionFileinfo::outputFileinfos(std::ostream &out, const char *path) {
 
 bool SectionFileinfo::outputFileinfo(std::ostream &out,
                                      const std::string filename) {
-    WIN32_FIND_DATA findData;
-    SearchHandle findHandle{_winapi.FindFirstFile(filename.c_str(), &findData),
-                            _winapi};
-    if (findHandle) {
-        unsigned long long size =
-            (unsigned long long)findData.nFileSizeLow +
-            (((unsigned long long)findData.nFileSizeHigh) << 32);
-        out << filename << "|" << size << "|" << std::fixed
-            << std::setprecision(0)
-            << section_helpers::file_time(&findData.ftLastWriteTime) << "\n";
+    const fs::path path{filename};
+
+    try {
+        out << filename << "|" << fs::file_size(path) << "|";
+        const auto timeEntry = chrono::duration_cast<chrono::seconds>(
+            fs::last_write_time(path).time_since_epoch());
+        out << std::fixed << std::setprecision(0) << timeEntry.count() << "\n";
         return true;
+    } catch (const fs::filesystem_error &e) {
+        Error(_logger) << e.what();
     }
     return false;
 }

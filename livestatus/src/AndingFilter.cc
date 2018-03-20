@@ -43,7 +43,9 @@ std::unique_ptr<Filter> AndingFilter::make(Kind kind, Filters subfilters) {
                        std::make_move_iterator(conjuncts.begin()),
                        std::make_move_iterator(conjuncts.end()));
     }
-    return std::make_unique<AndingFilter>(kind, std::move(filters), Secret());
+    return filters.size() == 1 ? std::move(filters[0])
+                               : std::make_unique<AndingFilter>(
+                                     kind, std::move(filters), Secret());
 }
 
 bool AndingFilter::accepts(Row row, const contact *auth_user,

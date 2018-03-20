@@ -149,7 +149,7 @@ Filters AndingFilter::conjuncts() const {
 
 std::ostream &AndingFilter::print(std::ostream &os) const {
     for (const auto &filter : _subfilters) {
-        os << *filter;
+        os << *filter << "\\n";
     }
     switch (kind()) {
         case Kind::row:
@@ -162,5 +162,5 @@ std::ostream &AndingFilter::print(std::ostream &os) const {
             os << "WaitConditionAnd";
             break;
     }
-    return os << ": " << _subfilters.size() << "\n";
+    return os << ": " << _subfilters.size();
 }

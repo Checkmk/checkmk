@@ -47,6 +47,5 @@ Filters ColumnFilter::conjuncts() const {
 }
 
 std::ostream &ColumnFilter::print(std::ostream &os) const {
-    return os << "Filter: " << columnName() << " " << oper() << " " << value()
-              << "\n";
+    return os << "Filter: " << columnName() << " " << oper() << " " << value();
 }

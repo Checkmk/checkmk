@@ -1,0 +1,13 @@
+Title: Fixed race condition in counter computation if a host uses real time checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.5.0i4
+Date: 1521798371
+Class: fix
+
+There was a risk that the counter data for the Check_MK checks could get lost or reset
+to an earlier state, when the host received regular updates through the realtime check mechanism.
+This has been fixed. As a side effect, the counter data is now only saved back to disk when there were
+actual changes.

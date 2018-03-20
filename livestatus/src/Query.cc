@@ -712,6 +712,14 @@ void Query::finish(QueryRenderer &q) {
     }
 }
 
+std::unique_ptr<Filter> Query::partialFilter(
+    const std::string &message,
+    std::function<bool(const Column &)> predicate) const {
+    auto result = _filter->partialFilter(predicate);
+    Debug(_logger) << "partial filter for " << message << ": " << *result;
+    return result;
+}
+
 std::optional<std::string> Query::stringValueRestrictionFor(
     const std::string &column_name) const {
     auto result = _filter->stringValueRestrictionFor(column_name);

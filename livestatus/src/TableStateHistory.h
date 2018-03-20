@@ -55,7 +55,7 @@ public:
     void answerQuery(Query *query) override;
     bool isAuthorized(Row row, const contact *ctc) const override;
     std::shared_ptr<Column> column(std::string colname) const override;
-    static std::unique_ptr<Filter> createPartialFilter(const Filter &f);
+    static std::unique_ptr<Filter> createPartialFilter(const Query &query);
 
 protected:
     bool _abort_query;

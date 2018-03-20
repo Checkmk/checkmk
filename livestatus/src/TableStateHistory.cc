@@ -266,16 +266,17 @@ private:
 
 // static
 std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
-    const Filter &f) {
-    return f.partialFilter([](const Column &column) {
-        return mk::starts_with(column.name(), "current_") ||
-               mk::starts_with(column.name(), "host_") ||
-               mk::starts_with(column.name(), "service_");
-    });
+    const Query &query) {
+    return query.partialFilter(
+        "current host/service columns", [](const Column &column) {
+            return mk::starts_with(column.name(), "current_") ||
+                   mk::starts_with(column.name(), "host_") ||
+                   mk::starts_with(column.name(), "service_");
+        });
 }
 
 void TableStateHistory::answerQuery(Query *query) {
-    auto object_filter = createPartialFilter(*query->filter());
+    auto object_filter = createPartialFilter(*query);
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
     if (!_log_cache->logCachePreChecks()) {
         return;

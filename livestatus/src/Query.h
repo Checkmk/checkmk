@@ -70,6 +70,9 @@ public:
     const contact *authUser() const { return _auth_user; }
     std::chrono::seconds timezoneOffset() const { return _timezone_offset; }
 
+    std::unique_ptr<Filter> partialFilter(
+        const std::string &message,
+        std::function<bool(const Column &)> predicate) const;
     std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
     std::optional<int32_t> greatestLowerBoundFor(
@@ -78,7 +81,7 @@ public:
         const std::string &column_name) const;
     std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
         const std::string &column_name) const;
-    const Filter *filter() const { return _filter.get(); }
+
     const std::unordered_set<std::shared_ptr<Column>> &allColumns() const {
         return _all_columns;
     }

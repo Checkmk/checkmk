@@ -29,6 +29,21 @@
 #include "PerfCounter.h"
 #include "dynamic_func.h"
 
+namespace {
+
+const unsigned long long SEC_TO_UNIX_EPOCH = 11644473600L;
+const unsigned long WINDOWS_TICK = 10000000;
+
+inline unsigned long long sinceEpoch(const FILETIME &filetime) {
+    ULARGE_INTEGER uli{0};
+    uli.LowPart = filetime.dwLowDateTime;
+    uli.HighPart = filetime.dwHighDateTime;
+
+    return uli.QuadPart / WINDOWS_TICK - SEC_TO_UNIX_EPOCH;
+}
+
+}  // namespace
+
 SectionPS::SectionPS(Configuration &config, Logger *logger,
                      const WinApiAdaptor &winapi)
     : Section("ps", "ps", config.getEnvironment(), logger, winapi)
@@ -308,9 +323,8 @@ bool SectionPS::outputNative(std::ostream &out) {
             }
 
             // Uptime
-            double ft = section_helpers::file_time(&createTime);
-            ULONGLONG uptime =
-                static_cast<ULONGLONG>(section_helpers::current_time() - ft);
+            auto uptime = static_cast<unsigned long long>(
+                section_helpers::current_time() - sinceEpoch(createTime));
 
             // Note: CPU utilization is determined out of usermodetime and
             // kernelmodetime

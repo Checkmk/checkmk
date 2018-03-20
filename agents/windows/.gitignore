@@ -16,7 +16,7 @@ testtools
 *.d
 *.o
 chroot
-*.exe
-*.msi
+/*.exe
+/*.msi
 Makefile.in
 junit.xml

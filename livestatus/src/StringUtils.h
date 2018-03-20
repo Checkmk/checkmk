@@ -26,6 +26,8 @@
 #define StringUtils_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <bitset>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -61,5 +63,21 @@ std::string ipv4ToString(in_addr_t ipv4_address);
 std::string portToString(in_port_t port);
 #endif
 }  // namespace mk
+
+template <size_t N>
+struct FormattedBitSet {
+    const std::bitset<N> &value;
+};
+
+template <size_t N>
+std::ostream &operator<<(std::ostream &os, const FormattedBitSet<N> &bs) {
+    size_t elems = 0;
+    for (size_t pos = 0; pos < N; ++pos) {
+        if (bs.value[pos]) {
+            os << (elems++ == 0 ? "{" : ", ") << pos;
+        }
+    }
+    return os << "}";
+}
 
 #endif  // StringUtils_h

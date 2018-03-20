@@ -43,8 +43,8 @@ std::optional<int32_t> Filter::leastUpperBoundFor(
     return {};
 }
 
-bool Filter::optimizeBitmask(const std::string& /* column_name */,
-                             uint32_t* /* mask */,
-                             std::chrono::seconds /* timezone_offset */) const {
-    return false;
+std::optional<std::bitset<32>> Filter::valueSetLeastUpperBoundFor(
+    const std::string& /* column_name */,
+    std::chrono::seconds /* timezone_offset */) const {
+    return {};
 }

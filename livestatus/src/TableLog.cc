@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableLog.h"
+#include <bitset>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -136,10 +137,11 @@ void TableLog::answerQuery(Query *query) {
     int since = query->greatestLowerBoundFor("time").value_or(0);
     int until = query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1;
 
-    // The second optimization is for log message types.
-    // We want to load only those log type that are queried.
-    uint32_t classmask = LogEntry::all_classes;
-    query->optimizeBitmask("class", &classmask);
+    // The second optimization is for log message types. We want to load only
+    // those log type that are queried.
+    auto classmask = query->valueSetLeastUpperBoundFor("class")
+                         .value_or(~std::bitset<32>())
+                         .to_ulong();
     if (classmask == 0) {
         return;
     }

@@ -26,6 +26,7 @@
 #define TimeFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <bitset>
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -54,8 +55,9 @@ public:
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const override;
 
-    bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
-                         std::chrono::seconds timezone_offset) const override;
+    std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
+        const std::string &column_name,
+        std::chrono::seconds timezone_offset) const override;
 
     std::unique_ptr<Filter> copy() const override;
     std::unique_ptr<Filter> negate() const override;

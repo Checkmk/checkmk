@@ -26,6 +26,7 @@
 #include <iterator>
 #include <memory>
 #include <ostream>
+#include <type_traits>
 #include <vector>
 #include "AndingFilter.h"
 #include "Filter.h"
@@ -110,22 +111,17 @@ std::optional<int32_t> OringFilter::leastUpperBoundFor(
     return result;
 }
 
-bool OringFilter::optimizeBitmask(const std::string &column_name,
-                                  uint32_t *mask,
-                                  std::chrono::seconds timezone_offset) const {
-    // We can only optimize, if *all* subfilters are filters for the
-    // same column.
-    uint32_t m = 0;
-
+std::optional<std::bitset<32>> OringFilter::valueSetLeastUpperBoundFor(
+    const std::string &column_name,
+    std::chrono::seconds timezone_offset) const {
+    std::optional<std::bitset<32>> result;
     for (const auto &filter : _subfilters) {
-        uint32_t mm = 0xffffffff;
-        if (!filter->optimizeBitmask(column_name, &mm, timezone_offset)) {
-            return false;  // wrong column
+        if (auto foo = filter->valueSetLeastUpperBoundFor(column_name,
+                                                          timezone_offset)) {
+            result = result ? (*result | *foo) : foo;
         }
-        m |= mm;
     }
-    *mask &= m;
-    return true;
+    return result;
 }
 
 std::unique_ptr<Filter> OringFilter::copy() const {

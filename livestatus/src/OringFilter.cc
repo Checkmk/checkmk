@@ -156,7 +156,7 @@ Filters OringFilter::conjuncts() const {
 
 std::ostream &OringFilter::print(std::ostream &os) const {
     for (const auto &filter : _subfilters) {
-        os << *filter;
+        os << *filter << "\\n";
     }
     switch (kind()) {
         case Kind::row:
@@ -169,5 +169,5 @@ std::ostream &OringFilter::print(std::ostream &os) const {
             os << "WaitConditionOr";
             break;
     }
-    return os << ": " << _subfilters.size() << "\n";
+    return os << ": " << _subfilters.size();
 }

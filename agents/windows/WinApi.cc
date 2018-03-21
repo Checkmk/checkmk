@@ -287,6 +287,11 @@ HANDLE WinApi::FindFirstFile(LPCSTR lpFileName,
     return ::FindFirstFileA(lpFileName, lpFindFileData);
 }
 
+HANDLE WinApi::FindFirstFileW(LPCWSTR lpFileName,
+                              LPWIN32_FIND_DATAW lpFindFileData) const {
+    return ::FindFirstFileW(lpFileName, lpFindFileData);
+}
+
 HANDLE WinApi::FindFirstFileEx(LPCSTR lpFileName, int fInfoLevelId,
                                LPVOID lpFindFileData, int fSearchOp,
                                LPVOID lpSearchFilter,

@@ -1,0 +1,15 @@
+Title: Windows: use standard file matching patterns for fileinfo
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i4
+Date: 1521728082
+Class: fix
+
+Until now, Windows agent was using a non-standard way of defining recursive
+wildcards. From now on, the supported wildcard patterns '*', '?' and '**' work
+in a standardized way. Recursive patterns can be defined with '**', matching
+all descendants of the path so far. Previous patterns with single '*'s on
+several directory levels will from now on work as non-recursive patterns
+conforming to the standard.

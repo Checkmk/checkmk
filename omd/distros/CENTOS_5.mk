@@ -60,6 +60,7 @@ OS_PACKAGES      += binutils # Needed by Check_MK Agent Bakery
 OS_PACKAGES      += rpm-build # Needed by Check_MK Agent Bakery
 OS_PACKAGES      += perl-Net-SNMP
 OS_PACKAGES      += php
+OS_PACKAGES      += php-cli
 OS_PACKAGES      += php-mbstring
 OS_PACKAGES      += php-pdo
 OS_PACKAGES      += php-gd

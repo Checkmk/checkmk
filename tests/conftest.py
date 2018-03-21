@@ -75,11 +75,24 @@ def add_python_paths():
 
 
 def pytest_cmdline_main(config):
-    # Some special tests are not executed in a site environment
-    if config.getoption('markexpr') in [ "packaging", "git", "html_gentest", "unit" ]:
-        return
+    # Some special tests are not executed in a site environment, but in
+    # virtualenv environment. The integration tests and so on are required to
+    # run in our runtime environment (the site). Things like unit tests just
+    # need a similar python environment having the required modules.
+    verify_virtualenv()
+    #if config.getoption('markexpr') in [ "packaging", "git", "html_gentest", "unit" ]:
+    #else:
+    #    setup_site_and_switch_user()
 
-    setup_site_and_switch_user()
+
+def verify_virtualenv():
+    if not is_running_in_virtualenv():
+        raise SystemExit("ERROR: Please load virtual environment first "
+                        "(Use \"pipenv shell\" or configure direnv)")
+
+
+def is_running_in_virtualenv():
+    return os.environ.get("VIRTUAL_ENV")
 
 
 def is_running_as_site_user():

@@ -1,0 +1,63 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+requests = "*"
+"beautifulsoup4" = "*"
+pytest-stepwise = "*"
+dill = "*"
+"html5lib" = "*"
+bandit = "*"
+lockfile = "*"
+lxml = "*"
+# Newer version was broken - check again one day
+pylint = "==1.6.4"
+pyenchant = "*"
+typing = "*"
+
+[packages]
+# Extracted from omd/packages/python-modules/Makefile
+# TODO: Find a way to reduce the duplication
+pysphere = "*"
+pycryptodomex = "*"
+ordereddict = "*"
+ply = "*"
+pysmi = "*"
+pysnmp = "*"
+pymssql = "*"
+python-ldap = "*"
+MySQL-python = "*"
+psycopg2 = "*"
+dicttoxml = "*"
+pycparser = "*"
+enum34 = "*"
+cffi = "*"
+Pillow = "*"
+reportlab = "*"
+PyPDF2 = "*"
+npyscreen = "*"
+psutil = "*"
+six = "*"
+ipaddress = "*"
+netifaces = "*"
+dnspython = "*"
+idna = "*"
+cryptography = "*"
+requests = "*"
+pyOpenSSL = "*"
+pykerberos = "*"
+requests-kerberos = "*"
+tinkerforge = "*"
+paramiko = "*"
+pyghmi = "*"
+pathlib2 = "*"
+python-dateutil = "*"
+python-snap7 = "*"
+
+[requires]
+python_version = "2.7"

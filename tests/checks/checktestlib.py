@@ -1,5 +1,7 @@
 import types
 
+
+
 class Tuploid(object):
     """Base class for values with (potentially variadic) tuple representations"""
 
@@ -19,6 +21,7 @@ class Tuploid(object):
     def __iter__(self):
         for x in self.tuple:
             yield x
+
 
 
 class PerfValue(Tuploid):
@@ -60,6 +63,7 @@ class PerfValue(Tuploid):
                                                         self.crit, self.minimum, self.maximum)
 
 
+
 class BasicCheckResult(Tuploid):
     """
     A basic check result
@@ -98,6 +102,7 @@ class BasicCheckResult(Tuploid):
 
     def __repr__(self):
         return 'BasicCheckResult(%s, "%s", %s)' % (self.status, self.infotext, self.perfdata)
+
 
 
 class CheckResult(object):
@@ -152,6 +157,7 @@ class CheckResult(object):
         return perfdata
 
 
+
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
 
@@ -167,6 +173,7 @@ class DiscoveryEntry(Tuploid):
 
     def __repr__(self):
         return "DiscoveryEntry(%r, %r)" % (self.item, self.default_params)
+
 
 
 class DiscoveryResult(object):

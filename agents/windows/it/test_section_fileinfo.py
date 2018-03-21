@@ -8,13 +8,15 @@ from remote import (actual_output, config, remotedir, remotetest, wait_agent,
                     write_config)
 import shutil
 
-section = 'fileinfo'
-tempdir1 = os.path.join(remotedir, 'testdir1')
-tempdir2 = os.path.join(tempdir1, 'testdir2')
-tempfile1 = os.path.join(tempdir1, "testfile1")
-tempfile2 = os.path.join(tempdir1, "testfile2")
-tempfile3 = os.path.join(tempdir2, "testfile3")
-missingfile = os.path.join(tempdir1, 'foobar')
+
+class Globals:
+    section = 'fileinfo'
+    tempdir1 = os.path.join(remotedir, 'Testdir1')
+    tempdir2 = os.path.join(tempdir1, 'Testdir2')
+    tempfile1 = os.path.join(tempdir1, 'TestFile1')
+    tempfile2 = os.path.join(tempdir1, 'TestFile2')
+    tempfile3 = os.path.join(tempdir2, 'TestFile3')
+    missingfile = os.path.join(tempdir1, 'foobar')
 
 
 @pytest.fixture
@@ -22,18 +24,25 @@ def testfile(request):
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(config):
+@pytest.fixture(
+    params=[
+        os.path.join(Globals.tempdir1, '**'),
+        os.path.join(Globals.tempdir2, 'Te*')
+    ],
+    ids=['recursive_glob', 'simple_glob'])
+def testconfig(request, config):
     if platform.system() == 'Windows':
-        config.set("global", "sections", section)
-        config.set("global", "crash_debug", "yes")
-        config.add_section(section)
-        config.set(section, "path", tempfile1)
-        config.set(section, "path",
-                   os.path.join(tempdir1,
-                                '?' + os.path.basename(tempfile2)[1:]))
-        config.set(section, "path", os.path.join(tempdir1, '*', '*'))
-        config.set(section, "path", missingfile)
+        config.set('global', 'sections', Globals.section)
+        config.set('global', 'crash_debug', 'yes')
+        config.add_section(Globals.section)
+        if request.param != os.path.join(Globals.tempdir1, '**'):
+            config.set(Globals.section, 'path', Globals.tempfile1)
+            config.set(
+                Globals.section, 'path',
+                os.path.join(Globals.tempdir1,
+                             '?' + os.path.basename(Globals.tempfile2)[1:]))
+        config.set(Globals.section, 'path', request.param)
+        config.set(Globals.section, 'path', Globals.missingfile)
 
         return config
 
@@ -42,37 +51,32 @@ def testconfig(config):
 def expected_output():
     if platform.system() == 'Windows':
         return [
-            re.escape(r'<<<%s:sep(124)>>>' % section), r'\d+',
-            re.escape(r'%s|' % tempfile1) + r'\d+\|\d+',
-            re.escape(r'%s|' % tempfile2) + r'\d+\|\d+',
-            re.escape(r'%s|' % tempfile3) + r'\d+\|\d+',
-            re.escape(r'%s|missing|' % missingfile) + r'\d+'
+            re.escape(r'<<<%s:sep(124)>>>' % Globals.section), r'\d+',
+            re.escape(r'%s|' % Globals.tempfile1) + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.tempfile2) + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.tempfile3) + r'\d+\|\d+',
+            re.escape(r'%s|missing|' % Globals.missingfile) + r'\d+'
         ]
 
 
 @pytest.fixture
 def use_testfiles():
     if platform.system() == 'Windows':
-        tempdir1 = os.path.join(remotedir, 'testdir1')
-        tempdir2 = os.path.join(tempdir1, 'testdir2')
-        tempfile1 = os.path.join(tempdir1, "testfile1")
-        tempfile2 = os.path.join(tempdir1, "testfile2")
-        tempfile3 = os.path.join(tempdir2, "testfile3")
-
-        for d in [tempdir1, tempdir2]:
+        for d in [Globals.tempdir1, Globals.tempdir2]:
             os.mkdir(d)
-        for f in [tempfile1, tempfile2, tempfile3]:
+        for f in [Globals.tempfile1, Globals.tempfile2, Globals.tempfile3]:
             with open(f, 'w') as handle:
                 handle.write(f)
 
     yield
 
     if platform.system() == 'Windows':
-        for d in [tempdir2, tempdir1]:
+        for d in [Globals.tempdir2, Globals.tempdir1]:
             shutil.rmtree(d)
 
 
-@pytest.mark.usefixtures("use_testfiles")
-def test_section_fileinfo(testconfig, expected_output, actual_output,
+@pytest.mark.usefixtures('use_testfiles')
+def test_section_fileinfo(request, testconfig, expected_output, actual_output,
                           testfile):
-    remotetest(expected_output, actual_output, testfile)
+    # request.node.name gives test name
+    remotetest(expected_output, actual_output, testfile, request.node.name)

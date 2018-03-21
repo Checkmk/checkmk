@@ -55,15 +55,6 @@ test-shellcheck:
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 
-setup:
-	sudo apt-get install \
-	    python-pip \
-	    chrpath \
-	    cabal-install
-	sudo pip install --upgrade pip
-	sudo pip install --upgrade --ignore-installed -r requirements.txt
-	$(MAKE) -C pylint setup
-
 # TODO(sp): Proof of concept only for now, do this in a more general way
 PYTHONPATH := $(realpath ..)
 MYPYPATH := $(realpath typeshed)

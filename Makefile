@@ -406,14 +406,24 @@ setup:
 	    libpcap-dev \
 	    librrd-dev \
 	    llvm-5.0-dev \
+	    libsasl2-dev \
 	    pngcrush \
 	    slimit \
-	    valgrind
-	$(MAKE) -C tests setup
+	    valgrind \
+	    direnv \
+	    python-pip \
+	    chrpath \
+	    enchant
+	$(MAKE) setup-virtualenv
 	$(MAKE) -C omd setup
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/locale setup
 endif
+
+setup-virtualenv:
+	sudo pip install pipenv
+	pipenv install --dev
+	direnv allow
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n

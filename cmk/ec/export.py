@@ -164,7 +164,7 @@ def rule_pack_dir():
     """
     Returns the default WATO directory of the Event Console.
     """
-    return _default_settings().paths.config_dir.value / "wato"
+    return _default_settings().paths.rule_pack_dir.value
 
 
 def mkp_rule_pack_dir():
@@ -173,7 +173,7 @@ def mkp_rule_pack_dir():
     Returns the default directory for rule pack exports of the
     Event Console.
     """
-    return _default_settings().paths.config_dir.value / "mkp" / "rule_packs"
+    return _default_settings().paths.mkp_rule_pack_dir.value
 
 
 def read_rule_packs(context):

@@ -51,6 +51,8 @@ AnnotatedPath = NamedTuple(
 Paths = NamedTuple(
     'Paths', [('main_config_file', AnnotatedPath),
               ('config_dir', AnnotatedPath),
+              ('rule_pack_dir', AnnotatedPath),
+              ('mkp_rule_pack_dir', AnnotatedPath),
               ('unix_socket', AnnotatedPath),
               ('event_socket', AnnotatedPath),
               ('event_pipe', AnnotatedPath),
@@ -78,6 +80,10 @@ def _default_paths(omd_root, default_config_dir):
             'main configuration', default_config_dir / 'mkeventd.mk'),
         config_dir=AnnotatedPath(
             'configuration directory', default_config_dir / 'mkeventd.d'),
+        rule_pack_dir=AnnotatedPath(
+            'rule pack directory', default_config_dir / 'mkeventd.d' / 'wato'),
+        mkp_rule_pack_dir=AnnotatedPath(
+            'rule pack export directory', default_config_dir / 'mkeventd.d' / 'mkp' / 'rule_packs'),
         unix_socket=AnnotatedPath('Unix socket', run_dir / 'status'),
         event_socket=AnnotatedPath('event socket', run_dir / 'eventsocket'),
         event_pipe=AnnotatedPath('event pipe', run_dir / 'events'),

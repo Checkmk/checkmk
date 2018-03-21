@@ -5,15 +5,11 @@ import pytest
 import time
 import ast
 import pathlib2 as pathlib
-from testlib import web, ec, cmk_path, CMKEventConsole
+from testlib import CMKEventConsole, ec, web
 
 import cmk.ec.settings
 import cmk.paths
 import cmk.ec.main
-
-#
-# UNIT TESTS
-#
 
 class FakeStatusSocket(object):
     def __init__(self, query):
@@ -52,6 +48,7 @@ def settings():
 
 @pytest.fixture(scope="function")
 def config(settings):
+    # TODO: Currently does not work as unit test
     cmk.ec.main.load_configuration(settings)
 
 
@@ -123,6 +120,7 @@ def test_mkevent_check_query_perf(config, status_server, event_status, perfcount
 #
 # INTEGRATION TESTS
 #
+
 
 def ensure_core_and_get_connection(site, ec, core):
     if core != None:

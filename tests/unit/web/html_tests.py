@@ -17,6 +17,9 @@ from htmllib import HTML
 from classes import HTMLOrigTester, Refactored_htmlTester
 import tools
 
+unit_base_dir = cmk_path() + "/tests/unit/web"
+unit_test_files_dir = "%s/tests/unit/web/unittest_files" % cmk_path()
+
 
 #######################################################################################
 # HTML integration unit testing                                                       #
@@ -216,7 +219,7 @@ def build_cmk_test(function_name, args, state_in=None, add_vars=None):
 
 
 # write a list of html tests into a unittest file
-def save_html_test(test_name, test, test_files_dir = "%s/tests/web/unittest_files" % cmk_path()):
+def save_html_test(test_name, test, test_files_dir = unit_test_files_dir):
     if not isinstance(test, list):
         test = [test]
     assert all(isinstance(t, HtmlTest) for t in test), test
@@ -229,7 +232,7 @@ def save_html_test(test_name, test, test_files_dir = "%s/tests/web/unittest_file
 
 
 # load a unittest file and return a list of test objects
-def load_html_test(test_name, test_files_dir = "%s/tests/web/unittest_files" % cmk_path()):
+def load_html_test(test_name, test_files_dir = unit_test_files_dir):
     try:
         with open("%s/%s.unittest" % (test_files_dir.rstrip('/'), test_name), "r") as tfile:
             tests = ast.literal_eval(tfile.read())
@@ -314,7 +317,7 @@ def get_tests_args(function_name, arguments, state_in=None):
 # cmk_version in ["running", "old"]
 def load_gentest_file(test_name, cmk_version = "running"):
     assert test_name, "Specify a test file using the '--testfile $name' option!"
-    genpath = cmk_path() + "/tests/web/unittest_generation/"
+    genpath = unit_base_dir + "/unittest_generation/"
     ending  = ".testgen"
     filename = "%s/%s.%s" % (genpath.rstrip('/'), test_name, ending.lstrip('.'))
     try:
@@ -341,10 +344,10 @@ def load_gentest_file(test_name, cmk_version = "running"):
 
 
 def run_all_generated_tests(file_ending = ".testgen"):
-    genpath = cmk_path() + "/tests/web/unittest_generation/"
+    genpath = unit_base_dir + "/unittest_generation/"
     onlyfiles = [f for f in listdir(genpath) if f.endswith(".testgen") and isfile(join(genpath, f))]
     for test_name in onlyfiles:
-        tests = load_html_test(test_name.rstrip(file_ending), test_files_dir = "%s/tests/web/unittest_files" % cmk_path())
+        tests = load_html_test(test_name.rstrip(file_ending), test_files_dir = unit_test_files_dir)
         for test in tests:
             test.run()
 

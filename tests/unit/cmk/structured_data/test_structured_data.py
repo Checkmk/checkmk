@@ -183,7 +183,7 @@ def test_structured_data_NodeAttribute_has_edge(node_attribute, edge):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-TEST_DIR = "%s/tests/cmk/structured_data/tree_test_data" % cmk_path()
+TEST_DIR = "%s/tests/unit/cmk/structured_data/tree_test_data" % cmk_path()
 
 tree_name_old_addresses_arrays_memory = "%s/tree_old_addresses_arrays_memory" % TEST_DIR
 tree_name_old_addresses = "%s/tree_old_addresses" % TEST_DIR

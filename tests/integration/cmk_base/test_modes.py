@@ -28,11 +28,11 @@ def test_cfg(web, site):
 
     site.makedirs("var/check_mk/agent_output/")
     site.write_file("var/check_mk/agent_output/modes-test-host",
-            file("%s/tests/data/linux-agent-output" % repo_path()).read())
+            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file("var/check_mk/agent_output/modes-test-host2",
-            file("%s/tests/data/linux-agent-output" % repo_path()).read())
+            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file("var/check_mk/agent_output/modes-test-host3",
-            file("%s/tests/data/linux-agent-output" % repo_path()).read())
+            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
     web.discover_services("modes-test-host")
     web.discover_services("modes-test-host2")
@@ -200,7 +200,7 @@ def test_dump_agent_test(test_cfg, site):
         stdout, stderr = p.communicate()
         assert p.returncode == 0
         assert stderr == ""
-        assert stdout == file("%s/tests/data/linux-agent-output" % repo_path()).read()
+        assert stdout == file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read()
 
 #.
 #   .--dump----------------------------------------------------------------.

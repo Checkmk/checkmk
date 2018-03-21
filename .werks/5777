@@ -1,0 +1,44 @@
+Title: ucs_bladecenter_fans.temp: Made item name unique
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i4
+Date: 1521625999
+Class: fix
+
+The check plugins {{ucs_bladecenter_fans.temp}} and
+{{ucs_bladecenter_psu.chassis_temp}} created same
+item names and both use the WATO ruleset {{Temperature}}.
+That means that if a rule applied to a service generated
+by one of these check plugins, this rule automatically
+applied to the related one, too. No distinction was possible.
+
+You have to perform a rediscovery on the affected hosts.
+Performance data will be preserved.
+
+Example:
+ucs_bladecenter_fans.temp generated the services
+- Temperature Ambient Chassis 1 FAN
+- Temperature Ambient Chassis 2 FAN
+
+and ucs_bladecenter_psu.chassis_temp generated the services
+- Temperature Ambient Chassis 1
+- Temperature Ambient Chassis 2
+
+the item names were {{Ambient Chassis 1}} and {{Ambient Chassis 2}}
+in both cases. The temperature rule matching the sensor ID
+{{Ambient Chassis.*}} automatically applied to all four services.
+
+Now the item names for
+ucs_bladecenter_fans.temp look like
+- {{Ambient Chassis 1 FAN}}
+- {{Ambient Chassis 2 FAN}}
+
+and for ucs_bladecenter_psu.chassis_temp
+- {{Ambient Chassis 1}}
+- {{Ambient Chassis 2}}
+
+Independent rules may be created in the following order:
+- {{Ambient Chassis.*FAN}}
+- {{Ambient Chassis.*}}

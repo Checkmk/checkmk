@@ -150,14 +150,21 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
         return RulePackType.modified_mkp
 
 
+def _default_settings():
+    # type: () -> cmk.ec.settings.Settings
+    """Returns default EC settings. This function should vanish in the long run!"""
+    return cmk.ec.settings.settings('',
+                                    Path(cmk.paths.omd_root),
+                                    Path(cmk.paths.default_config_dir),
+                                    [''])
+
+
 def rule_pack_dir():
     # type: () -> Path
     """
     Returns the default WATO directory of the Event Console.
     """
-    paths = cmk.ec.settings.default_paths(Path(cmk.paths.omd_root),
-                                          Path(cmk.paths.default_config_dir))
-    return paths.config_dir.value / "wato"
+    return _default_settings().paths.config_dir.value / "wato"
 
 
 def mkp_rule_pack_dir():
@@ -166,9 +173,7 @@ def mkp_rule_pack_dir():
     Returns the default directory for rule pack exports of the
     Event Console.
     """
-    paths = cmk.ec.settings.default_paths(Path(cmk.paths.omd_root),
-                                          Path(cmk.paths.default_config_dir))
-    return paths.config_dir.value / "mkp" / "rule_packs"
+    return _default_settings().paths.config_dir.value / "mkp" / "rule_packs"
 
 
 def read_rule_packs(context):

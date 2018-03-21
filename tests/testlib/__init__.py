@@ -589,15 +589,20 @@ class Site(object):
 
 
     def _install_test_python_modules(self):
-        for file_name in os.listdir("/usr/local/lib/python2.7/dist-packages"):
-            target_path = self.path("local/lib/python/"+file_name)
-            if not os.path.exists(target_path):
-                assert os.system("sudo ln -s /usr/local/lib/python2.7/dist-packages/%s %s" %
-                              (file_name, target_path)) >> 8 == 0
-	#assert self.execute(["pip", "install",
-        #              "-r", os.path.join(cmk_path(), "tests", "requirements.txt"),
-        #              "-r", os.path.join(cmk_path(), "tests", "pylint", "requirements.txt"),
-        #            ]).wait() == 0
+        python_home = os.environ.get("VIRTUAL_ENV")
+        bin_dir      = os.path.join(python_home, "bin")
+        packages_dir = os.path.join(python_home, "lib/python2.7/site-packages")
+
+        for file_name in os.listdir(packages_dir):
+            #if "cffi" in file_name:
+            #    continue
+
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %
+                      (self.id, self.id, os.path.join(packages_dir, file_name), self.root)) >> 8 == 0
+
+        for file_name in [ "py.test", "pytest" ]:
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %
+                    (self.id, self.id, os.path.join(bin_dir, file_name), self.root)) >> 8 == 0
 
 
     def rm_if_not_reusing(self):
@@ -763,7 +768,7 @@ class Site(object):
         env_var_str = " ".join([ "%s=%s" % (k, pipes.quote(v))
                                  for k, v in env_vars.items() ]) + " "
 
-        cmd = env_var_str + subprocess.list2cmdline(["python"] + sys.argv + [ cmk_path() + "/tests" ])
+        cmd = env_var_str + subprocess.list2cmdline(["python", self.path("local/bin/py.test")] + sys.argv[1:] + [ cmk_path() + "/tests" ])
         args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]
         return subprocess.call(args)
 

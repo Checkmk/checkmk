@@ -3,16 +3,14 @@ import os
 
 from testlib import cmk_path
 
-# Make the cmk.paths point to the git directory so the unit tests can be
-# done without setting up a site
-@pytest.fixture(autouse=True)
-def patch_cmk_paths(monkeypatch, tmpdir):
-    monkeypatch.setattr("cmk.paths.check_manpages_dir", "%s/checkman" % cmk_path())
-    monkeypatch.setattr("cmk.paths.local_check_manpages_dir", "%s" % tmpdir)
-
 import cmk.man_pages as man_pages
+import cmk_base.checks as checks
 
 # TODO: Add tests for module internal functions
+
+@pytest.fixture(autouse=True)
+def patch_cmk_paths(monkeypatch, tmpdir):
+    monkeypatch.setattr("cmk.paths.local_check_manpages_dir", "%s" % tmpdir)
 
 def test_man_page_exists_only_shipped():
     assert man_pages.man_page_exists("if64") == True
@@ -113,6 +111,36 @@ def test_no_unsorted_man_pages():
     unsorted_page_names = [ m["name"] for m in catalog.get(("unsorted", ), []) ]
 
     assert not unsorted_page_names, "Found unsorted man pages: %s" % ", ".join(unsorted_page_names)
+
+
+def test_manpage_catalog_headers():
+    for name, path in man_pages.all_man_pages().items():
+        try:
+            parsed = man_pages._parse_man_page_header(name, path)
+        except Exception, e:
+            if cmk.debug.enabled():
+                raise
+            parsed = man_pages._create_fallback_man_page(name, path, e)
+
+        assert parsed.get("catalog"), "Did not find \"catalog:\" header in man page \"%s\"" % name
+
+
+def test_manpage_files():
+    manuals = man_pages.all_man_pages()
+    assert len(manuals) > 1000
+
+
+def test_find_missing_manpages():
+    all_check_manuals = man_pages.all_man_pages()
+
+    checks.load()
+    checks_sorted = checks.check_info.items() + \
+       [ ("check_" + name, entry) for (name, entry) in checks.active_check_info.items() ]
+    checks_sorted.sort()
+    assert len(checks_sorted) > 1000
+
+    for check_plugin_name, check in checks_sorted:
+        assert check_plugin_name in all_check_manuals, "Manpage missing: %s" % check_plugin_name
 
 
 def test_no_subtree_and_entries_on_same_level():

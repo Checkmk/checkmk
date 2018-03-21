@@ -148,7 +148,7 @@ def test_compare_soup():
 def get_attributes(html_object):
     attrs = {var: getattr(html_object, var) for var in dir(html_object)\
                 if not callable(getattr(html_object,var)) and not var.startswith("__")}
-    attrs = {key: val for key, val in attrs.iteritems() if key not in ['start_time', 'last_measurement', 'plugged_text', 'indent_level']
+    attrs = {key: val for key, val in attrs.iteritems() if key not in ['start_time', 'last_measurement', 'plugged_text', 'indent_level', 'escaper', 'encoder']
                                                         and not key.startswith("_unescaper")}
     return attrs
 

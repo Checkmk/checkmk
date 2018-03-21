@@ -9,6 +9,9 @@ monkeypatch = _pytest.monkeypatch.MonkeyPatch()
 monkeypatch.syspath_prepend("%s/web/htdocs" % (testlib.cmk_path()))
 #monkeypatch.syspath_prepend("/omd/sites/%s/%s/htdocs" % (os.environ["OMD_SITE"], cmk.paths.web_dir))
 
+import config
+monkeypatch.setattr(config, "omd_site", lambda: "NO_SITE")
+
 # Fake the localization wrapper _(...)
 monkeypatch.setattr(__builtin__, "_", lambda x: x, raising=False)
 

@@ -25,14 +25,16 @@
 #ifndef SectionFileinfo_h
 #define SectionFileinfo_h
 
+#include <experimental/filesystem>
 #include "Configurable.h"
 #include "Section.h"
+
+namespace fs = std::experimental::filesystem;
+using PathsT = std::vector<fs::path>;
 
 class Configuration;
 
 class SectionFileinfo : public Section {
-    typedef std::vector<std::string> PathsT;
-
 public:
     SectionFileinfo(Configuration &config, Logger *logger,
                     const WinApiAdaptor &winapi);
@@ -43,18 +45,7 @@ protected:
 
 private:
     unsigned char separator() const override { return '|'; }
-    void get_directories(const std::string base_path);
-    void determine_filepaths(const std::string search_pattern);
-    void determine_filepaths_full_search(const std::string base_path,
-                                         const std::string search_pattern);
-    void determine_filepaths_simple_search(const std::string base_path,
-                                           const std::string search_pattern);
 
-    void outputFileinfos(std::ostream &out, const char *path);
-    bool outputFileinfo(std::ostream &out, const std::string filename);
-
-    std::vector<std::string> _found_files;
-    std::vector<std::string> _temp_files;
     ListConfigurable<PathsT, BlockMode::Nop<PathsT>,
                      AddMode::PriorityAppend<PathsT>>
         _fileinfo_paths;

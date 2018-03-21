@@ -164,6 +164,9 @@ public:
     MOCK_CONST_METHOD1(FindClose, WINBOOL(HANDLE hFindFile));
     MOCK_CONST_METHOD2(FindFirstFile, HANDLE(LPCSTR lpFileName,
                                              LPWIN32_FIND_DATA lpFindFileData));
+    MOCK_CONST_METHOD2(FindFirstFileW,
+                       HANDLE(LPCWSTR lpFileName,
+                              LPWIN32_FIND_DATAW lpFindFileData));
     MOCK_CONST_METHOD6(FindFirstFileEx,
                        HANDLE(LPCSTR lpFileName, int fInfoLevelId,
                               LPVOID lpFindFileData, int fSearchOp,

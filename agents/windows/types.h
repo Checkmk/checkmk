@@ -27,6 +27,7 @@
 
 #include <limits.h>
 #include <stdint.h>
+#include <experimental/filesystem>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -50,6 +51,8 @@
 #ifndef INVALID_HANDLE_VALUE
 #define INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR)-1)
 #endif  // INVALID_HANDLE_VALUE
+
+namespace fs = std::experimental::filesystem;
 
 class script_statistics_t {
 public:
@@ -82,13 +85,16 @@ template <typename T>
 T from_string(const WinApiAdaptor &winapi, const std::string &input);
 
 template <>
-bool from_string<bool>(const WinApiAdaptor &winapi, const std::string &value);
+bool from_string<bool>(const WinApiAdaptor &, const std::string &value);
 template <>
-int from_string<int>(const WinApiAdaptor &winapi, const std::string &value);
+int from_string<int>(const WinApiAdaptor &, const std::string &value);
 
 template <>
-std::string from_string<std::string>(const WinApiAdaptor &winapi,
+std::string from_string<std::string>(const WinApiAdaptor &,
                                      const std::string &value);
+
+template <>
+fs::path from_string<fs::path>(const WinApiAdaptor &, const std::string &value);
 
 // Needed for only_from
 struct ipspec {

@@ -23,6 +23,12 @@ std::string from_string<std::string>(const WinApiAdaptor &,
 }
 
 template <>
+fs::path from_string<fs::path>(const WinApiAdaptor &,
+                               const std::string &value) {
+    return {value};
+}
+
+template <>
 ipspec from_string<ipspec>(const WinApiAdaptor &winapi,
                            const std::string &value) {
     ipspec result{winapi};

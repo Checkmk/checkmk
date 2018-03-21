@@ -143,6 +143,8 @@ public:
     virtual WINBOOL FindClose(HANDLE hFindFile) const override;
     virtual HANDLE FindFirstFile(
         LPCSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData) const override;
+    virtual HANDLE FindFirstFileW(
+        LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData) const override;
     virtual HANDLE FindFirstFileEx(LPCSTR lpFileName, int fInfoLevelId,
                                    LPVOID lpFindFileData, int fSearchOp,
                                    LPVOID lpSearchFilter,

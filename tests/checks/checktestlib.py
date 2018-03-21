@@ -75,7 +75,7 @@ class BasicCheckResult(Tuploid):
         assert status in [0, 1, 2, 3]
         self.status = status
 
-        assert type(infotext) == str
+        assert type(infotext) in [ str, unicode ]
         assert "\n" not in infotext
         self.infotext = infotext
 

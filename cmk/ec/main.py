@@ -3466,9 +3466,9 @@ class StatusTableHistory(StatusTable):
 
     def _enumerate(self, query):
         if g_config['archive_mode'] == 'mongodb':
-            return get_event_history_from_mongodb(settings, query)
+            return get_event_history_from_mongodb(self.settings, query)
         else:
-            return get_event_history_from_file(settings, query)
+            return get_event_history_from_file(self.settings, query)
 
 
 class StatusTableRules(StatusTable):

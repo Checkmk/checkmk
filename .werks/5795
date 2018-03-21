@@ -1,0 +1,11 @@
+Title: Realtime Checks: fixed race condition which caused loss of counter data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p28
+Date: 1521640214
+Class: fix
+
+If a host got data from realtime checks, as well as the regular check, there was a risk of loosing counter data.
+Missing counter data generally leads to stale services. This has been fixed.

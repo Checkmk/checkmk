@@ -1048,10 +1048,7 @@ def cachefile_age(filename):
 def load_item_state(hostname):
     global g_item_state
     filename = cmk.paths.counters_dir + "/" + hostname
-    try:
-        g_item_state = eval(file(filename).read())
-    except:
-        g_item_state = {}
+    g_item_state = store.load_data_from_file(filename, default={}, lock=True)
 
 
 def save_item_state(hostname):
@@ -1060,7 +1057,7 @@ def save_item_state(hostname):
         try:
             if not os.path.exists(cmk.paths.counters_dir):
                 os.makedirs(cmk.paths.counters_dir)
-            file(filename, "w").write("%r\n" % g_item_state)
+            store.save_data_to_file(filename, g_item_state, pretty=False)
         except Exception, e:
             raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
 

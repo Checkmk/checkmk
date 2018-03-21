@@ -155,9 +155,11 @@ def eventd_configuration():
         "debug_rules": False,
     }
 
-    ec_paths = cmk.ec.settings.default_paths(Path(cmk.paths.omd_root),
-                                             Path(cmk.paths.default_config_dir))
-    for path in [ec_paths.main_config_file.value] + sorted(ec_paths.config_dir.value.glob('**/*.mk')):
+    settings = cmk.ec.settings.settings('',
+                                        Path(cmk.paths.omd_root),
+                                        Path(cmk.paths.default_config_dir),
+                                        [''])
+    for path in [settings.paths.main_config_file.value] + sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         cmk.store.load_mk_file(str(path), config)
 
     cached_config = (html, config)

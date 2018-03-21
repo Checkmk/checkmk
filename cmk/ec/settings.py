@@ -68,7 +68,7 @@ Paths = NamedTuple(
               ('mongodb_config_file', AnnotatedPath)])
 
 
-def default_paths(omd_root, default_config_dir):
+def _default_paths(omd_root, default_config_dir):
     # type: (Path, Path) -> Paths
     """Returns all default filesystem paths related to the event console"""
     run_dir = omd_root / 'tmp/run/mkeventd'
@@ -112,7 +112,7 @@ PortNumbers = NamedTuple(
                     ('snmptrap_udp', PortNumber)])
 
 
-def default_port_numbers():
+def _default_port_numbers():
     # type: () -> PortNumbers
     """Returns all port numbers related to the event console"""
     return PortNumbers(syslog_udp=PortNumber(514),
@@ -227,8 +227,8 @@ Settings = NamedTuple(
 def settings(version, omd_root, default_config_dir, argv):
     # type: (str, Path, Path, List[str]) -> Settings
     """Returns all event console settings"""
-    paths = default_paths(omd_root, default_config_dir)
-    port_numbers = default_port_numbers()
+    paths = _default_paths(omd_root, default_config_dir)
+    port_numbers = _default_port_numbers()
     parser = ECArgumentParser(Path(argv[0]).name, version, paths, port_numbers)
     args = parser.parse_args(argv[1:])
     options = Options(

@@ -1418,11 +1418,11 @@ def mode_mkeventd_rules(phase):
                         rule_packs[other_pack_nr]["rules"][0:0] = [ rule ]
                         del rule_packs[rule_pack_nr]["rules"][move_nr]
 
-                        save_mkeventd_rules(legacy_rules, rule_packs)
                         if other_type_ == ec.RulePackType.exported:
                             export_mkp_rule_pack(other_pack)
                         if type_ == ec.RulePackType.exported:
                             export_mkp_rule_pack(rule_pack)
+                        save_mkeventd_rules(legacy_rules, rule_packs)
 
                         add_ec_change("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
                         return None, html.render_text(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
@@ -1445,9 +1445,9 @@ def mode_mkeventd_rules(phase):
 
                 del rules[nr]
 
-                save_mkeventd_rules(legacy_rules, rule_packs)
                 if type_ == ec.RulePackType.exported:
                     export_mkp_rule_pack(rule_pack)
+                save_mkeventd_rules(legacy_rules, rule_packs)
             elif c == False:
                 return ""
             else:
@@ -1466,9 +1466,9 @@ def mode_mkeventd_rules(phase):
                 del rules[from_pos] # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
 
-                save_mkeventd_rules(legacy_rules, rule_packs)
                 if type_ == ec.RulePackType.exported:
                     export_mkp_rule_pack(rule_pack)
+                save_mkeventd_rules(legacy_rules, rule_packs)
 
                 add_ec_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return
@@ -1850,9 +1850,9 @@ def mode_mkeventd_edit_rule(phase):
         else:
             rules[edit_nr] = rule
 
-        save_mkeventd_rules(legacy_rules, rule_packs)
         if type_ == ec.RulePackType.exported:
             export_mkp_rule_pack(rule_pack)
+        save_mkeventd_rules(legacy_rules, rule_packs)
 
         if new:
             add_ec_change("new-rule", _("Created new event correlation rule with id %s") % rule["id"])

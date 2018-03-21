@@ -284,6 +284,9 @@ def save_rule_packs(legacy_rules, rule_packs, pretty_print=False, dir_=None):
     cmk.store.save_file(file_, output)
 
 
+# NOTE: It is essential that export_rule_pack() is called *before*
+# save_rule_packs(), otherwise there is a race condition when the EC
+# recursively reads all *.mk files!
 def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     # type: (Dict[str, Any], bool, Optional[Path]) -> None
     """

@@ -1,0 +1,19 @@
+Title: CentOS/RedHat: Add explicit dependency to php-cli to fix possible broken PNP graphs
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521643261
+Class: fix
+
+The previous Check_MK packages were not explicitly declaring the dependency
+to the php-cli package which is needed to make Dokuwiki, NagVis and PNP4Nagios
+work.
+
+The dependency was only declared for php which normally implies php-cli.
+Unfortunately there are third party packages that don't have this implicit
+dependency.
+
+To make Check_MK work out of the box with those PHP installations, we now added
+php-cli as explicit dependency.

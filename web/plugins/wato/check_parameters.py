@@ -447,8 +447,6 @@ register_check_parameters(
                     default_value = None,
                 ),
             ),
-
-
             ( "if_in_pkts",
                 Levels(
                     title = _("Incoming Packets Maximum"),

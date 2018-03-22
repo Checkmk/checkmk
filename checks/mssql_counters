@@ -251,7 +251,7 @@ def check_mssql_counters_transactions(item, params, parsed):
             if value is None:
                 continue
 
-            rate = get_rate("mssql_counters.transactions.%s.%s" % (item, counter_key), now, value)
+            rate = get_rate("mssql_counters.transactions.%s.%s.%s" % (node_name, item, counter_key), now, value)
             infotext = "%s%s: %.1f/s" % (node_info, title, rate)
             node_info = ""
             yield 0, infotext, [(counter_key, rate)]
@@ -296,7 +296,7 @@ def check_mssql_counters_locks(item, params, parsed):
             if value is None:
                 continue
 
-            rate = get_rate("mssql_counters.locks.%s.%s" % (item, counter_key), now, value)
+            rate = get_rate("mssql_counters.locks.%s.%s.%s" % (node_name, item, counter_key), now, value)
             infotext = "%s%s: %.1f/s" % (node_info, title, rate)
             node_info = ""
 
@@ -352,7 +352,7 @@ def check_mssql_counters_sqlstats(item, params, parsed):
         if now is None:
             now = time.time()
 
-        rate = get_rate("mssql_counters.sqlstats.%s.%s" % (item, counter), now, value)
+        rate = get_rate("mssql_counters.sqlstats.%s.%s.%s" % (node_name, item, counter), now, value)
         node_info = ""
         if node_name:
             node_info = "[%s] " % node_name
@@ -410,7 +410,7 @@ def check_mssql_counters_pageactivity(item, params, parsed):
             if value is None:
                 continue
 
-            rate = get_rate("mssql_counters.pageactivity.%s.%s" % (item, counter_key), now, value)
+            rate = get_rate("mssql_counters.pageactivity.%s.%s.%s" % (node_name, item, counter_key), now, value)
             infotext = "%s%s: %.1f/s" % (node_info, title, rate)
             node_info = ""
 
@@ -471,8 +471,8 @@ def check_mssql_counters_locks_per_batch(item, params, parsed):
         locks = data_locks["lock_requests/sec"]
         batches = data_stats["batch_requests/sec"]
 
-        lock_rate = get_rate("mssql_counters_locks_per_batch.%s.locks" % item, now, locks)
-        batch_rate = get_rate("mssql_counters_locks_per_batch.%s.batches" % item, now, batches)
+        lock_rate = get_rate("mssql_counters_locks_per_batch.%s.%s.locks" % (node_name, item), now, locks)
+        batch_rate = get_rate("mssql_counters_locks_per_batch.%s.%s.batches" % (node_name, item), now, batches)
 
         if batch_rate == 0:
             lock_per_batch = 0

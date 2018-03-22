@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8; py-indent-offset: 4 -*-
 import os
 import pytest
 from remote import actual_output, config, remotetest, wait_agent, write_config

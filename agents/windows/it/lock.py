@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8; py-indent-offset: 4 -*-
 # Implement file based locking on Windows.
 # Simply exit with 1 if lock file exists (no retry).
 

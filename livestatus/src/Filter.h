@@ -55,6 +55,12 @@ public:
                          std::chrono::seconds timezone_offset) const = 0;
     virtual std::unique_ptr<Filter> partialFilter(
         std::function<bool(const Column &)> predicate) const = 0;
+
+    // TODO(sp) We might be able to unify all the methods below if we make the
+    // underlying lattice structure explicit, i.e. provide a set type and
+    // corresponding meet/join operations. Perhaps we can even get rid of the
+    // std::optional by making the lattice bounded, i.e. by providing bottom/top
+    // values.
     virtual std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
     virtual std::optional<int32_t> greatestLowerBoundFor(
@@ -66,6 +72,7 @@ public:
     virtual std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const;
+
     virtual std::unique_ptr<Filter> copy() const = 0;
     virtual std::unique_ptr<Filter> negate() const = 0;
 

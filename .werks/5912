@@ -1,0 +1,11 @@
+Title: mk_jolokia: Fixed exception in Bakery rule if an instance is set
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1521716626
+Class: fix
+
+A typo prevented the bakery ruleset to work correctly and has been introduced
+in werk #5762.

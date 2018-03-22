@@ -1639,7 +1639,8 @@ class EventServer(ECServerThread):
                 client_sockets[client_socket.fileno()] = (client_socket, address, "")
 
             # Read data from existing event unix socket connections
-            for fd, (cs, address, previous_data) in client_sockets.iteritems():
+            # NOTE: We modify client_socket in the loop, so we need to copy below!
+            for fd, (cs, address, previous_data) in list(client_sockets.iteritems()):
                 if fd in readable:
                     # Receive next part of data
                     try:

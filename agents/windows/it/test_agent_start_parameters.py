@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8; py-indent-offset: 4 -*-
 try:
     # Use iter version of filter
     from future_builtins import filter

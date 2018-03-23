@@ -80,7 +80,7 @@ class CachedItemStates(object):
     def reset(self):
         # The actual cached data
         self._item_states       = {}
-        self._item_state_prefix = None
+        self._item_state_prefix = ()
         self._last_mtime        = None # timestamp of last modification
         self._removed_item_state_keys = []
         self._updated_item_states = {}

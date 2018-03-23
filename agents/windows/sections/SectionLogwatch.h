@@ -31,7 +31,7 @@
 
 typedef struct _BY_HANDLE_FILE_INFORMATION BY_HANDLE_FILE_INFORMATION;
 
-enum file_encoding {
+enum class file_encoding {
     UNDEF,
     DEFAULT,
     UNICODE,
@@ -81,7 +81,7 @@ struct logwatch_textfile {
     bool missing{false};           // file no longer exists
     bool nocontext;                // do not report ignored lines
     bool rotated;                  // assume the logfile is a rotating log
-    file_encoding encoding{UNDEF};
+    file_encoding encoding{file_encoding::UNDEF};
     std::reference_wrapper<const condition_patterns_t>
         patterns;  // glob patterns applying for this file
 };

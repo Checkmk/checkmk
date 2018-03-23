@@ -67,7 +67,7 @@ file_encoding determine_encoding(const logwatch_textfile &textfile) {
     ifstream ifs(textfile.paths.front(), ifstream::in | ifstream::binary);
 
     if (ifs.fail()) {
-        return UNDEF;
+        return file_encoding::UNDEF;
     }
 
     std::array<char, 2> bytes;
@@ -75,24 +75,24 @@ file_encoding determine_encoding(const logwatch_textfile &textfile) {
     if (ifs.read(bytes.data(), bytes.size()) &&
         static_cast<unsigned char>(bytes[0]) == 0xFF &&
         static_cast<unsigned char>(bytes[1]) == 0xFE) {
-        return UNICODE;
+        return file_encoding::UNICODE;
     } else {
-        return DEFAULT;
+        return file_encoding::DEFAULT;
     }
 }
 
 ifstream open_logfile(logwatch_textfile &textfile) {
     ifstream result;
 
-    if ((textfile.encoding == UNDEF) || (textfile.offset == 0)) {
+    if ((textfile.encoding == file_encoding::UNDEF) || (textfile.offset == 0)) {
         textfile.encoding = determine_encoding(textfile);
     }
 
-    if (textfile.encoding == UNDEF) {
+    if (textfile.encoding == file_encoding::UNDEF) {
         result.setstate(std::ios_base::badbit);
     } else {
         auto mode = ifstream::in;
-        if (textfile.encoding == UNICODE) {
+        if (textfile.encoding == file_encoding::UNICODE) {
             mode |= ifstream::binary;
         }
         result.open(textfile.paths.front(), mode);
@@ -103,7 +103,7 @@ ifstream open_logfile(logwatch_textfile &textfile) {
 
 uint64_t logfile_offset(const logwatch_textfile &textfile) {
     uint64_t offset = textfile.offset;
-    if ((offset == 0) && (textfile.encoding == UNICODE)) {
+    if ((offset == 0) && (textfile.encoding == file_encoding::UNICODE)) {
         offset = 2;
     }
     return offset;
@@ -425,7 +425,7 @@ SectionLogwatch::ProcessTextfileResponse SectionLogwatch::processTextfile(
     // Necessary as reading UTF-16 file sets some fail bit(s) at the end.
     file.clear();
     file.seekg(logfile_offset(textfile));
-    if (textfile.encoding == UNICODE)
+    if (textfile.encoding == file_encoding::UNICODE)
         return processTextfileUnicode(file, textfile, out, write_output);
     else
         return processTextfileDefault(file, textfile, out, write_output);

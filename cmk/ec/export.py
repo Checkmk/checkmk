@@ -176,7 +176,7 @@ def mkp_rule_pack_dir():
     return _default_settings().paths.mkp_rule_pack_dir.value
 
 
-def read_rule_packs(context):
+def _read_rule_packs(context):
     # type: (Dict[str, Any]) -> None
     """
     Read rule packs from rules.mk into the variable context.
@@ -199,7 +199,7 @@ def read_rule_packs(context):
             cmk.ec.defaults.default_rule_pack(context["rules"])]
 
 
-def read_exported_rule_packs(context):
+def _read_exported_rule_packs(context):
     # type: (Dict[str, Any]) -> Dict[str, Any]
     """
     Read exported rule packs into the variable context. The exported
@@ -221,6 +221,7 @@ def remove_exported_rule_pack(id_):
     export_file.unlink()
 
 
+# Only called from cmk.ec.main.load_configuration.
 def bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
     # type: (Any, Any) -> None
     """
@@ -252,8 +253,8 @@ def load_rule_packs():
         "mkp_rule_packs": {}
     }
 
-    read_rule_packs(context)
-    read_exported_rule_packs(context)
+    _read_rule_packs(context)
+    _read_exported_rule_packs(context)
     bind_to_rule_pack_proxies(context['rule_packs'], context['mkp_rule_packs'])
 
     return context['rules'], context['rule_packs']

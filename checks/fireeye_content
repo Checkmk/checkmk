@@ -34,11 +34,20 @@ def check_fireeye_content(_no_item, _no_params, info):
     content, update_passed, last_update_time = info[0]
     state = 0
     now = time.time()
-    last_update_seconds = \
-        time.mktime(time.strptime(last_update_time, '%Y/%m/%d %H:%M:%S'))
-    infotext = "Security version: %s, Last update: %s (%s ago)" % \
-               (content, last_update_time,
-                get_age_human_readable(now - last_update_seconds))
+
+    # If content update has never completed, last_update_time contains no valid timestamp
+    # In that case, we just skip the output
+    try:
+        last_update_seconds = \
+            time.mktime(time.strptime(last_update_time, '%Y/%m/%d %H:%M:%S'))
+    except ValueError:
+        last_update_seconds = None
+
+    infotext = "Security version: %s" % content
+    if last_update_seconds:
+        infotext += ", Last update: %s (%s ago)" % \
+                    (last_update_time,
+                     get_age_human_readable(now - last_update_seconds))
 
     if update_passed != '1':
         state = 1

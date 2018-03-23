@@ -176,42 +176,6 @@ def mkp_rule_pack_dir():
     return _default_settings().paths.mkp_rule_pack_dir.value
 
 
-def _read_rule_packs(context):
-    # type: (Dict[str, Any]) -> None
-    """
-    Read rule packs from rules.mk into the variable context.
-    Context has to be a dict with the keys rules and rule_packs.
-    """
-    rules_file = rule_pack_dir() / "rules.mk"
-    if rules_file.is_file():
-        cmk.store.load_mk_file(str(rules_file), context)
-
-    # Convert some data fields into a new format
-    for rule in context["rules"]:
-        if "livetime" in rule:
-            livetime = rule["livetime"]
-            if not isinstance(livetime, tuple):
-                rule["livetime"] = (livetime, ["open"])
-
-    # Convert old plain rules into a list of one rule pack
-    if context["rules"] and not context["rule_packs"]:
-        context["rule_packs"] = [
-            cmk.ec.defaults.default_rule_pack(context["rules"])]
-
-
-def _read_exported_rule_packs(context):
-    # type: (Dict[str, Any]) -> Dict[str, Any]
-    """
-    Read exported rule packs into the variable context. The exported
-    rule packs may already be part of an MKP. Context has to be a
-    dict with the key mkp_rule_packs.
-    """
-    for file_ in mkp_rule_pack_dir().glob('*.mk'):
-        cmk.store.load_mk_file(str(file_), context)
-
-    return context
-
-
 def remove_exported_rule_pack(id_):
     # type: (str) -> None
     """
@@ -239,6 +203,8 @@ def bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
                                           % rule_pack.id_)
 
 
+# NOTE: This is the *only* place which can introduce legacy rules. Can we avoid
+# that and put it directly into the default rule pack?
 def load_rule_packs():
     # type: () -> Tuple[Any, Any]
     """
@@ -251,10 +217,27 @@ def load_rule_packs():
         "rules": [],
         "rule_packs": [],
         "mkp_rule_packs": {}
-    }
+    }  # type: Dict[str, Any]
 
-    _read_rule_packs(context)
-    _read_exported_rule_packs(context)
+    rules_file = rule_pack_dir() / "rules.mk"
+    if rules_file.is_file():
+        cmk.store.load_mk_file(str(rules_file), context)
+
+    # Convert some data fields into a new format
+    for rule in context["rules"]:
+        if "livetime" in rule:
+            livetime = rule["livetime"]
+            if not isinstance(livetime, tuple):
+                rule["livetime"] = (livetime, ["open"])
+
+    # Convert old plain rules into a list of one rule pack
+    if context["rules"] and not context["rule_packs"]:
+        context["rule_packs"] = [
+            cmk.ec.defaults.default_rule_pack(context["rules"])]
+
+    for file_ in mkp_rule_pack_dir().glob('*.mk'):
+        cmk.store.load_mk_file(str(file_), context)
+
     bind_to_rule_pack_proxies(context['rule_packs'], context['mkp_rule_packs'])
 
     return context['rules'], context['rule_packs']

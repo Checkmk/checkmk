@@ -76,6 +76,8 @@ package_parts = [ (part, title, perm, ldir and ldir or dir) for part, title, per
   ( "bin",           "Binaries",                  0755, None,                          cmk.paths.local_bin_dir ),
   ( "lib",           "Libraries",                 0644, None,                          cmk.paths.local_lib_dir),
   ( "mibs",          "SNMP MIBs",                 0644, None,                          cmk.paths.local_mib_dir),
+  ( "alert_handlers", "Alert handlers",           0755, cmk.paths.share_dir + "/alert_handlers",
+                                                        cmk.paths.local_share_dir + "/alert_handlers" ),
 ]]
 
 config_parts = [

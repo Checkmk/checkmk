@@ -14,7 +14,7 @@ class Crypto {
     static const ALG_ID DEFAULT_ALGORITHM = CALG_AES_256;
     static const ALG_ID HASH_ALGORITHM = CALG_MD5;
 
-    enum KeyLength {
+    enum class KeyLength {
         KEY_LEN_DEFAULT = 0,
         KEY_LEN_128 = 128,
         KEY_LEN_192 = 192,
@@ -28,7 +28,7 @@ public:
     explicit Crypto(const WinApiAdaptor &winapi);
 
     Crypto(const std::string &password, const WinApiAdaptor &winapi,
-           KeyLength key_length = KEY_LEN_DEFAULT);
+           KeyLength key_length = KeyLength::KEY_LEN_DEFAULT);
 
     Crypto(const BYTE *key, DWORD key_size, const WinApiAdaptor &winapi);
 

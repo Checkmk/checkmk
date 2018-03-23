@@ -8,7 +8,7 @@
 Crypto::Crypto(const WinApiAdaptor &winapi)
     : _algorithm(DEFAULT_ALGORITHM), _winapi(winapi) {
     _provider = initContext();
-    _key = genKey(KEY_LEN_DEFAULT);
+    _key = genKey(KeyLength::KEY_LEN_DEFAULT);
     configureKey();
 }
 
@@ -105,8 +105,9 @@ void Crypto::releaseContext() { _winapi.CryptReleaseContext(_provider, 0); }
 
 HCRYPTKEY Crypto::genKey(KeyLength key_length) const {
     HCRYPTKEY result;
-    if (!_winapi.CryptGenKey(_provider, _algorithm,
-                             key_length | CRYPT_EXPORTABLE, &result)) {
+    if (!_winapi.CryptGenKey(
+            _provider, _algorithm,
+            static_cast<unsigned>(key_length) | CRYPT_EXPORTABLE, &result)) {
         throw std::runtime_error(get_win_error_as_string(_winapi));
     }
 
@@ -184,10 +185,9 @@ void Crypto::deriveOpenSSLKey(const std::string &password, KeyLength key_length,
     size_t key_offset = 0;
     size_t iv_offset = 0;
 
-    int key_size = key_length;
-    if (key_size == 0) {
-        key_size = keySize(_algorithm) / 8;
-    }
+    auto key_size = (key_length == KeyLength::KEY_LEN_DEFAULT)
+                        ? keySize(_algorithm) / 8
+                        : static_cast<size_t>(key_length);
 
     std::vector<BYTE> key(key_size);
     std::vector<BYTE> iv;

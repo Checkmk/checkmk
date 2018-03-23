@@ -31,10 +31,10 @@ def testfile():
 def testconfig(request, config):
     Globals.host = request.param
     section = 'check_mk'
-    config.set("global", "sections", section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', section)
+    config.set('global', 'crash_debug', 'yes')
     if request.param:
-        config.set("global", "host", request.param)
+        config.set('global', 'host', request.param)
     return config
 
 
@@ -44,7 +44,7 @@ def testconfig(request, config):
 def testconfig_only_from(request, testconfig):
     Globals.only_from = request.param
     if request.param:
-        testconfig.set("global", "only_from", request.param)
+        testconfig.set('global', 'only_from', request.param)
     return testconfig
 
 

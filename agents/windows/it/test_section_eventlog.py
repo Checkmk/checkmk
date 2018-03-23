@@ -39,7 +39,7 @@ def generate_logs():
     if platform.system() == 'Windows':
         with _winreg.OpenKey(
                 _winreg.HKEY_LOCAL_MACHINE,
-                "SYSTEM\\CurrentControlSet\\Services\\Eventlog") as key:
+                'SYSTEM\\CurrentControlSet\\Services\\Eventlog') as key:
             index = 0
             while True:
                 try:
@@ -52,7 +52,7 @@ def generate_logs():
 # Windows SSH agent and COM spoil tests by omitting occasional events to
 # Security and System logs. Ignore those logs as they are too unstable during a
 # test run.
-logs = list(l for l in generate_logs() if l != "Security" and l != "System")
+logs = list(l for l in generate_logs() if l != 'Security' and l != 'System')
 
 
 @contextlib.contextmanager
@@ -106,15 +106,15 @@ def testfile():
 
 @pytest.fixture(params=['yes', 'no'], ids=['vista_api=yes', 'vista_api=no'])
 def testconfig(request, config):
-    config.set("global", "sections", Globals.section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', Globals.section)
+    config.set('global', 'crash_debug', 'yes')
     config.add_section(Globals.section)
-    config.set(Globals.section, "vista_api", request.param)
-    config.set(Globals.section, "logfile %s" % Globals.testlog, "warn")
+    config.set(Globals.section, 'vista_api', request.param)
+    config.set(Globals.section, 'logfile %s' % Globals.testlog, 'warn')
     # Ignore security and system logs as SSH agent and COM may emit something
     # there while tests run
-    config.set(Globals.section, "logfile Security", "off")
-    config.set(Globals.section, "logfile System", "off")
+    config.set(Globals.section, 'logfile Security', 'off')
+    config.set(Globals.section, 'logfile System', 'off')
 
     return config
 
@@ -172,7 +172,7 @@ def with_statefile(request):
                 for logtype in logs
             }
             for logtype, state in eventstate.items():
-                statefile.write("%s|%s\r\n" % (logtype, state))
+                statefile.write('%s|%s\r\n' % (logtype, state))
     yield
 
 
@@ -192,11 +192,11 @@ def verify_eventstate():
             assert math.fabs(
                 expected_state - actual_state) <= state_tolerance, (
                     "expected state for log '%s' is %d, actual state %d, "
-                    "state_tolerance %d" % (expected_log, expected_state,
+                    'state_tolerance %d' % (expected_log, expected_state,
                                             actual_state, state_tolerance))
 
 
-@pytest.mark.usefixtures("no_statefile")
+@pytest.mark.usefixtures('no_statefile')
 def test_section_eventlog__no_statefile__no_events(request, testconfig,
                                                    expected_output_no_events,
                                                    actual_output, testfile):
@@ -205,7 +205,7 @@ def test_section_eventlog__no_statefile__no_events(request, testconfig,
                request.node.name)
 
 
-@pytest.mark.usefixtures("with_statefile", "create_events")
+@pytest.mark.usefixtures('with_statefile', 'create_events')
 def test_section_eventlog__application_warnings(
         request, testconfig, expected_output_application_events, actual_output,
         testfile):

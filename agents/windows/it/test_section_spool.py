@@ -10,7 +10,7 @@ from remote import (actual_output, config, remotetest, remotedir, wait_agent,
 
 class Globals(object):
     section = 'spool'
-    test_message = "Test message"
+    test_message = 'Test message'
     outdated = False
 
 
@@ -21,8 +21,8 @@ def testfile():
 
 @pytest.fixture
 def testconfig(config):
-    config.set("global", "sections", Globals.section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', Globals.section)
+    config.set('global', 'crash_debug', 'yes')
     return config
 
 

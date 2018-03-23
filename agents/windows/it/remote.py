@@ -15,7 +15,7 @@ remote_ip = '10.1.2.30'
 # To use another user account for running the tests, replace this username.
 remoteuser = 'NetworkAdministrator'
 remotedir = os.path.join(os.sep, 'Users', remoteuser, 'Tests')
-sshopts = "-o StrictHostKeyChecking=no"
+sshopts = '-o StrictHostKeyChecking=no'
 host = 'localhost'
 port = 9999
 agent_exe = os.path.join(remotedir, 'check_mk_agent-64.exe')
@@ -23,7 +23,7 @@ ini_filename = os.path.join(remotedir, 'check_mk.ini')
 
 
 def run_subprocess(cmd):
-    sys.stderr.write(' '.join(cmd) + "\n")
+    sys.stderr.write(' '.join(cmd) + '\n')
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     return (p.returncode, stdout, stderr)
@@ -41,8 +41,8 @@ def assert_subprocess(cmd):
 @pytest.fixture
 def config():
     ini = IniWriter()
-    ini.add_section("global")
-    ini.set("global", "port", port)
+    ini.add_section('global')
+    ini.set('global', 'port', port)
     return ini
 
 
@@ -83,8 +83,8 @@ def actual_output(write_config, wait_agent):
                 wait_agent()
             # Thrown if something goes wrong before variable assigment
             except UnboundLocalError as e:
-                sys.stderr.write("%s\n" % str(e))
-                assert 0, "%s" % str(e)
+                sys.stderr.write('%s\n' % str(e))
+                assert 0, '%s' % str(e)
             os.chdir(save_cwd)
     else:
         # Not on Windows, test run remotely, nothing to be done.
@@ -96,7 +96,7 @@ class DuplicateSectionError(Exception):
 
     def __init__(self, section):
         super(DuplicateSectionError,
-              self).__init__(self, "Section %r already exists" % section)
+              self).__init__(self, 'Section %r already exists' % section)
 
 
 class NoSectionError(Exception):
@@ -118,7 +118,7 @@ class IniWriter(ConfigParser.RawConfigParser):
         already exists. Raise ValueError if name is DEFAULT or any of it's
         case-insensitive variants.
         """
-        if section.lower() == "default":
+        if section.lower() == 'default':
             raise ValueError, 'Invalid section name: %s' % section
 
         if section in self._sections:
@@ -175,13 +175,13 @@ def remotetest(expected_output,
                                                 (expected, actual))
         try:
             assert len(actual_output) >= len(expected_output), (
-                "actual output is shorter than expected:\n"
-                "expected output:\n%s\nactual output:\n%s" %
+                'actual output is shorter than expected:\n'
+                'expected output:\n%s\nactual output:\n%s' %
                 ('\n'.join(expected_output), '\n'.join(actual_output)))
             assert len(actual_output) <= len(expected_output), (
-                "actual output is longer than expected:\n"
-                "expected output:\n%s\nactual output:\n%s" %
+                'actual output is longer than expected:\n'
+                'expected output:\n%s\nactual output:\n%s' %
                 ('\n'.join(expected_output), '\n'.join(actual_output)))
         except TypeError:
             # expected_output may be an iterator without len
-            assert len(actual_output) > 0, "Actual output was empty"
+            assert len(actual_output) > 0, 'Actual output was empty'

@@ -67,7 +67,7 @@ def rm_rf_testfiles():
         pytest.skip(stderr)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def session_scope():
     try:
         acquire_lock()

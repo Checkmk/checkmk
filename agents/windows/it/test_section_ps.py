@@ -17,16 +17,16 @@ def testfile():
 
 @pytest.fixture(params=['yes', 'no'], ids=['use_wmi=yes', 'use_wmi=no'])
 def testconfig(request, config):
-    config.set("global", "sections", section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', section)
+    config.set('global', 'crash_debug', 'yes')
     config.add_section(section)
-    config.set(section, "use_wmi", request.param)
+    config.set(section, 'use_wmi', request.param)
     return config
 
 
 @pytest.fixture(params=['yes', 'no'], ids=['full_path=yes', 'full_path=no'])
 def full_path_config(request, testconfig):
-    testconfig.set(section, "full_path", request.param)
+    testconfig.set(section, 'full_path', request.param)
     return testconfig
 
 

@@ -65,13 +65,13 @@ def testfile():
 
 @pytest.fixture(params=['default', 'from_start', 'rotated', 'nocontext'])
 def testconfig(request, config):
-    config.set("global", "sections", Globals.section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', Globals.section)
+    config.set('global', 'crash_debug', 'yes')
     config.add_section(Globals.section)
     Globals.config_param_in_use = request.param
     tag = '' if request.param == 'default' else '%s ' % request.param
-    config.set(Globals.section, "textfile",
-               "%s%s|%s%s" % (tag, Globals.testlog1, tag, Globals.testlog2))
+    config.set(Globals.section, 'textfile',
+               '%s%s|%s%s' % (tag, Globals.testlog1, tag, Globals.testlog2))
     return config
 
 
@@ -90,7 +90,7 @@ def testconfig_glob(request, testconfig):
         'question_middle':
         Globals.testentry2[:2] + '?' + Globals.testentry2[3:]
     }[request.param]
-    testconfig.set(Globals.section, "crit", entry)
+    testconfig.set(Globals.section, 'crit', entry)
     return testconfig
 
 
@@ -204,7 +204,7 @@ def manage_logfiles(request):
             os.unlink(log)
 
 
-@pytest.mark.usefixtures("no_statefile")
+@pytest.mark.usefixtures('no_statefile')
 def test_section_logfiles__new_file(request, testconfig_glob,
                                     expected_output_no_statefile,
                                     actual_output, testfile):
@@ -213,7 +213,7 @@ def test_section_logfiles__new_file(request, testconfig_glob,
                request.node.name)
 
 
-@pytest.mark.usefixtures("with_statefile")
+@pytest.mark.usefixtures('with_statefile')
 def test_section_logfiles__new_entries_in_log(request, testconfig_glob,
                                               expected_output_with_statefile,
                                               actual_output, testfile):

@@ -35,7 +35,7 @@
 /////////////////////////////////////////////////////////////
 
 class EventLogRecordVista : public IEventLogRecord {
-    enum WinEventLevel {
+    enum class WinEventLevel {
         Audit = 0,
         Critical = 1,
         Error = 2,
@@ -133,7 +133,7 @@ public:
     virtual Level level() const override {
         const EVT_VARIANT *values =
             reinterpret_cast<const EVT_VARIANT *>(&_buffer[0]);
-        switch (values[4].ByteVal) {
+        switch (static_cast<WinEventLevel>(values[4].ByteVal)) {
             case WinEventLevel::Error:
             case WinEventLevel::Critical:
                 return Level::Error;

@@ -258,8 +258,9 @@ void SectionPluginGroup::runContainer(script_container *cont) {
                                  0,         // use default creation flags
                                  nullptr),  // returns the thread identifier
             _winapi};
-        if (cont->execution_mode == SYNC ||
-            (cont->execution_mode == ASYNC && *_async_execution == SEQUENTIAL))
+        if (cont->execution_mode == script_execution_mode::SYNC ||
+            (cont->execution_mode == script_execution_mode::ASYNC &&
+             *_async_execution == script_async_execution::SEQUENTIAL))
             _winapi.WaitForSingleObject(cont->worker_thread.get(), INFINITE);
 
         Debug(_logger) << "finished with status " << cont->status
@@ -381,9 +382,10 @@ SectionPluginGroup::SectionPluginGroup(
     , _type(type)
     , _user(user)
     , _collection_thread(_winapi)
-    , _default_execution_mode(config, "global", "caching_method", SYNC, _winapi)
-    , _async_execution(config, "global", "async_script_execution", SEQUENTIAL,
-                       _winapi)
+    , _default_execution_mode(config, "global", "caching_method",
+                              script_execution_mode::SYNC, _winapi)
+    , _async_execution(config, "global", "async_script_execution",
+                       script_async_execution::SEQUENTIAL, _winapi)
     , _execute_suffixes(config, "global", "execute", _winapi)
     , _timeout(config, typeToSection(type), "timeout", _winapi)
     , _cache_age(config, typeToSection(type), "cache_age", _winapi)
@@ -395,7 +397,7 @@ SectionPluginGroup::~SectionPluginGroup() { _containers.clear(); }
 
 void SectionPluginGroup::startIfAsync() {
     updateScripts();
-    collectData(ASYNC);
+    collectData(script_execution_mode::ASYNC);
 }
 
 void SectionPluginGroup::waitForCompletion() {
@@ -424,7 +426,7 @@ bool SectionPluginGroup::produceOutputInner(
     std::ostream &out, const std::optional<std::string> &) {
     Debug(_logger) << "SectionPluginGroup::produceOutputInner";
     // gather the data for the sync sections
-    collectData(SYNC);
+    collectData(script_execution_mode::SYNC);
     if (_type == PLUGIN) {
         // prevent errors from plugins missing their section header
         out << "<<<>>>\n";
@@ -616,7 +618,7 @@ DataCollectionThread(LPVOID lpParam) {
     do {
         self->_data_collection_retriggered = false;
         for (const auto &kv : self->_containers) {
-            if (kv.second->execution_mode == ASYNC) {
+            if (kv.second->execution_mode == script_execution_mode::ASYNC) {
                 self->runContainer(kv.second.get());
             }
         }
@@ -626,13 +628,13 @@ DataCollectionThread(LPVOID lpParam) {
 
 void SectionPluginGroup::collectData(script_execution_mode mode) {
     const std::string typeName = _type == PLUGIN ? "plugin" : "local";
-    if (mode == SYNC) {
+    if (mode == script_execution_mode::SYNC) {
         Debug(_logger) << "Collecting sync " << typeName << " data";
         for (const auto &kv : _containers) {
-            if (kv.second->execution_mode == SYNC)
+            if (kv.second->execution_mode == script_execution_mode::SYNC)
                 runContainer(kv.second.get());
         }
-    } else if (mode == ASYNC) {
+    } else if (mode == script_execution_mode::ASYNC) {
         // If the thread is still running, just tell it to do another cycle
         DWORD dwExitCode = 0;
         if (_winapi.GetExitCodeThread(_collection_thread.get(), &dwExitCode)) {

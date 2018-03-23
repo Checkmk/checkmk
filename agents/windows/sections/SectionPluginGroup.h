@@ -38,21 +38,31 @@ class Environment;
 class SectionPlugin;
 
 // How single scripts are executed
-enum script_execution_mode {
+enum class script_execution_mode {
     SYNC,  // inline
     ASYNC  // delayed
 };
 
+inline std::ostream &operator<<(std::ostream &os,
+                                const script_execution_mode mode) {
+    return os << static_cast<unsigned>(mode);
+}
+
 // How delayed scripts are executed
-enum script_async_execution { PARALLEL, SEQUENTIAL };
+enum class script_async_execution { PARALLEL, SEQUENTIAL };
+
+inline std::ostream &operator<<(std::ostream &os,
+                                const script_async_execution async) {
+    return os << static_cast<unsigned>(async);
+}
 
 template <>
 inline script_execution_mode from_string<script_execution_mode>(
     const WinApiAdaptor &, const std::string &value) {
     if (value == "async")
-        return ASYNC;
+        return script_execution_mode::ASYNC;
     else if (value == "sync")
-        return SYNC;
+        return script_execution_mode::SYNC;
     throw std::runtime_error("invalid execution mode");
 }
 
@@ -60,9 +70,9 @@ template <>
 inline script_async_execution from_string<script_async_execution>(
     const WinApiAdaptor &, const std::string &value) {
     if (value == "parallel")
-        return PARALLEL;
+        return script_async_execution::PARALLEL;
     else if (value == "sequential")
-        return SEQUENTIAL;
+        return script_async_execution::SEQUENTIAL;
     throw std::runtime_error("invalid async mode");
 }
 

@@ -161,7 +161,7 @@ class CachedItemStates(object):
 
 
     def set_item_state_prefix(self, args):
-        self._item_prefix = args
+        self._item_state_prefix = args
 
 
     def get_item_state(self, user_key, default=None):
@@ -174,7 +174,7 @@ class CachedItemStates(object):
 
 
     def get_unique_item_state_key(self, user_key):
-        return self._item_prefix + (user_key,)
+        return self._item_state_prefix + (user_key,)
 
 _cached_item_states = CachedItemStates()
 

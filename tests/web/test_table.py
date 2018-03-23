@@ -189,10 +189,6 @@ def test_nesting_context():
                             </table>'''), text
 
 
-def test_groupheader():
-    print bcolors.WARNING + "TODO"
-
-
 def test_table_wrapper(monkeypatch):
     import config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)

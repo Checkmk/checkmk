@@ -59,12 +59,12 @@ def test_plug():
     assert html.written == "A"
     html.plug()
     html.write("B")
-    assert html.plug_text == ["B"]
+    assert html.plug_text == [["B"]]
     html.plug()
     html.write("C")
-    assert html.plug_text == ["B", "C"]
+    assert html.plug_text == [["B"], ["C"]]
     html.unplug()
-    assert html.plug_text == ["BC"]
+    assert html.plug_text == [["B", "C"]]
     html.unplug()
     assert html.written == "ABC"
 
@@ -77,7 +77,7 @@ def test_drain():
     text = html.drain()
     assert text == "A"
     html.write("B")
-    assert html.plug_text == ["B"]
+    assert html.plug_text == [["B"]]
     html.unplug()
     assert html.written == "B"
 
@@ -90,7 +90,7 @@ def test_flush():
     html.plug_text == ["A"]
     html.flush()
     assert html.written == "A"
-    assert html.plug_text == ['']
+    assert html.plug_text == [[]]
     html.unplug()
     assert html.written == "A"
 
@@ -102,11 +102,11 @@ def test_context_nesting():
     assert html.written == "A"
     with html.plugged():
         html.write("B")
-        assert html.plug_text == ["B"]
+        assert html.plug_text == [["B"]]
         with html.plugged():
             html.write("C")
-            assert html.plug_text == ["B", "C"]
-        assert html.plug_text == ["BC"]
+            assert html.plug_text == [["B"], ["C"]]
+        assert html.plug_text == [["B", "C"]]
     assert html.written == "ABC"
 
 
@@ -117,9 +117,9 @@ def test_context_drain():
     assert html.written == "A"
     with html.plugged():
         html.write("B")
-        assert html.plug_text == ['B']
+        assert html.plug_text == [['B']]
         code = html.drain()
-        assert html.plug_text == ['']
+        assert html.plug_text == [[]]
     assert code == 'B'
     assert html.written == "A"
 
@@ -132,7 +132,7 @@ def test_context_raise():
         assert html.written == "A"
         with html.plugged():
             html.write("B")
-            assert html.plug_text == ['B']
+            assert html.plug_text == [['B']]
             raise Exception("Test exception")
     except Exception, e:
         assert e.message == "Test exception"

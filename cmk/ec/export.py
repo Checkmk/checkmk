@@ -218,10 +218,8 @@ def load_rule_packs():
         "rule_packs": [],
         "mkp_rule_packs": {}
     }  # type: Dict[str, Any]
-
-    rules_file = rule_pack_dir() / "rules.mk"
-    if rules_file.is_file():
-        cmk.store.load_mk_file(str(rules_file), context)
+    for path in [rule_pack_dir() / "rules.mk"] + sorted(mkp_rule_pack_dir().glob('*.mk')):
+        cmk.store.load_mk_file(str(path), context)
 
     # Convert some data fields into a new format
     for rule in context["rules"]:
@@ -234,9 +232,6 @@ def load_rule_packs():
     if context["rules"] and not context["rule_packs"]:
         context["rule_packs"] = [
             cmk.ec.defaults.default_rule_pack(context["rules"])]
-
-    for file_ in mkp_rule_pack_dir().glob('*.mk'):
-        cmk.store.load_mk_file(str(file_), context)
 
     bind_to_rule_pack_proxies(context['rule_packs'], context['mkp_rule_packs'])
 

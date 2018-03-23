@@ -250,6 +250,9 @@ def all_man_pages():
 
     for basedir in [ cmk.paths.check_manpages_dir,
                      cmk.paths.local_check_manpages_dir ]:
+        if not os.path.exists(basedir):
+            continue
+
         for name in os.listdir(basedir):
             if name[0] == "." or name[-1] == "~":
                 continue

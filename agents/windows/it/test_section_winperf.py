@@ -14,8 +14,8 @@ def testfile():
 @pytest.fixture(params=['System', '2'], ids=['counter:System', 'counter:2'])
 def testconfig(request, config):
     section = 'winperf'
-    config.set("global", "sections", section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', section)
+    config.set('global', 'crash_debug', 'yes')
     config.add_section(section)
     config.set(section, 'counters', '%s:test' % request.param)
     return config

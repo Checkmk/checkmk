@@ -22,7 +22,7 @@ def synchronized():
         mutex = CreateMutex(None, True, mutexname)
         if GetLastError() == ERROR_ALREADY_EXISTS:
             sys.stderr.write(
-                "Could not acquire mutex. Is another test process running?")
+                'Could not acquire mutex. Is another test process running?')
             sys.exit(1)
         yield
     finally:
@@ -34,7 +34,7 @@ def acquire():
     with synchronized():
         if os.path.exists(lockname):
             sys.stderr.write(
-                "Lock file exists. Is another test process running?")
+                'Lock file exists. Is another test process running?')
             sys.exit(1)
         open(lockname, 'w').close()
 

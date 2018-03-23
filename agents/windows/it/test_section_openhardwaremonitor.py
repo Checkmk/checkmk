@@ -20,8 +20,8 @@ def testfile():
     params=['ohm', 'openhardwaremonitor'],
     ids=['sections=ohm', 'sections=openhardwaremonitor'])
 def testconfig(request, config):
-    config.set("global", "sections", request.param)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', request.param)
+    config.set('global', 'crash_debug', 'yes')
     return config
 
 

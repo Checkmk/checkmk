@@ -14,8 +14,8 @@ def testfile():
 @pytest.fixture
 def testconfig(config):
     section = 'wmi_cpuload'
-    config.set("global", "sections", section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', section)
+    config.set('global', 'crash_debug', 'yes')
     return config
 
 

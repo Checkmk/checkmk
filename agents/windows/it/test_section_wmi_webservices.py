@@ -16,8 +16,8 @@ def testfile():
     params=['webservices', 'wmi_webservices'],
     ids=['sections=webservices', 'sections=wmi_webservices'])
 def testconfig(request, config):
-    config.set("global", "sections", request.param)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', request.param)
+    config.set('global', 'crash_debug', 'yes')
     return config
 
 

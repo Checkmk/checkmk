@@ -27,19 +27,19 @@ def testfile():
 
 
 @pytest.fixture(
-    params=["default", "bat ps1"], ids=["default_suffixes", "bat_ps1"])
+    params=['default', 'bat ps1'], ids=['default_suffixes', 'bat_ps1'])
 def testconfig_suffixes(request, config):
     Globals.suffixes = request.param
-    if request.param != "default":
-        config.set("global", "execute", request.param)
+    if request.param != 'default':
+        config.set('global', 'execute', request.param)
     return config
 
 
 @pytest.fixture(params=['sync', 'async', 'async+cached'])
 def testconfig(request, testconfig_suffixes):
     Globals.executionmode = request.param
-    testconfig_suffixes.set("global", "sections", Globals.plugintype)
-    testconfig_suffixes.set("global", "crash_debug", "yes")
+    testconfig_suffixes.set('global', 'sections', Globals.plugintype)
+    testconfig_suffixes.set('global', 'crash_debug', 'yes')
     if request.param != 'sync':
         testconfig_suffixes.add_section(Globals.plugintype)
         testconfig_suffixes.set(Globals.plugintype,
@@ -162,7 +162,7 @@ def manage_plugins(request, plugindir):
                 except WindowsError as e:
                     # For some reason, the exe plugin remains locked for a short
                     # while every now and then. Just sleep 1 s and retry.
-                    sys.stderr.write("%s\n" % str(e))
+                    sys.stderr.write('%s\n' % str(e))
                     time.sleep(1)
 
 

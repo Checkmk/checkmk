@@ -41,14 +41,14 @@ def testfile():
 
 @pytest.fixture
 def testconfig(config):
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'crash_debug', 'yes')
     if Globals.param[0] == 'showconfig':
-        config.set("global", "sections", ' '.join(Globals.sections))
+        config.set('global', 'sections', ' '.join(Globals.sections))
         for section in filter(lambda s: s != 'check_mk', Globals.sections):
             config.add_section(section)
         config.set('fileinfo', 'path', os.path.join(remotedir, '*.log'))
-        config.set('logfiles', "textfile",
-                   "from_start %s|nocontext %s" % Globals.testlogs)
+        config.set('logfiles', 'textfile',
+                   'from_start %s|nocontext %s' % Globals.testlogs)
         config.set('logfiles', 'crit', 'e*o?')
         config.set('logwatch', 'vista_api', 'yes')
         config.set('logwatch', 'logfile Application', 'warn')
@@ -143,9 +143,9 @@ def pack(install_basedir):
     cap = ""
     old_cwd = os.path.abspath('.')
     os.chdir(install_basedir)
-    for relative_dir, _unused_dirs, files in os.walk("."):
+    for relative_dir, _unused_dirs, files in os.walk('.'):
         for filename in sorted(files):
-            path = (relative_dir + "/" + filename)[2:]
+            path = (relative_dir + '/' + filename)[2:]
             cap += _cap_entry(path)
     os.chdir(old_cwd)
     return cap
@@ -261,10 +261,10 @@ def verify_uninstall_batch(script):
     else:
         test_plugins = [Globals.binaryplugin]
     expected_uninstall = [
-        ("REM \\* If you want to uninstall the plugins which were "
-         "installed during the"),
+        ('REM \\* If you want to uninstall the plugins which were '
+         'installed during the'),
         ("REM \\* last 'check_mk_agent.exe unpack' command, just "
-         "execute this script"), ""
+         'execute this script'), ''
     ] + [
         'del "%s%s"' %
         (drive_letter,
@@ -294,7 +294,7 @@ def post_test():
             elif Globals.param[0] == 'remove':
                 cmd = ['sc', 'query', 'Check_MK_Agent']
                 exit_code, stdout, stderr = run_subprocess(cmd)
-                assert exit_code == 1060, "Check_MK_Agent should not be running"
+                assert exit_code == 1060, 'Check_MK_Agent should not be running'
         finally:
             # Make sure the service is stopped and deleted after tests:
             for subcmd in ['stop', 'delete']:

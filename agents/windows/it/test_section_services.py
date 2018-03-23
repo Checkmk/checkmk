@@ -16,8 +16,8 @@ def testfile():
 @pytest.fixture
 def testconfig(request, config):
     section = 'services'
-    config.set("global", "sections", section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', section)
+    config.set('global', 'crash_debug', 'yes')
     return config
 
 

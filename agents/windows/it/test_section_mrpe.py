@@ -27,15 +27,15 @@ def testfile():
 
 @pytest.fixture
 def testconfig(config):
-    config.set("global", "sections", Globals.section)
-    config.set("global", "crash_debug", "yes")
+    config.set('global', 'sections', Globals.section)
+    config.set('global', 'crash_debug', 'yes')
     config.add_section(Globals.section)
     if Globals.newline < 0:
         config.set(Globals.section, 'check', '%s %s' %
                    (Globals.checkname,
                     os.path.join(Globals.mrpedir, Globals.pluginname)))
     else:
-        config.set(Globals.section, "include",
+        config.set(Globals.section, 'include',
                    os.path.join(Globals.includedir, Globals.cfgfile))
     return config
 
@@ -82,7 +82,7 @@ def manage_plugin(request):
             path = os.path.join(targetdir_windows, Globals.pluginname)
             if Globals.newline == 2:
                 path = path.replace('\\', '/')
-            cfg.write('check = %s "%s"%s' % (Globals.checkname, path, "\n"
+            cfg.write('check = %s "%s"%s' % (Globals.checkname, path, '\n'
                                            if Globals.newline > 0 else ""))
     yield
     if platform.system() == 'Windows':

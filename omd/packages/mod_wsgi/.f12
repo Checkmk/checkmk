@@ -1,0 +1,10 @@
+#!/bin/bash -e
+set -e
+
+SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
+make -C mod_wsgi-4.6.4 clean all
+sudo make install OMD_ROOT=$ROOT
+sudo omd restart $SITE apache

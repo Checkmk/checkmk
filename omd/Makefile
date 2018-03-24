@@ -22,8 +22,8 @@ PACKAGES=\
     msitools \
     net-snmp \
     apache-omd \
-    mod_python \
     mod_fcgid \
+    mod_wsgi \
     check_mk \
     check_multi \
     check_mysql_health \

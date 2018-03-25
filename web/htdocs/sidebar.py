@@ -494,7 +494,7 @@ def ajax_snapin():
             except Exception, e:
                 write_snapin_exception(e)
                 e_message = _("Exception during snapin refresh (snapin \'%s\')") % snapname
-                logger.error("%s %s: %s" % (html.request_uri(), e_message, traceback.format_exc()))
+                logger.error("%s %s: %s" % (html.requested_url(), e_message, traceback.format_exc()))
             finally:
                 snapin_code.append(html.drain())
 

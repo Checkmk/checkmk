@@ -917,6 +917,7 @@ class RequestHandler(object):
         self.uploads   = {}
         self.var_stash = []
         self.cookies   = {}
+        self._requested_url = None
 
         # Transaction IDs
         self.new_transids    = []
@@ -935,6 +936,10 @@ class RequestHandler(object):
     # The system web servers configured request timeout. This is the time
     # before the request is terminated from the view of the client.
     def client_request_timeout(self):
+        raise NotImplementedError()
+
+
+    def remote_ip(self):
         raise NotImplementedError()
 
 
@@ -957,6 +962,12 @@ class RequestHandler(object):
     def http_redirect(self, url):
         raise MKGeneralException("http_redirect not implemented")
 
+
+    def requested_url(self):
+        """Returns the URL requested by the user.
+        This is not the bare original URL used by the user. Some HTTP variables may
+        have been filtered by Check_MK while parsing the incoming request."""
+        return self._requested_url
 
     #
     # Request Processing
@@ -1422,7 +1433,6 @@ class html(HTMLGenerator, RequestHandler):
         self.browser_redirect = ''
         self.link_target = None
         self.keybindings_enabled = True
-        self._requested_url = None
         self.myfile = None
 
         # Browser options
@@ -1765,12 +1775,6 @@ class html(HTMLGenerator, RequestHandler):
     #
     # URL building
     #
-
-    def requested_url(self):
-        """Returns the URL requested by the user.
-        This is not the bare original URL used by the user. Some HTTP variables may
-        have been filtered by Check_MK while parsing the incoming request."""
-        return self._requested_url
 
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):

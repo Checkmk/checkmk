@@ -7,4 +7,6 @@ ROOT=/omd/sites/$SITE
 
 make -C mod_wsgi-4.6.4 clean all
 sudo make install OMD_ROOT=$ROOT
+sed -e "s|###ROOT###|$ROOT|g" -e "s|###SITE###|$SITE|g" skel/etc/apache/conf.d/01_wsgi.conf | sudo tee $ROOT/etc/apache/conf.d/01_wsgi.conf >/dev/null
+sudo rm -f $ROOT/etc/apache/conf.d/01_python.conf
 sudo omd restart $SITE apache

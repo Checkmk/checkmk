@@ -28,7 +28,6 @@ import config
 import userdb
 import utils
 from log import logger
-from html_mod_python import FinalizeRequest
 import os
 import time
 import traceback
@@ -37,7 +36,7 @@ from hashlib import md5
 
 import cmk.paths
 
-from gui_exceptions import MKInternalError, MKAuthException, MKUserError
+from gui_exceptions import MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
 auth_type = None
 auth_logger = logger.getChild("auth")
@@ -51,9 +50,9 @@ auth_logger = logger.getChild("auth")
 #
 # Otherwise we check / ask for the cookie authentication or eventually the
 # automation secret authentication.
-def authenticate(mod_python_req):
+def authenticate(request):
     # Check whether or not already authenticated
-    user_id = check_auth(mod_python_req)
+    user_id = check_auth(request)
     if user_id:
         login(user_id)
         return True
@@ -132,10 +131,10 @@ def del_auth_cookie():
     # others with the same auth.secret and user serial numbers. When a users
     # logs out then we need to delete all cookies that are accepted by us -
     # not just the one that we have issued.
-    for cookie_name in html.get_cookie_names():
+    for cookie_name in html.request.get_cookie_names():
         if cookie_name.startswith("auth_"):
             if auth_cookie_is_valid(cookie_name):
-                html.del_cookie(cookie_name)
+                html.response.del_cookie(cookie_name)
 
 
 def auth_cookie_value(username):
@@ -167,11 +166,11 @@ def create_auth_session(username):
 
 
 def set_auth_cookie(username):
-    html.set_cookie(auth_cookie_name(), auth_cookie_value(username))
+    html.response.set_cookie(auth_cookie_name(), auth_cookie_value(username))
 
 
 def set_session_cookie(username, session_id):
-    html.set_cookie(session_cookie_name(), session_cookie_value(username, session_id))
+    html.response.set_cookie(session_cookie_name(), session_cookie_value(username, session_id))
 
 
 def session_cookie_name():
@@ -184,7 +183,7 @@ def session_cookie_value(username, session_id):
 
 
 def get_session_id_from_cookie(username):
-    raw_value = html.cookie(session_cookie_name(), "::")
+    raw_value = html.request.cookie(session_cookie_name(), "::")
     cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
 
     if cookie_username.decode("utf-8") != username \
@@ -201,7 +200,7 @@ def renew_cookie(cookie_name, username):
     # b) A logout is requested
     if (html.myfile != 'logout' and not html.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
-        auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, html.vars))
+        auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, html.request.vars))
         renew_auth_session(username)
 
 
@@ -229,16 +228,16 @@ def check_auth_cookie(cookie_name):
     if html.myfile != 'user_change_pw':
         result = userdb.need_to_change_pw(username)
         if result:
-            html.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(html.makeuri([])), result))
+            html.response.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(html.makeuri([])), result))
 
     # Return the authenticated username
     return username
 
 
 def parse_auth_cookie(cookie_name):
-    raw_value = html.cookie(cookie_name, "::")
+    raw_value = html.request.cookie(cookie_name, "::")
     username, issue_time, cookie_hash = raw_value.split(':', 2)
-    return username.decode("utf-8"), float(issue_time), cookie_hash
+    return username.decode("utf-8"), float(issue_time) if issue_time else 0.0, cookie_hash
 
 
 def check_parsed_auth_cookie(username, issue_time, cookie_hash):
@@ -267,8 +266,8 @@ def auth_cookie_is_valid(cookie_name):
 # - It also calls userdb.is_customer_user_allowed_to_login()
 # - It calls userdb.create_non_existing_user() but we don't
 # - It calls connection.is_locked() but we don't
-def check_auth(mod_python_req):
-    user_id = check_auth_web_server(mod_python_req)
+def check_auth(request):
+    user_id = check_auth_web_server(request)
 
     if html.var("_secret"):
         user_id = check_auth_automation()
@@ -300,7 +299,7 @@ def check_auth_automation():
         path = cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
         if os.path.isfile(path) and file(path).read().strip() == secret:
             # Auth with automation secret succeeded - mark transid as unneeded in this case
-            html.set_ignore_transids()
+            html.transaction_manager.ignore()
             set_auth_type("automation")
             return user_id
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
@@ -309,7 +308,7 @@ def check_auth_automation():
 # When http header auth is enabled, try to read the user_id from the var
 # and when there is some available, set the auth cookie (for other addons) and proceed.
 def check_auth_http_header():
-    user_id = html.get_request_header(config.auth_by_http_header)
+    user_id = html.request.get_request_header(config.auth_by_http_header)
     if not user_id:
         return None
 
@@ -322,14 +321,15 @@ def check_auth_http_header():
 # Try to get the authenticated user from the mod_python provided request object.
 # The user may have configured (basic) authentication by the web server. In
 # case a user is provided, we trust that user.
-def check_auth_web_server(mod_python_req):
-    if mod_python_req.user != None:
+def check_auth_web_server(request):
+    user = request.remote_user
+    if user != None:
         set_auth_type("web_server")
-        return mod_python_req.user.decode("utf-8")
+        return user.decode("utf-8")
 
 
 def check_auth_by_cookie():
-    for cookie_name in html.get_cookie_names():
+    for cookie_name in html.request.get_cookie_names():
         if cookie_name.startswith('auth_'):
             try:
                 set_auth_type("cookie")
@@ -398,9 +398,9 @@ def do_login():
                 # password needs to be changed
                 result = userdb.need_to_change_pw(username)
                 if result:
-                    html.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(origtarget), result))
+                    html.response.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(origtarget), result))
                 else:
-                    html.http_redirect(origtarget)
+                    html.response.http_redirect(origtarget)
             else:
                 userdb.on_failed_login(username)
                 raise MKUserError(None, _('Invalid credentials.'))
@@ -441,8 +441,8 @@ def normal_login_page(called_directly = True):
 }''')
 
     # When someone calls the login page directly and is already authed redirect to main page
-    if html.myfile == 'login' and check_auth(html.req):
-        html.http_redirect(origtarget and origtarget or 'index.py')
+    if html.myfile == 'login' and check_auth(html.request):
+        html.response.http_redirect(origtarget and origtarget or 'index.py')
 
     html.open_div(id_="login")
     html.open_div(id_="login_window")
@@ -491,13 +491,13 @@ def page_logout():
     invalidate_auth_session()
 
     if auth_type == 'cookie':
-        html.http_redirect(config.url_prefix() + 'check_mk/login.py')
+        html.response.http_redirect(config.url_prefix() + 'check_mk/login.py')
     else:
         # Implement HTTP logout with cookie hack
-        if not html.has_cookie('logout'):
+        if not html.request.has_cookie('logout'):
             html.set_http_header('WWW-Authenticate', 'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
-            html.set_cookie('logout', '1')
+            html.response.set_cookie('logout', '1')
             raise FinalizeRequest(401)
         else:
-            html.del_cookie('logout')
-            html.http_redirect(config.url_prefix() + 'check_mk/')
+            html.response.del_cookie('logout')
+            html.response.http_redirect(config.url_prefix() + 'check_mk/')

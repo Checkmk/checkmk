@@ -10,7 +10,7 @@ echo "Update site $SITE..."
 echo "Copy CRE files..."
 sudo rsync \
     --exclude "*cmc.py" \
-    -arx htdocs plugins $ROOT/share/check_mk/web/
+    -arx app htdocs plugins $ROOT/share/check_mk/web/
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then

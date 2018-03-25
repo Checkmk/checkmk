@@ -26,11 +26,11 @@
 
 import os
 from types import ModuleType
-from mod_python.apache import import_module # pylint: disable=import-error
 
 import cmk.paths
 
 import utils
+import importlib
 import pagetypes
 
 # Register non page specific modules which are not having own pages,
@@ -93,8 +93,7 @@ def init_modules():
 
     # Load the list of internal hard coded modules
     for module_name in internal_module_names:
-        # TODO: use __import__
-        modules.append(import_module(module_name))
+        modules.append(importlib.import_module(module_name))
 
     # Load all multisite pages which will also perform imports of the needed modules
     utils.load_web_plugins('pages', globals())

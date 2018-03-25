@@ -45,7 +45,7 @@ class CMKWebLogger(_logging.getLoggerClass()):
             msg = _('Internal error')
         msg = kwargs.pop('msg', msg)
 
-        super(CMKWebLogger, self).exception("%s %s" % (html.request_uri(), msg), *args, **kwargs)
+        super(CMKWebLogger, self).exception("%s %s" % (html.request.requested_url, msg), *args, **kwargs)
 
 
 _logging.setLoggerClass(CMKWebLogger)

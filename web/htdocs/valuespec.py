@@ -4021,7 +4021,7 @@ class FileUpload(ValueSpec):
 
     def from_html_vars(self, varprefix):
         # returns a triple of (filename, mime-type, content)
-        return html.uploaded_file(varprefix)
+        return html.request.uploaded_file(varprefix)
 
 
 
@@ -4700,7 +4700,7 @@ class TimeperiodValuespec(ValueSpec):
 
     def render_input(self, varprefix, value):
         # The display mode differs when the valuespec is activated
-        vars_copy = html.vars.copy()
+        vars_copy = html.request.vars.copy()
 
 
         # The timeperiod mode can be set by either the GUI switch or by the value itself

@@ -54,8 +54,7 @@
 #
 # - Split HTML handling (page generating) code and generic request
 #   handling (vars, cookies, ...) up into separate classes to make
-#   the different tasks clearer. For example a RequestHandler()
-#   and a HTMLGenerator() or similar.
+#   the different tasks clearer. For HTMLGenerator() or similar.
 
 import time
 import os
@@ -66,6 +65,7 @@ import re
 import __builtin__
 import signal
 import json
+import abc
 
 from collections import deque
 from contextlib import contextmanager
@@ -77,20 +77,13 @@ _default.default = json.JSONEncoder().default # Save unmodified default.
 json.JSONEncoder.default = _default # replacement
 
 
-from cmk.exceptions import MKGeneralException, MKException
-from gui_exceptions import MKUserError
+import cmk.paths
+from cmk.exceptions import MKGeneralException
+from gui_exceptions import MKUserError, RequestTimeout
 
+import config
+import log
 
-# Information about uri
-class InvalidUserInput(Exception):
-    def __init__(self, varname, text):
-        self.varname = varname
-        self.text = text
-        super(InvalidUserInput, self).__init__(varname, text)
-
-
-class RequestTimeout(MKException):
-    pass
 
 #.
 #   .--Escaper-------------------------------------------------------------.
@@ -182,13 +175,19 @@ class Encoder(object):
     #       urlencode_vars() should directly use urlencode or urlencode_vars and
     #       not fallback to self.urlencode on it's own. self.urlencode() should
     #       work for a single value exacly as urlencode_vars() does for multiple
+    # TODO: Refactor to use urllib.urlencode()
     def urlencode_vars(self, vars):
+        assert type(vars) == list
         output = []
         for varname, value in sorted(vars):
+            assert type(varname) == str
+
             if type(value) == int:
                 value = str(value)
             elif type(value) == unicode:
                 value = value.encode("utf-8")
+
+            #assert type(value) == str, "%s: %s" % (varname, value)
 
             try:
                 # urllib is not able to encode non-Ascii characters. Yurks
@@ -204,6 +203,9 @@ class Encoder(object):
             value = value.encode("utf-8")
         elif value == None:
             return ""
+
+        assert type(value) == str
+
         ret = ""
         for c in value:
             if c == " ":
@@ -221,38 +223,9 @@ class Encoder(object):
         elif value == None:
             return ""
 
+        assert type(value) == str
+
         return urllib.quote_plus(value)
-
-
-    # Escape a variable name so that it only uses allowed charachters for URL variables
-    def varencode(self, varname):
-        if varname == None:
-            return "None"
-        if type(varname) == int:
-            return varname
-
-        ret = ""
-        for c in varname:
-            if not c.isdigit() and not c.isalnum() and c != "_":
-                ret += "%%%02x" % ord(c)
-            else:
-                ret += c
-        return ret
-
-
-    def u8(self, c):
-        if ord(c) > 127:
-            return "&#%d;" % ord(c)
-        else:
-            return c
-
-
-    def utf8_to_entities(self, text):
-        if type(text) != unicode:
-            return text
-        else:
-            return text.encode("utf-8")
-
 
 
 #.
@@ -409,7 +382,7 @@ __builtin__.HTML = HTML
 #   |    \___/ \__,_|\__| .__/ \__,_|\__|_|   \__,_|_| |_|_| |_|\___|_|    |
 #   |                   |_|                                                |
 #   +----------------------------------------------------------------------+
-#   | Provides the write functionality. The method lowlevel_write needs to |
+#   | Provides the write functionality. The method _lowlevel_write needs   |
 #   | to be overwritten in the specific subclass!                          |
 #   |                                                                      |
 #   |  Usage of plugged context:                                           |
@@ -421,6 +394,8 @@ __builtin__.HTML = HTML
 
 
 class OutputFunnel(object):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         super(OutputFunnel, self).__init__()
         self.plug_level = -1
@@ -447,10 +422,11 @@ class OutputFunnel(object):
             # only encode when leaving the pythonic world.
             if type(text) == unicode:
                 text = text.encode("utf-8")
-            self.lowlevel_write(text)
+            self._lowlevel_write(text)
 
 
-    def lowlevel_write(self, text):
+    @abc.abstractmethod
+    def _lowlevel_write(self, text):
         raise NotImplementedError()
 
 
@@ -894,248 +870,442 @@ class HTMLGenerator(OutputFunnel):
 
 
 #.
-#   .--RequestHandler----------------------------------------------------------------.
-#   |    ____                            _   _   _                 _ _               |
-#   |   |  _ \ ___  __ _ _   _  ___  ___| |_| | | | __ _ _ __   __| | | ___ _ __     |
-#   |   | |_) / _ \/ _` | | | |/ _ \/ __| __| |_| |/ _` | '_ \ / _` | |/ _ \ '__|    |
-#   |   |  _ <  __/ (_| | |_| |  __/\__ \ |_|  _  | (_| | | | | (_| | |  __/ |       |
-#   |   |_| \_\___|\__, |\__,_|\___||___/\__|_| |_|\__,_|_| |_|\__,_|_|\___|_|       |
-#   |                 |_|                                                            |
-#   +--------------------------------------------------------------------------------+
-#   |                                                                                |
-#   '--------------------------------------------------------------------------------'
+#   .--TimeoutMgr.---------------------------------------------------------.
+#   |      _____ _                            _   __  __                   |
+#   |     |_   _(_)_ __ ___   ___  ___  _   _| |_|  \/  | __ _ _ __        |
+#   |       | | | | '_ ` _ \ / _ \/ _ \| | | | __| |\/| |/ _` | '__|       |
+#   |       | | | | | | | | |  __/ (_) | |_| | |_| |  | | (_| | | _        |
+#   |       |_| |_|_| |_| |_|\___|\___/ \__,_|\__|_|  |_|\__, |_|(_)       |
+#   |                                                    |___/             |
+#   '----------------------------------------------------------------------'
+
+class TimeoutManager(object):
+    """Request timeout handling
+
+    The system apache process will end the communication with the client after
+    the timeout configured for the proxy connection from system apache to site
+    apache. This is done in /omd/sites/[site]/etc/apache/proxy-port.conf file
+    in the "timeout=x" parameter of the ProxyPass statement.
+
+    The regular request timeout configured here should always be lower to make
+    it possible to abort the page processing and send a helpful answer to the
+    client.
+
+    It is possible to disable the applications request timeout (temoporarily)
+    or totally for specific calls, but the timeout to the client will always
+    be applied by the system webserver. So the client will always get a error
+    page while the site apache continues processing the request (until the
+    first try to write anything to the client) which will result in an
+    exception.
+    """
+
+    def enable_timeout(self, duration):
+        def handle_request_timeout(signum, frame):
+            raise RequestTimeout(_("Your request timed out after %d seconds. This issue may be "
+                                   "related to a local configuration problem or a request which works "
+                                   "with a too large number of objects. But if you think this "
+                                   "issue is a bug, please send a crash report.") % duration)
 
 
-class RequestHandler(object):
+        signal.signal(signal.SIGALRM, handle_request_timeout)
+        signal.alarm(duration)
 
-    def __init__(self):
-        super(RequestHandler, self).__init__()
+
+    def disable_timeout(self):
+        signal.alarm(0)
+
+
+#.
+#   .--Transactions--------------------------------------------------------.
+#   |      _____                               _   _                       |
+#   |     |_   _| __ __ _ _ __  ___  __ _  ___| |_(_) ___  _ __  ___       |
+#   |       | || '__/ _` | '_ \/ __|/ _` |/ __| __| |/ _ \| '_ \/ __|      |
+#   |       | || | | (_| | | | \__ \ (_| | (__| |_| | (_) | | | \__ \      |
+#   |       |_||_|  \__,_|_| |_|___/\__,_|\___|\__|_|\___/|_| |_|___/      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+class TransactionManager(object):
+    """Manages the handling of transaction IDs used by the GUI to prevent against
+    performing the same action multiple times."""
+
+    def __init__(self, request):
+        super(TransactionManager, self).__init__()
+        self._request = request
+
+        self._new_transids    = []
+        self._ignore_transids = False
+        self._current_transid = None
+
+
+    def ignore(self):
+        """Makes the GUI skip all transaction validation steps"""
+        self._ignore_transids = True
+
+
+    def get(self):
+        """Returns a transaction ID that can be used during a subsequent action"""
+        if not self._current_transid:
+            self._current_transid = self._fresh_transid()
+        return self._current_transid
+
+
+    def _fresh_transid(self):
+        """Compute a (hopefully) unique transaction id.
+
+        This is generated during rendering of a form or an action link, stored
+        in a user specific file for later validation, sent to the users browser
+        via HTML code, then submitted by the user together with the action
+        (link / form) and then validated if it is a known transid. When it is a
+        known transid, it will be used and invalidated. If the id is not known,
+        the action will not be processed."""
+        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
+        self._new_transids.append(transid)
+        return transid
+
+
+    def store_new(self):
+        """All generated transids are saved per user.
+
+        They are stored in the transids.mk.  Per user only up to 20 transids of
+        the already existing ones are kept. The transids generated on the
+        current page are all kept. IDs older than one day are deleted."""
+        if not self._new_transids:
+            return
+
+        valid_ids = self._load_transids(lock = True)
+        cleared_ids = []
+        now = time.time()
+        for valid_id in valid_ids:
+            timestamp = valid_id.split("/")[0]
+            if now - int(timestamp) < 86400: # one day
+                cleared_ids.append(valid_id)
+        self._save_transids((cleared_ids[-20:] + self._new_transids))
+
+
+    def transaction_valid(self):
+        """Checks if the current transaction is valid
+
+        i.e. in case of browser reload a browser reload, the form submit should
+        not be handled  a second time.. The HTML variable _transid must be
+        present.
+
+        In case of automation users (authed by _secret in URL): If it is empty
+        or -1, then it's always valid (this is used for webservice calls).
+        This was also possible for normal users, but has been removed to preven
+        security related issues."""
+        if not self._request.has_var("_transid"):
+            return False
+
+        id = self._request.var("_transid")
+        if self._ignore_transids and (not id or id == '-1'):
+            return True # automation
+
+        if '/' not in id:
+            return False
+
+        # Normal user/password auth user handling
+        timestamp = id.split("/", 1)[0]
+
+        # If age is too old (one week), it is always
+        # invalid:
+        now = time.time()
+        if now - int(timestamp) >= 604800: # 7 * 24 hours
+            return False
+
+        # Now check, if this id is a valid one
+        if id in self._load_transids():
+            return True
+        else:
+            return False
+
+
+    def is_transaction(self):
+        """Checks, if the current page is a transation, i.e. something that is secured by
+        a transid (such as a submitted form)"""
+        return self._request.has_var("_transid")
+
+
+    def check_transaction(self):
+        """called by page functions in order to check, if this was a reload or the original form submission.
+
+        Increases the transid of the user, if the latter was the case.
+
+        There are three return codes:
+
+        True:  -> positive confirmation by the user
+        False: -> not yet confirmed, question is being shown
+        None:  -> a browser reload or a negative confirmation
+        """
+        if self.transaction_valid():
+            id = self._request.var("_transid")
+            if id and id != "-1":
+                self._invalidate(id)
+            return True
+        else:
+            return False
+
+
+    def _invalidate(self, used_id):
+        """Remove the used transid from the list of valid ones"""
+        valid_ids = self._load_transids(lock = True)
+        try:
+            valid_ids.remove(used_id)
+        except ValueError:
+            return
+        self._save_transids(valid_ids)
+
+
+    def _load_transids(self, lock = False):
+        return config.user.load_file("transids", [], lock)
+
+
+    def _save_transids(self, used_ids):
+        if config.user.id:
+            config.user.save_file("transids", used_ids)
+
+
+#.
+#   .--html----------------------------------------------------------------.
+#   |                        _     _             _                         |
+#   |                       | |__ | |_ _ __ ___ | |                        |
+#   |                       | '_ \| __| '_ ` _ \| |                        |
+#   |                       | | | | |_| | | | | | |                        |
+#   |                       |_| |_|\__|_| |_| |_|_|                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Caution! The class needs to be derived from Outputfunnel first!      |
+#   '----------------------------------------------------------------------'
+
+
+class html(HTMLGenerator):
+
+    def __init__(self, request, response):
+        super(html, self).__init__()
+
+        self._logger = log.logger.getChild("html")
+
+        # rendering state
+        self._header_sent = False
+        self._context_buttons_open = False
+
+        # style options
+        self._body_classes = ['main']
+        self._default_stylesheets = [ "check_mk", "graphs" ]
+        self._default_javascripts = [ "checkmk", "graphs" ]
+
+        # behaviour options
+        self.render_headfoot = True
+        self.enable_debug = False
+        self.screenshotmode = False
+        self.have_help = False
+        self.help_visible = False
+
+        # browser options
+        self.output_format = "html"
+        self.browser_reload = 0
+        self.browser_redirect = ''
+        self.link_target = None
+        self.myfile = None
+
+        # Browser options
+        self._user_id = None
+        self.user_errors = {}
+        self.focus_object = None
+        self.events = set([]) # currently used only for sounds
+        self.status_icons = {}
+        self.final_javascript_code = ""
+        self.caches = {}
+        self.treestates = None
+        self.page_context = {}
+
+        # Settings
+        self.mobile = False
+        self.buffering = True
+
+        # Forms
+        self.form_name = None
+        self.form_vars = []
+
+        # Time measurement
+        self.times            = {}
+        self.start_time       = time.time()
+        self.last_measurement = self.start_time
+
+        # FIXME: Drop this
+        self.auto_id = 0
 
         # Variable management
-        self.vars      = {}
-        self.listvars  = {} # for variables with more than one occurrance
-        self.uploads   = {}
-        self.var_stash = []
-        self.cookies   = {}
-        self._requested_url = None
+        self._var_stash = []
 
-        # Transaction IDs
-        self.new_transids    = []
-        self.ignore_transids = False
-        self.current_transid = None
+        # Register helpers
+        self.encoder = Encoder()
+        self.timeout_manager = TimeoutManager()
+        self.transaction_manager = TransactionManager(request)
+        self.request = request
+        self.response = response
 
-        # Timing
-        self._request_timeout = 110 # seconds
+        self.enable_request_timeout()
+
+        self.response.set_content_type("text/html; charset=UTF-8")
+
+        self.init_mobile()
+
+        self.myfile = self._requested_file_name()
+
+        # Disable caching for all our pages as they are mostly dynamically generated,
+        # user related and are required to be up-to-date on every refresh
+        self.response.set_http_header("Cache-Control", "no-cache")
+
+        self.set_output_format(self.var("output_format", "html").lower())
+
+
+    # TODO: Refactor call sites
+    def _lowlevel_write(self, text):
+        self.response.write(text)
+
+
+    def init_modes(self):
+        """Initializes the operation mode of the html() object. This is called
+        after the Check_MK GUI configuration has been loaded, so it is safe
+        to rely on the config."""
+        self._verify_not_using_threaded_mpm()
+
+        self._init_screenshot_mode()
+        self._init_debug_mode()
+        self.set_buffering(config.buffered_http_stream)
+
+
+    def _verify_not_using_threaded_mpm(self):
+        if self.request.is_multithreaded:
+            raise MKGeneralException(
+                _("You are trying to Check_MK together with a threaded Apache multiprocessing module (MPM). "
+                  "Check_MK is only working with the prefork module. Please change the MPM module to make "
+                  "Check_MK work."))
+
+
+    def _init_debug_mode(self):
+        # Debug flag may be set via URL to override the configuration
+        if self.var("debug"):
+            config.debug = True
+        self.enable_debug = config.debug
+
+
+    # Enabling the screenshot mode omits the fancy background and
+    # makes it white instead.
+    def _init_screenshot_mode(self):
+        if self.var("screenshotmode", config.screenshotmode):
+            self.screenshotmode = True
+
+
+    def _requested_file_name(self):
+        parts = self.request.requested_file.rstrip("/").split("/")
+
+        if len(parts) == 3 and parts[-1] == "check_mk":
+            # Load index page when accessing /[site]/check_mk
+            myfile = "index"
+
+        elif parts[-1].endswith(".py"):
+            # Regular pages end with .py - Stript it away to get the page name
+            myfile = parts[-1][:-3]
+            if myfile == "":
+                myfile = "index"
+
+        else:
+            myfile = "index"
+
+        # Redirect to mobile GUI if we are a mobile device and the index is requested
+        if myfile == "index" and self.mobile:
+            self.myfile = "mobile"
+
+        return myfile
+
+
+    def init_mobile(self):
+        if self.has_var("mobile"):
+            # TODO: Make private
+            self.mobile = bool(self.var("mobile"))
+            # Persist the explicitly set state in a cookie to have it maintained through further requests
+            self.response.set_cookie("mobile", str(int(self.mobile)))
+
+        elif self.request.has_cookie("mobile"):
+            self.mobile = self.cookie("mobile", "0") == "1"
+
+        else:
+            import mobile
+            self.mobile = mobile.is_mobile(self.request.user_agent)
 
 
     #
-    # Request settings
+    # HTTP variable processing
     #
 
-
-    # The system web servers configured request timeout. This is the time
-    # before the request is terminated from the view of the client.
-    def client_request_timeout(self):
-        raise NotImplementedError()
+    # TODO: Refactor call sites to html.request.*
+    def var(self, varname, deflt=None):
+        return self.request.var(varname, deflt)
 
 
-    def remote_ip(self):
-        raise NotImplementedError()
-
-
-    def is_ssl_request(self):
-        raise NotImplementedError()
-
-
-    def request_method(self):
-        raise NotImplementedError()
-
-
-    def get_user_agent(self):
-        raise NotImplementedError()
-
-
-    def get_referer(self):
-        raise NotImplementedError()
-
-
-    def http_redirect(self, url):
-        raise MKGeneralException("http_redirect not implemented")
-
-
-    def requested_url(self):
-        """Returns the URL requested by the user.
-        This is not the bare original URL used by the user. Some HTTP variables may
-        have been filtered by Check_MK while parsing the incoming request."""
-        return self._requested_url
-
-    #
-    # Request Processing
-    #
-
-
-    def var(self, varname, deflt = None):
-        return self.vars.get(varname, deflt)
-
-
+    # TODO: Refactor call sites to html.request.*
     def has_var(self, varname):
-        return varname in self.vars
+        return self.request.var(varname)
 
 
     # Checks if a variable with a given prefix is present
+    # TODO: Refactor call sites to html.request.*
     def has_var_prefix(self, prefix):
-        for varname in self.vars:
-            if varname.startswith(prefix):
-                return True
-        return False
+        return self.request.has_var_prefix(prefix)
 
 
+    # TODO: Refactor call sites to html.request.*
     def var_utf8(self, varname, deflt = None):
-        val = self.vars.get(varname, deflt)
-        if type(val) == str:
-            return val.decode("utf-8")
-        else:
-            return val
+        return self.request.var_utf8(varname, deflt)
 
 
+    # TODO: Refactor call sites to html.request.*
     def all_vars(self):
-        return self.vars
+        return self.request.all_vars()
 
 
+    # TODO: Refactor call sites to html.request.*
     def all_varnames_with_prefix(self, prefix):
-        for varname in self.vars.keys():
-            if varname.startswith(prefix):
-                yield varname
+        return self.request.all_varnames_with_prefix(prefix)
 
 
     # Return all values of a variable that possible occurs more
     # than once in the URL. note: self.listvars does contain those
     # variable only, if the really occur more than once.
+    # TODO: Refactor call sites to html.request.*
     def list_var(self, varname):
-        if varname in self.listvars:
-            return self.listvars[varname]
-        elif varname in self.vars:
-            return [self.vars[varname]]
-        else:
-            return []
+        return self.request.list_var(varname)
 
 
     # Adds a variable to listvars and also set it
+    # TODO: Refactor call sites to html.request.*
     def add_var(self, varname, value):
-        self.listvars.setdefault(varname, [])
-        self.listvars[varname].append(value)
-        self.vars[varname] = value
+        self.request.add_var(varname, value)
 
 
+    # TODO: Refactor call sites to html.request.*
     def set_var(self, varname, value):
-        if value is None:
-            self.del_var(varname)
-
-        elif type(value) in [ str, unicode ]:
-            self.vars[varname] = value
-
-        else:
-            # crash report please
-            raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
+        self.request.set_var(varname, value)
 
 
+    # TODO: Refactor call sites to html.request.*
     def del_var(self, varname):
-        if varname in self.vars:
-            del self.vars[varname]
-        if varname in self.listvars:
-            del self.listvars[varname]
+        self.request.del_var(varname)
 
 
+    # TODO: Refactor call sites to html.request.*
     def del_all_vars(self, prefix = None):
-        if not prefix:
-            self.vars = {}
-            self.listvars = {}
-        else:
-            self.vars = dict([(k,v) for (k,v) in self.vars.iteritems()
-                                            if not k.startswith(prefix)])
-            self.listvars = dict([(k,v) for (k,v) in self.listvars.iteritems()
-                                            if not k.startswith(prefix)])
+        self.request.del_all_vars(prefix)
 
 
     def stash_vars(self):
-        self.var_stash.append(self.vars.copy())
+        self._var_stash.append(self.request.vars.copy())
 
 
     def unstash_vars(self):
-        self.vars = self.var_stash.pop()
-
-
-    def uploaded_file(self, varname, default = None):
-        return self.uploads.get(varname, default)
-
-
-    #
-    # Cookie handling
-    #
-
-    def has_cookie(self, varname):
-        return varname in self.cookies
-
-
-    def get_cookie_names(self):
-        return self.cookies.keys()
-
-
-    def cookie(self, varname, deflt):
-        try:
-            return self.cookies[varname].value
-        except:
-            return deflt
-
-
-    #
-    # Request timeout handling
-    #
-    # The system apache process will end the communication with the client after
-    # the timeout configured for the proxy connection from system apache to site
-    # apache. This is done in /omd/sites/[site]/etc/apache/proxy-port.conf file
-    # in the "timeout=x" parameter of the ProxyPass statement.
-    #
-    # The regular request timeout configured here should always be lower to make
-    # it possible to abort the page processing and send a helpful answer to the
-    # client.
-    #
-    # It is possible to disable the applications request timeout (temoporarily)
-    # or totally for specific calls, but the timeout to the client will always
-    # be applied by the system webserver. So the client will always get a error
-    # page while the site apache continues processing the request (until the
-    # first try to write anything to the client) which will result in an
-    # exception.
-    #
-
-    # The timeout of the Check_MK GUI request processing. When the timeout handling
-    # has been enabled with enable_request_timeout(), after this time an alarm signal
-    # will be raised to give the application the option to end the processing in a
-    # gentle way.
-    def request_timeout(self):
-        return self._request_timeout
-
-
-    def enable_request_timeout(self):
-        signal.signal(signal.SIGALRM, self.handle_request_timeout)
-        signal.alarm(self.request_timeout())
-
-
-    def disable_request_timeout(self):
-        signal.alarm(0)
-
-
-    def handle_request_timeout(self, signum, frame):
-        raise RequestTimeout(_("Your request timed out after %d seconds. This issue may be "
-                               "related to a local configuration problem or a request which works "
-                               "with a too large number of objects. But if you think this "
-                               "issue is a bug, please send a crash report.") %
-                                                            self.request_timeout())
-
-
-    #
-    # Request processing
-    #
+        self.request.vars = self._var_stash.pop()
 
 
     def get_unicode_input(self, varname, deflt = None):
@@ -1188,324 +1358,51 @@ class RequestHandler(object):
 
         return request
 
-
-    def parse_field_storage(self, fields, handle_uploads_as_file_obj = False):
-        self.vars     = {}
-        self.listvars = {} # for variables with more than one occurrance
-        self.uploads  = {}
-
-        # TODO: Previously the regex below matched any alphanumeric character plus any character
-        # from set(r'%*+,-./:;<=>?@[\_'), but this was very probably unintended. Now we only allow
-        # alphanumeric characters plus any character from set('%*+-._'), which is probably still a
-        # bit too broad. We should really figure out what we need and make sure that we only use
-        # that restricted set.
-        varname_regex = re.compile(r'^[\w.%*+-]+$')
-
-        for field in fields.list:
-            varname = field.name
-
-            # To prevent variours injections, we only allow a defined set
-            # of characters to be used in variables
-            if not varname_regex.match(varname):
-                continue
-
-            # put uploaded file infos into separate storage
-            if field.filename is not None:
-                if handle_uploads_as_file_obj:
-                    value = field.file
-                else:
-                    value = field.value
-                self.uploads[varname] = (field.filename, field.type, value)
-
-            else: # normal variable
-                # Multiple occurrance of a variable? Store in extra list dict
-                if varname in self.vars:
-                    if varname in self.listvars:
-                        self.listvars[varname].append(field.value)
-                    else:
-                        self.listvars[varname] = [ self.vars[varname], field.value ]
-                # In the single-value-store the last occurrance of a variable
-                # has precedence. That makes appending variables to the current
-                # URL simpler.
-                self.vars[varname] = field.value
-
-
-    #
-    # Content Type
-    #
-
-
-    def set_output_format(self, f):
-        self.output_format = f
-        if f == "json":
-            content_type = "application/json; charset=UTF-8"
-
-        elif f == "jsonp":
-            content_type = "application/javascript; charset=UTF-8"
-
-        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
-            content_type = "text/csv; charset=UTF-8"
-
-        elif f == "python":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "text":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "html":
-            content_type = "text/html; charset=UTF-8"
-
-        elif f == "xml":
-            content_type = "text/xml; charset=UTF-8"
-
-        elif f == "pdf":
-            content_type = "application/pdf"
-
-        else:
-            raise MKGeneralException(_("Unsupported context type '%s'") % f)
-        self.set_content_type(content_type)
-
-
-    def set_content_type(self, ty):
-        raise NotImplementedError()
-
-
-    def is_api_call(self):
-        return self.output_format != "html"
-
-
     #
     # Transaction IDs
     #
 
-    def set_ignore_transids(self):
-        self.ignore_transids = True
-
-
-    # Compute a (hopefully) unique transaction id. This is generated during rendering
-    # of a form or an action link, stored in a user specific file for later validation,
-    # sent to the users browser via HTML code, then submitted by the user together
-    # with the action (link / form) and then validated if it is a known transid. When
-    # it is a known transid, it will be used and invalidated. If the id is not known,
-    # the action will not be processed.
-    def fresh_transid(self):
-        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
-        self.new_transids.append(transid)
-        return transid
-
-
-    def get_transid(self):
-        if not self.current_transid:
-            self.current_transid = self.fresh_transid()
-        return self.current_transid
-
-
-    # All generated transids are saved per user. They are stored in the transids.mk.
-    # Per user only up to 20 transids of the already existing ones are kept. The transids
-    # generated on the current page are all kept. IDs older than one day are deleted.
-    def store_new_transids(self):
-        if self.new_transids:
-            valid_ids = self.load_transids(lock = True)
-            cleared_ids = []
-            now = time.time()
-            for valid_id in valid_ids:
-                timestamp = valid_id.split("/")[0]
-                if now - int(timestamp) < 86400: # one day
-                    cleared_ids.append(valid_id)
-            self.save_transids((cleared_ids[-20:] + self.new_transids))
-
-
-    # Remove the used transid from the list of valid ones
-    def invalidate_transid(self, used_id):
-        valid_ids = self.load_transids(lock = True)
-        try:
-            valid_ids.remove(used_id)
-        except ValueError:
-            return
-        self.save_transids(valid_ids)
-
-
-    # Checks, if the current transaction is valid, i.e. in case of
-    # browser reload a browser reload, the form submit should not
-    # be handled  a second time.. The HTML variable _transid must be present.
-    #
-    # In case of automation users (authed by _secret in URL): If it is empty
-    # or -1, then it's always valid (this is used for webservice calls).
-    # This was also possible for normal users, but has been removed to preven
-    # security related issues.
+    # TODO: Cleanup all call sites to self.transaction_manager.*
     def transaction_valid(self):
-        if not self.has_var("_transid"):
-            return False
+        return self.transaction_manager.transaction_valid()
 
-        id = self.var("_transid")
-        if self.ignore_transids and (not id or id == '-1'):
-            return True # automation
 
-        if '/' not in id:
-            return False
-
-        # Normal user/password auth user handling
-        timestamp = id.split("/", 1)[0]
-
-        # If age is too old (one week), it is always
-        # invalid:
-        now = time.time()
-        if now - int(timestamp) >= 604800: # 7 * 24 hours
-            return False
-
-        # Now check, if this id is a valid one
-        if id in self.load_transids():
-            #self.guitest_set_transid_valid()
-            return True
-        else:
-            return False
-
-    # Checks, if the current page is a transation, i.e. something
-    # that is secured by a transid (such as a submitted form)
+    # TODO: Cleanup all call sites to self.transaction_manager.*
     def is_transaction(self):
-        return self.has_var("_transid")
+        return self.transaction_manager.is_transaction()
 
 
-    # called by page functions in order to check, if this was
-    # a reload or the original form submission. Increases the
-    # transid of the user, if the latter was the case.
-    # There are three return codes:
-    # True:  -> positive confirmation by the user
-    # False: -> not yet confirmed, question is being shown
-    # None:  -> a browser reload or a negative confirmation
+    # TODO: Cleanup all call sites to self.transaction_manager.*
     def check_transaction(self):
-        if self.transaction_valid():
-            id = self.var("_transid")
-            if id and id != "-1":
-                self.invalidate_transid(id)
-            return True
-        else:
-            return False
-
-
-    def load_transids(self, lock=False):
-        raise NotImplementedError()
-
-
-    def save_transids(self, used_ids):
-        raise NotImplementedError()
-
-
-#.
-#   .--html----------------------------------------------------------------.
-#   |                        _     _             _                         |
-#   |                       | |__ | |_ _ __ ___ | |                        |
-#   |                       | '_ \| __| '_ ` _ \| |                        |
-#   |                       | | | | |_| | | | | | |                        |
-#   |                       |_| |_|\__|_| |_| |_|_|                        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Caution! The class needs to be derived from Outputfunnel first!      |
-#   '----------------------------------------------------------------------'
-
-
-class html(HTMLGenerator, RequestHandler):
-
-    def __init__(self):
-        super(html, self).__init__()
-
-        # rendering state
-        self.html_is_open = False
-        self.header_sent = False
-        self.context_buttons_open = False
-        self.context_buttons_hidden = False
-
-        # style options
-        self.body_classes = ['main']
-        self._default_stylesheets = [ "check_mk", "graphs" ]
-        self._default_javascripts = [ "checkmk", "graphs" ]
-
-        # behaviour options
-        self.render_headfoot = True
-        self.enable_debug = False
-        self.screenshotmode = False
-        self.have_help = False
-        self.help_visible = False
-
-        # browser options
-        self.output_format = "html"
-        self.browser_reload = 0
-        self.browser_redirect = ''
-        self.link_target = None
-        self.myfile = None
-
-        # Browser options
-        self._user_id = None
-        self.user_errors = {}
-        self.focus_object = None
-        self.events = set([]) # currently used only for sounds
-        self.status_icons = {}
-        self.final_javascript_code = ""
-        self.caches = {}
-        self.treestates = None
-        self.page_context = {}
-
-        # Settings
-        self.io_error = False
-        self.mobile = False
-        self.buffering = True
-
-        # Forms
-        self.form_name = None
-        self.form_vars = []
-
-        # Time measurement
-        self.times            = {}
-        self.start_time       = time.time()
-        self.last_measurement = self.start_time
-
-        # FIXME: Drop this
-        self.auto_id = 0
-
-        # encoding
-        self.encoder = Encoder()
-
-
-    RETURN    = 13
-    SHIFT     = 16
-    CTRL      = 17
-    ALT       = 18
-    BACKSPACE = 8
-    F1        = 112
+        return self.transaction_manager.check_transaction()
 
 
     #
     # Encoding
     #
 
+    # TODO: Cleanup all call sites to self.encoder.*
     def urlencode_vars(self, vars):
         return self.encoder.urlencode_vars(vars)
 
+    # TODO: Cleanup all call sites to self.encoder.*
     def urlencode(self, value):
         return self.encoder.urlencode(value)
 
+    # TODO: Cleanup all call sites to self.encoder.*
     def urlencode_plus(self, value):
         return self.encoder.urlencode_plus(value)
-
-    # Escape a variable name so that it only uses allowed charachters for URL variables
-    def varencode(self, varname):
-        return self.encoder.varencode(varname)
-
-    def u8(self, c):
-        return self.encoder.u8(c)
-
-    def utf8_to_entities(self, text):
-        return self.encoder.utf8_to_entities(text)
-
 
     #
     # escaping - deprecated functions
     #
     # Encode HTML attributes: e.g. replace '"' with '&quot;', '<' and '>' with '&lt;' and '&gt;'
+    # TODO: Cleanup all call sites to self.escaper.*
     def attrencode(self, value):
         return self.escaper.escape_attribute(value)
 
     # Only strip off some tags. We allow some simple tags like <b> or <tt>.
+    # TODO: Cleanup all call sites to self.escaper.*
     def permissive_attrencode(self, obj):
         return self.escaper.escape_text(obj)
 
@@ -1546,6 +1443,62 @@ class html(HTMLGenerator, RequestHandler):
         return ht
 
 
+    #
+    # Timeout handling
+    #
+
+    def enable_request_timeout(self):
+        self.timeout_manager.enable_timeout(self.request.request_timeout)
+
+
+    def disable_request_timeout(self):
+        self.timeout_manager.disable_timeout()
+
+
+    #
+    # Content Type
+    #
+
+    def set_output_format(self, f):
+        if f == "json":
+            content_type = "application/json; charset=UTF-8"
+
+        elif f == "jsonp":
+            content_type = "application/javascript; charset=UTF-8"
+
+        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
+            content_type = "text/csv; charset=UTF-8"
+
+        elif f == "python":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "text":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "html":
+            content_type = "text/html; charset=UTF-8"
+
+        elif f == "xml":
+            content_type = "text/xml; charset=UTF-8"
+
+        elif f == "pdf":
+            content_type = "application/pdf"
+
+        else:
+            raise MKGeneralException(_("Unsupported context type '%s'") % f)
+
+        self.output_format = f
+        self.response.set_content_type(content_type)
+
+
+    def is_api_call(self):
+        return self.output_format != "html"
+
+
+    #
+    # Other things
+    #
+
     # TODO: Can this please be dropped?
     def some_id(self):
         self.auto_id += 1
@@ -1562,6 +1515,8 @@ class html(HTMLGenerator, RequestHandler):
 
     def set_user_id(self, user_id):
         self._user_id = user_id
+        # TODO: Shouldn't this be moved to some other place?
+        self.help_visible = config.user.load_file("help", False)  # cache for later usage
 
 
     def is_mobile(self):
@@ -1616,7 +1571,7 @@ class html(HTMLGenerator, RequestHandler):
 
 
     def add_body_css_class(self, cls):
-        self.body_classes.append(cls)
+        self._body_classes.append(cls)
 
 
     def add_status_icon(self, img, tooltip, url = None):
@@ -1662,17 +1617,19 @@ class html(HTMLGenerator, RequestHandler):
         self.treestates[tree] = val
 
 
-    def load_tree_states(self):
-        raise NotImplementedError()
-
-
     def save_tree_states(self):
-        raise NotImplementedError()
+        config.user.save_file("treestates", self.treestates)
 
 
-    def get_request_timeout(self):
-        return self._request_timeout
+    def load_tree_states(self):
+        if self.treestates == None:
+            self.treestates = config.user.load_file("treestates", {})
 
+
+    def finalize(self):
+        """Finish the HTTP request processing before handing over to the application server"""
+        self.transaction_manager.store_new()
+        self.disable_request_timeout()
 
 
     #
@@ -1766,7 +1723,7 @@ class html(HTMLGenerator, RequestHandler):
                 formatted = pprint.pformat(element)
             except UnicodeDecodeError:
                 formatted = repr(element)
-            self.lowlevel_write("%s" % self.render_pre(formatted))
+            self._lowlevel_write("%s" % self.render_pre(formatted))
 
 
     #
@@ -1777,7 +1734,7 @@ class html(HTMLGenerator, RequestHandler):
     def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):
         new_vars = [ nv[0] for nv in addvars ]
         vars = [ (v, self.var(v))
-                 for v in self.vars
+                 for v in self.request.vars
                  if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars) ]
         if remove_prefix != None:
             vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
@@ -1800,12 +1757,12 @@ class html(HTMLGenerator, RequestHandler):
 
 
     def makeactionuri(self, addvars, filename=None, delvars=None):
-        return self.makeuri(addvars + [("_transid", self.get_transid())],
+        return self.makeuri(addvars + [("_transid", self.transaction_manager.get())],
                             filename=filename, delvars=delvars)
 
 
     def makeactionuri_contextless(self, addvars, filename=None):
-        return self.makeuri_contextless(addvars + [("_transid", self.get_transid())],
+        return self.makeuri_contextless(addvars + [("_transid", self.transaction_manager.get())],
                                         filename=filename)
 
 
@@ -1838,18 +1795,18 @@ class html(HTMLGenerator, RequestHandler):
 
         # Load all specified style sheets and all user style sheets in htdocs/css
         for css in self._default_stylesheets + stylesheets:
-            fname = self.css_filename_for_browser(css)
+            fname = self._css_filename_for_browser(css)
             if fname is not None:
                 self.stylesheet(fname)
 
         # write css for internet explorer
-        fname = self.css_filename_for_browser("ie")
+        fname = self._css_filename_for_browser("ie")
         if fname is not None:
             self.write_html("<!--[if IE]>\n")
             self.stylesheet(fname)
             self.write_html("<![endif]-->\n")
 
-        self.add_custom_style_sheet()
+        self._add_custom_style_sheet()
 
         # Load all scripts
         for js in self._default_javascripts + javascripts:
@@ -1866,31 +1823,79 @@ class html(HTMLGenerator, RequestHandler):
         self.close_head()
 
 
+    def _add_custom_style_sheet(self):
+        for css in self._plugin_stylesheets():
+            self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
+
+        if config.custom_style_sheet:
+            self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
+
+        if cmk.is_managed_edition():
+            import gui_colors
+            gui_colors.GUIColors().render_html()
+
+
+    def _plugin_stylesheets(self):
+        plugin_stylesheets = set([])
+        for dir in [ cmk.paths.web_dir + "/htdocs/css", cmk.paths.local_web_dir + "/htdocs/css" ]:
+            if os.path.exists(dir):
+                for fn in os.listdir(dir):
+                    if fn.endswith(".css"):
+                        plugin_stylesheets.add(fn)
+        return plugin_stylesheets
+
+
+    # Make the browser load specified javascript files. We have some special handling here:
+    # a) files which can not be found shal not be loaded
+    # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
+    # c) load the minified javascript when not in debug mode
+    def javascript_filename_for_browser(self, jsname):
+        filename_for_browser = None
+        rel_path = "/share/check_mk/web/htdocs/js"
+        if self.enable_debug:
+            min_parts = [ "", "_min" ]
+        else:
+            min_parts = [ "_min", "" ]
+
+        for min_part in min_parts:
+            path_pattern = cmk.paths.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
+            if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
+                filename_for_browser = 'js/%s%s-%s.js' % (jsname, min_part, cmk.__version__)
+                break
+
+        return filename_for_browser
+
+
+    def _css_filename_for_browser(self, css):
+        rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
+        if os.path.exists(cmk.paths.omd_root + rel_path) or \
+            os.path.exists(cmk.paths.omd_root + "/local" + rel_path):
+            return '%s-%s.css' % (css, cmk.__version__)
+
+
     def html_head(self, title, javascripts=None, stylesheets=None, force=False):
 
         force_new_document = force # for backward stability and better readability
 
-        #TODO: html_is_open?
-
         if force_new_document:
-            self.header_sent = False
+            self._header_sent = False
 
-        if not self.header_sent:
+        if not self._header_sent:
             self.write_html('<!DOCTYPE HTML>\n')
             self.open_html()
             self._head(title, javascripts, stylesheets)
-            self.header_sent = True
+            self._header_sent = True
 
 
 
     def header(self, title='', javascripts=None, stylesheets=None, force=False,
                show_body_start=True, show_top_heading=True):
         if self.output_format == "html":
-            if not self.header_sent:
+            if not self._header_sent:
                 if show_body_start:
                     self.body_start(title, javascripts=javascripts, stylesheets=stylesheets, force=force)
 
-                self.header_sent = True
+                self._header_sent = True
 
                 if self.render_headfoot and show_top_heading:
                     self.top_heading(title)
@@ -1903,21 +1908,9 @@ class html(HTMLGenerator, RequestHandler):
 
     def _get_body_css_classes(self):
         if self.screenshotmode:
-            return self.body_classes + ["screenshotmode"]
+            return self._body_classes + ["screenshotmode"]
         else:
-            return self.body_classes
-
-
-    def add_custom_style_sheet(self):
-        raise NotImplementedError()
-
-
-    def css_filename_for_browser(self, css):
-        raise NotImplementedError()
-
-
-    def javascript_filename_for_browser(self, jsname):
-        raise NotImplementedError()
+            return self._body_classes
 
 
     def html_foot(self):
@@ -1925,7 +1918,22 @@ class html(HTMLGenerator, RequestHandler):
 
 
     def top_heading(self, title):
-        raise NotImplementedError()
+        if not isinstance(config.user, config.LoggedInNobody):
+            login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
+            if self.enable_debug:
+                if config.user.language():
+                    login_text += "/%s" % config.user.language()
+            login_text += ')'
+        else:
+            login_text = _("not logged in")
+        self.top_heading_left(title)
+
+        self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' % login_text)
+        if config.pagetitle_date_format:
+            self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
+        self.write(' <b id=headertime></b>')
+        self.javascript('update_header_timer()')
+        self.top_heading_right()
 
 
     def top_heading_left(self, title):
@@ -1964,7 +1972,7 @@ class html(HTMLGenerator, RequestHandler):
 
 
     def bottom_footer(self):
-        if self.header_sent:
+        if self._header_sent:
             self.bottom_focuscode()
             if self.render_headfoot:
                 self.open_table(class_="footer")
@@ -2019,9 +2027,6 @@ class html(HTMLGenerator, RequestHandler):
         self.close_body()
         self.close_html()
 
-        # Hopefully this is the correct place to performe some "finalization" tasks.
-        self.store_new_transids()
-
 
     #
     # HTML form rendering
@@ -2038,7 +2043,7 @@ class html(HTMLGenerator, RequestHandler):
                        enctype="multipart/form-data" if method.lower() == "post" else None)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
-            self.hidden_field("_transid", str(self.get_transid()))
+            self.hidden_field("_transid", str(self.transaction_manager.get()))
         self.form_name = name
 
 
@@ -2074,10 +2079,10 @@ class html(HTMLGenerator, RequestHandler):
         add_action_vars = args.get("add_action_vars", False)
         if varlist != None:
             for var in varlist:
-                value = self.vars.get(var, "")
+                value = self.request.vars.get(var, "")
                 self.hidden_field(var, value)
         else: # add *all* get variables, that are not set by any input!
-            for var in self.vars:
+            for var in self.request.vars:
                 if var not in self.form_vars and \
                     (var[0] != "_" or add_action_vars): # and var != "filled_in":
                     self.hidden_field(var, self.get_unicode_input(var))
@@ -2156,7 +2161,7 @@ class html(HTMLGenerator, RequestHandler):
 
     def buttonlink(self, href, text, add_transid=False, obj_id=None, style=None, title=None, disabled=None):
         if add_transid:
-            href += "&_transid=%s" % self.get_transid()
+            href += "&_transid=%s" % self.transaction_manager.get()
         if not obj_id:
             obj_id = self.some_id()
         self.input(name=obj_id, type_="button",
@@ -2198,7 +2203,7 @@ class html(HTMLGenerator, RequestHandler):
 
 
     def get_button_counts(self):
-        raise NotImplementedError()
+        return config.user.load_file("buttoncounts", {})
 
 
     def empty_icon_button(self):
@@ -2262,7 +2267,7 @@ class html(HTMLGenerator, RequestHandler):
 
         # Model
         error = self.user_errors.get(varname)
-        value = self.vars.get(varname, default_value)
+        value = self.request.vars.get(varname, default_value)
         if not value:
             value = ""
         if error:
@@ -2495,7 +2500,7 @@ class html(HTMLGenerator, RequestHandler):
                 self.open_center()
             self.open_div(class_="really")
             self.write_text(msg)
-            # FIXME: When this confirms another form, use the form name from self.vars()
+            # FIXME: When this confirms another form, use the form name from self.request.vars()
             self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
@@ -2677,21 +2682,21 @@ class html(HTMLGenerator, RequestHandler):
 
 
     def begin_context_buttons(self):
-        if not self.context_buttons_open:
+        if not self._context_buttons_open:
             self.context_button_hidden = False
             self.open_div(class_="contextlinks")
-            self.context_buttons_open = True
+            self._context_buttons_open = True
 
 
     def end_context_buttons(self):
-        if self.context_buttons_open:
+        if self._context_buttons_open:
             if self.context_button_hidden:
                 self.open_div(title=_("Show all buttons"), id="toggle", class_=["contextlink", "short"])
                 self.a("...", onclick='unhide_context_buttons(this);', href='#')
                 self.close_div()
             self.div("", class_="end")
             self.close_div()
-        self.context_buttons_open = False
+        self._context_buttons_open = False
 
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, class_=None):
@@ -2712,7 +2717,7 @@ class html(HTMLGenerator, RequestHandler):
                 display="none"
                 self.context_button_hidden = True
 
-        if not self.context_buttons_open:
+        if not self._context_buttons_open:
             self.begin_context_buttons()
 
         css_classes = [ "contextlink" ]
@@ -2776,10 +2781,6 @@ class html(HTMLGenerator, RequestHandler):
     #
 
 
-    def detect_icon_path(self, icon_name):
-        raise NotImplementedError()
-
-
     # FIXME: Change order of input arguments in one: icon and render_icon!!
     def icon(self, help, icon, **kwargs):
 
@@ -2804,12 +2805,29 @@ class html(HTMLGenerator, RequestHandler):
                       'id'      : id_,
                       'class'   : ["icon", cssclass],
                       'align'   : 'absmiddle' if middle else None,
-                      'src'     : icon_name if "/" in icon_name else self.detect_icon_path(icon_name)}
+                      'src'     : icon_name if "/" in icon_name else self._detect_icon_path(icon_name)}
 
         if class_:
             attributes['class'].extend(class_)
 
         return self._render_opening_tag('img', close_tag=True, **attributes)
+
+
+    def _detect_icon_path(self, icon_name):
+        # Detect whether or not the icon is available as images/icon_*.png
+        # or images/icons/*.png. When an icon is available as internal icon,
+        # always use this one
+        is_internal = False
+        rel_path = "share/check_mk/web/htdocs/images/icon_"+icon_name+".png"
+        if os.path.exists(cmk.paths.omd_root+"/"+rel_path):
+            is_internal = True
+        elif os.path.exists(cmk.paths.omd_root+"/local/"+rel_path):
+            is_internal = True
+
+        if is_internal:
+            return "images/icon_%s.png" % icon_name
+        else:
+            return "images/icons/%s.png" % icon_name
 
 
     def render_icon_button(self, url, help, icon, id=None, onclick=None,
@@ -2901,7 +2919,7 @@ class html(HTMLGenerator, RequestHandler):
 
     def debug_vars(self, prefix=None, hide_with_mouse=True, vars=None):
         if not vars:
-            vars = self.vars
+            vars = self.request.vars
         hover = "this.style.display=\'none\';"
         self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
         self.tr(self.render_th(_("POST / GET Variables"), colspan="2"))

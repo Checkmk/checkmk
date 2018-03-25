@@ -1631,7 +1631,7 @@ def site_is_running_cmc(site_id):
 
 
 def browser_supports_canvas():
-    user_agent = html.get_user_agent()
+    user_agent = html.request.user_agent
 
     if 'MSIE' in user_agent:
         matches = regex(r'MSIE ([0-9]{1,}[\.0-9]{0,})').search(user_agent)

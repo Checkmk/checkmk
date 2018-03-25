@@ -4430,7 +4430,7 @@ def automation_push_snapshot():
 
     verify_slave_site_config(site_id)
 
-    tarcontent = html.uploaded_file("snapshot")
+    tarcontent = html.request.uploaded_file("snapshot")
     if not tarcontent:
         raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
     tarcontent = tarcontent[2]
@@ -4993,7 +4993,7 @@ class ActivateChangesManager(ActivateChanges):
             # The site_state file may be missing/empty, if the operation has started recently.
             # However, if the file is still missing after a considerable amount
             # of time, we consider this site activation as dead
-            if site_state == {} and time.time() - self._time_started > html.get_request_timeout() - 10:
+            if site_state == {} and time.time() - self._time_started > html.request.request_timeout - 10:
                 continue
 
             if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:

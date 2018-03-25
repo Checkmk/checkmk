@@ -2100,7 +2100,7 @@ def mode_mkeventd_mibs(phase):
                 else:
                     return
         elif "_upload_mib" in html.uploads:
-            uploaded_mib = html.uploaded_file("_upload_mib")
+            uploaded_mib = html.request.uploaded_file("_upload_mib")
             filename, mimetype, content = uploaded_mib
             if filename:
                 try:

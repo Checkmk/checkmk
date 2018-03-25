@@ -1642,7 +1642,7 @@ def mode_bulk_rename_host(phase):
                 ("job_id", job_id),
                 ("back_url", html.makeuri([])),
             ], filename="wato.py")
-            html.http_redirect(job_details_url)
+            html.response.http_redirect(job_details_url)
         elif c == False: # not yet confirmed
             return ""
         else:
@@ -1902,7 +1902,7 @@ def mode_rename_host(phase):
                 ("job_id", job_id),
                 ("back_url", host.folder().url()),
             ], filename="wato.py")
-            html.http_redirect(job_details_url)
+            html.response.http_redirect(job_details_url)
 
         elif c == False: # not yet confirmed
             return ""
@@ -5414,7 +5414,7 @@ class ModeAuditLog(WatoMode):
             filename = "wato-auditlog-%s_%s_days.csv" % (render.date(time.time()), self._options["display"][1])
         html.write(filename)
 
-        html.req.headers_out['Content-Disposition'] = 'attachment; filename=%s' % filename
+        html.response.set_http_header("Content-Disposition", "attachment; filename=\"%s\"" % filename)
 
         titles = (
             _('Date'),
@@ -13014,8 +13014,13 @@ class ModeRuleEditor(WatoMode):
 
         menu = MainMenu()
         for groupname in watolib.g_rulespecs.get_main_groups():
-            url = watolib.folder_preserving_link([("mode", "rulesets"), ("group", groupname),
-                             ("host", self._only_host)])
+            url_vars = [
+                ("mode", "rulesets"),
+                ("group", groupname),
+            ]
+            if self._only_host:
+                url_vars.append(("host", self._only_host))
+            url = watolib.folder_preserving_link(url_vars)
             if groupname == "static": # these have moved into their own WATO module
                 continue
 
@@ -15137,7 +15142,7 @@ def page_user_profile(change_pw=False):
         html.reload_sidebar()
         if change_pw:
             html.message(_("Your password has been changed."))
-            html.http_redirect(html.var('_origtarget', 'index.py'))
+            html.response.http_redirect(html.var('_origtarget', 'index.py'))
         else:
             html.message(_("Successfully updated user profile."))
 
@@ -15297,7 +15302,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         action_handler = gui_background_job.ActionHandler()
 
         if action_handler.handle_actions() and action_handler.did_delete_job():
-            html.http_redirect(html.makeuri_contextless([
+            html.response.http_redirect(html.makeuri_contextless([
                 ("host", self._host.name()),
                 ("type", self._ty),
                 ("back_url", self._back_url),
@@ -17832,7 +17837,7 @@ from watolib import \
 
 
 def make_action_link(vars):
-    return watolib.folder_preserving_link(vars + [("_transid", html.get_transid())])
+    return watolib.folder_preserving_link(vars + [("_transid", html.transaction_manager.get())])
 
 
 def may_edit_ruleset(varname):

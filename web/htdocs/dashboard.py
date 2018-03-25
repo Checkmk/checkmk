@@ -950,7 +950,7 @@ def choose_view(name):
             load_view_into_dashlet(dashlet, dashlet_id, view_name)
             add_dashlet(dashlet, dashboard)
 
-            html.http_redirect('edit_dashlet.py?name=%s&id=%d' % (name, dashlet_id))
+            html.response.http_redirect('edit_dashlet.py?name=%s&id=%d' % (name, dashlet_id))
             return
 
         except MKUserError, e:

@@ -1646,7 +1646,7 @@ function add_bookmark() {
 
 
 def try_shorten_url(url):
-    referer = html.req.headers_in.get("Referer")
+    referer = html.request.referer
     if referer:
         ref_p = urlparse.urlsplit(referer)
         url_p = urlparse.urlsplit(url)

@@ -62,7 +62,7 @@ def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, ex
         filename = '%s-%s.json' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
         if type(filename) == unicode:
             filename = filename.encode("utf-8")
-        html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
+        html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)
 
     painted_rows = []
 

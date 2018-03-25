@@ -1015,7 +1015,7 @@ def page_create_view(next_url = None):
                 next_url = html.makeuri([('datasource', ds)], filename = "create_view_infos.py")
             else:
                 next_url = next_url + '&datasource=%s' % ds
-            html.http_redirect(next_url)
+            html.response.http_redirect(next_url)
             return
 
         except MKUserError, e:
@@ -2234,7 +2234,7 @@ def show_context_links(thisview, datasource, show_filters,
     # Customize/Edit view button
     if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
         url_vars = [
-            ("back", html.requested_url()),
+            ("back", html.request.requested_url),
             ("load_name", thisview["name"]),
         ]
 
@@ -3169,7 +3169,7 @@ def output_csv_headers(view):
     filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     if type(filename) == unicode:
         filename = filename.encode("utf-8")
-    html.req.headers_out['Content-Disposition'] = 'Attachment; filename="%s"' % filename
+    html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)
 
 
 def paint_host_list(site, hosts):

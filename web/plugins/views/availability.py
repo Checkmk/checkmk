@@ -57,7 +57,7 @@ def get_availability_options_from_url(what):
 def render_availability_options(what):
     if html.var("_reset"):
         config.user.save_file("avoptions", {})
-        for varname in html.vars.keys():
+        for varname in html.request.vars.keys():
             if varname.startswith("avo_"):
                 html.del_var(varname)
             html.del_var("avoptions")
@@ -929,4 +929,4 @@ def av_output_set_content_disposition(title):
     filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     if type(filename) == unicode:
         filename = filename.encode("utf-8")
-    html.req.headers_out['Content-Disposition'] = 'Attachment; filename="%s"' % filename
+    html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)

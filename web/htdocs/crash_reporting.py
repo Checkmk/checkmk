@@ -414,14 +414,14 @@ def show_agent_output(tardata):
 def create_crash_dump_info_file(tar, what):
     crash_info = cmk.crash_reporting.create_crash_info(what, details={
         "page"           : html.myfile+".py",
-        "vars"           : html.vars,
+        "vars"           : html.request.vars,
         "username"       : config.user.id,
-        "user_agent"     : html.get_user_agent(),
-        "referer"        : html.get_referer(),
+        "user_agent"     : html.request.user_agent,
+        "referer"        : html.request.referer,
         "is_mobile"      : html.is_mobile(),
-        "is_ssl_request" : html.is_ssl_request(),
+        "is_ssl_request" : html.request.is_ssl_request,
         "language"       : i18n.get_current_language(),
-        "request_method" : html.request_method(),
+        "request_method" : html.request.request_method,
     }, version=get_version(what))
 
     content = cStringIO.StringIO()

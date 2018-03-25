@@ -114,7 +114,7 @@ class ModeBackgroundJobDetails(WatoMode):
         action_handler.handle_actions()
         if action_handler.did_delete_job():
             if self._back_url():
-                html.http_redirect(self._back_url())
+                html.response.http_redirect(self._back_url())
             else:
                 return "background_jobs_overview"
 

@@ -25,7 +25,37 @@
 # Boston, MA 02110-1301 USA.
 
 
-from cmk.exceptions import MKException, MKGeneralException
+import http
+
+from cmk.exceptions import MKGeneralException, MKException
+
+
+class RequestTimeout(MKException):
+    """Is raised from the alarm signal handler (handle_request_timeout()) to
+    abort page processing before the system apache times out."""
+    pass
+
+
+
+class FinalizeRequest(Exception):
+    """Is used to end the HTTP request processing from deeper code levels"""
+    # TODO: Drop this default and make exit code explicit for all call sites
+    def __init__(self, code = None):
+        super(FinalizeRequest, self).__init__(http.http_status(code))
+        self.status = code or http.HTTP_OK
+
+
+
+class HTTPRedirect(FinalizeRequest):
+    """Is used to end the HTTP request processing from deeper code levels
+    and making the client request another page after receiving the response."""
+    def __init__(self, url, code=http.HTTP_MOVED_TEMPORARILY):
+        super(HTTPRedirect, self).__init__(code)
+        if code not in [ http.HTTP_MOVED_PERMANENTLY, http.HTTP_MOVED_TEMPORARILY ]:
+            raise Exception("Invalid status code: %d" % code)
+
+        self.url  = url
+
 
 
 class MKAuthException(MKException):

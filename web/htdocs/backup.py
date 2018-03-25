@@ -821,7 +821,7 @@ class PageEditBackupJob(object):
                 job.from_config(self._job_cfg)
 
             jobs.save()
-        html.http_redirect(html.makeuri_contextless([("mode", "backup")]))
+        html.response.http_redirect(html.makeuri_contextless([("mode", "backup")]))
 
 
     def page(self):
@@ -1247,7 +1247,7 @@ class PageEditBackupTarget(object):
                 target.from_config(self._target_cfg)
 
             targets.save()
-        html.http_redirect(html.makeuri_contextless([("mode", "backup_targets")]))
+        html.response.http_redirect(html.makeuri_contextless([("mode", "backup_targets")]))
 
 
     def page(self):

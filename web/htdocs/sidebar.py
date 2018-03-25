@@ -134,7 +134,7 @@ def iconlink(text, url, icon):
 
 def nagioscgilink(text, target):
     html.open_li(class_="sidebar")
-    html.a(text, class_="link", target="main", href="%snagios/cgi-bin/%s" % (html.url_prefix(), target))
+    html.a(text, class_="link", target="main", href="%snagios/cgi-bin/%s" % (config.url_prefix(), target))
     html.close_li()
 
 
@@ -494,7 +494,7 @@ def ajax_snapin():
             except Exception, e:
                 write_snapin_exception(e)
                 e_message = _("Exception during snapin refresh (snapin \'%s\')") % snapname
-                logger.error("%s %s: %s" % (html.requested_url(), e_message, traceback.format_exc()))
+                logger.error("%s %s: %s" % (html.request.requested_url, e_message, traceback.format_exc()))
             finally:
                 snapin_code.append(html.drain())
 
@@ -561,7 +561,7 @@ def page_add_snapin():
         snapin = sidebar_snapins[name]
         title = snapin.title()
         description = snapin.description()
-        transid = html.get_transid()
+        transid = html.transaction_manager.get()
         url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
         html.open_div(class_="snapinadder",
                       onmouseover="this.style.cursor=\'pointer\';",
@@ -693,7 +693,7 @@ def search_open():
         return
 
     url = generate_search_results(q)
-    html.http_redirect(url)
+    html.response.http_redirect(url)
 
 class TooManyRowsError(MKException):
     pass

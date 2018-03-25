@@ -82,7 +82,6 @@ def mobile_html_head(title, ready_code=""):
 def mobile_html_foot():
     html.close_body()
     html.close_html()
-    html.store_new_transids()
 
 def jqm_header_button(pos, url, title, icon=""):
     html.a('', href=url, class_="ui-btn-%s" % pos, title=title, **{"data-direction":"reverse", "data-icon":icon, "data-iconpos":"notext"})
@@ -179,7 +178,7 @@ def page_login():
     # Keep information about original target URL
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.myfile == 'login':
-        origtarget = html.req.uri
+        origtarget = html.request.requested_url
     html.hidden_field('_origtarget', html.attrencode(origtarget))
 
     html.text_input("_username", label = _("Username:"))

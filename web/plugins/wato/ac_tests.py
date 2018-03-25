@@ -296,7 +296,7 @@ class ACTestHTTPSecured(ACTest):
 
 
     def execute(self):
-        if html.is_ssl_request():
+        if html.request.is_ssl_request:
             yield ACResultOK(_("Site is using HTTPS"))
         else:
             yield ACResultWARN(_("Site is using plain HTTP. Consider enabling HTTPS."))

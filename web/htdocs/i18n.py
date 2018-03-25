@@ -134,14 +134,14 @@ def initialize():
 
 
 def del_language_cookie():
-    html.del_cookie("language")
+    html.response.del_cookie("language")
 
 
 def set_language_cookie(lang):
-    cookie_lang = html.cookie("language", None)
+    cookie_lang = html.request.cookie("language")
     if cookie_lang != lang:
         if lang != None:
-            html.set_cookie("language", lang)
+            html.response.set_cookie("language", lang)
         else:
             del_language_cookie()
 

@@ -134,7 +134,7 @@ def html_email_parameter_elements():
                                         config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
                     )),
                 ],
-                default_value=html.is_ssl_request() and "automatic_https" or "automatic_http",
+                default_value=html.request.is_ssl_request and "automatic_https" or "automatic_http",
         ), forth=transform_forth_html_mail_url_prefix,
            back=transform_back_html_mail_url_prefix)
         ),

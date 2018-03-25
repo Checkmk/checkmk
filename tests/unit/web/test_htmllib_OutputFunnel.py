@@ -1,55 +1,18 @@
-#!/usr/bin/python
-# call using
-# > py.test -s -k test_html_generator.py
-
+#!/usr/bin/env python
 
 import pytest
 
-# Override the global site fixture. Not wanted for git tests!
-@pytest.fixture
-def site(request):
-    pass
-
-# Mark all tests in this file to be executed in the git context
-pytestmark = pytest.mark.html_gentest
-
-# external imports
-from contextlib import contextmanager
-
-
-# internal imports
-from htmllib import HTML, OutputFunnel
-from classes import HTMLOrigTester, Refactored_htmlTester
+from htmllib import OutputFunnel
 
 
 class OutputFunnelTester(OutputFunnel):
-
     def __init__(self):
         super(OutputFunnelTester, self).__init__()
         self.written = ""
 
 
-    def lowlevel_write(self, text):
+    def _lowlevel_write(self, text):
         self.written += text
-
-
-#    @ofdecorate
-#    def write_test(self, text):
-#        self.write("<div>THISISATESTTEXT: %s</div>\n" % text)
-#
-# decorator for automatical test generation
-# def ofdecorate(func):
-#    def func_wrapper(html, *args, **kwargs):
-#        with html.plugged():
-#            func(html, *args, **kwargs)
-#            print "_" * 10 + " %s|%s|%s" % (args, kwargs, html.plug_text)
-#    return func_wrapper
-#
-#def test_decorator():
-#    print ""
-#    html = OutputFunnelTester()
-#    html.write_test("HALLO WELT!")
-#    print html.written
 
 
 def test_plug():

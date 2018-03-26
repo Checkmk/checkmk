@@ -65,14 +65,10 @@ import random
 import re
 import __builtin__
 import signal
+import json
 
 from collections import deque
 from contextlib import contextmanager
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
@@ -1170,7 +1166,7 @@ class RequestHandler(object):
                 json_request = self.var("request", "{}")
                 request = json.loads(json_request)
                 request["request_format"] = "json"
-            except json.JSONDecodeError, e:
+            except ValueError, e: # Python3: json.JSONDecodeError
                 raise MKUserError("request", _("Failed to parse JSON request: '%s': %s") %
                                                                     (json_request, e))
 

@@ -8119,8 +8119,8 @@ def simple_host_rule_match_conditions():
         ( "match_site",
           DualListChoice(
               title = _("Match site"),
-              help = _("This condition makes the rule match only notifications that have been "
-                       "created on the selected sites."),
+              help = _("This condition makes the rule match only hosts of "
+                       "the selected sites."),
               choices = config.site_attribute_choices,
           ),
         ),

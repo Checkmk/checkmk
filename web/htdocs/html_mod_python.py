@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from mod_python import Cookie, util, apache
+from mod_python import Cookie, util, apache # pylint: disable=import-error
 from lib import make_utf8, MKGeneralException, MKException
 from log import logger
 import htmllib

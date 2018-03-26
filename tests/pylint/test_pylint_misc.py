@@ -3,13 +3,9 @@
 
 import os
 import sys
-import pytest
 
 from testlib import cmk_path, cmc_path, cme_path
 import testlib.pylint_cmk as pylint_cmk
-
-# Mark all tests in this file to be pylint checks
-pytestmark = pytest.mark.pylint
 
 def test_pylint_misc():
     search_paths = [

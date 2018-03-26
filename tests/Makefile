@@ -1,31 +1,37 @@
 SHELL=/bin/bash -e
+PYTEST=py.test -s -vv
 
 .PHONY: help test-pylint test-integration test-gui-crawl \
 	test-bandit test-shellcheck setup format test-mypy \
-        test-pylint-simple
+        test-pylint-simple test-unit test-packaging
 
 help:
 	@echo "setup              - Install dependencies"
-	@echo "test-integration   - Run integration tests"
+	@echo "test-unit          - Run unit tests"
 	@echo "test-pylint        - Run pylint based tests"
+	@echo "test-integration   - Run integration tests"
 	@echo "test-gui-crawl     - Run GUI crawl test"
 	@echo "test-bandit        - Run bandit (security) tests"
 	@echo "test-shellcheck    - Run shellcheck tests"
 
+test-unit:
+	$(PYTEST) -T unit
+
 
 test-integration:
-	py.test \
-	    -m "not pylint and not packaging and not git and not html_gentest and not gui_crawl" \
-	    -s \
-	    -vv
+	$(PYTEST) -T integration
 
 
 test-gui-crawl:
-	py.test -s -m gui_crawl
+	$(PYTEST) -T gui_crawl
 
 
 test-pylint:
-	py.test -m pylint
+	$(PYTEST) -T pylint
+
+
+test-packageing:
+	$(PYTEST) -T packaging
 
 
 test-bandit:

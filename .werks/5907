@@ -1,4 +1,4 @@
-Title: CentOS/RedHat: Add explicit dependency to php-cli to fix possible broken PNP graphs
+Title: CentOS/RedHat: Add explicit dependency to php-cli and php-xml to fix possible broken PNP graphs
 Level: 1
 Component: packages
 Compatible: compat
@@ -16,4 +16,4 @@ Unfortunately there are third party packages that don't have this implicit
 dependency.
 
 To make Check_MK work out of the box with those PHP installations, we now added
-php-cli as explicit dependency.
+php-cli and php-xml as explicit dependency.

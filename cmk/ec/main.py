@@ -4964,16 +4964,6 @@ def load_configuration(settings):
                     g_slave_status["mode"])
     load_master_config(settings)
 
-    # Convert old contact_groups config
-    for rule_pack in g_config["rule_packs"]:
-        for rule in rule_pack["rules"]:
-            if type(rule.get("contact_groups")) == list:
-                rule["contact_groups"] = {
-                    "groups": rule["contact_groups"],
-                    "notify": False,
-                    "precedence": "host",
-                }
-
     # Create dictionary for actions for easy access
     g_config["action"] = {}
     for action in g_config["actions"]:

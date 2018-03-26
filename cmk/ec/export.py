@@ -264,8 +264,8 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
 
     if not dir_:
         dir_ = rule_pack_dir()
-    file_ = str(dir_ / "rules.mk")
-    cmk.store.save_file(file_, output)
+    dir_.mkdir(parents=True, exist_ok=True)
+    cmk.store.save_file(str(dir_ / "rules.mk"), output)
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*
@@ -298,8 +298,8 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
 
     if not dir_:
         dir_ = mkp_rule_pack_dir()
-    file_ = str(dir_ / ("%s.mk" % rule_pack['id']))
-    cmk.store.save_file(file_, output)
+    dir_.mkdir(parents=True, exist_ok=True)
+    cmk.store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), output)
 
 
 def add_rule_pack_proxies(file_names):

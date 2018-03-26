@@ -2057,13 +2057,6 @@ class EventServer(ECServerThread):
                     # Store information about rule pack right within the rule. This is needed
                     # for debug output and also for skipping rule packs
                     rule["pack"] = rule_pack["id"]
-
-                    # Convert some data fields into newer format
-                    if "livetime" in rule:
-                        livetime = rule["livetime"]
-                        if type(livetime) != tuple:
-                            rule["livetime"] = (livetime, ["open"])
-
                     self._rules.append(rule)
                     self._rule_by_id[rule["id"]] = rule
                     try:

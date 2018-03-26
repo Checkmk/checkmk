@@ -212,6 +212,14 @@ def load_config(settings):
             exec(file_object, config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
+
+    # Convert livetime fields in rules into new format
+    for rule in config["rules"]:
+        if "livetime" in rule:
+            livetime = rule["livetime"]
+            if not isinstance(livetime, tuple):
+                rule["livetime"] = (livetime, ["open"])
+
     return config
 
 
@@ -225,13 +233,6 @@ def load_rule_packs():
     object.
     """
     config = load_config(_default_settings())
-
-    # Convert some data fields into a new format
-    for rule in config["rules"]:
-        if "livetime" in rule:
-            livetime = rule["livetime"]
-            if not isinstance(livetime, tuple):
-                rule["livetime"] = (livetime, ["open"])
 
     # Convert old plain rules into a list of one rule pack
     if config["rules"] and not config["rule_packs"]:

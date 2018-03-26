@@ -9,6 +9,79 @@ import testlib
 import tempfile
 import shutil
 import errno
+from collections import OrderedDict
+
+#
+# Each test is of one of the following types.
+#
+# The tests are marked using the marker pytest.marker.type("TYPE")
+# which is added to the test automatically according to their location.
+#
+# With each call to py.test one type of tests needs to be selected using
+# the "-T TYPE" option. Only these tests will then be executed. Tests of
+# the other type will be skipped.
+#
+
+EXECUTE_IN_SITE, EXECUTE_IN_VENV = True, False
+
+test_types = OrderedDict([
+    ("unit",        EXECUTE_IN_VENV),
+    ("pylint",      EXECUTE_IN_VENV),
+    ("integration", EXECUTE_IN_SITE),
+    ("gui_crawl",   EXECUTE_IN_SITE),
+    ("packaging",   EXECUTE_IN_VENV),
+])
+
+def pytest_addoption(parser):
+    """Register the -T option to pytest"""
+    parser.addoption("-T", action="store", metavar="TYPE", default=None,
+        help="Run tests of the given TYPE. Available types are: %s" %
+                                           ", ".join(test_types.keys()))
+
+def pytest_configure(config):
+    """Register the type marker to pytest"""
+    config.addinivalue_line("markers",
+        "type(TYPE): Mark TYPE of test. Available: %s" %
+                                    ", ".join(test_types.keys()))
+
+
+def pytest_collection_modifyitems(items):
+    """Mark collected test types based on their location"""
+    for item in items:
+        type_marker = item.get_marker("type")
+        if type_marker and type_marker.args:
+            continue # Do not modify manually set marks
+
+        file_path = "%s" % item.reportinfo()[0]
+        if "tests/unit" in file_path:
+            ty = "unit"
+        elif "tests/git" in file_path:
+            ty = "unit"
+        elif "tests/packaging" in file_path:
+            ty = "packaging"
+        elif "tests/pylint" in file_path:
+            ty = "pylint"
+        elif "tests/integration" in file_path:
+            ty = "integration"
+        else:
+            raise Exception("Test not TYPE marked: %r" % item)
+
+        item.add_marker(pytest.mark.type.with_args(ty))
+
+
+def pytest_runtest_setup(item):
+    """Skip tests of unwanted types"""
+    test_type = item.get_marker("type")
+    if test_type is None:
+        raise Exception("Test is not TYPE marked: %s" % item)
+
+    if not item.config.getoption("-T"):
+        raise SystemExit("Please specify type of tests to be executed (py.test -T TYPE)")
+
+    test_type_name = test_type.args[0]
+    if test_type_name != item.config.getoption("-T"):
+        pytest.skip("Not testing type %r" % test_type_name)
+
 
 # Some cmk.* code is calling things like cmk. is_raw_edition() at import time
 # (e.g. cmk_base/default_config/notify.py) for edition specific variable
@@ -75,14 +148,21 @@ def add_python_paths():
 
 
 def pytest_cmdline_main(config):
-    # Some special tests are not executed in a site environment, but in
-    # virtualenv environment. The integration tests and so on are required to
-    # run in our runtime environment (the site). Things like unit tests just
-    # need a similar python environment having the required modules.
-    verify_virtualenv()
-    #if config.getoption('markexpr') in [ "packaging", "git", "html_gentest", "unit" ]:
-    #else:
-    #    setup_site_and_switch_user()
+    """There are 2 environments for testing:
+
+    * A real Check_MK site environment (e.g. integration tests)
+    * Python virtual environment (e.g. for unit tests)
+
+    Depending on the selected "type" marker the environment is ensured
+    or switched here."""
+    if not config.getoption("-T"):
+        return # missing option is handled later
+
+    context = test_types[config.getoption("-T")]
+    if context == EXECUTE_IN_SITE:
+        setup_site_and_switch_user()
+    else:
+        verify_virtualenv()
 
 
 def verify_virtualenv():

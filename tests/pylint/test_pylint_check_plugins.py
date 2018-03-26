@@ -3,13 +3,9 @@
 
 import os
 import sys
-import pytest
 
 from testlib import repo_path, cmc_path
 import testlib.pylint_cmk as pylint_cmk
-
-# Mark all tests in this file to be pylint checks
-pytestmark = pytest.mark.pylint
 
 def test_pylint_checks(pylint_test_dir):
     f = file(pylint_test_dir + "/cmk-checks.py", "w")

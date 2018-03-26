@@ -6,9 +6,6 @@ import glob
 import pytest
 from testlib import cmk_path, cmc_path
 
-# Mark all tests in this file to be executed in the git context
-pytestmark = pytest.mark.git
-
 def test_find_debug_code():
     scanned = 0
     for base_path in [ cmk_path(), cmc_path() ]:

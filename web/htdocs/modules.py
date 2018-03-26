@@ -27,7 +27,7 @@
 import os
 from types import ModuleType
 from lib import load_web_plugins, local_web_plugins_have_changed
-from mod_python.apache import import_module
+from mod_python.apache import import_module # pylint: disable=import-error
 import pagetypes
 
 # Register non page specific modules which are not having own pages,

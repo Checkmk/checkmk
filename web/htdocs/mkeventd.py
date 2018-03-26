@@ -36,6 +36,7 @@ import sites
 from lib import *
 import cmk.paths
 import cmk.ec.settings
+import cmk.ec.defaults
 import cmk.ec.export
 import cmk.store
 
@@ -147,14 +148,8 @@ def eventd_configuration():
     if cached_config and cached_config[0] is html:
         return cached_config[1]
 
-    config = {
-        "MkpRulePackProxy": cmk.ec.export.MkpRulePackProxy,
-        "rules": [],
-        "rule_packs": [],
-        "mkp_rule_packs": {},
-        "debug_rules": False,
-    }
-
+    config = cmk.ec.defaults.default_config()
+    config["MkpRulePackProxy"] = cmk.ec.export.MkpRulePackProxy
     settings = cmk.ec.settings.settings('',
                                         Path(cmk.paths.omd_root),
                                         Path(cmk.paths.default_config_dir),

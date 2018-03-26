@@ -231,36 +231,25 @@ def load_config(settings):
     return config
 
 
-# NOTE: This is the *only* place which can introduce legacy rules. Can we avoid
-# that and put it directly into the default rule pack?
 def load_rule_packs():
-    # type: () -> Tuple[Any, Any]
-    """
-    Returns the legacy rules and the rule packs (including MKP rule packs) of
-    a site. Proxy objects in the rule packs are already bound to the referenced
-    object.
-    """
-    config = load_config(_default_settings())
-    return config['rules'], config['rule_packs']
+    # type: () -> Any
+    """Returns all rule packs (including MKP rule packs) of a site. Proxy objects
+    in the rule packs are already bound to the referenced object."""
+    return load_config(_default_settings())["rule_packs"]
 
 
-def save_rule_packs(legacy_rules, rule_packs, pretty_print=False, dir_=None):
-    # type: (List[Any], List[Dict[str, Any]], bool, Optional[Path]) -> None
-    """
-    Saves the given legacy rules and rule packs to rules.mk. By default
-    it is saved to the default directory for rule packs. If dir_ is given it
-    is used instead of the default.
-    """
+def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
+    # type: (List[Dict[str, Any]], bool, Optional[Path]) -> None
+    """Saves the given rule packs to rules.mk. By default they are saved to the
+    default directory for rule packs. If dir_ is given it is used instead of
+    the default."""
     output = "# Written by WATO\n# encoding: utf-8\n\n"
 
     if pretty_print:
-        legacy_rules_text = pprint.pformat(legacy_rules)
         rule_packs_text = pprint.pformat(rule_packs)
     else:
-        legacy_rules_text = repr(legacy_rules)
         rule_packs_text = repr(rule_packs)
 
-    output += "rules += \\\n%s\n\n" % legacy_rules_text
     output += "rule_packs += \\\n%s\n" % rule_packs_text
 
     if not dir_:
@@ -310,11 +299,11 @@ def add_rule_pack_proxies(file_names):
     of file names. The file names without the file extension are used as
     the ID of the rule pack.
     """
-    legacy_rules, rule_packs = load_rule_packs()
+    rule_packs = load_rule_packs()
     ids = [os.path.splitext(fn)[0] for fn in file_names]
     for id_ in ids:
         rule_packs.append(MkpRulePackProxy(id_))
-    save_rule_packs(legacy_rules, rule_packs)
+    save_rule_packs(rule_packs)
 
 
 def override_rule_pack_proxy(rule_pack_nr, rule_packs):
@@ -344,7 +333,7 @@ def release_packaged_rule_packs(file_names):
     if not file_names:
         return
 
-    legacy_rules, rule_packs = load_rule_packs()
+    rule_packs = load_rule_packs()
     rule_pack_ids = [rp['id'] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
 
@@ -357,7 +346,7 @@ def release_packaged_rule_packs(file_names):
             rule_packs[index] = MkpRulePackProxy(id_)
 
     if save:
-        save_rule_packs(legacy_rules, rule_packs)
+        save_rule_packs(rule_packs)
 
 
 def remove_packaged_rule_packs(file_names, delete_export=True):
@@ -370,7 +359,7 @@ def remove_packaged_rule_packs(file_names, delete_export=True):
     if not file_names:
         return
 
-    legacy_rules, rule_packs = load_rule_packs()
+    rule_packs = load_rule_packs()
     rule_pack_ids = [rp['id'] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
 
@@ -380,7 +369,7 @@ def remove_packaged_rule_packs(file_names, delete_export=True):
         if delete_export:
             remove_exported_rule_pack(id_)
 
-    save_rule_packs(legacy_rules, rule_packs)
+    save_rule_packs(rule_packs)
 
 
 def rule_pack_id_to_mkp(package_info):

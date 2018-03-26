@@ -81,7 +81,7 @@ class ActionList(ListOf):
     def validate_value(self, value, varprefix):
         ListOf.validate_value(self, value, varprefix)
         action_ids = [ v["id"] for v in value ]
-        legacy_rules, rule_packs = load_mkeventd_rules()
+        rule_packs = load_mkeventd_rules()
         for rule_pack in rule_packs:
             for rule in rule_pack["rules"]:
                 for action_id in rule.get("actions", []):
@@ -985,10 +985,7 @@ vs_mkeventd_event = Dictionary(
 #   '----------------------------------------------------------------------'
 
 def load_mkeventd_rules():
-    # Old versions define rules. We convert this into
-    # rule_packs but keep the old rule intact so the
-    # user can switch back to his old configuration.
-    rules, rule_packs = ec.load_rule_packs()
+    rule_packs = ec.load_rule_packs()
 
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
@@ -1016,13 +1013,12 @@ def load_mkeventd_rules():
                     "precedence" : "host",
                 }
 
-    # Return old rules also, for easy rolling back to old config
-    return rules, rule_packs
+    return rule_packs
 
 
-def save_mkeventd_rules(legacy_rules, rule_packs):
+def save_mkeventd_rules(rule_packs):
     make_nagios_directories(str(ec.rule_pack_dir()))
-    ec.save_rule_packs(legacy_rules, rule_packs, config.mkeventd_pprint_rules)
+    ec.save_rule_packs(rule_packs, config.mkeventd_pprint_rules)
 
 
 def export_mkp_rule_pack(rule_pack):
@@ -1031,7 +1027,7 @@ def export_mkp_rule_pack(rule_pack):
 
 
 def save_mkeventd_sample_config():
-    save_mkeventd_rules([], [cmk.ec.defaults.default_rule_pack([])])
+    save_mkeventd_rules([cmk.ec.defaults.default_rule_pack([])])
 
 
 #.
@@ -1064,7 +1060,7 @@ def mode_mkeventd_rule_packs(phase):
         mkeventd_mibs_button()
         return
 
-    legacy_rules, rule_packs = load_mkeventd_rules()
+    rule_packs = load_mkeventd_rules()
 
     if phase == "action":
         action_outcome = event_simulation_action()
@@ -1081,7 +1077,7 @@ def mode_mkeventd_rule_packs(phase):
             if c:
                 add_ec_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
                 del rule_packs[nr]
-                save_mkeventd_rules(legacy_rules, rule_packs)
+                save_mkeventd_rules(rule_packs)
             elif c == False:
                 return ""
 
@@ -1115,7 +1111,7 @@ def mode_mkeventd_rule_packs(phase):
             rule_pack = rule_packs[from_pos]
             del rule_packs[from_pos] # make to_pos now match!
             rule_packs[to_pos:to_pos] = [rule_pack]
-            save_mkeventd_rules(legacy_rules, rule_packs)
+            save_mkeventd_rules(rule_packs)
             add_ec_change("move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"])
 
         # Export rule pack
@@ -1128,7 +1124,7 @@ def mode_mkeventd_rule_packs(phase):
 
             export_mkp_rule_pack(rule_pack)
             rule_packs[nr] = ec.MkpRulePackProxy(rule_pack['id'])
-            save_mkeventd_rules(legacy_rules, rule_packs)
+            save_mkeventd_rules(rule_packs)
             add_ec_change("export-rule-pack", _("Made rule pack %s available for MKP export") % rule_pack["id"])
 
         # Make rule pack non-exportable
@@ -1138,7 +1134,7 @@ def mode_mkeventd_rule_packs(phase):
                 rule_packs[nr] = rule_packs[nr].rule_pack
             except KeyError:
                 raise MKUserError("_dissolve", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(legacy_rules, rule_packs)
+            save_mkeventd_rules(rule_packs)
             ec.remove_exported_rule_pack(rule_packs[nr]["id"])
             add_ec_change("dissolve-rule-pack", _("Removed rule_pack %s from MKP export") % rule_packs[nr]["id"])
 
@@ -1149,7 +1145,7 @@ def mode_mkeventd_rule_packs(phase):
                 rule_packs[nr] = ec.MkpRulePackProxy(rule_packs[nr]['id'])
             except KeyError:
                 raise MKUserError("_reset", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(legacy_rules, rule_packs)
+            save_mkeventd_rules(rule_packs)
             add_ec_change("reset-rule-pack", _("Resetted the rules of rule pack %s to the ones provided via MKP") % rule_packs[nr].id_)
 
         # Synchronize modified rule pack with MKP
@@ -1160,7 +1156,7 @@ def mode_mkeventd_rule_packs(phase):
                 rule_packs[nr] = ec.MkpRulePackProxy(rule_packs[nr]['id'])
             except KeyError:
                 raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(legacy_rules, rule_packs)
+            save_mkeventd_rules(rule_packs)
             add_ec_change("synchronize-rule-pack", _("Synchronized MKP with the modified rule pack %s") % rule_packs[nr].id_)
 
         return
@@ -1380,7 +1376,7 @@ def filter_mkeventd_rule_packs(search_expression, rule_packs):
 
 def mode_mkeventd_rules(phase):
     search_expression = get_search_expression()
-    legacy_rules, rule_packs = load_mkeventd_rules()
+    rule_packs = load_mkeventd_rules()
     rule_pack_id = html.var("rule_pack")
     rule_pack_nr, rule_pack = rule_pack_with_id(rule_packs, rule_pack_id)
     rules = rule_pack["rules"]
@@ -1422,7 +1418,7 @@ def mode_mkeventd_rules(phase):
                             export_mkp_rule_pack(other_pack)
                         if type_ == ec.RulePackType.exported:
                             export_mkp_rule_pack(rule_pack)
-                        save_mkeventd_rules(legacy_rules, rule_packs)
+                        save_mkeventd_rules(rule_packs)
 
                         add_ec_change("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
                         return None, html.render_text(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
@@ -1447,7 +1443,7 @@ def mode_mkeventd_rules(phase):
 
                 if type_ == ec.RulePackType.exported:
                     export_mkp_rule_pack(rule_pack)
-                save_mkeventd_rules(legacy_rules, rule_packs)
+                save_mkeventd_rules(rule_packs)
             elif c == False:
                 return ""
             else:
@@ -1468,7 +1464,7 @@ def mode_mkeventd_rules(phase):
 
                 if type_ == ec.RulePackType.exported:
                     export_mkp_rule_pack(rule_pack)
-                save_mkeventd_rules(legacy_rules, rule_packs)
+                save_mkeventd_rules(rule_packs)
 
                 add_ec_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return
@@ -1627,7 +1623,7 @@ def copy_rules_from_master():
     if "rules" not in answer:
         raise MKGeneralException(_("Cannot get rules from local event daemon."))
     rule_packs = answer["rules"]
-    save_mkeventd_rules([], rule_packs)
+    save_mkeventd_rules(rule_packs)
 
 
 def filter_mkeventd_rules(search_expression, rule_pack):
@@ -1640,7 +1636,7 @@ def filter_mkeventd_rules(search_expression, rule_pack):
 
 
 def mode_mkeventd_edit_rule_pack(phase):
-    legacy_rules, rule_packs = load_mkeventd_rules()
+    rule_packs = load_mkeventd_rules()
     edit_nr = int(html.var("edit", -1)) # missing -> new rule pack
     new = edit_nr < 0
 
@@ -1705,7 +1701,7 @@ def mode_mkeventd_edit_rule_pack(phase):
                 rule_packs[edit_nr].rule_pack = rule_pack
                 export_mkp_rule_pack(rule_pack)
 
-        save_mkeventd_rules(legacy_rules, rule_packs)
+        save_mkeventd_rules(rule_packs)
 
         if new:
             add_ec_change("new-rule-pack", _("Created new rule pack with id %s") % rule_pack["id"])
@@ -1723,7 +1719,7 @@ def mode_mkeventd_edit_rule_pack(phase):
 
 
 def mode_mkeventd_edit_rule(phase):
-    legacy_rules, rule_packs = load_mkeventd_rules()
+    rule_packs = load_mkeventd_rules()
 
     if html.has_var("rule_pack"):
         rule_pack_nr, rule_pack = rule_pack_with_id(rule_packs, html.var("rule_pack"))
@@ -1852,7 +1848,7 @@ def mode_mkeventd_edit_rule(phase):
 
         if type_ == ec.RulePackType.exported:
             export_mkp_rule_pack(rule_pack)
-        save_mkeventd_rules(legacy_rules, rule_packs)
+        save_mkeventd_rules(rule_packs)
 
         if new:
             add_ec_change("new-rule", _("Created new event correlation rule with id %s") % rule["id"])

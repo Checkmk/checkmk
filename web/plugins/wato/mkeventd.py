@@ -1007,12 +1007,10 @@ def load_mkeventd_rules():
 
 
 def save_mkeventd_rules(rule_packs):
-    make_nagios_directories(str(ec.rule_pack_dir()))
     ec.save_rule_packs(rule_packs, config.mkeventd_pprint_rules)
 
 
 def export_mkp_rule_pack(rule_pack):
-    make_nagios_directories(str(ec.mkp_rule_pack_dir()))
     ec.export_rule_pack(rule_pack, config.mkeventd_pprint_rules)
 
 

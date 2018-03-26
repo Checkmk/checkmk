@@ -186,21 +186,33 @@ def remove_exported_rule_pack(id_):
 
 
 # Only called from cmk.ec.main.load_configuration.
-def bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
+def _bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
     # type: (Any, Any) -> None
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.
     """
     for rule_pack in rule_packs:
-        if not isinstance(rule_pack, MkpRulePackProxy):
-            continue
-
         try:
-            rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
+            if isinstance(rule_pack, MkpRulePackProxy):
+                rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
         except KeyError:
             raise MkpRulePackBindingError('Exported rule pack with ID "%s" not found.'
                                           % rule_pack.id_)
+
+
+def load_config(settings):
+    # type: (cmk.ec.settings.Settings) -> Dict[str, Any]
+    """Load event console configuration."""
+    config = cmk.ec.defaults.default_config()
+    config["MkpRulePackProxy"] = MkpRulePackProxy
+    for path in [settings.paths.main_config_file.value] + \
+            sorted(settings.paths.config_dir.value.glob('**/*.mk')):
+        with open(str(path)) as file_object:
+            exec(file_object, config)  # pylint: disable=exec-used
+    config.pop("MkpRulePackProxy", None)
+    _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
+    return config
 
 
 # NOTE: This is the *only* place which can introduce legacy rules. Can we avoid
@@ -212,26 +224,21 @@ def load_rule_packs():
     a site. Proxy objects in the rule packs are already bound to the referenced
     object.
     """
-    context = cmk.ec.defaults.default_config()
-    context["MkpRulePackProxy"] = MkpRulePackProxy
-    for path in [rule_pack_dir() / "rules.mk"] + sorted(mkp_rule_pack_dir().glob('*.mk')):
-        cmk.store.load_mk_file(str(path), context)
+    config = load_config(_default_settings())
 
     # Convert some data fields into a new format
-    for rule in context["rules"]:
+    for rule in config["rules"]:
         if "livetime" in rule:
             livetime = rule["livetime"]
             if not isinstance(livetime, tuple):
                 rule["livetime"] = (livetime, ["open"])
 
     # Convert old plain rules into a list of one rule pack
-    if context["rules"] and not context["rule_packs"]:
-        context["rule_packs"] = [
-            cmk.ec.defaults.default_rule_pack(context["rules"])]
+    if config["rules"] and not config["rule_packs"]:
+        config["rule_packs"] = [
+            cmk.ec.defaults.default_rule_pack(config["rules"])]
 
-    bind_to_rule_pack_proxies(context['rule_packs'], context['mkp_rule_packs'])
-
-    return context['rules'], context['rule_packs']
+    return config['rules'], config['rule_packs']
 
 
 def save_rule_packs(legacy_rules, rule_packs, pretty_print=False, dir_=None):

@@ -4944,20 +4944,7 @@ def load_slave_status(settings):
 
 def load_configuration(settings):
     global g_config, g_last_config_reload
-    g_config = cmk.ec.defaults.default_config()
-    g_config['MkpRulePackProxy'] = cmk.ec.export.MkpRulePackProxy  # needed for exec
-
-    config_path = settings.paths.main_config_file.value
-    if not config_path.exists():
-        bail_out("Main configuration file %s missing." % config_path)
-    for path in [config_path] + sorted(settings.paths.config_dir.value.glob('**/*.mk')):
-        with open(str(path)) as f:
-            exec(f, g_config)
-
-    try:
-        cmk.ec.export.bind_to_rule_pack_proxies(g_config['rule_packs'], g_config['mkp_rule_packs'])
-    except cmk.ec.export.MkpRulePackBindingError as e:
-        bail_out("%s" % e)
+    g_config = cmk.ec.export.load_config(settings)
 
     # If not set by command line, set the log level by configuration
     if settings.options.verbosity == 0:

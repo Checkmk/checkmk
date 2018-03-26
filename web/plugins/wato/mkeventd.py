@@ -1003,16 +1003,6 @@ def load_mkeventd_rules():
             pack_hits += hits
         rule_pack["hits"] = pack_hits
 
-    # Migrate old contact_group key (+ add False for notify option)
-    for rule_pack in rule_packs:
-        for rule in rule_pack["rules"]:
-            if type(rule.get("contact_groups")) == list:
-                rule["contact_groups"] = {
-                    "groups"     : rule["contact_groups"],
-                    "notify"     : False,
-                    "precedence" : "host",
-                }
-
     return rule_packs
 
 

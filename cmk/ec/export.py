@@ -228,6 +228,16 @@ def load_config(settings):
             cmk.ec.defaults.default_rule_pack(config["rules"])]
     config["rules"] = []
 
+    # Convert old contact_groups config
+    for rule_pack in config["rule_packs"]:
+        for rule in rule_pack["rules"]:
+            if isinstance(rule.get("contact_groups"), list):
+                rule["contact_groups"] = {
+                    "groups": rule["contact_groups"],
+                    "notify": False,
+                    "precedence": "host",
+                }
+
     return config
 
 

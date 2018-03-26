@@ -42,7 +42,7 @@ except NameError:
 
 
 def default_rule_pack(rules):
-    # type: (List[Dict[str, Any]]) -> Dict[str, object]
+    # type: (List[Dict[str, Any]]) -> Dict[str, Any]
     """Returns the default rule pack"""
     return {
         "id": "default",
@@ -53,7 +53,7 @@ def default_rule_pack(rules):
 
 
 def default_config():
-    # type: () -> Dict[str, object]
+    # type: () -> Dict[str, Any]
     """Returns the default configuration"""
     return {
         "rules":          [],  # old pre 1.2.7i1 format. Only used if rule_packs is empty

@@ -212,12 +212,8 @@ def load_rule_packs():
     a site. Proxy objects in the rule packs are already bound to the referenced
     object.
     """
-    context = {
-        "MkpRulePackProxy": MkpRulePackProxy,
-        "rules": [],
-        "rule_packs": [],
-        "mkp_rule_packs": {}
-    }  # type: Dict[str, Any]
+    context = cmk.ec.defaults.default_config()
+    context["MkpRulePackProxy"] = MkpRulePackProxy
     for path in [rule_pack_dir() / "rules.mk"] + sorted(mkp_rule_pack_dir().glob('*.mk')):
         cmk.store.load_mk_file(str(path), context)
 

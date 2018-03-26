@@ -35,7 +35,7 @@
 #    MTR results are stored in $VARDIR/mtr_${host}.report
 # return previous host data
 
-import sys, os, re, time, glob, ConfigParser, StringIO, distutils.spawn
+import sys, os, re, time, glob, ConfigParser, StringIO
 from unicodedata import normalize
 import subprocess
 
@@ -52,12 +52,31 @@ if '-d' in sys.argv[2:] or '--debug' in sys.argv[1:]:
 else:
     debug = False
 
+
+def which(program):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
+
 # See if we have mtr
-mtr_prog = distutils.spawn.find_executable('mtr')
+mtr_prog = which('mtr')
 if mtr_prog == None:
     if debug:
         sys.stdout.write("Could not find mtr binary\n")
     sys.exit(0)
+
 
 def read_config():
     default_options = {

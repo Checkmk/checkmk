@@ -36,6 +36,7 @@
 #   -> Add alternative rendering "dropdown"
 
 import math, os, time, re, sre_constants, urlparse, forms, tempfile, types
+import json
 import base64
 import hashlib
 import socket
@@ -44,11 +45,6 @@ from lib import *
 import cmk.defines as defines
 from Cryptodome.PublicKey import RSA
 from UserDict import DictMixin
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
 def type_name(v):
     try:
@@ -737,7 +733,7 @@ class TextAsciiAutocomplete(TextAscii):
 
         try:
             params = json.loads(raw_params)
-        except json.JSONDecodeError, e:
+        except ValueError, e: # Python 3: json.JSONDecodeError
             raise MKUserError("params", _("Invalid parameters: %s") % e)
 
         value = html.var("value")

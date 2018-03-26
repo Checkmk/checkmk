@@ -220,6 +220,14 @@ def load_config(settings):
             if not isinstance(livetime, tuple):
                 rule["livetime"] = (livetime, ["open"])
 
+    # Convert legacy rules into a default rule pack. Note that we completely
+    # ignore legacy rules if there are rule packs alreday. It's a bit unclear
+    # if we really want that, but at least that's how it worked in the past...
+    if config["rules"] and not config["rule_packs"]:
+        config["rule_packs"] = [
+            cmk.ec.defaults.default_rule_pack(config["rules"])]
+    config["rules"] = []
+
     return config
 
 
@@ -233,12 +241,6 @@ def load_rule_packs():
     object.
     """
     config = load_config(_default_settings())
-
-    # Convert old plain rules into a list of one rule pack
-    if config["rules"] and not config["rule_packs"]:
-        config["rule_packs"] = [
-            cmk.ec.defaults.default_rule_pack(config["rules"])]
-
     return config['rules'], config['rule_packs']
 
 

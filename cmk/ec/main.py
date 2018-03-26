@@ -2032,15 +2032,6 @@ class EventServer(ECServerThread):
             else:
                 return val.lower()
 
-        # Convert legacy_rules into rule_packs
-        if not rule_packs:
-            rule_packs = [{
-                "id": "default",
-                "title": "Default rule package",
-                "rules": legacy_rules,
-                "disabled": False,
-            }]
-
         # Loop through all rule packages and with through their rules
         for rule_pack in rule_packs:
             if rule_pack["disabled"]:

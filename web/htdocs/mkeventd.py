@@ -36,7 +36,6 @@ import sites
 from lib import *
 import cmk.paths
 import cmk.ec.settings
-import cmk.ec.defaults
 import cmk.ec.export
 import cmk.store
 

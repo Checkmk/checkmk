@@ -148,15 +148,11 @@ def eventd_configuration():
     if cached_config and cached_config[0] is html:
         return cached_config[1]
 
-    config = cmk.ec.defaults.default_config()
-    config["MkpRulePackProxy"] = cmk.ec.export.MkpRulePackProxy
     settings = cmk.ec.settings.settings('',
                                         Path(cmk.paths.omd_root),
                                         Path(cmk.paths.default_config_dir),
                                         [''])
-    for path in [settings.paths.main_config_file.value] + sorted(settings.paths.config_dir.value.glob('**/*.mk')):
-        cmk.store.load_mk_file(str(path), config)
-
+    config = cmk.ec.export.load_config(settings)
     cached_config = (html, config)
     return config
 

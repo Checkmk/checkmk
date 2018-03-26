@@ -185,7 +185,6 @@ def remove_exported_rule_pack(id_):
     export_file.unlink()
 
 
-# Only called from cmk.ec.main.load_configuration.
 def _bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
     # type: (Any, Any) -> None
     """

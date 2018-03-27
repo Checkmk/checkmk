@@ -40,8 +40,6 @@ class Logger;
 
 namespace section_helpers {
 
-double file_time(const FILETIME *filetime);
-
 template <class ToDuration = std::chrono::seconds, class Rep = long long>
 inline Rep current_time() {
     const std::chrono::duration<Rep> now =

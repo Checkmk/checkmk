@@ -31,7 +31,7 @@
 #include <fstream>
 #include "Environment.h"
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "SectionHeader.h"
 #include "stringutil.h"
 
 namespace fs = std::experimental::filesystem;
@@ -298,7 +298,8 @@ std::optional<std::string> getIPSpecificStatefileName(
 
 SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
-    : Section("logwatch", "logwatch", config.getEnvironment(), logger, winapi)
+    : Section("logwatch", config.getEnvironment(), logger, winapi,
+              std::make_unique<DefaultHeader>("logwatch", logger))
     , _sendall(config, "logwatch", "sendall", false, winapi)
     , _vista_api(config, "logwatch", "vista_api", false, winapi)
     , _config(config, "logwatch", "logname", winapi) {

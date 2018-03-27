@@ -25,11 +25,13 @@
 #include "SectionUptime.h"
 #include "Environment.h"
 #include "Logger.h"
+#include "SectionHeader.h"
 #include "dynamic_func.h"
 
 SectionUptime::SectionUptime(const Environment &env, Logger *logger,
                              const WinApiAdaptor &winapi)
-    : Section("uptime", "uptime", env, logger, winapi) {
+    : Section("uptime", env, logger, winapi,
+              std::make_unique<DefaultHeader>("uptime", logger)) {
     LPCWSTR dllName = L"kernel32.dll";
     LPCSTR funcName = "GetTickCount64";
     GetTickCount64_dyn =

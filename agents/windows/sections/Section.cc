@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -26,41 +26,29 @@
 #include <sstream>
 #include "Environment.h"
 #include "Logger.h"
+#include "SectionHeader.h"
 
-Section::Section(const std::string &outputName, const std::string &configName,
-                 const Environment &env, Logger *logger,
-                 const WinApiAdaptor &winapi)
-    : _outputName(outputName)
-    , _configName(configName)
+Section::Section(const std::string &configName, const Environment &env,
+                 Logger *logger, const WinApiAdaptor &winapi,
+                 std::unique_ptr<ISectionHeader> header)
+    : _configName(configName)
     , _env(env)
     , _logger(logger)
-    , _winapi(winapi) {}
+    , _winapi(winapi)
+    , _header(std::move(header)) {}
+
+Section::~Section() {}  // Allow member type fwd declarations in header
 
 bool Section::produceOutput(std::ostream &out,
-                            const std::optional<std::string> &remoteIP,
-                            bool nested) {
-    Debug(_logger) << "<<<" << _outputName << ">>>";
-
+                            const std::optional<std::string> &remoteIP) {
     std::string output;
     bool res = generateOutput(output, remoteIP);
 
-    if (res) {
-        const char *left_bracket = nested ? "[" : "<<<";
-        const char *right_bracket = nested ? "]" : ">>>";
+    if (res && !output.empty()) {
+        out << *_header << output;
 
-        if (!output.empty()) {
-            if (!_outputName.empty() && showHeader()) {
-                out << left_bracket << _outputName;
-                if (auto sep = separator(); sep != ' ' && !nested) {
-                    out << ":sep(" << static_cast<unsigned>(sep) << ")";
-                }
-                out << right_bracket << "\n";
-            }
-
-            out << output;
-            if (*output.rbegin() != '\n') {
-                out << '\n';
-            }
+        if (*output.rbegin() != '\n') {
+            out << '\n';
         }
     }
 

@@ -25,11 +25,12 @@
 #include "SectionMem.h"
 #include <iomanip>
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "SectionHeader.h"
 
 SectionMem::SectionMem(const Environment &env, Logger *logger,
                        const WinApiAdaptor &winapi)
-    : Section("mem", "mem", env, logger, winapi) {}
+    : Section("mem", env, logger, winapi,
+              std::make_unique<DefaultHeader>("mem", logger)) {}
 
 bool SectionMem::produceOutputInner(std::ostream &out,
                                     const std::optional<std::string> &) {

@@ -27,6 +27,7 @@
 #include "Environment.h"
 #include "Logger.h"
 #include "PerfCounter.h"
+#include "SectionHeader.h"
 #include "dynamic_func.h"
 
 namespace {
@@ -46,7 +47,9 @@ inline unsigned long long sinceEpoch(const FILETIME &filetime) {
 
 SectionPS::SectionPS(Configuration &config, Logger *logger,
                      const WinApiAdaptor &winapi)
-    : Section("ps", "ps", config.getEnvironment(), logger, winapi)
+    : Section(
+          "ps", config.getEnvironment(), logger, winapi,
+          std::make_unique<SectionHeader<'\t', SectionBrackets>>("ps", logger))
     , _use_wmi(config, "ps", "use_wmi", false, winapi)
     , _full_commandline(config, "ps", "full_path", false, winapi) {}
 

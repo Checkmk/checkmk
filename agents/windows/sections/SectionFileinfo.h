@@ -44,8 +44,6 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
-    unsigned char separator() const override { return '|'; }
-
     ListConfigurable<PathsT, BlockMode::Nop<PathsT>,
                      AddMode::PriorityAppend<PathsT>>
         _fileinfo_paths;

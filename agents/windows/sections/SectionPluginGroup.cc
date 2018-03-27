@@ -28,7 +28,7 @@
 #include "Environment.h"
 #include "ExternalCmd.h"
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "SectionHeader.h"
 
 namespace {
 
@@ -200,6 +200,13 @@ ScriptWorkerThread(LPVOID lpParam) {
         cont->buffer_work.reset();
     }
     return 0;
+}
+
+std::unique_ptr<ISectionHeader> makeHeader(script_type type, Logger *logger) {
+    if (type != script_type::PLUGIN)
+        return std::make_unique<DefaultHeader>(typeToSection(type), logger);
+    else  // plugin -> no collective header
+        return std::make_unique<HiddenHeader>(logger);
 }
 
 }  // namespace
@@ -378,8 +385,8 @@ SectionPluginGroup::SectionPluginGroup(
     Configuration &config, const std::string &path, script_type type,
     script_statistics_t &script_statistics, Logger *logger,
     const WinApiAdaptor &winapi, const std::string &user)
-    : Section(typeToSection(type), typeToSection(type), config.getEnvironment(),
-              logger, winapi)
+    : Section(typeToSection(type), config.getEnvironment(), logger, winapi,
+              makeHeader(type, logger))
     , _path(path)
     , _type(type)
     , _user(user)

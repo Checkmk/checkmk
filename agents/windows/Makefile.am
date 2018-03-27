@@ -124,6 +124,7 @@ WindowsAgentTest_SOURCES = \
         test/typesTest.cc \
         test/wmiHelperTest.cc \
         test/sections/SectionEventlogTest.cc \
+        test/sections/SectionHeaderTest.cc \
         test/sections/SectionLogwatchTest.cc \
         test/sections/SectionMRPETest.cc
 

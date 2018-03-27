@@ -29,6 +29,7 @@
 #include <vector>
 #include "Environment.h"
 #include "Logger.h"
+#include "SectionHeader.h"
 #include "stringutil.h"
 
 namespace {
@@ -68,7 +69,8 @@ SectionCheckMK::SectionCheckMK(Configuration &config,
                                OnlyFromConfigurable &only_from,
                                script_statistics_t &script_statistics,
                                Logger *logger, const WinApiAdaptor &winapi)
-    : Section("check_mk", "check_mk", config.getEnvironment(), logger, winapi)
+    : Section("check_mk", config.getEnvironment(), logger, winapi,
+              std::make_unique<DefaultHeader>("check_mk", logger))
     , _crash_debug(config, "global", "crash_debug", false, winapi)
     , _only_from(only_from)
     , _info_fields(createInfoFields(_env))

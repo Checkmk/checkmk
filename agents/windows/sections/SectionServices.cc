@@ -24,13 +24,14 @@
 
 #include "SectionServices.h"
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "SectionHeader.h"
 #include "stringutil.h"
 #include "types.h"
 
 SectionServices::SectionServices(const Environment &env, Logger *logger,
                                  const WinApiAdaptor &winapi)
-    : Section("services", "services", env, logger, winapi) {}
+    : Section("services", env, logger, winapi,
+              std::make_unique<DefaultHeader>("services", logger)) {}
 
 // Determine the start type of a service. Unbelievable how much
 // code is needed for that...

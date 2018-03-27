@@ -28,11 +28,13 @@
 #include "Environment.h"
 #include "Logger.h"
 #include "PerfCounter.h"
+#include "SectionHeader.h"
 #include "stringutil.h"
 
 SectionWinperf::SectionWinperf(const std::string &name, const Environment &env,
                                Logger *logger, const WinApiAdaptor &winapi)
-    : Section("winperf_" + name, "winperf_" + name, env, logger, winapi)
+    : Section("winperf_" + name, env, logger, winapi,
+              std::make_unique<DefaultHeader>("winperf_" + name, logger))
     , _base(0) {}
 
 SectionWinperf *SectionWinperf::withBase(unsigned int base) {

@@ -31,7 +31,6 @@
 #include "RegExp.h"
 #include "Row.h"
 #include "StringUtils.h"
-#include "Logger.h"
 
 CustomVarsDictFilter::CustomVarsDictFilter(Kind kind,
                                            const CustomVarsDictColumn &column,

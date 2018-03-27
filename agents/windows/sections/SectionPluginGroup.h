@@ -144,8 +144,7 @@ class SectionPluginGroup : public Section {
 #endif  // _WIN32 || _WIN64
         DataCollectionThread(LPVOID lpParam);
 
-    typedef std::map<std::string, std::shared_ptr<script_container>>
-        containers_t;
+    using containers_t = std::map<std::string, std::shared_ptr<script_container>>;
 
     static const int DEFAULT_PLUGIN_TIMEOUT = 60;
     static const int DEFAULT_LOCAL_TIMEOUT = 60;

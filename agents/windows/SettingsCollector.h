@@ -121,8 +121,8 @@ public:
 template <typename ContainerT>
 class PriorityAppendGrouped {
 public:
-    typedef void (*GroupFunction)(typename ContainerT::value_type &,
-                                  const char *key, const char *value);
+    using GroupFunction = void (*)(typename ContainerT::value_type &,
+                                   const char *key, const char *value);
 
     void startFile(ContainerT &list) { _insert_pos = list.begin(); }
     void add(ContainerT &list, const typename ContainerT::value_type &value) {

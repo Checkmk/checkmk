@@ -27,9 +27,6 @@
 
 #include "WinApiAdaptor.h"
 
-class WinApiAdaptor;
-typedef unsigned long DWORD;
-
 template <typename CharT>
 size_t string_length(const CharT *s);
 

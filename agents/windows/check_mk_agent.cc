@@ -38,9 +38,6 @@
 // This program needs at least windows version 0x0500
 // (Window 2000 / Windows XP)
 #define WINVER 0x0500
-// This define is required to use the function GetProcessHandleCount in
-// the ps section. Only available in winxp upwards
-#define _WIN32_WINNT 0x0501
 
 #include <winsock2.h>
 #include <ctype.h>  // isspace()

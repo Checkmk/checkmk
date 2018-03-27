@@ -35,8 +35,6 @@
 #include <unordered_map>
 #include <vector>
 #include "WinApiAdaptor.h"
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
 
 #if (__SIZEOF_POINTER__ == 8)
 #define PRIdword "d"

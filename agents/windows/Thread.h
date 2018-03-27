@@ -51,7 +51,7 @@ struct ThreadData {
 
 class Thread {
 public:
-    typedef DWORD WINAPI (*ThreadFunc)(void *);
+    using ThreadFunc = DWORD WINAPI (*)(void *);
 
 public:
     // the caller keeps ownership

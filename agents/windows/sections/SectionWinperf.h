@@ -36,8 +36,6 @@ class Result;
 }  // namespace wmi
 
 class SectionWinperf : public Section {
-    typedef unsigned long DWORD;
-
 public:
     SectionWinperf(const std::string &name, const Environment &env,
                    Logger *logger, const WinApiAdaptor &winapi);
@@ -49,7 +47,7 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
-    DWORD _base;
+    unsigned long _base;
 };
 
 #endif  // SectionWinperf_h

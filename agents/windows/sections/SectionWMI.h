@@ -35,7 +35,7 @@ class SectionWMI : public Section {
 public:
     SectionWMI(const std::string &outputName, const std::string &configName,
                const Environment &env, Logger *logger,
-               const WinApiAdaptor &winapi);
+               const WinApiAdaptor &winapi, bool asSubSection = false);
 
     SectionWMI *withNamespace(const wchar_t *name);
     SectionWMI *withObject(const wchar_t *path);
@@ -49,7 +49,6 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
-    unsigned char separator() const override { return ','; }
     void outputTable(std::ostream &out, wmi::Result &data);
 
     std::wstring _namespace{L"Root\\cimv2"};

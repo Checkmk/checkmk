@@ -29,6 +29,7 @@
 #include <regex>
 #include <sstream>
 #include "Logger.h"
+#include "SectionHeader.h"
 
 namespace {
 
@@ -300,7 +301,9 @@ void outputFileinfos(std::ostream &out, const fs::path &path, Logger *logger,
 
 SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
-    : Section("fileinfo", "fileinfo", config.getEnvironment(), logger, winapi)
+    : Section("fileinfo", config.getEnvironment(), logger, winapi,
+              std::make_unique<SectionHeader<'|', SectionBrackets>>("fileinfo",
+                                                                    logger))
     , _fileinfo_paths(config, "fileinfo", "path", winapi) {}
 
 bool SectionFileinfo::produceOutputInner(std::ostream &out,

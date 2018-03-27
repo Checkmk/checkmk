@@ -27,6 +27,7 @@
 #include "Logger.h"
 #include "PerfCounter.h"
 #include "PerfCounterCommon.h"
+#include "SectionHeader.h"
 #include "stringutil.h"
 
 int NameBaseNumberMap::getCounterBaseNumber(const std::string &counterName) {
@@ -54,7 +55,8 @@ SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
                                        NameBaseNumberMap &nameNumberMap,
                                        Logger *logger,
                                        const WinApiAdaptor &winapi)
-    : Section(outputName, configName, env, logger, winapi)
+    : Section(configName, env, logger, winapi,
+              std::make_unique<SubSectionHeader>(outputName, logger))
     , _nameNumberMap(nameNumberMap) {}
 
 bool SectionPerfcounter::produceOutputInner(
@@ -62,7 +64,7 @@ bool SectionPerfcounter::produceOutputInner(
     Debug(_logger) << "SectionPerfcounter::produceOutputInner";
     try {
         const int counterBaseNumber =
-            _nameNumberMap.getCounterBaseNumber(_outputName);
+            _nameNumberMap.getCounterBaseNumber(_configName);
 
         if (counterBaseNumber < 0) {
             return false;

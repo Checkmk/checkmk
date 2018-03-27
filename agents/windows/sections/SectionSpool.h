@@ -35,9 +35,6 @@ public:
 protected:
     virtual bool produceOutputInner(
         std::ostream &out, const std::optional<std::string> &) override;
-
-private:
-    bool showHeader() const override { return false; }
 };
 
 #endif  // SectionSpool_h

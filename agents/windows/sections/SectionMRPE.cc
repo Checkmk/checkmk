@@ -27,6 +27,7 @@
 #include "Environment.h"
 #include "ExternalCmd.h"
 #include "Logger.h"
+#include "SectionHeader.h"
 
 using std::regex;
 using std::sregex_token_iterator;
@@ -35,7 +36,8 @@ using std::vector;
 
 SectionMRPE::SectionMRPE(Configuration &config, Logger *logger,
                          const WinApiAdaptor &winapi)
-    : Section("mrpe", "mrpe", config.getEnvironment(), logger, winapi)
+    : Section("mrpe", config.getEnvironment(), logger, winapi,
+              std::make_unique<DefaultHeader>("mrpe", logger))
     , _entries(config, "mrpe", "check", winapi)
     , _includes(config, "mrpe", "include", winapi) {}
 

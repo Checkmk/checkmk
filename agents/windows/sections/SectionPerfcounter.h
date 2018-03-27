@@ -60,7 +60,6 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
-    unsigned char separator() const override { return ','; }
     time_t _disabled_until{0};
     NameBaseNumberMap &_nameNumberMap;
 };

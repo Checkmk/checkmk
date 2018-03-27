@@ -26,6 +26,7 @@
 #include <cstring>
 #include <iomanip>
 #include "Logger.h"
+#include "SectionHeader.h"
 #include "WinApiAdaptor.h"
 #include "stringutil.h"
 #include "types.h"
@@ -52,7 +53,9 @@ void char_replace(char what, char into, char *in) {
 
 SectionDF::SectionDF(const Environment &env, Logger *logger,
                      const WinApiAdaptor &winapi)
-    : Section("df", "df", env, logger, winapi) {}
+    : Section("df", env, logger, winapi,
+              std::make_unique<SectionHeader<'\t', SectionBrackets>>("df",
+                                                                     logger)) {}
 
 void SectionDF::output_filesystem(std::ostream &out, char *volid) {
     static const int KiloByte = 1024;

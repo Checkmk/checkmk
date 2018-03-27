@@ -23,14 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionLogwatch.h"
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 #include <cassert>
 #include <fstream>
 #include <regex>
 #include "Environment.h"
 #include "Logger.h"
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-#include "WinApiAdaptor.h"
+#include "SectionHeader.h"
 
 using std::ifstream;
 using std::ofstream;
@@ -137,7 +137,8 @@ logwatch_hint parseLogwatchStateLine(const std::string &line) {
 
 SectionLogwatch::SectionLogwatch(Configuration &config, Logger *logger,
                                  const WinApiAdaptor &winapi)
-    : Section("logwatch", "logfiles", config.getEnvironment(), logger, winapi)
+    : Section("logfiles", config.getEnvironment(), logger, winapi,
+              std::make_unique<DefaultHeader>("logwatch", logger))
     , _globlines(config, "logfiles", winapi) {
     _globlines.setGroupFunction(&addConditionPattern);
     loadLogwatchOffsets();

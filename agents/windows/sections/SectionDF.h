@@ -39,7 +39,6 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
-    unsigned char separator() const override { return '\t'; }
     void output_filesystem(std::ostream &out, char *volid);
     void output_mountpoints(std::ostream &out, char *volid);
 };

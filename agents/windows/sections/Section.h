@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -37,6 +37,7 @@
 
 class Environment;
 class Logger;
+class ISectionHeader;
 
 namespace section_helpers {
 
@@ -52,11 +53,11 @@ inline Rep current_time() {
 
 class Section {
 public:
-    Section(const std::string &outputName, const std::string &configName,
-            const Environment &env, Logger *logger,
-            const WinApiAdaptor &winapi);
+    Section(const std::string &configName, const Environment &env,
+            Logger *logger, const WinApiAdaptor &winapi,
+            std::unique_ptr<ISectionHeader> header);
 
-    virtual ~Section() = default;
+    virtual ~Section();
 
     virtual void postprocessConfig() {}
 
@@ -71,25 +72,22 @@ public:
     virtual std::vector<HANDLE> stopAsync() { return {}; }
 
     bool produceOutput(std::ostream &out,
-                       const std::optional<std::string> &remoteIP,
-                       bool nested = false);
-    std::string outputName() const { return _outputName; }
+                       const std::optional<std::string> &remoteIP);
     std::string configName() const { return _configName; }
 
 protected:
-    const std::string _outputName;
     const std::string _configName;
     const Environment &_env;
     Logger *_logger;
     const WinApiAdaptor &_winapi;
 
 private:
-    virtual unsigned char separator() const { return ' '; }
-    virtual bool showHeader() const { return true; }
     virtual bool produceOutputInner(
         std::ostream &out, const std::optional<std::string> &remoteIP) = 0;
     bool generateOutput(std::string &buffer,
                         const std::optional<std::string> &remoteIP);
+
+    std::unique_ptr<ISectionHeader> _header;
 };
 
 #endif  // Section_h

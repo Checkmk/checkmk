@@ -28,7 +28,7 @@
 #include <experimental/filesystem>
 #include "Environment.h"
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "SectionHeader.h"
 #include "types.h"
 
 namespace chrono = std::chrono;
@@ -36,7 +36,8 @@ namespace fs = std::experimental::filesystem;
 
 SectionSpool::SectionSpool(const Environment &env, Logger *logger,
                            const WinApiAdaptor &winapi)
-    : Section("spool", "spool", env, logger, winapi) {}
+    : Section("spool", env, logger, winapi,
+              std::make_unique<HiddenHeader>(logger)) {}
 
 bool SectionSpool::produceOutputInner(std::ostream &out,
                                       const std::optional<std::string> &) {

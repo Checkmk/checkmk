@@ -24,15 +24,28 @@
 
 #include "SectionGroup.h"
 #include "Logger.h"
+#include "SectionHeader.h"
+
+namespace {
+
+std::unique_ptr<ISectionHeader> makeHeader(bool show_header,
+                                           const std::string &outputName,
+                                           Logger *logger) {
+    if (show_header)
+        return std::make_unique<SectionHeader<',', SectionBrackets>>(outputName,
+                                                                     logger);
+    else
+        return std::make_unique<HiddenHeader>(logger);
+}
+
+}  // namespace
 
 SectionGroup::SectionGroup(const std::string &outputName,
                            const std::string &configName,
                            const Environment &env, Logger *logger,
-                           const WinApiAdaptor &winapi, bool nested,
-                           bool show_header)
-    : Section(outputName, configName, env, logger, winapi)
-    , _nested(nested)
-    , _show_header(show_header) {}
+                           const WinApiAdaptor &winapi, bool show_header)
+    : Section(configName, env, logger, winapi,
+              makeHeader(show_header, outputName, logger)) {}
 
 SectionGroup *SectionGroup::withSubSection(Section *section) {
     _subsections.push_back(std::unique_ptr<Section>(section));
@@ -60,14 +73,14 @@ bool SectionGroup::produceOutputInner(
     bool all_failed = true;
 
     for (const auto &table : _subsections) {
-        if (table->produceOutput(out, remoteIP, _nested)) {
+        if (table->produceOutput(out, remoteIP)) {
             all_failed = false;
         }
     }
 
     if (!all_failed) {
         for (const auto &table : _dependent_subsections) {
-            if (table->produceOutput(out, remoteIP, _nested)) {
+            if (table->produceOutput(out, remoteIP)) {
                 all_failed = false;
             }
         }

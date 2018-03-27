@@ -55,7 +55,6 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
-    unsigned char separator() const override { return '\t'; }
     bool ExtractProcessOwner(const NullHandle &hProcess_i,
                              std::string &csOwner_o);
     process_entry_t getProcessPerfdata();

@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <ctime>
 #include "Logger.h"
+#include "SectionHeader.h"
 #include "stringutil.h"
 #include "wmiHelper.h"
 
@@ -34,10 +35,26 @@
 // How to fix broken performance counters
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
+namespace {
+
+std::unique_ptr<ISectionHeader> makeHeader(bool subSection,
+                                           const std::string &outputName,
+                                           Logger *logger) {
+    if (subSection)
+        return std::make_unique<SubSectionHeader>(outputName, logger);
+    else
+        return std::make_unique<SectionHeader<',', SectionBrackets>>(outputName,
+                                                                     logger);
+}
+
+}  // namespace
+
 SectionWMI::SectionWMI(const std::string &outputName,
                        const std::string &configName, const Environment &env,
-                       Logger *logger, const WinApiAdaptor &winapi)
-    : Section(outputName, configName, env, logger, winapi) {}
+                       Logger *logger, const WinApiAdaptor &winapi,
+                       bool asSubSection /*= false*/)
+    : Section(configName, env, logger, winapi,
+              makeHeader(asSubSection, outputName, logger)) {}
 
 SectionWMI *SectionWMI::withNamespace(const wchar_t *name) {
     _namespace = name;

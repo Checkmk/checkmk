@@ -39,7 +39,7 @@
 #include <utility>
 #include <vector>
 
-using StringList = std::vector<std::wstring>;;
+using StringList = std::vector<std::wstring>;
 
 class PerfCounterQuery {
     HQUERY _query;

@@ -158,7 +158,7 @@ class GlobListConfigurable
     : public ListConfigurable<GlobListT, BlockMode::Nop<GlobListT>,
                               AddMode::PriorityAppendGrouped<GlobListT>> {
     using SuperT = ListConfigurable<GlobListT, BlockMode::Nop<GlobListT>,
-                             AddMode::PriorityAppendGrouped<GlobListT>>;
+                                    AddMode::PriorityAppendGrouped<GlobListT>>;
 
 public:
     GlobListConfigurable(Configuration &config, const char *section,

@@ -31,6 +31,7 @@
 #include "RegExp.h"
 #include "Row.h"
 #include "StringUtils.h"
+#include "Logger.h"
 
 CustomVarsDictFilter::CustomVarsDictFilter(Kind kind,
                                            const CustomVarsDictColumn &column,
@@ -54,10 +55,10 @@ bool CustomVarsDictFilter::accepts(
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::equal_icase:
-            return _regExp->match(_ref_string);
+            return _regExp->match(act_string);
         case RelationalOperator::not_equal:
         case RelationalOperator::not_equal_icase:
-            return !_regExp->match(_ref_string);
+            return !_regExp->match(act_string);
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
             return _regExp->search(act_string);

@@ -768,7 +768,13 @@ class Site(object):
         env_var_str = " ".join([ "%s=%s" % (k, pipes.quote(v))
                                  for k, v in env_vars.items() ]) + " "
 
-        cmd = env_var_str + subprocess.list2cmdline(["python", self.path("local/bin/py.test")] + sys.argv[1:] + [ cmk_path() + "/tests" ])
+        cmd_parts = [
+            "python", self.path("local/bin/py.test"),
+        ] + sys.argv[1:]
+
+        cmd = "cd %s && " % pipes.quote(cmk_path())
+        cmd += env_var_str + subprocess.list2cmdline(cmd_parts)
+        print cmd
         args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]
         return subprocess.call(args)
 

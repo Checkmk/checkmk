@@ -77,16 +77,20 @@ inline script_async_execution from_string<script_async_execution>(
 }
 
 // States for plugin and local scripts
-typedef enum _script_status {
+enum class script_status {
     SCRIPT_IDLE,
     SCRIPT_FINISHED,
     SCRIPT_COLLECT,
     SCRIPT_ERROR,
     SCRIPT_TIMEOUT,
     SCRIPT_NONE,
-} script_status;
+};
 
-typedef enum _script_type { PLUGIN, LOCAL, MRPE } script_type;
+inline std::ostream &operator<<(std::ostream &os, const script_status status) {
+    return os << static_cast<unsigned>(status);
+}
+
+enum class script_type { PLUGIN, LOCAL, MRPE };
 
 struct HeapBufferHandleTraits {
     using HandleT = char *;
@@ -123,8 +127,8 @@ struct script_container {
     const std::string run_as_user;
     const script_type type;
     const script_execution_mode execution_mode;
-    script_status status{SCRIPT_IDLE};
-    script_status last_problem{SCRIPT_NONE};
+    script_status status{script_status::SCRIPT_IDLE};
+    script_status last_problem{script_status::SCRIPT_NONE};
     volatile bool should_terminate{0};
     WrappedHandle<NullHandleTraits> worker_thread;
     DWORD exit_code{0};
@@ -164,7 +168,7 @@ protected:
 
 private:
     // plugin -> no collective header
-    bool showHeader() const override { return _type != PLUGIN; }
+    bool showHeader() const override { return _type != script_type::PLUGIN; }
     void collectData(script_execution_mode mode);
     void runContainer(script_container *cont);
     void outputContainers(std::ostream &out);

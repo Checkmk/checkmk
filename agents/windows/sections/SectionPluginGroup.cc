@@ -37,11 +37,11 @@ const size_t HEAP_BUFFER_DEFAULT = 16384L;
 
 const char *typeToSection(script_type type) {
     switch (type) {
-        case PLUGIN:
+        case script_type::PLUGIN:
             return "plugins";
-        case LOCAL:
+        case script_type::LOCAL:
             return "local";
-        case MRPE:
+        case script_type::MRPE:
             return "mrpe";
         default:
             return "unknown";
@@ -173,29 +173,30 @@ ScriptWorkerThread(LPVOID lpParam) {
     // Set finished status
     switch (result) {
         case 0:
-            cont->status = SCRIPT_FINISHED;
-            cont->last_problem = SCRIPT_NONE;
+            cont->status = script_status::SCRIPT_FINISHED;
+            cont->last_problem = script_status::SCRIPT_NONE;
             cont->retry_count = cont->max_retries;
             cont->buffer_time = time(0);
             break;
         case 1:
-            cont->status = SCRIPT_ERROR;
-            cont->last_problem = SCRIPT_ERROR;
+            cont->status = script_status::SCRIPT_ERROR;
+            cont->last_problem = script_status::SCRIPT_ERROR;
             cont->retry_count--;
             break;
         case 2:
-            cont->status = SCRIPT_TIMEOUT;
-            cont->last_problem = SCRIPT_TIMEOUT;
+            cont->status = script_status::SCRIPT_TIMEOUT;
+            cont->last_problem = script_status::SCRIPT_TIMEOUT;
             cont->retry_count--;
             break;
         default:
-            cont->status = SCRIPT_ERROR;
-            cont->last_problem = SCRIPT_ERROR;
+            cont->status = script_status::SCRIPT_ERROR;
+            cont->last_problem = script_status::SCRIPT_ERROR;
             cont->retry_count--;
     }
 
     // Cleanup work buffer in case the script ran into a timeout / error
-    if (cont->status == SCRIPT_TIMEOUT || cont->status == SCRIPT_ERROR) {
+    if (cont->status == script_status::SCRIPT_TIMEOUT ||
+        cont->status == script_status::SCRIPT_ERROR) {
         cont->buffer_work.reset();
     }
     return 0;
@@ -244,10 +245,11 @@ void SectionPluginGroup::runContainer(script_container *cont) {
     if (now - cont->buffer_time >= cont->max_age) {
         // Check if the thread within this cont is still collecting data
         // or a thread has finished but its data wasnt processed yet
-        if (cont->status == SCRIPT_COLLECT || cont->status == SCRIPT_FINISHED) {
+        if (cont->status == script_status::SCRIPT_COLLECT ||
+            cont->status == script_status::SCRIPT_FINISHED) {
             return;
         }
-        cont->status = SCRIPT_COLLECT;
+        cont->status = script_status::SCRIPT_COLLECT;
 
         Debug(_logger) << "invoke script " << cont->script_path;
         cont->worker_thread = {
@@ -277,7 +279,7 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
             continue;
         }
 
-        if (cont->status == SCRIPT_FINISHED) {
+        if (cont->status == script_status::SCRIPT_FINISHED) {
             // Free buffer
             cont->buffer.reset();
 
@@ -361,7 +363,7 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
                 cont->buffer.reset(cache_buffer.release());
             }
             cont->buffer_work.reset();
-            cont->status = SCRIPT_IDLE;
+            cont->status = script_status::SCRIPT_IDLE;
         } else if (cont->retry_count < 0) {
             // Remove outdated cache entries
             cont->buffer.reset();
@@ -414,7 +416,7 @@ void SectionPluginGroup::waitForCompletion() {
 std::vector<HANDLE> SectionPluginGroup::stopAsync() {
     std::vector<HANDLE> result;
     for (const auto &kv : _containers) {
-        if (kv.second->status == SCRIPT_COLLECT) {
+        if (kv.second->status == script_status::SCRIPT_COLLECT) {
             result.push_back(kv.second->worker_thread.get());
             kv.second->should_terminate = true;
         }
@@ -427,14 +429,14 @@ bool SectionPluginGroup::produceOutputInner(
     Debug(_logger) << "SectionPluginGroup::produceOutputInner";
     // gather the data for the sync sections
     collectData(script_execution_mode::SYNC);
-    if (_type == PLUGIN) {
+    if (_type == script_type::PLUGIN) {
         // prevent errors from plugins missing their section header
         out << "<<<>>>\n";
     }
 
     outputContainers(out);
 
-    if (_type == PLUGIN) {
+    if (_type == script_type::PLUGIN) {
         // prevent errors from plugins without final newline
         // TODO this may no longer be necessary as Section::produceOutput
         // appends a newline to any section not ending on one.
@@ -452,7 +454,8 @@ int SectionPluginGroup::getTimeout(const std::string &name) const {
             return timeout;
         }
     }
-    return _type == PLUGIN ? DEFAULT_PLUGIN_TIMEOUT : DEFAULT_LOCAL_TIMEOUT;
+    return _type == script_type::PLUGIN ? DEFAULT_PLUGIN_TIMEOUT
+                                        : DEFAULT_LOCAL_TIMEOUT;
 }
 
 int SectionPluginGroup::getCacheAge(const std::string &name) const {
@@ -585,20 +588,20 @@ void SectionPluginGroup::updateScripts() {
 void SectionPluginGroup::updateStatistics() {
     for (const auto &kv : _containers) {
         std::shared_ptr<script_container> cont = kv.second;
-        if (cont->type == PLUGIN)
+        if (cont->type == script_type::PLUGIN)
             ++_script_statistics["plugin_count"];
         else
             ++_script_statistics["local_count"];
 
         switch (cont->last_problem) {
-            case SCRIPT_TIMEOUT:
-                if (cont->type == PLUGIN)
+            case script_status::SCRIPT_TIMEOUT:
+                if (cont->type == script_type::PLUGIN)
                     ++_script_statistics["plugin_timeouts"];
                 else
                     ++_script_statistics["local_timeouts"];
                 break;
-            case SCRIPT_ERROR:
-                if (cont->type == PLUGIN)
+            case script_status::SCRIPT_ERROR:
+                if (cont->type == script_type::PLUGIN)
                     ++_script_statistics["plugin_errors"];
                 else
                     ++_script_statistics["local_errors"];
@@ -627,7 +630,8 @@ DataCollectionThread(LPVOID lpParam) {
 }
 
 void SectionPluginGroup::collectData(script_execution_mode mode) {
-    const std::string typeName = _type == PLUGIN ? "plugin" : "local";
+    const std::string typeName =
+        _type == script_type::PLUGIN ? "plugin" : "local";
     if (mode == script_execution_mode::SYNC) {
         Debug(_logger) << "Collecting sync " << typeName << " data";
         for (const auto &kv : _containers) {

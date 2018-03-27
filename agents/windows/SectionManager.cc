@@ -217,18 +217,22 @@ void SectionManager::loadStaticSections(Configuration &config,
                    ->withColumns({L"Index", L"Name", L"Parent", L"SensorType",
                                   L"Value"}));
 
-    addSection(new SectionPluginGroup(config, _env.localDirectory(), LOCAL,
-                                      _script_statistics, _logger, _winapi));
+    addSection(new SectionPluginGroup(config, _env.localDirectory(),
+                                      script_type::LOCAL, _script_statistics,
+                                      _logger, _winapi));
     for (const auto & [ user, path ] : *_script_local_includes) {
-        addSection(new SectionPluginGroup(
-            config, path, LOCAL, _script_statistics, _logger, _winapi, user));
+        addSection(new SectionPluginGroup(config, path, script_type::LOCAL,
+                                          _script_statistics, _logger, _winapi,
+                                          user));
     }
 
-    addSection(new SectionPluginGroup(config, _env.pluginsDirectory(), PLUGIN,
-                                      _script_statistics, _logger, _winapi));
+    addSection(new SectionPluginGroup(config, _env.pluginsDirectory(),
+                                      script_type::PLUGIN, _script_statistics,
+                                      _logger, _winapi));
     for (const auto & [ user, path ] : *_script_plugin_includes) {
-        addSection(new SectionPluginGroup(
-            config, path, PLUGIN, _script_statistics, _logger, _winapi, user));
+        addSection(new SectionPluginGroup(config, path, script_type::PLUGIN,
+                                          _script_statistics, _logger, _winapi,
+                                          user));
     }
 
     addSection(new SectionSpool(_env, _logger, _winapi));

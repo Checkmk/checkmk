@@ -35,7 +35,7 @@
 class Environment;
 
 class SectionUptime : public Section {
-    typedef ULONGLONG WINAPI (*GetTickCount64_type)(void);
+    using GetTickCount64_type = ULONGLONG WINAPI (*)(void);
 
 public:
     SectionUptime(const Environment &env, Logger *logger,

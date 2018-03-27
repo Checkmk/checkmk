@@ -34,7 +34,7 @@ SectionMem::SectionMem(const Environment &env, Logger *logger,
 bool SectionMem::produceOutputInner(std::ostream &out,
                                     const std::optional<std::string> &) {
     Debug(_logger) << "SectionMem::produceOutputInner";
-    typedef std::pair<const char *, DWORDLONG> KVPair;
+    using KVPair = std::pair<const char *, DWORDLONG>;
 
     MEMORYSTATUSEX stat;
     stat.dwLength = sizeof(stat);

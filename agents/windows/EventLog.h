@@ -34,8 +34,6 @@
 class Logger;
 class WinApiAdaptor;
 
-typedef struct HINSTANCE__ *HMODULE;
-
 class MessageResolver {
 public:
     MessageResolver(const std::wstring &logName, Logger *logger,

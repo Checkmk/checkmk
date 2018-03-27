@@ -37,17 +37,8 @@
 
 #endif  // WINAPI
 
-typedef long LONG;
-typedef void *PVOID;
-
-#if defined(_WIN64)
-typedef int64_t LONG_PTR;
-#else
-typedef long LONG_PTR;
-#endif
-
-typedef struct _EXCEPTION_POINTERS *LPEXCEPTION_POINTERS;
-typedef struct _CONTEXT CONTEXT;
+using LPEXCEPTION_POINTERS = struct _EXCEPTION_POINTERS *;
+using CONTEXT = struct _CONTEXT;
 
 class Logger;
 class WinApiAdaptor;
@@ -58,11 +49,11 @@ public:
     CrashHandler(const CrashHandler &) = delete;
     CrashHandler &operator=(const CrashHandler &) = delete;
 
-    LONG WINAPI handleCrash(LPEXCEPTION_POINTERS ptrs) const;
+    long WINAPI handleCrash(LPEXCEPTION_POINTERS ptrs) const;
 
 private:
 #ifdef __x86_64
-    void logBacktrace(PVOID exc_address) const;
+    void logBacktrace(void *exc_address) const;
 #endif  // __x86_64
 
     Logger *_logger;

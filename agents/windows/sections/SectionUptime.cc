@@ -22,13 +22,10 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#define _WIN32_WINNT 0x0600
-
 #include "SectionUptime.h"
 #include "Environment.h"
 #include "Logger.h"
 #include "dynamic_func.h"
-#define WIN32_LEAN_AND_MEAN
 
 SectionUptime::SectionUptime(const Environment &env, Logger *logger,
                              const WinApiAdaptor &winapi)

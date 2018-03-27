@@ -29,13 +29,6 @@
 #include <vector>
 #include "WinApiAdaptor.h"
 
-typedef uint64_t ULONGLONG;
-
-typedef struct _PERF_COUNTER_DEFINITION PERF_COUNTER_DEFINITION;
-typedef struct _PERF_INSTANCE_DEFINITION PERF_INSTANCE_DEFINITION;
-typedef struct _PERF_COUNTER_BLOCK PERF_COUNTER_BLOCK;
-typedef struct _PERF_OBJECT_TYPE PERF_OBJECT_TYPE;
-
 class Logger;
 
 // Wrapper for a single counter
@@ -69,7 +62,7 @@ private:
 // http://msdn.microsoft.com/en-us/library/aa373178(VS.85).aspx
 class PerfCounterObject {
 public:
-    typedef std::vector<std::pair<DWORD, std::wstring>> CounterList;
+    using CounterList = std::vector<std::pair<DWORD, std::wstring>>;
 
     PerfCounterObject(unsigned counter_base_number, const WinApiAdaptor &winapi,
                       Logger *logger);

@@ -29,7 +29,7 @@
 #include "Section.h"
 #include "types.h"
 
-typedef struct _BY_HANDLE_FILE_INFORMATION BY_HANDLE_FILE_INFORMATION;
+using BY_HANDLE_FILE_INFORMATION = struct _BY_HANDLE_FILE_INFORMATION;
 
 enum class file_encoding {
     UNDEF,
@@ -157,9 +157,8 @@ inline std::ostream &operator<<(std::ostream &os, const globline_container &g) {
 class GlobListConfigurable
     : public ListConfigurable<GlobListT, BlockMode::Nop<GlobListT>,
                               AddMode::PriorityAppendGrouped<GlobListT>> {
-    typedef ListConfigurable<GlobListT, BlockMode::Nop<GlobListT>,
-                             AddMode::PriorityAppendGrouped<GlobListT>>
-        SuperT;
+    using SuperT = ListConfigurable<GlobListT, BlockMode::Nop<GlobListT>,
+                             AddMode::PriorityAppendGrouped<GlobListT>>;
 
 public:
     GlobListConfigurable(Configuration &config, const char *section,
@@ -189,7 +188,7 @@ class SectionLogwatch : public Section {
         int unprocessed_bytes;
     };
 
-    typedef std::pair<std::string, FILETIME> FileEntryType;
+    using FileEntryType = std::pair<std::string, FILETIME>;
 
 public:
     SectionLogwatch(Configuration &config, Logger *logger,

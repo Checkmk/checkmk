@@ -70,7 +70,7 @@ private:
 template <typename ContainerT, typename BlockModeT = BlockMode::Nop<ContainerT>,
           typename AddModeT = AddMode::Append<ContainerT>>
 class ListConfigurable : public ConfigurableBase {
-    typedef typename ContainerT::value_type DataT;
+    using DataT = typename ContainerT::value_type;
 
 public:
     ListConfigurable(Configuration &config, const char *section,
@@ -153,7 +153,7 @@ private:
 
 template <typename DataT>
 class KeyedListConfigurable : public ConfigurableBase {
-    typedef std::vector<std::pair<std::string, DataT>> ContainerT;
+    using ContainerT = std::vector<std::pair<std::string, DataT>>;
 
 public:
     KeyedListConfigurable(Configuration &config, const char *section,
@@ -220,9 +220,9 @@ template <typename ContainerT, typename BlockModeT = BlockMode::Nop<ContainerT>,
           typename AddModeT = AddMode::Append<ContainerT>>
 class SplittingListConfigurable
     : public ListConfigurable<ContainerT, BlockModeT, AddModeT> {
-    typedef ListConfigurable<ContainerT, BlockModeT, AddModeT> SuperT;
-    typedef typename ContainerT::value_type DataT;
-    typedef std::function<std::string(const std::string &)> MapFunction;
+    using SuperT = ListConfigurable<ContainerT, BlockModeT, AddModeT>;
+    using DataT = typename ContainerT::value_type;
+    using MapFunction = std::function<std::string(const std::string &)>;
 
 public:
     SplittingListConfigurable(Configuration &config, const char *section,

@@ -4931,25 +4931,12 @@ def load_configuration(settings):
 
     # If not set by command line, set the log level by configuration
     if settings.options.verbosity == 0:
-        # Transform old normal/verbose config
-        if g_config["log_level"] in (0, 1):
-            log_level = cmk.log.INFO if g_config["log_level"] == 0 else cmk.log.VERBOSE
-
-            g_config["log_level"] = {
-                "cmk.mkeventd": log_level,
-                "cmk.mkeventd.EventServer": log_level,
-                "cmk.mkeventd.EventStatus": log_level,
-                "cmk.mkeventd.StatusServer": log_level,
-                "cmk.mkeventd.lock": log_level,
-            }
-
-        logger.setLevel(g_config["log_level"]["cmk.mkeventd"])
-        logger.getChild("EventServer").setLevel(g_config["log_level"]["cmk.mkeventd.EventServer"])
-        logger.getChild("EventStatus").setLevel(g_config["log_level"]["cmk.mkeventd.EventStatus"])
-        logger.getChild("StatusServer").setLevel(g_config["log_level"]["cmk.mkeventd.StatusServer"])
-
-        if "cmk.mkeventd.lock" in g_config["log_level"]:
-            logger.getChild("lock").setLevel(g_config["log_level"]["cmk.mkeventd.lock"])
+        levels = g_config["log_level"]
+        logger.setLevel(levels["cmk.mkeventd"])
+        logger.getChild("EventServer").setLevel(levels["cmk.mkeventd.EventServer"])
+        logger.getChild("EventStatus").setLevel(levels["cmk.mkeventd.EventStatus"])
+        logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
+        logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
 
     # Configure the auto deleting indexes in the DB when mongodb is enabled
     if g_config['archive_mode'] == 'mongodb':

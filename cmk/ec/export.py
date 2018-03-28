@@ -38,6 +38,7 @@ from enum import Enum
 from pathlib2 import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple  # pylint: disable=unused-import
 
+import cmk.log
 import cmk.paths
 import cmk.store
 import cmk.ec.defaults
@@ -236,6 +237,21 @@ def load_config(settings):
                     "notify": False,
                     "precedence": "host",
                 }
+
+    # Convert old logging configurations
+    levels = config["log_level"]
+    if isinstance(levels, int):
+        level = cmk.log.INFO if levels == 0 else cmk.log.VERBOSE
+        levels = {
+            "cmk.mkeventd": level,
+            "cmk.mkeventd.EventServer": level,
+            "cmk.mkeventd.EventStatus": level,
+            "cmk.mkeventd.StatusServer": level,
+            "cmk.mkeventd.lock": level
+        }
+    if "cmk.mkeventd.lock" not in levels:
+        levels["cmk.mkeventd.lock"] = levels["cmk.mkeventd"]
+    config["log_level"] = levels
 
     return config
 

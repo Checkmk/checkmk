@@ -32,6 +32,8 @@ import sys
 import cmk.tty as tty
 import cmk.log
 
+# NOTE: This is a hack! We abuse the global logger just to pass around the
+# verbosity setting.
 logger = cmk.log.get_logger("base")
 
 #

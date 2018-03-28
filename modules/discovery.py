@@ -1208,7 +1208,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         if check_source in [ "legacy", "active", "custom" ]:
             checkgroup = None
             if service_ignored(hostname, None, descr):
-                check_source = "ignored"
+                check_source = "%s_ignored" % check_source
         else:
             checkgroup = check_info[check_type]["group"]
 

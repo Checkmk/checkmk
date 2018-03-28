@@ -2726,12 +2726,25 @@ def ajax_diag_host():
 
 
 class ModeDiscovery(WatoMode):
-    # FIXME active checks are not listed below disabled services
+    #TODO In the future cleanup check_source (passive/active/custom/legacy) and
+    # check_state:
+    # - passive: new/vanished/old/ignored/removed
+    # - active/custom/legacy: old/ignored
     SERVICE_UNDECIDED = "new"
-    SERVICE_VANISHED = "vanished"
+    SERVICE_VANISHED  = "vanished"
     SERVICE_MONITORED = "old"
-    SERVICE_IGNORED = "ignored"
-    SERVICE_REMOVED = "removed"
+    SERVICE_IGNORED   = "ignored"
+    SERVICE_REMOVED   = "removed"
+
+    SERVICE_MANUAL         = "manual"
+    SERVICE_ACTIVE         = "active"
+    SERVICE_CUSTOM         = "custom"
+    SERVICE_LEGACY         = "legacy"
+    SERVICE_CLUSTERED_OLD  = "clustered_old"
+    SERVICE_CLUSTERED_NEW  = "clustered_new"
+    SERVICE_ACTIVE_IGNORED = "active_ignored"
+    SERVICE_CUSTOM_IGNORED = "custom_ignored"
+    SERVICE_LEGACY_IGNORED = "legacy_ignored"
 
 
     def __init__(self):
@@ -2862,7 +2875,7 @@ class ModeDiscovery(WatoMode):
                 if table_target == self.SERVICE_IGNORED:
                     add_disabled_rule.append(descr)
 
-            elif table_source in ["clustered_new", "clustered_old"]:
+            elif table_source in [self.SERVICE_CLUSTERED_NEW, self.SERVICE_CLUSTERED_OLD]:
                 services_to_save[(check_type, item)] = paramstring
 
         if apply_changes:
@@ -3144,13 +3157,14 @@ class ModeDiscovery(WatoMode):
 
         table.row(css="data", state=state)
 
-        self._show_bulk_checkbox(table_source, check_type, item, show_bulk_actions)
+        self._show_bulk_checkbox(check_type, item, show_bulk_actions)
         self._show_actions(check)
 
         table.cell(_("State"), statename, css=stateclass)
         table.cell(_("Service"), html.attrencode(descr))
         table.cell(_("Status detail"))
-        if table_source in ("custom", "active"):
+        if table_source in [self.SERVICE_CUSTOM, self.SERVICE_ACTIVE,
+                            self.SERVICE_CUSTOM_IGNORED, self.SERVICE_ACTIVE_IGNORED]:
             div_id = "activecheck_%s" % descr
             html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
             html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
@@ -3163,7 +3177,10 @@ class ModeDiscovery(WatoMode):
         else:
             html.write_text(output)
 
-        ctype = "check_" + check_type if table_source == "active" else check_type
+        if table_source in [self.SERVICE_ACTIVE, self.SERVICE_ACTIVE_IGNORED]:
+            ctype = "check_" + check_type
+        else:
+            ctype = check_type
         manpage_url = folder_preserving_link([("mode", "check_manpage"),
                                               ("check_type", ctype)])
         table.cell(_("Check plugin"), html.render_a(content=ctype, href=manpage_url))
@@ -3173,7 +3190,7 @@ class ModeDiscovery(WatoMode):
             self._show_check_parameters(table_source, check_type, checkgroup, params)
 
 
-    def _show_bulk_checkbox(self, table_source, check_type, item, show_bulk_actions):
+    def _show_bulk_checkbox(self, check_type, item, show_bulk_actions):
         if not self._show_checkboxes or not config.user.may("wato.services"):
             return
 
@@ -3288,7 +3305,7 @@ class ModeDiscovery(WatoMode):
             return "logwatch_rules"
         elif checkgroup:
             return "checkgroup_parameters:" + checkgroup
-        elif table_source == "active":
+        elif table_source in [self.SERVICE_ACTIVE, self.SERVICE_ACTIVE_IGNORED]:
             return "active_checks:" + check_type
         else:
             return None
@@ -3329,45 +3346,61 @@ class ModeDiscovery(WatoMode):
     def _ordered_table_groups(self):
         return [
             # table group, show bulk actions, title, help
-            (self.SERVICE_UNDECIDED, True, _("Undecided services (currently not monitored)"),
+            (self.SERVICE_UNDECIDED,      True, _("Undecided services (currently not monitored)"),
             _("These services have been found by the service discovery but are not yet added "
               "to the monitoring. You should either decide to monitor them or to permanently "
               "disable them. If you are sure that they are just transitional, just leave them "
               "until they vanish.")), # undecided
-            (self.SERVICE_VANISHED, True, _("Vanished services (monitored, but no longer exist)"),
+            (self.SERVICE_VANISHED,       True, _("Vanished services (monitored, but no longer exist)"),
             _("These services had been added to the monitoring by a previous discovery "
               "but the actual items that are monitored are not present anymore. This might "
               "be due to a real failure. In that case you should leave them in the monitoring. "
               "If the actually monitored things are really not relevant for the monitoring "
               "anymore then you should remove them in order to avoid UNKNOWN services in the "
               "monitoring.")),
-            (self.SERVICE_MONITORED, True, _("Monitored services"),
+            (self.SERVICE_MONITORED,      True, _("Monitored services"),
             _("These services had been found by a discovery and are currently configured "
               "to be monitored.")),
-            (self.SERVICE_IGNORED, True, _("Disabled services"),
+            (self.SERVICE_IGNORED,        True, _("Disabled services"),
             _("These services are being discovered but have been disabled by creating a rule "
               "in the rule set <i>Disabled services</i> oder <i>Disabled checks</i>.")),
-            ("active",        False, _("Active checks"),
+            (self.SERVICE_ACTIVE,         False, _("Active checks"),
             _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
               "call classical check plugins. They have been added by a rule in the section "
               "<i>Active checks</i> or implicitely by Check_MK.")),
-            ("manual",        False, _("Manual checks"),
+            (self.SERVICE_MANUAL,         False, _("Manual checks"),
             _("These services have not been found by the discovery but have been added "
               "manually by a rule in the WATO module <i>Manual checks</i>.")),
-            ("legacy",        False, _("Legacy services (defined in main.mk)"),
+            (self.SERVICE_LEGACY,         False, _("Legacy services (defined in main.mk)"),
             _("These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
               "in <tt>main.mk</tt> or a similar configuration file.")),
-            ("custom",        False, _("Custom checks (defined via rule)"),
+            (self.SERVICE_CUSTOM,         False, _("Custom checks (defined via rule)"),
             _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
               "call a classical check plugin, that you have installed yourself.")),
-            ("clustered_old", False, _("Monitored clustered services (located on cluster host)"),
+            (self.SERVICE_CLUSTERED_OLD,  False, _("Monitored clustered services (located on cluster host)"),
             _("These services have been found on this host but have been mapped to "
               "a cluster host by a rule in the set <i>Clustered services</i>.")),
-            ("clustered_new", False, _("Undecided clustered services"),
+            (self.SERVICE_CLUSTERED_NEW,  False, _("Undecided clustered services"),
             _("These services have been found on this host and have been mapped to "
               "a cluster host by a rule in the set <i>Clustered services</i>, but are not "
               "yet added to the active monitoring. Please either add them or permanently disable "
               "them.")),
+            (self.SERVICE_ACTIVE_IGNORED, False, _("Disabled active checks"),
+            _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+              "call classical check plugins. They have been added by a rule in the section "
+              "<i>Active checks</i> or implicitely by Check_MK. "
+              "These services have been disabled by creating a rule in the rule set "
+              "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
+            (self.SERVICE_CUSTOM_IGNORED, False, _("Disabled custom checks (defined via rule)"),
+            _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+              "call a classical check plugin, that you have installed yourself. "
+              "These services have been disabled by creating a rule in the rule set "
+              "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
+            (self.SERVICE_LEGACY_IGNORED, False, _("Disabled legacy services (defined in main.mk)"),
+            _("These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
+              "in <tt>main.mk</tt> or a similar configuration file. "
+              "These services have been disabled by creating a rule in the rule set "
+              "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
         ]
 
 

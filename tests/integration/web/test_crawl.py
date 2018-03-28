@@ -284,7 +284,7 @@ class SetQueue(Queue.Queue):
 
 
 class TestCrawler(object):
-    @pytest.mark.gui_crawl
+    @pytest.mark.type("gui_crawl")
     def test_crawl(self, site):
         self.stats   = {}
         self.todo    = SetQueue()

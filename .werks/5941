@@ -1,0 +1,28 @@
+Title: Fixed nagios using outdated config when not using "cmk -R/-O"
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1522308528
+Class: fix
+
+When using "omd start/restart" or the init script etc/init.d/nagios to
+start or restart nagios, it was possible that the core started with an
+outdated configuration.
+
+During start/restart the nagios init script is working in two steps: 1. config
+validation and 2. start/restart of the nagios process. During both steps the
+whole object configuration (etc/nagios/conf.d) needs to be processed. To
+optimize this the first step is perfoming some precompiling of the read config
+files. The result is saved in the file var/nagios/objects.precache and read
+by the core during startup instead of the single object config files.
+
+The init script had an option set (CORE_NOVERIFY=yes) in all cases that
+prevented the config verification even when executed manually. Without the
+config verification the object precache was not updated before the restart,
+making the core load an outdated file. The variable CORE_NOVERIFY=yes should
+only be set when the config verification has already been done. For example cmk
+-R/-O is doing exactly this.
+
+A workaround is to trigger the restarts using "cmk -R".

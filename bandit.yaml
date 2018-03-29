@@ -8,6 +8,7 @@ exclude_dirs:
  - '/scripts'
  - '/agents/windows/plugins/build'
  - '/agents/windows/chroot'
+ - '/.venv/'
 
 ### Bandit config file generated from:
 # '/usr/local/bin/bandit-config-generator -o ../bandit.yaml'

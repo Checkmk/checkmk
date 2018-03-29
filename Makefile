@@ -414,16 +414,11 @@ setup:
 	    python-pip \
 	    chrpath \
 	    enchant
-	$(MAKE) setup-virtualenv
+	sudo pip install pipenv
 	$(MAKE) -C omd setup
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/locale setup
 endif
-
-setup-virtualenv:
-	sudo pip install pipenv
-	pipenv install --dev
-	direnv allow
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n
@@ -538,6 +533,10 @@ documentation: config.h
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
+
+.venv: Pipfile Pipfile.lock
+	source .envrc ; pipenv install --dev
+	direnv allow
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

@@ -45,3 +45,4 @@ stamp-h1
 tags
 tests/web/data/*
 .idea/
+.venv

@@ -1,5 +1,5 @@
 SHELL=/bin/bash -e
-PYTEST=py.test -s -vv
+PYTEST=source $$(pipenv --venv)/bin/activate ; py.test -s -vv
 
 .PHONY: help test-pylint test-integration test-gui-crawl \
 	test-bandit test-shellcheck setup format test-mypy \
@@ -14,27 +14,35 @@ help:
 	@echo "test-bandit        - Run bandit (security) tests"
 	@echo "test-shellcheck    - Run shellcheck tests"
 
-test-unit:
+# This target needs to be phony so it is run every time because only the other
+# makefile can determine that there's nothing to be done.
+# TODO: Move everything to top level makefile?
+.PHONY: ../.venv
+
+../.venv:
+	$(MAKE) -C .. .venv
+
+test-unit: ../.venv
 	$(PYTEST) -T unit
 
 
-test-integration:
+test-integration: ../.venv
 	$(PYTEST) -T integration
 
 
-test-gui-crawl:
+test-gui-crawl: ../.venv
 	$(PYTEST) -T gui_crawl
 
 
-test-pylint:
+test-pylint: ../.venv
 	$(PYTEST) -T pylint
 
 
-test-packageing:
+test-packaging: ../.venv
 	$(PYTEST) -T packaging
 
 
-test-bandit:
+test-bandit: ../.venv
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	CMK_DIR="$(realpath ..)" ; \

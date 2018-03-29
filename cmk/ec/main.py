@@ -1250,7 +1250,7 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, settings, perfcounters):
+    def __init__(self, settings, perfcounters, event_status):
         super(EventServer, self).__init__(name="EventServer",
                                           settings=settings,
                                           profiling_enabled=settings.options.profile_event,
@@ -1267,6 +1267,7 @@ class EventServer(ECServerThread):
 
         self.host_config = HostConfig()
         self._perfcounters = perfcounters
+        self._event_status = event_status
 
     def open_sockets(self):
         self.create_pipe()
@@ -1323,7 +1324,7 @@ class EventServer(ECServerThread):
     def _add_general_status(self):
         return [
             g_last_config_reload,
-            g_event_status.num_existing_events,
+            self._event_status.num_existing_events,
             self._virtual_memory_size(),
         ]
 
@@ -1771,7 +1772,7 @@ class EventServer(ECServerThread):
     def hk_cleanup_downtime_events(self):
         host_downtimes = {}
 
-        for event in g_event_status.events():
+        for event in self._event_status.events():
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
 
@@ -1785,7 +1786,7 @@ class EventServer(ECServerThread):
                 continue  # (still) in downtime, don't delete any event
 
             self.logger.verbose("Remove event %d (created in downtime, host left downtime)" % event["id"])
-            g_event_status.remove_event(event)
+            self._event_status.remove_event(event)
 
     def hk_handle_event_timeouts(self):
         # 1. Automatically delete all events that are in state "counting"
@@ -1794,7 +1795,7 @@ class EventServer(ECServerThread):
         # 2. Automatically delete all events that are in state "open"
         #    and whose livetime is elapsed.
         events_to_delete = []
-        events = g_event_status.events()
+        events = self._event_status.events()
         now = time.time()
         for nr, event in enumerate(events):
             rule = self._rule_by_id.get(event["rule_id"])
@@ -1881,7 +1882,7 @@ class EventServer(ECServerThread):
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
         for nr in events_to_delete[::-1]:
-            g_event_status.remove_event(events[nr])
+            self._event_status.remove_event(events[nr])
 
     def hk_check_expected_messages(self):
         now = time.time()
@@ -1903,11 +1904,11 @@ class EventServer(ECServerThread):
                 interval = rule["expect"]["interval"]
                 expected_count = rule["expect"]["count"]
 
-                interval_start = g_event_status.interval_start(rule["id"], interval)
+                interval_start = self._event_status.interval_start(rule["id"], interval)
                 if interval_start >= now:
                     continue
 
-                next_interval_start = g_event_status.next_interval_start(interval, interval_start)
+                next_interval_start = self._event_status.next_interval_start(interval, interval_start)
                 if next_interval_start > now:
                     continue
 
@@ -1915,12 +1916,12 @@ class EventServer(ECServerThread):
                 # rule matches?
 
                 # First do not forget to switch to next interval
-                g_event_status.start_next_interval(rule["id"], interval)
+                self._event_status.start_next_interval(rule["id"], interval)
 
                 # First look for case 1: rule that already have at least one hit
                 # and this events in the state "counting" exist.
                 events_to_delete = []
-                events = g_event_status.events()
+                events = self._event_status.events()
                 for nr, event in enumerate(events):
                     if event["rule_id"] == rule["id"] and event["phase"] == "counting":
                         # time has elapsed. Now lets see if we have reached
@@ -1941,7 +1942,7 @@ class EventServer(ECServerThread):
                     self.handle_absent_event(rule, 0, expected_count, interval_start)
 
                 for nr in events_to_delete[::-1]:
-                    g_event_status.remove_event(events[nr])
+                    self._event_status.remove_event(events[nr])
 
     def handle_absent_event(self, rule, event_count, expected_count, interval_start):
         now = time.time()
@@ -1957,7 +1958,7 @@ class EventServer(ECServerThread):
         merge_event = None
         merge = rule["expect"].get("merge", "open")
         if merge != "never":
-            for event in g_event_status.events():
+            for event in self._event_status.events():
                 if event["rule_id"] == rule["id"] and \
                         (event["phase"] == "open" or
                          (event["phase"] == "ack" and merge == "acked")):
@@ -1997,13 +1998,13 @@ class EventServer(ECServerThread):
             }
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
-            g_event_status.new_event(event)
+            self._event_status.new_event(event)
             log_event_history(self.settings, event, "COUNTFAILED")
             event_has_opened(self.settings, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 log_event_history(self.settings, event, "AUTODELETE")
-                g_event_status.remove_event(event)
+                self._event_status.remove_event(event)
 
     def reload_configuration(self):
         self.compile_rules(g_config["rules"], g_config["rule_packs"])
@@ -2195,7 +2196,7 @@ class EventServer(ECServerThread):
                 if g_config["debug_rules"]:
                     self.logger.info("  matching groups:\n%s" % pprint.pformat(match_groups))
 
-                g_event_status.count_rule_match(rule["id"])
+                self._event_status.count_rule_match(rule["id"])
                 if g_config["log_rulehits"]:
                     self.logger.info("Rule '%s/%s' hit by message %s/%s - '%s'." % (
                         rule["pack"], rule["id"],
@@ -2213,7 +2214,7 @@ class EventServer(ECServerThread):
                         return
 
                 if cancelling:
-                    g_event_status.cancel_events(event, match_groups, rule)
+                    self._event_status.cancel_events(event, match_groups, rule)
                     return
                 else:
                     # Remember the rule id that this event originated from
@@ -2242,7 +2243,7 @@ class EventServer(ECServerThread):
                         # count up. If the count reaches the limit, the event will
                         # be opened and its rule actions performed.
                         existing_event = \
-                            g_event_status.count_event(event, rule, count)
+                            self._event_status.count_event(event, rule, count)
                         if existing_event:
                             if "delay" in rule:
                                 if g_config["debug_rules"]:
@@ -2258,9 +2259,9 @@ class EventServer(ECServerThread):
                                 existing_event["phase"] = "closed"
                                 log_event_history(self.settings, existing_event, "AUTODELETE")
                                 with lock_eventstatus:
-                                    g_event_status.remove_event(existing_event)
+                                    self._event_status.remove_event(existing_event)
                     elif "expect" in rule:
-                        g_event_status.count_expected_event(event)
+                        self._event_status.count_expected_event(event)
                     else:
                         if "delay" in rule:
                             if g_config["debug_rules"]:
@@ -2277,12 +2278,12 @@ class EventServer(ECServerThread):
                                     event["phase"] = "closed"
                                     log_event_history(self.settings, event, "AUTODELETE")
                                     with lock_eventstatus:
-                                        g_event_status.remove_event(event)
+                                        self._event_status.remove_event(event)
                     return
 
         # End of loop over rules.
         if g_config["archive_orphans"]:
-            g_event_status.archive_event(event)
+            self._event_status.archive_event(event)
 
     def _add_rule_contact_groups_to_event(self, rule, event):
         if rule.get("contact_groups") is None:
@@ -2910,14 +2911,14 @@ class EventServer(ECServerThread):
 
     def get_hosts_with_active_event_limit(self):
         hosts = []
-        for hostname, num_existing_events in g_event_status.num_existing_events_by_host.iteritems():
+        for hostname, num_existing_events in self._event_status.num_existing_events_by_host.iteritems():
             if num_existing_events >= g_config["event_limit"]["by_host"]["limit"]:
                 hosts.append(hostname)
         return hosts
 
     def get_rules_with_active_event_limit(self):
         rule_ids = []
-        for rule_id, num_existing_events in g_event_status.num_existing_events_by_rule.iteritems():
+        for rule_id, num_existing_events in self._event_status.num_existing_events_by_rule.iteritems():
             if rule_id is None:
                 continue  # Ignore rule unrelated overflow events. They have no rule id associated.
             if num_existing_events >= g_config["event_limit"]["by_rule"]["limit"]:
@@ -2925,7 +2926,7 @@ class EventServer(ECServerThread):
         return rule_ids
 
     def is_overall_event_limit_active(self):
-        return g_event_status.num_existing_events \
+        return self._event_status.num_existing_events \
             >= g_config["event_limit"]["overall"]["limit"]
 
     # protected by lock_eventstatus
@@ -2943,7 +2944,7 @@ class EventServer(ECServerThread):
             if self._handle_event_limit("by_rule", event):
                 return False
 
-            g_event_status.new_event(event)
+            self._event_status.new_event(event)
             return True
 
     # The following actions can be configured:
@@ -2958,7 +2959,7 @@ class EventServer(ECServerThread):
     def _handle_event_limit(self, ty, event):
         assert ty in ["overall", "by_rule", "by_host"]
 
-        num_already_open = g_event_status.get_num_existing_events_by(ty, event)
+        num_already_open = self._event_status.get_num_existing_events_by(ty, event)
         limit, action = self._get_event_limit(ty, event)
         self.logger.verbose("  Type: %s, already open events: %d, Limit: %d" % (ty, num_already_open, limit))
 
@@ -2974,7 +2975,7 @@ class EventServer(ECServerThread):
         if action == "delete_oldest":
             while num_already_open > limit:
                 self._perfcounters.count("overflows")
-                g_event_status.remove_oldest_event(ty, event)
+                self._event_status.remove_oldest_event(ty, event)
                 num_already_open -= 1
             return False
 
@@ -2995,7 +2996,7 @@ class EventServer(ECServerThread):
 
         if "overflow" in action:
             self.logger.info("  Creating overflow event")
-            g_event_status.new_event(overflow_event)
+            self._event_status.new_event(overflow_event)
 
         if "notify" in action:
             self.logger.info("  Creating overflow notification")
@@ -3419,8 +3420,12 @@ class StatusTableEvents(StatusTable):
         ("event_match_groups_syslog_application", ""),  # introduced in 1.5.0i2
     ]
 
+    def __init__(self, event_status):
+        super(StatusTableEvents, self).__init__()
+        self._event_status = event_status
+
     def _enumerate(self, query):
-        for event in g_event_status.get_events():
+        for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
             if query.only_host and event["host"] not in query.only_host:
@@ -3465,8 +3470,12 @@ class StatusTableRules(StatusTable):
         ("rule_hits", 0),
     ]
 
+    def __init__(self, event_status):
+        super(StatusTableRules, self).__init__()
+        self._event_status = event_status
+
     def _enumerate(self, query):
-        return g_event_status.get_rule_stats()
+        return self._event_status.get_rule_stats()
 
 
 class StatusTableStatus(StatusTable):
@@ -3490,7 +3499,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings, perfcounters):
+    def __init__(self, settings, perfcounters, event_status):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
                                            profiling_enabled=settings.options.profile_status,
@@ -3499,11 +3508,12 @@ class StatusServer(ECServerThread):
         self._tcp_socket = None
         self._reopen_sockets = False
 
-        self.table_events = StatusTableEvents()
+        self.table_events = StatusTableEvents(event_status)
         self.table_history = StatusTableHistory(settings)
-        self.table_rules = StatusTableRules()
+        self.table_rules = StatusTableRules(event_status)
         self.table_status = StatusTableStatus()
         self._perfcounters = perfcounters
+        self._event_status = event_status
 
     def table(self, name):
         return getattr(self, "table_%s" % name)
@@ -3718,11 +3728,11 @@ class StatusServer(ECServerThread):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_id, user = arguments
-        g_event_status.delete_event(int(event_id), user)
+        self._event_status.delete_event(int(event_id), user)
 
     def handle_command_update(self, arguments):
         event_id, user, acknowledged, comment, contact = arguments
-        event = g_event_status.event(int(event_id))
+        event = self._event_status.event(int(event_id))
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         if comment:
@@ -3745,7 +3755,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_changestate(self, arguments):
         event_id, user, newstate = arguments
-        event = g_event_status.event(int(event_id))
+        event = self._event_status.event(int(event_id))
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         event["state"] = int(newstate)
@@ -3762,8 +3772,8 @@ class StatusServer(ECServerThread):
     # Erase our current state and history!
     def handle_command_flush(self):
         flush_event_history(self.settings)
-        g_event_status.flush()
-        g_event_status.save_status()
+        self._event_status.flush()
+        self._event_status.save_status()
         if is_replication_slave():
             try:
                 self.settings.paths.master_config_file.value.unlink()
@@ -3774,7 +3784,7 @@ class StatusServer(ECServerThread):
         self.logger.info("Flushed current status and historic events.")
 
     def handle_command_sync(self):
-        g_event_status.save_status()
+        self._event_status.save_status()
 
     def handle_command_resetcounters(self, arguments):
         if arguments:
@@ -3783,11 +3793,11 @@ class StatusServer(ECServerThread):
         else:
             rule_id = None  # Reset all rule counters
             self.logger.info("Resetting all rule counters")
-        g_event_status.reset_counters(rule_id)
+        self._event_status.reset_counters(rule_id)
 
     def handle_command_action(self, arguments):
         event_id, user, action_id = arguments
-        event = g_event_status.event(int(event_id))
+        event = self._event_status.event(int(event_id))
 
         if action_id == "@NOTIFY":
             do_notify(event, user, is_cancelling=False)
@@ -3820,7 +3830,7 @@ class StatusServer(ECServerThread):
 
         except Exception:
             raise MKClientError("Invalid arguments to command REPLICATE")
-        return replication_send(last_update)
+        return replication_send(self._event_status, last_update)
 
 
 #.
@@ -3835,7 +3845,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(settings, perfcounters):
+def run_eventd(settings, perfcounters, event_status):
     g_status_server.start()
     g_event_server.start()
     now = time.time()
@@ -3864,7 +3874,7 @@ def run_eventd(settings, perfcounters):
 
             if now > next_retention:
                 with lock_eventstatus:
-                    g_event_status.save_status()
+                    event_status.save_status()
                 next_retention = now + g_config["retention_interval"]
 
             if now > next_statistics:
@@ -3873,7 +3883,7 @@ def run_eventd(settings, perfcounters):
 
             # Beware: replication might be turned on during this loop!
             if is_replication_slave() and now > next_replication:
-                replication_pull(settings, perfcounters)
+                replication_pull(settings, perfcounters, event_status)
                 next_replication = now + g_config["replication"]["interval"]
         except MKSignalException as e:
             if e._signum == 1:
@@ -4740,10 +4750,10 @@ def replication_allow_command(command):
                             "while it is in sync mode.")
 
 
-def replication_send(last_update):
+def replication_send(event_status, last_update):
     response = {}
     with lock_configuration:
-        response["status"] = g_event_status.pack_status()
+        response["status"] = event_status.pack_status()
         if last_update < g_last_config_reload:
             response["rules"] = g_config["rules"]  # Remove one bright day, where legacy rules are not needed anymore
             response["rule_packs"] = g_config["rule_packs"]
@@ -4751,7 +4761,7 @@ def replication_send(last_update):
         return response
 
 
-def replication_pull(settings, perfcounters):
+def replication_pull(settings, perfcounters, event_status):
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -4774,7 +4784,7 @@ def replication_pull(settings, perfcounters):
 
                 try:
                     new_state = get_state_from_master()
-                    replication_update_state(settings, new_state)
+                    replication_update_state(settings, event_status, new_state)
                     if repl_settings.get("logging"):
                         logger.info("Successfully synchronized with master")
                     g_slave_status["last_sync"] = now
@@ -4821,7 +4831,7 @@ def replication_pull(settings, perfcounters):
                 perfcounters.count_time("sync", time.time() - now)
 
 
-def replication_update_state(settings, new_state):
+def replication_update_state(settings, event_status, new_state):
 
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
@@ -4830,7 +4840,7 @@ def replication_update_state(settings, new_state):
         g_config["actions"] = new_state["actions"]
 
     # Update to the masters' event state
-    g_event_status.unpack_status(new_state["status"])
+    event_status.unpack_status(new_state["status"])
 
 
 def save_master_config(settings, new_state):
@@ -5032,15 +5042,15 @@ def main():
         settings.paths.status_file.value.parent.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
-        global g_event_status, g_status_server, g_event_server
+        global g_status_server, g_event_server
         perfcounters = Perfcounters()
-        g_event_status = EventStatus(settings, perfcounters)
-        g_status_server = StatusServer(settings, perfcounters)
+        event_status = EventStatus(settings, perfcounters)
+        g_status_server = StatusServer(settings, perfcounters, event_status)
         g_status_server.open_sockets()
-        g_event_server = EventServer(settings, perfcounters)
+        g_event_server = EventServer(settings, perfcounters, event_status)
         g_event_server.open_sockets()
 
-        g_event_status.load_status()
+        event_status.load_status()
 
         initialize_snmptrap_handling(settings)
 
@@ -5060,7 +5070,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(settings, perfcounters)
+        run_eventd(settings, perfcounters, event_status)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)
@@ -5077,7 +5087,7 @@ def main():
         os.close(pipe)                     # Close pipe
 
         logger.verbose("Saving final event state")
-        g_event_status.save_status()
+        event_status.save_status()
 
         logger.verbose("Cleaning up sockets")
         settings.paths.unix_socket.value.unlink()

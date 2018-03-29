@@ -1,0 +1,12 @@
+Title: netapp_api_luns: fixed interchanged free/used names in WATO configuration rule
+Level: 1
+Component: wato
+Compatible: incomp
+Edition: cre
+Version: 1.4.0p28
+Date: 1522333081
+Class: fix
+
+The levels configuration for netapp_api_luns was incorrectly named.
+The free space levels were treated as used space and vice versa.
+

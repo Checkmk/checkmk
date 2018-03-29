@@ -1,0 +1,14 @@
+Title: Fixed "skipping unimplemented check" warning message of active checks
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1522223534
+
+If an active check was disabled via the rule "Disabled services"
+and then readmitted to the list of monitored services of the host
+on the service discovery page, this active check was falsely stored
+to the related autochecks file which caused above warning message.

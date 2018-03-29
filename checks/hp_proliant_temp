@@ -24,50 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
-def format_hp_proliant_name(line):
-    return "%s (%s)" % (line[1], hp_proliant_locale[int(line[2])])
-
-def inventory_hp_proliant_temp(info):
-    for line in info:
-        yield format_hp_proliant_name(line), {}
-
-def check_hp_proliant_temp(item, params, info):
-    for line in info:
-        if format_hp_proliant_name(line) == item:
-            chassis, index, name, value, threshold, status = line
-
-            # This case means no threshold available and
-            # the devices' web interface displays "N/A"
-            if threshold == "-99" or threshold == "0":
-                devlevels = None
-            else:
-                threshold = float(threshold)
-                devlevels = (threshold, threshold)
-
-            snmp_status = hp_proliant_status_map[int(status)]
-
-            return check_temperature(float(value), params, "hp_proliant_temp_%s" % item,
-                    dev_levels=devlevels,
-                    dev_status=hp_proliant_status2nagios_map[snmp_status],
-                    dev_status_name="Unit: %s" % snmp_status)
-    return 3, "item not found in snmp data"
 
 check_info["hp_proliant_temp"] = {
-    'check_function'     : check_hp_proliant_temp,
-    'inventory_function' : inventory_hp_proliant_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata'       : True,
-    'snmp_info'          : ( ".1.3.6.1.4.1.232.6.2.6.8.1", [
-                                "1", # cpqHeTemperatureChassis
-                                "2", # cpqHeTemperatureIndex
-                                "3", # cpqHeTemperatureLocale
-                                "4", # cpqHeTemperatureCelsius
-                                "5", # cpqHeTemperatureThresholdCelsius
-                                "6", # cpqHeTemperatureCondition
-        ] ),
-    'snmp_scan_function' : lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
-    'group'              : 'temperature',
-    'includes'           : [ 'temperature.include', 'hp_proliant.include' ]
+    'check_function'        : check_hp_proliant_temp,
+    'inventory_function'    : inventory_hp_proliant_temp,
+    'service_description'   : 'Temperature %s',
+    'has_perfdata'          : True,
+    'snmp_info'             : ( ".1.3.6.1.4.1.232.6.2.6.8.1", [
+                                   "1", # cpqHeTemperatureChassis
+                                   "2", # cpqHeTemperatureIndex
+                                   "3", # cpqHeTemperatureLocale
+                                   "4", # cpqHeTemperatureCelsius
+                                   "5", # cpqHeTemperatureThresholdCelsius
+                                   "6", # cpqHeTemperatureCondition
+                              ]),
+    'snmp_scan_function'    : lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
+    'group'                 : 'temperature',
+    'includes'              : ['temperature.include', 'hp_proliant.include']
 }

@@ -46,7 +46,7 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     if attributes_key is None:
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     else:
-        return _paint_host_inventory_tree_value(struct_tree, parsed_path, invpath, attributes_key)
+        return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath, attributes_key)
 
 
 def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
@@ -63,19 +63,23 @@ def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     return "invtree", code
 
 
-def _paint_host_inventory_tree_value(struct_tree, parsed_path, invpath, attributes_key):
-    #TODO what about numerations?
+def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath, attributes_key):
     if attributes_key == []:
         child = struct_tree.get_sub_numeration(parsed_path)
     else:
         child = struct_tree.get_sub_attributes(parsed_path)
+
     if child is None:
         return  "", ""
+
     with html.plugged():
         if invpath.endswith(".") or invpath.endswith(":"):
             invpath = invpath[:-1]
-        show_child_value(child.get_child_data().get(attributes_key),
-                         inv_display_hint(invpath))
+        if attributes_key == []:
+            tree_renderer.show_numeration(child, path=invpath)
+        else:
+            tree_renderer.show_attribute(child.get_child_data().get(attributes_key),
+                                         inv_display_hint(invpath))
         code = html.drain()
     return "invtree", code
 
@@ -1423,26 +1427,6 @@ def render_inv_dicttable(*args):
     pass
 
 
-def show_child_value(value, hint):
-    if "paint_function" in hint:
-        tdclass, code = hint["paint_function"](value)
-        html.write(code)
-    elif type(value) == str:
-        try:
-            text = value.decode("utf-8")
-        except:
-            text = value
-        html.write_text(text)
-    elif type(value) == unicode:
-        html.write_text(value)
-    elif type(value) == int:
-        html.write(str(value))
-    elif type(value) == float:
-        html.write("%.2f" % value)
-    elif value != None:
-        html.write(str(value))
-
-
 
 class NodeRenderer(object):
     def __init__(self, hostname, tree_id, invpath, show_internal_tree_paths=False):
@@ -1594,12 +1578,13 @@ class NodeRenderer(object):
             html.write(self._get_header(title, key, "#DDD"))
             html.close_th()
             html.open_td()
-            self._show_attribute(value, hint)
+            self.show_attribute(value, hint)
             html.close_td()
             html.close_tr()
         html.close_table()
 
-    def _show_attribute(self, value, hint):
+
+    def show_attribute(self, value, hint):
         raise NotImplementedError()
 
     #   ---helper---------------------------------------------------------------
@@ -1610,6 +1595,7 @@ class NodeRenderer(object):
         else:
             return path.strip(".")
 
+
     def _get_header(self, title, key, hex_color):
         header = HTML(title)
         if self._show_internal_tree_paths:
@@ -1618,14 +1604,34 @@ class NodeRenderer(object):
         return header
 
 
+    def _show_child_value(self, value, hint):
+        if "paint_function" in hint:
+            tdclass, code = hint["paint_function"](value)
+            html.write(code)
+        elif type(value) == str:
+            try:
+                text = value.decode("utf-8")
+            except:
+                text = value
+            html.write_text(text)
+        elif type(value) == unicode:
+            html.write_text(value)
+        elif type(value) == int:
+            html.write(str(value))
+        elif type(value) == float:
+            html.write("%.2f" % value)
+        elif value != None:
+            html.write(str(value))
+
+
 
 class AttributeRenderer(NodeRenderer):
     def _show_numeration_value(self, value, hint):
-        show_child_value(value, hint)
+        self._show_child_value(value, hint)
 
 
-    def _show_attribute(self, value, hint):
-        show_child_value(value, hint)
+    def show_attribute(self, value, hint):
+        self._show_child_value(value, hint)
 
 
 
@@ -1633,26 +1639,26 @@ class DeltaNodeRenderer(NodeRenderer):
     def _show_numeration_value(self, value, hint):
         if value is None:
             value = (None, None)
-        self._show_attribute(value, hint)
+        self.show_attribute(value, hint)
 
 
-    def _show_attribute(self, value, hint):
+    def show_attribute(self, value, hint):
         old, new = value
         if old is None and new is not None:
             html.open_span(class_="invnew")
-            show_child_value(new, hint)
+            self._show_child_value(new, hint)
             html.close_span()
         elif old is not None and new is None:
             html.open_span(class_="invold")
-            show_child_value(old, hint)
+            self._show_child_value(old, hint)
             html.close_span()
         elif old is not None and new is not None:
             html.open_span(class_="invold")
-            show_child_value(old, hint)
+            self._show_child_value(old, hint)
             html.close_span()
             html.write(u" → ")
             html.open_span(class_="invnew")
-            show_child_value(new, hint)
+            self._show_child_value(new, hint)
             html.close_span()
         elif old == new:
-            show_child_value(old, hint)
+            self._show_child_value(old, hint)

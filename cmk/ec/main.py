@@ -303,10 +303,10 @@ class ECServerThread(threading.Thread):
         raise NotImplementedError()
 
 
-def terminate():
+def terminate(event_server):
     g_terminate_main_event.set()
     g_status_server.terminate()
-    g_event_server.terminate()
+    event_server.terminate()
 
 
 def bail_out(reason):
@@ -463,17 +463,17 @@ class MKClientError(Exception):
 #   | Generic SNMP-Trap processing functions                               |
 #   '----------------------------------------------------------------------'
 
-def initialize_snmptrap_handling(settings):
+def initialize_snmptrap_handling(settings, event_server):
     if settings.options.snmptrap_udp is None:
         return
 
-    initialize_snmptrap_engine()
+    initialize_snmptrap_engine(event_server)
 
     if snmptrap_translation_enabled():
-        g_event_server.load_mibs()
+        event_server.load_mibs()
 
 
-def initialize_snmptrap_engine():
+def initialize_snmptrap_engine(event_server):
     global g_snmp_engine, g_snmp_receiver
     g_snmp_engine = snmp_engine.SnmpEngine()
 
@@ -482,7 +482,7 @@ def initialize_snmptrap_engine():
         pduTypes = (snmp_v1.TrapPDU.tagSet, snmp_v2c.SNMPv2TrapPDU.tagSet)
 
     initialize_snmp_credentials()
-    g_snmp_receiver = ECNotificationReceiver(g_snmp_engine, g_event_server.handle_snmptrap)
+    g_snmp_receiver = ECNotificationReceiver(g_snmp_engine, event_server.handle_snmptrap)
 
 
 def initialize_snmp_credentials():
@@ -3702,7 +3702,7 @@ class StatusServer(ECServerThread):
             self.handle_command_reload()
         elif command == "SHUTDOWN":
             self.logger.info("Going to shut down")
-            terminate()
+            terminate(g_event_server)
         elif command == "REOPENLOG":
             self.handle_command_reopenlog()
         elif command == "FLUSH":
@@ -3845,9 +3845,9 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(settings, perfcounters, event_status):
+def run_eventd(settings, perfcounters, event_status, event_server):
     g_status_server.start()
-    g_event_server.start()
+    event_server.start()
     now = time.time()
     next_housekeeping = now + g_config["housekeeping_interval"]
     next_retention = now + g_config["retention_interval"]
@@ -3869,7 +3869,7 @@ def run_eventd(settings, perfcounters, event_status):
 
             now = time.time()
             if now > next_housekeeping:
-                g_event_server.do_housekeeping()
+                event_server.do_housekeeping()
                 next_housekeeping = now + g_config["housekeeping_interval"]
 
             if now > next_retention:
@@ -3891,7 +3891,7 @@ def run_eventd(settings, perfcounters, event_status):
                 reload_configuration(settings)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
-                terminate()
+                terminate(event_server)
         except Exception as e:
             logger.exception("Exception in main thread:\n%s" % e)
             if settings.options.debug:
@@ -3899,7 +3899,7 @@ def run_eventd(settings, perfcounters, event_status):
             time.sleep(1)
 
     # Now wait for termination of the server threads
-    g_event_server.join()
+    event_server.join()
     g_status_server.join()
 
 
@@ -4977,7 +4977,7 @@ def load_configuration(settings):
 def reload_configuration(settings):
     with lock_configuration:
         load_configuration(settings)
-        initialize_snmptrap_handling(settings)
+        initialize_snmptrap_handling(settings, g_event_server)
         g_event_server.reload_configuration()
 
     g_status_server.reload_configuration()
@@ -5052,7 +5052,7 @@ def main():
 
         event_status.load_status()
 
-        initialize_snmptrap_handling(settings)
+        initialize_snmptrap_handling(settings, g_event_server)
 
         g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 
@@ -5070,7 +5070,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(settings, perfcounters, event_status)
+        run_eventd(settings, perfcounters, event_status, g_event_server)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

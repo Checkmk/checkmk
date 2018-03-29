@@ -1140,6 +1140,11 @@ def get_logfile_timespan(path):
 #   |  Helper class for performance counting                               |
 #   '----------------------------------------------------------------------'
 
+def lerp(a, b, t):
+    """Linear interpolation between a and b with weight t"""
+    return (1 - t) * a + t * b;
+
+
 class Perfcounters(object):
     _counter_names = [
         "messages",
@@ -1176,17 +1181,14 @@ class Perfcounters(object):
 
     def count_time(self, counter, ptime):
         with self._lock:
-            if counter not in self._times:
-                self._times[counter] = ptime
+            if counter in self._times:
+                self._times[counter] = lerp(ptime, self._times[counter], self._weights[counter])
             else:
-                weight = self._weights[counter]
-                self._times[counter] *= weight
-                self._times[counter] += (1.00 - weight) * ptime
+                self._times[counter] = ptime
 
     def do_statistics(self):
         with self._lock:
             now = time.time()
-            weight = 0.9  # We could make this configurable
             if self._last_statistics:
                 duration = now - self._last_statistics
             else:
@@ -1197,8 +1199,8 @@ class Perfcounters(object):
                     rate = delta / duration
                     self._rates[name] = rate
                     if name in self._average_rates:
-                        self._average_rates[name] = \
-                            self._average_rates[name] * weight + rate * (1.0 - weight)
+                        # We could make the weight configurable
+                        self._average_rates[name] = lerp(rate, self._average_rates[name], 0.9)
                     else:
                         self._average_rates[name] = rate
 

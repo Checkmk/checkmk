@@ -1250,7 +1250,7 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, settings):
+    def __init__(self, settings, perfcounters):
         super(EventServer, self).__init__(name="EventServer",
                                           settings=settings,
                                           profiling_enabled=settings.options.profile_event,
@@ -1266,6 +1266,7 @@ class EventServer(ECServerThread):
             self._hash_stats.append([0] * 8)
 
         self.host_config = HostConfig()
+        self._perfcounters = perfcounters
 
     def open_sockets(self):
         self.create_pipe()
@@ -1313,7 +1314,7 @@ class EventServer(ECServerThread):
         row = []
 
         row += self._add_general_status()
-        row += g_perfcounters.get_status()
+        row += self._perfcounters.get_status()
         row += self._add_replication_status()
         row += self._add_event_limit_status()
 
@@ -1732,7 +1733,7 @@ class EventServer(ECServerThread):
     # Processes incoming data, just a wrapper between the real data and the
     # handler function to record some statistics etc.
     def process_raw_data(self, handler_func, data):
-        g_perfcounters.count("messages")
+        self._perfcounters.count("messages")
         before = time.time()
         # In replication slave mode (when not took over), ignore all events
         if not is_replication_slave() or g_slave_status["mode"] != "sync":
@@ -1740,7 +1741,7 @@ class EventServer(ECServerThread):
         elif self.settings.options.debug:
             self.logger.info("Replication: we are in slave mode, ignoring event")
         elapsed = time.time() - before
-        g_perfcounters.count_time("processing", elapsed)
+        self._perfcounters.count_time("processing", elapsed)
 
     # Takes several lines of messages, handles encoding and processes them separated
     def process_raw_lines(self, data, address=None):
@@ -2188,7 +2189,7 @@ class EventServer(ECServerThread):
                 result = False
 
             if result:  # A tuple with (True/False, {match_info}).. O.o
-                g_perfcounters.count("rule_hits")
+                self._perfcounters.count("rule_hits")
                 cancelling, match_groups = result
 
                 if g_config["debug_rules"]:
@@ -2208,7 +2209,7 @@ class EventServer(ECServerThread):
                             self.logger.info("  skipping this rule pack (%s)" % skip_pack)
                         continue
                     else:
-                        g_perfcounters.count("drops")
+                        self._perfcounters.count("drops")
                         return
 
                 if cancelling:
@@ -2338,7 +2339,7 @@ class EventServer(ECServerThread):
     # if matched regex groups in either text (normal) or match_ok (cancelling)
     # match.
     def event_rule_matches(self, rule, event):
-        g_perfcounters.count("rule_tries")
+        self._perfcounters.count("rule_tries")
         with lock_configuration:
             result = self.event_rule_matches_non_inverted(rule, event)
             if rule.get("invert_matching"):
@@ -2972,7 +2973,7 @@ class EventServer(ECServerThread):
         # Delete oldest messages if that is the configure method of keeping the limit
         if action == "delete_oldest":
             while num_already_open > limit:
-                g_perfcounters.count("overflows")
+                self._perfcounters.count("overflows")
                 g_event_status.remove_oldest_event(ty, event)
                 num_already_open -= 1
             return False
@@ -2981,7 +2982,7 @@ class EventServer(ECServerThread):
         if num_already_open > limit:
             # Just log in verbose mode! Otherwise log file will be flooded
             self.logger.verbose("  Skip processing because limit is already in effect")
-            g_perfcounters.count("overflows")
+            self._perfcounters.count("overflows")
             return True  # Prevent creation and prevent one time actions (below)
 
         self.logger.info("  The %s limit has been reached" % ty)
@@ -3489,7 +3490,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings):
+    def __init__(self, settings, perfcounters):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
                                            profiling_enabled=settings.options.profile_status,
@@ -3502,6 +3503,7 @@ class StatusServer(ECServerThread):
         self.table_history = StatusTableHistory(settings)
         self.table_rules = StatusTableRules()
         self.table_status = StatusTableStatus()
+        self._perfcounters = perfcounters
 
     def table(self, name):
         return getattr(self, "table_%s" % name)
@@ -3594,7 +3596,7 @@ class StatusServer(ECServerThread):
                     client_socket, addr_info = s.accept()
                     client_socket.settimeout(3)
                     before = time.time()
-                    g_perfcounters.count("connects")
+                    self._perfcounters.count("connects")
                     if addr_info:
                         allow_commands = self._tcp_allow_commands
                         if self.settings.options.debug:
@@ -3614,7 +3616,7 @@ class StatusServer(ECServerThread):
 
                     duration = time.time() - before
                     self.logger.verbose("Answered request in %0.2f ms" % (duration * 1000))
-                    g_perfcounters.count_time("request", duration)
+                    self._perfcounters.count_time("request", duration)
 
             except Exception as e:
                 self.logger.exception("Error handling client %s: %s" % (addr_info, e))
@@ -3833,7 +3835,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(settings):
+def run_eventd(settings, perfcounters):
     g_status_server.start()
     g_event_server.start()
     now = time.time()
@@ -3866,12 +3868,12 @@ def run_eventd(settings):
                 next_retention = now + g_config["retention_interval"]
 
             if now > next_statistics:
-                g_perfcounters.do_statistics()
+                perfcounters.do_statistics()
                 next_statistics = now + g_config["statistics_interval"]
 
             # Beware: replication might be turned on during this loop!
             if is_replication_slave() and now > next_replication:
-                replication_pull(settings)
+                replication_pull(settings, perfcounters)
                 next_replication = now + g_config["replication"]["interval"]
         except MKSignalException as e:
             if e._signum == 1:
@@ -3906,9 +3908,10 @@ def run_eventd(settings):
 
 class EventStatus(object):
 
-    def __init__(self, settings):
+    def __init__(self, settings, perfcounters):
         self.logger = logger.getChild("EventStatus")
         self.settings = settings
+        self._perfcounters = perfcounters
         self.flush()
 
     def flush(self):
@@ -4057,7 +4060,7 @@ class EventStatus(object):
         self.num_existing_events_by_rule[event["rule_id"]] -= 1
 
     def new_event(self, event):
-        g_perfcounters.count("events")
+        self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         self._events.append(event)
@@ -4066,7 +4069,7 @@ class EventStatus(object):
         log_event_history(self.settings, event, "NEW")
 
     def archive_event(self, event):
-        g_perfcounters.count("events")
+        self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         event["phase"] = "closed"
@@ -4748,7 +4751,7 @@ def replication_send(last_update):
         return response
 
 
-def replication_pull(settings):
+def replication_pull(settings, perfcounters):
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -4815,7 +4818,7 @@ def replication_pull(settings):
                 save_slave_status(settings)
 
                 # Compute statistics of the average time needed for a sync
-                g_perfcounters.count_time("sync", time.time() - now)
+                perfcounters.count_time("sync", time.time() - now)
 
 
 def replication_update_state(settings, new_state):
@@ -5029,12 +5032,12 @@ def main():
         settings.paths.status_file.value.parent.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
-        global g_perfcounters, g_event_status, g_status_server, g_event_server
-        g_perfcounters = Perfcounters()
-        g_event_status = EventStatus(settings)
-        g_status_server = StatusServer(settings)
+        global g_event_status, g_status_server, g_event_server
+        perfcounters = Perfcounters()
+        g_event_status = EventStatus(settings, perfcounters)
+        g_status_server = StatusServer(settings, perfcounters)
         g_status_server.open_sockets()
-        g_event_server = EventServer(settings)
+        g_event_server = EventServer(settings, perfcounters)
         g_event_server.open_sockets()
 
         g_event_status.load_status()
@@ -5057,7 +5060,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(settings)
+        run_eventd(settings, perfcounters)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

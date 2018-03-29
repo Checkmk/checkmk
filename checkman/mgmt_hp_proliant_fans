@@ -1,0 +1,17 @@
+title: SNMP Management Boards: HP Proliant Servers: FANs
+agents: snmp
+catalog: hw/server/hp
+license: GPL
+distribution: check_mk
+description:
+ This check connects to the SNMP agent installed on an operating system
+ on a HP Proliant server and reads the information from the {CPQHLTH-MIB}
+ MIB.
+ The systems SNMP agent is extended by the HP Management Agents which need
+ to be installed on the monitored systems.
+
+ The check monitors the reported state of the builtin FAN sensors.
+
+inventory:
+ One check is automatically created for each FAN sensor which is
+ provided in the SNMP output.

@@ -5,6 +5,20 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo rsync -a * $ROOT/lib/python/cmk/
+echo "Update site $SITE..."
+
+echo "Copy CRE files..."
+sudo rsync \
+    --exclude=cee \
+    --exclude=cee.py \
+    -a * $ROOT/lib/python/cmk/
 sudo pycompile -q $ROOT/lib/python/cmk/
-echo "Installed to $ROOT/lib/python/cmk/"
+
+# Also deploy all other directories of same type
+if [ ${ALL_EDITIONS:-1} != 0 ]; then
+    for WHAT in enterprise managed; do
+        if [ -e ../$WHAT/cmk/.f12 ]; then
+            (cd ../$WHAT/cmk; ONLY_COPY=1 ALL_EDITIONS=0 bash .f12)
+        fi
+    done
+fi

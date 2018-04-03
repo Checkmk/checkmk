@@ -53,9 +53,9 @@ def config(settings):
 
 
 @pytest.fixture(scope="function")
-def status_server(settings):
-    cmk.ec.main.g_status_server = cmk.ec.main.StatusServer(settings)
-    return cmk.ec.main.g_status_server
+def perfcounters():
+    cmk.ec.main.g_perfcounters = cmk.ec.main.Perfcounters()
+    return cmk.ec.main.g_perfcounters
 
 
 @pytest.fixture(scope="function")
@@ -65,9 +65,9 @@ def event_status(settings):
 
 
 @pytest.fixture(scope="function")
-def perfcounters():
-    cmk.ec.main.g_perfcounters = cmk.ec.main.Perfcounters()
-    return cmk.ec.main.g_perfcounters
+def status_server(settings, perfcounters, event_status):
+    cmk.ec.main.g_status_server = cmk.ec.main.StatusServer(settings, perfcounters, event_status)
+    return cmk.ec.main.g_status_server
 
 
 def test_handle_client(status_server, event_status):

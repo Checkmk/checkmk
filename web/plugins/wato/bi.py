@@ -1369,7 +1369,6 @@ class ModeBIEditRule(ModeBI):
         vs_rule.validate_value(new_rule, 'rule')
 
         if self._ruleid and self._ruleid != new_rule["id"]:
-            #TODO test
             forbidden_packs = self._get_forbidden_packs_using_rule()
             if forbidden_packs:
                 raise MKAuthException(_("You have no permission for changes in BI packs <b>%s</b> "

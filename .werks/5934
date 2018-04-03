@@ -1,0 +1,29 @@
+Title: Service Discovery: Permissions for moving services can be assigned to user role
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1522741446
+Class: feature
+
+The service discovery dialog has different action
+buttons within the service tables
+<ul>
+<li>Undecided services</li>
+<li>Monitored services</li>
+<li>Disabled services</li>
+<li>Vanished services</li>
+</ul>
+
+These actions are
+<ul>
+<li>Move to undecided services</li>
+<li>Move to monitored services</li>
+<li>Move to Disabled services</li>
+<li>Remove services</li>
+</ul>
+
+For each action permissions can be set below
+{{WATO - Check_MK's Web Administration Tool}}
+in the user roles.

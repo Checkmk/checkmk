@@ -38,12 +38,11 @@ class FakeStatusSocket(object):
 
 @pytest.fixture(scope="function")
 def settings():
-    cmk.ec.main.g_settings = cmk.ec.settings.settings(
+    return cmk.ec.settings.settings(
         '1.2.3i45',
         pathlib.Path(cmk.paths.omd_root),
         pathlib.Path(cmk.paths.default_config_dir),
         ['mkeventd'])
-    return cmk.ec.main.g_settings
 
 
 @pytest.fixture(scope="function")
@@ -54,14 +53,12 @@ def config(settings):
 
 @pytest.fixture(scope="function")
 def perfcounters():
-    cmk.ec.main.g_perfcounters = cmk.ec.main.Perfcounters()
-    return cmk.ec.main.g_perfcounters
+    return cmk.ec.main.Perfcounters()
 
 
 @pytest.fixture(scope="function")
 def event_status(settings):
-    cmk.ec.main.g_event_status = cmk.ec.main.EventStatus(settings, perfcounters)
-    return cmk.ec.main.g_event_status
+    return cmk.ec.main.EventStatus(settings, perfcounters)
 
 
 @pytest.fixture(scope="function")

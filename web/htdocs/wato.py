@@ -2985,6 +2985,11 @@ class ModeDiscovery(WatoMode):
 
 
     def _automatic_refresh_discovery(self, hostname):
+        config.user.need_permission("wato.service_discovery_to_undecided")
+        config.user.need_permission("wato.service_discovery_to_monitored")
+        config.user.need_permission("wato.service_discovery_to_ignored")
+        config.user.need_permission("wato.service_discovery_to_removed")
+
         counts, failed_hosts = watolib.check_mk_automation(self._host.site_id(), "inventory",
                                                    ["@scan", "refresh", hostname])
         count_added, count_removed, count_kept, count_new = counts[hostname]
@@ -3002,8 +3007,20 @@ class ModeDiscovery(WatoMode):
             descr, state, output, perfdata in check_table:
 
             table_target = self._get_table_target(table_source, check_type, item)
-            if not apply_changes and table_source != table_target:
-                apply_changes = True
+
+            if table_source != table_target:
+                if table_target == self.SERVICE_UNDECIDED:
+                    config.user.need_permission("wato.service_discovery_to_undecided")
+                elif table_target in [self.SERVICE_MONITORED, self.SERVICE_CLUSTERED_NEW,
+                                      self.SERVICE_CLUSTERED_OLD]:
+                    config.user.need_permission("wato.service_discovery_to_undecided")
+                elif table_target == self.SERVICE_IGNORED:
+                    config.user.need_permission("wato.service_discovery_to_ignored")
+                elif table_target == self.SERVICE_REMOVED:
+                    config.user.need_permission("wato.service_discovery_to_removed")
+
+                if not apply_changes:
+                    apply_changes = True
 
             if table_source == self.SERVICE_UNDECIDED:
                 if table_target == self.SERVICE_MONITORED:
@@ -3292,21 +3309,29 @@ class ModeDiscovery(WatoMode):
             label = _("all services")
 
         if table_source == self.SERVICE_MONITORED:
-            bulk_button(table_source, self.SERVICE_UNDECIDED, _("Undecided"), label)
-            bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
+            if config.user.may("wato.service_discovery_to_undecided"):
+                bulk_button(table_source, self.SERVICE_UNDECIDED, _("Undecided"), label)
+            if config.user.may("wato.service_discovery_to_ignored"):
+                bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
 
         elif table_source == self.SERVICE_IGNORED:
-            bulk_button(table_source, self.SERVICE_MONITORED, _("Monitor"), label)
-            bulk_button(table_source, self.SERVICE_UNDECIDED, _("Undecided"), label)
+            if config.user.may("wato.service_discovery_to_monitored"):
+                bulk_button(table_source, self.SERVICE_MONITORED, _("Monitor"), label)
+            if config.user.may("wato.service_discovery_to_undecided"):
+                bulk_button(table_source, self.SERVICE_UNDECIDED, _("Undecided"), label)
 
         elif table_source == self.SERVICE_VANISHED:
-            html.button("_bulk_%s_removed" % table_source, _("Remove"),
-                        help=_("Remove %s services") % label)
-            bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
+            if config.user.may("wato.service_discovery_to_removed"):
+                html.button("_bulk_%s_removed" % table_source, _("Remove"),
+                            help=_("Remove %s services") % label)
+            if config.user.may("wato.service_discovery_to_ignored"):
+                bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
 
         elif table_source == self.SERVICE_UNDECIDED:
-            bulk_button(table_source, self.SERVICE_MONITORED, _("Monitor"), label)
-            bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
+            if config.user.may("wato.service_discovery_to_monitored"):
+                bulk_button(table_source, self.SERVICE_MONITORED, _("Monitor"), label)
+            if config.user.may("wato.service_discovery_to_ignored"):
+                bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
 
 
     def _check_row(self, check, show_bulk_actions):
@@ -3422,46 +3447,49 @@ class ModeDiscovery(WatoMode):
         table_source, check_type, checkgroup, item, paramstring, params, \
             descr, state, output, perfdata = check
         checkbox_name = self._checkbox_name(check_type, item)
+
         buttons = []
         if table_source == self.SERVICE_MONITORED:
-            buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))
-            if may_edit_ruleset("ignored_services"):
+            if config.user.may("wato.service_discovery_to_undecided"):
+                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))
+            if may_edit_ruleset("ignored_services") \
+               and config.user.may("wato.service_discovery_to_ignored"):
                 buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
-            else:
-                buttons.append(html.empty_icon())
 
         elif table_source == self.SERVICE_IGNORED:
             if may_edit_ruleset("ignored_services"):
-                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored"))
-                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))
+                if config.user.may("wato.service_discovery_to_monitored"):
+                    buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored"))
+                if config.user.may("wato.service_discovery_to_ignored"):
+                    buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))
                 buttons.append(disabled_services_button())
 
         elif table_source == self.SERVICE_VANISHED:
-            buttons.append(icon_button_removed(table_source, checkbox_name))
-            if may_edit_ruleset("ignored_services"):
+            if config.user.may("wato.service_discovery_to_removed"):
+                buttons.append(icon_button_removed(table_source, checkbox_name))
+            if may_edit_ruleset("ignored_services") \
+               and config.user.may("wato.service_discovery_to_ignored"):
                 buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
-            else:
-                buttons.append(html.empty_icon())
 
         elif table_source == self.SERVICE_UNDECIDED:
-            buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored"))
-            if may_edit_ruleset("ignored_services"):
+            if config.user.may("wato.service_discovery_to_monitored"):
+                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored"))
+            if may_edit_ruleset("ignored_services") \
+               and config.user.may("wato.service_discovery_to_ignored"):
                 buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
-            else:
-                buttons.append(html.empty_icon())
 
-        else:
-            buttons.append(html.empty_icon())
+        while len(buttons) < 2:
             buttons.append(html.empty_icon())
 
         if table_source not in [self.SERVICE_UNDECIDED,
-                                self.SERVICE_IGNORED] and \
-           config.user.may('wato.rulesets'):
+                                self.SERVICE_IGNORED] \
+           and config.user.may('wato.rulesets'):
             buttons.append(rulesets_button())
             buttons.append(check_parameters_button())
 
         while len(buttons) < 4:
             buttons.append(html.empty_icon())
+
         for button in buttons:
             button
 
@@ -18414,6 +18442,26 @@ def load_plugins(force):
           "permission to be able to configure rulesets where bare command lines are "
           "configured."),
         [ "admin" ])
+
+    config.declare_permission("wato.service_discovery_to_undecided",
+         _("Service discovery: Move to undecided services"),
+         _("Service discovery: Move to undecided services"),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.service_discovery_to_monitored",
+         _("Service discovery: Move to monitored services"),
+         _("Service discovery: Move to monitored services"),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.service_discovery_to_ignored",
+         _("Service discovery: Disabled services"),
+         _("Service discovery: Disabled services"),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.service_discovery_to_removed",
+         _("Service discovery: Remove services"),
+         _("Service discovery: Remove services"),
+         [ "admin", "user" ])
 
     load_web_plugins("wato", globals())
 

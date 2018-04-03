@@ -1860,7 +1860,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     log_event_history(self.settings, event, "DELAYOVER")
                     if rule:
-                        event_has_opened(self.settings, rule, event)
+                        event_has_opened(self.settings, g_event_server, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             log_event_history(self.settings, event, "AUTODELETE")
@@ -2000,7 +2000,7 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(event)
             log_event_history(self.settings, event, "COUNTFAILED")
-            event_has_opened(self.settings, rule, event)
+            event_has_opened(self.settings, event_server, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 log_event_history(self.settings, event, "AUTODELETE")
@@ -2251,7 +2251,7 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                event_has_opened(self.settings, rule, existing_event)
+                                event_has_opened(self.settings, event_server, rule, existing_event)
 
                             log_event_history(self.settings, existing_event, "COUNTREACHED")
 
@@ -2273,7 +2273,7 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                event_has_opened(self.settings, rule, event)
+                                event_has_opened(self.settings, event_server, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
                                     log_event_history(self.settings, event, "AUTODELETE")
@@ -3000,7 +3000,7 @@ class EventServer(ECServerThread):
 
         if "notify" in action:
             self.logger.info("  Creating overflow notification")
-            do_notify(overflow_event)
+            do_notify(g_event_server, overflow_event)
 
         return False
 
@@ -3762,7 +3762,7 @@ class StatusServer(ECServerThread):
         log_event_history(self.settings, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
-        reload_configuration(self.settings)
+        reload_configuration(self.settings, g_event_server)
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3800,7 +3800,7 @@ class StatusServer(ECServerThread):
         event = self._event_status.event(int(event_id))
 
         if action_id == "@NOTIFY":
-            do_notify(event, user, is_cancelling=False)
+            do_notify(g_event_server, event, user, is_cancelling=False)
         else:
             with lock_configuration:
                 if action_id not in g_config["action"]:
@@ -3883,12 +3883,12 @@ def run_eventd(settings, perfcounters, event_status, event_server):
 
             # Beware: replication might be turned on during this loop!
             if is_replication_slave() and now > next_replication:
-                replication_pull(settings, perfcounters, event_status)
+                replication_pull(settings, perfcounters, event_status, event_server)
                 next_replication = now + g_config["replication"]["interval"]
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                reload_configuration(settings)
+                reload_configuration(settings, event_server)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 terminate(event_server)
@@ -4161,7 +4161,7 @@ class EventStatus(object):
                                                  "is not 'open' but '%s'" %
                                                  (event["id"], previous_phase))
                             else:
-                                do_event_actions(self.settings, actions, event, is_cancelling=True)
+                                do_event_actions(self.settings, g_event_server, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -4342,7 +4342,7 @@ class EventStatus(object):
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
-def event_has_opened(settings, rule, event):
+def event_has_opened(settings, event_server, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -4354,15 +4354,15 @@ def event_has_opened(settings, rule, event):
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(settings, rule.get("actions", []), event, is_cancelling=False)
+    do_event_actions(settings, event_server, rule.get("actions", []), event, is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(settings, actions, event, is_cancelling):
+def do_event_actions(settings, event_server, actions, event, is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
-            do_notify(event, is_cancelling=is_cancelling)
+            do_notify(event_server, event, is_cancelling=is_cancelling)
         else:
             action = g_config["action"].get(aname)
             if not action:
@@ -4539,11 +4539,11 @@ def execute_script(body, event):
 
 # This function creates a Check_MK Notification for a locally running Check_MK.
 # We simulate a *service* notification.
-def do_notify(event, username=None, is_cancelling=False):
+def do_notify(event_server, event, username=None, is_cancelling=False):
     if core_has_notifications_disabled(event):
         return
 
-    context = create_notification_context(event, username, is_cancelling)
+    context = create_notification_context(event_server, event, username, is_cancelling)
 
     if logger.is_verbose():
         logger.verbose("Sending notification via Check_MK with the following context:")
@@ -4572,9 +4572,9 @@ def do_notify(event, username=None, is_cancelling=False):
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
-def create_notification_context(event, username, is_cancelling):
+def create_notification_context(event_server, event, username, is_cancelling):
     context = base_notification_context(event, username, is_cancelling)
-    add_infos_from_monitoring_host(context, event)  # involves Livestatus query
+    add_infos_from_monitoring_host(event_server, context, event)  # involves Livestatus query
     add_contacts_from_rule(context, event)
     return context
 
@@ -4594,7 +4594,7 @@ def add_contacts_from_rule(context, event):
     # add the fallback contacts then.
 
 
-def add_infos_from_monitoring_host(context, event):
+def add_infos_from_monitoring_host(event_server, context, event):
     def _add_artificial_context_info():
         context.update({
             "HOSTNAME": event["host"],
@@ -4612,7 +4612,7 @@ def add_infos_from_monitoring_host(context, event):
         _add_artificial_context_info()
         return
 
-    host_config = g_event_server.host_config.get(event["core_host"])
+    host_config = event_server.host_config.get(event["core_host"])
     if not host_config:
         _add_artificial_context_info()  # No config found - Host has vanished?
         return
@@ -4761,7 +4761,7 @@ def replication_send(event_status, last_update):
         return response
 
 
-def replication_pull(settings, perfcounters, event_status):
+def replication_pull(settings, perfcounters, event_status, event_server):
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -4784,7 +4784,7 @@ def replication_pull(settings, perfcounters, event_status):
 
                 try:
                     new_state = get_state_from_master()
-                    replication_update_state(settings, event_status, new_state)
+                    replication_update_state(settings, event_status, event_server, new_state)
                     if repl_settings.get("logging"):
                         logger.info("Successfully synchronized with master")
                     g_slave_status["last_sync"] = now
@@ -4831,12 +4831,12 @@ def replication_pull(settings, perfcounters, event_status):
                 perfcounters.count_time("sync", time.time() - now)
 
 
-def replication_update_state(settings, event_status, new_state):
+def replication_update_state(settings, event_status, event_server, new_state):
 
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
         save_master_config(settings, new_state)
-        g_event_server.compile_rules(new_state["rules"], new_state.get("rule_packs", []))
+        event_server.compile_rules(new_state["rules"], new_state.get("rule_packs", []))
         g_config["actions"] = new_state["actions"]
 
     # Update to the masters' event state
@@ -4974,11 +4974,11 @@ def load_configuration(settings):
     g_last_config_reload = time.time()
 
 
-def reload_configuration(settings):
+def reload_configuration(settings, event_server):
     with lock_configuration:
         load_configuration(settings)
-        initialize_snmptrap_handling(settings, g_event_server)
-        g_event_server.reload_configuration()
+        initialize_snmptrap_handling(settings, event_server)
+        event_server.reload_configuration()
 
     g_status_server.reload_configuration()
     logger.info("Reloaded configuration.")

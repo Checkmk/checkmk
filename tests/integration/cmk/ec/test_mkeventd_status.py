@@ -78,6 +78,11 @@ def test_handle_client(status_server, event_status):
 
 
 def test_mkevent_check_query_perf(config, status_server, event_status, perfcounters):
+    assert isinstance(status_server, cmk.ec.main.StatusServer)
+    assert isinstance(event_status, cmk.ec.main.EventStatus)
+    assert isinstance(event_status._perfcounters, cmk.ec.main.Perfcounters)
+    assert isinstance(perfcounters, cmk.ec.main.Perfcounters)
+
     for num in range(10000):
         event_status.new_event(CMKEventConsole.new_event({
             "host": "heute-%d" % num,

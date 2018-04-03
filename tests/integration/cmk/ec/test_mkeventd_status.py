@@ -60,7 +60,7 @@ def perfcounters():
 
 @pytest.fixture(scope="function")
 def event_status(settings):
-    cmk.ec.main.g_event_status = cmk.ec.main.EventStatus(settings)
+    cmk.ec.main.g_event_status = cmk.ec.main.EventStatus(settings, perfcounters)
     return cmk.ec.main.g_event_status
 
 

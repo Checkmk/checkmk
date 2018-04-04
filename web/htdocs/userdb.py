@@ -906,7 +906,7 @@ def contactgroups_of_user(user_id):
     user = load_cached_profile()
     if user == None:
         # No cached profile present. Load all users to get the users data
-        user = load_users(lock=False)[user_id]
+        user = load_users(lock=False).get(user_id, {})
 
     return user.get("contactgroups", [])
 

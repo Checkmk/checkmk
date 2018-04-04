@@ -55,7 +55,7 @@ GRP=###SITE###
 # in case of start, restart or reload. This is in order to
 # avoid duplicate effort when being called by cmk -R or
 # cmk -O.
-export CORE_NOVERIFY=yes
+# export CORE_NOVERIFY=yes
 
 # Make sure that check plugins do not run localized.
 # check_icmp outputs performance data with german

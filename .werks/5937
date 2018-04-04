@@ -1,0 +1,10 @@
+Title: apc_system_events: New check which monitors active system events on an InRow Cooling device
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1522848872
+Class: feature
+
+

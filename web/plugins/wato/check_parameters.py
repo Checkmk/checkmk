@@ -5807,6 +5807,23 @@ register_check_parameters(
     "dict",
 )
 
+register_check_parameters(
+    subgroup_environment,
+    "apc_system_events",
+    _("APC Inrow System Events"),
+    Dictionary(
+        title = _("System Events on APX Inrow Devices"),
+        elements = [
+            ( "state",
+              MonitoringState(
+                    title = _("State during active system events"),
+                    default_value = 2,
+            )),
+        ]),
+    None,
+    "dict"
+)
+
 #.
 #   .--Printing------------------------------------------------------------.
 #   |                ____       _       _   _                              |

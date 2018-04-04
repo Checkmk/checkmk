@@ -1,0 +1,14 @@
+Title: Fixed DST shift correction for downtimes, causing CMC to use 100% CPU
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i4
+Date: 1522839759
+Class: fix
+
+When a downtime was configured to recur every hour and a 1h DST shift
+happened, the CMC would go into an infinite loop with 100% CPU load and no
+monitoring at all.  If the downtime in question was set in an ad hoc fashion
+via the GUI (not via rules), the only way to work around this issue was to
+remove the state file, losing all downtimes, acknowledgements and comments.

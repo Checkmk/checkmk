@@ -114,11 +114,7 @@ if cmk.is_managed_edition():
 else:
     managed = None
 
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 g_html_head_open = False
 display_options  = None

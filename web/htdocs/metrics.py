@@ -45,10 +45,7 @@ from valuespec import *
 import livestatus
 from cmk.regex import regex
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

@@ -25,11 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 def ajax_switch_help():
     state = html.var("enabled", "") != ""

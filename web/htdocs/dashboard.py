@@ -29,10 +29,7 @@ from valuespec import *
 from lib import *
 import wato
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 loaded_with_language = False
 builtin_dashboards = {}

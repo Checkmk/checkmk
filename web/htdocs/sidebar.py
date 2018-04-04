@@ -37,11 +37,7 @@ from log import logger
 import cmk.paths
 import cmk.store as store
 
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 # Constants to be used in snapins
 snapin_width = 230

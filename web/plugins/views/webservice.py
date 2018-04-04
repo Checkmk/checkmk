@@ -24,10 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 def render_python_raw(data, view, group_cells, cells, num_columns, show_checkboxes):
     html.write(repr(data))

@@ -26,17 +26,13 @@
 
 import os
 import time
+import json
 
 import cmk.paths
 import config
 import sites
 from lib import *
 import cmk.store as store
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
 
 graph_size = 2000, 700

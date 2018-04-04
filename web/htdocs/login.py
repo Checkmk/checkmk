@@ -257,6 +257,14 @@ def auth_cookie_is_valid(cookie_name):
         return False
 
 
+# TODO: Needs to be cleaned up. When using HTTP header auth or web server auth it is not
+# ensured that a user exists after letting the user in. This is a problem for the following
+# code! We need to define a point where the following code can rely on an existing user
+# object. userdb.hook_login() is doing some similar stuff
+# - It also checks the type() of the user_id (Not in the same way :-/)
+# - It also calls userdb.is_customer_user_allowed_to_login()
+# - It calls userdb.create_non_existing_user() but we don't
+# - It calls connection.is_locked() but we don't
 def check_auth(mod_python_req):
     user_id = check_auth_web_server(mod_python_req)
 

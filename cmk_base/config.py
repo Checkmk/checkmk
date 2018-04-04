@@ -238,6 +238,15 @@ def _verify_non_duplicate_hosts():
 # statically defined in checks.
 def add_wato_static_checks_to_checks():
     global checks
+
+    # In case the checks are not loaded yet it seems the current mode
+    # is not working with the checks. In this case also don't load the
+    # static checks into the configuration.
+    # TODO: Clean this up. Shouldn't we move the "checks" stuff to the
+    # checks module?
+    if not cmk_base.checks.check_info:
+        return
+
     static = []
     for entries in static_checks.values():
         for entry in entries:

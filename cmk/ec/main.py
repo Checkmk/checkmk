@@ -2000,7 +2000,7 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(event)
             log_event_history(self.settings, event, "COUNTFAILED")
-            event_has_opened(self.settings, event_server, rule, event)
+            event_has_opened(self.settings, g_event_server, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 log_event_history(self.settings, event, "AUTODELETE")
@@ -2251,7 +2251,7 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                event_has_opened(self.settings, event_server, rule, existing_event)
+                                event_has_opened(self.settings, g_event_server, rule, existing_event)
 
                             log_event_history(self.settings, existing_event, "COUNTREACHED")
 
@@ -2273,7 +2273,7 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                event_has_opened(self.settings, event_server, rule, event)
+                                event_has_opened(self.settings, g_event_server, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
                                     log_event_history(self.settings, event, "AUTODELETE")

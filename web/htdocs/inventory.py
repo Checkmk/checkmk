@@ -27,11 +27,7 @@
 
 import re
 import os
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 import ast
 import config

@@ -37,11 +37,7 @@ import signal
 import socket
 import subprocess
 import time
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 import table
 import key_mgmt

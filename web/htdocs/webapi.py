@@ -38,10 +38,7 @@ if cmk.is_managed_edition():
 else:
     managed = None
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 api_actions = {}
 loaded_with_language = False

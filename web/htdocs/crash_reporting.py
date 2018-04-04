@@ -32,10 +32,7 @@ from valuespec import *
 import table, config, forms
 import cmk.crash_reporting
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 def page_crashed(what):
     if what == "check":

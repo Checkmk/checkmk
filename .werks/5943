@@ -1,0 +1,11 @@
+Title: Fixed broken PDF export of host/service history views
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i4
+Date: 1522821525
+
+This issue seemed to be introduced with 1.4.0p26.

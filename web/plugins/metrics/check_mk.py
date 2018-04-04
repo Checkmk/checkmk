@@ -4196,7 +4196,7 @@ for what, color in [
     metric_info_key = '%s_rate' % what.lower()
     metric_info[metric_info_key] = {
         'title' : _('%s per Second') % what,
-        'unit'  : '1/sec',
+        'unit'  : '1/s',
         'color' : color,
     }
 
@@ -4209,7 +4209,7 @@ for what, color in [
     metric_info_key = 'fireeye_stat_%s' % what.replace(' ', '').lower()
     metric_info[metric_info_key] = {
         'title' : _('Emails containing %s per Second') % what,
-        'unit'  : '1/sec',
+        'unit'  : '1/s',
         'color' : color,
     }
 

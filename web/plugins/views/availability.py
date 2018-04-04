@@ -545,10 +545,10 @@ def render_bi_availability(title, aggr_rows):
             timewarp = None
 
         has_reached_logrow_limit = False
-        timeline_containers, fetched_rows = availability.get_timeline_containers(aggr_rows,
-                                                                                 avoptions,
-                                                                                 timewarp,
-                                                                                 livestatus_limit + 1)
+        timeline_containers, fetched_rows = availability.get_timeline_containers(
+            aggr_rows, avoptions, timewarp,
+            livestatus_limit + 1 if livestatus_limit != None else None
+        )
         if livestatus_limit and fetched_rows > livestatus_limit:
             has_reached_logrow_limit = True
 

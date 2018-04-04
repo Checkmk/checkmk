@@ -1,0 +1,11 @@
+Title: Fixed broken BI availability with limit set to 0 (regression in 1.4.0p26)
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p28
+Date: 1522820887
+Class: fix
+
+In case you are affected, you can set the availability limit to another value than
+0 to workaround this issue.

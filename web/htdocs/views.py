@@ -806,9 +806,9 @@ class Cell(object):
 
             if isinstance(txt, HTML):
                 txt = "%s" % txt
-
-            txt = html.unescape_attributes(txt)
-            txt = html.strip_tags(txt)
+            elif not isinstance(txt, tuple):
+                txt = html.unescape_attributes(txt)
+                txt = html.strip_tags(txt)
 
             return css_classes, txt
         except Exception:

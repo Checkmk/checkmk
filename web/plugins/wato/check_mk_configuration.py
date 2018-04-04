@@ -578,7 +578,10 @@ register_configvar(group,
                   "(Apache <tt>Allow from</tt>), like proxy "
                   "servers, to this webpage. A user with access to this page could simply fake "
                   "the authentication information. This option can be useful to "
-                  " realize authentication in reverse proxy environments.")
+                  " realize authentication in reverse proxy environments."),
+        none_value = False,
+        none_label = _("Don't use HTTP header authentication"),
+        indent = False,
     ),
     domain = "multisite")
 

@@ -88,6 +88,8 @@ def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None
     values = rulesets.host_extra_conf(hostname, config.host_check_commands)
     if values:
         value = values[0]
+    elif config.is_no_ip_host(hostname):
+        value = "ok"
     elif config.monitoring_core == "cmc":
         value = "smart"
     else:

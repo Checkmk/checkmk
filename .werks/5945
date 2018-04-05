@@ -1,0 +1,21 @@
+Title: Hosts can now be configured without IP address
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1522929824
+Class: feature
+
+It is now possible to configure hosts in Check_MK that have no IP address configured.
+This is useful e.g. in case a host is only monitored using piggyback data from another
+host.
+
+In previous versions of Check_MK a fake IP address had to be configured for each host
+to prevent warning messages during config generation and during monitoring.
+
+To configure a host without IP, simply set the "IP address family" attribute of a host
+to "No IP".
+
+The host check of these hosts will always report "UP" by default. To override this, you
+can use the rule set "Host check command".

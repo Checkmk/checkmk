@@ -118,6 +118,10 @@ def cached_dns_lookup(hostname, family):
         cache[cache_id] = cached_ip
         return cached_ip
 
+    if config.is_no_ip_host(hostname):
+        cache[cache_id] = None
+        return None
+
     # Now do the actual DNS lookup
     try:
         ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or socket.AF_INET6)[0][4][0]

@@ -60,7 +60,7 @@ setversion:
 
 # Converts all files which are targeted to a windows system to CRLF
 fix_linebreaks:
-	for F in mrpe/* plugins/* *.ini; do \
+	for F in $$(find mrpe plugins -maxdepth 1 ! -perm -111) *.ini; do \
 	    if [ -f "$$F" ]; then \
 	        sed -i 's/\r//' "$$F" ; \
 	        sed -i 's/$$/\r/' "$$F" ; \

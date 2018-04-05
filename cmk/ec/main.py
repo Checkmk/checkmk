@@ -1860,7 +1860,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     log_event_history(self.settings, event, "DELAYOVER")
                     if rule:
-                        event_has_opened(self.settings, g_event_server, rule, event)
+                        event_has_opened(self.settings, self, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             log_event_history(self.settings, event, "AUTODELETE")
@@ -2000,7 +2000,7 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(event)
             log_event_history(self.settings, event, "COUNTFAILED")
-            event_has_opened(self.settings, g_event_server, rule, event)
+            event_has_opened(self.settings, self, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 log_event_history(self.settings, event, "AUTODELETE")
@@ -2251,7 +2251,7 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                event_has_opened(self.settings, g_event_server, rule, existing_event)
+                                event_has_opened(self.settings, self, rule, existing_event)
 
                             log_event_history(self.settings, existing_event, "COUNTREACHED")
 
@@ -2273,7 +2273,7 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                event_has_opened(self.settings, g_event_server, rule, event)
+                                event_has_opened(self.settings, self, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
                                     log_event_history(self.settings, event, "AUTODELETE")
@@ -3000,7 +3000,7 @@ class EventServer(ECServerThread):
 
         if "notify" in action:
             self.logger.info("  Creating overflow notification")
-            do_notify(g_event_server, overflow_event)
+            do_notify(self, overflow_event)
 
         return False
 
@@ -3014,7 +3014,7 @@ class EventServer(ECServerThread):
 
         # Prefer the host individual limit for by_host limit (in case there is some)
         if ty == "by_host":
-            host_config = g_event_server.host_config.get(event["core_host"], {})
+            host_config = self.host_config.get(event["core_host"], {})
             host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
             if host_limit:
                 limit, action = host_limit.split(":", 1)

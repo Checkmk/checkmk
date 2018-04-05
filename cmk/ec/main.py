@@ -284,7 +284,7 @@ class ECServerThread(threading.Thread):
             try:
                 with cmk.profile.Profile(enabled=self._profiling_enabled,
                                          profile_file=str(self._profile_file)):
-                    self.serve(g_event_server)
+                    self.serve(g_event_server, g_status_server)
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
                 if self._settings.options.debug:
@@ -299,7 +299,7 @@ class ECServerThread(threading.Thread):
     def terminate(self):
         self._terminate_event.set()
 
-    def serve(self, event_server):
+    def serve(self, event_server, status_server):
         raise NotImplementedError()
 
 
@@ -1593,7 +1593,7 @@ class EventServer(ECServerThread):
 
         return event
 
-    def serve(self, event_server):
+    def serve(self, event_server, status_server):
         pipe_fragment = ''
         pipe = self.open_pipe()
         listen_list = [pipe]
@@ -1661,14 +1661,14 @@ class EventServer(ECServerThread):
                         # Do we have any complete messages?
                         if '\n' in data:
                             complete, rest = data.rsplit("\n", 1)
-                            self.process_raw_lines(complete + "\n", address)
+                            self.process_raw_lines(status_server, complete + "\n", address)
                         else:
                             rest = data  # keep for next time
 
                     # Only complete messages
                     else:
                         if data:
-                            self.process_raw_lines(data, address)
+                            self.process_raw_lines(status_server, data, address)
                         rest = ""
 
                     # Connection still open?
@@ -1700,17 +1700,17 @@ class EventServer(ECServerThread):
                         if data[-1] != '\n':
                             if '\n' in data:  # at least one complete message contained
                                 messages, pipe_fragment = data.rsplit('\n', 1)
-                                self.process_raw_lines(messages + '\n')  # got lost in split
+                                self.process_raw_lines(status_server, messages + '\n')  # got lost in split
                             else:
                                 pipe_fragment = data  # keep beginning of message, wait for \n
                         else:
-                            self.process_raw_lines(data)
+                            self.process_raw_lines(status_server, data)
                 except Exception:
                     pass
 
             # Read events from builtin syslog server
             if self._syslog is not None and self._syslog.fileno() in readable:
-                self.process_raw_lines(*self._syslog.recvfrom(4096))
+                self.process_raw_lines(status_server, *self._syslog.recvfrom(4096))
 
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap.fileno() in readable:
@@ -1724,7 +1724,7 @@ class EventServer(ECServerThread):
             try:
                 # process the first spool file we get
                 spool_file = next(self.settings.paths.spool_dir.value.glob('[!.]*'))
-                self.process_raw_lines(spool_file.read_bytes())
+                self.process_raw_lines(status_server, spool_file.read_bytes())
                 spool_file.unlink()
                 select_timeout = 0  # enable fast processing to process further files
             except StopIteration:
@@ -1744,13 +1744,13 @@ class EventServer(ECServerThread):
         self._perfcounters.count_time("processing", elapsed)
 
     # Takes several lines of messages, handles encoding and processes them separated
-    def process_raw_lines(self, data, address=None):
+    def process_raw_lines(self, status_server, data, address=None):
         lines = data.splitlines()
         for line in lines:
             line = scrub_and_decode(line.rstrip())
             if line:
                 try:
-                    self.process_raw_data(self.process_line, (line, address))
+                    self.process_raw_data(self.process_line, (status_server, line, address))
                 except Exception as e:
                     self.logger.exception('Exception handling a log line (skipping this one): %s' % e)
 
@@ -2151,7 +2151,7 @@ class EventServer(ECServerThread):
             ))
 
     def process_line(self, data):
-        line, address = data
+        status_server, line, address = data
         line = line.rstrip()
         if g_config["debug_rules"]:
             if address:
@@ -2160,7 +2160,7 @@ class EventServer(ECServerThread):
                 self.logger.info(u"Processing message '%s'" % line)
 
         event = self.create_event_from_line(line, address)
-        self.process_event(g_status_server, event)
+        self.process_event(status_server, event)
 
     def process_event(self, status_server, event):
         self.do_translate_hostname(event)
@@ -2213,7 +2213,7 @@ class EventServer(ECServerThread):
                         return
 
                 if cancelling:
-                    self._event_status.cancel_events(self, event, match_groups, rule)
+                    self._event_status.cancel_events(self, status_server, event, match_groups, rule)
                     return
                 else:
                     # Remember the rule id that this event originated from
@@ -3579,7 +3579,7 @@ class StatusServer(ECServerThread):
     def reload_configuration(self):
         self._reopen_sockets = True
 
-    def serve(self, event_server):
+    def serve(self, event_server, status_server):
         while not self._shal_terminate():
             try:
                 client_socket = None
@@ -4134,7 +4134,7 @@ class EventStatus(object):
 
     # Cancel all events the belong to a certain rule id and are
     # of the same "breed" as a new event.
-    def cancel_events(self, event_server, new_event, match_groups, rule):
+    def cancel_events(self, event_server, status_server, new_event, match_groups, rule):
         with lock_eventstatus:
             to_delete = []
             for nr, event in enumerate(self._events):
@@ -4159,7 +4159,7 @@ class EventStatus(object):
                                                  "is not 'open' but '%s'" %
                                                  (event["id"], previous_phase))
                             else:
-                                do_event_actions(self.settings, event_server, g_status_server, actions, event, is_cancelling=True)
+                                do_event_actions(self.settings, event_server, status_server, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 

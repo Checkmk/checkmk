@@ -303,9 +303,9 @@ class ECServerThread(threading.Thread):
         raise NotImplementedError()
 
 
-def terminate(event_server):
+def terminate(event_server, status_server):
     g_terminate_main_event.set()
-    g_status_server.terminate()
+    status_server.terminate()
     event_server.terminate()
 
 
@@ -813,7 +813,7 @@ def log_event_history_to_mongodb(settings, event, what, who, addinfo):
     })
 
 
-def get_event_history_from_mongodb(settings, query):
+def get_event_history_from_mongodb(settings, status_server, query):
     filters, limit = query.filters, query.limit
 
     history_entries = []
@@ -875,7 +875,7 @@ def get_event_history_from_mongodb(settings, query):
             entry['who'],
             entry['addinfo'],
         ]
-        for colname, defval in g_status_server.table_events.columns:
+        for colname, defval in status_server.table_events.columns:
             key = colname[6:]  # drop "event_"
             item.append(entry['event'].get(key, defval))
         history_entries.append(item)
@@ -895,14 +895,14 @@ def get_event_history_from_mongodb(settings, query):
 #   | Functions for logging the history of events                          |
 #   '----------------------------------------------------------------------'
 
-def log_event_history(settings, event, what, who="", addinfo=""):
+def log_event_history(settings, status_server, event, what, who="", addinfo=""):
     if g_config["debug_rules"]:
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
     if g_config['archive_mode'] == 'mongodb':
         log_event_history_to_mongodb(settings, event, what, who, addinfo)
     else:
-        log_event_history_to_file(settings, event, what, who, addinfo)
+        log_event_history_to_file(settings, status_server, event, what, who, addinfo)
 
 
 # Make a new entry in the event history. Each entry is tab-separated line
@@ -912,7 +912,7 @@ def log_event_history(settings, event, what, who="", addinfo=""):
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
-def log_event_history_to_file(settings, event, what, who, addinfo):
+def log_event_history_to_file(settings, status_server, event, what, who, addinfo):
     with lock_logging:
         columns = [
             str(time.time()),
@@ -921,7 +921,7 @@ def log_event_history_to_file(settings, event, what, who, addinfo):
             scrub_string(addinfo)
         ]
         columns += [quote_tab(event.get(colname[6:], defval))  # drop "event_"
-                    for colname, defval in g_status_server.table_events.columns]
+                    for colname, defval in status_server.table_events.columns]
 
         with get_logfile(settings.paths.history_dir.value).open(mode='ab') as f:
             f.write("\t".join(map(to_utf8, columns)) + "\n")
@@ -1020,7 +1020,7 @@ def flush_event_history_files(settings):
         expire_logfiles(settings, True)
 
 
-def get_event_history_from_file(settings, query):
+def get_event_history_from_file(settings, status_server, query):
     filters, limit = query.filters, query.limit
     history_entries = []
     if not settings.paths.history_dir.value.exists():
@@ -1078,7 +1078,7 @@ def get_event_history_from_file(settings, query):
                     logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue  # skip this file
 
-        new_entries = parse_history_file(path, query, greptexts, limit)
+        new_entries = parse_history_file(status_server, path, query, greptexts, limit)
         history_entries += new_entries
         if limit is not None:
             limit -= len(new_entries)
@@ -1086,7 +1086,7 @@ def get_event_history_from_file(settings, query):
     return history_entries
 
 
-def parse_history_file(path, query, greptexts, limit):
+def parse_history_file(status_server, path, query, greptexts, limit):
     entries = []
     line_no = 0
     # If we have greptexts we pre-filter the file using the extremely
@@ -1097,7 +1097,7 @@ def parse_history_file(path, query, greptexts, limit):
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)  # nosec
 
-    headers = g_status_server.table_history.column_names
+    headers = status_server.table_history.column_names
 
     for line in grep.stdout:
         line_no += 1
@@ -1110,7 +1110,7 @@ def parse_history_file(path, query, greptexts, limit):
             parts = line.decode('utf-8').rstrip('\n').split('\t')
             convert_history_line(parts)
             values = [line_no] + parts
-            if g_status_server.table_history.filter_row(query, values):
+            if status_server.table_history.filter_row(query, values):
                 entries.append(values)
         except Exception as e:
             logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))
@@ -1807,14 +1807,14 @@ class EventServer(ECServerThread):
                     self.logger.info("Deleting orphaned event %d created by obsolete rule %s" %
                                      (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    log_event_history(self.settings, event, "ORPHANED")
+                    log_event_history(self.settings, g_status_server, event, "ORPHANED")
                     events_to_delete.append(nr)
 
                 elif "count" not in rule and "expect" not in rule:
                     self.logger.info("Count-based event %d belonging to rule %s: rule does not "
                                      "count/expect anymore. Deleting event." % (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    log_event_history(self.settings, event, "NOCOUNT")
+                    log_event_history(self.settings, g_status_server, event, "NOCOUNT")
                     events_to_delete.append(nr)
 
                 # handle counting
@@ -1840,7 +1840,7 @@ class EventServer(ECServerThread):
                                 self.logger.info("Rule %s/%s, event %d: again without allowed rate, dropping event" %
                                                  (rule["pack"], rule["id"], event["id"]))
                                 event["phase"] = "closed"
-                                log_event_history(self.settings, event, "COUNTFAILED")
+                                log_event_history(self.settings, g_status_server, event, "COUNTFAILED")
                                 events_to_delete.append(nr)
 
                     else:  # algorithm 'interval'
@@ -1849,7 +1849,7 @@ class EventServer(ECServerThread):
                                              "Resetting to zero." % (rule["pack"], rule["id"], event["count"],
                                                                      count["count"], count["period"]))
                             event["phase"] = "closed"
-                            log_event_history(self.settings, event, "COUNTFAILED")
+                            log_event_history(self.settings, g_status_server, event, "COUNTFAILED")
                             events_to_delete.append(nr)
 
             # Handle delayed actions
@@ -1858,12 +1858,12 @@ class EventServer(ECServerThread):
                 if now >= delay_until:
                     self.logger.info("Delayed event %d of rule %s is now activated." % (event["id"], event["rule_id"]))
                     event["phase"] = "open"
-                    log_event_history(self.settings, event, "DELAYOVER")
+                    log_event_history(self.settings, g_status_server, event, "DELAYOVER")
                     if rule:
                         event_has_opened(self.settings, self, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
-                            log_event_history(self.settings, event, "AUTODELETE")
+                            log_event_history(self.settings, g_status_server, event, "AUTODELETE")
                             events_to_delete.append(nr)
 
                     else:
@@ -1878,7 +1878,7 @@ class EventServer(ECServerThread):
                         events_to_delete.append(nr)
                         self.logger.info("Livetime of event %d (rule %s) exceeded. Deleting event." %
                                          (event["id"], event["rule_id"]))
-                        log_event_history(self.settings, event, "EXPIRED")
+                        log_event_history(self.settings, g_status_server, event, "EXPIRED")
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
         for nr in events_to_delete[::-1]:
@@ -1932,7 +1932,7 @@ class EventServer(ECServerThread):
                             self.logger.info("Rule %s/%s has reached %d occurrances (%d required). "
                                              "Starting next period." %
                                              (rule["pack"], rule["id"], event["count"], expected_count))
-                            log_event_history(self.settings, event, "COUNTREACHED")
+                            log_event_history(self.settings, g_status_server, event, "COUNTREACHED")
                         # Counting event is no longer needed.
                         events_to_delete.append(nr)
                         break
@@ -1974,7 +1974,7 @@ class EventServer(ECServerThread):
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
             self.rewrite_event(rule, merge_event, ())
-            log_event_history(self.settings, merge_event, "COUNTFAILED")
+            log_event_history(self.settings, g_status_server, merge_event, "COUNTFAILED")
         else:
             # Create artifical event from scratch. Make sure that all important
             # fields are defined.
@@ -1999,11 +1999,11 @@ class EventServer(ECServerThread):
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(event)
-            log_event_history(self.settings, event, "COUNTFAILED")
+            log_event_history(self.settings, g_status_server, event, "COUNTFAILED")
             event_has_opened(self.settings, self, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
-                log_event_history(self.settings, event, "AUTODELETE")
+                log_event_history(self.settings, g_status_server, event, "AUTODELETE")
                 self._event_status.remove_event(event)
 
     def reload_configuration(self):
@@ -2253,11 +2253,11 @@ class EventServer(ECServerThread):
                             else:
                                 event_has_opened(self.settings, self, rule, existing_event)
 
-                            log_event_history(self.settings, existing_event, "COUNTREACHED")
+                            log_event_history(self.settings, g_status_server, existing_event, "COUNTREACHED")
 
                             if "delay" not in rule and rule.get("autodelete"):
                                 existing_event["phase"] = "closed"
-                                log_event_history(self.settings, existing_event, "AUTODELETE")
+                                log_event_history(self.settings, g_status_server, existing_event, "AUTODELETE")
                                 with lock_eventstatus:
                                     self._event_status.remove_event(existing_event)
                     elif "expect" in rule:
@@ -2276,7 +2276,7 @@ class EventServer(ECServerThread):
                                 event_has_opened(self.settings, self, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
-                                    log_event_history(self.settings, event, "AUTODELETE")
+                                    log_event_history(self.settings, g_status_server, event, "AUTODELETE")
                                     with lock_eventstatus:
                                         self._event_status.remove_event(event)
                     return
@@ -3180,17 +3180,17 @@ class QueryGET(Query):
 
     def _from_raw_query(self):
         super(QueryGET, self)._from_raw_query()
-        self._parse_table()
+        self._parse_table(g_status_server)
         self._parse_header_lines()
 
-    def _parse_table(self):
+    def _parse_table(self, status_server):
         self.table_name = self.method_arg
 
         if self.table_name not in self._allowed_tables:
             raise MKClientError("Invalid table: %s (allowed are: %s)" %
                                 (self.table_name, ", ".join(self._allowed_tables)))
 
-        self.table = g_status_server.table(self.table_name)
+        self.table = status_server.table(self.table_name)
 
     def _parse_header_lines(self):
         self.requested_columns = self.table.column_names  # use all columns as default
@@ -3458,9 +3458,9 @@ class StatusTableHistory(StatusTable):
 
     def _enumerate(self, query):
         if g_config['archive_mode'] == 'mongodb':
-            return get_event_history_from_mongodb(self.settings, query)
+            return get_event_history_from_mongodb(self.settings, g_status_server, query)
         else:
-            return get_event_history_from_file(self.settings, query)
+            return get_event_history_from_file(self.settings, g_status_server, query)
 
 
 class StatusTableRules(StatusTable):
@@ -3702,7 +3702,7 @@ class StatusServer(ECServerThread):
             self.handle_command_reload()
         elif command == "SHUTDOWN":
             self.logger.info("Going to shut down")
-            terminate(g_event_server)
+            terminate(g_event_server, self)
         elif command == "REOPENLOG":
             self.handle_command_reopenlog()
         elif command == "FLUSH":
@@ -3742,7 +3742,7 @@ class StatusServer(ECServerThread):
         if int(acknowledged) and event["phase"] not in ["open", "ack"]:
             raise MKClientError("You cannot acknowledge an event that is not open.")
         event["phase"] = int(acknowledged) and "ack" or "open"
-        log_event_history(self.settings, event, "UPDATE", user)
+        log_event_history(self.settings, self, event, "UPDATE", user)
 
     def handle_command_create(self, arguments):
         # Would rather use g_event_server.process_raw_line(), but we are already
@@ -3759,7 +3759,7 @@ class StatusServer(ECServerThread):
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         event["state"] = int(newstate)
-        log_event_history(self.settings, event, "CHANGESTATE", user)
+        log_event_history(self.settings, self, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
         reload_configuration(self.settings, g_event_server)
@@ -3891,7 +3891,7 @@ def run_eventd(settings, perfcounters, event_status, event_server):
                 reload_configuration(settings, event_server)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
-                terminate(event_server)
+                terminate(event_server, g_status_server)
         except Exception as e:
             logger.exception("Exception in main thread:\n%s" % e)
             if settings.options.debug:
@@ -4076,14 +4076,14 @@ class EventStatus(object):
         self._events.append(event)
         self.num_existing_events += 1
         self._count_event_add(event)
-        log_event_history(self.settings, event, "NEW")
+        log_event_history(self.settings, g_status_server, event, "NEW")
 
     def archive_event(self, event):
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         event["phase"] = "closed"
-        log_event_history(self.settings, event, "ARCHIVED")
+        log_event_history(self.settings, g_status_server, event, "ARCHIVED")
 
     def remove_event(self, event):
         try:
@@ -4152,7 +4152,7 @@ class EventStatus(object):
                         event["time"] = new_event["time"]
                         event["last"] = new_event["time"]
                         event["priority"] = new_event["priority"]
-                        log_event_history(self.settings, event, "CANCELLED")
+                        log_event_history(self.settings, g_status_server, event, "CANCELLED")
                         actions = rule.get("cancel_actions", [])
                         if actions:
                             if previous_phase != "open" \
@@ -4317,7 +4317,7 @@ class EventStatus(object):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
                 event["phase"] = "closed"
-                log_event_history(self.settings, event, "DELETE", user)
+                log_event_history(self.settings, g_status_server, event, "DELETE", user)
                 self._remove_event_by_nr(nr)
                 return
         raise MKClientError("No event with id %s" % event_id)

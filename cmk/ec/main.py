@@ -463,17 +463,17 @@ class MKClientError(Exception):
 #   | Generic SNMP-Trap processing functions                               |
 #   '----------------------------------------------------------------------'
 
-def initialize_snmptrap_handling(settings, event_server):
+def initialize_snmptrap_handling(settings, event_server, status_server):
     if settings.options.snmptrap_udp is None:
         return
 
-    initialize_snmptrap_engine(event_server)
+    initialize_snmptrap_engine(event_server, status_server)
 
     if snmptrap_translation_enabled():
         event_server.load_mibs()
 
 
-def initialize_snmptrap_engine(event_server):
+def initialize_snmptrap_engine(event_server, status_server):
     global g_snmp_engine, g_snmp_receiver
     g_snmp_engine = snmp_engine.SnmpEngine()
 
@@ -482,7 +482,11 @@ def initialize_snmptrap_engine(event_server):
         pduTypes = (snmp_v1.TrapPDU.tagSet, snmp_v2c.SNMPv2TrapPDU.tagSet)
 
     initialize_snmp_credentials()
-    g_snmp_receiver = ECNotificationReceiver(g_snmp_engine, event_server.handle_snmptrap)
+    def handle_snmptrap(snmp_engine, state_reference, context_engine_id, context_name,
+                        var_binds, cb_ctx):
+        event_server.handle_snmptrap(status_server, snmp_engine, state_reference,
+                                     context_engine_id, context_name, var_binds, cb_ctx)
+    g_snmp_receiver = ECNotificationReceiver(g_snmp_engine, handle_snmptrap)
 
 
 def initialize_snmp_credentials():
@@ -1547,7 +1551,7 @@ class EventServer(ECServerThread):
         g_snmp_engine.setUserContext(sender_address=sender_address)
         g_snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_engine, (), (), whole_msg)
 
-    def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
+    def handle_snmptrap(self, status_server, snmp_engine, state_reference, context_engine_id, context_name,
                         var_binds, cb_ctx):
         ipaddress = snmp_engine.getUserContext("sender_address")[0]
 
@@ -1559,7 +1563,7 @@ class EventServer(ECServerThread):
             trap = self.snmptrap_convert_var_binds(var_binds)
 
         event = self.create_event_from_trap(trap, ipaddress)
-        self.process_event(g_status_server, event)
+        self.process_event(status_server, event)
 
     def log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
         if self.logger.is_verbose():
@@ -3104,8 +3108,9 @@ class EventServer(ECServerThread):
 #   '----------------------------------------------------------------------'
 
 class Queries(object):
-    def __init__(self, sock):
+    def __init__(self, status_server, sock):
         super(Queries, self).__init__()
+        self._status_server = status_server
         self._socket = sock
         self._buffer = ""
 
@@ -3129,7 +3134,7 @@ class Queries(object):
         request_lines = request.decode("utf-8").splitlines()
 
         cls = Query.get_query_class(request_lines)
-        return cls(request_lines)
+        return cls(self._status_server, request_lines)
 
 
 class Query(object):
@@ -3149,18 +3154,20 @@ class Query(object):
             raise MKClientError("Invalid method %s (allowed are %s) " %
                                 (method, ", ".join(cls._allowed_methods)))
 
+        # TODO: This is pure maintenance horror! Never ever calculate the name
+        # of a class in user code...
         return globals()["Query%s" % method]
 
-    def __init__(self, raw_query):
+    def __init__(self, status_server, raw_query):
         super(Query, self).__init__()
 
         self.logger = logger
         self.output_format = "python"
 
         self._raw_query = raw_query
-        self._from_raw_query()
+        self._from_raw_query(status_server)
 
-    def _from_raw_query(self):
+    def _from_raw_query(self, status_server):
         self._parse_method_and_args()
 
     def _parse_method_and_args(self):
@@ -3177,9 +3184,9 @@ class Query(object):
 class QueryGET(Query):
     _allowed_tables = set(["events", "history", "rules", "status"])
 
-    def _from_raw_query(self):
-        super(QueryGET, self)._from_raw_query()
-        self._parse_table(g_status_server)
+    def _from_raw_query(self, status_server):
+        super(QueryGET, self)._from_raw_query(status_server)
+        self._parse_table(status_server)
         self._parse_header_lines()
 
     def _parse_table(self, status_server):
@@ -3620,7 +3627,7 @@ class StatusServer(ECServerThread):
                     else:
                         allow_commands = True
 
-                    self.handle_client(event_server, client_socket, allow_commands,
+                    self.handle_client(event_server, status_server, client_socket, allow_commands,
                                        addr_info and addr_info[0] or "")
 
                     duration = time.time() - before
@@ -3635,8 +3642,8 @@ class StatusServer(ECServerThread):
                 time.sleep(0.2)
             client_socket = None  # close without danger of exception
 
-    def handle_client(self, event_server, client_socket, allow_commands, client_ip):
-        for query in Queries(client_socket):
+    def handle_client(self, event_server, status_server, client_socket, allow_commands, client_ip):
+        for query in Queries(status_server, client_socket):
             self.logger.verbose("Client livestatus query: %r" % query)
 
             with lock_eventstatus:
@@ -4976,7 +4983,7 @@ def load_configuration(settings):
 def reload_configuration(settings, event_server, status_server):
     with lock_configuration:
         load_configuration(settings)
-        initialize_snmptrap_handling(settings, event_server)
+        initialize_snmptrap_handling(settings, event_server, status_server)
         event_server.reload_configuration()
 
     status_server.reload_configuration()
@@ -5049,7 +5056,7 @@ def main():
 
         event_status.load_status(g_event_server)
 
-        initialize_snmptrap_handling(settings, g_event_server)
+        initialize_snmptrap_handling(settings, g_event_server, g_status_server)
 
         g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 

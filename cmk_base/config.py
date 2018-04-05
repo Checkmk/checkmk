@@ -679,8 +679,20 @@ def is_ipv6_host(hostname):
 
 
 def is_ipv4_host(hostname):
-    # Either explicit IPv4 or implicit (when host is not an IPv6 host)
-    return "ip-v4" in tags_of_host(hostname) or "ip-v6" not in tags_of_host(hostname)
+    """Whether or not the given host is configured to be monitored via IPv4.
+    This is the case when it is set to be explicit IPv4 or implicit
+    (when host is not an IPv6 host and not a "No IP" host)"""
+    tags = tags_of_host(hostname)
+
+    if "ip-v4" in tags:
+       return True
+
+    return "ip-v6" not in tags and "no-ip" not in tags
+
+
+def is_no_ip_host(hostname):
+    """Whether or not the given host is configured not to be monitored via IP"""
+    return "no-ip" in tags_of_host(hostname)
 
 #
 # Management board

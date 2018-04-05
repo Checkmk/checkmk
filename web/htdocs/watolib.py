@@ -6152,6 +6152,7 @@ def register_builtin_host_tags():
                 ("ip-v4-only", _("IPv4 only"), ["ip-v4"]),
                 ("ip-v6-only", _("IPv6 only"), ["ip-v6"]),
                 ("ip-v4v6",    _("IPv4/IPv6 dual-stack"), ["ip-v4", "ip-v6"]),
+                ("no-ip",      _("No IP"),     []),
             ]
         ),
     ]

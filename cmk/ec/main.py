@@ -284,7 +284,7 @@ class ECServerThread(threading.Thread):
             try:
                 with cmk.profile.Profile(enabled=self._profiling_enabled,
                                          profile_file=str(self._profile_file)):
-                    self.serve(g_event_server, g_status_server)
+                    self.serve(g_status_server)
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
                 if self._settings.options.debug:
@@ -299,7 +299,7 @@ class ECServerThread(threading.Thread):
     def terminate(self):
         self._terminate_event.set()
 
-    def serve(self, event_server, status_server):
+    def serve(self, status_server):
         raise NotImplementedError()
 
 
@@ -1597,7 +1597,7 @@ class EventServer(ECServerThread):
 
         return event
 
-    def serve(self, event_server, status_server):
+    def serve(self, status_server):
         pipe_fragment = ''
         pipe = self.open_pipe()
         listen_list = [pipe]
@@ -3525,6 +3525,7 @@ class StatusServer(ECServerThread):
         self.table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
         self._event_status = event_status
+        self._event_server = event_server
 
         self.open_unix_socket()
         self.open_tcp_socket()
@@ -3591,7 +3592,7 @@ class StatusServer(ECServerThread):
     def reload_configuration(self):
         self._reopen_sockets = True
 
-    def serve(self, event_server, status_server):
+    def serve(self, status_server):
         while not self._shal_terminate():
             try:
                 client_socket = None
@@ -3631,7 +3632,7 @@ class StatusServer(ECServerThread):
                     else:
                         allow_commands = True
 
-                    self.handle_client(event_server, status_server, client_socket, allow_commands,
+                    self.handle_client(client_socket, allow_commands,
                                        addr_info and addr_info[0] or "")
 
                     duration = time.time() - before
@@ -3646,8 +3647,8 @@ class StatusServer(ECServerThread):
                 time.sleep(0.2)
             client_socket = None  # close without danger of exception
 
-    def handle_client(self, event_server, status_server, client_socket, allow_commands, client_ip):
-        for query in Queries(status_server, client_socket):
+    def handle_client(self, client_socket, allow_commands, client_ip):
+        for query in Queries(self, client_socket):
             self.logger.verbose("Client livestatus query: %r" % query)
 
             with lock_eventstatus:
@@ -3660,7 +3661,7 @@ class StatusServer(ECServerThread):
                 elif query.method == "COMMAND":
                     if not allow_commands:
                         raise MKClientError("Sorry. Commands are disallowed via TCP")
-                    self.handle_command_request(event_server, query.method_arg)
+                    self.handle_command_request(self._event_server, query.method_arg)
                     response = None
 
                 else:
@@ -3709,10 +3710,10 @@ class StatusServer(ECServerThread):
         if command == "DELETE":
             self.handle_command_delete(arguments)
         elif command == "RELOAD":
-            self.handle_command_reload(event_server)
+            self.handle_command_reload(self._event_server)
         elif command == "SHUTDOWN":
             self.logger.info("Going to shut down")
-            terminate(event_server, self)
+            terminate(self._event_server, self)
         elif command == "REOPENLOG":
             self.handle_command_reopenlog()
         elif command == "FLUSH":
@@ -3728,7 +3729,7 @@ class StatusServer(ECServerThread):
         elif command == "CHANGESTATE":
             self.handle_command_changestate(arguments)
         elif command == "ACTION":
-            self.handle_command_action(event_server, arguments)
+            self.handle_command_action(self._event_server, arguments)
         elif command == "SWITCHMODE":
             self.handle_command_switchmode(arguments)
         else:
@@ -3772,7 +3773,7 @@ class StatusServer(ECServerThread):
         log_event_history(self.settings, self, event, "CHANGESTATE", user)
 
     def handle_command_reload(self, event_server):
-        reload_configuration(self.settings, event_server, self)
+        reload_configuration(self.settings, self._event_server, self)
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3810,7 +3811,7 @@ class StatusServer(ECServerThread):
         event = self._event_status.event(int(event_id))
 
         if action_id == "@NOTIFY":
-            do_notify(event_server, event, user, is_cancelling=False)
+            do_notify(self._event_server, event, user, is_cancelling=False)
         else:
             with lock_configuration:
                 if action_id not in g_config["action"]:
@@ -5056,7 +5057,7 @@ def main():
         perfcounters = Perfcounters()
         event_status = EventStatus(settings, perfcounters)
         g_event_server = EventServer(settings, perfcounters, event_status)
-        g_status_server = StatusServer(settings, perfcounters, event_status, event_server)
+        g_status_server = StatusServer(settings, perfcounters, event_status, g_event_server)
 
         event_status.load_status(g_event_server)
 

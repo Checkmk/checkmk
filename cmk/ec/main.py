@@ -3489,8 +3489,12 @@ class StatusTableStatus(StatusTable):
     prefix = "status"
     columns = EventServer.status_columns()
 
+    def __init__(self, event_server):
+        super(StatusTableStatus, self).__init__()
+        self._event_server = event_server
+
     def _enumerate(self, query):
-        return g_event_server.get_status()
+        return self._event_server.get_status()
 
 
 #.
@@ -3506,7 +3510,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings, perfcounters, event_status):
+    def __init__(self, settings, perfcounters, event_status, event_server):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
                                            profiling_enabled=settings.options.profile_status,
@@ -3518,7 +3522,7 @@ class StatusServer(ECServerThread):
         self.table_events = StatusTableEvents(event_status)
         self.table_history = StatusTableHistory(settings, self)
         self.table_rules = StatusTableRules(event_status)
-        self.table_status = StatusTableStatus()
+        self.table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
         self._event_status = event_status
 
@@ -3751,7 +3755,7 @@ class StatusServer(ECServerThread):
         log_event_history(self.settings, self, event, "UPDATE", user)
 
     def handle_command_create(self, arguments):
-        # Would rather use g_event_server.process_raw_line(), but we are already
+        # Would rather use process_raw_line(), but we are already
         # holding lock_eventstatus and it's sub functions are setting
         # lock_eventstatus too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
@@ -5051,8 +5055,8 @@ def main():
         global g_status_server, g_event_server
         perfcounters = Perfcounters()
         event_status = EventStatus(settings, perfcounters)
-        g_status_server = StatusServer(settings, perfcounters, event_status)
         g_event_server = EventServer(settings, perfcounters, event_status)
+        g_status_server = StatusServer(settings, perfcounters, event_status, event_server)
 
         event_status.load_status(g_event_server)
 

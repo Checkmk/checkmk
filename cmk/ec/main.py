@@ -284,7 +284,7 @@ class ECServerThread(threading.Thread):
             try:
                 with cmk.profile.Profile(enabled=self._profiling_enabled,
                                          profile_file=str(self._profile_file)):
-                    self.serve()
+                    self.serve(g_event_server)
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
                 if self._settings.options.debug:
@@ -299,7 +299,7 @@ class ECServerThread(threading.Thread):
     def terminate(self):
         self._terminate_event.set()
 
-    def serve(self):
+    def serve(self, event_server):
         raise NotImplementedError()
 
 
@@ -1593,7 +1593,7 @@ class EventServer(ECServerThread):
 
         return event
 
-    def serve(self):
+    def serve(self, event_server):
         pipe_fragment = ''
         pipe = self.open_pipe()
         listen_list = [pipe]
@@ -2213,7 +2213,7 @@ class EventServer(ECServerThread):
                         return
 
                 if cancelling:
-                    self._event_status.cancel_events(event, match_groups, rule)
+                    self._event_status.cancel_events(self, event, match_groups, rule)
                     return
                 else:
                     # Remember the rule id that this event originated from
@@ -2242,7 +2242,7 @@ class EventServer(ECServerThread):
                         # count up. If the count reaches the limit, the event will
                         # be opened and its rule actions performed.
                         existing_event = \
-                            self._event_status.count_event(event, rule, count)
+                            self._event_status.count_event(self, event, rule, count)
                         if existing_event:
                             if "delay" in rule:
                                 if g_config["debug_rules"]:
@@ -2260,7 +2260,7 @@ class EventServer(ECServerThread):
                                 with lock_eventstatus:
                                     self._event_status.remove_event(existing_event)
                     elif "expect" in rule:
-                        self._event_status.count_expected_event(event)
+                        self._event_status.count_expected_event(self, event)
                     else:
                         if "delay" in rule:
                             if g_config["debug_rules"]:
@@ -3579,7 +3579,7 @@ class StatusServer(ECServerThread):
     def reload_configuration(self):
         self._reopen_sockets = True
 
-    def serve(self):
+    def serve(self, event_server):
         while not self._shal_terminate():
             try:
                 client_socket = None
@@ -3619,7 +3619,7 @@ class StatusServer(ECServerThread):
                     else:
                         allow_commands = True
 
-                    self.handle_client(client_socket, allow_commands,
+                    self.handle_client(event_server, client_socket, allow_commands,
                                        addr_info and addr_info[0] or "")
 
                     duration = time.time() - before
@@ -3634,7 +3634,7 @@ class StatusServer(ECServerThread):
                 time.sleep(0.2)
             client_socket = None  # close without danger of exception
 
-    def handle_client(self, client_socket, allow_commands, client_ip):
+    def handle_client(self, event_server, client_socket, allow_commands, client_ip):
         for query in Queries(client_socket):
             self.logger.verbose("Client livestatus query: %r" % query)
 
@@ -3648,7 +3648,7 @@ class StatusServer(ECServerThread):
                 elif query.method == "COMMAND":
                     if not allow_commands:
                         raise MKClientError("Sorry. Commands are disallowed via TCP")
-                    self.handle_command_request(query.method_arg)
+                    self.handle_command_request(event_server, query.method_arg)
                     response = None
 
                 else:
@@ -3688,7 +3688,7 @@ class StatusServer(ECServerThread):
         client_socket.sendall(repr(response) + "\n")
 
     # All commands are already locked with lock_eventstatus
-    def handle_command_request(self, commandline):
+    def handle_command_request(self, event_server, commandline):
         self.logger.info("Executing command: %s" % commandline)
         parts = commandline.split(";")
         command = parts[0]
@@ -3697,10 +3697,10 @@ class StatusServer(ECServerThread):
         if command == "DELETE":
             self.handle_command_delete(arguments)
         elif command == "RELOAD":
-            self.handle_command_reload()
+            self.handle_command_reload(event_server)
         elif command == "SHUTDOWN":
             self.logger.info("Going to shut down")
-            terminate(g_event_server, self)
+            terminate(event_server, self)
         elif command == "REOPENLOG":
             self.handle_command_reopenlog()
         elif command == "FLUSH":
@@ -3716,7 +3716,7 @@ class StatusServer(ECServerThread):
         elif command == "CHANGESTATE":
             self.handle_command_changestate(arguments)
         elif command == "ACTION":
-            self.handle_command_action(arguments)
+            self.handle_command_action(event_server, arguments)
         elif command == "SWITCHMODE":
             self.handle_command_switchmode(arguments)
         else:
@@ -3759,8 +3759,8 @@ class StatusServer(ECServerThread):
         event["state"] = int(newstate)
         log_event_history(self.settings, self, event, "CHANGESTATE", user)
 
-    def handle_command_reload(self):
-        reload_configuration(self.settings, g_event_server, self)
+    def handle_command_reload(self, event_server):
+        reload_configuration(self.settings, event_server, self)
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3793,12 +3793,12 @@ class StatusServer(ECServerThread):
             self.logger.info("Resetting all rule counters")
         self._event_status.reset_counters(rule_id)
 
-    def handle_command_action(self, arguments):
+    def handle_command_action(self, event_server, arguments):
         event_id, user, action_id = arguments
         event = self._event_status.event(int(event_id))
 
         if action_id == "@NOTIFY":
-            do_notify(g_event_server, event, user, is_cancelling=False)
+            do_notify(event_server, event, user, is_cancelling=False)
         else:
             with lock_configuration:
                 if action_id not in g_config["action"]:
@@ -4017,7 +4017,7 @@ class EventStatus(object):
             self._rule_stats = {}
         self.save_status()
 
-    def load_status(self):
+    def load_status(self, event_server):
         path = self.settings.paths.status_file.value
         if path.exists():
             try:
@@ -4037,7 +4037,7 @@ class EventStatus(object):
             event.setdefault("ipaddress", "")
 
             if "core_host" not in event:
-                g_event_server.add_core_host_to_event(event)
+                event_server.add_core_host_to_event(event)
                 event["host_in_downtime"] = False
 
     # Called on Event Console initialization from status file to initialize
@@ -4134,7 +4134,7 @@ class EventStatus(object):
 
     # Cancel all events the belong to a certain rule id and are
     # of the same "breed" as a new event.
-    def cancel_events(self, new_event, match_groups, rule):
+    def cancel_events(self, event_server, new_event, match_groups, rule):
         with lock_eventstatus:
             to_delete = []
             for nr, event in enumerate(self._events):
@@ -4159,7 +4159,7 @@ class EventStatus(object):
                                                  "is not 'open' but '%s'" %
                                                  (event["id"], previous_phase))
                             else:
-                                do_event_actions(self.settings, g_event_server, g_status_server, actions, event, is_cancelling=True)
+                                do_event_actions(self.settings, event_server, g_status_server, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -4256,7 +4256,7 @@ class EventStatus(object):
         found.update(event)
         found.update(preserve)
 
-    def count_expected_event(self, event):
+    def count_expected_event(self, event_server, event):
         for ev in self._events:
             if ev["rule_id"] == event["rule_id"] and ev["phase"] == "counting":
                 self.count_event_up(ev, event)
@@ -4265,9 +4265,9 @@ class EventStatus(object):
         # None found, create one
         event["count"] = 1
         event["phase"] = "counting"
-        g_event_server.new_event_respecting_limits(event)
+        event_server.new_event_respecting_limits(event)
 
-    def count_event(self, event, rule, count):
+    def count_event(self, event_server, event, rule, count):
         # Find previous occurrance of this event and acount for
         # one new occurrance. In case of negated count (expecting rules)
         # we do never modify events that are already in the state "open"
@@ -4300,7 +4300,7 @@ class EventStatus(object):
         else:
             event["count"] = 1
             event["phase"] = "counting"
-            g_event_server.new_event_respecting_limits(event)
+            event_server.new_event_respecting_limits(event)
             found = event
 
         # Did we just count the event that was just one too much?
@@ -5046,7 +5046,7 @@ def main():
         g_status_server = StatusServer(settings, perfcounters, event_status)
         g_event_server = EventServer(settings, perfcounters, event_status)
 
-        event_status.load_status()
+        event_status.load_status(g_event_server)
 
         initialize_snmptrap_handling(settings, g_event_server)
 

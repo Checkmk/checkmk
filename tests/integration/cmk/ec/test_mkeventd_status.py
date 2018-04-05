@@ -72,17 +72,17 @@ def status_server(settings, config, perfcounters, event_status, event_server):
     return cmk.ec.main.g_status_server
 
 
-def test_handle_client(event_status, event_server, status_server):
+def test_handle_client(status_server):
     s = FakeStatusSocket("GET events")
 
-    status_server.handle_client(event_server, s, True, "127.0.0.1")
+    status_server.handle_client(s, True, "127.0.0.1")
 
     response = s.get_response()
     assert len(response) == 1
     assert "event_id" in response[0]
 
 
-def test_mkevent_check_query_perf(config, perfcounters, event_status, status_server):
+def test_mkevent_check_query_perf(config, event_status, status_server):
     for num in range(10000):
         event_status.new_event(status_server, CMKEventConsole.new_event({
             "host": "heute-%d" % num,
@@ -105,7 +105,7 @@ def test_mkevent_check_query_perf(config, perfcounters, event_status, status_ser
     #import cProfile, StringIO, pstats
     #pr = cProfile.Profile()
     #pr.enable()
-    status_server.handle_client(event_server, s, True, "127.0.0.1")
+    status_server.handle_client(s, True, "127.0.0.1")
     #pr.disable()
     #ps = pstats.Stats(pr, stream=StringIO.StringIO())
     #ps.dump_stats("/tmp/test_mkevent_check_query_perf.profile")

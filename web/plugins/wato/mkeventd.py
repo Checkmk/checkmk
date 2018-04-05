@@ -1351,12 +1351,12 @@ def rule_pack_with_id(rule_packs, rule_pack_id):
 def filter_mkeventd_rule_packs(search_expression, rule_packs):
     found_packs = {}
     for rule_pack in rule_packs:
-        if search_expression in rule_pack["id"] \
-           or search_expression in rule_pack["title"]:
+        if search_expression in rule_pack["id"].lower() \
+           or search_expression in rule_pack["title"].lower():
             found_packs.setdefault(rule_pack["id"], [])
         for rule in rule_pack.get("rules", []):
-            if search_expression in rule["id"] \
-               or search_expression in rule.get("description"):
+            if search_expression in rule["id"].lower() \
+               or search_expression in rule.get("description").lower():
                 found_rules = found_packs.setdefault(rule_pack["id"], [])
                 found_rules.append(rule)
     return found_packs
@@ -1617,8 +1617,8 @@ def copy_rules_from_master():
 def filter_mkeventd_rules(search_expression, rule_pack):
     found_rules = []
     for rule in rule_pack.get("rules", []):
-        if search_expression in rule["id"] \
-           or search_expression in rule.get("description"):
+        if search_expression in rule["id"].lower() \
+           or search_expression in rule.get("description").lower():
             found_rules.append(rule)
     return found_rules
 

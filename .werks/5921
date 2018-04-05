@@ -1,0 +1,13 @@
+Title: mk_logwatch frozen binary for Windows was broken
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p28
+Date: 1522922955
+Class: fix
+
+The python frozen binary of the mk_logwatch plugin for Windows was
+broken.
+
+

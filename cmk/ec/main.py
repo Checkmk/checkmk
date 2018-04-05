@@ -1269,7 +1269,6 @@ class EventServer(ECServerThread):
         self._perfcounters = perfcounters
         self._event_status = event_status
 
-    def open_sockets(self):
         self.create_pipe()
         self.open_eventsocket()
         self.open_syslog()
@@ -3515,12 +3514,11 @@ class StatusServer(ECServerThread):
         self._perfcounters = perfcounters
         self._event_status = event_status
 
-    def table(self, name):
-        return getattr(self, "table_%s" % name)
-
-    def open_sockets(self):
         self.open_unix_socket()
         self.open_tcp_socket()
+
+    def table(self, name):
+        return getattr(self, "table_%s" % name)
 
     def open_unix_socket(self):
         path = self.settings.paths.unix_socket.value
@@ -5046,9 +5044,7 @@ def main():
         perfcounters = Perfcounters()
         event_status = EventStatus(settings, perfcounters)
         g_status_server = StatusServer(settings, perfcounters, event_status)
-        g_status_server.open_sockets()
         g_event_server = EventServer(settings, perfcounters, event_status)
-        g_event_server.open_sockets()
 
         event_status.load_status()
 

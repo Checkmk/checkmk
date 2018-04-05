@@ -1,0 +1,10 @@
+Title: netapp_api_vf_stats: now uses the correct number of CPUs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1522924468
+Class: fix
+
+

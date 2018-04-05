@@ -1860,7 +1860,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     log_event_history(self.settings, g_status_server, event, "DELAYOVER")
                     if rule:
-                        event_has_opened(self.settings, self, rule, event)
+                        event_has_opened(self.settings, self, g_status_server, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             log_event_history(self.settings, g_status_server, event, "AUTODELETE")
@@ -2000,7 +2000,7 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(event)
             log_event_history(self.settings, g_status_server, event, "COUNTFAILED")
-            event_has_opened(self.settings, self, rule, event)
+            event_has_opened(self.settings, self, g_status_server, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 log_event_history(self.settings, g_status_server, event, "AUTODELETE")
@@ -2251,7 +2251,7 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                event_has_opened(self.settings, self, rule, existing_event)
+                                event_has_opened(self.settings, self, g_status_server, rule, existing_event)
 
                             log_event_history(self.settings, g_status_server, existing_event, "COUNTREACHED")
 
@@ -2273,7 +2273,7 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                event_has_opened(self.settings, self, rule, event)
+                                event_has_opened(self.settings, self, g_status_server, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
                                     log_event_history(self.settings, g_status_server, event, "AUTODELETE")
@@ -3762,7 +3762,7 @@ class StatusServer(ECServerThread):
         log_event_history(self.settings, self, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
-        reload_configuration(self.settings, g_event_server)
+        reload_configuration(self.settings, g_event_server, self)
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3807,7 +3807,7 @@ class StatusServer(ECServerThread):
                     raise MKClientError("The action '%s' is not defined. After adding new commands please "
                                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = g_config["action"][action_id]
-            do_event_action(self.settings, action, event, user)
+            do_event_action(self.settings, self, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -3845,8 +3845,8 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(settings, perfcounters, event_status, event_server):
-    g_status_server.start()
+def run_eventd(settings, perfcounters, event_status, event_server, status_server):
+    status_server.start()
     event_server.start()
     now = time.time()
     next_housekeeping = now + g_config["housekeeping_interval"]
@@ -3888,10 +3888,10 @@ def run_eventd(settings, perfcounters, event_status, event_server):
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                reload_configuration(settings, event_server)
+                reload_configuration(settings, event_server, status_server)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
-                terminate(event_server, g_status_server)
+                terminate(event_server, status_server)
         except Exception as e:
             logger.exception("Exception in main thread:\n%s" % e)
             if settings.options.debug:
@@ -3900,7 +3900,7 @@ def run_eventd(settings, perfcounters, event_status, event_server):
 
     # Now wait for termination of the server threads
     event_server.join()
-    g_status_server.join()
+    status_server.join()
 
 
 #.
@@ -4161,7 +4161,7 @@ class EventStatus(object):
                                                  "is not 'open' but '%s'" %
                                                  (event["id"], previous_phase))
                             else:
-                                do_event_actions(self.settings, g_event_server, actions, event, is_cancelling=True)
+                                do_event_actions(self.settings, g_event_server, g_status_server, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -4342,7 +4342,7 @@ class EventStatus(object):
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
-def event_has_opened(settings, event_server, rule, event):
+def event_has_opened(settings, event_server, status_server, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -4354,12 +4354,12 @@ def event_has_opened(settings, event_server, rule, event):
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(settings, event_server, rule.get("actions", []), event, is_cancelling=False)
+    do_event_actions(settings, event_server, status_server, rule.get("actions", []), event, is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(settings, event_server, actions, event, is_cancelling):
+def do_event_actions(settings, event_server, status_server, actions, event, is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event_server, event, is_cancelling=is_cancelling)
@@ -4372,7 +4372,7 @@ def do_event_actions(settings, event_server, actions, event, is_cancelling):
             else:
                 logger.info("Going to execute action '%s' on event %d" %
                             (action["title"], event["id"]))
-                do_event_action(settings, action, event)
+                do_event_action(settings, status_server, action, event)
 
 
 # Rule actions are currently done synchronously. Actions should
@@ -4405,7 +4405,7 @@ def escape_null_bytes(s):
     return s.replace("\000", "\\000")
 
 
-def do_event_action(settings, action, event, user=""):
+def do_event_action(settings, status_server, action, event, user=""):
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return
@@ -4413,14 +4413,14 @@ def do_event_action(settings, action, event, user=""):
     try:
         action_type, settings = action["action"]
         if action_type == 'email':
-            to = escape_null_bytes(substitute_event_tags(settings["to"], event))
-            subject = escape_null_bytes(substitute_event_tags(settings["subject"], event))
-            body = escape_null_bytes(substitute_event_tags(settings["body"], event))
+            to = escape_null_bytes(substitute_event_tags(status_server, settings["to"], event))
+            subject = escape_null_bytes(substitute_event_tags(status_server, settings["subject"], event))
+            body = escape_null_bytes(substitute_event_tags(status_server, settings["body"], event))
 
             send_email(to, subject, body)
             log_event_history(settings, event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
-            execute_script(escape_null_bytes(substitute_event_tags(settings["script"], get_quoted_event(event))), event)
+            execute_script(status_server, escape_null_bytes(substitute_event_tags(status_server, settings["script"], get_quoted_event(event))), event)
             log_event_history(settings, event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
@@ -4430,12 +4430,12 @@ def do_event_action(settings, action, event, user=""):
         logger.exception("Error during execution of action %s" % action["id"])
 
 
-def get_event_tags(event):
+def get_event_tags(status_server, event):
     substs = [("match_group_%d" % (nr + 1), g)
               for (nr, g)
               in enumerate(event.get("match_groups", ()))]
 
-    for key, defaultvalue in g_status_server.table_events.columns:
+    for key, defaultvalue in status_server.table_events.columns:
         varname = key[6:]
         substs.append((varname, event.get(varname, defaultvalue)))
 
@@ -4457,8 +4457,8 @@ def get_event_tags(event):
     return tags
 
 
-def substitute_event_tags(text, event):
-    for key, value in get_event_tags(event).iteritems():
+def substitute_event_tags(status_server, text, event):
+    for key, value in get_event_tags(status_server, event).iteritems():
         text = text.replace('$%s$' % key.upper(), value)
     return text
 
@@ -4493,10 +4493,10 @@ def send_email(to, subject, body):
     return True
 
 
-def execute_script(body, event):
+def execute_script(status_server, body, event):
     script_env = os.environ.copy()
 
-    for key, value in get_event_tags(event).iteritems():
+    for key, value in get_event_tags(status_server, event).iteritems():
         if type(key) == unicode:
             key = key.encode("utf-8")
         if type(value) == unicode:
@@ -4974,13 +4974,13 @@ def load_configuration(settings):
     g_last_config_reload = time.time()
 
 
-def reload_configuration(settings, event_server):
+def reload_configuration(settings, event_server, status_server):
     with lock_configuration:
         load_configuration(settings)
         initialize_snmptrap_handling(settings, event_server)
         event_server.reload_configuration()
 
-    g_status_server.reload_configuration()
+    status_server.reload_configuration()
     logger.info("Reloaded configuration.")
 
 
@@ -5070,7 +5070,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(settings, perfcounters, event_status, g_event_server)
+        run_eventd(settings, perfcounters, event_status, g_event_server, g_status_server)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

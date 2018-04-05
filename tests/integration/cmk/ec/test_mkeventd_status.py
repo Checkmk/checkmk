@@ -62,15 +62,21 @@ def event_status(settings, perfcounters):
 
 
 @pytest.fixture(scope="function")
+def event_server(settings, config, perfcounters, event_status):
+    cmk.ec.main.g_event_server = cmk.ec.main.StatusServer(settings, perfcounters, event_status)
+    return cmk.ec.main.g_event_server
+
+
+@pytest.fixture(scope="function")
 def status_server(settings, config, perfcounters, event_status):
     cmk.ec.main.g_status_server = cmk.ec.main.StatusServer(settings, perfcounters, event_status)
     return cmk.ec.main.g_status_server
 
 
-def test_handle_client(status_server, event_status):
+def test_handle_client(event_status, event_server, status_server):
     s = FakeStatusSocket("GET events")
 
-    status_server.handle_client(s, True, "127.0.0.1")
+    status_server.handle_client(event_server, s, True, "127.0.0.1")
 
     response = s.get_response()
     assert len(response) == 1
@@ -100,7 +106,7 @@ def test_mkevent_check_query_perf(config, status_server, event_status, perfcount
     #import cProfile, StringIO, pstats
     #pr = cProfile.Profile()
     #pr.enable()
-    status_server.handle_client(s, True, "127.0.0.1")
+    status_server.handle_client(event_server, s, True, "127.0.0.1")
     #pr.disable()
     #ps = pstats.Stats(pr, stream=StringIO.StringIO())
     #ps.dump_stats("/tmp/test_mkevent_check_query_perf.profile")

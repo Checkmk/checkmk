@@ -63,8 +63,7 @@ def event_status(settings, perfcounters):
 
 @pytest.fixture(scope="function")
 def event_server(settings, config, perfcounters, event_status):
-    cmk.ec.main.g_event_server = cmk.ec.main.StatusServer(settings, perfcounters, event_status)
-    return cmk.ec.main.g_event_server
+    return cmk.ec.main.EventServer(settings, perfcounters, event_status)
 
 
 @pytest.fixture(scope="function")

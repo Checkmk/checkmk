@@ -5053,17 +5053,17 @@ def main():
         settings.paths.status_file.value.parent.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
-        global g_status_server, g_event_server
+        global g_status_server
         perfcounters = Perfcounters()
         event_status = EventStatus(settings, perfcounters)
-        g_event_server = EventServer(settings, perfcounters, event_status)
-        g_status_server = StatusServer(settings, perfcounters, event_status, g_event_server)
+        event_server = EventServer(settings, perfcounters, event_status)
+        g_status_server = StatusServer(settings, perfcounters, event_status, event_server)
 
-        event_status.load_status(g_event_server)
+        event_status.load_status(event_server)
 
-        initialize_snmptrap_handling(settings, g_event_server, g_status_server)
+        initialize_snmptrap_handling(settings, event_server, g_status_server)
 
-        g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
+        event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 
         if not settings.options.foreground:
             pid_path.parent.mkdir(parents=True, exist_ok=True)
@@ -5079,7 +5079,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(settings, perfcounters, event_status, g_event_server, g_status_server)
+        run_eventd(settings, perfcounters, event_status, event_server, g_status_server)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)
@@ -5090,7 +5090,7 @@ def main():
         # that processes (syslog, etc) will not hang when trying
         # to write into the pipe.
         logger.verbose("Cleaning up event pipe")
-        pipe = g_event_server.open_pipe()  # Open it
+        pipe = event_server.open_pipe()  # Open it
         settings.paths.event_pipe.value.unlink() # Remove pipe
         drain_pipe(pipe)                   # Drain any data
         os.close(pipe)                     # Close pipe
@@ -5103,7 +5103,7 @@ def main():
         settings.paths.event_socket.value.unlink()
 
         logger.verbose("Output hash stats")
-        g_event_server.output_hash_stats()
+        event_server.output_hash_stats()
 
         logger.verbose("Closing fds which might be still open")
         for fd in [settings.options.syslog_udp,

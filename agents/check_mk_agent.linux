@@ -922,7 +922,7 @@ fi
 
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
-if ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+if [ -z "$MK_IN_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
     echo '<<<lnx_thermal>>>'
     for F in /sys/class/thermal/thermal_zone*; do
         echo -n "${F##*/} "

@@ -952,6 +952,34 @@ if type pvecm > /dev/null 2>&1 ; then
     pvecm nodes
 fi
 
+# Iterate all running containers and report piggyback data for them
+if type docker > /dev/null 2>&1 ; then
+    for CONTAINER_ID in $(docker container ls -q); do
+        echo "<<<<$CONTAINER_ID>>>>"
+
+        # Is there a regular agent available in the container? Use it!
+        #
+        # Otherwise execute the agent of the node in the context of the container.
+        # Using this approach we should always get at least basic information from
+        # the container.
+        # Once it comes to plugins and custom configuration the user needs to use
+        # a little more complex setup. Have a look at the documentation.
+        # TODO: Hand over REMOTE (and other?) environment variables
+        AGENT_PATH=$(docker container exec "$CONTAINER_ID" which check_mk_agent 2>/dev/null)
+        if [ -n "$AGENT_PATH" ]; then
+            docker container exec "$CONTAINER_ID" check_mk_agent
+        else
+            # TODO: In case the docker part is added to the official agent script
+            # erase the hard coded path and replace it with 'basename "$0"'.
+            # In case the docker stuff remains as plugin, at least replace it with
+            # to get the agent path $(type check_mk_agent).
+            docker container exec --env MK_FROM_NODE=1 -i "$CONTAINER_ID" bash </usr/bin/check_mk_agent
+        fi
+
+        echo "<<<<>>>>"
+    done
+fi
+
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.

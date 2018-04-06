@@ -5,8 +5,9 @@ import pytest
 import time
 import ast
 import pathlib2 as pathlib
-from testlib import CMKEventConsole, ec, web
+import threading
 
+from testlib import CMKEventConsole, ec, web
 import cmk.ec.settings
 import cmk.paths
 import cmk.ec.main
@@ -72,7 +73,7 @@ def event_server(settings, config, perfcounters, event_status, table_events):
 
 @pytest.fixture(scope="function")
 def status_server(settings, config, perfcounters, event_status, event_server, table_events):
-    return cmk.ec.main.StatusServer(settings, config, perfcounters, event_status, event_server, table_events)
+    return cmk.ec.main.StatusServer(settings, config, perfcounters, event_status, event_server, table_events, threading.Event())
 
 
 def test_handle_client(status_server):

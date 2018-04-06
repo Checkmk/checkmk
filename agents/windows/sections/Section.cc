@@ -30,7 +30,7 @@
 
 Section::Section(const std::string &configName, const Environment &env,
                  Logger *logger, const WinApiInterface &winapi,
-                 std::unique_ptr<ISectionHeader> header)
+                 std::unique_ptr<SectionHeaderBase> header)
     : _configName(configName)
     , _env(env)
     , _logger(logger)

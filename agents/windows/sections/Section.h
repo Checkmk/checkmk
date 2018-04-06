@@ -37,7 +37,7 @@
 
 class Environment;
 class Logger;
-class ISectionHeader;
+class SectionHeaderBase;
 
 namespace section_helpers {
 
@@ -55,7 +55,7 @@ class Section {
 public:
     Section(const std::string &configName, const Environment &env,
             Logger *logger, const WinApiInterface &winapi,
-            std::unique_ptr<ISectionHeader> header);
+            std::unique_ptr<SectionHeaderBase> header);
 
     virtual ~Section();
 
@@ -87,7 +87,7 @@ private:
     bool generateOutput(std::string &buffer,
                         const std::optional<std::string> &remoteIP);
 
-    std::unique_ptr<ISectionHeader> _header;
+    std::unique_ptr<SectionHeaderBase> _header;
 };
 
 #endif  // Section_h

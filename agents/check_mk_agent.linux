@@ -131,6 +131,15 @@ function section_cpu()
     fi
 }
 
+function section_uptime()
+{
+    echo '<<<uptime>>>'
+    if [ -z "$MK_IN_CONTAINER" ]; then
+        cat /proc/uptime
+    else
+        echo "$(($(date +%s) - $(stat -c %Z /dev/pts)))"
+    fi
+}
 
 function run_mrpe() {
     local descr=$1
@@ -391,9 +400,7 @@ section_mem
 section_cpu
 
 # Uptime
-echo '<<<uptime>>>'
-cat /proc/uptime
-
+section_uptime
 
 # New variant: Information about speed and state in one section
 if type ip > /dev/null

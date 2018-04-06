@@ -467,7 +467,7 @@ void do_remove() { UninstallService(); }
 void wsa_startup() {
     WSADATA wsa;
     if (0 != s_winapi.WSAStartup(MAKEWORD(2, 0), &wsa)) {
-        fprintf(stderr, "Cannot initialize winsock.\n");
+        std::cerr << "Cannot initialize winsock." << std::endl;
         exit(1);
     }
 }
@@ -497,23 +497,24 @@ void stop_threads() {
 //   '----------------------------------------------------------------------'
 
 void usage() {
-    fprintf(stderr,
-            "Usage: \n"
-            "check_mk_agent version         -- show version %s and exit\n"
-            "check_mk_agent install         -- install as Windows NT service "
-            "Check_Mk_Agent\n"
-            "check_mk_agent remove          -- remove Windows NT service\n"
-            "check_mk_agent adhoc           -- open TCP port %d and answer "
-            "request until killed\n"
-            "check_mk_agent test            -- test output of plugin, do not "
-            "open TCP port\n"
-            "check_mk_agent file FILENAME   -- write output of plugin into "
-            "file, do not open TCP port\n"
-            "check_mk_agent debug           -- similar to test, but with lots "
-            "of debug output\n"
-            "check_mk_agent showconfig      -- shows the effective "
-            "configuration used (currently incomplete)\n",
-            CHECK_MK_VERSION, *s_config->port);
+    std::cerr
+        << "Usage: \n"
+        << "check_mk_agent version         -- show version " << CHECK_MK_VERSION
+        << " and exit\n"
+        << "check_mk_agent install         -- install as Windows NT service "
+        << "Check_Mk_Agent\n"
+        << "check_mk_agent remove          -- remove Windows NT service\n"
+        << "check_mk_agent adhoc           -- open TCP port " << *s_config->port
+        << " and answer "
+        << "request until killed\n"
+        << "check_mk_agent test            -- test output of plugin, do not "
+        << "open TCP port\n"
+        << "check_mk_agent file FILENAME   -- write output of plugin into "
+        << "file, do not open TCP port\n"
+        << "check_mk_agent debug           -- similar to test, but with lots "
+        << "of debug output\n"
+        << "check_mk_agent showconfig      -- shows the effective "
+        << "configuration used (currently incomplete)" << std::endl;
     exit(1);
 }
 
@@ -1008,7 +1009,8 @@ void RunImmediate(const char *mode, int argc, char **argv) {
         do_test(env);
     else if (!strcmp(mode, "file")) {
         if (argc < 1) {
-            fprintf(stderr, "Please specify the name of an output file.\n");
+            std::cerr << "Please specify the name of an output file."
+                      << std::endl;
             exit(1);
         }
         do_file(env, argv[0]);

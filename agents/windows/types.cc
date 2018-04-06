@@ -61,8 +61,8 @@ ipspec from_string<ipspec>(const WinApiInterface &winapi,
 
         if ((result.ip.v4.address & result.ip.v4.netmask) !=
             result.ip.v4.address) {
-            fprintf(stderr, "Invalid only_hosts entry: host part not 0: %s",
-                    value.c_str());
+            std::cerr << "Invalid only_hosts entry: host part not 0: " << value
+                      << std::endl;
             exit(1);
         }
     }

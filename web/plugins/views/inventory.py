@@ -776,6 +776,12 @@ inventory_displayhints.update({
                                                          },
     ".software.applications.mssql.instances:*.clustered" : { "title" : _("Clustered"), "paint" : "mssql_is_clustered"},
 
+    ".software.applications.docker."                   : { "title" : _("Docker") },
+    ".software.applications.docker.images:"            : { "title" : _("Images"),
+                                                           "keyorder": ["repository", "tag", "id", "creation", "size", "labels", "amount_containers"],
+                                                         },
+    ".software.applications.docker.images:*.id"        : { "title" : _("ID"), },
+
     ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
     ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },
     ".networking.total_ethernet_ports"                 : { "title" : _("Ports"), "paint" : "count", },

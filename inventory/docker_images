@@ -1,0 +1,85 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def _parse_docker_images(info):
+    import json
+    parsed = {}
+    section_name = None
+    for line in info:
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            section_name = line[0][3:-3]
+            continue
+
+        data = json.loads(" ".join(line))
+        if section_name == "images":
+            data = json.loads(" ".join(line))
+            parsed.setdefault(data["Repository"], data)
+
+        elif section_name.startswith("images_labels"):
+            _, image_id = section_name.split(":", 1)
+            image = parsed.get(image_id)
+            if image is not None and data:
+                image.setdefault("__labels__", data)
+
+        elif section_name == "containers":
+            image = parsed.get(data["Image"])
+            if image is not None:
+                image.setdefault("__containers__", []).append(data)
+    return parsed
+
+
+def inv_docker_images(info, inventory_tree, status_data_tree):
+    parsed = _parse_docker_images(info)
+    path = "software.applications.docker.images:"
+    inv_node = inventory_tree.get_list(path)
+    status_node = status_data_tree.get_list(path)
+
+    for repo, image in parsed.iteritems():
+        tag = image["Tag"]
+        id_ = image["ID"]
+        inv_node.append({
+            "repository"        : repo,
+            "tag"               : tag,
+            "id"                : id_,
+            "creation"          : image["CreatedAt"],
+            "size"              : image["VirtualSize"],
+            "labels"            : ", ".join([": ".join(e)
+                                  for e in image.get("__labels__", {}).items()]),
+        })
+
+        status_node.append({
+            "repository"        : repo,
+            "tag"               : tag,
+            "id"                : id_,
+            "amount_containers" : len(image.get("__containers__", [])),
+        })
+
+
+inv_info['docker_images'] = {
+    'inv_function'    : inv_docker_images,
+    'has_status_data' : True,
+}

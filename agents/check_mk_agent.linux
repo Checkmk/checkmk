@@ -60,7 +60,7 @@ SPOOLDIR=$MK_VARDIR/spool
 # close standard input (for security reasons) and stderr when not
 # explicitly in debug mode.
 # When the nodes agent is executed by a e.g. docker node in a container,
-# then don't close stdin, because the agent is piped through it in this 
+# then don't close stdin, because the agent is piped through it in this
 # case.
 if [ "$1" = -d ]
 then
@@ -964,6 +964,17 @@ fi
 if type docker > /dev/null 2>&1 ; then
     echo "<<<docker_node_info>>>"
     docker info --format "{{json .}}" 2>&1
+
+    echo "<<<docker_images>>>"
+    echo "[[[images]]]"
+    docker images --all --format "{{json .}}"
+    for image in $(docker images --all --format "{{.Repository}}");
+    do
+        echo "[[[images_labels:$image]]]"
+        docker image inspect --format "{{json .Config.Labels}}" $image
+    done
+    echo "[[[containers]]]"
+    docker container ls --all --format "{{json .}}"
 
     for CONTAINER_ID in $(docker container ls -q); do
         echo "<<<<$CONTAINER_ID>>>>"

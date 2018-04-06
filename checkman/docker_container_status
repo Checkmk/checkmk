@@ -1,0 +1,14 @@
+title: Docker Container Status
+agents: linux
+catalog: app/docker
+license: GPL
+distribution: check_mk
+description:
+ Monitors the status of docker containers. A status of "running" is treated as OK,
+ any other status is treated as CRIT.
+
+item:
+ None
+
+inventory:
+ One check per container is discovered

@@ -62,14 +62,18 @@ def event_status(settings, perfcounters):
 
 
 @pytest.fixture(scope="function")
-def event_server(settings, config, perfcounters, event_status):
-    return cmk.ec.main.EventServer(settings, perfcounters, event_status)
+def table_events(event_status):
+    return cmk.ec.main.StatusTableEvents(event_status)
 
 
 @pytest.fixture(scope="function")
-def status_server(settings, config, perfcounters, event_status, event_server):
-    cmk.ec.main.g_status_server = cmk.ec.main.StatusServer(settings, perfcounters, event_status, event_server)
-    return cmk.ec.main.g_status_server
+def event_server(settings, config, perfcounters, event_status, table_events):
+    return cmk.ec.main.EventServer(settings, perfcounters, event_status, table_events)
+
+
+@pytest.fixture(scope="function")
+def status_server(settings, config, perfcounters, event_status, event_server, table_events):
+    return cmk.ec.main.StatusServer(settings, perfcounters, event_status, event_server, table_events)
 
 
 def test_handle_client(status_server):
@@ -82,9 +86,9 @@ def test_handle_client(status_server):
     assert "event_id" in response[0]
 
 
-def test_mkevent_check_query_perf(config, event_status, status_server):
+def test_mkevent_check_query_perf(config, event_status, status_server, table_events):
     for num in range(10000):
-        event_status.new_event(status_server.table_events, CMKEventConsole.new_event({
+        event_status.new_event(table_events, CMKEventConsole.new_event({
             "host": "heute-%d" % num,
             "text": "%s %s BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R" \
                     " j:O#A@J$ KLA@J $L:A@J :AMW: RAMR@: RMA@:LRMA@ L:RMA@ :AL@R MA:L@RM A@:LRMA@ :RLMA@ R:LA@RMM@RL:MA@R: AM@" % \

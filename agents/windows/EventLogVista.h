@@ -43,11 +43,11 @@
 #include "win_error.h"
 
 class UnsupportedException : public std::exception {};
-class WinApiAdaptor;
+class WinApiInterface;
 
 class EventApiModule {
 public:
-    explicit EventApiModule(const WinApiAdaptor &winapi);
+    explicit EventApiModule(const WinApiInterface &winapi);
 
     ~EventApiModule();
 
@@ -55,11 +55,11 @@ public:
 
 private:
     HMODULE _mod;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 struct EvtFunctionMap {
-    explicit EvtFunctionMap(const WinApiAdaptor &winapi);
+    explicit EvtFunctionMap(const WinApiInterface &winapi);
 
     std::unique_ptr<EventApiModule> _mod;
     decltype(&EvtOpenLog) openLog;
@@ -97,7 +97,7 @@ class EventLogVista : public IEventLog {
 public:
     // constructor
     // This throws an UnsupportedException if the vista-api is not supported.
-    EventLogVista(const std::wstring &path, const WinApiAdaptor &winapi);
+    EventLogVista(const std::wstring &path, const WinApiInterface &winapi);
 
     virtual std::wstring getName() const override;
 
@@ -113,7 +113,7 @@ private:
 
     const EvtFunctionMap _evt;
     std::wstring _path;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
     EventHandleVista _handle;
     const EventHandleVista _render_context;
     WrappedHandle<NullHandleTraits> _signal;

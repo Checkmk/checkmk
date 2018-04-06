@@ -25,7 +25,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
 template <typename CharT>
 size_t string_length(const CharT *s);
@@ -75,23 +75,22 @@ template <>
 long strTolFunc<char>(const char *str, char **str_end, int base);
 
 template <typename CharT>
-long regQueryValueEx(const WinApiAdaptor &winapi, HKEY hkey, const CharT *name,
-                     LPBYTE result, DWORD *counters_size);
+long regQueryValueEx(const WinApiInterface &winapi, HKEY hkey,
+                     const CharT *name, LPBYTE result, DWORD *counters_size);
 
 template <>
-long regQueryValueEx<wchar_t>(const WinApiAdaptor &winapi, HKEY hkey,
+long regQueryValueEx<wchar_t>(const WinApiInterface &winapi, HKEY hkey,
                               const wchar_t *name, LPBYTE result,
                               DWORD *counters_size);
 
 template <>
-long regQueryValueEx<char>(const WinApiAdaptor &winapi, HKEY hkey,
+long regQueryValueEx<char>(const WinApiInterface &winapi, HKEY hkey,
                            const char *name, LPBYTE result,
                            DWORD *counters_size);
 
 template <typename CharT>
-inline std::vector<CharT> retrievePerfCounterNames(const WinApiAdaptor &winapi,
-                                                   const CharT *name,
-                                                   bool local) {
+inline std::vector<CharT> retrievePerfCounterNames(
+    const WinApiInterface &winapi, const CharT *name, bool local) {
     std::vector<CharT> result;
     DWORD counters_size = 0;
 
@@ -111,7 +110,7 @@ inline std::vector<CharT> retrievePerfCounterNames(const WinApiAdaptor &winapi,
 // If local is set, localized names are used, otherwise the names are english.
 template <typename CharT>
 inline std::unordered_map<DWORD, std::basic_string<CharT>> perf_id_map(
-    const WinApiAdaptor &winapi, bool local) {
+    const WinApiInterface &winapi, bool local) {
     std::vector<CharT> names = retrievePerfCounterNames<CharT>(
         winapi, getCounterValueName<CharT>(), local);
 
@@ -135,7 +134,7 @@ inline std::unordered_map<DWORD, std::basic_string<CharT>> perf_id_map(
 // If local is set, localized names are used, otherwise the names are english.
 template <typename CharT>
 inline std::unordered_map<std::basic_string<CharT>, DWORD> perf_name_map(
-    const WinApiAdaptor &winapi, bool local) {
+    const WinApiInterface &winapi, bool local) {
     std::vector<CharT> names = retrievePerfCounterNames<CharT>(
         winapi, getCounterValueName<CharT>(), local);
 
@@ -158,7 +157,7 @@ inline std::unordered_map<std::basic_string<CharT>, DWORD> perf_name_map(
 // Resolves the ID of the given performance counter entry based on its name.
 // The counter name can be either localized or in english.
 template <typename CharT>
-int resolveCounterName(const WinApiAdaptor &winapi,
+int resolveCounterName(const WinApiInterface &winapi,
                        const std::basic_string<CharT> &counterName) {
     for (bool local : {true, false}) {
         const auto nameIdMap = perf_name_map<CharT>(winapi, local);

@@ -29,7 +29,7 @@
 #include <memory>
 #include <numeric>
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "stringutil.h"
 #include "win_error.h"
 
@@ -72,7 +72,7 @@ inline bool ipv4Match(const ipspec &only_from, const SOCKADDR &ip) {
 
 ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist,
                            bool supportIPV6, Logger *logger,
-                           const WinApiAdaptor &winapi)
+                           const WinApiInterface &winapi)
     : _logger(logger)
     , _winapi(winapi)
     , _use_ipv6(supportIPV6)

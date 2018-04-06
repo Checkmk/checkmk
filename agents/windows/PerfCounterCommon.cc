@@ -26,7 +26,7 @@
 #include <cstring>
 #include <map>
 #include <vector>
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
 template <>
 size_t string_length<char>(const char *s) {
@@ -59,7 +59,7 @@ long strTolFunc<char>(const char *str, char **str_end, int base) {
 }
 
 template <>
-long regQueryValueEx<wchar_t>(const WinApiAdaptor &winapi, HKEY hkey,
+long regQueryValueEx<wchar_t>(const WinApiInterface &winapi, HKEY hkey,
                               const wchar_t *name, LPBYTE result,
                               DWORD *counters_size) {
     return winapi.RegQueryValueExW(hkey, name, nullptr, nullptr, result,
@@ -67,7 +67,7 @@ long regQueryValueEx<wchar_t>(const WinApiAdaptor &winapi, HKEY hkey,
 }
 
 template <>
-long regQueryValueEx<char>(const WinApiAdaptor &winapi, HKEY hkey,
+long regQueryValueEx<char>(const WinApiInterface &winapi, HKEY hkey,
                            const char *name, LPBYTE result,
                            DWORD *counters_size) {
     return winapi.RegQueryValueEx(hkey, name, nullptr, nullptr, result,

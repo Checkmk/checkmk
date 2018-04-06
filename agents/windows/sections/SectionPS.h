@@ -48,7 +48,7 @@ class SectionPS : public Section {
 
 public:
     SectionPS(Configuration &config, Logger *logger,
-              const WinApiAdaptor &winapi);
+              const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

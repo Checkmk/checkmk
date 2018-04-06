@@ -58,7 +58,7 @@ inline std::ostream &operator<<(std::ostream &os,
 
 template <>
 inline script_execution_mode from_string<script_execution_mode>(
-    const WinApiAdaptor &, const std::string &value) {
+    const WinApiInterface &, const std::string &value) {
     if (value == "async")
         return script_execution_mode::ASYNC;
     else if (value == "sync")
@@ -68,7 +68,7 @@ inline script_execution_mode from_string<script_execution_mode>(
 
 template <>
 inline script_async_execution from_string<script_async_execution>(
-    const WinApiAdaptor &, const std::string &value) {
+    const WinApiInterface &, const std::string &value) {
     if (value == "parallel")
         return script_async_execution::PARALLEL;
     else if (value == "sequential")
@@ -96,7 +96,7 @@ struct HeapBufferHandleTraits {
     using HandleT = char *;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.HeapFree(winapi.GetProcessHeap(), 0, value);
     }
 };
@@ -109,7 +109,8 @@ struct script_container {
         const std::string &_script_path,  // path of script
         int _max_age, int _timeout, int _max_entries, const std::string &_user,
         script_type _type, script_execution_mode _execution_mode,
-        const Environment &_env, Logger *_logger, const WinApiAdaptor &_winapi);
+        const Environment &_env, Logger *_logger,
+        const WinApiInterface &_winapi);
 
     script_container(const script_container &) = delete;
     ~script_container();
@@ -134,7 +135,7 @@ struct script_container {
     DWORD exit_code{0};
     const Environment &env;
     Logger *logger;
-    const WinApiAdaptor &winapi;
+    const WinApiInterface &winapi;
 };
 
 class SectionPluginGroup : public Section {
@@ -153,7 +154,7 @@ class SectionPluginGroup : public Section {
 public:
     SectionPluginGroup(Configuration &config, const std::string &path,
                        script_type type, script_statistics_t &script_statistics,
-                       Logger *logger, const WinApiAdaptor &winapi,
+                       Logger *logger, const WinApiInterface &winapi,
                        const std::string &user = std::string());
 
     virtual ~SectionPluginGroup();

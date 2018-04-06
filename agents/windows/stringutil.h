@@ -40,7 +40,7 @@ using std::smatch;
 using std::sregex_token_iterator;
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 struct sockaddr_storage;
 
 inline void ltrim(std::string &s) {
@@ -242,10 +242,10 @@ std::string replaceAll(const std::string &str, const std::string &from,
                        const std::string &to);
 
 void stringToIPv6(const char *value, uint16_t *address,
-                  const WinApiAdaptor &winapi);
+                  const WinApiInterface &winapi);
 void stringToIPv4(const char *value, uint32_t &address);
 void netmaskFromPrefixIPv6(int bits, uint16_t *netmask,
-                           const WinApiAdaptor &winapi);
+                           const WinApiInterface &winapi);
 void netmaskFromPrefixIPv4(int bits, uint32_t &netmask);
 
 template <typename InputIt, typename SeparatorT>
@@ -308,7 +308,7 @@ inline bool isPathRelative(const std::string &path) {
  * @return            The string representation of the IP address
  */
 std::string IPAddrToString(const sockaddr_storage &addr, Logger *logger,
-                           const WinApiAdaptor &winapi);
+                           const WinApiInterface &winapi);
 
 /**
  * Extract the actual IP address out of a string representation possibly

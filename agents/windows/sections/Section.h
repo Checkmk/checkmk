@@ -33,7 +33,7 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
 class Environment;
 class Logger;
@@ -54,7 +54,7 @@ inline Rep current_time() {
 class Section {
 public:
     Section(const std::string &configName, const Environment &env,
-            Logger *logger, const WinApiAdaptor &winapi,
+            Logger *logger, const WinApiInterface &winapi,
             std::unique_ptr<ISectionHeader> header);
 
     virtual ~Section();
@@ -79,7 +79,7 @@ protected:
     const std::string _configName;
     const Environment &_env;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 
 private:
     virtual bool produceOutputInner(

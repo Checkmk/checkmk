@@ -27,7 +27,7 @@
 #include <map>
 #include <string>
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "stringutil.h"
 
 using std::vector;
@@ -36,7 +36,7 @@ using std::wstring;
 namespace {
 
 // loads a dll with support for environment variables in the path
-HMODULE load_library_ext(LPCWSTR dllpath, const WinApiAdaptor &winapi) {
+HMODULE load_library_ext(LPCWSTR dllpath, const WinApiInterface &winapi) {
     // this should be sufficient most of the time
     static const size_t INIT_BUFFER_SIZE = 128;
 
@@ -250,7 +250,7 @@ private:
 };
 
 EventLog::EventLog(const std::wstring &name, Logger *logger,
-                   const WinApiAdaptor &winapi)
+                   const WinApiInterface &winapi)
     : _name(name)
     , _handle(winapi.OpenEventLogW(nullptr, _name.c_str()), winapi)
     , _resolver(name, logger, winapi)

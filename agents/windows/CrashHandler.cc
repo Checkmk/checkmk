@@ -28,11 +28,11 @@
 #include <iomanip>
 #include <ostream>
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
 using std::ostream;
 
-CrashHandler::CrashHandler(Logger *logger, const WinApiAdaptor &winapi)
+CrashHandler::CrashHandler(Logger *logger, const WinApiInterface &winapi)
     : _logger(logger), _winapi(winapi) {}
 
 #ifdef __x86_64
@@ -49,7 +49,7 @@ ostream &operator<<(ostream &os, const CONTEXT &c) {
 /**
  * converts instruction pointer to "filename (line)"
  **/
-static std::string resolve(const WinApiAdaptor &winapi, ULONG64 rip) {
+static std::string resolve(const WinApiInterface &winapi, ULONG64 rip) {
     std::string result;
 
     HANDLE process = winapi.GetCurrentProcess();

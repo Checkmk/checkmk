@@ -34,7 +34,7 @@ class Configuration;
 class SectionOHM : public SectionWMI {
 public:
     SectionOHM(Configuration &config, Logger *logger,
-               const WinApiAdaptor &winapi);
+               const WinApiInterface &winapi);
 
     virtual void startIfAsync();
 

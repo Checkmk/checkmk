@@ -32,7 +32,7 @@
 class Configuration;
 class Environment;
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 // Configuration for section [winperf]
 struct winperf_counter {
@@ -46,7 +46,7 @@ inline std::ostream &operator<<(std::ostream &out, const winperf_counter &wpc) {
 }
 
 template <>
-winperf_counter from_string<winperf_counter>(const WinApiAdaptor &winapi,
+winperf_counter from_string<winperf_counter>(const WinApiInterface &winapi,
                                              const std::string &value);
 
 std::ostream &operator<<(std::ostream &out,
@@ -59,7 +59,7 @@ using OnlyFromConfigurable =
 class SectionManager {
 public:
     SectionManager(Configuration &config, OnlyFromConfigurable &only_from,
-                   Logger *logger, const WinApiAdaptor &winapi);
+                   Logger *logger, const WinApiInterface &winapi);
 
     void emitConfigLoaded();
     void loadDynamicSections();
@@ -96,7 +96,7 @@ private:
     script_statistics_t _script_statistics;
     const Environment &_env;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 #endif  // SectionManager_h

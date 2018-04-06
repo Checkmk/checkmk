@@ -54,7 +54,7 @@ SectionPerfcounter::SectionPerfcounter(const std::string &outputName,
                                        const Environment &env,
                                        NameBaseNumberMap &nameNumberMap,
                                        Logger *logger,
-                                       const WinApiAdaptor &winapi)
+                                       const WinApiInterface &winapi)
     : Section(configName, env, logger, winapi,
               std::make_unique<SubSectionHeader>(outputName, logger))
     , _nameNumberMap(nameNumberMap) {}

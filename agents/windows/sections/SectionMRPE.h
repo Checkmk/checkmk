@@ -51,13 +51,13 @@ inline std::ostream &operator<<(std::ostream &os, const mrpe_entry &entry) {
 using mrpe_entries_t = std::vector<mrpe_entry>;
 
 template <>
-mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &,
+mrpe_entry from_string<mrpe_entry>(const WinApiInterface &,
                                    const std::string &value);
 
 class SectionMRPE : public Section {
 public:
     SectionMRPE(Configuration &config, Logger *logger,
-                const WinApiAdaptor &winapi);
+                const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

@@ -32,7 +32,7 @@
 #include "stringutil.h"
 
 SectionWinperf::SectionWinperf(const std::string &name, const Environment &env,
-                               Logger *logger, const WinApiAdaptor &winapi)
+                               Logger *logger, const WinApiInterface &winapi)
     : Section("winperf_" + name, env, logger, winapi,
               std::make_unique<DefaultHeader>("winperf_" + name, logger))
     , _base(0) {}

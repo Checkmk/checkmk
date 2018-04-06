@@ -32,7 +32,7 @@
 
 class Environment;
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 struct ThreadData {
     ThreadData(const Environment &env_, Logger *logger_)
@@ -56,7 +56,7 @@ public:
 public:
     // the caller keeps ownership
     template <typename T>
-    Thread(ThreadFunc func, T &data, const WinApiAdaptor &winapi)
+    Thread(ThreadFunc func, T &data, const WinApiInterface &winapi)
         : _func(func), _data(static_cast<void *>(&data)), _winapi(winapi) {}
     ~Thread();
     Thread(const Thread &) = delete;
@@ -76,7 +76,7 @@ private:
     ThreadFunc _func;
     HANDLE _thread_handle{INVALID_HANDLE_VALUE};
     void *_data;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 #endif  // Thread_h

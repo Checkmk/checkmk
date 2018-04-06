@@ -37,7 +37,7 @@ class Configuration;
 class SectionFileinfo : public Section {
 public:
     SectionFileinfo(Configuration &config, Logger *logger,
-                    const WinApiAdaptor &winapi);
+                    const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

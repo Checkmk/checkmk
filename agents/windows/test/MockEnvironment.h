@@ -5,11 +5,11 @@
 #include "gmock/gmock.h"
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 class MockEnvironment : public ::Environment {
 public:
-    MockEnvironment(Logger *logger, const WinApiAdaptor &winapi);
+    MockEnvironment(Logger *logger, const WinApiInterface &winapi);
     virtual ~MockEnvironment();
 
     MOCK_CONST_METHOD0(hostname, std::string());

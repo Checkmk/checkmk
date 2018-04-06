@@ -27,7 +27,7 @@
 #include <cstring>
 #include "Environment.h"
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "win_error.h"
 
 namespace {
@@ -40,13 +40,13 @@ bool ends_with(std::string const &value, std::string const &ending) {
 }
 
 std::string combinePaths(const std::string &path1, const std::string &path2,
-                         const WinApiAdaptor &winapi) {
+                         const WinApiInterface &winapi) {
     std::vector<char> combined(MAX_PATH, '\0');
     return winapi.PathCombine(combined.data(), path1.c_str(), path2.c_str());
 }
 
 // Prepare cmk-update-agent.exe for being run in temp directory.
-std::string handleAgentUpdater(Logger *logger, const WinApiAdaptor &winapi) {
+std::string handleAgentUpdater(Logger *logger, const WinApiInterface &winapi) {
     const auto *env = Environment::instance();
     if (env == nullptr) {
         const std::string errorMsg = "No environment!";
@@ -68,7 +68,7 @@ std::string handleAgentUpdater(Logger *logger, const WinApiAdaptor &winapi) {
 }
 
 std::pair<PipeHandle, PipeHandle> createPipe(SECURITY_ATTRIBUTES &attr,
-                                             const WinApiAdaptor &winapi) {
+                                             const WinApiInterface &winapi) {
     HANDLE readPipe = INVALID_HANDLE_VALUE;
     HANDLE writePipe = INVALID_HANDLE_VALUE;
     if (!winapi.CreatePipe(&readPipe, &writePipe, &attr, 0)) {
@@ -87,7 +87,7 @@ std::string AgentUpdaterError::buildSectionCheckMK(
 }
 
 ExternalCmd::ExternalCmd(const std::string &cmdline, const Environment &env,
-                         Logger *logger, const WinApiAdaptor &winapi)
+                         Logger *logger, const WinApiInterface &winapi)
     : _script_stderr{winapi}
     , _script_stdout{winapi}
     , _process{winapi}

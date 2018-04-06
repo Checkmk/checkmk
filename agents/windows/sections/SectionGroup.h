@@ -43,7 +43,7 @@ class SectionGroup : public Section {
 public:
     SectionGroup(const std::string &outputName, const std::string &configName,
                  const Environment &env, Logger *logger,
-                 const WinApiAdaptor &winapi, bool show_header);
+                 const WinApiInterface &winapi, bool show_header);
 
     /**
      * add a section that will be printed as part of this group

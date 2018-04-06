@@ -46,7 +46,7 @@ inline unsigned long long sinceEpoch(const FILETIME &filetime) {
 }  // namespace
 
 SectionPS::SectionPS(Configuration &config, Logger *logger,
-                     const WinApiAdaptor &winapi)
+                     const WinApiInterface &winapi)
     : Section(
           "ps", config.getEnvironment(), logger, winapi,
           std::make_unique<SectionHeader<'\t', SectionBrackets>>("ps", logger))

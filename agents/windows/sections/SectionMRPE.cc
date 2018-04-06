@@ -35,7 +35,7 @@ using std::string;
 using std::vector;
 
 SectionMRPE::SectionMRPE(Configuration &config, Logger *logger,
-                         const WinApiAdaptor &winapi)
+                         const WinApiInterface &winapi)
     : Section("mrpe", config.getEnvironment(), logger, winapi,
               std::make_unique<DefaultHeader>("mrpe", logger))
     , _entries(config, "mrpe", "check", winapi)
@@ -188,7 +188,8 @@ void normalizeCommand(string &cmd) {
 }  // namespace
 
 template <>
-mrpe_entry from_string<mrpe_entry>(const WinApiAdaptor &, const string &value) {
+mrpe_entry from_string<mrpe_entry>(const WinApiInterface &,
+                                   const string &value) {
     vector<string> tokens = tokenizePossiblyQuoted(value);
 
     if (tokens.size() < 2) {

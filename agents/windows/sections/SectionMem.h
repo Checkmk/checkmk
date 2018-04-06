@@ -30,7 +30,7 @@
 class SectionMem : public Section {
 public:
     SectionMem(const Environment &env, Logger *logger,
-               const WinApiAdaptor &winapi);
+               const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

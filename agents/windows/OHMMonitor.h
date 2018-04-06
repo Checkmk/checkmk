@@ -30,13 +30,13 @@
 #include "types.h"
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 struct OhmProcessHandleTraits {
     using HandleT = HANDLE;
     static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         DWORD exitCode = 0;
         if (winapi.GetExitCodeProcess(value, &exitCode) &&
             exitCode == STILL_ACTIVE) {
@@ -54,11 +54,11 @@ class OHMMonitor {
     const bool _available;
     OhmProcessHandle _current_process;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 
 public:
     OHMMonitor(const std::string &bin_path, Logger *logger,
-               const WinApiAdaptor &winapi);
+               const WinApiInterface &winapi);
     ~OHMMonitor();
 
     /**

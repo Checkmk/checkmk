@@ -32,12 +32,12 @@
 #include "win_error.h"
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 class MessageResolver {
 public:
     MessageResolver(const std::wstring &logName, Logger *logger,
-                    const WinApiAdaptor &winapi)
+                    const WinApiInterface &winapi)
         : _name(logName), _logger(logger), _winapi(winapi) {}
     MessageResolver(const MessageResolver &) = delete;
     MessageResolver &operator=(const MessageResolver &) = delete;
@@ -53,14 +53,14 @@ private:
     std::wstring _name;
     mutable std::map<std::wstring, HModuleHandle> _cache;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 struct EventHandleTraits {
     using HandleT = HANDLE;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.CloseEventLog(value);
     }
 };
@@ -75,7 +75,7 @@ public:
      * Construct a reader for the named eventlog
      */
     EventLog(const std::wstring &name, Logger *logger,
-             const WinApiAdaptor &winapi);
+             const WinApiInterface &winapi);
 
     virtual std::wstring getName() const override;
 
@@ -122,7 +122,7 @@ private:
 
     const MessageResolver _resolver;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 #endif  // EventLog_h

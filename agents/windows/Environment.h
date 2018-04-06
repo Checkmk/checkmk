@@ -29,12 +29,12 @@
 #include "types.h"
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 class Environment {
 public:
     Environment(bool use_cwd, bool with_stderr, Logger *logger,
-                const WinApiAdaptor &winapi);
+                const WinApiInterface &winapi);
     virtual ~Environment();
 
     // TODO: this is an evil hack, but currently there is at least one global
@@ -84,7 +84,7 @@ private:
     static Environment *s_Instance;
 
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 
     const std::string _hostname;
 

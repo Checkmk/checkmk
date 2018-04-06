@@ -1,18 +1,18 @@
 #include "Crypto.h"
 #include <stdexcept>
 #include "Environment.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "types.h"
 #include "win_error.h"
 
-Crypto::Crypto(const WinApiAdaptor &winapi)
+Crypto::Crypto(const WinApiInterface &winapi)
     : _algorithm(DEFAULT_ALGORITHM), _winapi(winapi) {
     _provider = initContext();
     _key = genKey(KeyLength::KEY_LEN_DEFAULT);
     configureKey();
 }
 
-Crypto::Crypto(const std::string &password, const WinApiAdaptor &winapi,
+Crypto::Crypto(const std::string &password, const WinApiInterface &winapi,
                KeyLength key_length)
     : _algorithm(DEFAULT_ALGORITHM), _winapi(winapi) {
     _provider = initContext();
@@ -20,7 +20,7 @@ Crypto::Crypto(const std::string &password, const WinApiAdaptor &winapi,
     configureKey();
 }
 
-Crypto::Crypto(const BYTE *key, DWORD key_size, const WinApiAdaptor &winapi)
+Crypto::Crypto(const BYTE *key, DWORD key_size, const WinApiInterface &winapi)
     : _algorithm(DEFAULT_ALGORITHM), _winapi(winapi) {
     _provider = initContext();
     _key = importKey(key, key_size);

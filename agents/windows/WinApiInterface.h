@@ -1,5 +1,5 @@
-#ifndef WinApiAdaptor_h
-#define WinApiAdaptor_h
+#ifndef WinApiInterface_h
+#define WinApiInterface_h
 
 #include <winsock2.h>
 #include <dbghelp.h>
@@ -52,12 +52,12 @@
 #undef WSAAddressToString
 #undef ZeroMemory
 
-class WinApiAdaptor {
+class WinApiInterface {
 public:
-    WinApiAdaptor() = default;
-    virtual ~WinApiAdaptor() = default;
-    WinApiAdaptor(const WinApiAdaptor &) = delete;
-    WinApiAdaptor &operator=(const WinApiAdaptor &) = delete;
+    WinApiInterface() = default;
+    virtual ~WinApiInterface() = default;
+    WinApiInterface(const WinApiInterface &) = delete;
+    WinApiInterface &operator=(const WinApiInterface &) = delete;
 
     // WINADVAPI:
     virtual WINBOOL CloseEventLog(HANDLE hEventLog) const = 0;
@@ -464,4 +464,4 @@ public:
                                   LPPROCESSENTRY32 lppe) const = 0;
 };
 
-#endif  // WinApiAdaptor_h
+#endif  // WinApiInterface_h

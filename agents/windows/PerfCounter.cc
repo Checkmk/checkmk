@@ -47,7 +47,7 @@ PERF_INSTANCE_DEFINITION *NextInstance(PERF_INSTANCE_DEFINITION *pInstance) {
 }
 
 PerfCounter::PerfCounter(PERF_COUNTER_DEFINITION *counter, BYTE *datablock,
-                         const WinApiAdaptor &winapi)
+                         const WinApiInterface &winapi)
     : _counter(counter), _datablock(datablock), _winapi(winapi) {}
 
 std::string PerfCounter::typeName() const {
@@ -211,7 +211,7 @@ std::vector<BYTE> PerfCounterObject::retrieveCounterData(
 }
 
 PerfCounterObject::PerfCounterObject(unsigned int counter_base_number,
-                                     const WinApiAdaptor &winapi,
+                                     const WinApiInterface &winapi,
                                      Logger *logger)
     : _datablock(nullptr), _winapi(winapi), _logger(logger) {
     _buffer = retrieveCounterData(std::to_wstring(counter_base_number).c_str());

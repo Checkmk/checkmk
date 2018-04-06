@@ -13,7 +13,7 @@ BOOL WINAPI FakeEvtClose(EVT_HANDLE) {
 }
 
 struct FakeEvtFunctionMap : public EvtFunctionMap {
-    explicit FakeEvtFunctionMap(const WinApiAdaptor &winapi)
+    explicit FakeEvtFunctionMap(const WinApiInterface &winapi)
         : EvtFunctionMap(winapi) {
         this->close = FakeEvtClose;
     }

@@ -248,7 +248,7 @@ PathsT findFiles(const fs::path &path, Logger *logger) {
 // provides us with an API that lets you do it just for the last, "basename"
 // part of the path.
 inline fs::path fixBasenameCase(const fs::path &filePath,
-                                const WinApiAdaptor &winapi) {
+                                const WinApiInterface &winapi) {
     WIN32_FIND_DATAW fileData{0};
     SearchHandle handle{
         winapi.FindFirstFileW(filePath.wstring().c_str(), &fileData), winapi};
@@ -257,7 +257,7 @@ inline fs::path fixBasenameCase(const fs::path &filePath,
 
 // The case-preservation fun for the entire path.
 fs::path correctPathCase(const fs::path &filePath,
-                         const WinApiAdaptor &winapi) {
+                         const WinApiInterface &winapi) {
     auto[preserved, diff] = buildPathBeginning(filePath);
 
     // Append the rest of the part with fixed cases.
@@ -270,7 +270,7 @@ fs::path correctPathCase(const fs::path &filePath,
 }
 
 void outputFileinfo(std::ostream &out, const fs::path &filePath, Logger *logger,
-                    const WinApiAdaptor &winapi) {
+                    const WinApiInterface &winapi) {
     try {
         const auto finalPath = correctPathCase(filePath, winapi);
         out << Utf8(finalPath.wstring()) << "|" << fs::file_size(finalPath)
@@ -284,7 +284,7 @@ void outputFileinfo(std::ostream &out, const fs::path &filePath, Logger *logger,
 }
 
 void outputFileinfos(std::ostream &out, const fs::path &path, Logger *logger,
-                     const WinApiAdaptor &winapi) {
+                     const WinApiInterface &winapi) {
     const auto filePaths = findFiles(path, logger);
 
     if (filePaths.empty()) {
@@ -300,7 +300,7 @@ void outputFileinfos(std::ostream &out, const fs::path &path, Logger *logger,
 }  // namespace
 
 SectionFileinfo::SectionFileinfo(Configuration &config, Logger *logger,
-                                 const WinApiAdaptor &winapi)
+                                 const WinApiInterface &winapi)
     : Section("fileinfo", config.getEnvironment(), logger, winapi,
               std::make_unique<SectionHeader<'|', SectionBrackets>>("fileinfo",
                                                                     logger))

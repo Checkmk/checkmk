@@ -25,7 +25,7 @@
 #include "OutputProxy.h"
 #include <cstdarg>
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
 // urgh
 extern volatile bool g_should_terminate;
@@ -48,7 +48,7 @@ void FileOutputProxy::flush(bool) {
 }
 
 BufferedSocketProxy::BufferedSocketProxy(SOCKET socket, Logger *logger,
-                                         const WinApiAdaptor &winapi)
+                                         const WinApiInterface &winapi)
     : _socket(socket), _logger(logger), _winapi(winapi) {
     _buffer.resize(DEFAULT_BUFFER_SIZE);
 }
@@ -145,7 +145,7 @@ bool BufferedSocketProxy::flushInt() {
 
 EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(
     SOCKET socket, const std::string &passphrase, Logger *logger,
-    const WinApiAdaptor &winapi)
+    const WinApiInterface &winapi)
     : BufferedSocketProxy(socket, logger, winapi)
     , _crypto(passphrase, winapi)
     , _written(0) {

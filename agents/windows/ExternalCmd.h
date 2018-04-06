@@ -29,7 +29,7 @@
 
 class Environment;
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 using PipeHandle = WrappedHandle<InvalidHandleTraits>;
 
@@ -47,7 +47,7 @@ class ExternalCmd {
 
 public:
     ExternalCmd(const std::string &cmdline, const Environment &env,
-                Logger *logger, const WinApiAdaptor &winapi);
+                Logger *logger, const WinApiInterface &winapi);
 
     ~ExternalCmd();
 
@@ -74,7 +74,7 @@ private:
     PipeHandle _stderr;
     const bool _with_stderr;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 #endif  // ExternalCmd_h

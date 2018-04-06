@@ -43,7 +43,7 @@ std::unique_ptr<ISectionHeader> makeHeader(bool show_header,
 SectionGroup::SectionGroup(const std::string &outputName,
                            const std::string &configName,
                            const Environment &env, Logger *logger,
-                           const WinApiAdaptor &winapi, bool show_header)
+                           const WinApiInterface &winapi, bool show_header)
     : Section(configName, env, logger, winapi,
               makeHeader(show_header, outputName, logger)) {}
 

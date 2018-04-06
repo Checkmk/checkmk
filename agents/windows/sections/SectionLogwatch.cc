@@ -136,7 +136,7 @@ logwatch_hint parseLogwatchStateLine(const std::string &line) {
 }
 
 SectionLogwatch::SectionLogwatch(Configuration &config, Logger *logger,
-                                 const WinApiAdaptor &winapi)
+                                 const WinApiInterface &winapi)
     : Section("logfiles", config.getEnvironment(), logger, winapi,
               std::make_unique<DefaultHeader>("logwatch", logger))
     , _globlines(config, "logfiles", winapi) {
@@ -734,7 +734,7 @@ void SectionLogwatch::loadLogwatchOffsets() {
 // This globline is split into tokens which are processed by
 // process_glob_expression
 template <>
-globline_container from_string<globline_container>(const WinApiAdaptor &,
+globline_container from_string<globline_container>(const WinApiInterface &,
                                                    const std::string &value) {
     // Each globline receives its own pattern container
     // In case new files matching the glob pattern are we

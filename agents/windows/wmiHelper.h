@@ -33,23 +33,23 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "stringutil.h"
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 namespace wmi {
 
 class ComException : public std::runtime_error {
 public:
     ComException(const std::string &message, HRESULT result,
-                 const WinApiAdaptor &winapi);
+                 const WinApiInterface &winapi);
     static std::string resolveError(HRESULT result,
-                                    const WinApiAdaptor &winapi);
+                                    const WinApiInterface &winapi);
 
 private:
-    static IErrorInfo *getErrorInfo(const WinApiAdaptor &winapi);
+    static IErrorInfo *getErrorInfo(const WinApiInterface &winapi);
     std::string toStringHex(HRESULT res);
 };
 
@@ -64,7 +64,7 @@ public:
 
 class Variant {
 public:
-    Variant(const VARIANT &val, Logger *logger, const WinApiAdaptor &winapi);
+    Variant(const VARIANT &val, Logger *logger, const WinApiInterface &winapi);
     ~Variant();
 
     template <typename T>
@@ -75,7 +75,7 @@ public:
 private:
     VARIANT _value;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 template <>
@@ -100,7 +100,7 @@ class ObjectWrapper {
 
 public:
     ObjectWrapper(IWbemClassObject *object, Logger *logger,
-                  const WinApiAdaptor &winapi);
+                  const WinApiInterface &winapi);
 
     ObjectWrapper(const ObjectWrapper &reference);
     ~ObjectWrapper() noexcept;
@@ -123,7 +123,7 @@ public:
 protected:
     std::shared_ptr<IWbemClassObject> _current;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 
 private:
     VARIANT getVarByKey(const wchar_t *key) const;
@@ -142,9 +142,9 @@ T ObjectWrapper::get(const wchar_t *key) const {
 
 class Result : public ObjectWrapper {
 public:
-    Result(Logger *logger, const WinApiAdaptor &winapi);
+    Result(Logger *logger, const WinApiInterface &winapi);
     Result(IEnumWbemClassObject *enumerator, Logger *logger,
-           const WinApiAdaptor &winapi);
+           const WinApiInterface &winapi);
     Result(const Result &reference);
     ~Result() noexcept;
 
@@ -174,7 +174,7 @@ private:
 
 class Helper {
 public:
-    Helper(Logger *logger, const WinApiAdaptor &winapi,
+    Helper(Logger *logger, const WinApiInterface &winapi,
            LPCWSTR path = L"Root\\Cimv2");
 
     Helper(const Helper &reference) = delete;
@@ -199,7 +199,7 @@ private:
     IWbemServices *_services;
     std::wstring _path;
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 }  // namespace wmi

@@ -34,7 +34,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
 #if (__SIZEOF_POINTER__ == 8)
 #define PRIdword "d"
@@ -80,23 +80,25 @@ public:
 };
 
 template <typename T>
-T from_string(const WinApiAdaptor &winapi, const std::string &input);
+T from_string(const WinApiInterface &winapi, const std::string &input);
 
 template <>
-bool from_string<bool>(const WinApiAdaptor &, const std::string &value);
+bool from_string<bool>(const WinApiInterface &, const std::string &value);
 template <>
-int from_string<int>(const WinApiAdaptor &, const std::string &value);
+int from_string<int>(const WinApiInterface &, const std::string &value);
 
 template <>
-std::string from_string<std::string>(const WinApiAdaptor &,
+std::string from_string<std::string>(const WinApiInterface &,
                                      const std::string &value);
 
 template <>
-fs::path from_string<fs::path>(const WinApiAdaptor &, const std::string &value);
+fs::path from_string<fs::path>(const WinApiInterface &,
+                               const std::string &value);
 
 // Needed for only_from
 struct ipspec {
-    explicit ipspec(const WinApiAdaptor &winapi_) : winapi(std::ref(winapi_)) {}
+    explicit ipspec(const WinApiInterface &winapi_)
+        : winapi(std::ref(winapi_)) {}
     union {
         struct {
             uint32_t address;
@@ -109,16 +111,16 @@ struct ipspec {
     } ip;
     int bits;
     bool ipv6;
-    std::reference_wrapper<const WinApiAdaptor> winapi;
+    std::reference_wrapper<const WinApiInterface> winapi;
 };
 
 template <>
-ipspec from_string<ipspec>(const WinApiAdaptor &winapi,
+ipspec from_string<ipspec>(const WinApiInterface &winapi,
                            const std::string &value);
 
 std::ostream &operator<<(std::ostream &os, const ipspec &ips);
 
-ipspec toIPv6(const ipspec &ips, const WinApiAdaptor &winapi);
+ipspec toIPv6(const ipspec &ips, const WinApiInterface &winapi);
 
 using only_from_t = std::vector<ipspec>;
 
@@ -141,7 +143,7 @@ inline uint64_t to_u64(DWORD low, DWORD high) {
     return static_cast<uint64_t>(low) + (static_cast<uint64_t>(high) << 32);
 }
 
-template <typename HandleTraits, typename Api = WinApiAdaptor>
+template <typename HandleTraits, typename Api = WinApiInterface>
 class WrappedHandle {
     using handle_t = typename HandleTraits::HandleT;
 
@@ -249,7 +251,7 @@ struct InvalidHandleTraits {
     using HandleT = HANDLE;
     static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.CloseHandle(value);
     }
 };
@@ -258,7 +260,7 @@ struct NullHandleTraits {
     using HandleT = HANDLE;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.CloseHandle(value);
     }
 };
@@ -267,7 +269,7 @@ struct HModuleTraits {
     using HandleT = HMODULE;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.FreeLibrary(value);
     }
 };
@@ -277,7 +279,7 @@ struct JobHandleTraits {
     using HandleT = HANDLE;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.TerminateJobObject(value, exitCode);
         winapi.CloseHandle(value);
     }
@@ -291,7 +293,7 @@ struct HKeyHandleTraits {
     using HandleT = HKEY;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.RegCloseKey(value);
     }
 };
@@ -302,7 +304,7 @@ struct ServiceHandleTraits {
     using HandleT = SC_HANDLE;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.CloseServiceHandle(value);
     }
 };
@@ -313,7 +315,7 @@ struct SearchHandleTraits {
     using HandleT = HANDLE;
     static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.FindClose(value);
     }
 };
@@ -325,7 +327,7 @@ struct LocalMemoryHandleTraits {
     using HandleT = PointerT;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.LocalFree(value);
     }
 };

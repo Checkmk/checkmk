@@ -49,7 +49,7 @@ const char *typeToSection(script_type type) {
 }
 
 void outputScript(const std::string &output, script_container *cont,
-                  const WinApiAdaptor &winapi) {
+                  const WinApiInterface &winapi) {
     const auto count = output.size();
     cont->buffer_work.reset(reinterpret_cast<char *>(winapi.HeapAlloc(
         winapi.GetProcessHeap(), HEAP_ZERO_MEMORY, count + 1)));
@@ -60,7 +60,7 @@ void outputScript(const std::string &output, script_container *cont,
 int launch_program(script_container *cont) {
     enum { SUCCESS = 0, CANCELED, BUFFER_FULL, WORKING } result = WORKING;
     const auto &logger = cont->logger;
-    const WinApiAdaptor &winapi = cont->winapi;
+    const WinApiInterface &winapi = cont->winapi;
 
     try {
         ExternalCmd command(cont->path.c_str(), cont->env, logger, winapi);
@@ -216,7 +216,7 @@ script_container::script_container(
     const std::string &_script_path,  // path of script
     int _max_age, int _timeout, int _max_entries, const std::string &_user,
     script_type _type, script_execution_mode _execution_mode,
-    const Environment &_env, Logger *_logger, const WinApiAdaptor &_winapi)
+    const Environment &_env, Logger *_logger, const WinApiInterface &_winapi)
     : path(_path)
     , script_path(_script_path)
     , max_age(_max_age)
@@ -384,7 +384,7 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
 SectionPluginGroup::SectionPluginGroup(
     Configuration &config, const std::string &path, script_type type,
     script_statistics_t &script_statistics, Logger *logger,
-    const WinApiAdaptor &winapi, const std::string &user)
+    const WinApiInterface &winapi, const std::string &user)
     : Section(typeToSection(type), config.getEnvironment(), logger, winapi,
               makeHeader(type, logger))
     , _path(path)

@@ -1,0 +1,16 @@
+title: Docker Container Health
+agents: linux
+catalog: app/docker
+license: GPL
+distribution: check_mk
+description:
+ Monitors the health status of docker containers, as reported via
+ the HEALTHCHECK API. A Status of "healthy" is treated as OK,
+ "starting" as WARN, "unhealthy" as CRIT.
+
+item:
+ None
+
+inventory:
+ One check per container is discovered if HEALTHCHECK has been
+ implemented for this container.

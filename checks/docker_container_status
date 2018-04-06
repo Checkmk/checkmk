@@ -1,0 +1,108 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+
+
+def parse_docker_container_status(info):
+    import json
+    json_data = "\n".join(" ".join(line) for line in info)
+    return json.loads(json_data)
+
+
+#.
+#   .--Health--------------------------------------------------------------.
+#   |                    _   _            _ _   _                          |
+#   |                   | | | | ___  __ _| | |_| |__                       |
+#   |                   | |_| |/ _ \/ _` | | __| '_ \                      |
+#   |                   |  _  |  __/ (_| | | |_| | | |                     |
+#   |                   |_| |_|\___|\__,_|_|\__|_| |_|                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Represents the containers internal status, as implemented within     |
+#   | the container itself using Docker's HEALTHCHECK API                  |
+#   '----------------------------------------------------------------------'
+
+def inventory_docker_container_status_health(parsed):
+    if u"Health" in parsed:
+        return [(None, None)]
+
+
+def check_docker_container_status_health(_no_item, params, parsed):
+    health_status = parsed[u"Health"][u"Status"]
+
+    if health_status == "healthy":
+        return 0, "Healthy"
+    elif health_status == "starting":
+        return 1, "Starting"
+    elif health_status == "unhealthy":
+        failing_streak = parsed[u"Health"][u"FailingStreak"]
+        return 2, "Unhealthy - Failing Streak: %d" % failing_streak
+    else:
+        return 3, "Health Status '%s' unknown" % health_status
+
+
+check_info["docker_container_status.health"] = {
+    "inventory_function"    : inventory_docker_container_status_health,
+    "check_function"        : check_docker_container_status_health,
+    "service_description"   : "Docker Container Health",
+}
+
+#.
+#   .--Status - Main Check-------------------------------------------------.
+#   |                    ____  _        _                                  |
+#   |                   / ___|| |_ __ _| |_ _   _ ___                      |
+#   |                   \___ \| __/ _` | __| | | / __|                     |
+#   |                    ___) | || (_| | |_| |_| \__ \                     |
+#   |                   |____/ \__\__,_|\__|\__,_|___/                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Represents the status of the docker container "from the outside"     |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_docker_container_status(parsed):
+    if parsed:
+        return [(None, None)]
+
+
+def check_docker_container_status(_no_item, params, parsed):
+    if parsed[u"Status"] == u"running":
+        return 0, "Running"
+    else:
+        status = 2
+        infotext = "Status: " + parsed[u"Status"]
+        if parsed.get(u"Error"):
+            infotext += " Error: " + parsed[u"Error"]
+        return status, infotext
+
+
+check_info['docker_container_status'] = {
+    'parse_function'        : parse_docker_container_status,
+    'inventory_function'    : inventory_docker_container_status,
+    'check_function'        : check_docker_container_status,
+    'service_description'   : 'Docker Container Status',
+}

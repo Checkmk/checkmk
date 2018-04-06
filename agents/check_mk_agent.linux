@@ -962,6 +962,9 @@ fi
 
 # Iterate all running containers and report piggyback data for them
 if type docker > /dev/null 2>&1 ; then
+    echo "<<<docker_node_info>>>"
+    docker info --format "{{json .}}" 2>&1
+
     for CONTAINER_ID in $(docker container ls -q); do
         echo "<<<<$CONTAINER_ID>>>>"
 

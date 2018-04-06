@@ -377,15 +377,18 @@ void InstallService() {
                     SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, quoted_path),
                 s_winapi};
             if (service) {
-                printf(SERVICE_NAME " Installed Successfully\n");
+                std::cout << SERVICE_NAME << " Installed Successfully"
+                          << std::endl;
             } else {
                 const DWORD lastError = s_winapi.GetLastError();
-                if (lastError == ERROR_SERVICE_EXISTS)
-                    printf(SERVICE_NAME " Already Exists.\n");
-                else
-                    printf(SERVICE_NAME
-                           " Was not Installed Successfully. Error Code %d\n",
-                           static_cast<int>(lastError));
+                if (lastError == ERROR_SERVICE_EXISTS) {
+                    std::cout << SERVICE_NAME << " Already Exists."
+                              << std::endl;
+                } else {
+                    std::cout << SERVICE_NAME
+                              << " Was not Installed Successfully. Error Code "
+                              << lastError << std::endl;
+                }
             }
         }
     }
@@ -427,23 +430,26 @@ void UninstallService() {
 
                 if (serviceStatus.dwCurrentState == SERVICE_STOPPED) {
                     if (s_winapi.DeleteService(service.get()))
-                        printf(SERVICE_NAME " Removed Successfully\n");
+                        std::cout << SERVICE_NAME << " Removed Successfully"
+                                  << std::endl;
                     else {
                         const DWORD dwError = s_winapi.GetLastError();
                         if (dwError == ERROR_ACCESS_DENIED)
-                            printf(
-                                "Access Denied While trying to "
-                                "Remove " SERVICE_NAME " \n");
+                            std::cout << "Access Denied While trying to "
+                                         "Remove "
+                                      << SERVICE_NAME << std::endl;
                         else if (dwError == ERROR_INVALID_HANDLE)
-                            printf(
-                                "Handle invalid while trying to "
-                                "Remove " SERVICE_NAME " \n");
+                            std::cout << "Handle invalid while trying to "
+                                         "Remove "
+                                      << SERVICE_NAME << std::endl;
                         else if (dwError == ERROR_SERVICE_MARKED_FOR_DELETE)
-                            printf(SERVICE_NAME
-                                   " already marked for deletion\n");
+                            std::cout << SERVICE_NAME
+                                      << " already marked for deletion"
+                                      << std::endl;
                     }
                 } else {
-                    printf(SERVICE_NAME " is still Running.\n");
+                    std::cout << SERVICE_NAME << " is still Running."
+                              << std::endl;
                 }
             }
         }
@@ -695,17 +701,25 @@ void do_adhoc(const Environment &env) {
     ListenSocket sock(*s_config->port, *s_config->only_from,
                       *s_config->support_ipv6, logger, s_winapi);
 
-    printf("Listening for TCP connections (%s) on port %d\n",
-           sock.supportsIPV6()
-               ? sock.supportsIPV4() ? "IPv4 and IPv6" : "IPv6 only"
-               : "IPv4 only",
-           *s_config->port);
+    std::cout << "Listening for TCP connections (";
 
-    printf("realtime monitoring %s\n",
-           s_sections->useRealtimeMonitoring() ? "active" : "inactive");
+    if (sock.supportsIPV6()) {
+        if (sock.supportsIPV4())
+            std::cout << "IPv4 and IPv6";
+        else
+            std::cout << "IPv6 only";
+    } else {
+        std::cout << "IPv4 only";
+    }
+    std::cout << ") on port " << *s_config->port << std::endl;
 
-    printf("Close window or press Ctrl-C to exit\n");
-    fflush(stdout);
+    std::cout << "realtime monitoring ";
+    if (s_sections->useRealtimeMonitoring())
+        std::cout << "active\n";
+    else
+        std::cout << "inactive\n";
+
+    std::cout << "Close window or press Ctrl-C to exit" << std::endl;
 
     // Run all ASYNC scripts on startup, so that their data is available on
     // the first query of a client. Obviously, this slows down the agent
@@ -804,7 +818,9 @@ void output_data(OutputProxy &out, const Environment &env, bool realtime,
     out.flush(true);
 }
 
-void show_version() { printf("Check_MK_Agent version %s\n", CHECK_MK_VERSION); }
+void show_version() {
+    std::cout << "Check_MK_Agent version " << CHECK_MK_VERSION << std::endl;
+}
 
 void show_config() { s_config->parser.outputConfigurables(std::cout); }
 

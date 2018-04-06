@@ -31,8 +31,8 @@ int parse_boolean(const char *value) {
     else if (!strcmp(value, "no"))
         return 0;
     else
-        fprintf(stderr,
-                "Invalid boolean value. Only yes and no are allowed.\r\n");
+        std::cerr << "Invalid boolean value. Only yes and no are allowed."
+                  << std::endl;
     return -1;
 }
 
@@ -115,7 +115,7 @@ void stringToIPv6(const char *value, uint16_t *address,
         unsigned long segment = strtoul(pos, &endpos, 16);
 
         if (segment > 0xFFFFu) {
-            fprintf(stderr, "Invalid ipv6 address %s\n", value);
+            std::cerr << "Invalid ipv6 address " << value << std::endl;
             exit(1);
         } else if (endpos == pos) {
             skip_offset = segments.size();
@@ -149,7 +149,8 @@ void stringToIPv6(const char *value, uint16_t *address,
 void stringToIPv4(const char *value, uint32_t &address) {
     unsigned a, b, c, d;
     if (4 != sscanf(value, "%u.%u.%u.%u", &a, &b, &c, &d)) {
-        fprintf(stderr, "Invalid value %s for only_hosts\n", value);
+        std::cerr << "Invalid value " << value << " for only_hosts"
+                  << std::endl;
         exit(1);
     }
 

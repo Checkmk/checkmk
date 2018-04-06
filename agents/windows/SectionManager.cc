@@ -63,10 +63,10 @@ winperf_counter from_string<winperf_counter>(const WinApiInterface &winapi,
                                              const std::string &value) {
     size_t colonIdx = value.find_last_of(":");
     if (colonIdx == std::string::npos) {
-        fprintf(stderr,
-                "Invalid counter '%s' in section [winperf]: need number(or "
-                "text) and colon, e.g. 238:processor.\n",
-                value.c_str());
+        std::cerr << "Invalid counter '" << value
+                  << "' in section [winperf]: need number(or "
+                     "text) and colon, e.g. 238:processor."
+                  << std::endl;
         exit(1);
     }
 

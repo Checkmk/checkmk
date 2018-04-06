@@ -109,8 +109,13 @@ fi
 
 function section_mem()
 {
-    echo '<<<mem>>>'
-    egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
+    if [ -z "$MK_IN_CONTAINER" ]; then
+        echo '<<<mem>>>'
+        grep -E -v '^Swap:|^Mem:|total:' < /proc/meminfo
+    else
+        echo '<<docker_container_mem>>>'
+        echo "$(</sys/fs/cgroup/memory/memory.stat)"
+    fi
 }
 
 function section_cpu()

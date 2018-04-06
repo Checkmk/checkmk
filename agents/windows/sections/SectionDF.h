@@ -39,8 +39,8 @@ protected:
         std::ostream &out, const std::optional<std::string> &) override;
 
 private:
-    void output_filesystem(std::ostream &out, char *volid);
-    void output_mountpoints(std::ostream &out, char *volid);
+    void output_filesystem(std::ostream &out, const std::string &volid);
+    void output_mountpoints(std::ostream &out, const std::string &volid);
 };
 
 #endif  // SectionDF_h

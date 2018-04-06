@@ -15342,6 +15342,156 @@ register_check_parameters(
 
 
 register_check_parameters(
+    subgroup_applications,
+    "docker_node_containers",
+    _("Docker node container levels"),
+    Dictionary(
+        help = _("Allows to define absolute levels for all, running, paused, and stopped containers."),
+        elements = [
+            ("upper_levels",
+            Tuple(
+                title = _("Containers upper levels"),
+                elements = [
+                    Integer(title = _("Warning at"),
+                            allow_empty = False),
+                    Integer(title = _("Critical at"),
+                            allow_empty = False),
+                ]
+            )),
+            ("lower_levels",
+            Tuple(
+                title = _("Containers lower levels"),
+                elements = [
+                    Integer(title = _("Warning at"),
+                            allow_empty = False),
+                    Integer(title = _("Critical at"),
+                            allow_empty = False),
+                ]
+            )),
+            ("running_upper_levels",
+            Tuple(
+                title = _("Running containers upper levels"),
+                elements = [
+                    Integer(title = _("Warning at"),
+                            allow_empty = False),
+                    Integer(title = _("Critical at"),
+                            allow_empty = False),
+                ]
+            )),
+            ("running_lower_levels",
+            Tuple(
+                title = _("Running containers lower levels"),
+                elements = [
+                    Integer(title = _("Warning at"),
+                            allow_empty = False),
+                    Integer(title = _("Critical at"),
+                            allow_empty = False),
+                ]
+            )),
+            ("paused_upper_levels",
+            Tuple(
+                title = _("Paused containers upper levels"),
+                elements = [
+                    Integer(title = _("Warning at"),
+                            allow_empty = False),
+                    Integer(title = _("Critical at"),
+                            allow_empty = False),
+                ]
+            )),
+            ("paused_lower_levels",
+            Tuple(
+                title = _("Paused containers lower levels"),
+                elements = [
+                    Integer(title = _("Warning at"),
+                            allow_empty = False),
+                    Integer(title = _("Critical at"),
+                            allow_empty = False),
+                ]
+            )),
+            ("stopped_upper_levels",
+            Tuple(
+                title = _("Stopped containers upper levels"),
+                elements = [
+                    Integer(title = _("Warning at"),
+                            allow_empty = False),
+                    Integer(title = _("Critical at"),
+                            allow_empty = False),
+                ]
+            )),
+            ("stopped_lower_levels",
+            Tuple(
+                title = _("Stopped containers lower levels"),
+                elements = [
+                    Integer(title = _("Warning at"),
+                            allow_empty = False),
+                    Integer(title = _("Critical at"),
+                            allow_empty = False),
+                ]
+            )),
+        ]),
+    None,
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    "docker_system_df",
+    _("Docker node disk usage"),
+    Dictionary(
+        help = _("Allows to define levels for the counts and size of Docker Containers, Images, Local Volumes, and the Build Cache."),
+        elements = [
+            ("size",
+             Tuple(
+                 title = _("Size"),
+                 elements = [
+                     Filesize(title = _("Warning at"),
+                             allow_empty = False),
+                     Filesize(title = _("Critical at"),
+                             allow_empty = False),
+                 ]
+            )),
+            ("reclaimable",
+             Tuple(
+                 title = _("Reclaimable"),
+                 elements = [
+                     Filesize(title = _("Warning at"),
+                             allow_empty = False),
+                     Filesize(title = _("Critical at"),
+                             allow_empty = False),
+                 ]
+            )),
+            ("count",
+             Tuple(
+                 title = _("Total count"),
+                 elements = [
+                     Integer(title = _("Warning at"),
+                             allow_empty = False),
+                     Integer(title = _("Critical at"),
+                             allow_empty = False),
+                 ]
+            )),
+            ("active",
+             Tuple(
+                 title = _("Active"),
+                 elements = [
+                     Integer(title = _("Warning at"),
+                             allow_empty = False),
+                     Integer(title = _("Critical at"),
+                             allow_empty = False),
+                 ]
+            )),
+        ]),
+    TextAscii(
+        title = _("Type"),
+        help = _("Either Containers, Images, Local Volumes or Build Cache"),
+        allow_empty = True,
+    ),
+    "dict"
+)
+
+
+register_check_parameters(
     subgroup_storage,
     "heartbeat_crm",
     _("Heartbeat CRM general status"),

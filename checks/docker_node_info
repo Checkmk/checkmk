@@ -52,3 +52,51 @@ check_info['docker_node_info'] = {
     'check_function'        : check_docker_node_info,
     'service_description'   : 'Docker Node Info',
 }
+
+
+def inventory_docker_node_containers(parsed):
+    return [(None, {})]
+
+
+def check_docker_node_containers(item, params, parsed):
+    def check_node_levels(count, warn, crit, warn_lower, crit_lower):
+        if crit is not None and count >= crit:
+            return 2, " (warn/crit at %s/%s)" % (warn, crit)
+        if crit_lower is not None and count < crit_lower:
+            return 2, " (warn/crit below %s/%s)" % (warn_lower, crit_lower)
+        if warn is not None and count >= warn:
+            return 1, " (warn/crit at %s/%s)" % (warn, crit)
+        if warn_lower is not None and count < warn_lower:
+            return 1, " (warn/crit below %s/%s)" % (warn_lower, crit_lower)
+        return 0, ""
+
+    for title, key, upper_name, lower_name in (
+        ("containers", "Containers", 'upper_levels', 'lower_levels'),
+        ("running", "ContainersRunning", 'running_upper_levels', 'running_lower_levels'),
+        ("paused", "ContainersPaused", 'paused_upper_levels', 'paused_lower_levels'),
+        ("stopped", "ContainersStopped", 'stopped_upper_levels', 'stopped_lower_levels'),
+    ):
+        raw_count = parsed.get(key)
+        if raw_count is None:
+            yield 3, "%s: count not present in agent output" % title
+        count = int(raw_count)
+
+        warn, crit = params.get(upper_name, (None, None))
+        lower_warn, lower_crit = params.get(lower_name, (None, None))
+
+        status, level_text = check_node_levels(count, warn, crit, lower_warn, lower_crit)
+        infotext = "%s: %d" % (title, count)
+        if level_text:
+            infotext += level_text
+        perfdata = [(title.lower(), count, warn, crit, lower_warn, lower_crit)]
+
+        yield status, infotext, perfdata
+
+
+check_info["docker_node_info.containers"] = {
+    "inventory_function": inventory_docker_node_containers,
+    "check_function": check_docker_node_containers,
+    "service_description": "Docker Container",
+    "has_perfdata": True,
+    "group": "docker_node_containers",
+}

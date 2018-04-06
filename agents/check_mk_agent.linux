@@ -637,7 +637,7 @@ then
     done
 fi
 
-if [ -e /proc/drbd ]; then
+if [ -z "$MK_IN_CONTAINER" ] && [ -e /proc/drbd ]; then
   echo '<<<drbd>>>'
   cat /proc/drbd
 fi

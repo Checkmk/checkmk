@@ -269,10 +269,11 @@ class ECLock(object):
 
 
 class ECServerThread(threading.Thread):
-    def __init__(self, name, settings, config, table_events, profiling_enabled, profile_file):
+    def __init__(self, name, settings, config, slave_status, table_events, profiling_enabled, profile_file):
         super(ECServerThread, self).__init__(name=name)
         self.settings = settings
         self._config = config
+        self._slave_status = slave_status
         self._table_events = table_events
         self._profiling_enabled = profiling_enabled
         self._profile_file = profile_file
@@ -1256,10 +1257,11 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, settings, config, perfcounters, event_status, table_events):
+    def __init__(self, settings, config, slave_status, perfcounters, event_status, table_events):
         super(EventServer, self).__init__(name="EventServer",
                                           settings=settings,
                                           config=config,
+                                          slave_status=slave_status,
                                           table_events=table_events,
                                           profiling_enabled=settings.options.profile_event,
                                           profile_file=settings.paths.event_server_profile.value)
@@ -1342,9 +1344,9 @@ class EventServer(ECServerThread):
     def _add_replication_status(self):
         if is_replication_slave(self._config):
             return [
-                g_slave_status["mode"],
-                g_slave_status["last_sync"],
-                g_slave_status["success"],
+                self._slave_status["mode"],
+                self._slave_status["last_sync"],
+                self._slave_status["success"],
             ]
         else:
             return ["master", 0.0, False]
@@ -1744,7 +1746,7 @@ class EventServer(ECServerThread):
         self._perfcounters.count("messages")
         before = time.time()
         # In replication slave mode (when not took over), ignore all events
-        if not is_replication_slave(self._config) or g_slave_status["mode"] != "sync":
+        if not is_replication_slave(self._config) or self._slave_status["mode"] != "sync":
             handler_func(data)
         elif self.settings.options.debug:
             self.logger.info("Replication: we are in slave mode, ignoring event")
@@ -3516,10 +3518,11 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings, config, perfcounters, event_status, event_server, table_events, terminate_main_event):
+    def __init__(self, settings, config, slave_status, perfcounters, event_status, event_server, table_events, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
                                            config=config,
+                                           slave_status=slave_status,
                                            table_events=table_events,
                                            profiling_enabled=settings.options.profile_status,
                                            profile_file=settings.paths.status_server_profile.value)
@@ -3671,7 +3674,7 @@ class StatusServer(ECServerThread):
                 elif query.method == "COMMAND":
                     if not allow_commands:
                         raise MKClientError("Sorry. Commands are disallowed via TCP")
-                    self.handle_command_request(self._event_server, query.method_arg)
+                    self.handle_command_request(query.method_arg)
                     response = None
 
                 else:
@@ -3711,11 +3714,11 @@ class StatusServer(ECServerThread):
         client_socket.sendall(repr(response) + "\n")
 
     # All commands are already locked with lock_eventstatus
-    def handle_command_request(self, event_server, commandline):
+    def handle_command_request(self, commandline):
         self.logger.info("Executing command: %s" % commandline)
         parts = commandline.split(";")
         command = parts[0]
-        replication_allow_command(self._config, command)
+        replication_allow_command(self._config, command, self._slave_status)
         arguments = parts[1:]
         if command == "DELETE":
             self.handle_command_delete(arguments)
@@ -3739,7 +3742,7 @@ class StatusServer(ECServerThread):
         elif command == "CHANGESTATE":
             self.handle_command_changestate(arguments)
         elif command == "ACTION":
-            self.handle_command_action(self._event_server, arguments)
+            self.handle_command_action(arguments)
         elif command == "SWITCHMODE":
             self.handle_command_switchmode(arguments)
         else:
@@ -3783,7 +3786,7 @@ class StatusServer(ECServerThread):
         log_event_history(self.settings, self._config, self.table_events, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
-        reload_configuration(self.settings, self._event_status, self._event_server, self)
+        reload_configuration(self.settings, self._event_status, self._event_server, self, self._slave_status)
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3799,7 +3802,7 @@ class StatusServer(ECServerThread):
             try:
                 self.settings.paths.master_config_file.value.unlink()
                 self.settings.paths.slave_status_file.value.unlink()
-                load_slave_status(self.settings, self._config)
+                update_slave_status(self._slave_status, self.settings, self._config)
             except Exception:
                 pass
         self.logger.info("Flushed current status and historic events.")
@@ -3816,7 +3819,7 @@ class StatusServer(ECServerThread):
             self.logger.info("Resetting all rule counters")
         self._event_status.reset_counters(rule_id)
 
-    def handle_command_action(self, event_server, arguments):
+    def handle_command_action(self, arguments):
         event_id, user, action_id = arguments
         event = self._event_status.event(int(event_id))
 
@@ -3837,8 +3840,8 @@ class StatusServer(ECServerThread):
         elif new_mode not in ["sync", "takeover"]:
             raise MKClientError("Invalid target mode '%s': allowed are only 'sync' and 'takeover'" %
                                 new_mode)
-        g_slave_status["mode"] = new_mode
-        save_slave_status(self.settings)
+        self._slave_status["mode"] = new_mode
+        save_slave_status(self.settings, self._slave_status)
         self.logger.info("Switched replication mode to '%s' by external command." % new_mode)
 
     def handle_replicate(self, argument, client_ip):
@@ -3866,7 +3869,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(terminate_main_event, settings, config, perfcounters, event_status, event_server, status_server):
+def run_eventd(terminate_main_event, settings, config, perfcounters, event_status, event_server, status_server, slave_status):
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3904,12 +3907,12 @@ def run_eventd(terminate_main_event, settings, config, perfcounters, event_statu
 
             # Beware: replication might be turned on during this loop!
             if is_replication_slave(config) and now > next_replication:
-                replication_pull(settings, config, perfcounters, event_status, event_server)
+                replication_pull(settings, config, perfcounters, event_status, event_server, slave_status)
                 next_replication = now + config["replication"]["interval"]
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                reload_configuration(settings, event_status, event_server, status_server)
+                reload_configuration(settings, event_status, event_server, status_server, slave_status)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 terminate(terminate_main_event, event_server, status_server)
@@ -4768,8 +4771,8 @@ def is_replication_slave(config):
     return repl_settings and not repl_settings.get("disabled")
 
 
-def replication_allow_command(config, command):
-    if is_replication_slave(config) and g_slave_status["mode"] == "sync" \
+def replication_allow_command(config, command, slave_status):
+    if is_replication_slave(config) and slave_status["mode"] == "sync" \
        and command in ["DELETE", "UPDATE", "CHANGESTATE", "ACTION"]:
         raise MKClientError("This command is not allowed on a replication slave "
                             "while it is in sync mode.")
@@ -4786,7 +4789,7 @@ def replication_send(config, event_status, last_update):
         return response
 
 
-def replication_pull(settings, config, perfcounters, event_status, event_server):
+def replication_pull(settings, config, perfcounters, event_status, event_server, slave_status):
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -4798,49 +4801,49 @@ def replication_pull(settings, config, perfcounters, event_status, event_server)
     #    is enabled then simply do nothing.
     now = time.time()
     repl_settings = config["replication"]
-    mode = g_slave_status["mode"]
+    mode = slave_status["mode"]
     need_sync = mode == "sync" or (mode == "takeover" and "fallback" in repl_settings and
-                                   (g_slave_status["last_master_down"] is None or
-                                    now - repl_settings["fallback"] < g_slave_status["last_master_down"]))
+                                   (slave_status["last_master_down"] is None or
+                                    now - repl_settings["fallback"] < slave_status["last_master_down"]))
 
     if need_sync:
         with lock_eventstatus:
             with lock_configuration:
 
                 try:
-                    new_state = get_state_from_master(config)
+                    new_state = get_state_from_master(config, slave_status)
                     replication_update_state(settings, config, event_status, event_server, new_state)
                     if repl_settings.get("logging"):
                         logger.info("Successfully synchronized with master")
-                    g_slave_status["last_sync"] = now
-                    g_slave_status["success"] = True
+                    slave_status["last_sync"] = now
+                    slave_status["success"] = True
 
                     # Fall back to slave mode after successful sync
                     # (time frame has already been checked)
                     if mode == "takeover":
-                        if g_slave_status["last_master_down"] is None:
+                        if slave_status["last_master_down"] is None:
                             logger.info("Replication: master reachable for the first time, "
                                         "switching back to slave mode")
-                            g_slave_status["mode"] = "sync"
+                            slave_status["mode"] = "sync"
                         else:
                             logger.info("Replication: master reachable again after %d seconds, "
-                                        "switching back to sync mode" % (now - g_slave_status["last_master_down"]))
-                            g_slave_status["mode"] = "sync"
-                    g_slave_status["last_master_down"] = None
+                                        "switching back to sync mode" % (now - slave_status["last_master_down"]))
+                            slave_status["mode"] = "sync"
+                    slave_status["last_master_down"] = None
 
                 except Exception as e:
                     logger.warning("Replication: cannot sync with master: %s" % e)
-                    g_slave_status["success"] = False
-                    if g_slave_status["last_master_down"] is None:
-                        g_slave_status["last_master_down"] = now
+                    slave_status["success"] = False
+                    if slave_status["last_master_down"] is None:
+                        slave_status["last_master_down"] = now
 
                     # Takeover
                     if "takeover" in repl_settings and mode != "takeover":
-                        if not g_slave_status["last_sync"]:
+                        if not slave_status["last_sync"]:
                             if repl_settings.get("logging"):
                                 logger.error("Replication: no takeover since master was never reached.")
                         else:
-                            offline = now - g_slave_status["last_sync"]
+                            offline = now - slave_status["last_sync"]
                             if offline < repl_settings["takeover"]:
                                 if repl_settings.get("logging"):
                                     logger.warning("Replication: no takeover yet, still %d seconds to wait" %
@@ -4848,9 +4851,9 @@ def replication_pull(settings, config, perfcounters, event_status, event_server)
                             else:
                                 logger.info("Replication: master not reached for %d seconds, taking over!" %
                                             offline)
-                                g_slave_status["mode"] = "takeover"
+                                slave_status["mode"] = "takeover"
 
-                save_slave_status(settings)
+                save_slave_status(settings, slave_status)
 
                 # Compute statistics of the average time needed for a sync
                 perfcounters.count_time("sync", time.time() - now)
@@ -4893,14 +4896,14 @@ def load_master_config(settings, config):
             logger.error("Replication: no previously saved master state available")
 
 
-def get_state_from_master(config):
+def get_state_from_master(config, slave_status):
     repl_settings = config["replication"]
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(repl_settings["connect_timeout"])
         sock.connect(repl_settings["master"])
         sock.sendall("REPLICATE %d\n" %
-                     (g_slave_status["last_sync"] and g_slave_status["last_sync"] or 0))
+                     (slave_status["last_sync"] and slave_status["last_sync"] or 0))
         sock.shutdown(socket.SHUT_WR)
 
         response_text = ""
@@ -4921,36 +4924,40 @@ def get_state_from_master(config):
         raise Exception("Cannot connect to event daemon: %s" % e)
 
 
-def save_slave_status(settings):
-    settings.paths.slave_status_file.value.write_bytes(repr(g_slave_status) + "\n")
+def save_slave_status(settings, slave_status):
+    settings.paths.slave_status_file.value.write_bytes(repr(slave_status) + "\n")
 
 
-# Load the current replication slave status. If we are in
-# replication mode then after this call g_slave_status will be set.
-# if not, then this variable will be missing and also the file
-def load_slave_status(settings, config):
-    global g_slave_status
+def default_slave_status_master():
+    return {
+        "last_sync": 0,
+        "last_master_down": None,
+        "mode": "master",
+        "average_sync_time": None,
+    }
+
+
+def default_slave_status_sync():
+    return {
+        "last_sync": 0,
+        "last_master_down": None,
+        "mode": "sync",
+        "average_sync_time": None,
+    }
+
+
+def update_slave_status(slave_status, settings, config):
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
         try:
-            g_slave_status = ast.literal_eval(path.read_bytes())
+            slave_status.update(ast.literal_eval(path.read_bytes()))
         except Exception:
-            g_slave_status = {
-                "last_sync": 0,  # Time of last successful sync
-                "last_master_down": None,
-                "mode": "sync",
-                "average_sync_time": None,
-            }
-            save_slave_status(settings)
-
-    # Remove slave status if we are (no longer) a slave
+            slave_status.update(default_slave_status_sync())
+            save_slave_status(settings, slave_status)
     else:
         if path.exists():
             path.unlink()
-        try:
-            del g_slave_status
-        except Exception:
-            pass
+        slave_status.update(default_slave_status_master())
 
 
 #.
@@ -4965,7 +4972,7 @@ def load_slave_status(settings, config):
 #   |  Loading of the configuration files                                  |
 #   '----------------------------------------------------------------------'
 
-def load_configuration(settings):
+def load_configuration(settings, slave_status):
     config = cmk.ec.export.load_config(settings)
 
     # If not set by command line, set the log level by configuration
@@ -4984,10 +4991,10 @@ def load_configuration(settings):
 
     # Are we a replication slave? Parts of the configuration
     # will be overridden by values from the master.
-    load_slave_status(settings, config)
+    update_slave_status(slave_status, settings, config)
     if is_replication_slave(config):
         logger.info("Replication: slave configuration, current mode: %s" %
-                    g_slave_status["mode"])
+                    slave_status["mode"])
     load_master_config(settings, config)
 
     # Create dictionary for actions for easy access
@@ -5000,9 +5007,9 @@ def load_configuration(settings):
     return config
 
 
-def reload_configuration(settings, event_status, event_server, status_server):
+def reload_configuration(settings, event_status, event_server, status_server, slave_status):
     with lock_configuration:
-        config = load_configuration(settings)
+        config = load_configuration(settings, slave_status)
         initialize_snmptrap_handling(settings, config, event_server, status_server.table_events)
         event_server.reload_configuration(config)
 
@@ -5052,7 +5059,8 @@ def main():
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting" % cmk.__version__)
 
-        config = load_configuration(settings)
+        slave_status = default_slave_status_master()
+        config = load_configuration(settings, slave_status)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():
@@ -5070,9 +5078,9 @@ def main():
         perfcounters = Perfcounters()
         event_status = EventStatus(settings, config, perfcounters)
         table_events = StatusTableEvents(event_status)
-        event_server = EventServer(settings, config, perfcounters, event_status, table_events)
+        event_server = EventServer(settings, config, slave_status, perfcounters, event_status, table_events)
         terminate_main_event = threading.Event()
-        status_server = StatusServer(settings, config, perfcounters, event_status, event_server, table_events, terminate_main_event)
+        status_server = StatusServer(settings, config, slave_status, perfcounters, event_status, event_server, table_events, terminate_main_event)
 
         event_status.load_status(event_server)
 
@@ -5094,7 +5102,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(terminate_main_event, settings, config, perfcounters, event_status, event_server, status_server)
+        run_eventd(terminate_main_event, settings, config, perfcounters, event_status, event_server, status_server, slave_status)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

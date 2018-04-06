@@ -287,7 +287,7 @@ class ECServerThread(threading.Thread):
             try:
                 with cmk.profile.Profile(enabled=self._profiling_enabled,
                                          profile_file=str(self._profile_file)):
-                    self.serve(self._table_events)
+                    self.serve()
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
                 if self._settings.options.debug:
@@ -302,7 +302,7 @@ class ECServerThread(threading.Thread):
     def terminate(self):
         self._terminate_event.set()
 
-    def serve(self, table_events):
+    def serve(self):
         raise NotImplementedError()
 
 
@@ -485,11 +485,7 @@ def initialize_snmptrap_engine(config, event_server, table_events):
         pduTypes = (snmp_v1.TrapPDU.tagSet, snmp_v2c.SNMPv2TrapPDU.tagSet)
 
     initialize_snmp_credentials(config)
-    def handle_snmptrap(snmp_engine, state_reference, context_engine_id, context_name,
-                        var_binds, cb_ctx):
-        event_server.handle_snmptrap(table_events, snmp_engine, state_reference,
-                                     context_engine_id, context_name, var_binds, cb_ctx)
-    g_snmp_receiver = ECNotificationReceiver(g_snmp_engine, handle_snmptrap)
+    g_snmp_receiver = ECNotificationReceiver(g_snmp_engine, event_server.handle_snmptrap)
 
 
 def initialize_snmp_credentials(config):
@@ -1557,7 +1553,7 @@ class EventServer(ECServerThread):
         g_snmp_engine.setUserContext(sender_address=sender_address)
         g_snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_engine, (), (), whole_msg)
 
-    def handle_snmptrap(self, table_events, snmp_engine, state_reference, context_engine_id, context_name,
+    def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
                         var_binds, cb_ctx):
         ipaddress = snmp_engine.getUserContext("sender_address")[0]
 
@@ -1569,7 +1565,7 @@ class EventServer(ECServerThread):
             trap = self.snmptrap_convert_var_binds(var_binds)
 
         event = self.create_event_from_trap(trap, ipaddress)
-        self.process_event(table_events, event)
+        self.process_event(event)
 
     def log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
         if self.logger.is_verbose():
@@ -1603,7 +1599,7 @@ class EventServer(ECServerThread):
 
         return event
 
-    def serve(self, table_events):
+    def serve(self):
         pipe_fragment = ''
         pipe = self.open_pipe()
         listen_list = [pipe]
@@ -1671,14 +1667,14 @@ class EventServer(ECServerThread):
                         # Do we have any complete messages?
                         if '\n' in data:
                             complete, rest = data.rsplit("\n", 1)
-                            self.process_raw_lines(table_events, complete + "\n", address)
+                            self.process_raw_lines(complete + "\n", address)
                         else:
                             rest = data  # keep for next time
 
                     # Only complete messages
                     else:
                         if data:
-                            self.process_raw_lines(table_events, data, address)
+                            self.process_raw_lines(data, address)
                         rest = ""
 
                     # Connection still open?
@@ -1710,17 +1706,17 @@ class EventServer(ECServerThread):
                         if data[-1] != '\n':
                             if '\n' in data:  # at least one complete message contained
                                 messages, pipe_fragment = data.rsplit('\n', 1)
-                                self.process_raw_lines(table_events, messages + '\n')  # got lost in split
+                                self.process_raw_lines(messages + '\n')  # got lost in split
                             else:
                                 pipe_fragment = data  # keep beginning of message, wait for \n
                         else:
-                            self.process_raw_lines(table_events, data)
+                            self.process_raw_lines(data)
                 except Exception:
                     pass
 
             # Read events from builtin syslog server
             if self._syslog is not None and self._syslog.fileno() in readable:
-                self.process_raw_lines(table_events, *self._syslog.recvfrom(4096))
+                self.process_raw_lines(*self._syslog.recvfrom(4096))
 
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap.fileno() in readable:
@@ -1734,7 +1730,7 @@ class EventServer(ECServerThread):
             try:
                 # process the first spool file we get
                 spool_file = next(self.settings.paths.spool_dir.value.glob('[!.]*'))
-                self.process_raw_lines(table_events, spool_file.read_bytes())
+                self.process_raw_lines(spool_file.read_bytes())
                 spool_file.unlink()
                 select_timeout = 0  # enable fast processing to process further files
             except StopIteration:
@@ -1754,21 +1750,21 @@ class EventServer(ECServerThread):
         self._perfcounters.count_time("processing", elapsed)
 
     # Takes several lines of messages, handles encoding and processes them separated
-    def process_raw_lines(self, table_events, data, address=None):
+    def process_raw_lines(self, data, address=None):
         lines = data.splitlines()
         for line in lines:
             line = scrub_and_decode(line.rstrip())
             if line:
                 try:
-                    self.process_raw_data(self.process_line, (table_events, line, address))
+                    self.process_raw_data(self.process_line, (line, address))
                 except Exception as e:
                     self.logger.exception('Exception handling a log line (skipping this one): %s' % e)
 
-    def do_housekeeping(self, table_events):
+    def do_housekeeping(self):
         with lock_eventstatus:
             with lock_configuration:
-                self.hk_handle_event_timeouts(table_events)
-                self.hk_check_expected_messages(table_events)
+                self.hk_handle_event_timeouts()
+                self.hk_check_expected_messages()
                 self.hk_cleanup_downtime_events()
 
         if self._config['archive_mode'] != 'mongodb':
@@ -1797,7 +1793,7 @@ class EventServer(ECServerThread):
             self.logger.verbose("Remove event %d (created in downtime, host left downtime)" % event["id"])
             self._event_status.remove_event(event)
 
-    def hk_handle_event_timeouts(self, table_events):
+    def hk_handle_event_timeouts(self):
         # 1. Automatically delete all events that are in state "counting"
         #    and have not reached the required number of hits and whose
         #    time is elapsed.
@@ -1816,14 +1812,14 @@ class EventServer(ECServerThread):
                     self.logger.info("Deleting orphaned event %d created by obsolete rule %s" %
                                      (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    log_event_history(self.settings, self._config, table_events, event, "ORPHANED")
+                    log_event_history(self.settings, self._config, self._table_events, event, "ORPHANED")
                     events_to_delete.append(nr)
 
                 elif "count" not in rule and "expect" not in rule:
                     self.logger.info("Count-based event %d belonging to rule %s: rule does not "
                                      "count/expect anymore. Deleting event." % (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    log_event_history(self.settings, self._config, table_events, event, "NOCOUNT")
+                    log_event_history(self.settings, self._config, self._table_events, event, "NOCOUNT")
                     events_to_delete.append(nr)
 
                 # handle counting
@@ -1849,7 +1845,7 @@ class EventServer(ECServerThread):
                                 self.logger.info("Rule %s/%s, event %d: again without allowed rate, dropping event" %
                                                  (rule["pack"], rule["id"], event["id"]))
                                 event["phase"] = "closed"
-                                log_event_history(self.settings, self._config, table_events, event, "COUNTFAILED")
+                                log_event_history(self.settings, self._config, self._table_events, event, "COUNTFAILED")
                                 events_to_delete.append(nr)
 
                     else:  # algorithm 'interval'
@@ -1858,7 +1854,7 @@ class EventServer(ECServerThread):
                                              "Resetting to zero." % (rule["pack"], rule["id"], event["count"],
                                                                      count["count"], count["period"]))
                             event["phase"] = "closed"
-                            log_event_history(self.settings, self._config, table_events, event, "COUNTFAILED")
+                            log_event_history(self.settings, self._config, self._table_events, event, "COUNTFAILED")
                             events_to_delete.append(nr)
 
             # Handle delayed actions
@@ -1867,12 +1863,12 @@ class EventServer(ECServerThread):
                 if now >= delay_until:
                     self.logger.info("Delayed event %d of rule %s is now activated." % (event["id"], event["rule_id"]))
                     event["phase"] = "open"
-                    log_event_history(self.settings, self._config, table_events, event, "DELAYOVER")
+                    log_event_history(self.settings, self._config, self._table_events, event, "DELAYOVER")
                     if rule:
-                        event_has_opened(self.settings, self._config, self, table_events, rule, event)
+                        event_has_opened(self.settings, self._config, self, self._table_events, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
-                            log_event_history(self.settings, self._config, table_events, event, "AUTODELETE")
+                            log_event_history(self.settings, self._config, self._table_events, event, "AUTODELETE")
                             events_to_delete.append(nr)
 
                     else:
@@ -1887,13 +1883,13 @@ class EventServer(ECServerThread):
                         events_to_delete.append(nr)
                         self.logger.info("Livetime of event %d (rule %s) exceeded. Deleting event." %
                                          (event["id"], event["rule_id"]))
-                        log_event_history(self.settings, self._config, table_events, event, "EXPIRED")
+                        log_event_history(self.settings, self._config, self._table_events, event, "EXPIRED")
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
         for nr in events_to_delete[::-1]:
             self._event_status.remove_event(events[nr])
 
-    def hk_check_expected_messages(self, table_events):
+    def hk_check_expected_messages(self):
         now = time.time()
         # "Expecting"-rules are rules that require one or several
         # occurrances of a message within a defined time period.
@@ -1936,24 +1932,24 @@ class EventServer(ECServerThread):
                         # time has elapsed. Now lets see if we have reached
                         # the neccessary count:
                         if event["count"] < expected_count:  # no -> trigger alarm
-                            self.handle_absent_event(table_events, rule, event["count"], expected_count, event["last"])
+                            self.handle_absent_event(rule, event["count"], expected_count, event["last"])
                         else:  # yes -> everything is fine. Just log.
                             self.logger.info("Rule %s/%s has reached %d occurrances (%d required). "
                                              "Starting next period." %
                                              (rule["pack"], rule["id"], event["count"], expected_count))
-                            log_event_history(self.settings, self._config, table_events, event, "COUNTREACHED")
+                            log_event_history(self.settings, self._config, self._table_events, event, "COUNTREACHED")
                         # Counting event is no longer needed.
                         events_to_delete.append(nr)
                         break
 
                 # Ou ou, no event found at all.
                 else:
-                    self.handle_absent_event(table_events, rule, 0, expected_count, interval_start)
+                    self.handle_absent_event(rule, 0, expected_count, interval_start)
 
                 for nr in events_to_delete[::-1]:
                     self._event_status.remove_event(events[nr])
 
-    def handle_absent_event(self, table_events, rule, event_count, expected_count, interval_start):
+    def handle_absent_event(self, rule, event_count, expected_count, interval_start):
         now = time.time()
         if event_count:
             text = "Expected message arrived only %d out of %d times since %s" % \
@@ -1983,7 +1979,7 @@ class EventServer(ECServerThread):
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
             self.rewrite_event(rule, merge_event, ())
-            log_event_history(self.settings, self._config, table_events, merge_event, "COUNTFAILED")
+            log_event_history(self.settings, self._config, self._table_events, merge_event, "COUNTFAILED")
         else:
             # Create artifical event from scratch. Make sure that all important
             # fields are defined.
@@ -2007,12 +2003,12 @@ class EventServer(ECServerThread):
             }
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
-            self._event_status.new_event(table_events, event)
-            log_event_history(self.settings, self._config, table_events, event, "COUNTFAILED")
-            event_has_opened(self.settings, self._config, self, table_events, rule, event)
+            self._event_status.new_event(self._table_events, event)
+            log_event_history(self.settings, self._config, self._table_events, event, "COUNTFAILED")
+            event_has_opened(self.settings, self._config, self, self._table_events, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
-                log_event_history(self.settings, self._config, table_events, event, "AUTODELETE")
+                log_event_history(self.settings, self._config, self._table_events, event, "AUTODELETE")
                 self._event_status.remove_event(event)
 
     def reload_configuration(self, config):
@@ -2162,7 +2158,7 @@ class EventServer(ECServerThread):
             ))
 
     def process_line(self, data):
-        table_events, line, address = data
+        line, address = data
         line = line.rstrip()
         if self._config["debug_rules"]:
             if address:
@@ -2171,9 +2167,9 @@ class EventServer(ECServerThread):
                 self.logger.info(u"Processing message '%s'" % line)
 
         event = self.create_event_from_line(line, address)
-        self.process_event(table_events, event)
+        self.process_event(event)
 
-    def process_event(self, table_events, event):
+    def process_event(self, event):
         self.do_translate_hostname(event)
 
         # Log all incoming messages into a syslog-like text file if that is enabled
@@ -2224,7 +2220,7 @@ class EventServer(ECServerThread):
                         return
 
                 if cancelling:
-                    self._event_status.cancel_events(self, table_events, event, match_groups, rule)
+                    self._event_status.cancel_events(self, self._table_events, event, match_groups, rule)
                     return
                 else:
                     # Remember the rule id that this event originated from
@@ -2253,7 +2249,7 @@ class EventServer(ECServerThread):
                         # count up. If the count reaches the limit, the event will
                         # be opened and its rule actions performed.
                         existing_event = \
-                            self._event_status.count_event(self, table_events, event, rule, count)
+                            self._event_status.count_event(self, self._table_events, event, rule, count)
                         if existing_event:
                             if "delay" in rule:
                                 if self._config["debug_rules"]:
@@ -2261,17 +2257,17 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                event_has_opened(self.settings, self._config, self, table_events, rule, existing_event)
+                                event_has_opened(self.settings, self._config, self, self._table_events, rule, existing_event)
 
-                            log_event_history(self.settings, self._config, table_events, existing_event, "COUNTREACHED")
+                            log_event_history(self.settings, self._config, self._table_events, existing_event, "COUNTREACHED")
 
                             if "delay" not in rule and rule.get("autodelete"):
                                 existing_event["phase"] = "closed"
-                                log_event_history(self.settings, self._config, table_events, existing_event, "AUTODELETE")
+                                log_event_history(self.settings, self._config, self._table_events, existing_event, "AUTODELETE")
                                 with lock_eventstatus:
                                     self._event_status.remove_event(existing_event)
                     elif "expect" in rule:
-                        self._event_status.count_expected_event(self, table_events, event)
+                        self._event_status.count_expected_event(self, self._table_events, event)
                     else:
                         if "delay" in rule:
                             if self._config["debug_rules"]:
@@ -2281,19 +2277,19 @@ class EventServer(ECServerThread):
                         else:
                             event["phase"] = "open"
 
-                        if self.new_event_respecting_limits(table_events, event):
+                        if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                event_has_opened(self.settings, self._config, self, table_events, rule, event)
+                                event_has_opened(self.settings, self._config, self, self._table_events, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
-                                    log_event_history(self.settings, self._config, table_events, event, "AUTODELETE")
+                                    log_event_history(self.settings, self._config, self._table_events, event, "AUTODELETE")
                                     with lock_eventstatus:
                                         self._event_status.remove_event(event)
                     return
 
         # End of loop over rules.
         if self._config["archive_orphans"]:
-            self._event_status.archive_event(table_events, event)
+            self._event_status.archive_event(self._table_events, event)
 
     def _add_rule_contact_groups_to_event(self, rule, event):
         if rule.get("contact_groups") is None:
@@ -2940,21 +2936,21 @@ class EventServer(ECServerThread):
             >= self._config["event_limit"]["overall"]["limit"]
 
     # protected by lock_eventstatus
-    def new_event_respecting_limits(self, table_events, event):
+    def new_event_respecting_limits(self, event):
         self.logger.verbose("Checking limit for message from %s (rule '%s')" % (
             event["host"], event["rule_id"]))
 
         with lock_eventstatus:
-            if self._handle_event_limit(table_events, "overall", event):
+            if self._handle_event_limit("overall", event):
                 return False
 
-            if self._handle_event_limit(table_events, "by_host", event):
+            if self._handle_event_limit("by_host", event):
                 return False
 
-            if self._handle_event_limit(table_events, "by_rule", event):
+            if self._handle_event_limit("by_rule", event):
                 return False
 
-            self._event_status.new_event(table_event, event)
+            self._event_status.new_event(self._table_event, event)
             return True
 
     # The following actions can be configured:
@@ -2966,7 +2962,7 @@ class EventServer(ECServerThread):
 
     # Returns False if the event has been created and actions should be
     # performed on that event
-    def _handle_event_limit(self, table_event, ty, event):
+    def _handle_event_limit(self, ty, event):
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
@@ -3006,7 +3002,7 @@ class EventServer(ECServerThread):
 
         if "overflow" in action:
             self.logger.info("  Creating overflow event")
-            self._event_status.new_event(table_event, overflow_event)
+            self._event_status.new_event(self._table_event, overflow_event)
 
         if "notify" in action:
             self.logger.info("  Creating overflow notification")
@@ -3530,8 +3526,8 @@ class StatusServer(ECServerThread):
         self._tcp_socket = None
         self._reopen_sockets = False
 
-        self.table_events = table_events
-        self.table_history = StatusTableHistory(settings, config, self.table_events)
+        self.table_events = table_events # alias for reflection Kung Fu :-P
+        self.table_history = StatusTableHistory(settings, config, table_events)
         self.table_rules = StatusTableRules(event_status)
         self.table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
@@ -3605,7 +3601,7 @@ class StatusServer(ECServerThread):
         self._config = config
         self._reopen_sockets = True
 
-    def serve(self, table_events):
+    def serve(self):
         while not self._shal_terminate():
             try:
                 client_socket = None
@@ -3752,7 +3748,7 @@ class StatusServer(ECServerThread):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_id, user = arguments
-        self._event_status.delete_event(self, self.table_events, int(event_id), user)
+        self._event_status.delete_event(self, self._table_events, int(event_id), user)
 
     def handle_command_update(self, arguments):
         event_id, user, acknowledged, comment, contact = arguments
@@ -3766,7 +3762,7 @@ class StatusServer(ECServerThread):
         if int(acknowledged) and event["phase"] not in ["open", "ack"]:
             raise MKClientError("You cannot acknowledge an event that is not open.")
         event["phase"] = int(acknowledged) and "ack" or "open"
-        log_event_history(self.settings, self._config, self.table_events, event, "UPDATE", user)
+        log_event_history(self.settings, self._config, self._table_events, event, "UPDATE", user)
 
     def handle_command_create(self, arguments):
         # Would rather use process_raw_line(), but we are already
@@ -3783,7 +3779,7 @@ class StatusServer(ECServerThread):
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         event["state"] = int(newstate)
-        log_event_history(self.settings, self._config, self.table_events, event, "CHANGESTATE", user)
+        log_event_history(self.settings, self._config, self._table_events, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
         reload_configuration(self.settings, self._event_status, self._event_server, self, self._slave_status)
@@ -3831,7 +3827,7 @@ class StatusServer(ECServerThread):
                     raise MKClientError("The action '%s' is not defined. After adding new commands please "
                                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = self._config["action"][action_id]
-            do_event_action(self.settings, self._config, self.table_events, action, event, user)
+            do_event_action(self.settings, self._config, self._table_events, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -3893,7 +3889,7 @@ def run_eventd(terminate_main_event, settings, config, perfcounters, event_statu
 
             now = time.time()
             if now > next_housekeeping:
-                event_server.do_housekeeping(status_server.table_events)
+                event_server.do_housekeeping()
                 next_housekeeping = now + config["housekeeping_interval"]
 
             if now > next_retention:
@@ -4295,7 +4291,7 @@ class EventStatus(object):
         # None found, create one
         event["count"] = 1
         event["phase"] = "counting"
-        event_server.new_event_respecting_limits(table_events, event)
+        event_server.new_event_respecting_limits(event)
 
     def count_event(self, event_server, table_events, event, rule, count):
         # Find previous occurrance of this event and acount for
@@ -4330,7 +4326,7 @@ class EventStatus(object):
         else:
             event["count"] = 1
             event["phase"] = "counting"
-            event_server.new_event_respecting_limits(table_events, event)
+            event_server.new_event_respecting_limits(event)
             found = event
 
         # Did we just count the event that was just one too much?

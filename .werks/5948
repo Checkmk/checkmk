@@ -1,0 +1,18 @@
+Title: docker_container_mem: Docker container specific memory checking
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523007246
+Class: feature
+
+Instead of using the default linux memory check (mem), Check_MK is now
+using the container specific memory check.
+
+The main reason is that the memory information in the container is not
+available through <tt>/proc/meminfo</tt> as usual. The memory data is available
+through the kernels cgroup interface which is available in the containers
+context below <tt>/sys/fs/cgroup/memory/memory.stat</tt>
+
+The features of both checks are exactly the same.

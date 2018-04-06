@@ -1,0 +1,134 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# cur[cgroup.name]['memory.usage_in_bytes'] = cgroup['memory.usage_in_bytes']
+# cache = cgroup['memory.stat']['cache']
+# cur[cgroup.name]['memory.usage_in_bytes'] = cgroup['memory.usage_in_bytes'] - cache
+# cur[cgroup.name]['memory.limit_in_bytes'] = min(int(cgroup['memory.limit_in_bytes']), measures['global']['total_memory'])
+ 
+
+# Example:
+#
+# <<<docker_container_mem>>>
+# cache 57294848               -> Cached
+# rss 43728896
+# rss_huge 27262976
+# shmem 13275136
+# mapped_file 32395264
+# dirty 0
+# writeback 0
+# pgpgin 2270817
+# pgpgout 2252796
+# pgfault 4699689
+# pgmajfault 466
+# inactive_anon 13275136
+# active_anon 43556864
+# inactive_file 22306816
+# active_file 21712896
+# unevictable 0
+# hierarchical_memory_limit 9223372036854771712
+# MemTotal:       16299300 kB
+
+# cache       -> page cache, including tmpfs (shmem), in bytes
+# rss         -> anonymous and swap cache, not including tmpfs (shmem), in bytes
+# mapped_file -> size of memory-mapped mapped files, including tmpfs (shmem), in bytes
+# -> 'rss + mapped_file" will give you resident set size of cgroup.
+# -> mapped_file	- # of bytes of mapped file (includes tmpfs/shmem)
+# swap -> swap usage, in bytes
+
+# When you interpret the values reported by memory.stat, note how the various statistics inter-relate:
+#
+#  active_anon + inactive_anon = anonymous memory + file cache for tmpfs + swap cache
+#  Therefore, active_anon + inactive_anon ≠ rss, because rss does not include tmpfs.
+#  active_file + inactive_file = cache - size of tmpfs 
+
+# 5.2 stat file
+# 
+# memory.stat file includes following statistics
+# 
+# # per-memory cgroup local status
+# cache		- # of bytes of page cache memory.
+# rss		- # of bytes of anonymous and swap cache memory (includes
+# 		transparent hugepages).
+# rss_huge	- # of bytes of anonymous transparent hugepages.
+# mapped_file	- # of bytes of mapped file (includes tmpfs/shmem)
+# swap		- # of bytes of swap usage
+
+# dirty		- # of bytes that are waiting to get written back to the disk.
+# writeback	- # of bytes of file/anon cache that are queued for syncing to
+# 		disk.
+
+# inactive_anon	- # of bytes of anonymous and swap cache memory on inactive
+# 		LRU list.
+# active_anon	- # of bytes of anonymous and swap cache memory on active
+# 		LRU list.
+
+# inactive_file	- # of bytes of file-backed memory on inactive LRU list.
+# active_file	- # of bytes of file-backed memory on active LRU list.
+
+# hierarchical_memory_limit - # of bytes of memory limit with regard to hierarchy
+# 			under which the memory cgroup is
+# hierarchical_memsw_limit - # of bytes of memory+swap limit with regard to
+# 			hierarchy under which memory cgroup is.
+
+# Note:
+# 	Only anonymous and swap cache memory is listed as part of 'rss' stat.
+# 	This should not be confused with the true 'resident set size' or the
+# 	amount of physical memory used by the cgroup.
+# 	'rss + mapped_file" will give you resident set size of cgroup.
+# 	(Note: file and shmem may be shared among other cgroups. In that case,
+# 	 mapped_file is accounted only when the memory cgroup is owner of page
+# 	 cache.)
+
+
+
+def parse_docker_container_mem(info):
+    parsed = {}
+    for line in info:
+        if line[0] == "MemTotal:":
+            if line[2] == "kB":
+                parsed["system_mem_total"] = int(line[1]) * 1024
+            #TODO: Other cases?
+        else:
+            parsed[line[0]] = int(line[1])
+    return parsed
+
+
+def inventory_docker_container_mem(parsed):
+    pprint.pprint(parsed)
+    return [(None, None)]
+
+
+def check_docker_container_mem(_no_item, params, parsed):
+    return 3, 'not yet implemented'
+
+
+check_info['docker_container_mem'] = {
+    'parse_function'        : parse_docker_container_mem,
+    'inventory_function'    : inventory_docker_container_mem,
+    'check_function'        : check_docker_container_mem,
+    'service_description'   : 'Memory',
+}

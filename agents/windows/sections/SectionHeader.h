@@ -59,18 +59,18 @@ struct SubSectionBrackets {
     static constexpr auto right = "]";
 };
 
-class ISectionHeader {
+class SectionHeaderBase {
 public:
-    ISectionHeader() = default;
-    ISectionHeader(const ISectionHeader &) = delete;
-    virtual ~ISectionHeader() = default;
-    ISectionHeader &operator=(const ISectionHeader &) = delete;
+    SectionHeaderBase() = default;
+    SectionHeaderBase(const SectionHeaderBase &) = delete;
+    virtual ~SectionHeaderBase() = default;
+    SectionHeaderBase &operator=(const SectionHeaderBase &) = delete;
 
     virtual std::ostream &output(std::ostream &os) const = 0;
 };
 
 template <unsigned char SepChar, class Brackets>
-class SectionHeader : public ISectionHeader {
+class SectionHeader : public SectionHeaderBase {
 public:
     SectionHeader(const std::string &name, Logger *logger)
         : _name(name), _logger(logger) {}
@@ -98,7 +98,7 @@ public:
 };
 
 inline std::ostream &operator<<(std::ostream &os,
-                                const ISectionHeader &header) {
+                                const SectionHeaderBase &header) {
     return header.output(os);
 }
 

@@ -202,7 +202,8 @@ ScriptWorkerThread(LPVOID lpParam) {
     return 0;
 }
 
-std::unique_ptr<ISectionHeader> makeHeader(script_type type, Logger *logger) {
+std::unique_ptr<SectionHeaderBase> makeHeader(script_type type,
+                                              Logger *logger) {
     if (type != script_type::PLUGIN)
         return std::make_unique<DefaultHeader>(typeToSection(type), logger);
     else  // plugin -> no collective header

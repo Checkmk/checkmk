@@ -28,9 +28,9 @@
 
 namespace {
 
-std::unique_ptr<ISectionHeader> makeHeader(bool show_header,
-                                           const std::string &outputName,
-                                           Logger *logger) {
+std::unique_ptr<SectionHeaderBase> makeHeader(bool show_header,
+                                              const std::string &outputName,
+                                              Logger *logger) {
     if (show_header)
         return std::make_unique<SectionHeader<',', SectionBrackets>>(outputName,
                                                                      logger);

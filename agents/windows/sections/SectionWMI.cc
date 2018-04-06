@@ -37,9 +37,9 @@
 
 namespace {
 
-std::unique_ptr<ISectionHeader> makeHeader(bool subSection,
-                                           const std::string &outputName,
-                                           Logger *logger) {
+std::unique_ptr<SectionHeaderBase> makeHeader(bool subSection,
+                                              const std::string &outputName,
+                                              Logger *logger) {
     if (subSection)
         return std::make_unique<SubSectionHeader>(outputName, logger);
     else

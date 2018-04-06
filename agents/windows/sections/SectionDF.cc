@@ -42,13 +42,6 @@ struct MountPointHandleTraits {
     }
 };
 
-void char_replace(char what, char into, char *in) {
-    while (*in) {
-        if (*in == what) *in = into;
-        in++;
-    }
-}
-
 }  // namespace
 
 SectionDF::SectionDF(const Environment &env, Logger *logger,
@@ -57,51 +50,53 @@ SectionDF::SectionDF(const Environment &env, Logger *logger,
               std::make_unique<SectionHeader<'\t', SectionBrackets>>("df",
                                                                      logger)) {}
 
-void SectionDF::output_filesystem(std::ostream &out, char *volid) {
+void SectionDF::output_filesystem(std::ostream &out, const std::string &volid) {
     static const int KiloByte = 1024;
 
-    char fsname[128];
-    char volume[512];
+    char fsname[128] = {0};
+    char volume[512] = {0};
     DWORD dwSysFlags = 0;
-    if (!_winapi.GetVolumeInformation(volid, volume, sizeof(volume), 0, 0,
-                                      &dwSysFlags, fsname, sizeof(fsname)))
-        fsname[0] = 0;
+    if (!_winapi.GetVolumeInformation(volid.c_str(), volume, sizeof(volume), 0,
+                                      0, &dwSysFlags, fsname, sizeof(fsname))) {
+        fsname[0] = '\0';  // May be necessary if partial information returned
+    }
 
     ULARGE_INTEGER free_avail, total, free;
     free_avail.QuadPart = 0;
     total.QuadPart = 0;
     free.QuadPart = 0;
     int returnvalue =
-        _winapi.GetDiskFreeSpaceEx(volid, &free_avail, &total, &free);
+        _winapi.GetDiskFreeSpaceEx(volid.c_str(), &free_avail, &total, &free);
     if (returnvalue > 0) {
         double perc_used = 0;
         if (total.QuadPart > 0)
             perc_used = 100 - (100 * free_avail.QuadPart / total.QuadPart);
 
-        if (volume[0])  // have a volume name
-            char_replace(' ', '_', volume);
+        std::string volumeStr{volume};
+        if (!volumeStr.empty())  // have a volume name
+            std::replace(volumeStr.begin(), volumeStr.end(), ' ', '_');
         else
-            strncpy(volume, volid, sizeof(volume));
+            volumeStr = volid;
 
-        out << volume << "\t" << fsname << "\t" << (total.QuadPart / KiloByte)
-            << "\t" << (total.QuadPart - free_avail.QuadPart) / KiloByte << "\t"
+        out << volumeStr << "\t" << fsname << "\t"
+            << (total.QuadPart / KiloByte) << "\t"
+            << (total.QuadPart - free_avail.QuadPart) / KiloByte << "\t"
             << (free_avail.QuadPart / KiloByte) << "\t" << std::fixed
             << std::setprecision(0) << perc_used << "%\t" << volid << "\n";
     }
 }
 
-void SectionDF::output_mountpoints(std::ostream &out, char *volid) {
+void SectionDF::output_mountpoints(std::ostream &out,
+                                   const std::string &volid) {
     char mountpoint[512];
     WrappedHandle<MountPointHandleTraits> hPt{
-        _winapi.FindFirstVolumeMountPoint(volid, mountpoint,
+        _winapi.FindFirstVolumeMountPoint(volid.c_str(), mountpoint,
                                           sizeof(mountpoint)),
         _winapi};
 
     if (hPt) {
         while (true) {
-            char combined_path[1024];
-            snprintf(combined_path, sizeof(combined_path), "%s%s", volid,
-                     mountpoint);
+            const std::string combined_path = volid + mountpoint;
             output_filesystem(out, combined_path);
             if (!_winapi.FindNextVolumeMountPoint(hPt.get(), mountpoint,
                                                   sizeof(mountpoint)))

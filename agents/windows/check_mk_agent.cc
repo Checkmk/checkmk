@@ -365,16 +365,16 @@ void InstallService() {
         s_winapi.OpenSCManager(0, 0, SC_MANAGER_CREATE_SERVICE);
 
     if (serviceControlManager) {
-        char path[_MAX_PATH + 1];
+        char path[_MAX_PATH + 1] = {0};
         if (s_winapi.GetModuleFileName(0, path,
                                        sizeof(path) / sizeof(path[0])) > 0) {
-            char quoted_path[1024];
-            snprintf(quoted_path, sizeof(quoted_path), "\"%s\"", path);
+            const auto quoted_path = std::string{"\""} + path + "\"";
             ServiceHandle service{
-                s_winapi.CreateService(
-                    serviceControlManager, gszServiceName, gszServiceName,
-                    SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-                    SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, quoted_path),
+                s_winapi.CreateService(serviceControlManager, gszServiceName,
+                                       gszServiceName, SERVICE_ALL_ACCESS,
+                                       SERVICE_WIN32_OWN_PROCESS,
+                                       SERVICE_AUTO_START, SERVICE_ERROR_IGNORE,
+                                       quoted_path.c_str()),
                 s_winapi};
             if (service) {
                 std::cout << SERVICE_NAME << " Installed Successfully"

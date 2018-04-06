@@ -1,0 +1,88 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_docker_system_df(info):
+    import json
+
+    parsed = {}
+    for line in info:
+        data = json.loads(",".join(line))
+
+        type_ = data.pop('Type')
+        parsed[type_] = data
+
+        data['Active'] = int(data['Active']) if data['Active'] else 0
+        data['TotalCount'] = int(data['TotalCount']) if data['TotalCount'] else 0
+        data['Size'] = docker_size_to_bytes(data['Size'])
+
+        reclaimable = data['Reclaimable'].split(' ')[0]    # discard percentage
+        data['Reclaimable'] = docker_size_to_bytes(reclaimable)
+
+    return parsed
+
+
+def inventory_docker_system_df(parsed):
+    for item in parsed:
+        yield item, {}
+
+
+def check_docker_system_df(item, params, parsed):
+    data = parsed.get(item)
+    if data is None:
+        yield 3, "no data"
+
+    for key, param, conversion_func in (
+            ('Size', 'size', get_filesize_human_readable),
+            ('Reclaimable', 'reclaimable', get_filesize_human_readable),
+            ('TotalCount', 'count', lambda x: x),
+            ('Active', 'active', lambda x: x),
+    ):
+        value = data[key]
+
+        warn, crit = params.get(param, (None, None))
+        if crit is not None and value >= crit:
+            status, lvl_text = 2, " (warn/crit at %s/%s)" % (warn, crit)
+        elif warn is not None and value >= warn:
+            status, lvl_text = 1, " (warn/crit at %s/%s)" % (warn, crit)
+        else:
+            status, lvl_text = 0, ""
+
+        infotext = "%s: %s%s" % (param, conversion_func(value), lvl_text)
+        perfdata = [(param, value, warn, crit)]
+
+        yield status, infotext, perfdata
+
+
+check_info["docker_system_df"] = {
+    "parse_function": parse_docker_system_df,
+    "inventory_function": inventory_docker_system_df,
+    "check_function": check_docker_system_df,
+    "service_description": "Docker disk usage - %s",
+    "includes": ["docker.include"],
+    "has_perfdata": True,
+    "group": "docker_system_df",
+}

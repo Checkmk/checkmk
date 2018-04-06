@@ -1,0 +1,10 @@
+Title: docker_node_info.containers, docker_system_df: new checks to monitor the container status and disk usage of a node
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523027491
+Class: feature
+
+

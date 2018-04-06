@@ -4145,6 +4145,54 @@ metric_info["emcvnx_dedupl_shared_capacity"] = {
     "color" : "31/a",
 }
 
+metric_info["docker_all_containers"] = {
+    "title" : _("Number of containers"),
+    "unit"  : "count",
+    "color" : "11/a",
+}
+
+metric_info["docker_running_containers"] = {
+    "title" : _("Running containers"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
+metric_info["docker_paused_containers"] = {
+    "title" : _("Paused containers"),
+    "unit"  : "count",
+    "color" : "31/a",
+}
+
+metric_info["docker_stopped_containers"] = {
+    "title" : _("Stopped containers"),
+    "unit"  : "count",
+    "color" : "41/a",
+}
+
+metric_info["docker_count"] = {
+    "title" : _("Count"),
+    "unit"  : "count",
+    "color" : "11/a",
+}
+
+metric_info["docker_active"] = {
+    "title" : _("Active"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
+metric_info["docker_size"] = {
+    "title" : _("Size"),
+    "unit"  : "bytes",
+    "color" : "31/a",
+}
+
+metric_info["docker_reclaimable"] = {
+    "title" : _("Reclaimable"),
+    "unit"  : "bytes",
+    "color" : "41/a",
+}
+
 metric_info["active_vms"] = {
     "title" : _("Active VMs"),
     "unit"  : "count",
@@ -4739,6 +4787,20 @@ check_metrics["check_mk-diskstat"] = {
 check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
     "read"  : { "name" : "disk_read_ios" },
     "write" : { "name" : "disk_write_ios" }
+}
+
+check_metrics["check_mk-docker_node_info.containers"] = {
+    "containers"  : { "name" : "docker_all_containers" },
+    "running" : { "name" : "docker_running_containers" },
+    "paused" : { "name" : "docker_paused_containers" },
+    "stopped" : { "name" : "docker_stopped_containers" },
+}
+
+check_metrics["check_mk-docker_system_df"] = {
+    "count"  : { "name" : "docker_count" },
+    "active" : { "name" : "docker_active" },
+    "size" : { "name" : "docker_size" },
+    "reclaimable" : { "name" : "docker_reclaimable" },
 }
 
 check_metrics["check_mk-dell_powerconnect_temp"] = {

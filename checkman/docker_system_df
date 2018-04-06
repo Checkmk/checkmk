@@ -1,0 +1,11 @@
+title: Docker disk usage
+agents: linux
+catalog: app/docker
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the absolute total and active number as well as the size and
+ reclaimable size of containers, images, local volumes, and build cache.
+
+inventory:
+ One service per type (i.e. containers, images, volumen, build cache) is created.

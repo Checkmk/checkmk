@@ -305,8 +305,8 @@ class ECServerThread(threading.Thread):
         raise NotImplementedError()
 
 
-def terminate(event_server, status_server):
-    g_terminate_main_event.set()
+def terminate(terminate_main_event, event_server, status_server):
+    terminate_main_event.set()
     status_server.terminate()
     event_server.terminate()
 
@@ -3516,7 +3516,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings, config, perfcounters, event_status, event_server, table_events):
+    def __init__(self, settings, config, perfcounters, event_status, event_server, table_events, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
                                            config=config,
@@ -3534,6 +3534,7 @@ class StatusServer(ECServerThread):
         self._perfcounters = perfcounters
         self._event_status = event_status
         self._event_server = event_server
+        self._terminate_main_event = terminate_main_event
 
         self.open_unix_socket()
         self.open_tcp_socket()
@@ -3722,7 +3723,7 @@ class StatusServer(ECServerThread):
             self.handle_command_reload()
         elif command == "SHUTDOWN":
             self.logger.info("Going to shut down")
-            terminate(self._event_server, self)
+            terminate(self._terminate_main_event, self._event_server, self)
         elif command == "REOPENLOG":
             self.handle_command_reopenlog()
         elif command == "FLUSH":
@@ -3865,7 +3866,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(settings, config, perfcounters, event_status, event_server, status_server):
+def run_eventd(terminate_main_event, settings, config, perfcounters, event_status, event_server, status_server):
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3874,7 +3875,7 @@ def run_eventd(settings, config, perfcounters, event_status, event_server, statu
     next_statistics = now + config["statistics_interval"]
     next_replication = 0  # force immediate replication after restart
 
-    while not g_terminate_main_event.is_set():
+    while not terminate_main_event.is_set():
         try:
             # Wait until either housekeeping or retention is due, but at
             # maximum 60 seconds. That way changes of the interval from a very
@@ -3911,7 +3912,7 @@ def run_eventd(settings, config, perfcounters, event_status, event_server, statu
                 reload_configuration(settings, event_status, event_server, status_server)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
-                terminate(event_server, status_server)
+                terminate(terminate_main_event, event_server, status_server)
         except Exception as e:
             logger.exception("Exception in main thread:\n%s" % e)
             if settings.options.debug:
@@ -5031,8 +5032,6 @@ lock_eventstatus = ECLock("eventstatus")
 lock_configuration = ECLock("configuration")
 lock_logging = ECLock("history")
 
-g_terminate_main_event = threading.Event()
-
 
 def main():
     os.unsetenv("LANG")
@@ -5072,7 +5071,8 @@ def main():
         event_status = EventStatus(settings, config, perfcounters)
         table_events = StatusTableEvents(event_status)
         event_server = EventServer(settings, config, perfcounters, event_status, table_events)
-        status_server = StatusServer(settings, config, perfcounters, event_status, event_server, table_events)
+        terminate_main_event = threading.Event()
+        status_server = StatusServer(settings, config, perfcounters, event_status, event_server, table_events, terminate_main_event)
 
         event_status.load_status(event_server)
 
@@ -5094,7 +5094,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(settings, config, perfcounters, event_status, event_server, status_server)
+        run_eventd(terminate_main_event, settings, config, perfcounters, event_status, event_server, status_server)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

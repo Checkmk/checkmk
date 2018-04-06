@@ -477,18 +477,19 @@ def initialize_snmptrap_handling(settings, config, event_server, table_events):
 
 
 def initialize_snmptrap_engine(config, event_server, table_events):
-    global g_snmp_engine, g_snmp_receiver
-    g_snmp_engine = snmp_engine.SnmpEngine()
+    the_snmp_engine = snmp_engine.SnmpEngine()
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class ECNotificationReceiver(snmp_ntfrcv.NotificationReceiver):
         pduTypes = (snmp_v1.TrapPDU.tagSet, snmp_v2c.SNMPv2TrapPDU.tagSet)
 
-    initialize_snmp_credentials(config)
-    g_snmp_receiver = ECNotificationReceiver(g_snmp_engine, event_server.handle_snmptrap)
+    initialize_snmp_credentials(config, the_snmp_engine)
+    global g_snmp_receiver, g_snmp_engine
+    g_snmp_receiver = ECNotificationReceiver(the_snmp_engine, event_server.handle_snmptrap)
+    g_snmp_engine = the_snmp_engine
 
 
-def initialize_snmp_credentials(config):
+def initialize_snmp_credentials(config, the_snmp_engine):
     user_num = 0
     for spec in config["snmp_credentials"]:
         credentials = spec["credentials"]
@@ -496,7 +497,7 @@ def initialize_snmp_credentials(config):
 
         # SNMPv1/v2
         if type(credentials) != tuple:
-            snmp_config.addV1System(g_snmp_engine, 'snmpv2-%d' % user_num, credentials)
+            snmp_config.addV1System(the_snmp_engine, 'snmpv2-%d' % user_num, credentials)
             continue
 
         # SNMPv3
@@ -529,7 +530,7 @@ def initialize_snmp_credentials(config):
 
         for engine_id in spec["engine_ids"]:
             snmp_config.addV3User(
-                g_snmp_engine, user_id,
+                the_snmp_engine, user_id,
                 auth_proto, auth_key,
                 priv_proto, priv_key,
                 securityEngineId=snmp_v2c.OctetString(hexValue=engine_id)

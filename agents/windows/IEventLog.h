@@ -29,7 +29,7 @@
 #include <string>
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 class IEventLogRecord {
 public:
@@ -100,6 +100,6 @@ public:
 
 std::unique_ptr<IEventLog> open_eventlog(const std::wstring &name_or_path,
                                          bool try_vista_api, Logger *logger,
-                                         const WinApiAdaptor &winapi);
+                                         const WinApiInterface &winapi);
 
 #endif  // EventLog_h

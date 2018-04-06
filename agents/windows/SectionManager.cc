@@ -59,7 +59,7 @@ std::string mapSectionName(const std::string &sectionName) {
 }  // namespace
 
 template <>
-winperf_counter from_string<winperf_counter>(const WinApiAdaptor &winapi,
+winperf_counter from_string<winperf_counter>(const WinApiInterface &winapi,
                                              const std::string &value) {
     size_t colonIdx = value.find_last_of(":");
     if (colonIdx == std::string::npos) {
@@ -90,7 +90,7 @@ winperf_counter from_string<winperf_counter>(const WinApiAdaptor &winapi,
 
 SectionManager::SectionManager(Configuration &config,
                                OnlyFromConfigurable &only_from, Logger *logger,
-                               const WinApiAdaptor &winapi)
+                               const WinApiInterface &winapi)
     : _ps_use_wmi(config, "ps", "use_wmi", false, winapi)
     , _enabled_sections(config, "global", "sections", winapi, mapSectionName)
     , _disabled_sections(config, "global", "disabled_sections", winapi,

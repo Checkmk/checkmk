@@ -35,7 +35,7 @@ namespace chrono = std::chrono;
 namespace fs = std::experimental::filesystem;
 
 SectionSpool::SectionSpool(const Environment &env, Logger *logger,
-                           const WinApiAdaptor &winapi)
+                           const WinApiInterface &winapi)
     : Section("spool", env, logger, winapi,
               std::make_unique<HiddenHeader>(logger)) {}
 

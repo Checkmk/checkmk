@@ -28,7 +28,7 @@
 #include "SectionHeader.h"
 
 SectionMem::SectionMem(const Environment &env, Logger *logger,
-                       const WinApiAdaptor &winapi)
+                       const WinApiInterface &winapi)
     : Section("mem", env, logger, winapi,
               std::make_unique<DefaultHeader>("mem", logger)) {}
 

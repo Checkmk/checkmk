@@ -29,7 +29,7 @@
 #include "EventLog.h"
 #include "Section.h"
 
-class WinApiAdaptor;
+class WinApiInterface;
 
 namespace eventlog {
 
@@ -78,7 +78,7 @@ class Configurable : public ListConfigurable<Configs, BlockMode::Nop<Configs>,
 
 public:
     Configurable(Configuration &config, const char *section, const char *key,
-                 const WinApiAdaptor &winapi)
+                 const WinApiInterface &winapi)
         : SuperT(config, section, key, winapi) {}
 
     virtual void feed(const std::string &var,
@@ -97,7 +97,7 @@ using FindResult = std::pair<DWORD, std::string>;
 class SectionEventlog : public Section {
 public:
     SectionEventlog(Configuration &config, Logger *logger,
-                    const WinApiAdaptor &winapi);
+                    const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

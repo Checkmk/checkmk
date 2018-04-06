@@ -24,11 +24,11 @@
 
 #include "OHMMonitor.h"
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
 namespace {
 
-HANDLE dev_null(const WinApiAdaptor &winapi) {
+HANDLE dev_null(const WinApiInterface &winapi) {
     SECURITY_ATTRIBUTES secattr{sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE};
     return winapi.CreateFile("nul:", GENERIC_READ | GENERIC_WRITE,
                              FILE_SHARE_READ | FILE_SHARE_WRITE, &secattr,
@@ -38,7 +38,7 @@ HANDLE dev_null(const WinApiAdaptor &winapi) {
 }  // namespace
 
 OHMMonitor::OHMMonitor(const std::string &bin_path, Logger *logger,
-                       const WinApiAdaptor &winapi)
+                       const WinApiInterface &winapi)
     : _exe_path(bin_path + "\\OpenHardwareMonitorCLI.exe")
     , _available(winapi.GetFileAttributes(_exe_path.c_str()) !=
                  INVALID_FILE_ATTRIBUTES)

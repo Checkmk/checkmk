@@ -39,7 +39,7 @@ using namespace wmi;
 using namespace std;
 
 std::string ComException::resolveError(HRESULT result,
-                                       const WinApiAdaptor &winapi) {
+                                       const WinApiInterface &winapi) {
     switch (static_cast<ULONG>(result)) {
         case WBEM_E_INVALID_NAMESPACE:
             return string("Invalid Namespace");
@@ -55,14 +55,14 @@ std::string ComException::resolveError(HRESULT result,
 }
 
 ComException::ComException(const string &message, HRESULT result,
-                           const WinApiAdaptor &winapi)
+                           const WinApiInterface &winapi)
     : runtime_error(message + string(": ") + resolveError(result, winapi) +
                     string(" (") + toStringHex(result) + string(")")) {}
 
 ComTypeException::ComTypeException(const string &message)
     : runtime_error(message) {}
 
-IErrorInfo *ComException::getErrorInfo(const WinApiAdaptor &winapi) {
+IErrorInfo *ComException::getErrorInfo(const WinApiInterface &winapi) {
     IErrorInfo *result;
     winapi.GetErrorInfo(0, &result);
     return result;
@@ -75,7 +75,7 @@ string ComException::toStringHex(HRESULT res) {
 }
 
 Variant::Variant(const VARIANT &val, Logger *logger,
-                 const WinApiAdaptor &winapi)
+                 const WinApiInterface &winapi)
     : _value(val), _logger(logger), _winapi(winapi) {}
 
 Variant::~Variant() { _winapi.VariantClear(&_value); }
@@ -87,7 +87,7 @@ void releaseInterface(IUnknown *ptr) {
 }
 
 ObjectWrapper::ObjectWrapper(IWbemClassObject *object, Logger *logger,
-                             const WinApiAdaptor &winapi)
+                             const WinApiInterface &winapi)
     : _current(object, releaseInterface), _logger(logger), _winapi(winapi) {}
 
 ObjectWrapper::ObjectWrapper(const ObjectWrapper &reference)
@@ -131,7 +131,7 @@ VARIANT ObjectWrapper::getVarByKey(const wchar_t *key) const {
     return value;
 }
 
-Result::Result(Logger *logger, const WinApiAdaptor &winapi)
+Result::Result(Logger *logger, const WinApiInterface &winapi)
     : ObjectWrapper(nullptr, logger, winapi)
     , _enumerator(nullptr, releaseInterface) {}
 
@@ -141,7 +141,7 @@ Result::Result(const Result &reference)
     , _last_error(reference._last_error) {}
 
 Result::Result(IEnumWbemClassObject *enumerator, Logger *logger,
-               const WinApiAdaptor &winapi)
+               const WinApiInterface &winapi)
     : ObjectWrapper(nullptr, logger, winapi)
     , _enumerator(enumerator, releaseInterface) {
     if (!next()) {
@@ -175,7 +175,7 @@ struct SafeArrayHandleTraits {
     using HandleT = SAFEARRAY *;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.SafeArrayDestroy(value);
     }
 };
@@ -184,7 +184,7 @@ struct BStringHandleTraits {
     using HandleT = BSTR;
     static HandleT invalidValue() { return nullptr; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.SysFreeString(value);
     }
 };
@@ -386,7 +386,7 @@ wstring Variant::get() const {
 
 class COMManager {
 public:
-    static void init(Logger *logger, const WinApiAdaptor &winapi) {
+    static void init(Logger *logger, const WinApiInterface &winapi) {
         // this is apparently thread safe in C++11 and in gcc even before that
         // see §6.4 in C++11 standard or §6.7 in C++14
         static COMManager s_Instance(logger, winapi);
@@ -398,7 +398,7 @@ public:
     }
 
 private:
-    COMManager(Logger *logger, const WinApiAdaptor &winapi)
+    COMManager(Logger *logger, const WinApiInterface &winapi)
         : _logger(logger), _winapi(winapi) {
         Debug(_logger) << "COMManager::COMManager";
         // Dr.Memory reports a memory leak here, despite the fact CoUninitialize
@@ -425,10 +425,10 @@ private:
     }
 
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
-Helper::Helper(Logger *logger, const WinApiAdaptor &winapi, LPCWSTR path)
+Helper::Helper(Logger *logger, const WinApiInterface &winapi, LPCWSTR path)
     : _locator(nullptr), _path(path), _logger(logger), _winapi(winapi) {
     COMManager::init(logger, winapi);
 

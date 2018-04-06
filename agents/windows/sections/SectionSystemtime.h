@@ -30,7 +30,7 @@
 class SectionSystemtime : public Section {
 public:
     SectionSystemtime(const Environment &env, Logger *logger,
-                      const WinApiAdaptor &winapi);
+                      const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

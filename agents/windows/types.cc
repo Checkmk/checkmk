@@ -7,29 +7,29 @@
 #include "stringutil.h"
 
 template <>
-bool from_string<bool>(const WinApiAdaptor &, const std::string &value) {
+bool from_string<bool>(const WinApiInterface &, const std::string &value) {
     return parse_boolean(value.c_str());
 }
 
 template <>
-int from_string<int>(const WinApiAdaptor &, const std::string &value) {
+int from_string<int>(const WinApiInterface &, const std::string &value) {
     return std::stol(value);
 }
 
 template <>
-std::string from_string<std::string>(const WinApiAdaptor &,
+std::string from_string<std::string>(const WinApiInterface &,
                                      const std::string &value) {
     return value;
 }
 
 template <>
-fs::path from_string<fs::path>(const WinApiAdaptor &,
+fs::path from_string<fs::path>(const WinApiInterface &,
                                const std::string &value) {
     return {value};
 }
 
 template <>
-ipspec from_string<ipspec>(const WinApiAdaptor &winapi,
+ipspec from_string<ipspec>(const WinApiInterface &winapi,
                            const std::string &value) {
     ipspec result{winapi};
 
@@ -90,7 +90,7 @@ std::ostream &operator<<(std::ostream &os, const ipspec &ips) {
     return os;
 }
 
-ipspec toIPv6(const ipspec &ips, const WinApiAdaptor &winapi) {
+ipspec toIPv6(const ipspec &ips, const WinApiInterface &winapi) {
     ipspec result{winapi};
     // first 96 bits are fixed: 0:0:0:0:0:ffff
     result.bits = 96 + ips.bits;

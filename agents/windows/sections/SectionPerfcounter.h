@@ -33,7 +33,7 @@
 
 class NameBaseNumberMap {
 public:
-    NameBaseNumberMap(Logger *logger, const WinApiAdaptor &winapi)
+    NameBaseNumberMap(Logger *logger, const WinApiInterface &winapi)
         : _logger(logger), _winapi(winapi) {}
     NameBaseNumberMap(const NameBaseNumberMap &) = delete;
     NameBaseNumberMap &operator=(const NameBaseNumberMap &) = delete;
@@ -45,7 +45,7 @@ private:
     std::vector<std::unordered_map<std::string, DWORD>> _nameIdMaps;
 
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 class SectionPerfcounter : public Section {
@@ -53,7 +53,7 @@ public:
     SectionPerfcounter(const std::string &outputName,
                        const std::string &configName, const Environment &env,
                        NameBaseNumberMap &nameNumberMap, Logger *logger,
-                       const WinApiAdaptor &winapi);
+                       const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

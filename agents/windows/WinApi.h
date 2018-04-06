@@ -1,9 +1,9 @@
 #ifndef WinApi_h
 #define WinApi_h
 
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
-class WinApi : public WinApiAdaptor {
+class WinApi : public WinApiInterface {
 public:
     // WINADVAPI:
     virtual WINBOOL CloseEventLog(HANDLE hEventLog) const override;

@@ -29,7 +29,7 @@
 #include "types.h"
 
 SectionServices::SectionServices(const Environment &env, Logger *logger,
-                                 const WinApiAdaptor &winapi)
+                                 const WinApiInterface &winapi)
     : Section("services", env, logger, winapi,
               std::make_unique<DefaultHeader>("services", logger)) {}
 

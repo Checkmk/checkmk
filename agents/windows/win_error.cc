@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "win_error.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "types.h"
 
-std::string get_win_error_as_string(const WinApiAdaptor &winapi,
+std::string get_win_error_as_string(const WinApiInterface &winapi,
                                     DWORD error_id /* = GET_LAST_ERROR */) {
     // Get the error message, if any.
     if (error_id == 0) return "No error message has been recorded";
@@ -45,7 +45,7 @@ std::string get_win_error_as_string(const WinApiAdaptor &winapi,
     return message + " (" + std::to_string(error_id) + ")";
 }
 
-win_exception::win_exception(const WinApiAdaptor &winapi,
+win_exception::win_exception(const WinApiInterface &winapi,
                              const std::string &msg,
                              DWORD error_code /* = GET_LAST_ERROR */)
     : std::runtime_error(

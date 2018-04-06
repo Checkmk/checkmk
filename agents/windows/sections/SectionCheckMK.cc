@@ -68,7 +68,7 @@ std::vector<KVPair> createInfoFields(const Environment &env) {
 SectionCheckMK::SectionCheckMK(Configuration &config,
                                OnlyFromConfigurable &only_from,
                                script_statistics_t &script_statistics,
-                               Logger *logger, const WinApiAdaptor &winapi)
+                               Logger *logger, const WinApiInterface &winapi)
     : Section("check_mk", config.getEnvironment(), logger, winapi,
               std::make_unique<DefaultHeader>("check_mk", logger))
     , _crash_debug(config, "global", "crash_debug", false, winapi)

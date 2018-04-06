@@ -8,11 +8,12 @@
 #include "stringutil.h"
 #include "types.h"
 
-class WinApiAdaptor;
+class WinApiInterface;
 
 class ConfigurableBase {
 public:
-    explicit ConfigurableBase(const WinApiAdaptor &winapi) : _winapi(winapi) {}
+    explicit ConfigurableBase(const WinApiInterface &winapi)
+        : _winapi(winapi) {}
     virtual ~ConfigurableBase() = default;
     ConfigurableBase(const ConfigurableBase &) = delete;
     ConfigurableBase &operator=(const ConfigurableBase &) = delete;
@@ -23,14 +24,14 @@ public:
     virtual void startBlock() = 0;
 
 protected:
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 template <typename ValueT>
 class Configurable : public ConfigurableBase {
 public:
     Configurable(Configuration &config, const char *section, const char *key,
-                 const ValueT &def, const WinApiAdaptor &winapi)
+                 const ValueT &def, const WinApiInterface &winapi)
         : ConfigurableBase(winapi), _value(def) {
         config.reg(section, key, this);
     }
@@ -74,7 +75,7 @@ class ListConfigurable : public ConfigurableBase {
 
 public:
     ListConfigurable(Configuration &config, const char *section,
-                     const char *key, const WinApiAdaptor &winapi)
+                     const char *key, const WinApiInterface &winapi)
         : ConfigurableBase(winapi) {
         config.reg(section, key, this);
     }
@@ -157,7 +158,7 @@ class KeyedListConfigurable : public ConfigurableBase {
 
 public:
     KeyedListConfigurable(Configuration &config, const char *section,
-                          const char *key, const WinApiAdaptor &winapi)
+                          const char *key, const WinApiInterface &winapi)
         : ConfigurableBase(winapi) {
         config.reg(section, key, this);
     }
@@ -226,7 +227,7 @@ class SplittingListConfigurable
 
 public:
     SplittingListConfigurable(Configuration &config, const char *section,
-                              const char *key, const WinApiAdaptor &winapi,
+                              const char *key, const WinApiInterface &winapi,
                               const MapFunction &mapFunction =
                                   [](const std::string &s) { return s; },
                               char split_char = ' ')

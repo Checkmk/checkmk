@@ -26,7 +26,7 @@
 #include <stdexcept>
 #include "Environment.h"
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "win_error.h"
 
 Thread::~Thread() {

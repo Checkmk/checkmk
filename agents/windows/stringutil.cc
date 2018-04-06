@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <optional>
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "win_error.h"
 
 #ifdef _WIN32
@@ -104,7 +104,7 @@ std::string replaceAll(const std::string &str, const std::string &from,
 }
 
 void stringToIPv6(const char *value, uint16_t *address,
-                  const WinApiAdaptor &winapi) {
+                  const WinApiInterface &winapi) {
     const char *pos = value;
     std::vector<uint16_t> segments;
     int skip_offset = -1;
@@ -157,7 +157,7 @@ void stringToIPv4(const char *value, uint32_t &address) {
 }
 
 void netmaskFromPrefixIPv6(int bits, uint16_t *netmask,
-                           const WinApiAdaptor &winapi) {
+                           const WinApiInterface &winapi) {
     memset(netmask, 0, sizeof(uint16_t) * 8);
     for (int i = 0; i < 8; ++i) {
         if (bits > 0) {
@@ -180,7 +180,7 @@ void netmaskFromPrefixIPv4(int bits, uint32_t &netmask) {
 }
 
 std::string IPAddrToString(const sockaddr_storage &addr, Logger *logger,
-                           const WinApiAdaptor &winapi) {
+                           const WinApiInterface &winapi) {
     std::vector<char> buffer(INET6_ADDRSTRLEN);
     unsigned short family = addr.ss_family;
     sockaddr const *inputAddr = nullptr;

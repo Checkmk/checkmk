@@ -35,7 +35,7 @@ class SectionWMI : public Section {
 public:
     SectionWMI(const std::string &outputName, const std::string &configName,
                const Environment &env, Logger *logger,
-               const WinApiAdaptor &winapi, bool asSubSection = false);
+               const WinApiInterface &winapi, bool asSubSection = false);
 
     SectionWMI *withNamespace(const wchar_t *name);
     SectionWMI *withObject(const wchar_t *path);

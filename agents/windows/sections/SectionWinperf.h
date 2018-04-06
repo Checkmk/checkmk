@@ -38,7 +38,7 @@ class Result;
 class SectionWinperf : public Section {
 public:
     SectionWinperf(const std::string &name, const Environment &env,
-                   Logger *logger, const WinApiAdaptor &winapi);
+                   Logger *logger, const WinApiInterface &winapi);
 
     SectionWinperf *withBase(unsigned int base);
 

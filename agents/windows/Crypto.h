@@ -5,9 +5,9 @@
 #include <windows.h>
 #include <string>
 #include <vector>
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
-class WinApiAdaptor;
+class WinApiInterface;
 
 class Crypto {
     // algorithm can't currently be changed
@@ -25,12 +25,12 @@ class Crypto {
     };
 
 public:
-    explicit Crypto(const WinApiAdaptor &winapi);
+    explicit Crypto(const WinApiInterface &winapi);
 
-    Crypto(const std::string &password, const WinApiAdaptor &winapi,
+    Crypto(const std::string &password, const WinApiInterface &winapi,
            KeyLength key_length = KeyLength::KEY_LEN_DEFAULT);
 
-    Crypto(const BYTE *key, DWORD key_size, const WinApiAdaptor &winapi);
+    Crypto(const BYTE *key, DWORD key_size, const WinApiInterface &winapi);
 
     ~Crypto();
 
@@ -65,7 +65,7 @@ private:
     HCRYPTPROV _provider;
     HCRYPTKEY _key;
     ALG_ID _algorithm;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 #endif  // Crypto_h

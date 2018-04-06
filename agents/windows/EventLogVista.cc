@@ -25,7 +25,7 @@
 #include "EventLogVista.h"
 #include <algorithm>
 #include <cstdint>
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "dynamic_func.h"
 #include "stringutil.h"
 
@@ -46,7 +46,7 @@ class EventLogRecordVista : public IEventLogRecord {
 
 public:
     EventLogRecordVista(EVT_HANDLE event, const EvtFunctionMap &evt,
-                        EVT_HANDLE renderContext, const WinApiAdaptor &winapi)
+                        EVT_HANDLE renderContext, const WinApiInterface &winapi)
         : _event(event), _evt(evt), _winapi(winapi) {
         DWORD required = 0;
         DWORD property_count = 0;
@@ -62,7 +62,7 @@ public:
                     &_buffer[0], &required, &property_count);
     }
 
-    static EVT_HANDLE createRenderContext(const WinApiAdaptor &winapi,
+    static EVT_HANDLE createRenderContext(const WinApiInterface &winapi,
                                           const EvtFunctionMap &evt) {
         if (evt.createRenderContext == nullptr)
             throw win_exception(
@@ -236,10 +236,10 @@ private:
     const EvtFunctionMap &_evt;
     std::vector<BYTE> _buffer;
     std::wstring _eventData;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
-EventApiModule::EventApiModule(const WinApiAdaptor &winapi)
+EventApiModule::EventApiModule(const WinApiInterface &winapi)
     : _mod(winapi.LoadLibraryW(L"wevtapi.dll")), _winapi(winapi) {}
 
 EventApiModule::~EventApiModule() {
@@ -251,7 +251,7 @@ EventApiModule::~EventApiModule() {
 #define GET_FUNC(func) \
     ((decltype(&func))winapi.GetProcAddress(_mod->get_module(), #func))
 
-EvtFunctionMap::EvtFunctionMap(const WinApiAdaptor &winapi)
+EvtFunctionMap::EvtFunctionMap(const WinApiInterface &winapi)
     : _mod(std::make_unique<EventApiModule>(winapi)) {
     if (_mod->get_module() == nullptr) {
         return;
@@ -273,7 +273,7 @@ EvtFunctionMap::EvtFunctionMap(const WinApiAdaptor &winapi)
 }
 
 EventLogVista::EventLogVista(const std::wstring &path,
-                             const WinApiAdaptor &winapi)
+                             const WinApiInterface &winapi)
     : _evt(winapi)
     , _path(path)
     , _winapi(winapi)
@@ -324,7 +324,7 @@ std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
 namespace {
 EVT_HANDLE create_log_handle(const EvtFunctionMap &evt, EVT_QUERY_FLAGS flags,
                              const std::wstring &path,
-                             const WinApiAdaptor &winapi) {
+                             const WinApiInterface &winapi) {
     if (evt.query == nullptr) {
         throw win_exception(winapi,
                             "EvtQuery function not found in wevtapi.dll");

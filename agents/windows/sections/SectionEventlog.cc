@@ -191,7 +191,7 @@ inline bool hasPreviousState(eventlog::state &state) {
 }  // namespace
 
 template <>
-eventlog::config from_string<eventlog::config>(const WinApiAdaptor &,
+eventlog::config from_string<eventlog::config>(const WinApiInterface &,
                                                const std::string &value) {
     // this parses only what's on the right side of the = in the configuration
     // file
@@ -297,7 +297,7 @@ std::optional<std::string> getIPSpecificStatefileName(
 }
 
 SectionEventlog::SectionEventlog(Configuration &config, Logger *logger,
-                                 const WinApiAdaptor &winapi)
+                                 const WinApiInterface &winapi)
     : Section("logwatch", config.getEnvironment(), logger, winapi,
               std::make_unique<DefaultHeader>("logwatch", logger))
     , _sendall(config, "logwatch", "sendall", false, winapi)

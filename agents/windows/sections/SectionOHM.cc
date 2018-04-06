@@ -30,7 +30,7 @@
 #include "SectionWMI.h"
 
 SectionOHM::SectionOHM(Configuration &config, Logger *logger,
-                       const WinApiAdaptor &winapi)
+                       const WinApiInterface &winapi)
     : SectionWMI("openhardwaremonitor", "openhardwaremonitor",
                  config.getEnvironment(), logger, winapi)
     , _ohm_monitor(_env.binDirectory(), _logger, _winapi) {

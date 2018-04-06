@@ -38,7 +38,7 @@ class SectionCheckMK : public Section {
 public:
     SectionCheckMK(Configuration &config, OnlyFromConfigurable &only_from,
                    script_statistics_t &script_statistics, Logger *logger,
-                   const WinApiAdaptor &winapi);
+                   const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

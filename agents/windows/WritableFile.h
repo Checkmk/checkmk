@@ -55,7 +55,7 @@ public:
      *
      */
     WritableFile(const std::string &filePath, DWORD shareMode,
-                 DWORD disposition, const WinApiAdaptor &winapi);
+                 DWORD disposition, const WinApiInterface &winapi);
 
     WritableFile(const WritableFile &) = delete;
     WritableFile &operator=(const WritableFile &) = delete;
@@ -79,7 +79,7 @@ public:
 private:
     const std::string _path;
     WrappedHandle<InvalidHandleTraits> _hFile;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 /**
@@ -90,7 +90,7 @@ private:
  * @return               unordered_set of absolute file paths.
  */
 std::unordered_set<std::string> getDefaultWhitelist(
-    const Environment &env, const WinApiAdaptor &winapi);
+    const Environment &env, const WinApiInterface &winapi);
 
 /**
  * Check recursively that the current user has write permissions to each file in
@@ -104,7 +104,7 @@ std::unordered_set<std::string> getDefaultWhitelist(
  * @throw FileError      At first non-writable file
  */
 bool areAllFilesWritable(const std::string &dirPath,
-                         const WinApiAdaptor &winapi,
+                         const WinApiInterface &winapi,
                          const std::unordered_set<std::string> &whitelist = {});
 
 #endif  // WritableFile_h

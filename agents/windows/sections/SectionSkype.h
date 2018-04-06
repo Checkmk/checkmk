@@ -32,7 +32,7 @@
 class SectionSkype : public SectionGroup {
 public:
     SectionSkype(const Environment &env, Logger *logger,
-                 const WinApiAdaptor &winapi);
+                 const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

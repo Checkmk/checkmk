@@ -27,7 +27,7 @@
 
 #include <string>
 #include <vector>
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 
 class Logger;
 
@@ -46,7 +46,7 @@ public:
 
 private:
     PerfCounter(PERF_COUNTER_DEFINITION *counter, BYTE *datablock,
-                const WinApiAdaptor &winapi);
+                const WinApiInterface &winapi);
     ULONGLONG extractValue(PERF_COUNTER_BLOCK *block) const;
 
     PERF_COUNTER_DEFINITION *_counter;
@@ -54,7 +54,7 @@ private:
                        // If the counter has instances we don't need this
                        // as the instance definition contains a pointer to
                        // the instance-specific data
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 // Wrapper to deal with performance counters.
@@ -64,8 +64,8 @@ class PerfCounterObject {
 public:
     using CounterList = std::vector<std::pair<DWORD, std::wstring>>;
 
-    PerfCounterObject(unsigned counter_base_number, const WinApiAdaptor &winapi,
-                      Logger *logger);
+    PerfCounterObject(unsigned counter_base_number,
+                      const WinApiInterface &winapi, Logger *logger);
 
     bool isEmpty() const;
 
@@ -81,7 +81,7 @@ private:
     std::vector<BYTE> _buffer;
     PERF_OBJECT_TYPE *_object;
     BYTE *_datablock;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
     Logger *_logger;
 };
 

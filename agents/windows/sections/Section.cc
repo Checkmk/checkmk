@@ -29,7 +29,7 @@
 #include "SectionHeader.h"
 
 Section::Section(const std::string &configName, const Environment &env,
-                 Logger *logger, const WinApiAdaptor &winapi,
+                 Logger *logger, const WinApiInterface &winapi,
                  std::unique_ptr<ISectionHeader> header)
     : _configName(configName)
     , _env(env)

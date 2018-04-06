@@ -29,7 +29,7 @@
 
 std::unique_ptr<IEventLog> open_eventlog(const std::wstring &name_or_path,
                                          bool try_vista_api, Logger *logger,
-                                         const WinApiAdaptor &winapi) {
+                                         const WinApiInterface &winapi) {
     if (try_vista_api) {
         try {
             return std::unique_ptr<IEventLog>(

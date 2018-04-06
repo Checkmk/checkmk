@@ -32,7 +32,7 @@ class Environment;
 class SectionDF : public Section {
 public:
     SectionDF(const Environment &env, Logger *logger,
-              const WinApiAdaptor &winapi);
+              const WinApiInterface &winapi);
 
 protected:
     virtual bool produceOutputInner(

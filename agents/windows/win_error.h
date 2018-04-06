@@ -28,16 +28,16 @@
 #include <stdexcept>
 #include <string>
 
-class WinApiAdaptor;
+class WinApiInterface;
 
 #define GET_LAST_ERROR \
     0xffffffff  // Hopefully this is not used by any real function!
 
-std::string get_win_error_as_string(const WinApiAdaptor &winapi,
+std::string get_win_error_as_string(const WinApiInterface &winapi,
                                     unsigned long error_id = GET_LAST_ERROR);
 
 struct win_exception : public std::runtime_error {
-    win_exception(const WinApiAdaptor &winapi, const std::string &msg,
+    win_exception(const WinApiInterface &winapi, const std::string &msg,
                   unsigned long error_code = GET_LAST_ERROR);
 };
 

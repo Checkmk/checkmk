@@ -1,7 +1,7 @@
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "gmock/gmock.h"
 
-class MockWinApi : public WinApiAdaptor {
+class MockWinApi : public WinApiInterface {
 public:
     MockWinApi();
     virtual ~MockWinApi();

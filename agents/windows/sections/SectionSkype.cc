@@ -25,11 +25,11 @@
 #include "SectionSkype.h"
 #include "Logger.h"
 #include "PerfCounterCommon.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "stringutil.h"
 
 SectionSkype::SectionSkype(const Environment &env, Logger *logger,
-                           const WinApiAdaptor &winapi)
+                           const WinApiInterface &winapi)
     : SectionGroup("skype", "skype", env, logger, winapi, true)
     , _nameNumberMap(_logger, _winapi) {
     withToggleIfMissing();

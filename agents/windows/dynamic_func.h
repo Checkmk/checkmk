@@ -26,12 +26,12 @@
 // This can be used for functions that may not exist in windows versions
 // we still support
 
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "types.h"
 
 template <typename FuncT>
 FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName,
-                   const WinApiAdaptor &winapi) {
+                   const WinApiInterface &winapi) {
     HModuleHandle mod{winapi.LoadLibraryW(dllName), winapi};
     if (mod) {
         FARPROC proc = winapi.GetProcAddress(mod.get(), funcName);

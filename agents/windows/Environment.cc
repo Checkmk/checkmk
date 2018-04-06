@@ -28,7 +28,7 @@
 #include <stdexcept>
 #include <vector>
 #include "Logger.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "types.h"
 #include "win_error.h"
 
@@ -42,7 +42,7 @@ static const int MAX_PATH_UNICODE = 32767;
 Environment *Environment::s_Instance = nullptr;
 
 Environment::Environment(bool use_cwd, bool with_stderr, Logger *logger,
-                         const WinApiAdaptor &winapi)
+                         const WinApiInterface &winapi)
     : _logger(logger)
     , _winapi(winapi)
     , _hostname(determineHostname())

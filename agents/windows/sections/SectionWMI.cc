@@ -51,7 +51,7 @@ std::unique_ptr<ISectionHeader> makeHeader(bool subSection,
 
 SectionWMI::SectionWMI(const std::string &outputName,
                        const std::string &configName, const Environment &env,
-                       Logger *logger, const WinApiAdaptor &winapi,
+                       Logger *logger, const WinApiInterface &winapi,
                        bool asSubSection /*= false*/)
     : Section(configName, env, logger, winapi,
               makeHeader(asSubSection, outputName, logger)) {}

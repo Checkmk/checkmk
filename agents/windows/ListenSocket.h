@@ -29,13 +29,13 @@
 #include "types.h"
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 struct SocketHandleTraits {
     using HandleT = SOCKET;
     static HandleT invalidValue() { return INVALID_SOCKET; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.closesocket(value);
     }
 };
@@ -45,7 +45,8 @@ using SocketHandle = WrappedHandle<SocketHandleTraits>;
 class ListenSocket {
 public:
     ListenSocket(int port, const only_from_t &source_whitelist,
-                 bool supportIPV6, Logger *logger, const WinApiAdaptor &winapi);
+                 bool supportIPV6, Logger *logger,
+                 const WinApiInterface &winapi);
 
     bool supportsIPV4() const;
     bool supportsIPV6() const;
@@ -60,7 +61,7 @@ private:
     SOCKET RemoveSocketInheritance(SOCKET oldsocket) const;
 
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
     const bool _use_ipv6;
     SocketHandle _socket;
     const only_from_t _source_whitelist;

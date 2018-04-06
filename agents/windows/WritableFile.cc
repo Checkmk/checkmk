@@ -34,7 +34,7 @@ std::string FileError::constructMessage(const std::string &path,
 }
 
 WritableFile::WritableFile(const std::string &filePath, DWORD shareMode,
-                           DWORD disposition, const WinApiAdaptor &winapi)
+                           DWORD disposition, const WinApiInterface &winapi)
     : _path(filePath)
     , _hFile{winapi.CreateFile(_path.c_str(),  // file to open
                                GENERIC_WRITE,  // open for write
@@ -69,7 +69,7 @@ WritableFile &WritableFile::operator<<(const std::vector<BYTE> &s) {
 }
 
 std::unordered_set<std::string> getDefaultWhitelist(
-    const Environment &env, const WinApiAdaptor &winapi) {
+    const Environment &env, const WinApiInterface &winapi) {
     std::unordered_set<std::string> whitelist = {
         env.agentDirectory() + "\\bin\\OpenHardwareMonitorLib.sys"};
     std::vector<char> path(_MAX_PATH, '\0');
@@ -82,7 +82,7 @@ std::unordered_set<std::string> getDefaultWhitelist(
 }
 
 bool areAllFilesWritable(const std::string &dirPath,
-                         const WinApiAdaptor &winapi,
+                         const WinApiInterface &winapi,
                          const std::unordered_set<std::string> &whitelist) {
     std::string tmp = dirPath + "\\*";
     WIN32_FIND_DATA file{0};

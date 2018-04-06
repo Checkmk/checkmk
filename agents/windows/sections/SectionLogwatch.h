@@ -135,8 +135,8 @@ struct globline_container {
 using GlobListT = std::vector<globline_container>;
 
 template <>
-globline_container from_string<globline_container>(const WinApiAdaptor &winapi,
-                                                   const std::string &value);
+globline_container from_string<globline_container>(
+    const WinApiInterface &winapi, const std::string &value);
 
 inline std::ostream &operator<<(std::ostream &os, const globline_container &g) {
     os << "\n[tokens]\n";
@@ -162,7 +162,7 @@ class GlobListConfigurable
 
 public:
     GlobListConfigurable(Configuration &config, const char *section,
-                         const WinApiAdaptor &winapi)
+                         const WinApiInterface &winapi)
         : SuperT(config, section, "textfile", winapi) {
         config.reg(section, "warn", this);
         config.reg(section, "crit", this);
@@ -192,7 +192,7 @@ class SectionLogwatch : public Section {
 
 public:
     SectionLogwatch(Configuration &config, Logger *logger,
-                    const WinApiAdaptor &winapi);
+                    const WinApiInterface &winapi);
     virtual ~SectionLogwatch();
 
 protected:

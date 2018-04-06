@@ -41,11 +41,11 @@ using LPEXCEPTION_POINTERS = struct _EXCEPTION_POINTERS *;
 using CONTEXT = struct _CONTEXT;
 
 class Logger;
-class WinApiAdaptor;
+class WinApiInterface;
 
 class CrashHandler {
 public:
-    CrashHandler(Logger *logger, const WinApiAdaptor &winapi);
+    CrashHandler(Logger *logger, const WinApiInterface &winapi);
     CrashHandler(const CrashHandler &) = delete;
     CrashHandler &operator=(const CrashHandler &) = delete;
 
@@ -57,7 +57,7 @@ private:
 #endif  // __x86_64
 
     Logger *_logger;
-    const WinApiAdaptor &_winapi;
+    const WinApiInterface &_winapi;
 };
 
 #endif  // CrashHandler_h

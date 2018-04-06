@@ -28,7 +28,7 @@
 #include "SectionHeader.h"
 
 SectionSystemtime::SectionSystemtime(const Environment &env, Logger *logger,
-                                     const WinApiAdaptor &winapi)
+                                     const WinApiInterface &winapi)
     : Section("systemtime", env, logger, winapi,
               std::make_unique<DefaultHeader>("systemtime", logger)) {}
 

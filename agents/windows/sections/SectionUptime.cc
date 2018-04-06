@@ -29,7 +29,7 @@
 #include "dynamic_func.h"
 
 SectionUptime::SectionUptime(const Environment &env, Logger *logger,
-                             const WinApiAdaptor &winapi)
+                             const WinApiInterface &winapi)
     : Section("uptime", env, logger, winapi,
               std::make_unique<DefaultHeader>("uptime", logger)) {
     LPCWSTR dllName = L"kernel32.dll";

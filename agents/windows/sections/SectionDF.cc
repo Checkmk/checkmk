@@ -27,7 +27,7 @@
 #include <iomanip>
 #include "Logger.h"
 #include "SectionHeader.h"
-#include "WinApiAdaptor.h"
+#include "WinApiInterface.h"
 #include "stringutil.h"
 #include "types.h"
 
@@ -37,7 +37,7 @@ struct MountPointHandleTraits {
     using HandleT = HANDLE;
     static HandleT invalidValue() { return INVALID_HANDLE_VALUE; }
 
-    static void closeHandle(HandleT value, const WinApiAdaptor &winapi) {
+    static void closeHandle(HandleT value, const WinApiInterface &winapi) {
         winapi.FindVolumeMountPointClose(value);
     }
 };
@@ -52,7 +52,7 @@ void char_replace(char what, char into, char *in) {
 }  // namespace
 
 SectionDF::SectionDF(const Environment &env, Logger *logger,
-                     const WinApiAdaptor &winapi)
+                     const WinApiInterface &winapi)
     : Section("df", env, logger, winapi,
               std::make_unique<SectionHeader<'\t', SectionBrackets>>("df",
                                                                      logger)) {}

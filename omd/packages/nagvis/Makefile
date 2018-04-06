@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-VERSION = 1.9.6
+VERSION = 1.9.7
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel

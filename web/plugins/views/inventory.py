@@ -781,7 +781,7 @@ inventory_displayhints.update({
                                                            "keyorder": ["repository", "tag", "id", "creation", "size", "labels", "amount_containers"],
                                                          },
     ".software.applications.docker.images:*.id"        : { "title" : _("ID"), },
-    ".software.applications.docker.images:*.amount_containers" : { "title" : _("#Containers"), },
+    ".software.applications.docker.images:*.amount_containers" : { "title" : _("# Containers"), },
 
     ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
     ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },

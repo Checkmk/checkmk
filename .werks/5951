@@ -1,0 +1,11 @@
+Title: kernel: Disabled in docker container contexts
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523015219
+Class: feature
+
+These checks do not make sense in the context of a docker container.
+The agent is now skipping this section when executed in a container.

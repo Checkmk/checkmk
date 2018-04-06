@@ -478,9 +478,11 @@ fi
 
 
 # Performancecounter Kernel
-echo '<<<kernel>>>'
-date +%s
-cat /proc/vmstat /proc/stat
+if [ -z "$MK_IN_CONTAINER" ]; then
+    echo '<<<kernel>>>'
+    date +%s
+    cat /proc/vmstat /proc/stat
+fi
 
 # Hardware sensors via IPMI (need ipmitool)
 if type ipmitool > /dev/null

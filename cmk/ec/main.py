@@ -3664,7 +3664,7 @@ class StatusServer(ECServerThread):
                 elif query.method == "COMMAND":
                     if not allow_commands:
                         raise MKClientError("Sorry. Commands are disallowed via TCP")
-                    self.handle_command_request(self._event_server, self.table_events, query.method_arg)
+                    self.handle_command_request(self._event_server, query.method_arg)
                     response = None
 
                 else:
@@ -3704,14 +3704,14 @@ class StatusServer(ECServerThread):
         client_socket.sendall(repr(response) + "\n")
 
     # All commands are already locked with lock_eventstatus
-    def handle_command_request(self, event_server, table_events, commandline):
+    def handle_command_request(self, event_server, commandline):
         self.logger.info("Executing command: %s" % commandline)
         parts = commandline.split(";")
         command = parts[0]
         replication_allow_command(command)
         arguments = parts[1:]
         if command == "DELETE":
-            self.handle_command_delete(table_events, arguments)
+            self.handle_command_delete(arguments)
         elif command == "RELOAD":
             self.handle_command_reload(self._event_server)
         elif command == "SHUTDOWN":
@@ -3738,11 +3738,11 @@ class StatusServer(ECServerThread):
         else:
             raise MKClientError("Unknown command %s" % command)
 
-    def handle_command_delete(self, table_events, arguments):
+    def handle_command_delete(self, arguments):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_id, user = arguments
-        self._event_status.delete_event(self, table_events, int(event_id), user)
+        self._event_status.delete_event(self, self.table_events, int(event_id), user)
 
     def handle_command_update(self, arguments):
         event_id, user, acknowledged, comment, contact = arguments

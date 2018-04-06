@@ -47,8 +47,7 @@ def settings():
 
 @pytest.fixture(scope="function")
 def config(settings):
-    # TODO: Currently does not work as unit test
-    cmk.ec.main.load_configuration(settings)
+    return cmk.ec.main.load_configuration(settings)
 
 
 @pytest.fixture(scope="function")
@@ -57,8 +56,8 @@ def perfcounters():
 
 
 @pytest.fixture(scope="function")
-def event_status(settings, perfcounters):
-    return cmk.ec.main.EventStatus(settings, perfcounters)
+def event_status(settings, config, perfcounters):
+    return cmk.ec.main.EventStatus(settings, config, perfcounters)
 
 
 @pytest.fixture(scope="function")
@@ -68,12 +67,12 @@ def table_events(event_status):
 
 @pytest.fixture(scope="function")
 def event_server(settings, config, perfcounters, event_status, table_events):
-    return cmk.ec.main.EventServer(settings, perfcounters, event_status, table_events)
+    return cmk.ec.main.EventServer(settings, config, perfcounters, event_status, table_events)
 
 
 @pytest.fixture(scope="function")
 def status_server(settings, config, perfcounters, event_status, event_server, table_events):
-    return cmk.ec.main.StatusServer(settings, perfcounters, event_status, event_server, table_events)
+    return cmk.ec.main.StatusServer(settings, config, perfcounters, event_status, event_server, table_events)
 
 
 def test_handle_client(status_server):

@@ -269,9 +269,10 @@ class ECLock(object):
 
 
 class ECServerThread(threading.Thread):
-    def __init__(self, name, settings, profiling_enabled, profile_file):
+    def __init__(self, name, settings, table_events, profiling_enabled, profile_file):
         super(ECServerThread, self).__init__(name=name)
         self.settings = settings
+        self._table_events = table_events
         self._profiling_enabled = profiling_enabled
         self._profile_file = profile_file
         self._terminate_event = threading.Event()
@@ -284,7 +285,7 @@ class ECServerThread(threading.Thread):
             try:
                 with cmk.profile.Profile(enabled=self._profiling_enabled,
                                          profile_file=str(self._profile_file)):
-                    self.serve(g_status_server.table_events)
+                    self.serve(self._table_events)
             except Exception:
                 self.logger.exception("Exception in %s server" % self.name)
                 if self._settings.options.debug:
@@ -1254,9 +1255,10 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, settings, perfcounters, event_status):
+    def __init__(self, settings, perfcounters, event_status, table_events):
         super(EventServer, self).__init__(name="EventServer",
                                           settings=settings,
+                                          table_events=table_events,
                                           profiling_enabled=settings.options.profile_event,
                                           profile_file=settings.paths.event_server_profile.value)
         self._syslog = None
@@ -3510,16 +3512,17 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings, perfcounters, event_status, event_server):
+    def __init__(self, settings, perfcounters, event_status, event_server, table_events):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
+                                           table_events=table_events,
                                            profiling_enabled=settings.options.profile_status,
                                            profile_file=settings.paths.status_server_profile.value)
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
 
-        self.table_events = StatusTableEvents(event_status)
+        self.table_events = table_events
         self.table_history = StatusTableHistory(settings, self.table_events)
         self.table_rules = StatusTableRules(event_status)
         self.table_status = StatusTableStatus(event_server)
@@ -5053,15 +5056,15 @@ def main():
         settings.paths.status_file.value.parent.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
-        global g_status_server
         perfcounters = Perfcounters()
         event_status = EventStatus(settings, perfcounters)
-        event_server = EventServer(settings, perfcounters, event_status)
-        g_status_server = StatusServer(settings, perfcounters, event_status, event_server)
+        table_events = StatusTableEvents(event_status)
+        event_server = EventServer(settings, perfcounters, event_status, table_events)
+        status_server = StatusServer(settings, perfcounters, event_status, event_server, table_events)
 
         event_status.load_status(event_server)
 
-        initialize_snmptrap_handling(settings, event_server, g_status_server.table_events)
+        initialize_snmptrap_handling(settings, event_server, table_events)
 
         event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
 
@@ -5079,7 +5082,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(settings, perfcounters, event_status, event_server, g_status_server)
+        run_eventd(settings, perfcounters, event_status, event_server, status_server)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

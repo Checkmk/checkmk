@@ -114,7 +114,11 @@ function section_mem()
         grep -E -v '^Swap:|^Mem:|total:' < /proc/meminfo
     else
         echo '<<<docker_container_mem>>>'
-        cat /sys/fs/cgroup/memory/memory.stat
+        echo -n "usage_in_bytes "
+        cat /sys/fs/cgroup/memory/memory.usage_in_bytes
+        echo -n "limit_in_bytes "
+        cat /sys/fs/cgroup/memory/memory.limit_in_bytes
+        grep -F 'MemTotal:' /proc/meminfo
     fi
 }
 

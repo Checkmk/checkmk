@@ -34,7 +34,7 @@
 //          function pointers
 /////////////////////////////////////////////////////////////
 
-class EventLogRecordVista : public IEventLogRecord {
+class EventLogRecordVista : public EventLogRecordBase {
     enum class WinEventLevel {
         Audit = 0,
         Critical = 1,
@@ -417,11 +417,11 @@ void EventLogVista::seek(uint64_t record_id) {
     }
 }
 
-std::unique_ptr<IEventLogRecord> EventLogVista::read() {
+std::unique_ptr<EventLogRecordBase> EventLogVista::read() {
     if ((_next_event == _events.size()) ||
         (_events[_next_event].get() == nullptr)) {
         if (!fillBuffer()) {
-            return std::unique_ptr<IEventLogRecord>();
+            return std::unique_ptr<EventLogRecordBase>();
         }
     }
     return std::make_unique<EventLogRecordVista>(

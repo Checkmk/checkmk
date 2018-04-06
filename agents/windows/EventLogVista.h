@@ -38,7 +38,7 @@
 #include <functional>
 #include <string>
 #include <vector>
-#include "IEventLog.h"
+#include "EventLogBase.h"
 #include "types.h"
 #include "win_error.h"
 
@@ -91,7 +91,7 @@ struct EventHandleTraitsVista {
 
 using EventHandleVista = WrappedHandle<EventHandleTraitsVista, EvtFunctionMap>;
 
-class EventLogVista : public IEventLog {
+class EventLogVista : public EventLogBase {
     static const int EVENT_BLOCK_SIZE = 16;
 
 public:
@@ -103,7 +103,7 @@ public:
 
     virtual void seek(uint64_t record_id) override;
 
-    virtual std::unique_ptr<IEventLogRecord> read() override;
+    virtual std::unique_ptr<EventLogRecordBase> read() override;
 
     virtual uint64_t getLastRecordId() override;
 

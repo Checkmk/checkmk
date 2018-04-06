@@ -40,21 +40,21 @@ namespace {
 
 using uint64limits = std::numeric_limits<uint64_t>;
 
-std::pair<char, eventlog::Level> getEventState(const IEventLogRecord &event,
+std::pair<char, eventlog::Level> getEventState(const EventLogRecordBase &event,
                                                eventlog::Level level) {
     switch (event.level()) {
-        case IEventLogRecord::Level::Error:
+        case EventLogRecordBase::Level::Error:
             return {'C', eventlog::Level::Crit};
-        case IEventLogRecord::Level::Warning:
+        case EventLogRecordBase::Level::Warning:
             return {'W', eventlog::Level::Warn};
-        case IEventLogRecord::Level::Information:
-        case IEventLogRecord::Level::AuditSuccess:
-        case IEventLogRecord::Level::Success:
+        case EventLogRecordBase::Level::Information:
+        case EventLogRecordBase::Level::AuditSuccess:
+        case EventLogRecordBase::Level::Success:
             if (level == eventlog::Level::All)
                 return {'O', level};
             else
                 return {'.', level};
-        case IEventLogRecord::Level::AuditFailure:
+        case EventLogRecordBase::Level::AuditFailure:
             return {'C', eventlog::Level::Crit};
         default:
             return {'u', eventlog::Level::Warn};
@@ -69,7 +69,7 @@ inline bool isToBeOutput(char type_char, bool hide_context) {
     return type_char != '.';
 }
 
-std::ostream &operator<<(std::ostream &out, const IEventLogRecord &event) {
+std::ostream &operator<<(std::ostream &out, const EventLogRecordBase &event) {
     // convert UNIX timestamp to local time
     time_t time_generated = static_cast<time_t>(event.timeGenerated());
     struct tm *t = localtime(&time_generated);
@@ -149,8 +149,8 @@ bool handleFindResult(const FindResult &result, bool sendall,
 }
 
 std::pair<uint64_t, eventlog::Level> processEventLog(
-    IEventLog &log, uint64_t previouslyReadId, eventlog::Level level,
-    const std::function<eventlog::Level(const IEventLogRecord &,
+    EventLogBase &log, uint64_t previouslyReadId, eventlog::Level level,
+    const std::function<eventlog::Level(const EventLogRecordBase &,
                                         eventlog::Level)> &processFunc) {
     // we must seek past the previously read event - if there was one
     const uint64_t seekPosition =
@@ -327,11 +327,11 @@ void SectionEventlog::saveEventlogOffsets(const std::string &statefile,
     }
 }
 
-uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
+uint64_t SectionEventlog::outputEventlog(std::ostream &out, EventLogBase &log,
                                          uint64_t previouslyReadId,
                                          eventlog::Level level,
                                          bool hideContext) {
-    const auto getState = [](const IEventLogRecord &record,
+    const auto getState = [](const EventLogRecordBase &record,
                              eventlog::Level level) {
         return getEventState(record, level).second;
     };
@@ -346,7 +346,7 @@ uint64_t SectionEventlog::outputEventlog(std::ostream &out, IEventLog &log,
     // second pass - if there were, print everything
     if (worstState >= level) {
         const auto outputRecord = [&out, hideContext](
-                                      const IEventLogRecord &record,
+                                      const EventLogRecordBase &record,
                                       eventlog::Level level) {
             // clang-format off
             const auto [type_char, dummy] = getEventState(record, level);
@@ -424,12 +424,12 @@ std::pair<eventlog::Level, bool> SectionEventlog::readConfig(
                : std::make_pair(eventlog::Level::Warn, false);
 }
 
-std::unique_ptr<IEventLog> SectionEventlog::openEventlog(
+std::unique_ptr<EventLogBase> SectionEventlog::openEventlog(
     const std::string &logname, std::ostream &out) const {
     Debug(_logger) << " - event log \"" << logname << "\":";
 
     try {
-        std::unique_ptr<IEventLog> log(
+        std::unique_ptr<EventLogBase> log(
             open_eventlog(to_utf16(logname), *_vista_api, _logger, _winapi));
 
         Debug(_logger) << "   . successfully opened event log";

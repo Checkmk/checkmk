@@ -1,0 +1,11 @@
+Title: raritan_pdu_ocprot: Now displays performance data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b2
+Date: 1523603546
+
+

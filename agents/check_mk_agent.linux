@@ -976,6 +976,14 @@ if type docker > /dev/null 2>&1 ; then
     echo "[[[containers]]]"
     docker container ls --all --format "{{json .}}"
 
+    # For the container status, we want information about *all* containers
+    for CONTAINER_ID in $(docker container ls -q --all); do
+     echo "<<<<$CONTAINER_ID>>>>"
+     echo "<<<docker_container_status>>>"
+     docker inspect $CONTAINER_ID --format='{{json .State}}'
+     echo "<<<<>>>>"
+    done
+
     for CONTAINER_ID in $(docker container ls -q); do
         echo "<<<<$CONTAINER_ID>>>>"
 

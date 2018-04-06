@@ -1,0 +1,12 @@
+Title: df mounts: Skip docker mounts for name resolution
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523029250
+Class: feature
+
+When docker containers are configured to perform name resolution there are
+mounts at /etc/resolv.conf, /etc/hostname and /etc/hosts which are not relevant
+to be monitored. These checks are now always skipped.

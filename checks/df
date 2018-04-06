@@ -203,7 +203,7 @@ def inventory_df(parsed):
     (df_blocks, volume_info), _ = parsed
 
     mplist = []
-    for line in df_blocks:
+    for line in _filter_docker_local_storage(df_blocks):
 
         mountpoint = line[0]
         if mountpoint in inventory_df_exclude_mountpoints:
@@ -230,11 +230,19 @@ def inventory_df(parsed):
 
 def check_df(item, params, parsed):
     (df_blocks, volume_info), df_inodes = parsed
+
+    df_blocks = _filter_docker_local_storage(df_blocks)
+
     if "patterns" in params or item in volume_info:
         return df_check_filesystem_list(item, params, df_blocks, df_inodes)
     else:
         mountpoint = { ("%s %s" % (volume_info[mp]["volume_name"], mp)) : mp for mp in volume_info }[item]
         return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
+
+
+# Always exclude filesystems below dockers local storage area
+def _filter_docker_local_storage(df_blocks):
+    return [ e for e in df_blocks if not e[0].startswith("/var/lib/docker") ]
 
 
 check_info['df'] = {

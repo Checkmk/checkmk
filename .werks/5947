@@ -1,0 +1,19 @@
+Title: df: Exclude docker local storage mounts on docker nodes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523005992
+Class: feature
+
+The df check is now excluding all filesystems found below
+<tt>/var/lib/docker</tt>, which is the default location for
+the docker container local storage.
+
+Depending on the used storage engine docker creates overlay
+filesystems and mounts below this hierarchy for the started
+containers.
+
+The filesystems are not interesting for our monitoring. They
+will be monitored from the container context.

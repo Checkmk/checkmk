@@ -1,0 +1,13 @@
+Title: uptime: Is now reported correctly for docker containers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523014708
+Class: feature
+
+In previous versions of the linux agent the uptime of the 
+docker node was reported by the agent when it is being executed
+in a docker container context.
+

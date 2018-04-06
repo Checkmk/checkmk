@@ -30,6 +30,9 @@ def inv_docker_node_info(parsed, inventory_tree):
     node = inventory_tree.get_dict("software.applications.docker.")
     node["version"] = parsed[u"ServerVersion"]
 
+    node_labels = inventory_tree.get_list("software.applications.docker.node_labels:")
+    node_labels +=  [ {"label": label} for label in parsed[u"Labels"] ]
+
 
 inv_info['docker_node_info'] = {
     'inv_function'       : inv_docker_node_info,

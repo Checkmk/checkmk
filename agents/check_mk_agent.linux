@@ -128,6 +128,9 @@ function section_cpu()
             CPU_REGEX='^CPU|^processor'
         fi
         echo "$(cat /proc/loadavg) $(grep -c -E $CPU_REGEX < /proc/cpuinfo)"
+    else
+        echo '<<<docker_container_cpu>>>'
+        echo "$(</sys/fs/cgroup/cpu/cpuacct.stat)"
     fi
 }
 

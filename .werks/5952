@@ -1,0 +1,12 @@
+Title: docker_container_cpu: Check the CPU utilization of a docker container
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523018035
+Class: feature
+
+This check reports the percentage CPU utilization of a docker container.
+Unlike the Linux CPU utilization check (kernel.util) it does only report
+user and system time. More detailed values, like iowait, are not available.

@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_docker_container_cpu(info):
+    if info:
+        return [(None, {})]
+
+
+def check_docker_container_cpu(_no_item, params, info):
+    if not params:
+        params = {}
+
+    # user, nice, system, idle, iowait, hw-int, sw-int, steal
+    ticks = dict(info)
+    values = [ int(ticks["user"]), 0, int(ticks["system"]), 0, 0, 0, 0, 0 ]
+
+    return check_cpu_util_unix(values, params)
+
+
+check_info["docker_container_cpu"] = {
+    "check_function":       check_docker_container_cpu,
+    "inventory_function":   inventory_docker_container_cpu,
+    "service_description":  "CPU utilization",
+    "has_perfdata":         True,
+    "includes":             ["cpu_util.include"],
+    "group":                "cpu_iowait",
+}

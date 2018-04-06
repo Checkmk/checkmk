@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef IEventLog_h
-#define IEventLog_h
+#ifndef EventLogBase_h
+#define EventLogBase_h
 
 #include <memory>
 #include <string>
@@ -31,7 +31,7 @@
 class Logger;
 class WinApiInterface;
 
-class IEventLogRecord {
+class EventLogRecordBase {
 public:
     enum class Level {
         Error,
@@ -42,10 +42,10 @@ public:
         Success
     };
 
-    IEventLogRecord() = default;
-    virtual ~IEventLogRecord() = default;
-    IEventLogRecord(const IEventLogRecord &) = delete;
-    IEventLogRecord &operator=(const IEventLogRecord &) = delete;
+    EventLogRecordBase() = default;
+    virtual ~EventLogRecordBase() = default;
+    EventLogRecordBase(const EventLogRecordBase &) = delete;
+    EventLogRecordBase &operator=(const EventLogRecordBase &) = delete;
 
     virtual uint64_t recordId() const = 0;
     virtual uint16_t eventId() const = 0;
@@ -56,12 +56,12 @@ public:
     virtual std::wstring message() const = 0;
 };
 
-class IEventLog {
+class EventLogBase {
 public:
-    IEventLog() = default;
-    virtual ~IEventLog() = default;
-    IEventLog(const IEventLog &) = delete;
-    IEventLog &operator=(const IEventLog &) = delete;
+    EventLogBase() = default;
+    virtual ~EventLogBase() = default;
+    EventLogBase(const EventLogBase &) = delete;
+    EventLogBase &operator=(const EventLogBase &) = delete;
 
     /**
      * return the name/path of the eventlog monitored
@@ -90,7 +90,7 @@ public:
      * quick most of the time but occasionally cause a fetch via api that takes
      * longer
      */
-    virtual std::unique_ptr<IEventLogRecord> read() = 0;
+    virtual std::unique_ptr<EventLogRecordBase> read() = 0;
 
     /**
      * return the ID of the last record in eventlog
@@ -98,8 +98,8 @@ public:
     virtual uint64_t getLastRecordId() = 0;
 };
 
-std::unique_ptr<IEventLog> open_eventlog(const std::wstring &name_or_path,
-                                         bool try_vista_api, Logger *logger,
-                                         const WinApiInterface &winapi);
+std::unique_ptr<EventLogBase> open_eventlog(const std::wstring &name_or_path,
+                                            bool try_vista_api, Logger *logger,
+                                            const WinApiInterface &winapi);
 
-#endif  // EventLog_h
+#endif  // EventLogBase_h

@@ -26,7 +26,7 @@
 #define EventLog_h
 
 #include <map>
-#include "IEventLog.h"
+#include "EventLogBase.h"
 #include "stringutil.h"
 #include "types.h"
 #include "win_error.h"
@@ -67,7 +67,7 @@ struct EventHandleTraits {
 
 using EventHandle = WrappedHandle<EventHandleTraits>;
 
-class EventLog : public IEventLog {
+class EventLog : public EventLogBase {
     static const size_t INIT_BUFFER_SIZE = 64 * 1024;
 
 public:
@@ -95,7 +95,7 @@ public:
      * quick most of the time but occasionally cause a fetch via api that takes
      * longer
      */
-    virtual std::unique_ptr<IEventLogRecord> read() override;
+    virtual std::unique_ptr<EventLogRecordBase> read() override;
 
     /**
      * return the ID of the last record in eventlog

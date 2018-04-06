@@ -66,9 +66,9 @@ libcheck_mk_agent_a_SOURCES = \
         Crypto.cc \
         Environment.cc \
         EventLog.cc \
+        EventLogBase.cc \
         EventLogVista.cc \
         ExternalCmd.cc \
-        IEventLog.cc \
         ListenSocket.cc \
         Logger.cc \
         OHMMonitor.cc \

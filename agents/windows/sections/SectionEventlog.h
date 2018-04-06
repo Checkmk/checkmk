@@ -104,7 +104,7 @@ protected:
         std::ostream &out, const std::optional<std::string> &remoteIP) override;
 
 private:
-    uint64_t outputEventlog(std::ostream &out, IEventLog &log,
+    uint64_t outputEventlog(std::ostream &out, EventLogBase &log,
                             uint64_t previouslyReadId, eventlog::Level level,
                             bool hideContext);
     FindResult findLog(const HKeyHandle &hKey, DWORD index) const;
@@ -114,8 +114,8 @@ private:
                              const eventlog::States &states);
     std::pair<eventlog::Level, bool> readConfig(
         const eventlog::state &state) const;
-    std::unique_ptr<IEventLog> openEventlog(const std::string &logname,
-                                            std::ostream &out) const;
+    std::unique_ptr<EventLogBase> openEventlog(const std::string &logname,
+                                               std::ostream &out) const;
     void handleExistingLog(std::ostream &out, eventlog::state &state);
 
     Configurable<bool> _sendall;

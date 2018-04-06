@@ -180,7 +180,7 @@ wstring MessageResolver::resolve(DWORD eventID, LPCWSTR source,
     return result;
 }
 
-class EventLogRecord : public IEventLogRecord {
+class EventLogRecord : public EventLogRecordBase {
 public:
     EventLogRecord(EVENTLOGRECORD *record, const MessageResolver &resolver)
         : _record(record), _resolver(resolver) {}
@@ -286,7 +286,7 @@ void EventLog::seek(uint64_t record_number) {
     _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
 }
 
-std::unique_ptr<IEventLogRecord> EventLog::read() {
+std::unique_ptr<EventLogRecordBase> EventLog::read() {
     EVENTLOGRECORD *result = nullptr;
     while (result == nullptr) {
         while (_buffer_offset < _buffer_used) {
@@ -317,7 +317,7 @@ std::unique_ptr<IEventLogRecord> EventLog::read() {
         _last_record_read = result->RecordNumber;
         return std::make_unique<EventLogRecord>(result, _resolver);
     } else {
-        return std::unique_ptr<IEventLogRecord>();
+        return std::unique_ptr<EventLogRecordBase>();
     }
 }
 

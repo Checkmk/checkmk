@@ -1,0 +1,17 @@
+Title: lnx_if: Exclude veth* network interfaces on docker nodes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523003860
+Class: fix
+
+The veth* network interfaces created for docker containers are now
+excluded by the linux agent in all cases. The interface names have no
+direct match with the docker container name or ID. They seem to have
+some kind of random nature.
+
+These container specific interfaces are not relevant to be monitored
+on the node. We are monitoring the docker network interfaces in the
+container.

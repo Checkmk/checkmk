@@ -217,6 +217,10 @@ def parse_lnx_if(info):
 def inventory_lnx_if(parsed):
     if linux_nic_check == "legacy":
         return []
+
+    # Always exclude dockers veth* interfaces on docker nodes
+    parsed = [ e for e in parsed if not e[2].startswith("veth") ]
+
     return inventory_if_common(parsed, has_nodeinfo=True)
 
 

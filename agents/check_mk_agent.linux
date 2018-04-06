@@ -393,7 +393,7 @@ if type ip > /dev/null
 then
     echo '<<<lnx_if>>>'
     echo "[start_iplink]"
-        ip link
+    ip link
     echo "[end_iplink]"
 fi
 

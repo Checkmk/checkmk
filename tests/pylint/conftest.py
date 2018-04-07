@@ -6,6 +6,12 @@ import tempfile
 import shutil
 import pytest
 
+# pylint tests should not be executed in site.
+# -> Disabled site fixture for them
+@pytest.fixture(scope="session")
+def site(request):
+    pass
+
 @pytest.fixture(scope="session")
 def pylint_test_dir():
     base_path = os.environ.get("WORKDIR")

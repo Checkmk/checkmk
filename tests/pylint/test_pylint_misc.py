@@ -15,6 +15,8 @@ def test_pylint_misc():
         cmk_path() + "/cmk_base/default_config",
         cmk_path() + "/cmk_base/data_sources",
 
+        cmc_path() + "/cmk",
+        cmc_path() + "/cmk/cee/liveproxy",
         cmc_path() + "/cmk_base",
         cmc_path() + "/cmk_base/cee",
         cmc_path() + "/cmk_base/modes",
@@ -23,7 +25,8 @@ def test_pylint_misc():
 
         cme_path() + "/cmk_base/default_config",
 
-        cmk_path() + "/lib",
+        cmk_path() + "/cmk",
+        cmk_path() + "/cmk/ec",
         cmk_path() + "/bin",
         cmk_path() + "/notifications",
         cmk_path() + "/agents/plugins",

@@ -64,6 +64,7 @@ package_names=(
     gettext
     language-pack-en
     lcab
+    lcov
     libauthen-sasl-perl
     libc6-dev
     libencode-locale-perl

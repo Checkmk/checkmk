@@ -1,6 +1,6 @@
 bin_PROGRAMS = check_mk_agent
-check_PROGRAMS = WindowsAgentTest wmitest
-noinst_LIBRARIES = libcheck_mk_agent.a
+check_PROGRAMS = WindowsAgentTest WindowsAgentCoverage wmitest
+noinst_LIBRARIES = libcheck_mk_agent.a libcheck_mk_agent_coverage.a
 noinst_PROGRAMS = MontyPython
 
 AUTOMAKE_OPTIONS = foreign
@@ -14,6 +14,11 @@ check_mk_agent_LDADD = check_mk_agent.res libcheck_mk_agent.a $(LD_COMMON)
 
 WindowsAgentTest_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/test
 WindowsAgentTest_LDADD = libcheck_mk_agent.a -lgtest -lgmock $(LD_COMMON)
+
+WindowsAgentCoverage_CPPFLAGS = $(WindowsAgentTest_CPPFLAGS) -fprofile-arcs -ftest-coverage
+WindowsAgentCoverage_LDFLAGS = $(AM_LDFLAGS) -lgcov --coverage
+WindowsAgentCoverage_LDADD = libcheck_mk_agent_coverage.a -lgtest -lgmock $(LD_COMMON)
+libcheck_mk_agent_coverage_a_CPPFLAGS = -D main=check_mk_agent_main $(WindowsAgentCoverage_CPPFLAGS)
 
 wmitest_LDADD = $(LD_COMMON)
 
@@ -47,7 +52,7 @@ check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 # Using Xvfb does not work properly, either. Simply send those stderr warnings
 # to /dev/null as the test output will go to stdout (and/or xml file) anyway.
 unittest: WindowsAgentTest$(EXEEXT)
-	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
+	DISPLAY="$$DISPLAY xterm" wine $< 2>/dev/null
 
 integrationtest: install-strip
 	cd $(bindir)/it ; \
@@ -59,6 +64,13 @@ integrationtest: install-strip
           $(pytest) $(pytest_options) ; \
         fi ; \
         cd -
+
+coverage.info: WindowsAgentCoverage$(EXEEXT) ; \
+	DISPLAY="$$DISPLAY xterm" wine $< 2>/dev/null ; \
+        lcov --capture --rc lcov_branch_coverage=1 --directory . --output-file $@
+
+unittest-coverage-html: coverage.info
+	genhtml $< --rc lcov_branch_coverage=1 --output-directory htmlcov
 
 libcheck_mk_agent_a_SOURCES = \
         Configuration.cc \
@@ -108,6 +120,8 @@ libcheck_mk_agent_a_SOURCES = \
 
 check_mk_agent_SOURCES = check_mk_agent.cc
 
+libcheck_mk_agent_coverage_a_SOURCES = $(libcheck_mk_agent_a_SOURCES) $(check_mk_agent_SOURCES)
+
 MontyPython_SOURCES = it/MontyPython.cc
 
 WindowsAgentTest_SOURCES = \
@@ -128,10 +142,14 @@ WindowsAgentTest_SOURCES = \
         test/sections/SectionLogwatchTest.cc \
         test/sections/SectionMRPETest.cc
 
+WindowsAgentCoverage_SOURCES = $(WindowsAgentTest_SOURCES)
+
 wmitest_SOURCES = Logger.cc WinApi.cc stringutil.cc wmiHelper.cc wmitest.cc
 
 CLEANFILES = \
         *.ico *.res *.rc config.* stamp-* Makefile \
+        $$(find . -name "*.gc*") \
+        $$(find . -name "*.html") \
         $$(find . -name .dirstamp) \
         $$(find .deps/ sections/.deps test/.deps test/sections/.deps it/.deps -type f) \
         $(addprefix $(bindir)/,$(bin_PROGRAMS)) \

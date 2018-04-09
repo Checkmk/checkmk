@@ -1074,4 +1074,6 @@ int main(int argc, char **argv) {
     else {
         RunImmediate(argv[1], argc - 2, argv + 2);
     }
+
+    return 0;
 }

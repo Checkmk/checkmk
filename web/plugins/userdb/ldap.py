@@ -1503,10 +1503,17 @@ def ldap_sync_auth_expire(connection, plugin, params, user_id, ldap_user, user):
     # Special handling for active directory: Is the user enabled / disabled?
     if connection.is_active_directory() and ldap_user.get('useraccountcontrol'):
         # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
-        if saveint(ldap_user['useraccountcontrol'][0]) & 2 and not user.get("locked", False):
+        locked_in_ad = int(ldap_user['useraccountcontrol'][0]) & 2
+        locked_in_cmk = user.get("locked", False)
+
+        if locked_in_ad and not locked_in_cmk:
             return {
                 'locked': True,
                 'serial': user.get('serial', 0) + 1,
+            }
+        elif not locked_in_ad and locked_in_cmk:
+            return {
+                'locked': False,
             }
 
     changed_attr = params.get('attr', connection.ldap_attr('pw_changed')).lower()
@@ -1547,6 +1554,7 @@ ldap_attribute_plugins['auth_expire'] = {
                                  'the password has changed in LDAP or the account has been locked.'),
     'needed_attributes'      : ldap_needed_attributes_auth_expire,
     'sync_func'              : ldap_sync_auth_expire,
+    'lock_attributes'        : ['locked'],
     # When a plugin introduces new user attributes, it should declare the output target for
     # this attribute. It can either be written to the multisites users.mk or the check_mk
     # contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk

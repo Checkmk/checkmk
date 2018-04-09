@@ -553,9 +553,10 @@ def test_inventory_verbose(test_cfg, site):
         assert p.wait() == 0
         assert stderr == ""
         assert stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
-        assert "check_mk " in stdout
-        assert "lnx_if " in stdout
-        assert "mem " in stdout
+        stdout_words = stdout.split()
+        assert "check_mk" in stdout_words
+        assert "lnx_if" in stdout_words
+        assert "mem" in stdout_words
 
 
 #.

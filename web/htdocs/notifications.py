@@ -26,13 +26,10 @@
 
 import config
 import lib
-import errno
-import os
 import sites
 import table
 import time
 import wato
-import watolib
 
 g_acknowledgement_time = {}
 g_modified_time        = 0
@@ -66,19 +63,23 @@ def acknowledge_failed_notifications(timestamp):
     g_acknowledgement_time[config.user.id] = timestamp
     save_acknowledgements()
 
+
 def set_modified_time():
     global g_modified_time
     g_modified_time = time.time()
 
+
 def save_acknowledgements():
     config.user.save_file("acknowledged_notifications", int(g_acknowledgement_time[config.user.id]))
     set_modified_time()
+
 
 def acknowledged_time():
     if g_acknowledgement_time.get(config.user.id) is None or\
             config.user.file_modified("acknowledged_notifications") > g_modified_time:
         load_acknowledgements()
     return g_acknowledgement_time[config.user.id]
+
 
 def load_acknowledgements():
     g_acknowledgement_time[config.user.id] = config.user.load_file("acknowledged_notifications", 0)
@@ -88,6 +89,7 @@ def load_acknowledgements():
         # date. This should considerably reduce the number of log files that have to be searched
         # when retrieving the list
         acknowledge_failed_notifications(time.time())
+
 
 def load_failed_notifications(before=None, after=None, stat_only=False, extra_headers=None):
     may_see_notifications =\
@@ -143,6 +145,7 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
     else:
         return sites.live().query(query)
 
+
 def render_notification_table(failed_notifications):
     table.begin()
 
@@ -158,6 +161,7 @@ def render_notification_table(failed_notifications):
         table.cell(_("Output"),  row[header['comment']])
 
     table.end()
+
 
 # TODO: We should really recode this to use the view and a normal view command / action
 def render_page_confirm(acktime, prev_url, failed_notifications):
@@ -176,6 +180,7 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
     render_notification_table(failed_notifications)
 
     html.footer()
+
 
 def page_clear():
     acktime = html.var('acktime')
@@ -196,4 +201,3 @@ def page_clear():
     failed_notifications = load_failed_notifications(before=acktime,
                                                      after=acknowledged_time())
     render_page_confirm(acktime, prev_url, failed_notifications)
-

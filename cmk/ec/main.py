@@ -2951,7 +2951,7 @@ class EventServer(ECServerThread):
             if self._handle_event_limit("by_rule", event):
                 return False
 
-            self._event_status.new_event(self._table_event, event)
+            self._event_status.new_event(self._table_events, event)
             return True
 
     # The following actions can be configured:
@@ -3003,7 +3003,7 @@ class EventServer(ECServerThread):
 
         if "overflow" in action:
             self.logger.info("  Creating overflow event")
-            self._event_status.new_event(self._table_event, overflow_event)
+            self._event_status.new_event(self._table_events, overflow_event)
 
         if "notify" in action:
             self.logger.info("  Creating overflow notification")

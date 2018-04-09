@@ -3756,13 +3756,16 @@ class StatusServer(ECServerThread):
         event = self._event_status.event(int(event_id))
         if not event:
             raise MKClientError("No event with id %s" % event_id)
+        # Note the common practice: We validate parameters *before* doing any changes.
+        if acknowledged:
+            ack = int(acknowledged)
+            if ack and event["phase"] not in ["open", "ack"]:
+                raise MKClientError("You cannot acknowledge an event that is not open.")
+            event["phase"] = "ack" if ack else "open"
         if comment:
             event["comment"] = comment
         if contact:
             event["contact"] = contact
-        if int(acknowledged) and event["phase"] not in ["open", "ack"]:
-            raise MKClientError("You cannot acknowledge an event that is not open.")
-        event["phase"] = int(acknowledged) and "ack" or "open"
         log_event_history(self.settings, self._config, self._table_events, event, "UPDATE", user)
 
     def handle_command_create(self, arguments):

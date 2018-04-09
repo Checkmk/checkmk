@@ -1,0 +1,17 @@
+Title: Fixed handling of 'acknowledged' parameter of the EC's UPDATE command
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523278661
+Class: fix
+
+Previously, the 'acknowledged' parameter of the EC's UPDATE command was
+processed after the event was already (partially) updated.  When the
+'acknowledged' parameter was missing or not an integer, this behavior was
+confusing and could e.g. lead to missing history entries.
+
+Now all parameters are checked before the event is modified, so no partial
+updates happen.  Furthermore, the 'acknowledged' parameter is optional now,
+restoring the previous accidental behavior in a clean way.

@@ -46,3 +46,5 @@ tags
 tests/web/data/*
 .idea/
 .venv
+*.gcov
+htmlcov/

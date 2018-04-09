@@ -20,3 +20,4 @@ chroot
 /*.msi
 Makefile.in
 junit.xml
+coverage.info

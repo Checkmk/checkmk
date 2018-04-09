@@ -37,8 +37,9 @@ windowsdir="/$CHROOT_BUILD_DIR/agents/windows"
         exit 1
     fi
 
-    if [[ "$targets" == unittest || "$targets" == integrationtest ]] ; then
-        # Only unittest or integrationtest
+    if [[ "$targets" == unittest || "$targets" == integrationtest \
+              || "$targets" == unittest-coverage-html ]] ; then
+        # Only unittest, integrationtest or unittest-coverage-html
         build_archs=()
     elif [[ "$targets" == check ]] ; then
         build_archs=(64)
@@ -72,8 +73,9 @@ windowsdir="/$CHROOT_BUILD_DIR/agents/windows"
     fi
 
     if [[ ! "$targets" =~ clean && "$targets" != integrationtest ]] ; then
-        # Run unittest only in 64 bit
-        targets=unittest
+        if [[ "$targets" != unittest-coverage-html ]] ; then
+            targets=unittest
+        fi
         build 64
     fi
 

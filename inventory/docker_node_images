@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def _parse_docker_images(info):
+def _parse_docker_node_images(info):
     import json
     parsed = {}
     section_name = None
@@ -52,8 +52,8 @@ def _parse_docker_images(info):
     return parsed
 
 
-def inv_docker_images(info, inventory_tree, status_data_tree):
-    parsed = _parse_docker_images(info)
+def inv_docker_node_images(info, inventory_tree, status_data_tree):
+    parsed = _parse_docker_node_images(info)
     path = "software.applications.docker.images:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
@@ -79,7 +79,7 @@ def inv_docker_images(info, inventory_tree, status_data_tree):
         })
 
 
-inv_info['docker_images'] = {
-    'inv_function'    : inv_docker_images,
+inv_info['docker_node_images'] = {
+    'inv_function'    : inv_docker_node_images,
     'has_status_data' : True,
 }

@@ -1,0 +1,10 @@
+Title: docker_container_labels, docker_container_node_name: Inventorizes labels and node name of docker containers
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523285922
+Class: feature
+
+

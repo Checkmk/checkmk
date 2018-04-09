@@ -962,13 +962,15 @@ fi
 
 # Iterate all running containers and report piggyback data for them
 if type docker > /dev/null 2>&1 ; then
+    NODE_NAME=$(docker info --format "{{json .Name}}")
+
     echo "<<<docker_node_info>>>"
     docker info --format "{{json .}}" 2>&1
 
     echo "<<<docker_system_df:sep(44)>>>"
     docker system df --format "{{json .}}" 2>&1
 
-    echo "<<<docker_images>>>"
+    echo "<<<docker_node_images>>>"
     echo "[[[images]]]"
     docker images --all --format "{{json .}}"
     for image in $(docker images --all --format "{{.Repository}}");
@@ -981,10 +983,16 @@ if type docker > /dev/null 2>&1 ; then
 
     # For the container status, we want information about *all* containers
     for CONTAINER_ID in $(docker container ls -q --all); do
-     echo "<<<<$CONTAINER_ID>>>>"
-     echo "<<<docker_container_status>>>"
-     docker inspect $CONTAINER_ID --format='{{json .State}}'
-     echo "<<<<>>>>"
+        echo "<<<<$CONTAINER_ID>>>>"
+        echo "<<<docker_container_status>>>"
+        docker inspect $CONTAINER_ID --format='{{json .State}}'
+
+        echo "<<<docker_container_node_name>>>"
+        echo $NODE_NAME
+
+        echo "<<<docker_container_labels>>>"
+        docker inspect $CONTAINER_ID --format='{{json .Config.Labels}}'
+        echo "<<<<>>>>"
     done
 
     for CONTAINER_ID in $(docker container ls -q); do

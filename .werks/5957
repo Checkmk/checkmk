@@ -1,0 +1,15 @@
+Title: LDAP: Locking of users using "Authentication Expiration" plugin was not unlocking users
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p29
+Date: 1523264693
+Class: fix
+
+The LDAP sync can lock users in Check_MK based on their locking property in the Active Directory.
+When a user was locked in AD and Check_MK performed the next sync, the user login was disabled.
+The inverse operation was not working.
+
+Unlocking previously locked users has now been implemented correctly. Another change is, that
+the locking property in Check_MK is now read-only for LDAP users.

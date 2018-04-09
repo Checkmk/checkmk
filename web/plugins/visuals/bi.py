@@ -24,34 +24,109 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 import bi
+
 
 class BIGroupFilter(FilterUnicodeFilter):
     def __init__(self):
         self.column = "aggr_group"
-        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"), "aggr_group", [self.column], [self.column])
+        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"),
+                                     self.column, [self.column], [self.column])
+
 
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]
 
+
     def display(self):
         htmlvar = self.htmlvars[0]
-        html.dropdown(htmlvar, [ ("", "") ] + [(g, g) for g in bi.aggregation_groups()])
+        html.dropdown(htmlvar, [("", "")] + [(group, group) for group in
+                      {sg for g in bi.aggregation_groups() for sg in g}])
+
 
     def selected_group(self):
         return html.get_unicode_input(self.htmlvars[0])
+
 
     def filter_table(self, rows):
         group = self.selected_group()
         if not group:
             return rows
         else:
-            return [ row for row in rows if row[self.column] == group ]
+            return [row for row in rows if row[self.column] == group]
+
 
     def heading_info(self):
         return html.get_unicode_input(self.htmlvars[0])
 
-declare_filter( 90,  BIGroupFilter())
+
+declare_filter(90, BIGroupFilter())
+
+
+class BIGroupTreeFilter(FilterUnicodeFilter):
+    def __init__(self):
+        self.column = "aggr_group_tree"
+        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group tree"),
+                                     "aggr_group", [self.column], [self.column])
+
+
+    def variable_settings(self, row):
+        return [ (self.htmlvars[0], row[self.column]) ]
+
+
+    def display(self):
+        htmlvar = self.htmlvars[0]
+        html.dropdown(htmlvar, [("", "")] + self._get_selection())
+
+
+    def selected_group(self):
+        return html.get_unicode_input(self.htmlvars[0])
+
+
+    def heading_info(self):
+        return html.get_unicode_input(self.htmlvars[0])
+
+
+    def _get_selection(self):
+        def _build_tree(group, parent, path):
+            this_node = group[0]
+            path = path + (this_node,)
+            child = parent.setdefault(this_node, {"__path__": path})
+            children = group[1:]
+            if children:
+                child = child.setdefault('__children__', {})
+                _build_tree(children, child, path)
+
+        def _build_selection(selection, tree, index):
+            index += 1
+            for _, sub_tree in tree.iteritems():
+                selection.append(_get_selection_entry(sub_tree, index, True))
+                _build_selection(selection, sub_tree.get("__children__", {}), index)
+
+        def _get_selection_entry(tree, index, prefix=None):
+            path = tree["__path__"]
+            if prefix:
+                title_prefix = (u"\u00a0" * 6 * index) + u"\u2514\u2500 "
+            else:
+                title_prefix = ""
+            return ("/".join(path), title_prefix + path[index])
+
+        tree = {}
+        for group in bi.aggregation_groups():
+            _build_tree(group, tree, tuple())
+
+        selection = []
+        index = 0
+        for _, sub_tree in tree.iteritems():
+            selection.append(_get_selection_entry(sub_tree, index))
+            _build_selection(selection, sub_tree.get("__children__", {}), index)
+
+        return selection
+
+
+declare_filter(91, BIGroupTreeFilter())
+
 
 # how is either "regex" or "exact"
 class BITextFilter(FilterUnicodeFilter):
@@ -68,14 +143,18 @@ class BITextFilter(FilterUnicodeFilter):
         FilterUnicodeFilter.__init__(self, self.column + suffix,
                         label, "aggr", [self.column + suffix], [self.column])
 
+
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]
+
 
     def display(self):
         html.text_input(self.htmlvars[0])
 
+
     def heading_info(self):
         return html.get_unicode_input(self.htmlvars[0])
+
 
     def filter_table(self, rows):
         val = html.get_unicode_input(self.htmlvars[0])
@@ -97,16 +176,20 @@ declare_filter(120, BITextFilter("name", suffix="_regex"))
 declare_filter(120, BITextFilter("name", how="exact"))
 declare_filter(121, BITextFilter("output"))
 
+
 class BIHostFilter(Filter):
     def __init__(self):
         self.column = "aggr_hosts"
         Filter.__init__(self, self.column, _("Affected hosts contain"), "aggr", ["aggr_host_site", "aggr_host_host"], [])
 
+
     def display(self):
         html.text_input(self.htmlvars[1])
 
+
     def heading_info(self):
         return html.var(self.htmlvars[1])
+
 
     def find_host(self, host, hostlist):
         for s, h in hostlist:
@@ -114,9 +197,11 @@ class BIHostFilter(Filter):
                 return True
         return False
 
+
     # Used for linking
     def variable_settings(self, row):
         return [ ("aggr_host_host", row["host_name"]), ("aggr_host_site", row["site"]) ]
+
 
     def filter_table(self, rows):
         val = html.var(self.htmlvars[1])
@@ -124,14 +209,18 @@ class BIHostFilter(Filter):
             return rows
         return [ row for row in rows if self.find_host(val, row["aggr_hosts"]) ]
 
+
 declare_filter(130, BIHostFilter(), _("Filter for all aggregations that base on status information of that host. Exact match (no regular expression)"))
+
 
 class BIServiceFilter(Filter):
     def __init__(self):
         Filter.__init__(self, "aggr_service", _("Affected by service"), "aggr", ["aggr_service_site", "aggr_service_host", "aggr_service_service"], [])
 
+
     def double_height(self):
         return True
+
 
     def display(self):
         html.write(_("Host") + ": ")
@@ -139,19 +228,24 @@ class BIServiceFilter(Filter):
         html.write(_("Service") + ": ")
         html.text_input(self.htmlvars[2])
 
+
     def heading_info(self):
         return html.get_unicode_input(self.htmlvars[1], "") \
                + " / " + html.get_unicode_input(self.htmlvars[2], "")
+
 
     def service_spec(self):
         if html.has_var(self.htmlvars[2]):
             return html.get_unicode_input(self.htmlvars[0]), html.get_unicode_input(self.htmlvars[1]), html.get_unicode_input(self.htmlvars[2])
 
+
     # Used for linking
     def variable_settings(self, row):
         return [ ("site", row["site"]), ("host", row["host_name"]), ("service", row["service_description"]) ]
 
+
 declare_filter(131, BIServiceFilter(), _("Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)"))
+
 
 class BIStatusFilter(Filter):
     def __init__(self, what):
@@ -167,11 +261,14 @@ class BIStatusFilter(Filter):
             vars.append(self.prefix + "n")
         Filter.__init__(self, self.column, title, "aggr", vars, [])
 
+
     def filter(self, tablename):
         return ""
 
+
     def double_height(self):
         return self.column == "aggr_assumed_state"
+
 
     def display(self):
         if html.var("filled_in"):
@@ -186,6 +283,7 @@ class BIStatusFilter(Filter):
                 html.br()
             var = self.prefix + varend
             html.checkbox(var, defval, label=text)
+
 
     def filter_table(self, rows):
         jeaders = []
@@ -212,8 +310,7 @@ class BIStatusFilter(Filter):
                 newrows.append(row)
         return newrows
 
+
 declare_filter(150,  BIStatusFilter(""))
 declare_filter(151,  BIStatusFilter("effective_"))
 declare_filter(152,  BIStatusFilter("assumed_"))
-
-

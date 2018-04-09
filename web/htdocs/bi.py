@@ -240,29 +240,17 @@ def get_current_sitestats():
 def reused_compilation():
     return used_cache and not did_compilation
 
-# Returns a sorted list of aggregation group names
+
 def aggregation_groups():
-    if config.bi_precompile_on_demand:
-        migrate_bi_configuration() # convert bi_packs into legacy variables
-        # on demand: show all configured groups
-        group_names = set([])
-        for aggr_def in config.aggregations + config.host_aggregations:
-            if aggr_def[0].get("disabled"):
-                continue
+    migrate_bi_configuration() # convert bi_packs into legacy variables
+    # on demand: show all configured groups
+    groups = []
+    for aggr_def in config.aggregations + config.host_aggregations:
+        if aggr_def[0].get("disabled"):
+            continue
+        groups.extend(aggr_def[1])
+    return groups
 
-            if type(aggr_def[1]) == list:
-                group_names.update(aggr_def[1])
-            else:
-                group_names.add(aggr_def[1])
-
-        group_names = list(group_names)
-
-    else:
-        # classic mode: precompile all and display only groups with members
-        compile_forest(config.user.id)
-        group_names = list(set([ group for group, trees in g_tree_cache["forest"].iteritems() if trees ]))
-
-    return sorted(group_names, cmp = lambda a,b: cmp(a.lower(), b.lower()))
 
 def log(*args):
     for idx, arg in enumerate(args):
@@ -376,15 +364,12 @@ class JobWorker(multiprocessing.Process):
             raise MKConfigError("Aggregation mismatch: Index error")
 
         aggr = enabled_aggregations[aggr_idx]
+
         if aggr[0] != aggr_type:
             raise MKConfigError("Aggregation type mismatch")
 
         aggr = aggr[1]
-        if isinstance(aggr[1], list):
-            aggr_groups = tuple(aggr[1])
-        else:
-            aggr_groups = tuple([aggr[1]])
-        if groups != aggr_groups:
+        if groups != get_aggr_groups(aggr):
             raise MKConfigError("Aggregation groups mismatch")
 
         aggr_options, aggr = aggr[0], aggr[1:]
@@ -403,17 +388,20 @@ class JobWorker(multiprocessing.Process):
             this_entry["downtime_aggr_warn"] = downtime_aggr_warn
 
         new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
+        for entry in new_entries:
+            entry["aggr_group_tree"] = groups
 
         # Generates a unique id for the given entry
         def get_hash(entry):
             return md5.md5(repr(entry) + repr(job)).hexdigest()
 
-        for group in groups:
+        for group in {sg for g in groups for sg in g}: # Flattened groups
             new_entries_hash = map(get_hash, new_entries)
             if group not in new_data['forest']:
                 new_data['forest_ref'][group] = new_entries_hash
             else:
                 new_data['forest_ref'][group] += new_entries_hash
+
 
             # Update several global speed-up indices
             for aggr in new_entries:
@@ -425,7 +413,6 @@ class JobWorker(multiprocessing.Process):
                 # Aggregations by last part of title (assumed to be host name)
                 name = aggr["title"].split()[-1]
                 new_data["aggregations_by_hostname_ref"].setdefault(name, []).append((group, aggr_hash))
-
 
                 # All single-host aggregations looked up per host
                 # Only process the aggregations of hosts which are mentioned in only_hosts
@@ -452,7 +439,6 @@ class JobWorker(multiprocessing.Process):
                 services = find_all_leaves(aggr)
                 for s in services: # triples of site, host, service
                     new_data["affected_services_ref"].setdefault(s, []).append((group, aggr_hash))
-
         return new_data
 
 
@@ -1277,12 +1263,13 @@ def get_enabled_aggregations():
 
     return result
 
+
 def get_aggr_groups(aggr_def):
-    if type(aggr_def[1]) != list:
-        aggr_groups = [ aggr_def[1] ]
-    else:
-        aggr_groups = aggr_def[1]
-    return aggr_groups
+    groups = []
+    for group_list in aggr_def[1]:
+        groups.append(tuple(group_list))
+    return tuple(groups)
+
 
 def get_aggr_ids(what = None): # AGGR_HOST / AGGR_MULTI
     if what is None:
@@ -1291,12 +1278,13 @@ def get_aggr_ids(what = None): # AGGR_HOST / AGGR_MULTI
     enabled_aggregations = get_enabled_aggregations()
     for idx, (aggr_type, aggr_def) in enumerate(enabled_aggregations):
         if aggr_type in what:
-            aggr_groups = get_aggr_groups(aggr_def)
-            result.append((aggr_type, idx, tuple(aggr_groups)))
+            result.append((aggr_type, idx, get_aggr_groups(aggr_def)))
     return result
+
 
 def num_filelocks():
     return len(os.listdir("/proc/%s/fd" % os.getpid()))
+
 
 def setup_bi_instances():
     # The Sitedata Manager holds all data queried from the sites
@@ -1350,7 +1338,7 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
     used_cache      = True
 
     try:
-        if not get_enabled_aggregations():
+        if not get_aggr_ids([AGGR_HOST, AGGR_MULTI]):
             log("No aggregations activated")
             return
 
@@ -1528,10 +1516,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                 raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt></h1>"
                                       "Must have at least 3 entries (has %d)") % (aggr_def, len(aggr_def)))
 
-            if type(aggr_def[1]) == list:
-                groups = aggr_def[1]
-            else:
-                groups = [ aggr_def[1] ]
+            groups = aggr_def[1]
             groups_set = set(groups)
 
             if only_groups and not groups_set.intersection(only_groups):
@@ -3360,6 +3345,7 @@ def table(columns, add_headers, only_sites, limit, filters):
     only_service = None
     only_aggr_name = None
 
+    required_groups = tuple()
     for filter in filters:
         if filter.name == "aggr_group":
             val = filter.selected_group()
@@ -3371,6 +3357,10 @@ def table(columns, add_headers, only_sites, limit, filters):
             only_aggr_name = filter.value().get("aggr_name")
         # TODO: can be further improved by filtering aggr_name_regex
         #       See BITextFilter(Filter): filter_table(self, rows)
+        elif filter.name == "aggr_group_tree":
+            val = filter.value().get("aggr_group_tree")
+            if val:
+                required_groups = tuple(val.split("/"))
 
     if config.bi_precompile_on_demand and only_group:
         # optimized mode: if aggregation group known only precompile this one
@@ -3390,13 +3380,11 @@ def table(columns, add_headers, only_sites, limit, filters):
                 entries = by_groups.get(group, [])
                 entries.append(aggr)
                 by_groups[group] = entries
-            items = by_groups.items()
+            items = by_groups
     else:
-        items = g_tree_cache["forest"].items()
-
+        items = g_tree_cache["forest"]
 
     online_sites = set(map(lambda x: x[0], get_current_sitestats()["online_sites"]))
-
 
     # Prefetch data for later usage - this saves lots of redundant livestatus queries
     def is_tree_required(tree):
@@ -3408,17 +3396,30 @@ def table(columns, add_headers, only_sites, limit, filters):
             return False
         return True
 
+    def is_sub_tree(row, group):
+        try:
+            aggr_group_tree = row["aggr_tree"]["aggr_group_tree"]
+        except KeyError:
+            return True
+
+        if not required_groups:
+            return True
+
+        l = len(required_groups)
+        for aggr_group in aggr_group_tree:
+            if group in aggr_group[l-1:] and aggr_group[:l] == required_groups:
+                return True
+        return False
 
     required_hosts = set()
-    for group, trees in items:
+    for group, trees in items.iteritems():
         for tree in trees:
             if not is_tree_required(tree):
                 continue
             required_hosts.update(tree.get("reqhosts"))
     status_info = get_status_info(required_hosts)
 
-
-    for group, trees in items:
+    for group, trees in items.iteritems():
         if only_group not in [ None, group ]:
             continue
 
@@ -3430,12 +3431,14 @@ def table(columns, add_headers, only_sites, limit, filters):
             if row["aggr_state"]["state"] == None:
                 continue # Not yet monitored, aggregation is not displayed
 
+            if not is_sub_tree(row, group):
+                continue
+
             row["aggr_group"] = group
             rows.append(row)
             import views
             if not views.check_limit(rows, limit):
                 return rows
-
     return rows
 
 
@@ -3443,11 +3446,14 @@ def table(columns, add_headers, only_sites, limit, filters):
 def hostname_table(columns, add_headers, only_sites, limit, filters):
     return singlehost_table(columns, add_headers, only_sites, limit, filters, True, bygroup=False)
 
+
 def hostname_by_group_table(columns, add_headers, only_sites, limit, filters):
     return singlehost_table(columns, add_headers, only_sites, limit, filters, True, bygroup=True)
 
+
 def host_table(columns, add_headers, only_sites, limit, filters):
     return singlehost_table(columns, add_headers, only_sites, limit, filters, False, bygroup=False)
+
 
 def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbyname, bygroup):
     log("--------------------------------------------------------------------")
@@ -3657,6 +3663,23 @@ def migrate_bi_configuration():
 
 
 def _convert_aggregation(aggr_tuple):
+    # Convert group string or list of group string to list of list of group strings O.o
+    old_groups = aggr_tuple[1]
+    updated_groups = []
+    if isinstance(old_groups, list):
+        for old_group in old_groups:
+            if isinstance(old_group, list):
+                updated_groups.append(old_group)
+            else:
+                updated_groups.append([old_group])
+    else:
+        updated_groups.append([old_groups])
+
+    updated_groups.sort()
+    tmp_aggr_list = list(aggr_tuple)
+    tmp_aggr_list[1] = updated_groups
+    aggr_tuple = tuple(tmp_aggr_list)
+
     if type(aggr_tuple[0]) == dict:
         return aggr_tuple # already converted
 

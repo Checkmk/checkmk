@@ -1048,6 +1048,7 @@ class ListOfStrings(ValueSpec):
         self._allow_empty = kwargs.get("allow_empty", True)
         self._empty_text  = kwargs.get("empty_text", "")
         self._max_entries = kwargs.get("max_entries")
+        self._separator   = kwargs.get("separator", "") # in case of float
 
 
     def help(self):
@@ -1074,11 +1075,20 @@ class ListOfStrings(ValueSpec):
                 html.del_var(vp + "_%d" % nr)
                 nr += 1
 
-        html.open_div(id_=vp, class_=["listofstrings", "vertical" if self._vertical else "horizontal"])
+        class_ = ["listofstrings"]
+        if self._vertical:
+            class_.append("vertical")
+        else:
+            class_.append("horizontal")
+        html.open_div(id_=vp, class_=class_)
 
         for nr, s in enumerate(value + [""]):
             html.open_div()
             self._valuespec.render_input(vp + "_%d" % nr, s)
+            if self._vertical != "vertical" and self._separator:
+                html.nbsp()
+                html.write(self._separator)
+                html.nbsp()
             html.close_div()
         html.close_div()
         html.div('', style="clear:left;")

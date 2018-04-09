@@ -1,0 +1,12 @@
+Title: Fixed RFC1158 MIB from pysnmp library
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523267771
+Class: fix
+
+The shipped pysnmp library (version 4.4.4) had a bug in one of its MIBs,
+leading to a Python stacktrace in the Event Console logs and non-working
+SNMP trap translation. This has been fixed.

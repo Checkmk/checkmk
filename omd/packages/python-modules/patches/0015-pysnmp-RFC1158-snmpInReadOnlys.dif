@@ -1,0 +1,10 @@
+diff -Nur dest.orig/pysnmp-4.4.4/pysnmp/smi/mibs/RFC1158-MIB.py dest/pysnmp-4.4.4/pysnmp/smi/mibs/RFC1158-MIB.py
+--- dest/pysnmp-4.4.4.orig/pysnmp/smi/mibs/RFC1158-MIB.py	2018-01-03 13:31:46.000000000 +0100
++++ dest/pysnmp-4.4.4/pysnmp/smi/mibs/RFC1158-MIB.py	2018-04-09 11:51:10.815461746 +0200
+@@ -17,5 +17,5 @@
+ snmpInBadTypes = MibScalar((1, 3, 6, 1, 2, 1, 11, 7), Counter32()).setMaxAccess("readonly")
+ if mibBuilder.loadTexts: snmpInBadTypes.setStatus('mandatory')
+ snmpOutReadOnlys = MibScalar((1, 3, 6, 1, 2, 1, 11, 23), Counter32()).setMaxAccess("readonly")
+-if mibBuilder.loadTexts: snmpInReadOnlys.setStatus('mandatory')
++if mibBuilder.loadTexts: snmpOutReadOnlys.setStatus('mandatory')
+ mibBuilder.exportSymbols("RFC1158-MIB", snmpOutReadOnlys=snmpOutReadOnlys, snmpInBadTypes=snmpInBadTypes)

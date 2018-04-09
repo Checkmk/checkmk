@@ -1,0 +1,10 @@
+Title: nfsmounts, cifsmounts: Fixed the blemish "Invalid parameter" displayed in service discovery dialog
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p29
+Date: 1523256923
+Class: fix
+
+

@@ -48,7 +48,7 @@ def parse_network_fs_mounts(info):
 
 def inventory_network_fs_mounts(parsed):
     for mp in parsed:
-        yield mp, None
+        yield mp, {}
 
 
 def check_network_fs_mounts(item, params, parsed):

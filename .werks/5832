@@ -1,0 +1,12 @@
+Title: Render snmpTrapAddress in a human-readable form even without SNMP trap translation
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523277096
+Class: feature
+
+If SNMP trap translation was disabled, the originating IP address of a trap
+appeared as a funny byte blob in EC messages.  This has been fixed, the
+usual dotted notation is used now.

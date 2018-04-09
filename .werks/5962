@@ -1,0 +1,15 @@
+Title: BI aggregation groups: Group paths can be specified in order to manage aggregations as a virtual tree
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523284412
+Class: feature
+
+Previously aggregation groups were a flat list of strings.
+Now you're able to add paths in order to manage these
+groups as a virtual tree.
+
+There's also a new sidebar snapin {BI Aggregation Groups Tree}
+which displays this tree and a related filter.

@@ -210,13 +210,7 @@ class ModeBI(WatoMode):
 
 
     def _convert_aggregation_to_bi(self, aggr):
-        if len(aggr["groups"]) == 1:
-            conv = (aggr["groups"][0],)
-        else:
-            conv = (aggr["groups"],)
         node = self._convert_node_to_bi(aggr["node"])
-        convaggr = conv + node
-
         option_keys = [
             ("hard_states",        False),
             ("downtime_aggr_warn", False),
@@ -231,8 +225,7 @@ class ModeBI(WatoMode):
         for option, default_value in option_keys:
             options[option] = aggr.get(option, default_value)
 
-        convaggr = (options,) + convaggr
-        return convaggr
+        return (options, self._convert_aggregation_groups(aggr["groups"])) + node
 
 
     def _convert_node_to_bi(self, node):
@@ -297,20 +290,29 @@ class ModeBI(WatoMode):
             else:
                 options["hard_states"] = False
 
-
-        if type(aggr[0]) != list:
-            groups = [aggr[0]]
-        else:
-            groups = aggr[0]
-
         node = self._convert_node_from_bi(aggr[1:])
         aggr_dict = {
-            "groups"             : groups,
+            "groups"             : self._convert_aggregation_groups(aggr[0]),
             "node"               : node,
             "single_host"        : single_host,
         }
         aggr_dict.update(options)
         return aggr_dict
+
+
+    def _convert_aggregation_groups(self, old_groups):
+        #TODO Clean up duplicate in htdocs/bi.py
+        groups = []
+        if isinstance(old_groups, list):
+            for old_group in old_groups:
+                if isinstance(old_group, list):
+                    groups.append(old_group)
+                else:
+                    groups.append([old_group])
+        else:
+            groups.append([old_groups])
+        return groups
+
 
     # Make some conversions so that the format of the
     # valuespecs is matched
@@ -664,6 +666,28 @@ class ModeBI(WatoMode):
 
 
     def _get_vs_aggregation(self):
+        def transform_aggregation_groups_to_gui(groups):
+            if not isinstance(groups, list):
+                groups = [groups]
+
+            new = []
+            for group in groups:
+                if isinstance(group, list) and len(group) == 1:
+                    new.append(group[0])
+                else:
+                    new.append(group)
+            return new
+
+        def transform_aggregation_groups_to_disk(groups):
+            # result is always of the form [["SINGLE NAME"], ["ANY", "PATH"], ...]
+            new = []
+            for group in groups:
+                if isinstance(group, list):
+                    new.append(group)
+                else:
+                    new.append([group])
+            return new
+
         if cmk.is_managed_edition():
             cme_elements = managed.customer_choice_element()
         else:
@@ -674,15 +698,19 @@ class ModeBI(WatoMode):
             optional_keys = False,
             render = "form",
             elements = cme_elements + [
-            ( "groups",
-              ListOfStrings(
-                  title = _("Aggregation Groups"),
-                  help = _("List of groups in which to show this aggregation. Usually "
-                           "each aggregation is only in one group. Group names are arbitrary "
-                           "texts. At least one group is mandatory."),
-                  valuespec = TextUnicode(),
-              ),
-            ),
+            ("groups", Transform(ListOf(
+                Alternative(
+                    style="dropdown",
+                    orientation="horizontal",
+                    elements=[
+                        TextUnicode(title=_("Group name")),
+                        ListOfStrings(title=_("Group path"), orientation="horizontal", separator="/"),
+                    ],
+                ),
+                title=_("Aggregation Groups")),
+                forth=transform_aggregation_groups_to_gui,
+                back=transform_aggregation_groups_to_disk,
+            )),
             ( "node",
               CascadingDropdown(
                   title = _("Rule to call"),
@@ -1123,7 +1151,7 @@ class ModeBIAggregations(ModeBI):
         c = wato_confirm(_("Confirm aggregation deletion"),
             _("Do you really want to delete the aggregation number <b>%s</b>?") % (aggregation_id+1))
         if c:
-            self._pack["aggregations"].remove(aggregation_id)
+            del self._pack["aggregations"][aggregation_id]
             self._add_change("bi-delete-aggregation", _("Deleted BI aggregation number %d") % (aggregation_id+1))
             self.save_config()
         elif c == False: # not yet confirmed
@@ -1229,7 +1257,13 @@ class ModeBIAggregations(ModeBI):
             if aggregation["single_host"]:
                 html.icon(_("This aggregation covers only data from a single host."), "host")
 
-            table.text_cell(_("Groups"), ", ".join(aggregation["groups"]))
+            group_infos = []
+            for group in aggregation["groups"]:
+                if isinstance(group, list):
+                    group_infos.append("/".join(group))
+                else:
+                    group_infos.append(group)
+            table.text_cell(_("Groups"), ", ".join(group_infos))
 
             ruleid, description = self.rule_called_by_node(aggregation["node"])
             edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id), ("id", ruleid)])
@@ -1533,7 +1567,7 @@ class ModeBIEditAggregation(ModeBI):
         self._edited_nr = int(html.var("id", "-1")) # In case of Aggregations: index in list
         if self._edited_nr == -1:
             self._new = True
-            self._edited_aggregation = { "groups" : [ _("Main") ] }
+            self._edited_aggregation = {"groups" : [[_("Main")]]}
         else:
             self._new = False
             try:

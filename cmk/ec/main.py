@@ -1489,8 +1489,8 @@ class EventServer(ECServerThread):
         for oid, value in var_bind_list:
             key = str(oid)
 
-            if value.__class__.__name__ == 'ObjectIdentifier':
-                val = str(value)
+            if value.__class__.__name__ in ['ObjectIdentifier', 'IpAddress']:
+                val = value.prettyPrint()
             elif value.__class__.__name__ == 'TimeTicks':
                 val = self.fmt_timeticks(value._value)
             else:

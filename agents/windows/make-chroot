@@ -126,6 +126,9 @@ debootstrap \
     --include="$packages" \
     --arch amd64 $DISTRO $CHROOT_PATH $MIRROR
 
+# "Disable" apt privilege dropping in chroot
+sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
+
 # Cope with the known bug with libsane1 that wine depends on.
 # https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/
 # Need to use --force-overwrite with apt-get. This option cannot be passed
@@ -166,9 +169,6 @@ EOF
 if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
     ln -sf python2.7 $CHROOT_PATH/usr/bin/python
 fi
-
-# "Disable" apt privilege dropping in chroot
-sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
 
 # We need to enable 32bit Wine
 $SCRIPT_DIR/do-chroot 'dpkg --add-architecture i386 && apt-get update && apt-get -o Dpkg::Options::="--force-overwrite" -y install wine32'

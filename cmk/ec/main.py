@@ -489,6 +489,22 @@ def initialize_snmptrap_engine(config, event_server, table_events):
     g_snmp_engine = the_snmp_engine
 
 
+def auth_proto_for(proto_name):
+    if proto_name == "md5":
+        return snmp_config.usmHMACMD5AuthProtocol
+    if proto_name == "sha":
+        return snmp_config.usmHMACSHAAuthProtocol
+    raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
+
+
+def priv_proto_for(proto_name):
+    if proto_name == "DES":
+        return snmp_config.usmDESPrivProtocol
+    if proto_name == "AES":
+        return snmp_config.usmAesCfb128Protocol
+    raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
+
+
 def initialize_snmp_credentials(config, the_snmp_engine):
     user_num = 0
     for spec in config["snmp_credentials"]:
@@ -497,45 +513,45 @@ def initialize_snmp_credentials(config, the_snmp_engine):
 
         # SNMPv1/v2
         if type(credentials) != tuple:
-            snmp_config.addV1System(the_snmp_engine, 'snmpv2-%d' % user_num, credentials)
+            community_index = 'snmpv2-%d' % user_num
+            logger.info("adding SNMPv1 system: communityIndex=%s" % community_index)
+            snmp_config.addV1System(the_snmp_engine, community_index, credentials)
             continue
 
         # SNMPv3
-        user_id = "user-%d" % user_num
-        auth_key, priv_key = None, None
-
-        if credentials[0] == "noAuthNoPriv":
+        securityLevel = credentials[0]
+        if securityLevel == "noAuthNoPriv":
+            user_id = credentials[1]
             auth_proto = snmp_config.usmNoAuthProtocol
-        elif credentials[0] in ["authNoPriv", "authPriv"]:
-            if credentials[1] == "md5":
-                auth_proto = snmp_config.usmHMACMD5AuthProtocol
-            elif credentials[1] == "sha":
-                auth_proto = snmp_config.usmHMACSHAAuthProtocol
-            else:
-                raise Exception("Invalid SNMP auth protocol: %s" % credentials[1])
-
+            auth_key = None
+            priv_proto = snmp_config.usmNoPrivProtocol
+            priv_key = None
+        elif securityLevel == "authNoPriv":
             user_id = credentials[2]
+            auth_proto = auth_proto_for(credentials[1])
             auth_key = credentials[3]
-
-        if credentials[0] == "authPriv":
-            if credentials[4] == "DES":
-                priv_proto = snmp_config.usmDESPrivProtocol
-            elif credentials[4] == "AES":
-                priv_proto = snmp_config.usmAesCfb128Protocol
-            else:
-                raise Exception("Invalid SNMP priv protocol: %s" % credentials[4])
+            priv_proto = snmp_config.usmNoPrivProtocol
+            priv_key = None
+        elif securityLevel == "authPriv":
+            user_id = credentials[2]
+            auth_proto = auth_proto_for(credentials[1])
+            auth_key = credentials[3]
+            priv_proto = priv_proto_for(credentials[4])
             priv_key = credentials[5]
         else:
-            priv_proto = snmp_config.usmNoPrivProtocol
+            raise Exception("Invalid SNMP security level: %s" % securityLevel)
 
-        for engine_id in spec["engine_ids"]:
+        for engine_id in spec.get("engine_ids", []):
+            logger.info("adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s" %
+                        (user_id,
+                         ".".join(str(i) for i in auth_proto),
+                         ".".join(str(i) for i in priv_proto),
+                         engine_id))
             snmp_config.addV3User(
                 the_snmp_engine, user_id,
                 auth_proto, auth_key,
                 priv_proto, priv_key,
-                securityEngineId=snmp_v2c.OctetString(hexValue=engine_id)
-            )
-
+                securityEngineId=snmp_v2c.OctetString(hexValue=engine_id))
 
 #.
 #   .--Timeperiods---------------------------------------------------------.

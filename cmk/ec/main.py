@@ -3765,7 +3765,7 @@ class StatusServer(ECServerThread):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_id, user = arguments
-        self._event_status.delete_event(self, self._table_events, int(event_id), user)
+        self._event_status.delete_event(self._table_events, int(event_id), user)
 
     def handle_command_update(self, arguments):
         event_id, user, acknowledged, comment, contact = arguments

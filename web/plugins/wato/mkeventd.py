@@ -2918,6 +2918,7 @@ if mkeventd_enabled:
                         allow_empty = False,
                     )),
                 ],
+                # NOTE: For SNMPv3, this should not be empty, otherwise users will be confused...
                 optional_keys = ["engine_ids"],
             ),
             title = _("Credentials for processing SNMP traps"),

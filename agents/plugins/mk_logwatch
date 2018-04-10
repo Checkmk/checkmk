@@ -110,6 +110,8 @@ def read_config():
 
     have_filenames = False
     config = []
+    cont_list = []
+    rewrite_list = []
 
     for line in config_lines:
         if line[0].isspace(): # pattern line

@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.5.0i4
+Version: 1.5.0b1
 Date: 1519389923
 
 The werk 5415 (1.4.0p22) renamed an agent section from "ohm" to "openhardwaremonitor" to fix

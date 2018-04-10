@@ -1,0 +1,204 @@
+Title: Introduce docker monitoring with Check_MK
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1523350439
+Class: feature
+
+With this change we prepare Check_MK for monitoring docker environments out
+of the box. These checks work in different layers (node, container).
+
+The docker monitoring is currently available through the linux agent. To get
+a docker node monitored it should be enough to simply deploy the agent as
+usual on the node. Check_MK will find all relevant checks automatically.
+
+The agent on the node will iterate over all containers and execute the
+Check_MK agent in the context of the container. In case there is a agent already
+installed in the container, the agent of the container will be used. Otherwise
+the node will execute the nodes agent in the context of the container.
+
+In case you need specific agent plugins executed in the container, you can
+add them to the container image together with the agent just like you would
+do it for regular hosts.
+
+By default the docker container specific parts are transported via piggyback
+from the node to the Check_MK server. This means that you will have to create
+hosts in your Check_MK use the short container ID as name.
+
+For the docker container hosts please use the following configuration:
+
+<ul>
+<li>Set the "IP address family" to "No IP" for only processing the piggyback data.</li>
+<li>Set the docker node as parent.</li>
+<li>Enable HW/SW inventory for the node and the containers</li>
+</ul>
+
+The manual (or scripted) configuration of these hosts will be necessary with
+the 1.5. Check_MK 1.6 will solve this problem automatically in a more elegant way.
+
+There are other use cases, for example if you have not access to the node,
+then you can also install the agent (including optional config and plugins)
+into the image and make the container open a dedicated network port for
+agent communication.
+
+We'll add a dedicated docker monitoring page to the documentation in the
+near future to describe this in detail.
+
+The following changes have been made for now:
+
+<h3>New check plugins</h3>
+
+<ul>
+<li>docker_node_info: Check the status of docker daemon<br>
+
+    Whether or not the docker daemon is running and functional on the docker
+    node.
+    </li>
+
+<li>docker_node_info.containers: Count number of containers<br>
+
+    Counts the number of containers in the different states. Creates metrics
+    out of these information. Thresholds can be configured on the number of
+    containers in the different states.
+    </li>
+
+<li>docker_node_disk_usage: Disk usage of docker files<br>
+
+    This check summarizes the disk usage of docker files (images, ...) on
+    the disks. It tells you whether or not you can safe disk space by
+    cleaning up things.
+    </li>
+
+<li>docker_container_cpu: Check the CPU utilization of a docker container<br>
+    
+    This check reports the percentage CPU utilization of a docker container.
+    Unlike the Linux CPU utilization check (kernel.util) it does only report
+    user and system time. More detailed values, like iowait, are not available.
+    </li>
+
+<li>docker_container_mem: Docker container specific memory checking<br>
+    
+    Instead of using the default linux memory check (mem), Check_MK is now
+    using the container specific memory check.
+    
+    The main reason is that the memory information in the container is not
+    available through <tt>/proc/meminfo</tt> as usual. The memory data is available
+    through the kernels cgroup interface which is available in the containers
+    context below <tt>/sys/fs/cgroup/memory/memory.stat</tt>
+    
+    The features of both checks are exactly the same.
+    </li>
+
+<li>docker_container_status: Checks running state of container<br>
+    
+    The check docker_container_status checks whether a container is running or not.
+    </li>
+
+<li>docker_container_status.health: Check healthcheck API of containers<br>
+
+    Check the status of containers as reported by Docker's healthcheck API.
+    </li>
+</ul>
+
+
+<h3>New HW / SW inventory plugins</h3>
+
+<ul>
+<li>docker_node_images: Inventorize docker node information<br>
+
+    Inventorizes information about repository, tag, ID, creation time, size,
+    labels and the amount of docker images. It also collect information about
+    how many containers currently use this image.
+    </li>
+
+<li>docker_node_info: Inventory plugin displaying docker version<br>
+
+    Adds the docker version and node labels to the inventory tree.
+    </li>
+<li>docker_container_labels: Inventorize the labels of container</li>
+<li>docker_container_node_name: Inventorize node name of containers</li>
+</ul>
+
+
+<h3>Preparing linux agent for docker monitoring</h3>
+
+<ul>
+<li>The agent now detects whether or not it is being executed
+    in a docker container context.
+    </li>
+
+<li>Find docker containers and execute agent in context<br>
+    
+    In case the agent is running on a docker node, it iterates
+    all running containers and executes the Check_MK agent in
+    to context of the container to gather container specific
+    information.
+    
+    In case a check_mk_agent is already installed in the
+    container, then this agent is executed.
+    
+    In case there is no check_mk_agent installed, the agent
+    of the docker node is executed in the container.
+    </li>
+</ul>
+    
+<h3>Changed checks</h3>
+
+<ul>
+<li>lnx_if: Exclude veth* network interfaces on docker nodes<br>
+    
+    The veth* network interfaces created for docker containers are now
+    excluded by the linux agent in all cases. The interface names have no
+    direct match with the docker container name or ID. They seem to have
+    some kind of random nature.
+    
+    These container specific interfaces are not relevant to be monitored
+    on the node. We are monitoring the docker network interfaces in the
+    container.
+    </li>
+    
+<li>df: Exclude docker local storage mounts on docker nodes<br>
+    
+    The df check is now excluding all filesystems found below
+    <tt>/var/lib/docker</tt>, which is the default location for
+    the docker container local storage.
+    
+    Depending on the used storage engine docker creates overlay
+    filesystems and mounts below this hierarchy for the started
+    containers.
+    
+    The filesystems are not interesting for our monitoring. They
+    will be monitored from the container context.
+    </li>
+
+<li>df mounts: Skip docker mounts for name resolution in container<br>
+    
+    When docker containers are configured to perform name resolution there are
+    mounts at <tt>/etc/resolv.conf</tt>, <tt>/etc/hostname</tt> and
+    <tt>/etc/hosts</tt> which are not relevant to be monitored. These checks are
+    now always skipped.
+    </li>
+
+<li>uptime: Is now reported correctly for docker containers<br>
+    
+    In previous versions of the linux agent the uptime of the
+    docker node was reported by the agent when it is being executed
+    in a docker container context.
+    </li>
+
+<li>Checks disabled in docker container contexts<br>
+    
+    These checks do not make sense in the context of a docker container.
+    The agent is now skipping this section when executed in a container.
+    For some of the checks docker specific ones have been added (see above).
+
+    <ul>
+    <li>kernel</li>
+    <li>cpu.threads</li>
+    <li>cpu.load</li>
+    <li>drbd</li>
+    <li>lnx_thermal</li>
+    </ul>
+</ul>

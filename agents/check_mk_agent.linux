@@ -967,7 +967,7 @@ if type docker > /dev/null 2>&1 ; then
     echo "<<<docker_node_info>>>"
     docker info --format "{{json .}}" 2>&1
 
-    echo "<<<docker_system_df:sep(44)>>>"
+    echo "<<<docker_node_disk_usage:sep(44)>>>"
     docker system df --format "{{json .}}" 2>&1
 
     echo "<<<docker_node_images>>>"

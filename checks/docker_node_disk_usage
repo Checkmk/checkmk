@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_docker_system_df(info):
+def parse_docker_node_disk_usage(info):
     import json
 
     parsed = {}
@@ -45,12 +45,12 @@ def parse_docker_system_df(info):
     return parsed
 
 
-def inventory_docker_system_df(parsed):
+def inventory_docker_node_disk_usage(parsed):
     for item in parsed:
         yield item, {}
 
 
-def check_docker_system_df(item, params, parsed):
+def check_docker_node_disk_usage(item, params, parsed):
     data = parsed.get(item)
     if data is None:
         yield 3, "no data"
@@ -77,12 +77,12 @@ def check_docker_system_df(item, params, parsed):
         yield status, infotext, perfdata
 
 
-check_info["docker_system_df"] = {
-    "parse_function": parse_docker_system_df,
-    "inventory_function": inventory_docker_system_df,
-    "check_function": check_docker_system_df,
+check_info["docker_node_disk_usage"] = {
+    "parse_function": parse_docker_node_disk_usage,
+    "inventory_function": inventory_docker_node_disk_usage,
+    "check_function": check_docker_node_disk_usage,
     "service_description": "Docker disk usage - %s",
     "includes": ["docker.include"],
     "has_perfdata": True,
-    "group": "docker_system_df",
+    "group": "docker_node_disk_usage",
 }

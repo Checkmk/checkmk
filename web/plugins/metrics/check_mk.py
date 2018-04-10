@@ -4796,7 +4796,7 @@ check_metrics["check_mk-docker_node_info.containers"] = {
     "stopped" : { "name" : "docker_stopped_containers" },
 }
 
-check_metrics["check_mk-docker_system_df"] = {
+check_metrics["check_mk-docker_node_disk_usage"] = {
     "count"  : { "name" : "docker_count" },
     "active" : { "name" : "docker_active" },
     "size" : { "name" : "docker_size" },

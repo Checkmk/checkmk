@@ -15436,7 +15436,7 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
-    "docker_system_df",
+    "docker_node_disk_usage",
     _("Docker node disk usage"),
     Dictionary(
         help = _("Allows to define levels for the counts and size of Docker Containers, Images, Local Volumes, and the Build Cache."),

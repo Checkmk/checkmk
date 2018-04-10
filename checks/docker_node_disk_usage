@@ -32,7 +32,7 @@ def parse_docker_node_disk_usage(info):
     for line in info:
         data = json.loads(",".join(line))
 
-        type_ = data.pop('Type')
+        type_ = data.pop('Type').lower()
         parsed[type_] = data
 
         data['Active'] = int(data['Active']) if data['Active'] else 0

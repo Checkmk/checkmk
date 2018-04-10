@@ -50,7 +50,7 @@ check_info['docker_node_info'] = {
     'parse_function'        : parse_docker_node_info,
     'inventory_function'    : inventory_docker_node_info,
     'check_function'        : check_docker_node_info,
-    'service_description'   : 'Docker Node Info',
+    'service_description'   : 'Docker node info',
 }
 
 
@@ -96,7 +96,7 @@ def check_docker_node_containers(item, params, parsed):
 check_info["docker_node_info.containers"] = {
     "inventory_function": inventory_docker_node_containers,
     "check_function": check_docker_node_containers,
-    "service_description": "Docker Containers",
+    "service_description": "Docker containers",
     "has_perfdata": True,
     "group": "docker_node_containers",
 }

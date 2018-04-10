@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.5.0i4
+Version: 1.5.0b1
 Date: 1520250977
 
 Previously, any strings against which to match would be ignored. This has been fixed.

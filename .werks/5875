@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.5.0i4
+Version: 1.5.0b1
 Date: 1519993814
 
 When using older git versions (saw this with 1.7.1) an error could occur when enabling the

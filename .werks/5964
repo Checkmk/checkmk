@@ -1,0 +1,11 @@
+Title: sym_brightmail_queues: Fixed ValueError if some queues do not provide all necessary data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i4
+Date: 1523359396
+
+

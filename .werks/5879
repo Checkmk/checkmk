@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.5.0i4
+Version: 1.5.0b1
 Date: 1520241957
 
 The row limits of the views were not applied in the dashlets. This could result

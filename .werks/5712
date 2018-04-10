@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.5.0i4
+Version: 1.5.0b1
 Date: 1520339353
 
 The state in case of 0 total memory is still UNKNOWN, but the error message is more helpful.

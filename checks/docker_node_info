@@ -96,7 +96,7 @@ def check_docker_node_containers(item, params, parsed):
 check_info["docker_node_info.containers"] = {
     "inventory_function": inventory_docker_node_containers,
     "check_function": check_docker_node_containers,
-    "service_description": "Docker Container",
+    "service_description": "Docker Containers",
     "has_perfdata": True,
     "group": "docker_node_containers",
 }

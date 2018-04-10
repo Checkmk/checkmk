@@ -68,7 +68,7 @@ def check_docker_container_status_health(_no_item, params, parsed):
 check_info["docker_container_status.health"] = {
     "inventory_function"    : inventory_docker_container_status_health,
     "check_function"        : check_docker_container_status_health,
-    "service_description"   : "Docker Container Health",
+    "service_description"   : "Docker container health",
 }
 
 #.
@@ -104,5 +104,5 @@ check_info['docker_container_status'] = {
     'parse_function'        : parse_docker_container_status,
     'inventory_function'    : inventory_docker_container_status,
     'check_function'        : check_docker_container_status,
-    'service_description'   : 'Docker Container Status',
+    'service_description'   : 'Docker container status',
 }

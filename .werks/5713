@@ -1,0 +1,10 @@
+Title: mk_logwatch: Fix message rewriting and continuation patterns
+Level: 2
+Component: checks
+Compatible: comp
+Edition: cre
+Version: 1.4.0p30
+Date: 1523367537
+Class: fix
+
+Thanks to Martin Adamiak for the patch!

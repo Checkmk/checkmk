@@ -117,8 +117,6 @@ def read_config():
                 raise Exception("Missing logfile names")
 
             level, pattern = line.split(None, 1)
-            cont_list = [] # List of continuation patterns
-            rewrite_list = [] # List of rewrite patterns
 
             if level == 'A':
                 cont_list.append(parse_cont_pattern(pattern))
@@ -126,12 +124,15 @@ def read_config():
                 rewrite_list.append(pattern)
             else:
                 level, compiled = parse_pattern(level, pattern, line)
+                # New pattern for line matching => clear continuation and rewrite patterns
                 cont_list = []
                 rewrite_list = []
                 patterns.append((level, compiled, cont_list, rewrite_list))
 
         else: # filename line
             patterns = []
+            cont_list = [] # Clear list of continuation patterns from last file
+            rewrite_list = [] # Same for rewrite patterns
             config.append((parse_filenames(line), patterns))
             have_filenames = True
     return config

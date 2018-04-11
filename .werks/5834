@@ -1,0 +1,17 @@
+Title: Fixed SNMPv3 credential handling in the event console.
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b2
+Date: 1523427930
+
+Although it is not really useful, the list of engine IDs, for which a given
+set of credential parameters should be used, can be empty.  Previously this
+lead to a traceback in the EC log and missing credentials for SNMP traps. 
+This has been fixed.
+
+Another bug was in the handling of the noAuthNoPriv security level, where
+the wrong user name was used. This, too, has been fixed.

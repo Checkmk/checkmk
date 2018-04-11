@@ -1,0 +1,37 @@
+Title: Cascading livestatus proxy is now possible
+Level: 2
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.5.0b2
+Date: 1523438853
+Class: feature
+
+It is now possible to cascade livestatus proxy configurations. This comes in
+handy to build cascaded distributed GUI (status GUI) setups.
+
+The feature has been build for a scenario like this:
+
+<ul>
+<li>A distributed setup where you have remote sites that are not directly
+reachable</li> <li>These remote sites are only reachable through a single
+"location master" site</li> <li>You use the "location masters" for
+configuration of all the related sites</li> <li>The central site is only used
+as central operating site (overview, reporting) and not for configuration</li>
+</ul>
+
+To get a cascading setup, configure Check_MK like this:
+
+<ul>
+<li>Location master: Create one site in "Distributed configuration" for each
+local site. Configure the connection parameters to use the Livestatus Proxy.
+Set the new option to open a TCP port for this connection and insert a TCP port
+that is currently not used on the local machine (e.g. 6560).</li> <li>Central
+viewer site: Create one site in "Distributed configuration" for each remote
+site. Configure it to use the Livestatus Proxy. Set the destination IP address
+to the IP address of the "Location master" server and set the TCP port to the
+port you configured for the site in the previous step.</li>
+</ul>
+
+After this you should be able to connect to your cascaded remote sites through
+the Livestatus Proxy of the "Location master".

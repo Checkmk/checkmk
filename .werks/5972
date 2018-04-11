@@ -1,0 +1,12 @@
+Title: docker_node_info: Fixed crash when a node with older version reports null labels
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1523446916
+
+The inventory plugin made the Check_MK and Check_MK Inventory services crash when working
+with an older docker version.

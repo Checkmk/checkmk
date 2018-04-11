@@ -37,7 +37,7 @@ from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, DAILY, WEEKLY, MONTHLY
 
 
-class Schedule:
+class Schedule(object):
     """
     Abstract base class for schedules. A default implementation
     for the last and next event at a given datetime are provided.

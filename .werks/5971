@@ -1,0 +1,12 @@
+Title: docker_node_disk_usage: Fix "No JSON object could be decoded" exception with older docker versions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b2
+Date: 1523446569
+Class: fix
+
+When the new agent is executed on a docker nodes that does not yet support the "docker system df" command
+with the "--format" parameter, then the check crashed. The agent has now been fixed to not transport the
+error message to the Check_MK server.

@@ -1,0 +1,18 @@
+Title: webapi: Fixed handling of the option mode in service discovery
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1523461091
+Class: fix
+
+The previous implementation of the option "mode" in service_discovery did not
+allow a handling in the same way as in other webapi requests like including it
+into the request part. This is now fixed. The old behaviour is still supported.
+
+old only supported this syntax:
+curl "http://localhost/$OMD_SITE/check_mk/webapi.py?action=discover_services&_username=automation&_secret=$(cat $OMD_ROOT/var/check_mk/web/automation/automation.secret)&mode=refresh" -d 'request={"hostname":"heute"}'
+
+newly supported and now coherent to other calls:
+curl "http://localhost/$OMD_SITE/check_mk/webapi.py?action=discover_services&_username=automation&_secret=$(cat $OMD_ROOT/var/check_mk/web/automation/automation.secret)" -d 'request={"hostname":"heute", "mode":"refresh"}'

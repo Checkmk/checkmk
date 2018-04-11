@@ -15494,6 +15494,15 @@ class ModePatternEditor(WatoMode):
 #   '----------------------------------------------------------------------'
 
 class CustomAttrMode(WatoMode):
+    def __init__(self, what):
+        # TODO: move _what to the subclasses.
+        # Note: _what is used in _from_vars defined in the subclass
+        #       ModeEditCustomAttr but called in the base class WatoMode.
+        #       Therefore, we have to set it before init right now.
+        self._what = what
+        super(CustomAttrMode, self).__init__()
+
+
     @classmethod
     def custom_attr_types(cls):
         return [
@@ -15544,6 +15553,10 @@ class CustomAttrMode(WatoMode):
 
 
 class ModeEditCustomAttr(CustomAttrMode):
+    def __init__(self, what):
+        super(ModeEditCustomAttr, self).__init__(what)
+
+
     def _from_vars(self):
         self._name = html.var("edit") # missing -> new custom attr
         self._new = self._name == None
@@ -15705,8 +15718,8 @@ class ModeEditCustomAttr(CustomAttrMode):
 
 
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
-    # TODO: Cleanup "what" variable
-    _what = "user"
+    def __init__(self):
+        super(ModeEditCustomUserAttr, self).__init__('user')
 
     def title(self):
         if self._new:
@@ -15721,7 +15734,8 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
 
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
-    _what = "host"
+    def __init__(self):
+        super(ModeEditCustomHostAttr, self).__init__('host')
 
     def title(self):
         if self._new:
@@ -15737,8 +15751,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
 
 class ModeCustomAttrs(CustomAttrMode):
-    def __init__(self):
-        super(ModeCustomAttrs, self).__init__()
+    def __init__(self, what):
+        super(ModeCustomAttrs, self).__init__(what)
         self._load_attributes(lock=html.is_transaction())
 
 
@@ -15794,7 +15808,9 @@ class ModeCustomAttrs(CustomAttrMode):
 
 
 class ModeCustomUserAttrs(ModeCustomAttrs):
-    _what = "user"
+    def __init__(self):
+        super(ModeCustomUserAttrs, self).__init__('user')
+
 
     def title(self):
         return _("Custom User Attributes")
@@ -15807,7 +15823,9 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
 
 
 class ModeCustomHostAttrs(ModeCustomAttrs):
-    _what = "host"
+    def __init__(self):
+        super(ModeCustomHostAttrs, self).__init__('host')
+
 
     def title(self):
         return _("Custom Host Attributes")

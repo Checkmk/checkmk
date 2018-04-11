@@ -15542,8 +15542,8 @@ class CustomAttrMode(WatoMode):
         }, lock=lock)
 
         attrs = {}
-        for self._what in [ "user", "host" ]:
-            attrs[self._what] = vars.get("wato_%s_attrs" % self._what, [])
+        for what in [ "user", "host" ]:
+            attrs[what] = vars.get("wato_%s_attrs" % what, [])
         return attrs
 
 
@@ -15560,10 +15560,10 @@ class CustomAttrMode(WatoMode):
 
     def _save(self, attrs):
         output = watolib.wato_fileheader()
-        for self._what in [ "user", "host" ]:
-            if self._what in attrs and len(attrs[self._what]) > 0:
-                output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (self._what, self._what)
-                output += "wato_%s_attrs += %s\n\n" % (self._what, pprint.pformat(attrs[self._what]))
+        for what in [ "user", "host" ]:
+            if what in attrs and len(attrs[what]) > 0:
+                output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
+                output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
 
         make_nagios_directory(multisite_dir)
         store.save_file(multisite_dir + "custom_attrs.mk", output)

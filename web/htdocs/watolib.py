@@ -10024,3 +10024,25 @@ def format_config_value(value):
     return format_func(value)
 
 
+class LivestatusViaTCP(Dictionary):
+    def __init__(self, **kwargs):
+        kwargs["elements"] = [
+            ("port", Integer(
+                title = _("TCP port"),
+                minvalue = 1,
+                maxvalue = 65535,
+                default_value = kwargs.get("tcp_port", 6557),
+            )),
+            ("only_from", ListOfStrings(
+                title = _("Restrict access to IP addresses"),
+                help = _("The access to Livestatus via TCP will only be allowed from the "
+                         "configured source IP addresses. You can either configure specific "
+                         "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."),
+
+                valuespec = IPv4Network(),
+                orientation = "horizontal",
+                allow_empty = False,
+            )),
+        ]
+        kwargs["optional_keys"] = [ "only_from" ]
+        super(LivestatusViaTCP, self).__init__(**kwargs)

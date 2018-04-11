@@ -17471,7 +17471,8 @@ from watolib import \
     ACTest, \
     ACResultCRIT, \
     ACResultWARN, \
-    ACResultOK
+    ACResultOK, \
+    LivestatusViaTCP
 
 
 def make_action_link(vars):

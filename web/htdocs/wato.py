@@ -15493,6 +15493,18 @@ class ModePatternEditor(WatoMode):
 #   | Mange custom attributes of users (in future hosts etc.)              |
 #   '----------------------------------------------------------------------'
 
+
+def update_user_custom_attrs():
+    userdb.declare_custom_user_attrs()
+    userdb.rewrite_users()
+
+
+def update_host_custom_attrs():
+    declare_custom_host_attrs()
+    watolib.Folder.invalidate_caches()
+    watolib.Folder.root_folder().rewrite_hosts_files()
+
+
 class CustomAttrMode(WatoMode):
     def __init__(self, what):
         # TODO: move _what to the subclasses.
@@ -15516,6 +15528,7 @@ class CustomAttrMode(WatoMode):
 
 
     def _load(self, lock):
+        # TODO: cleanup that the method knows the subclasses 'user' and 'host' implicitely
         filename = os.path.join(multisite_dir, "custom_attrs.mk")
         vars = store.load_mk_file(filename, {
             'wato_user_attrs': [],
@@ -15528,23 +15541,17 @@ class CustomAttrMode(WatoMode):
         return attrs
 
 
+    def _update_config(self):
+        raise NotImplementedError()
+
+
     def _save_attributes(self):
-        self._save(self._all_attrs)
-        if self._what == "user":
-            userdb.declare_custom_user_attrs()
-            userdb.rewrite_users()
-        else:
-            declare_custom_host_attrs()
-            watolib.Folder.invalidate_caches()
-            watolib.Folder.root_folder().rewrite_hosts_files()
-
-
-    def _save(self, attrs):
+        # TODO: cleanup that the method knows the subclasses 'user' and 'host' implicitely
         output = watolib.wato_fileheader()
         for what in [ "user", "host" ]:
-            if what in attrs and len(attrs[what]) > 0:
+            if what in self._all_attrs and len(self._all_attrs[what]) > 0:
                 output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
-                output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
+                output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(self._all_attrs[what]))
 
         make_nagios_directory(multisite_dir)
         store.save_file(multisite_dir + "custom_attrs.mk", output)
@@ -15632,6 +15639,7 @@ class ModeEditCustomAttr(CustomAttrMode):
             self._attr['user_editable'] = user_editable
 
         self._save_attributes()
+        self._update_config()
 
         return self._what + "_attrs"
 
@@ -15721,6 +15729,10 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
     def __init__(self):
         super(ModeEditCustomUserAttr, self).__init__('user')
 
+
+    def _update_config(self):
+        update_user_custom_attrs()
+
     def title(self):
         if self._new:
             return _("Create User Attribute")
@@ -15736,6 +15748,10 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
     def __init__(self):
         super(ModeEditCustomHostAttr, self).__init__('host')
+
+
+    def _update_config(self):
+        update_host_custom_attrs()
 
     def title(self):
         if self._new:
@@ -15778,6 +15794,7 @@ class ModeCustomAttrs(CustomAttrMode):
                     if attr['name'] == delname:
                         self._attrs.pop(index)
                 self._save_attributes()
+                self._update_config()
                 add_change("edit-%sattrs" % self._what, _("Deleted attribute %s") % (delname))
             elif c == False:
                 return ""
@@ -15812,6 +15829,10 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         super(ModeCustomUserAttrs, self).__init__('user')
 
 
+    def _update_config(self):
+        update_user_custom_attrs()
+
+
     def title(self):
         return _("Custom User Attributes")
 
@@ -15825,6 +15846,10 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
 class ModeCustomHostAttrs(ModeCustomAttrs):
     def __init__(self):
         super(ModeCustomHostAttrs, self).__init__('host')
+
+
+    def _update_config(self):
+        update_host_custom_attrs()
 
 
     def title(self):

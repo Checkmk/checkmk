@@ -1,0 +1,16 @@
+Title: Fixed Check_MK Check Helper file locking errors
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.4.0p30
+Date: 1523446148
+Class: fix
+
+Check helpers kept a file lock, whenever the monitored host check ran into a timeout.
+As a result other check helpers were never able to get the file lock again and were stuck until the
+helper timed out. This effectively brought down the entire check helper pool.
+
+Note:<br>
+Since this error only happens when there are hosts with Check_MK check timeouts, it might be
+a good idea to increase the check plugin timeout in the configuration - till this version goes live.

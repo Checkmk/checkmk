@@ -1048,7 +1048,7 @@ def cachefile_age(filename):
 def load_item_state(hostname):
     global g_item_state
     filename = cmk.paths.counters_dir + "/" + hostname
-    g_item_state = store.load_data_from_file(filename, default={}, lock=True)
+    g_item_state = store.load_data_from_file(filename, default={})
 
 
 def save_item_state(hostname):

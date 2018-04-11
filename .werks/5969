@@ -1,0 +1,13 @@
+Title: Fixed possible "params" exception when editing sites after update
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0b2
+Date: 1523434352
+
+When trying to edit an existing site configuration a "params" exception
+could occur. This happened when at least one configured site is configured
+to use the livestatus proxy.

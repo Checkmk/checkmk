@@ -3964,34 +3964,30 @@ class CRESiteManagement(object):
 
     @classmethod
     def load_sites(cls):
-        try:
-            if not os.path.exists(sites_mk):
-                return config.default_single_site_configuration()
+        if not os.path.exists(sites_mk):
+            return config.default_single_site_configuration()
 
-            vars = { "sites" : {} }
-            execfile(sites_mk, vars, vars)
+        vars = { "sites" : {} }
+        execfile(sites_mk, vars, vars)
 
-            # Be compatible to old "disabled" value in socket attribute.
-            # Can be removed one day.
-            for site in vars['sites'].values():
-                if site.get('socket') == 'disabled':
-                    site['disabled'] = True
-                    del site['socket']
+        # Be compatible to old "disabled" value in socket attribute.
+        # Can be removed one day.
+        for site_id, site in vars['sites'].items():
+            socket = site.get("socket")
+            if socket == 'disabled':
+                site['disabled'] = True
+                del site['socket']
 
-            if not vars["sites"]:
-                # There seem to be installations out there which have a sites.mk
-                # which has an empty sites dictionary. Apply the default configuration
-                # for these sites too.
-                return config.default_single_site_configuration()
-            else:
-                return vars["sites"]
+            elif type(socket) == tuple and socket[0] == "proxy":
+                site["socket"] = ("proxy", cls.transform_old_connection_params(socket[1]))
 
-
-        except Exception, e:
-            if config.debug:
-                raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                              (sites_mk, e))
-            return {}
+        if not vars["sites"]:
+            # There seem to be installations out there which have a sites.mk
+            # which has an empty sites dictionary. Apply the default configuration
+            # for these sites too.
+            return config.default_single_site_configuration()
+        else:
+            return vars["sites"]
 
 
     @classmethod
@@ -4049,6 +4045,12 @@ class CRESiteManagement(object):
     @classmethod
     def _affected_config_domains(cls):
         return [ConfigDomainGUI]
+
+
+    @classmethod
+    def transform_old_connection_params(cls, value):
+        return value
+
 
 
 SiteManagement = CRESiteManagement

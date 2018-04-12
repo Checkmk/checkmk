@@ -793,31 +793,45 @@ def do_snmpwalk(options, hostnames):
 def do_snmpwalk_on(options, access_data, filename):
     hostname = access_data["hostname"]
     console.verbose("%s:\n" % hostname)
+
+    oids = oids_to_walk(options)
+
+    with open(filename, "w") as out:
+        for rows in _execute_walks_for_dump(hostname, access_data, oids):
+            for oid, value in rows:
+                out.write("%s %s\n" % (oid, value))
+            console.verbose("%d variables.\n" % len(rows))
+
+    console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
+
+
+def _execute_walks_for_dump(hostname, access_data, oids_to_walk):
+    for oid in oids_to_walk:
+        try:
+            console.verbose("Walk on \"%s\"..." % oid)
+            yield walk_for_export(access_data, oid)
+        except Exception, e:
+            console.error("Error: %s\n" % e)
+            if cmk.debug.enabled():
+                raise
+
+
+def oids_to_walk(options=None):
+    if options is None:
+        options = {}
+
     oids_to_walk = [
         ".1.3.6.1.2.1", # SNMPv2-SMI::mib-2
         ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
     ]
+
     if "oids" in options:
         oids_to_walk = options["oids"]
+
     elif "extraoids" in options:
         oids_to_walk += options["extraoids"]
 
-    with open(filename, "w") as out:
-        for oid in sorted(oids_to_walk, key = lambda x: map(int, x.strip(".").split("."))):
-            try:
-                console.verbose("Walk on \"%s\"..." % oid)
-
-                rows = walk_for_export(access_data, oid)
-                for oid, value in rows:
-                    out.write("%s %s\n" % (oid, value))
-
-                console.verbose("%d variables.\n" % len(rows))
-            except Exception, e:
-                console.error("Error: %s\n" % e)
-                if cmk.debug.enabled():
-                    raise
-
-    console.verbose("Successfully wrote %s%s%s.\n" % (tty.bold, filename, tty.normal))
+    return sorted(oids_to_walk, key = lambda x: map(int, x.strip(".").split(".")))
 
 
 def do_snmpget(*args):

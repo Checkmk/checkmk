@@ -37,14 +37,14 @@
 # Config might include
 # DB_USER_hpy=foo
 # DB_PASSWORD_hpy=bar
-if [ -f $MK_CONFDIR/sap_hana.cfg ];
+if [ -f "$MK_CONFDIR/sap_hana.cfg" ];
 then
-    . $MK_CONFDIR/sap_hana.cfg
+    . "$MK_CONFDIR/sap_hana.cfg"
 fi
 
 
 LSSAP=/usr/sap/hostctrl/exe/lssap
-if [[ ! -x $LSSAP ]]; then
+if [[ ! -x "$LSSAP" ]]; then
     exit 1
 fi
 
@@ -67,7 +67,7 @@ function process_list () {
     local sidadm_short=$3
     echo "<<<sap_hana_process_list:sep(44)>>>"
     echo "[[[$sidadm_short]]]"
-    su - $sidadm -c "sapcontrol -nr $inst_nr -function GetProcessList"
+    su - "${sidadm}" -c "sapcontrol -nr ${inst_nr} -function GetProcessList"
 }
 
 
@@ -76,7 +76,7 @@ function hdb_version () {
     local sidadm_short=$2
     echo "<<<sap_hana_version:sep(58)>>>"
     echo "[[[$sidadm_short]]]"
-    su - $sidadm -c "HDB version"
+    su - "${sidadm}" -c "HDB version"
 }
 
 
@@ -89,7 +89,7 @@ function full_backup () {
     local sidadm_short=$5
     echo "<<<sap_hana_full_backup:sep(44)>>>"
     echo "[[[$sidadm_short]]]"
-    sudo -i -u ${sidadm} hdbsql -n localhost -i ${inst_nr} -u ${db_user} -p "${db_password}" -j -a -x "SELECT TO_DATE(SYS_END_TIME), days_between(SYS_END_TIME,CURRENT_TIMESTAMP) ,seconds_between(SYS_START_TIME,SYS_END_TIME), STATE_NAME,COMMENT FROM M_BACKUP_CATALOG WHERE ENTRY_TYPE_NAME = 'complete data backup' AND SYS_START_TIME = (SELECT MAX(SYS_START_TIME) FROM M_BACKUP_CATALOG WHERE  ENTRY_TYPE_NAME = 'complete data backup');"
+    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "SELECT TO_DATE(SYS_END_TIME), days_between(SYS_END_TIME,CURRENT_TIMESTAMP) ,seconds_between(SYS_START_TIME,SYS_END_TIME), STATE_NAME,COMMENT FROM M_BACKUP_CATALOG WHERE ENTRY_TYPE_NAME = 'complete data backup' AND SYS_START_TIME = (SELECT MAX(SYS_START_TIME) FROM M_BACKUP_CATALOG WHERE  ENTRY_TYPE_NAME = 'complete data backup');"
 }
 
 
@@ -97,14 +97,14 @@ function sap_hana_mem () {
     local sidadm=$1
     local inst_nr=$2
     local db_user=$3
-    local db_password="$4"
+    local db_password=$4
     local sidadm_short=$5
     echo "<<<sap_hana_mem:sep(44)>>>"
     echo "[[[$sidadm_short]]]"
     echo "[[[resident]]]"
-    sudo -i -u ${sidadm} hdbsql -n localhost -i ${inst_nr} -u ${db_user} -p "${db_password}" -j -a -x "SELECT HOST, ROUND(SUM(PHYSICAL_MEMORY_SIZE/1024/1024/1024),2) FROM M_SERVICE_MEMORY GROUP BY HOST;"
+    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "SELECT HOST, ROUND(SUM(PHYSICAL_MEMORY_SIZE/1024/1024/1024),2) FROM M_SERVICE_MEMORY GROUP BY HOST;"
     echo "[[[database]]]"
-    sudo -i -u ${sidadm} hdbsql -n localhost -i ${inst_nr} -u ${db_user} -p "${db_password}" -j -a -x "select HOST,  round(INSTANCE_TOTAL_MEMORY_ALLOCATED_SIZE/(1024*1024*1024), 2), round(ALLOCATION_LIMIT/(1024*1024*1024), 2), ROUND((USED_PHYSICAL_MEMORY + FREE_PHYSICAL_MEMORY)/1024/1024/1024,2) from M_HOST_RESOURCE_UTILIZATION;"
+    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "select HOST,  round(INSTANCE_TOTAL_MEMORY_ALLOCATED_SIZE/(1024*1024*1024), 2), round(ALLOCATION_LIMIT/(1024*1024*1024), 2), ROUND((USED_PHYSICAL_MEMORY + FREE_PHYSICAL_MEMORY)/1024/1024/1024,2) from M_HOST_RESOURCE_UTILIZATION;"
 }
 
 
@@ -117,7 +117,7 @@ function sap_hana_filesystem () {
     local sidadm_short=$5
     echo "<<<sap_hana_filesystem:sep(44)>>>"
     echo "[[[$sidadm_short]]]"
-    sudo -i -u ${sidadm} hdbsql -n localhost -i ${inst_nr} -u ${db_user} -p "${db_password}" -j -a -x "select D1.HOST, D1.USAGE_TYPE, ROUND(D2.USED_SIZE/1024/1024/1024,2),ROUND(D1.TOTAL_SIZE/1024/1024/1024,2) FROM M_DISKS AS D1 INNER JOIN M_DISK_USAGE AS D2 ON D1.USAGE_TYPE = D2.USAGE_TYPE;"
+    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "select D1.HOST, D1.USAGE_TYPE, ROUND(D2.USED_SIZE/1024/1024/1024,2),ROUND(D1.TOTAL_SIZE/1024/1024/1024,2) FROM M_DISKS AS D1 INNER JOIN M_DISK_USAGE AS D2 ON D1.USAGE_TYPE = D2.USAGE_TYPE;"
 }
 
 
@@ -137,11 +137,11 @@ $LSSAP
 
 for line in $($LSSAP | awk -F"|" '{if ($0 ~/\//) print tolower($1)"adm|"$2}' | sed "s/\s*//g")
 do
-    sidadm=$(echo "$line" | cut -d"|" -f1)
-    sidadm_short=$(echo "$sidadm" | sed "s/adm$//")
-    inst_nr=$(echo "$line" | cut -d"|" -f2)
-    process_list $sidadm $inst_nr $sidadm_short
-    hdb_version $sidadm $sidadm_short
+    sidadm=$(echo "${line}" | cut -d"|" -f1)
+    sidadm_short=${sidadm/%adm/}
+    inst_nr=$(echo "${line}" | cut -d"|" -f2)
+    process_list "${sidadm}" "${inst_nr}" "${sidadm_short}"
+    hdb_version "${sidadm}" "${sidadm_short}"
 
     DB_USER=DB_USER_$sidadm_short
     DB_USER=${!DB_USER}
@@ -149,8 +149,8 @@ do
     DB_PASSWORD=${!DB_PASSWORD}
     if [ -n "$DB_USER" ] && [ -n "$DB_PASSWORD" ];
     then
-        full_backup $sidadm $inst_nr ${DB_USER} ${DB_PASSWORD} $sidadm_short
-        sap_hana_mem $sidadm $inst_nr ${DB_USER} ${DB_PASSWORD} $sidadm_short
-        sap_hana_filesystem $sidadm $inst_nr ${DB_USER} ${DB_PASSWORD} $sidadm_short
+        full_backup "${sidadm}" "${inst_nr}" "${DB_USER}" "${DB_PASSWORD}" "${sidadm_short}"
+        sap_hana_mem "${sidadm}" "${inst_nr}" "${DB_USER}" "${DB_PASSWORD}" "${sidadm_short}"
+        sap_hana_filesystem "${sidadm}" "${inst_nr}" "${DB_USER}" "${DB_PASSWORD}" "${sidadm_short}"
     fi
 done

@@ -269,7 +269,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def show_job_details(self, job_id = None, job_snapshot = None):
         job_info = self._get_job_infos([job_id])
         if not job_info:
-            raise MKGeneralException("Background job with id <i>%s/i> not found" % job_id)
+            raise MKGeneralException("Background job with id <i>%s</i> not found" % job_id)
 
         job_id, job_status = job_info.items()[0]
         html.write(JobRenderer.render_job_details(job_id, job_status))
@@ -281,7 +281,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
             job_id, job_status = job_info.items()[0]
             html.write(JobRenderer.render_job_details(job_id, job_status))
         else:
-            raise MKGeneralException("Background job with id <i>%s/i> not found" % job_id)
+            raise MKGeneralException("Background job with id <i>%s</i> not found" % job_snapshot.get_job_id())
 
 
 

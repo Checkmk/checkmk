@@ -1,0 +1,12 @@
+Title: Fixed possible exception on background job detail page
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b2
+Date: 1523560619
+
+When a detail page can not access job information (e.g. the job does not exist anymore),
+the error message was not displayed correctly.

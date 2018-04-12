@@ -1,0 +1,13 @@
+Title: Fixed broken SNMP walk download via GUI
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1523558726
+
+When clicking on the context menu of a SNMP host, the SNMP walk
+can be downloaded from the GUI. This function broke with one the
+last innovation releases.

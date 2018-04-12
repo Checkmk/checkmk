@@ -1290,7 +1290,6 @@ class AutomationGetAgentOutput(Automation):
 
         try:
             if ty == "agent":
-
                 data_sources.abstract.DataSource.set_may_use_cache_file(not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
@@ -1310,9 +1309,24 @@ class AutomationGetAgentOutput(Automation):
                         success = False
                         output += "[%s] %s\n" % (source.id(), source_output)
             else:
-                path = cmk.paths.snmpwalks_dir + "/" + hostname
-                snmp.do_snmpwalk_on({}, hostname, path)
-                info = file(path).read()
+                access_data = {
+                    "hostname"    : hostname,
+                    "ipaddress"   : ip_lookup.lookup_ipv4_address(hostname),
+                    "credentials" : config.snmp_credentials_of(hostname),
+                }
+
+                lines = []
+                for oid in snmp.oids_to_walk():
+                    try:
+                        for oid, value in snmp.walk_for_export(access_data, oid):
+                            lines.append("%s %s\n" % (oid, value))
+                    except Exception, e:
+                        if cmk.debug.enabled():
+                            raise
+                        success = False
+                        output += "OID '%s': %s\n" % (oid, e)
+
+                info = "".join(lines)
         except Exception, e:
             success = False
             output = "Failed to fetch data from %s: %s\n" % (hostname, e)

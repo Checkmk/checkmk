@@ -15078,29 +15078,16 @@ def page_user_profile(change_pw=False):
 #   +----------------------------------------------------------------------+
 #   | Page for downloading the current agent output / SNMP walk of a host  |
 #   '----------------------------------------------------------------------'
+# TODO: This feature is used exclusively from the GUI. Why is the code in
+#       wato.py? The only reason is because the WATO automation is used. Move
+#       to better location.
 
-class PageDownloadAgentOutput(object):
-    def page(self):
+class AgentOutputPage(object):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self):
+        super(AgentOutputPage, self).__init__()
         self._from_vars()
-
-        import htmllib
-        try:
-            success, output, agent_data = watolib.check_mk_automation(self._host.site_id(), "get-agent-output",
-                                                          [self._host.name(), self._ty])
-        except htmllib.RequestTimeout, e:
-            success, output, agent_data = False, "%s" % e, ""
-
-        if success:
-            html.set_output_format("text")
-            html.set_http_header("Content-Disposition", "Attachment; filename=" + self._host.name())
-            html.write(agent_data)
-        else:
-            html.header(_("Failed to fetch agent data"), stylesheets=["status", "pages"])
-            html.p(_("There was a problem fetching data from the host."))
-            if output:
-                html.show_error(output)
-            html.pre(agent_data)
-            html.footer()
 
 
     def _from_vars(self):
@@ -15115,13 +15102,133 @@ class PageDownloadAgentOutput(object):
             raise MKGeneralException(_("Invalid type specified."))
         self._ty = ty
 
+        self._back_url = html.var("back_url")
+
         init_wato_datastructures(with_wato_lock=True)
 
         host = watolib.Folder.current().host(host_name)
         if not host:
-            raise MKGeneralException(_("Invalid host."))
+            raise MKGeneralException(_("Host is not managed by WATO. "
+                "Click <a href=\"%s\">here</a> to go back.") %
+                    html.escape_attribute(self._back_url))
         host.need_permission("read")
         self._host = host
+
+        self._job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
+
+
+    @abc.abstractmethod
+    def page(self):
+        pass
+
+
+    @staticmethod
+    def file_name(site_id, host_name, ty):
+        return "%s-%s-%s.txt" % (site_id, host_name, ty)
+
+
+
+class PageFetchAgentOutput(AgentOutputPage):
+    def page(self):
+        html.header(_("%s: Download agent output") % self._host.name(),
+                    stylesheets=["status", "pages"])
+
+        html.begin_context_buttons()
+        if self._back_url:
+            html.context_button(_("Back"), self._back_url, "back")
+        html.end_context_buttons()
+
+        self._action()
+
+        job_snapshot = self._job.get_status_snapshot()
+        if html.has_var("_start") and not self._job.is_running():
+            self._job.start()
+
+        self._show_status(self._job)
+
+        html.footer()
+
+
+    def _action(self):
+        if not html.transaction_valid():
+            return
+
+        action_handler = gui_background_job.ActionHandler()
+
+        if action_handler.handle_actions() and action_handler.did_delete_job():
+            html.http_redirect(html.makeuri_contextless([
+                ("host", self._host.name()),
+                ("type", self._ty),
+                ("back_url", self._back_url),
+            ]))
+
+
+    def _show_status(self, job):
+        job_snapshot = job.get_status_snapshot()
+
+        if job_snapshot.is_running():
+            html.h3(_("Current status of process"))
+            html.immediate_browser_redirect(0.8, html.makeuri([]))
+        elif job.exists():
+            html.h3(_("Result of last process"))
+
+        job_manager = gui_background_job.GUIBackgroundJobManager()
+        job_manager.show_job_details_from_snapshot(job_snapshot=job_snapshot)
+
+
+
+class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
+    job_prefix = "agent-output-"
+    gui_title  = _("Fetch agent output")
+
+    def __init__(self, site_id, host_name, ty):
+        self._site_id = site_id
+        self._host_name = host_name
+        self._ty = ty
+
+        job_id = "%s%s-%s-%s" % (self.job_prefix, site_id, host_name, ty)
+        title = _("Fetching %s of %s / %s") % (ty, site_id, host_name)
+        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title)
+
+        self.set_function(self._fetch_agent_output)
+
+
+    def _fetch_agent_output(self, job_interface):
+        job_interface.send_progress_update(_("Fetching '%s'...") % self._ty)
+
+        success, output, agent_data = watolib.check_mk_automation(self._site_id, "get-agent-output",
+                                                              [self._host_name, self._ty])
+
+        if not success:
+            job_interface.send_progress_update(_("Failed: %s") % output)
+
+        preview_filepath = os.path.join(job_interface.get_work_dir(),
+                                        AgentOutputPage.file_name(self._site_id, self._host_name, self._ty))
+        store.save_file(preview_filepath, agent_data)
+
+        download_url = html.makeuri_contextless([
+            ("host", self._host_name),
+            ("type", self._ty)
+        ], filename="download_agent_output.py")
+
+        button = html.render_icon_button(download_url, _("Download"), "agent_output", ty="icon")
+        job_interface.send_progress_update(_("Finished. Click on the icon to download the data."))
+        job_interface.send_result_message(_("%s Finished.") % button)
+
+
+
+class PageDownloadAgentOutput(AgentOutputPage):
+    def page(self):
+        file_name = self.file_name(self._host.site_id(), self._host.name(), self._ty)
+
+        html.set_output_format("text")
+        html.set_http_header("Content-Disposition", "Attachment; filename=%s" % file_name)
+
+        preview_filepath = os.path.join(self._job.get_work_dir(), file_name)
+        html.write(file(preview_filepath).read())
+
+
+
 
 #.
 #   .--Sampleconfig--------------------------------------------------------.

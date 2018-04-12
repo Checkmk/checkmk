@@ -102,16 +102,26 @@ def paint_download_host_info(what, row, tags, host_custom_vars, ty):
         elif ty == "agent" and "snmp" in tags and "tcp" not in tags:
             return
 
-        params = [("host",   row["host_name"]),
-                  ("folder", wato_folder_from_filename(row["host_filename"])),
-                  ("type",   ty)]
+        params = [
+            ("host",   row["host_name"]),
+            ("folder", wato_folder_from_filename(row["host_filename"])),
+            ("type",   ty),
+            ("_start", "1"),
+        ]
+
+        # When the download icon is part of the host/service action menu, then
+        # the _back_url set in paint_action_menu() needs to be used. Otherwise
+        # html.makeuri([]) (not html.requested_uri()) is the right choice.
+        back_url = html.var("_back_url", html.makeuri([]))
+        if back_url:
+            params.append(("back_url", back_url))
 
         if ty == "agent":
             title = _("Download agent output")
         else:
             title = _("Download SNMP walk")
 
-        url = html.makeuri_contextless(params, filename="download_agent_output.py")
+        url = html.makeuri_contextless(params, filename="fetch_agent_output.py")
         return "agent_output", title, url
 
 

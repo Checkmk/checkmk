@@ -41,7 +41,7 @@ register_handlers({
     "wato_ajax_diag_host"       : lambda: wato.ModeAjaxDiagHost().handle_page(),
     "wato_ajax_profile_repl"    : watolib.ajax_profile_repl,
     "wato_ajax_execute_check"   : lambda: wato.ModeAjaxExecuteCheck().handle_page(),
-    "download_agent_output"     : wato.page_download_agent_output,
+    "download_agent_output"     : lambda: wato.PageDownloadAgentOutput().page(),
     "ajax_popup_move_to_folder" : wato.ajax_popup_move_to_folder,
     "ajax_backup_job_state"     : lambda: wato.ModeAjaxBackupJobState().page(),
 })

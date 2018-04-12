@@ -15051,42 +15051,49 @@ def page_user_profile(change_pw=False):
 #   | Page for downloading the current agent output / SNMP walk of a host  |
 #   '----------------------------------------------------------------------'
 
-def page_download_agent_output():
-    config.user.need_permission("wato.download_agent_output")
+class PageDownloadAgentOutput(object):
+    def page(self):
+        self._from_vars()
 
-    host_name = html.var("host")
-    if not host_name:
-        raise MKGeneralException(_("The host is missing."))
+        import htmllib
+        try:
+            success, output, agent_data = watolib.check_mk_automation(self._host.site_id(), "get-agent-output",
+                                                          [self._host.name(), self._ty])
+        except htmllib.RequestTimeout, e:
+            success, output, agent_data = False, "%s" % e, ""
 
-    ty = html.var("type")
-    if ty not in [ "walk", "agent" ]:
-        raise MKGeneralException(_("Invalid type specified."))
+        if success:
+            html.set_output_format("text")
+            html.set_http_header("Content-Disposition", "Attachment; filename=" + self._host.name())
+            html.write(agent_data)
+        else:
+            html.header(_("Failed to fetch agent data"), stylesheets=["status", "pages"])
+            html.p(_("There was a problem fetching data from the host."))
+            if output:
+                html.show_error(output)
+            html.pre(agent_data)
+            html.footer()
 
-    init_wato_datastructures(with_wato_lock=True)
 
-    host = watolib.Folder.current().host(host_name)
-    if not host:
-        raise MKGeneralException(_("Invalid host."))
-    host.need_permission("read")
+    def _from_vars(self):
+        config.user.need_permission("wato.download_agent_output")
 
-    import htmllib
-    try:
-        success, output, agent_data = watolib.check_mk_automation(host.site_id(), "get-agent-output",
-                                                      [host_name, ty])
-    except htmllib.RequestTimeout, e:
-        success, output, agent_data = False, "%s" % e, ""
+        host_name = html.var("host")
+        if not host_name:
+            raise MKGeneralException(_("The host is missing."))
 
-    if success:
-        html.set_output_format("text")
-        html.set_http_header("Content-Disposition", "Attachment; filename=" + host_name)
-        html.write(agent_data)
-    else:
-        html.header(_("Failed to fetch agent data"), stylesheets=["status", "pages"])
-        html.p(_("There was a problem fetching data from the host."))
-        if output:
-            html.show_error(output)
-        html.pre(agent_data)
-        html.footer()
+        ty = html.var("type")
+        if ty not in [ "walk", "agent" ]:
+            raise MKGeneralException(_("Invalid type specified."))
+        self._ty = ty
+
+        init_wato_datastructures(with_wato_lock=True)
+
+        host = watolib.Folder.current().host(host_name)
+        if not host:
+            raise MKGeneralException(_("Invalid host."))
+        host.need_permission("read")
+        self._host = host
 
 #.
 #   .--Sampleconfig--------------------------------------------------------.

@@ -1,0 +1,18 @@
+Title: Agent output / SNMP walk download: Now processed asynchronously
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b2
+Date: 1523560900
+Class: fix
+
+The download of the agent output or SNMP walks, that can be triggered from the
+hosts or Check_MK service context menus could run into time out situations with
+bad error messages like "Gateway timeout" in case the destination devices need
+more than ~110 seconds to respond.
+
+We have now changed the process of fetching the data to be executed as
+background job. The GUI is displaying the progress during processing and
+presenting a download icon on the progress page to finally download the created
+file.

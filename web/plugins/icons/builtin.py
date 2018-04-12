@@ -83,6 +83,7 @@ def paint_action_menu(what, row, tags, host_custom_vars):
         url_vars.append(('display_options', html.var('display_options')))
     if html.has_var('_display_options'):
         url_vars.append(('_display_options', html.var('_display_options')))
+    url_vars.append(('_back_url', html.makeuri([])))
 
     return html.render_popup_trigger(
         html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),

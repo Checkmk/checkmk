@@ -27,15 +27,15 @@
 # Older versions replay an empty string if the state is Unknown / Error state
 
 sync_name_mapping = {
-    '0' : 'Synced',
-    '1' : 'Not Synced',
+    '1' : 'Synced',
+    '0' : 'Not Synced',
     '-1': 'Unknown / Error',
     ''  : 'Unknown / Error',
     }
 
 sync_status_mapping = {
-    '0' : 0,
-    '1' : 2,
+    '1' : 0,
+    '0' : 2,
     '-1': 3,
     ''  : 3,
     }

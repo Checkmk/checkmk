@@ -15533,13 +15533,21 @@ def update_host_custom_attrs():
     watolib.Folder.root_folder().rewrite_hosts_files()
 
 
+def load_custom_attrs_from_mk_file(lock):
+    filename = os.path.join(multisite_dir, "custom_attrs.mk")
+    vars = store.load_mk_file(filename, {
+        'wato_user_attrs': [],
+        'wato_host_attrs': [],
+    }, lock=lock)
+
+    attrs = {}
+    for what in [ "user", "host" ]:
+        attrs[what] = vars.get("wato_%s_attrs" % what, [])
+    return attrs
+
+
 class CustomAttrMode(WatoMode):
-    def __init__(self, what):
-        # TODO: move _what to the subclasses.
-        # Note: _what is used in _from_vars defined in the subclass
-        #       ModeEditCustomAttr but called in the base class WatoMode.
-        #       Therefore, we have to set it before init right now.
-        self._what = what
+    def __init__(self):
         super(CustomAttrMode, self).__init__()
 
 
@@ -15551,22 +15559,10 @@ class CustomAttrMode(WatoMode):
 
 
     def _load_attributes(self, lock=False):
-        self._all_attrs = self._load(lock=lock)
-        self._attrs = self._all_attrs.get(self._what, {})
-
-
-    def _load(self, lock):
-        # TODO: cleanup that the method knows the subclasses 'user' and 'host' implicitely
-        filename = os.path.join(multisite_dir, "custom_attrs.mk")
-        vars = store.load_mk_file(filename, {
-            'wato_user_attrs': [],
-            'wato_host_attrs': [],
-        }, lock=lock)
-
-        attrs = {}
-        for what in [ "user", "host" ]:
-            attrs[what] = vars.get("wato_%s_attrs" % what, [])
-        return attrs
+        # TODO: Inappropriate Intimacy: A custom host attribute shouldn't know
+        #       custom user attributes (and vice versa). The only reason  for this
+        #       is that custom_attrs.mk contains both types.
+        self._all_attrs = load_custom_attrs_from_mk_file(lock)
 
 
     def _update_config(self):
@@ -15589,7 +15585,16 @@ class CustomAttrMode(WatoMode):
 
 class ModeEditCustomAttr(CustomAttrMode):
     def __init__(self, what):
-        super(ModeEditCustomAttr, self).__init__(what)
+        # TODO: move _what to the subclasses.
+        # Note: _what is used in _from_vars but called in the base class WatoMode.
+        #       Therefore, we have to set it before super(...).__init__() right now.
+        self._what = what
+        super(ModeEditCustomAttr, self).__init__()
+
+
+    @property
+    def _attrs(self):
+        return self._all_attrs[self._what]
 
 
     def _from_vars(self):
@@ -15796,8 +15801,15 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
 class ModeCustomAttrs(CustomAttrMode):
     def __init__(self, what):
-        super(ModeCustomAttrs, self).__init__(what)
+        # TODO: move _what to the subclasses.
+        super(ModeCustomAttrs, self).__init__()
+        self._what = what
         self._load_attributes(lock=html.is_transaction())
+
+
+    @property
+    def _attrs(self):
+        return self._all_attrs[self._what]
 
 
     def action(self):

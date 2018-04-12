@@ -39,15 +39,14 @@ function get_tag_stats () {
     local site="$2"
     local header="$3"
     local tags=($(echo "$header" | tr ' ' '\n'))
-    if [ -n "$tags" ] && [ -S "$socket" ];
+    if [ "${#tags[@]}" -ne 0 ] && [ -S "$socket" ];
     then
         local tags_query="GET hosts\n"
         for tag in "${tags[@]}";
         do
             tags_query="${tags_query}Stats: custom_variables ~ TAGS ${tag}\n"
         done
-        echo "Tags|$header|$(echo -e "${tags_query}" | \
-                             waitmax 3 /omd/sites/${site}/bin/unixcat ${socket})"
+        echo "Tags|$header|$(echo -e "${tags_query}" | waitmax 3 "/omd/sites/${site}/bin/unixcat" "${socket}")"
     fi
 }
 
@@ -57,15 +56,14 @@ function get_check_command_stats () {
     local site="$2"
     local header="$3"
     local service_check_commands=($(echo "$header" | tr ' ' '\n'))
-    if [ -n "$service_check_commands" ] && [ -S "$socket" ];
+    if [ "${#service_check_commands[@]}" -ne 0 ] && [ -S "$socket" ];
     then
         local service_check_commands_query="GET services\n"
         for service_check_command in "${service_check_commands[@]}";
         do
             service_check_commands_query="${service_check_commands_query}Stats: check_command ~~ ${service_check_command}$\n"
         done
-        echo "Service check commands|$header|$(echo -e "${service_check_commands_query}" | \
-                                       waitmax 3 /omd/sites/${site}/bin/unixcat ${socket})"
+        echo "Service check commands|$header|$(echo -e "${service_check_commands_query}" | waitmax 3 "/omd/sites/${site}/bin/unixcat" "${socket}")"
     fi
 }
 
@@ -80,10 +78,14 @@ function get_check_command_stats () {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+SITES=
+TAGS=
+SERVICE_CHECK_COMMANDS=
+
 
 if [ -e "$MK_CONFDIR/site_object_counts.cfg" ];
 then
-    . $MK_CONFDIR/site_object_counts.cfg
+    . "$MK_CONFDIR/site_object_counts.cfg"
 fi
 
 

@@ -1,0 +1,13 @@
+Title: ucd_mem, hr_mem: Fixed wrong preferring of ucd_mem
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p31
+Date: 1523540816
+Class: fix
+
+In december 2017 a bug has been introduced which lead into using ucd_mem
+instead of using hr_mem anymore. This leads to vanished services which has
+been created by hr_mem and new services created by ucd_mem.
+This has now been fixed.

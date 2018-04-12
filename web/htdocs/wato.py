@@ -15607,6 +15607,9 @@ class ModeEditCustomAttr(WatoMode):
         self._name = html.var("edit") # missing -> new custom attr
         self._new = self._name == None
 
+        # TODO: Inappropriate Intimacy: custom host attributes should not now about
+        #       custom user attributes and vice versa. The only reason they now about
+        #       each other now is that they are stored in one file.
         self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
 
         if not self._new:
@@ -15806,35 +15809,32 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
 
 class ModeCustomAttrs(WatoMode):
-    def __init__(self, what):
-        # TODO: move _what to the subclasses.
+    def __init__(self):
         super(ModeCustomAttrs, self).__init__()
-        self._what = what
+        # TODO: Inappropriate Intimacy: custom host attributes should not now about
+        #       custom user attributes and vice versa. The only reason they now about
+        #       each other now is that they are stored in one file.
         self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
 
+    @property
+    def _type(self):
+        raise NotImplementedError()
 
     @property
     def _attrs(self):
-        return self._all_attrs[self._what]
+        return self._all_attrs[self._type]
 
+    def title(self):
+        raise NotImplementedError()
 
     def _update_config(self):
         raise NotImplementedError()
-
 
     def action(self):
         if html.var('_delete'):
             delname = html.var("_delete")
 
-            # FIXME: Find usages and warn
-            #if usages:
-            #    message = "<b>%s</b><br>%s:<ul>" % \
-            #                (_("You cannot delete this %s attribute.") % self._what,
-            #                 _("It is still in use by"))
-            #    for title, link in usages:
-            #        message += '<li><a href="%s">%s</a></li>\n' % (link, title)
-            #    message += "</ul>"
-            #    raise MKUserError(None, message)
+            # FIXME: Raise an error if the attribute is still used
 
             confirm_txt = _('Do you really want to delete the custom attribute "%s"?') % (delname)
 
@@ -15845,22 +15845,21 @@ class ModeCustomAttrs(WatoMode):
                         self._attrs.pop(index)
                 save_custom_attrs_to_mk_file(self._all_attrs)
                 self._update_config()
-                add_change("edit-%sattrs" % self._what, _("Deleted attribute %s") % (delname))
+                add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
             elif c == False:
                 return ""
-
 
     def page(self):
         if not self._attrs:
             html.div(_("No custom attributes are defined yet."), class_="info")
             return
 
-        table.begin(self._what + "attrs")
+        table.begin(self._type + "attrs")
         for custom_attr in sorted(self._attrs, key=lambda x: x['title']):
             table.row()
 
             table.cell(_("Actions"), css="buttons")
-            edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % self._what),
+            edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % self._type),
                                                        ("edit", custom_attr['name'])])
             delete_url = html.makeactionuri([("_delete", custom_attr['name'])])
             html.icon_button(edit_url, _("Properties"), "edit")
@@ -15873,47 +15872,45 @@ class ModeCustomAttrs(WatoMode):
         table.end()
 
 
-
 class ModeCustomUserAttrs(ModeCustomAttrs):
     def __init__(self):
-        super(ModeCustomUserAttrs, self).__init__('user')
+        super(ModeCustomUserAttrs, self).__init__()
 
+    @property
+    def _type(self):
+        return 'user'
 
     def _update_config(self):
         update_user_custom_attrs()
 
-
     def title(self):
         return _("Custom User Attributes")
-
 
     def buttons(self):
         html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
         html.context_button(_("New attribute"), watolib.folder_preserving_link([("mode", "edit_user_attr")]), "new")
 
 
-
 class ModeCustomHostAttrs(ModeCustomAttrs):
     def __init__(self):
-        super(ModeCustomHostAttrs, self).__init__('host')
+        super(ModeCustomHostAttrs, self).__init__()
 
+    @property
+    def _type(self):
+        return 'host'
 
     def _update_config(self):
         update_host_custom_attrs()
 
-
     def title(self):
         return _("Custom Host Attributes")
-
 
     def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         html.context_button(_("New attribute"), watolib.folder_preserving_link([("mode", "edit_host_attr")]), "new")
 
-
     def get_attributes(self):
         return self._attrs
-
 
 
 #.

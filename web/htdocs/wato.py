@@ -15586,22 +15586,19 @@ def custom_attr_types():
 
 
 class ModeEditCustomAttr(WatoMode):
-    def __init__(self, what):
-        # TODO: move _what to the subclasses.
-        # Note: _what is used in _from_vars but called in the base class WatoMode.
-        #       Therefore, we have to set it before super(...).__init__() right now.
-        self._what = what
+    def __init__(self):
         super(ModeEditCustomAttr, self).__init__()
 
+    @property
+    def _type(self):
+        raise NotImplementedError()
 
     @property
     def _attrs(self):
-        return self._all_attrs[self._what]
-
+        return self._all_attrs[self._type]
 
     def _update_config(self):
         raise NotImplementedError()
-
 
     def _from_vars(self):
         self._name = html.var("edit") # missing -> new custom attr
@@ -15621,12 +15618,11 @@ class ModeEditCustomAttr(WatoMode):
         else:
             self._attr = {}
 
-
     def title(self):
         raise NotImplementedError()
 
-
     def action(self):
+        # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         if not html.check_transaction():
             return
 
@@ -15640,7 +15636,7 @@ class ModeEditCustomAttr(WatoMode):
 
         topic = html.var('topic', '').strip()
         help  = html.get_unicode_input('help').strip()
-        if self._what == "user":
+        if self._type == "user":
             user_editable = html.get_checkbox('user_editable')
         show_in_table = html.get_checkbox('show_in_table')
         add_custom_macro = html.get_checkbox('add_custom_macro')
@@ -15666,9 +15662,9 @@ class ModeEditCustomAttr(WatoMode):
             }
             self._attrs.append(self._attr)
 
-            add_change("edit-%sattr" % self._what, _("Create new %s attribute %s") % (self._what, self._name))
+            add_change("edit-%sattr" % self._type, _("Create new %s attribute %s") % (self._type, self._name))
         else:
-            add_change("edit-%sattr" % self._what, _("Modified %s attribute %s") % (self._what, self._name))
+            add_change("edit-%sattr" % self._type, _("Modified %s attribute %s") % (self._type, self._name))
         self._attr.update({
             'title'            : title,
             'topic'            : topic,
@@ -15677,16 +15673,16 @@ class ModeEditCustomAttr(WatoMode):
             'add_custom_macro' : add_custom_macro,
         })
 
-        if self._what == "user":
+        if self._type == "user":
             self._attr['user_editable'] = user_editable
 
         save_custom_attrs_to_mk_file(self._all_attrs)
         self._update_config()
 
-        return self._what + "_attrs"
-
+        return self._type + "_attrs"
 
     def page(self):
+        # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         html.begin_form("attr")
         forms.header(_("Properties"))
         forms.section(_("Name"), simple = not self._new)
@@ -15706,7 +15702,7 @@ class ModeEditCustomAttr(WatoMode):
         forms.section(_('Topic'))
         html.help(_('The attribute is added to this section in the edit dialog.'))
 
-        if self._what == "user":
+        if self._type == "user":
             topics = [
                 ('ident',    _('Identity')),
                 ('security', _('Security')),
@@ -15732,7 +15728,7 @@ class ModeEditCustomAttr(WatoMode):
         else:
             html.write(dict(custom_attr_types())[self._attr.get('type')])
 
-        if self._what == "user":
+        if self._type == "user":
             forms.section(_('Editable by Users'))
             html.help(_('It is possible to let users edit their custom attributes.'))
             html.checkbox('user_editable', self._attr.get('user_editable', True),
@@ -15745,7 +15741,7 @@ class ModeEditCustomAttr(WatoMode):
                       label = _("Show the setting of the attribute in the list table"))
 
         forms.section(_('Add as custom macro'))
-        if self._what == "user":
+        if self._type == "user":
             html.help(_('The attribute can be added to the contact definiton in order '
                         'to use it for notifications.'))
             label = _("Make this variable available in notifications")
@@ -15766,11 +15762,13 @@ class ModeEditCustomAttr(WatoMode):
         html.end_form()
 
 
-
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
     def __init__(self):
-        super(ModeEditCustomUserAttr, self).__init__('user')
+        super(ModeEditCustomUserAttr, self).__init__()
 
+    @property
+    def _type(self):
+        return 'user'
 
     def _update_config(self):
         update_user_custom_attrs()
@@ -15781,7 +15779,6 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         else:
             return _("Edit User Attribute")
 
-
     def buttons(self):
         html.context_button(_("Back"), watolib.folder_preserving_link([
                                             ("mode", "user_attrs")]), "back")
@@ -15789,8 +15786,11 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
     def __init__(self):
-        super(ModeEditCustomHostAttr, self).__init__('host')
+        super(ModeEditCustomHostAttr, self).__init__()
 
+    @property
+    def _type(self):
+        return 'host'
 
     def _update_config(self):
         update_host_custom_attrs()
@@ -15801,11 +15801,9 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         else:
             return _("Edit Host Attribute")
 
-
     def buttons(self):
         html.context_button(_("Back"), watolib.folder_preserving_link([
                                             ("mode", "host_attrs")]), "back")
-
 
 
 class ModeCustomAttrs(WatoMode):

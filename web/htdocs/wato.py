@@ -15494,6 +15494,28 @@ class ModePatternEditor(WatoMode):
 #   '----------------------------------------------------------------------'
 
 
+def declare_custom_host_attrs():
+    # First remove all previously registered custom host attributes
+    for attr_name in watolib.all_host_attribute_names():
+        if attr_name not in builtin_host_attribute_names and not\
+           attr_name.startswith("tag_"):
+            watolib.undeclare_host_attribute(attr_name)
+
+    # now declare the custom attributes
+    for attr in config.wato_host_attrs:
+        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
+
+        if attr['add_custom_macro']:
+            a = watolib.NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs)
+        else:
+            a = ValueSpecAttribute(attr["name"], vs)
+
+        declare_host_attribute(a,
+            show_in_table = attr['show_in_table'],
+            topic = attr['topic'],
+        )
+
+
 def update_user_custom_attrs():
     userdb.declare_custom_user_attrs()
     userdb.rewrite_users()
@@ -15518,44 +15540,24 @@ def load_custom_attrs_from_mk_file(lock):
     return attrs
 
 
-class CustomAttrMode(WatoMode):
-    def __init__(self):
-        super(CustomAttrMode, self).__init__()
+def save_custom_attrs_to_mk_file(attrs):
+    output = watolib.wato_fileheader()
+    for what in [ "user", "host" ]:
+        if what in attrs and len(attrs[what]) > 0:
+            output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
+            output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
+
+    make_nagios_directory(multisite_dir)
+    store.save_file(multisite_dir + "custom_attrs.mk", output)
 
 
-    @classmethod
-    def custom_attr_types(cls):
-        return [
-            ('TextAscii', _('Simple Text')),
-        ]
+def custom_attr_types():
+    return [
+        ('TextAscii', _('Simple Text')),
+    ]
 
 
-    def _load_attributes(self, lock=False):
-        # TODO: Inappropriate Intimacy: A custom host attribute shouldn't know
-        #       custom user attributes (and vice versa). The only reason  for this
-        #       is that custom_attrs.mk contains both types.
-        self._all_attrs = load_custom_attrs_from_mk_file(lock)
-
-
-    def _update_config(self):
-        raise NotImplementedError()
-
-
-    def _save_attributes(self):
-        # TODO: cleanup that the method knows the subclasses 'user' and 'host' implicitely
-        output = watolib.wato_fileheader()
-        for what in [ "user", "host" ]:
-            if what in self._all_attrs and len(self._all_attrs[what]) > 0:
-                output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
-                output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(self._all_attrs[what]))
-
-        make_nagios_directory(multisite_dir)
-        store.save_file(multisite_dir + "custom_attrs.mk", output)
-
-
-
-
-class ModeEditCustomAttr(CustomAttrMode):
+class ModeEditCustomAttr(WatoMode):
     def __init__(self, what):
         # TODO: move _what to the subclasses.
         # Note: _what is used in _from_vars but called in the base class WatoMode.
@@ -15569,11 +15571,15 @@ class ModeEditCustomAttr(CustomAttrMode):
         return self._all_attrs[self._what]
 
 
+    def _update_config(self):
+        raise NotImplementedError()
+
+
     def _from_vars(self):
         self._name = html.var("edit") # missing -> new custom attr
         self._new = self._name == None
 
-        self._load_attributes(lock=html.is_transaction())
+        self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
 
         if not self._new:
             self._attr = [ a for a in self._attrs if a['name'] == self._name ]
@@ -15620,7 +15626,7 @@ class ModeEditCustomAttr(CustomAttrMode):
                 raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
 
             ty = html.var('type', '').strip()
-            if ty not in [ t[0] for t in self.custom_attr_types() ]:
+            if ty not in [ t[0] for t in custom_attr_types() ]:
                 raise MKUserError('type', _('The choosen attribute type is invalid.'))
 
             self._attr = {
@@ -15643,7 +15649,7 @@ class ModeEditCustomAttr(CustomAttrMode):
         if self._what == "user":
             self._attr['user_editable'] = user_editable
 
-        self._save_attributes()
+        save_custom_attrs_to_mk_file(self._all_attrs)
         self._update_config()
 
         return self._what + "_attrs"
@@ -15691,9 +15697,9 @@ class ModeEditCustomAttr(CustomAttrMode):
         forms.section(_('Data type'))
         html.help(_('The type of information to be stored in this attribute.'))
         if self._new:
-            html.dropdown('type', self.custom_attr_types(), deflt=self._attr.get('type'))
+            html.dropdown('type', custom_attr_types(), deflt=self._attr.get('type'))
         else:
-            html.write(dict(self.custom_attr_types())[self._attr.get('type')])
+            html.write(dict(custom_attr_types())[self._attr.get('type')])
 
         if self._what == "user":
             forms.section(_('Editable by Users'))
@@ -15771,17 +15777,21 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
 
 
-class ModeCustomAttrs(CustomAttrMode):
+class ModeCustomAttrs(WatoMode):
     def __init__(self, what):
         # TODO: move _what to the subclasses.
         super(ModeCustomAttrs, self).__init__()
         self._what = what
-        self._load_attributes(lock=html.is_transaction())
+        self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
 
 
     @property
     def _attrs(self):
         return self._all_attrs[self._what]
+
+
+    def _update_config(self):
+        raise NotImplementedError()
 
 
     def action(self):
@@ -15805,7 +15815,7 @@ class ModeCustomAttrs(CustomAttrMode):
                 for index, attr in enumerate(self._attrs):
                     if attr['name'] == delname:
                         self._attrs.pop(index)
-                self._save_attributes()
+                save_custom_attrs_to_mk_file(self._all_attrs)
                 self._update_config()
                 add_change("edit-%sattrs" % self._what, _("Deleted attribute %s") % (delname))
             elif c == False:
@@ -15830,7 +15840,7 @@ class ModeCustomAttrs(CustomAttrMode):
 
             table.cell(_("Name"),  custom_attr['name'])
             table.cell(_("Title"), custom_attr['title'])
-            table.cell(_("Type"),  dict(ModeEditCustomAttr.custom_attr_types())[custom_attr['type']])
+            table.cell(_("Type"),  dict(custom_attr_types())[custom_attr['type']])
 
         table.end()
 
@@ -15877,27 +15887,6 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         return self._attrs
 
 
-
-def declare_custom_host_attrs():
-    # First remove all previously registered custom host attributes
-    for attr_name in watolib.all_host_attribute_names():
-        if attr_name not in builtin_host_attribute_names and not\
-           attr_name.startswith("tag_"):
-            watolib.undeclare_host_attribute(attr_name)
-
-    # now declare the custom attributes
-    for attr in config.wato_host_attrs:
-        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
-
-        if attr['add_custom_macro']:
-            a = watolib.NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs)
-        else:
-            a = ValueSpecAttribute(attr["name"], vs)
-
-        declare_host_attribute(a,
-            show_in_table = attr['show_in_table'],
-            topic = attr['topic'],
-        )
 
 #.
 #   .--Check Plugins-------------------------------------------------------.

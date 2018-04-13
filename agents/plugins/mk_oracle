@@ -27,7 +27,8 @@
 # This plugin is a result of the common work of Thorsten Bruhns
 # and Mathias Kettner. Thorsten is responsible for the ORACLE
 # stuff, Mathias for the shell hacking...
-# This plugin is available for linux AND solaris.
+
+# This plugin is available for Linux and Solaris
 
 # Example for mk_oracle.cfg
 # DBUSER=<DBUSER>:<PASSWORD>:<SYSDBA>:<HOSTNAME>:<Port>
@@ -40,35 +41,33 @@
 # ONLY_SIDS is only usable for local running instances. It is ignored for
 # REMOTE_-Instances. The same applies to EXCLUDE.
 
-while test $# -gt 0
-do
-    if [ "${1}" = '-d' ] ; then
+while test $# -gt 0; do
+    if [ "${1}" = '-d' ]; then
         set -xv ; DEBUG=1
-    elif [ "${1}" = '-t' ] ; then
+    elif [ "${1}" = '-t' ]; then
         DEBUGCONNECT=1
     fi
     shift
 done
 
-if [ ! "$MK_CONFDIR" ] ; then
+
+if [ ! "$MK_CONFDIR" ]; then
     echo "MK_CONFDIR not set!" >&2
     exit 1
 fi
 
-if [ ! "$MK_VARDIR" ] ; then
-    export MK_VARDIR=$MK_CONFDIR
+
+if [ ! "$MK_VARDIR" ]; then
+    export MK_VARDIR="$MK_CONFDIR"
 fi
 
-
-#   .--Config--------------------------------------------------------------.
-#   |                     ____             __ _                            |
-#   |                    / ___|___  _ __  / _(_) __ _                      |
-#   |                   | |   / _ \| '_ \| |_| |/ _` |                     |
-#   |                   | |__| (_) | | | |  _| | (_| |                     |
-#   |                    \____\___/|_| |_|_| |_|\__, |                     |
+#   .--config--------------------------------------------------------------.
+#   |                                      __ _                            |
+#   |                      ___ ___  _ __  / _(_) __ _                      |
+#   |                     / __/ _ \| '_ \| |_| |/ _` |                     |
+#   |                    | (_| (_) | | | |  _| | (_| |                     |
+#   |                     \___\___/|_| |_|_| |_|\__, |                     |
 #   |                                           |___/                      |
-#   +----------------------------------------------------------------------+
-#   | The user can override and set variables in mk_oracle.cfg             |
 #   '----------------------------------------------------------------------'
 
 # Sections that run fast and do no caching
@@ -112,9 +111,8 @@ CACHE_MAXAGE=600
 #
 
 # Source the optional configuration file for this agent plugin
-if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]
-then
-    . $MK_CONFDIR/mk_oracle.cfg
+if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
+    . "$MK_CONFDIR/mk_oracle.cfg"
 fi
 
 #.
@@ -133,8 +131,8 @@ fi
 
 sql_performance()
 {
-    if [ "$AT_LEAST_ORACLE_101" = 'yes' ] ; then
-        echo 'PROMPT <<<oracle_performance:sep(124)>>>'
+    if [ "$AT_LEAST_ORACLE_101" = "yes" ]; then
+        echo "PROMPT <<<oracle_performance:sep(124)>>>"
         echo "select upper(i.INSTANCE_NAME)
                      ||'|'|| 'sys_time_model'
                      ||'|'|| S.STAT_NAME
@@ -172,11 +170,11 @@ sql_performance()
     fi
 }
 
+
 sql_tablespaces()
 {
-    echo 'PROMPT <<<oracle_tablespaces:sep(124)>>>'
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
-
+    echo "PROMPT <<<oracle_tablespaces:sep(124)>>>"
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ]; then
         echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                   || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
                   ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
@@ -205,10 +203,9 @@ sql_tablespaces()
                     GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
                     f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
                     'TEMP', t.block_size, t.status)
-           where d.database_role = 'PRIMARY';
-              "
-    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
+           where d.database_role = 'PRIMARY';"
 
+    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ]; then
         echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                   || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
                   ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
@@ -233,14 +230,14 @@ sql_tablespaces()
                     WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
                     GROUP BY th.instance, f.file_name, f.tablespace_name, 'ONLINE',
                     f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
-                    'TEMP', t.block_size, t.status);
-              "
+                    'TEMP', t.block_size, t.status);"
     fi
 }
 
+
 sql_dataguard_stats()
 {
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ]; then
         echo 'PROMPT <<<oracle_dataguard_stats:sep(124)>>>'
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| upper(d.DB_UNIQUE_NAME)
@@ -254,15 +251,15 @@ sql_dataguard_stats()
               left outer join V\$dataguard_stats ds on 1=1
               WHERE vp.name = 'log_archive_config'
               AND   vp.value is not null
-              ORDER BY 1;
-             "
+              ORDER BY 1;"
     fi
 }
+
 
 sql_recovery_status()
 {
     echo 'PROMPT <<<oracle_recovery_status:sep(124)>>>'
-    if [ "$AT_LEAST_ORACLE_101" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_101" = 'yes' ]; then
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| d.DB_UNIQUE_NAME
                      ||'|'|| d.DATABASE_ROLE
@@ -277,7 +274,7 @@ sql_recovery_status()
               FROM  V\$datafile_header dh, v\$database d, v\$instance i
               ORDER BY dh.file#;
              "
-    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
+    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ]; then
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| d.DATABASE_ROLE
@@ -295,11 +292,12 @@ sql_recovery_status()
     fi
 }
 
+
 sql_rman()
 {
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ]; then
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
-        echo "select /*"$HINT_RMAN" check_mk rman1 */ upper(name)
+        echo "select /*${HINT_RMAN} check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
@@ -327,7 +325,7 @@ sql_rman()
                             , bd2.INCREMENTAL_CHANGE#
                      order by name, bd2.INCREMENTAL_LEVEL);
 
-              select /*"$HINT_RMAN" check_mk rman2 */ name
+              select /*${HINT_RMAN} check_mk rman2 */ name
                     || '|' || 'COMPLETED'
                     || '|'
                     || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
@@ -343,7 +341,7 @@ sql_rman()
                     group by upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                    );
 
-              select /*"$HINT_RMAN" check_mk rman3 */ name
+              select /*${HINT_RMAN} check_mk rman3 */ name
                      || '|COMPLETED'
                      || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
@@ -367,9 +365,10 @@ sql_rman()
     fi
 }
 
+
 sql_recovery_area()
 {
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ]; then
         echo 'PROMPT <<<oracle_recovery_area>>>'
         echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||' '|| round((SPACE_USED-SPACE_RECLAIMABLE)/
@@ -378,15 +377,15 @@ sql_recovery_area()
                      ||' '|| round(SPACE_USED/1024/1024)
                      ||' '|| round(SPACE_RECLAIMABLE/1024/1024)
                      ||' '|| d.FLASHBACK_ON
-              from V\$RECOVERY_FILE_DEST, v\$database d, v\$instance i;
-             "
+              from V\$RECOVERY_FILE_DEST, v\$database d, v\$instance i;"
     fi
 }
+
 
 sql_undostat()
 {
     echo 'PROMPT <<<oracle_undostat:sep(124)>>>'
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ]; then
         echo "select upper(i.INSTANCE_NAME)
                      ||'|'|| ACTIVEBLKS
                      ||'|'|| MAXCONCURRENCY
@@ -399,9 +398,9 @@ sql_undostat()
                                  )
                             where rownum = 1
                               and TUNED_UNDORETENTION > 0
-                  );
-             "
-    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
+                  );"
+
+    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ]; then
         # TUNED_UNDORETENTION and ACTIVEBLKS are not availibe in Oracle <=9.2!
         # we sent a -1 for filtering in check_undostat
         echo "select upper(i.INSTANCE_NAME)
@@ -415,10 +414,10 @@ sql_undostat()
                                   from v\$undostat order by end_time desc
                                  )
                             where rownum = 1
-                  );
-             "
+                  );"
     fi
 }
+
 
 sql_resumable()
 {
@@ -440,14 +439,13 @@ sql_resumable()
           union all
           select upper(i.INSTANCE_NAME)
                  || '|||||||||'
-          from v\$instance i
-;
-         "
+          from v\$instance i;"
 }
+
 
 sql_jobs()
 {
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ]; then
         echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
                      ||'|'|| j.OWNER
@@ -470,10 +468,10 @@ sql_jobs()
               left outer join dba_scheduler_job_run_details jd
                               on  jd.owner = jm.OWNER
                               AND jd.JOB_NAME = jm.JOB_NAME
-                              AND jd.LOG_ID = jm.LOG_ID;
-             "
+                              AND jd.LOG_ID = jm.LOG_ID;"
     fi
 }
+
 
 sql_ts_quotas()
 {
@@ -489,9 +487,9 @@ sql_ts_quotas()
           select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                  ||'|||'
           from v\$database d, v\$instance i
-          order by 1;
-         "
+          order by 1;"
 }
+
 
 sql_version()
 {
@@ -502,10 +500,11 @@ sql_version()
 	  where banner like 'Oracle%';"
 }
 
+
 sql_instance()
 {
     echo 'prompt <<<oracle_instance:sep(124)>>>'
-    if [ ${ORACLE_SID:0:1} = '+' ] ; then
+    if [ "${ORACLE_SID:0:1}" = '+' ]; then
         # ASM
         echo "select upper(i.instance_name)
                      || '|' || i.VERSION
@@ -518,8 +517,8 @@ sql_instance()
                      || '|' || 'ASM'
                      || '|' || 'NO'
                      || '|' || i.instance_name
-                from v\$instance i;
-             "
+                from v\$instance i;"
+
     else
         # normal Instance
         echo "select upper(i.instance_name)
@@ -534,10 +533,10 @@ sql_instance()
                      || '|' || FORCE_LOGGING
                      || '|' || d.name
                      || '|' || to_char(d.created, 'ddmmyyyyhh24mi')
-                from v\$instance i, v\$database d;
-             "
+                from v\$instance i, v\$database d;"
     fi
 }
+
 
 sql_sessions()
 {
@@ -548,8 +547,8 @@ sql_sessions()
                  || '|' || MAX_UTILIZATION
           from v\$resource_limit, v\$instance i
           where RESOURCE_NAME = 'sessions';"
-
 }
+
 
 sql_processes()
 {
@@ -558,9 +557,9 @@ sql_processes()
                   || ' ' || CURRENT_UTILIZATION
                   || ' ' || ltrim(rtrim(LIMIT_VALUE))
            from v\$resource_limit, v\$instance i
-           where RESOURCE_NAME = 'processes';
-         "
+           where RESOURCE_NAME = 'processes';"
 }
+
 
 sql_logswitches()
 {
@@ -572,13 +571,13 @@ sql_logswitches()
                  from v\$loghist h , v\$instance i
                  where h.first_time > sysdate - 1/24
                  and h.thread# = i.instance_number
-                );
-         "
+                );"
 }
+
 
 sql_locks()
 {
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ]; then
         echo 'prompt <<<oracle_locks:sep(124)>>>'
         echo "select upper(i.instance_name)
                      || '|' || b.sid
@@ -602,70 +601,68 @@ sql_locks()
               join v\$instance i on 1=1
               join gv\$session bs on bs.inst_id = b.BLOCKING_INSTANCE
                                  and bs.sid = b.BLOCKING_SESSION
-              where b.BLOCKING_SESSION is not null
-;
+              where b.BLOCKING_SESSION is not null;
               select upper(i.instance_name)
                      || '|||||||||||||||||'
-              from v\$instance i
-;
-        "
+              from v\$instance i;"
     fi
 }
+
 
 sql_locks_old()
 {
-    if [ "$AT_LEAST_ORACLE_101" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_101" = 'yes' ]; then
         echo 'prompt <<<oracle_locks:sep(124)>>>'
         echo "SET SERVEROUTPUT ON feedback off
-DECLARE
-    type x is table of varchar2(20000) index by pls_integer;
-    xx x;
-begin
-    begin
-        execute immediate 'select upper(i.instance_name)
-           || ''|'' || a.sid
-           || ''|'' || b.serial#
-           || ''|'' || b.machine
-           || ''|'' || b.program
-           || ''|'' || b.process
-           || ''|'' || b.osuser
-           || ''|'' || a.ctime
-           || ''|'' || decode(c.owner,NULL,''NULL'',c.owner)
-           || ''|'' || decode(c.object_name,NULL,''NULL'',c.object_name)
-            from V\$LOCK a, v\$session b, dba_objects c, v\$instance i
-            where (a.id1, a.id2, a.type)
-                       IN (SELECT id1, id2, type
-                           FROM GV\$LOCK
-                           WHERE request>0
-                          )
-            and request=0
-            and a.sid = b.sid
-            and a.id1 = c.object_id (+)
-            union all
-            select upper(i.instance_name) || ''|||||||||''
-            from  v\$instance i'
-        bulk collect into xx;
-        if xx.count >= 1 then
-            for i in 1 .. xx.count loop
-                dbms_output.put_line(xx(i));
-            end loop;
-        end if;
-    exception
-        when others then
-            for cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) loop
-                dbms_output.put_line(cur1.instance_name || '|||||||||'||sqlerrm);
-            end loop;
-    end;
-END;
-/
-set serverout off
-"
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(i.instance_name)
+                         || ''|'' || a.sid
+                         || ''|'' || b.serial#
+                         || ''|'' || b.machine
+                         || ''|'' || b.program
+                         || ''|'' || b.process
+                         || ''|'' || b.osuser
+                         || ''|'' || a.ctime
+                         || ''|'' || decode(c.owner,NULL,''NULL'',c.owner)
+                         || ''|'' || decode(c.object_name,NULL,''NULL'',c.object_name)
+                          from V\$LOCK a, v\$session b, dba_objects c, v\$instance i
+                          where (a.id1, a.id2, a.type)
+                                     IN (SELECT id1, id2, type
+                                         FROM GV\$LOCK
+                                         WHERE request>0
+                                        )
+                          and request=0
+                          and a.sid = b.sid
+                          and a.id1 = c.object_id (+)
+                          union all
+                          select upper(i.instance_name) || ''|||||||||''
+                          from  v\$instance i'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) loop
+                              dbms_output.put_line(cur1.instance_name || '|||||||||'||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
     fi
 }
 
+
 sql_longactivesessions()
 {
-    if [ "$AT_LEAST_ORACLE_101" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_101" = 'yes' ]; then
         echo 'prompt <<<oracle_longactivesessions:sep(124)>>>'
         echo "select upper(i.instance_name)
                      || '|' || s.sid
@@ -685,15 +682,15 @@ sql_longactivesessions()
               union all
               select upper(i.instance_name)
                      || '||||||||'
-              from v\$instance i;
-             "
+              from v\$instance i;"
     fi
 }
+
 
 sql_asm_diskgroup()
 {
     echo 'prompt <<<oracle_asm_diskgroup>>>'
-    if [ "$AT_LEAST_ORACLE_112" = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_112" = 'yes' ]; then
         echo "select STATE
                      || ' ' || TYPE
                      || ' ' || 'N'
@@ -707,9 +704,9 @@ sql_asm_diskgroup()
                      || ' ' || offline_disks
                      || ' ' || voting_files
                      || ' ' || name || '/'
-                from v\$asm_diskgroup;
-             "
-    elif [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+                from v\$asm_diskgroup;"
+
+    elif [ "$AT_LEAST_ORACLE_102" = 'yes' ]; then
         echo "select STATE
                      || ' ' || TYPE
                      || ' ' || 'N'
@@ -723,8 +720,7 @@ sql_asm_diskgroup()
                      || ' ' || offline_disks
                      || ' ' || 'N'
                      || ' ' || name || '/'
-                from v\$asm_diskgroup;
-             "
+                from v\$asm_diskgroup;"
     fi
 }
 
@@ -740,38 +736,41 @@ sql_asm_diskgroup()
 #   | Functions for Operating System dependent stuff                       |
 #   '----------------------------------------------------------------------'
 
-function set_osenv () {
+set_osenv () {
+    local ostype
     ostype=$(uname -s)
     AWK=$(which awk)
 
-    if [ ${ostype} = 'Linux' ] ; then
-
+    if [ "${ostype}" = 'Linux' ]; then
         GREP=$(which grep)
         STATCX='stat -c %X'
         STATCY='stat -c %Y'
 
-    elif [ ${ostype} = 'SunOS' ] ; then
-
+    elif [ "${ostype}" = 'SunOS' ]; then
         # expand the PATH for inetd. Otherwise some stuff in /opt/sfw/bin is not found!
         export PATH=$PATH:/usr/ucb:/usr/proc/bin:opt/sfw/bin:/opt/sfw/sbin:/usr/sfw/bin:/usr/sfw/sbin:/opt/csw/bin
+        GREP="/usr/xpg4/bin/grep"
 
-        GREP=/usr/xpg4/bin/grep
-
-        if [ ! -x $GREP ] ; then
-            echo "Please make sure that "$GREP" is existing on Solaris!"
+        if [ ! -x "$GREP" ]; then
+            echo "Please make sure that $GREP is existing on Solaris!"
             echo "Aborting mk_oracle plugin."
             exit 999
         fi
 
+        AWK=$(which nawk)
         STATCX='file_mtime'
         STATCY='file_mtime'
 
-        AWK=$(which nawk)
+    elif [ "${ostype}" = 'AIX' ]; then
+        GREP=
+        AWK=
+        STATCX=
+        STATCY=
 
     else
-        ostype="unknown OS: "${ostype}
-    fi
+        ostype="unknown OS: ${ostype}"
 
+    fi
 }
 
 #.
@@ -786,11 +785,10 @@ function set_osenv () {
 #   | Functions for getting the Oracle environment                         |
 #   '----------------------------------------------------------------------'
 
-function set_oraenv () {
+set_oraenv () {
     local SID=${1}
 
-    if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]] ; then
-
+    if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]]; then
         # we get the ORACLE_HOME from mk_oracle.cfg for REMOTE execution
         ORACLE_HOME=${ORACLE_HOME:-${REMOTE_ORACLE_HOME}}
 
@@ -806,74 +804,53 @@ function set_oraenv () {
         test -f ${ORATAB:-""} || echo "ORA-99999 oratab not found"
         test -f ${ORATAB:-""} || exit 1
 
-        ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID}":" | cut -d":" -f2)
-        if [ -z $ORACLE_HOME ] ; then
+        ORACLE_HOME=$(grep "^${ORACLE_SID}:" <"${ORATAB}" | cut -d":" -f2)
+        if [ -z "${ORACLE_HOME}" ]; then
             # cut last number from SID for Oracle RAC to find entry in oratab
-            ORACLE_SID_SHORT=$(echo $ORACLE_SID | sed "s/[0-9]$//")
-            ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID_SHORT}":" | cut -d":" -f2)
+            ORACLE_SID_SHORT=${ORACLE_SID/%[0-9]/}
+            ORACLE_HOME=$(grep "^${ORACLE_SID_SHORT}:" <"${ORATAB}" | cut -d":" -f2)
         fi
     fi
 
     LD_LIBRARY_PATH=$ORACLE_HOME/lib
 
-    if [ ! -d ${ORACLE_HOME:-"not_found"} ] ; then
-        echo "ORA-99999 ORACLE_HOME for ORACLE_SID="$ORACLE_SID" not found or not existing!"
+    if [ ! -d "${ORACLE_HOME:-'not_found'}" ]; then
+        echo "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!"
         exit 1
     fi
 
     TNS_ADMIN=${TNS_ADMIN:-$MK_CONFDIR}
-
-    test -f ${TNS_ADMIN}/sqlnet.ora || ( echo "ORA-99998 Couldn't find "${TNS_ADMIN}/sqlnet.ora ; exit 1)
-
+    test -f "${TNS_ADMIN}/sqlnet.ora" || ( echo "ORA-99998 Couldn't find ${TNS_ADMIN}/sqlnet.ora" ; exit 1)
     export ORACLE_HOME TNS_ADMIN ORACLE_SID LD_LIBRARY_PATH
 }
 
-function get_oraversion () {
+get_oraversion () {
     # oraenv is only needed when version is determined from sqlplus
-    set_oraenv ${1}
+    set_oraenv "${1}"
 
-    if [[ ! "$1" =~ ^REMOTE_INSTANCE_.* ]] ; then
+    if [[ ! "$1" =~ ^REMOTE_INSTANCE_.* ]]; then
         # we get the ORACLE_VERSION in main loop because this is only avalible from mk_oracle.cfg
         # that file is only read in function sqlplus at later time!
 
         # get the version from ORACLE_HOME/bin/sqlplus
-        ORACLE_VERSION=$($ORACLE_HOME/bin/sqlplus -V | grep ^SQL | cut -d" " -f3 | cut -d"." -f-2)
+        ORACLE_VERSION=$("${ORACLE_HOME}"/bin/sqlplus -V | grep ^SQL | cut -d" " -f3 | cut -d"." -f-2)
     fi
+
+    NUMERIC_ORACLE_VERSION=${ORACLE_VERSION//./}
 
     # remove possible existing variables
-    unset AT_LEAST_ORACLE_122 AT_LEAST_ORACLE_121 AT_LEAST_ORACLE_112 AT_LEAST_ORACLE_111 AT_LEAST_ORACLE_102 AT_LEAST_ORACLE_101 AT_LEAST_ORACLE_92
+    unset AT_LEAST_ORACLE_112 AT_LEAST_ORACLE_111 AT_LEAST_ORACLE_102 AT_LEAST_ORACLE_101 AT_LEAST_ORACLE_92
 
-    if [ "$ORACLE_VERSION" = '12.2' ] ; then
-        AT_LEAST_ORACLE_122=yes
-    fi
-
-    if [ "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' ] ; then
-        AT_LEAST_ORACLE_121=yes
-    fi
-
-    if [ "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' ] ; then
+    if [ $((NUMERIC_ORACLE_VERSION)) -ge 112 ]; then
         AT_LEAST_ORACLE_112=yes
-    fi
 
-    if [ "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
-         -o "$ORACLE_VERSION" = '11.1' ] ; then
-        AT_LEAST_ORACLE_111=yes
-    fi
-
-    if [ "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
-         -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' ] ; then
+    elif [ $((NUMERIC_ORACLE_VERSION)) -ge 102 ]; then
         AT_LEAST_ORACLE_102=yes
-    fi
 
-    if [ "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
-         -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' \
-         -o "$ORACLE_VERSION" = '10.1' ] ; then
+    elif [ $((NUMERIC_ORACLE_VERSION)) -ge 101 ]; then
         AT_LEAST_ORACLE_101=yes
-    fi
 
-    if [ "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
-         -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' \
-         -o "$ORACLE_VERSION" = '10.1' -o "$ORACLE_VERSION" = '9.2' ] ; then
+    elif [ $((NUMERIC_ORACLE_VERSION)) -ge 92 ]; then
         AT_LEAST_ORACLE_92=yes
     fi
 }
@@ -891,15 +868,15 @@ function get_oraversion () {
 #   '----------------------------------------------------------------------'
 
 
-function ora_session_environment()
+ora_session_environment()
 {
     echo 'set pages 0 trimspool on feedback off lines 8000'
-    if [ "$AT_LEAST_ORACLE_102" = 'yes' -a ! "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' -a ! "$DISABLE_ORA_SESSION_SETTINGS" ]; then
         echo 'set echo off'
         echo 'alter session set "_optimizer_mjc_enabled"=false;'
 
         # cursor_sharing is not valid for ASM instances
-        if [ ! ${ORACLE_SID:0:1} = '+' ] ; then
+        if [ ! "${ORACLE_SID:0:1}" = '+' ]; then
             echo 'alter session set cursor_sharing=exact;'
         fi
 
@@ -909,63 +886,62 @@ function ora_session_environment()
     echo ' '
 }
 
+
 # Helper function that calls an SQL statement with a clean output
 # Usage: echo "..." | sqlplus SID
-function sqlplus() {
+sqlplus() {
+    local loc_stdin
     loc_stdin=$(cat)
     local SID=$1
 
-
     # reload mk_oracle.cfg for run_cached. Otherwise some variables are missing
-    if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]
-    then
-        . $MK_CONFDIR/mk_oracle.cfg
+    if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
+        . "$MK_CONFDIR/mk_oracle.cfg"
     fi
 
     ORADBUSER=""
     DBPASSWORD=""
 
-    set_oraenv $SID
+    set_oraenv "$SID"
 
-    if [[ "$1" =~ ^REMOTE_INSTANCE_.* ]] ; then
-
+    if [[ "$1" =~ ^REMOTE_INSTANCE_.* ]]; then
         # working on REMOTE_-Mode!
-        ORACFGLINE=$(eval echo \${$1})
-
-        ORACLE_SID=$(echo ${ORACFGLINE} | cut -d":" -f$[7])
-
-        TNSALIAS=$(echo $REMOTE_VARNAME | cut -d"_" -f3-)
+        ORACFGLINE=$(eval "echo \${$1}")
+        ORACLE_SID=$(echo "${ORACFGLINE}" | cut -d":" -f7)
+        TNSALIAS=$(echo "${REMOTE_VARNAME}" | cut -d"_" -f3-)
 
         # we need to add the piggyback sections!
-        remote_hostname=$(echo ${ORACFGLINE} | cut -d":" -f$[6])
+        remote_hostname=$(echo "${ORACFGLINE}" | cut -d":" -f6)
 
         # build the piggyback information in loc_stdin
         # <<<<hostname>>>> SQL-Statements <<<<>>>>
-        loc_stdin=$(echo 'prompt <<<<'$remote_hostname'>>>>'; echo ' ')$loc_stdin$(echo ' '; echo 'prompt <<<<>>>>'; echo ' ')
+        loc_stdin="$(echo "prompt <<<<$remote_hostname>>>>"; echo ' ')${loc_stdin}$(echo ' '; echo 'prompt <<<<>>>>'; echo ' ')"
+
     else
         # working with locally running instances
         # mk_oracle_dbusers.conf is for compatibility. Do not use it anymore
         ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
-
         TNSALIAS=${ORACLE_SID}
 
         # ASM use '+' as 1st character in SID!
-        if [ ${ORACLE_SID:0:1} = '+' ] ; then
+        if [ "${ORACLE_SID:0:1}" = '+' ]; then
             ORACFGLINE=${ASMUSER}
+
         else
             # use an individuel user or the default DBUSER from mk_oracle.cfg
-            dummy="DBUSER_"${ORACLE_SID}
+            dummy="DBUSER_${ORACLE_SID}"
             ORACFGLINE=${!dummy}
-            if [ "$ORACFGLINE" = '' ] ; then
+            if [ "$ORACFGLINE" = '' ]; then
                 ORACFGLINE=${DBUSER}
             fi
         fi
 
-        if [ -f ${ORACLE_USERCONF} -a "${ORACFGLINE}" = '' ] ; then
+        if [ -f "${ORACLE_USERCONF}" -a "${ORACFGLINE}" = '' ]; then
             # mk_oracle_dbuser.conf
-            ORACFGLINE=$(cat ${ORACLE_USERCONF} | grep "^"${ORACLE_SID}":")
+            ORACFGLINE=$(grep "^${ORACLE_SID}:" < "${ORACLE_USERCONF}")
             # mk_oracle_dbuser has ORACLE_SID as 1. parameter. we need an offset for all values
             offset=1
+
         else
             # mk_oracle.cfg
             offset=0
@@ -974,19 +950,19 @@ function sqlplus() {
 
     # SID_UPPER is required for later use in function sqlplus.
     # gathering at this point is needed due to dependency to mk_oracle.cfg in remote mode
-    SID_UPPER=$(echo $ORACLE_SID | tr '[:lower:]' '[:upper:]')
+    SID_UPPER=$(echo "${ORACLE_SID}" | tr '[:lower:]' '[:upper:]')
     export SID_UPPER
 
     offset=${offset:-0}
-    ORADBUSER=$(echo ${ORACFGLINE} | cut -d":" -f$[1+offset])
-    DBPASSWORD=$(echo ${ORACFGLINE} | cut -d":" -f$[2+offset])
-    DBSYSCONNECT=$(echo ${ORACFGLINE} | cut -d":" -f$[3+offset])
-    DBHOST=$(echo ${ORACFGLINE} | cut -d":" -f$[4+offset])
-    DBPORT=$(echo ${ORACFGLINE} | cut -d":" -f$[5+offset])
+    ORADBUSER=$(echo "${ORACFGLINE}" | cut -d":" -f$((1+offset)))
+    DBPASSWORD=$(echo "${ORACFGLINE}" | cut -d":" -f$((2+offset)))
+    DBSYSCONNECT=$(echo "${ORACFGLINE}" | cut -d":" -f$((3+offset)))
+    DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
+    DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
     TNSPINGOK=no
-    if [ -f ${TNS_ADMIN}/tnsnames.ora ] ; then
-        if "${ORACLE_HOME}"/bin/tnsping "${TNSALIAS}" >/dev/null 2>&1  ; then
+    if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
+        if "${ORACLE_HOME}/bin/tnsping" "${TNSALIAS}" >/dev/null 2>&1; then
             TNSPINGOK=yes
         else
             unset TNSALIAS
@@ -995,23 +971,23 @@ function sqlplus() {
         unset TNSALIAS
     fi
 
-    if [ ! "${ORACFGLINE}" ] ; then
+    if [ ! "${ORACFGLINE}" ]; then
         # no configuration found
         # => use the wallet with tnsnames.ora or EZCONNECT
         TNSALIAS=${TNSALIAS:-"localhost:1521/${ORACLE_SID}"}
     else
-        if [ ${DBSYSCONNECT} ] ; then
+        if [ "${DBSYSCONNECT}" ]; then
             assysdbaconnect=" as "${DBSYSCONNECT}
         fi
 
         TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST:-"localhost"})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
 
         # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet
-        if [ "${ORADBUSER}" = '/' ] ; then
+        if [ "${ORADBUSER}" = '/' ]; then
             # connect with / and wallet
             ORADBUSER=""
             DBPASSWORD=""
-            if [ "$TNSPINGOK" = 'no' ] ; then
+            if [ "$TNSPINGOK" = 'no' ]; then
                 # create an EZCONNECT string when no tnsnames.ora is usable
                 # defaults to localhost:1521/<ORACLE_SID>
                 TNSALIAS="${DBHOST:-"localhost"}:${DBPORT:-1521}/${ORACLE_SID}"
@@ -1022,59 +998,56 @@ function sqlplus() {
     DBCONNECT="${ORADBUSER}/${DBPASSWORD}@${TNSALIAS}${assysdbaconnect}"
 
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus
-    if [ ! -x ${SQLPLUS} ] ; then
+    if [ ! -x "${SQLPLUS}" ]; then
         echo "sqlplus not found or ORACLE_HOME wrong! "
-        echo "SQLPLUS="${SQLPLUS}
+        echo "SQLPLUS=${SQLPLUS}"
         return 1
     fi
 
     # add ora_session_environment as prefix before loc_stdin
     loc_stdin=$(ora_session_environment)${loc_stdin}
 
-    if OUTPUT=$(echo "$loc_stdin"  | "$SQLPLUS" -L -s ${DBCONNECT})
-    then
+    if OUTPUT=$(echo "$loc_stdin"  | "$SQLPLUS" -L -s "${DBCONNECT}"); then
         echo "$OUTPUT"
     else
 
-        if [ "$DEBUGCONNECT" ] ; then
+        if [ "$DEBUGCONNECT" ]; then
             echo "Logindetails: ${DBCONNECT}" >&2
             echo "$OUTPUT"
         else
             # SID_UPPER is required for backword compatibilty to old sqlplus.sh.
             # THis will be removed in a future time
-            SID_UPPER=${SID_UPPER:-$(echo $SID | tr '[:lower:]' '[:upper:]')}
+            SID_UPPER=${SID_UPPER:-$(echo "${SID}" | tr '[:lower:]' '[:upper:]')}
 
             # we need to add the piggyback as the sql didn't return any piggyback information in this situation
-            if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]] ; then
-                echo '<<<<'$remote_hostname'>>>>'
+            if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]]; then
+                echo "<<<<${remote_hostname}>>>>"
             fi
 
             echo '<<<oracle_instance:sep(124)>>>'
             echo "$OUTPUT" | grep -v "^ERROR at line" | tr '\n' ' ' | sed "s/^/$SID_UPPER|FAILURE|/" ; echo
 
-            if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]] ; then
+            if [[ "$SID" =~ ^REMOTE_INSTANCE_.* ]]; then
                 echo '<<<<>>>>'
             fi
         fi
     fi
 }
 
-function remove_excluded_sections ()
+remove_excluded_sections ()
 {
     local sections="$1"
     local excluded="$2"
     local result=""
-    for section in $sections
-    do
+    for section in $sections; do
         local skip=
-        for exclude in $excluded
-        do
-            if [ "$exclude" = "$section" ] ; then
+        for exclude in $excluded; do
+            if [ "$exclude" = "$section" ]; then
                 local skip=yes
                 break
             fi
         done
-        if [ "$skip" != yes ] ; then
+        if [ "$skip" != yes ]; then
             result="$result $section"
         fi
     done
@@ -1084,20 +1057,19 @@ function remove_excluded_sections ()
 
 # Create one SQL statements for several sections and run
 # these with sqlplus. The exitcode is preserved.
-function do_sync_checks ()
+do_sync_checks ()
 {
     local SID=$1
     local SECTIONS="$2"
-    for section in $SECTIONS
-    do
+    for section in $SECTIONS; do
         eval "sql_$section"
-    done | sqlplus $SID
+    done | sqlplus "${SID}"
 }
 
-function do_async_checks ()
+do_async_checks ()
 {
     local SID=$1
-    echo "$ASYNC_SQL" | sqlplus $SID
+    echo "$ASYNC_SQL" | sqlplus "${SID}"
 }
 
 # Make sure that the new shell that is being run by run_cached inherits
@@ -1107,28 +1079,36 @@ export -f ora_session_environment
 export -f do_async_checks
 export -f set_oraenv
 
-function file_mtime() {
+file_mtime () {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($mtime);' "$1"
 }
 
-function run_cached () {
+run_cached () {
     local section=
-    if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
+    if [ "$1" = -s ]; then
+        local section="echo '<<<${2}>>>' ; "
+        shift
+    fi
+
     local NAME=$1
     local MAXAGE=$2
     shift 2
-    local CMDLINE="$section$@"
+    local CMDLINE="$section$*"
 
-    if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
+    if [ ! -d "$MK_VARDIR/cache" ]; then
+        mkdir -p "$MK_VARDIR/cache"
+    fi
+
     CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
-
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
     # perl is needed for Solaris => no date +%s availible
-    local NOW=$(perl -le "print time()")
-    if [ -e "$CACHEFILE.new" ] ; then
-        local CF_ATIME=$($STATCX "$CACHEFILE.new")
-        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
+    local NOW
+    NOW=$(perl -le "print time()")
+    if [ -e "$CACHEFILE.new" ]; then
+        local CF_ATIME
+        CF_ATIME=$("$STATCX" "$CACHEFILE.new")
+        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ]; then
             # Kill the process still accessing that file in case
             # it is still running. This avoids overlapping processes!
             fuser -k -9 "$CACHEFILE.new" >/dev/null 2>&1
@@ -1138,17 +1118,20 @@ function run_cached () {
     fi
 
     # Check if cache file exists and is recent enough
-    if [ -s "$CACHEFILE" ] ; then
-        local MTIME=$($STATCY "$CACHEFILE")
-        if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
+    if [ -s "$CACHEFILE" ]; then
+        local MTIME
+        MTIME=$("$STATCY" "$CACHEFILE")
+        if [ $((NOW - MTIME)) -le "$MAXAGE" ]; then
+            local USE_CACHEFILE=1
+        fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
         cat "$CACHEFILE"
     fi
 
     # Cache file outdated and new job not yet running? Start it
-    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-        if [ "$DEBUG" ] ; then
+    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]; then
+        if [ "$DEBUG" ]; then
             echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | /bin/bash
         else
             # When the command fails, the output is throws away ignored
@@ -1157,30 +1140,32 @@ function run_cached () {
     fi
 }
 
-function do_testmode() {
+do_testmode() {
     echo "-----------------------------------------------"
-    echo "Operating System: "${ostype}
-    echo "Logincheck to Instance: "$SID"  Version: "$ORACLE_VERSION
+    echo "Operating System: ${ostype}"
+    echo "Logincheck to Instance: ${SID}  Version: ${ORACLE_VERSION}"
     echo "select 'Login ok User: ' || user || ' on ' || host_name ||' Instance ' || instance_name
-          from v\$instance;" | sqlplus $SID
+          from v\$instance;" | sqlplus "$SID"
     echo "SYNC_SECTIONS=$SECTIONS"
     echo "ASYNC_SECTIONS=$ASECTIONS"
-    if [ "$IGNORE_DB_NAME" ] ; then
+    if [ "$IGNORE_DB_NAME" ]; then
         echo "IGNORE_DB_NAME found. Ignoring DB_NAME in all SQLs!"
     fi
-    if [ "$DISABLE_ORA_SESSION_SETTINGS" ] ; then
+
+    if [ "$DISABLE_ORA_SESSION_SETTINGS" ]; then
         echo "Paramter DISABLE_ORA_SESSION_SETTINGS found!"
     fi
-    if [ "$HINT_RMAN" ] ; then
+
+    if [ "$HINT_RMAN" ]; then
         echo "Using HINT_RMAN for this Instance!"
     fi
 }
 
-function do_instance() {
+do_instance() {
 
     SID=$1
 
-    if [ ${ORACLE_SID:0:1} = '+' ] ; then
+    if [ "${ORACLE_SID:0:1}" = '+' ]; then
         DO_ASYNC_SECTIONS=${ASYNC_ASM_SECTIONS}
         DO_SYNC_SECTIONS=${SYNC_ASM_SECTIONS}
     else
@@ -1190,7 +1175,7 @@ function do_instance() {
     fi
 
     # Do sync checks
-    EXCLUDED=$(eval 'echo $EXCLUDE'"_$SID")
+    EXCLUDED=$(eval "echo \$EXCLUDE_$SID")
     SECTIONS=$(remove_excluded_sections "$DO_SYNC_SECTIONS" "$EXCLUDED")
 
     # Do async checks
@@ -1198,11 +1183,11 @@ function do_instance() {
     ASYNC_SQL=$(for section in $ASECTIONS ; do eval "sql_$section" ; done)
     export ASYNC_SQL
 
-    if [ "$DEBUGCONNECT" ] ; then
-        do_testmode $SID
+    if [ "$DEBUGCONNECT" ]; then
+        do_testmode "$SID"
     else
-        do_sync_checks $SID "$SECTIONS"
-        run_cached oracle_$SID $CACHE_MAXAGE do_async_checks $SID
+        do_sync_checks "$SID" "$SECTIONS"
+        run_cached "oracle_$SID" "$CACHE_MAXAGE" do_async_checks "$SID"
     fi
 }
 
@@ -1222,81 +1207,81 @@ function do_instance() {
 set_osenv
 
 # Are there any remote configurations?
-for element in $(compgen -A variable | ${GREP} -E "^REMOTE_INSTANCE_.*") ; do
-
-    REMOTE_DBS=$REMOTE_DBS" "$element
-
-    remote_hostname=$(echo $element | cut -d":" -f6)
-
-    REMOTE_HOSTLIST=${remote_hostname}" "${REMOTE_HOSTLIST}
+for element in $(compgen -A variable | "${GREP}" -E "^REMOTE_INSTANCE_.*"); do
+    REMOTE_DBS="${REMOTE_DBS} ${element}"
+    remote_hostname=$(echo "${element}" | cut -d":" -f6)
+    REMOTE_HOSTLIST="${remote_hostname} ${REMOTE_HOSTLIST}"
 done
 
-if [ "$REMOTE_HOSTLIST" ] ; then
+if [ "$REMOTE_HOSTLIST" ]; then
     # remove duplicate hosts from list
-    REMOTE_HOSTLIST=$(echo $REMOTE_HOSTLIST | tr ' ' '\n' | sort | uniq)
+    REMOTE_HOSTLIST=$(echo "$REMOTE_HOSTLIST" | tr ' ' '\n' | sort | uniq)
 
     # create empty piggyback SECTIONS
-    for element in $REMOTE_HOSTLIST ; do
+    for element in $REMOTE_HOSTLIST; do
+        remote_hostname=$(echo "$element" | cut -d":" -f6)
+        echo "<<<<${remote_hostname}>>>>"
 
-        remote_hostname=$(echo $element | cut -d":" -f6)
-        echo "<<<<"$remote_hostname">>>>"
-
-        for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS
-        do
-            echo "<<<oracle_"$section">>>"
+        for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
+            echo "<<<oracle_${section}>>>"
         done
 
         echo "<<<<>>>>"
     done
 
-    if [ ! -e "$MK_VARDIR/mk_oracle.found" ] ; then
+    if [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
         touch "$MK_VARDIR/mk_oracle.found"
     fi
 fi
 
-# Get list of all running databases
-# Do not work on ASM in this plugin. => Ignore a running ASM-Instance!
-SIDS=$(UNIX95=true ps -ef | ${AWK} '{print $NF}' | ${GREP} -E '^asm_pmon_|^ora_pmon_|^xe_pmon_XE' | cut -d"_" -f3-)
+# Get list of all running databases. Do not work on ASM in this plugin.
+#   => Ignore a running ASM-Instance!
+# Shell checker wants to be smart regarding awk and '$NF'. We need to set AWK
+# dependent on OS and we would get the error message:
+#   ^-- SC2016: Expressions don't expand in single quotes, use double quotes for that.
+# Therefore we disable the shellcheck for the following line
+# shellcheck disable=SC2016
+SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' | "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_XE' | cut -d"_" -f3-)
 
 # If we do not have found any running database instance, then either
 # no ORACLE is present on this system or it's just currently not running.
 # In the later case we ouput empty agent sections so that Check_MK will be
 # happy and execute the actual check functions.
-if [ -z "$SIDS" -a ! -e "$MK_VARDIR/mk_oracle.found" ] ; then
+if [ -z "$SIDS" -a ! -e "$MK_VARDIR/mk_oracle.found" ]; then
     exit
 fi
 
 # From now on we expect databases on this system (for ever)
-touch $MK_VARDIR/mk_oracle.found
+touch "$MK_VARDIR/mk_oracle.found"
 
 # Make sure that always all sections are present, even
 # in case of an error. Note: the section <<<oracle_instance>>>
 # section shows the general state of a database instance. If
 # that section fails for an instance then all other sections
 # do not contain valid data anyway.
-for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS
-do
-    echo "<<<oracle_"$section">>>"
+for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
+    echo "<<<oracle_${section}>>>"
 done
 
-for SID in $SIDS
-do
-
+for SID in $SIDS; do
     # Check if SID is listed in ONLY_SIDS if this is used
-    if [ "$ONLY_SIDS" ] ; then
+    if [ "$ONLY_SIDS" ];
+    then
         SKIP=yes
-        for S in $ONLY_SIDS ; do
-            if  [ "$S" = "$SID" ] ; then
+        for S in $ONLY_SIDS; do
+            if  [ "$S" = "$SID" ]; then
                 SKIP=
                 break
             fi
         done
-        if [ "$SKIP" ] ; then continue ; fi
+
+        if [ "$SKIP" ]; then
+            continue
+        fi
     fi
 
     EXCLUDE=EXCLUDE_$SID
-    if [[ "$EXCLUDE" =~ ^[a-zA-Z][a-zA-Z0-9_]*$ ]]
-    then
+    if [[ "$EXCLUDE" =~ ^[a-zA-Z][a-zA-Z0-9_]*$ ]]; then
         # Handle explicit exclusion of instances
         # but not for +ASM
         EXCLUDE=${!EXCLUDE}
@@ -1306,22 +1291,22 @@ do
         fi
     fi
 
-    get_oraversion $SID
-    do_instance $SID
+    get_oraversion "$SID"
+    do_instance "$SID"
 done
 
-for REMOTE_DB in $REMOTE_DBS ; do
-    REMOTE_DB_LINE=$(eval echo \${$REMOTE_DB})
+for REMOTE_DB in $REMOTE_DBS; do
+    REMOTE_DB_LINE=$(eval "echo \${$REMOTE_DB}")
 
     # ORACLE_VERSION comes from mk_oracle.cfg!
-    ORACLE_VERSION=$(echo $REMOTE_DB_LINE | cut -d":" -f8)
+    ORACLE_VERSION=$(echo "$REMOTE_DB_LINE" | cut -d":" -f8)
 
     # the ORACLE_SID is needed for the oracle_instance check for ASM and normal instance
-    ORACLE_SID=$(echo $REMOTE_DB_LINE | cut -d":" -f7)
+    ORACLE_SID=$(echo "$REMOTE_DB_LINE" | cut -d":" -f7)
 
     # This is the piggyback hostname
-    remote_hostname=$(echo $element | cut -d":" -f6)
+    remote_hostname=$(echo "$element" | cut -d":" -f6)
 
-    get_oraversion $REMOTE_DB
-    do_instance $REMOTE_DB
+    get_oraversion "$REMOTE_DB"
+    do_instance "$REMOTE_DB"
 done

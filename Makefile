@@ -240,6 +240,10 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	gzip $(DISTNAME)/bin.tar
 	python -m compileall cmk ; \
 	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
+	    --exclude "cee" \
+	    --exclude "cee.py*" \
+	    --exclude "cme" \
+	    --exclude "cme.py*" \
 	    cmk/* ; \
 	  rm cmk/*.pyc
 	python -m compileall cmk_base ; \

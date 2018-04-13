@@ -79,15 +79,34 @@
 #   | Importing, Permissions, global variables                             |
 #   `----------------------------------------------------------------------'
 
-import sys, pprint, socket, re, time, datetime,  \
-       shutil, math, fcntl, random, glob, \
-       base64, csv
 import ast
+import base64
+import csv
+import datetime
+import fcntl
+import glob
+import json
+import math
+import multiprocessing
+import pprint
+import Queue
+import random
+import re
+import shutil
+import socket
 import subprocess
+import sys
+import time
 import traceback
-import i18n
-import config, table, multitar, userdb, weblib, login
 from hashlib import sha256
+
+import i18n
+import config
+import table
+import multitar
+import userdb
+import weblib
+import login
 from lib import *
 from log import logger
 from valuespec import *
@@ -95,9 +114,6 @@ import forms
 import backup
 import modules as multisite_modules
 import watolib
-
-import multiprocessing
-import Queue
 
 import cmk.paths
 import cmk.translations
@@ -113,8 +129,6 @@ if cmk.is_managed_edition():
     import managed
 else:
     managed = None
-
-import json
 
 g_html_head_open = False
 display_options  = None

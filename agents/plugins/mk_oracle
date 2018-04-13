@@ -807,7 +807,7 @@ set_oraenv () {
         ORACLE_HOME=$(grep "^${ORACLE_SID}:" <"${ORATAB}" | cut -d":" -f2)
         if [ -z "${ORACLE_HOME}" ]; then
             # cut last number from SID for Oracle RAC to find entry in oratab
-            ORACLE_SID_SHORT=${ORACLE_SID/%[0-9]/}
+            ORACLE_SID_SHORT=${ORACLE_SID%/[0-9]/}
             ORACLE_HOME=$(grep "^${ORACLE_SID_SHORT}:" <"${ORATAB}" | cut -d":" -f2)
         fi
     fi

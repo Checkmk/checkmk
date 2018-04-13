@@ -759,7 +759,8 @@ class Site(object):
     # executed this way.
     def switch_to_site_user(self):
         env_vars = {
-            "VERSION": self.version._version,
+            "VERSION" : self.version._version,
+            "REUSE"   : "1" if self.reuse else "0",
         }
         for varname in [ "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS", "PYLINT_ARGS"]:
             if varname in os.environ:

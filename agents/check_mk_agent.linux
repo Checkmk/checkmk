@@ -87,19 +87,19 @@ if type timeout >/dev/null 2>&1 ; then
     export -f waitmax
 fi
 
-if [ -f $MK_CONFDIR/encryption.cfg ] ; then
-    source $MK_CONFDIR/encryption.cfg
+if [ -f "$MK_CONFDIR/encryption.cfg" ] ; then
+    source "$MK_CONFDIR/encryption.cfg"
 fi
 
 if [ "$ENCRYPTED" == "yes" ] ; then
     echo -n "00" # protocol version
-    exec > >(openssl enc -aes-256-cbc -k $PASSPHRASE -nosalt)
+    exec > >(openssl enc -aes-256-cbc -k "$PASSPHRASE" -nosalt)
 fi
 
 
 RTC_PLUGINS=""
-if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
-    . $MK_CONFDIR/real_time_checks.cfg
+if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
+    . "$MK_CONFDIR/real_time_checks.cfg"
 fi
 
 
@@ -114,7 +114,7 @@ function section_mem()
         grep -E -v '^Swap:|^Mem:|total:' < /proc/meminfo
     else
         echo '<<<docker_container_mem>>>'
-        echo "$(</sys/fs/cgroup/memory/memory.stat)"
+        cat /sys/fs/cgroup/memory/memory.stat
     fi
 }
 
@@ -130,7 +130,7 @@ function section_cpu()
         echo "$(cat /proc/loadavg) $(grep -c -E $CPU_REGEX < /proc/cpuinfo)"
     else
         echo '<<<docker_container_cpu>>>'
-        echo "$(</sys/fs/cgroup/cpu/cpuacct.stat)"
+        cat /sys/fs/cgroup/cpu/cpuacct.stat
     fi
 }
 
@@ -147,7 +147,7 @@ function section_uptime()
 function run_mrpe() {
     local descr=$1
     shift
-    local cmdline="$@"
+    local cmdline=$*
 
     echo '<<<mrpe>>>'
 
@@ -167,7 +167,8 @@ export -f run_mrpe
 #   NAME is the name of the section (also used as cache file name)
 #   MAXAGE is the maximum cache livetime in seconds
 function run_cached () {
-    local NOW=$(date +%s)
+    local NOW
+    NOW=$(date +%s)
     local section=
     local mrpe=0
     local append_age=0
@@ -177,9 +178,9 @@ function run_cached () {
     local NAME=$1
     local MAXAGE=$2
     shift 2
-    local CMDLINE="$section$@"
+    local CMDLINE=$section$*
 
-    if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
+    if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache" ; fi
     if [ "$mrpe" = 1 ] ; then
         CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
     else
@@ -191,7 +192,8 @@ function run_cached () {
     # Output the evantually already cached section anyways and start the cache
     # update again.
     if [ -e "$CACHEFILE.new" ] ; then
-        local CF_ATIME=$(stat -c %X "$CACHEFILE.new")
+        local CF_ATIME
+        CF_ATIME=$(stat -c %X "$CACHEFILE.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
             # Kill the process still accessing that file in case
             # it is still running. This avoids overlapping processes!
@@ -203,9 +205,11 @@ function run_cached () {
 
     # Check if cache file exists and is recent enough
     if [ -s "$CACHEFILE" ] ; then
-        local MTIME=$(stat -c %Y "$CACHEFILE")
-        local AGE=$((NOW - MTIME))
-        if [ $AGE -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
+        local MTIME
+        MTIME=$(stat -c %Y "$CACHEFILE")
+        local AGE
+        AGE=$((NOW - MTIME))
+        if [ "$AGE" -le "$MAXAGE" ] ; then local USE_CACHEFILE=1 ; fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
         if [ $append_age -eq 1 ] ; then
@@ -213,7 +217,7 @@ function run_cached () {
             # or, if no pipe found (-e t) append it (third -e),
             # but only once and on the second line (2!b) (first line is section header,
             # all further lines are long output)
-            cat "$CACHEFILE" | sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/"
+            sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/" < "$CACHEFILE"
         else
             cat "$CACHEFILE"
         fi
@@ -239,7 +243,7 @@ export -f run_cached
 function run_real_time_checks()
 {
     PIDFILE=$MK_VARDIR/real_time_checks.pid
-    echo $$ > $PIDFILE
+    echo $$ > "$PIDFILE"
 
 
     if [ "$PASSPHRASE" != "" ] ; then
@@ -256,7 +260,7 @@ function run_real_time_checks()
 
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
-        if [ ! -e $PIDFILE ] || [ $(<$PIDFILE) -ne $$ ] || [ $RTC_TIMEOUT -eq 0 ]; then
+        if [ ! -e "$PIDFILE" ] || [ "$(<"$PIDFILE")" -ne $$ ] || [ "$RTC_TIMEOUT" -eq 0 ]; then
             exit 1
         fi
 
@@ -268,16 +272,16 @@ function run_real_time_checks()
             { echo -n $PROTOCOL ;
               date +%s | tr -d '\n' ;
               if [ "$ENCRYPTED_RT" != "no" ] ; then
-                  export RTC_SECRET=$RTC_SECRET ; section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
+                  export RTC_SECRET=$RTC_SECRET ; section_"$SECTION" | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
               else
-                  section_$SECTION ;
+                  section_"$SECTION" ;
               fi
-            } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/$REMOTE/$RTC_PORT
+            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
         done
 
 
         # Plugins
-        if cd $PLUGINSDIR ; then
+        if cd "$PLUGINSDIR" ; then
             for PLUGIN in $RTC_PLUGINS; do
                 if [ ! -f $PLUGIN ] ; then
                     continue
@@ -292,9 +296,9 @@ function run_real_time_checks()
                   if [ "$ENCRYPTED_RT" != "no" ] ; then
                       export RTC_SECRET=$RTC_SECRET ; ./$PLUGIN | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
                   else
-                      ./$PLUGIN;
+                      ./"$PLUGIN";
                   fi
-                } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/$REMOTE/$RTC_PORT
+                } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
             done
         fi
 
@@ -305,19 +309,19 @@ function run_real_time_checks()
 
 echo '<<<check_mk>>>'
 echo Version: 1.6.0i1
-echo AgentOS: linux
-echo Hostname: $HOSTNAME
-echo AgentDirectory: $MK_CONFDIR
-echo DataDirectory: $MK_VARDIR
-echo SpoolDirectory: $SPOOLDIR
-echo PluginsDirectory: $PLUGINSDIR
-echo LocalDirectory: $LOCALDIR
+echo "AgentOS: linux"
+echo "Hostname: $HOSTNAME"
+echo "AgentDirectory: $MK_CONFDIR"
+echo "DataDirectory: $MK_VARDIR"
+echo "SpoolDirectory: $SPOOLDIR"
+echo "PluginsDirectory: $PLUGINSDIR"
+echo "LocalDirectory: $LOCALDIR"
 
 # If we are called via xinetd, try to find only_from configuration
 if [ -n "$REMOTE_HOST" ]
 then
     echo -n 'OnlyFrom: '
-    echo $(sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
+    sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' < /etc/xinetd.d/* | head -n1
 fi
 
 # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
@@ -331,12 +335,12 @@ echo '<<<df>>>'
 # The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
 # to be all but working.
 excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x prl_fs"
-df -PTlk $excludefs | sed 1d
+df -PTlk "$excludefs" | sed 1d
 
 # df inodes information
 echo '<<<df>>>'
 echo '[df_inodes_start]'
-df -PTli $excludefs | sed 1d
+df -PTli "$excludefs" | sed 1d
 echo '[df_inodes_end]'
 
 # Filesystem usage for ZFS
@@ -361,7 +365,7 @@ then
         sed 's/\\040/ /g' |
         while read MP
     do
-        if [ $STAT_VERSION != $STAT_BROKE ]; then
+        if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
             waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
                 echo "$MP hanging 0 0 0 0"
         else
@@ -375,9 +379,9 @@ then
         sed 's/\\040/ /g' |
         while read MP
     do
-        if [ ! -r $MP ]; then
+        if [ ! -r "$MP" ]; then
             echo "$MP Permission denied"
-        elif [ $STAT_VERSION != $STAT_BROKE ]; then
+        elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
             waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
                 echo "$MP hanging 0 0 0 0"
         else
@@ -418,8 +422,7 @@ echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
 if type ethtool > /dev/null
 then
-    for eth in $(sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort)
-    do
+    sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read eth; do
         echo "[$eth]"
         ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
         echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
@@ -431,7 +434,7 @@ fi
 if [ -e /proc/net/bonding ] ; then
     echo '<<<lnx_bonding:sep(58)>>>'
     pushd /proc/net/bonding > /dev/null
-    head -v -n 1000 *
+    head -v -n 1000 ./*
     popd > /dev/null
 fi
 
@@ -440,9 +443,9 @@ if type ovs-appctl > /dev/null ; then
     BONDS=$(ovs-appctl bond/list)
     COL=$(echo "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
     echo '<<<ovs_bonding:sep(58)>>>'
-    for bond in $(echo "$BONDS" | sed -e 1d | cut -f${COL}) ; do
+    for bond in $(echo "$BONDS" | sed -e 1d | cut -f"${COL}") ; do
         echo "[$bond]"
-        ovs-appctl bond/show $bond
+        ovs-appctl bond/show "$bond"
     done
 fi
 
@@ -483,7 +486,7 @@ else
     echo '<<<docker_container_diskstat>>>'
     for F in io_service_bytes io_serviced; do
         echo "[$F]"
-        echo "$(</sys/fs/cgroup/blkio/blkio.throttle.$F)"
+        cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
     done
 fi
 
@@ -543,12 +546,12 @@ then
     waitmax 20 dmraid -s | grep -e ^name -e ^status
 
     # Output disk names of the RAID disks
-    DISKS=$(echo "$DMSTATUS" | cut -f1 -d\:)
+    DISKS=$(echo "$DMSTATUS" | cut -f1 -d":")
 
     for disk in $DISKS ; do
-        device=$(cat /sys/block/$(basename $disk)/device/model )
-        status=$(echo "$DMSTATUS" | grep ^${disk})
-        echo "$status Model: $device"
+        device=$(cat /sys/block/"$(basename "$disk")"/device/model )
+        status=$(echo "$DMSTATUS" | grep "^${disk}")
+        echo "${status} Model: ${device}"
     done
 fi
 
@@ -578,8 +581,8 @@ if [ "$MegaCli_bin" != "unknown" ]; then
     echo '<<<megaraid_pdisks>>>'
     for part in $($MegaCli_bin -EncInfo -aALL -NoLog < /dev/null \
         | sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-        [ $part = adapter ] && echo ""
-        [ $part = 'Enclosure' ] && echo -ne "\ndev2enc"
+        [ "$part" = adapter ] && echo ""
+        [ "$part" = 'Enclosure' ] && echo -ne "\ndev2enc"
         echo -n " $part"
     done
     echo
@@ -594,11 +597,11 @@ fi
 if type tw_cli > /dev/null ; then
     for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
         echo '<<<3ware_info>>>'
-        tw_cli /$C show all | egrep 'Model =|Firmware|Serial'
+        tw_cli "/$C" show all | egrep 'Model =|Firmware|Serial'
         echo '<<<3ware_disks>>>'
-        tw_cli /$C show drivestatus | egrep 'p[0-9]' | sed "s/^/$C\//"
+        tw_cli "/$C" show drivestatus | egrep 'p[0-9]' | sed "s/^/$C\//"
         echo '<<<3ware_units>>>'
-        tw_cli /$C show unitstatus | egrep 'u[0-9]' | sed "s/^/$C\//"
+        tw_cli "/$C" show unitstatus | egrep 'u[0-9]' | sed "s/^/$C\//"
     done
 fi
 
@@ -614,7 +617,7 @@ fi
 echo '<<<vbox_guest>>>'
 if type VBoxControl >/dev/null 2>&1 && lsmod | grep vboxguest >/dev/null 2>&1; then
     VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
-    [ ${PIPESTATUS[0]} = 0 ] || echo "ERROR"
+    [ "${PIPESTATUS[0]}" = 0 ] || echo "ERROR"
 fi
 
 # OpenVPN Clients. Currently we assume that the configuration # is in
@@ -663,11 +666,11 @@ if type cl_status > /dev/null 2>&1; then
 
   echo '<<<heartbeat_nodes>>>'
   for NODE in $(cl_status listnodes); do
-    if [ $NODE != $(echo $HOSTNAME | tr 'A-Z' 'a-z') ]; then
-      STATUS=$(cl_status nodestatus $NODE)
+    if [ "$NODE" != "$(echo "$HOSTNAME" | tr '[:upper:]' '[:lower:]')" ]; then
+      STATUS=$(cl_status nodestatus "$NODE")
       echo -n "$NODE $STATUS"
-      for LINK in $(cl_status listhblinks $NODE 2>/dev/null); do
-        echo -n " $LINK $(cl_status hblinkstatus $NODE $LINK)"
+      for LINK in $(cl_status listhblinks "$NODE" 2>/dev/null); do
+        echo -n " $LINK $(cl_status hblinkstatus "$NODE" "$LINK")"
       done
       echo
     fi
@@ -685,8 +688,8 @@ function read_postfix_queue_dirs {
         fi
         for queue in deferred active
         do
-            count=$(find $postfix_queue_dir/$queue -type f | wc -l)
-            size=$(du -s $postfix_queue_dir/$queue | awk '{print $1 }')
+            count=$(find "${postfix_queue_dir}/$queue" -type f | wc -l)
+            size=$(du -s "${postfix_queue_dir}/$queue" | awk '{print $1 }')
             if [ -z "$size" ]; then
                 size=0
             fi
@@ -709,14 +712,14 @@ if type postconf >/dev/null ; then
         for queue_dir in $multi_instances_dirs
         do
             if [ -n "$queue_dir" ]; then
-                postfix_queue_dir=$(postconf -c $queue_dir 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
-                read_postfix_queue_dirs $postfix_queue_dir $queue_dir
+                postfix_queue_dir=$(postconf -c "$queue_dir" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
+                read_postfix_queue_dirs "$postfix_queue_dir" "$queue_dir"
             fi
         done
 
     else
         postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
-        read_postfix_queue_dirs $postfix_queue_dir
+        read_postfix_queue_dirs "$postfix_queue_dir"
     fi
 
 elif [ -x /usr/sbin/ssmtp ] ; then
@@ -728,23 +731,22 @@ fi
 # Postfix status monitoring. Can handle multiple instances.
 if type postfix >/dev/null ; then
     echo "<<<postfix_mailq_status:sep(58)>>>"
-    for i in $(ls -d /var/spool/postfix*)
-        do
-            if [ -e "$i/pid/master.pid" ]; then
-                if [ -r "$i/pid/master.pid" ]; then
-                    postfix_pid=$(cat $i/pid/master.pid | sed 's/ //g') # handle possible spaces in output
-                    if readlink -- "/proc/$postfix_pid/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
-                        echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
-                    else
-                        echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
-                    fi
+    for i in /var/spool/postfix*/; do
+        if [ -e "$i/pid/master.pid" ]; then
+            if [ -r "$i/pid/master.pid" ]; then
+                postfix_pid=$(sed 's/ //g' < "$i/pid/master.pid") # handle possible spaces in output
+                if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
+                    echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
                 else
-                    echo "$i:PID file exists but is not readable"
+                    echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
                 fi
             else
-                echo "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
+                echo "$i:PID file exists but is not readable"
             fi
-        done
+        else
+            echo "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
+        fi
+    done
 fi
 
 # Check status of qmail mailqueue
@@ -773,7 +775,7 @@ then
 	    site=${statefile%/var/log*}
 	    site=${site#/omd/sites/}
 	    echo "[$site]"
-	    grep -v '^#' < $statefile
+	    grep -v '^#' < "$statefile"
         fi
     done
 
@@ -783,8 +785,8 @@ then
 	    site=${statsfile%/var/log*}
 	    site=${site#/omd/sites/}
 	    echo "[$site]"
-            cat $statsfile
-            > $statsfile
+            cat "$statsfile"
+            > "$statsfile"
             # prevent next section to fail caused by a missing newline at the end of the statsfile
             echo
         fi
@@ -810,8 +812,8 @@ then
     vcshost=$(hostname | cut -d. -f1)
     waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
     waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
-    waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys $vcshost -attribute State -localclus
-    waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys $vcshost -attribute State -localclus
+    waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "$vcshost" -attribute State -localclus
+    waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "$vcshost" -attribute State -localclus
 fi
 
 
@@ -821,6 +823,7 @@ function replace_datevariable()
     # Replace the date variable of the input, e.g. $DATE:%Y%m%d$, by
     # the current date. If there's no match just return the input.
     local file_name="$1"
+    # shellcheck disable=SC2016
     local pattern='(\$DATE:(.*)\$)'
 
     if [[ ! $file_name =~ $pattern ]]; then
@@ -828,7 +831,7 @@ function replace_datevariable()
     else
         date_variable="${BASH_REMATCH[1]}"
         format_string="${BASH_REMATCH[2]}"
-        echo "${file_name/$date_variable/$(date +$format_string)}"
+        echo "${file_name/$date_variable/$(date +"$format_string")}"
     fi
 }
 
@@ -841,9 +844,9 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
 '
     while read -r pattern; do
         case $pattern in
-            /*) pattern=`replace_datevariable "$pattern"`
+            /*) pattern=$(replace_datevariable "$pattern")
                 for file in $pattern; do
-                    stat -c "%n|%s|%Y" "$file" 2> /dev/null || echo "$file|missing|`date +%s`"
+                    stat -c "%n|%s|%Y" "$file" 2> /dev/null || echo "$file|missing|$(date +%s)"
                 done ;;
         esac
     done < "$MK_CONFDIR/fileinfo.cfg"
@@ -861,7 +864,7 @@ then
         if [ -S "/omd/sites/$site/tmp/run/live" ] ; then
             echo "[$site]"
             echo -e "GET status" | \
-                waitmax 3 /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
+                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
         fi
     done
     echo '<<<mkeventd_status:sep(0)>>>'
@@ -870,7 +873,7 @@ then
         if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ] ; then
             echo "[\"$site\"]"
             echo -e "GET status\nOutputFormat: json" \
-                | waitmax 3 /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/mkeventd/status
+                | waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
         fi
     done
 fi
@@ -887,7 +890,7 @@ if ls /omd/sites/*/var/check_mk/backup/*.state >/dev/null 2>&1; then
 
         if [ "$JOB_IDENT" != "restore" ]; then
             echo "[[[site:$SITE:$JOB_IDENT]]]"
-            cat $F
+            cat "$F"
             echo
         fi
     done
@@ -902,7 +905,7 @@ if type mkbackup >/dev/null && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; the
 
         if [ "$JOB_IDENT" != "restore" ]; then
             echo "[[[system:$JOB_IDENT]]]"
-            cat $F
+            cat "$F"
             echo
         fi
     done
@@ -912,7 +915,7 @@ fi
 # is a sub directory per user that ran a job. That directory must be
 # owned by the user so that a symlink or hardlink attack for reading
 # arbitrary files can be avoided.
-if pushd $MK_VARDIR/job >/dev/null; then
+if pushd "$MK_VARDIR/job" >/dev/null; then
     echo '<<<job>>>'
     for username in *
     do
@@ -920,7 +923,7 @@ if pushd $MK_VARDIR/job >/dev/null; then
             if [ $EUID -eq 0 ]; then
                 su "$username" -c "head -n -0 -v *"
             else
-                head -n -0 -v *
+                head -n -0 -v ./*
             fi
             cd ..
         fi
@@ -934,8 +937,8 @@ if [ -z "$MK_IN_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2
     echo '<<<lnx_thermal>>>'
     for F in /sys/class/thermal/thermal_zone*; do
         echo -n "${F##*/} "
-        if [ ! -e $F/mode ] ; then echo -n "- " ; fi
-        cat $F/{mode,type,temp,trip_point_*} | tr \\n " "
+        if [ ! -e "$F/mode" ] ; then echo -n "- " ; fi
+        cat "$F"/{mode,type,temp,trip_point_*} | tr \\n " "
         echo
     done
 fi
@@ -976,22 +979,22 @@ if type docker > /dev/null 2>&1 ; then
     for image in $(docker images --all --format "{{.Repository}}");
     do
         echo "[[[images_labels:$image]]]"
-        docker image inspect --format "{{json .Config.Labels}}" $image
+        docker image inspect --format "{{json .Config.Labels}}" "$image"
     done
     echo "[[[containers]]]"
     docker container ls --all --format "{{json .}}"
 
     # For the container status, we want information about *all* containers
     for CONTAINER_ID in $(docker container ls -q --all); do
-        echo "<<<<$CONTAINER_ID>>>>"
+        echo "<<<<${CONTAINER_ID}>>>>"
         echo "<<<docker_container_status>>>"
-        docker inspect $CONTAINER_ID --format='{{json .State}}'
+        docker inspect "$CONTAINER_ID" --format='{{json .State}}'
 
         echo "<<<docker_container_node_name>>>"
-        echo $NODE_NAME
+        echo "$NODE_NAME"
 
         echo "<<<docker_container_labels>>>"
-        docker inspect $CONTAINER_ID --format='{{json .Config.Labels}}'
+        docker inspect "$CONTAINER_ID" --format='{{json .Config.Labels}}'
         echo "<<<<>>>>"
     done
 
@@ -1023,8 +1026,8 @@ fi
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.
-if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
-    if [ -z $REMOTE ]; then
+if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
+    if [ -z "$REMOTE" ]; then
         echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
     elif ! type openssl >/dev/null; then
         echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
@@ -1050,11 +1053,11 @@ then
             cmdline=${BASH_REMATCH[2]}
 
             # split multiple parameter assignments
-            for par in $(echo $parameters | tr ":" "\n")
+            for par in $(echo "$parameters" | tr ":" "\n")
             do
                 # split each assignment
-                key=$(echo $par | cut -d= -f1)
-                value=$(echo $par | cut -d= -f2)
+                key=$(echo "$par" | cut -d= -f1)
+                value=$(echo "$par" | cut -d= -f2)
 
                 if [ "$key" = "interval" ] ; then
                     interval=$value
@@ -1066,9 +1069,9 @@ then
 
         if [ -z "$interval" ]
         then
-            run_mrpe $descr "$cmdline"
+            run_mrpe "$descr" "$cmdline"
         else
-            run_cached $args $descr $interval "$cmdline"
+            run_cached "$args" "$descr" "$interval" "$cmdline"
         fi
     done
 fi
@@ -1079,7 +1082,7 @@ then
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" | \
     while read type user include
     do
-        if [ -d $include -o \( "$type" == "mrpe" -a -f $include \) ] ; then
+        if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ] ; then
             PREFIX=""
             if [ "$user" != "-" ] ; then
                 PREFIX="su $user -c "
@@ -1101,7 +1104,7 @@ then
                         cmdline=${BASH_REMATCH[2]}
 
                         # split multiple parameter assignments
-                        for par in $(echo $parameters | tr ":" "\n")
+                        for par in $(echo "$parameters" | tr ":" "\n")
                         do
                             # split each assignment
                             IFS='=' read key value <<< $par
@@ -1118,9 +1121,9 @@ then
                     fi
                     if [ -z "$interval" ]
                     then
-                        run_mrpe $descr "$cmdline"
+                        run_mrpe "$descr" "$cmdline"
                     else
-                        run_cached -m $descr $interval "$cmdline"
+                        run_cached -m "$descr" "$interval" "$cmdline"
                     fi
                 done
 
@@ -1130,7 +1133,7 @@ then
                     echo "<<<local>>>"
                 fi
 
-                find $include -executable -type f | \
+                find "$include" -executable -type f | \
                 while read filename
                 do
                     if [ -n "$PREFIX" ] ; then
@@ -1150,37 +1153,38 @@ function is_valid_plugin () {
     # NOTE: Due to an escaping-related bug in some old bash versions
     # (3.2.x), we have to use an intermediate variable for the pattern.
     pattern='\.dpkg-(new|old|temp)$'
+    #TODO Maybe we should change this mechanism
+    # shellcheck disable=SC2015
     [[ -f "$1" && -x "$1" && ! "$1" =~ $pattern ]] && true || false
 }
 
-
 # Local checks
 echo '<<<local>>>'
-if cd $LOCALDIR ; then
-    for skript in $(ls) ; do
-        if is_valid_plugin "$skript" ; then
-            ./$skript
+if cd "$LOCALDIR" ; then
+    for skript in *.dpkg-{old,new,temp}; do
+        if is_valid_plugin "$skript"; then
+            ./"$skript"
         fi
     done
     # Call some plugins only every X'th second
     for skript in [1-9]*/* ; do
-        if is_valid_plugin "$skript" ; then
-            run_cached local_${skript//\//\\} ${skript%/*} "$skript"
+        if is_valid_plugin "$skript"; then
+            run_cached "local_${skript//\//\\}" "${skript%/*}" "$skript"
         fi
     done
 fi
 
 # Plugins
-if cd $PLUGINSDIR ; then
-    for skript in $(ls) ; do
-        if is_valid_plugin "$skript" ; then
-            ./$skript
+if cd "$PLUGINSDIR"; then
+    for skript in *.dpkg-{old,new,temp}; do
+        if is_valid_plugin "$skript"; then
+            ./"skript"
         fi
     done
     # Call some plugins only every Xth second
     for skript in [1-9]*/* ; do
-        if is_valid_plugin "$skript" ; then
-            run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
+        if is_valid_plugin "$skript"; then
+            run_cached "plugins_${skript//\//\\}" "${skript%/*}" "$skript"
         fi
     done
 fi
@@ -1211,7 +1215,7 @@ then
         # If there is at least one digit, than we honor that.
         if [ "$maxage" ] ; then
             mtime=$(stat -c %Y "$file")
-            if [ $((now - mtime)) -gt $maxage ] ; then
+            if [ $((now - mtime)) -gt "$maxage" ] ; then
                 continue
             fi
         fi

@@ -5,8 +5,7 @@
 set -e
 
 DISTRO=bionic
-#MIRROR=http://de.archive.ubuntu.com/ubuntu
-MIRROR=http://ubuntu.mirror.lrz.de/ubuntu
+MIRROR=http://de.archive.ubuntu.com/ubuntu
 
 export HOSTNAME=cmk-windows-agent-chroot
 export LC_ALL=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LANG=en_US.UTF-8
@@ -50,8 +49,6 @@ cleanup_chroot
 
 # chroot leer machen
 rm -rf $CHROOT_PATH/*
-
-echo "+ INSTALLING SYSTEM"
 
 package_names=(
     autoconf
@@ -121,17 +118,20 @@ package_names=(
 )
 packages=$(IFS=,; echo "${package_names[*]}")
 
+echo "+ INSTALLING SYSTEM (PHASE 1)"
+
 # TODO: Would use --force-check-gpg, but not supported on wheezy (root server)
 debootstrap \
     --components=main,universe \
     --include="$packages" \
     --arch amd64 $DISTRO $CHROOT_PATH $MIRROR
 
-# Cope with the known bug with libsane1 that wine depends on.
-# https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/
-# Need to use --force-overwrite with apt-get. This option cannot be passed
-# through debootstrap.
-$SCRIPT_DIR/do-chroot 'apt-get -y -o Dpkg::Options::="--force-overwrite" install wine-stable'
+echo "+ INSTALLING SYSTEM (PHASE 2)"
+
+# "Disable" apt privilege dropping in chroot
+cat $CHROOT_PATH/etc/passwd
+sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
+cat $CHROOT_PATH/etc/passwd
 
 # Need to be installed for installation.
 cat <<EOF > $CHROOT_PATH/etc/fstab
@@ -139,14 +139,13 @@ cat <<EOF > $CHROOT_PATH/etc/fstab
 /dev/sda1 / ext2 rw,noatime,nodiratime,errors=continue 0 1
 EOF
 
-# Nun ein kleiner Hack um zu verhindern, dass beim Installieren der Pakete
-# die Daemonen der Pakete gestartet werden. Ist nicht dramatisch, erzeugt
-# aber doofe Fehlermeldungen.
+# Prevent startup of daemons during package installation
 echo exit 101 > $CHROOT_PATH/usr/sbin/policy-rc.d
 chmod +x $CHROOT_PATH/usr/sbin/policy-rc.d
 
 cp /etc/resolv.conf $CHROOT_PATH/etc/resolv.conf
 
+# Deploy fake hostname binary
 if [ ! -e $CHROOT_PATH/bin/hostname.bin ] ; then
     mv $CHROOT_PATH/bin/hostname{,.bin}
 fi
@@ -155,8 +154,15 @@ echo $HOSTNAME
 EOF
 chmod +x $CHROOT_PATH/bin/hostname
 
-# Uses debian_chroot, but use it for all distros!
-#debian_chroot=\$(hostname)
+# Cope with the known bug with libsane1 that wine depends on.
+# https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/
+# Need to use --force-overwrite with apt-get. This option cannot be passed
+# through debootstrap.
+$SCRIPT_DIR/do-chroot 'apt-get -y -o Dpkg::Options::="--force-overwrite" install wine-stable'
+
+# We need to enable 32bit Wine
+$SCRIPT_DIR/do-chroot 'dpkg --add-architecture i386 && apt-get update && apt-get -o Dpkg::Options::="--force-overwrite" -y install wine32'
+
 cat <<EOF > $CHROOT_PATH/root/.bashrc
 debian_chroot=$(hostname)
 PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\$ '
@@ -167,12 +173,6 @@ EOF
 if [ ! -h $CHROOT_PATH/usr/bin/python ] ; then
     ln -sf python2.7 $CHROOT_PATH/usr/bin/python
 fi
-
-# "Disable" apt privilege dropping in chroot
-sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
-
-# We need to enable 32bit Wine
-$SCRIPT_DIR/do-chroot 'dpkg --add-architecture i386 && apt-get update && apt-get -o Dpkg::Options::="--force-overwrite" -y install wine32'
 
 # Build Google Test and Google Mock
 $SCRIPT_DIR/do-chroot "$CHROOT_BUILD_DIR/agents/windows/test/build-googletest"

@@ -29,6 +29,7 @@
 #include "PerfCounter.h"
 #include "SectionHeader.h"
 #include "dynamic_func.h"
+#include "win_error.h"
 
 namespace {
 
@@ -296,11 +297,14 @@ bool SectionPS::outputNative(std::ostream &out) {
             FILETIME createTime, exitTime, kernelTime, userTime;
             ULARGE_INTEGER kernelmodetime, usermodetime;
             if (_winapi.GetProcessTimes(hProcess.get(), &createTime, &exitTime,
-                                        &kernelTime, &userTime) != -1) {
+                                        &kernelTime, &userTime) != 0) {
                 kernelmodetime.LowPart = kernelTime.dwLowDateTime;
                 kernelmodetime.HighPart = kernelTime.dwHighDateTime;
                 usermodetime.LowPart = userTime.dwLowDateTime;
                 usermodetime.HighPart = userTime.dwHighDateTime;
+            } else {
+                Error(_logger) << "GetProcessTimes failed: "
+                               << get_win_error_as_string(_winapi);
             }
 
             DWORD processHandleCount = 0;

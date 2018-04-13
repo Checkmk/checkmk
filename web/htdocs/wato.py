@@ -15686,6 +15686,10 @@ class ModeEditCustomAttr(WatoMode):
         raise NotImplementedError()
 
     @property
+    def _default_topic(self):
+        raise NotImplementedError()
+
+    @property
     def _macro_help(self):
         raise NotImplementedError()
 
@@ -15716,8 +15720,7 @@ class ModeEditCustomAttr(WatoMode):
 
         forms.section(_('Topic'))
         html.help(_('The attribute is added to this section in the edit dialog.'))
-        # TODO: is deflt set correctly?
-        html.dropdown('topic', self._topics, deflt=self._attr.get('topic', 'personal'))
+        html.dropdown('topic', self._topics, deflt=self._attr.get('topic', self._default_topic))
 
         forms.section(_('Help Text') + "<sup>*</sup>")
         html.help(_('You might want to add some helpful description for the attribute.'))
@@ -15768,6 +15771,10 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         ]
 
     @property
+    def _default_topic(self):
+        return 'personal'
+
+    @property
     def _macro_help(self):
         return _('The attribute can be added to the contact definiton in order to use it for notifications.')
 
@@ -15808,9 +15815,14 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
     @property
     def _topics(self):
-        topics = list(set([ (a[1], a[1]) for a in watolib.all_host_attributes() if a[1] != None ]))
-        topics.insert(0, (_("Custom attributes"), _("Custom attributes")))
+        default = self._default_topic
+        topics = list(set((a[1], a[1]) for a in watolib.all_host_attributes() if a[1] not in (None, default)))
+        topics.insert(0, (default, default))
         return topics
+
+    @property
+    def _default_topic(self):
+        return _("Custom attributes")
 
     @property
     def _macro_help(self):

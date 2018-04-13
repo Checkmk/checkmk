@@ -1,11 +1,12 @@
 Title: Introduce docker monitoring with Check_MK
 Level: 2
 Component: checks
+Class: feature
 Compatible: compat
 Edition: cre
-Version: 1.5.0b1
+State: unknown
+Version: 1.6.0i1
 Date: 1523350439
-Class: feature
 
 With this change we prepare Check_MK for monitoring docker environments out
 of the box. These checks work in different layers (node, container).
@@ -30,6 +31,7 @@ hosts in your Check_MK use the short container ID as name.
 For the docker container hosts please use the following configuration:
 
 <ul>
+<li>Set the "Check_MK Agent" option to "No agent".</li>
 <li>Set the "IP address family" to "No IP" for only processing the piggyback data.</li>
 <li>Set the docker node as parent.</li>
 <li>Enable HW/SW inventory for the node and the containers</li>

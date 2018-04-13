@@ -1,0 +1,14 @@
+Title: Improve performance of various event console queries.
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b2
+Date: 1523613247
+
+Various event console queries took a very long time, e.g. retrieving the
+event history of a given host.  This could even lead to timeout in the GUI.
+
+This was a regression in 1.4.0 compared to 1.2.8 and has been fixed.

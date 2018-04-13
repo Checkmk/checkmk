@@ -1,0 +1,13 @@
+Title: cmk-update-agent: Fix run-as-plugin mode (Regression since 1.5.0b1)
+Level: 2
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1523606519
+
+Due to an erroneous call to a non-existant method, the Agent Updater crashes when run as plugin.
+
+As a result, automatic updates would not work with an Agent Updater 1.5.0b1. Manual updates are still working, so it is possible to replace the erroneous Agent Updater with a fixed one by doing a manual Update to a newly baked agent.

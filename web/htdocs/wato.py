@@ -79,6 +79,7 @@
 #   | Importing, Permissions, global variables                             |
 #   `----------------------------------------------------------------------'
 
+import abc
 import ast
 import base64
 import csv
@@ -15600,19 +15601,15 @@ def custom_attr_types():
 
 
 class ModeEditCustomAttr(WatoMode):
-    def __init__(self):
-        super(ModeEditCustomAttr, self).__init__()
+    __metaclass__ = abc.ABCMeta
 
-    @property
-    def _type(self):
-        raise NotImplementedError()
+    def __init__(self):
+        # Note: the base class calls _from_vars
+        super(ModeEditCustomAttr, self).__init__()
 
     @property
     def _attrs(self):
         return self._all_attrs[self._type]
-
-    def _update_config(self):
-        raise NotImplementedError()
 
     def _from_vars(self):
         self._name = html.var("edit") # missing -> new custom attr
@@ -15632,10 +15629,38 @@ class ModeEditCustomAttr(WatoMode):
         else:
             self._attr = {}
 
+    @abc.abstractproperty
+    def _type(self):
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def _topics(self):
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def _default_topic(self):
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def _macro_help(self):
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def _macro_label(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _update_config(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def title(self):
         raise NotImplementedError()
 
     def _add_extra_attrs_from_html_vars(self):
+        pass
+
+    def _add_extra_form_sections(self):
         pass
 
     def action(self):
@@ -15694,25 +15719,6 @@ class ModeEditCustomAttr(WatoMode):
         self._update_config()
 
         return self._type + "_attrs"
-
-    @property
-    def _topics(self):
-        raise NotImplementedError()
-
-    @property
-    def _default_topic(self):
-        raise NotImplementedError()
-
-    @property
-    def _macro_help(self):
-        raise NotImplementedError()
-
-    @property
-    def _macro_label(self):
-        raise NotImplementedError()
-
-    def _add_extra_form_sections(self):
-        pass
 
     def page(self):
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
@@ -15864,6 +15870,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
 
 class ModeCustomAttrs(WatoMode):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         super(ModeCustomAttrs, self).__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
@@ -15872,16 +15880,18 @@ class ModeCustomAttrs(WatoMode):
         self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
 
     @property
-    def _type(self):
-        raise NotImplementedError()
-
-    @property
     def _attrs(self):
         return self._all_attrs[self._type]
 
+    @abc.abstractproperty
+    def _type(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def title(self):
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def _update_config(self):
         raise NotImplementedError()
 

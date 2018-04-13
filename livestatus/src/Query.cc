@@ -760,7 +760,7 @@ std::optional<int32_t> Query::leastUpperBoundFor(
                        << ")";
     } else {
         Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " has least upper bound";
+                       << " has no least upper bound";
     }
     return result;
 }

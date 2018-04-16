@@ -6,6 +6,7 @@
 from contextlib import contextmanager
 import os
 import sys
+import time
 from win32api import GetLastError
 from win32event import CreateMutex, ReleaseMutex
 from winerror import ERROR_ALREADY_EXISTS
@@ -14,7 +15,7 @@ from remote import remotedir
 
 lockname = os.path.join(remotedir, 'test.lock')
 mutexname = '__test_lock__'
-
+retry_count = 20
 
 @contextmanager
 def synchronized():
@@ -31,12 +32,17 @@ def synchronized():
 
 
 def acquire():
-    with synchronized():
-        if os.path.exists(lockname):
-            sys.stderr.write(
-                'Lock file exists. Is another test process running?')
-            sys.exit(1)
-        open(lockname, 'w').close()
+    for i in range(retry_count):
+        with synchronized():
+            if not os.path.exists(lockname):
+                open(lockname, 'w').close()
+                return
+        sys.stderr.write('Lock file exists. Waiting 60s...')
+        time.sleep(60)
+
+    sys.stderr.write('Lock file still exists after waiting %d minutes. '
+                     'Another test process hung?')
+    sys.exit(1)
 
 
 def release():

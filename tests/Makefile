@@ -1,18 +1,20 @@
 SHELL=/bin/bash -e
-PYTEST=source $$(pipenv --venv)/bin/activate ; py.test -s -vv
+PYTEST=source ../.envrc ; py.test -s -vv
+COVERAGE=source ../.envrc ; coverage
 
 .PHONY: help test-pylint test-integration test-gui-crawl \
 	test-bandit test-shellcheck setup format test-mypy \
-        test-pylint-simple test-unit test-packaging
+        test-pylint-simple test-unit test-unit-coverage test-packaging	
 
 help:
-	@echo "setup              - Install dependencies"
-	@echo "test-unit          - Run unit tests"
-	@echo "test-pylint        - Run pylint based tests"
-	@echo "test-integration   - Run integration tests"
-	@echo "test-gui-crawl     - Run GUI crawl test"
-	@echo "test-bandit        - Run bandit (security) tests"
-	@echo "test-shellcheck    - Run shellcheck tests"
+	@echo "setup                     - Install dependencies"
+	@echo "test-unit                 - Run unit tests"
+	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
+	@echo "test-pylint               - Run pylint based tests"
+	@echo "test-integration          - Run integration tests"
+	@echo "test-gui-crawl            - Run GUI crawl test"
+	@echo "test-bandit               - Run bandit (security) tests"
+	@echo "test-shellcheck           - Run shellcheck tests"
 
 # This target needs to be phony so it is run every time because only the other
 # makefile can determine that there's nothing to be done.
@@ -25,6 +27,8 @@ help:
 test-unit: ../.venv
 	$(PYTEST) -T unit
 
+test-unit-coverage-html: ../.venv
+	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit ; $(COVERAGE) html
 
 test-integration: ../.venv
 	$(PYTEST) -T integration

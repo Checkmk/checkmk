@@ -1,0 +1,13 @@
+Title: Fixed possible "AttributeError" exception on custom graph list page
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1523863569
+
+When a user opened up the custom graph list page while another user
+had a custom graph that was not published to other users, this lead
+to an exception on this page.

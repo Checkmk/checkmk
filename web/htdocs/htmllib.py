@@ -2802,7 +2802,7 @@ class html(HTMLGenerator, RequestHandler):
         self.write_html(self.render_icon("images/trans.png"))
 
 
-    def render_icon(self, icon_name, help=None, middle=True, id=None, cssclass=None):
+    def render_icon(self, icon_name, help=None, middle=True, id=None, cssclass=None, class_=None):
 
         # TODO: Refactor
         title    = help
@@ -2813,6 +2813,9 @@ class html(HTMLGenerator, RequestHandler):
                       'class'   : ["icon", cssclass],
                       'align'   : 'absmiddle' if middle else None,
                       'src'     : icon_name if "/" in icon_name else self.detect_icon_path(icon_name)}
+
+        if class_:
+            attributes['class'].extend(class_)
 
         return self._render_opening_tag('img', close_tag=True, **attributes)
 

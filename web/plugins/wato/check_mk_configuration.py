@@ -2532,49 +2532,94 @@ register_rule(group,
     help = _("Control encryption of data sent from agent to host."),
 )
 
+def _common_check_mk_exit_status_elements():
+    return [
+        ("empty_output", MonitoringState(
+            default_value = 2,
+            title = _("State in case of empty output")),
+        ),
+        ("connection", MonitoringState(
+            default_value = 2,
+            title = _("State in case of connection problems")),
+        ),
+        ("timeout", MonitoringState(
+            default_value = 2,
+            title = _("State in case of a timeout")),
+        ),
+        ("exception", MonitoringState(
+            default_value = 3,
+            title = _("State in case of unhandled exception")),
+        ),
+    ]
+
+def transform_exit_code_spec(p):
+    if "overall" in p:
+        return p
+    return {"overall": p}
+
 register_rule(group,
     "check_mk_exit_status",
-    Dictionary(
-        elements = [
-            ( "connection",
-              MonitoringState(
-                default_value = 2,
-                title = _("State in case of connection problems")),
-            ),
-            ( "timeout",
-              MonitoringState(
-                default_value = 2,
-                title = _("State in case of a overall timeout")),
-            ),
-            ( "missing_sections",
-              MonitoringState(
-                default_value = 1,
-                title = _("State if just <i>some</i> agent sections are missing")),
-            ),
-            ( "empty_output",
-              MonitoringState(
-                default_value = 2,
-                title = _("State in case of empty agent output")),
-            ),
-            ( "wrong_version",
-              MonitoringState(
-                default_value = 1,
-                title = _("State in case of wrong agent version")),
-            ),
-            ( "exception",
-              MonitoringState(
-                default_value = 3,
-                title = _("State in case of unhandled exception")),
-            ),
-        ],
-    ),
+    Transform(Dictionary(
+        elements=[
+            ("overall", Dictionary(
+                title=_("Overall status"),
+                elements=_common_check_mk_exit_status_elements() + [
+                    ("wrong_version", MonitoringState(
+                        default_value = 1,
+                        title = _("State in case of wrong agent version")),
+                    ),
+                    ("missing_sections", MonitoringState(
+                        default_value = 1,
+                        title = _("State if just <i>some</i> agent sections are missing")),
+                    ),
+                ]
+            )),
+            ("individual", Dictionary(
+                title=_("Individual states per data source"),
+                elements=[
+                    ("agent", Dictionary(
+                        title=_("Agent"),
+                        elements=_common_check_mk_exit_status_elements() + [
+                            ("wrong_version", MonitoringState(
+                                default_value = 1,
+                                title = _("State in case of wrong agent version")),
+                            ),
+                    ])),
+                    ("programs", Dictionary(
+                        title=_("Programs"),
+                        elements=_common_check_mk_exit_status_elements()
+                    )),
+                    ("special", Dictionary(
+                        title=_("Programs"),
+                        elements=_common_check_mk_exit_status_elements()
+                    )),
+                    ("snmp", Dictionary(
+                        title=_("SNMP"),
+                        elements=_common_check_mk_exit_status_elements()
+                    )),
+                    ("mgmt_snmp", Dictionary(
+                        title=_("SNMP Management Board"),
+                        elements=_common_check_mk_exit_status_elements()
+                    )),
+                    ("mgmt_ipmi", Dictionary(
+                        title=_("IPMI Management Board"),
+                        elements=_common_check_mk_exit_status_elements()
+                    )),
+                    ("piggyback", Dictionary(
+                        title=_("Piggyback"),
+                        elements=_common_check_mk_exit_status_elements()
+                    )),
+                ]
+            )),
+        ], optional_keys=["individual"],
+    ), forth=transform_exit_code_spec),
     factory_default = { "connection" : 2, "missing_sections" : 1, "empty_output" : 2, "wrong_version" : 1, "exception": 3 },
-    title = _("Status of the Check_MK service"),
-    help = _("This ruleset specifies the total status of the Check_MK service in "
-             "case of various error situations. One use case is the monitoring "
-             "of hosts that are not always up. You can have Check_MK an OK status "
-             "here if the host is not reachable. Note: the <i>Timeout</i> setting only works "
-             "when using the Check_MK Micro Core."),
+    title = _("Status of the Check_MK services"),
+    help = _("This ruleset specifies the total status of the Check_MK services <i>Check_MK</i>, "
+             "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> in case of various "
+             "error situations. One use case is the monitoring of hosts that are not always up. "
+             "You can have Check_MK an OK status here if the host is not reachable. Note: the "
+             "<i>Timeout</i> setting only works when using the Check_MK Micro Core."),
     match = "dict",
 )
 

@@ -1,0 +1,35 @@
+Title: Status of the Check_MK services can be specified per data source
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i4
+Date: 1522071041
+Class: feature
+
+Within the rule <i>Status of the Check_MK services</i> the state of
+<ul>
+<li>connection problems,</li>
+<li>empty output,</li>
+<li>any unhandled exception or</li>
+<li>timeout</li>
+</ul>
+can be specified for each data source.
+
+Additionally for the agent data sources the state of
+<ul>
+<li>wrong version</li>
+</ul>
+can be specified, too.
+
+The configuration of the overall state also includes
+<ul>
+<li>missing sections</li>
+</ul>
+
+The default configuration for the overall and each data source
+is <table> <tr><td>connection problems</td><td>CRIT</td></tr>
+<tr><td>empty output</td><td>CRIT</td></tr> <tr><td>any unhandled
+exception</td><td>UNKNOWN</td></tr> <tr><td>timeout</td><td>CRIT</td></tr>
+<tr><td>wrong version</td><td>WARN</td></tr> <tr><td>missing
+sections</td><td>WARN</td></tr> </table>

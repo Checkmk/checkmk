@@ -86,6 +86,7 @@ class DataSource(object):
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception = None
         self._host_sections = None
+        self._exit_code_spec = self._get_exit_code_spec()
 
 
     def _setup_logger(self):
@@ -93,6 +94,26 @@ class DataSource(object):
         self._logger.propagate = False
         self._logger.set_format(" %s[%s%s%s]%s %%(message)s" %
                     (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
+
+
+    def _get_exit_code_spec(self):
+        exit_code_spec = config.exit_code_spec(self._hostname)
+        try:
+            return self._get_individual_exit_code_spec(exit_code_spec)
+        except KeyError:
+            pass
+
+        try:
+            return exit_code_spec["overall"]
+        except KeyError:
+            pass
+
+        # Old configuration format
+        return exit_code_spec
+
+
+    def _get_individual_exit_code_spec(self, exit_code_spec):
+        return exit_code_spec["individual"][self.id()]
 
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):
@@ -371,22 +392,21 @@ class DataSource(object):
         if not self._exception:
             return self._summary_result()
 
-        exit_spec = config.exit_code_spec(self._hostname)
         exc_msg = "%s" % self._exception
 
         if isinstance(self._exception, MKEmptyAgentData):
-            status = exit_spec.get("empty_output", 2)
+            status = self._exit_code_spec.get("empty_output", 2)
 
         elif isinstance(self._exception, MKAgentError) \
            or isinstance(self._exception, MKIPAddressLookupError) \
            or isinstance(self._exception, MKSNMPError):
-            status = exit_spec.get("connection", 2)
+            status = self._exit_code_spec.get("connection", 2)
 
         elif isinstance(self._exception, MKTimeout):
-            status = exit_spec.get("timeout", 2)
+            status = self._exit_code_spec.get("timeout", 2)
 
         else:
-            status = exit_spec.get("exception", 3)
+            status = self._exit_code_spec.get("exception", 3)
 
         return status, exc_msg + check_api.state_markers[status], []
 
@@ -660,7 +680,6 @@ class CheckMKAgentDataSource(DataSource):
     # TODO: refactor
     def _summary_result(self):
         expected_version = config.agent_target_version(self._hostname)
-        exit_spec = config.exit_code_spec(self._hostname)
 
         agent_info = self._get_agent_info()
         agent_version = agent_info["version"]
@@ -690,11 +709,11 @@ class CheckMKAgentDataSource(DataSource):
             else:
                 expected = expected_version
             output.append("unexpected agent version %s (should be %s), " % (agent_version, expected))
-            status = exit_spec.get("wrong_version", 1)
+            status = self._exit_code_spec.get("wrong_version", 1)
 
         elif config.agent_min_version and agent_version < config.agent_min_version:
             output.append("old plugin version %s (should be at least %s), " % (agent_version, config.agent_min_version))
-            status = exit_spec.get("wrong_version", 1)
+            status = self._exit_code_spec.get("wrong_version", 1)
 
         return status, ", ".join(output), []
 

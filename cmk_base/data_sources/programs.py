@@ -169,6 +169,10 @@ class SpecialAgentDataSource(ProgramDataSource):
         return "special_%s" % self._special_agent_id
 
 
+    def _get_individual_exit_code_spec(self, exit_code_spec):
+        return exit_code_spec["individual"]["special"]
+
+
     # TODO: Can't we make this more specific in case of special agents?
     def _gather_check_plugin_names(self):
         return checks.discoverable_tcp_checks()

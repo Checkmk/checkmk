@@ -1190,16 +1190,19 @@ class ModeBIAggregations(ModeBI):
         if self._pack["aggregations"]:
             fieldstyle = "margin-top:10px"
             html.button("_bulk_delete_bi_aggregations", _("Bulk delete"), "submit", style=fieldstyle)
-            html.button("_bulk_move_bi_aggregations",   _("Bulk move"),   "submit", style=fieldstyle)
 
-            if html.has_var('bulk_moveto'):
-                html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-
-            choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
+            move_choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
                         if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs) ]
-            html.select("bulk_moveto", choices, "@",
-                         onchange = "update_bulk_moveto(this.value)",
-                         attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
+
+            if move_choices:
+                html.button("_bulk_move_bi_aggregations",   _("Bulk move"),   "submit", style=fieldstyle)
+
+                if html.has_var('bulk_moveto'):
+                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+
+                html.select("bulk_moveto", move_choices, "@",
+                             onchange = "update_bulk_moveto(this.value)",
+                             attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
         html.end_form()
 
 
@@ -1398,16 +1401,19 @@ class ModeBIRules(ModeBI):
         if self._pack["rules"]:
             fieldstyle = "margin-top:10px"
             html.button("_bulk_delete_bi_rules", _("Bulk delete"), "submit", style=fieldstyle)
-            html.button("_bulk_move_bi_rules",   _("Bulk move"),   "submit", style=fieldstyle)
 
-            if html.has_var('bulk_moveto'):
-                html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-
-            choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
+            move_choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
                         if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs) ]
-            html.select("bulk_moveto", choices, "@",
-                         onchange = "update_bulk_moveto(this.value)",
-                         attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
+
+            if move_choices:
+                html.button("_bulk_move_bi_rules",   _("Bulk move"),   "submit", style=fieldstyle)
+
+                if html.has_var('bulk_moveto'):
+                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+
+                html.select("bulk_moveto", move_choices, "@",
+                             onchange = "update_bulk_moveto(this.value)",
+                             attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
         html.end_form()
 
 

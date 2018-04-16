@@ -18,19 +18,25 @@ def lock_cmd(subcmd):
     ]
 
 
-def acquire_lock():
+def lock_operation(command):
+    # Copy essential sources always to remote host. This is necessary as
+    # another test executor might have removed the files meanwhile.
     files = [os.path.join(localdir, f) for f in ['lock.py', 'remote.py']]
     cmds = [[
         'scp',
         sshopts,
     ] + files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)],
-            lock_cmd('acquire')]
+            lock_cmd(command)]
     for cmd in cmds:
         assert_subprocess(cmd)
 
 
+def acquire_lock():
+    lock_operation('acquire')
+
+
 def release_lock():
-    assert_subprocess(lock_cmd('release'))
+    lock_operation('release')
 
 
 def scp_agent_exe():

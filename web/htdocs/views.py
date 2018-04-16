@@ -2037,8 +2037,15 @@ def save_state_for_playing_alarm_sounds(row):
     for state_map, state in [
             (host_state_map, row.get("host_hard_state", row.get("host_state"))),
             (service_state_map, row.get("service_last_hard_state", row.get("service_state"))) ]:
-        if state != None:
-            g_alarm_sound_states.add(state_map[int(state)])
+        if state is None:
+            continue
+
+        try:
+            state_name = state_map[int(state)]
+        except KeyError:
+            continue
+
+        g_alarm_sound_states.add(state_name)
 
 
 def play_alarm_sounds():

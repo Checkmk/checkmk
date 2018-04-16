@@ -4,6 +4,7 @@ import pytest
 import subprocess
 import re
 import os
+import lockfile
 
 from testlib import web, repo_path
 
@@ -73,14 +74,19 @@ def test_cfg(web, site, tmpdir):
     site.delete_file("etc/check_mk/backup.mk")
 
 
+def BackupLock():
+    return lockfile.FileLock("/tmp/cmk-test-execute-backup")
+
+
 def _execute_backup(site, job_id="testjob"):
-    # Perform the backup
-    p = site.execute(["mkbackup", "backup", job_id],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert stderr == ""
-    assert p.wait() == 0
-    assert "Backup completed " in stdout
+    with BackupLock():
+        # Perform the backup
+        p = site.execute(["mkbackup", "backup", job_id],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        assert stderr == ""
+        assert p.wait() == 0
+        assert "Backup completed " in stdout
 
     # Check successful backup listing
     p = site.execute(["mkbackup", "list", "test-target"],
@@ -100,6 +106,18 @@ def _execute_backup(site, job_id="testjob"):
     backup_id = matches.groups()[0]
 
     return backup_id
+
+
+def _execute_restore(site, backup_id, env=None):
+    with BackupLock():
+        p = site.execute(["mkbackup", "restore", "test-target", backup_id],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        stdout, stderr = p.communicate()
+        assert "Restore completed" in stdout
+        assert stderr == ""
+        assert p.wait() == 0
+
+
 
 #.
 #   .--Command line--------------------------------------------------------.
@@ -173,13 +191,7 @@ def test_mkbackup_simple_backup(site, test_cfg):
 
 def test_mkbackup_simple_restore(site, test_cfg):
     backup_id = _execute_backup(site)
-
-    p = site.execute(["mkbackup", "restore", "test-target", backup_id],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert "Restore completed" in stdout
-    assert stderr == ""
-    assert p.wait() == 0
+    _execute_restore(site, backup_id)
 
 
 def test_mkbackup_encrypted_backup(site, test_cfg):
@@ -192,21 +204,9 @@ def test_mkbackup_encrypted_backup_and_restore(site, test_cfg):
     env = os.environ.copy()
     env["MKBACKUP_PASSPHRASE"] = "lala"
 
-    p = site.execute(["mkbackup", "restore", "test-target", backup_id],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            env=env)
-    stdout, stderr = p.communicate()
-    assert stderr == ""
-    assert p.wait() == 0
-    assert "Restore completed" in stdout
+    _execute_restore(site, backup_id, env)
 
 
 def test_mkbackup_compressed_backup_and_restore(site, test_cfg):
     backup_id = _execute_backup(site, job_id="testjob-compressed")
-
-    p = site.execute(["mkbackup", "restore", "test-target", backup_id],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert stderr == ""
-    assert p.wait() == 0
-    assert "Restore completed" in stdout
+    _execute_restore(site, backup_id)

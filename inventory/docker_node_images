@@ -35,17 +35,26 @@ def _parse_docker_node_images(info):
             continue
 
         data = json.loads(" ".join(line))
+
         if section_name == "images":
-            parsed.setdefault(data["Repository"], data)
+            parsed.setdefault((data["Repository"], data["Tag"]), data)
 
         elif section_name.startswith("images_labels"):
-            _, image_id = section_name.split(":", 1)
-            image = parsed.get(image_id)
-            if image is not None and data:
-                image.setdefault("__labels__", data)
+            parts = section_name.split(":", 2)
+            if len(parts) == 3:
+                repository, tag = parts[1:]
+                image = parsed.get((repository, tag))
+                if image is not None and data:
+                    image.setdefault("__labels__", data)
 
         elif section_name == "containers":
-            image = parsed.get(data["Image"])
+            image_name = data["Image"]
+            if ":" in image_name:
+                repository, tag = image_name.split(":", 1)
+            else:
+                repository, tag = image_name, "latest"
+
+            image = parsed.get((repository, tag))
             if image is not None:
                 image.setdefault("__containers__", []).append(data)
     return parsed
@@ -57,8 +66,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
 
-    for repo, image in parsed.iteritems():
-        tag = image["Tag"]
+    for (repo, tag), image in parsed.iteritems():
         id_ = image["ID"]
         inv_node.append({
             "repository"        : repo,

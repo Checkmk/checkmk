@@ -1,0 +1,13 @@
+Title: Fixed displaying of BI aggregation with icons
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1523890523
+
+When displaying BI aggregations that want to display an icon,
+for example when a service is in downtime, an exception like
+this could occur: TypeError: render_icon() got an unexpected keyword argument 'class_'.

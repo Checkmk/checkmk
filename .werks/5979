@@ -1,0 +1,11 @@
+Title: Availability: Fixed broken highlighting of timeline entries on hover
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1523886523
+
+

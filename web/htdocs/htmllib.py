@@ -2430,8 +2430,8 @@ class html(HTMLGenerator, RequestHandler):
         if error:
             self.open_x(class_="inputerror")
 
-        if "read_only" in attrs:
-            attrs["disabled"] = "disabled" if attrs.pop("read_only") else None
+        if "read_only" in attrs and attrs.pop("read_only"):
+            attrs["disabled"] = "disabled"
             self.hidden_field(varname, current, add_var=False)
 
         self.open_select(name=varname, id_=varname, **attrs)

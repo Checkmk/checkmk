@@ -1,0 +1,15 @@
+Title: Fixed broken dropdown fields in several places
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b2
+Date: 1523877884
+Class: fix
+
+Some dropdown (select) fields were broken in Check_MK 1.5.0 for a longer time,
+especially in WATO configuration dialogs. This issue existed in all previous
+1.5.0 releases.
+
+E.g. when setting the "Match syslog priority" option in a Event Console rule,
+the selected option was not persisted as expected.

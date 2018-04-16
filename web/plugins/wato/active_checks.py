@@ -1533,7 +1533,7 @@ register_rule(group,
     match = 'all'
 )
 
-def PluginCommandLine(addhelp = ""):
+def PluginCommandLine():
     return TextAscii(
           title = _("Command line"),
           help = _("Please enter the complete shell command including path name and arguments to execute. "
@@ -1569,10 +1569,7 @@ register_rule(group,
                   default_value = _("Customcheck"))
             ),
             ( "command_line",
-              PluginCommandLine(addhelp = _("<br><br>"
-                   "<b>Passive checks</b>: Do no specify a command line if you want "
-                   "to define passive checks."),
-              ),
+              PluginCommandLine(),
             ),
             ( "command_name",
               TextAscii(

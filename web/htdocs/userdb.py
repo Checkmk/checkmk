@@ -912,7 +912,13 @@ def contactgroups_of_user(user_id):
 
 
 def convert_idle_timeout(value):
-    return value != "False" and int(value) or False
+    if value == "False":
+        return False # Idle timeout disabled
+
+    try:
+        return int(value)
+    except ValueError:
+        return None # Invalid value -> use global setting
 
 
 #.

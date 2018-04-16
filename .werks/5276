@@ -1,0 +1,17 @@
+Title: cmk-update-agent: Restore compatibility to older python versions (Regression since 1.4.0p25)
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p31
+Date: 1523877738
+
+This werk fixes an issue that occurs when cmk-update-agent is executed with a Python version of 2.5 or earlier. It would crash with an error message like
+
+<pre>
+except IOError as exc:
+               ^
+SyntaxError: invalid syntax
+</pre>

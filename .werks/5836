@@ -1,0 +1,17 @@
+Title: Event Console messages without a service level can be matched against service level 0 now.
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1523871989
+Class: fix
+
+Various message sources, e.g. syslog messages or SNMP traps, do not carry a
+service level with them.  If an event console rule specified a matching
+criterion including the service level value 0 (meaning "no service level
+specified"), the rule didn't fire for such messages.  This behavior was
+confusing and inconsistent with the rule matching for notifications.
+
+Messages not carrying a service level have an implicit service level 0 now,
+so EC rules can match for this case.

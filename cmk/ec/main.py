@@ -2420,12 +2420,7 @@ class EventServer(ECServerThread):
             sl_from, sl_to = rule["match_sl"]
             if sl_from > sl_to:
                 sl_to, sl_from = sl_from, sl_to
-            p = event.get("sl")
-            if p is None:
-                if self._config["debug_rules"]:
-                    self.logger.info("  did not match, because no service level is set in event")
-                return False
-
+            p = event.get("sl", 0)
             if p < sl_from or p > sl_to:
                 if self._config["debug_rules"]:
                     self.logger.info("  did not match because of wrong service level %d (need %d..%d)" %

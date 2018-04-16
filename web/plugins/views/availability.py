@@ -327,7 +327,11 @@ def render_availability_timeline(what, av_entry, avoptions):
     # Table with detailed events
     table.begin("av_timeline", "", css="timelineevents", sortable=False, searchable=False)
     for row_nr, row in enumerate(timeline_layout["table"]):
-        table.row(onmouseover="timetable_hover(this, %d, 1);" % row_nr, onmouseout="timetable_hover(this, %d, 0);" % row_nr)
+        table.row(
+            id_="timetable_%d" % row_nr,
+            onmouseover="timetable_hover(%d, 1);" % row_nr,
+            onmouseout="timetable_hover(%d, 0);" % row_nr
+        )
         table.cell(_("Links"), css="buttons")
         if what == "bi":
             url = html.makeuri([("timewarp", str(int(row["from"])))])
@@ -455,13 +459,16 @@ def render_timeline_bar(timeline_layout, style):
     html.open_tr(class_="timeline")
     for row_nr, title, width, css in timeline_layout["spans"]:
 
-        td_attrs = {"style": "width: %.3f%%" % width,
-                    "title": title,
-                    "class": css,}
+        td_attrs = {
+            "style": "width: %.3f%%" % width,
+            "title": title,
+            "class": css,
+            "id_": "timeline_%d" % row_nr,
+        }
 
         if style == "standalone" and row_nr is not None:
-            td_attrs.update({"onmouseover": "timeline_hover(this, %d, 1);" % row_nr,
-                             "onmouseout" : "timeline_hover(this, %d, 0);" % row_nr, })
+            td_attrs.update({"onmouseover": "timeline_hover(%d, 1);" % row_nr,
+                             "onmouseout" : "timeline_hover(%d, 0);" % row_nr, })
 
         html.td('', **td_attrs)
 

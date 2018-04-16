@@ -2946,11 +2946,12 @@ function host_tag_update_value(prefix, grp) {
 //#   |                                                                    |
 //#   '--------------------------------------------------------------------'
 
-function timeline_hover(td, row_nr, onoff)
+function timeline_hover(row_nr, onoff)
 {
-    var timeline_bar_table = td.parentNode.parentNode.parentNode.parentNode;
-    var events_table = timeline_bar_table.nextElementSibling;
-    var row = events_table.children[0].children[row_nr+1];
+    var row = document.getElementById("timetable_" + row_nr);
+    if (!row)
+        return;
+
     if (onoff) {
         add_class(row, 'hilite');
     } else {
@@ -2959,15 +2960,16 @@ function timeline_hover(td, row_nr, onoff)
 }
 
 
-function timetable_hover(tr, row_nr, onoff) {
+function timetable_hover(row_nr, onoff)
+{
+    var slice = document.getElementById("timeline_" + row_nr);
+    if (!slice)
+        return;
 
-    var timeline_bar_table = tr.parentNode.parentNode.previousElementSibling;
-    var tds = timeline_bar_table.getElementsByTagName("TD");
-    var td = tds[row_nr];
-    if (td && onoff) {
-        add_class(td, 'hilite');
-    } else if (td) {
-        remove_class(td, 'hilite');
+    if (onoff) {
+        add_class(slice, 'hilite');
+    } else {
+        remove_class(slice, 'hilite');
     }
 }
 

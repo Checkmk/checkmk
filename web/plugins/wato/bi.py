@@ -77,9 +77,10 @@ class ModeBI(WatoMode):
         # Most modes need a pack as context
         if html.has_var("pack"):
             self._pack_id = html.var("pack")
-            if self._pack_id not in self._packs:
-                raise MKGeneralException(_("The BI pack '%s' does not exist.") % html.attrencode(self._pack_id))
-            self._pack = self._packs[self._pack_id]
+            try:
+                self._pack = self._packs[self._pack_id]
+            except KeyError:
+                raise MKUserError("pack", _("This BI pack does not exist."))
         else:
             self._pack_id = None
             self._pack = None
@@ -935,7 +936,11 @@ class ModeBIPacks(ModeBI):
     def action(self):
         if config.user.may("wato.bi_admin") and html.has_var("_delete"):
             pack_id = html.var("_delete")
-            pack = self._packs[pack_id]
+            try:
+                pack = self._packs[pack_id]
+            except KeyError:
+                raise MKUserError("_delete", _("This BI pack does not exist."))
+
             if pack["rules"]:
                 raise MKUserError(None, _("You cannot delete this pack. It contains <b>%d</b> rules.") % len(pack["rules"]))
             c = wato_confirm(_("Confirm BI pack deletion"),

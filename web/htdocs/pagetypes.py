@@ -497,7 +497,7 @@ class Overridable(Base):
         # Is this the visual which would be shown to the user in case the user
         # requests a visual with the current name?
         page = self.find_page(self.name())
-        if page.owner() != self.owner():
+        if page and page.owner() != self.owner():
             return False
 
         return self.is_public()

@@ -1,0 +1,16 @@
+Title: docker_node_images: Fixed mixups between images of same repository and different tags
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1523907880
+
+The number of containers was not counted per image because the tag information
+was not handled correctly in all cases.
+
+Some containers don't explicitly state "repository:tag" but only "repository"
+as their image, depending on the "docker run" call. Check_MK is now falling
+back to "latest" tag in this case.

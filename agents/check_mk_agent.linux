@@ -976,7 +976,7 @@ if type docker > /dev/null 2>&1 ; then
     echo "<<<docker_node_images>>>"
     echo "[[[images]]]"
     docker images --all --format "{{json .}}"
-    for image in $(docker images --all --format "{{.Repository}}");
+    for image in $(docker images --all --format "{{.Repository}}:{{.Tag}}");
     do
         echo "[[[images_labels:$image]]]"
         docker image inspect --format "{{json .Config.Labels}}" "$image"

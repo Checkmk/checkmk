@@ -1,0 +1,14 @@
+Title: Fixed possible exception when user has invalid idle timeout value configured
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1523878776
+
+The login session idle timeout can be configured individually per user. This setting
+is stored in the file <tt>var/check_mk/web/[user]/idle_timeout.mk</tt>. When this
+file contains an invalid value, the global default value is used instead of raising
+an error message.

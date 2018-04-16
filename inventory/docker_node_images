@@ -36,7 +36,6 @@ def _parse_docker_node_images(info):
 
         data = json.loads(" ".join(line))
         if section_name == "images":
-            data = json.loads(" ".join(line))
             parsed.setdefault(data["Repository"], data)
 
         elif section_name.startswith("images_labels"):

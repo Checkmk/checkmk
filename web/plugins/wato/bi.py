@@ -1123,7 +1123,7 @@ class ModeBIAggregations(ModeBI):
         c = wato_confirm(_("Confirm aggregation deletion"),
             _("Do you really want to delete the aggregation number <b>%s</b>?") % (aggregation_id+1))
         if c:
-            self._pack["aggregations"].remove(aggregation_id)
+            del self._pack["aggregations"][aggregation_id]
             self._add_change("bi-delete-aggregation", _("Deleted BI aggregation number %d") % (aggregation_id+1))
             self.save_config()
         elif c == False: # not yet confirmed

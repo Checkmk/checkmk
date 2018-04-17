@@ -105,6 +105,7 @@ APACHE_BIN        = /usr/sbin/httpd2-prefork
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR = /usr/lib/apache2-prefork
 APACHE_MODULE_DIR_64 = /usr/lib64/apache2-prefork
+HTPASSWD_BIN      = /usr/bin/htpasswd2
 PHP_FCGI_BIN	  = /usr/bin/php-cgi
 APACHE_ENMOD      = a2enmod %s
 BECOME_ROOT       = su -c

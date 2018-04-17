@@ -105,6 +105,7 @@ APACHE_BIN        = /usr/sbin/apache2
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR = /usr/lib/apache2/modules
 APACHE_MODULE_DIR_64 = /usr/lib/apache2/modules
+HTPASSWD_BIN      = /usr/bin/htpasswd
 APACHE_ENMOD      = a2enmod %s
 PHP_FCGI_BIN      = /usr/bin/php-cgi
 BECOME_ROOT       = sudo su -c

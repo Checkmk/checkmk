@@ -1,0 +1,14 @@
+Title: htpasswd command is now available in all sites
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0b2
+Date: 1523961959
+Class: fix
+
+The "omd create" success message tells users about using the htpasswd
+command to change the password of the default GUI user. On SLES platforms
+the command is available under the name "htpasswd2". We provide a symlink
+to the platform specific name to make the command available for all site
+users now.

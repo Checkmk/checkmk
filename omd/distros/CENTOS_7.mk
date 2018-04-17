@@ -106,6 +106,7 @@ APACHE_BIN        = /usr/sbin/httpd
 APACHE_CTL        = /usr/sbin/apachectl
 APACHE_MODULE_DIR = /usr/lib/httpd/modules
 APACHE_MODULE_DIR_64 = /usr/lib64/httpd/modules
+HTPASSWD_BIN      = /usr/bin/htpasswd
 PHP_FCGI_BIN      = /usr/bin/php-cgi
 APACHE_ENMOD      = true %s
 BECOME_ROOT       = su -c

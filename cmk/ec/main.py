@@ -4186,8 +4186,12 @@ class EventStatus(object):
                         # values and the logfile entry if more relevant.
                         previous_phase = event["phase"]
                         event["phase"] = "closed"
+                        # TODO: Why do we use OK below and not new_event["state"]???
                         event["state"] = 0  # OK
                         event["text"] = new_event["text"]
+                        # TODO: This is a hack and partial copy-n-paste from rewrite_events...
+                        if "set_text" in rule:
+                            event["text"] = replace_groups(rule["set_text"], event["text"], match_groups)
                         event["time"] = new_event["time"]
                         event["last"] = new_event["time"]
                         event["priority"] = new_event["priority"]

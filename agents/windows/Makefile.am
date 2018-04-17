@@ -65,12 +65,15 @@ integrationtest: install-strip
         fi ; \
         cd -
 
-coverage.info: WindowsAgentCoverage$(EXEEXT) ; \
+coverage.info: WindowsAgentCoverage$(EXEEXT)
 	DISPLAY="$$DISPLAY xterm" wine $< 2>/dev/null ; \
-        lcov --capture --rc lcov_branch_coverage=1 --directory . --output-file $@
+        lcov -c --rc lcov_branch_coverage=1 --directory . -o $@
 
-unittest-coverage-html: coverage.info
-	genhtml $< --rc lcov_branch_coverage=1 --output-directory htmlcov
+filtered_coverage.info: coverage.info
+	lcov --rc lcov_branch_coverage=1 --remove $< "/usr/*" "c++/*" -o $@
+
+unittest-coverage-html: filtered_coverage.info
+	genhtml $< --rc lcov_branch_coverage=1 -o htmlcov
 
 libcheck_mk_agent_a_SOURCES = \
         Configuration.cc \
@@ -149,6 +152,7 @@ wmitest_SOURCES = Logger.cc WinApi.cc stringutil.cc wmiHelper.cc wmitest.cc
 CLEANFILES = \
         *.ico *.res *.rc config.* stamp-* Makefile \
         $$(find . -name "*.gc*") \
+        $$(find . -name "*coverage.info") \
         $$(find . -name "*.html") \
         $$(find . -name .dirstamp) \
         $$(find .deps/ sections/.deps test/.deps test/sections/.deps it/.deps -type f) \

@@ -321,7 +321,7 @@ echo "LocalDirectory: $LOCALDIR"
 if [ -n "$REMOTE_HOST" ]
 then
     echo -n 'OnlyFrom: '
-    sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' < /etc/xinetd.d/* | head -n1
+    sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1; echo
 fi
 
 # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)

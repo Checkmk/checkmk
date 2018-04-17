@@ -1,0 +1,11 @@
+Title: Agent RPMs: Add missing "Vendor" RPM header
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p31
+Date: 1523951179
+
+

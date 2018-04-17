@@ -29,6 +29,7 @@ Release:   1
 License:   GPL
 Group:     System/Monitoring
 URL:       http://mathias-kettner.de/check_mk.html
+Vendor:    Mathias Kettner GmbH
 Source:    check-mk-agent-%{_version}.tar.gz
 BuildRoot: %{_topdir}/buildroot
 AutoReq:   off

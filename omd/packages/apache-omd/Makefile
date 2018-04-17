@@ -72,6 +72,8 @@ install:
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	install -m 644 apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf
+	# Create distribution independent alias for htpasswd command
+	ln -sf $(HTPASSWD_BIN) $(DESTDIR)$(OMD_ROOT)/bin/htpasswd
 
 skel:
 	# This file is loaded by php-wrapper on RedHat/CentOS < 7

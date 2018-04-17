@@ -1,0 +1,12 @@
+Title: Fixed overflow event text for local limits.
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1523958152
+Class: fix
+
+The event text of overflow events always contained the global limit, even
+when the reason for the overflow event was a local limit.  This has been
+fixed.

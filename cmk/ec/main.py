@@ -3010,7 +3010,7 @@ class EventServer(ECServerThread):
         # events will be stopped.
 
         # Perform one time actions
-        overflow_event = self._create_overflow_event(ty, event)
+        overflow_event = self._create_overflow_event(ty, event, limit)
 
         if "overflow" in action:
             self.logger.info("  Creating overflow event")
@@ -3043,7 +3043,7 @@ class EventServer(ECServerThread):
 
         return limit, action
 
-    def _create_overflow_event(self, ty, event):
+    def _create_overflow_event(self, ty, event, limit):
         now = time.time()
         new_event = {
             "rule_id": None,
@@ -3072,7 +3072,7 @@ class EventServer(ECServerThread):
             new_event["text"] = (
                 "The overall event limit of %d open events has been reached. Not "
                 "opening any additional event until open events have been "
-                "archived." % self._config["event_limit"]["overall"]["limit"]
+                "archived." % limit
             )
 
         elif ty == "by_host":
@@ -3082,7 +3082,7 @@ class EventServer(ECServerThread):
                 "text": (
                     "The host event limit of %d open events has been reached for host \"%s\". "
                     "Not opening any additional event for this host until open events have "
-                    "been archived." % (self._config["event_limit"]["by_host"]["limit"], event["host"])
+                    "been archived." % (limit, event["host"])
                 )
             })
 
@@ -3100,7 +3100,7 @@ class EventServer(ECServerThread):
                     "The rule event limit of %d open events has been reached for rule \"%s\". "
                     "Not opening any additional event for this rule until open events have "
                     "been archived." %
-                    (self._config["event_limit"]["by_rule"]["limit"], event["rule_id"])
+                    (limit, event["rule_id"])
                 )
             })
 

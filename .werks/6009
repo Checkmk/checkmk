@@ -1,0 +1,11 @@
+Title: Rewrite event text in cancel events, too
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1523965551
+Class: fix
+
+Previously, only non-cancelling events had their text rewritten.  This has
+been fixed.

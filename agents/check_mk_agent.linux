@@ -1161,7 +1161,7 @@ function is_valid_plugin () {
 # Local checks
 echo '<<<local>>>'
 if cd "$LOCALDIR" ; then
-    for skript in *.dpkg-{old,new,temp}; do
+    for skript in ./*; do
         if is_valid_plugin "$skript"; then
             ./"$skript"
         fi
@@ -1176,9 +1176,9 @@ fi
 
 # Plugins
 if cd "$PLUGINSDIR"; then
-    for skript in *.dpkg-{old,new,temp}; do
+    for skript in ./*; do
         if is_valid_plugin "$skript"; then
-            ./"skript"
+            ./"$skript"
         fi
     done
     # Call some plugins only every Xth second

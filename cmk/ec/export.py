@@ -228,15 +228,18 @@ def load_config(settings):
             cmk.ec.defaults.default_rule_pack(config["rules"])]
     config["rules"] = []
 
-    # Convert old contact_groups config
     for rule_pack in config["rule_packs"]:
         for rule in rule_pack["rules"]:
+            # Convert old contact_groups config
             if isinstance(rule.get("contact_groups"), list):
                 rule["contact_groups"] = {
                     "groups": rule["contact_groups"],
                     "notify": False,
                     "precedence": "host",
                 }
+            # Old configs only have a naked service level without a precedence.
+            if isinstance(rule["sl"], int):
+                rule["sl"] = {"value": rule["sl"], "precedence": "message"}
 
     # Convert old logging configurations
     levels = config["log_level"]

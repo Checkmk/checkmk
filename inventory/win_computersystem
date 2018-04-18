@@ -24,35 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# win_computersystem is executed after win_system
+# and we overwrite some data.
+# Assumption: it's more precise
+
 # Example output:
-# <<<win_system:sep(58)>>>
-# Manufacturer : Oracle Corporation
-# Name         : Computergehäuse
-# Model        :
-# HotSwappable :
-# InstallDate  :
-# PartNumber   :
-# SerialNumber :
+# <<<win_computersystem:sep(58)>>>
+# Manufacturer: FUJITSU
+# Model: PRIMERGY RX100 S7
+# Name: <WINDOWSHOST>
 
 
-def inv_win_system(info):
+def inv_win_computersystem(info):
     node = inv_tree("hardware.system.")
     for line in info:
-        if len(line) > 2:
-            line = [ line[0], ":".join(line[1:]) ]
-        varname, value = line
-        varname = re.sub(" *","", varname)
-        value = re.sub("^ ", "", value)
-        if varname == "SerialNumber":
-            node["serial"] = value
-        elif varname == "Manufacturer":
+        key = line[0]
+        value = " ".join(line[1:])
+        if key == "Manufacturer":
             node["manufacturer"] = value
-        elif varname == "Name":
-            node["product"] = value
-        elif varname == "Model":
+        elif key == "Model":
+            node["model"] = value
+        elif key == "Name":
             node["family"] = value
 
 
-inv_info['win_system'] = {
-   "inv_function": inv_win_system,
+inv_info['win_computersystem'] = {
+   "inv_function": inv_win_computersystem,
 }

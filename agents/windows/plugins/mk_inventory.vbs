@@ -285,6 +285,11 @@ Call startSection("win_system",58,timeUntil)
 systemVars = Array( "Manufacturer","Name","Model","HotSwappable","InstallDate","PartNumber","SerialNumber" )
 Call getWMIObject("Win32_SystemEnclosure",systemVars)
 
+' ComputerSystem
+Call startSection("win_computersystem",58,timeUntil)
+systemVars = Array( "Manufacturer","Name","Model","InstallDate" )
+Call getWMIObject("Win32_ComputerSystem",systemVars)
+
 ' Hard-Disk
 Call startSection("win_disks",58,timeUntil)
 diskVars = Array( "Manufacturer","InterfaceType","Model","Name","SerialNumber","Size","MediaType","Signature" )

@@ -208,7 +208,7 @@ run_real_time_checks()
             { echo -n $PROTOCOL ;
               date +%s | tr -d '\n' ;
               if [ "$ENCRYPTED_RT" != "no" ] ; then
-                  export RTC_SECRET=$RTC_SECRET ; section_$SECTION | openssl enc -aes-256-cbc -pass env:RTC_SECRET -nosalt ;
+                  export RTC_SECRET=$RTC_SECRET ; section_$SECTION | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt ;
               else
                   section_$SECTION ;
               fi

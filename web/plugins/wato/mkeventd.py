@@ -373,8 +373,7 @@ def vs_mkeventd_rule(customer=None):
                         default_value = "message",
                     )),
                 ]
-            ),
-            forth = lambda x: {"value": x, "precedence": "message"} if isinstance(x, int) else x
+            )
         )),
         ( "contact_groups", Dictionary(
             title = _("Contact Groups"),

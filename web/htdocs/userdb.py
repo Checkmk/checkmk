@@ -24,7 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Rework connection management and multiplexing
+
 import config, hooks
+import gui_background_job
 from lib import *
 from log import logger
 import time, os, pprint, shutil, traceback
@@ -207,7 +210,13 @@ def create_non_existing_user(connection_id, username):
     save_users(users)
 
     # Call the sync function for this new user
-    hook_sync(connection_id = connection_id, only_username = username)
+    connection = get_connection(connection_id)
+    try:
+        connection.do_sync(add_to_changelog=False, only_username=username)
+    except MKLDAPException, e:
+        show_exception(connection_id, _("Error during sync"), e, debug=config.debug)
+    except Exception, e:
+        show_exception(connection_id, _("Error during sync"), e)
 
 
 def is_automation_user(user_id):
@@ -1146,16 +1155,17 @@ class UserConnector(object):
     def do_sync(self, add_to_changelog, only_username):
         pass
 
+
+    # Optional: Tells whether or not the synchronization (using do_sync()
+    # method) is needed.
+    def sync_is_needed(self):
+        return False
+
+
     # Optional: Tells whether or not the given user is currently
     # locked which would mean that he is not allowed to login.
     def is_locked(self, user_id):
         return False
-
-    # Optional: Hook function can be registered here to be executed
-    # on each call to the multisite cron job page which is normally
-    # executed once a minute.
-    def on_cron_job(self):
-        pass
 
     # Optional: Hook function can be registered here to be xecuted
     # to save all users.
@@ -1229,33 +1239,6 @@ def show_exception(connection_id, title, e, debug=True):
     )
 
 
-# Hook function can be registered here to be executed to synchronize all users.
-# Is called on:
-#   a) before rendering the user management page in WATO
-#   b) a user is created during login (only for this user)
-#   c) Before activating the changes in WATO
-def hook_sync(connection_id = None, add_to_changelog = False, only_username = None, raise_exc = False):
-    if connection_id:
-        connections = [ (connection_id, get_connection(connection_id)) ]
-    else:
-        connections = active_connections()
-
-    no_errors = True
-    for connection_id, connection in connections:
-        try:
-            connection.do_sync(add_to_changelog, only_username)
-        except MKLDAPException, e:
-            if raise_exc:
-                raise
-            show_exception(connection_id, _("Error during sync"), e, debug=config.debug)
-            no_errors = False
-        except Exception, e:
-            if raise_exc:
-                raise
-            show_exception(connection_id, _("Error during sync"), e)
-            no_errors = False
-    return no_errors
-
 # Hook function can be registered here to be executed during saving of the
 # new user construct
 def hook_save(users):
@@ -1287,25 +1270,19 @@ def general_userdb_job():
         save_users(load_users(lock = True))
 
 
-# Hook function can be registered here to execute actions on a "regular" base without
-# user triggered action. This hook is called on each page load.
-# Catch all exceptions and log them to apache error log. Let exceptions raise trough
-# when debug mode is enabled.
 def execute_userdb_job():
+    """This function is called by the GUI cron job once a minute.
+
+    Errors are logged to var/log/web.log. """
     if not userdb_sync_job_enabled():
         return
 
-    for connection_id, connection in active_connections():
-        try:
-            connection.on_cron_job()
-        except:
-            if config.debug:
-                raise
-            else:
-                auth_logger.error('Exception (%s, userdb_job): %s' %
-                                  (connection_id, traceback.format_exc()))
+    job = UserSyncBackgroundJob()
+    if job.is_running():
+        logger.debug("Another synchronization job is already running")
 
-    general_userdb_job()
+    job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=False)
+    job.start()
 
 
 # Legacy option config.userdb_automatic_sync defaulted to "master".
@@ -1348,11 +1325,54 @@ def userdb_sync_job_enabled():
 
 def ajax_sync():
     try:
-        hook_sync(add_to_changelog = False, raise_exc = True)
-        html.write('OK\n')
+        job = UserSyncBackgroundJob()
+        if job.is_running():
+            raise MKUserError(None, _("Another synchronization job is already running"))
+        job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=True)
+        job.start()
+        html.write('OK Started synchronization\n')
     except Exception, e:
         log_exception()
         if config.debug:
             raise
         else:
             html.write('ERROR %s\n' % e)
+
+
+class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
+    job_prefix = "user_sync"
+    gui_title  = _("User synchronization")
+
+    def __init__(self):
+        kwargs = {}
+        kwargs["title"]     = self.gui_title
+        kwargs["deletable"] = False
+        kwargs["stoppable"] = False
+
+        super(UserSyncBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+
+
+    def do_sync(self, job_interface, add_to_changelog, enforce_sync):
+        job_interface.send_progress_update(_("Synchronization started..."))
+        if self._execute_sync_action(job_interface, add_to_changelog, enforce_sync):
+            job_interface.send_result_message(_("The user synchronization completed successfully."))
+        else:
+            job_interface.send_exception(_("The user synchronization failed."))
+
+
+    def _execute_sync_action(self, job_interface, add_to_changelog, enforce_sync):
+        for connection_id, connection in active_connections():
+            try:
+                if not enforce_sync and not connection.sync_is_needed():
+                    continue
+
+                job_interface.send_progress_update(_("[%s] Starting sync for connection") % connection_id)
+                connection.do_sync(add_to_changelog=add_to_changelog, only_username=False)
+                job_interface.send_exception(_("[%s] Finished sync for connection") % connection_id)
+            except Exception, e:
+                job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
+                logger.error('Exception (%s, userdb_job): %s' %
+                                   (connection_id, traceback.format_exc()))
+
+        job_interface.send_progress_update(_("Finalizing synchronization"))
+        general_userdb_job()

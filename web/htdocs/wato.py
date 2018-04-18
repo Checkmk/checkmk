@@ -6346,7 +6346,7 @@ class ModeLDAPConfig(LDAPMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "users")
+        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "users")]), "back")
         html.context_button(_("New Connection"), watolib.folder_preserving_link([("mode", "edit_ldap_connection")]), "new")
 
 
@@ -11060,7 +11060,7 @@ def mode_edit_user(phase):
             return _("Edit user %s") % user_id
 
     elif phase == "buttons":
-        html.context_button(_("All Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
+        html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
         if rulebased_notifications and not is_new_user:
             html.context_button(_("Notifications"), watolib.folder_preserving_link([("mode", "user_notifications"),
                     ("user", user_id)]), "notifications")

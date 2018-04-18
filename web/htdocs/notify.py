@@ -108,7 +108,7 @@ def page_notify():
     html.header(_('Notify Users'), stylesheets = ['pages', 'status', 'views'])
 
     html.begin_context_buttons()
-    html.context_button(_('User Config'), 'wato.py?mode=users', 'users')
+    html.context_button(_("Users"), "wato.py?mode=users", "back")
     html.end_context_buttons()
 
     vs_notify = _vs_notify()

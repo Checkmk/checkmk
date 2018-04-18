@@ -189,8 +189,6 @@ class LDAPUserConnector(UserConnector):
 
         # File for storing the time of the last success event
         self._sync_time_file = cmk.paths.var_dir + '/web/ldap_%s_sync_time.mk'% self.id()
-        # Exists when last ldap sync failed, contains exception text
-        self._sync_fail_file = cmk.paths.var_dir + '/web/ldap_%s_sync_fail.mk' % self.id()
 
         self.save_suffix()
 
@@ -995,10 +993,6 @@ class LDAPUserConnector(UserConnector):
 
 
     def do_sync(self, add_to_changelog, only_username):
-        # Don't store after sync since parallel requests to e.g. the page hook
-        # would cause duplicate calculations
-        self.set_last_sync_time()
-
         if not self.has_user_base_dn_configured():
             self._logger.debug("Not trying sync (no \"user base DN\" configured)")
             return # silently skip sync without configuration
@@ -1121,13 +1115,9 @@ class LDAPUserConnector(UserConnector):
         if changes:
             watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
-        # delete the fail flag file after successful sync
-        try:
-            os.unlink(self._sync_fail_file)
-        except OSError:
-            pass
-
         save_users(users)
+
+        self.set_last_sync_time()
 
 
     def find_changed_user_keys(self, keys, user, new_user):
@@ -1166,15 +1156,6 @@ class LDAPUserConnector(UserConnector):
         return user_locked(user_id)
 
 
-    # Is called once a minute by the multisite cron job call
-    def on_cron_job(self):
-        if self.sync_is_needed():
-            try:
-                self.do_sync(False, None)
-            except:
-                self.persist_sync_failure()
-
-
     def is_enabled(self):
         sync_config = user_sync_config()
         if type(sync_config) == tuple and self.id() not in sync_config[1]:
@@ -1194,21 +1175,8 @@ class LDAPUserConnector(UserConnector):
             return 0
 
 
-    # in case of sync problems, synchronize all 20 seconds, instead of the configured
-    # regular cache livetime
     def get_cache_livetime(self):
-        if os.path.exists(self._sync_fail_file):
-            return 20
-        else:
-            return self._config['cache_livetime']
-
-
-    def persist_sync_failure(self):
-        # Do not let the exception through to the user. Instead write last
-        # error in a state file which is then visualized for the admin and
-        # will be deleted upon next successful sync.
-        file(self._sync_fail_file, 'w').write('%s\n%s' % (time.strftime('%Y-%m-%d %H:%M:%S'),
-                                                        traceback.format_exc()))
+        return self._config['cache_livetime']
 
 
     # Calculates the attributes of the users which are locked for users managed

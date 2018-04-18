@@ -820,18 +820,16 @@ def compute_availability(what, av_rawdata, avoptions):
                 host_alias = span.get("host_alias", site_host[1])
                 consider = True
 
-                if state == -1:
-                    s = "unmonitored"
-                    if not avoptions["consider"]["unmonitored"]:
-                        consider = False
-
-                elif avoptions["service_period"] != "ignore" and \
+                if avoptions["service_period"] != "ignore" and \
                     (( span["in_service_period"] and avoptions["service_period"] != "honor" )
                     or \
                     ( not span["in_service_period"] and avoptions["service_period"] == "honor" )):
                     s = "outof_service_period"
                     consider = False
-
+                elif state == -1:
+                    s = "unmonitored"
+                    if not avoptions["consider"]["unmonitored"]:
+                        consider = False
                 elif span["in_notification_period"] == 0 and avoptions["notification_period"] == "exclude":
                     consider = False
 

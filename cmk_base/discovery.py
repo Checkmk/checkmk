@@ -979,7 +979,7 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
     # Handle discovered services -> "new"
     new_items = _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error)
     for check_plugin_name, item, paramstring in new_items:
-        services[(check_plugin_name, item)] = ("new", paramstring)
+        services.setdefault((check_plugin_name, item), ("new", paramstring))
 
     # Match with existing items -> "old" and "vanished"
     old_items = parse_autochecks_file(hostname)

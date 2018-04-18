@@ -1,0 +1,14 @@
+Title: User synchronization is now using background job mechanism
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1524031969
+
+To prevent timeouts of the GUI when manually starting the user synchronization
+the user synchronization is now performed as background job. You can either
+have a log at the state of the current/last job from the Users page or the
+list of all background jobs.

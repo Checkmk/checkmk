@@ -6347,7 +6347,7 @@ class ModeLDAPConfig(LDAPMode):
     def buttons(self):
         global_buttons()
         html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "users")]), "back")
-        html.context_button(_("New Connection"), watolib.folder_preserving_link([("mode", "edit_ldap_connection")]), "new")
+        html.context_button(_("New connection"), watolib.folder_preserving_link([("mode", "edit_ldap_connection")]), "new")
 
 
     def action(self):
@@ -10803,6 +10803,7 @@ def automation_push_profile():
 class ModeUsers(WatoMode):
     def __init__(self):
         super(ModeUsers, self).__init__()
+        self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
 
 
     def title(self):
@@ -10811,13 +10812,17 @@ class ModeUsers(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("New User"), watolib.folder_preserving_link([("mode", "edit_user")]), "new")
-        html.context_button(_("Custom Attributes"), watolib.folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
+        html.context_button(_("New user"), watolib.folder_preserving_link([("mode", "edit_user")]), "new")
+        html.context_button(_("Custom attributes"), watolib.folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
         if userdb.sync_possible():
-            html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
+            if not self._job_snapshot.is_running():
+                html.context_button(_("Sync users"), html.makeactionuri([("_sync", 1)]), "replicate")
+                html.context_button(_("Last sync result"), self._job_details_url(), "background_job_details")
+
+
         if config.user.may("general.notify"):
-            html.context_button(_("Notify Users"), 'notify.py', "notification")
-        html.context_button(_("LDAP Connections"), watolib.folder_preserving_link([("mode", "ldap_config")]), "ldap")
+            html.context_button(_("Notify users"), 'notify.py', "notification")
+        html.context_button(_("LDAP connections"), watolib.folder_preserving_link([("mode", "ldap_config")]), "ldap")
 
 
     def action(self):
@@ -10832,14 +10837,28 @@ class ModeUsers(WatoMode):
 
         elif html.var('_sync'):
             try:
-                if userdb.hook_sync(add_to_changelog = True, raise_exc = True):
-                    return None, _('The user synchronization completed successfully.')
+                html.check_transaction()
+
+                job = userdb.UserSyncBackgroundJob()
+                if job.is_running():
+                    raise MKUserError(None, _("Another synchronization job is already running"))
+                job.set_function(job.do_sync, add_to_changelog=True, enforce_sync=True)
+                job.start()
+
+                self._job_snapshot = job.get_status_snapshot()
             except Exception, e:
                 log_exception()
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
         elif html.var("_bulk_delete_users"):
             return self._bulk_delete_users_after_confirm()
+
+        elif html.check_transaction():
+            action_handler = gui_background_job.ActionHandler(stylesheets=wato_styles)
+            action_handler.handle_actions()
+            if action_handler.did_acknowledge_job():
+                self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
+                return None, _("Synchronization job acknowledged")
 
 
     def _bulk_delete_users_after_confirm(self):
@@ -10861,6 +10880,56 @@ class ModeUsers(WatoMode):
 
 
     def page(self):
+        if not self._job_snapshot.exists():
+            # Skip if snapshot doesnt exists
+            pass
+
+        elif self._job_snapshot.is_running():
+            # Still running
+            html.message(_("User synchronization currently running: %s") % self._job_details_link())
+            url = html.makeuri([])
+            html.immediate_browser_redirect(2, url)
+
+        elif self._job_snapshot.state() == gui_background_job.background_job.JobStatus.state_finished and not\
+           self._job_snapshot.acknowledged_by():
+            # Just finished, auto-acknowledge
+            userdb.UserSyncBackgroundJob().acknowledge(config.user.id)
+            html.message(_("User synchronization successful"))
+
+        elif not self._job_snapshot.acknowledged_by() and self._job_snapshot.has_exception():
+            # Finished, but not OK - show info message with links to details
+            html.show_warning(_("Last user synchronization ran into an exception: %s") % self._job_details_link())
+
+        self._show_user_list()
+
+
+
+    def _job_details_link(self):
+        job = userdb.UserSyncBackgroundJob().get_status_snapshot()
+        return html.render_a("%s" % job.get_title(), href=self._job_details_url())
+
+
+    def _job_details_url(self):
+        return html.makeuri_contextless([
+            ("mode", "background_job_details"),
+            ("back_url", html.makeuri_contextless([("mode", "users")], filename="%s.py" % html.myfile)),
+            ("job_id", self._job_snapshot.get_job_id())
+        ], filename="wato.py")
+
+
+    def _show_job_info(self):
+        if self._job_snapshot.is_running():
+            html.h3(_("Current status of synchronization process"))
+            html.javascript("set_reload(0.8)")
+        else:
+            html.h3(_("Result of last synchronization process"))
+
+        job_manager = gui_background_job.GUIBackgroundJobManager()
+        job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
+        html.br()
+
+
+    def _show_user_list(self):
         visible_custom_attrs = [
             (name, attr)
             for name, attr

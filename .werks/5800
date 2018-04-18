@@ -1,0 +1,10 @@
+Title: Availability: UNMONITORED timeperiods were incorrectly used in computation results in certain scenarios
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1524055633
+Class: fix
+
+When honoring host and service periods, UNMONITORED timeperiods outside of a service period were will still used in the computation.

@@ -8,7 +8,7 @@ State: unknown
 Version: 1.5.0b2
 Date: 1524050943
 
-This error appears when the availability timeline is not fully connect, e.g. if it is split
+This error appears when the availability timeline is not fully connected, e.g. if it is split
 by a service period. The computation error itself seems no big issue, since this incorrect
 computed value wasn't evaluated, anyway.
 

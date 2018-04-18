@@ -351,13 +351,31 @@ def vs_mkeventd_rule(customer=None):
             help = _("The monitoring state that this event will trigger."),
             default_value = -1,
         )),
-        ( "sl",
-          DropdownChoice(
-            title = _("Service Level"),
-            choices = mkeventd.service_levels,
-            prefix_values = True,
-          ),
-        ),
+        ( "sl", Transform(
+            Dictionary(
+                title = _("Service Level"),
+                optional_keys = False,
+                elements = [
+                    ( "value", DropdownChoice(
+                        title = _("Value"),
+                        choices = mkeventd.service_levels,
+                        prefix_values = True,
+                        help = _("The default/fixed service level to use for this rule."),
+                    )),
+                    ( "precedence", DropdownChoice(
+                        title = _("Precedence"),
+                        choices = [
+                            ( "message", _("Keep service level from message (if available)") ),
+                            ( "rule", _("Always use service level from rule") ),
+                        ],
+                        help = _("Here you can specify which service level will be used when "
+                                 "the incoming message already carries a service level."),
+                        default_value = "message",
+                    )),
+                ]
+            ),
+            forth = lambda x: {"value": x, "precedence": "message"} if isinstance(x, int) else x
+        )),
         ( "contact_groups", Dictionary(
             title = _("Contact Groups"),
             elements = [
@@ -1574,7 +1592,7 @@ def mode_mkeventd_rules(phase):
             html.write("%s" % dict(mkeventd.syslog_facilities)[facnr])
 
         table.cell(_("Service Level"),
-                  dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
+                  dict(mkeventd.service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]))
         hits = rule.get('hits')
         table.cell(_("Hits"), hits != None and hits or '', css="number")
 

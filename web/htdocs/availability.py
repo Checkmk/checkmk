@@ -1077,7 +1077,7 @@ def object_title(what, av_entry):
 def merge_timeline(entries):
     n = 1
     while n < len(entries):
-        if entries[n][1] == entries[n-1][1]:
+        if entries[n][1] == entries[n-1][1] and entries[n][0]["from"] == entries[n-1][0]["until"]:
             entries[n-1][0]["duration"] += entries[n][0]["duration"]
             entries[n-1][0]["until"] = entries[n][0]["until"]
             del entries[n]

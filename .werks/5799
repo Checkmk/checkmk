@@ -1,0 +1,13 @@
+Title: Availability: Fixed error in duration computation when merging identical states
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1524050943
+Class: fix
+
+This error appears when the availability timeline is not fully connect, e.g. if it is split
+by a service period. The computation error itself seems no big issue, since this incorrect
+computed value wasn't evaluated, anyway.
+

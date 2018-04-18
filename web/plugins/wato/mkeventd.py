@@ -351,29 +351,27 @@ def vs_mkeventd_rule(customer=None):
             help = _("The monitoring state that this event will trigger."),
             default_value = -1,
         )),
-        ( "sl", Transform(
-            Dictionary(
-                title = _("Service Level"),
-                optional_keys = False,
-                elements = [
-                    ( "value", DropdownChoice(
-                        title = _("Value"),
-                        choices = mkeventd.service_levels,
-                        prefix_values = True,
-                        help = _("The default/fixed service level to use for this rule."),
-                    )),
-                    ( "precedence", DropdownChoice(
-                        title = _("Precedence"),
-                        choices = [
-                            ( "message", _("Keep service level from message (if available)") ),
-                            ( "rule", _("Always use service level from rule") ),
-                        ],
-                        help = _("Here you can specify which service level will be used when "
-                                 "the incoming message already carries a service level."),
-                        default_value = "message",
-                    )),
-                ]
-            )
+        ( "sl", Dictionary(
+            title = _("Service Level"),
+            optional_keys = False,
+            elements = [
+                ( "value", DropdownChoice(
+                    title = _("Value"),
+                    choices = mkeventd.service_levels,
+                    prefix_values = True,
+                    help = _("The default/fixed service level to use for this rule."),
+                )),
+                ( "precedence", DropdownChoice(
+                    title = _("Precedence"),
+                    choices = [
+                        ( "message", _("Keep service level from message (if available)") ),
+                        ( "rule", _("Always use service level from rule") ),
+                    ],
+                    help = _("Here you can specify which service level will be used when "
+                             "the incoming message already carries a service level."),
+                    default_value = "message",
+                )),
+            ]
         )),
         ( "contact_groups", Dictionary(
             title = _("Contact Groups"),

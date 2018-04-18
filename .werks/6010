@@ -1,0 +1,19 @@
+Title: Service levels in event console rules can now have a precedence
+Level: 1
+Component: ec
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b2
+Date: 1524046455
+
+Event console rules specify a service level, but it was a bit unclear what
+that actually means.  Previously it was just a default value to use when the
+incoming message did not carry a service level itself.  If it carried one
+(including '0'), this part of the rule did not have any effect.
+
+This behavior was a bit confusing and did not cover all use cases, so you
+can now specify what should happen when the incoming message already has a
+service level: Keep it (old behavior, the default) or overwrite it
+unconditionally with the configured service level.

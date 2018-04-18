@@ -2599,8 +2599,8 @@ class EventServer(ECServerThread):
         else:
             event["state"] = rule["state"]
 
-        if "sl" not in event:
-            event["sl"] = rule["sl"]
+        if  ("sl" not in event) or (rule["sl"]["precedence"] == "rule"):
+            event["sl"] = rule["sl"]["value"]
         event["first"] = event["time"]
         event["last"] = event["time"]
         if "set_comment" in rule:

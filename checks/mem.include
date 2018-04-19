@@ -42,22 +42,27 @@ def parse_proc_meminfo_bytes(info):
     return meminfo
 
 def check_memory(params, meminfo):
-    swapused = meminfo['SwapTotal'] - meminfo['SwapFree']
-    memused  = meminfo['MemTotal']  - meminfo['MemFree']
+    swapused_kb = meminfo['SwapTotal'] - meminfo['SwapFree']
+    swapused = swapused_kb * 1024.0
+    memused_kb  = meminfo['MemTotal']  - meminfo['MemFree']
+    memused = memused_kb * 1024.0
 
     # Buffers and Cached are optional. On Linux both mean basically the same.
-    caches   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
+    caches_kb   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
+    caches = caches_kb * 1024.0
 
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
-    pagetables = meminfo.get('PageTables', 0)
-    pagetables_mb = pagetables / 1024.0
+    pagetables_kb = meminfo.get('PageTables', 0)
+    pagetables_mb = pagetables_kb / 1024.0
 
-    totalused_kb = (swapused + memused - caches + pagetables)
+    totalused_kb = (swapused_kb + memused_kb - caches_kb + pagetables_kb)
     totalused_mb = totalused_kb / 1024.0
+    totalused = totalused_kb * 1024.0
     totalmem_kb = meminfo['MemTotal']
     totalmem_mb = totalmem_kb / 1024.0
+    totalmem = totalmem_kb * 1024.0
     totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
     totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024.0
 
@@ -65,13 +70,28 @@ def check_memory(params, meminfo):
         params = { "levels" : params }
     warn, crit = params["levels"]
 
-    if pagetables > 0:
-        pgtext = " + %.2f Pagetables" % (pagetables_mb / 1024.0)
+    details = []
+    if swapused:
+        details.append("%s SWAP" % render.bytes(swapused))
+
+    if pagetables_kb:
+        details.append("%s Pagetables" % render.bytes(pagetables_kb * 1024.0))
+
+    if details:
+        details.insert(0, "%s RAM" % render.bytes(memused - caches))
+        details_txt = " + ".join(details) + ", "
     else:
-        pgtext = ""
-    infotext = "%.2f GB used (%.2f RAM + %.2f SWAP%s, this is %.1f%% of %.2f RAM (%.2f total SWAP)" % \
-               (totalused_mb / 1024.0, (memused-caches) / 1024.0 / 1024, swapused / 1024.0 / 1024,
-               pgtext, totalused_perc, totalmem_mb / 1024.0, meminfo["SwapTotal"] / 1024.0 / 1024)
+        details_txt = ""
+
+    if meminfo["SwapTotal"]:
+        swap_txt = (" + %s SWAP" % render.bytes(meminfo["SwapTotal"]))
+    else:
+        swap_txt = ""
+
+    infotext = "%s used (%sthis is %.1f%% of %s RAM%s)" % \
+               (render.bytes(totalused), details_txt,
+                totalused_perc, render.bytes(totalmem), swap_txt)
+
 
     # Take into account averaging
     average_min = params.get("average")
@@ -83,7 +103,6 @@ def check_memory(params, meminfo):
         comp_mb = totalused_mb_avg
     else:
         comp_mb = totalused_mb
-        infotext += ")"
 
 
     # levels may be given either in int -> MB or in float -> percentages. So convert
@@ -99,8 +118,8 @@ def check_memory(params, meminfo):
 
     # Prepare performance data
     perfdata = [
-        ('ramused',  str( (memused - caches) / 1024) + 'MB', '', '', 0, totalmem_mb),
-        ('swapused', str(swapused / 1024) + 'MB', '', '', 0, meminfo['SwapTotal']/1024),
+        ('ramused',  str( (memused_kb - caches_kb) / 1024) + 'MB', '', '', 0, totalmem_mb),
+        ('swapused', str(swapused_kb / 1024) + 'MB', '', '', 0, meminfo['SwapTotal']/1024),
         ('memused',  str(totalused_mb) + 'MB', warn_mb, crit_mb, 0, totalvirt_mb),
     ]
 

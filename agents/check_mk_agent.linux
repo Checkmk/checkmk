@@ -489,9 +489,16 @@ if [ -z "$MK_IN_CONTAINER" ]; then
     fi
 else
     echo '<<<docker_container_diskstat>>>'
+    echo "[time]"
+    date +%s
     for F in io_service_bytes io_serviced; do
         echo "[$F]"
         cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
+    done
+    echo "[names]"
+    for F in /sys/block/*; do
+        echo -n "${F##*/} " ;
+        cat "$F/dev";
     done
 fi
 

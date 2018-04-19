@@ -59,10 +59,10 @@ private:
                              std::string &csOwner_o);
     process_entry_t getProcessPerfdata();
     void outputProcess(std::ostream &out, ULONGLONG virtual_size,
-                       ULONGLONG working_set_size, ULONGLONG pagefile_usage,
-                       ULONGLONG uptime, ULONGLONG usermode_time,
-                       ULONGLONG kernelmode_time, DWORD process_id,
-                       DWORD process_handle_count, DWORD thread_count,
+                       ULONGLONG working_set_size, long long pagefile_usage,
+                       ULONGLONG uptime, long long usermode_time,
+                       long long kernelmode_time, long long process_id,
+                       long long process_handle_count, long long thread_count,
                        const std::string &user, const std::string &exe_file);
     bool outputWMI(std::ostream &out);
     bool outputNative(std::ostream &out);

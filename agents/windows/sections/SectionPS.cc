@@ -160,9 +160,9 @@ bool SectionPS::produceOutputInner(std::ostream &out,
 
 void SectionPS::outputProcess(
     std::ostream &out, ULONGLONG virtual_size, ULONGLONG working_set_size,
-    ULONGLONG pagefile_usage, ULONGLONG uptime, ULONGLONG usermode_time,
-    ULONGLONG kernelmode_time, DWORD process_id, DWORD process_handle_count,
-    DWORD thread_count, const std::string &user, const std::string &exe_file) {
+    long long pagefile_usage, ULONGLONG uptime, long long usermode_time,
+    long long kernelmode_time, long long process_id, long long process_handle_count,
+    long long thread_count, const std::string &user, const std::string &exe_file) {
     // Note: CPU utilization is determined out of usermodetime and
     // kernelmodetime
     out << "(" << user << "," << virtual_size / 1024 << ","
@@ -185,7 +185,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
         bool more = result.valid();
 
         while (more) {
-            int processId = result.get<int>(L"ProcessId");
+            long long processId = result.get<long long>(L"ProcessId");
 
             NullHandle process(
                 _winapi.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -224,11 +224,11 @@ bool SectionPS::outputWMI(std::ostream &out) {
             outputProcess(
                 out, std::stoull(result.get<std::string>(L"VirtualSize")),
                 std::stoull(result.get<std::string>(L"WorkingSetSize")),
-                result.get<int>(L"PagefileUsage"), uptime,
+                result.get<long long>(L"PagefileUsage"), uptime,
                 std::stoull(result.get<std::wstring>(L"UserModeTime")),
                 std::stoull(result.get<std::wstring>(L"KernelModeTime")),
-                processId, result.get<int>(L"HandleCount"),
-                result.get<int>(L"ThreadCount"), user, to_utf8(process_name));
+                processId, result.get<long long>(L"HandleCount"),
+                result.get<long long>(L"ThreadCount"), user, to_utf8(process_name));
 
             more = result.next();
         }

@@ -125,16 +125,20 @@ function section_mem()
 
 function section_cpu()
 {
+    if [ "$(uname -m)" = "armv7l" ]; then
+        CPU_REGEX='^processor'
+    else
+        CPU_REGEX='^CPU|^processor'
+    fi
+    NUM_CPUS=$(grep -c -E $CPU_REGEX < /proc/cpuinfo)
+
     if [ -z "$MK_IN_CONTAINER" ]; then
         echo '<<<cpu>>>'
-        if [ "$(uname -m)" = "armv7l" ]; then
-            CPU_REGEX='^processor'
-        else
-            CPU_REGEX='^CPU|^processor'
-        fi
-        echo "$(cat /proc/loadavg) $(grep -c -E $CPU_REGEX < /proc/cpuinfo)"
+        echo "$(cat /proc/loadavg) $NUM_CPUS"
     else
         echo '<<<docker_container_cpu>>>'
+        grep "^cpu " /proc/stat
+        echo "num_cpus $NUM_CPUS"
         cat /sys/fs/cgroup/cpu/cpuacct.stat
     fi
 }

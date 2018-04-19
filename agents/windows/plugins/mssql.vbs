@@ -152,14 +152,14 @@ For Each rk In regkeys
                                           instance_name & "\MSSQLServer\SuperSocketNetLib\TCP\IPAll", _
                                           "tcpPort", tcpport
 
-            If IsNull(cluster_name) Then
+            If IsNull(cluster_name) Or cluster_name = "" Then
                 cluster_name = ""
 
                 ' In case of instance name "MSSQLSERVER" always use (local) as connect string
                 If instance_id = "MSSQLSERVER" Then
                     sources.add instance_id, "(local)"
                 Else
-                    If isNull(tcpport) Then
+                    If isNull(tcpport) Or tcpport = "" Then
                         sources.add instance_id, hostname & "\" & instance_id
                     Else
                         sources.add instance_id, hostname & "," & tcpport
@@ -170,7 +170,7 @@ For Each rk In regkeys
                 If instance_id = "MSSQLSERVER" Then
                     sources.add instance_id, cluster_name
                 Else
-                    If isNull(tcpport) Then
+                    If isNull(tcpport) Or tcpport = "" Then
                         sources.add instance_id, cluster_name & "\" & instance_id
                     Else
                         sources.add instance_id, cluster_name & "," & tcpport

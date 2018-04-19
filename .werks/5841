@@ -1,0 +1,10 @@
+Title: MSSQL plugin: fixed instance connection setup if at least one, but not all instances, use TCP ports
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b2
+Date: 1524139736
+Class: fix
+
+

@@ -9,14 +9,16 @@ AM_CPPFLAGS = -I$(top_srcdir)/sections -O2 -Wformat=2 -Werror -Wall -fno-rtti \
               -D__USE_MINGW_ANSI_STDIO -DSI_SUPPORT_IOSTREAMS
 AM_LDFLAGS = -static -static-libgcc -static-libstdc++
 LD_COMMON = -lwsock32 -lws2_32 -lole32 -loleaut32 -lwbemuuid -lpsapi -lshlwapi -limagehlp -lstdc++fs
+COVERAGE_CPPFLAGS=-fprofile-arcs -ftest-coverage
+COVERAGE_LDFLAGS=-lgcov --coverage
 
 check_mk_agent_LDADD = check_mk_agent.res libcheck_mk_agent.a $(LD_COMMON)
 
 WindowsAgentTest_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/test
 WindowsAgentTest_LDADD = libcheck_mk_agent.a -lgtest -lgmock $(LD_COMMON)
 
-WindowsAgentCoverage_CPPFLAGS = $(WindowsAgentTest_CPPFLAGS) -fprofile-arcs -ftest-coverage
-WindowsAgentCoverage_LDFLAGS = $(AM_LDFLAGS) -lgcov --coverage
+WindowsAgentCoverage_CPPFLAGS = $(WindowsAgentTest_CPPFLAGS) $(COVERAGE_CPPFLAGS)
+WindowsAgentCoverage_LDFLAGS = $(AM_LDFLAGS) $(COVERAGE_LDFLAGS)
 WindowsAgentCoverage_LDADD = libcheck_mk_agent_coverage.a -lgtest -lgmock $(LD_COMMON)
 libcheck_mk_agent_coverage_a_CPPFLAGS = -D main=check_mk_agent_main $(WindowsAgentCoverage_CPPFLAGS)
 
@@ -66,10 +68,12 @@ integrationtest: install-strip
         cd -
 
 # Force regeneration of coverage data during test run.
-clean-coverage:
-	rm -f $$(find . -name "*.gcda")
+coverage-reset:
+	rm -fr "*coverage.info"
+	find . -name "*.gcda" -exec rm {} \;
+	lcov --directory . --zerocounters
 
-coverage.info: WindowsAgentCoverage$(EXEEXT) clean-coverage
+coverage.info: WindowsAgentCoverage$(EXEEXT) coverage-reset
 	DISPLAY="$$DISPLAY xterm" wine $< 2>/dev/null ; \
         lcov -c --rc lcov_branch_coverage=1 --directory . -o $@
 

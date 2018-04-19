@@ -33,11 +33,23 @@ def check_docker_container_cpu(_no_item, params, info):
     if not params:
         params = {}
 
-    # user, nice, system, idle, iowait, hw-int, sw-int, steal
-    ticks = dict(info)
-    values = [ int(ticks["user"]), 0, int(ticks["system"]), 0, 0, 0, 0, 0 ]
+    ticks = {}
+    for line in info:
+        if line[0] == "cpu":
+            ticks["total"] = sum(map(int, line[1:]))
+        else:
+            ticks[line[0]] = int(line[1])
 
-    return check_cpu_util_unix(values, params)
+    this_time = time.time()
+    node_delta = get_rate("node_total", this_time, ticks["total"])
+    container_delta = get_rate("container", this_time, ticks["user"] + ticks["system"])
+
+    if not node_delta or not container_delta:
+        raise MKCounterWrapped("Too short time difference since last check")
+
+    cpu_usage = (container_delta / node_delta) * ticks["num_cpus"] * 100.0
+
+    return check_cpu_util(cpu_usage, params)
 
 
 check_info["docker_container_cpu"] = {
@@ -46,5 +58,5 @@ check_info["docker_container_cpu"] = {
     "service_description":  "CPU utilization",
     "has_perfdata":         True,
     "includes":             ["cpu_util.include"],
-    "group":                "cpu_iowait",
+    "group":                "cpu_utilization_os",
 }

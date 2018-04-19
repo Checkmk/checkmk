@@ -1,0 +1,10 @@
+Title: docker_container_cpu: Fixed calculation of CPU utilization
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b2
+Date: 1524157293
+Class: fix
+
+The CPU utilization was not correctly calculated for docker containers.

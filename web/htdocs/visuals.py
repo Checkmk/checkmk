@@ -911,7 +911,7 @@ class PublishTo(CascadingDropdown):
                     with_foreign_groups=with_foreign_groups,
                     title = _("Publish to members of contact groups"),
                     rows = 5,
-                    size = 40,
+                    size = 80,
                 )),
             ],
             title = _('Make this %s available for other users') % type_title,

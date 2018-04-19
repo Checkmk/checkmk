@@ -1,0 +1,12 @@
+Title: Combined graphs: Fixed handling of optional metrics
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0b2
+Date: 1524160513
+Class: fix
+
+When trying to render combined graphs with graph templates that have optional
+metrics, these graphs could not be rendered. For example the "CPU utilization"
+graphs of some devices could not be displayed in combined graphs.

@@ -1,4 +1,4 @@
-title: Docker Container Status
+title: Docker container status
 agents: linux
 catalog: app/docker
 license: GPL

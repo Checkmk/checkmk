@@ -254,20 +254,14 @@ bool Result::next() {
 }
 
 template <>
-int Variant::get() const {
+long long Variant::get() const {
     switch (_value.vt) {
         case VT_I1:
-            return _value.bVal;
-        case VT_I2:
             return _value.iVal;
+        case VT_I2:
+            return _value.intVal;
         case VT_I4:
-            return _value.intVal;
-        case VT_UI1:
-            return _value.cVal;
-        case VT_UI2:
-            return _value.uiVal;
-        case VT_UI4:
-            return _value.intVal;
+            return _value.llVal;
         default:
             throw ComTypeException(string("wrong value type requested: ") +
                                    to_string(_value.vt));
@@ -367,7 +361,7 @@ wstring Variant::get() const {
         case VT_I1:
         case VT_I2:
         case VT_I4:
-            return std::to_wstring(get<int>());
+            return std::to_wstring(get<long long>());
         case VT_UI1:
         case VT_UI2:
         case VT_UI4:

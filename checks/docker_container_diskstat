@@ -1,0 +1,136 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def parse_docker_container_diskstat(info):
+    node_sections = _parse_sub_sections(info)
+
+    disks = {}
+    for node_name, node_info in node_sections.items():
+        timestamp = node_info["time"]
+
+        for device_id, device in node_info["devices"].items():
+            # Filter out unwanted things
+            if device["name"].startswith("loop"):
+                continue
+
+            # Skip devices without counts
+            if "ios" not in device or "bytes" not in device:
+                continue
+
+            disks[(node_name, device["name"])] = timestamp, device
+
+    return disks
+
+
+def _parse_sub_sections(info):
+    node_sections = {}
+
+    node = None
+    for line in info:
+        node = line[0]
+
+        if line[1] == "[io_service_bytes]":
+            phase = "bytes"
+        elif line[1] == "[io_serviced]":
+            phase = "ios"
+        elif line[1] == '[names]':
+            phase = "names"
+        elif line[1] == '[time]':
+            phase = "time"
+        else:
+            if line[1] == "Total":
+                continue
+
+            sections = node_sections.setdefault(node, {})
+
+            if phase == "time":
+                sections["time"] = int(line[1])
+                continue
+
+            devices = sections.setdefault("devices", {})
+
+            if phase == "names":
+                major, minor = map(int, line[2].split(":"))
+            else:
+                major, minor = map(int, line[1].split(":"))
+
+            device_id = node, major, minor
+            device = devices.setdefault(device_id, {})
+
+            if phase == "names":
+                device["name"] = line[1]
+            else:
+                device_phase = device.setdefault(phase, {})
+                device_phase[line[2]] = int(line[3])
+
+    return node_sections
+
+
+def inventory_docker_container_diskstat(parsed):
+    return inventory_diskstat_generic(parsed.keys())
+
+
+def check_docker_container_diskstat(item, params, parsed):
+    disks = {}
+    for (node_name, device_name), (timestamp, device) in parsed.items():
+        counter_base = "diskstat.%s." % device_name
+
+        # Docker container information is provided via piggyback in the most cases. In case
+        # we got no new data simply skip this check
+        previous_timestamp = get_item_state(counter_base + "time")
+        if previous_timestamp == timestamp:
+            raise MKCounterWrapped('No time difference')
+        set_item_state(counter_base + "time", timestamp)
+
+        read_ios_rate      = get_rate(counter_base + "read_ios",    timestamp, device["ios"]["Read"], onwrap=0.0)
+        write_ios_rate     = get_rate(counter_base + "write_ios",   timestamp, device["ios"]["Write"], onwrap=0.0)
+        total_ios_rate     = read_ios_rate + write_ios_rate
+        read_bytes_rate    = get_rate(counter_base + "read_bytes",  timestamp, device["bytes"]["Read"], onwrap=0.0)
+        write_bytes_rate   = get_rate(counter_base + "write_bytes", timestamp, device["bytes"]["Write"], onwrap=0.0)
+        total_bytes_rate   = read_bytes_rate + write_bytes_rate
+
+        disks[device_name] = {
+            "node"                       : node_name,
+            "read_ios"                   : read_ios_rate,
+            "write_ios"                  : write_ios_rate,
+            "read_throughput"            : read_bytes_rate,
+            "write_throughput"           : write_bytes_rate,
+        }
+
+    return check_diskstat_dict(item, params, disks)
+
+
+check_info["docker_container_diskstat"] = {
+    "parse_function"      : parse_docker_container_diskstat,
+    "inventory_function"  : inventory_docker_container_diskstat,
+    "check_function"      : check_docker_container_diskstat,
+    "service_description" : "Disk IO %s",
+    "has_perfdata"        : True,
+    "group"               : "diskstat",
+    "node_info"           : True, # add first column with actual host name
+    "includes"            : [ "diskstat.include" ],
+}
+

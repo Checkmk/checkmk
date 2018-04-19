@@ -1,0 +1,11 @@
+Title: docker_container_diskstat: Check disk usage of docker containers
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1524133606
+
+

@@ -79,7 +79,7 @@ private:
 };
 
 template <>
-int Variant::get() const;
+long long Variant::get() const;
 template <>
 bool Variant::get() const;
 template <>

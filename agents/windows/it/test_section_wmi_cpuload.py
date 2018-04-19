@@ -34,7 +34,7 @@ def expected_output():
          r'ProcessorQueueLength,SystemCallsPersec,SystemUpTime,Threads,'
          r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS'),
         (r'\d+,,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,,\d+,'
-         r'\-?\d+,\d+,\d+,\-?\d+,\d+,\d+,\d+,\d+,\d+'),
+         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'),
         re.escape(r'[computer_system]'),
         (r'AdminPasswordStatus,AutomaticManagedPagefile,'
          r'AutomaticResetBootOption,AutomaticResetCapability,BootOptionOnLimit,'
@@ -57,7 +57,7 @@ def expected_output():
         (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,,\w+,\d+,\d+,'
          r'[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,'
          r'[\w-]+,,\d+,\d+,\d+,,[^,]+,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[\w-]+,'
-         r'\d+,\-?\d+,\-?\d+,[^,]+,\w+,,[^,]*,,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*')
+         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*')
     ]
 
 

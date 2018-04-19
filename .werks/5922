@@ -1,0 +1,17 @@
+Title: Windows agent: Many WMI queries could lead to integer overflow
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1524205799
+Class: fix
+
+Integer values returned by a number of WMI queries were handled incorrectly,
+squeezing 64 bit integers into 32 bit representation. This lead to sporadical
+erroneous results for a number of agent sections / checks. Potentially
+affected were at least the checks wmi_cpuload and ps, but basically any checks
+using information provided by WMI. The symptoms of this may have been varying
+across different checks.
+
+

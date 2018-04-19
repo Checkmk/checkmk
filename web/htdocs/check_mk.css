@@ -623,6 +623,7 @@ table.vs_duallist td {
 table.vs_duallist td select {
     width: 100%;
     height: 200px;
+    resize: both;
 }
 table.vs_duallist td.head {
     text-align:center;

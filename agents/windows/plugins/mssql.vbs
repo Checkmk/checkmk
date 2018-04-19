@@ -183,7 +183,7 @@ For Each rk In regkeys
 
             ' Only collect results for instances which services are currently running
             Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
-                                  "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running'")
+                                  "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running' OR Name = 'MSSQLSERVER' AND State = 'Running'")
             If Not IsNull(service) Then
                 instances.add instance_id, cluster_name
             End If

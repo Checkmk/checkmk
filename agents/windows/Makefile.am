@@ -65,7 +65,11 @@ integrationtest: install-strip
         fi ; \
         cd -
 
-coverage.info: WindowsAgentCoverage$(EXEEXT)
+# Force regeneration of coverage data during test run.
+clean-coverage:
+	rm -f $$(find . -name "*.gcda")
+
+coverage.info: WindowsAgentCoverage$(EXEEXT) clean-coverage
 	DISPLAY="$$DISPLAY xterm" wine $< 2>/dev/null ; \
         lcov -c --rc lcov_branch_coverage=1 --directory . -o $@
 

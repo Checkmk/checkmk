@@ -463,12 +463,14 @@ def render_timeline_bar(timeline_layout, style):
             "style": "width: %.3f%%" % width,
             "title": title,
             "class": css,
-            "id_": "timeline_%d" % row_nr,
         }
 
-        if style == "standalone" and row_nr is not None:
-            td_attrs.update({"onmouseover": "timeline_hover(%d, 1);" % row_nr,
-                             "onmouseout" : "timeline_hover(%d, 0);" % row_nr, })
+        if row_nr is not None:
+            td_attrs.update({"id_": "timeline_%d" % row_nr})
+
+            if style == "standalone":
+                td_attrs.update({"onmouseover": "timeline_hover(%d, 1);" % row_nr,
+                                 "onmouseout" : "timeline_hover(%d, 0);" % row_nr, })
 
         html.td('', **td_attrs)
 

@@ -17062,6 +17062,7 @@ class ModeAnalyzeConfig(WatoMode):
 
     def __init__(self):
         super(ModeAnalyzeConfig, self).__init__()
+        self._logger = logger.getChild("analyze-config")
         self._acks = self._load_acknowledgements()
 
 
@@ -17111,6 +17112,11 @@ class ModeAnalyzeConfig(WatoMode):
 
 
     def page(self):
+        if not self._analyze_site_ids():
+            html.show_info(_("Analyze configuration can only be used with the local site and "
+                             "distributed WATO slave sites. You currently have no such site configured."))
+            return
+
         results_by_category = self._perform_tests()
 
         site_ids = sorted(self._analyze_site_ids())
@@ -17237,13 +17243,16 @@ class ModeAnalyzeConfig(WatoMode):
 
 
     def _perform_tests(self):
+        test_site_ids = self._analyze_site_ids()
+
+        self._logger.debug("Executing tests for %d sites" % len(test_site_ids))
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
         result_queue = multiprocessing.JoinableQueue()
 
         processes = []
-        for site_id in self._analyze_site_ids():
+        for site_id in test_site_ids:
             process = multiprocessing.Process(target=self._perform_tests_for_site,
                                               args=(site_id, result_queue))
             process.start()
@@ -17277,6 +17286,8 @@ class ModeAnalyzeConfig(WatoMode):
                 log_exception()
                 html.show_error("%s: %s" % (site_id, e))
 
+        self._logger.debug("Got test results")
+
         # Group results by category in first instance and then then by test
         results_by_category = {}
         for site_id, results in results_by_site.items():
@@ -17302,6 +17313,7 @@ class ModeAnalyzeConfig(WatoMode):
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
     def _perform_tests_for_site(self, site_id, result_queue):
+        self._logger.debug("[%s] Starting" % site_id)
         try:
             # Would be better to clean all open fds that are not needed, but we don't
             # know the FDs of the result_queue pipe. Can we find it out somehow?
@@ -17326,12 +17338,15 @@ class ModeAnalyzeConfig(WatoMode):
                 results_data = watolib.do_remote_automation(
                     config.site(site_id), "check-analyze-config", [])
 
+            self._logger.debug("[%s] Finished" % site_id)
+
             result = {
                 "state"    : 0,
                 "response" : results_data,
             }
 
         except Exception, e:
+            self._logger.exception("[%s] Failed" % site_id)
             log_exception()
             result = {
                 "state"    : 1,

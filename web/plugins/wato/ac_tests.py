@@ -372,7 +372,12 @@ class ACTestApacheNumberOfProcesses(ACTest, BPApacheTest):
                  "<p>Possible actions:<ul>"
                  "<li>Change the <a href=\"wato.py?mode=edit_configvar&varname=apache_process_tuning\">number of apache processes</a></li>"
                  "</ul>"
-                 "</p>")
+                 "</p>"
+                 "<p>Once you have verified your settings, you can acknowledge this test. The "
+                 "test will not automatically turn to OK, because it can not exactly estimate "
+                 "the required memory nedded by the apache processes."
+                 "</p>"
+                 )
 
 
     def is_relevant(self):

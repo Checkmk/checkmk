@@ -9710,8 +9710,13 @@ automation_commands["check-analyze-config"] = check_analyze_config
 
 
 def site_is_using_livestatus_proxy(site_id):
-    site   = config.site(site_id)
-    socket = site["socket"]
+    sites = SiteManagement.load_sites()
+    site = sites[site_id]
+
+    socket = site.get("socket")
+    if not socket:
+        return False # local site
+
     return type(socket) == tuple and socket[0] == "proxy"
 
 #.

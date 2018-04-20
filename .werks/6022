@@ -1,0 +1,10 @@
+Title: Analyze configuration: Enabled livestatus proxy is now deceted correctly
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0b2
+Date: 1524222712
+Class: fix
+
+

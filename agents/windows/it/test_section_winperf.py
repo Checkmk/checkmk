@@ -29,5 +29,7 @@ def expected_output():
                   r'|\-?\d+( \d+)+ [\w\(\)]+')
 
 
-def test_section_winperf(testconfig, expected_output, actual_output, testfile):
-    remotetest(expected_output, actual_output, testfile)
+def test_section_winperf(request, testconfig, expected_output, actual_output,
+                         testfile):
+    # request.node.name gives test name
+    remotetest(expected_output, actual_output, testfile, request.node.name)

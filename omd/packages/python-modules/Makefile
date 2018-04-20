@@ -42,7 +42,7 @@ MODULES += psycopg2-2.6.2.tar.gz # needed by check_sql
 MODULES += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 MODULES += pycparser-2.18.tar.gz # needed for cffi
 MODULES += enum34-1.1.6.tar.gz # needed for cffi
-MODULES += cffi-1.11.4.tar.gz # needed by e.g. Pillow
+MODULES += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 MODULES += Pillow-5.0.0.tar.gz # needed by reportlab (pillow>=2.4.0)
 MODULES += pip-9.0.1.tar.gz # needed by reportlab (pip>=1.4.1)
 MODULES += reportlab-3.4.0.tar.gz # needed by reporting
@@ -82,7 +82,7 @@ MODULES += psutil-5.4.3.tar.gz # needed for mkbench
 # so we need to patch one more time.
 
 MODULES += six-1.11.0.tar.gz
-MODULES += ipaddress-1.0.19.tar.gz
+MODULES += ipaddress-1.0.22.tar.gz
 
 MODULES += netifaces-0.10.6.tar.gz # needed for LDAP (nearest DC detection)
 MODULES += dnspython-1.15.0.zip # needed for LDAP (nearest DC detection)
@@ -94,9 +94,10 @@ ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4
     PATCHES += patches/0005-NID_ecdsa_with_SHA-fix.patch
     PATCHES += patches/0009-cryptography-1.4-disable-version-warning.patch
 else
-    MODULES += cryptography-1.5.3.tar.gz
-    PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
-    PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
+    MODULES += cryptography-1.9.tar.gz
+    MODULES += asn1crypto-0.24.0.tar.gz
+    #PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
+    #PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
 endif
 
 # Added for NetApp special agent, but may be used in other components too in future

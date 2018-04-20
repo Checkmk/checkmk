@@ -183,7 +183,7 @@ integrationtest: install-strip
 # Force regeneration of coverage data during test run.
 coverage-reset:
 	rm -fr "*coverage.info"
-	find . -name "*.gcda" -exec rm {} \;
+	find . -name "*.gcda" -delete
 	lcov --directory . --zerocounters
 
 coverage.info: WindowsAgentCoverage$(EXEEXT) coverage-reset

@@ -45,7 +45,7 @@ def load_plugins(force):
     if loaded_with_language == current_language and not force:
         return
 
-    config.declare_permission_section("background_jobs", _("Background Jobs"), do_sort = False)
+    config.declare_permission_section("background_jobs", _("Background jobs"), do_sort = False)
 
     config.declare_permission("background_jobs.manage_jobs",         _("Manage background jobs"),
                    _("Allows you to see the job overview page."), ["admin"])

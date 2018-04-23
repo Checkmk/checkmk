@@ -892,7 +892,9 @@ def output_availability_csv(what, av_data, avoptions):
             # presumably all rows have the same width
             pad = len(row["object"]) - 1
         table.row()
-        cells_from_row(group_titles, group_cells,
+
+        if "summary" in av_table:
+           cells_from_row(group_titles, group_cells,
                        av_table["object_titles"], av_table["cell_titles"],
                        [(_("Summary"), "")] + [("", "")] * pad, av_table["summary"])
     table.end()

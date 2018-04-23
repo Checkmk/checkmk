@@ -1,0 +1,10 @@
+Title: Fixed availability CSV export when summary is disabled
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p31
+Date: 1524486596
+Class: fix
+
+

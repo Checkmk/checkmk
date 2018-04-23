@@ -1,0 +1,14 @@
+Title: nfsexports: Added support for NFS exporting via ZFS
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1524489614
+Class: feature
+
+With this patch in the plugin nfsexports.solaris the support for ZFS is
+added. If ZFS is available and there are no other exports in /etc/dfs/dfstab.
+
+You need to replace you plugin with the new version to benefit from this
+change.

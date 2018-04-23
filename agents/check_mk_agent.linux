@@ -1000,6 +1000,10 @@ if type docker > /dev/null 2>&1 ; then
     echo "[[[containers]]]"
     docker container ls --all --format "{{json .}}"
 
+    echo "<<<docker_node_network:sep(0)>>>"
+    NETWORK_IDS=$(docker network ls -f 'driver=bridge' --format='{{.ID}}')
+    docker network inspect "$NETWORK_IDS"
+
     # For the container status, we want information about *all* containers
     for CONTAINER_ID in $(docker container ls -q --all); do
         echo "<<<<${CONTAINER_ID}>>>>"

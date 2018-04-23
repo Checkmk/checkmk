@@ -706,6 +706,19 @@ inventory_displayhints.update({
         "keyorder" : [ "port", "protocol", "host_addresses" ],
     },
 
+    ".software.applications.docker.networks:*.": {
+        "title": "Network %d",
+    },
+    ".software.applications.docker.networks:*.containers:": {
+        "keyorder" : [ "name", "id", "ipv4_address", "ipv6_address", "mac_address" ],
+    },
+    ".software.applications.docker.networks:*.containers:*.ipv4_address": {
+        "title" : _("IPv4 address"),
+    },
+    ".software.applications.docker.networks:*.containers:*.ipv6_address": {
+        "title" : _("IPv6 address"),
+    },
+
     ".software.applications.citrix."                              : { "title" : _("Citrix") },
     ".software.applications.citrix.controller."                   : { "title" : _("Controller") },
     ".software.applications.citrix.controller.controller_version" : { "title" : _("Controller Version"), },

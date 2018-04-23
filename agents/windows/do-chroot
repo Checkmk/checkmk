@@ -6,6 +6,7 @@
 CMD="$1"
 export HOSTNAME=cmk-windows-agent-chroot
 unset LANG
+export TERM=linux
 
 SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 BASE="$(realpath $SCRIPT_DIR/../..)"

@@ -266,7 +266,7 @@ class SNMPDataSource(DataSource):
 # 1. TCP host + SNMP MGMT Board: standard SNMP beibehalten
 # 2. snmpv3 context
 
-class SNMPManagementBoardDataSource(SNMPDataSource, ManagementBoardDataSource):
+class SNMPManagementBoardDataSource(ManagementBoardDataSource, SNMPDataSource):
     def id(self):
         return "mgmt_snmp"
 

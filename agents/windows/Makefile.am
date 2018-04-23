@@ -166,8 +166,9 @@ check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 # Wine depends on X Server and may produce a number of warnings at startup.
 # Using Xvfb does not work properly, either. Simply send those stderr warnings
 # to /dev/null as the test output will go to stdout (and/or xml file) anyway.
+#	DISPLAY="$$DISPLAY xterm" GTEST_OUTPUT=xml:result.xml wine $< 2>/dev/null
 unittest: WindowsAgentTest$(EXEEXT)
-	DISPLAY="$$DISPLAY xterm" GTEST_OUTPUT=xml:result.xml wine $< 2>/dev/null
+	DISPLAY="$$DISPLAY xterm" GTEST_OUTPUT=xml:result.xml wine $<
 
 integrationtest: install-strip
 	cd $(bindir)/it ; \

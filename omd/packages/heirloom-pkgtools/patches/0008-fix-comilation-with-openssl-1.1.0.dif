@@ -1,0 +1,33 @@
+diff -Nur heirloom-pkgtools-070227.orig/libpkg/keystore.c heirloom-pkgtools-070227/libpkg/keystore.c
+--- heirloom-pkgtools-070227.orig/libpkg/keystore.c	2007-02-25 19:39:51.000000000 +0100
++++ heirloom-pkgtools-070227/libpkg/keystore.c	2018-04-23 17:14:05.450917523 +0200
+@@ -56,7 +56,6 @@
+ #include <openssl/err.h>
+ #include <openssl/safestack.h>
+ #include <openssl/stack.h>
+-#include "p12lib.h"
+ #include "pkgerr.h"
+ #include "keystore.h"
+ #include "pkglib.h"
+diff -Nur heirloom-pkgtools-070227.orig/libpkg/pkgweb.c heirloom-pkgtools-070227/libpkg/pkgweb.c
+--- heirloom-pkgtools-070227.orig/libpkg/pkgweb.c	2007-02-26 01:31:09.000000000 +0100
++++ heirloom-pkgtools-070227/libpkg/pkgweb.c	2018-04-23 17:14:18.068000845 +0200
+@@ -72,7 +72,6 @@
+ #include "keystore.h"
+ #include "pkgweb.h"
+ #include "pkgerr.h"
+-#include "p12lib.h"
+ #include "libadm.h"
+ 
+ #ifdef __sun
+diff -Nur heirloom-pkgtools-070227.orig/libpkg/security.c heirloom-pkgtools-070227/libpkg/security.c
+--- heirloom-pkgtools-070227.orig/libpkg/security.c	2007-02-25 15:47:15.000000000 +0100
++++ heirloom-pkgtools-070227/libpkg/security.c	2018-04-23 17:14:19.728144963 +0200
+@@ -63,7 +63,6 @@
+ #include "pkglib.h"
+ #include "pkglibmsgs.h"
+ #include "pkglocale.h"
+-#include "p12lib.h"
+ 
+ /* length of allowable passwords */
+ #define	MAX_PASSLEN		128

@@ -26,7 +26,7 @@
 
 register_modules(WatoModule(
     mode_or_url="background_jobs_overview",
-    title=_("Background Jobs"),
+    title=_("Background jobs"),
     icon="background_jobs",
     permission="background_jobs.manage_jobs",
     description=_("Manage longer running tasks in the Check_MK GUI"),
@@ -39,7 +39,7 @@ class ModeBackgroundJobsOverview(WatoMode):
 
 
     def title(self):
-        return _("Background Jobs Overview")
+        return _("Background jobs overview")
 
 
     def page(self):
@@ -74,7 +74,7 @@ class ModeBackgroundJobDetails(WatoMode):
 
 
     def title(self):
-        return _("Background Job Details")
+        return _("Background job details")
 
 
 

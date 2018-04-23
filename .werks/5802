@@ -1,0 +1,12 @@
+Title: Graph rendering: fixed automatically scaling of vertical axis
+Level: 1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1524477101
+
+The graph viewport of some metrics was not computed correctly. So the min and max value did not show up,
+unless the user manually scrolled the graph to the correct value.

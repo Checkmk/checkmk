@@ -142,6 +142,9 @@ function reload_sidebar()
 
 // Handle Enter key in textfields
 function textinput_enter_submit(e, submit) {
+    if(!e)
+        e = window.event;
+
     var keyCode = e.which || e.keyCode;
     if (keyCode == 13) {
         if (submit) {

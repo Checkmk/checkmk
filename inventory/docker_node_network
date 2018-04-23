@@ -33,8 +33,8 @@ def _parse_docker_node_network(info):
 def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
     parsed = _parse_docker_node_network(info)
 
-    inventory_networks = inventory_tree.get_list("software.applications.docker.networks:")
-    status_networks = status_data_tree.get_list("software.applications.docker.networks:")
+    inventory_networks = inventory_tree.get_dict("software.applications.docker.networks.")
+    status_networks = status_data_tree.get_dict("software.applications.docker.networks.")
 
     for network in parsed:
         labels = sorted(["%s: %s" % (k,v) for k,v in network["Labels"].items()])
@@ -49,18 +49,18 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
                 "mac_address"  : container["MacAddress"],
             })
 
-        status_networks.append({
+        status_networks[network["Name"]] = {
             "name"              : network["Name"],
             "containers"        : containers,
-        })
+        }
 
-        inventory_networks.append({
+        inventory_networks[network["Name"]] = {
             "name"              : network["Name"],
             "host_ifname"       : network["Options"]["com.docker.network.bridge.name"],
             "labels"            : ", ".join(labels),
             "network_id"        : network["Id"][:12],
             "scope"             : network["Scope"],
-        })
+        }
 
 
 inv_info["docker_node_network.networks"] = {

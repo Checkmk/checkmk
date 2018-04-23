@@ -652,7 +652,11 @@ fi
 # Time synchronization with Chrony
 if type chronyc > /dev/null 2>&1 ; then
     # Force successful exit code. Otherwise section will be missing if daemon not running
-    run_cached -s chrony 30 "waitmax 5 chronyc -n tracking || true"
+    #
+    # The "| cat" has been added for some kind of regression in RedHat 7.5. The
+    # SELinux rules shipped with that release were denying the chronyc call
+    # without cat.
+    run_cached -s chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
 fi
 
 if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]

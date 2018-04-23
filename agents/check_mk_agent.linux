@@ -1011,6 +1011,10 @@ if type docker > /dev/null 2>&1 ; then
 
         echo "<<<docker_container_labels>>>"
         docker inspect "$CONTAINER_ID" --format='{{json .Config.Labels}}'
+
+        echo "<<<docker_container_network>>>"
+        docker inspect "$CONTAINER_ID" --format='{{json .NetworkSettings}}'
+
         echo "<<<<>>>>"
     done
 

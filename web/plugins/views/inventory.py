@@ -690,6 +690,22 @@ inventory_displayhints.update({
                                                                  },
     ".software.applications.check_mk.cluster.nodes:"           : { "title"    : _("Nodes"),},
 
+    ".software.applications.docker.container.": {
+        "title" : _("Container"),
+    },
+    ".software.applications.docker.container.node_name": {
+        "title" : _("Node name"),
+    },
+    ".software.applications.docker.container.networks:": {
+        "title" : _("Networks"),
+        "keyorder" : [ "name", "ip_address", "ip_prefixlen", "gateway",
+                       "mac_address", "network_id" ],
+    },
+    ".software.applications.docker.container.ports:": {
+        "title" : _("Ports"),
+        "keyorder" : [ "port", "protocol", "host_addresses" ],
+    },
+
     ".software.applications.citrix."                              : { "title" : _("Citrix") },
     ".software.applications.citrix.controller."                   : { "title" : _("Controller") },
     ".software.applications.citrix.controller.controller_version" : { "title" : _("Controller Version"), },

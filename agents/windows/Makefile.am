@@ -47,7 +47,8 @@ check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 # Using Xvfb does not work properly, either. Simply send those stderr warnings
 # to /dev/null as the test output will go to stdout (and/or xml file) anyway.
 unittest: WindowsAgentTest$(EXEEXT)
-	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
+	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT)
+#	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
 
 integrationtest: install-strip
 	cd $(bindir)/it ; \

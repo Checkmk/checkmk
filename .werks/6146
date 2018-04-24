@@ -1,0 +1,10 @@
+Title: mk_oracle: New configuration option 'SKIP_SIDS' where SIDs can be stated to be ignored
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1530167590
+Class: feature
+
+

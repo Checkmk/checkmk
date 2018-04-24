@@ -207,13 +207,14 @@ class StructuredDataTree(object):
 
     def _is_numeration(self, entries):
         for entry in entries:
-            #TODO Skipping invalid entries such as
-            # esx_vsphere_clusters: {u'hostsystems': [LIST OF STRINGS], ...}
-            #if not isinstance(entry, dict):
-            #    continue
-            for k, v in entry.iteritems():
-                if isinstance(v, list):
-                    return False
+            # Skipping invalid entries such as
+            # {u'KEY': [LIST OF STRINGS], ...}
+            try:
+                for k, v in entry.iteritems():
+                    if isinstance(v, list):
+                        return False
+            except AttributeError:
+                return False
         return True
 
     #   ---delegators-----------------------------------------------------------
@@ -301,6 +302,10 @@ class StructuredDataTree(object):
         # Just for testing
         return self._root.get_tree_repr()
 
+
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
+
     #   ---web------------------------------------------------------------------
 
     def show(self, renderer, path=None):
@@ -361,6 +366,10 @@ class NodeAttribute(object):
     def get_tree_repr(self):
         # Just for testing
         raise NotImplementedError()
+
+
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
 
     #   ---web------------------------------------------------------------------
 

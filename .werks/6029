@@ -1,0 +1,10 @@
+Title: Fixed error handling when RPM building fails
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0b2
+Date: 1524548807
+Class: fix
+
+

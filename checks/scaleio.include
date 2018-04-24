@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_scaleio(info, section):
     parsed = {}
     sys_id = ""
@@ -49,6 +50,7 @@ def convert_scaleio_space(unit, value):
     elif unit == "TB":
         return value * 1024 * 1024
 
+
 # Values can be in every unit. We need Bytes for
 # diskstat.include
 def convert_to_bytes(tp, unit):
@@ -62,6 +64,7 @@ def convert_to_bytes(tp, unit):
         return tp * 1024 * 1024 * 1024
     elif unit == "TB":
         return tp * 1024 * 1024 * 1024 * 1024
+
 
 def get_disks(item, read_data, write_data):
     read_tp = convert_to_bytes(int(read_data[-3].strip("(")), \
@@ -79,8 +82,4 @@ def get_disks(item, read_data, write_data):
     return disks
 
 def get_scaleio_data(item, parsed):
-    data = None
-    for entry in parsed:
-        if entry == item:
-            data = parsed[entry]
-    return data
+    return parsed.get(item)

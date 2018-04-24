@@ -25,7 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 
-# example output
+#<<<scaleio_system:sep(9)>>>
+#SYSTEM 5914d6b47d479d5a:
+#	ID                                                 5914d6b47d479d5a
+#	NAME                                               N/A
+#	CAPACITY_ALERT_HIGH_THRESHOLD                      80%
+#	CAPACITY_ALERT_CRITICAL_THRESHOLD                  90%
+#	MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
+#	UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
+#
 
 
 def inventory_scaleio_system(parsed):
@@ -35,15 +43,16 @@ def inventory_scaleio_system(parsed):
 
 def check_scaleio_system(item, params, parsed):
     data = get_scaleio_data(item, parsed)
+    if not data:
+        return
 
-    if data:
-        if not "levels" in params:
-            params["levels"] = (float(data["CAPACITY_ALERT_HIGH_THRESHOLD"][0].strip("%")), \
-                                float(data["CAPACITY_ALERT_CRITICAL_THRESHOLD"][0].strip("%")))
-        total = int(data["MAX_CAPACITY_IN_KB"][2].strip("(")) * 1024
-        free = int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")) * 1024
+    if "levels" not in params:
+        params["levels"] = (float(data["CAPACITY_ALERT_HIGH_THRESHOLD"][0].strip("%")), \
+                            float(data["CAPACITY_ALERT_CRITICAL_THRESHOLD"][0].strip("%")))
+    total = int(data["MAX_CAPACITY_IN_KB"][2].strip("(")) * 1024
+    free = int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")) * 1024
 
-        yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
+    yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
 
 
 check_info['scaleio_system'] = {

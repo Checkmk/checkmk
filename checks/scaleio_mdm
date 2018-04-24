@@ -25,62 +25,71 @@
 # Boston, MA 02110-1301 USA.
 
 
-# example output
+#<<<scaleio_mdm:sep(44)>>>
+#Cluster:
+#    Mode: 3_node, State: Normal, Active: 3/3, Replicas: 2/2
+#    Virtual IPs: N/A
+#Master MDM:
+#    Name: MDM02, ID: 0x028f4e581a749941
+#        IPs: 10.75.9.52, 10.75.10.52, Management IPs: 10.75.0.52, Port: 9011, Virtual IP interfaces: N/A
+#        Version: 2.0.13000
+#Slave MDMs:
+#    Name: MDM01, ID: 0x1402b04f3ad359c0
+#        IPs: 10.75.10.51, 10.75.9.51, Management IPs: 10.75.0.51, Port: 9011, Virtual IP interfaces: N/A
+#        Status: Normal, Version: 2.0.13000
+#Tie-Breakers:
+#    Name: TB01, ID: 0x69dd57a10fa1c7b2
+#        IPs: 10.75.10.53, 10.75.9.53, Port: 9011
+#        Status: Normal, Version: 2.0.13000
 
 
 def parse_scaleio_mdm(info):
     # parsing this section is horrible. But I will guide you...
-    parsed = {}
-    id = ""
-    node = ""
+    parsed, id, node = {}, "", ""
     for line in info:
         # A subsection starts with one of the following:
         if line[0].lower() in [ "cluster:", "master mdm:", "slave mdms:", \
-                           "tie-breakers:", "standby mdms:"]:
+                                "tie-breakers:", "standby mdms:"]:
             id = line[0].strip(":")
             parsed[id] = {}
         # The first subsection is different and entries can be parsed
         # directly. Hooray!
         elif id == "Cluster" and id in parsed:
-           nl = []
-           for entry in line:
-               nl.append(entry.split(":"))
-           for l in nl:
-               parsed[id][l[0].replace(" ", "")] = l[1].replace(" ", "")
+            nl = [entry.split(': ') for entry in line]
+            for l in nl:
+                parsed[id][l[0].strip()] = l[1].strip()
         # The other subsections can have several nodes. Each node
         # starts with his name and has already some more information.
         # Sometimes there is information about a role inside of the
         # cluster. This is handled by the entry "Role"!
         elif id in parsed and "name" in line[0].lower():
-            node = line[0].split(":")[1].replace(" ", "")
-            node_id = line[1].split(":")
-            parsed[id][node] = {
-                    node_id[0].replace(" ", "") : node_id[1].replace(" ", "")
-            }
+            node = line[0].split(": ")[1]
+            node_id = line[1].split(": ")
+
+            parsed[id][node] = {node_id[0].strip(): node_id[1].strip()}
             if len(line) == 3:
-                parsed[id][node] = { u"Role" : line[2].replace(" ", "") }
+                parsed[id][node][u'Role'] = line[2].strip()
         # Finally we can add the rest of information to a node in a
         # subsection. When splitting the lines we sometimes get lines
         # belonging to the last entry. These information is then added
         # to the last known entry.
-        elif id in parsed and node in parsed[id] and not id == "Cluster":
-            nl = []
-            for entry in line:
-                nl.append(entry.split(":"))
+        elif id in parsed and node in parsed[id] and id != "Cluster":
+            nl = [entry.split(': ') for entry in line]
             for l in nl:
                 if len(l) > 1:
-                    name = l[0].replace(" ", "")
-                    parsed[id][node][name] = [ l[1].replace(" ", "") ]
+                    name = l[0].strip()
+                    parsed[id][node][name] = l[1].strip()
                 else:
+                    if type(parsed[id][node][name]) != list:
+                        parsed[id][node][name] = [parsed[id][node][name]]
                     parsed[id][node][name].append(l[0].replace(" ", ""))
 
     return parsed
 
 
 def inventory_scaleio_mdm(parsed):
-    for entry in parsed:
-        if entry == "Cluster":
-            yield None, {}
+    if parsed.get('Cluster'):
+        yield None, {}
 
 
 def check_scaleio_mdm(item, params, parsed):
@@ -91,12 +100,12 @@ def check_scaleio_mdm(item, params, parsed):
         "Disconnected"      : 2,
         "Not synchronized"  : 1,
     }
-    data = get_scaleio_data("Cluster", parsed)
 
+    data = get_scaleio_data("Cluster", parsed)
     if data:
-        state    = 0
-        status   = data["State"]
-        active   = data["Active"].split("/")
+        state = 0
+        status = data["State"]
+        active = data["Active"].split("/")
         replicas = data["Replicas"].split("/")
 
         yield translate_status[status], "Mode: %s, State: %s" % (data["Mode"], status)
@@ -105,17 +114,26 @@ def check_scaleio_mdm(item, params, parsed):
            not replicas[0] == replicas[1]:
             state = 2
 
-        yield state, "Active: %s, Replicas: %s" % \
-                    ("/".join(active), "/".join(replicas))
+        yield state, "Active: %s, Replicas: %s" % ("/".join(active), "/".join(replicas))
 
     for role in [ "Master MDM", "Slave MDMs",
                   "Tie-Breakers", "Standby MDMs" ]:
-        nodes = []
-        for node in parsed[role]:
+        state, nodes = 0, []
+        for node in parsed.get(role, {}):
             nodes.append(node)
-            if "Status" in node and not node["Status"] == "Normal":
-                state = translate_status[node["Status"]]
-        yield state, "%s: %s" % (role, ", ".join(nodes))
+            status = parsed[role][node].get("Status", "Normal")
+            if status != "Normal":
+                state = max(state, translate_status[status])
+
+        if nodes:
+            infotext = "%s: %s" % (role, ", ".join(nodes))
+        else:
+            if role != "Standby MDMs":
+                state, infotext = 2, "%s not found in agent output" % role
+            else:
+                infotext = "%s: no" % role
+
+        yield state, infotext
 
 
 check_info['scaleio_mdm'] = {

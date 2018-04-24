@@ -1,0 +1,11 @@
+Title: HW/SW Inventory: Fixed AttributeError if any plugin provides wrong data structure
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b2
+Date: 1524558923
+
+

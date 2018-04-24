@@ -61,7 +61,7 @@ then
     fi
 
     # System
-    echo '<<<scaleio_system:sep(9)>>>'
+    echo '<<<scaleio_system>>>'
     scli --query_properties --object_type SYSTEM --all_objects --properties ID,NAME,CAPACITY_ALERT_HIGH_THRESHOLD,CAPACITY_ALERT_CRITICAL_THRESHOLD,MAX_CAPACITY_IN_KB,UNUSED_CAPACITY_IN_KB
 
     # MDM

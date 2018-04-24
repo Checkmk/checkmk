@@ -25,7 +25,21 @@
 # Boston, MA 02110-1301 USA.
 
 
-# example output
+#<<<scaleio_volume>>>
+#VOLUME f6a9425800000002:
+#	ID                                                 f6a9425800000002
+#	NAME                                               SEASIOCF1001
+#	SIZE                                               8.0 TB (8192 GB)
+#	USER_DATA_READ_BWC                                 0 IOPS 0 Bytes per-second
+#	USER_DATA_WRITE_BWC                                0 IOPS 0 Bytes per-second
+#
+#VOLUME f6a9425900000003:
+#	ID                                                 f6a9425900000003
+#	NAME                                               SEASIOCF2001
+#	SIZE                                               5.0 TB (5120 GB)
+#	USER_DATA_READ_BWC                                 0 IOPS 0 Bytes per-second
+#	USER_DATA_WRITE_BWC                                0 IOPS 0 Bytes per-second
+#
 
 
 def inventory_scaleio_volume(parsed):
@@ -39,25 +53,26 @@ def check_scaleio_volume(item, params, parsed):
         "MB" : "GB",
         "GB" : "TB",
     }
+
     data = get_scaleio_data(item, parsed)
+    if not data:
+        return
 
-    if data:
-        name = data["NAME"][0]
-        total = int(data["SIZE"][2].strip("("))
-        unit = data["SIZE"][3].strip(")")
+    name = data["NAME"][0]
+    total = int(data["SIZE"][2].strip("("))
+    unit = data["SIZE"][3].strip(")")
 
-        # Assuming the API will never report
-        # a number bigger than 1048576
-        if total > 1024:
-            total = total / 1024
-            unit = change_unit[unit]
-        yield 0, "Name: %s, Size: %.1f %s" % (name, total, unit)
+    # Assuming the API will never report
+    # a number bigger than 1048576
+    if total > 1024:
+        total = total / 1024
+        unit = change_unit[unit]
+    yield 0, "Name: %s, Size: %.1f %s" % (name, total, unit)
 
-        read_data = data["USER_DATA_READ_BWC"]
-        write_data = data["USER_DATA_WRITE_BWC"]
-        for io_type in list(check_diskstat_dict(item, params, \
-                      get_disks(item, read_data, write_data))):
-            yield io_type
+    read_data = data["USER_DATA_READ_BWC"]
+    write_data = data["USER_DATA_WRITE_BWC"]
+    for io_type in list(check_diskstat_dict(item, params, get_disks(item, read_data, write_data))):
+        yield io_type
 
 
 check_info['scaleio_volume'] = {

@@ -26,6 +26,40 @@
 
 
 # example output
+#<<<scaleio_sds>>>
+#SDS 3c7af8db00000000:
+#	ID                                                 3c7af8db00000000
+#	NAME                                               sds03
+#	PROTECTION_DOMAIN_ID                               91ebcf4500000000
+#	STATE                                              REMOVE_STATE_NORMAL
+#	MEMBERSHIP_STATE                                   JOINED
+#	MDM_CONNECTION_STATE                               MDM_CONNECTED
+#	MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
+#	MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
+#	UNUSED_CAPACITY_IN_KB                              13.2 TB (13471 GB)
+#
+#SDS 3c7ad1cc00000001:
+#	ID                                                 3c7ad1cc00000001
+#	NAME                                               sds01
+#	PROTECTION_DOMAIN_ID                               91ebcf4500000000
+#	STATE                                              REMOVE_STATE_NORMAL
+#	MEMBERSHIP_STATE                                   JOINED
+#	MDM_CONNECTION_STATE                               MDM_CONNECTED
+#	MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
+#	MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
+#	UNUSED_CAPACITY_IN_KB                              13.2 TB (13477 GB)
+#
+#SDS 3c7af8dc00000002:
+#	ID                                                 3c7af8dc00000002
+#	NAME                                               sds02
+#	PROTECTION_DOMAIN_ID                               91ebcf4500000000
+#	STATE                                              REMOVE_STATE_NORMAL
+#	MEMBERSHIP_STATE                                   JOINED
+#	MDM_CONNECTION_STATE                               MDM_CONNECTED
+#	MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
+#	MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
+#	UNUSED_CAPACITY_IN_KB                              13.2 TB (13477 GB)
+#
 
 
 def inventory_scaleio_sds(parsed):
@@ -35,17 +69,18 @@ def inventory_scaleio_sds(parsed):
 
 def check_scaleio_sds(item, params, parsed):
     data = get_scaleio_data(item, parsed)
+    if not data:
+        return
 
-    if data:
-        # How will the data be represented? It's magic and the only
-        # indication is the unit. We need to handle this!
-        unit    = data["MAX_CAPACITY_IN_KB"][3].strip(")")
-        total   = convert_scaleio_space(unit,
-                                        int(data["MAX_CAPACITY_IN_KB"][2].strip("(")))
-        free    = convert_scaleio_space(unit,
-                                        int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")))
+    # How will the data be represented? It's magic and the only
+    # indication is the unit. We need to handle this!
+    unit    = data["MAX_CAPACITY_IN_KB"][3].strip(")")
+    total   = convert_scaleio_space(unit,
+                                    int(data["MAX_CAPACITY_IN_KB"][2].strip("(")))
+    free    = convert_scaleio_space(unit,
+                                    int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")))
 
-        yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
+    yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
 
 
 check_info['scaleio_sds'] = {
@@ -55,8 +90,9 @@ check_info['scaleio_sds'] = {
     'service_description'   : 'ScaleIO SDS capacity %s',
     'group'                 : "filesystem",
     'has_perfdata'          : True,
-    'includes'              : [ 'size_trend.include', 'df.include' ],
+    'includes'              : [ 'scaleio.include', 'size_trend.include', 'df.include' ],
 }
+
 
 def inventory_scaleio_sds_status(parsed):
     for entry in parsed:
@@ -65,25 +101,27 @@ def inventory_scaleio_sds_status(parsed):
 
 def check_scaleio_sds_status(item, params, parsed):
     data = get_scaleio_data(item, parsed)
+    if not data:
+        return
 
-    if data:
-        name = data["NAME"][0]
-        pd_id = data["PROTECTION_DOMAIN_ID"][0]
-        status = data["STATE"][0]
-        status_maint = data["MAINTENANCE_MODE_STATE"][0]
-        status_conn = data["MDM_CONNECTION_STATE"][0]
-        status_member = data["MEMBERSHIP_STATE"][0]
+    name, pd_id = data["NAME"][0], data["PROTECTION_DOMAIN_ID"][0]
+    yield 0, "Name: %s, PD: %s" % (name, pd_id)
 
-        yield 0, "Name: %s, PD: %s" % (name, pd_id)
+    status = data["STATE"][0]
+    if "normal" not in status.lower():
+        yield 2, "State: %s" % status
 
-        if not "normal" in status.lower():
-            yield 2, "State: %s" % status
-        if not "no_maintenance" in status_maint.lower():
-            yield 1, "Maintenance: %s" % status_maint
-        if not "connected" in status_conn.lower():
-            yield 2, "Connection state: %s" % status_conn
-        if not "joined" in status_member.lower():
-            yield 2, "Membership state: %s" % status_member
+    status_maint = data["MAINTENANCE_MODE_STATE"][0]
+    if "no_maintenance" not in status_maint.lower():
+        yield 1, "Maintenance: %s" % status_maint
+
+    status_conn = data["MDM_CONNECTION_STATE"][0]
+    if "connected" not in status_conn.lower():
+        yield 2, "Connection state: %s" % status_conn
+
+    status_member = data["MEMBERSHIP_STATE"][0]
+    if "joined" not in status_member.lower():
+        yield 2, "Membership state: %s" % status_member
 
 
 check_info['scaleio_sds.status'] = {

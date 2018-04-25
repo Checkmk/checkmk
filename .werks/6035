@@ -1,0 +1,14 @@
+Title: Improved error handling when images can not be rendered
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1524662502
+
+When embedding a custom image into a report an unhandled exception
+"Decompressed Data Too Large" could occur for some images which have 
+huge meta data information. This exception is now catched and displayed
+as regular graph error instead of producing a trace / crash dump.

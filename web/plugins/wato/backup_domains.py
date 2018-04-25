@@ -76,6 +76,5 @@ watolib.backup_domains.update({
                         ("dir", "var/check_mk/packages" ),
                         ("dir", "local" ),
                      ],
-        "default"  : True,
     },
 })

@@ -1,0 +1,12 @@
+Title: esx_vsphere_sensors: ignore 'Unknown' sensors
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1524650419
+Class: fix
+
+Previously, sensors where only ignored by the check esx_vsphere_sensors
+if the special agent delivered 'unknown'. Now, also the status 'Unknown'
+is ignored which is delivered by some systems.

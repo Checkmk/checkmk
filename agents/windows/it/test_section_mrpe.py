@@ -11,6 +11,7 @@ from remote import (actual_output, assert_subprocess, config, remote_ip,
 
 class Globals(object):
     section = 'mrpe'
+    alone = True
     pluginname = 'check_crit.bat'
     param = 'foobar'
     checkname = 'Dummy'
@@ -25,9 +26,13 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(config):
-    config.set('global', 'sections', Globals.section)
+@pytest.fixture(params=['alone', 'with_systemtime'])
+def testconfig(request, config):
+    Globals.alone = request.param == 'alone'
+    if Globals.alone:
+        config.set('global', 'sections', Globals.section)
+    else:
+        config.set('global', 'sections', '%s systemtime' % Globals.section)
     config.set('global', 'crash_debug', 'yes')
     config.add_section(Globals.section)
     if Globals.newline < 0:
@@ -43,11 +48,17 @@ def testconfig(config):
 @pytest.fixture
 def expected_output():
     drive = r'[A-Z]:%s' % re.escape(os.sep)
-    return [
-        re.escape(r'<<<%s>>>' % Globals.section),
-        r'\(%s\) %s 2 CRIT - This check is always critical' %
-        (Globals.pluginname, Globals.checkname)
-    ]
+    expected = [
+            re.escape(r'<<<%s>>>' % Globals.section),
+            r'\(%s\) %s 2 CRIT - This check is always critical' %
+            (Globals.pluginname, Globals.checkname)
+        ]
+    if not Globals.alone:
+        expected += [
+            re.escape(r'<<<systemtime>>>'),
+            r'\d+'
+        ]
+    return expected
 
 
 @pytest.fixture(

@@ -177,7 +177,7 @@ integrationtest: install-strip
         if [[ $$USER == jenkins ]] ; then \
           $(PYTEST) $(PYTEST_JENKINS) ; \
         else \
-          $(PYTEST) $(PYTEST_OPTIONS) test_section_check_mk.py ; \
+          $(PYTEST) $(PYTEST_OPTIONS) ; \
         fi ; \
         cd -
 

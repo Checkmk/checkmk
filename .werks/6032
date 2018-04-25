@@ -1,0 +1,10 @@
+Title: Debian/Ubuntu: Disable possible duplicate startup on systemd based systems
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0b2
+Date: 1524648393
+Class: fix
+
+

@@ -105,11 +105,8 @@ case "$1" in
     if test -d /usr/lib/systemd && dpkg -S /sbin/init 2>/dev/null | grep ^systemd >/dev/null; then
         echo "Installing systemd service: omd.init"
     
-        # Disable startup of eventually existing SysV scripts
-        if test -e $DEFAULT ; then
-            echo "Disabling startup through old SysV (/etc/init.d/omd*) scripts"
-            echo "AUTOSTART=0" > $DEFAULT
-        fi
+        echo "Disabling startup through SysV (/etc/init.d/*) scripts"
+        echo "AUTOSTART=0" > $DEFAULT
     
         echo "Activating startup during system boot"
         cp /omd/versions/default/share/omd/omd.service /etc/systemd/system/omd.service

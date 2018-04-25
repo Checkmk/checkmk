@@ -104,8 +104,7 @@ bool SectionMRPE::produceOutputInner(std::ostream &out,
         try {
             ExternalCmd command(modified_command, _env, _logger, _winapi);
             Debug(_logger) << "Script started -> collecting data";
-            string buffer;
-            buffer.resize(8192);
+            string buffer(8192, '\0');
             char *buf_start = &buffer[0];
             char *pos = &buffer[0];
             while (command.exitCode() == STILL_ACTIVE) {
@@ -114,10 +113,13 @@ bool SectionMRPE::produceOutputInner(std::ostream &out,
                 pos += read;
                 _winapi.Sleep(10);
             }
-            command.readStdout(pos, buffer.size() - (pos - buf_start), false);
-
+            DWORD read = command.readStdout(
+                pos, buffer.size() - (pos - buf_start), false);
+            pos += read;
+            buffer.resize(pos - buf_start);
             rtrim(buffer);
             ltrim(buffer);
+
             // replace newlines
             std::transform(buffer.cbegin(), buffer.cend(), buffer.begin(),
                            [](char ch) {

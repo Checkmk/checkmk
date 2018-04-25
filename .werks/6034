@@ -1,0 +1,17 @@
+Title: Fixed adding combined graphs to reports
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1524661146
+
+When clicking on the context menu of a combined graph and adding it to a report,
+the element that is added to the report is not created correctly. When trying
+to edit the element later an exception "TypeError (unhashable type: 'dict')" is
+shown.
+
+Delete the element after the update and re-add it to the report should fix the
+issue.

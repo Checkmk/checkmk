@@ -1498,7 +1498,7 @@ if not error:
                     output("<<<esx_vsphere_sensors:sep(59)>>>")
                     for key in sorted(hostsystems_sensors[hostname].keys()):
                         data = hostsystems_sensors[hostname][key]
-                        if data["key"] in ["green", "unknown", "Green"]:
+                        if data["key"].lower() in ["green", "unknown"]:
                             continue
                         output('%s;%s;%s;%s;%s;%s;%s;%s;%s' % (
                                         data["name"].replace(";", "_"),

@@ -1,0 +1,16 @@
+Title: Windows: section MRPE was incorrectly formatted
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1524656219
+Class: fix
+
+The output of section MRPE was incorrectly formatted. A null character
+at the end of the output string caused the output to be cut abruptly
+and missing a newline character before the following section header.
+Broken by commit d0ae246003d630f80ad5ff3fbe469552738141a9 that was
+included in releases 1.5.0i3 and 1.5.0b1.
+
+

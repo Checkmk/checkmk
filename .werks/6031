@@ -1,0 +1,22 @@
+Title: Improved initial activation step performance in some cases
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b2
+Date: 1524641789
+Class: fix
+
+When activating the changed configuration, the first step "Initializing activation" may
+take a lot of time when there are a lot of files located below the "local" hierarchy of
+the site.
+
+This is caused by a backup mechanism that is executed in this step. It saves snapshots
+of your WATO configuration (not the whole site nor the whole config of the site) to
+archives which are located below "var/check_mk/wato/snapshots". These can be used for
+reverting the changes in the GUI and for recovery of configuration files. This is not
+primarily a backup mechanism, better use the Check_MK site backup for this task.
+
+These archives were also containing the whole local/ hierarchy. In case there are a lot
+of small files or some larger files in this hierarchy, this slowed down the activation
+significantly. We've decided to remove those files from the config snapshot now.

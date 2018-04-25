@@ -94,10 +94,17 @@ ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4
     PATCHES += patches/0005-NID_ecdsa_with_SHA-fix.patch
     PATCHES += patches/0009-cryptography-1.4-disable-version-warning.patch
 else
-    MODULES += cryptography-1.9.tar.gz
-    MODULES += asn1crypto-0.24.0.tar.gz
-    #PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
-    #PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
+    ifneq ($(filter $(DISTRO_CODE),el6),)
+        # Cryptography dropped support for OpenSSL 1.0.0 with release 1.7
+	# (https://github.com/pyca/cryptography/blob/master/CHANGELOG.rst).
+	# Therefore we need stick with 1.5.3 which was default previously to 1.9.
+        MODULES += cryptography-1.5.3.tar.gz
+        PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
+        PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
+    else
+        MODULES += cryptography-1.9.tar.gz
+        MODULES += asn1crypto-0.24.0.tar.gz
+    endif
 endif
 
 # Added for NetApp special agent, but may be used in other components too in future

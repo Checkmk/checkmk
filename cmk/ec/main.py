@@ -565,41 +565,36 @@ def initialize_snmp_credentials(config, the_snmp_engine):
 #   |  Timeperiods are used in rule conditions                             |
 #   '----------------------------------------------------------------------'
 
-# Dictionary from name to True/False (active / inactive)
-g_timeperiods = None
-g_last_timeperiod_update = 0
+class TimePeriods(object):
+    def __init__(self):
+        super(TimePeriods, self).__init__()
+        self._periods = None
+        self._last_update = 0
 
+    def _update(self):
+        if self._periods is not None and int(time.time()) / 60 == self._last_update:
+            return  # only update once a minute
+        try:
+            table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
+            periods = {}
+            for tpname, alias, isin in table:
+                periods[tpname] = (alias, bool(isin))
+            self._periods = periods
+            self._last_update = int(time.time()) / 60
+        except Exception as e:
+            logger.exception("Cannot update timeperiod information: %s" % e)
+            if settings.options.debug:
+                raise
 
-def update_timeperiods(settings):
-    global g_timeperiods, g_last_timeperiod_update
-
-    if g_timeperiods is not None and int(time.time()) / 60 == g_last_timeperiod_update:
-        return  # only update once a minute
-    try:
-        table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
-        new_timeperiods = {}
-        for tpname, alias, isin in table:
-            new_timeperiods[tpname] = (alias, bool(isin))
-        g_timeperiods = new_timeperiods
-        g_last_timeperiod_update = int(time.time()) / 60
-    except Exception as e:
-        logger.exception("Cannot update timeperiod information: %s" % e)
-        if settings.options.debug:
-            raise
-
-
-def check_timeperiod(settings, tpname):
-    update_timeperiods(settings)
-    if not g_timeperiods:
-        logger.warning("No timeperiod information. Assuming %s active" % tpname)
-        return True
-
-    elif tpname not in g_timeperiods:
-        logger.warning("No such timeperiod %s. Assume to active" % tpname)
-        return True
-
-    else:
-        return g_timeperiods[tpname][1]
+    def check(self, tpname):
+        self._update(settings)
+        if not self._periods:
+            logger.warning("no timeperiod information, assuming %s is active" % tpname)
+            return True
+        if tpname not in self._periods:
+            logger.warning("no such timeperiod %s, assuming it is active" % tpname)
+            return True
+        return self._periods[tpname][1]
 
 
 #.
@@ -1291,6 +1286,7 @@ class EventServer(ECServerThread):
         self.host_config = HostConfig()
         self._perfcounters = perfcounters
         self._event_status = event_status
+        self._time_periods = TimePeriods()
 
         self.create_pipe()
         self.open_eventsocket()
@@ -2429,7 +2425,7 @@ class EventServer(ECServerThread):
         return True
 
     def event_rule_matches_timeperiod(self, rule, event):
-        if "match_timeperiod" in rule and not check_timeperiod(self.settings, rule["match_timeperiod"]):
+        if "match_timeperiod" in rule and not self._time_periods.check(self.settings, rule["match_timeperiod"]):
             if self._config["debug_rules"]:
                 self.logger.info("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
             return False

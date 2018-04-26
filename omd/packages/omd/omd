@@ -2476,43 +2476,6 @@ def main_help(args=[], options={}):
                      " omd COMMAND -h, --help          show available options of COMMAND\n"
                     )
 
-def main_setup(args, options={}):
-    packages = g_info["OS_PACKAGES"].split()
-    install_cmd = g_info["PACKAGE_INSTALL"]
-    command = "%s %s" % (install_cmd, " ".join(packages))
-    sys.stdout.write("Going to execute '%s'\n" % command)
-    if 0 == os.system(command):
-        ok()
-
-    # Enable Apache modules
-    for mod in [ "proxy", "proxy_http", "rewrite" ]:
-        command = g_info["APACHE_ENMOD"] % mod
-        if 0 != os.system(command):
-            sys.stdout.write("ERROR: Could not enable Apache module mod_%s\n" % mod)
-
-    # Activate init script of OMD and APACHE
-    for service in [ 'omd',  g_info["APACHE_INIT_NAME"] ]:
-        sys.stdout.write("Activating init script for \"%s\"\n" % service)
-        command = g_info["ACTIVATE_INITSCRIPT"].replace("%s", service)
-        sys.stdout.write("Going to execute '%s'\n" % command)
-        if 0 != os.system(command):
-            sys.stdout.write("ERROR\n")
-
-    # Create group 'omd'
-    if not group_exists('omd'):
-        sys.stdout.write("Creating new group 'omd'\n")
-        groupadd('omd')
-
-    # set SUID bit for certain plugins (neccessary for
-    # non RPM/DEB installations (FIXME: find a more elegant
-    # solution later)
-    gid = group_id('omd')
-    for plugin in [ 'nagios/plugins/check_icmp', 'nagios/plugins/check_dhcp',
-                    'cmc/icmpsender', 'cmc/icmpreceiver' ]:
-        path = "/omd/versions/%s/lib/%s" % (OMD_VERSION, plugin)
-        os.chown(path, -1, gid)
-        os.chmod(path, 04750)
-
 
 def main_uninstall(args, options={}):
     global g_sitename
@@ -3869,12 +3832,6 @@ commands = [
     [],
     "Show general help",
     ""),
-
-  ( "setup",     True,  False, 0, 0, True, "",        main_setup,
-    [],
-    "Prepare operating system for OMD (installs packages)",
-    "We will install missing packages from your operating system and setup the\n"
-    "system apache daemon (add configuration files and modules needed by omd)\n"),
 
   ( "uninstall", True,  False, 0, 0, True, "",        main_uninstall,
     [],

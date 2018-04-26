@@ -1,0 +1,12 @@
+Title: Fixed execution of management board checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1524749776
+Class: fix
+
+This concerns hosts which have configured a management board.
+During checking the wrong data source was used and therefore
+the wrong data was checked. Fixed that!

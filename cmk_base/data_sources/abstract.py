@@ -314,11 +314,24 @@ class DataSource(object):
 
     @abc.abstractmethod
     def _gather_check_plugin_names(self):
+        """
+        Returns the list of check plugin names which are supported by
+        the device.
+
+        Example: SNMP scan
+        """
         raise NotImplementedError()
 
 
     def enforce_check_plugin_names(self, check_plugin_names):
-        self._enforced_check_plugin_names = check_plugin_names
+        """
+        Returns a subset of beforehand gathered check plugin names which are
+        supported by the data source.
+
+        Example: management board checks only for management board data sources
+        """
+        self._enforced_check_plugin_names = checks.filter_by_management_board(self._hostname,
+                                                   check_plugin_names, self._for_mgmt_board)
 
 
     @abc.abstractmethod

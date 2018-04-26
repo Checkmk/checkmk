@@ -765,7 +765,8 @@ def do_status_data_inventory_for(hostname):
     return False
 
 
-def filter_by_management_board(hostname, found_check_plugin_names, for_mgmt_board):
+def filter_by_management_board(hostname, found_check_plugin_names,
+                               for_mgmt_board, for_discovery=False):
     # #1 SNMP host with MGMT board
     #    MGMT board:
     #        SNMP management board precedence: mgmt_prec_check
@@ -819,6 +820,14 @@ def filter_by_management_board(hostname, found_check_plugin_names, for_mgmt_boar
     if for_mgmt_board:
         final_collection.update(mgmt_precedence)
         final_collection.update(mgmt_only)
+        if not for_discovery and not config.is_snmp_host(hostname):
+            # Compatibility: in CMK version 1.4.0 if a TCP host has configured
+            # a SNMP management board then SNMP checks (non-"SNMP management board"-checks)
+            # were discovered. During checking we do not change that behaviour.
+            # Then an upgrade to >=1.5.0 is done.
+            # After a rediscovery the non-"SNMP management board"-checks are vanished and
+            # "SNMP management board"-checks are discovered.
+            final_collection.update(host_precedence)
     else:
         final_collection.update(host_precedence)
         if not has_mgmt_board:

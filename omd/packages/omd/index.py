@@ -1,4 +1,4 @@
-from mod_python import apache,util
+from mod_python import apache,util # pylint: disable=import-error
 import os, re
 
 def site_name(req):

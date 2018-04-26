@@ -665,13 +665,12 @@ def read_skel_permissions():
     global g_skel_permissions
     g_skel_permissions = load_skel_permissions(OMD_VERSION)
     if not g_skel_permissions:
-        bail_out("%s is missing or currupted." % file_path)
+        bail_out("%s is missing or currupted." % skel_permissions_file_path(OMD_VERSION))
 
 def load_skel_permissions(version):
     perms = {}
-    file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
     try:
-        for line in file(file_path):
+        for line in file(skel_permissions_file_path(version)):
             line = line.strip()
             if line == "" or line[0] == "#":
                 continue
@@ -681,6 +680,9 @@ def load_skel_permissions(version):
         return perms
     except:
         return None
+
+def skel_permissions_file_path(version):
+    return "/omd/versions/%s/share/omd/skel.permissions" % version
 
 def get_skel_permissions(version, perms, relpath):
     try:
@@ -3036,7 +3038,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
         if abs_path == ".":
             abs_path = ""
         elif abs_path.startswith("./"):
-            abs_path = path[2:]
+            abs_path = abs_path[2:]
         abs_path = os.getcwd() + "/" + abs_path
     abs_path = abs_path.rstrip("/")
 

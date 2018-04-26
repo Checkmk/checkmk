@@ -804,7 +804,8 @@ def snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True, 
     if for_inv:
         filtered = found_check_plugin_names
     else:
-        filtered = checks.filter_by_management_board(hostname, found_check_plugin_names, for_mgmt_board)
+        filtered = checks.filter_by_management_board(hostname, found_check_plugin_names,
+                                                     for_mgmt_board, for_discovery=True)
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp.write_single_oid_cache(access_data)
     return sorted(filtered)

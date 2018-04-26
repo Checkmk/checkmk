@@ -68,20 +68,6 @@ This mainly updates the symlink \fB/omd/versions/default\fP. On debian based dis
 it calls update-alternatives to change the default versions. In this case there is a special
 option \fBauto\fP available to let update-alternatives choose the default OMD version.
 .TP
-.B omd setup
-Prepare operating system for OMD. This includes installing all software
-packages from your linux distribution that the components of OMD need
-to run properly. You need to make sure that a package installation via
-aptitude/zypper/yum is possible.
-
-After installing missing packages a group \fBomd\fP will be created,
-some Apache modules will be activated, the init script \fB/etc/init.d/omd\fP
-will be activated and the SUID bits for some Nagios plugins will be
-correctly configured (for the group omd).
-
-\fBNote:\fP If you have installed OMD via RPM or DEB and have installed
-all packages the omd package depends on, no \fBomd setup\fP is neccessary.
-.TP
 .B omd uninstall
 This deletes all software and data of OMD and its sites. That command is mainly used
 for trying out OMD or testing the installation of OMD. Be aware that

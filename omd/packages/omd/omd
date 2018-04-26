@@ -2455,7 +2455,12 @@ def check_site_user(site_must_exist):
 #   |  Implementation of actual omd commands                               |
 #   '----------------------------------------------------------------------'
 
-def main_help(args=[], options={}):
+def main_help(args=None, options=None):
+    if args is None:
+        args = []
+    if options is None:
+        options = {}
+
     am_root = os.getuid() == 0
     if am_root:
         sys.stdout.write("Usage (called as root):\n\n")
@@ -2479,7 +2484,10 @@ def main_help(args=[], options={}):
                     )
 
 
-def main_uninstall(args, options={}):
+def main_uninstall(args, options=None):
+    if options is None:
+        options = {}
+
     global g_sitename
     global g_sitedir
     for sitename in all_sites():
@@ -2499,7 +2507,10 @@ def main_uninstall(args, options={}):
     sys.stdout.write("Good bye.\n")
 
 
-def main_setversion(args, options={}):
+def main_setversion(args, options=None):
+    if options is None:
+        options = {}
+
     if len(args) == 0:
         versions = [ (v, "Version %s" % v) for v in omd_versions() if not v == default_version() ]
 
@@ -2539,7 +2550,10 @@ def use_update_alternatives():
     return os.path.exists("/var/lib/dpkg/alternatives/omd")
 
 
-def main_version(args, options={}):
+def main_version(args, options=None):
+    if options is None:
+        options = {}
+
     if len(args) > 0:
         site = args[0]
         if not site_exists(site):
@@ -2553,7 +2567,10 @@ def main_version(args, options={}):
         sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % version)
 
 
-def main_versions(args, options={}):
+def main_versions(args, options=None):
+    if options is None:
+        options = {}
+
     for v in omd_versions():
         if v == default_version() and not "bare" in options:
             sys.stdout.write("%s (default)\n" % v)
@@ -2571,7 +2588,10 @@ def omd_versions():
 def version_exists(v):
     return v in omd_versions()
 
-def main_sites(args, options={}):
+def main_sites(args, options=None):
+    if options is None:
+        options = {}
+
     if on_tty and not "bare" in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for site in all_sites():
@@ -2604,7 +2624,10 @@ def sitename_must_be_valid(name, reuse = False):
         bail_out("Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16")
 
 
-def main_create(args, options={}):
+def main_create(args, options=None):
+    if options is None:
+        options = {}
+
     reuse = False
     if "reuse" in options:
         reuse = True
@@ -2775,7 +2798,10 @@ def finalize_size_as_user(what):
     call_scripts('post-' + what)
 
 
-def main_rm(args, options={}):
+def main_rm(args, options=None):
+    if options is None:
+        options = {}
+
     # omd rm is called as root but the init scripts need to be called as
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
@@ -2887,12 +2913,14 @@ def get_exclude_patterns(options):
     return excludes
 
 
-def main_mv_or_cp(what, args, options={}):
+def main_mv_or_cp(what, args, options=None):
+    if options is None:
+        options = {}
+
     set_conflict_option(options)
     action = what == "mv" and "rename" or "copy"
 
     global g_sitename
-    global g_sitedir
     if len(args) != 1:
         bail_out("omd: Usage: omd %s oldname newname" % what)
     new = args[0]
@@ -2988,7 +3016,10 @@ def main_mv_or_cp(what, args, options={}):
 
 
 
-def main_diff(args, options={}):
+def main_diff(args, options=None):
+    if options is None:
+        options = {}
+
     from_version  = site_version(g_sitename)
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
@@ -3114,7 +3145,10 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms)
 
 
 
-def main_update(args, options={}):
+def main_update(args, options=None):
+    if options is None:
+        options = {}
+
     set_conflict_option(options)
 
     if not site_is_stopped(g_sitename):
@@ -3201,7 +3235,10 @@ def main_update(args, options={}):
     stop_logging()
 
 
-def main_umount(args, options = {}):
+def main_umount(args, options=None):
+    if options is None:
+        options = {}
+
     global g_sitename
     global g_sitedir
 
@@ -3239,7 +3276,10 @@ def main_umount(args, options = {}):
     sys.exit(0)
 
 
-def main_init_action(command, args, options={}):
+def main_init_action(command, args, options=None):
+    if options is None:
+        options = {}
+
     if g_sitename:
         exit_status = init_action(command, args, options)
         sys.exit(exit_status)
@@ -3358,7 +3398,10 @@ def main_init_action(command, args, options={}):
 
     sys.exit(exit_status)
 
-def main_config(args, options={}):
+def main_config(args, options=None):
+    if options is None:
+        options = {}
+
     if (len(args) == 0 or args[0] != "show") and \
         not site_is_stopped(g_sitename) and opt_force:
         need_start = True
@@ -3384,7 +3427,10 @@ def main_config(args, options={}):
     if need_start:
         start_site(g_sitename)
 
-def main_su(args, options={}):
+def main_su(args, options=None):
+    if options is None:
+        options = {}
+
     try:
         os.execl("/bin/su", "su", "-", "%s" % g_sitename)
     except OSError:
@@ -3536,7 +3582,10 @@ def backup_site_to_tarfile(fh, mode, options):
         bail_out("Failed to perform backup: %s" % e)
 
 
-def main_backup(args, options={}):
+def main_backup(args, options=None):
+    if options is None:
+        options = {}
+
     if len(args) == 0:
         bail_out("You need to provide either a path to the destination "
                  "file or \"-\" for backup to stdout.")
@@ -3558,7 +3607,10 @@ def main_backup(args, options={}):
     backup_site_to_tarfile(fh, tar_mode, options)
 
 
-def main_restore(args, options={}):
+def main_restore(args, options=None):
+    if options is None:
+        options = {}
+
     global g_sitename
     global g_sitedir
 
@@ -4251,7 +4303,13 @@ if len(main_args) < 1:
 
 command = main_args[0]
 args = main_args[1:]
+
 found = False
+
+only_root, no_suid, needs_site, site_must_exist, \
+  confirm, argumentlist, command_function, option_spec, \
+  description, confirm_text = 10 * [None]
+
 for c, only_root, no_suid, needs_site, site_must_exist, confirm, argumentlist, \
     command_function, option_spec, description, confirm_text in commands:
     if c == command:

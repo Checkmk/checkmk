@@ -205,7 +205,7 @@ class DataSource(object):
             self._logger.debug("Not using cache (Does not exist)")
             return
 
-        if self._no_cache:
+        if self.is_agent_cache_disabled():
             self._logger.debug("Not using cache (Cache usage disabled)")
             return
 
@@ -231,6 +231,10 @@ class DataSource(object):
 
 
     def _write_cache_file(self, raw_data):
+        if self.is_agent_cache_disabled():
+            self._logger.debug("Not writing data to cache file (Cache usage disabled)")
+            return
+
         cachefile = self._cache_file_path()
 
         try:
@@ -244,7 +248,7 @@ class DataSource(object):
         except Exception, e:
             raise MKGeneralException("Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
 
-        self._logger.verbose("Write data to cache file %s" % (cachefile))
+        self._logger.debug("Write data to cache file %s" % (cachefile))
         try:
             store.save_file(cachefile, self._to_cache_file(raw_data))
         except Exception, e:

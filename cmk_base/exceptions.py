@@ -27,6 +27,8 @@
 # TODO: Inherit from cmk.MKGeneralException?
 # TODO: Cleanup self.reason to use .args of standard exceptions
 
+import traceback
+
 from cmk.exceptions import MKGeneralException as _MKGeneralException
 
 class MKAgentError(Exception):
@@ -59,7 +61,7 @@ class MKParseFunctionError(Exception):
         return self.exception_type, self.exception, self.backtrace
 
     def __str__(self):
-        return "%s\n%s" % (self.exception, self.backtrace)
+        return "%r\n%s" % (self.exception, "".join(traceback.format_tb(self.backtrace)))
 
 
 

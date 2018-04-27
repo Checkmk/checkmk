@@ -1,0 +1,11 @@
+Title: Nagios: Fix processing of service output containing special characters
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0b3
+Date: 1524844305
+Class: fix
+
+When using nagios service results of the "Check_MK *" services could end up
+with output of "(null)" when the resulting text contained special characters.

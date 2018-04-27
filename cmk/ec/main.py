@@ -1299,6 +1299,7 @@ class EventServer(ECServerThread):
         self.open_syslog()
         self.open_syslog_tcp()
         self.open_snmptrap()
+        initialize_snmptrap_handling(self.settings, self._config, self)
 
     @classmethod
     def status_columns(cls):
@@ -2031,6 +2032,7 @@ class EventServer(ECServerThread):
 
     def reload_configuration(self, config):
         self._config = config
+        initialize_snmptrap_handling(self.settings, self._config, self)
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config.initialize()
 
@@ -5025,7 +5027,6 @@ def load_configuration(settings, slave_status):
 def reload_configuration(settings, event_status, event_server, status_server, slave_status):
     with lock_configuration:
         config = load_configuration(settings, slave_status)
-        initialize_snmptrap_handling(settings, config, event_server)
         event_server.reload_configuration(config)
 
     event_status.reload_configuration(config)
@@ -5098,9 +5099,6 @@ def main():
         status_server = StatusServer(settings, config, slave_status, perfcounters, event_status, event_server, table_events, terminate_main_event)
 
         event_status.load_status(event_server)
-
-        initialize_snmptrap_handling(settings, config, event_server)
-
         event_server.compile_rules(config["rules"], config["rule_packs"])
 
         if not settings.options.foreground:

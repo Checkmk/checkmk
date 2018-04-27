@@ -67,6 +67,18 @@ def create_crash_info(crash_type, details=None, version=None):
 
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
+    tb_list = traceback.extract_tb(exc_traceback)
+
+    # MKParseFunctionError() are re raised exceptions originating from the
+    # parse functions of checks. They have the original traceback object saved.
+    # The formated stack of these tracebacks is somehow relative to the calling
+    # function. To get the full stack trace instead of this relative one we need
+    # to concatenate the traceback of the MKParseFunctionError() and the original
+    # exception.
+    # Re-raising exceptions will be much easier with Python 3.x.
+    if exc_type.__name__ == "MKParseFunctionError":
+        tb_list += traceback.extract_tb(exc_value.exc_info()[2])
+
     return {
         "crash_type"    : crash_type,
         "time"          : time.time(),
@@ -78,7 +90,7 @@ def create_crash_info(crash_type, details=None, version=None):
         "python_paths"  : sys.path,
         "exc_type"      : exc_type.__name__,
         "exc_value"     : "%s" % exc_value,
-        "exc_traceback" : traceback.extract_tb(exc_traceback),
+        "exc_traceback" : tb_list,
         "local_vars"    : get_local_vars_of_last_exception(),
         "details"       : details,
     }

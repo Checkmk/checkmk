@@ -1064,7 +1064,7 @@ if '-d' in sys.argv:
         cluster_nodes = config.nodes_of(hostname)
         output.write("clusters = { %r : %r }\n" %
                      (hostname, cluster_nodes))
-        output.write("def is_cluster(hostname):\n    return True\n\n")
+        output.write("def is_cluster(hostname):\n    return hostname == %r\n\n" % hostname)
 
         nodes_of_map = {hostname: cluster_nodes}
         for node in config.nodes_of(hostname):
@@ -1075,25 +1075,35 @@ if '-d' in sys.argv:
         output.write("def nodes_of(hostname):\n    return None\n")
 
     # IP addresses
-    needed_ipaddresses = {}
-    nodes = []
+    needed_ipaddresses, needed_ipv6addresses, = {}, {}
     if config.is_cluster(hostname):
         for node in config.nodes_of(hostname):
-            ipa = ip_lookup.lookup_ip_address(node)
-            needed_ipaddresses[node] = ipa
-            nodes.append( (node, ipa) )
+            if config.is_ipv4_host(node):
+                needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node)
+
+            if config.is_ipv6_host(node):
+                needed_ipv6addresses[node] = ip_lookup.lookup_ipv6_address(node)
 
         try:
-            ipaddress = ip_lookup.lookup_ip_address(hostname) # might throw exception
-            needed_ipaddresses[hostname] = ipaddress
+            if config.is_ipv4_host(hostname):
+                needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
         except:
-            ipaddress = None
+            pass
+
+        try:
+            if config.is_ipv6_host(hostname):
+                needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(hostname)
+        except:
+            pass
     else:
-        ipaddress = ip_lookup.lookup_ip_address(hostname) # might throw exception
-        needed_ipaddresses[hostname] = ipaddress
-        nodes = [ (hostname, ipaddress) ]
+        if config.is_ipv4_host(hostname):
+            needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
+
+        if config.is_ipv6_host(hostname):
+            needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(hostname)
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
+    output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
 
     # datasource programs. Is this host relevant?
 
@@ -1120,7 +1130,7 @@ if '-d' in sys.argv:
 
     # perform actual check with a general exception handler
     output.write("try:\n")
-    output.write("    sys.exit(checking.do_check(%r, %r))\n" % (hostname, ipaddress))
+    output.write("    sys.exit(checking.do_check(%r, None))\n" % hostname)
     output.write("except MKTerminate:\n")
     output.write("    console.output('<Interrupted>\\n', stream=sys.stderr)\n")
     output.write("    sys.exit(1)\n")

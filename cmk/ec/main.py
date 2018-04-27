@@ -1566,11 +1566,10 @@ class EventServer(ECServerThread):
 
     # Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
     # and processing. PySNMP is calling self.handle_snmptrap back.
-    def process_snmptrap(self, data):
-        whole_msg, sender_address = data
+    def process_snmptrap(self, message, sender_address):
         self.logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
         g_snmp_trap_engine.snmp_engine.setUserContext(sender_address=sender_address)
-        g_snmp_trap_engine.snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_trap_engine.snmp_engine, (), (), whole_msg)
+        g_snmp_trap_engine.snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_trap_engine.snmp_engine, (), (), message)
 
     def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
                         var_binds, cb_ctx):
@@ -1740,8 +1739,8 @@ class EventServer(ECServerThread):
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap.fileno() in readable:
                 try:
-                    data = self._snmptrap.recvfrom(65535)
-                    self.process_raw_data(self.process_snmptrap, data)
+                    message, sender_address = self._snmptrap.recvfrom(65535)
+                    self.process_raw_data(lambda: self.process_snmptrap(message, sender_address))
                 except Exception:
                     self.logger.exception('Exception handling a SNMP trap from "%s". Skipping this one' %
                                           (data[1][0]))
@@ -1757,12 +1756,12 @@ class EventServer(ECServerThread):
 
     # Processes incoming data, just a wrapper between the real data and the
     # handler function to record some statistics etc.
-    def process_raw_data(self, handler_func, data):
+    def process_raw_data(self, handler):
         self._perfcounters.count("messages")
         before = time.time()
         # In replication slave mode (when not took over), ignore all events
         if not is_replication_slave(self._config) or self._slave_status["mode"] != "sync":
-            handler_func(data)
+            handler()
         elif self.settings.options.debug:
             self.logger.info("Replication: we are in slave mode, ignoring event")
         elapsed = time.time() - before
@@ -1775,7 +1774,7 @@ class EventServer(ECServerThread):
             line = scrub_and_decode(line.rstrip())
             if line:
                 try:
-                    self.process_raw_data(self.process_line, (line, address))
+                    self.process_raw_data(lambda: self.process_line(line, address))
                 except Exception as e:
                     self.logger.exception('Exception handling a log line (skipping this one): %s' % e)
 
@@ -2176,8 +2175,7 @@ class EventServer(ECServerThread):
                 (100.0 * count / float(total_count))
             ))
 
-    def process_line(self, data):
-        line, address = data
+    def process_line(self, line, address):
         line = line.rstrip()
         if self._config["debug_rules"]:
             if address:

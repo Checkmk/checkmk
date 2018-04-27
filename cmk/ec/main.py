@@ -583,11 +583,10 @@ class TimePeriods(object):
             self._last_update = int(time.time()) / 60
         except Exception as e:
             logger.exception("Cannot update timeperiod information: %s" % e)
-            if settings.options.debug:
-                raise
+            raise
 
     def check(self, tpname):
-        self._update(settings)
+        self._update()
         if not self._periods:
             logger.warning("no timeperiod information, assuming %s is active" % tpname)
             return True
@@ -2425,7 +2424,7 @@ class EventServer(ECServerThread):
         return True
 
     def event_rule_matches_timeperiod(self, rule, event):
-        if "match_timeperiod" in rule and not self._time_periods.check(self.settings, rule["match_timeperiod"]):
+        if "match_timeperiod" in rule and not self._time_periods.check(rule["match_timeperiod"]):
             if self._config["debug_rules"]:
                 self.logger.info("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
             return False

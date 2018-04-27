@@ -71,7 +71,7 @@ import cmk.paths
 import cmk.profile
 import cmk.render
 import livestatus
-from cmk.regex import is_regex, regex
+import cmk.regex
 
 logger = cmk.log.get_logger("mkeventd")
 
@@ -220,9 +220,9 @@ filter_operators = {
     "<": (lambda a, b: a < b),
     ">=": (lambda a, b: a >= b),
     "<=": (lambda a, b: a <= b),
-    "~": (lambda a, b: regex(b).search(a)),
+    "~": (lambda a, b: cmk.regex.regex(b).search(a)),
     "=~": (lambda a, b: a.lower() == b.lower()),
-    "~~": (lambda a, b: regex(b.lower()).search(a.lower())),
+    "~~": (lambda a, b: cmk.regex.regex(b.lower()).search(a.lower())),
     "in": (lambda a, b: a in b),
 }
 
@@ -2054,7 +2054,7 @@ class EventServer(ECServerThread):
             if not value:
                 return None
 
-            if is_regex(value):
+            if cmk.regex.is_regex(value):
                 return re.compile(value, re.IGNORECASE)
             else:
                 return val.lower()
@@ -2720,7 +2720,7 @@ class EventServer(ECServerThread):
                 regex, subst = translation.get("regex")
                 if not regex.endswith('$'):
                     regex += '$'
-                rcomp = regex(regex)
+                rcomp = cmk.regex.regex(regex)
                 mo = rcomp.match(backedhost)
                 if mo:
                     backedhost = subst

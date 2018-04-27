@@ -1,0 +1,15 @@
+Title: Fixed HW/SW inventory marking discovered services as vanished
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1524849172
+
+The service discovery (e.g. WATO service discovery page) could be
+confused after the execution of the HW/SW inventory check.
+
+When opening the service discovery page for a host with SNMP services,
+the page could show still existing services as vanished.

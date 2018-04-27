@@ -951,8 +951,8 @@ def _precompile_hostcheck(hostname):
             pass
 
     # check table, enriched with addition precompiled information.
-    check_table = check_table.get_precompiled_check_table(hostname)
-    if not check_table:
+    host_check_table = check_table.get_precompiled_check_table(hostname, filter_mode="include_clustered")
+    if not host_check_table:
         console.verbose("(no Check_MK checks)\n")
         return
 
@@ -1013,23 +1013,27 @@ if '-d' in sys.argv:
     # has at least one SNMP based check. Also collect the needed check
     # types and sections.
     needed_check_plugin_names = set([])
-    needed_sections = set([])
-    for check_plugin_name, _unused_item, _unused_param, descr in check_table:
+    for check_plugin_name, _unused_item, _unused_param, descr in host_check_table:
         if check_plugin_name not in checks.check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
             continue
+
         if checks.check_info[check_plugin_name].get("extra_sections"):
             for section_name in checks.check_info[check_plugin_name]["extra_sections"]:
                 if section_name in checks.check_info:
                     needed_check_plugin_names.add(section_name)
-                needed_sections.add(section_name)
 
-        needed_sections.add(checks.section_name_of(check_plugin_name))
         needed_check_plugin_names.add(check_plugin_name)
+
+    # Also include the check plugins of the cluster nodes to be able to load
+    # the autochecks of the nodes
+    if config.is_cluster(hostname):
+        for node in config.nodes_of(hostname):
+            needed_check_plugin_names.update([ e[0] for e in check_table.get_precompiled_check_table(node) ])
 
     # check info table
     # We need to include all those plugins that are referenced in the host's
-    # check table
+    # check table.
     filenames = []
     for check_plugin_name in needed_check_plugin_names:
         section_name = checks.section_name_of(check_plugin_name)
@@ -1054,25 +1058,23 @@ if '-d' in sys.argv:
                 filenames.append(path)
 
     output.write("checks.load_checks(%r)\n" % filenames)
-    for filename in filenames:
-        console.verbose(" %s%s%s", tty.green, filename.split('/')[-1], tty.normal, stream=sys.stderr)
+    for check_plugin_name in sorted(needed_check_plugin_names):
+        console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
     output.write("config.load(validate_hosts=False)\n")
 
     # handling of clusters
     if config.is_cluster(hostname):
         cluster_nodes = config.nodes_of(hostname)
-        output.write("clusters = { %r : %r }\n" %
-                     (hostname, cluster_nodes))
-        output.write("def is_cluster(hostname):\n    return hostname == %r\n\n" % hostname)
+        output.write("config.is_cluster = lambda h: h == %r\n" % hostname)
 
         nodes_of_map = {hostname: cluster_nodes}
         for node in config.nodes_of(hostname):
             nodes_of_map[node] = None
-        output.write("def nodes_of(hostname):\n    return %r[hostname]\n\n" % nodes_of_map)
+        output.write("config.nodes_of = lambda h: %r[h]\n" % nodes_of_map)
     else:
-        output.write("clusters = {}\ndef is_cluster(hostname):\n    return False\n\n")
-        output.write("def nodes_of(hostname):\n    return None\n")
+        output.write("config.is_cluster = lambda h: False\n")
+        output.write("config.nodes_of = lambda h: None\n")
 
     # IP addresses
     needed_ipaddresses, needed_ipv6addresses, = {}, {}

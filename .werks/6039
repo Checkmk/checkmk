@@ -1,0 +1,12 @@
+Title: Nagios: Fixed monitoring of cluster hosts and nodes
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1524831426
+
+Monitoring Check_MK clusters was not correctly working in all
+previous 1.5 releases. 

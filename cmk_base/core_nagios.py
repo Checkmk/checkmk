@@ -1094,7 +1094,6 @@ if '-d' in sys.argv:
         nodes = [ (hostname, ipaddress) ]
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
-    output.write("ip_lookup.lookup_ip_address = lambda hostname: config.ipaddresses.get(hostname)\n\n");
 
     # datasource programs. Is this host relevant?
 

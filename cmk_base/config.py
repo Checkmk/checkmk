@@ -666,7 +666,14 @@ def is_ipv6_primary(hostname):
     primarily via IPv6."""
     dual_stack_host = is_ipv4v6_host(hostname)
     return (not dual_stack_host and is_ipv6_host(hostname)) \
-            or (dual_stack_host and rulesets.host_extra_conf(hostname, primary_address_family) == "ipv6")
+            or (dual_stack_host and _primary_ip_address_family_of(hostname) == "ipv6")
+
+
+def _primary_ip_address_family_of(hostname):
+    rules = rulesets.host_extra_conf(hostname, primary_address_family)
+    if rules:
+        return rules[0]
+    return "ipv4"
 
 
 def is_ipv4v6_host(hostname):

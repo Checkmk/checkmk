@@ -1,0 +1,13 @@
+Title: Fixed host name translation via regexes in the EC
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b3
+Date: 1524822276
+
+Using a host name translation via regexes resulted in an exception in the
+event console, this has been fixed.  Note that this was a regression
+starting with the earliest 1.4.0 relase, the 1.2.8 series is OK.

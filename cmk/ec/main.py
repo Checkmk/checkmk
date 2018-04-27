@@ -473,17 +473,17 @@ class SNMPTrapEngine(object):
         self.snmp_engine = snmp_engine
 
 
-def initialize_snmptrap_handling(settings, config, event_server, table_events):
+def initialize_snmptrap_handling(settings, config, event_server):
     if settings.options.snmptrap_udp is None:
         return
 
-    initialize_snmptrap_engine(config, event_server, table_events)
+    initialize_snmptrap_engine(config, event_server)
 
     if snmptrap_translation_enabled(config):
         event_server.load_mibs()
 
 
-def initialize_snmptrap_engine(config, event_server, table_events):
+def initialize_snmptrap_engine(config, event_server):
     snmp_engine = pysnmp.entity.engine.SnmpEngine()
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
@@ -5025,7 +5025,7 @@ def load_configuration(settings, slave_status):
 def reload_configuration(settings, event_status, event_server, status_server, slave_status):
     with lock_configuration:
         config = load_configuration(settings, slave_status)
-        initialize_snmptrap_handling(settings, config, event_server, status_server.table_events)
+        initialize_snmptrap_handling(settings, config, event_server)
         event_server.reload_configuration(config)
 
     event_status.reload_configuration(config)
@@ -5099,7 +5099,7 @@ def main():
 
         event_status.load_status(event_server)
 
-        initialize_snmptrap_handling(settings, config, event_server, table_events)
+        initialize_snmptrap_handling(settings, config, event_server)
 
         event_server.compile_rules(config["rules"], config["rule_packs"])
 

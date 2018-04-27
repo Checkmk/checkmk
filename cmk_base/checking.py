@@ -109,14 +109,14 @@ def handle_check_mk_check_result(check_plugin_name, description):
             if perfdata:
                 output_txt += " | %s" % " ".join(perfdata)
             if long_infotexts:
-                output_txt += "\n" + "\n".join(long_infotexts)
+                output_txt = "%s\n%s" % (output_txt, "\n".join(long_infotexts))
             output_txt += "\n"
 
             if _in_keepalive_mode():
                 keepalive.add_keepalive_active_check_result(hostname, output_txt)
-                console.verbose(output_txt)
+                console.verbose(output_txt.encode("utf-8"))
             else:
-                console.output(output_txt)
+                console.output(output_txt.encode("utf-8"))
 
             return status
         return wrapped_check_func

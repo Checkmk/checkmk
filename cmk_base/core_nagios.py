@@ -951,7 +951,8 @@ def _precompile_hostcheck(hostname):
             pass
 
     # check table, enriched with addition precompiled information.
-    host_check_table = check_table.get_precompiled_check_table(hostname, filter_mode="include_clustered")
+    host_check_table = check_table.get_precompiled_check_table(hostname,
+                            filter_mode="include_clustered", skip_ignored=False)
     if not host_check_table:
         console.verbose("(no Check_MK checks)\n")
         return
@@ -1009,10 +1010,9 @@ if '-d' in sys.argv:
 
 """)
 
-    # Do we need to load the SNMP module? This is the case, if the host
-    # has at least one SNMP based check. Also collect the needed check
-    # types and sections.
     needed_check_plugin_names = set([])
+
+    # Collect the needed check plugin names using the host check table
     for check_plugin_name, _unused_item, _unused_param, descr in host_check_table:
         if check_plugin_name not in checks.check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
@@ -1029,7 +1029,7 @@ if '-d' in sys.argv:
     # the autochecks of the nodes
     if config.is_cluster(hostname):
         for node in config.nodes_of(hostname):
-            needed_check_plugin_names.update([ e[0] for e in check_table.get_precompiled_check_table(node) ])
+            needed_check_plugin_names.update([ e[0] for e in check_table.get_precompiled_check_table(node, skip_ignored=False) ])
 
     # check info table
     # We need to include all those plugins that are referenced in the host's
@@ -1060,6 +1060,11 @@ if '-d' in sys.argv:
     output.write("checks.load_checks(%r)\n" % filenames)
     for check_plugin_name in sorted(needed_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
+
+    # Disable this check. We don't have all check plugins loaded and have not all possible
+    # check config variables known. These issues don't have to be validated by the single
+    # precompiled checks.
+    output.write("config.verify_non_invalid_variables = lambda x: None\n")
 
     output.write("config.load(validate_hosts=False)\n")
 

@@ -1,0 +1,13 @@
+Title: Discovery: Exceptions during discovery produce crash reports again
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1524842047
+
+It is intended that exceptions during service discovery lead to crash reports
+instead of less helpful UNKOWN states with missing trace information. This broke
+somewhere on the way to 1.5.

@@ -1,0 +1,13 @@
+Title: Fixed broken IP lookup in Check_MK service when using Nagios core
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1524809608
+
+The "Check_MK" services of hosts were not doing IP resolution correctly,
+leading to messages like "(No output returned from plugin)" and non working
+checking for these hosts.

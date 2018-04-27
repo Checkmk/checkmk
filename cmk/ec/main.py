@@ -466,6 +466,13 @@ class MKClientError(Exception):
 #   | Generic SNMP-Trap processing functions                               |
 #   '----------------------------------------------------------------------'
 
+class SNMPTrapEngine(object):
+    def __init__(self, snmp_receiver, the_snmp_engine):
+        super(SNMPTrapEngine, self).__init__()
+        self.snmp_receiver = snmp_receiver
+        self.snmp_engine = the_snmp_engine
+
+
 def initialize_snmptrap_handling(settings, config, event_server, table_events):
     if settings.options.snmptrap_udp is None:
         return
@@ -484,9 +491,9 @@ def initialize_snmptrap_engine(config, event_server, table_events):
         pduTypes = (snmp_v1.TrapPDU.tagSet, snmp_v2c.SNMPv2TrapPDU.tagSet)
 
     initialize_snmp_credentials(config, the_snmp_engine)
-    global g_snmp_receiver, g_snmp_engine
-    g_snmp_receiver = ECNotificationReceiver(the_snmp_engine, event_server.handle_snmptrap)
-    g_snmp_engine = the_snmp_engine
+    snmp_receiver = ECNotificationReceiver(the_snmp_engine, event_server.handle_snmptrap)
+    global g_snmp_trap_engine
+    g_snmp_trap_engine = SNMPTrapEngine(snmp_receiver, the_snmp_engine)
 
 
 def auth_proto_for(proto_name):
@@ -1562,8 +1569,8 @@ class EventServer(ECServerThread):
     def process_snmptrap(self, data):
         whole_msg, sender_address = data
         self.logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
-        g_snmp_engine.setUserContext(sender_address=sender_address)
-        g_snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_engine, (), (), whole_msg)
+        g_snmp_trap_engine.snmp_engine.setUserContext(sender_address=sender_address)
+        g_snmp_trap_engine.snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_trap_engine.snmp_engine, (), (), whole_msg)
 
     def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
                         var_binds, cb_ctx):

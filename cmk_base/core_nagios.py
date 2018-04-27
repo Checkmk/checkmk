@@ -1145,20 +1145,7 @@ if '-d' in sys.argv:
     # generate traceback for long output
     output.write("    sys.stdout.write(\"Traceback: %s\\n\" % traceback.format_exc())\n")
 
-    # debug logging
     output.write("\n")
-    output.write("    l = file(cmk.paths.log_dir + \"/crashed-checks.log\", \"a\")\n")
-    output.write("    l.write((\"Exception in precompiled check:\\n\"\n")
-    output.write("            \"  Check_MK Version: %s\\n\"\n")
-    output.write("            \"  Date:             %s\\n\"\n")
-    output.write("            \"  Host:             %s\\n\"\n")
-    output.write("            \"  %s\\n\") % (\n")
-    output.write("            cmk.__version__,\n")
-    output.write("            time.strftime(\"%Y-%d-%m %H:%M:%S\"),\n")
-    output.write("            \"%s\",\n" % hostname)
-    output.write("            traceback.format_exc().replace('\\n', '\\n      ')))\n")
-    output.write("    l.close()\n")
-
     output.write("    sys.exit(3)\n")
     output.close()
 

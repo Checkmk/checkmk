@@ -36,10 +36,16 @@ import cmk_base.rulesets as rulesets
 import cmk_base.piggyback as piggyback
 import cmk_base.item_state as item_state
 
+# TODO: Refactor this to OO. The check table needs to be an object.
 
 # Returns check table for a specific host
 # Format: (checkname, item) -> (params, description)
-def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='config', skip_autochecks=False):
+#
+# filter_mode: None                -> default, returns only checks for this host
+# filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
+# filter_mode: "only_clustered"    -> returns only checks belonging to clusters
+def get_check_table(hostname, remove_duplicates=False, use_cache=True,
+                    world='config', skip_autochecks=False, filter_mode=None):
     import cmk_base.discovery as discovery
 
     if config.is_ping_host(hostname):
@@ -47,12 +53,16 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
 
     # speed up multiple lookup of same host
     check_table_cache = cmk_base.config_cache.get_dict("check_tables")
+    table_cache_id = hostname, filter_mode
 
-    if not skip_autochecks and use_cache and hostname in check_table_cache:
+    if not skip_autochecks and use_cache and table_cache_id in check_table_cache:
+        # TODO: The whole is_dual_host handling needs to be cleaned up. The duplicate checking
+        #       needs to be done in all cases since a host can now have a lot of different data
+        #       sources.
         if remove_duplicates and config.is_dual_host(hostname):
-            return _remove_duplicate_checks(check_table_cache[hostname])
+            return _remove_duplicate_checks(check_table_cache[table_cache_id])
         else:
-            return check_table_cache[hostname]
+            return check_table_cache[table_cache_id]
 
     check_table = {}
 
@@ -123,8 +133,15 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             descr = config.service_description(hostname, checkname, item)
             if config.service_ignored(hostname, checkname, descr):
                 return
-            if hostname != config.host_of_clustered_service(hostname, descr):
+
+            svc_is_mine = hostname == config.host_of_clustered_service(hostname, descr)
+            print hostname, descr, svc_is_mine, filter_mode
+            if filter_mode is None and not svc_is_mine:
                 return
+
+            elif filter_mode == "only_clustered" and svc_is_mine:
+                return
+
             deps  = service_deps(hostname, descr)
             check_table[(checkname, item)] = (params, descr, deps)
 
@@ -168,7 +185,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
                 deps.append(d)
 
     if not skip_autochecks and use_cache:
-        check_table_cache[hostname] = check_table
+        check_table_cache[table_cache_id] = check_table
 
     if remove_duplicates:
         return _remove_duplicate_checks(check_table)
@@ -176,8 +193,8 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         return check_table
 
 
-def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"):
-    host_checks = get_sorted_check_table(hostname, remove_duplicates, world)
+def get_precompiled_check_table(hostname, remove_duplicates=True, world="config", filter_mode=None):
+    host_checks = get_sorted_check_table(hostname, remove_duplicates, world, filter_mode=filter_mode)
     precomp_table = []
     for check_plugin_name, item, params, description, _unused_deps in host_checks:
         # make these globals available to the precompile function
@@ -254,12 +271,13 @@ def _remove_duplicate_checks(check_table):
 # if there already is a TCP based one with the same
 # description. E.g: df vs hr_fs.
 # TODO: Clean this up!
-def get_sorted_check_table(hostname, remove_duplicates=False, world="config"):
+def get_sorted_check_table(hostname, remove_duplicates=False, world="config", filter_mode=None):
     # Convert from dictionary into simple tuple list. Then sort
     # it according to the service dependencies.
     unsorted = [ (checkname, item, params, descr, deps)
                  for ((checkname, item), (params, descr, deps))
-                 in get_check_table(hostname, remove_duplicates=remove_duplicates, world=world).items() ]
+                 in get_check_table(hostname, remove_duplicates=remove_duplicates, world=world,
+				    filter_mode=filter_mode).items() ]
 
     def cmp(a, b):
         if a[3] < b[3]:

@@ -1,0 +1,12 @@
+Title: if: Fixed interface graphs for some hosts when using the raw edition
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b3
+Date: 1524832612
+Class: fix
+
+Some network interface graphs were not working as expected. Instead an "Error
+500" was shown in the GUI hover menus. When clicking on the graph icon, PNP
+showed some kind of PHP error message about a non numeric value.

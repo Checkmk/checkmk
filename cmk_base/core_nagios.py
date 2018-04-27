@@ -531,7 +531,7 @@ define service {
     # Inventory checks - if user has configured them.
     if params["check_interval"] \
         and not config.service_ignored(hostname, None, service_discovery_name) \
-        and not "ping" in config.tags_of_host(hostname): # FIXME/TODO: Why not user is_ping_host()?
+        and not config.is_ping_host(hostname):
         outfile.write("""
 define service {
   use\t\t\t\t%s

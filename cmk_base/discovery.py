@@ -652,11 +652,11 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                     discovered_services.append((check_plugin_name, item, paramstring))
             except (KeyboardInterrupt, MKTimeout):
                 raise
-            except Exception:
+            except Exception, e:
                 if on_error == "raise":
                     raise
                 elif on_error == "warn":
-                    console.error("Discovery of '%s' failed: %s\n" % (check_plugin_nam, e))
+                    console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
         return discovered_services
 

@@ -135,7 +135,6 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
                 return
 
             svc_is_mine = hostname == config.host_of_clustered_service(hostname, descr)
-            print hostname, descr, svc_is_mine, filter_mode
             if filter_mode is None and not svc_is_mine:
                 return
 

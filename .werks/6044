@@ -1,0 +1,12 @@
+Title: Nagios: Fixed crash when discovered checks were disabled
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1524855837
+
+When all services discovered by a single check were disabled a
+"KeyError: 'logwatch'" exception occured while checking the host. 

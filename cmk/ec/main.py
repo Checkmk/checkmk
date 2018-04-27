@@ -49,21 +49,21 @@ import time
 import traceback
 
 # Needed for receiving traps
-from pysnmp.entity import engine as snmp_engine
-from pysnmp.entity import config as snmp_config
-from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
-from pysnmp.proto.api import v2c as snmp_v2c, v1 as snmp_v1
+import pysnmp.entity.config
+import pysnmp.entity.engine
+import pysnmp.entity.rfc3413.ntfrcv
+import pysnmp.proto.api
 
 # Needed for trap translation
-from pysnmp.smi.builder import MibBuilder, DirMibSource
-from pysnmp.smi.view import MibViewController
-from pysnmp.smi.rfc1902 import ObjectType, ObjectIdentity
-from pysnmp.smi.error import SmiError
-from pyasn1.error import ValueConstraintError
+import pysnmp.smi.builder
+import pysnmp.smi.view
+import pysnmp.smi.rfc1902
+import pysnmp.smi.error
+import pyasn1.error
 
 import cmk
 import cmk.daemon
-import cmk.defines as defines
+import cmk.defines
 import cmk.ec.export
 import cmk.ec.settings
 import cmk.log
@@ -71,7 +71,7 @@ import cmk.paths
 import cmk.profile
 import cmk.render
 import livestatus
-from cmk.regex import is_regex, regex
+import cmk.regex
 
 logger = cmk.log.get_logger("mkeventd")
 
@@ -220,9 +220,9 @@ filter_operators = {
     "<": (lambda a, b: a < b),
     ">=": (lambda a, b: a >= b),
     "<=": (lambda a, b: a <= b),
-    "~": (lambda a, b: regex(b).search(a)),
+    "~": (lambda a, b: cmk.regex.regex(b).search(a)),
     "=~": (lambda a, b: a.lower() == b.lower()),
-    "~~": (lambda a, b: regex(b.lower()).search(a.lower())),
+    "~~": (lambda a, b: cmk.regex.regex(b.lower()).search(a.lower())),
     "in": (lambda a, b: a in b),
 }
 
@@ -467,10 +467,10 @@ class MKClientError(Exception):
 #   '----------------------------------------------------------------------'
 
 class SNMPTrapEngine(object):
-    def __init__(self, snmp_receiver, the_snmp_engine):
+    def __init__(self, snmp_receiver, snmp_engine):
         super(SNMPTrapEngine, self).__init__()
         self.snmp_receiver = snmp_receiver
-        self.snmp_engine = the_snmp_engine
+        self.snmp_engine = snmp_engine
 
 
 def initialize_snmptrap_handling(settings, config, event_server, table_events):
@@ -484,35 +484,35 @@ def initialize_snmptrap_handling(settings, config, event_server, table_events):
 
 
 def initialize_snmptrap_engine(config, event_server, table_events):
-    the_snmp_engine = snmp_engine.SnmpEngine()
+    snmp_engine = pysnmp.entity.engine.SnmpEngine()
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
-    class ECNotificationReceiver(snmp_ntfrcv.NotificationReceiver):
-        pduTypes = (snmp_v1.TrapPDU.tagSet, snmp_v2c.SNMPv2TrapPDU.tagSet)
+    class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
+        pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
-    initialize_snmp_credentials(config, the_snmp_engine)
-    snmp_receiver = ECNotificationReceiver(the_snmp_engine, event_server.handle_snmptrap)
+    initialize_snmp_credentials(config, snmp_engine)
+    snmp_receiver = ECNotificationReceiver(snmp_engine, event_server.handle_snmptrap)
     global g_snmp_trap_engine
-    g_snmp_trap_engine = SNMPTrapEngine(snmp_receiver, the_snmp_engine)
+    g_snmp_trap_engine = SNMPTrapEngine(snmp_receiver, snmp_engine)
 
 
 def auth_proto_for(proto_name):
     if proto_name == "md5":
-        return snmp_config.usmHMACMD5AuthProtocol
+        return pysnmp.entity.config.usmHMACMD5AuthProtocol
     if proto_name == "sha":
-        return snmp_config.usmHMACSHAAuthProtocol
+        return pysnmp.entity.config.usmHMACSHAAuthProtocol
     raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
 
 
 def priv_proto_for(proto_name):
     if proto_name == "DES":
-        return snmp_config.usmDESPrivProtocol
+        return pysnmp.entity.config.usmDESPrivProtocol
     if proto_name == "AES":
-        return snmp_config.usmAesCfb128Protocol
+        return pysnmp.entity.config.usmAesCfb128Protocol
     raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
 
 
-def initialize_snmp_credentials(config, the_snmp_engine):
+def initialize_snmp_credentials(config, snmp_engine):
     user_num = 0
     for spec in config["snmp_credentials"]:
         credentials = spec["credentials"]
@@ -522,22 +522,22 @@ def initialize_snmp_credentials(config, the_snmp_engine):
         if type(credentials) != tuple:
             community_index = 'snmpv2-%d' % user_num
             logger.info("adding SNMPv1 system: communityIndex=%s" % community_index)
-            snmp_config.addV1System(the_snmp_engine, community_index, credentials)
+            pysnmp.entity.config.addV1System(snmp_engine, community_index, credentials)
             continue
 
         # SNMPv3
         securityLevel = credentials[0]
         if securityLevel == "noAuthNoPriv":
             user_id = credentials[1]
-            auth_proto = snmp_config.usmNoAuthProtocol
+            auth_proto = pysnmp.entity.config.usmNoAuthProtocol
             auth_key = None
-            priv_proto = snmp_config.usmNoPrivProtocol
+            priv_proto = pysnmp.entity.config.usmNoPrivProtocol
             priv_key = None
         elif securityLevel == "authNoPriv":
             user_id = credentials[2]
             auth_proto = auth_proto_for(credentials[1])
             auth_key = credentials[3]
-            priv_proto = snmp_config.usmNoPrivProtocol
+            priv_proto = pysnmp.entity.config.usmNoPrivProtocol
             priv_key = None
         elif securityLevel == "authPriv":
             user_id = credentials[2]
@@ -554,11 +554,11 @@ def initialize_snmp_credentials(config, the_snmp_engine):
                          ".".join(str(i) for i in auth_proto),
                          ".".join(str(i) for i in priv_proto),
                          engine_id))
-            snmp_config.addV3User(
-                the_snmp_engine, user_id,
+            pysnmp.entity.config.addV3User(
+                snmp_engine, user_id,
                 auth_proto, auth_key,
                 priv_proto, priv_key,
-                securityEngineId=snmp_v2c.OctetString(hexValue=engine_id))
+                securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
 
 #.
 #   .--Timeperiods---------------------------------------------------------.
@@ -1460,10 +1460,10 @@ class EventServer(ECServerThread):
 
     def load_mibs(self):
         try:
-            builder = MibBuilder()  # manages python MIB modules
+            builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
             # load MIBs from our compiled MIB and default MIB paths
-            builder.setMibSources(*[DirMibSource(str(self.settings.paths.compiled_mibs_dir.value))] + list(builder.getMibSources()))
+            builder.setMibSources(*[pysnmp.smi.builder.DirMibSource(str(self.settings.paths.compiled_mibs_dir.value))] + list(builder.getMibSources()))
 
             # Indicate we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = True
@@ -1476,8 +1476,8 @@ class EventServer(ECServerThread):
             self.logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
 
             # This object maintains various indices built from MIBs data
-            self._mib_resolver = MibViewController(builder)
-        except SmiError as e:
+            self._mib_resolver = pysnmp.smi.view.MibViewController(builder)
+        except pysnmp.smi.error.SmiError as e:
             if self.settings.options.debug:
                 raise
             self.logger.info("Exception while loading MIB modules. Proceeding without modules!")
@@ -1531,7 +1531,7 @@ class EventServer(ECServerThread):
         def translate(oid, value):
             # Disable mib_var[0] type detection
             # pylint: disable=no-member
-            mib_var = ObjectType(ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
+            mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
 
             node = mib_var[0].getMibNode()
             translated_oid = mib_var[0].prettyPrint().replace("\"", "")
@@ -1553,7 +1553,7 @@ class EventServer(ECServerThread):
 
                 var_binds.append((translated_oid, translated_value))
 
-            except (SmiError, ValueConstraintError) as e:
+            except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
                 self.logger.warning('Failed to translate OID %s (in trap from %s): %s '
                                     '(enable debug logging for details)' %
                                     (oid.prettyPrint(), ipaddress, e))
@@ -2056,7 +2056,7 @@ class EventServer(ECServerThread):
             if not value:
                 return None
 
-            if is_regex(value):
+            if cmk.regex.is_regex(value):
                 return re.compile(value, re.IGNORECASE)
             else:
                 return val.lower()
@@ -2722,7 +2722,7 @@ class EventServer(ECServerThread):
                 regex, subst = translation.get("regex")
                 if not regex.endswith('$'):
                     regex += '$'
-                rcomp = regex(regex)
+                rcomp = cmk.regex.regex(regex)
                 mo = rcomp.match(backedhost)
                 if mo:
                     backedhost = subst
@@ -4703,7 +4703,7 @@ def base_notification_context(event, username, is_cancelling):
         "SERVICEOUTPUT": event["text"],
         "SERVICEPERFDATA": "",
         "SERVICEPROBLEMID": "ec-id-" + str(event["id"]),
-        "SERVICESTATE": defines.service_state_name(event["state"]),
+        "SERVICESTATE": cmk.defines.service_state_name(event["state"]),
         "SERVICESTATEID": str(event["state"]),
         "SERVICE_EC_CONTACT": event.get("owner", ""),
         "SERVICE_SL": str(event["sl"]),

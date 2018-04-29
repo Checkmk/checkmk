@@ -34,7 +34,7 @@ def parse_docker_node_info(info):
 
 
 def inventory_docker_node_info(parsed):
-    if parsed:
+    if parsed and isinstance(parsed, dict):
         return [(None, {})]
 
 
@@ -55,10 +55,15 @@ check_info['docker_node_info'] = {
 
 
 def inventory_docker_node_containers(parsed):
-    return [(None, {})]
+    if parsed and isinstance(parsed, dict):
+        return [(None, {})]
 
 
 def check_docker_node_containers(item, params, parsed):
+    if not isinstance(parsed, dict):
+        # String with error message in case the daemon is not running
+        return
+
     def check_node_levels(count, warn, crit, warn_lower, crit_lower):
         if crit is not None and count >= crit:
             return 2, " (warn/crit at %s/%s)" % (warn, crit)

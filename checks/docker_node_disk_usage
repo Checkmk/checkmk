@@ -53,7 +53,7 @@ def inventory_docker_node_disk_usage(parsed):
 def check_docker_node_disk_usage(item, params, parsed):
     data = parsed.get(item)
     if data is None:
-        yield 3, "no data"
+        return
 
     for key, param, conversion_func in (
             ('Size', 'size', get_filesize_human_readable),

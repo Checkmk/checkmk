@@ -1,0 +1,10 @@
+Title: docker_node_disk_usage: Fixed crash when docker process is not running
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b3
+Date: 1525024748
+Class: fix
+
+

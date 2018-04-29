@@ -54,6 +54,7 @@ check_mk_config_dir       = None
 modules_dir               = None
 var_dir                   = None
 log_dir                   = None
+precompiled_checks_dir    = None
 autochecks_dir            = None
 precompiled_hostchecks_dir= None
 snmpwalks_dir             = None
@@ -122,6 +123,7 @@ def _set_paths():
         "modules_dir"                 : os.path.join(omd_root, "share/check_mk/modules"),
         "var_dir"                     : os.path.join(omd_root, "var/check_mk"),
         "log_dir"                     : os.path.join(omd_root, "var/log"),
+        "precompiled_checks_dir"      : os.path.join(omd_root, "var/check_mk/precompiled_checks"),
         "autochecks_dir"              : os.path.join(omd_root, "var/check_mk/autochecks"),
         "precompiled_hostchecks_dir"  : os.path.join(omd_root, "var/check_mk/precompiled"),
         "snmpwalks_dir"               : os.path.join(omd_root, "var/check_mk/snmpwalks"),

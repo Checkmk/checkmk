@@ -28,6 +28,7 @@ import os
 import math
 import copy
 import ast
+import marshal
 from collections import OrderedDict
 
 import cmk.paths
@@ -149,7 +150,7 @@ def load_checks(filelist):
 
             load_check_includes(f, check_context)
 
-            execfile(f, check_context)
+            load_precompiled_plugin(f, check_context)
             loaded_files.add(file_name)
 
         except MKTerminate:
@@ -248,7 +249,7 @@ def load_check_includes(check_file_path, check_context):
     for include_file_name in includes_of_plugin(check_file_path):
         include_file_path = check_include_file_path(include_file_name)
         try:
-            execfile(include_file_path, check_context)
+            load_precompiled_plugin(include_file_path, check_context)
         except MKTerminate:
             raise
 
@@ -323,6 +324,46 @@ def _plugin_pathnames_in_directory(path):
         ])
     else:
         return []
+
+
+def load_precompiled_plugin(path, check_context):
+    """Loads the given check or check include plugin into the given
+    check context.
+
+    To improve loading speed the files are not read directly. The files are
+    python byte-code compiled before in case it has not been done before. In
+    case there is already a compiled file that is newer than the current one,
+    then the precompiled file is loaded."""
+
+    precompiled_path = _precompiled_plugin_path(path)
+
+    if not _is_plugin_precompiled(path, precompiled_path):
+        console.vverbose("Precompile %s to %s\n" % (path, precompiled_path))
+        _precompile_plugin(path, precompiled_path)
+
+    exec(marshal.load(open(precompiled_path)), check_context)
+
+
+def _is_plugin_precompiled(path, precompiled_path):
+    return os.path.exists(precompiled_path) \
+        and os.stat(path).st_mtime < os.stat(precompiled_path).st_mtime
+
+
+def _precompile_plugin(path, precompiled_path):
+    code = compile(open(path).read(), path, "exec")
+
+    if not os.path.exists(os.path.dirname(precompiled_path)):
+        os.makedirs(os.path.dirname(precompiled_path))
+
+    with open(precompiled_path, "w") as compiled_file:
+        marshal.dump(code, compiled_file)
+
+
+def _precompiled_plugin_path(path):
+    is_local = path.startswith(cmk.paths.local_checks_dir)
+    return os.path.join(cmk.paths.precompiled_checks_dir,
+                        "local" if is_local else "",
+                        os.path.basename(path))
 
 
 def check_variable_names():

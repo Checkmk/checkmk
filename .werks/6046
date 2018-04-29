@@ -1,0 +1,15 @@
+Title: Improved execution time of e.g. service discovery
+Level: 1
+Component: core
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1525023719
+
+The overall execution time of the service discovery has been reduced by
+introducing some precompiling of the check plugins and their includes
+before loading them. The mechanism is similar to the compilation of
+python modules from (.py to .pyc files). This mechanism reduces the
+load time of the plugins by 50%.

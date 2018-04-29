@@ -27,6 +27,10 @@
 
 
 def inv_docker_node_info(parsed, inventory_tree):
+    if not isinstance(parsed, dict):
+        # String with error message in case the daemon is not running
+        return
+
     node = inventory_tree.get_dict("software.applications.docker.")
     node["version"] = parsed[u"ServerVersion"]
 

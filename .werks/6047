@@ -1,0 +1,10 @@
+Title: docker_node_info: Fix crash in case docker process is not running
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0b3
+Date: 1525024297
+Class: fix
+
+

@@ -153,6 +153,31 @@ function section_uptime()
     fi
 }
 
+# Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
+# Heads up: NFS-mounts are generally supressed to avoid agent hangs.
+# If hard NFS mounts are configured or you have too large nfs retry/timeout
+# settings, accessing those mounts from the agent would leave you with
+# thousands of agent processes and, ultimately, a dead monitored system.
+# These should generally be monitored on the NFS server, not on the clients.
+function section_df()
+{
+    if [ -n "$MK_IN_CONTAINER" ]; then
+        return
+    fi
+
+    echo '<<<df>>>'
+    # The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
+    # to be all but working.
+    local excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x prl_fs"
+    df -PTlk "$excludefs" | sed 1d
+
+    # df inodes information
+    echo '<<<df>>>'
+    echo '[df_inodes_start]'
+    df -PTli "$excludefs" | sed 1d
+    echo '[df_inodes_end]'
+}
+
 function run_mrpe() {
     local descr=$1
     shift
@@ -333,24 +358,7 @@ then
     sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1; echo
 fi
 
-# Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
-# Heads up: NFS-mounts are generally supressed to avoid agent hangs.
-# If hard NFS mounts are configured or you have too large nfs retry/timeout
-# settings, accessing those mounts from the agent would leave you with
-# thousands of agent processes and, ultimately, a dead monitored system.
-# These should generally be monitored on the NFS server, not on the clients.
-
-echo '<<<df>>>'
-# The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
-# to be all but working.
-excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x prl_fs"
-df -PTlk "$excludefs" | sed 1d
-
-# df inodes information
-echo '<<<df>>>'
-echo '[df_inodes_start]'
-df -PTli "$excludefs" | sed 1d
-echo '[df_inodes_end]'
+section_df
 
 # Filesystem usage for ZFS
 if type zfs > /dev/null 2>&1 ; then

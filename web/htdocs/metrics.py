@@ -976,7 +976,10 @@ def build_perfometer(perfometer, translated_metrics):
 
 
     # This stuf is deprecated and will be removed soon. Watch out!
-    perfometer_type, definition, _unused, _unused2 = perfometer
+    if len(perfometer) == 4:
+        perfometer_type, definition, _unused, _unused2 = perfometer
+    else:
+        perfometer_type, definition = perfometer
 
     if perfometer_type == "logarithmic":
         expression, median, exponent = definition

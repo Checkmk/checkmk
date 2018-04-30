@@ -143,6 +143,12 @@ class ACTestLivestatusUsage(ACTest):
         )
 
         usage, threads, active_connections, overflows_rate = site_status
+
+        # Usage is cmc specific average calculation of the usage. For nagios calculate the
+        # current value to have at least any value.
+        if usage is None:
+            usage = float(active_connections) / threads
+
         usage_perc = 100 * usage
 
         usage_warn, usage_crit = 80, 95
@@ -153,9 +159,12 @@ class ACTestLivestatusUsage(ACTest):
         else:
             cls = ACResultOK
 
-        yield cls(_("The current livestatus usage is %.2f%%. You have a connection overflow "
-                    "rate of %.2f/s. %d of %d connections used") %
-                    (usage_perc, overflows_rate, active_connections, threads))
+        yield cls(_("The current livestatus usage is %.2f%%") % usage_perc)
+
+        if overflows_rate is not None:
+            yield ACResultOK("You have a connection overflow rate of %.2f/s" % overflows_rate)
+
+        yield ACResultOK("%d of %d connections used" % (active_connections, threads))
 
 
 

@@ -4322,7 +4322,7 @@ def get_event_console_sync_sites():
 
 
 def get_notification_sync_sites():
-    return sorted([ site_id for site_id, site in wato_slave_sites()
+    return sorted([ site_id for site_id, site in config.wato_slave_sites()
                         if not config.site_is_local(site_id) ])
 
 

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import requests
 import subprocess
 
@@ -416,8 +417,21 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
 
 
 
-# Abstract base class for apache related tests
-class BPApacheTest(object):
+class ACMicrocoreTest(object):
+    """Abstract base class for microcore specific tests"""
+    __metaclass__ = abc.ABCMeta
+
+    def _uses_microcore(self):
+        local_connection = sites.livestatus.LocalConnection()
+        version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
+        return version.startswith("Check_MK")
+
+
+
+class ACApacheTest(object):
+    """Abstract base class for apache related tests"""
+    __metaclass__ = abc.ABCMeta
+
     def _get_number_of_idle_processes(self):
         apache_status = self._get_apache_status()
 
@@ -449,7 +463,7 @@ class BPApacheTest(object):
 
 
 
-class ACTestApacheNumberOfProcesses(ACTest, BPApacheTest):
+class ACTestApacheNumberOfProcesses(ACTest, ACApacheTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -533,7 +547,7 @@ class ACTestApacheNumberOfProcesses(ACTest, BPApacheTest):
 
 
 
-class ACTestApacheProcessUsage(ACTest, BPApacheTest):
+class ACTestApacheProcessUsage(ACTest, ACApacheTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -575,7 +589,7 @@ class ACTestApacheProcessUsage(ACTest, BPApacheTest):
 
 
 
-class ACTestCheckMKHelperUsage(ACTest):
+class ACTestCheckMKHelperUsage(ACTest, ACMicrocoreTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -606,7 +620,7 @@ class ACTestCheckMKHelperUsage(ACTest):
 
 
     def is_relevant(self):
-        return True
+        return self._uses_microcore()
 
 
     def execute(self):
@@ -655,7 +669,7 @@ class ACTestCheckMKHelperUsage(ACTest):
 
 
 
-class ACTestGenericCheckHelperUsage(ACTest):
+class ACTestGenericCheckHelperUsage(ACTest, ACMicrocoreTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -679,7 +693,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
 
 
     def is_relevant(self):
-        return True
+        return self._uses_microcore()
 
 
     def execute(self):

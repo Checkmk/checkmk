@@ -9105,7 +9105,7 @@ def mode_user_notifications(phase, profilemode):
         return
 
     if notification_rule_start_async_repl:
-        user_profile_async_replication_dialog(sites=get_notification_sync_sites())
+        user_profile_async_replication_dialog(sites=watolib.get_notification_sync_sites())
         notification_rule_start_async_repl = False
         html.h3(_('Notification Rules'))
 
@@ -9224,7 +9224,7 @@ def mode_notification_rule(phase, profilemode):
             return "notifications"
 
     if notification_rule_start_async_repl:
-        user_profile_async_replication_dialog(sites=get_notification_sync_sites())
+        user_profile_async_replication_dialog(sites=watolib.get_notification_sync_sites())
         notification_rule_start_async_repl = False
         return
 

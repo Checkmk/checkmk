@@ -4321,6 +4321,11 @@ def get_event_console_sync_sites():
     return [ s[0] for s in config.get_event_console_site_choices() ]
 
 
+def get_notification_sync_sites():
+    return sorted([ site_id for site_id, site in wato_slave_sites()
+                        if not config.site_is_local(site_id) ])
+
+
 # TODO: cleanup all call sites to this name
 site_choices = config.site_choices
 

@@ -690,6 +690,19 @@ inventory_displayhints.update({
                                                                  },
     ".software.applications.check_mk.cluster.nodes:"           : { "title"    : _("Nodes"),},
 
+    ".software.applications.docker.": {
+        "icon": "docker",
+        "title": "Docker",
+    },
+
+    ".software.applications.docker.images:": {
+        "title" : _("Images"),
+        "keyorder": ["repository", "tag", "id", "creation", "size", "labels", "amount_containers"],
+    },
+    ".software.applications.docker.images:*.id"        : { "title" : _("ID"), },
+    ".software.applications.docker.images:*.amount_containers" : { "title" : _("# Containers"), },
+
+
     ".software.applications.docker.container.": {
         "title" : _("Container"),
     },
@@ -804,13 +817,6 @@ inventory_displayhints.update({
                                                                           "cluster_name", "active_node", "node_names" ],
                                                          },
     ".software.applications.mssql.instances:*.clustered" : { "title" : _("Clustered"), "paint" : "mssql_is_clustered"},
-
-    ".software.applications.docker."                   : { "title" : _("Docker") },
-    ".software.applications.docker.images:"            : { "title" : _("Images"),
-                                                           "keyorder": ["repository", "tag", "id", "creation", "size", "labels", "amount_containers"],
-                                                         },
-    ".software.applications.docker.images:*.id"        : { "title" : _("ID"), },
-    ".software.applications.docker.images:*.amount_containers" : { "title" : _("# Containers"), },
 
     ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
     ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },
@@ -1492,11 +1498,14 @@ class NodeRenderer(object):
                     part = "%s:%d" % (last, part)
                 finally:
                     _titleinfo.append(part)
+
             titleinfo_path = ".%s." % ".".join(_titleinfo)
             icon, title = inv_titleinfo(titleinfo_path, node)
+
             if "%d" in title: # Replace with list index
                 list_index = int(titleinfo_path.split(":")[-1].rstrip(".")) + 1
                 title = title % list_index
+
             # Some displayhints may end with ":", eg. ".software.packages:"
             if "%s:" % titleinfo_path[:-1] in inventory_displayhints:
                 icon, title = inv_titleinfo("%s:" % titleinfo_path[:-1], node)

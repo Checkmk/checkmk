@@ -362,7 +362,7 @@ def _precompile_plugin(path, precompiled_path):
 def _precompiled_plugin_path(path):
     is_local = path.startswith(cmk.paths.local_checks_dir)
     return os.path.join(cmk.paths.precompiled_checks_dir,
-                        "local" if is_local else "",
+                        "local" if is_local else "builtin",
                         os.path.basename(path))
 
 

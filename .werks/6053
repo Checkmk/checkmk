@@ -1,0 +1,14 @@
+Title: Fixed sync after user notification rule changes
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.4.0p32
+Date: 1525074833
+Class: fix
+
+When a user changes his personal notification rules in a distributed
+environment, the user profile synchronization was only performed for the
+configured "login sites". These are the sites where user logins are allowed (by
+the site configuration). In case of notification setting changes the notification
+rules need to be synchronized to all sites instead.

@@ -9105,7 +9105,7 @@ def mode_user_notifications(phase, profilemode):
         return
 
     if notification_rule_start_async_repl:
-        user_profile_async_replication_dialog()
+        user_profile_async_replication_dialog(sites=get_notification_sync_sites())
         notification_rule_start_async_repl = False
         html.h3(_('Notification Rules'))
 
@@ -9224,7 +9224,7 @@ def mode_notification_rule(phase, profilemode):
             return "notifications"
 
     if notification_rule_start_async_repl:
-        user_profile_async_replication_dialog()
+        user_profile_async_replication_dialog(sites=get_notification_sync_sites())
         notification_rule_start_async_repl = False
         return
 
@@ -14799,12 +14799,12 @@ def user_profile_async_replication_page():
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
     html.end_context_buttons()
 
-    user_profile_async_replication_dialog()
+    user_profile_async_replication_dialog(sites=config.user.authorized_login_sites())
 
     html.footer()
 
 
-def user_profile_async_replication_dialog():
+def user_profile_async_replication_dialog(sites):
     repstatus = watolib.load_replication_status()
 
     html.message(_('In order to activate your changes available on all remote sites, your user profile needs '
@@ -14815,7 +14815,8 @@ def user_profile_async_replication_dialog():
     html.h3(_('Replication States'))
     html.open_div(id_="profile_repl")
     num_replsites = 0
-    for site_id, site in config.user.authorized_login_sites():
+    for site_id in sites:
+        site = config.sites[site_id]
         srs  = repstatus.get(site_id, {})
 
         if not "secret" in site:

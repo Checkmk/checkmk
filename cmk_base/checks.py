@@ -720,9 +720,7 @@ def do_status_data_inventory_for(hostname):
     # use it after every check cycle.
     params = rulesets.host_extra_conf(hostname, rules)
     if params:
-        # Means: Enabled "Do hardware/software inventory",
-        #        => params is at least [{}]
-        return params[0].get('status_data_inventory', True)
+        return params[0].get('status_data_inventory', False)
     return False
 
 

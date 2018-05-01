@@ -173,7 +173,8 @@ def do_inv_for(sources, hostname, ipaddress):
     console.section_success("Found %s%s%d%s inventory entries" %
             (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
 
-    if not status_data_tree.is_empty():
+    if not status_data_tree.is_empty() \
+       and checks.do_status_data_inventory_for(hostname):
         status_data_tree.normalize_nodes()
         _save_status_data_tree(hostname, status_data_tree)
 

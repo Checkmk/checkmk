@@ -160,7 +160,7 @@ def get_history(hostname):
     except:
         return [] # No inventory for this host
     else:
-        history = [(timestamp, inventory_tree)]
+        history = [(0, StructuredDataTree()), (timestamp, inventory_tree)]
 
     inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.paths.var_dir, hostname)
     if os.path.exists(inventory_archive_dir):

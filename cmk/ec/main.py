@@ -594,7 +594,7 @@ class SNMPTrapTranslator(object):
             self._logger.warning('Failed to translate OIDs, no modules loaded (see above)')
             return [(str(oid), str(value)) for oid, value in var_bind_list]
 
-        def translate(oid, value):
+        def do_translate(oid, value):
             # Disable mib_var[0] type detection
             # pylint: disable=no-member
             mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
@@ -607,7 +607,7 @@ class SNMPTrapTranslator(object):
 
         for oid, value in var_bind_list:
             try:
-                node, translated_oid, translated_value = translate(oid, value)
+                node, translated_oid, translated_value = do_translate(oid, value)
 
                 if hasattr(node, "getUnits"):
                     translated_value += ' ' + node.getUnits()

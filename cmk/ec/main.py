@@ -476,14 +476,6 @@ class SNMPTrapEngine(object):
 def initialize_snmptrap_handling(settings, config, event_server):
     if settings.options.snmptrap_udp is None:
         return
-
-    initialize_snmptrap_engine(config, event_server)
-
-    if snmptrap_translation_enabled(config):
-        event_server.load_mibs()
-
-
-def initialize_snmptrap_engine(config, event_server):
     snmp_engine = pysnmp.entity.engine.SnmpEngine()
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
@@ -1300,6 +1292,7 @@ class EventServer(ECServerThread):
         self.open_syslog_tcp()
         self.open_snmptrap()
         initialize_snmptrap_handling(self.settings, self._config, self)
+        self._load_mibs()
 
     @classmethod
     def status_columns(cls):
@@ -1459,7 +1452,9 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    def load_mibs(self):
+    def _load_mibs(self):
+        if self.settings.options.snmptrap_udp is None or not snmptrap_translation_enabled(self._config):
+            return
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
@@ -2033,6 +2028,7 @@ class EventServer(ECServerThread):
     def reload_configuration(self, config):
         self._config = config
         initialize_snmptrap_handling(self.settings, self._config, self)
+        self._load_mibs()
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config.initialize()
 

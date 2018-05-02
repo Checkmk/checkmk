@@ -1465,9 +1465,9 @@ class CREFolder(BaseFolder):
             ("ipaddress",      "ipaddresses",               {}, "Explicit IPv4 addresses"),
             ("ipv6address",    "ipv6addresses",             {}, "Explicit IPv6 addresses"),
             ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),
-            ("management_snmp_community", "management_snmp_credentials", {}, "Management board SNMP credentials"),
+            ("management_snmp_community",   "management_snmp_credentials", {}, "Management board SNMP credentials"),
             ("management_ipmi_credentials", "management_ipmi_credentials", {}, "Management board IPMI credentials"),
-            ("management_protocol",       "management_protocol",         {}, "Management board protocol"),
+            ("management_protocol",         "management_protocol",         {}, "Management board protocol"),
         ]
 
         for hostname in hostnames:

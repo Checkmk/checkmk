@@ -1,0 +1,14 @@
+Title: Fixed lookup of management protocol and credentials
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b3
+Date: 1525257689
+
+If a host has configured a SNMP management board in Check_MK
+version 1.4.0 and the site was upgraded to 1.5.0 or later versions,
+then the SNMP management board protocol and credentials were not
+found. Fixed that!

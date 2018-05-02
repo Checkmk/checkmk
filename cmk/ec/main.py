@@ -467,25 +467,19 @@ class MKClientError(Exception):
 #   '----------------------------------------------------------------------'
 
 class SNMPTrapEngine(object):
-    def __init__(self, snmp_receiver, snmp_engine):
-        super(SNMPTrapEngine, self).__init__()
-        self.snmp_receiver = snmp_receiver
-        self.snmp_engine = snmp_engine
-
-
-def initialize_snmptrap_handling(settings, config, event_server):
-    if settings.options.snmptrap_udp is None:
-        return
-    snmp_engine = pysnmp.entity.engine.SnmpEngine()
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
-    initialize_snmp_credentials(config, snmp_engine)
-    snmp_receiver = ECNotificationReceiver(snmp_engine, event_server.handle_snmptrap)
-    global g_snmp_trap_engine
-    g_snmp_trap_engine = SNMPTrapEngine(snmp_receiver, snmp_engine)
+
+    def __init__(self, settings, config, callback):
+        super(SNMPTrapEngine, self).__init__()
+        if settings.options.snmptrap_udp is None:
+            return
+        self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
+        initialize_snmp_credentials(config, self.snmp_engine)
+        self.snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, callback)
 
 
 def auth_proto_for(proto_name):
@@ -1291,7 +1285,7 @@ class EventServer(ECServerThread):
         self.open_syslog()
         self.open_syslog_tcp()
         self.open_snmptrap()
-        initialize_snmptrap_handling(self.settings, self._config, self)
+        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config, self.handle_snmptrap)
         self._load_mibs()
 
     @classmethod
@@ -1564,8 +1558,9 @@ class EventServer(ECServerThread):
     # and processing. PySNMP is calling self.handle_snmptrap back.
     def process_snmptrap(self, message, sender_address):
         self.logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
-        g_snmp_trap_engine.snmp_engine.setUserContext(sender_address=sender_address)
-        g_snmp_trap_engine.snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_trap_engine.snmp_engine, (), (), message)
+        engine = self._snmp_trap_engine.snmp_engine
+        engine.setUserContext(sender_address=sender_address)
+        engine.msgAndPduDsp.receiveMessage(engine, (), (), message)
 
     def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
                         var_binds, cb_ctx):
@@ -2027,7 +2022,7 @@ class EventServer(ECServerThread):
 
     def reload_configuration(self, config):
         self._config = config
-        initialize_snmptrap_handling(self.settings, self._config, self)
+        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config, self.handle_snmptrap)
         self._load_mibs()
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config.initialize()

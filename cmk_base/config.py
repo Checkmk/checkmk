@@ -126,6 +126,8 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
 
     _load_config(with_conf_d, exclude_parents_mk)
 
+    _transform_mgmt_config_vars_from_140_to_150()
+
     initialize_config_caches()
     initialize_service_levels()
 
@@ -194,6 +196,21 @@ def _load_config(with_conf_d, exclude_parents_mk):
     # Cleanup global helper vars
     for helper_var in helper_vars.keys():
         del global_dict[helper_var]
+
+
+def _transform_mgmt_config_vars_from_140_to_150():
+    #FIXME We have to transform some configuration variables from host attributes
+    # to cmk_base configuration variables because during the migration step from
+    # 1.4.0 to 1.5.0 some config variables are not known in cmk_base. These variables
+    # are 'management_protocol' and 'management_snmp_community'.
+    # Clean this up one day!
+    for hostname, attributes in host_attributes.iteritems():
+        for name, var in [
+            ('management_protocol',       management_protocol),
+            ('management_snmp_community', management_snmp_credentials),
+        ]:
+            if attributes.get(name):
+                var.setdefault(hostname, attributes[name])
 
 
 # Create list of all files to be included during configuration loading
@@ -594,6 +611,10 @@ def alias_of(hostname, fallback):
 
 
 def get_additional_ipaddresses_of(hostname):
+    #TODO Regarding the following configuration variables from WATO
+    # there's no inheritance, thus we use 'host_attributes'.
+    # Better would be to use cmk_base configuration variables,
+    # eg. like 'management_protocol'.
     return (host_attributes.get(hostname, {}).get("additional_ipv4addresses", []),
             host_attributes.get(hostname, {}).get("additional_ipv6addresses", []))
 

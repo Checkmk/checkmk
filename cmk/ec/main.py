@@ -478,73 +478,75 @@ class SNMPTrapEngine(object):
         if settings.options.snmptrap_udp is None:
             return
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
-        initialize_snmp_credentials(config, self.snmp_engine)
-        self.snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, callback)
+        self._initialize_snmp_credentials(config)
+        self._snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, callback)
 
 
-def auth_proto_for(proto_name):
-    if proto_name == "md5":
-        return pysnmp.entity.config.usmHMACMD5AuthProtocol
-    if proto_name == "sha":
-        return pysnmp.entity.config.usmHMACSHAAuthProtocol
-    raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
+    @staticmethod
+    def _auth_proto_for(proto_name):
+        if proto_name == "md5":
+            return pysnmp.entity.config.usmHMACMD5AuthProtocol
+        if proto_name == "sha":
+            return pysnmp.entity.config.usmHMACSHAAuthProtocol
+        raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
 
 
-def priv_proto_for(proto_name):
-    if proto_name == "DES":
-        return pysnmp.entity.config.usmDESPrivProtocol
-    if proto_name == "AES":
-        return pysnmp.entity.config.usmAesCfb128Protocol
-    raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
+    @staticmethod
+    def _priv_proto_for(proto_name):
+        if proto_name == "DES":
+            return pysnmp.entity.config.usmDESPrivProtocol
+        if proto_name == "AES":
+            return pysnmp.entity.config.usmAesCfb128Protocol
+        raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
 
 
-def initialize_snmp_credentials(config, snmp_engine):
-    user_num = 0
-    for spec in config["snmp_credentials"]:
-        credentials = spec["credentials"]
-        user_num += 1
+    def _initialize_snmp_credentials(self, config):
+        user_num = 0
+        for spec in config["snmp_credentials"]:
+            credentials = spec["credentials"]
+            user_num += 1
 
-        # SNMPv1/v2
-        if type(credentials) != tuple:
-            community_index = 'snmpv2-%d' % user_num
-            logger.info("adding SNMPv1 system: communityIndex=%s" % community_index)
-            pysnmp.entity.config.addV1System(snmp_engine, community_index, credentials)
-            continue
+            # SNMPv1/v2
+            if type(credentials) != tuple:
+                community_index = 'snmpv2-%d' % user_num
+                logger.info("adding SNMPv1 system: communityIndex=%s" % community_index)
+                pysnmp.entity.config.addV1System(self.snmp_engine, community_index, credentials)
+                continue
 
-        # SNMPv3
-        securityLevel = credentials[0]
-        if securityLevel == "noAuthNoPriv":
-            user_id = credentials[1]
-            auth_proto = pysnmp.entity.config.usmNoAuthProtocol
-            auth_key = None
-            priv_proto = pysnmp.entity.config.usmNoPrivProtocol
-            priv_key = None
-        elif securityLevel == "authNoPriv":
-            user_id = credentials[2]
-            auth_proto = auth_proto_for(credentials[1])
-            auth_key = credentials[3]
-            priv_proto = pysnmp.entity.config.usmNoPrivProtocol
-            priv_key = None
-        elif securityLevel == "authPriv":
-            user_id = credentials[2]
-            auth_proto = auth_proto_for(credentials[1])
-            auth_key = credentials[3]
-            priv_proto = priv_proto_for(credentials[4])
-            priv_key = credentials[5]
-        else:
-            raise Exception("Invalid SNMP security level: %s" % securityLevel)
+            # SNMPv3
+            securityLevel = credentials[0]
+            if securityLevel == "noAuthNoPriv":
+                user_id = credentials[1]
+                auth_proto = pysnmp.entity.config.usmNoAuthProtocol
+                auth_key = None
+                priv_proto = pysnmp.entity.config.usmNoPrivProtocol
+                priv_key = None
+            elif securityLevel == "authNoPriv":
+                user_id = credentials[2]
+                auth_proto = self._auth_proto_for(credentials[1])
+                auth_key = credentials[3]
+                priv_proto = pysnmp.entity.config.usmNoPrivProtocol
+                priv_key = None
+            elif securityLevel == "authPriv":
+                user_id = credentials[2]
+                auth_proto = self._auth_proto_for(credentials[1])
+                auth_key = credentials[3]
+                priv_proto = self._priv_proto_for(credentials[4])
+                priv_key = credentials[5]
+            else:
+                raise Exception("Invalid SNMP security level: %s" % securityLevel)
 
-        for engine_id in spec.get("engine_ids", []):
-            logger.info("adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s" %
-                        (user_id,
-                         ".".join(str(i) for i in auth_proto),
-                         ".".join(str(i) for i in priv_proto),
-                         engine_id))
-            pysnmp.entity.config.addV3User(
-                snmp_engine, user_id,
-                auth_proto, auth_key,
-                priv_proto, priv_key,
-                securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
+            for engine_id in spec.get("engine_ids", []):
+                logger.info("adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s" %
+                            (user_id,
+                             ".".join(str(i) for i in auth_proto),
+                             ".".join(str(i) for i in priv_proto),
+                             engine_id))
+                pysnmp.entity.config.addV3User(
+                    self.snmp_engine, user_id,
+                    auth_proto, auth_key,
+                    priv_proto, priv_key,
+                    securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
 
 #.
 #   .--Timeperiods---------------------------------------------------------.

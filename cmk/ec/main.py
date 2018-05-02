@@ -553,14 +553,26 @@ class SNMPTrapTranslator(object):
     def __init__(self, settings, config, logger):
         super(SNMPTrapTranslator, self).__init__()
         self._settings = settings
-        self._config = config
+        self._translation_mode = self._to_translation_mode(config["translate_snmptraps"])
         self._logger = logger
         self._mib_resolver = None
         self._load_mibs()
 
 
+    # TODO: This should be in the valuespec, the current set of values is horrible.
+    @staticmethod
+    def _to_translation_mode(translation_config):
+        if translation_config == False:
+            return "no_translation"
+        if translation_config == (True, {}):
+            return "translate"
+        if translation_config == (True, {'add_description': True}):
+            return "translate_with_description"
+        raise Exception("invalid SNMP trap translation")
+
+
     def _load_mibs(self):
-        if self._settings.options.snmptrap_udp is None or not snmptrap_translation_enabled(self._config):
+        if self._settings.options.snmptrap_udp is None or self._translation_mode == "no_translation":
             return
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
@@ -587,8 +599,14 @@ class SNMPTrapTranslator(object):
             self._logger.exception("Exception: %s" % e)
 
 
+    def translate(self, ipaddress, var_binds):
+        if self._translation_mode == "no_translation":
+            return self._translate_simple(var_binds)
+        return self._translate_via_mibs(ipaddress, var_binds)
+
+
     # Convert pysnmp datatypes to simply handable ones
-    def convert_var_binds(self, var_bind_list):
+    def _translate_simple(self, var_bind_list):
         var_binds = []
         for oid, value in var_bind_list:
             key = str(oid)
@@ -628,10 +646,11 @@ class SNMPTrapTranslator(object):
 
 
     # Convert pysnmp datatypes to simply handable ones
-    def translate(self, ipaddress, var_bind_list):
+    def _translate_via_mibs(self, ipaddress, var_bind_list):
         var_binds = []
         if self._mib_resolver is None:
             self._logger.warning('Failed to translate OIDs, no modules loaded (see above)')
+            # TODO: Fall back to _translate_simple?
             return [(str(oid), str(value)) for oid, value in var_bind_list]
 
         def do_translate(oid, value):
@@ -652,9 +671,7 @@ class SNMPTrapTranslator(object):
                 if hasattr(node, "getUnits"):
                     translated_value += ' ' + node.getUnits()
 
-                if hasattr(node, "getDescription") \
-                   and type(self._config["translate_snmptraps"]) == tuple \
-                   and "add_description" in self._config["translate_snmptraps"][1]:
+                if hasattr(node, "getDescription") and self._translation_mode == "translate_with_description":
                     translated_value += "(%s)" % node.getDescription()
 
                 var_binds.append((translated_oid, translated_value))
@@ -1581,14 +1598,8 @@ class EventServer(ECServerThread):
     def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
                         var_binds, cb_ctx):
         ipaddress = snmp_engine.getUserContext("sender_address")[0]
-
         self.log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
-
-        if snmptrap_translation_enabled(self._config):
-            trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
-        else:
-            trap = self._snmp_trap_translator.convert_var_binds(var_binds)
-
+        trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         event = self.create_event_from_trap(trap, ipaddress)
         self.process_event(event)
 
@@ -5039,10 +5050,6 @@ def reload_configuration(settings, event_status, event_server, status_server, sl
     event_status.reload_configuration(config)
     status_server.reload_configuration(config)
     logger.info("Reloaded configuration.")
-
-
-def snmptrap_translation_enabled(config):
-    return config["translate_snmptraps"] is not False
 
 
 #.

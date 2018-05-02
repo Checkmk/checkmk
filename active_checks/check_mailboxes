@@ -132,31 +132,6 @@ class ImapWrapper(object):
         return MailList(self.__conn, ids[1][0].split())
 
 
-class Age(object):
-    def __init__(self, secs):
-        super(Age, self).__init__()
-        self.__secs = secs
-
-    def __str__(self):
-        if self.__secs < 240:
-            return "%d sec" % self.__secs
-        mins = self.__secs / 60
-        if mins < 120:
-            return "%d min" % mins
-        hours, mins = divmod(mins, 60)
-        if hours < 12 and mins > 0:
-            return "%d hours %d min" % (hours, mins)
-        elif hours < 48:
-            return "%d hours" % hours
-        days, hours = divmod(hours, 24)
-        if days < 7 and hours > 0:
-            return "%d days %d hours" % (days, hours)
-        return "%d days" % days
-
-    def __float__(self):
-        return float(self.__secs)
-
-
 def output(message):
     sys.stdout.write(message+"\n")
 

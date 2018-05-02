@@ -231,7 +231,7 @@ nagios_illegal_chars     = _config.nagios_illegal_chars
 is_ipv6_primary          = _config.is_ipv6_primary
 is_cmc                   = _config.is_cmc
 
-get_age_human_readable   = render.approx_age
+get_age_human_readable   = lambda secs: str(render.Age(secs))
 get_bytes_human_readable = render.bytes
 quote_shell_string       = _utils.quote_shell_string
 

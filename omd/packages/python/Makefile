@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Python
-VERSION  = 2.7.14
+VERSION  = 2.7.15
 DIR      = $(NAME)-$(VERSION)
 
 .PHONY: build install skel clean

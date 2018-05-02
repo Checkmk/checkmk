@@ -552,61 +552,48 @@ class SNMPTrapEngine(object):
 class SNMPTrapTranslator(object):
     def __init__(self, settings, config, logger):
         super(SNMPTrapTranslator, self).__init__()
-        self._settings = settings
-        self._translation_mode = self._to_translation_mode(config["translate_snmptraps"])
         self._logger = logger
-        self._mib_resolver = None
-        self._load_mibs()
-
-
-    # TODO: This should be in the valuespec, the current set of values is horrible.
-    @staticmethod
-    def _to_translation_mode(translation_config):
+        translation_config = config["translate_snmptraps"]
         if translation_config == False:
-            return "no_translation"
-        if translation_config == (True, {}):
-            return "translate"
-        if translation_config == (True, {'add_description': True}):
-            return "translate_with_description"
-        raise Exception("invalid SNMP trap translation")
+            self.translate = self._translate_simple
+        elif translation_config == (True, {}):
+            self._mib_resolver = self._construct_resolver(logger, settings.paths.compiled_mibs_dir.value, False)
+            self.translate = self._translate_via_mibs
+        elif translation_config == (True, {'add_description': True}):
+            self._mib_resolver = self._construct_resolver(logger, settings.paths.compiled_mibs_dir.value, True)
+            self.translate = self._translate_via_mibs
+        else:
+            raise Exception("invalid SNMP trap translation")
 
 
-    def _load_mibs(self):
-        if self._settings.options.snmptrap_udp is None or self._translation_mode == "no_translation":
-            return
+    @staticmethod
+    def _construct_resolver(logger, mibs_dir, load_texts):
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
             # load MIBs from our compiled MIB and default MIB paths
-            builder.setMibSources(*[pysnmp.smi.builder.DirMibSource(str(self._settings.paths.compiled_mibs_dir.value))] + list(builder.getMibSources()))
+            builder.setMibSources(*[pysnmp.smi.builder.DirMibSource(str(mibs_dir))] + list(builder.getMibSources()))
 
-            # Indicate we wish to load DESCRIPTION and other texts from MIBs
-            builder.loadTexts = True
+            # Indicate if we wish to load DESCRIPTION and other texts from MIBs
+            builder.loadTexts = load_texts
 
             # This loads all or specified pysnmp MIBs into memory
             builder.loadModules()
 
             loaded_mib_module_names = builder.mibSymbols.keys()
-            self._logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
-            self._logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
+            logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
+            logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
 
             # This object maintains various indices built from MIBs data
-            self._mib_resolver = pysnmp.smi.view.MibViewController(builder)
+            return pysnmp.smi.view.MibViewController(builder)
         except pysnmp.smi.error.SmiError as e:
-            if self._settings.options.debug:
-                raise
-            self._logger.info("Exception while loading MIB modules. Proceeding without modules!")
-            self._logger.exception("Exception: %s" % e)
-
-
-    def translate(self, ipaddress, var_binds):
-        if self._translation_mode == "no_translation":
-            return self._translate_simple(var_binds)
-        return self._translate_via_mibs(ipaddress, var_binds)
+            logger.info("Exception while loading MIB modules. Proceeding without modules!")
+            logger.exception("Exception: %s" % e)
+            return None
 
 
     # Convert pysnmp datatypes to simply handable ones
-    def _translate_simple(self, var_bind_list):
+    def _translate_simple(self, ipaddress, var_bind_list):
         var_binds = []
         for oid, value in var_bind_list:
             key = str(oid)
@@ -667,23 +654,21 @@ class SNMPTrapTranslator(object):
         for oid, value in var_bind_list:
             try:
                 node, translated_oid, translated_value = do_translate(oid, value)
-
-                if hasattr(node, "getUnits"):
-                    translated_value += ' ' + node.getUnits()
-
-                if hasattr(node, "getDescription") and self._translation_mode == "translate_with_description":
-                    translated_value += "(%s)" % node.getDescription()
-
-                var_binds.append((translated_oid, translated_value))
-
+                units = node.getUnits() if hasattr(node, "getUnits") else ""
+                if units:
+                    translated_value += ' %s' % units
+                description = node.getDescription() if hasattr(node, "getDescription") else ""
+                if description:
+                    translated_value += "(%s)" % description
             except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
                 self._logger.warning('Failed to translate OID %s (in trap from %s): %s '
                                      '(enable debug logging for details)' %
                                      (oid.prettyPrint(), ipaddress, e))
                 self._logger.debug('Failed trap var binds:\n%s' % "\n".join(["%s: %r" % i for i in var_bind_list]))
                 self._logger.debug(traceback.format_exc())
-
-                var_binds.append((str(oid), str(value)))  # add untranslated
+                translated_oid = str(oid)
+                translated_value = str(value)
+            var_binds.append((translated_oid, translated_value))
 
         return var_binds
 

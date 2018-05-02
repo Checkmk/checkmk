@@ -601,7 +601,7 @@ class SNMPTrapTranslator(object):
             if value.__class__.__name__ in ['ObjectIdentifier', 'IpAddress']:
                 val = value.prettyPrint()
             elif value.__class__.__name__ == 'TimeTicks':
-                val = self._fmt_timeticks(value._value)
+                val = str(cmk.render.Age(float(value._value) / 100))
             else:
                 val = value._value
 
@@ -611,25 +611,6 @@ class SNMPTrapTranslator(object):
 
             var_binds.append((key, val))
         return var_binds
-
-
-    # Format time difference seconds into approximated human readable value
-    @staticmethod
-    def _fmt_timeticks(ticks):
-        secs = float(ticks) / 100
-        if secs < 240:
-            return "%d sec" % secs
-        mins = secs / 60
-
-        if mins < 120:
-            return "%d min" % mins
-
-        hours, mins = divmod(mins, 60)
-        if hours < 48:
-            return "%d hours, %d min" % (hours, mins)
-
-        days, hours = divmod(hours, 24)
-        return "%d days, %d hours, %d min" % (days, hours, mins)
 
 
     # Convert pysnmp datatypes to simply handable ones

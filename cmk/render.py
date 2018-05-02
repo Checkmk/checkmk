@@ -64,27 +64,29 @@ def time_since(timestamp):
     return timespan(time.time() - timestamp)
 
 
-def approx_age(secs):
-    """Format time difference seconds into approximated human readable text"""
+class Age(object):
+    def __init__(self, secs):
+        super(Age, self).__init__()
+        self.__secs = secs
 
-    if secs < 240:
-        return "%d sec" % secs
+    def __str__(self):
+        if self.__secs < 240:
+            return "%d sec" % self.__secs
+        mins = self.__secs / 60
+        if mins < 120:
+            return "%d min" % mins
+        hours, mins = divmod(mins, 60)
+        if hours < 12 and mins > 0:
+            return "%d hours %d min" % (hours, mins)
+        elif hours < 48:
+            return "%d hours" % hours
+        days, hours = divmod(hours, 24)
+        if days < 7 and hours > 0:
+            return "%d days %d hours" % (days, hours)
+        return "%d days" % days
 
-    mins = secs / 60
-    if mins < 120:
-        return "%d min" % mins
-
-    hours, mins = divmod(mins, 60)
-    if hours < 12 and mins > 0:
-        return "%d hours %d min" % (hours, mins)
-    elif hours < 48:
-        return "%d hours" % hours
-
-    days, hours = divmod(hours, 24)
-    if days < 7 and hours > 0:
-        return "%d days %d hours" % (days, hours)
-
-    return "%d days" % days
+    def __float__(self):
+        return float(self.__secs)
 
 
 def bytes(b, base=1024.0, bytefrac=True, unit="B"):

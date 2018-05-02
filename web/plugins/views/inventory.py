@@ -79,7 +79,7 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, in
             tree_renderer.show_numeration(child, path=invpath)
         else:
             tree_renderer.show_attribute(child.get_child_data().get(attributes_key),
-                                         inv_display_hint(invpath))
+                                         _inv_display_hint(invpath))
         code = html.drain()
     return "invtree", code
 
@@ -407,13 +407,71 @@ def inv_paint_timestamp_as_age_days(timestamp):
 #   '----------------------------------------------------------------------'
 
 
-# Convert .foo.bar:18.test to .foo.bar:*.test
-def inv_display_hint(invpath):
-    r = regex(".[0-9]+")
-    invpath = r.sub(":*", invpath)
-    hint = inventory_displayhints.get(invpath, {})
+def _inv_display_hint(invpath):
+    """Generic access function to display hints
+    Don't use other methods to access the hints!"""
+    hint_id = _find_display_hint_id(invpath)
+    hint = inventory_displayhints.get(hint_id, {})
+    return _convert_display_hint(hint)
 
-    # Convert paint type to paint function, for the convenciance of the called
+
+def _find_display_hint_id(invpath):
+    """Looks up the display hint for the given inventory path.
+
+    It returns either the ID of the display hint matching the given invpath
+    or None in case no entry was found.
+
+    In case no exact match is possible try to match display hints that use
+    some kind of *-syntax. There are two types of cases here:
+
+      :* -> Entries in lists (* resolves to list index numbers)
+      .* -> Path entries (* resolves to a path element)
+
+    The current logic has some limitations related to the ways stars can
+    be used.
+    """
+    invpath = invpath.rstrip(".:")
+
+    # Convert index of lists to *-syntax
+    # e.g. ".foo.bar:18.test" to ".foo.bar:*.test"
+    r = regex("([^\.]):[0-9]+")
+    invpath = r.sub("\\1:*", invpath)
+
+    candidates = [
+        invpath,
+    ]
+
+    # Produce a list of invpath candidates with a "*" going from back to front.
+    #
+    # This algorithm only allows one ".*" in a invpath. It finds the match with
+    # the longest path prefix before the ".*".
+    #
+    # TODO: Implement a generic mechanism that allows as many stars as possible
+    invpath_parts = invpath.split(".")
+    star_index = len(invpath_parts) - 1
+    while star_index >= 0:
+        parts = invpath_parts[:star_index] + ["*"] + invpath_parts[star_index+1:]
+        invpath_with_star = "%s" % ".".join(parts)
+        candidates.append(invpath_with_star)
+        star_index -= 1
+
+    for candidate in candidates:
+        # TODO: Better cleanup trailing ":" and "." from display hints at all. They are useless
+        # for finding the right entry.
+        if candidate in inventory_displayhints:
+            return candidate
+
+        if candidate+"." in inventory_displayhints:
+            return candidate+"."
+
+        if candidate+":" in inventory_displayhints:
+            return candidate+":"
+
+    return None
+
+
+def _convert_display_hint(hint):
+    """Convert paint type to paint function, for the convenciance of the called"""
     if "paint" in hint:
         paint_function_name = "inv_paint_" + hint["paint"]
         hint["paint_function"] = globals()[paint_function_name]
@@ -422,7 +480,7 @@ def inv_display_hint(invpath):
 
 
 def inv_titleinfo(invpath, node):
-    hint = inv_display_hint(invpath)
+    hint = _inv_display_hint(invpath)
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
@@ -1486,32 +1544,15 @@ class NodeRenderer(object):
         for _, node in container.get_edge_nodes():
             node_abs_path = node.get_absolute_path()
 
-            #FIXME clean this up
-            _titleinfo = []
-            for part in node_abs_path:
-                try:
-                    part = int(part)
-                except ValueError:
-                    pass
-                else:
-                    last = _titleinfo.pop(-1)
-                    part = "%s:%d" % (last, part)
-                finally:
-                    _titleinfo.append(part)
-
-            titleinfo_path = ".%s." % ".".join(_titleinfo)
-            icon, title = inv_titleinfo(titleinfo_path, node)
-
-            if "%d" in title: # Replace with list index
-                list_index = int(titleinfo_path.split(":")[-1].rstrip(".")) + 1
-                title = title % list_index
-
-            # Some displayhints may end with ":", eg. ".software.packages:"
-            if "%s:" % titleinfo_path[:-1] in inventory_displayhints:
-                icon, title = inv_titleinfo("%s:" % titleinfo_path[:-1], node)
-
             raw_invpath = self._get_raw_path(".".join(map(str, node_abs_path)))
             invpath = ".%s." % raw_invpath
+
+            icon, title = inv_titleinfo(invpath, node)
+
+            # Replace placeholders in title with the real values for this path
+            if "%d" in title or "%s" in title:
+                title = self._replace_placeholders(title, invpath)
+
             header = self._get_header(title, ".".join(map(str, node_abs_path)), "#666")
             fetch_url = html.makeuri_contextless([("host", self._hostname),
                                                   ("path", invpath),
@@ -1526,13 +1567,32 @@ class NodeRenderer(object):
                     child.show(self, path=raw_invpath)
             html.end_foldable_container()
 
+
+    def _replace_placeholders(self, raw_title, invpath):
+        hint_id = _find_display_hint_id(invpath)
+        invpath_parts = invpath.strip(".").split(".")
+
+        # Use the position of the stars in the path to build a list of texts
+        # that should be used for replacing the tile placeholders
+        replace_vars = []
+        hint_parts = hint_id.strip(".").split(".")
+        for index, hint_part in enumerate(hint_parts):
+            if hint_part == "*":
+                replace_vars.append(invpath_parts[index])
+
+        # Now replace the variables in the title. Handle the case where we have
+        # more stars than macros in the title.
+        num_macros = raw_title.count("%d") + raw_title.count("%s")
+        return raw_title % tuple(replace_vars[:num_macros])
+
+
     #   ---numeration-----------------------------------------------------------
 
     def show_numeration(self, numeration, path=None):
         #FIXME these kind of paths are required for hints.
         # Clean this up one day.
         invpath = ".%s:" % self._get_raw_path(path)
-        hint = inv_display_hint(invpath)
+        hint = _inv_display_hint(invpath)
         keyorder = hint.get("keyorder", []) # well known keys
         data = numeration.get_child_data()
 
@@ -1541,7 +1601,7 @@ class NodeRenderer(object):
         for key in keyorder:
             sub_invpath = "%s0.%s" % (invpath, key)
             icon, title = inv_titleinfo(sub_invpath, None)
-            sub_hint = inv_display_hint(sub_invpath)
+            sub_hint = _inv_display_hint(sub_invpath)
             short_title = sub_hint.get("short", title)
             titles.append((short_title, key))
 
@@ -1588,7 +1648,7 @@ class NodeRenderer(object):
             for title, key in titles:
                 value = entry.get(key)
                 sub_invpath = "%s%d.%s" % (invpath, index, key)
-                hint = inv_display_hint(sub_invpath)
+                hint = _inv_display_hint(sub_invpath)
                 if "paint_function" in hint:
                     #FIXME At the moment  we need it to get tdclass
                     # Clean this up one day.
@@ -1616,7 +1676,7 @@ class NodeRenderer(object):
         for key, value in attributes.get_child_data().iteritems():
             sub_invpath = "%s.%s" % (invpath, key)
             icon, title = inv_titleinfo(sub_invpath, key)
-            hint = inv_display_hint(sub_invpath)
+            hint = _inv_display_hint(sub_invpath)
 
             html.open_tr()
             html.open_th(title=sub_invpath)

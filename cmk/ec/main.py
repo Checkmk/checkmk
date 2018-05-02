@@ -548,6 +548,44 @@ class SNMPTrapEngine(object):
                     priv_proto, priv_key,
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
 
+
+class SNMPTrapTranslator(object):
+    def __init__(self, settings, config, logger):
+        super(SNMPTrapTranslator, self).__init__()
+        self._settings = settings
+        self._config = config
+        self._logger = logger
+        self.mib_resolver = None
+
+
+    def load_mibs(self):
+        if self._settings.options.snmptrap_udp is None or not snmptrap_translation_enabled(self._config):
+            return
+        try:
+            builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
+
+            # load MIBs from our compiled MIB and default MIB paths
+            builder.setMibSources(*[pysnmp.smi.builder.DirMibSource(str(self._settings.paths.compiled_mibs_dir.value))] + list(builder.getMibSources()))
+
+            # Indicate we wish to load DESCRIPTION and other texts from MIBs
+            builder.loadTexts = True
+
+            # This loads all or specified pysnmp MIBs into memory
+            builder.loadModules()
+
+            loaded_mib_module_names = builder.mibSymbols.keys()
+            self._logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
+            self._logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
+
+            # This object maintains various indices built from MIBs data
+            self.mib_resolver = pysnmp.smi.view.MibViewController(builder)
+        except pysnmp.smi.error.SmiError as e:
+            if self._settings.options.debug:
+                raise
+            self._logger.info("Exception while loading MIB modules. Proceeding without modules!")
+            self._logger.exception("Exception: %s" % e)
+
+
 #.
 #   .--Timeperiods---------------------------------------------------------.
 #   |      _____ _                                _           _            |
@@ -1270,7 +1308,6 @@ class EventServer(ECServerThread):
         self._syslog = None
         self._syslog_tcp = None
         self._snmptrap = None
-        self._mib_resolver = None
 
         self._rules = []
         self._hash_stats = []
@@ -1288,7 +1325,7 @@ class EventServer(ECServerThread):
         self.open_syslog_tcp()
         self.open_snmptrap()
         self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config, self.handle_snmptrap)
-        self._load_mibs()
+        self._snmp_trap_translator = SNMPTrapTranslator(self.settings, self._config, self.logger)
 
     @classmethod
     def status_columns(cls):
@@ -1448,33 +1485,6 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    def _load_mibs(self):
-        if self.settings.options.snmptrap_udp is None or not snmptrap_translation_enabled(self._config):
-            return
-        try:
-            builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
-
-            # load MIBs from our compiled MIB and default MIB paths
-            builder.setMibSources(*[pysnmp.smi.builder.DirMibSource(str(self.settings.paths.compiled_mibs_dir.value))] + list(builder.getMibSources()))
-
-            # Indicate we wish to load DESCRIPTION and other texts from MIBs
-            builder.loadTexts = True
-
-            # This loads all or specified pysnmp MIBs into memory
-            builder.loadModules()
-
-            loaded_mib_module_names = builder.mibSymbols.keys()
-            self.logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
-            self.logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
-
-            # This object maintains various indices built from MIBs data
-            self._mib_resolver = pysnmp.smi.view.MibViewController(builder)
-        except pysnmp.smi.error.SmiError as e:
-            if self.settings.options.debug:
-                raise
-            self.logger.info("Exception while loading MIB modules. Proceeding without modules!")
-            self.logger.exception("Exception: %s" % e)
-
     # Format time difference seconds into approximated
     # human readable value
     def fmt_timeticks(self, ticks):
@@ -1516,14 +1526,14 @@ class EventServer(ECServerThread):
     # Convert pysnmp datatypes to simply handable ones
     def snmptrap_translate_varbinds(self, ipaddress, var_bind_list):
         var_binds = []
-        if self._mib_resolver is None:
+        if self._snmp_trap_translator.mib_resolver is None:
             self.logger.warning('Failed to translate OIDs, no modules loaded (see above)')
             return [(str(oid), str(value)) for oid, value in var_bind_list]
 
         def translate(oid, value):
             # Disable mib_var[0] type detection
             # pylint: disable=no-member
-            mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
+            mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid), value).resolveWithMib(self._snmp_trap_translator.mib_resolver)
 
             node = mib_var[0].getMibNode()
             translated_oid = mib_var[0].prettyPrint().replace("\"", "")
@@ -2025,7 +2035,7 @@ class EventServer(ECServerThread):
     def reload_configuration(self, config):
         self._config = config
         self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config, self.handle_snmptrap)
-        self._load_mibs()
+        self._snmp_trap_translator = SNMPTrapTranslator(self.settings, self._config, self.logger)
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config.initialize()
 

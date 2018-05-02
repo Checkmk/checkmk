@@ -24,27 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
 def transform_back_html_mail_url_prefix(p):
     if type(p) == tuple:
         return {p[0]: p[1]}
-    elif p == "automatic_http":
+    if p == "automatic_http":
         return {"automatic": "http"}
-    elif p == "automatic_https":
+    if p == "automatic_https":
         return {"automatic": "https"}
-    else:
-        return {"manual": p}
+    return {"manual": p}
+
 
 def transform_forth_html_mail_url_prefix(p):
-    if type(p) == dict:
-        k, v = p.items()[0]
-        if k == "automatic":
-            return "%s_%s" % (k, v)
-        else:
-            return ("manual", p)
-    else:
+    if type(p) != dict:
         return ("manual", p)
+
+    k, v = p.items()[0]
+    if k == "automatic":
+        return "%s_%s" % (k, v)
+
+    return ("manual", v)
+
 
 def html_email_parameter_elements():
     elements = [

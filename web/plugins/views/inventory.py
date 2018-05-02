@@ -761,33 +761,56 @@ inventory_displayhints.update({
     ".software.applications.docker.images:*.amount_containers" : { "title" : _("# Containers"), },
 
 
+    ".software.applications.docker.networks.*.": {
+        "title": "Network %s",
+    },
+    ".software.applications.docker.networks.*.network_id": {
+        "title": "Network ID",
+    },
+
     ".software.applications.docker.container.": {
         "title" : _("Container"),
     },
     ".software.applications.docker.container.node_name": {
         "title" : _("Node name"),
     },
-    ".software.applications.docker.container.networks:": {
-        "title" : _("Networks"),
-        "keyorder" : [ "name", "ip_address", "ip_prefixlen", "gateway",
-                       "mac_address", "network_id" ],
-    },
     ".software.applications.docker.container.ports:": {
         "title" : _("Ports"),
         "keyorder" : [ "port", "protocol", "host_addresses" ],
     },
 
-    ".software.applications.docker.networks:*.": {
-        "title": "Network %d",
+    ".software.applications.docker.container.networks:": {
+        "title" : _("Networks"),
+        "keyorder" : [ "name", "ip_address", "ip_prefixlen", "gateway",
+                       "mac_address", "network_id" ],
     },
-    ".software.applications.docker.networks:*.containers:": {
+    ".software.applications.docker.container.networks:*.ip_address": {
+        "title" : _("IP address"),
+    },
+    ".software.applications.docker.container.networks:*.ip_prefixlen": {
+        "title" : _("IP Prefix"),
+    },
+    ".software.applications.docker.container.networks:*.mac_address": {
+        "title" : _("MAC address"),
+    },
+    ".software.applications.docker.container.networks:*.network_id": {
+        "title" : _("Network ID"),
+    },
+
+    ".software.applications.docker.networks.*.containers:": {
         "keyorder" : [ "name", "id", "ipv4_address", "ipv6_address", "mac_address" ],
     },
-    ".software.applications.docker.networks:*.containers:*.ipv4_address": {
+    ".software.applications.docker.networks.*.containers:*.id": {
+        "title" : _("ID"),
+    },
+    ".software.applications.docker.networks.*.containers:*.ipv4_address": {
         "title" : _("IPv4 address"),
     },
-    ".software.applications.docker.networks:*.containers:*.ipv6_address": {
+    ".software.applications.docker.networks.*.containers:*.ipv6_address": {
         "title" : _("IPv6 address"),
+    },
+    ".software.applications.docker.networks.*.containers:*.mac_address": {
+        "title" : _("MAC address"),
     },
 
     ".software.applications.citrix."                              : { "title" : _("Citrix") },

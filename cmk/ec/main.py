@@ -1750,7 +1750,7 @@ class EventServer(ECServerThread):
                     self.process_raw_data(lambda: self.process_snmptrap(message, sender_address))
                 except Exception:
                     self.logger.exception('Exception handling a SNMP trap from "%s". Skipping this one' %
-                                          (data[1][0]))
+                                          sender_address[0])
 
             try:
                 # process the first spool file we get

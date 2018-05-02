@@ -588,6 +588,46 @@ class SNMPTrapTranslator(object):
 
 
     # Convert pysnmp datatypes to simply handable ones
+    def convert_var_binds(self, var_bind_list):
+        var_binds = []
+        for oid, value in var_bind_list:
+            key = str(oid)
+
+            if value.__class__.__name__ in ['ObjectIdentifier', 'IpAddress']:
+                val = value.prettyPrint()
+            elif value.__class__.__name__ == 'TimeTicks':
+                val = self._fmt_timeticks(value._value)
+            else:
+                val = value._value
+
+            # Translate some standard SNMPv2 oids
+            if key == '1.3.6.1.2.1.1.3.0':
+                key = 'Uptime'
+
+            var_binds.append((key, val))
+        return var_binds
+
+
+    # Format time difference seconds into approximated human readable value
+    @staticmethod
+    def _fmt_timeticks(ticks):
+        secs = float(ticks) / 100
+        if secs < 240:
+            return "%d sec" % secs
+        mins = secs / 60
+
+        if mins < 120:
+            return "%d min" % mins
+
+        hours, mins = divmod(mins, 60)
+        if hours < 48:
+            return "%d hours, %d min" % (hours, mins)
+
+        days, hours = divmod(hours, 24)
+        return "%d days, %d hours, %d min" % (days, hours, mins)
+
+
+    # Convert pysnmp datatypes to simply handable ones
     def translate(self, ipaddress, var_bind_list):
         var_binds = []
         if self._mib_resolver is None:
@@ -1530,44 +1570,6 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    # Format time difference seconds into approximated
-    # human readable value
-    def fmt_timeticks(self, ticks):
-        secs = float(ticks) / 100
-        if secs < 240:
-            return "%d sec" % secs
-        mins = secs / 60
-
-        if mins < 120:
-            return "%d min" % mins
-
-        hours, mins = divmod(mins, 60)
-        if hours < 48:
-            return "%d hours, %d min" % (hours, mins)
-
-        days, hours = divmod(hours, 24)
-        return "%d days, %d hours, %d min" % (days, hours, mins)
-
-    # Convert pysnmp datatypes to simply handable ones
-    def snmptrap_convert_var_binds(self, var_bind_list):
-        var_binds = []
-        for oid, value in var_bind_list:
-            key = str(oid)
-
-            if value.__class__.__name__ in ['ObjectIdentifier', 'IpAddress']:
-                val = value.prettyPrint()
-            elif value.__class__.__name__ == 'TimeTicks':
-                val = self.fmt_timeticks(value._value)
-            else:
-                val = value._value
-
-            # Translate some standard SNMPv2 oids
-            if key == '1.3.6.1.2.1.1.3.0':
-                key = 'Uptime'
-
-            var_binds.append((key, val))
-        return var_binds
-
     # Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
     # and processing. PySNMP is calling self.handle_snmptrap back.
     def process_snmptrap(self, message, sender_address):
@@ -1585,7 +1587,7 @@ class EventServer(ECServerThread):
         if snmptrap_translation_enabled(self._config):
             trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         else:
-            trap = self.snmptrap_convert_var_binds(var_binds)
+            trap = self._snmp_trap_translator.convert_var_binds(var_binds)
 
         event = self.create_event_from_trap(trap, ipaddress)
         self.process_event(event)

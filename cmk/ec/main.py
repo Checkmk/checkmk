@@ -555,10 +555,11 @@ class SNMPTrapTranslator(object):
         self._settings = settings
         self._config = config
         self._logger = logger
-        self.mib_resolver = None
+        self._mib_resolver = None
+        self._load_mibs()
 
 
-    def load_mibs(self):
+    def _load_mibs(self):
         if self._settings.options.snmptrap_udp is None or not snmptrap_translation_enabled(self._config):
             return
         try:
@@ -578,12 +579,56 @@ class SNMPTrapTranslator(object):
             self._logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
 
             # This object maintains various indices built from MIBs data
-            self.mib_resolver = pysnmp.smi.view.MibViewController(builder)
+            self._mib_resolver = pysnmp.smi.view.MibViewController(builder)
         except pysnmp.smi.error.SmiError as e:
             if self._settings.options.debug:
                 raise
             self._logger.info("Exception while loading MIB modules. Proceeding without modules!")
             self._logger.exception("Exception: %s" % e)
+
+
+    # Convert pysnmp datatypes to simply handable ones
+    def translate(self, ipaddress, var_bind_list):
+        var_binds = []
+        if self._mib_resolver is None:
+            self._logger.warning('Failed to translate OIDs, no modules loaded (see above)')
+            return [(str(oid), str(value)) for oid, value in var_bind_list]
+
+        def translate(oid, value):
+            # Disable mib_var[0] type detection
+            # pylint: disable=no-member
+            mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
+
+            node = mib_var[0].getMibNode()
+            translated_oid = mib_var[0].prettyPrint().replace("\"", "")
+            translated_value = mib_var[1].prettyPrint()
+
+            return node, translated_oid, translated_value
+
+        for oid, value in var_bind_list:
+            try:
+                node, translated_oid, translated_value = translate(oid, value)
+
+                if hasattr(node, "getUnits"):
+                    translated_value += ' ' + node.getUnits()
+
+                if hasattr(node, "getDescription") \
+                   and type(self._config["translate_snmptraps"]) == tuple \
+                   and "add_description" in self._config["translate_snmptraps"][1]:
+                    translated_value += "(%s)" % node.getDescription()
+
+                var_binds.append((translated_oid, translated_value))
+
+            except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
+                self._logger.warning('Failed to translate OID %s (in trap from %s): %s '
+                                     '(enable debug logging for details)' %
+                                     (oid.prettyPrint(), ipaddress, e))
+                self._logger.debug('Failed trap var binds:\n%s' % "\n".join(["%s: %r" % i for i in var_bind_list]))
+                self._logger.debug(traceback.format_exc())
+
+                var_binds.append((str(oid), str(value)))  # add untranslated
+
+        return var_binds
 
 
 #.
@@ -1523,49 +1568,6 @@ class EventServer(ECServerThread):
             var_binds.append((key, val))
         return var_binds
 
-    # Convert pysnmp datatypes to simply handable ones
-    def snmptrap_translate_varbinds(self, ipaddress, var_bind_list):
-        var_binds = []
-        if self._snmp_trap_translator.mib_resolver is None:
-            self.logger.warning('Failed to translate OIDs, no modules loaded (see above)')
-            return [(str(oid), str(value)) for oid, value in var_bind_list]
-
-        def translate(oid, value):
-            # Disable mib_var[0] type detection
-            # pylint: disable=no-member
-            mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid), value).resolveWithMib(self._snmp_trap_translator.mib_resolver)
-
-            node = mib_var[0].getMibNode()
-            translated_oid = mib_var[0].prettyPrint().replace("\"", "")
-            translated_value = mib_var[1].prettyPrint()
-
-            return node, translated_oid, translated_value
-
-        for oid, value in var_bind_list:
-            try:
-                node, translated_oid, translated_value = translate(oid, value)
-
-                if hasattr(node, "getUnits"):
-                    translated_value += ' ' + node.getUnits()
-
-                if hasattr(node, "getDescription") \
-                   and type(self._config["translate_snmptraps"]) == tuple \
-                   and "add_description" in self._config["translate_snmptraps"][1]:
-                    translated_value += "(%s)" % node.getDescription()
-
-                var_binds.append((translated_oid, translated_value))
-
-            except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
-                self.logger.warning('Failed to translate OID %s (in trap from %s): %s '
-                                    '(enable debug logging for details)' %
-                                    (oid.prettyPrint(), ipaddress, e))
-                self.logger.debug('Failed trap var binds:\n%s' % "\n".join(["%s: %r" % i for i in var_bind_list]))
-                self.logger.debug(traceback.format_exc())
-
-                var_binds.append((str(oid), str(value)))  # add untranslated
-
-        return var_binds
-
     # Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
     # and processing. PySNMP is calling self.handle_snmptrap back.
     def process_snmptrap(self, message, sender_address):
@@ -1581,7 +1583,7 @@ class EventServer(ECServerThread):
         self.log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
 
         if snmptrap_translation_enabled(self._config):
-            trap = self.snmptrap_translate_varbinds(ipaddress, var_binds)
+            trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         else:
             trap = self.snmptrap_convert_var_binds(var_binds)
 

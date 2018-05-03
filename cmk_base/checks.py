@@ -397,8 +397,7 @@ def _precompile_plugin(path, precompiled_path):
     if not os.path.exists(os.path.dirname(precompiled_path)):
         os.makedirs(os.path.dirname(precompiled_path))
 
-    with open(precompiled_path, "w") as compiled_file:
-        marshal.dump(code, compiled_file)
+    store.save_file(precompiled_path, marshal.dumps(code))
 
 
 def _precompiled_plugin_path(path):

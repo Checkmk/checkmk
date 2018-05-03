@@ -131,6 +131,7 @@ def _set_paths():
         "tcp_cache_dir"               : os.path.join(omd_root, "tmp/check_mk/cache"),
         "data_source_cache_dir"       : os.path.join(omd_root, "tmp/check_mk/data_source_cache"),
         "snmp_scan_cache_dir"         : os.path.join(omd_root, "tmp/check_mk/snmp_scan_cache"),
+        "include_cache_dir"           : os.path.join(omd_root, "tmp/check_mk/check_includes"),
         "tmp_dir"                     : os.path.join(omd_root, "tmp/check_mk"),
         "logwatch_dir"                : os.path.join(omd_root, "var/check_mk/logwatch"),
         "nagios_startscript"          : os.path.join(omd_root, "etc/init.d/core"),

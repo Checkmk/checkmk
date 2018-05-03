@@ -247,7 +247,7 @@ def new_check_context():
 # Working with imports when specifying the includes would be much cleaner,
 # sure. But we need to deal with the current check API.
 def load_check_includes(check_file_path, check_context):
-    for include_file_name in includes_of_plugin(check_file_path):
+    for include_file_name in cached_includes_of_plugin(check_file_path):
         include_file_path = check_include_file_path(include_file_name)
         try:
             load_precompiled_plugin(include_file_path, check_context)
@@ -270,6 +270,47 @@ def check_include_file_path(include_file_name):
         include_file_path = local_path
 
     return include_file_path
+
+
+def cached_includes_of_plugin(check_file_path):
+    cache_file_path = _include_cache_file_path(check_file_path)
+    try:
+        return _get_cached_check_includes(check_file_path, cache_file_path)
+    except OSError, e:
+        pass # No usable cache. Terminate
+
+    includes = includes_of_plugin(check_file_path)
+    _write_check_include_cache(cache_file_path, includes)
+    return includes
+
+
+def _get_cached_check_includes(check_file_path, cache_file_path):
+    check_stat = os.stat(check_file_path)
+    cache_stat = os.stat(cache_file_path)
+
+    if check_stat.st_mtime >= cache_stat.st_mtime:
+        raise OSError("Cache is too old")
+
+    if cache_stat.st_size == 0:
+        return [] # No includes
+
+    x = open(cache_file_path).read().strip()
+    if not x:
+        return []
+    return x.split("|")
+
+
+def _write_check_include_cache(cache_file_path, includes):
+    if not os.path.exists(os.path.dirname(cache_file_path)):
+        os.makedirs(os.path.dirname(cache_file_path))
+    store.save_file(cache_file_path, "|".join(includes))
+
+
+def _include_cache_file_path(path):
+    is_local = path.startswith(cmk.paths.local_checks_dir)
+    return os.path.join(cmk.paths.include_cache_dir,
+                        "local" if is_local else "builtin",
+                        os.path.basename(path))
 
 
 # Parse the check file without executing the code to find the check include

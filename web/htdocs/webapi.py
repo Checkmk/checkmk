@@ -30,6 +30,8 @@ from lib import *
 import config
 import watolib
 import userdb
+from gui_exceptions import MKGeneralException, MKUserError, MKAuthException, \
+                           MKException
 
 from valuespec import *
 

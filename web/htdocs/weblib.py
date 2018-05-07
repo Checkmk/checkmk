@@ -28,6 +28,8 @@ import config
 import lib
 import re
 
+from gui_exceptions import MKUserError
+
 def ajax_tree_openclose():
     html.load_tree_states()
 
@@ -35,7 +37,7 @@ def ajax_tree_openclose():
     name = html.get_unicode_input("name")
 
     if not tree or not name:
-        raise lib.MKUserError(None, _('tree or name parameter missing'))
+        raise MKUserError(None, _('tree or name parameter missing'))
 
     html.set_tree_state(tree, name, html.var("state"))
     html.save_tree_states()
@@ -117,7 +119,7 @@ def ajax_set_rowselection():
 
     action = html.var('action', 'set')
     if action not in [ 'add', 'del', 'set', 'unset' ]:
-        raise lib.MKUserError(None, _('Invalid action'))
+        raise MKUserError(None, _('Invalid action'))
 
     rows  = html.var('rows', '').split(',')
 

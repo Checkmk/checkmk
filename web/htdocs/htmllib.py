@@ -78,7 +78,7 @@ json.JSONEncoder.default = _default # replacement
 
 
 from cmk.exceptions import MKGeneralException, MKException
-from lib import MKUserError
+from gui_exceptions import MKUserError
 
 
 # Information about uri

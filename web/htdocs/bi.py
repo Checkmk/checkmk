@@ -36,6 +36,8 @@ import cmk
 import multiprocessing
 from contextlib import contextmanager
 
+from gui_exceptions import MKConfigError, MKGeneralException
+
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 compile_logger = logger.getChild("bi.compilation")

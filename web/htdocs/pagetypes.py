@@ -50,6 +50,8 @@ import userdb
 from lib import *
 from valuespec import *
 
+from gui_exceptions import MKUserError, MKGeneralException, MKAuthException
+
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
 #   |                       | __ )  __ _ ___  ___                          |

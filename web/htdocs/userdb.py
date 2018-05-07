@@ -29,6 +29,7 @@
 import config, hooks
 import gui_background_job
 from lib import *
+from gui_exceptions import MKGeneralException, MKUserError, MKInternalError
 from log import logger
 import time, os, pprint, shutil, traceback
 from valuespec import *

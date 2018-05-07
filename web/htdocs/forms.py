@@ -26,6 +26,7 @@
 
 from htmllib import HTML
 from lib import *
+from gui_exceptions import MKUserError
 
 # A input function with the same call syntax as htmllib.textinput()
 def input(valuespec, varprefix, defvalue):

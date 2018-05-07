@@ -37,6 +37,8 @@ from hashlib import md5
 
 import cmk.paths
 
+from gui_exceptions import MKInternalError, MKAuthException, MKUserError
+
 auth_type = None
 auth_logger = logger.getChild("auth")
 

@@ -25,7 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import Cookie, util, apache # pylint: disable=import-error
-from lib import make_utf8, MKGeneralException, MKException
+from lib import make_utf8
+from gui_exceptions import MKGeneralException, MKException
 from log import logger
 import htmllib
 import os, time, config, weblib, re

@@ -39,9 +39,13 @@ import config, pagetypes, table
 import sites
 import traceback
 from collections import OrderedDict
+
 from log import logger
 from lib import *
 from valuespec import *
+from gui_exceptions import MKGeneralException, MKUserError, MKInternalError, \
+                           MKUnauthenticatedException, MKAuthException
+
 import livestatus
 from cmk.regex import regex
 

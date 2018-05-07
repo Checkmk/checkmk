@@ -37,6 +37,7 @@ import table
 import config
 from valuespec import *
 from lib import make_nagios_directory, create_user_file
+from gui_exceptions import MKUserError
 
 
 class KeypairStore(object):

@@ -41,10 +41,13 @@ import base64
 import hashlib
 import socket
 import ipaddress
-from lib import *
-import cmk.defines as defines
 from Cryptodome.PublicKey import RSA
 from UserDict import DictMixin
+
+from lib import *
+from gui_exceptions import MKUserError, MKGeneralException
+
+import cmk.defines as defines
 
 def type_name(v):
     try:

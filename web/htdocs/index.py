@@ -40,6 +40,13 @@ import log
 from html_mod_python import html_mod_python, FinalizeRequest
 import cmk.paths
 
+from gui_exceptions import \
+    MKUserError, \
+    MKConfigError, \
+    MKGeneralException, \
+    MKAuthException, \
+    MKUnauthenticatedException
+
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(mod_python_req, fields = None, is_profiling = False):
     # Create an object that contains all data about the request and

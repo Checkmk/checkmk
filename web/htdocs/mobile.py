@@ -27,6 +27,7 @@
 import re
 from lib import *
 import views, config, visuals, metrics
+from gui_exceptions import MKGeneralException, MKUserError
 
 # These regexes are taken from the public domain code of Matt Sullivan
 # http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/

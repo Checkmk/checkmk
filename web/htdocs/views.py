@@ -30,6 +30,7 @@ import sites
 import bi
 import inspect
 from lib import *
+from gui_exceptions import MKGeneralException, MKUserError, MKInternalError
 
 import cmk.paths
 

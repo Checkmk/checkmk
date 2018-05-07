@@ -28,6 +28,7 @@ import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
 import i18n
 import sites
 from lib import *
+from gui_exceptions import MKGeneralException, MKUserError
 from valuespec import *
 import table, config, forms
 import cmk.crash_reporting

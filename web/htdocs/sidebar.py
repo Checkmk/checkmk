@@ -33,6 +33,7 @@ import notify, werks
 import sites
 import modules
 from lib import *
+from gui_exceptions import MKGeneralException, MKUserError, MKException
 from log import logger
 import cmk.paths
 import cmk.store as store

@@ -1,0 +1,11 @@
+Title: check_mk_agent.aix: Fixed parameter substitution for environment variables MK_LIBDIR,MK_CONFDIR and MK_VARDIR
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p32
+Date: 1525711070
+
+

@@ -241,7 +241,7 @@ register_rule(group,
                  choices = [
                      ("address", _("Ping the normal IP address")),
                      ("alias",   _("Use the alias as DNS name / IP address")),
-                     ("explicit", _("Ping the following explicity address / DNS name"), Hostname()),
+                     ("explicit", _("Ping the following explicit address / DNS name"), Hostname()),
                      ("all_ipv4addresses", _("Ping all IPv4 addresses")),
                      ("all_ipv6addresses", _("Ping all IPv6 addresses")),
                      ("additional_ipv4addresses", _("Ping additional IPv4 addresses")),

@@ -1,0 +1,10 @@
+Title: windows services: service discovery was unable to ignore disabled rules
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1525697446
+Class: fix
+
+

@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ListFilter.h"
-#include <algorithm>
 #include <ostream>
+#include <utility>
 #include "Logger.h"
 #include "Row.h"
 

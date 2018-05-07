@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "NegatingFilter.h"
-#include <algorithm>
+#include <utility>
 #include "FilterVisitor.h"
 #include "Row.h"
 

@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StatsColumn.h"
-#include <algorithm>
+#include <utility>
 #include "Column.h"
 #include "CountAggregator.h"
 #include "Filter.h"

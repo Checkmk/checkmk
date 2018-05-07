@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsListFilter.h"
-#include <algorithm>
 #include <sstream>
+#include <utility>
 #include "Logger.h"
 #include "Row.h"
 

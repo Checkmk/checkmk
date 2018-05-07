@@ -24,9 +24,9 @@
 
 #include "StringFilter.h"
 #include <strings.h>
-#include <algorithm>
 #include <map>
 #include <sstream>
+#include <utility>
 #include <vector>
 #include "Row.h"
 

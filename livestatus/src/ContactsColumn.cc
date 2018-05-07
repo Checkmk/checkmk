@@ -23,7 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactsColumn.h"
-#include <algorithm>
+#include <utility>
 #include "Renderer.h"
 #include "Row.h"
 

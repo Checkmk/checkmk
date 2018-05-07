@@ -241,7 +241,7 @@ register_rule(group,
                  choices = [
                      ( "address", _("Ping the normal IP address")),
                      ( "alias",   _("Use the alias as DNS name / IP address")),
-                     ( "explicit", _("Ping the following explicity address / DNS name"),
+                     ( "explicit", _("Ping the following explicit address / DNS name"),
                        Hostname()),
                  ]
            )),

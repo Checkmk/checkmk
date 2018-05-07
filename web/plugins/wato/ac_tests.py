@@ -266,6 +266,38 @@ class ACTestHTTPSecured(ACTest):
 
 
 
+class ACTestOldDefaultCredentials(ACTest):
+    def category(self):
+        return ACTestCategories.security
+
+
+    def title(self):
+        return _("Default credentials")
+
+
+    def help(self):
+        return _("In versions prior to version 1.4.0 the first administrative user of the "
+            "site was named <tt>omdadmin</tt> with the standard password <tt>omd</tt>. "
+            "This test warns you in case the site uses these standard credentials. "
+            "It is highly recommended to change this password.")
+
+
+    def is_relevant(self):
+        return userdb.user_exists("omdadmin")
+
+
+    def execute(self):
+        if userdb.HtpasswdUserConnector({}).check_credentials("omdadmin", "omd") == "omdadmin":
+            yield ACResultCRIT(_("Found <tt>omdadmin</tt> with default password. "
+                               "It is highly recommended to change this password."))
+        else:
+            yield ACResultOK(_("Found <tt>omdadmin</tt> using custom password."))
+
+
+
+
+
+
 class ACTestBackupConfigured(ACTest):
     def category(self):
         return ACTestCategories.reliability

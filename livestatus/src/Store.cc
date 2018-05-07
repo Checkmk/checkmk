@@ -25,7 +25,6 @@
 #include "Store.h"
 #include <cstring>
 #include <ctime>
-#include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <utility>

@@ -30,12 +30,16 @@ import os
 import json
 
 import ast
+
 import config
 import userdb
 import sites
+from lib import lqencode
+from gui_exceptions import MKException, MKGeneralException, MKAuthException, MKUserError
+
 import cmk.paths
 import cmk.store as store
-from lib import MKException, MKGeneralException, MKAuthException, MKUserError, lqencode
+import cmk.profile
 from cmk.structured_data import StructuredDataTree, Container, Numeration, Attributes
 
 

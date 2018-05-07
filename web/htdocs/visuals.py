@@ -28,6 +28,7 @@ import os, copy, sys
 import json
 
 from lib import *
+from gui_exceptions import MKGeneralException, MKAuthException, MKUserError, MKInternalError
 from valuespec import *
 import config, table, userdb
 import pagetypes # That will replace visuals.py one day

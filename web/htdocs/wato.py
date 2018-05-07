@@ -109,6 +109,8 @@ import userdb
 import weblib
 import login
 from lib import *
+from gui_exceptions import MKGeneralException, MKUserError, MKAuthException, \
+                           MKInternalError, MKException
 from log import logger
 from valuespec import *
 import forms

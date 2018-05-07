@@ -32,6 +32,7 @@ import cmk.paths
 import config
 import sites
 from lib import *
+from gui_exceptions import MKGeneralException
 import cmk.store as store
 
 

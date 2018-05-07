@@ -26,62 +26,11 @@
 
 import math, grp, pprint, os, errno, marshal, re, fcntl, time
 import traceback
-from cmk.exceptions import MKException, MKGeneralException
 from cmk.regex import regex
 import cmk.store as store
 import cmk.paths
 
 from log import logger
-
-class MKAuthException(MKException):
-    def __init__(self, reason):
-        self.reason = reason
-        super(MKAuthException, self).__init__(reason)
-
-    def __str__(self):
-        return self.reason
-
-    def title(self):
-        return _("Permission denied")
-
-    def plain_title(self):
-        return _("Authentication error")
-
-
-class MKUnauthenticatedException(MKGeneralException):
-    def title(self):
-        return _("Not authenticated")
-
-    def plain_title(self):
-        return _("Missing authentication credentials")
-
-
-class MKConfigError(MKException):
-    def title(self):
-        return _("Configuration error")
-
-    def plain_title(self):
-        return self.title()
-
-
-class MKUserError(MKException):
-    def __init__(self, varname, message):
-        self.varname = varname
-        self.message = message
-        super(MKUserError, self).__init__(varname, message)
-
-    def __str__(self):
-        return self.message
-
-    def title(self):
-        return _("Invalid User Input")
-
-    def plain_title(self):
-        return _("User error")
-
-
-class MKInternalError(MKException):
-    pass
 
 # Create directory owned by common group of Nagios and webserver,
 # and make it writable for the group
@@ -94,6 +43,7 @@ def make_nagios_directory(path):
             os.mkdir(path)
             os.chmod(path, 0770)
         except Exception, e:
+            from gui_exceptions import MKConfigError
             raise MKConfigError("Your web server cannot create the directory <tt>%s</tt>, "
                     "or cannot set the permissions to <tt>0770</tt>: %s" % (path, e))
 

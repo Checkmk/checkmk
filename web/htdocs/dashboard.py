@@ -29,6 +29,8 @@ from valuespec import *
 from lib import *
 import wato
 
+from gui_exceptions import MKGeneralException, MKAuthException, MKUserError
+
 import json
 
 loaded_with_language = False

@@ -34,6 +34,7 @@ import config
 import livestatus
 import sites
 from lib import *
+from gui_exceptions import MKGeneralException
 import cmk.paths
 import cmk.ec.settings
 import cmk.ec.export

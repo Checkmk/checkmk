@@ -30,6 +30,8 @@ from lib import *
 from log import logger
 import cmk.paths
 
+from gui_exceptions import MKGeneralException
+
 loaded_with_language = False
 multisite_cronjobs = []
 

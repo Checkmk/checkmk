@@ -60,6 +60,7 @@ import config, hooks, userdb, multitar
 import sites
 import mkeventd
 import backup
+from gui_exceptions import MKGeneralException, MKAuthException, MKUserError
 
 import cmk.paths
 import cmk.defines

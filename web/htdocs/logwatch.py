@@ -27,6 +27,7 @@
 import time, re, datetime, config, table, livestatus
 from lib import *
 import views, sites
+from gui_exceptions import MKGeneralException, MKUserError, MKAuthException
 
 
 #   .--HTML Output---------------------------------------------------------.

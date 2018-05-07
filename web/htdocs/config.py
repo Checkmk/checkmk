@@ -34,6 +34,8 @@ import log
 from lib import *
 import cmk.paths
 
+from gui_exceptions import MKConfigError, MKAuthException
+
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |

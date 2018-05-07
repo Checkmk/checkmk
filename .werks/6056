@@ -1,0 +1,11 @@
+Title: Analyze configuration: Test for old omdadmin default credentials
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b3
+Date: 1525628120
+Class: feature
+
+A new "Analyze configuration" test warns you in case a omdadmin user with the pre
+1.4 default password is found in the site.

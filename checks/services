@@ -118,6 +118,11 @@ def inventory_windows_services(info):
     # Filter WATO compatible rules by tags/hostlist
     rules = []
     for rule in inventory_services_rules:
+        if len(rule) >= 4:
+            options = rule[3]
+            if options.get("disabled"):
+                continue
+
         # 1. Get all rules matching the current host
         taglist, hostlist = rule[1:3]
         if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \

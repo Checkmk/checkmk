@@ -62,6 +62,7 @@ counters_dir              = None
 tcp_cache_dir             = None
 data_source_cache_dir     = None
 snmp_scan_cache_dir       = None
+include_cache_dir         = None
 tmp_dir                   = None
 logwatch_dir              = None
 nagios_objects_file       = None

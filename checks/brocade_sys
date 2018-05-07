@@ -26,10 +26,13 @@
 
 
 def parse_brocade_sys(info):
-    return {
-        "cpu_util"          : int(info[0][0]),
-        "mem_used_percent"  : int(info[0][1]),
-    }
+    try:
+        return {
+            "cpu_util"          : int(info[0][0]),
+            "mem_used_percent"  : int(info[0][1]),
+        }
+    except IndexError, ValueError:
+        return {}
 
 
 #   .--Memory--------------------------------------------------------------.

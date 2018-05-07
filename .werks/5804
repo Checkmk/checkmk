@@ -1,0 +1,12 @@
+Title: BI aggregations: increased render performance
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1525694777
+
+The livestatus data required for rendering the BI tree is no longer fetched consecutive from one site after another.
+The new mechanism queries all sites in parallel, hereby increasing the livestatus query performance.

@@ -2483,33 +2483,31 @@ def execute_rule_node(node, status_info, aggregation_options):
 # a known lists of lists (list of site/host pairs)
 def get_status_info(required_hosts):
     # Query each site only for hosts that that site provides
-    site_hosts = {}
+    req_hosts = set()
+    req_sites = set()
+
     for site, host in required_hosts:
-        hosts = site_hosts.get(site)
-        if hosts == None:
-            site_hosts[site] = [host]
-        else:
-            hosts.append(host)
+        req_hosts.add(host)
+        req_sites.add(site)
 
-    tuples = []
-    for site, hosts in site_hosts.iteritems():
-        filter = ""
-        for host in hosts:
-            filter += "Filter: name = %s\n" % host
-        if len(hosts) > 1:
-            filter += "Or: %d\n" % len(hosts)
-        sites.live().set_auth_domain('bi')
-        sites.live().set_only_sites([site])
-        data = sites.live().query(
-                "GET hosts\n"
-                "Columns: name state hard_state plugin_output scheduled_downtime_depth "
-                "acknowledged in_service_period services_with_fullstate\n"
-                + filter)
-        sites.live().set_auth_domain('read')
-        sites.live().set_only_sites(None)
-        tuples += [((site, e[0]), e[1:]) for e in data]
+    host_filter = ""
+    for host in req_hosts:
+        host_filter += "Filter: name = %s\n" % host
+    if len(req_hosts) > 1:
+        host_filter += "Or: %d\n" % len(req_hosts)
+    sites.live().set_auth_domain('bi')
+    sites.live().set_only_sites(list(req_sites))
+    sites.live().set_prepend_site(True)
+    data = sites.live().query(
+            "GET hosts\n"
+            "Columns: name state hard_state plugin_output scheduled_downtime_depth "
+            "acknowledged in_service_period services_with_fullstate\n"
+            + host_filter)
+    sites.live().set_auth_domain('read')
+    sites.live().set_only_sites(None)
+    sites.live().set_prepend_site(False)
+    return dict([((e[0], e[1]), e[2:]) for e in data])
 
-    return dict(tuples)
 
 # This variant of the function is configured not with a list of
 # hosts but with a livestatus filter header and a list of columns

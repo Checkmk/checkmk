@@ -54,7 +54,7 @@ CXX_FLAGS          := -g -O3 -Wall -Wextra
 # should be removed when the compiler defaults are in sync again.
 CXX_FLAGS          += -std=c++14
 
-CLANG_VERSION      := 5.0
+CLANG_VERSION      := 6.0
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)

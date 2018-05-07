@@ -55,6 +55,10 @@
 #-A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
 #COMMIT
 
+def iptables_hash(config):
+    import hashlib
+    return hashlib.sha256(config).hexdigest()
+
 
 def parse_iptables(info):
     config_lines = [" ".join(sublist) for sublist in info]
@@ -63,7 +67,7 @@ def parse_iptables(info):
 
 
 def inventory_iptables(parsed):
-    return [(None, {"config_hash": hash(parsed)})]
+    return [(None, {"config_hash": iptables_hash(parsed)})]
 
 
 def check_iptables(_no_item, params, parsed):
@@ -71,11 +75,11 @@ def check_iptables(_no_item, params, parsed):
 
     if not item_state:
         set_item_state("iptables.config",
-                       {"config": parsed, "hash": hash(parsed)})
+                       {"config": parsed, "hash": iptables_hash(parsed)})
         return 0, "saved initial configuration"
 
     initial_config_hash = params["config_hash"]
-    new_config_hash = hash(parsed)
+    new_config_hash = iptables_hash(parsed)
 
     if initial_config_hash == new_config_hash:
         if initial_config_hash != item_state.get("hash"):

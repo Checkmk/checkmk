@@ -52,6 +52,7 @@
 #include "ChronoUtils.h"
 #include "ClientQueue.h"
 #include "DowntimeOrComment.h"
+#include "DowntimesOrComments.h"
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "MonitoringCore.h"

@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "LogEntry.h"
-#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <unordered_map>

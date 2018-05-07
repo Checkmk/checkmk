@@ -25,6 +25,9 @@
 #include "StringFilter.h"
 #include <strings.h>
 #include <algorithm>
+#include <map>
+#include <sstream>
+#include <vector>
 #include "Row.h"
 
 using std::move;

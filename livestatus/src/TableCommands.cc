@@ -24,6 +24,7 @@
 
 #include "TableCommands.h"
 #include <memory>
+#include <vector>
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "OffsetSStringColumn.h"

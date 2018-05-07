@@ -24,7 +24,10 @@
 
 #include "CustomVarsDictFilter.h"
 #include <strings.h>
+#include <map>
+#include <sstream>
 #include <tuple>
+#include <vector>
 #include "Row.h"
 #include "StringUtils.h"
 

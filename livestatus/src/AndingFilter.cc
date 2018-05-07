@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
+#include <deque>
 #include <memory>
 #include "Filter.h"
 #include "Row.h"

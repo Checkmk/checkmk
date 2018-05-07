@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsValuesColumn.h"
+#include <unordered_map>
 #include <utility>
 #include "CustomVarsListFilter.h"
 #include "Filter.h"

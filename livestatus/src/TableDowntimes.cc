@@ -27,6 +27,7 @@
 #include <utility>
 #include "Column.h"
 #include "DowntimeOrComment.h"
+#include "DowntimesOrComments.h"
 #include "MonitoringCore.h"
 #include "OffsetBoolColumn.h"
 #include "OffsetIntColumn.h"

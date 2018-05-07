@@ -32,6 +32,7 @@
 #include <ostream>
 #include <set>
 #include <utility>
+#include "AndingFilter.h"
 #include "Column.h"
 #include "ColumnFilter.h"
 #include "Filter.h"

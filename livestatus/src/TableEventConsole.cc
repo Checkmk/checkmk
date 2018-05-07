@@ -28,6 +28,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 #include "Column.h"
 #include "EventConsoleConnection.h"

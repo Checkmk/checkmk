@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsDictColumn.h"
+#include <unordered_map>
 #include <utility>
 #include "CustomVarsDictFilter.h"
 #include "Filter.h"

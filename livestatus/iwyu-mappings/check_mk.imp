@@ -18,6 +18,7 @@
   { include: ["<bits/types/struct_tm.h>", private, "<time.h>", public ] },
   { include: ["<bits/types/time_t.h>", private, "<time.h>", public ] },
   { include: ["<experimental/bits/fs_ops.h>", private, "<experimental/filesystem>", public ] },
+  { include: ["<experimental/fs_ops.h>", private, "<experimental/filesystem>", public ] },
   { include: ["<linux/if_ether.h>", private, "<netinet/if_ether.h>", public ] },
   { include: ["<pcap/bpf.h>", private, "<pcap.h>", public ] },
   { include: ["<pcap/dlt.h>", private, "<pcap.h>", public ] },

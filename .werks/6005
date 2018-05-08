@@ -1,0 +1,10 @@
+Title: hp_procurve_cpu: Fixed invalid parameter format
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1525795585
+Class: fix
+
+

@@ -35,23 +35,25 @@ def inventory_hp_procurve_cpu(info):
     if len(info) == 1 and int(info[0][0]) >= 0 <= 100:
         return [ (None, 'hp_procurve_cpu_default_levels') ]
 
+
 def check_hp_procurve_cpu(item, params, info):
+    if not isinstance(params, tuple):
+        params = (None, None)
+
     if len(info) == 1:
         cpu_util = int(info[0][0])
         if cpu_util >= 0 and cpu_util <= 100:
-            status = 0
-            output = ''
-            if cpu_util >= params[1]:
+            infotext = "Usage: %s%%" % cpu_util
+            warn, crit = params
+            if crit is not None and cpu_util >= crit:
                 status = 2
-                output = ' (Above %d%%)' % params[1]
-            elif cpu_util >= params[0]:
+            elif warn is not None and cpu_util >= warn:
                 status = 1
-                output = ' (Above %d%%)' % params[0]
-
-            return (status, 'CPU utilization is %d%% %s' % (cpu_util, output),
-                   [('util', '%d%%' % cpu_util, params[0], params[1], 0, 100)])
-
-    return (3, "Invalid information in snmp data")
+            else:
+                status = 0
+            if status:
+                infotext += " (warn/crit at %s/%s)" % (warn, crit)
+            return status, infotext, [('util', '%d%%' % cpu_util, warn, crit, 0, 100)]
 
 
 

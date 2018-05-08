@@ -1,0 +1,10 @@
+Title: Periodic service discovery crashed when no "Automatically update service configuration" option was set
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.4.0p32
+Date: 1525772580
+Class: fix
+
+

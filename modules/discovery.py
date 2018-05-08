@@ -485,7 +485,7 @@ def discover_marked_hosts():
 
         # have to do hosts one-by-one because each could have a different configuration
         params = discovery_check_parameters(hostname) or default_discovery_check_parameters()
-        params_rediscovery = params["inventory_rediscovery"]
+        params_rediscovery = params.get("inventory_rediscovery", {})
         if "service_blacklist" in params_rediscovery or "service_whitelist" in params_rediscovery:
             # whitelist. if none is specified, this matches everything
             whitelist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))

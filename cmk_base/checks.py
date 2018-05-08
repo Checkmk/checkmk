@@ -29,6 +29,8 @@ import math
 import copy
 import ast
 import marshal
+import py_compile
+import struct
 from collections import OrderedDict
 
 import cmk.paths
@@ -383,21 +385,39 @@ def load_precompiled_plugin(path, check_context):
         console.vverbose("Precompile %s to %s\n" % (path, precompiled_path))
         _precompile_plugin(path, precompiled_path)
 
-    exec(marshal.load(open(precompiled_path)), check_context)
+    exec(marshal.loads(open(precompiled_path, "rb").read()[8:]), check_context)
 
 
 def _is_plugin_precompiled(path, precompiled_path):
-    return os.path.exists(precompiled_path) \
-        and os.stat(path).st_mtime < os.stat(precompiled_path).st_mtime
+    if not os.path.exists(precompiled_path):
+        return False
+
+    # Check precompiled file header
+    f = open(precompiled_path, "rb")
+
+    file_magic = f.read(4)
+    if file_magic != py_compile.MAGIC:
+        return False
+
+    try:
+        origin_file_mtime = struct.unpack("I", f.read(4))[0]
+    except struct.error, e:
+        return False
+
+    if long(os.stat(path).st_mtime) > origin_file_mtime:
+        return False
+
+    return True
 
 
 def _precompile_plugin(path, precompiled_path):
     code = compile(open(path).read(), path, "exec")
+    plugin_mtime = os.stat(path).st_mtime
 
     if not os.path.exists(os.path.dirname(precompiled_path)):
         os.makedirs(os.path.dirname(precompiled_path))
 
-    store.save_file(precompiled_path, marshal.dumps(code))
+    py_compile.compile(path, precompiled_path, doraise=True)
 
 
 def _precompiled_plugin_path(path):

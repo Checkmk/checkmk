@@ -7,9 +7,12 @@
 #       * cppcoreguidelines-pro-bounds-constant-array-index ("do not use array subscript when the index is not an integer constant expression; use gsl::at() instead")
 #       * cppcoreguidelines-pro-bounds-pointer-arithmetic ("do not use pointer arithmetic")
 #       * google-runtime-int ("consider replacing 'unsigned long' with 'uint64'")
+#       * hicpp-no-array-decay ("do not implicitly decay an array into a pointer; consider using gsl::array_view or an explicit cast instead")
 #
 #   * undesirable checks:
 #       * cppcoreguidelines-pro-type-static-cast-downcast ("do not use static_cast to downcast from a base to a derived class; use dynamic_cast instead")
+#       * fuchsia-default-arguments ("calling a function that uses a default argument is disallowed")
+#       * fuchsia-overloaded-operator ("cannot overload 'operatorFOO'")
 #       * google-runtime-references ("non-const reference parameter 'foo', make it const or use a pointer")
 #       * hicpp-no-assembler ("do not use inline assembler in safety-critical code") triggered by ntohs/htons
 #       * llvm-include-order ("#includes are not sorted properly")
@@ -23,6 +26,8 @@
 #       * cppcoreguidelines-pro-type-reinterpret-cast ("do not use reinterpret_cast")
 #       * cppcoreguidelines-pro-type-vararg ("do not call c-style vararg functions")
 #       * hicpp-member-init: alias for cppcoreguidelines-pro-type-member-init
+#       * hicpp-signed-bitwise ("use of a signed integer operand with a binary bitwise operator")
+#       * hicpp-vararg ("do not call c-style vararg functions")
 #       * llvm-header-guard ("header guard does not follow preferred style") tricky to get right with the current bear/clang-tidy/symlink situation
 #
 #   * desirable checks, but some places need to be suppressed:
@@ -36,7 +41,7 @@
 #       * hicpp-special-member-functions
 #       * modernize-use-default-member-init
 #
-Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-assembler,-llvm-header-guard,-llvm-include-order,-modernize-use-bool-literals,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-special-member-functions,-hicpp-special-member-functions,-modernize-use-default-member-init'
+Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-default-arguments,-fuchsia-overloaded-operator,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-modernize-use-bool-literals,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-special-member-functions,-hicpp-special-member-functions,-modernize-use-default-member-init'
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'

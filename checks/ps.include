@@ -414,9 +414,9 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                         kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
                         percent_cpu += user_perc + kernel_perc
                         handle_count += handle_c
-                        process.append([("cpu usage (user space)",   (user_perc, "%")),
-                                        ("cpu usage (kernel space)", (kernel_perc, "%")),
-                                        ("pid", (pid, ""))])
+                        process.append(("cpu usage (user space)",   (user_perc, "%")))
+                        process.append(("cpu usage (kernel space)", (kernel_perc, "%")))
+                        process.append(("pid", (pid, "")))
                     else:
                         # process_info[3] contains the used CPU time and possibly, separated by /, also
                         # the total elapsed time since the birth of the process.

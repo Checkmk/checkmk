@@ -1,0 +1,11 @@
+Title: ps.include: Checks crashed if parameters 'Levels on CPU utilization of a single process' or 'Enable per-process details in long-output' are used
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b3
+Date: 1525782403
+
+

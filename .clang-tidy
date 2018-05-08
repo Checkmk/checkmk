@@ -22,6 +22,7 @@
 #       * android-cloexec-open ("'open' should use O_CLOEXEC where possible") Ancient CentOS 5 doesn't have O_CLOEXEC
 #       * cert-env33-c ("calling 'system' uses a command processor")
 #       * cert-err34-c ("'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead")
+#       * cppcoreguidelines-owning-memory ("deleting a pointer through a type that is not marked 'gsl::owner<>'; consider using a smart pointer instead") We won't fix this for 1.5.0
 #       * cppcoreguidelines-pro-type-member-init ("uninitialized record type: 'foo'")
 #       * cppcoreguidelines-pro-type-reinterpret-cast ("do not use reinterpret_cast")
 #       * cppcoreguidelines-pro-type-vararg ("do not call c-style vararg functions")
@@ -41,7 +42,7 @@
 #       * hicpp-special-member-functions
 #       * modernize-use-default-member-init
 #
-Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-default-arguments,-fuchsia-overloaded-operator,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-modernize-use-bool-literals,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-special-member-functions,-hicpp-special-member-functions,-modernize-use-default-member-init'
+Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-default-arguments,-fuchsia-overloaded-operator,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-modernize-use-bool-literals,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-special-member-functions,-hicpp-special-member-functions,-modernize-use-default-member-init'
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'

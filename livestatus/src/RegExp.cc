@@ -68,7 +68,10 @@ private:
 // -----------------------------------------------------------------------------
 // standard <regex> implementation
 // -----------------------------------------------------------------------------
+#include <map>
 #include <regex>
+#include <sstream>
+#include <vector>
 class RegExp::Impl {
 public:
     Impl(const std::string &str, Case c, Syntax s)

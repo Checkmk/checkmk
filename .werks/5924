@@ -1,0 +1,18 @@
+Title: Windows: Use WMI for process monitoring by default
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1525784407
+Class: feature
+
+The option use_wmi has been available as an 'experimental' feature
+for the section ps of the Windows agent since release 1.2.7i3. The
+default setting has still been to use the 'native' WinAPI for obtaining
+process information. As the native way seems to fail to obtain
+information about all desired processes at times and the WMI option
+seems to be working without significant problems, the default value of
+the option is now changed to 'yes'.
+
+

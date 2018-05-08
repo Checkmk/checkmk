@@ -47,7 +47,8 @@ double ServiceSpecialDoubleColumn::getValue(Row row) const {
         switch (_type) {
             case Type::staleness: {
                 extern int interval_length;
-                time_t check_result_age = time(nullptr) - svc->last_check;
+                double check_result_age =
+                    static_cast<double>(time(nullptr) - svc->last_check);
                 if (svc->check_interval != 0) {
                     return check_result_age /
                            (svc->check_interval * interval_length);

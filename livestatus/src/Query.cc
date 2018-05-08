@@ -230,8 +230,9 @@ void Query::parseAndOrLine(char *line, Filter::Kind kind,
 void Query::parseNegateLine(char *line, FilterStack &filters) {
     checkNoArguments(line);
     if (filters.empty()) {
-        throw("error combining filters for table '" + _table.name() +
-              "': expected 1 filters, but only 0 are on stack");
+        throw std::runtime_error(
+            "error combining filters for table '" + _table.name() +
+            "': expected 1 filters, but only 0 are on stack");
     }
 
     auto top = std::move(filters.back());
@@ -262,8 +263,9 @@ void Query::parseStatsAndOrLine(char *line,
 void Query::parseStatsNegateLine(char *line) {
     checkNoArguments(line);
     if (_stats_columns.empty()) {
-        throw("error combining filters for table '" + _table.name() +
-              "': expected 1 filters, but only 0 are on stack");
+        throw std::runtime_error(
+            "error combining filters for table '" + _table.name() +
+            "': expected 1 filters, but only 0 are on stack");
     }
     auto to_negate = _stats_columns.back()->stealFilter();
     _stats_columns.pop_back();

@@ -26,7 +26,6 @@
 #define OringFilter_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <algorithm>
 #include <bitset>
 #include <chrono>
 #include <cstdint>
@@ -35,6 +34,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include "Filter.h"
 #include "contact_fwd.h"
 class Column;

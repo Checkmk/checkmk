@@ -41,7 +41,7 @@
 factory_settings["cisco_asa_failover_default_levels"] = {
             "primary"            : "active",
             "secondary"          : "standby",
-            "failover_state"     : 0,
+            "failover_state"     : 1,
 }
 
 

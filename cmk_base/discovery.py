@@ -29,6 +29,7 @@ import socket
 import sys
 import time
 import inspect
+import signal
 
 from cmk.regex import regex
 import cmk.tty as tty
@@ -435,38 +436,32 @@ def _set_rediscovery_flag(hostname, need_rediscovery):
                 pass
 
 
+
+class DiscoveryTimeout(Exception):
+    pass
+
+
+def _handle_discovery_timeout():
+    raise DiscoveryTimeout()
+
+
+def _set_discovery_timeout():
+    signal.signal(signal.SIGALRM, _handle_discovery_timeout)
+    # Add an additional 10 seconds as grace period
+    signal.alarm(_marked_host_discovery_timeout + 10)
+
+
+def _clear_discovery_timeout():
+    signal.alarm(0)
+
+
+def _get_autodiscovery_dir():
+    return cmk.paths.var_dir + '/autodiscovery'
+
+
 def discover_marked_hosts():
     console.verbose("Doing discovery for all marked hosts:\n")
-
-    def queue_age():
-        oldest = time.time()
-        for filename in os.listdir(autodiscovery_dir):
-            oldest = min(oldest, os.path.getmtime(autodiscovery_dir + "/" + filename))
-        return oldest
-
-    def may_rediscover(params):
-        if "inventory_rediscovery" not in params:
-            return "automatic discovery disabled for this host"
-
-        now = time.gmtime(now_ts)
-        for start_hours_mins, end_hours_mins in params["inventory_rediscovery"]["excluded_time"]:
-            start_time = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday,
-                start_hours_mins[0], start_hours_mins[1], 0,
-                now.tm_wday, now.tm_yday, now.tm_isdst))
-
-            end_time = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday,
-                end_hours_mins[0], end_hours_mins[1], 0,
-                now.tm_wday, now.tm_yday, now.tm_isdst))
-
-            if start_time <= now <= end_time:
-                return "we are currently in a disallowed time of day"
-
-        if now_ts - oldest_queued < params["inventory_rediscovery"]["group_time"]:
-            return "last activation is too recent"
-
-        return None
-
-    autodiscovery_dir = cmk.paths.var_dir + '/autodiscovery'
+    autodiscovery_dir = _get_autodiscovery_dir()
 
     if not os.path.exists(autodiscovery_dir):
         # there is obviously nothing to do
@@ -475,7 +470,38 @@ def discover_marked_hosts():
 
     now_ts = time.time()
     end_time_ts = now_ts + _marked_host_discovery_timeout  # don't run for more than 2 minutes
-    oldest_queued = queue_age()
+    oldest_queued = _queue_age()
+    all_hosts = config.all_configured_hosts()
+    hosts = os.listdir(autodiscovery_dir)
+    if not hosts:
+        console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
+
+    activation_required = False
+    try:
+        _set_discovery_timeout()
+        for hostname in hosts:
+            if _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
+                activation_required = True
+
+            if time.time() > end_time_ts:
+                console.warning("  Timeout of %d seconds reached. Lets do the remaining hosts next time." % _marked_host_discovery_timeout)
+                break
+    except DiscoveryTimeout:
+        pass
+    finally:
+        _clear_discovery_timeout()
+
+
+    if activation_required:
+        console.verbose("\nRestarting monitoring core with updated configuration...\n")
+        if config.monitoring_core == "cmc":
+            core.do_reload()
+        else:
+            core.do_restart()
+
+
+def _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
+    services_changed = False
 
     mode_table = {
         0: "new",
@@ -484,84 +510,98 @@ def discover_marked_hosts():
         3: "refresh"
     }
 
-    hosts = os.listdir(autodiscovery_dir)
-    if not hosts:
-        console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
+    console.verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
+    host_flag_path = os.path.join(_get_autodiscovery_dir(), hostname)
+    if hostname not in all_hosts:
+        try:
+            os.remove(host_flag_path)
+        except OSError:
+            pass
+        console.verbose("  Skipped. Host does not exist in configuration. Removing mark.\n")
         return
 
-    activation_required = False
 
-    for hostname in hosts:
-        console.verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
-        host_flag_path = autodiscovery_dir + "/" + hostname
+    params = discovery_check_parameters(hostname) or default_discovery_check_parameters()
+    params_rediscovery = params.get("inventory_rediscovery", {})
+    if "service_blacklist" in params_rediscovery or "service_whitelist" in params_rediscovery:
+        # whitelist. if none is specified, this matches everything
+        whitelist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))
+        # blacklist. if none is specified, this matches nothing
+        blacklist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
+        item_filters = lambda hostname, check_plugin_name, item:\
+            _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
+    else:
+        item_filters = None
 
-        if hostname not in config.all_configured_hosts():
-            try:
-                os.remove(host_flag_path)
-            except OSError:
-                pass
-            console.verbose("  Skipped. Host does not exist in configuration. Removing mark.\n")
-            continue
-
-        if time.time() > end_time_ts:
-            console.warning("  Timeout of %d seconds reached. Lets do the remaining hosts next time." % _marked_host_discovery_timeout)
-            break
-
-        # have to do hosts one-by-one because each could have a different configuration
-        params = discovery_check_parameters(hostname) or default_discovery_check_parameters()
-        params_rediscovery = params["inventory_rediscovery"]
-        if "service_blacklist" in params_rediscovery or "service_whitelist" in params_rediscovery:
-            # whitelist. if none is specified, this matches everything
-            whitelist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))
-            # blacklist. if none is specified, this matches nothing
-            blacklist = regex("|".join(["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
-            item_filters = lambda hostname, check_plugin_name, item:\
-                _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
-        else:
-            item_filters = None
-
-        why_not = may_rediscover(params)
-        if not why_not:
-            redisc_params = params["inventory_rediscovery"]
-            console.verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
-            result, error = discover_on_host(mode_table[redisc_params["mode"]], hostname,
-                                             do_snmp_scan=params["inventory_check_do_scan"],
-                                             use_caches=True,
-                                             service_filter=item_filters)
-            if error is not None:
-                if error:
-                    console.verbose("failed: %s\n" % error)
-                else:
-                    # for offline hosts the error message is empty. This is to remain
-                    # compatible with the automation code
-                    console.verbose("  failed: host is offline\n")
+    why_not = _may_rediscover(params, now_ts, oldest_queued)
+    if not why_not:
+        redisc_params = params["inventory_rediscovery"]
+        console.verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
+        result, error = discover_on_host(mode_table[redisc_params["mode"]], hostname,
+                                         do_snmp_scan=params["inventory_check_do_scan"],
+                                         use_caches=True,
+                                         service_filter=item_filters)
+        if error is not None:
+            if error:
+                console.verbose("failed: %s\n" % error)
             else:
-                new_services, removed_services, kept_services, total_services = result
-                if new_services == 0 and removed_services == 0 and kept_services == total_services:
-                    console.verbose("  nothing changed.\n")
-                else:
-                    console.verbose("  %d new, %d removed, %d kept, %d total services.\n" % (tuple(result)))
-                    if redisc_params["activation"]:
-                        activation_required = True
-
-                    # Now ensure that the discovery service is updated right after the changes
-                    schedule_discovery_check(hostname)
-
-            # delete the file even in error case, otherwise we might be causing the same error
-            # every time the cron job runs
-            try:
-                os.remove(host_flag_path)
-            except OSError:
-                pass
+                # for offline hosts the error message is empty. This is to remain
+                # compatible with the automation code
+                console.verbose("  failed: host is offline\n")
         else:
-            console.verbose("  skipped: %s\n" % why_not)
+            new_services, removed_services, kept_services, total_services = result
+            if new_services == 0 and removed_services == 0 and kept_services == total_services:
+                console.verbose("  nothing changed.\n")
+            else:
+                console.verbose("  %d new, %d removed, %d kept, %d total services.\n" % (tuple(result)))
+                if redisc_params["activation"]:
+                    services_changed = True
 
-    if activation_required:
-        console.verbose("\nRestarting monitoring core with updated configuration...\n")
-        if config.monitoring_core == "cmc":
-            core.do_reload()
-        else:
-            core.do_restart()
+                # Now ensure that the discovery service is updated right after the changes
+                schedule_discovery_check(hostname)
+
+        # delete the file even in error case, otherwise we might be causing the same error
+        # every time the cron job runs
+        try:
+            os.remove(host_flag_path)
+        except OSError:
+            pass
+    else:
+        console.verbose("  skipped: %s\n" % why_not)
+
+    return services_changed
+
+
+def _queue_age():
+    autodiscovery_dir = _get_autodiscovery_dir()
+    oldest = time.time()
+    for filename in os.listdir(autodiscovery_dir):
+        oldest = min(oldest, os.path.getmtime(autodiscovery_dir + "/" + filename))
+    return oldest
+
+
+def _may_rediscover(params, now_ts, oldest_queued):
+    if "inventory_rediscovery" not in params:
+        return "automatic discovery disabled for this host"
+
+    now = time.gmtime(now_ts)
+    for start_hours_mins, end_hours_mins in params["inventory_rediscovery"]["excluded_time"]:
+        start_time = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday,
+            start_hours_mins[0], start_hours_mins[1], 0,
+            now.tm_wday, now.tm_yday, now.tm_isdst))
+
+        end_time = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday,
+            end_hours_mins[0], end_hours_mins[1], 0,
+            now.tm_wday, now.tm_yday, now.tm_isdst))
+
+        if start_time <= now <= end_time:
+            return "we are currently in a disallowed time of day"
+
+    if now_ts - oldest_queued < params["inventory_rediscovery"]["group_time"]:
+        return "last activation is too recent"
+
+    return None
+
 
 
 def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):

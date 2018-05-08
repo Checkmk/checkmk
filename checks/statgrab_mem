@@ -24,23 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 memused_default_levels = (150.0, 200.0)
 
-def parse_statgrab_mem(info):
-    for var, value in info:
-        if var == 'mem.used':     memused_kb   = int(value) / 1024
-        elif var == 'mem.total':  totalmem_kb  = int(value) / 1024
-        elif var == 'swap.used':  swapused_kb  = int(value) / 1024
-        elif var == 'swap.total': totalswap_kb = int(value) / 1024
-        elif var == 'mem.cache':  caches_kb    = int(value) / 1024
 
-    return {
-        "MemTotal"  : totalmem_kb,
-        "MemFree"   : totalmem_kb - memused_kb,
-        "SwapTotal" : totalswap_kb,
-        "SwapFree"  : totalswap_kb - swapused_kb,
-        "Cached"    : caches_kb,
-    }
+def parse_statgrab_mem(info):
+    parsed = {}
+    for var, value in info:
+        try:
+            parsed.setdefault(var, int(value) / 1024)
+        except ValueError:
+            pass
+
+    try:
+        totalmem_kb = parsed['mem.total']
+        memused_kb = parsed['mem.used']
+        totalswap_kb = parsed['swap.total']
+        swapused_kb = parsed['swap.used']
+        instance = {
+            "MemTotal"  : totalmem_kb,
+            "MemFree"   : totalmem_kb - memused_kb,
+            "SwapTotal" : totalswap_kb,
+            "SwapFree"  : totalswap_kb - swapused_kb,
+        }
+        if 'mem.cache' in parsed:
+            instance.setdefault("Cached", parsed['mem.cache'])
+        return instance
+
+    except KeyError:
+        return {}
 
 
 def inventory_statgrab_mem(parsed):

@@ -1,0 +1,10 @@
+Title: ucd_hr.include: Astaro Firewall is Linux but should use hr_mem
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1525767467
+Class: fix
+
+

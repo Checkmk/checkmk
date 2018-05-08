@@ -33,7 +33,7 @@ double HostSpecialDoubleColumn::getValue(Row row) {
     if (auto hst = columnData<host>(row)) {
         switch (_type) {
             case Type::staleness: {
-                return (time(nullptr) - hst->last_check) /
+                return static_cast<double>(time(nullptr) - hst->last_check) /
                        ((hst->check_interval == 0 ? 1 : hst->check_interval) *
                         interval_length);
             }

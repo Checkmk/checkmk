@@ -38,7 +38,7 @@ function has_class(o, cn) {
     if (typeof(o.className) === 'undefined')
         return false;
     var parts = o.className.split(' ');
-    for (x=0; x<parts.length; x++) {
+    for (var x=0; x<parts.length; x++) {
         if (parts[x] == cn)
             return true;
     }
@@ -48,7 +48,7 @@ function has_class(o, cn) {
 function remove_class(o, cn) {
     var parts = o.className.split(' ');
     var new_parts = Array();
-    for (x=0; x<parts.length; x++) {
+    for (var x=0; x<parts.length; x++) {
         if (parts[x] != cn)
             new_parts.push(parts[x]);
     }
@@ -142,8 +142,9 @@ function reload_sidebar()
 
 // Handle Enter key in textfields
 function textinput_enter_submit(e, submit) {
-    if(!e)
+    if (!e) {
         e = window.event;
+    }
 
     var keyCode = e.which || e.keyCode;
     if (keyCode == 13) {
@@ -211,7 +212,7 @@ function mouse_position(event) {
     return {
         x: event.clientX,
         y: event.clientY
-    }
+    };
 }
 
 // mouse offset to the top/left coordinates of an object
@@ -221,7 +222,7 @@ function mouse_offset(obj, event){
     return {
         "x": mouse_pos.left - obj_pos.x,
         "y": mouse_pos.top - obj_pos.y
-    }
+    };
 }
 
 // mouse offset to the middle coordinates of an object
@@ -231,7 +232,7 @@ function mouse_offset_to_middle(obj, event){
     return {
         "x": mouse_pos.x - (obj_pos.left + obj_pos.width/2),
         "y": mouse_pos.y - (obj_pos.top + obj_pos.height/2)
-    }
+    };
 }
 
 //#.
@@ -269,7 +270,7 @@ function getButton(event) {
 
 // Adds document/window global event handlers
 function add_event_handler(type, func, obj) {
-    var obj = (typeof(obj) === 'undefined') ? window : obj;
+    obj = (typeof(obj) === 'undefined') ? window : obj;
 
     if (obj.addEventListener) {
         // W3 standard browsers
@@ -285,7 +286,7 @@ function add_event_handler(type, func, obj) {
 }
 
 function del_event_handler(type, func, obj) {
-    var obj = (typeof(obj) === 'undefined') ? window : obj;
+    obj = (typeof(obj) === 'undefined') ? window : obj;
 
     if (obj.removeEventListener) {
         // W3 stadnard browsers
@@ -366,14 +367,17 @@ if (!document.getElementsByClassName) {
         }
 
         // and for others... IE7-, IE8 (quirks mode), Firefox 2-, Safari 3.1-, Opera 9-
-        var tagName = tagName || '*', _tags = root.getElementsByTagName(tagName), _nodeList = [];
+        tagName = tagName || '*';
+        var _tags = root.getElementsByTagName(tagName);
+        var _nodeList = [];
+
         for (var i = 0, _tag; _tag = _tags[i++];) {
             if (has_class(_tag, className)) {
                 _nodeList.push(_tag);
             }
         }
         return _nodeList;
-    }
+    };
 }
 
 // Again, some IE 7 fun: The IE7 mixes up name and id attributes of objects.
@@ -414,7 +418,7 @@ if (!("nextElementSibling" in document.documentElement)) {
 if (!("children" in document.documentElement)) {
     Object.defineProperty(Element.prototype, "children", {
         get: function(){
-            var typefilter = function(n){return n && n.nodeType == 1;}
+            var typefilter = function(n){return n && n.nodeType == 1;};
             return Array.prototype.slice.call(this.childNodes).filter(typefilter);
         }
     });
@@ -509,7 +513,7 @@ function call_ajax(url, optional_args)
                         args.error_handler(args.handler_data, AJAX.status, AJAX.statusText);
                 }
             }
-        }
+        };
     }
 
     AJAX.send(args.post_data);
@@ -539,7 +543,7 @@ function post_url(url, post_params, responseHandler, handler_data, errorHandler)
     var args = {
         method: "POST",
         post_data: post_params
-    }
+    };
 
     if (typeof responseHandler !== 'undefined') {
         args.response_handler = responseHandler;
@@ -556,7 +560,7 @@ function post_url(url, post_params, responseHandler, handler_data, errorHandler)
 
 function bulkUpdateContents(ids, codes)
 {
-    var codes = eval(codes);
+    codes = eval(codes);
     for (var i = 0, len = ids.length; i < len; i++) {
         if (restart_snapins.indexOf(ids[i].replace('snapin_', '')) !== -1) {
             // Snapins which rely on the restart time of nagios receive
@@ -606,7 +610,7 @@ function executeJSbyObject(obj)
                 eval(aScripts[i].text);
                 g_current_script = null;
             } catch(e) {
-                console.log(e)
+                console.log(e);
                 alert(aScripts[i].text + "\nError:" + e.message);
             }
         }
@@ -627,15 +631,14 @@ function executeJSbyObject(obj)
 
 // Function gets the value of the given url parameter
 function getUrlParam(name, url) {
-    var url = (typeof url === 'undefined') ? window.location : url;
+    name = name.replace('[', '\\[').replace(']', '\\]');
+    url = (typeof url === 'undefined') ? window.location : url;
 
-    var name = name.replace('[', '\\[').replace(']', '\\]');
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
     var results = regex.exec(url);
     if(results === null)
         return '';
-    else
-        return results[1];
+    return results[1];
 }
 
 /**
@@ -644,7 +647,7 @@ function getUrlParam(name, url) {
  * - Removes _* parameters
  */
 function makeuri(addvars, url) {
-    var url = (typeof(url) === 'undefined') ? window.location.href : url;
+    url = (typeof(url) === 'undefined') ? window.location.href : url;
 
     var tmp = url.split('?');
     var base = tmp[0];
@@ -658,7 +661,6 @@ function makeuri(addvars, url) {
         tmp = [];
     }
 
-    var len = tmp.length;
     var params = [];
     var pair = null;
 
@@ -677,7 +679,7 @@ function makeuri(addvars, url) {
         params.push(encodeURIComponent(key) + '=' + encodeURIComponent(addvars[key]));
     }
 
-    return base + '?' + params.join('&')
+    return base + '?' + params.join('&');
 }
 
 // ----------------------------------------------------------------------------
@@ -804,7 +806,7 @@ function create_pnp_graph(data, params) {
 
     if (data.with_link) {
         var graph_container = document.createElement('div');
-        graph_container.setAttribute('class', 'pnp_graph')
+        graph_container.setAttribute('class', 'pnp_graph');
 
         var view   = data['view'] == '' ? 0 : data['view'];
         // needs to be extracted from "params", hack!
@@ -825,7 +827,7 @@ function create_pnp_graph(data, params) {
                     null,
                     false
                 );
-            }
+            };
         }(data['host'], data['service'], view, source);
 
         graph_container.appendChild(visualadd);
@@ -870,7 +872,7 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
 
 function show_hover_graphs(event, site_id, host_name, service_description, pnp_popup_url, force_pnp_graphing)
 {
-    var event = event || window.event;
+    event = event || window.event;
 
     show_hover_menu(event, "<div class=\"message\">Loading...</div>");
 
@@ -1060,7 +1062,7 @@ function update_header_timer()
     if (min < 10)
         min = "0" + min;
 
-    oTime.innerHTML = hours + ':' + min
+    oTime.innerHTML = hours + ':' + min;
 
     var oDate = document.getElementById('headerdate');
     if (oDate) {
@@ -1266,14 +1268,15 @@ function stop_reload_pause_timer()
 function draw_reload_pause_overlay(seconds)
 {
     var container = document.getElementById("reload_pause");
+    var counter;
     if (container) {
         // only render once. Just update the counter.
-        var counter = document.getElementById("reload_pause_counter");
+        counter = document.getElementById("reload_pause_counter");
         counter.innerHTML = seconds;
         return;
     }
 
-    var container = document.createElement("a");
+    container = document.createElement("a");
     container.setAttribute("id", "reload_pause");
     container.href = "javascript:window.location.reload(false)";
     // FIXME: Localize
@@ -1289,10 +1292,10 @@ function draw_reload_pause_overlay(seconds)
 
     container.appendChild(document.createElement("br"));
 
-    var counter = document.createElement("a");
+    counter = document.createElement("a");
     counter.setAttribute("id", "reload_pause_counter");
     // FIXME: Localize
-    counter.title = "Click to stop the countdown."
+    counter.title = "Click to stop the countdown.";
     counter.href = "javascript:stop_reload_pause_timer()";
     container.appendChild(counter);
 
@@ -1405,7 +1408,7 @@ function toggle_grouped_rows(tree, id, cell, num_rows)
 
     var row = group_title_row;
     for (var i = 0; i < num_rows; i++) {
-        var row = row.nextElementSibling;
+        row = row.nextElementSibling;
         row.style.display = display;
     }
 }
@@ -2003,7 +2006,7 @@ function valuespec_toggle_dropdownn(oDropdown, divid) {
    input field as soon as the user focusses the last field. */
 function list_of_strings_init(divid) {
     var oContainer = document.getElementById(divid);
-    var oDivChildren = oContainer.getElementsByTagName("div")
+    var oDivChildren = oContainer.getElementsByTagName("div");
     var oLastChild = oDivChildren[oDivChildren.length-1];
     list_of_strings_add_focus(oLastChild);
 }
@@ -2089,12 +2092,12 @@ function valuespec_listof_add(varprefix, magic)
     var oPrototype = document.getElementById(varprefix + "_prototype").children[0].children[0]; // TR
     var htmlcode = oPrototype.innerHTML;
     // replace the magic
-    var re = new RegExp(magic, "g")
-    htmlcode = htmlcode.replace(re, strcount)
+    var re = new RegExp(magic, "g");
+    htmlcode = htmlcode.replace(re, strcount);
 
     // in some cases the magic might be URL encoded. Also replace these occurences.
-    re       = new RegExp(encodeURIComponent(magic).replace('!', '%21'), "g")
-    htmlcode = htmlcode.replace(re, strcount)
+    re       = new RegExp(encodeURIComponent(magic).replace('!', '%21'), "g");
+    htmlcode = htmlcode.replace(re, strcount);
 
     var oTable = document.getElementById(varprefix + "_table");
 
@@ -2107,7 +2110,7 @@ function valuespec_listof_add(varprefix, magic)
     // Hack for IE. innerHTML does not work on tbody/tr correctly.
     var container = document.createElement('div');
     container.innerHTML = '<table><tbody><tr>' + htmlcode + '</tr></tbody></tr>';
-    var oTr = container.children[0].children[0].children[0] // TR
+    var oTr = container.children[0].children[0].children[0]; // TR
     oTbody.appendChild(oTr);
 
     executeJSbyObject(oTable.lastElementChild);
@@ -2121,10 +2124,10 @@ function valuespec_listof_add(varprefix, magic)
 function valuespec_listof_delete(oA, varprefix, nr) {
     var oTr = oA.parentNode.parentNode; // TR
     var oTbody = oTr.parentNode;
-    oInput = document.createElement("input");
+    var oInput = document.createElement("input");
     oInput.type = "hidden";
-    oInput.name = "_" + varprefix + '_deleted_' + nr
-    oInput.value = "1"
+    oInput.name = "_" + varprefix + '_deleted_' + nr;
+    oInput.value = "1";
     var oTable = oTbody.parentNode;
     oTable.parentNode.insertBefore(oInput, oTable);
     oTbody.removeChild(oTr);
@@ -2160,7 +2163,7 @@ function valuespec_listof_sort(varprefix, magic, sort_by) {
     var entries = [];
     for (var i = 0, td, sort_field_name, fields; i < rows.length; i++) {
         // Find the index of this row
-        var td = rows[i].cells[0]; /* TD with buttons */
+        td = rows[i].cells[0]; /* TD with buttons */
         if(td.children.length == 0)
             continue;
         var index = td.getElementsByClassName("orig_index")[0].value;
@@ -2282,7 +2285,7 @@ function vs_rule_comment_prefix_date_and_user(img, text) {
 
 
 function vs_passwordspec_randomize(img) {
-    password = "";
+    var a, c, password = "";
     while (password.length < 8) {
         a = parseInt(Math.random() * 128);
         if ((a >= 97 && a <= 122) ||
@@ -2314,11 +2317,9 @@ function vs_duallist_enlarge(field_suffix, varprefix) {
     if (field.id != varprefix + '_selected') {
         // The other field is the one without "_unselected" suffix
         var other_id = varprefix + '_selected';
-        var positive = true;
     } else {
         // The other field is the one with "_unselected" suffix
         var other_id = varprefix + '_unselected';
-        var positive = false;
     }
 
     var other_field = document.getElementById(other_id);
@@ -2377,7 +2378,7 @@ function vs_duallist_switch(field_suffix, varprefix, keeporder) {
             while (sibling != null) {
                 if (sibling.nodeType == 1 && sibling.label.toLowerCase() > selected[i].label.toLowerCase())
                     break;
-                sibling = sibling.nextSibling
+                sibling = sibling.nextSibling;
             }
         }
 
@@ -2390,15 +2391,13 @@ function vs_duallist_switch(field_suffix, varprefix, keeporder) {
     }
 
     // Update internal helper field which contains a list of all selected keys
-    if (positive)
-        var pos_field = other_field;
-    else
-        var pos_field = field;
+    var pos_field = positive ? other_field : field;
+
     var texts = [];
     for (var i = 0; i < pos_field.options.length; i++) {
         texts.push(pos_field.options[i].value);
     }
-    helper.value = texts.join('|')
+    helper.value = texts.join('|');
 }
 
 function vs_iconselector_select(event, varprefix, value) {
@@ -2631,7 +2630,7 @@ function vs_autocomplete_show(input_id, inner_html)
     var popup = document.getElementById(input_id + "_popup");
     if (!popup) {
         var input = document.getElementById(input_id);
-        var popup = document.createElement("div");
+        popup = document.createElement("div");
         popup.setAttribute("id", input_id + "_popup");
         popup.className = "vs_autocomplete";
         input.parentNode.appendChild(popup);
@@ -2752,8 +2751,8 @@ function view_toggle_form(button, form_id) {
     for (var i=0; i<allbuttons.length; i++) {
         var b = allbuttons[i];
         if (b != button && !has_class(b, "empth") && !has_class(b, "checkbox")) {
-            remove_class(b, "down")
-            add_class(b, "up")
+            remove_class(b, "down");
+            add_class(b, "up");
         }
     }
     remove_class(button, "down");
@@ -2819,7 +2818,7 @@ function view_dial_option(oDiv, viewname, option, choices) {
         choice = choices[c];
         val = choice[0];
         if (has_class(oDiv, "val_" + val)) {
-            var new_choice = choices[(c + choices.length + g_dial_direction) % choices.length];
+            new_choice = choices[(c + choices.length + g_dial_direction) % choices.length];
             change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
             break;
         }
@@ -2881,10 +2880,13 @@ function make_unselectable(elem)
     elem.unselectable = "on";
 }
 
+// TODO: Is gColumnSwitchTimeout and view_switch_option needed at all?
+// TODO: Where is handleReload defined?
 /* Switch number of view columns, refresh and checkboxes. If the
    choices are missing, we do a binary toggle. */
 gColumnSwitchTimeout = null;
 function view_switch_option(oDiv, viewname, option, choices) {
+    var new_value;
     if (has_class(oDiv, "down")) {
         new_value = false;
         change_class(oDiv, "down", "up");
@@ -2893,7 +2895,7 @@ function view_switch_option(oDiv, viewname, option, choices) {
         new_value = true;
         change_class(oDiv, "up", "down");
     }
-    new_choice = [ new_value, '' ];
+    var new_choice = [ new_value, '' ];
 
     var url = "ajax_set_viewoption.py?view_name=" + viewname +
                "&option=" + option + "&value=" + new_choice[0];
@@ -3129,7 +3131,7 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
 
     var wrapper = document.createElement("div");
     wrapper.className = 'wrapper';
-    menu.appendChild(wrapper)
+    menu.appendChild(wrapper);
 
     var content = document.createElement('div');
     content.className = 'content';
@@ -3156,7 +3158,7 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
         //if (ident in popup_contents)
         //    menu.innerHTML = popup_contents[ident];
         //else
-        var url_vars = !url_vars ? '' : '?'+url_vars;
+        url_vars = !url_vars ? '' : '?'+url_vars;
         get_url('ajax_popup_'+what+'.py'+url_vars, handle_render_popup_contents, {
             ident: ident,
             content: content,
@@ -3225,7 +3227,7 @@ function add_to_visual(visual_type, visual_name)
                          + '&params=' + encodeURIComponent(JSON.stringify(popup_data[2])), {
         sync: true,
         plain_error : true
-    })
+    });
     var response = AJAX.responseText;
     popup_data = null;
 
@@ -3309,13 +3311,12 @@ function hide_hover_menu()
 function show_hover_menu(event, code)
 {
     event = event || window.event;
-    var x = event.clientX,
-        y = event.clientY;
+    var x = event.clientX;
+    var y = event.clientY;
 
     hide_hover_menu();
 
     var hoverSpacer = 5;
-    var minWidth = 400;
 
     // document.body.scrollTop does not work in IE
     var scrollTop = document.body.scrollTop ? document.body.scrollTop :
@@ -3345,8 +3346,6 @@ function show_hover_menu(event, code)
      * If there is some need for reposition try to reposition the hover menu
      */
 
-    var hoverLeft = parseInt(g_hover_menu.style.left.replace('px', ''));
-    var screenWidth = pageWidth();
     var hoverPosAndSizeOk = true;
     if (!hover_menu_in_screen(g_hover_menu, hoverSpacer))
         hoverPosAndSizeOk = false;
@@ -3405,6 +3404,7 @@ function bi_toggle_subtree(oImg, lazy)
     }
     var oSubtree = oImg.parentNode.getElementsByTagName("ul")[0];
     var url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
+    var do_open;
 
     if (has_class(oImg, "closed")) {
         change_class(oSubtree, "closed", "open");
@@ -3506,10 +3506,10 @@ function toggle_assumption(link, site, host, service)
         current = '1';
     else if (current == '3' || (service == '' && current == '2'))
         // Assume OK when unknown assumed (or when critical assumed for host)
-        current = '0'
+        current = '0';
     else if (current == '0')
         // Disable assumption when ok assumed
-        current = 'none'
+        current = 'none';
     else
         // In all other cases increas the assumption
         current = parseInt(current) + 1;
@@ -3667,10 +3667,7 @@ function do_job_detail_refresh(url, ident, is_site)
 function handle_job_detail_response(handler_data, response_body)
 {
     // when a message was shown and now not anymore, assume the job has finished
-    if (document.getElementById("job_detail_msg"))
-        had_message = true;
-    else
-        had_message = false;
+    var had_message = document.getElementById("job_detail_msg") ? true : false;
 
     var container = document.getElementById("job_details");
     container.innerHTML = response_body;
@@ -3698,7 +3695,7 @@ function handle_job_detail_error(handler_data, status_code, error_msg)
     msg.setAttribute("id", "job_detail_msg");
     msg.className = "message";
 
-    txt = "Could not update the job details.";
+    var txt = "Could not update the job details.";
     if (handler_data.is_site)
         txt += " The site will be started again after the restore.";
     else

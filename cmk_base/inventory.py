@@ -351,7 +351,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
     for hookname, ruleset in config.inv_exports.items():
         entries = rulesets.host_extra_conf(hostname, ruleset)
         if entries:
-            hooks.append(hookname, entries[0])
+            hooks.append((hookname, entries[0]))
 
     if not hooks:
         return

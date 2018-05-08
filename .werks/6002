@@ -1,0 +1,11 @@
+Title: cisco_asa_failover: If a failover occurs the check goes WARN as the related manpage describes.
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1525783907
+
+

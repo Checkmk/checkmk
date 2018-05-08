@@ -1,0 +1,10 @@
+Title: HW/SW inventory: Fixed TypeError if any inventory hooks are executed
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1525790394
+Class: fix
+
+

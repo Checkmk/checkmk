@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OringFilter.h"
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <ostream>

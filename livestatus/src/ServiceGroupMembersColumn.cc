@@ -33,6 +33,7 @@
 #include "Row.h"
 
 #ifdef CMC
+#include <unordered_set>
 #include "Host.h"
 #include "LogEntry.h"
 #include "Service.h"

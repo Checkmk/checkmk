@@ -31,6 +31,7 @@
 #ifdef CMC
 #include <cstdint>
 #include <memory>
+#include <unordered_set>
 #include "Host.h"
 #include "LogEntry.h"
 #include "Service.h"

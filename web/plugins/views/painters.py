@@ -602,7 +602,7 @@ multisite_painters["service_state"] = {
 multisite_painters["svc_plugin_output"] = {
     "title"   : _("Output of check plugin"),
     "short"   : _("Status detail"),
-    "columns" : ["service_plugin_output"],
+    "columns" : ["service_plugin_output", "service_custom_variables"],
     "paint"   : lambda row: paint_stalified(row, format_plugin_output(row["service_plugin_output"], row)),
     "sorter"  : 'svcoutput',
 }
@@ -610,7 +610,7 @@ multisite_painters["svc_plugin_output"] = {
 multisite_painters["svc_long_plugin_output"] = {
     "title"   : _("Long output of check plugin (multiline)"),
     "short"   : _("Status detail"),
-    "columns" : ["service_long_plugin_output"],
+    "columns" : ["service_long_plugin_output", "service_custom_variables"],
     "paint"   : lambda row: paint_stalified(row, format_plugin_output(row["service_long_plugin_output"], row).replace('\\n', '<br>').replace('\n', '<br>')),
 }
 
@@ -1340,8 +1340,8 @@ multisite_painters["host_state_onechar"] = {
 multisite_painters["host_plugin_output"] = {
     "title"   : _("Output of host check plugin"),
     "short"   : _("Status detail"),
-    "columns" : ["host_plugin_output"],
-    "paint"   : lambda row: (None, row["host_plugin_output"]),
+    "columns" : ["host_plugin_output", "host_custom_variables"],
+    "paint"   : lambda row: (None, format_plugin_output(row["host_plugin_output"], row)),
 }
 
 multisite_painters["host_perf_data"] = {
@@ -2119,7 +2119,7 @@ multisite_painters["comment_author"] = {
 multisite_painters["comment_comment"] = {
     "title"   : _("Comment text"),
     "columns" : ["comment_comment"],
-    "paint"   : lambda row: (None, format_plugin_output(row["comment_comment"])),
+    "paint"   : lambda row: (None, format_plugin_output(row["comment_comment"], row)),
 }
 
 multisite_painters["comment_what"] = {
@@ -2204,8 +2204,8 @@ multisite_painters["downtime_author"] = {
 multisite_painters["downtime_comment"] = {
     "title"   : _("Downtime comment"),
     "short"   : _("Comment"),
-    "columns" : ["downtime_comment"],
-    "paint"   : lambda row: (None, format_plugin_output(row["downtime_comment"])),
+    "columns" : ["downtime_comment" ],
+    "paint"   : lambda row: (None, format_plugin_output(row["downtime_comment"], row)),
 }
 
 multisite_painters["downtime_fixed"] = {
@@ -2338,7 +2338,7 @@ def paint_log_plugin_output(row):
 multisite_painters["log_plugin_output"] = {
     "title"   : _("Log: Output"),
     "short"   : _("Output"),
-    "columns" : ["log_plugin_output", "log_type", "log_state_type", "log_comment" ],
+    "columns" : ["log_plugin_output", "log_type", "log_state_type", "log_comment", "custom_variables" ],
     "paint"   : paint_log_plugin_output,
 }
 

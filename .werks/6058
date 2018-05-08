@@ -1,0 +1,18 @@
+Title: Escaping of HTML in plugin output can now be configured individually
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1525761586
+
+Using the global setting "Escape HTML codes in plugin output" you can configure
+whether or not HTML contained in the status output of hosts / services is
+interpreted by the GUI globally.
+
+In case you need the HTML of a specific check interpreted by the GUI, it is
+better to use the new rulesets "Escape HTML codes in host output" or "Escape
+HTML codes in service output". Using these rulesets you can selectively disable
+the escaping for specific hosts / services.

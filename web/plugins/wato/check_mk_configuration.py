@@ -312,13 +312,16 @@ register_configvar(group,
 
 register_configvar(group,
     "escape_plugin_output",
-    Checkbox(title = _("Escape HTML codes in plugin output"),
-             label = _("Prevent loading HTML from plugin output or log messages"),
-             help = _("By default, for security reasons, Multisite does not interpret any HTML "
-                      "code received from external sources, like plugin output or log messages. "
-                      "If you are really sure what you are doing and need to have HTML codes, like "
-                      "links rendered, disable this option. Be aware, you might open the way "
-                      "for several injection attacks."),
+    Checkbox(
+        title = _("Escape HTML codes in plugin output"),
+        help = _("By default, for security reasons, the GUI does not interpret any HTML "
+                 "code received from external sources, like plugin output or log messages. "
+                 "If you are really sure what you are doing and need to have HTML codes, like "
+                 "links rendered, disable this option. Be aware, you might open the way "
+                 "for several injection attacks.") \
+             + _("This setting can either be set globally or individually for selected hosts "
+                 "or services using the host or service rulesets."),
+        label = _("Prevent loading HTML from plugin output or log messages"),
     ),
     domain = "multisite")
 
@@ -2245,6 +2248,24 @@ register_rule(group,
     itemtype = "service")
 
 
+#.
+#   .--User Interface------------------------------------------------------.
+#   |   _   _                 ___       _             __                   |
+#   |  | | | |___  ___ _ __  |_ _|_ __ | |_ ___ _ __ / _| __ _  ___ ___    |
+#   |  | | | / __|/ _ \ '__|  | || '_ \| __/ _ \ '__| |_ / _` |/ __/ _ \   |
+#   |  | |_| \__ \  __/ |     | || | | | ||  __/ |  |  _| (_| | (_|  __/   |
+#   |   \___/|___/\___|_|    |___|_| |_|\__\___|_|  |_|  \__,_|\___\___|   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | User interface specific rule sets                                    |
+#   '----------------------------------------------------------------------'
+
+register_rulegroup("user_interface", _("User Interface"),
+   _("Settings concerning the user interface of Check_MK"))
+
+group = "user_interface"
+
+
 register_rule(group,
     "extra_host_conf:icon_image",
     Transform(
@@ -2287,6 +2308,45 @@ register_rule(group,
         help = _("You can assign icons or actions to services for the status GUI."),
     ),
     match = "all",
+    itemtype = "service",
+)
+
+register_rule(group,
+    "extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
+    DropdownChoice(
+        title = _("Escape HTML codes in host output"),
+        help = _("By default, for security reasons, the GUI does not interpret any HTML "
+                 "code received from external sources, like plugin output or log messages. "
+                 "If you are really sure what you are doing and need to have HTML codes, like "
+                 "links rendered, disable this option. Be aware, you might open the way "
+                 "for several injection attacks.") \
+             + _("This setting can either be set globally or individually for selected hosts "
+                 "or services using the host or service rulesets."),
+        choices = [
+            ("1", _("Escape HTML codes")),
+            ("0", _("Don't escape HTML codes (insecure)")),
+        ],
+        default_value = "1",
+    )
+)
+
+register_rule(group,
+    "extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
+    DropdownChoice(
+        title = _("Escape HTML codes in service output"),
+        help = _("By default, for security reasons, the GUI does not interpret any HTML "
+                 "code received from external sources, like plugin output or log messages. "
+                 "If you are really sure what you are doing and need to have HTML codes, like "
+                 "links rendered, disable this option. Be aware, you might open the way "
+                 "for several injection attacks.") \
+             + _("This setting can either be set globally or individually for selected hosts "
+                 "or services using the host or service rulesets."),
+        choices = [
+            ("1", _("Escape HTML codes")),
+            ("0", _("Don't escape HTML codes (insecure)")),
+        ],
+        default_value = "1",
+    ),
     itemtype = "service",
 )
 

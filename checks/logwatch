@@ -504,6 +504,7 @@ def logwatch_username():
 
 
 def check_logwatch_generic(item, params, loglines, found, groups=False):
+    import hashlib
     logdir = logwatch_dir + "/" + host_name()
 
     # Create directories, if neccessary
@@ -605,7 +606,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     except Exception, e:
         raise MKGeneralException("User %s cannot open file for writing: %s" % (logwatch_username(), e))
 
-    pattern_hash = hash(repr(patterns))
+    pattern_hash = hashlib.sha256(repr(patterns)).hexdigest()
     net_lines = 0
     # parse cached log lines
     if log_exists:
@@ -613,7 +614,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
         # changed
         initline = logwatch_file.readline().rstrip('\n')
         if initline.startswith('[[[') and initline.endswith(']]]'):
-            old_pattern_hash = int(initline[3:-3])
+            old_pattern_hash = initline[3:-3]
             skip_reclassification = old_pattern_hash == pattern_hash
         else:
             logwatch_file.seek(0)
@@ -675,7 +676,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     if not skip_reclassification and collect_block.output_lines:
         logwatch_file.seek(0)
         logwatch_file.truncate()
-        logwatch_file.write("[[[%d]]]\n" % pattern_hash)
+        logwatch_file.write("[[[%s]]]\n" % pattern_hash)
 
     if collect_block.output_lines:
         logwatch_file.writelines(collect_block.output_lines)

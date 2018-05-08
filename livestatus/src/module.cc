@@ -211,17 +211,23 @@ void *main_thread(void *data) {
         FD_SET(g_unix_socket, &fds);
         int retval = select(g_unix_socket + 1, &fds, nullptr, nullptr, &tv);
         if (retval > 0 && FD_ISSET(g_unix_socket, &fds)) {
+#if HAVE_ACCEPT4
+            int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
+#else
             int cc = accept(g_unix_socket, nullptr, nullptr);
+#endif
             if (cc == -1) {
                 generic_error ge("cannot accept client connection");
                 Warning(fl_logger_livestatus) << ge;
                 continue;
             }
+#if !HAVE_ACCEPT4
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0) {
                 generic_error ge(
                     "cannot set close-on-exec bit on client socket");
                 Warning(fl_logger_livestatus) << ge;
             }
+#endif
             if (cc > g_max_fd_ever) {
                 g_max_fd_ever = cc;
             }

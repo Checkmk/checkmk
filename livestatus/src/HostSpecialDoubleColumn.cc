@@ -49,7 +49,7 @@ double HostSpecialDoubleColumn::getValue(Row row) const {
         switch (_type) {
             case Type::staleness: {
                 extern int interval_length;
-                return (time(nullptr) - hst->last_check) /
+                return static_cast<double>(time(nullptr) - hst->last_check) /
                        ((hst->check_interval == 0 ? 1 : hst->check_interval) *
                         interval_length);
             }

@@ -1,0 +1,14 @@
+Title: Periodic service discovery: Fixed scenario where process could get stuck
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1525770992
+Class: fix
+
+The process discovery (cmk --discover-marked-hosts) triggered by the cronjob had no timeout handling implemented.
+The python process could get stuck if the connection to the remote host was never closed.
+This could consume lots of memory over time, since the discovery process is triggered every 5 minutes.
+
+

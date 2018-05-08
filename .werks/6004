@@ -1,0 +1,11 @@
+Title: dell_compellent_folder: Fixed forgotten include file 'size_trend.include'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b3
+Date: 1525791344
+
+

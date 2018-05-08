@@ -51,7 +51,7 @@ SectionPS::SectionPS(Configuration &config, Logger *logger,
     : Section(
           "ps", config.getEnvironment(), logger, winapi,
           std::make_unique<SectionHeader<'\t', SectionBrackets>>("ps", logger))
-    , _use_wmi(config, "ps", "use_wmi", false, winapi)
+    , _use_wmi(config, "ps", "use_wmi", true, winapi)
     , _full_commandline(config, "ps", "full_path", false, winapi) {}
 
 SectionPS::process_entry_t SectionPS::getProcessPerfdata() {

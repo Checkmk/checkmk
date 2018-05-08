@@ -50,6 +50,7 @@
 #include "ChronoUtils.h"
 #include "ClientQueue.h"
 #include "DowntimeOrComment.h"
+#include "DowntimesOrComments.h"
 #include "InputBuffer.h"
 #include "LogEntry.h"  // IWYU pragma: keep
 #include "Logger.h"

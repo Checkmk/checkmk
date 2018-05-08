@@ -3157,7 +3157,17 @@ def format_plugin_output(output, row = None):
     crit_marker    = '<b class="stmark state2">CRIT</b>'
     unknown_marker = '<b class="stmark state3">UNKN</b>'
 
-    if config.escape_plugin_output:
+    shall_escape = config.escape_plugin_output
+
+    # In case we have a host or service row use the optional custom attribute
+    # ESCAPE_PLUGIN_OUTPUT (set by host / service ruleset) to override the global
+    # setting.
+    if row:
+        custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
+        if "ESCAPE_PLUGIN_OUTPUT" in custom_vars:
+            shall_escape = custom_vars["ESCAPE_PLUGIN_OUTPUT"] == "1"
+
+    if shall_escape:
         output = html.attrencode(output)
 
     output = output.replace("(!)", warn_marker) \
@@ -3172,7 +3182,7 @@ def format_plugin_output(output, row = None):
         css, h = paint_host_list(row["site"], hosts)
         output = output[:a] + "running on " + h + output[e+1:]
 
-    if config.escape_plugin_output:
+    if shall_escape:
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
         output = re.sub("(?:&lt;A HREF=&quot;)?(http[s]?://[^\"'>\t\s\n,]+)(?: target=&quot;_blank&quot;&gt;)?",

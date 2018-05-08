@@ -195,14 +195,19 @@ void *main_thread(void *data) {
         if (retval > 0 &&
             poller.isFileDescriptorSet(g_unix_socket, PollEvents::in)) {
             int cc = accept(g_unix_socket, nullptr, nullptr);
-            if (cc > g_max_fd_ever) {
-                g_max_fd_ever = cc;
+            if (cc == -1) {
+                generic_error ge("cannot accept client connection");
+                Warning(fl_logger_livestatus) << ge;
+                continue;
             }
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) == -1) {
                 generic_error ge(
                     "cannot set close-on-exec bit on client socket");
                 Alert(fl_logger_livestatus) << ge;
                 break;
+            }
+            if (cc > g_max_fd_ever) {
+                g_max_fd_ever = cc;
             }
             fl_client_queue->addConnection(cc);  // closes fd
             g_num_queued_connections++;

@@ -370,7 +370,7 @@ class ConfigDomain(object):
         for varname, value in settings.items():
             output += "%s = %s\n" % (varname, pprint.pformat(value))
 
-        store.mkdir(os.path.dirname(filename))
+        store.makedirs(os.path.dirname(filename))
         store.save_file(filename, output)
 
 

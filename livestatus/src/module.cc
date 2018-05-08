@@ -193,18 +193,24 @@ void *main_thread(void *data) {
         int retval = poller.poll(std::chrono::milliseconds(2500));
         if (retval > 0 &&
             poller.isFileDescriptorSet(g_unix_socket, PollEvents::in)) {
+#if HAVE_ACCEPT4
+            int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
+#else
             int cc = accept(g_unix_socket, nullptr, nullptr);
+#endif
             if (cc == -1) {
                 generic_error ge("cannot accept client connection");
                 Warning(fl_logger_livestatus) << ge;
                 continue;
             }
+#if !HAVE_ACCEPT4
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) == -1) {
                 generic_error ge(
                     "cannot set close-on-exec bit on client socket");
                 Alert(fl_logger_livestatus) << ge;
                 break;
             }
+#endif
             if (cc > g_max_fd_ever) {
                 g_max_fd_ever = cc;
             }

@@ -73,7 +73,7 @@ def check_cisco_asa_failover(_no_item, _no_params, info):
                 or (unit_type == "secondary" and device_state == 10):
                 state = 0
             elif device_state in [ 9, 10 ] and other_device_state in [ 9, 10 ]:
-                state = 0
+                state = 1
                 details = "The cluster is in failover state (Secondary device is active)"
             elif device_state == 4:
                 state = 2

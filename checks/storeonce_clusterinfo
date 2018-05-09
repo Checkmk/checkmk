@@ -66,12 +66,6 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-#def parse_storeonce_clusterinfo(info):
-#    parsed = {}
-#    for line in info:
-#        parsed[line[0]] = line[1]
-#    return parsed
-
 
 def inventory_storeonce_clusterinfo(parsed):
     if "Product Class" in parsed:

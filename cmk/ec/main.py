@@ -835,9 +835,6 @@ class MongoDB(object):
         self.db = None
 
 
-g_mongo = MongoDB()
-
-
 def mongodb_local_connection_opts(settings):
     ip, port = None, None
     with settings.paths.mongodb_config_file.value.open(encoding='utf-8') as f:
@@ -849,56 +846,56 @@ def mongodb_local_connection_opts(settings):
     return ip, port
 
 
-def connect_mongodb(settings):
+def connect_mongodb(settings, mongodb):
     if Connection is None:
         raise Exception('Could not initialize MongoDB (Python-Modules are missing)')
-    g_mongo.connection = Connection(*mongodb_local_connection_opts(settings))
-    g_mongo.db = g_mongo.connection.__getitem__(os.environ['OMD_SITE'])
+    mongodb.connection = Connection(*mongodb_local_connection_opts(settings))
+    mongodb.db = mongodb.connection.__getitem__(os.environ['OMD_SITE'])
 
 
-def flush_event_history_mongodb():
-    g_mongo.db.ec_archive.drop()
+def flush_event_history_mongodb(mongodb):
+    mongodb.db.ec_archive.drop()
 
 
-def get_mongodb_max_history_age():
-    result = g_mongo.db.ec_archive.index_information()
+def get_mongodb_max_history_age(mongodb):
+    result = mongodb.db.ec_archive.index_information()
     if 'dt_-1' not in result or 'expireAfterSeconds' not in result['dt_-1']:
         return -1
     else:
         return result['dt_-1']['expireAfterSeconds']
 
 
-def update_mongodb_indexes(settings):
-    if not g_mongo.connection:
-        connect_mongodb(settings)
-    result = g_mongo.db.ec_archive.index_information()
+def update_mongodb_indexes(settings, mongodb):
+    if not mongodb.connection:
+        connect_mongodb(settings, mongodb)
+    result = mongodb.db.ec_archive.index_information()
 
     if 'time_-1' not in result:
-        g_mongo.db.ec_archive.ensure_index([('time', DESCENDING)])
+        mongodb.db.ec_archive.ensure_index([('time', DESCENDING)])
 
 
-def update_mongodb_history_lifetime(settings, config):
-    if not g_mongo.connection:
-        connect_mongodb(settings)
+def update_mongodb_history_lifetime(settings, config, mongodb):
+    if not mongodb.connection:
+        connect_mongodb(settings, mongodb)
 
-    if get_mongodb_max_history_age() == config['history_lifetime'] * 86400:
+    if get_mongodb_max_history_age(mongodb) == config['history_lifetime'] * 86400:
         return  # do not update already correct index
 
     try:
-        g_mongo.db.ec_archive.drop_index("dt_-1")
+        mongodb.db.ec_archive.drop_index("dt_-1")
     except OperationFailure:
         pass  # Ignore not existing index
 
     # Delete messages after x days
-    g_mongo.db.ec_archive.ensure_index(
+    mongodb.db.ec_archive.ensure_index(
         [('dt', DESCENDING)],
         expireAfterSeconds=config['history_lifetime'] * 86400,
         unique=False
     )
 
 
-def mongodb_next_id(name, first_id=0):
-    ret = g_mongo.db.counters.find_and_modify(
+def mongodb_next_id(mongodb, name, first_id=0):
+    ret = mongodb.db.counters.find_and_modify(
         query={'_id': name},
         update={'$inc': {'seq': 1}},
         new=True
@@ -906,7 +903,7 @@ def mongodb_next_id(name, first_id=0):
 
     if not ret:
         # Initialize the index!
-        g_mongo.db.counters.insert({
+        mongodb.db.counters.insert({
             '_id': name,
             'seq': first_id
         })
@@ -915,16 +912,16 @@ def mongodb_next_id(name, first_id=0):
         return ret['seq']
 
 
-def log_event_history_to_mongodb(settings, event, what, who, addinfo):
-    if not g_mongo.connection:
-        connect_mongodb(settings)
+def log_event_history_to_mongodb(settings, event, what, who, addinfo, mongodb):
+    if not mongodb.connection:
+        connect_mongodb(settings, mongodb)
     # We converted _id to be an auto incrementing integer. This makes the unique
     # index compatible to history_line of the file (which is handled as integer)
     # within mkeventd. It might be better to use the ObjectId() of MongoDB, but
     # for the first step, we use the integer index for simplicity
     now = time.time()
-    g_mongo.db.ec_archive.insert({
-        '_id': mongodb_next_id('ec_archive_id'),
+    mongodb.db.ec_archive.insert({
+        '_id': mongodb_next_id(mongodb, 'ec_archive_id'),
         'dt': datetime.datetime.fromtimestamp(now),
         'time': now,
         'event': event,
@@ -934,13 +931,13 @@ def log_event_history_to_mongodb(settings, event, what, who, addinfo):
     })
 
 
-def get_event_history_from_mongodb(settings, table_events, query):
+def get_event_history_from_mongodb(settings, table_events, query, mongodb):
     filters, limit = query.filters, query.limit
 
     history_entries = []
 
-    if not g_mongo.connection:
-        connect_mongodb(settings)
+    if not mongodb.connection:
+        connect_mongodb(settings, mongodb)
 
     # Construct the mongodb filtering specification. We could fetch all information
     # and do filtering on this data, but this would be way too inefficient.
@@ -978,7 +975,7 @@ def get_event_history_from_mongodb(settings, table_events, query):
         else:
             raise Exception('Filter %s not implemented for MongoDB' % filter_name)
 
-    result = g_mongo.db.ec_archive.find(query).sort('time', -1)
+    result = mongodb.db.ec_archive.find(query).sort('time', -1)
 
     # Might be used for debugging / profiling
     #file(cmk.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
@@ -1016,12 +1013,12 @@ def get_event_history_from_mongodb(settings, table_events, query):
 #   | Functions for logging the history of events                          |
 #   '----------------------------------------------------------------------'
 
-def log_event_history(settings, config, table_events, event, what, who="", addinfo=""):
+def log_event_history(settings, config, mongodb, table_events, event, what, who="", addinfo=""):
     if config["debug_rules"]:
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
     if config['archive_mode'] == 'mongodb':
-        log_event_history_to_mongodb(settings, event, what, who, addinfo)
+        log_event_history_to_mongodb(settings, event, what, who, addinfo, mongodb)
     else:
         log_event_history_to_file(settings, config, table_events, event, what, who, addinfo)
 
@@ -1129,9 +1126,9 @@ def expire_logfiles(settings, config, flush=False):
         logger.exception("Error expiring log files: %s" % e)
 
 
-def flush_event_history(settings, config):
+def flush_event_history(settings, config, mongodb):
     if config['archive_mode'] == 'mongodb':
-        flush_event_history_mongodb()
+        flush_event_history_mongodb(mongodb)
     else:
         flush_event_history_files(settings, config)
 
@@ -1371,7 +1368,7 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, settings, config, slave_status, perfcounters, event_status, table_events):
+    def __init__(self, settings, config, slave_status, perfcounters, mongodb, event_status, table_events):
         super(EventServer, self).__init__(name="EventServer",
                                           settings=settings,
                                           config=config,
@@ -1390,6 +1387,7 @@ class EventServer(ECServerThread):
 
         self.host_config = HostConfig()
         self._perfcounters = perfcounters
+        self._mongodb = mongodb
         self._event_status = event_status
         self._time_periods = TimePeriods()
 
@@ -1820,14 +1818,14 @@ class EventServer(ECServerThread):
                     self.logger.info("Deleting orphaned event %d created by obsolete rule %s" %
                                      (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    log_event_history(self.settings, self._config, self._table_events, event, "ORPHANED")
+                    log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "ORPHANED")
                     events_to_delete.append(nr)
 
                 elif "count" not in rule and "expect" not in rule:
                     self.logger.info("Count-based event %d belonging to rule %s: rule does not "
                                      "count/expect anymore. Deleting event." % (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    log_event_history(self.settings, self._config, self._table_events, event, "NOCOUNT")
+                    log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "NOCOUNT")
                     events_to_delete.append(nr)
 
                 # handle counting
@@ -1853,7 +1851,7 @@ class EventServer(ECServerThread):
                                 self.logger.info("Rule %s/%s, event %d: again without allowed rate, dropping event" %
                                                  (rule["pack"], rule["id"], event["id"]))
                                 event["phase"] = "closed"
-                                log_event_history(self.settings, self._config, self._table_events, event, "COUNTFAILED")
+                                log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "COUNTFAILED")
                                 events_to_delete.append(nr)
 
                     else:  # algorithm 'interval'
@@ -1862,7 +1860,7 @@ class EventServer(ECServerThread):
                                              "Resetting to zero." % (rule["pack"], rule["id"], event["count"],
                                                                      count["count"], count["period"]))
                             event["phase"] = "closed"
-                            log_event_history(self.settings, self._config, self._table_events, event, "COUNTFAILED")
+                            log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "COUNTFAILED")
                             events_to_delete.append(nr)
 
             # Handle delayed actions
@@ -1871,12 +1869,12 @@ class EventServer(ECServerThread):
                 if now >= delay_until:
                     self.logger.info("Delayed event %d of rule %s is now activated." % (event["id"], event["rule_id"]))
                     event["phase"] = "open"
-                    log_event_history(self.settings, self._config, self._table_events, event, "DELAYOVER")
+                    log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "DELAYOVER")
                     if rule:
-                        event_has_opened(self.settings, self._config, self, self._table_events, rule, event)
+                        event_has_opened(self.settings, self._config, self, self._mongodb, self._table_events, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
-                            log_event_history(self.settings, self._config, self._table_events, event, "AUTODELETE")
+                            log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "AUTODELETE")
                             events_to_delete.append(nr)
 
                     else:
@@ -1891,7 +1889,7 @@ class EventServer(ECServerThread):
                         events_to_delete.append(nr)
                         self.logger.info("Livetime of event %d (rule %s) exceeded. Deleting event." %
                                          (event["id"], event["rule_id"]))
-                        log_event_history(self.settings, self._config, self._table_events, event, "EXPIRED")
+                        log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "EXPIRED")
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
         for nr in events_to_delete[::-1]:
@@ -1945,7 +1943,7 @@ class EventServer(ECServerThread):
                             self.logger.info("Rule %s/%s has reached %d occurrances (%d required). "
                                              "Starting next period." %
                                              (rule["pack"], rule["id"], event["count"], expected_count))
-                            log_event_history(self.settings, self._config, self._table_events, event, "COUNTREACHED")
+                            log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "COUNTREACHED")
                         # Counting event is no longer needed.
                         events_to_delete.append(nr)
                         break
@@ -1987,7 +1985,7 @@ class EventServer(ECServerThread):
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
             self.rewrite_event(rule, merge_event, ())
-            log_event_history(self.settings, self._config, self._table_events, merge_event, "COUNTFAILED")
+            log_event_history(self.settings, self._config, self._mongodb, self._table_events, merge_event, "COUNTFAILED")
         else:
             # Create artifical event from scratch. Make sure that all important
             # fields are defined.
@@ -2012,11 +2010,11 @@ class EventServer(ECServerThread):
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(self._table_events, event)
-            log_event_history(self.settings, self._config, self._table_events, event, "COUNTFAILED")
-            event_has_opened(self.settings, self._config, self, self._table_events, rule, event)
+            log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "COUNTFAILED")
+            event_has_opened(self.settings, self._config, self, self._mongodb, self._table_events, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
-                log_event_history(self.settings, self._config, self._table_events, event, "AUTODELETE")
+                log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "AUTODELETE")
                 self._event_status.remove_event(event)
 
     def reload_configuration(self, config):
@@ -2266,13 +2264,13 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                event_has_opened(self.settings, self._config, self, self._table_events, rule, existing_event)
+                                event_has_opened(self.settings, self._config, self, self._mongodb, self._table_events, rule, existing_event)
 
-                            log_event_history(self.settings, self._config, self._table_events, existing_event, "COUNTREACHED")
+                            log_event_history(self.settings, self._config, self._mongodb, self._table_events, existing_event, "COUNTREACHED")
 
                             if "delay" not in rule and rule.get("autodelete"):
                                 existing_event["phase"] = "closed"
-                                log_event_history(self.settings, self._config, self._table_events, existing_event, "AUTODELETE")
+                                log_event_history(self.settings, self._config, self._mongodb, self._table_events, existing_event, "AUTODELETE")
                                 with lock_eventstatus:
                                     self._event_status.remove_event(existing_event)
                     elif "expect" in rule:
@@ -2288,10 +2286,10 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                event_has_opened(self.settings, self._config, self, self._table_events, rule, event)
+                                event_has_opened(self.settings, self._config, self, self._mongodb, self._table_events, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
-                                    log_event_history(self.settings, self._config, self._table_events, event, "AUTODELETE")
+                                    log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "AUTODELETE")
                                     with lock_eventstatus:
                                         self._event_status.remove_event(event)
                     return
@@ -3442,15 +3440,16 @@ class StatusTableHistory(StatusTable):
         ("history_addinfo", ""),
     ] + StatusTableEvents.columns
 
-    def __init__(self, settings, config, table_events):
+    def __init__(self, settings, config, mongodb, table_events):
         super(StatusTableHistory, self).__init__()
         self.settings = settings
         self._config = config
+        self._mongodb = mongodb
         self._table_events = table_events
 
     def _enumerate(self, query):
         if self._config['archive_mode'] == 'mongodb':
-            return get_event_history_from_mongodb(self.settings, self._table_events, query)
+            return get_event_history_from_mongodb(self.settings, self._table_events, query, self._mongodb)
         else:
             return get_event_history_from_file(self.settings, self, query)
 
@@ -3495,7 +3494,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings, config, slave_status, perfcounters, event_status, event_server, table_events, terminate_main_event):
+    def __init__(self, settings, config, slave_status, perfcounters, mongodb, event_status, event_server, table_events, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
                                            config=config,
@@ -3508,10 +3507,11 @@ class StatusServer(ECServerThread):
         self._reopen_sockets = False
 
         self.table_events = table_events # alias for reflection Kung Fu :-P
-        self.table_history = StatusTableHistory(settings, config, table_events)
+        self.table_history = StatusTableHistory(settings, config, mongodb, table_events)
         self.table_rules = StatusTableRules(event_status)
         self.table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
+        self._mongodb = mongodb
         self._event_status = event_status
         self._event_server = event_server
         self._terminate_main_event = terminate_main_event
@@ -3759,7 +3759,7 @@ class StatusServer(ECServerThread):
             event["comment"] = comment
         if contact:
             event["contact"] = contact
-        log_event_history(self.settings, self._config, self._table_events, event, "UPDATE", user)
+        log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "UPDATE", user)
 
     def handle_command_create(self, arguments):
         # Would rather use process_raw_line(), but we are already
@@ -3776,10 +3776,10 @@ class StatusServer(ECServerThread):
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         event["state"] = int(newstate)
-        log_event_history(self.settings, self._config, self._table_events, event, "CHANGESTATE", user)
+        log_event_history(self.settings, self._config, self._mongodb, self._table_events, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
-        reload_configuration(self.settings, self._event_status, self._event_server, self, self._slave_status)
+        reload_configuration(self.settings, self._mongodb, self._event_status, self._event_server, self, self._slave_status)
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3788,7 +3788,7 @@ class StatusServer(ECServerThread):
 
     # Erase our current state and history!
     def handle_command_flush(self):
-        flush_event_history(self.settings, self._config)
+        flush_event_history(self.settings, self._config, self._mongodb)
         self._event_status.flush()
         self._event_status.save_status()
         if is_replication_slave(self._config):
@@ -3824,7 +3824,7 @@ class StatusServer(ECServerThread):
                     raise MKClientError("The action '%s' is not defined. After adding new commands please "
                                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = self._config["action"][action_id]
-            do_event_action(self.settings, self._config, self._table_events, action, event, user)
+            do_event_action(self.settings, self._config, self._mongodb, self._table_events, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -3862,7 +3862,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(terminate_main_event, settings, config, perfcounters, event_status, event_server, status_server, slave_status):
+def run_eventd(terminate_main_event, settings, config, mongodb, perfcounters, event_status, event_server, status_server, slave_status):
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3905,7 +3905,7 @@ def run_eventd(terminate_main_event, settings, config, perfcounters, event_statu
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                reload_configuration(settings, event_status, event_server, status_server, slave_status)
+                reload_configuration(settings, mongodb, event_status, event_server, status_server, slave_status)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 terminate(terminate_main_event, event_server, status_server)
@@ -3935,11 +3935,12 @@ def run_eventd(terminate_main_event, settings, config, perfcounters, event_statu
 
 class EventStatus(object):
 
-    def __init__(self, settings, config, perfcounters):
+    def __init__(self, settings, config, perfcounters, mongodb):
         self.logger = logger.getChild("EventStatus")
         self.settings = settings
         self._config = config
         self._perfcounters = perfcounters
+        self._mongodb = mongodb
         self.flush()
 
     def reload_configuration(self, config):
@@ -4097,14 +4098,14 @@ class EventStatus(object):
         self._events.append(event)
         self.num_existing_events += 1
         self._count_event_add(event)
-        log_event_history(self.settings, self._config, table_events, event, "NEW")
+        log_event_history(self.settings, self._config, self._mongodb, table_events, event, "NEW")
 
     def archive_event(self, table_events, event):
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         event["phase"] = "closed"
-        log_event_history(self.settings, self._config, table_events, event, "ARCHIVED")
+        log_event_history(self.settings, self._config, self._mongodb, table_events, event, "ARCHIVED")
 
     def remove_event(self, event):
         try:
@@ -4177,7 +4178,7 @@ class EventStatus(object):
                         event["time"] = new_event["time"]
                         event["last"] = new_event["time"]
                         event["priority"] = new_event["priority"]
-                        log_event_history(self.settings, self._config, table_events, event, "CANCELLED")
+                        log_event_history(self.settings, self._config, self._mongodb, table_events, event, "CANCELLED")
                         actions = rule.get("cancel_actions", [])
                         if actions:
                             if previous_phase != "open" \
@@ -4186,7 +4187,7 @@ class EventStatus(object):
                                                  "is not 'open' but '%s'" %
                                                  (event["id"], previous_phase))
                             else:
-                                do_event_actions(self.settings, self._config, event_server, table_events, actions, event, is_cancelling=True)
+                                do_event_actions(self.settings, self._config, event_server, self._mongodb, table_events, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -4342,7 +4343,7 @@ class EventStatus(object):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
                 event["phase"] = "closed"
-                log_event_history(self.settings, self._config, table_events, event, "DELETE", user)
+                log_event_history(self.settings, self._config, self._mongodb, table_events, event, "DELETE", user)
                 self._remove_event_by_nr(nr)
                 return
         raise MKClientError("No event with id %s" % event_id)
@@ -4367,7 +4368,7 @@ class EventStatus(object):
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
-def event_has_opened(settings, config, event_server, table_events, rule, event):
+def event_has_opened(settings, config, event_server, mongodb, table_events, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -4379,12 +4380,12 @@ def event_has_opened(settings, config, event_server, table_events, rule, event):
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(settings, config, event_server, table_events, rule.get("actions", []), event, is_cancelling=False)
+    do_event_actions(settings, config, event_server, mongodb, table_events, rule.get("actions", []), event, is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(settings, config, event_server, table_events, actions, event, is_cancelling):
+def do_event_actions(settings, config, event_server, mongodb, table_events, actions, event, is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event_server, event, is_cancelling=is_cancelling)
@@ -4397,7 +4398,7 @@ def do_event_actions(settings, config, event_server, table_events, actions, even
             else:
                 logger.info("Going to execute action '%s' on event %d" %
                             (action["title"], event["id"]))
-                do_event_action(settings, config, table_events, action, event)
+                do_event_action(settings, config, mongodb, table_events, action, event)
 
 
 # Rule actions are currently done synchronously. Actions should
@@ -4430,7 +4431,7 @@ def escape_null_bytes(s):
     return s.replace("\000", "\\000")
 
 
-def do_event_action(settings, config, table_events, action, event, user=""):
+def do_event_action(settings, config, mongodb, table_events, action, event, user=""):
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return
@@ -4443,10 +4444,10 @@ def do_event_action(settings, config, table_events, action, event, user=""):
             body = escape_null_bytes(substitute_event_tags(table_events, settings["body"], event))
 
             send_email(config, to, subject, body)
-            log_event_history(settings, config, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
+            log_event_history(settings, config, mongodb, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
             execute_script(table_events, escape_null_bytes(substitute_event_tags(table_events, settings["script"], get_quoted_event(event))), event)
-            log_event_history(settings, config, table_events, event, "SCRIPT", user, action['id'])
+            log_event_history(settings, config, mongodb, table_events, event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:
@@ -4969,7 +4970,7 @@ def update_slave_status(slave_status, settings, config):
 #   |  Loading of the configuration files                                  |
 #   '----------------------------------------------------------------------'
 
-def load_configuration(settings, slave_status):
+def load_configuration(settings, slave_status, mongodb):
     config = cmk.ec.export.load_config(settings)
 
     # If not set by command line, set the log level by configuration
@@ -4983,8 +4984,8 @@ def load_configuration(settings, slave_status):
 
     # Configure the auto deleting indexes in the DB when mongodb is enabled
     if config['archive_mode'] == 'mongodb':
-        update_mongodb_indexes(settings)
-        update_mongodb_history_lifetime(settings, config)
+        update_mongodb_indexes(settings, mongodb)
+        update_mongodb_history_lifetime(settings, config, mongodb)
 
     # Are we a replication slave? Parts of the configuration
     # will be overridden by values from the master.
@@ -5004,9 +5005,9 @@ def load_configuration(settings, slave_status):
     return config
 
 
-def reload_configuration(settings, event_status, event_server, status_server, slave_status):
+def reload_configuration(settings, mongodb, event_status, event_server, status_server, slave_status):
     with lock_configuration:
-        config = load_configuration(settings, slave_status)
+        config = load_configuration(settings, slave_status, mongodb)
         event_server.reload_configuration(config)
 
     event_status.reload_configuration(config)
@@ -5052,7 +5053,8 @@ def main():
         logger.info("mkeventd version %s starting" % cmk.__version__)
 
         slave_status = default_slave_status_master()
-        config = load_configuration(settings, slave_status)
+        mongodb = MongoDB()
+        config = load_configuration(settings, slave_status, mongodb)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():
@@ -5068,11 +5070,11 @@ def main():
 
         # First do all things that might fail, before daemonizing
         perfcounters = Perfcounters()
-        event_status = EventStatus(settings, config, perfcounters)
+        event_status = EventStatus(settings, config, perfcounters, mongodb)
         table_events = StatusTableEvents(event_status)
-        event_server = EventServer(settings, config, slave_status, perfcounters, event_status, table_events)
+        event_server = EventServer(settings, config, slave_status, perfcounters, mongodb, event_status, table_events)
         terminate_main_event = threading.Event()
-        status_server = StatusServer(settings, config, slave_status, perfcounters, event_status, event_server, table_events, terminate_main_event)
+        status_server = StatusServer(settings, config, slave_status, perfcounters, mongodb, event_status, event_server, table_events, terminate_main_event)
 
         event_status.load_status(event_server)
         event_server.compile_rules(config["rules"], config["rule_packs"])
@@ -5091,7 +5093,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(terminate_main_event, settings, config, perfcounters, event_status, event_server, status_server, slave_status)
+        run_eventd(terminate_main_event, settings, config, mongodb, perfcounters, event_status, event_server, status_server, slave_status)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

@@ -1619,7 +1619,7 @@ def site_is_running_cmc(site_id):
         return sites.state(site_id, {}).get("program_version", "").startswith("Check_MK")
     else:
         for status in sites.states().values():
-            if status.get("program_version").startswith("Check_MK"):
+            if status.get("program_version", "").startswith("Check_MK"):
                 return True
         return False
 

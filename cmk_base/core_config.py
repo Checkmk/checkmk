@@ -465,8 +465,6 @@ def get_cluster_attributes(hostname, nodes):
     for suffix, val in [ ("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6) ]:
         attrs["_NODEIPS%s" % suffix] = " ".join(val)
 
-    print attrs
-
     return attrs
 
 

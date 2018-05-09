@@ -1,0 +1,11 @@
+Title: netextreme_fan: Fixed crash if no speed information is sent from device
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p32
+Date: 1525852737
+
+

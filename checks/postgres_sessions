@@ -45,11 +45,11 @@ def parse_postgres_sessions(info):
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
-        parsed.setdefault(instance_name, {})
+        instance = parsed.setdefault(instance_name, {})
         if line[0].startswith("t"):
-            parsed[instance_name]["total"] = int(line[1])
+            instance["total"] = int(line[1])
         elif line[0].startswith("f"):
-            parsed[instance_name]["running"] = int(line[1])
+            instance["running"] = int(line[1])
     return parsed
 
 
@@ -58,35 +58,31 @@ def inventory_postgres_sessions(parsed):
 
 
 def check_postgres_sessions(item, params, parsed):
-    if item in parsed:
-        idle     = parsed[item]['total']
-        running  = parsed[item]['running']
-        total    = idle + running
-        status   = 0
-        infos    = []
-        perfdata = []
-        for value, what, format, unit in [
-            ( total,   "total",       "%d",   "" ),
-            ( running, "running",     "%d",   "" )]:
-            infos.append((format + " %s%s") % (value, what, unit))
-            if what in params:
-                warn, crit = params[what]
-                if value >= crit:
-                    status = 2
-                    infos[-1] += "(!!)"
-                elif value >= warn:
-                    status = max(status, 1)
-                    infos[-1] += "(!)"
-            else:
-                warn, crit = None, None
-            perfdata.append((what, value, warn, crit))
+    if item not in parsed:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
 
-        return (status, ", ".join(infos), perfdata)
+    data = parsed[item]
+    idle = data.get('total', 0)
+    running = data.get('running', 0)
+    total = idle + running
 
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    for key, val in [
+        ("total",   total),
+        ("running", running),
+    ]:
+        infotext = "%s: %s" % (key.title(), val)
+        warn, crit = params.get(key, (None, None))
+        state = 0
+        if crit is not None  and val >= crit:
+            state = 2
+        elif warn is not None and val >= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        yield state, infotext, [(key, val, warn, crit)]
 
 
 check_info['postgres_sessions'] = {

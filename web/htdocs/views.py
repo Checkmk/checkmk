@@ -2852,6 +2852,11 @@ def url_to_view(row, view_name):
             if filter_key in dict(url_vars):
                 add_site_hint = False
 
+        # Hack for servicedesc view which is meant to show all services with the given
+        # description: Don't add the site filter for this view.
+        if view_name == "servicedesc":
+            add_site_hint = False
+
         if add_site_hint and row.get('site'):
             url_vars.append(('site', row['site']))
 

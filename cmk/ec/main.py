@@ -1366,7 +1366,7 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, settings, config, slave_status, perfcounters, lock_history, mongodb, active_history_period, event_status, table_events):
+    def __init__(self, settings, config, slave_status, perfcounters, lock_configuration, lock_history, mongodb, active_history_period, event_status, table_events):
         super(EventServer, self).__init__(name="EventServer",
                                           settings=settings,
                                           config=config,
@@ -1385,6 +1385,7 @@ class EventServer(ECServerThread):
 
         self.host_config = HostConfig()
         self._perfcounters = perfcounters
+        self._lock_configuration = lock_configuration
         self._lock_history = lock_history
         self._mongodb = mongodb
         self._active_history_period = active_history_period
@@ -1769,7 +1770,7 @@ class EventServer(ECServerThread):
 
     def do_housekeeping(self):
         with lock_eventstatus:
-            with lock_configuration:
+            with self._lock_configuration:
                 self.hk_handle_event_timeouts()
                 self.hk_check_expected_messages()
                 self.hk_cleanup_downtime_events()
@@ -2354,7 +2355,7 @@ class EventServer(ECServerThread):
     # match.
     def event_rule_matches(self, rule, event):
         self._perfcounters.count("rule_tries")
-        with lock_configuration:
+        with self._lock_configuration:
             result = self.event_rule_matches_non_inverted(rule, event)
             if rule.get("invert_matching"):
                 if result is False:
@@ -3494,7 +3495,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings, config, slave_status, perfcounters, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event):
+    def __init__(self, settings, config, slave_status, perfcounters, lock_configuration, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
                                            settings=settings,
                                            config=config,
@@ -3511,6 +3512,7 @@ class StatusServer(ECServerThread):
         self.table_rules = StatusTableRules(event_status)
         self.table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
+        self._lock_configuration = lock_configuration
         self._lock_history = lock_history
         self._mongodb = mongodb
         self._active_history_period = active_history_period
@@ -3781,7 +3783,7 @@ class StatusServer(ECServerThread):
         log_event_history(self.settings, self._config, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
-        reload_configuration(self.settings, self._mongodb, self._event_status, self._event_server, self, self._slave_status)
+        reload_configuration(self.settings, self._lock_configuration, self._mongodb, self._event_status, self._event_server, self, self._slave_status)
 
     def handle_command_reopenlog(self):
         self.logger.info("Closing this logfile")
@@ -3821,7 +3823,7 @@ class StatusServer(ECServerThread):
         if action_id == "@NOTIFY":
             do_notify(self._event_server, event, user, is_cancelling=False)
         else:
-            with lock_configuration:
+            with self._lock_configuration:
                 if action_id not in self._config["action"]:
                     raise MKClientError("The action '%s' is not defined. After adding new commands please "
                                         "make sure that you activate the changes in the Event Console." % action_id)
@@ -3849,7 +3851,7 @@ class StatusServer(ECServerThread):
 
         except Exception:
             raise MKClientError("Invalid arguments to command REPLICATE")
-        return replication_send(self._config, self._event_status, last_update)
+        return replication_send(self._config, self._lock_configuration, self._event_status, last_update)
 
 
 #.
@@ -3864,7 +3866,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(terminate_main_event, settings, config, mongodb, perfcounters, event_status, event_server, status_server, slave_status):
+def run_eventd(terminate_main_event, settings, config, lock_configuration, mongodb, perfcounters, event_status, event_server, status_server, slave_status):
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3902,12 +3904,12 @@ def run_eventd(terminate_main_event, settings, config, mongodb, perfcounters, ev
 
             # Beware: replication might be turned on during this loop!
             if is_replication_slave(config) and now > next_replication:
-                replication_pull(settings, config, perfcounters, event_status, event_server, slave_status)
+                replication_pull(settings, config, lock_configuration, perfcounters, event_status, event_server, slave_status)
                 next_replication = now + config["replication"]["interval"]
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                reload_configuration(settings, mongodb, event_status, event_server, status_server, slave_status)
+                reload_configuration(settings, lock_configuration, mongodb, event_status, event_server, status_server, slave_status)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 terminate(terminate_main_event, event_server, status_server)
@@ -4780,7 +4782,7 @@ def replication_allow_command(config, command, slave_status):
                             "while it is in sync mode.")
 
 
-def replication_send(config, event_status, last_update):
+def replication_send(config, lock_configuration, event_status, last_update):
     response = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
@@ -4791,7 +4793,7 @@ def replication_send(config, event_status, last_update):
         return response
 
 
-def replication_pull(settings, config, perfcounters, event_status, event_server, slave_status):
+def replication_pull(settings, config, lock_configuration, perfcounters, event_status, event_server, slave_status):
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -5009,7 +5011,7 @@ def load_configuration(settings, slave_status, mongodb):
     return config
 
 
-def reload_configuration(settings, mongodb, event_status, event_server, status_server, slave_status):
+def reload_configuration(settings, lock_configuration, mongodb, event_status, event_server, status_server, slave_status):
     with lock_configuration:
         config = load_configuration(settings, slave_status, mongodb)
         event_server.reload_configuration(config)
@@ -5033,7 +5035,6 @@ def reload_configuration(settings, mongodb, event_status, event_server, status_s
 
 # Create locks for global data structures
 lock_eventstatus = ECLock("eventstatus")
-lock_configuration = ECLock("configuration")
 
 
 def main():
@@ -5077,9 +5078,10 @@ def main():
         lock_history = ECLock("history")
         event_status = EventStatus(settings, config, perfcounters, lock_history, mongodb, active_history_period)
         table_events = StatusTableEvents(event_status)
-        event_server = EventServer(settings, config, slave_status, perfcounters, lock_history, mongodb, active_history_period, event_status, table_events)
+        lock_configuration = ECLock("configuration")
+        event_server = EventServer(settings, config, slave_status, perfcounters, lock_configuration, lock_history, mongodb, active_history_period, event_status, table_events)
         terminate_main_event = threading.Event()
-        status_server = StatusServer(settings, config, slave_status, perfcounters, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event)
+        status_server = StatusServer(settings, config, slave_status, perfcounters, lock_configuration, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event)
 
         event_status.load_status(event_server)
         event_server.compile_rules(config["rules"], config["rule_packs"])
@@ -5098,7 +5100,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(terminate_main_event, settings, config, mongodb, perfcounters, event_status, event_server, status_server, slave_status)
+        run_eventd(terminate_main_event, settings, config, lock_configuration, mongodb, perfcounters, event_status, event_server, status_server, slave_status)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

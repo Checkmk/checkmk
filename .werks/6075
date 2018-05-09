@@ -1,0 +1,11 @@
+Title: fortigate_ipsecvpn: Fixed crash if no parameters are stated
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p32
+Date: 1525875977
+
+

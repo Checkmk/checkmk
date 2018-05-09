@@ -71,27 +71,33 @@
 # Node addresses: nnn.mmm.ooo.ppp
 
 
-def inventory_pvecm_status(info):
-    return [(None, None)]
-
-
-def check_pvecm_status(_no_item, _no_params, info):
+def parse_pvecm_status(info):
     parsed = {}
     for line in info:
-        if len(line) != 2:
+        if len(line) < 2:
             continue
-        what, value = line
+        k = line[0].strip().lower()
+        if k == "date":
+            v = ":".join(line[1:]).strip()
+        else:
+            v = " ".join(line[1:]).strip()
+        parsed.setdefault(k, v)
+    return parsed
 
-        parsed[what.lower()] = value.strip().lower()
 
+def inventory_pvecm_status(parsed):
+    if parsed:
+        return [(None, None)]
+
+
+def check_pvecm_status(_no_item, _no_params, parsed):
     if "cman_tool" in parsed and \
        "cannot open connection to cman" in parsed["cman_tool"]:
         yield 2, "Cluster management tool: %s" % parsed["cman_tool"]
 
     else:
         name = parsed.get("cluster name",
-                          parsed.get("quorum provider",
-                                     "unknown"))
+                          parsed.get("quorum provider", "unknown"))
 
         yield 0, "Name: %s, Nodes: %s" % \
                  (name, parsed["nodes"])
@@ -107,6 +113,7 @@ def check_pvecm_status(_no_item, _no_params, info):
 
 
 check_info['pvecm_status'] = {
+    'parse_function'            : parse_pvecm_status,
     'inventory_function'        : inventory_pvecm_status,
     'check_function'            : check_pvecm_status,
     'service_description'       : 'PVE Cluster State',

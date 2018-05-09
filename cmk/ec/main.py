@@ -3175,8 +3175,6 @@ class Query(object):
 
 
 class QueryGET(Query):
-    _allowed_tables = set(["events", "history", "rules", "status"])
-
     def _from_raw_query(self, status_server):
         super(QueryGET, self)._from_raw_query(status_server)
         self._parse_table(status_server)
@@ -3184,11 +3182,6 @@ class QueryGET(Query):
 
     def _parse_table(self, status_server):
         self.table_name = self.method_arg
-
-        if self.table_name not in self._allowed_tables:
-            raise MKClientError("Invalid table: %s (allowed are: %s)" %
-                                (self.table_name, ", ".join(self._allowed_tables)))
-
         self.table = status_server.table(self.table_name)
 
     def _parse_header_lines(self):
@@ -3524,7 +3517,15 @@ class StatusServer(ECServerThread):
         self.open_tcp_socket()
 
     def table(self, name):
-        return getattr(self, "table_%s" % name)
+        if name == "events":
+            return self.table_events
+        if name == "history":
+            return self.table_history
+        if name == "rules":
+            return self.table_rules
+        if name == "status":
+            return self.table_status
+        raise MKClientError("Invalid table: %s (allowed are: events, history, rules, status)" % name)
 
     def open_unix_socket(self):
         path = self.settings.paths.unix_socket.value

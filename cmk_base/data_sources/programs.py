@@ -29,6 +29,7 @@ import signal
 import subprocess
 
 import cmk.paths
+import cmk.regex
 
 import cmk_base.console as console
 import cmk_base.config as config
@@ -136,6 +137,7 @@ class DSProgramDataSource(ProgramDataSource):
 
         cmd = self._translate_legacy_macros(cmd)
         cmd = self._translate_host_macros(cmd)
+        cmd = self._cleanup_left_over_macros(cmd)
 
         return cmd
 
@@ -155,6 +157,12 @@ class DSProgramDataSource(ProgramDataSource):
 
         macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
         return core_config.replace_macros(cmd, macros)
+
+
+    def _cleanup_left_over_macros(self, cmd):
+        """Now after we have replaced all known macros remove all remaining macros in
+        the format $...$ to prevent shell expansion of them"""
+        return cmk.regex.regex(r"\$[a-zA-Z0-9_-]+\$").sub("", cmd)
 
 
 

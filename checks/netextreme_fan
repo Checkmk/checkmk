@@ -45,7 +45,8 @@ def check_netextreme_fan(item, params, info):
         if fan_nr == item:
             state, state_readable = map_fan_status[fan_status]
             yield state, "Operational status: %s" % state_readable
-            yield check_fan(int(fan_speed_str), params)
+            if fan_speed_str:
+                yield check_fan(int(fan_speed_str), params)
 
 
 check_info['netextreme_fan'] = {

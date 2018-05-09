@@ -1,0 +1,11 @@
+Title: Quicksearch: Searching for groups did not always return full results
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p32
+Date: 1525853954
+Class: fix
+
+Choosing a specific value from the dropdown menu in the quicksearch snapin, also applied
+a site filter for the chosen group. The group results were hereby incorrectly restricted to a specific site.

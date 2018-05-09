@@ -88,7 +88,7 @@ def check_etherbox_temp(item, params, info):
     uom = { "0": "c", "1": "f", "2": "k" }[info[0][0][0]]
     temp = int(value) / 10.0
     state, infotext, perfdata = check_temperature(temp, params, "etherbox_temp_%s" % item, uom)
-    return state, "[%s] %s" % (name, infotext), perfdata
+    return state, "[%s] %s" % (name, infotext.decode("utf8")), perfdata
 
 
 check_info["etherbox.temp"] = {

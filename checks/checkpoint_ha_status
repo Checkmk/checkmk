@@ -44,6 +44,9 @@ def inventory_checkpoint_ha_status(info):
 def check_checkpoint_ha_status(_no_item, _no_params, info):
     installed, major, minor, started, state, block_state, stat_code, stat_long = info[0]
 
+    # Some devices have a trailing "\n" in the state field. Drop it.
+    state = state.rstrip()
+
     if installed == "0":
         yield 2, "Not installed"
     else:

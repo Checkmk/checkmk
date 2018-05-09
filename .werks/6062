@@ -1,0 +1,11 @@
+Title: checkpoint_ha_status: Workaround devices reporting wrong state information
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b3
+Date: 1525859977
+Class: fix
+
+Some devices report a state of "Active\n" instead of "Active" which was not
+handled by the check. The state could not be determined correctly.

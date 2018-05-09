@@ -886,8 +886,12 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         for row in self._rows:
             entry = {"text_tokens": []}
             url_params = []
+            skip_site = False
             for filter_shortname in self._used_filters:
                 plugin = self._get_plugin_with_shortname(filter_shortname)
+
+                if plugin.is_group_match():
+                    skip_site = True
 
                 match_info = plugin.get_matches(target_view, row, self._livestatus_table, self._used_filters)
                 if not match_info:
@@ -896,8 +900,11 @@ class LivestatusSearchConductor(LivestatusSearchBase):
                 url_params.extend(url_filters)
                 entry["text_tokens"].append((plugin.get_filter_shortname(), text))
 
-            entry["url"]      = self._build_url([("view_name", target_view),
-                                                 ("site", row.get("site"))] + url_params, restore_regex = True)
+            url_tokens = [("view_name", target_view)] + url_params
+            if not skip_site:
+                url_tokens.append(("site", row.get("site")))
+            entry["url"] = self._build_url(url_tokens, restore_regex = True)
+
 
             entry["raw_data"] = row
             self._elements.append(entry)

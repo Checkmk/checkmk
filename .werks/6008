@@ -1,0 +1,11 @@
+Title: df.include: Fixed possibly missing parameter 'Show reserved space'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p32
+Date: 1525849463
+
+

@@ -339,7 +339,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, reserved
             (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0)):
             infotext += ", " + levels["levels_text"]
 
-        if reserved_mb > 0 and params["show_reserved"]:
+        if reserved_mb > 0 and params.get("show_reserved"):
             reserved_perc = 100.0 * float(reserved_mb) / size_mb
             infotext += ", therein reserved for root: %.1f%% (%.2f MB)" % (reserved_perc, reserved_mb)
             perfdata.append(("reserved", reserved_mb))

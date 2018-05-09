@@ -3131,33 +3131,26 @@ class Queries(object):
                 break
             self._buffer += data
         request, self._buffer = parts
-
-        request_lines = request.decode("utf-8").splitlines()
-
-        cls = Query.get_query_class(request_lines)
-        return cls(self._status_server, request_lines)
+        return Query.make(self._status_server, request.decode("utf-8").splitlines())
 
 
 class Query(object):
-    _allowed_methods = set(["GET", "REPLICATE", "COMMAND"])
     _allowed_formats = set(["python", "plain", "json"])
     _allowed_headers = set(["OutputFormat", "Filter", "Columns", "Limit"])
 
-    @classmethod
-    def get_query_class(cls, raw_query):
+    @staticmethod
+    def make(status_server, raw_query):
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
-
         method = parts[0]
-
-        if method not in cls._allowed_methods:
-            raise MKClientError("Invalid method %s (allowed are %s) " %
-                                (method, ", ".join(cls._allowed_methods)))
-
-        # TODO: This is pure maintenance horror! Never ever calculate the name
-        # of a class in user code...
-        return globals()["Query%s" % method]
+        if method == "GET":
+            return QueryGET(status_server, raw_query)
+        if method == "REPLICATE":
+            return QueryREPLICATE(status_server, raw_query)
+        if method == "COMMAND":
+            return QueryCOMMAND(status_server, raw_query)
+        raise MKClientError("Invalid method %s (allowed are GET, REPLICATE, COMMAND)" % method)
 
     def __init__(self, status_server, raw_query):
         super(Query, self).__init__()

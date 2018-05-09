@@ -434,10 +434,14 @@ def _extra_host_attributes(hostname):
 
 
 def get_cluster_attributes(hostname, nodes):
-    attrs = {}
+    sorted_nodes = sorted(nodes)
+
+    attrs = {
+        "_NODENAMES": " ".join(sorted_nodes),
+    }
     node_ips_4 = []
     if config.is_ipv4_host(hostname):
-        for h in nodes:
+        for h in sorted_nodes:
             addr = ip_address_of(h, 4)
             if addr != None:
                 node_ips_4.append(addr)
@@ -446,7 +450,7 @@ def get_cluster_attributes(hostname, nodes):
 
     node_ips_6 = []
     if config.is_ipv6_host(hostname):
-        for h in nodes:
+        for h in sorted_nodes:
             addr = ip_address_of(h, 6)
             if addr != None:
                 node_ips_6.append(addr)
@@ -460,6 +464,8 @@ def get_cluster_attributes(hostname, nodes):
 
     for suffix, val in [ ("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6) ]:
         attrs["_NODEIPS%s" % suffix] = " ".join(val)
+
+    print attrs
 
     return attrs
 

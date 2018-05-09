@@ -1,0 +1,14 @@
+Title: Clusters: Add missing custom variable containing the node names
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1525851596
+
+In addition to the existing custom attributes _NODEIPS, _NODEIPS_4 and
+_NODEIPS_6 this change adds a new variable _NODENAMES. All the entries
+in this variables are now sorted by the node name. This means that e.g.
+the 2nd entry in all of the above variables belongs to the same node.

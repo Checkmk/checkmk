@@ -1111,32 +1111,28 @@ def current_history_period(config):
 
 
 # Delete old log files
-def expire_logfiles(settings, config, flush=False):
-    try:
-        days = config["history_lifetime"]
-        min_mtime = time.time() - days * 86400
-        logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
-                       (days, cmk.render.date_and_time(min_mtime)))
-        for path in settings.paths.history_dir.value.glob('*.log'):
-            if flush or path.stat().st_mtime < min_mtime:
-                logger.info("Deleting log file %s (age %s)" %
-                            (path, cmk.render.date_and_time(path.stat().st_mtime)))
-                path.unlink()
-    except Exception as e:
-        if settings.options.debug:
-            raise
-        logger.exception("Error expiring log files: %s" % e)
+def expire_logfiles(settings, config, flush):
+    with lock_logging:
+        try:
+            days = config["history_lifetime"]
+            min_mtime = time.time() - days * 86400
+            logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
+                           (days, cmk.render.date_and_time(min_mtime)))
+            for path in settings.paths.history_dir.value.glob('*.log'):
+                if flush or path.stat().st_mtime < min_mtime:
+                    logger.info("Deleting log file %s (age %s)" %
+                                (path, cmk.render.date_and_time(path.stat().st_mtime)))
+                    path.unlink()
+        except Exception as e:
+            if settings.options.debug:
+                raise
+            logger.exception("Error expiring log files: %s" % e)
 
 
 def flush_event_history(settings, config, mongodb):
     if config['archive_mode'] == 'mongodb':
         flush_event_history_mongodb(mongodb)
     else:
-        flush_event_history_files(settings, config)
-
-
-def flush_event_history_files(settings, config):
-    with lock_logging:
         expire_logfiles(settings, config, True)
 
 
@@ -1778,8 +1774,7 @@ class EventServer(ECServerThread):
                 self.hk_cleanup_downtime_events()
 
         if self._config['archive_mode'] != 'mongodb':
-            with lock_logging:
-                expire_logfiles(self.settings, self._config)
+            expire_logfiles(self.settings, self._config, False)
 
     # For all events that have been created in a host downtime check the host
     # whether or not it is still in downtime. In case the downtime has ended

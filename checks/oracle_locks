@@ -108,4 +108,5 @@ check_info["oracle_locks"] = {
     'service_description':     'ORA %s Locks',
     "default_levels_variable" : "oracle_locks_defaults",
     'group':                   'oracle_locks',
+    'includes':                 ['oracle.include'],
 }

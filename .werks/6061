@@ -1,0 +1,11 @@
+Title: Real time checks: Improved log messages in case of invalid messages
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0b3
+Date: 1525859624
+Class: fix
+
+The error messages now contain the name of the related host.
+This makes it easier to find host related problems during debugging.

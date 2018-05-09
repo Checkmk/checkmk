@@ -1,0 +1,16 @@
+Title: New Web API Call: delete_hosts, allows to delete multiple hosts at once
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1525862330
+Class: feature
+
+The required payload for delete_hosts is a variable <tt>hostnames</tt> with a list of hostnames.
+
+For example, <tt>"hostnames": ["host1", "host2", "host3"]</tt>.
+
+The API returns an error if a specified host does not exist.
+
+

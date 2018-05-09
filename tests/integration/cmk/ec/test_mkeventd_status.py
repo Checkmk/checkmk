@@ -51,8 +51,13 @@ def slave_status():
 
 
 @pytest.fixture(scope="function")
-def config(settings, slave_status):
-    return cmk.ec.main.load_configuration(settings, slave_status)
+def mongodb():
+    return cmk.ec.main.MongoDB()
+
+
+@pytest.fixture(scope="function")
+def config(settings, slave_status, mongodb):
+    return cmk.ec.main.load_configuration(settings, slave_status, mongodb)
 
 
 @pytest.fixture(scope="function")
@@ -61,8 +66,13 @@ def perfcounters():
 
 
 @pytest.fixture(scope="function")
-def event_status(settings, config, perfcounters):
-    return cmk.ec.main.EventStatus(settings, config, perfcounters)
+def active_history_period():
+    return cmk.ec.main.ActiveHistoryPeriod()
+
+
+@pytest.fixture(scope="function")
+def event_status(settings, config, perfcounters, mongodb, active_history_period):
+    return cmk.ec.main.EventStatus(settings, config, perfcounters, mongodb, active_history_period)
 
 
 @pytest.fixture(scope="function")
@@ -71,13 +81,13 @@ def table_events(event_status):
 
 
 @pytest.fixture(scope="function")
-def event_server(settings, config, slave_status, perfcounters, event_status, table_events):
-    return cmk.ec.main.EventServer(settings, config, slave_status, perfcounters, event_status, table_events)
+def event_server(settings, config, slave_status, perfcounters, mongodb, active_history_period, event_status, table_events):
+    return cmk.ec.main.EventServer(settings, config, slave_status, perfcounters, mongodb, active_history_period, event_status, table_events)
 
 
 @pytest.fixture(scope="function")
-def status_server(settings, config, slave_status, perfcounters, event_status, event_server, table_events):
-    return cmk.ec.main.StatusServer(settings, config, slave_status, perfcounters, event_status, event_server, table_events, threading.Event())
+def status_server(settings, config, slave_status, perfcounters, mongodb, active_history_period, event_status, event_server, table_events):
+    return cmk.ec.main.StatusServer(settings, config, slave_status, perfcounters, mongodb, active_history_period, event_status, event_server, table_events, threading.Event())
 
 
 def test_handle_client(status_server):

@@ -1673,9 +1673,9 @@ class DropdownChoice(ValueSpec):
         return options
 
 
-    @classmethod
-    def option_id(cls, val):
-        return "%s" % hash(repr(val))
+    @staticmethod
+    def option_id(val):
+        return "%s" % hashlib.sha256(repr(val)).hexdigest()
 
 
     def validate_value(self, value, varprefix):

@@ -189,6 +189,10 @@ class QuicksearchMatchPlugin(object):
         raise NotImplementedError()
 
 
+    def is_group_match(self):
+        return False
+
+
     def _matches_regex(self, pattern, value):
         return re.match(pattern, value)
 
@@ -208,6 +212,10 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
                                                 "%sgroups" % group_type,
                                                 filter_shortname)
         self._group_type = group_type
+
+
+    def is_group_match(self):
+        return True
 
 
     def get_match_topic(self):
@@ -398,7 +406,9 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
 
     def _get_hosttag_dict(self):
         lookup_dict = {}
-        for group, text, values in config.host_tag_groups():
+        for entry in config.host_tag_groups():
+            group, text, values = entry[:3]
+
             for value in values:
                 lookup_dict[value[0]] = group
         return lookup_dict

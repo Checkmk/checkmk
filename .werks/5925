@@ -1,0 +1,25 @@
+Title: Use 10 min default timeout for Windows updates plugin
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0b3
+Date: 1525863190
+
+The plugin windows_updates.vbs has the tendency of running quite long.
+The default execution timeout of 60s for Windows plugins is in most
+cases not enough, resulting in the plugin being started every time
+the Windows agent is contacted and always timing out after 60s without
+delivering results. At its worst the plugin may cause high CPU load
+repeated every minute.
+
+Most users of windows_updates.vbs have been forced to configure a
+timeout rule for the plugin in Agent Bakery. To simplify this process,
+Agent Bakery now delivers windows_updates.vbs with a preconfigured
+timeout of 10 minutes that should be enough for most users. The
+already existing defaults for async execution and cache_age of 4 hours
+were preserved.
+
+

@@ -1,0 +1,11 @@
+Title: etherbox.temp: Fixed another UnicodeDecodeError
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b3
+Date: 1525848865
+
+

@@ -1,0 +1,10 @@
+Title: emcvnx_sp_util: Fixed UnboundLocalError 'busy_ticks' referenced before assignment
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1525859964
+Class: fix
+
+

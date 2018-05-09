@@ -3135,8 +3135,6 @@ class Queries(object):
 
 
 class Query(object):
-    _allowed_formats = set(["python", "plain", "json"])
-
     @staticmethod
     def make(status_server, raw_query):
         parts = raw_query[0].split(None, 1)
@@ -3197,9 +3195,8 @@ class QueryGET(Query):
                 argument = argument.lstrip(" ")
 
                 if header == "OutputFormat":
-                    if argument not in self._allowed_formats:
-                        raise MKClientError("Invalid output format \"%s\" "
-                                            "(allowed are: %s)" % ", ".join(self._allowed_formats))
+                    if argument not in ["python", "plain", "json"]:
+                        raise MKClientError("Invalid output format \"%s\" (allowed are: python, plain, json)" % argument)
 
                     self.output_format = argument
 

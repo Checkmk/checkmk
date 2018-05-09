@@ -71,8 +71,13 @@ def active_history_period():
 
 
 @pytest.fixture(scope="function")
-def event_status(settings, config, perfcounters, mongodb, active_history_period):
-    return cmk.ec.main.EventStatus(settings, config, perfcounters, mongodb, active_history_period)
+def lock_history():
+    return cmk.ec.main.ECLock("history")
+
+
+@pytest.fixture(scope="function")
+def event_status(settings, config, perfcounters, lock_history, mongodb, active_history_period):
+    return cmk.ec.main.EventStatus(settings, config, perfcounters, lock_history, mongodb, active_history_period)
 
 
 @pytest.fixture(scope="function")
@@ -81,13 +86,13 @@ def table_events(event_status):
 
 
 @pytest.fixture(scope="function")
-def event_server(settings, config, slave_status, perfcounters, mongodb, active_history_period, event_status, table_events):
-    return cmk.ec.main.EventServer(settings, config, slave_status, perfcounters, mongodb, active_history_period, event_status, table_events)
+def event_server(settings, config, slave_status, perfcounters, lock_history, mongodb, active_history_period, event_status, table_events):
+    return cmk.ec.main.EventServer(settings, config, slave_status, perfcounters, lock_history, mongodb, active_history_period, event_status, table_events)
 
 
 @pytest.fixture(scope="function")
-def status_server(settings, config, slave_status, perfcounters, mongodb, active_history_period, event_status, event_server, table_events):
-    return cmk.ec.main.StatusServer(settings, config, slave_status, perfcounters, mongodb, active_history_period, event_status, event_server, table_events, threading.Event())
+def status_server(settings, config, slave_status, perfcounters, lock_history, mongodb, active_history_period, event_status, event_server, table_events):
+    return cmk.ec.main.StatusServer(settings, config, slave_status, perfcounters, lock_history, mongodb, active_history_period, event_status, event_server, table_events, threading.Event())
 
 
 def test_handle_client(status_server):

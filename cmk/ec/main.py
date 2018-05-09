@@ -240,10 +240,10 @@ filter_operators = {
 #   '----------------------------------------------------------------------'
 
 class ECLock(object):
-    def __init__(self, ident):
+    def __init__(self, logger):
         super(ECLock, self).__init__()
+        self._logger = logger
         self._lock = threading.Lock()
-        self._logger = g_logger.getChild("lock.%s" % ident)
 
     def acquire(self, blocking=True):
         self._logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
@@ -269,7 +269,7 @@ class ECLock(object):
 
 
 class ECServerThread(threading.Thread):
-    def __init__(self, name, settings, config, slave_status, table_events, profiling_enabled, profile_file):
+    def __init__(self, name, logger, settings, config, slave_status, table_events, profiling_enabled, profile_file):
         super(ECServerThread, self).__init__(name=name)
         self.settings = settings
         self._config = config
@@ -278,7 +278,7 @@ class ECServerThread(threading.Thread):
         self._profiling_enabled = profiling_enabled
         self._profile_file = profile_file
         self._terminate_event = threading.Event()
-        self._logger = g_logger.getChild(name)
+        self._logger = logger
 
     def run(self):
         self._logger.info("Starting up")
@@ -668,8 +668,9 @@ class SNMPTrapTranslator(object):
 #   '----------------------------------------------------------------------'
 
 class TimePeriods(object):
-    def __init__(self):
+    def __init__(self, logger):
         super(TimePeriods, self).__init__()
+        self._logger = logger
         self._periods = None
         self._last_update = 0
 
@@ -684,16 +685,16 @@ class TimePeriods(object):
             self._periods = periods
             self._last_update = int(time.time()) / 60
         except Exception as e:
-            g_logger.exception("Cannot update timeperiod information: %s" % e)
+            self._logger.exception("Cannot update timeperiod information: %s" % e)
             raise
 
     def check(self, tpname):
         self._update()
         if not self._periods:
-            g_logger.warning("no timeperiod information, assuming %s is active" % tpname)
+            self._logger.warning("no timeperiod information, assuming %s is active" % tpname)
             return True
         if tpname not in self._periods:
-            g_logger.warning("no such timeperiod %s, assuming it is active" % tpname)
+            self._logger.warning("no such timeperiod %s, assuming it is active" % tpname)
             return True
         return self._periods[tpname][1]
 
@@ -712,8 +713,8 @@ class TimePeriods(object):
 #   '----------------------------------------------------------------------'
 
 class HostConfig(object):
-    def __init__(self):
-        self._logger = g_logger.getChild("HostConfig")
+    def __init__(self, logger):
+        self._logger = logger
         self.initialize()
 
     def initialize(self):
@@ -1280,8 +1281,9 @@ class Perfcounters(object):
         "request": 0.95,     # Client requests
     }
 
-    def __init__(self):
-        self._lock = ECLock("perfcounters")
+    def __init__(self, logger):
+        super(Perfcounters, self).__init__()
+        self._lock = ECLock(logger)
 
         # Initialize counters
         self._counters = dict([(n, 0) for n in self._counter_names])
@@ -1367,8 +1369,9 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, table_events):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, table_events):
         super(EventServer, self).__init__(name="EventServer",
+                                          logger=logger,
                                           settings=settings,
                                           config=config,
                                           slave_status=slave_status,
@@ -1384,7 +1387,7 @@ class EventServer(ECServerThread):
         for _unused_facility in xrange(32):
             self._hash_stats.append([0] * 8)
 
-        self.host_config = HostConfig()
+        self.host_config = HostConfig(logger)
         self._perfcounters = perfcounters
         self._lock_eventstatus = lock_eventstatus
         self._lock_configuration = lock_configuration
@@ -1393,7 +1396,7 @@ class EventServer(ECServerThread):
         self._active_history_period = active_history_period
         self._event_status = event_status
         self._active_history_period = active_history_period
-        self._time_periods = TimePeriods()
+        self._time_periods = TimePeriods(self._logger)
 
         self.create_pipe()
         self.open_eventsocket()
@@ -3496,8 +3499,9 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
+                                           logger=logger,
                                            settings=settings,
                                            config=config,
                                            slave_status=slave_status,
@@ -5073,16 +5077,16 @@ def main():
         settings.paths.status_file.value.parent.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing
-        perfcounters = Perfcounters()
+        perfcounters = Perfcounters(logger.getChild("lock.perfcounters"))
         active_history_period = ActiveHistoryPeriod()
-        lock_eventstatus = ECLock("eventstatus")
-        lock_history = ECLock("history")
+        lock_eventstatus = ECLock(logger.getChild("lock.eventstatus"))
+        lock_history = ECLock(logger.getChild("lock.history"))
         event_status = EventStatus(settings, config, perfcounters, lock_eventstatus, lock_history, mongodb, active_history_period)
         table_events = StatusTableEvents(event_status)
-        lock_configuration = ECLock("configuration")
-        event_server = EventServer(settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, table_events)
+        lock_configuration = ECLock(logger.getChild("lock.configuration"))
+        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, table_events)
         terminate_main_event = threading.Event()
-        status_server = StatusServer(settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event)
+        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event)
 
         event_status.load_status(event_server)
         event_server.compile_rules(config["rules"], config["rule_packs"])

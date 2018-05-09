@@ -310,6 +310,10 @@ class APICallHosts(APICallCollection):
                 "handler"         : self._delete,
                 "locking"         : True,
             },
+            "delete_hosts": {
+                "handler"         : self._delete_hosts,
+                "locking"         : True,
+            },
             "get_all_hosts": {
                 "handler"         : self._get_all,
                 "locking"         : False,
@@ -440,6 +444,25 @@ class APICallHosts(APICallCollection):
 
         host = watolib.Host.host(hostname)
         host.folder().delete_hosts([host.name()])
+
+
+    def _delete_hosts(self, request):
+        validate_request_keys(request, required_keys=["hostnames"])
+
+        all_hosts = watolib.Host.all()
+        delete_hostnames = set(request["hostnames"])
+        all_hostnames = set(all_hosts.keys())
+
+        unknown_hosts = delete_hostnames - all_hostnames
+        if unknown_hosts:
+            raise MKUserError(None, _("No such host(s): %s") % ", ".join(unknown_hosts))
+
+        grouped_by_folders = {}
+        for hostname in delete_hostnames:
+            grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
+
+        for folder, hostnames in grouped_by_folders.iteritems():
+            folder.delete_hosts(hostnames)
 
 
 #.

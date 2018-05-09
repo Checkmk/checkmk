@@ -94,7 +94,7 @@ def _render_tree(tree):
             html.open_ul()
             fetch_url = html.makeuri_contextless([
                 ("view_name", "aggr_all"),
-                ("aggr_group_tree", html.urlencode("/".join(attrs["__path__"])))],
+                ("aggr_group_tree", "/".join(attrs["__path__"]))],
                 "view.py")
             bulletlink(group, fetch_url)
             html.close_ul()

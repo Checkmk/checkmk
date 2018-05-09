@@ -3136,7 +3136,6 @@ class Queries(object):
 
 class Query(object):
     _allowed_formats = set(["python", "plain", "json"])
-    _allowed_headers = set(["OutputFormat", "Filter", "Columns", "Limit"])
 
     @staticmethod
     def make(status_server, raw_query):
@@ -3203,11 +3202,6 @@ class QueryGET(Query):
             try:
                 header, argument = line.rstrip("\n").split(":", 1)
                 argument = argument.lstrip(" ")
-
-                # TODO: Be compatible with livestatus: Only log the issue to the log
-                #if header not in self._allowed_headers:
-                #    raise MKClientError("Invalid header: \"%s\" (allowed are %s)" %
-                #                                ", ".join(self._allowed_headers))
 
                 if header == "OutputFormat":
                     if argument not in self._allowed_formats:

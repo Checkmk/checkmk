@@ -73,7 +73,7 @@ import cmk.render
 import livestatus
 import cmk.regex
 
-logger = cmk.log.get_logger("mkeventd")
+g_logger = cmk.log.get_logger("mkeventd")
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -243,7 +243,7 @@ class ECLock(object):
     def __init__(self, ident):
         super(ECLock, self).__init__()
         self._lock = threading.Lock()
-        self._logger = logger.getChild("lock.%s" % ident)
+        self._logger = g_logger.getChild("lock.%s" % ident)
 
     def acquire(self, blocking=True):
         self._logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
@@ -278,7 +278,7 @@ class ECServerThread(threading.Thread):
         self._profiling_enabled = profiling_enabled
         self._profile_file = profile_file
         self._terminate_event = threading.Event()
-        self._logger = logger.getChild(name)
+        self._logger = g_logger.getChild(name)
 
     def run(self):
         self._logger.info("Starting up")
@@ -313,7 +313,7 @@ def terminate(terminate_main_event, event_server, status_server):
 
 
 def bail_out(reason):
-    logger.error("FATAL ERROR: %s" % reason)
+    g_logger.error("FATAL ERROR: %s" % reason)
     sys.exit(1)
 
 
@@ -445,7 +445,7 @@ class MKSignalException(Exception):
 
 
 def signal_handler(signum, stack_frame):
-    logger.verbose("Got signal %d." % signum)
+    g_logger.verbose("Got signal %d." % signum)
     raise MKSignalException(signum)
 
 
@@ -473,8 +473,9 @@ class SNMPTrapEngine(object):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
 
-    def __init__(self, settings, config, callback):
+    def __init__(self, settings, config, logger, callback):
         super(SNMPTrapEngine, self).__init__()
+        self._logger = logger
         if settings.options.snmptrap_udp is None:
             return
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
@@ -509,7 +510,7 @@ class SNMPTrapEngine(object):
             # SNMPv1/v2
             if type(credentials) != tuple:
                 community_index = 'snmpv2-%d' % user_num
-                logger.info("adding SNMPv1 system: communityIndex=%s" % community_index)
+                self._logger.info("adding SNMPv1 system: communityIndex=%s" % community_index)
                 pysnmp.entity.config.addV1System(self.snmp_engine, community_index, credentials)
                 continue
 
@@ -537,11 +538,11 @@ class SNMPTrapEngine(object):
                 raise Exception("Invalid SNMP security level: %s" % securityLevel)
 
             for engine_id in spec.get("engine_ids", []):
-                logger.info("adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s" %
-                            (user_id,
-                             ".".join(str(i) for i in auth_proto),
-                             ".".join(str(i) for i in priv_proto),
-                             engine_id))
+                self._logger.info("adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s" %
+                                  (user_id,
+                                   ".".join(str(i) for i in auth_proto),
+                                   ".".join(str(i) for i in priv_proto),
+                                   engine_id))
                 pysnmp.entity.config.addV3User(
                     self.snmp_engine, user_id,
                     auth_proto, auth_key,
@@ -683,16 +684,16 @@ class TimePeriods(object):
             self._periods = periods
             self._last_update = int(time.time()) / 60
         except Exception as e:
-            logger.exception("Cannot update timeperiod information: %s" % e)
+            g_logger.exception("Cannot update timeperiod information: %s" % e)
             raise
 
     def check(self, tpname):
         self._update()
         if not self._periods:
-            logger.warning("no timeperiod information, assuming %s is active" % tpname)
+            g_logger.warning("no timeperiod information, assuming %s is active" % tpname)
             return True
         if tpname not in self._periods:
-            logger.warning("no such timeperiod %s, assuming it is active" % tpname)
+            g_logger.warning("no such timeperiod %s, assuming it is active" % tpname)
             return True
         return self._periods[tpname][1]
 
@@ -712,7 +713,7 @@ class TimePeriods(object):
 
 class HostConfig(object):
     def __init__(self):
-        self._logger = logger.getChild("HostConfig")
+        self._logger = g_logger.getChild("HostConfig")
         self.initialize()
 
     def initialize(self):
@@ -1015,7 +1016,7 @@ def get_event_history_from_mongodb(settings, table_events, query, mongodb):
 
 def log_event_history(settings, config, lock_history, mongodb, active_history_period, table_events, event, what, who="", addinfo=""):
     if config["debug_rules"]:
-        logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
+        g_logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
     if config['archive_mode'] == 'mongodb':
         log_event_history_to_mongodb(settings, event, what, who, addinfo, mongodb)
@@ -1116,17 +1117,17 @@ def expire_logfiles(settings, config, lock_history, flush):
         try:
             days = config["history_lifetime"]
             min_mtime = time.time() - days * 86400
-            logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
-                           (days, cmk.render.date_and_time(min_mtime)))
+            g_logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
+                             (days, cmk.render.date_and_time(min_mtime)))
             for path in settings.paths.history_dir.value.glob('*.log'):
                 if flush or path.stat().st_mtime < min_mtime:
-                    logger.info("Deleting log file %s (age %s)" %
-                                (path, cmk.render.date_and_time(path.stat().st_mtime)))
+                    g_logger.info("Deleting log file %s (age %s)" %
+                                  (path, cmk.render.date_and_time(path.stat().st_mtime)))
                     path.unlink()
         except Exception as e:
             if settings.options.debug:
                 raise
-            logger.exception("Error expiring log files: %s" % e)
+            g_logger.exception("Error expiring log files: %s" % e)
 
 
 def flush_event_history(settings, config, lock_history, mongodb):
@@ -1191,7 +1192,7 @@ def get_event_history_from_file(settings, table_history, query):
             # any useful entry for us.
             if len(time_filters):
                 if settings.options.debug:
-                    logger.info("Skipping logfile %s.log because of time filter" % ts)
+                    g_logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue  # skip this file
 
         new_entries = parse_history_file(table_history, path, query, greptexts, limit)
@@ -1229,7 +1230,7 @@ def parse_history_file(table_history, path, query, greptexts, limit):
             if table_history.filter_row(query, values):
                 entries.append(values)
         except Exception as e:
-            logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))
+            g_logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))
 
     return entries
 
@@ -1399,7 +1400,7 @@ class EventServer(ECServerThread):
         self.open_syslog()
         self.open_syslog_tcp()
         self.open_snmptrap()
-        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config, self.handle_snmptrap)
+        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config, self._logger, self.handle_snmptrap)
         self._snmp_trap_translator = SNMPTrapTranslator(self.settings, self._config, self._logger)
 
     @classmethod
@@ -2021,7 +2022,7 @@ class EventServer(ECServerThread):
 
     def reload_configuration(self, config):
         self._config = config
-        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config, self.handle_snmptrap)
+        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config, self._logger, self.handle_snmptrap)
         self._snmp_trap_translator = SNMPTrapTranslator(self.settings, self._config, self._logger)
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config.initialize()
@@ -3157,7 +3158,7 @@ class Query(object):
     def __init__(self, status_server, raw_query):
         super(Query, self).__init__()
 
-        self._logger = logger
+        self._logger = g_logger
         self.output_format = "python"
 
         self._raw_query = raw_query
@@ -3909,13 +3910,13 @@ def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_co
                 next_replication = now + config["replication"]["interval"]
         except MKSignalException as e:
             if e._signum == 1:
-                logger.info("Received SIGHUP - going to reload configuration")
+                g_logger.info("Received SIGHUP - going to reload configuration")
                 reload_configuration(settings, lock_configuration, mongodb, event_status, event_server, status_server, slave_status)
             else:
-                logger.info("Signalled to death by signal %d" % e._signum)
+                g_logger.info("Signalled to death by signal %d" % e._signum)
                 terminate(terminate_main_event, event_server, status_server)
         except Exception as e:
-            logger.exception("Exception in main thread:\n%s" % e)
+            g_logger.exception("Exception in main thread:\n%s" % e)
             if settings.options.debug:
                 raise
             time.sleep(1)
@@ -3941,7 +3942,7 @@ def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_co
 class EventStatus(object):
 
     def __init__(self, settings, config, perfcounters, lock_eventstatus, lock_history, mongodb, active_history_period):
-        self._logger = logger.getChild("EventStatus")
+        self._logger = g_logger.getChild("EventStatus")
         self.settings = settings
         self._config = config
         self._perfcounters = perfcounters
@@ -4385,7 +4386,7 @@ def event_has_opened(settings, config, event_server, lock_history, mongodb, acti
         event["live_until_phases"] = phases
 
     if rule.get("actions_in_downtime", True) is False and event["host_in_downtime"]:
-        logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
+        g_logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
     do_event_actions(settings, config, event_server, lock_history, mongodb, active_history_period, table_events, rule.get("actions", []), event, is_cancelling=False)
@@ -4400,12 +4401,12 @@ def do_event_actions(settings, config, event_server, lock_history, mongodb, acti
         else:
             action = config["action"].get(aname)
             if not action:
-                logger.info("Cannot execute undefined action '%s'" % aname)
-                logger.info("We have to following actions: %s" %
-                            ", ".join(config["action"].keys()))
+                g_logger.info("Cannot execute undefined action '%s'" % aname)
+                g_logger.info("We have to following actions: %s" %
+                              ", ".join(config["action"].keys()))
             else:
-                logger.info("Going to execute action '%s' on event %d" %
-                            (action["title"], event["id"]))
+                g_logger.info("Going to execute action '%s' on event %d" %
+                              (action["title"], event["id"]))
                 do_event_action(settings, config, lock_history, mongodb, active_history_period, table_events, action, event)
 
 
@@ -4430,7 +4431,7 @@ def get_quoted_event(event):
             except Exception as e:
                 # If anything unforeseen happens, we use the intial value
                 new_event[key] = value
-                logger.exception("Unable to quote event text %r: %r, %r" % (key, value, e))
+                g_logger.exception("Unable to quote event text %r: %r, %r" % (key, value, e))
 
     return new_event
 
@@ -4441,7 +4442,7 @@ def escape_null_bytes(s):
 
 def do_event_action(settings, config, lock_history, mongodb, active_history_period, table_events, action, event, user=""):
     if action["disabled"]:
-        logger.info("Skipping disabled action %s." % action["id"])
+        g_logger.info("Skipping disabled action %s." % action["id"])
         return
 
     try:
@@ -4457,11 +4458,11 @@ def do_event_action(settings, config, lock_history, mongodb, active_history_peri
             execute_script(table_events, escape_null_bytes(substitute_event_tags(table_events, settings["script"], get_quoted_event(event))), event)
             log_event_history(settings, config, lock_history, mongodb, active_history_period, table_events, event, "SCRIPT", user, action['id'])
         else:
-            logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
+            g_logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:
         if settings.options.debug:
             raise
-        logger.exception("Error during execution of action %s" % action["id"])
+        g_logger.exception("Error during execution of action %s" % action["id"])
 
 
 def get_event_tags(table_events, event):
@@ -4507,7 +4508,7 @@ def send_email(config, to, subject, body):
                     to.encode("utf-8")]
 
     if config["debug_rules"]:
-        logger.info("  Executing: %s" % " ".join(command_utf8))
+        g_logger.info("  Executing: %s" % " ".join(command_utf8))
 
     p = subprocess.Popen(command_utf8, close_fds=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, stdin=subprocess.PIPE)
@@ -4517,11 +4518,11 @@ def send_email(config, to, subject, body):
     stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
     exitcode = p.returncode
 
-    logger.info('  Exitcode: %d' % exitcode)
+    g_logger.info('  Exitcode: %d' % exitcode)
     if exitcode != 0:
-        logger.info("  Error: Failed to send the mail.")
+        g_logger.info("  Error: Failed to send the mail.")
         for line in (stdout_txt + stderr_txt).splitlines():
-            logger.info("  Output: %s" % line.rstrip())
+            g_logger.info("  Output: %s" % line.rstrip())
         return False
 
     return True
@@ -4546,9 +4547,9 @@ def execute_script(table_events, body, event):
         env=script_env,
     )
     output = p.communicate(body.encode('utf-8'))[0]
-    logger.info('  Exit code: %d' % p.returncode)
+    g_logger.info('  Exit code: %d' % p.returncode)
     if output:
-        logger.info('  Output: \'%s\'' % output)
+        g_logger.info('  Output: \'%s\'' % output)
 
 
 #.
@@ -4579,15 +4580,15 @@ def do_notify(event_server, event, username=None, is_cancelling=False):
 
     context = create_notification_context(event_server, event, username, is_cancelling)
 
-    if logger.is_verbose():
-        logger.verbose("Sending notification via Check_MK with the following context:")
+    if g_logger.is_verbose():
+        g_logger.verbose("Sending notification via Check_MK with the following context:")
         for varname, value in sorted(context.iteritems()):
-            logger.verbose("  %-25s: %s" % (varname, value))
+            g_logger.verbose("  %-25s: %s" % (varname, value))
 
     if context["HOSTDOWNTIME"] != "0":
-        logger.info("Host %s is currently in scheduled downtime. "
-                    "Skipping notification of event %s." %
-                    (context["HOSTNAME"], event["id"]))
+        g_logger.info("Host %s is currently in scheduled downtime. "
+                      "Skipping notification of event %s." %
+                      (context["HOSTNAME"], event["id"]))
         return
 
     # Send notification context via stdin.
@@ -4601,9 +4602,9 @@ def do_notify(event_server, event, username=None, is_cancelling=False):
     response = p.communicate(input=context_string)[0]
     status = p.returncode
     if status:
-        logger.error("Error notifying via Check_MK: %s" % response.strip())
+        g_logger.error("Error notifying via Check_MK: %s" % response.strip())
     else:
-        logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
+        g_logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
 def create_notification_context(event_server, event, username, is_cancelling):
@@ -4718,8 +4719,8 @@ def add_contact_information_to_context(context, contact_groups):
     contact_names = rbn_groups_contacts(contact_groups)
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
-    logger.verbose("Setting %d contacts %s resulting from rule contact groups %s" %
-                   (len(contact_names), ",".join(contact_names), ",".join(contact_groups)))
+    g_logger.verbose("Setting %d contacts %s resulting from rule contact groups %s" %
+                     (len(contact_names), ",".join(contact_names), ",".join(contact_groups)))
 
 
 # NOTE: This function is an exact copy from modules/notify.py. We need
@@ -4752,10 +4753,10 @@ def core_has_notifications_disabled(event):
     try:
         notifications_enabled = livestatus.LocalConnection().query_value("GET status\nColumns: enable_notifications")
         if not notifications_enabled:
-            logger.info("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
+            g_logger.info("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
             return True
     except Exception as e:
-        logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
+        g_logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
 
     return False
 
@@ -4820,7 +4821,7 @@ def replication_pull(settings, config, lock_eventstatus, lock_configuration, per
                     new_state = get_state_from_master(config, slave_status)
                     replication_update_state(settings, config, event_status, event_server, new_state)
                     if repl_settings.get("logging"):
-                        logger.info("Successfully synchronized with master")
+                        g_logger.info("Successfully synchronized with master")
                     slave_status["last_sync"] = now
                     slave_status["success"] = True
 
@@ -4828,17 +4829,17 @@ def replication_pull(settings, config, lock_eventstatus, lock_configuration, per
                     # (time frame has already been checked)
                     if mode == "takeover":
                         if slave_status["last_master_down"] is None:
-                            logger.info("Replication: master reachable for the first time, "
-                                        "switching back to slave mode")
+                            g_logger.info("Replication: master reachable for the first time, "
+                                          "switching back to slave mode")
                             slave_status["mode"] = "sync"
                         else:
-                            logger.info("Replication: master reachable again after %d seconds, "
-                                        "switching back to sync mode" % (now - slave_status["last_master_down"]))
+                            g_logger.info("Replication: master reachable again after %d seconds, "
+                                          "switching back to sync mode" % (now - slave_status["last_master_down"]))
                             slave_status["mode"] = "sync"
                     slave_status["last_master_down"] = None
 
                 except Exception as e:
-                    logger.warning("Replication: cannot sync with master: %s" % e)
+                    g_logger.warning("Replication: cannot sync with master: %s" % e)
                     slave_status["success"] = False
                     if slave_status["last_master_down"] is None:
                         slave_status["last_master_down"] = now
@@ -4847,16 +4848,16 @@ def replication_pull(settings, config, lock_eventstatus, lock_configuration, per
                     if "takeover" in repl_settings and mode != "takeover":
                         if not slave_status["last_sync"]:
                             if repl_settings.get("logging"):
-                                logger.error("Replication: no takeover since master was never reached.")
+                                g_logger.error("Replication: no takeover since master was never reached.")
                         else:
                             offline = now - slave_status["last_sync"]
                             if offline < repl_settings["takeover"]:
                                 if repl_settings.get("logging"):
-                                    logger.warning("Replication: no takeover yet, still %d seconds to wait" %
-                                                   (repl_settings["takeover"] - offline))
+                                    g_logger.warning("Replication: no takeover yet, still %d seconds to wait" %
+                                                     (repl_settings["takeover"] - offline))
                             else:
-                                logger.info("Replication: master not reached for %d seconds, taking over!" %
-                                            offline)
+                                g_logger.info("Replication: master not reached for %d seconds, taking over!" %
+                                              offline)
                                 slave_status["mode"] = "takeover"
 
                 save_slave_status(settings, slave_status)
@@ -4895,11 +4896,11 @@ def load_master_config(settings, config):
         config["rules"] = config["rules"]
         config["rule_packs"] = config.get("rule_packs", [])
         config["actions"] = config["actions"]
-        logger.info("Replication: restored %d rule packs and %d actions from %s" %
-                    (len(config["rule_packs"]), len(config["actions"]), path))
+        g_logger.info("Replication: restored %d rule packs and %d actions from %s" %
+                      (len(config["rule_packs"]), len(config["actions"]), path))
     except Exception:
         if is_replication_slave(config):
-            logger.error("Replication: no previously saved master state available")
+            g_logger.error("Replication: no previously saved master state available")
 
 
 def get_state_from_master(config, slave_status):
@@ -4978,7 +4979,7 @@ def update_slave_status(slave_status, settings, config):
 #   |  Loading of the configuration files                                  |
 #   '----------------------------------------------------------------------'
 
-def load_configuration(settings, slave_status, mongodb):
+def load_configuration(settings, slave_status, mongodb, logger):
     config = cmk.ec.export.load_config(settings)
 
     # If not set by command line, set the log level by configuration
@@ -5015,12 +5016,12 @@ def load_configuration(settings, slave_status, mongodb):
 
 def reload_configuration(settings, lock_configuration, mongodb, event_status, event_server, status_server, slave_status):
     with lock_configuration:
-        config = load_configuration(settings, slave_status, mongodb)
+        config = load_configuration(settings, slave_status, mongodb, g_logger)
         event_server.reload_configuration(config)
 
     event_status.reload_configuration(config)
     status_server.reload_configuration(config)
-    logger.info("Reloaded configuration.")
+    g_logger.info("Reloaded configuration.")
 
 
 #.
@@ -5051,12 +5052,13 @@ def main():
         if not settings.options.foreground:
             cmk.log.open_log(str(settings.paths.log_file.value))
 
+        logger = g_logger
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting" % cmk.__version__)
 
         slave_status = default_slave_status_master()
         mongodb = MongoDB()
-        config = load_configuration(settings, slave_status, mongodb)
+        config = load_configuration(settings, slave_status, mongodb, logger)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():

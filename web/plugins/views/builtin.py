@@ -2368,6 +2368,7 @@ multisite_builtin_views.update({
             'play_sounds': False,
             'public': False,
             'show_filters': ['aggr_group',
+                             'aggr_group_tree',
                              'aggr_hosts',
                              'aggr_name_regex',
                              'aggr_state',

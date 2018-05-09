@@ -84,19 +84,18 @@ def _build_tree(group, parent, path):
 
 def _render_tree(tree):
     for group, attrs in tree.iteritems():
-        fetch_url = html.makeuri_contextless([
-            ("view_name", "aggr_all"),
-            ("aggr_group_tree", html.urlencode("/".join(attrs["__path__"])))],
-            "view.py")
-
         if attrs.get('__children__'):
             html.begin_foldable_container("bi_aggregation_groups", group, False,
-                                          HTML(html.render_a(group, href=fetch_url,
+                                          HTML(html.render_a(group, href=None,
                                                target="main")))
             _render_tree(attrs['__children__'])
             html.end_foldable_container()
         else:
             html.open_ul()
+            fetch_url = html.makeuri_contextless([
+                ("view_name", "aggr_all"),
+                ("aggr_group_tree", html.urlencode("/".join(attrs["__path__"])))],
+                "view.py")
             bulletlink(group, fetch_url)
             html.close_ul()
 

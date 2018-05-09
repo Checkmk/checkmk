@@ -1,0 +1,14 @@
+Title: CMC Graphs: fixed incorrect fallback to pnp4nagios graphs in case some sites are disabled
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.4.0p32
+Date: 1525870437
+Class: fix
+
+The detection routine, which determines if CMC-graphs are possible could fail when a remote site
+was down or unreachable. Furthermore, it didn't matter if the site in question had the actual
+rrd data for the graph, so it could have been any site.
+
+As fallback, pnp4nagios graphs were used - which may lead to other display errors.

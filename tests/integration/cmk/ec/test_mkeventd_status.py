@@ -64,7 +64,7 @@ def config(settings, slave_status, mongodb):
 
 @pytest.fixture(scope="function")
 def perfcounters():
-    return cmk.ec.main.Perfcounters(loggiing.getLogger("cmk.mkeventd.lock.perfcounters"))
+    return cmk.ec.main.Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
 
 
 @pytest.fixture(scope="function")

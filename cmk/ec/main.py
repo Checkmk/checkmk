@@ -3232,8 +3232,8 @@ class QueryGET(Query):
 
                 if header == "OutputFormat":
                     if argument not in self._allowed_formats:
-                        raise MKClientError("Invalid output format \"%s\" "
-                                            "(allowed are: %s)" % ", ".join(self._allowed_formats))
+                        raise MKClientError("Invalid output format \"%s\" (allowed are: %s)" %
+                                            (argument, ", ".join(self._allowed_formats)))
 
                     self.output_format = argument
 

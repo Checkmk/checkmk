@@ -61,6 +61,7 @@ def inventory_storeonce_servicesets(parsed):
     for key, values in parsed.iteritems():
         yield ( values["ServiceSet ID"], {} )
 
+
 def check_storeonce_servicesets(item, params, parsed):
     for key, values in parsed.iteritems():
         if not item == values["ServiceSet ID"]:
@@ -96,6 +97,7 @@ def inventory_storeonce_servicesets_capacity(parsed):
     for key, values in parsed.iteritems():
         yield ( values["ServiceSet ID"], {} )
 
+
 def check_storeonce_servicesets_capacity(item, params, parsed):
     for key, values in parsed.iteritems():
         if not item == values["ServiceSet ID"]:
@@ -110,7 +112,6 @@ def check_storeonce_servicesets_capacity(item, params, parsed):
 
 
 check_info['storeonce_servicesets.capacity'] = {
-    'parse_function'        : parse_storeonce_servicesets,
     'inventory_function'    : inventory_storeonce_servicesets_capacity,
     'check_function'        : check_storeonce_servicesets_capacity,
     'service_description'   : "ServiceSet %s Capacity",

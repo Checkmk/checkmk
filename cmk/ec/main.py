@@ -827,8 +827,15 @@ try:
 except ImportError:
     Connection = None
 
-g_mongo_conn = None
-g_mongo_db = None
+
+class MongoDB(object):
+    def __init__(self):
+        super(MongoDB, self).__init__()
+        self.connection = None
+        self.db = None
+
+
+g_mongo = MongoDB()
 
 
 def mongodb_local_connection_opts(settings):
@@ -843,19 +850,18 @@ def mongodb_local_connection_opts(settings):
 
 
 def connect_mongodb(settings):
-    global g_mongo_conn, g_mongo_db
     if Connection is None:
         raise Exception('Could not initialize MongoDB (Python-Modules are missing)')
-    g_mongo_conn = Connection(*mongodb_local_connection_opts(settings))
-    g_mongo_db = g_mongo_conn.__getitem__(os.environ['OMD_SITE'])
+    g_mongo.connection = Connection(*mongodb_local_connection_opts(settings))
+    g_mongo.db = g_mongo.connection.__getitem__(os.environ['OMD_SITE'])
 
 
 def flush_event_history_mongodb():
-    g_mongo_db.ec_archive.drop()
+    g_mongo.db.ec_archive.drop()
 
 
 def get_mongodb_max_history_age():
-    result = g_mongo_db.ec_archive.index_information()
+    result = g_mongo.db.ec_archive.index_information()
     if 'dt_-1' not in result or 'expireAfterSeconds' not in result['dt_-1']:
         return -1
     else:
@@ -863,28 +869,28 @@ def get_mongodb_max_history_age():
 
 
 def update_mongodb_indexes(settings):
-    if not g_mongo_conn:
+    if not g_mongo.connection:
         connect_mongodb(settings)
-    result = g_mongo_db.ec_archive.index_information()
+    result = g_mongo.db.ec_archive.index_information()
 
     if 'time_-1' not in result:
-        g_mongo_db.ec_archive.ensure_index([('time', DESCENDING)])
+        g_mongo.db.ec_archive.ensure_index([('time', DESCENDING)])
 
 
 def update_mongodb_history_lifetime(settings, config):
-    if not g_mongo_conn:
+    if not g_mongo.connection:
         connect_mongodb(settings)
 
     if get_mongodb_max_history_age() == config['history_lifetime'] * 86400:
         return  # do not update already correct index
 
     try:
-        g_mongo_db.ec_archive.drop_index("dt_-1")
+        g_mongo.db.ec_archive.drop_index("dt_-1")
     except OperationFailure:
         pass  # Ignore not existing index
 
     # Delete messages after x days
-    g_mongo_db.ec_archive.ensure_index(
+    g_mongo.db.ec_archive.ensure_index(
         [('dt', DESCENDING)],
         expireAfterSeconds=config['history_lifetime'] * 86400,
         unique=False
@@ -892,7 +898,7 @@ def update_mongodb_history_lifetime(settings, config):
 
 
 def mongodb_next_id(name, first_id=0):
-    ret = g_mongo_db.counters.find_and_modify(
+    ret = g_mongo.db.counters.find_and_modify(
         query={'_id': name},
         update={'$inc': {'seq': 1}},
         new=True
@@ -900,7 +906,7 @@ def mongodb_next_id(name, first_id=0):
 
     if not ret:
         # Initialize the index!
-        g_mongo_db.counters.insert({
+        g_mongo.db.counters.insert({
             '_id': name,
             'seq': first_id
         })
@@ -910,14 +916,14 @@ def mongodb_next_id(name, first_id=0):
 
 
 def log_event_history_to_mongodb(settings, event, what, who, addinfo):
-    if not g_mongo_conn:
+    if not g_mongo.connection:
         connect_mongodb(settings)
     # We converted _id to be an auto incrementing integer. This makes the unique
     # index compatible to history_line of the file (which is handled as integer)
     # within mkeventd. It might be better to use the ObjectId() of MongoDB, but
     # for the first step, we use the integer index for simplicity
     now = time.time()
-    g_mongo_db.ec_archive.insert({
+    g_mongo.db.ec_archive.insert({
         '_id': mongodb_next_id('ec_archive_id'),
         'dt': datetime.datetime.fromtimestamp(now),
         'time': now,
@@ -933,7 +939,7 @@ def get_event_history_from_mongodb(settings, table_events, query):
 
     history_entries = []
 
-    if not g_mongo_conn:
+    if not g_mongo.connection:
         connect_mongodb(settings)
 
     # Construct the mongodb filtering specification. We could fetch all information
@@ -972,7 +978,7 @@ def get_event_history_from_mongodb(settings, table_events, query):
         else:
             raise Exception('Filter %s not implemented for MongoDB' % filter_name)
 
-    result = g_mongo_db.ec_archive.find(query).sort('time', -1)
+    result = g_mongo.db.ec_archive.find(query).sort('time', -1)
 
     # Might be used for debugging / profiling
     #file(cmk.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(

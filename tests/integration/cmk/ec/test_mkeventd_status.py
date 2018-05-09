@@ -6,6 +6,7 @@ import time
 import ast
 import pathlib2 as pathlib
 import threading
+import logging
 
 from testlib import CMKEventConsole, ec, web
 import cmk.ec.settings
@@ -57,7 +58,7 @@ def mongodb():
 
 @pytest.fixture(scope="function")
 def config(settings, slave_status, mongodb):
-    return cmk.ec.main.load_configuration(settings, slave_status, mongodb)
+    return cmk.ec.main.load_configuration(settings, slave_status, mongodb, logging.getLogger("cmk.mkeventd"))
 
 
 @pytest.fixture(scope="function")

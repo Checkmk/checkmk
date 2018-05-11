@@ -13,87 +13,111 @@ endif
 # in favor of providing a working setup for a pyinstaller build with python 2.7
 
 # Match package names with their filenames in order to reference them
-asn1crypto = $(SRC_DIR)/pip/asn1crypto-0.22.0-py2.py3-none-any.whl
-certifi = $(SRC_DIR)/pip/certifi-2017.7.27.1-py2.py3-none-any.whl
-cffi = $(SRC_DIR)/pip/cffi-1.10.0-cp27-cp27m-win32.whl
+altgraph = $(SRC_DIR)/pip/altgraph-0.15-py2.py3-none-any.whl
+asn1crypto = $(SRC_DIR)/pip/asn1crypto-0.24.0-py2.py3-none-any.whl
+certifi = $(SRC_DIR)/pip/certifi-2018.4.16-py2.py3-none-any.whl
+cffi = $(SRC_DIR)/pip/cffi-1.11.5-cp27-cp27m-win32.whl
+dis3 = $(SRC_DIR)/pip/dis3-0.1.2.tar.gz
 chardet = $(SRC_DIR)/pip/chardet-3.0.4-py2.py3-none-any.whl
-crytography = $(SRC_DIR)/pip/cryptography-2.0.3-cp27-cp27m-win32.whl
+crytography = $(SRC_DIR)/pip/cryptography-2.2.2-cp27-cp27m-win32.whl
 enum34 = $(SRC_DIR)/pip/enum34-1.1.6-py2-none-any.whl
 future = $(SRC_DIR)/pip/future-0.16.0.tar.gz
 idna = $(SRC_DIR)/pip/idna-2.6-py2.py3-none-any.whl
-ipaddress = $(SRC_DIR)/pip/ipaddress-1.0.18-py2-none-any.whl
+ipaddress = $(SRC_DIR)/pip/ipaddress-1.0.22-py2.py3-none-any.whl
+macholib = $(SRC_DIR)/pip/macholib-1.9-py2.py3-none-any.whl
+pefile = $(SRC_DIR)/pip/pefile-2017.11.5.tar.gz
 pycparser = $(SRC_DIR)/pip/pycparser-2.18.tar.gz
-PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.2.1.tar.bz2
-pyOpenSSL = $(SRC_DIR)/pip/pyOpenSSL-17.2.0-py2.py3-none-any.whl
-pypiwin32 = $(SRC_DIR)/pip/pypiwin32-219-cp27-none-win32.whl
+PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.3.1.tar.gz
+PySocks = $(SRC_DIR)/pip/PySocks-1.6.8.tar.gz
+pyOpenSSL = $(SRC_DIR)/pip/pyOpenSSL-17.5.0-py2.py3-none-any.whl
+pypiwin32 = $(SRC_DIR)/pip/pywin32-223-cp27-cp27m-win32.whl
 requests = $(SRC_DIR)/pip/requests-2.18.4-py2.py3-none-any.whl
-setuptools = $(SRC_DIR)/pip/setuptools-36.2.7-py2.py3-none-any.whl
-six = $(SRC_DIR)/pip/six-1.10.0-py2.py3-none-any.whl
+setuptools = $(SRC_DIR)/pip/setuptools-39.1.0-py2.py3-none-any.whl
+six = $(SRC_DIR)/pip/six-1.11.0-py2.py3-none-any.whl
 urllib3 = $(SRC_DIR)/pip/urllib3-1.22-py2.py3-none-any.whl
+win_inet_pton = $(SRC_DIR)/pip/win_inet_pton-1.0.1.tar.gz
 
 # This list expands to filenames and is meant to be used
 # as depencencie(s). There must not be matching targets in order
 # to prevent automatic download
 PYTHON_PACKAGE_FILES = \
+	$(altgraph) \
 	$(asn1crypto) \
 	$(certifi) \
 	$(cffi) \
+	$(dis3) \
 	$(chardet) \
 	$(crytography) \
 	$(enum34) \
 	$(future) \
 	$(idna) \
 	$(ipaddress) \
+	$(macholib) \
+	$(pefile) \
 	$(pycparser) \
 	$(PyInstaller) \
+	$(PySocks) \
 	$(pyOpenSSL) \
 	$(pypiwin32) \
 	$(requests) \
 	$(setuptools) \
 	$(six) \
-	$(urllib3)
+	$(urllib3) \
+	$(win_inet_pton)
 
 # This list is meant to be used as target(s) for manual download
 PYTHON_PACKAGES = \
+	altgraph \
 	asn1crypto \
 	certifi \
 	cffi \
+	dis3 \
 	chardet \
 	crytography \
 	enum34 \
 	future \
 	idna \
 	ipaddress \
+	macholib \
+	pefile \
 	pycparser \
 	PyInstaller \
+	PySocks \
 	pyOpenSSL \
 	pypiwin32 \
 	requests \
 	setuptools \
 	six \
-	urllib3
+	urllib3 \
+	win_inet_pton
 
 # Matching from filename to download-string.
 # When used as target, the target variable
 # must be extended two times in order to obtain the desired download-string.
 # E.g. make PyInstaller -> pip download $($($@))
-$(asn1crypto) := asn1crypto==0.22.0
-$(certifi) := certifi==2017.7.27.1
-$(cffi) := cffi==1.10.0
+$(altgraph) := asn1crypto==0.15
+$(asn1crypto) := asn1crypto==0.24.0
+$(certifi) := certifi==2018.4.16
+$(cffi) := cffi==1.11.5
+$(dis3) := dis3==0.1.2
 $(chardet) := chardet==3.0.4
-$(crytography) := cryptography==2.0.3
+$(crytography) := cryptography==2.2.2
 $(enum34) := enum34==1.1.6
 $(future) := future==0.16.0
 $(idna) := idna==2.6
-$(ipaddress) := ipaddress==1.0.18
+$(ipaddress) := ipaddress==1.0.22
+$(macholib) := macholib==1.9
+$(pefile) := pefile==2017.11.5
 $(pycparser) := pycparser==2.18
-$(PyInstaller) := PyInstaller==3.2.1
-$(pyOpenSSL) := pyOpenSSL==17.2.0
-$(pypiwin32) := pypiwin32==219
+$(PyInstaller) := PyInstaller==3.3.1
+$(PySocks) := PySocks==1.6.8
+$(pyOpenSSL) := pyOpenSSL==17.5.0
+$(pypiwin32) := pypiwin32==223
 $(requests) := requests==2.18.4
-$(setuptools) := setuptools==36.2.7
-$(six) := six==1.10.0
+$(setuptools) := setuptools==39.1.0
+$(six) := six==1.11.0
 $(urllib3) := urllib3==1.22
+$(win_inet_pton) := win_inet_pton==1.0.1
 
 
 $(BUILD_DIR)/drive_c/Python27/python.exe: $(SRC_DIR)/python-$(PYTHON_VERSION).msi
@@ -146,7 +170,9 @@ new_packages: $(BUILD_DIR)/drive_c/Python27/python.exe
 	cd $(BUILD_DIR) && \
 	mkdir pip && \
 	cd pip && \
+	wine c:\\Python27\\python.exe -m pip download pypiwin32 && \
 	wine c:\\Python27\\python.exe -m pip download requests && \
+	wine c:\\Python27\\python.exe -m pip download requests[socks] && \
 	wine c:\\Python27\\python.exe -m pip download pyinstaller && \
 	wine c:\\Python27\\python.exe -m pip download pyOpenSSL && \
 	mkdir -p $(SRC_DIR)/pip && \

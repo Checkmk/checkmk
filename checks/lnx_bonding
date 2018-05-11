@@ -107,6 +107,7 @@ def parse_lnx_bonding(info):
     # Now convert to generic dict, also used by other bonding checks
     converted = {}
     for bond, status in bonds.items():
+        bond = bond.lstrip("./")
         interfaces = {}
         for eth, ethstatus in status["interfaces"].items():
             interfaces[eth] = {

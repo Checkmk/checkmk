@@ -1,0 +1,20 @@
+Title: Agent Bakery options for WMI and full path with Windows processes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1526037609
+Class: fix
+
+Werk #2656 added the options to use WMI for retrieving information
+about process on Windows and to display the full path of the process.
+These new configuration options were left without the counterpart for
+configuring them in the Agent Bakery.
+
+This deficit is now fixed so that the option use_wmi for the ps section
+is also configurable through the Agent Bakery. The full path option is
+now also configurable, nevertheless enabling it only takes effect if
+use_wmi is also enabled.
+
+

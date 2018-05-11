@@ -1319,6 +1319,26 @@ process_level_elements = [
         ],
         default_value = "disable",
     )),
+    ("use_linux_cpu_cores", Checkbox(
+        title=_("Use number of cores sent by agent (Linux)"),
+        label=_("Enable")
+    )),
+    ('process_info', DropdownChoice(
+        title = _("Enable per-process details in long-output"),
+        label = _("Enable per-process details"),
+        help  = _("If active, the long output of this service will contain a list of "
+                    "all the matching processes and their details (i.e. PID, CPU usage, memory usage). "
+                    "Please note that HTML output will only work if \"Escape HTML codes in plugin output\" is "
+                    "disabled in global settings. This might expose you to Cross-Site-Scripting (everyone "
+                    "with write-access to checks could get scripts executed on the monitoring site in the context "
+                    "of the user of the monitoring site) so please do this if you understand the consequences."),
+        choices = [
+            (None, _("Disable")),
+            ("text", _("Text output")),
+            ("html", _("HTML output"))
+        ],
+        default_value = "disable",
+    )),
 ]
 
 # In version 1.2.4 the check parameters for the resulting ps check

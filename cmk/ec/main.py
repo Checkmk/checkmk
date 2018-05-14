@@ -972,7 +972,7 @@ def get_event_history_from_mongodb(settings, table_events, query, mongodb):
     # Construct the mongodb filtering specification. We could fetch all information
     # and do filtering on this data, but this would be way too inefficient.
     query = {}
-    for column_name, operator_name, _operator_function, argument in filters:
+    for column_name, operator_name, _predicate in filters:
 
         if operator_name == '=':
             mongo_filter = argument
@@ -1187,7 +1187,7 @@ def get_event_history_from_file(settings, table_history, query, logger):
         'event_core_host',
         ]
     greptexts = []
-    for column_name, operator_name, _operator_function, argument in filters:
+    for column_name, operator_name, _predicate in filters:
         # Make sure that the greptexts are in the same order as in the
         # actual logfiles. They will be joined with ".*"!
         try:
@@ -1222,10 +1222,10 @@ def get_event_history_from_file(settings, table_history, query, logger):
         if limit is not None and limit <= 0:
             break
         first_entry, last_entry = get_logfile_timespan(path)
-        for _column_name, _operator_name, operator_function, argument in time_filters:
-            if operator_function(first_entry, argument):
+        for _column_name, _operator_name, predicate in time_filters:
+            if predicate(first_entry):
                 break
-            if operator_function(last_entry, argument):
+            if predicate(last_entry):
                 break
         else:
             # If no filter matches but we *have* filters
@@ -3253,13 +3253,13 @@ class QueryGET(Query):
                     self.requested_columns = argument.split(" ")
 
                 elif header == "Filter":
-                    column_name, operator_name, operator_function, argument = self._parse_filter(argument)
+                    column_name, operator_name, predicate = self._parse_filter(argument)
 
                     # Needed for later optimization (check_mkevents)
                     if column_name == "event_host" and operator_name == 'in':
                         self.only_host = set(argument)
 
-                    self.filters.append((column_name, operator_name, operator_function, argument))
+                    self.filters.append((column_name, operator_name, predicate))
 
                 elif header == "Limit":
                     self.limit = int(argument)
@@ -3301,7 +3301,7 @@ class QueryGET(Query):
         if not operator_function:
             raise MKClientError("Unknown filter operator '%s'" % operator_name)
 
-        return (column, operator_name, operator_function, argument)
+        return (column, operator_name, lambda x: operator_function(x, argument))
 
     def requested_column_indexes(self):
         indexes = []
@@ -3417,8 +3417,8 @@ class StatusTable(object):
         return result_row
 
     def filter_row(self, query, row):
-        for column_name, _operator_name, operator_function, argument in query.filters:
-            if not operator_function(row[query.table.column_indices[column_name]], argument):
+        for column_name, _operator_name, predicate in query.filters:
+            if not predicate(row[query.table.column_indices[column_name]]):
                 return None
         return row
 

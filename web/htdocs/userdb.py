@@ -1376,3 +1376,4 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
 
         job_interface.send_progress_update(_("Finalizing synchronization"))
         general_userdb_job()
+        return True

@@ -1,0 +1,12 @@
+Title: Fixed misleading "Last user synchronization ran into an exception: User synchronization" message
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1526288040
+
+When opening the Users page of the configuration an error message "Last user synchronization ran into an exception: User synchronization"
+could be shown since 1.5.0b2. Even when no LDAP connection is configured. This error message has been fixed.

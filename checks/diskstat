@@ -102,9 +102,6 @@
 # parsed = timestamp, disks
 
 
-diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
-
-
 def parse_diskstat(info):
     timestamp_str, proc_diskstat, name_info = diskstat_extract_name_info(info)
     timestamp = int(timestamp_str)

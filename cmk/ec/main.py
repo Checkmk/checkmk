@@ -51,6 +51,7 @@ import traceback
 import cmk
 import cmk.daemon
 import cmk.defines
+import cmk.ec.actions
 import cmk.ec.export
 import cmk.ec.settings
 import cmk.ec.snmp
@@ -1024,9 +1025,9 @@ def parse_history_file(table_history, path, query, greptexts, limit, logger):
     # If we have greptexts we pre-filter the file using the extremely
     # fast GNU Grep
     # Revert lines from the log file to have the newer lines processed first
-    cmd = 'tac %s' % quote_shell_string(str(path))
+    cmd = 'tac %s' % cmk.ec.actions.quote_shell_string(str(path))
     if greptexts:
-        cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
+        cmd += " | egrep -i -e %s" % cmk.ec.actions.quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)  # nosec
 
     headers = table_history.column_names
@@ -1691,7 +1692,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "DELAYOVER")
                     if rule:
-                        event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
+                        cmk.ec.actions.event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "AUTODELETE")
@@ -1831,7 +1832,7 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(self._table_events, event)
             log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "COUNTFAILED")
-            event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
+            cmk.ec.actions.event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "AUTODELETE")
@@ -2082,7 +2083,7 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, existing_event)
+                                cmk.ec.actions.event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, existing_event)
 
                             log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, existing_event, "COUNTREACHED")
 
@@ -2104,7 +2105,7 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
+                                cmk.ec.actions.event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
                                     log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "AUTODELETE")
@@ -4027,7 +4028,7 @@ class EventStatus(object):
                                                   "is not 'open' but '%s'" %
                                                   (event["id"], previous_phase))
                             else:
-                                do_event_actions(self.settings, self._config, self._logger, event_server, self._lock_history, self._mongodb, self._active_history_period, table_events, actions, event, is_cancelling=True)
+                                cmk.ec.actions.do_event_actions(self.settings, self._config, self._logger, event_server, self._lock_history, self._mongodb, self._active_history_period, table_events, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -4193,403 +4194,6 @@ class EventStatus(object):
 
     def get_rule_stats(self):
         return sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
-
-
-#.
-#   .--Actions-------------------------------------------------------------.
-#   |                     _        _   _                                   |
-#   |                    / \   ___| |_(_) ___  _ __  ___                   |
-#   |                   / _ \ / __| __| |/ _ \| '_ \/ __|                  |
-#   |                  / ___ \ (__| |_| | (_) | | | \__ \                  |
-#   |                 /_/   \_\___|\__|_|\___/|_| |_|___/                  |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Global functions for executing rule actions like sending emails and  |
-#   | executing scripts.                                                   |
-#   '----------------------------------------------------------------------'
-
-def event_has_opened(settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, rule, event):
-    # Prepare for events with a limited livetime. This time starts
-    # when the event enters the open state or acked state
-    if "livetime" in rule:
-        livetime, phases = rule["livetime"]
-        event["live_until"] = time.time() + livetime
-        event["live_until_phases"] = phases
-
-    if rule.get("actions_in_downtime", True) is False and event["host_in_downtime"]:
-        logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
-        return
-
-    do_event_actions(settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, rule.get("actions", []), event, is_cancelling=False)
-
-
-# Execute a list of actions on an event that has just been
-# opened or cancelled.
-def do_event_actions(settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, actions, event, is_cancelling):
-    for aname in actions:
-        if aname == "@NOTIFY":
-            do_notify(event_server, logger, event, is_cancelling=is_cancelling)
-        else:
-            action = config["action"].get(aname)
-            if not action:
-                logger.info("Cannot execute undefined action '%s'" % aname)
-                logger.info("We have to following actions: %s" %
-                            ", ".join(config["action"].keys()))
-            else:
-                logger.info("Going to execute action '%s' on event %d" %
-                              (action["title"], event["id"]))
-                do_event_action(settings, config, logger, lock_history, mongodb, active_history_period, table_events, action, event)
-
-
-# Rule actions are currently done synchronously. Actions should
-# not hang for more than a couple of ms.
-
-def get_quoted_event(event, logger):
-    new_event = {}
-    fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
-    for key, value in event.iteritems():
-        if key not in fields_to_quote:
-            new_event[key] = value
-        else:
-            try:
-                if type(value) in [list, tuple]:
-                    new_value = map(quote_shell_string, value)
-                    if type(value) == tuple:
-                        new_value = tuple(value)
-                else:
-                    new_value = quote_shell_string(value)
-                new_event[key] = new_value
-            except Exception as e:
-                # If anything unforeseen happens, we use the intial value
-                new_event[key] = value
-                logger.exception("Unable to quote event text %r: %r, %r" % (key, value, e))
-
-    return new_event
-
-
-def escape_null_bytes(s):
-    return s.replace("\000", "\\000")
-
-
-def do_event_action(settings, config, logger, lock_history, mongodb, active_history_period, table_events, action, event, user=""):
-    if action["disabled"]:
-        logger.info("Skipping disabled action %s." % action["id"])
-        return
-
-    try:
-        action_type, settings = action["action"]
-        if action_type == 'email':
-            to = escape_null_bytes(substitute_event_tags(table_events, settings["to"], event))
-            subject = escape_null_bytes(substitute_event_tags(table_events, settings["subject"], event))
-            body = escape_null_bytes(substitute_event_tags(table_events, settings["body"], event))
-
-            send_email(config, to, subject, body, logger)
-            log_event_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
-        elif action_type == 'script':
-            execute_script(table_events, escape_null_bytes(substitute_event_tags(table_events, settings["script"], get_quoted_event(event, logger))), event, logger)
-            log_event_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, "SCRIPT", user, action['id'])
-        else:
-            logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
-    except Exception:
-        if settings.options.debug:
-            raise
-        logger.exception("Error during execution of action %s" % action["id"])
-
-
-def get_event_tags(table_events, event):
-    substs = [("match_group_%d" % (nr + 1), g)
-              for (nr, g)
-              in enumerate(event.get("match_groups", ()))]
-
-    for key, defaultvalue in table_events.columns:
-        varname = key[6:]
-        substs.append((varname, event.get(varname, defaultvalue)))
-
-    def to_string(v):
-        if type(v) in [str, unicode]:
-            return v
-        else:
-            return "%s" % v
-
-    tags = {}
-    for key, value in substs:
-        if type(value) == tuple:
-            value = " ".join(map(to_string, value))
-        else:
-            value = to_string(value)
-
-        tags[key] = value
-
-    return tags
-
-
-def substitute_event_tags(table_events, text, event):
-    for key, value in get_event_tags(table_events, event).iteritems():
-        text = text.replace('$%s$' % key.upper(), value)
-    return text
-
-
-def quote_shell_string(s):
-    return "'" + s.replace("'", "'\"'\"'") + "'"
-
-
-def send_email(config, to, subject, body, logger):
-    command_utf8 = ["mail", "-S", "sendcharsets=utf-8",
-                    "-s", subject.encode("utf-8"),
-                    to.encode("utf-8")]
-
-    if config["debug_rules"]:
-        logger.info("  Executing: %s" % " ".join(command_utf8))
-
-    p = subprocess.Popen(command_utf8, close_fds=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-    # FIXME: This may lock on too large buffer. We should move all "mail sending" code
-    # to a general place and fix this for all our components (notification plugins,
-    # notify.py, this one, ...)
-    stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
-    exitcode = p.returncode
-
-    logger.info('  Exitcode: %d' % exitcode)
-    if exitcode != 0:
-        logger.info("  Error: Failed to send the mail.")
-        for line in (stdout_txt + stderr_txt).splitlines():
-            logger.info("  Output: %s" % line.rstrip())
-        return False
-
-    return True
-
-
-def execute_script(table_events, body, event, logger):
-    script_env = os.environ.copy()
-
-    for key, value in get_event_tags(table_events, event).iteritems():
-        if type(key) == unicode:
-            key = key.encode("utf-8")
-        if type(value) == unicode:
-            value = value.encode("utf-8")
-        script_env["CMK_" + key.upper()] = value
-
-    # Traps can contain 0-Bytes. We need to remove this from the script
-    # body. Otherwise suprocess.Popen will crash.
-    p = subprocess.Popen(
-        ['/bin/bash'],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        close_fds=True,
-        env=script_env,
-    )
-    output = p.communicate(body.encode('utf-8'))[0]
-    logger.info('  Exit code: %d' % p.returncode)
-    if output:
-        logger.info('  Output: \'%s\'' % output)
-
-
-#.
-#   .--Notification--------------------------------------------------------.
-#   |         _   _       _   _  __ _           _   _                      |
-#   |        | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __           |
-#   |        |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \          |
-#   |        | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | |         |
-#   |        |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  EC create Check_MK native notifications via cmk --notify.           |
-#   '----------------------------------------------------------------------'
-
-
-# Es fehlt:
-# - Wenn CONTACTS fehlen, dann müssen in notify.py die Fallbackadressen
-#   genommen werden.
-# - Was ist mit Nagios als Core. Sendet der CONTACTS? Nein!!
-#
-# - Das muss sich in den Hilfetexten wiederspiegeln
-
-# This function creates a Check_MK Notification for a locally running Check_MK.
-# We simulate a *service* notification.
-def do_notify(event_server, logger, event, username=None, is_cancelling=False):
-    if core_has_notifications_disabled(event, logger):
-        return
-
-    context = create_notification_context(event_server, event, username, is_cancelling, logger)
-
-    if logger.is_verbose():
-        logger.verbose("Sending notification via Check_MK with the following context:")
-        for varname, value in sorted(context.iteritems()):
-            logger.verbose("  %-25s: %s" % (varname, value))
-
-    if context["HOSTDOWNTIME"] != "0":
-        logger.info("Host %s is currently in scheduled downtime. "
-                    "Skipping notification of event %s." %
-                    (context["HOSTNAME"], event["id"]))
-        return
-
-    # Send notification context via stdin.
-    context_string = to_utf8("".join([
-        "%s=%s\n" % (varname, value.replace("\n", "\\n"))
-        for (varname, value) in context.iteritems()]))
-
-    p = subprocess.Popen(["cmk", "--notify", "stdin"], stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         close_fds=True)
-    response = p.communicate(input=context_string)[0]
-    status = p.returncode
-    if status:
-        logger.error("Error notifying via Check_MK: %s" % response.strip())
-    else:
-        logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
-
-
-def create_notification_context(event_server, event, username, is_cancelling, logger):
-    context = base_notification_context(event, username, is_cancelling)
-    add_infos_from_monitoring_host(event_server, context, event)  # involves Livestatus query
-    add_contacts_from_rule(context, event, logger)
-    return context
-
-
-def add_contacts_from_rule(context, event, logger):
-    # Add contact information from the rule, but only if the
-    # host is unknown or if contact groups in rule have precedence
-
-    if event.get("contact_groups") is not None and \
-       event.get("contact_groups_notify") and (
-           "CONTACTS" not in context or
-           event.get("contact_groups_precedence", "host") != "host" or
-           not event['core_host']):
-        add_contact_information_to_context(context, event["contact_groups"], logger)
-
-    # "CONTACTS" is allowed to be missing in the context, cmk --notify will
-    # add the fallback contacts then.
-
-
-def add_infos_from_monitoring_host(event_server, context, event):
-    def _add_artificial_context_info():
-        context.update({
-            "HOSTNAME": event["host"],
-            "HOSTALIAS": event["host"],
-            "HOSTADDRESS": event["ipaddress"],
-            "HOSTTAGS": "",
-            "HOSTDOWNTIME": "0",  # Non existing host cannot be in scheduled downtime ;-)
-            "CONTACTS": "?",  # Will trigger using fallback contacts
-            "SERVICECONTACTGROUPNAMES": "",
-        })
-
-    if not event["core_host"]:
-        # Host not known in active monitoring. Create artificial host context
-        # as good as possible.
-        _add_artificial_context_info()
-        return
-
-    host_config = event_server.host_config.get(event["core_host"])
-    if not host_config:
-        _add_artificial_context_info()  # No config found - Host has vanished?
-        return
-
-    context.update({
-        "HOSTNAME": host_config["name"],
-        "HOSTALIAS": host_config["alias"],
-        "HOSTADDRESS": host_config["address"],
-        "HOSTTAGS": host_config["custom_variables"].get("TAGS", ""),
-        "CONTACTS": ",".join(host_config["contacts"]),
-        "SERVICECONTACTGROUPNAMES": ",".join(host_config["contact_groups"]),
-    })
-
-    # Add custom variables to the notification context
-    for key, val in host_config["custom_variables"].iteritems():
-        context["HOST_%s" % key] = val
-
-    context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
-
-
-def base_notification_context(event, username, is_cancelling):
-    return {
-        "WHAT": "SERVICE",
-        "CONTACTNAME": "check-mk-notify",
-        "DATE": str(int(event["last"])),  # -> Event: Time
-        "MICROTIME": str(int(event["last"] * 1000000)),
-        "LASTSERVICESTATE": is_cancelling and "CRITICAL" or "OK",  # better assume OK, we have no transition information
-        "LASTSERVICESTATEID": is_cancelling and "2" or "0",  # -> immer OK
-        "LASTSERVICEOK": "0",  # 1.1.1970
-        "LASTSERVICESTATECHANGE": str(int(event["last"])),
-        "LONGSERVICEOUTPUT": "",
-        "NOTIFICATIONAUTHOR": username or "",
-        "NOTIFICATIONAUTHORALIAS": username or "",
-        "NOTIFICATIONAUTHORNAME": username or "",
-        "NOTIFICATIONCOMMENT": "",
-        "NOTIFICATIONTYPE": is_cancelling and "RECOVERY" or "PROBLEM",
-        "SERVICEACKAUTHOR": "",
-        "SERVICEACKCOMMENT": "",
-        "SERVICEATTEMPT": "1",
-        "SERVICECHECKCOMMAND": event["rule_id"] is None and "ec-internal" or "ec-rule-" + event["rule_id"],
-        "SERVICEDESC": event["application"] or "Event Console",
-        "SERVICENOTIFICATIONNUMBER": "1",
-        "SERVICEOUTPUT": event["text"],
-        "SERVICEPERFDATA": "",
-        "SERVICEPROBLEMID": "ec-id-" + str(event["id"]),
-        "SERVICESTATE": cmk.defines.service_state_name(event["state"]),
-        "SERVICESTATEID": str(event["state"]),
-        "SERVICE_EC_CONTACT": event.get("owner", ""),
-        "SERVICE_SL": str(event["sl"]),
-        "SVC_SL": str(event["sl"]),
-
-        # Some fields only found in EC notifications
-        "EC_ID": str(event["id"]),
-        "EC_RULE_ID": event["rule_id"] or "",
-        "EC_PRIORITY": str(event["priority"]),
-        "EC_FACILITY": str(event["facility"]),
-        "EC_PHASE": event["phase"],
-        "EC_COMMENT": event.get("comment", ""),
-        "EC_OWNER": event.get("owner", ""),
-        "EC_CONTACT": event.get("contact", ""),
-        "EC_PID": str(event.get("pid", 0)),
-        "EC_MATCH_GROUPS": "\t".join(event["match_groups"]),
-        "EC_CONTACT_GROUPS": " ".join(event.get("contact_groups") or []),
-        "EC_ORIG_HOST": event.get("orig_host", event["host"]),
-    }
-
-
-def add_contact_information_to_context(context, contact_groups, logger):
-    contact_names = rbn_groups_contacts(contact_groups)
-    context["CONTACTS"] = ",".join(contact_names)
-    context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
-    logger.verbose("Setting %d contacts %s resulting from rule contact groups %s" %
-                   (len(contact_names), ",".join(contact_names), ",".join(contact_groups)))
-
-
-# NOTE: This function is an exact copy from modules/notify.py. We need
-# to move all this Check_MK-specific livestatus query stuff to a helper
-# module in lib some day.
-def rbn_groups_contacts(groups):
-    if not groups:
-        return {}
-    query = "GET contactgroups\nColumns: members\n"
-    for group in groups:
-        query += "Filter: name = %s\n" % group
-    query += "Or: %d\n" % len(groups)
-
-    try:
-        contacts = set([])
-        for contact_list in livestatus.LocalConnection().query_column(query):
-            contacts.update(contact_list)
-        return contacts
-
-    except livestatus.MKLivestatusNotFoundError:
-        return []
-
-    except Exception:
-        if cmk.debug.enabled():
-            raise
-        return []
-
-
-def core_has_notifications_disabled(event, logger):
-    try:
-        notifications_enabled = livestatus.LocalConnection().query_value("GET status\nColumns: enable_notifications")
-        if not notifications_enabled:
-            logger.info("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
-            return True
-    except Exception as e:
-        logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
-
-    return False
 
 
 #.

@@ -1203,7 +1203,6 @@ class EventServer(ECServerThread):
         self._mongodb = mongodb
         self._active_history_period = active_history_period
         self._event_status = event_status
-        self._active_history_period = active_history_period
         self._time_periods = TimePeriods(self._logger)
 
         self.create_pipe()

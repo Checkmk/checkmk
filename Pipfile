@@ -48,7 +48,7 @@ netifaces = "*"
 dnspython = "*"
 idna = "*"
 cryptography = "*"
-requests = "*"
+requests = {extras = ["socks"]}
 pyOpenSSL = "*"
 pykerberos = "*"
 requests-kerberos = "*"

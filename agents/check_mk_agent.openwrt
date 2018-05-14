@@ -278,8 +278,6 @@ then
         sed 's/\\040/ /g' |
         while read MP
 	do
-         if [ ! -r $MP ]; then
-            echo "$MP Permission denied"
 	    if [ $STAT_VERSION != $STAT_BROKE ]; then
 	        waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
 	            echo "$MP hanging 0 0 0 0"

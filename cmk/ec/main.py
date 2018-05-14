@@ -73,26 +73,75 @@ import cmk.render
 import livestatus
 import cmk.regex
 
-#   .--Declarations--------------------------------------------------------.
-#   |       ____            _                 _   _                        |
-#   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
-#   |      | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|       |
-#   |      | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \       |
-#   |      |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Global declarations and defaults settings                           |
-#   '----------------------------------------------------------------------'
 
-# Basic settings, can be changed with configuration file (at
-# least I hope so)
+class SyslogPriority(object):
+    NAMES = {
+        0: "emerg",
+        1: "alert",
+        2: "crit",
+        3: "err",
+        4:"warning",
+        5: "notice",
+        6: "info",
+        7: "debug",
+        }
 
-syslog_priorities = ["emerg", "alert", "crit", "err", "warning", "notice", "info", "debug"]
-syslog_facilities = ["kern", "user", "mail", "daemon", "auth", "syslog", "lpr", "news",
-                     "uucp", "cron", "authpriv", "ftp",
-                     "(unused 12)", "(unused 13)", "(unused 13)", "(unused 14)",
-                     "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7",
-                     None, None, None, None, None, None, None, "snmptrap"]
+    def __init__(self, value):
+        super(SyslogPriority, self).__init__()
+        self.value = int(value)
+
+    def __repr__(self):
+        return "SyslogPriority(%d)" % self.value
+
+    def __str__(self):
+        try:
+            return self.NAMES[self.value]
+        except KeyError:
+            return "(unknown priority %d)" % self.value
+
+
+class SyslogFacility(object):
+    NAMES = {
+        0: 'kern',
+        1: 'user',
+        2: 'mail',
+        3: 'daemon',
+        4: 'auth',
+        5: 'syslog',
+        6: 'lpr',
+        7: 'news',
+        8: 'uucp',
+        9: 'cron',
+        10: 'authpriv',
+        11: 'ftp',
+        12: "ntp",
+        13: "logaudit",
+        14:	"logalert",
+        15:	"clock",
+        16: 'local0',
+        17: 'local1',
+        18: 'local2',
+        19: 'local3',
+        20: 'local4',
+        21: 'local5',
+        22: 'local6',
+        23: 'local7',
+        31: 'snmptrap',  # HACK!
+        }
+
+    def __init__(self, value):
+        super(SyslogFacility, self).__init__()
+        self.value = int(value)
+
+    def __repr__(self):
+        return "SyslogFacility(%d)" % self.value
+
+    def __str__(self):
+        try:
+            return self.NAMES[self.value]
+        except KeyError:
+            return "(unknown facility %d)" % self.value
+
 
 grepping_filters = [
     'event_text',
@@ -2108,13 +2157,12 @@ class EventServer(ECServerThread):
         if self._config["rule_optimizer"]:
             self._logger.info("Rule hash: %d rules - %d hashed, %d unspecific" %
                               (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
-            for facility in xrange(32):
+            for facility in range(23) + [31]:
                 if facility in self._rule_hash:
                     stats = []
                     for prio, entries in self._rule_hash[facility].iteritems():
-                        stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
-                    if syslog_facilities[facility]:
-                        self._logger.info(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
+                        stats.append("%s(%d)" % (SyslogPriority(prio), len(entries)))
+                    self._logger.info(" %-12s: %s" % (SyslogFacility(facility), " ".join(stats)))
 
     def hash_rule(self, rule):
         # Construct rule hash for faster execution.
@@ -2160,7 +2208,7 @@ class EventServer(ECServerThread):
         entries.reverse()
         for count, (facility, priority) in entries[:20]:
             self._logger.info("  %s/%s - %d (%.2f%%)" % (
-                syslog_facilities[facility], syslog_priorities[priority], count,
+                SyslogFacility(facility), SyslogPriority(priority), count,
                 (100.0 * count / float(total_count))))
 
     def process_line(self, line, address):
@@ -2211,7 +2259,7 @@ class EventServer(ECServerThread):
                 if self._config["log_rulehits"]:
                     self._logger.info("Rule '%s/%s' hit by message %s/%s - '%s'." % (
                         rule["pack"], rule["id"],
-                        syslog_facilities[event["facility"]], syslog_priorities[event["priority"]],
+                        SyslogFacility(event["facility"]), SyslogPriority(event["priority"]),
                         event["text"]))
 
                 if rule.get("drop"):

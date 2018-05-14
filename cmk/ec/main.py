@@ -143,20 +143,6 @@ class SyslogFacility(object):
             return "(unknown facility %d)" % self.value
 
 
-grepping_filters = [
-    'event_text',
-    'event_comment',
-    'event_host',
-    'event_host_regex',
-    'event_contact',
-    'event_application',
-    'event_rule_id',
-    'event_owner',
-    'event_ipaddress',
-    'event_core_host',
-]
-
-
 # Alas, we often have no clue about the actual encoding, so we have to guess:
 # Initially we assume UTF-8, but fall back to latin-1 if it didn't work.
 def decode_from_bytes(string_as_bytes):
@@ -1188,6 +1174,18 @@ def get_event_history_from_file(settings, table_history, query, logger):
 
     # Optimization: use grep in order to reduce amount
     # of read lines based on some frequently used filters.
+    grepping_filters = [
+        'event_text',
+        'event_comment',
+        'event_host',
+        'event_host_regex',
+        'event_contact',
+        'event_application',
+        'event_rule_id',
+        'event_owner',
+        'event_ipaddress',
+        'event_core_host',
+        ]
     greptexts = []
     for filter_name, opfunc, args in filters:
         # Make sure that the greptexts are in the same order as in the

@@ -1,0 +1,10 @@
+Title: diskstat: Fixed error complaining about unknown diskstat_diskless_pattern
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b4
+Date: 1526286734
+Class: fix
+
+

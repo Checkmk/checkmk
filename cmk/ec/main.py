@@ -247,19 +247,6 @@ def convert_history_line(values):
         values[28] = unsplit(values[28])
 
 
-filter_operators = {
-    "=": (lambda a, b: a == b),
-    ">": (lambda a, b: a > b),
-    "<": (lambda a, b: a < b),
-    ">=": (lambda a, b: a >= b),
-    "<=": (lambda a, b: a <= b),
-    "~": (lambda a, b: cmk.regex.regex(b).search(a)),
-    "=~": (lambda a, b: a.lower() == b.lower()),
-    "~~": (lambda a, b: cmk.regex.regex(b.lower()).search(a.lower())),
-    "in": (lambda a, b: a in b),
-}
-
-
 #.
 #   .--Helper functions----------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -3222,6 +3209,18 @@ class Query(object):
 
 
 class QueryGET(Query):
+    filter_operators = {
+        "=": (lambda a, b: a == b),
+        ">": (lambda a, b: a > b),
+        "<": (lambda a, b: a < b),
+        ">=": (lambda a, b: a >= b),
+        "<=": (lambda a, b: a <= b),
+        "~": (lambda a, b: cmk.regex.regex(b).search(a)),
+        "=~": (lambda a, b: a.lower() == b.lower()),
+        "~~": (lambda a, b: cmk.regex.regex(b.lower()).search(a.lower())),
+        "in": (lambda a, b: a in b),
+        }
+
     def _from_raw_query(self, status_server):
         super(QueryGET, self)._from_raw_query(status_server)
         self._parse_table(status_server)
@@ -3297,7 +3296,7 @@ class QueryGET(Query):
         else:
             argument = convert(argument)
 
-        operator_function = filter_operators.get(operator_name)
+        operator_function = self._filter_operators.get(operator_name)
         if not operator_function:
             raise MKClientError("Unknown filter operator '%s'" % operator_name)
 

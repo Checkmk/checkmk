@@ -847,14 +847,7 @@ def log_event_history_to_file(settings, config, lock_history, active_history_per
                     for colname, defval in table_events.columns]
 
         with get_logfile(config, settings.paths.history_dir.value, active_history_period).open(mode='ab') as f:
-            f.write("\t".join(map(to_utf8, columns)) + "\n")
-
-
-def to_utf8(x):
-    if type(x) == unicode:
-        return x.encode("utf-8")
-    else:
-        return x
+            f.write("\t".join(map(cmk.ec.actions.to_utf8, columns)) + "\n")
 
 
 def quote_tab(col):
@@ -1692,7 +1685,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "DELAYOVER")
                     if rule:
-                        cmk.ec.actions.event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
+                        cmk.ec.actions.event_has_opened(log_event_history, self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "AUTODELETE")
@@ -1832,7 +1825,7 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(self._table_events, event)
             log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "COUNTFAILED")
-            cmk.ec.actions.event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
+            cmk.ec.actions.event_has_opened(log_event_history, self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "AUTODELETE")
@@ -2083,7 +2076,7 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                cmk.ec.actions.event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, existing_event)
+                                cmk.ec.actions.event_has_opened(log_event_history, self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, existing_event)
 
                             log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, existing_event, "COUNTREACHED")
 
@@ -2105,7 +2098,7 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                cmk.ec.actions.event_has_opened(self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
+                                cmk.ec.actions.event_has_opened(log_event_history, self.settings, self._config, self._logger, self, self._lock_history, self._mongodb, self._active_history_period, self._table_events, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
                                     log_event_history(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._active_history_period, self._table_events, event, "AUTODELETE")
@@ -2827,7 +2820,7 @@ class EventServer(ECServerThread):
 
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
-            do_notify(self, self._logger, overflow_event)
+            cmk.ec.actions.do_notify(self, self._logger, overflow_event)
 
         return False
 
@@ -3655,14 +3648,14 @@ class StatusServer(ECServerThread):
         event = self._event_status.event(int(event_id))
 
         if action_id == "@NOTIFY":
-            do_notify(self._event_server, self._logger, event, user, is_cancelling=False)
+            cmk.ec.actions.do_notify(self._event_server, self._logger, event, user, is_cancelling=False)
         else:
             with self._lock_configuration:
                 if action_id not in self._config["action"]:
                     raise MKClientError("The action '%s' is not defined. After adding new commands please "
                                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = self._config["action"][action_id]
-            do_event_action(self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._ac_active_history_period, self._table_events, action, event, user)
+            cmk.ec.actions.do_event_action(log_event_history, self.settings, self._config, self._logger, self._lock_history, self._mongodb, self._ac_active_history_period, self._table_events, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -4028,7 +4021,7 @@ class EventStatus(object):
                                                   "is not 'open' but '%s'" %
                                                   (event["id"], previous_phase))
                             else:
-                                cmk.ec.actions.do_event_actions(self.settings, self._config, self._logger, event_server, self._lock_history, self._mongodb, self._active_history_period, table_events, actions, event, is_cancelling=True)
+                                cmk.ec.actions.do_event_actions(log_event_history, self.settings, self._config, self._logger, event_server, self._lock_history, self._mongodb, self._active_history_period, table_events, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 

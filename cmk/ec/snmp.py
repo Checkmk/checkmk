@@ -37,6 +37,8 @@ import pysnmp.smi.rfc1902
 import pysnmp.smi.error
 import pyasn1.error
 
+import traceback
+
 import cmk.render
 
 class SNMPTrapEngine(object):

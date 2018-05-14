@@ -24,6 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
+import subprocess
+import time
+
+import cmk
+import cmk.defines
+import livestatus
+
 #.
 #   .--Actions-------------------------------------------------------------.
 #   |                     _        _   _                                   |
@@ -37,7 +45,7 @@
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
-def event_has_opened(settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, rule, event):
+def event_has_opened(log_to_history, settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -49,12 +57,12 @@ def event_has_opened(settings, config, logger, event_server, lock_history, mongo
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, rule.get("actions", []), event, is_cancelling=False)
+    do_event_actions(log_to_history, settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, rule.get("actions", []), event, is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, actions, event, is_cancelling):
+def do_event_actions(log_to_history, settings, config, logger, event_server, lock_history, mongodb, active_history_period, table_events, actions, event, is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event_server, logger, event, is_cancelling=is_cancelling)
@@ -67,13 +75,13 @@ def do_event_actions(settings, config, logger, event_server, lock_history, mongo
             else:
                 logger.info("Going to execute action '%s' on event %d" %
                               (action["title"], event["id"]))
-                do_event_action(settings, config, logger, lock_history, mongodb, active_history_period, table_events, action, event)
+                do_event_action(log_to_history, settings, config, logger, lock_history, mongodb, active_history_period, table_events, action, event)
 
 
 # Rule actions are currently done synchronously. Actions should
 # not hang for more than a couple of ms.
 
-def do_event_action(settings, config, logger, lock_history, mongodb, active_history_period, table_events, action, event, user=""):
+def do_event_action(log_to_history, settings, config, logger, lock_history, mongodb, active_history_period, table_events, action, event, user=""):
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return
@@ -86,10 +94,10 @@ def do_event_action(settings, config, logger, lock_history, mongodb, active_hist
             body = _escape_null_bytes(_substitute_event_tags(table_events, settings["body"], event))
 
             _send_email(config, to, subject, body, logger)
-            log_event_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
+            log_to_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
             _execute_script(table_events, _escape_null_bytes(_substitute_event_tags(table_events, settings["script"], _get_quoted_event(event, logger))), event, logger)
-            log_event_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, "SCRIPT", user, action['id'])
+            log_to_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:
@@ -417,3 +425,10 @@ def _core_has_notifications_disabled(event, logger):
         logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
 
     return False
+
+
+def to_utf8(x):
+    if type(x) == unicode:
+        return x.encode("utf-8")
+    else:
+        return x

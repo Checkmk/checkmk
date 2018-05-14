@@ -3383,7 +3383,7 @@ def table(columns, add_headers, only_sites, limit, filters):
     if only_service:
         affected = g_tree_cache["affected_services"].get(only_service)
         if affected == None:
-            items = {}
+            items = []
         else:
             by_groups = {}
             for group, aggr in affected:

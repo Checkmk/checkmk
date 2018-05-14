@@ -959,7 +959,7 @@ def get_event_history_from_mongodb(settings, table_events, query, mongodb):
     # Construct the mongodb filtering specification. We could fetch all information
     # and do filtering on this data, but this would be way too inefficient.
     query = {}
-    for column_name, operator_name, _predicate in filters:
+    for column_name, operator_name, _predicate, argument in filters:
 
         if operator_name == '=':
             mongo_filter = argument
@@ -1174,7 +1174,7 @@ def get_event_history_from_file(settings, table_history, query, logger):
         'event_core_host',
         ]
     greptexts = []
-    for column_name, operator_name, _predicate in filters:
+    for column_name, operator_name, _predicate, argument in filters:
         # Make sure that the greptexts are in the same order as in the
         # actual logfiles. They will be joined with ".*"!
         try:
@@ -1209,7 +1209,7 @@ def get_event_history_from_file(settings, table_history, query, logger):
         if limit is not None and limit <= 0:
             break
         first_entry, last_entry = get_logfile_timespan(path)
-        for _column_name, _operator_name, predicate in time_filters:
+        for _column_name, _operator_name, predicate, _argument in time_filters:
             if predicate(first_entry):
                 break
             if predicate(last_entry):
@@ -3209,7 +3209,7 @@ class Query(object):
 
 
 class QueryGET(Query):
-    filter_operators = {
+    _filter_operators = {
         "=": (lambda a, b: a == b),
         ">": (lambda a, b: a > b),
         "<": (lambda a, b: a < b),
@@ -3252,13 +3252,13 @@ class QueryGET(Query):
                     self.requested_columns = argument.split(" ")
 
                 elif header == "Filter":
-                    column_name, operator_name, predicate = self._parse_filter(argument)
+                    column_name, operator_name, predicate, argument = self._parse_filter(argument)
 
                     # Needed for later optimization (check_mkevents)
                     if column_name == "event_host" and operator_name == 'in':
                         self.only_host = set(argument)
 
-                    self.filters.append((column_name, operator_name, predicate))
+                    self.filters.append((column_name, operator_name, predicate, argument))
 
                 elif header == "Limit":
                     self.limit = int(argument)
@@ -3300,7 +3300,7 @@ class QueryGET(Query):
         if not operator_function:
             raise MKClientError("Unknown filter operator '%s'" % operator_name)
 
-        return (column, operator_name, lambda x: operator_function(x, argument))
+        return (column, operator_name, lambda x: operator_function(x, argument), argument)
 
     def requested_column_indexes(self):
         indexes = []
@@ -3490,7 +3490,7 @@ class StatusTableHistory(StatusTable):
         self._config = config
         self._mongodb = mongodb
         self._table_events = table_events
-        self._loger = logger
+        self._logger = logger
 
     def _enumerate(self, query):
         if self._config['archive_mode'] == 'mongodb':
@@ -4622,7 +4622,7 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
     if core_has_notifications_disabled(event, logger):
         return
 
-    context = create_notification_context(event_server, event, username, is_cancelling)
+    context = create_notification_context(event_server, event, username, is_cancelling, logger)
 
     if logger.is_verbose():
         logger.verbose("Sending notification via Check_MK with the following context:")

@@ -1,0 +1,13 @@
+Title: Fixed possible hanging updates from 1.5 versions
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0b4
+Date: 1526282366
+Class: fix
+
+When the "omd update" is executed as root user for a site, the update
+might hang in case the default OMD version on the system is a 1.5 version.
+
+To workaround this issue you may execute the "omd update" command as site user.

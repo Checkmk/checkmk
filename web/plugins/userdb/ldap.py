@@ -88,7 +88,7 @@ ldap_attr_map = {
         'user_id':    'uid',
         'pw_changed': 'krbPasswordExpiration',
         # group attributes
-        'member':     'uniquemember',
+        'member':     'member',
     },
 }
 

@@ -89,7 +89,7 @@ def lock_history():
 
 @pytest.fixture(scope="function")
 def event_status(settings, config, perfcounters, lock_eventstatus, lock_history, mongodb, active_history_period):
-    return cmk.ec.main.EventStatus(settings, config, perfcounters, lock_eventstatus, lock_history, mongodb, active_history_period)
+    return cmk.ec.main.EventStatus(settings, config, perfcounters, lock_eventstatus, lock_history, mongodb, active_history_period, logging.getLogger("cmk.mkeventd.EventStatus"))
 
 
 @pytest.fixture(scope="function")

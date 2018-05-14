@@ -1,11 +1,12 @@
-Title: fileinfo.groups: Fixed broken discovery "Invalid output from webservice (malformed string)"
+Title: fileinfo.groups logwatch.groups: Fixed broken discovery "Invalid output from webservice (malformed string)"
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
+State: unknown
 Version: 1.5.0b4
 Date: 1526284756
-Class: fix
 
 When this check was used to create a grouped file check and rediscovered with 1.5.*, this lead
 to an error message like "Invalid output from webservice (malformed string)".

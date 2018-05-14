@@ -324,8 +324,10 @@ register_configvar(group,
 
 register_configvar(group,
     "crash_report_target",
-    TextAscii(title = _("Mail Address for Crash reports"),
-              help = _("This Address will be used as default receiver address for crash reports"),
+    TextAscii(title = _("Fallback mail address for crash reports"),
+              help = _("By default crash reports will be sent to our crash reporting server. In case "
+                       "this fails for some reason, the crash reports can be sent by mail to the "
+                       "address configured here."),
               size = 80,
               attrencode = True),
     domain = "multisite")

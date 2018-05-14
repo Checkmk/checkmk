@@ -26,6 +26,7 @@
 
 import utils
 import config, time, os, re, pprint
+import hashlib
 import weblib, traceback, forms, valuespec, inventory, visuals, metrics
 import sites
 import bi
@@ -2886,7 +2887,7 @@ def row_id(view, row):
     key = ''
     for col in multisite_datasources[view['datasource']]['idkeys']:
         key += '~%s' % row[col]
-    return str(hash(key))
+    return hashlib.sha256(key).hexdigest()
 
 def paint_stalified(row, text):
     if is_stale(row):

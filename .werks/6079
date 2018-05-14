@@ -1,0 +1,10 @@
+Title: BI Aggregation: Fixed crash when opening 'BI Aggregations containing this Service' in service drop down menu if service is not part of any aggregation
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1526314124
+Class: fix
+
+

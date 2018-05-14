@@ -43,6 +43,9 @@ diskstat_inventory = []
 #  ( [ 'summary', 'physical', 'lvm', 'vxvm' ], ALL_HOSTS ),
 # ]
 
+diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
+
+
 def inventory_diskstat_generic(parsed):
     # Skip over on empty data
     if not parsed:

@@ -45,7 +45,10 @@ def parse_postgres_sessions(info):
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
-        instance = parsed.setdefault(instance_name, {})
+        instance = parsed.setdefault(instance_name, {
+            "total": 0,
+            "running": 0,
+        })
         if line[0].startswith("t"):
             instance["total"] = int(line[1])
         elif line[0].startswith("f"):
@@ -65,8 +68,8 @@ def check_postgres_sessions(item, params, parsed):
         raise MKCounterWrapped("Login into database failed")
 
     data = parsed[item]
-    idle = data.get('total', 0)
-    running = data.get('running', 0)
+    idle = data['total']
+    running = data['running']
     total = idle + running
 
     for key, val in [

@@ -972,38 +972,38 @@ def get_event_history_from_mongodb(settings, table_events, query, mongodb):
     # Construct the mongodb filtering specification. We could fetch all information
     # and do filtering on this data, but this would be way too inefficient.
     query = {}
-    for filter_name, opfunc, args in filters:
+    for column_name, operator_name, _operator_function, argument in filters:
 
-        if opfunc == filter_operators['=']:
-            mongo_filter = args
-        elif opfunc == filter_operators['>']:
-            mongo_filter = {'$gt': args}
-        elif opfunc == filter_operators['<']:
-            mongo_filter = {'$lt': args}
-        elif opfunc == filter_operators['>=']:
-            mongo_filter = {'$gte': args}
-        elif opfunc == filter_operators['<=']:
-            mongo_filter = {'$lte': args}
-        elif opfunc == filter_operators['~']:  # case sensitive regex, find pattern in string
-            mongo_filter = {'$regex': args, '$options': ''}
-        elif opfunc == filter_operators['=~']:  # case insensitive, match whole string
-            mongo_filter = {'$regex': args, '$options': 'mi'}
-        elif opfunc == filter_operators['~~']:  # case insensitive regex, find pattern in string
-            mongo_filter = {'$regex': args, '$options': 'i'}
-        elif opfunc == filter_operators['in']:
-            mongo_filter = {'$in': args}
+        if operator_name == '=':
+            mongo_filter = argument
+        elif operator_name == '>':
+            mongo_filter = {'$gt': argument}
+        elif operator_name == '<':
+            mongo_filter = {'$lt': argument}
+        elif operator_name == '>=':
+            mongo_filter = {'$gte': argument}
+        elif operator_name == '<=':
+            mongo_filter = {'$lte': argument}
+        elif operator_name == '~':  # case sensitive regex, find pattern in string
+            mongo_filter = {'$regex': argument, '$options': ''}
+        elif operator_name == '=~':  # case insensitive, match whole string
+            mongo_filter = {'$regex': argument, '$options': 'mi'}
+        elif operator_name == '~~':  # case insensitive regex, find pattern in string
+            mongo_filter = {'$regex': argument, '$options': 'i'}
+        elif operator_name == 'in':
+            mongo_filter = {'$in': argument}
         else:
-            raise Exception('Filter operator of filter %s not implemented for MongoDB archive' % filter_name)
+            raise Exception('Filter operator of filter %s not implemented for MongoDB archive' % column_name)
 
-        if filter_name[:6] == 'event_':
-            query['event.' + filter_name[6:]] = mongo_filter
-        elif filter_name[:8] == 'history_':
-            key = filter_name[8:]
+        if column_name[:6] == 'event_':
+            query['event.' + column_name[6:]] = mongo_filter
+        elif column_name[:8] == 'history_':
+            key = column_name[8:]
             if key == 'line':
                 key = '_id'
             query[key] = mongo_filter
         else:
-            raise Exception('Filter %s not implemented for MongoDB' % filter_name)
+            raise Exception('Filter %s not implemented for MongoDB' % column_name)
 
     result = mongodb.db.ec_archive.find(query).sort('time', -1)
 
@@ -1187,13 +1187,13 @@ def get_event_history_from_file(settings, table_history, query, logger):
         'event_core_host',
         ]
     greptexts = []
-    for filter_name, opfunc, args in filters:
+    for column_name, operator_name, _operator_function, argument in filters:
         # Make sure that the greptexts are in the same order as in the
         # actual logfiles. They will be joined with ".*"!
         try:
-            nr = grepping_filters.index(filter_name)
-            if opfunc in [filter_operators['='], filter_operators['~~']]:
-                greptexts.append((nr, args))
+            nr = grepping_filters.index(column_name)
+            if operator_name in ['=' '~~']:
+                greptexts.append((nr, argument))
         except Exception:
             pass
 
@@ -1222,10 +1222,10 @@ def get_event_history_from_file(settings, table_history, query, logger):
         if limit is not None and limit <= 0:
             break
         first_entry, last_entry = get_logfile_timespan(path)
-        for _unused_name, opfunc, argument in time_filters:
-            if opfunc(first_entry, argument):
+        for _column_name, _operator_name, operator_function, argument in time_filters:
+            if operator_function(first_entry, argument):
                 break
-            if opfunc(last_entry, argument):
+            if operator_function(last_entry, argument):
                 break
         else:
             # If no filter matches but we *have* filters
@@ -3253,13 +3253,13 @@ class QueryGET(Query):
                     self.requested_columns = argument.split(" ")
 
                 elif header == "Filter":
-                    name, opfunc, argument = self._parse_filter(argument)
+                    column_name, operator_name, operator_function, argument = self._parse_filter(argument)
 
                     # Needed for later optimization (check_mkevents)
-                    if name == "event_host" and opfunc == filter_operators['in']:
+                    if column_name == "event_host" and operator_name == 'in':
                         self.only_host = set(argument)
 
-                    self.filters.append((name, opfunc, argument))
+                    self.filters.append((column_name, operator_name, operator_function, argument))
 
                 elif header == "Limit":
                     self.limit = int(argument)
@@ -3278,7 +3278,7 @@ class QueryGET(Query):
         parts = textspec.split(None, 2)
         if len(parts) == 2:
             parts.append("")
-        column, operator, argument = parts
+        column, operator_name, argument = parts
 
         try:
             convert = self.table.column_types[column]
@@ -3292,16 +3292,16 @@ class QueryGET(Query):
         # when the filter contains non ascii characters!
         # Fix this by making the default values unicode and skip unicode conversion
         # here (for performance reasons) because argument is already unicode.
-        if operator == 'in':
+        if operator_name == 'in':
             argument = map(convert, argument.split())
         else:
             argument = convert(argument)
 
-        opfunc = filter_operators.get(operator)
-        if not opfunc:
-            raise MKClientError("Unknown filter operator '%s'" % operator)
+        operator_function = filter_operators.get(operator_name)
+        if not operator_function:
+            raise MKClientError("Unknown filter operator '%s'" % operator_name)
 
-        return (column, opfunc, argument)
+        return (column, operator_name, operator_function, argument)
 
     def requested_column_indexes(self):
         indexes = []
@@ -3417,8 +3417,8 @@ class StatusTable(object):
         return result_row
 
     def filter_row(self, query, row):
-        for column, opfunc, argument in query.filters:
-            if not opfunc(row[query.table.column_indices[column]], argument):
+        for column_name, _operator_name, operator_function, argument in query.filters:
+            if not operator_function(row[query.table.column_indices[column_name]], argument):
                 return None
         return row
 

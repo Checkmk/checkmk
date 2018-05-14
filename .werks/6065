@@ -1,4 +1,4 @@
-Title: fileinfo.groups: Fixed broken discovery "Invalid output from webservice (malformed string)"
+Title: fileinfo.groups logwatch.groups: Fixed broken discovery "Invalid output from webservice (malformed string)"
 Level: 1
 Component: checks
 Class: fix

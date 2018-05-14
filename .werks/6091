@@ -1,0 +1,10 @@
+Title: Fixed possible UnicodeDecodeError with special characters in the start_url parameter
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p32
+Date: 1526300572
+Class: fix
+
+

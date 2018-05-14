@@ -1,0 +1,14 @@
+Title: cmk-update-agent: Add support for proxy servers
+Level: 2
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0b7
+Date: 1526285787
+Class: feature
+
+The agent updater is now able to connect to the Check_MK server via proxy.
+
+With this werk, a new checkbox "Use proxy server" is added to the Agent Updater rule configuration. You can now either configure a HTTP, SOCKS4 or SOCKS5 proxy (with optional credentials) or choose to follow the environment variables "HTTP_PROXY" and "HTTPS_PROXY" that may be set locally on the hosts.
+
+Please note that the configuration default is still set to ignore local proxy settings.

@@ -1,0 +1,11 @@
+Title: Download agent page: Only link to rule sets in case the user is permitted to access it
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p32
+Date: 1526290491
+
+

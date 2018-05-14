@@ -1,0 +1,12 @@
+Title: Download Agent: Fixed possible broken "Properties" link for hosts
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0b4
+Date: 1526291461
+Class: fix
+
+When navigating from "Monitoring Agents" page to the "Download agent of host *"
+page, the "Properties" context button may link to a wrong page resulting in
+an error message that the requested host does not exist.

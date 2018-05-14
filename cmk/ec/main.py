@@ -3416,7 +3416,7 @@ class StatusTable(object):
         return result_row
 
     def filter_row(self, query, row):
-        for column_name, _operator_name, predicate in query.filters:
+        for column_name, _operator_name, predicate, _argument in query.filters:
             if not predicate(row[query.table.column_indices[column_name]]):
                 return None
         return row

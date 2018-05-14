@@ -419,7 +419,8 @@ def logwatch_groups_of_logfile(group_patterns, filename):
             found_these_groups.setdefault(this_group_name, set())
             found_these_groups[this_group_name].add(this_pattern)
 
-    return found_these_groups
+    # Convert pattern containers to lists (sets are not possible in autochecks)
+    return dict([ (k, list(v)) for k, v in found_these_groups.items() ])
 
 
 def inventory_logwatch_groups(info):

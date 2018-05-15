@@ -4563,8 +4563,6 @@ class CAorCAChain(UploadOrPasteTextFile):
 
 
 
-# Move this to wato.py or valuespec.py as soon as we need this at least
-# once again somewhere
 def ListOfCAs(**args):
     args.setdefault("title", _("CAs to accept"))
     args.setdefault("help", _("Only accepting HTTPS connections with a server which certificate "

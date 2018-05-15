@@ -449,14 +449,13 @@ multisite_icons_and_actions['custom_action'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def logwatch_url(sitename, hostname, item):
-    return html.makeuri_contextless([("site", sitename), ("host", hostname), ("file", item)], filename="logwatch.py")
-
 def paint_logwatch(what, row, tags, host_custom_vars):
-    if what != "service":
+    if what != "service" or row[what + "_check_command"] not in ['check_mk-logwatch', 'check_mk-logwatch.groups']:
         return
-    if row[what + "_check_command"] in [ 'check_mk-logwatch', 'check_mk-logwatch.groups' ]:
-        return 'logwatch', _('Open Log'), logwatch_url(row["site"], row['host_name'], row['service_description'][4:])
+
+    sitename, hostname, item = row['site'], row['host_name'], row['service_description'][4:]
+    url = html.makeuri_contextless([("site", sitename), ("host", hostname), ("file", item)], filename="logwatch.py")
+    return 'logwatch', _('Open Log'), url
 
 multisite_icons_and_actions['logwatch'] = {
     'service_columns': [ 'host_name', 'service_description', 'check_command' ],

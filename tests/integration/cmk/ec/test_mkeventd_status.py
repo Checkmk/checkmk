@@ -54,7 +54,7 @@ def slave_status():
 
 @pytest.fixture(scope="function")
 def mongodb():
-    return cmk.ec.main.MongoDB()
+    return cmk.ec.history.MongoDB()
 
 
 @pytest.fixture(scope="function")
@@ -69,7 +69,7 @@ def perfcounters():
 
 @pytest.fixture(scope="function")
 def active_history_period():
-    return cmk.ec.main.ActiveHistoryPeriod()
+    return cmk.ec.history.ActiveHistoryPeriod()
 
 
 @pytest.fixture(scope="function")

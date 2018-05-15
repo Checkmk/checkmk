@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DowntimeColumn.h"
+#include <cstdint>
+#include <type_traits>
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -36,13 +38,34 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
                             std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &downtime : downtimes_for_row(row)) {
-        if (_with_info) {
-            SublistRenderer s(l);
-            s.output(downtime._id);
-            s.output(downtime._author);
-            s.output(downtime._comment);
-        } else {
-            l.output(downtime._id);
+        switch (_with_info) {
+            case info::none:
+                l.output(downtime._id);
+                break;
+            case info::medium: {
+                SublistRenderer s(l);
+                s.output(downtime._id);
+                s.output(downtime._author);
+                s.output(downtime._comment);
+                break;
+            }
+            case info::full: {
+                SublistRenderer s(l);
+                s.output(downtime._id);
+                s.output(downtime._author);
+                s.output(downtime._comment);
+                s.output(downtime._origin_is_rule);
+                s.output(downtime._entry_time);
+                s.output(downtime._start_time);
+                s.output(downtime._end_time);
+                s.output(downtime._fixed);
+                s.output(std::chrono::duration_cast<std::chrono::seconds>(
+                             downtime._duration)
+                             .count());
+                s.output(downtime._recurring);
+                s.output(downtime._pending);
+                break;
+            }
         }
     }
 }

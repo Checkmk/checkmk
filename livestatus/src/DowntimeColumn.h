@@ -38,10 +38,12 @@ class RowRenderer;
 
 class DowntimeColumn : public ListColumn {
 public:
+    enum class info { none, medium, full };
+
     DowntimeColumn(const std::string &name, const std::string &description,
                    int indirect_offset, int extra_offset,
                    int extra_extra_offset, int offset, MonitoringCore *mc,
-                   bool is_service, bool with_info)
+                   bool is_service, info with_info)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset)
         , _mc(mc)
@@ -58,7 +60,7 @@ public:
 private:
     MonitoringCore *_mc;
     bool _is_service;
-    bool _with_info;
+    info _with_info;
 
     std::vector<DowntimeData> downtimes_for_row(Row row) const;
 };

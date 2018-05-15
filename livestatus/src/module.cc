@@ -703,7 +703,19 @@ private:
         for (const auto &entry : fl_store->_downtimes) {
             auto *dt = static_cast<Downtime *>(entry.second.get());
             if (dt->_host == h && dt->_service == s) {
-                result.push_back({dt->_id, dt->_author_name, dt->_comment});
+                result.push_back({
+                    dt->_id,
+                    dt->_author_name,
+                    dt->_comment,
+                    false,
+                    std::chrono::system_clock::from_time_t(dt->_entry_time),
+                    std::chrono::system_clock::from_time_t(dt->_start_time),
+                    std::chrono::system_clock::from_time_t(dt->_end_time),
+                    dt->_fixed != 0,
+                    std::chrono::seconds(dt->_duration),
+                    0,
+                    dt->_type != 0,
+                });
             }
         }
         return result;

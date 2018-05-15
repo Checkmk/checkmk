@@ -43,6 +43,14 @@ struct DowntimeData {
     unsigned long _id;
     std::string _author;
     std::string _comment;
+    bool _origin_is_rule;
+    std::chrono::system_clock::time_point _entry_time;
+    std::chrono::system_clock::time_point _start_time;
+    std::chrono::system_clock::time_point _end_time;
+    bool _fixed;
+    std::chrono::seconds _duration;
+    int32_t _recurring;
+    bool _pending;
 };
 
 struct CommentData {

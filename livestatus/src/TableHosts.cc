@@ -456,11 +456,18 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host",
-        indirect_offset, extra_offset, -1, 0, table->core(), false, false));
+        indirect_offset, extra_offset, -1, 0, table->core(), false,
+        DowntimeColumn::info::none));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
-        "A list of the all scheduled downtimes of the host with id, author and comment",
-        indirect_offset, extra_offset, -1, 0, table->core(), false, true));
+        "A list of the scheduled downtimes of the host with id, author and comment",
+        indirect_offset, extra_offset, -1, 0, table->core(), false,
+        DowntimeColumn::info::medium));
+    table->addColumn(std::make_unique<DowntimeColumn>(
+        prefix + "downtimes_with_extra_info",
+        "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
+        indirect_offset, extra_offset, -1, 0, table->core(), false,
+        DowntimeColumn::info::full));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
         indirect_offset, extra_offset, -1, 0, table->core(), false, false,

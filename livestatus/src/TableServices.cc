@@ -409,11 +409,18 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         indirect_offset, -1, -1, 0));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        indirect_offset, -1, -1, 0, table->core(), true, false));
+        indirect_offset, -1, -1, 0, table->core(), true,
+        DowntimeColumn::info::none));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        indirect_offset, -1, -1, 0, table->core(), true, true));
+        indirect_offset, -1, -1, 0, table->core(), true,
+        DowntimeColumn::info::medium));
+    table->addColumn(std::make_unique<DowntimeColumn>(
+        prefix + "downtimes_with_extra_info",
+        "A list of all downtimes of the service with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
+        indirect_offset, -1, -1, 0, table->core(), true,
+        DowntimeColumn::info::full));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of all comment ids of the service",
         indirect_offset, -1, -1, 0, table->core(), true, false, false));

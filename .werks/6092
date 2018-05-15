@@ -1,0 +1,11 @@
+Title: docker_node_images: Fixed crash in case of agent output from old docker versions
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1526373122
+
+

@@ -16,7 +16,7 @@ class Globals(object):
     param = 'foobar'
     checkname = 'Dummy'
     mrpedir = 'mrpe'
-    includedir = 'test include' # space in directory name!
+    includedir = 'test include'  # space in directory name!
     cfgfile = 'test.cfg'
     newline = -1
 
@@ -49,15 +49,12 @@ def testconfig(request, config):
 def expected_output():
     drive = r'[A-Z]:%s' % re.escape(os.sep)
     expected = [
-            re.escape(r'<<<%s>>>' % Globals.section),
-            r'\(%s\) %s 2 CRIT - This check is always critical' %
-            (Globals.pluginname, Globals.checkname)
-        ]
+        re.escape(r'<<<%s>>>' % Globals.section),
+        r'\(%s\) %s 2 CRIT - This check is always critical' %
+        (Globals.pluginname, Globals.checkname)
+    ]
     if not Globals.alone:
-        expected += [
-            re.escape(r'<<<systemtime>>>'),
-            r'\d+'
-        ]
+        expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
     return expected
 
 
@@ -81,7 +78,8 @@ def manage_plugin(request):
         cmds = [[
             'ssh', sshopts,
             '%s@%s' % (remoteuser, remote_ip),
-            'if not exist "%s" md "%s"' % (targetdir_windows, targetdir_windows)
+            'if not exist "%s" md "%s"' % (targetdir_windows,
+                                           targetdir_windows)
         ], [
             'scp', sshopts, source,
             '%s@%s:"%s"' % (remoteuser, remote_ip, targetdir)
@@ -94,7 +92,7 @@ def manage_plugin(request):
             if Globals.newline == 2:
                 path = path.replace('\\', '/')
             cfg.write('check = %s "%s"%s' % (Globals.checkname, path, '\n'
-                                           if Globals.newline > 0 else ""))
+                                             if Globals.newline > 0 else ""))
     yield
     if platform.system() == 'Windows':
         os.unlink(os.path.join(targetdir, Globals.pluginname))
@@ -105,5 +103,4 @@ def manage_plugin(request):
 def test_section_mrpe(request, testconfig, expected_output, actual_output,
                       testfile):
     # request.node.name gives test name
-    remotetest(expected_output, actual_output, testfile,
-               request.node.name)
+    remotetest(expected_output, actual_output, testfile, request.node.name)

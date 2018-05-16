@@ -3620,7 +3620,8 @@ class ModeDiscovery(WatoMode):
     # may contain such chars, we need to use some encoded form of it. Simple escaping/encoding
     # like we use for values of variables is not enough here.
     def _checkbox_name(self, check_type, item):
-        return "_move_%s" % sha256("%s_%s" % (check_type, item)).hexdigest()
+        key = u"%s_%s" % (check_type, item)
+        return "_move_%s" % sha256(key.encode('utf-8')).hexdigest()
 
     #.
 

@@ -2884,10 +2884,10 @@ def docu_link(topic, text):
 # Calculates a uniq id for each data row which identifies the current
 # row accross different page loadings.
 def row_id(view, row):
-    key = ''
+    key = u''
     for col in multisite_datasources[view['datasource']]['idkeys']:
-        key += '~%s' % row[col]
-    return hashlib.sha256(key).hexdigest()
+        key += u'~%s' % row[col]
+    return hashlib.sha256(key.encode('utf-8')).hexdigest()
 
 def paint_stalified(row, text):
     if is_stale(row):

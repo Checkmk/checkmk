@@ -1121,7 +1121,6 @@ class html(HTMLGenerator):
 
         # Settings
         self.mobile = False
-        self.buffering = True
 
         # Forms
         self.form_name = None
@@ -1173,7 +1172,6 @@ class html(HTMLGenerator):
 
         self._init_screenshot_mode()
         self._init_debug_mode()
-        self.set_buffering(config.buffered_http_stream)
 
 
     def _verify_not_using_threaded_mpm(self):
@@ -1525,10 +1523,6 @@ class html(HTMLGenerator):
 
     def set_page_context(self, c):
         self.page_context = c
-
-
-    def set_buffering(self, b):
-        self.buffering = b
 
 
     def set_link_target(self, framename):

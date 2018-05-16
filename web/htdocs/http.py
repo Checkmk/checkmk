@@ -420,10 +420,6 @@ class Response(object):
 
     def write(self, text):
         """Extend the response body with the given text"""
-        # TODO
-        #if self.buffering:
-        #    self.req.write(text, 0)
-        #else:
         self._output.append(text)
 
 

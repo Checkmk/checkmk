@@ -48,7 +48,7 @@ def expected_output():
               r'[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
               r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+')
     if not Globals.alone:
-        re_str += r'|' + re.escape(r'<<<systemtime>>>') + '|\d+'
+        re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
     return chain(base, repeat(re_str))
 
 

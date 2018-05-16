@@ -51,7 +51,7 @@ def expected_output():
     re_str = (r'^\d+,[^,]+,(\/\w+)+,(Power|Clock|Load|Data|Temperature),'
               r'\d+\.\d{6}')
     if not Globals.alone:
-        re_str += r'|' + re.escape(r'<<<systemtime>>>') + '|\d+'
+        re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
     re_str += r'$'
     return chain([
         re.escape(r'<<<openhardwaremonitor:sep(44)>>>'),

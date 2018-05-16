@@ -148,7 +148,7 @@ def expected_output_application_events():
             [logtitle(l) for l in logs[split_index:]] +
             [r'[CWOu\.] \w{3} \d{2} \d{2}\:\d{2}:\d{2} \d+\.\d+ .+ .+'])
         if not Globals.alone:
-            re_str += r'|' + re.escape(r'<<<systemtime>>>') + '|\d+'
+            re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
         return chain([re.escape(r'<<<%s>>>' % Globals.section)],
                      [logtitle(l) for l in logs[:split_index]], [
                          r'W \w{3} \d{2} \d{2}\:\d{2}:\d{2} 0\.%d %s %s' %

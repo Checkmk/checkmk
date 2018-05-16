@@ -644,7 +644,7 @@ register_rule(group,
             ),
             ( "host",
                 TextAscii(
-                    title = _("Host to connect to"),
+                    title = _("DNS hostname or IP address"),
                     help = _("This defaults to the host for which the active check is configured."),
                 )
             ),

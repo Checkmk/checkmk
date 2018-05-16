@@ -141,5 +141,4 @@ _omd()
     fi
 }
 
-# removing nospace breaks dir/file complete on ex. backup/restore
-complete -o default -o nospace -F _omd omd
+complete -o default -F _omd omd

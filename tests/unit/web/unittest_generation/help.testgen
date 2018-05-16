@@ -1,3 +1,0 @@
-name = "help"
-arguments = { "text": ['', "test", "<h2> <div> Hallo Welt <div> </h2><br>"] }
-states = { "help_visible": [True, False] }

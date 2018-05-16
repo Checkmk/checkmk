@@ -484,7 +484,7 @@ class OutputFunnel(object):
 
 
     def unplug_all(self):
-        while(self.is_plugged()):
+        while self.is_plugged():
             self.unplug()
 
 

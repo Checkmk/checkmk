@@ -1,20 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# call using
-# > py.test -s -k test_HTML_generator.py
 
-# external imports
-import re
 import traceback
 
-# internal imports
-from htmllib import HTML, HTMLGenerator
+from htmllib import HTMLGenerator
 import tools
 
 
-def test_HTMLGenerator():
-
-    html = HTMLGenerator()
+def test_HTMLGenerator(register_builtin_html):
     html.plug()
 
     with html.plugged():
@@ -56,17 +49,13 @@ def test_HTMLGenerator():
             print e
 
 
-def test_multiclass_call():
-    html = HTMLGenerator()
-    html.plug()
-
-    with html.plugged():
-        html.div('', class_="1", css="3", cssclass = "4", **{"class": "2"})
-        assert tools.compare_html(html.drain(), "<div class=\"1 3 4 2\"></div>")
+def test_multiclass_call(register_builtin_html):
+    html.div('', class_="1", css="3", cssclass = "4", **{"class": "2"})
+    written_text = "".join(html.response.flush_output())
+    assert tools.compare_html(written_text, "<div class=\"1 3 4 2\"></div>")
 
 
-def test_exception_handling():
-    html = HTMLGenerator()
+def test_exception_handling(register_builtin_html):
     try:
         raise Exception("Test")
     except Exception, e:

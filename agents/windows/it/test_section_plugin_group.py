@@ -35,23 +35,33 @@ def testconfig_suffixes(request, config):
     return config
 
 
+@pytest.fixture(params=['alone', 'with_systemtime'])
+def testconfig_sections(request, testconfig_suffixes):
+    Globals.alone = request.param == 'alone'
+    if Globals.alone:
+        testconfig_suffixes.set('global', 'sections', Globals.plugintype)
+    else:
+        testconfig_suffixes.set('global', 'sections',
+                                '%s systemtime' % Globals.plugintype)
+    return testconfig_suffixes
+
+
 @pytest.fixture(params=['sync', 'async', 'async+cached'])
-def testconfig(request, testconfig_suffixes):
+def testconfig(request, testconfig_sections):
     Globals.executionmode = request.param
-    testconfig_suffixes.set('global', 'sections', Globals.plugintype)
-    testconfig_suffixes.set('global', 'crash_debug', 'yes')
+    testconfig_sections.set('global', 'crash_debug', 'yes')
     if request.param != 'sync':
-        testconfig_suffixes.add_section(Globals.plugintype)
-        testconfig_suffixes.set(Globals.plugintype,
+        testconfig_sections.add_section(Globals.plugintype)
+        testconfig_sections.set(Globals.plugintype,
                                 'execution %s' % Globals.pluginname, 'async')
-        testconfig_suffixes.set(Globals.plugintype,
+        testconfig_sections.set(Globals.plugintype,
                                 'timeout %s' % Globals.pluginname, '10')
         if request.param == 'async+cached':
-            testconfig_suffixes.set(Globals.plugintype,
+            testconfig_sections.set(Globals.plugintype,
                                     'cache_age %s' % Globals.pluginname, '300')
-        testconfig_suffixes.set(Globals.plugintype,
+        testconfig_sections.set(Globals.plugintype,
                                 'retry_count %s' % Globals.pluginname, '3')
-    return testconfig_suffixes
+    return testconfig_sections
 
 
 @pytest.fixture()
@@ -74,7 +84,7 @@ def expected_output():
              if Globals.executionmode == 'async+cached' else r'') +
             re.escape(r'>>>'), r'^$'
         ]
-        netstat_pattern = (
+        repeating_pattern = (
             r'^$'
             r'|Aktive Verbindungen'
             r'|Active Connections'
@@ -88,8 +98,10 @@ def expected_output():
             r'|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT)'
             r'|\-?\d+( \d+)+ [\w\(\)]+')
         if Globals.plugintype == 'plugins':
-            netstat_pattern += r'|%s' % re.escape(r'<<<>>>')
-        plugin_variadic = repeat(netstat_pattern)
+            repeating_pattern += r'|%s' % re.escape(r'<<<>>>')
+        if not Globals.alone:
+            repeating_pattern += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
+        plugin_variadic = repeat(repeating_pattern)
     elif Globals.pluginname == 'wmic_if.bat':
         plugin_fixed += [
             re.escape(r'<<<') + r'winperf_if:sep\(44\)%s' %
@@ -98,11 +110,14 @@ def expected_output():
             re.escape(r'>>>'), r'^$', r'^$',
             r'Node,MACAddress,Name,NetConnectionID,NetConnectionStatus,Speed'
         ]
-        plugin_variadic = repeat(
+        re_variadic = (
             r'[^,]+,([0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5})?,[^,]+,[^,]*,\d*,\d*'
-            r'|^$'
-            r'%s' % (r'|%s' % re.escape(r'<<<>>>')
-                     if Globals.plugintype == 'plugins' else ''))
+            r'|^$')
+        if Globals.plugintype == 'plugins':
+            re_variadic += r'|%s' % re.escape(r'<<<>>>')
+        if not Globals.alone:
+            re_variadic += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
+        plugin_variadic = repeat(re_variadic)
     elif Globals.pluginname == 'windows_if.ps1':
         plugin_fixed += [
             re.escape(r'<<<') + r'winperf_if:sep\(9\)%s' %
@@ -114,7 +129,10 @@ def expected_output():
             (r'[^\t]+\s+([0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5})?\s+[^\t]+\s+[^\t]*'
              r'\s+\d*\s+\d*\s+\{[0-9A-F]+(\-[0-9A-F]+)+\}')
         ]
-        plugin_variadic = []
+        plugin_variadic = [
+            r'%s' % ('' if Globals.alone else
+                     r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+')
+        ]
 
     return chain(main_label, plugin_fixed, plugin_variadic)
 

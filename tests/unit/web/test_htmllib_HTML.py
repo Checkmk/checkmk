@@ -1,21 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# call using
-# > py.test -s -k test_HTML_generator.py
 
-# external imports
-import re
-
-# internal imports
 import json
-import htmllib
 from htmllib import HTML
 
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)
@@ -23,10 +11,7 @@ _default.default = json.JSONEncoder().default # Save unmodified default.
 json.JSONEncoder.default = _default # replacement
 
 
-
-
 def test_class_HTML():
-
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
     b = "two"
     c = "Three"

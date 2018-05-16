@@ -4,4 +4,4 @@
                           'icon': 'TestIcon',
                           'id': 'TestID',
                           'middle': True}},
-  'output': {'html_code': '<img src="test/TestIcon.jpg" class="icon test" align=absmiddle title="Icon Title" id="TestID" />'}}]
+  'output': {'html_code': '<img src="images/icons/TestIcon.png" class="icon test" align=absmiddle title="Icon Title" id="TestID" />'}}]

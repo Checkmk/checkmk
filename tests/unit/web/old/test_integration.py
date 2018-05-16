@@ -3,8 +3,8 @@
 # > py.test -s -k test_html_generator.py
 
 # internal imports
-from classes import Refactored_htmlTester
-from html_tests import load_html_test, run_all_generated_tests
+from classes import HTMLTester
+from html_tests import load_html_test
 
 
 def run_tests(function_name, tests=None):
@@ -12,8 +12,6 @@ def run_tests(function_name, tests=None):
     for test in tests:
         assert test.run(), "%s" % test
 
-def test_generated_tests():
-    run_all_generated_tests()
 
 def test_select():
     run_tests("select")
@@ -44,7 +42,10 @@ def test_popup_trigger():
     run_tests("popup_trigger")
 
 
-def test_header():
+def test_header(monkeypatch):
+    import config
+    monkeypatch.setattr(config, "custom_style_sheet", None, raising=False)
+
     for function_name in ["default_html_headers", "top_heading", "top_heading_left", "top_heading_right", "html_head", "header"]:
         run_tests(function_name)
 
@@ -57,7 +58,7 @@ def test_scripts():
 
 def test_renderers_instance():
 
-    new = Refactored_htmlTester()
+    new = HTMLTester()
 
     assert isinstance(new.render_icon("icon"), HTML)
     assert isinstance(new.render_icon_button("www.url.de", "help", "icon"), HTML)
@@ -71,6 +72,9 @@ def test_context_buttons():
     run_tests("context_button_test")
 
 
-def test_body_foot():
+def test_body_foot(monkeypatch):
+    import config
+    monkeypatch.setattr(config, "custom_style_sheet", None, raising=False)
+
     for function_name in ["body_start", "html_foot"]:
         run_tests(function_name)

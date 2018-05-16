@@ -1,3 +1,0 @@
-[{'function_name': 'top_heading_right',
-  'input': {'arguments': {}},
-  'output': {'html_code': '<a id=\'helpbutton\' onclick="toggle_help()" style="display:none" class="passive" onfocus="if (this.blur) this.blur();" href="javascript:void(0)" title="Toggle context help texts"><img src="test/help.jpg" class="icon iconbutton" align=absmiddle /></a><a class=head_logo href="https://mathias-kettner.com"><img src="images/logo_cmk_small.png"/></a></td></tr></table><hr class="header">\n'}}]

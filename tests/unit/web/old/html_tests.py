@@ -14,11 +14,11 @@ from os.path import isfile, join
 # internal imports
 from testlib import cmk_path
 from htmllib import HTML
-from classes import HTMLOrigTester, Refactored_htmlTester
+from classes import HTMLTester
 import tools
 
-unit_base_dir = cmk_path() + "/tests/unit/web"
-unit_test_files_dir = "%s/tests/unit/web/unittest_files" % cmk_path()
+unit_base_dir = cmk_path() + "/tests/unit/web/old"
+unit_test_files_dir = "%s/tests/unit/web/old/unittest_files" % cmk_path()
 
 
 #######################################################################################
@@ -116,7 +116,7 @@ class HtmlTest(object):
         global eval_func, set_html_state
         construct_html = (html is None)
         if construct_html:
-            html = Refactored_htmlTester()
+            html = HTMLTester()
         add_html_vars(html, self.add_vars)
         set_html_state(html, self.state_in)
         return_value, html_code = eval_func(html, self.function_name, self.arguments)
@@ -210,9 +210,8 @@ def build_orig_test(function_name, args, state_in=None, add_vars=None):
     return test
 
 
-# build a test using the HTMLOrigTester function
 def build_cmk_test(function_name, args, state_in=None, add_vars=None):
-    cmk = Refactored_htmlTester()
+    cmk = HTMLTester()
     test = build_html_test(cmk, function_name, args, state_in, add_vars)
     del cmk
     return test
@@ -284,71 +283,3 @@ def get_cartesian_product(dictionary):
     to_tuples = [ [(key, val) for val in dictionary[key]] for key in dictionary.keys() ]
     # convert the tuples back to dictionaries
     return [ {arg: val for arg, val in config} for config in itertools.product(*to_tuples)]
-
-
-# cartesian product of all possible state and argument spaces
-def get_tests_args_state(function_name, arguments, state_in):
-    tests = []
-    for s_in in get_cartesian_product(state_in):
-        for args in get_cartesian_product(state_in):
-            tests.append(build_orig_test(function_name, arguments, s_in))
-    return tests
-
-
-# cartesian product of all possible argument spaces
-def get_tests_args(function_name, arguments, state_in=None):
-    tests = []
-    for args in get_cartesian_product(state_in):
-        tests.append(build_orig_test(function_name, arguments, state_in))
-    return tests
-
-
-
-#######################################################################################
-# User interface for creating tests.                                                  #
-#                                                                                     #
-# Call using                                                                          #
-#                                                                                     #
-#       pytest -sv -m html_gentest web/generate_integration.py -k testgen             #
-#                                                                                     #
-#######################################################################################
-
-
-# cmk_version in ["running", "old"]
-def load_gentest_file(test_name, cmk_version = "running"):
-    assert test_name, "Specify a test file using the '--testfile $name' option!"
-    genpath = unit_base_dir + "/unittest_generation/"
-    ending  = ".testgen"
-    filename = "%s/%s.%s" % (genpath.rstrip('/'), test_name, ending.lstrip('.'))
-    try:
-        with open(filename, "r") as tfile:
-            test = ast.literal_eval(tfile.read())
-    except Exception, e:
-        print tools.bcolors.WARNING + "\nERROR: No gentest file for test '%s'.\n" % test_name \
-               + "Generate a test file first (see README for more details!)\n"
-        raise e
-
-    function_name  = test.get("function_name", test_name)
-    arguments  = test.get("arguments", {})
-    states_in  = test.get("attributes", {})
-    add_vars   = test.get("variables", {})
-
-    tests = []
-    build_test = build_orig_test if cmk_version == "old" else build_cmk_test
-    for args in get_cartesian_product(arguments):
-        for s_in in get_cartesian_product(states_in):
-            for vars in get_cartesian_product(add_vars):
-                tests.append(build_test(function_name, args, s_in, vars))
-    # save the tests to file and write out
-    testfile = save_html_test(filename.split('/')[-1].split('.')[0], tests)
-
-
-def run_all_generated_tests(file_ending = ".testgen"):
-    genpath = unit_base_dir + "/unittest_generation/"
-    onlyfiles = [f for f in listdir(genpath) if f.endswith(".testgen") and isfile(join(genpath, f))]
-    for test_name in onlyfiles:
-        tests = load_html_test(test_name.rstrip(file_ending), test_files_dir = unit_test_files_dir)
-        for test in tests:
-            test.run()
-
-

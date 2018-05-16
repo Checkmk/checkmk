@@ -1,24 +1,20 @@
-#!/usr/bin/python
-# call using
-# > py.test -s -k test_html_generator.py
+#!/usr/bin/env python
 
-# external imports
 import re
 from bs4 import BeautifulSoup as bs
-
-# internal imports
-from htmllib import html
 import __builtin__
-from htmllib import HTMLGenerator, html
+import pytest
+
 from tools import compare_html, gentest, compare_and_empty, bcolors
-from classes import DeprecatedRenderer, TableTester
 
-
-def save_user_mock(name, data, user, unlock=False):
-    pass
+import htmllib
+import http
+import table
+from table import Table
 
 
 def read_out_simple_table(text):
+    assert type(text) in [ str, unicode ]
     # Get the contents of the table as a list of lists
     data = []
     for row in bs(text, 'html5lib').findAll('tr'):
@@ -44,14 +40,7 @@ def read_out_csv(text, separator):
 
 
 
-
-def test_basic():
-
-    from table import Table
-
-    html = TableTester()
-    __builtin__.html = html
-
+def test_basic(register_builtin_html):
     id = 0
     title = " TEST "
 
@@ -64,16 +53,11 @@ def test_basic():
     table.cell("C", "4")
     table.end()
 
-    assert read_out_simple_table(html.written_text) == [[u'A', u'B'], [u'1', u'2'], [u'1', u'4']]
+    written_text = "".join(html.response.flush_output())
+    assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1', u'2'], [u'1', u'4']]
 
 
-def test_plug():
-
-    from table import Table
-
-    html = TableTester()
-    __builtin__.html = html
-
+def test_plug(register_builtin_html):
     id = 0
     title = " TEST "
 
@@ -90,15 +74,11 @@ def test_plug():
     html.write("c")
     table.end()
 
-    assert read_out_simple_table(html.written_text) == [[u'A', u'B'], [u'1a', u'2b'], [u'1a', u'4c']]
+    written_text = "".join(html.response.flush_output())
+    assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1a', u'2b'], [u'1a', u'4c']]
 
 
-def test_context():
-    import table
-
-    html = TableTester()
-    __builtin__.html = html
-
+def test_context(register_builtin_html):
     table_id = 0
     rows    = [ (i, i**3) for i in range(10) ]
     header  = ["Number", "Cubical"]
@@ -109,20 +89,14 @@ def test_context():
             for i in range(len(header)):
                 table.cell(_(header[i]), row[i])
 
-    text = html.written_text
-    data = read_out_simple_table(text)
+    written_text = "".join(html.response.flush_output())
+    data = read_out_simple_table(written_text)
     assert data.pop(0) == header
     data = [ tuple(map(int, row)) for row in data if row and row[0]]
     assert data == rows
 
 
-def test_nesting():
-
-    from table import Table
-
-    html = TableTester()
-    __builtin__.html = html
-
+def test_nesting(register_builtin_html):
     id = 0
     title = " TEST "
 
@@ -138,8 +112,8 @@ def test_nesting():
     t2.end()
 
     table.end()
-    text = html.written_text
-    assert compare_html(text, '''<h3>  TEST </h3>
+    written_text = "".join(html.response.flush_output())
+    assert compare_html(written_text, '''<h3>  TEST </h3>
                             <script type="text/javascript">\nupdate_headinfo(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
@@ -151,16 +125,10 @@ def test_nesting():
                                 <tr class="data odd0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
-                            </table>'''), text
+                            </table>'''), written_text
 
 
-def test_nesting_context():
-
-    import table
-
-    html = TableTester()
-    __builtin__.html = html
-
+def test_nesting_context(register_builtin_html):
     id = 0
     title = " TEST "
 
@@ -173,8 +141,8 @@ def test_nesting_context():
             table.cell("_", "+")
             table.cell("|", "-")
 
-    text = html.written_text
-    assert compare_html(text, '''<h3>  TEST </h3>
+    written_text = "".join(html.response.flush_output())
+    assert compare_html(written_text, '''<h3>  TEST </h3>
                             <script type="text/javascript">\nupdate_headinfo(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
@@ -186,28 +154,19 @@ def test_nesting_context():
                                 <tr class="data odd0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
-                            </table>'''), text
+                            </table>'''), written_text
 
 
-def test_table_wrapper(monkeypatch):
+@pytest.mark.parametrize("sortable", [ True, False ])
+@pytest.mark.parametrize("searchable", [ True, False ])
+@pytest.mark.parametrize("limit", [ None, 2 ])
+@pytest.mark.parametrize("output_format", [ "html", "csv" ])
+def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable, limit, output_format):
+    # TODO: Better mock the access to save_user in table.*
+    def save_user_mock(name, data, user, unlock=False):
+        pass
     import config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
-
-    rows = [ (i, i**3) for i in range(10) ]
-    header = ["Number", "Cubical"]
-    for sortable in [True, False]:
-        for searchable in [True, False]:
-            for limit in [None, 2]:
-                for output_format in ["html", "csv"]:
-                    passed, emsg = table_test_cubical(sortable, searchable, limit, output_format)
-                    assert passed, emsg
-
-
-def table_test_cubical(sortable, searchable, limit, output_format):
-    import table
-
-    html = TableTester()
-    __builtin__.html = html
 
     # Test data
     rows = [ (i, i**3) for i in range(10) ]
@@ -234,22 +193,19 @@ def table_test_cubical(sortable, searchable, limit, output_format):
     table.end()
 
     # Get generated html
-    text = html.written_text
+    written_text = "".join(html.response.flush_output())
 
     # Data assertions
-    if not output_format in ['html', 'csv']:
-        return False, 'Fetch is not yet implemented'
+    assert output_format in ['html', 'csv'], 'Fetch is not yet implemented'
     if output_format == 'html':
-        data = read_out_simple_table(text)
-        if not data.pop(0) == header:
-            return False, 'Wrong header'
+        data = read_out_simple_table(written_text)
+        assert data.pop(0) == header, 'Wrong header'
     elif output_format == 'csv':
-        data = read_out_csv(text, separator)
+        data = read_out_csv(written_text, separator)
         limit = len(data)
-        if not data.pop(0) == header:
-            return False, 'Wrong header'
+        assert data.pop(0) == header, 'Wrong header'
     else:
-        return False, 'Not yet implemented'
+        raise Exception('Not yet implemented')
 
     # Reconstruct table data
     data = [ tuple(map(int, row)) for row in data if row and row[0]]
@@ -257,10 +213,5 @@ def table_test_cubical(sortable, searchable, limit, output_format):
         limit = len(rows)
 
     # Assert data correctness
-    if not len(data) <= limit:
-        return False, 'Wrong number of rows: Got %s, should be <= %s' %(len(data), limit)
-    if not data == rows[:limit]:
-        return False, "Incorrect data: %s\n\nVS\n%s" % (data, rows[:limit])
-    return True, ''
-
-
+    assert len(data) <= limit, 'Wrong number of rows: Got %s, should be <= %s' %(len(data), limit)
+    assert data == rows[:limit], "Incorrect data: %s\n\nVS\n%s" % (data, rows[:limit])

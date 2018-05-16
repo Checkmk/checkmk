@@ -1,7 +1,10 @@
 import __builtin__
 import sys
+import pytest
 import _pytest
+
 import testlib
+
 import cmk
 
 monkeypatch = _pytest.monkeypatch.MonkeyPatch()
@@ -10,6 +13,9 @@ monkeypatch.syspath_prepend("%s/web/htdocs" % (testlib.cmk_path()))
 #monkeypatch.syspath_prepend("/omd/sites/%s/%s/htdocs" % (os.environ["OMD_SITE"], cmk.paths.web_dir))
 
 import config
+import htmllib
+import http
+
 monkeypatch.setattr(config, "omd_site", lambda: "NO_SITE")
 
 # Fake the localization wrapper _(...)
@@ -62,3 +68,17 @@ class FakeModPythonUnderscoreApache(object):
 
 monkeypatch.setitem(sys.modules, "_apache", FakeModPythonUnderscoreApache())
 
+
+@pytest.fixture()
+def register_builtin_html():
+    """This fixture registers a htmllib.html() instance under __builtin__.html
+    just like the regular GUI"""
+    wsgi_environ = {
+        # TODO: This is no complete WSGI environment. Produce some
+        "wsgi.input"  : "",
+        "SCRIPT_NAME" : "",
+    }
+    _request = http.Request(wsgi_environ)
+    _response = http.Response(_request)
+
+    __builtin__.html = htmllib.html(_request, _response)

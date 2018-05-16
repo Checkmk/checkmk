@@ -15,39 +15,51 @@ class OutputFunnelTester(OutputFunnel):
         self.written += text
 
 
-def test_plug():
-    html = OutputFunnelTester()
+@pytest.fixture()
+def html():
+    return OutputFunnelTester()
 
+
+def test_output_funnel_not_plugged(html):
     html.write("A")
     assert html.written == "A"
+
+
+def test_output_funnel_plugged(html):
     html.plug()
     html.write("B")
     assert html.plug_text == [["B"]]
+
+
+def test_output_funnel_2nd_plug(html):
+    html.plug()
+    html.write("B")
+    assert html.plug_text == [["B"]]
+
     html.plug()
     html.write("C")
     assert html.plug_text == [["B"], ["C"]]
+
     html.unplug()
     assert html.plug_text == [["B", "C"]]
+
     html.unplug()
-    assert html.written == "ABC"
+    assert html.written == "BC"
 
 
-def test_drain():
-    html = OutputFunnelTester()
-
+def test_output_funnel_drain(html):
     html.plug()
     html.write("A")
     text = html.drain()
     assert text == "A"
+
     html.write("B")
     assert html.plug_text == [["B"]]
     html.unplug()
     assert html.written == "B"
 
 
-def test_flush():
-    html = OutputFunnelTester()
-
+def test_output_funnel_flush(html):
     html.plug()
     html.write("A")
     html.plug_text == ["A"]
@@ -58,9 +70,7 @@ def test_flush():
     assert html.written == "A"
 
 
-def test_context_nesting():
-    html = OutputFunnelTester()
-
+def test_output_funnel_context_nesting(html):
     html.write("A")
     assert html.written == "A"
     with html.plugged():
@@ -73,7 +83,7 @@ def test_context_nesting():
     assert html.written == "ABC"
 
 
-def test_context_drain():
+def test_output_funnel_context_drain(html):
     html = OutputFunnelTester()
 
     html.write("A")
@@ -87,9 +97,7 @@ def test_context_drain():
     assert html.written == "A"
 
 
-def test_context_raise():
-    html = OutputFunnelTester()
-
+def test_output_funnel_context_raise(html):
     try:
         html.write("A")
         assert html.written == "A"
@@ -103,8 +111,7 @@ def test_context_raise():
         assert not html.is_plugged()
 
 
-def test_try_finally():
-    html = OutputFunnelTester()
+def test_output_funnel_try_finally(html):
     try:
         html.write("try1\n")
         try:
@@ -121,5 +128,3 @@ def test_try_finally():
     finally:
         html.write("finally1\n")
     assert html.written == "try1\ntry2\nexcept2\nfinally2\nexcept1\nError\nfinally1\n"
-
-

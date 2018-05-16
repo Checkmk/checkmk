@@ -32,6 +32,46 @@ import time
 import cmk.ec.actions
 import cmk.render
 
+
+# TODO: As one can see clearly below, we should really have a class hierarchy here...
+
+def configure_event_history(settings, config, mongodb):
+    if config['archive_mode'] == 'mongodb':
+        # Configure the auto deleting indexes in the DB
+        _update_mongodb_indexes(settings, mongodb)
+        _update_mongodb_history_lifetime(settings, config, mongodb)
+    else:
+        pass
+
+
+def flush_event_history(settings, config, logger, lock_history, mongodb):
+    if config['archive_mode'] == 'mongodb':
+        _flush_event_history_mongodb(mongodb)
+    else:
+        _expire_logfiles(settings, config, logger, lock_history, True)
+
+
+def log_event_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, what, who="", addinfo=""):
+    if config['archive_mode'] == 'mongodb':
+        _log_event_history_to_mongodb(settings, config, logger, event, what, who, addinfo, mongodb)
+    else:
+        _log_event_history_to_file(settings, config, logger, lock_history, active_history_period, table_events, event, what, who, addinfo)
+
+
+def get_event_history(settings, config, mongodb, table_events, table_history, logger, query):
+    if config['archive_mode'] == 'mongodb':
+        return _get_event_history_from_mongodb(settings, table_events, query, mongodb)
+    else:
+        return _get_event_history_from_file(settings, table_history, query, logger)
+
+
+def history_housekeeping(settings, config, logger, lock_history):
+    if config['archive_mode'] == 'mongodb':
+        pass
+    else:
+        _expire_logfiles(settings, config, logger, lock_history, False)
+
+
 #.
 #   .--MongoDB-------------------------------------------------------------.
 #   |             __  __                         ____  ____                |
@@ -92,7 +132,7 @@ def _get_mongodb_max_history_age(mongodb):
         return result['dt_-1']['expireAfterSeconds']
 
 
-def update_mongodb_indexes(settings, mongodb):
+def _update_mongodb_indexes(settings, mongodb):
     if not mongodb.connection:
         _connect_mongodb(settings, mongodb)
     result = mongodb.db.ec_archive.index_information()
@@ -101,7 +141,7 @@ def update_mongodb_indexes(settings, mongodb):
         mongodb.db.ec_archive.ensure_index([('time', DESCENDING)])
 
 
-def update_mongodb_history_lifetime(settings, config, mongodb):
+def _update_mongodb_history_lifetime(settings, config, mongodb):
     if not mongodb.connection:
         _connect_mongodb(settings, mongodb)
 
@@ -139,7 +179,8 @@ def _mongodb_next_id(mongodb, name, first_id=0):
         return ret['seq']
 
 
-def _log_event_history_to_mongodb(settings, event, what, who, addinfo, mongodb):
+def _log_event_history_to_mongodb(settings, config, logger, event, what, who, addinfo, mongodb):
+    _log_event(config, logger, event, what, who, addinfo)
     if not mongodb.connection:
         _connect_mongodb(settings, mongodb)
     # We converted _id to be an auto incrementing integer. This makes the unique
@@ -158,7 +199,12 @@ def _log_event_history_to_mongodb(settings, event, what, who, addinfo, mongodb):
     })
 
 
-def get_event_history_from_mongodb(settings, table_events, query, mongodb):
+def _log_event(config, logger, event, what, who, addinfo):
+    if config['debug_rules']:
+        logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
+
+
+def _get_event_history_from_mongodb(settings, table_events, query, mongodb):
     filters, limit = query.filters, query.limit
 
     history_entries = []
@@ -240,16 +286,6 @@ def get_event_history_from_mongodb(settings, table_events, query, mongodb):
 #   | Functions for logging the history of events                          |
 #   '----------------------------------------------------------------------'
 
-def log_event_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, what, who="", addinfo=""):
-    if config["debug_rules"]:
-        logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
-
-    if config['archive_mode'] == 'mongodb':
-        _log_event_history_to_mongodb(settings, event, what, who, addinfo, mongodb)
-    else:
-        _log_event_history_to_file(settings, config, lock_history, active_history_period, table_events, event, what, who, addinfo)
-
-
 # Make a new entry in the event history. Each entry is tab-separated line
 # with the following columns:
 # 0: time of log entry
@@ -257,7 +293,8 @@ def log_event_history(settings, config, logger, lock_history, mongodb, active_hi
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
-def _log_event_history_to_file(settings, config, lock_history, active_history_period, table_events, event, what, who, addinfo):
+def _log_event_history_to_file(settings, config, logger, lock_history, active_history_period, table_events, event, what, who, addinfo):
+    _log_event(config, logger, event, what, who, addinfo)
     with lock_history:
         columns = [
             str(time.time()),
@@ -331,7 +368,7 @@ def _current_history_period(config):
 
 
 # Delete old log files
-def expire_logfiles(settings, config, logger, lock_history, flush):
+def _expire_logfiles(settings, config, logger, lock_history, flush):
     with lock_history:
         try:
             days = config["history_lifetime"]
@@ -349,14 +386,7 @@ def expire_logfiles(settings, config, logger, lock_history, flush):
             logger.exception("Error expiring log files: %s" % e)
 
 
-def flush_event_history(settings, config, logger, lock_history, mongodb):
-    if config['archive_mode'] == 'mongodb':
-        _flush_event_history_mongodb(mongodb)
-    else:
-        expire_logfiles(settings, config, logger, lock_history, True)
-
-
-def get_event_history_from_file(settings, table_history, query, logger):
+def _get_event_history_from_file(settings, table_history, query, logger):
     filters, limit = query.filters, query.limit
     history_entries = []
     if not settings.paths.history_dir.value.exists():

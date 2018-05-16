@@ -24,7 +24,6 @@ def testconfig_sections(request, config):
         config.set('global', 'sections', Globals.section)
     else:
         config.set('global', 'sections', '%s systemtime' % Globals.section)
-    config.set('global', 'crash_debug', 'yes')
     return config
 
 

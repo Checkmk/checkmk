@@ -7,9 +7,11 @@ import re
 from remote import (actual_output, config, remotetest, remotedir, wait_agent,
                     write_config)
 
+
 class Globals(object):
     section = 'ps'
     alone = True
+
 
 @pytest.fixture
 def testfile():

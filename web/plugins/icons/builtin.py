@@ -58,6 +58,7 @@
 #})
 
 import cmk.utils
+import cmk.render
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -502,6 +503,24 @@ multisite_icons_and_actions['notes'] = {
 #   '----------------------------------------------------------------------'
 
 def paint_downtimes(what, row, tags, host_custom_vars):
+    def detail_txt(downtimes_with_extra_info):
+        if not downtimes_with_extra_info:
+            return ""
+
+        lines = []
+        for downtime_entry in downtimes_with_extra_info:
+            downtime_id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring, is_pending = downtime_entry[:11]
+
+            if fixed:
+                time_info = "Start: %s, End: %s" % (cmk.render.date_and_time(start_time), cmk.render.date_and_time(end_time))
+            else:
+                time_info = "May start from %s till %s with duration of %s" % \
+                    (cmk.render.date_and_time(start_time), cmk.render.date_and_time(end_time), cmk.render.Age(duration))
+
+            lines.append("%s (%s) - %s" % (author, time_info, comment))
+
+        return "\n%s" % "\n".join(lines)
+
     # Currently we are in a downtime + link to list of downtimes
     # for this host / service
     if row[what + "_scheduled_downtime_depth"] > 0:
@@ -509,13 +528,21 @@ def paint_downtimes(what, row, tags, host_custom_vars):
             icon = "derived_downtime"
         else:
             icon = "downtime"
-        return icon, _("Currently in downtime"), url_to_view(row, 'downtimes_of_' + what)
+
+        title = _("Currently in downtime")
+        title += detail_txt(row[what + "_downtimes_with_extra_info"])
+
+        return icon, title, url_to_view(row, 'downtimes_of_' + what)
+
     elif what == "service" and row["host_scheduled_downtime_depth"] > 0:
-        return 'derived_downtime', _("The host is currently in downtime"), url_to_view(row, 'downtimes_of_host')
+        title = _("The host is currently in downtime")
+        title += detail_txt(row["host_downtimes_with_extra_info"])
+
+        return 'derived_downtime', title, url_to_view(row, 'downtimes_of_host')
 
 multisite_icons_and_actions['status_downtimes'] = {
-    'host_columns':    [ 'scheduled_downtime_depth' ],
-    'columns':         [ 'scheduled_downtime_depth' ],
+    'host_columns':    [ 'scheduled_downtime_depth', 'downtimes_with_extra_info' ],
+    'columns':         [ 'scheduled_downtime_depth', 'downtimes_with_extra_info' ],
     'paint':           paint_downtimes,
     'toplevel':        True,
 }

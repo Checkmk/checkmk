@@ -1,0 +1,12 @@
+Title: Bash completion: Make completion work on SLES
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1526457105
+
+The completion file of the RPMs is now installed as /etc/bash_completion.d/omd.sh instead
+of /etc/bash_completion.d/omd because SLES only interprets files ending with .sh.

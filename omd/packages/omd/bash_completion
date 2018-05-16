@@ -8,6 +8,12 @@ _omd_cmd_options() {
     return
 }
 
+# Return true if the completion should be treated as running as root
+_complete_as_root()
+{
+    [[ $EUID -eq 0 || ${root_command:-} ]]
+}
+
 _omd()
 {
     local GLOBALCMDS="sites|version|versions|help"

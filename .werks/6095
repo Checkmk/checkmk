@@ -1,0 +1,12 @@
+Title: Improved hover menu information of downtime icons
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1526462266
+Class: feature
+
+In case a host / service is in downtime, an icon (moon) is shown in the icons column
+to visualize the downtime state. When hovering over the icon it now shows detailed
+information related to the active downtimes (author, timing, comment).

@@ -3047,68 +3047,6 @@ function sla_details_table_hover(tr, row_id, onoff) {
     }
 }
 
-
-//#.
-//#   .-Keybindings--------------------------------------------------------.
-//#   |        _  __          _     _           _ _                        |
-//#   |       | |/ /___ _   _| |__ (_)_ __   __| (_)_ __   __ _ ___        |
-//#   |       | ' // _ \ | | | '_ \| | '_ \ / _` | | '_ \ / _` / __|       |
-//#   |       | . \  __/ |_| | |_) | | | | | (_| | | | | | (_| \__ \       |
-//#   |       |_|\_\___|\__, |_.__/|_|_| |_|\__,_|_|_| |_|\__, |___/       |
-//#   |                 |___/                             |___/            |
-//#   +--------------------------------------------------------------------+
-//#   |                                                                    |
-//#   '--------------------------------------------------------------------'
-
-// var keybindings will be defined dynamically by htmllib.py
-var keybindings_pressedkeys = [];
-
-function keybindings_keydown(e) {
-    if (!e) e = window.event;
-    var keyCode = e.which || e.keyCode;
-    keybindings_pressedkeys.push(keyCode);
-    return keybindings_check(e);
-}
-
-function keybindings_keyup(e) {
-    if (!e) e = window.event;
-    var keyCode = e.which || e.keyCode;
-    for (var i in keybindings_pressedkeys) {
-        if (keybindings_pressedkeys[i] == keyCode) {
-            keybindings_pressedkeys.splice(i, 1);
-            break;
-        }
-    }
-}
-
-function keybindings_focus(e) {
-    keybindings_pressedkeys = [];
-}
-
-function keybindings_check(e) {
-    for (var i in keybindings) {
-        var keylist = keybindings[i][0];
-        if (keybindings_check_keylist(keylist)) {
-            if (e.stopPropagation)
-                e.stopPropagation();
-            e.cancelBubble = true;
-            var jscode = keybindings[i][1];
-            eval(jscode);
-            return false;
-        }
-    }
-    return true;
-}
-
-function keybindings_check_keylist(keylist)
-{
-    for (var i in keylist) {
-        if (keybindings_pressedkeys.indexOf(keylist[i]) < 0)
-            return false;
-    }
-    return true;
-}
-
 //#.
 //#   .-Popup Menu---------------------------------------------------------.
 //#   |       ____                           __  __                        |

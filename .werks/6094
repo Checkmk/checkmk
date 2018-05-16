@@ -1,0 +1,10 @@
+Title: Bash completion: Fixed exception when trying to use completion as root
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0b5
+Date: 1526457255
+Class: fix
+
+

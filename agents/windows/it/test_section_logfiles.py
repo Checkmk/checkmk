@@ -16,6 +16,7 @@ class Globals(object):
     config_param_in_use = None
     utf_encoding = None
     section = 'logfiles'
+    alone = True
     testlog1 = os.path.join(remotedir, 'test1.log')
     testlog2 = os.path.join(remotedir, 'test2.log')
     testentry1 = 'foobar'
@@ -63,13 +64,23 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['default', 'from_start', 'rotated', 'nocontext'])
+@pytest.fixture(
+    params=[('default', True), ('from_start', True), ('rotated', True),
+            ('nocontext', True), ('default', False)],
+    ids=[
+        'default_alone', 'from_start_alone', 'rotated_alone',
+        'nocontext_alone', 'default_with_systemtime'
+    ])
 def testconfig(request, config):
-    config.set('global', 'sections', Globals.section)
+    Globals.alone = request.param[1]
+    if Globals.alone:
+        config.set('global', 'sections', Globals.section)
+    else:
+        config.set('global', 'sections', '%s systemtime' % Globals.section)
     config.set('global', 'crash_debug', 'yes')
     config.add_section(Globals.section)
-    Globals.config_param_in_use = request.param
-    tag = '' if request.param == 'default' else '%s ' % request.param
+    Globals.config_param_in_use = request.param[0]
+    tag = '' if request.param[0] == 'default' else '%s ' % request.param[0]
     config.set(Globals.section, 'textfile',
                '%s%s|%s%s' % (tag, Globals.testlog1, tag, Globals.testlog2))
     return config
@@ -111,6 +122,8 @@ def expected_output_no_statefile():
             r'\. %s' % Globals.testentry1,
             r'C %s' % Globals.testentry2
         ]
+    if not Globals.alone:
+        expected_output += [re.escape(r'<<<systemtime>>>'), r'\d+']
     return expected_output
 
 
@@ -129,6 +142,8 @@ def expected_output_with_statefile():
     if Globals.config_param_in_use != 'nocontext':
         expected_output.append(r'\. %s' % Globals.testentry1)
     expected_output.append(r'C %s' % Globals.testentry2)
+    if not Globals.alone:
+        expected_output += [re.escape(r'<<<systemtime>>>'), r'\d+']
     return expected_output
 
 

@@ -1,0 +1,81 @@
+Title: Check_MK GUI is now shipped via mod_wsgi as WSGI application
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1526490553
+Class: feature
+
+This change should be seamless for most users, but may be interesting
+especially for users that use custom GUI extensions. In case you only use the
+GUI as it is and are not interested in technical details, you can skip the
+following details.
+
+With this change we replaced mod_python apache module with mod_wsgi.
+Mod_python has been "deprecated" for several years. These days all modern
+python based web applications are built using the WSGI standard. There are a
+lot of implementations of WSGI applications out there. To have a smooth
+transition we decided to use the mod_wsgi apache module as application server
+for the GUI. It is now shipped with Check_MK instead of mod_python.
+
+We have made the necessary changes to the GUI to work as WSGI application.
+
+Some other cleanups and modifications have been made on the way.
+
+<ul>
+<li>Move index file to dedicated app folder as recommended for WSGI apps</li>
+<li>Move several things from htmllib.html to dedicated helper classes
+  <ul>
+    <li>http.Request -> HTTP request parsing (from WSGI env)</li>
+    <li>http.Response -> HTTP response processing (for WSGI)</li>
+    <li>htmllib.TimeoutManager -> Handle GUI task timeouts</li>
+    <li>htmllib.TransactionManager -> Mange GUI action transaction IDs</li>
+  </ul>
+</li>
+<li>Cleaned up several other things in the htmllib and parent classes</li>
+</ul>
+
+The following changes have been made to the htmllib.html API:
+
+html.set_cookie() -> html.response.set_cookie()
+html.del_cookie() -> html.response.del_cookie()
+html.get_request_header() -> html.request.get_request_header()
+html.lowlevel_write() -> html._lowlevel_write()
+html.remote_ip() -> html.request.remote_ip
+html.is_ssl_request() -> html.request.is_ssl_request
+html.request_method() -> html.request.request_method
+html.get_user_agent() -> html.request.user_agent
+html.get_referer() -> html.request.referer
+html.requested_url() -> html.request.requested_url
+html.request_uri() -> html.request.requested_url
+html.http_redirect() -> html.response.http_redirect()
+html.client_request_timeout() -> html.request.request_timeout
+html.get_cookie_names() -> html.request.get_cookie_names()
+html.has_cookie() -> html.request.has_cookie()
+html.cookie() -> html.request.cookie()
+html.uploaded_file() -> html.request.uploaded_file()
+html.request_timeout() -> html.request.request_timeout
+html.get_request_timeout() -> html.request.request_timeout
+html.set_ignore_transids() -> html.transaction_ids.ignore()
+html.get_transid() -> html.transaction_ids.get()
+html.store_new_transids() -> html.transaction_ids.store_new()
+html.urlencode_plus() -> html.urlencode()
+
+Dropped things:
+
+html.add_keybinding()
+html.add_keybidings()
+html.disable_keybindings()
+html.keybindings_enabled
+html.keybindings
+html.RETURN
+html.SHIFT
+html.CTRL
+html.ALT
+html.BACKSPACE
+html.F1
+html.u8()
+html.utf8_to_entities()
+html.varencode()
+

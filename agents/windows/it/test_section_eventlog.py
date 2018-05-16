@@ -25,6 +25,7 @@ class Globals:
     local_statefile = 'eventstate.txt'
     state_pattern = re.compile(r'^(?P<logtype>[^\|]+)\|(?P<record>\d+)$')
     section = 'logwatch'
+    alone = True
     statedir = os.path.join(remotedir, 'state')
     statefile = 'eventstate___1.txt'
     testlog = 'Application'
@@ -104,42 +105,56 @@ def testfile():
     return os.path.basename(__file__)
 
 
+@pytest.fixture(params=['alone', 'with_systemtime'])
+def testconfig_sections(request, config):
+    Globals.alone = request.param == 'alone'
+    if Globals.alone:
+        config.set('global', 'sections', Globals.section)
+    else:
+        config.set('global', 'sections', '%s systemtime' % Globals.section)
+    return config
+
+
 @pytest.fixture(params=['yes', 'no'], ids=['vista_api=yes', 'vista_api=no'])
-def testconfig(request, config):
-    config.set('global', 'sections', Globals.section)
-    config.set('global', 'crash_debug', 'yes')
-    config.add_section(Globals.section)
-    config.set(Globals.section, 'vista_api', request.param)
-    config.set(Globals.section, 'logfile %s' % Globals.testlog, 'warn')
+def testconfig(request, testconfig_sections):
+    testconfig_sections.set('global', 'crash_debug', 'yes')
+    testconfig_sections.add_section(Globals.section)
+    testconfig_sections.set(Globals.section, 'vista_api', request.param)
+    testconfig_sections.set(Globals.section, 'logfile %s' % Globals.testlog,
+                            'warn')
     # Ignore security and system logs as SSH agent and COM may emit something
     # there while tests run
-    config.set(Globals.section, 'logfile Security', 'off')
-    config.set(Globals.section, 'logfile System', 'off')
+    testconfig_sections.set(Globals.section, 'logfile Security', 'off')
+    testconfig_sections.set(Globals.section, 'logfile System', 'off')
 
-    return config
+    return testconfig_sections
 
 
 @pytest.fixture
 def expected_output_no_events():
     if platform.system() == 'Windows':
-        return [re.escape(r'<<<%s>>>' % Globals.section)
-                ] + [logtitle(l) for l in logs]
+        expected = [re.escape(r'<<<%s>>>' % Globals.section)
+                    ] + [logtitle(l) for l in logs]
+        if not Globals.alone:
+            expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
+        return expected
 
 
 @pytest.fixture
 def expected_output_application_events():
     if platform.system() == 'Windows':
         split_index = logs.index('Application') + 1
-        return chain(
-            [re.escape(r'<<<%s>>>' % Globals.section)],
-            [logtitle(l) for l in logs[:split_index]], [
-                r'W \w{3} \d{2} \d{2}\:\d{2}:\d{2} 0\.%d %s %s' %
-                (i, Globals.testsource.replace(' ', '_'),
-                 Globals.testdescription) for i in Globals.testids
-            ],
-            repeat(r'|'.join(
-                [logtitle(l) for l in logs[split_index:]] +
-                [r'[CWOu\.] \w{3} \d{2} \d{2}\:\d{2}:\d{2} \d+\.\d+ .+ .+'])))
+        re_str = r'|'.join(
+            [logtitle(l) for l in logs[split_index:]] +
+            [r'[CWOu\.] \w{3} \d{2} \d{2}\:\d{2}:\d{2} \d+\.\d+ .+ .+'])
+        if not Globals.alone:
+            re_str += r'|' + re.escape(r'<<<systemtime>>>') + '|\d+'
+        return chain([re.escape(r'<<<%s>>>' % Globals.section)],
+                     [logtitle(l) for l in logs[:split_index]], [
+                         r'W \w{3} \d{2} \d{2}\:\d{2}:\d{2} 0\.%d %s %s' %
+                         (i, Globals.testsource.replace(' ', '_'),
+                          Globals.testdescription) for i in Globals.testids
+                     ], repeat(re_str))
 
 
 def last_records():

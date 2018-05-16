@@ -1065,9 +1065,7 @@ class EventServer(ECServerThread):
                 self.hk_handle_event_timeouts()
                 self.hk_check_expected_messages()
                 self.hk_cleanup_downtime_events()
-
-        if self._config['archive_mode'] != 'mongodb':
-            cmk.ec.history.expire_logfiles(self.settings, self._config, self._logger, self._lock_history, False)
+        cmk.ec.history.history_housekeeping(self.settings, self._config, self._logger, self._lock_history)
 
     # For all events that have been created in a host downtime check the host
     # whether or not it is still in downtime. In case the downtime has ended
@@ -2752,10 +2750,7 @@ class StatusTableHistory(StatusTable):
         self._logger = logger
 
     def _enumerate(self, query):
-        if self._config['archive_mode'] == 'mongodb':
-            return cmk.ec.history.get_event_history_from_mongodb(self.settings, self._table_events, query, self._mongodb)
-        else:
-            return cmk.ec.history.get_event_history_from_file(self.settings, self, query, self._logger)
+        cmk.ec.history.get_event_history(self.settings, self._config, self._mongodb, self._table_events, self, self._logger, query)
 
 
 class StatusTableRules(StatusTable):
@@ -3897,10 +3892,7 @@ def load_configuration(settings, slave_status, mongodb, logger):
         logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
         logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
 
-    # Configure the auto deleting indexes in the DB when mongodb is enabled
-    if config['archive_mode'] == 'mongodb':
-        cmk.ec.history.update_mongodb_indexes(settings, mongodb)
-        cmk.ec.history.update_mongodb_history_lifetime(settings, config, mongodb)
+    cmk.ec.history.configure_event_history(settings, config, mongodb)
 
     # Are we a replication slave? Parts of the configuration
     # will be overridden by values from the master.

@@ -11,6 +11,7 @@ import shutil
 
 class Globals:
     section = 'fileinfo'
+    alone = True
     tempdir1 = os.path.join(remotedir, 'Testdir1')
     tempdir2 = os.path.join(tempdir1, 'Testdir2')
     tempfile1 = os.path.join(tempdir1, 'TestFile1')
@@ -26,22 +27,27 @@ def testfile(request):
 
 @pytest.fixture(
     params=[
-        os.path.join(Globals.tempdir1, '**'),
-        os.path.join(Globals.tempdir2, 'Te*')
+        (os.path.join(Globals.tempdir1, '**'), True),
+        (os.path.join(Globals.tempdir2, 'Te*'), True),
+        (os.path.join(Globals.tempdir2, 'Te*'), False)
     ],
-    ids=['recursive_glob', 'simple_glob'])
+    ids=['recursive_glob', 'simple_glob_alone', 'simple_glob_with_systemtime'])
 def testconfig(request, config):
     if platform.system() == 'Windows':
-        config.set('global', 'sections', Globals.section)
+        Globals.alone = request.param[1]
+        if Globals.alone:
+            config.set('global', 'sections', Globals.section)
+        else:
+            config.set('global', 'sections', '%s systemtime' % Globals.section)
         config.set('global', 'crash_debug', 'yes')
         config.add_section(Globals.section)
-        if request.param != os.path.join(Globals.tempdir1, '**'):
+        if request.param[0] != os.path.join(Globals.tempdir1, '**'):
             config.set(Globals.section, 'path', Globals.tempfile1)
             config.set(
                 Globals.section, 'path',
                 os.path.join(Globals.tempdir1,
                              '?' + os.path.basename(Globals.tempfile2)[1:]))
-        config.set(Globals.section, 'path', request.param)
+        config.set(Globals.section, 'path', request.param[0])
         config.set(Globals.section, 'path', Globals.missingfile)
 
         return config
@@ -50,13 +56,19 @@ def testconfig(request, config):
 @pytest.fixture
 def expected_output():
     if platform.system() == 'Windows':
-        return [
+        expected = [
             re.escape(r'<<<%s:sep(124)>>>' % Globals.section), r'\d+',
             re.escape(r'%s|' % Globals.tempfile1) + r'\d+\|\d+',
             re.escape(r'%s|' % Globals.tempfile2) + r'\d+\|\d+',
             re.escape(r'%s|' % Globals.tempfile3) + r'\d+\|\d+',
             re.escape(r'%s|missing|' % Globals.missingfile) + r'\d+'
         ]
+        if not Globals.alone:
+            expected += [
+                re.escape(r'<<<systemtime>>>'),
+                r'\d+'
+            ]
+        return expected
 
 
 @pytest.fixture

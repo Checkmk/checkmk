@@ -10,6 +10,7 @@ from remote import (actual_output, config, remotetest, remotedir, wait_agent,
 
 class Globals(object):
     section = 'spool'
+    alone = True
     test_message = 'Test message'
     outdated = False
 
@@ -19,16 +20,25 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(config):
-    config.set('global', 'sections', Globals.section)
+@pytest.fixture(params=['alone', 'with_systemtime'])
+def testconfig(request, config):
+    Globals.alone = request.param == 'alone'
+    if Globals.alone:
+        config.set('global', 'sections', Globals.section)
+    else:
+        config.set('global', 'sections', '%s systemtime' % Globals.section)
     config.set('global', 'crash_debug', 'yes')
     return config
 
 
 @pytest.fixture
 def expected_output():
-    return [] if Globals.outdated else [r'%s' % Globals.test_message]
+    expected = []
+    if not Globals.outdated:
+        expected += [r'%s' % Globals.test_message]
+    if not Globals.alone:
+        expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
+    return expected
 
 
 @pytest.fixture(

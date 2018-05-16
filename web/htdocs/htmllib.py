@@ -1432,7 +1432,6 @@ class html(HTMLGenerator, RequestHandler):
         self.browser_reload = 0
         self.browser_redirect = ''
         self.link_target = None
-        self.keybindings_enabled = True
         self.myfile = None
 
         # Browser options
@@ -1450,8 +1449,6 @@ class html(HTMLGenerator, RequestHandler):
         self.io_error = False
         self.mobile = False
         self.buffering = True
-        self.keybindings_enabled = True
-        self.keybindings = []
 
         # Forms
         self.form_name = None
@@ -2016,12 +2013,6 @@ class html(HTMLGenerator, RequestHandler):
     def body_end(self):
         if self.have_help:
             self.javascript("enable_help();")
-        if self.keybindings_enabled and self.keybindings:
-            self.javascript("var keybindings = %s;\n"
-                            "document.body.onkeydown = keybindings_keydown;\n"
-                            "document.body.onkeyup = keybindings_keyup;\n"
-                            "document.body.onfocus = keybindings_focus;\n" %
-                                json.dumps(self.keybindings))
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code)
         self.javascript("initialize_visibility_detection();")
@@ -2703,15 +2694,13 @@ class html(HTMLGenerator, RequestHandler):
         self.context_buttons_open = False
 
 
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None, class_=None):
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, class_=None):
         # TODO: REFACTOR
         id_ = id
-        self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, fkey=fkey, class_=class_)
-        if fkey and self.keybindings_enabled:
-            self.add_keybinding([self.F1 + (fkey - 1)], "document.location='%s';" % self.escaper.escape_attribute(url))
+        self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, class_=class_)
 
 
-    def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None, class_=None):
+    def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, class_=None):
         title = self.attrencode(title)
         display = "block"
         if bestof:
@@ -2729,8 +2718,6 @@ class html(HTMLGenerator, RequestHandler):
         css_classes = [ "contextlink" ]
         if hot:
             css_classes.append("hot")
-        if fkey and self.keybindings_enabled:
-            css_classes.append("button")
         if class_:
             if type(class_) == list:
                 css_classes += class_
@@ -2746,8 +2733,6 @@ class html(HTMLGenerator, RequestHandler):
 
         self.span(title)
 
-        if fkey and self.keybindings_enabled:
-            self.div("F%d" % fkey, class_="keysym")
         self.close_a()
 
         self.close_div()
@@ -3016,23 +3001,6 @@ class html(HTMLGenerator, RequestHandler):
     def del_cache(self, name):
         if name in self.caches:
             del self.caches[name]
-
-
-    #
-    # Keyboard control
-    # TODO: Can we move this specific feature to AQ?
-    #
-
-    def add_keybinding(self, keylist, jscode):
-        self.keybindings.append([keylist, jscode])
-
-
-    def add_keybindings(self, bindings):
-        self.keybindings += bindings
-
-
-    def disable_keybindings(self):
-        self.keybindings_enabled = False
 
 
     #

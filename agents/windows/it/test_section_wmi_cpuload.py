@@ -6,23 +6,31 @@ import re
 from remote import actual_output, config, remotetest, wait_agent, write_config
 
 
+class Globals(object):
+    section = 'wmi_cpuload'
+    alone = True
+
+
 @pytest.fixture
 def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(config):
-    section = 'wmi_cpuload'
-    config.set('global', 'sections', section)
+@pytest.fixture(params=['alone', 'with_systemtime'])
+def testconfig(request, config):
+    Globals.alone = request.param == 'alone'
+    if Globals.alone:
+        config.set('global', 'sections', Globals.section)
+    else:
+        config.set('global', 'sections', '%s systemtime' % Globals.section)
     config.set('global', 'crash_debug', 'yes')
     return config
 
 
 @pytest.fixture
 def expected_output():
-    return [
-        re.escape(r'<<<wmi_cpuload:sep(44)>>>'),
+    expected = [
+        re.escape(r'<<<%s:sep(44)>>>' % Globals.section),
         re.escape(r'[system_perf]'),
         (r'AlignmentFixupsPersec,Caption,ContextSwitchesPersec,Description,'
          r'ExceptionDispatchesPersec,FileControlBytesPersec,'
@@ -59,8 +67,12 @@ def expected_output():
          r'[\w-]+,,\d+,\d+,\d+,,[^,]+,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[\w-]+,'
          r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*')
     ]
+    if not Globals.alone:
+        expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
+    return expected
 
 
-def test_section_wmi_cpuload(testconfig, expected_output, actual_output,
+def test_section_wmi_cpuload(request, testconfig, expected_output, actual_output,
                              testfile):
-    remotetest(expected_output, actual_output, testfile)
+    # request.node.name gives test name
+    remotetest(expected_output, actual_output, testfile, request.node.name)

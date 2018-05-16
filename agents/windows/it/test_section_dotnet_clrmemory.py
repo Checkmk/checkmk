@@ -7,23 +7,31 @@ import re
 from remote import actual_output, config, remotetest, wait_agent, write_config
 
 
+class Globals(object):
+    section = 'dotnet_clrmemory'
+    alone = True
+
+
 @pytest.fixture
 def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(config):
-    section = 'dotnet_clrmemory'
-    config.set('global', 'sections', section)
+@pytest.fixture(params=['alone', 'with_systemtime'])
+def testconfig(request, config):
+    Globals.alone = request.param == 'alone'
+    if Globals.alone:
+        config.set('global', 'sections', Globals.section)
+    else:
+        config.set('global', 'sections', '%s systemtime' % Globals.section)
     config.set('global', 'crash_debug', 'yes')
     return config
 
 
 @pytest.fixture
 def expected_output():
-    return chain([
-        re.escape(r'<<<dotnet_clrmemory:sep(44)>>>'),
+    base = [
+        re.escape(r'<<<%s:sep(44)>>>' % Globals.section),
         (r'AllocatedBytesPersec,Caption,Description,FinalizationSurvivors,'
          r'Frequency_Object,Frequency_PerfTime,Frequency_Sys100NS,Gen0heapsize,'
          r'Gen0PromotedBytesPerSec,Gen1heapsize,Gen1PromotedBytesPerSec,'
@@ -35,12 +43,16 @@ def expected_output():
          r'ProcessID,PromotedFinalizationMemoryfromGen0,PromotedMemoryfromGen0,'
          r'PromotedMemoryfromGen1,Timestamp_Object,Timestamp_PerfTime,'
          r'Timestamp_Sys100NS')
-    ],
-                 repeat(r'\d+,,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'))
+    ]
+    re_str = (r'\d+,,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+              r'[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+')
+    if not Globals.alone:
+        re_str += r'|' + re.escape(r'<<<systemtime>>>') + '|\d+'
+    return chain(base, repeat(re_str))
 
 
-def test_section_dotnet_clrmemory(testconfig, expected_output, actual_output,
-                                  testfile):
-    remotetest(expected_output, actual_output, testfile)
+def test_section_dotnet_clrmemory(request, testconfig, expected_output,
+                                  actual_output, testfile):
+    # request.node.name gives test name
+    remotetest(expected_output, actual_output, testfile, request.node.name)

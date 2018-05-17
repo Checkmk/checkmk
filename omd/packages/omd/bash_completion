@@ -118,7 +118,7 @@ _omd()
 
         # omd config set|show ...
         elif [ ${#subcmdargs[@]} -eq 1 ]; then
-            opts=$(cat /omd/sites/$site/etc/omd/site.conf | awk -F= '{ print $1 }' | sed 's/^CONFIG_//')
+            opts=$(awk -F= '{ print $1 }' /omd/sites/$site/etc/omd/site.conf | sed 's/^CONFIG_//')
 
         # omd config set <option> ...
         elif [ ${subcmdargs[0]} = "set" ]; then

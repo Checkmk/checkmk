@@ -1,0 +1,11 @@
+Title: Fixed broken active checks (Regression in 1.4.0p32, werk #6063)
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.4.0p33
+Date: 1526545713
+Class: fix
+
+Active checks were not usable in 1.4.0p32. They always resulted in an UNKNOWN
+state with an output similar to "sh: 1: /check_http: not found".

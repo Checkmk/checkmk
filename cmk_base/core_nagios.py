@@ -962,6 +962,12 @@ def _precompile_hostcheck(hostname):
     output.write("# encoding: utf-8\n\n")
 
     output.write("import sys\n")
+
+    # Remove precompiled directory from sys.path. Leaving it in the path
+    # makes problems when host names (name of precompiled files) are equal
+    # to python module names like "random"
+    output.write("sys.path.pop(0)\n")
+
     output.write("import cmk.log\n")
     output.write("import cmk.debug\n")
     output.write("from cmk.exceptions import MKTerminate\n")
@@ -985,11 +991,6 @@ if os.path.islink(%(dst)r):
     os.chmod(%(dst)r, 0755)
 
 """ % { "src" : source_filename, "dst" : compiled_filename })
-
-    # Remove precompiled directory from sys.path. Leaving it in the path
-    # makes problems when host names (name of precompiled files) are equal
-    # to python module names like "random"
-    output.write("sys.path.pop(0)\n")
 
     # Register default Check_MK signal handler
     output.write("cmk_base.utils.register_sigint_handler()\n")

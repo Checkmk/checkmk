@@ -1,0 +1,15 @@
+Title: Only reset default version when current default version is uninstalled
+Level: 1
+Component: rpm
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b5
+Date: 1526541350
+
+Previously all RPM packages that were uninstalled were resetting the current
+default version to the result of "ls -A /omd/versions 2>/dev/null| sort -n |
+tail -n 1". The uninstall logic of NEW packages will now first check whether or
+not the version currently being removed is the default version and only reset
+the default version in case it is needed.

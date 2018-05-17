@@ -1,0 +1,10 @@
+Title: Fixed info extension by node name of cluster-aware checks if host if not part of a cluster
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1526541876
+Class: fix
+
+

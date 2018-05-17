@@ -1,0 +1,10 @@
+Title: fortigate_sessions: Removed useless include statement which cause an OSError
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p33
+Date: 1526539177
+Class: fix
+
+

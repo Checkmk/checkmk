@@ -1709,6 +1709,20 @@ class DropdownChoice(ValueSpec):
         return True
 
 
+class FolderChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        import watolib
+        kwargs["choices"] = watolib.Folder.folder_choices
+        kwargs.setdefault("title", _("Folder"))
+        DropdownChoice.__init__(self, **kwargs)
+
+class FullPathFolderChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        import watolib
+        kwargs["choices"] = watolib.Folder.folder_choices_fulltitle
+        kwargs.setdefault("title", _("Folder"))
+        DropdownChoice.__init__(self, **kwargs)
+
 # Special conveniance variant for monitoring states
 # TODO: Rename to ServiceState() or something like this
 class MonitoringState(DropdownChoice):

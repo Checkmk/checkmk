@@ -958,7 +958,7 @@ def _precompile_hostcheck(hostname):
         return
 
     output = file(source_filename + ".new", "w")
-    output.write("#!/usr/bin/python\n")
+    output.write("#!/usr/bin/env python\n")
     output.write("# encoding: utf-8\n\n")
 
     output.write("import sys\n")

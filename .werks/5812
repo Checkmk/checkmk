@@ -1,0 +1,14 @@
+Title: Fixed Check_MK check helper crashes related to loading of precompiled checks
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b5
+Date: 1526550541
+
+The latest versions no longer read checks as plain text python files (Werk 6046).
+The operation which generates the precompilated file was not atomic, so a file could
+be partially written, while being read by another process.
+This caused various exceptions in multiple checks.

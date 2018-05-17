@@ -176,13 +176,19 @@ fi
 
 
 %postun
-rm -f /omd/versions/default
 v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
 if [ -n "$v" ]
 then
-    echo "New default version is $v"
-    ln -sfn "$v" /omd/versions/default
+    DEFAULT_VERSION=$(readlink /omd/versions/default 2>/dev/null)
+    DEFAULT_VERSION=${DEFAULT_VERSION##*/}}
+    if [ "$v" = "$DEFAULT_VERSION" ]; then
+        echo "New default version is $v"
+        ln -sfn "$v" /omd/versions/default
+    else
+        echo "Leaving default version $DEFAULT_VERSION"
+    fi
 else
+    rm -f /omd/versions/default
     echo "Removing system group 'omd'"
     groupdel omd
     echo "Removing global symbolic links"

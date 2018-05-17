@@ -40,6 +40,13 @@ build: bin/gcc bin/g++
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 	PATH="$(abspath bin):$$PATH" ; $(MAKE) -j1 -C $(DIR) DESTDIR=$(PACKAGE_PYTHON_DESTDIR) install
+	$(MAKE) sitecustomize.pyc
+
+sitecustomize.pyc: sitecustomize.py
+	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
+	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	$(PACKAGE_PYTHON_EXECUTABLE) -m py_compile sitecustomize.py
 
 # The compiler detection code below is basically what part of AC_PROC_CXX does.
 bin/gcc:
@@ -87,12 +94,12 @@ install: bin/gcc bin/g++
 	    $(DESTDIR)$(OMD_ROOT)/bin/pydoc \
 	    $(DESTDIR)$(OMD_ROOT)/bin/python2.7-config \
 	    $(DESTDIR)$(OMD_ROOT)/bin/2to3
-	install -m 644 sitecustomize.py $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
+	install -m 644 sitecustomize.py sitecustomize.pyc $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
 
 skel:
 
 clean:
-	rm -rf $(DIR) bin build $(PACKAGE_PYTHON_DESTDIR)
+	rm -rf $(DIR) bin build $(PACKAGE_PYTHON_DESTDIR) sitecutomize.pyc
 
 upstream:
 	git rm Python-*.tgz

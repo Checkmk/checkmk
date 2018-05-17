@@ -93,10 +93,10 @@ def makedirs(path, mode=0770):
     if type(path) is unicode:
         return path.encode("utf-8")
 
-    if os.path.exists(path):
-        return
-
-    os.makedirs(path, mode)
+    try:
+        os.makedirs(path, mode)
+    except OSError:
+        pass
 
 #.
 #   .--.mk Configs---------------------------------------------------------.

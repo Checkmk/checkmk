@@ -69,6 +69,7 @@ _omd()
     done
 
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local OMD_ROOT="/omd/sites/$site"
 
     # omd -V|setversion ...
     if [[ $prev =~ -V|setversion ]]; then
@@ -107,7 +108,7 @@ _omd()
 
     # omd start|stop|restart|reload|status  ...
     elif [[ $subcmd =~ start|stop|restart|reload|status ]]; then
-        opts="$(_omd_cmd_options $subcmd) $(env ls -1 /omd/sites/$site/etc/init.d/ 2>/dev/null)"
+        opts="$(_omd_cmd_options $subcmd) $(env ls -1 $OMD_ROOT/etc/init.d/ 2>/dev/null)"
 
     # omd config ...
     elif [[ $subcmd =~ config ]]; then
@@ -118,14 +119,16 @@ _omd()
 
         # omd config set|show ...
         elif [ ${#subcmdargs[@]} -eq 1 ]; then
-            opts=$(awk -F= '{ print $1 }' /omd/sites/$site/etc/omd/site.conf | sed 's/^CONFIG_//')
+            opts=$(awk -F= '{ print $1 }' $OMD_ROOT/etc/omd/site.conf | sed 's/^CONFIG_//')
 
         # omd config set <option> ...
         elif [ ${subcmdargs[0]} = "set" ]; then
-            if [ $EUID -eq 0 ]; then
-                opts=$(su - $site ./lib/omd/hooks/$prev choices | awk -F: '{ print $1 }')
-            else
-                opts=$(./lib/omd/hooks/$prev choices | awk -F: '{ print $1 }')
+            if [[ -e "$OMD_ROOT/lib/omd/hooks/$prev" ]]; then
+                if [ $EUID -eq 0 ]; then
+                    opts=$(su - $site $OMD_ROOT/lib/omd/hooks/$prev choices | awk -F: '{ print $1 }')
+                else
+                    opts=$($OMD_ROOT/lib/omd/hooks/$prev choices | awk -F: '{ print $1 }')
+                fi
             fi
         fi
 

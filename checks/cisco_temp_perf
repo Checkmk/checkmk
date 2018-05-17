@@ -58,28 +58,6 @@ def inventory_cisco_temp_perf(info):
 def check_cisco_temp_perf(item, _no_params, info):
     for statustext, temp, max_temp, state, oid_end in info:
         if cisco_sensor_item(statustext, oid_end) == item:
-#            # FIXME saveint needed here? (See if condition)
-#            temp = saveint(temp)
-#            if temp != 0:
-#                max_temp = max_temp and int(max_temp) or None
-#                perfdata = [("temp", temp, None, max_temp )]
-#                temptext = ", Temperature: %d °C" % temp
-#                if max_temp != None:
-#                    temptext += " (critical at %d °C)" % max_temp
-#            else:
-#                perfdata = []
-#                temptext = ""
-#
-#            state = int(state)
-#            statename = cisco_temp_perf_envmon_states.get(state, "(invalid)")
-#            if state == 1:
-#                return (0, "state is normal%s" % temptext, perfdata)
-#            elif state == 2:
-#                return (1, "state is %s%s" % (statename, temptext), perfdata)
-#            elif state in [ 5, 6 ]:
-#                return (3, "state is %s" % statename)
-#            else:
-#                return (2, "state is %s%s" % (statename, temptext), perfdata)
             return 3, "This check is obsolete, please re-inventorize this host"
 
 

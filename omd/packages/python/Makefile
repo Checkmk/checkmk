@@ -8,6 +8,12 @@ DIR      = $(NAME)-$(VERSION)
 
 build: bin/gcc bin/g++
 	tar xzf $(DIR).tgz
+
+	set -e ; for p in patches/*.dif ; do \
+	    echo "applying $$p..." ; \
+	    patch -p1 -b -d $(DIR) < $$p ; \
+	done
+
 # Things are a bit tricky here: For PGO/LTO we need a rather recent compiler,
 # but we don't want to bake paths to our build system into _sysconfigdata and
 # friends. Workaround: Find a recent compiler to be used for building and make a

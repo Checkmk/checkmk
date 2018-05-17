@@ -194,9 +194,8 @@ class MultiHostSections(object):
         if check_plugin_name not in checks.check_info or not checks.check_info[check_plugin_name]["node_info"]:
             return section_content # unknown check_plugin_name or does not want node info -> do nothing
 
-        if for_discovery:
-            node_name = None
-        else:
+        node_name = None
+        if not for_discovery and config.clusters_of(hostname):
             node_name = hostname
 
         return self._add_node_column(section_content, node_name)

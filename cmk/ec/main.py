@@ -1949,7 +1949,7 @@ class EventServer(ECServerThread):
                         # time has elapsed. Now lets see if we have reached
                         # the neccessary count:
                         if event["count"] < expected_count:  # no -> trigger alarm
-                            self.handle_absent_event(rule, event["count"], expected_count, event["last"])
+                            self._handle_absent_event(rule, event["count"], expected_count, event["last"])
                         else:  # yes -> everything is fine. Just log.
                             self.logger.info("Rule %s/%s has reached %d occurrances (%d required). "
                                              "Starting next period." %
@@ -1961,12 +1961,12 @@ class EventServer(ECServerThread):
 
                 # Ou ou, no event found at all.
                 else:
-                    self.handle_absent_event(rule, 0, expected_count, interval_start)
+                    self._handle_absent_event(rule, 0, expected_count, interval_start)
 
                 for nr in events_to_delete[::-1]:
                     self._event_status.remove_event(events[nr])
 
-    def handle_absent_event(self, rule, event_count, expected_count, interval_start):
+    def _handle_absent_event(self, rule, event_count, expected_count, interval_start):
         now = time.time()
         if event_count:
             text = "Expected message arrived only %d out of %d times since %s" % \
@@ -3333,7 +3333,7 @@ class QueryCOMMAND(Query):
 #   an event is being created:
 #   * create_event_from_trap()
 #   * create_event_from_line()
-#   * handle_absent_event()
+#   * _handle_absent_event()
 #   * _create_overflow_event()
 # - When loading the status file add the possibly missing column to all
 #   loaded events (load_status())

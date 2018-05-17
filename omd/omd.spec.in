@@ -148,7 +148,9 @@ chkconfig --add @APACHE_NAME@ >/dev/null 2>&1
 chkconfig @APACHE_NAME@ on    >/dev/null 2>&1
 
 # RHEL / CENTOS >= 6.4, remove symlinks from existing sites in /etc/fstab
-sed -i "s/^tmpfs  \/omd\/sites/tmpfs  \/opt\/omd\/sites/" /etc/fstab
+if [ -e /etc/fstab ]; then
+    sed -i "s/^tmpfs  \/omd\/sites/tmpfs  \/opt\/omd\/sites/" /etc/fstab
+fi
 
 # ensure apache is running
 service @APACHE_NAME@ start >/dev/null 2>&1

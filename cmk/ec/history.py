@@ -35,41 +35,51 @@ import cmk.render
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
-def configure_event_history(settings, config, mongodb):
-    if config['archive_mode'] == 'mongodb':
+class History(object):
+    def __init__(self, settings, config, logger, lock_history, mongodb):
+        super(History, self).__init__()
+        self._settings = settings
+        self._config = config
+        self._logger = logger
+        self._lock_history = lock_history
+        self._mongodb = mongodb
+
+
+def configure_event_history(history):
+    if history._config['archive_mode'] == 'mongodb':
         # Configure the auto deleting indexes in the DB
-        _update_mongodb_indexes(settings, mongodb)
-        _update_mongodb_history_lifetime(settings, config, mongodb)
+        _update_mongodb_indexes(history._settings, history._mongodb)
+        _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
     else:
         pass
 
 
-def flush_event_history(settings, config, logger, lock_history, mongodb):
-    if config['archive_mode'] == 'mongodb':
-        _flush_event_history_mongodb(mongodb)
+def flush_event_history(history):
+    if history._config['archive_mode'] == 'mongodb':
+        _flush_event_history_mongodb(history._mongodb)
     else:
-        _expire_logfiles(settings, config, logger, lock_history, True)
+        _expire_logfiles(history._settings, history._config, history._logger, history._lock_history, True)
 
 
-def log_event_history(settings, config, logger, lock_history, mongodb, active_history_period, table_events, event, what, who="", addinfo=""):
-    if config['archive_mode'] == 'mongodb':
-        _log_event_history_to_mongodb(settings, config, logger, event, what, who, addinfo, mongodb)
+def log_event_history(history, active_history_period, table_events, event, what, who="", addinfo=""):
+    if history._config['archive_mode'] == 'mongodb':
+        _log_event_history_to_mongodb(history._settings, history._config, history._logger, event, what, who, addinfo, history._mongodb)
     else:
-        _log_event_history_to_file(settings, config, logger, lock_history, active_history_period, table_events, event, what, who, addinfo)
+        _log_event_history_to_file(history._settings, history._config, history._logger, history._lock_history, active_history_period, table_events, event, what, who, addinfo)
 
 
-def get_event_history(settings, config, mongodb, table_events, table_history, logger, query):
-    if config['archive_mode'] == 'mongodb':
-        return _get_event_history_from_mongodb(settings, table_events, query, mongodb)
+def get_event_history(history, table_events, table_history, query):
+    if history._config['archive_mode'] == 'mongodb':
+        return _get_event_history_from_mongodb(history._settings, table_events, query, history._mongodb)
     else:
-        return _get_event_history_from_file(settings, table_history, query, logger)
+        return _get_event_history_from_file(history._settings, table_history, query, history._logger)
 
 
-def history_housekeeping(settings, config, logger, lock_history):
-    if config['archive_mode'] == 'mongodb':
+def history_housekeeping(history):
+    if history._config['archive_mode'] == 'mongodb':
         pass
     else:
-        _expire_logfiles(settings, config, logger, lock_history, False)
+        _expire_logfiles(history._settings, history._config, history._logger, history._lock_history, False)
 
 
 #.

@@ -48,31 +48,6 @@ def settings():
 
 
 @pytest.fixture(scope="function")
-def slave_status():
-    return cmk.ec.main.default_slave_status_master()
-
-
-@pytest.fixture(scope="function")
-def mongodb():
-    return cmk.ec.history.MongoDB()
-
-
-@pytest.fixture(scope="function")
-def config(settings, slave_status, mongodb):
-    return cmk.ec.main.load_configuration(settings, slave_status, mongodb, logging.getLogger("cmk.mkeventd"))
-
-
-@pytest.fixture(scope="function")
-def perfcounters():
-    return cmk.ec.main.Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
-
-
-@pytest.fixture(scope="function")
-def active_history_period():
-    return cmk.ec.history.ActiveHistoryPeriod()
-
-
-@pytest.fixture(scope="function")
 def lock_eventstatus():
     return cmk.ec.main.ECLock(logging.getLogger("cmk.mkeventd.eventstatus"))
 
@@ -85,6 +60,31 @@ def lock_configuration():
 @pytest.fixture(scope="function")
 def lock_history():
     return cmk.ec.main.ECLock(logging.getLogger("cmk.mkeventd.history"))
+
+
+@pytest.fixture(scope="function")
+def slave_status():
+    return cmk.ec.main.default_slave_status_master()
+
+
+@pytest.fixture(scope="function")
+def mongodb():
+    return cmk.ec.history.MongoDB()
+
+
+@pytest.fixture(scope="function")
+def config(settings, lock_lock_history, mongodb, slave_status):
+    return cmk.ec.main.load_configuration(settings, logging.getLogger("cmk.mkeventd"), lock_history, mongodb, slave_status)
+
+
+@pytest.fixture(scope="function")
+def perfcounters():
+    return cmk.ec.main.Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
+
+
+@pytest.fixture(scope="function")
+def active_history_period():
+    return cmk.ec.history.ActiveHistoryPeriod()
 
 
 @pytest.fixture(scope="function")

@@ -46,6 +46,55 @@ try:
 except NameError:
     _ = lambda x: x # Fake i18n when not available
 
+
+#.
+#.
+#   .--Directories---------------------------------------------------------.
+#   |           ____  _               _             _                      |
+#   |          |  _ \(_)_ __ ___  ___| |_ ___  _ __(_) ___  ___            |
+#   |          | | | | | '__/ _ \/ __| __/ _ \| '__| |/ _ \/ __|           |
+#   |          | |_| | | | |  __/ (__| || (_) | |  | |  __/\__ \           |
+#   |          |____/|_|_|  \___|\___|\__\___/|_|  |_|\___||___/           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Some small wrappers around the python standard directory handling    |
+#   | functions.                                                           |
+#   '----------------------------------------------------------------------'
+
+def mkdir(path, mode=0770):
+    """Create a directory. Different from os.mkdir() in the following ways:
+
+    a) default mode is 0770
+    b) Encodes unicode paths to UTF-8
+    c) Returns without error when the directory exists
+    """
+
+    if type(path) is unicode:
+        return path.encode("utf-8")
+
+    if os.path.exists(path):
+        return
+
+    os.mkdir(path, mode)
+
+
+def makedirs(path, mode=0770):
+    """Create a leaf directory and all intermediate ones.
+    Different from os.makedirs() in the following ways:
+
+    a) default mode is 0770
+    b) Encodes unicode paths to UTF-8
+    c) Returns without error when the directory exists
+    """
+
+    if type(path) is unicode:
+        return path.encode("utf-8")
+
+    try:
+        os.makedirs(path, mode)
+    except OSError:
+        pass
+
 #.
 #   .--.mk Configs---------------------------------------------------------.
 #   |                     _       ____             __ _                    |

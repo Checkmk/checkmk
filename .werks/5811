@@ -1,0 +1,13 @@
+Title: Fixed race condition when creating missing directories
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b5
+Date: 1526550430
+
+Creating missing directories could lead to exceptions. This has been fixed
+
+

@@ -414,9 +414,7 @@ def _precompile_plugin(path, precompiled_path):
     code = compile(open(path).read(), path, "exec")
     plugin_mtime = os.stat(path).st_mtime
 
-    if not os.path.exists(os.path.dirname(precompiled_path)):
-        os.makedirs(os.path.dirname(precompiled_path))
-
+    store.makedirs(os.path.dirname(precompiled_path))
     py_compile.compile(path, precompiled_path, doraise=True)
 
 

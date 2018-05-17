@@ -181,12 +181,13 @@ fi
 v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
 if [ -n "$v" ]
 then
-    DEFAULT_VERSION=$(readlink /omd/versions/default 2>/dev/null)
-    DEFAULT_VERSION=${DEFAULT_VERSION##*/}
-    if [ "$v" = "$DEFAULT_VERSION" ]; then
+    # Test for broken default version symlink and replace with available version
+    if [ ! -e /omd/versions/default ]; then
         echo "New default version is $v"
         ln -sfn "$v" /omd/versions/default
     else
+        DEFAULT_VERSION=$(readlink /omd/versions/default 2>/dev/null)
+        DEFAULT_VERSION=${DEFAULT_VERSION##*/}
         echo "Leaving default version $DEFAULT_VERSION"
     fi
 else

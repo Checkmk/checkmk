@@ -1130,6 +1130,11 @@ class CREFolder(BaseFolder):
 
 
     @staticmethod
+    def folder_choices_fulltitle():
+        return Folder.root_folder().recursive_subfolder_choices(current_depth=0, pretty=False)
+
+
+    @staticmethod
     def folder(folder_path):
         if folder_path in Folder.all_folders():
             return Folder.all_folders()[folder_path]
@@ -1811,15 +1816,20 @@ class CREFolder(BaseFolder):
         return choices
 
 
-    def recursive_subfolder_choices(self, current_depth=0):
-        if current_depth:
-            title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 "
+    def recursive_subfolder_choices(self, current_depth=0, pretty=True):
+        if pretty:
+            if current_depth:
+                title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 "
+            else:
+                title_prefix = ""
+            title = HTML(title_prefix + html.attrencode(self.title()))
         else:
-            title_prefix = ""
-        sel = [ (self.path(), HTML(title_prefix + html.attrencode(self.title()))) ]
+            title = HTML(html.attrencode("/".join(self.title_path_without_root())))
+
+        sel = [(self.path(), title)]
 
         for subfolder in self.visible_subfolders_sorted_by_title():
-            sel += subfolder.recursive_subfolder_choices(current_depth + 1)
+            sel += subfolder.recursive_subfolder_choices(current_depth + 1, pretty)
         return sel
 
 

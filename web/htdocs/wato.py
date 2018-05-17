@@ -7907,13 +7907,6 @@ class CheckTypeGroupSelection(ElementSelection):
         return "<tt>%s</tt>" % value
 
 
-
-def FolderChoice(**kwargs):
-    kwargs["choices"] = lambda: watolib.Folder.folder_choices()
-    kwargs.setdefault("title", _("Folder"))
-    return DropdownChoice(**kwargs)
-
-
 def vs_notification_bulkby():
     return ListChoice(
       title = _("Create separate notification bulks based on"),
@@ -8185,52 +8178,97 @@ def vs_notification_rule(userid = None):
     )
 
 
-def simple_host_rule_match_conditions():
+def site_rule_match_condition():
+    return (
+        "match_site",
+        DualListChoice(
+            title = _("Match site"),
+            help = _("This condition makes the rule match only hosts of "
+                     "the selected sites."),
+            choices = config.site_attribute_choices,
+        ),
+    )
+
+
+def single_folder_rule_match_condition():
+    return (
+        "match_folder",
+        FolderChoice(
+            title = _("Match folder"),
+            help = _("This condition makes the rule match only hosts that are managed "
+                    "via WATO and that are contained in this folder - either directly "
+                    "or in one of its subfolders."),
+        ),
+    )
+
+
+def multi_folder_rule_match_condition():
+    return (
+        "match_folders",
+        ListOf(
+            FullPathFolderChoice(
+                title = _("Folder"),
+                help = _("This condition makes the rule match only hosts that are managed "
+                         "via WATO and that are contained in this folder - either directly "
+                         "or in one of its subfolders."),
+            ),
+            add_label = _("Add additional folder"),
+            title = _("Match folders"),
+            movable = False
+        ),
+    )
+
+
+def common_host_rule_match_conditions():
     return [
-        ( "match_site",
-          DualListChoice(
-              title = _("Match site"),
-              help = _("This condition makes the rule match only hosts of "
-                       "the selected sites."),
-              choices = config.site_attribute_choices,
-          ),
-        ),
-        ( "match_folder",
-          FolderChoice(
-              title = _("Match folder"),
-              help = _("This condition makes the rule match only hosts that are managed "
-                       "via WATO and that are contained in this folder - either directly "
-                       "or in one of its subfolders."),
-          ),
-        ),
         ( "match_hosttags",
-          watolib.HostTagCondition(
-              title = _("Match Host Tags"))
+        watolib.HostTagCondition(
+            title = _("Match Host Tags"))
         ),
         ( "match_hostgroups",
-          userdb.GroupChoice("host",
-              title = _("Match Host Groups"),
-              help = _("The host must be in one of the selected host groups"),
-              allow_empty = False,
-          )
+        userdb.GroupChoice("host",
+            title = _("Match Host Groups"),
+            help = _("The host must be in one of the selected host groups"),
+            allow_empty = False,
+        )
         ),
         ( "match_hosts",
-          ListOfStrings(
-              title = _("Match only the following hosts"),
-              size = 24,
-              orientation = "horizontal",
-              allow_empty = False,
-              empty_text = _("Please specify at least one host. Disable the option if you want to allow all hosts."),
-          )
+        ListOfStrings(
+            title = _("Match only the following hosts"),
+            size = 24,
+            orientation = "horizontal",
+            allow_empty = False,
+            empty_text = _("Please specify at least one host. Disable the option if you want to allow all hosts."),
+        )
         ),
         ( "match_exclude_hosts",
-          ListOfStrings(
-              title = _("Exclude the following hosts"),
-              size = 24,
-              orientation = "horizontal",
-          )
-        ),
+        ListOfStrings(
+            title = _("Exclude the following hosts"),
+            size = 24,
+            orientation = "horizontal",
+        )
+        )
     ]
+
+
+def simple_host_rule_match_conditions():
+    return [
+        site_rule_match_condition(),
+        single_folder_rule_match_condition()
+    ] + common_host_rule_match_conditions()
+
+
+def multifolder_host_rule_match_conditions():
+    return [
+        site_rule_match_condition(),
+        multi_folder_rule_match_condition()
+    ] + common_host_rule_match_conditions()
+
+
+def transform_simple_to_multi_host_rule_match_conditions(value):
+    if value and "match_folder" in value:
+        value["match_folders"] = [value.pop("match_folder")]
+    return value
 
 
 def generic_rule_match_conditions():

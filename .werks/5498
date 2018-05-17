@@ -1,0 +1,11 @@
+Title: Allow multiple folders in Agent Bakery Host selection
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1526556867
+Class: feature
+
+Previously, only one WATO-folder could be selected as a filter to enable agent deployment for specific hosts.
+This selection has now been extended to an arbitrary number of WATO-folders.

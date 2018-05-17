@@ -1,0 +1,15 @@
+Title: Fixed partial uninstall of Check_MK 1.5 versions (leaving sitecustomize.pyc)
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1526558604
+
+The python delivered with Check_MK was not precompiling the lib/python2.7/sitecustomize.pyc
+during packaging. It was then created during runtime on the target system. Since this file
+is not under control of the RPM/DEB packages the file was left on the filesystem after
+uninstall. The version was still visible after removal in "omd version" output until one
+removed the /omd/versions/[version] directory.

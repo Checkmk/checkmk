@@ -1,0 +1,13 @@
+Title: temperature.include, etherbox.temp: fix unicode error
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1526558045
+
+Use unicode strings for the units in temperature.include and remove
+UTF-8 decoding in etherbox.temp. Adapt ra32e_sensors tests to work
+correctly.

@@ -1,0 +1,15 @@
+Title: Raw Edition: Fix possible "(null)" output of Check_MK services
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0b5
+Date: 1526538591
+Class: fix
+
+The Check_MK service of multiple hosts may terminate without proper error
+message resulting just in status output "(null)" in specific situations.
+
+This happened when the precompiled host check files
+(var/check_mk/precompiled/[host]) were executed by Nagios using the system wide
+Python interpreter instead of the site specific interpreter.

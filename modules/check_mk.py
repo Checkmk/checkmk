@@ -3089,10 +3089,6 @@ def replace_macros(s, macros):
                 if cmk.debug.enabled():
                     raise
 
-    # Now after we have replaced all known macros remove all remaining macros in the format
-    # $...$ to prevent shell expansion of them
-    s = regex(r"\$[a-zA-Z0-9_-]+\$").sub("", s)
-
     return s
 
 

@@ -200,12 +200,11 @@ class ECLock(object):
 
 
 class ECServerThread(threading.Thread):
-    def __init__(self, name, logger, settings, config, slave_status, table_events, profiling_enabled, profile_file):
+    def __init__(self, name, logger, settings, config, slave_status, profiling_enabled, profile_file):
         super(ECServerThread, self).__init__(name=name)
         self.settings = settings
         self._config = config
         self._slave_status = slave_status
-        self._table_events = table_events
         self._profiling_enabled = profiling_enabled
         self._profile_file = profile_file
         self._terminate_event = threading.Event()
@@ -656,13 +655,12 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, table_events):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_columns):
         super(EventServer, self).__init__(name="EventServer",
                                           logger=logger,
                                           settings=settings,
                                           config=config,
                                           slave_status=slave_status,
-                                          table_events=table_events,
                                           profiling_enabled=settings.options.profile_event,
                                           profile_file=settings.paths.event_server_profile.value)
         self._syslog = None
@@ -681,6 +679,7 @@ class EventServer(ECServerThread):
         self._history = history
         self._active_history_period = active_history_period
         self._event_status = event_status
+        self._event_columns = event_columns
         self._time_periods = TimePeriods(self._logger)
 
         self.create_pipe()
@@ -1160,7 +1159,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     self._history.add(self._active_history_period, event, "DELAYOVER")
                     if rule:
-                        cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._table_events, rule, event)
+                        cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._event_columns, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             self._history.add(self._active_history_period, event, "AUTODELETE")
@@ -1300,7 +1299,7 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(event)
             self._history.add(self._active_history_period, event, "COUNTFAILED")
-            cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._table_events, rule, event)
+            cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._event_columns, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 self._history.add(self._active_history_period, event, "AUTODELETE")
@@ -1514,7 +1513,7 @@ class EventServer(ECServerThread):
                         return
 
                 if cancelling:
-                    self._event_status.cancel_events(self, self._table_events, event, match_groups, rule)
+                    self._event_status.cancel_events(self, self._event_columns, event, match_groups, rule)
                     return
                 else:
                     # Remember the rule id that this event originated from
@@ -1551,7 +1550,7 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._table_events, rule, existing_event)
+                                cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._event_columns, rule, existing_event)
 
                             self._history.add(self._active_history_period, existing_event, "COUNTREACHED")
 
@@ -1573,7 +1572,7 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._table_events, rule, event)
+                                cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._event_columns, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
                                     self._history.add(self._active_history_period, event, "AUTODELETE")
@@ -2788,23 +2787,22 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, table_events, terminate_main_event):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
                                            logger=logger,
                                            settings=settings,
                                            config=config,
                                            slave_status=slave_status,
-                                           table_events=table_events,
                                            profiling_enabled=settings.options.profile_status,
                                            profile_file=settings.paths.status_server_profile.value)
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
 
-        self.table_events = table_events # alias for reflection Kung Fu :-P
-        self.table_history = StatusTableHistory(history)
-        self.table_rules = StatusTableRules(event_status)
-        self.table_status = StatusTableStatus(event_server)
+        self._table_events = StatusTableEvents(event_status)
+        self._table_history = StatusTableHistory(history)
+        self._table_rules = StatusTableRules(event_status)
+        self._table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
         self._lock_eventstatus = lock_eventstatus
         self._lock_configuration = lock_configuration
@@ -2812,6 +2810,7 @@ class StatusServer(ECServerThread):
         self._active_history_period = active_history_period
         self._event_status = event_status
         self._event_server = event_server
+        self._event_columns = StatusTableEvents.columns
         self._terminate_main_event = terminate_main_event
 
         self.open_unix_socket()
@@ -2819,13 +2818,13 @@ class StatusServer(ECServerThread):
 
     def table(self, name):
         if name == "events":
-            return self.table_events
+            return self._table_events
         if name == "history":
-            return self.table_history
+            return self._table_history
         if name == "rules":
-            return self.table_rules
+            return self._table_rules
         if name == "status":
-            return self.table_status
+            return self._table_status
         raise MKClientError("Invalid table: %s (allowed are: events, history, rules, status)" % name)
 
     def open_unix_socket(self):
@@ -3122,7 +3121,7 @@ class StatusServer(ECServerThread):
                     raise MKClientError("The action '%s' is not defined. After adding new commands please "
                                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = self._config["action"][action_id]
-            cmk.ec.actions.do_event_action(self._history, self.settings, self._config, self._logger, self._active_history_period, self._table_events, action, event, user)
+            cmk.ec.actions.do_event_action(self._history, self.settings, self._config, self._logger, self._active_history_period, self._event_columns, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -3458,7 +3457,7 @@ class EventStatus(object):
 
     # Cancel all events the belong to a certain rule id and are
     # of the same "breed" as a new event.
-    def cancel_events(self, event_server, table_events, new_event, match_groups, rule):
+    def cancel_events(self, event_server, event_columns, new_event, match_groups, rule):
         with self._lock_eventstatus:
             to_delete = []
             for nr, event in enumerate(self._events):
@@ -3487,7 +3486,7 @@ class EventStatus(object):
                                                   "is not 'open' but '%s'" %
                                                   (event["id"], previous_phase))
                             else:
-                                cmk.ec.actions.do_event_actions(self._history, self.settings, self._config, self._logger, event_server, self._active_history_period, table_events, actions, event, is_cancelling=True)
+                                cmk.ec.actions.do_event_actions(self._history, self.settings, self._config, self._logger, event_server, self._active_history_period, event_columns, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -3966,11 +3965,10 @@ def main():
         active_history_period = cmk.ec.history.ActiveHistoryPeriod()
         lock_eventstatus = ECLock(logger.getChild("lock.eventstatus"))
         event_status = EventStatus(settings, config, perfcounters, lock_eventstatus, history, active_history_period, logger.getChild("EventStatus"))
-        table_events = StatusTableEvents(event_status)
         lock_configuration = ECLock(logger.getChild("lock.configuration"))
-        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, table_events)
+        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, StatusTableEvents.columns)
         terminate_main_event = threading.Event()
-        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, table_events, terminate_main_event)
+        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, terminate_main_event)
 
         event_status.load_status(event_server)
         event_server.compile_rules(config["rules"], config["rule_packs"])

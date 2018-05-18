@@ -54,6 +54,7 @@ def test_active_check_execution(test_cfg, site, web, core):
         site.schedule_check("test-host", u'\xc4ctive-Check', 0)
 
         result = site.live.query_row("GET services\nColumns: host_name description state plugin_output has_been_checked\nFilter: host_name = test-host\nFilter: description = Äctive-Check")
+        print "Result: %r" % result
         assert result[4] == 1
         assert result[0] == "test-host"
         assert result[1] == u'\xc4ctive-Check'

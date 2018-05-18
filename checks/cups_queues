@@ -61,8 +61,11 @@ def inventory_cups_queues(info):
 
 def check_cups_queues(item, params, info):
     if type(params) == tuple and len(params) == 4:
-        params = {"job_count" : (params[0], params[1]),
-                  "job_age"   : (params[2], params[3]),
+        params = {"job_count"      : (params[0], params[1]),
+                  "job_age"        : (params[2], params[3]),
+                  'is_idle'        : 0,
+                  'now_printing'   : 0,
+                  'disabled_since' : 2,
         }
 
     warn_num, crit_num = params["job_count"]

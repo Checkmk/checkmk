@@ -75,13 +75,13 @@ def do_event_actions(history, settings, config, logger, event_server, active_his
             else:
                 logger.info("Going to execute action '%s' on event %d" %
                               (action["title"], event["id"]))
-                do_event_action(history, settings, config, logger, active_history_period, table_events, action, event)
+                do_event_action(history, settings, config, logger, active_history_period, table_events, action, event, "")
 
 
 # Rule actions are currently done synchronously. Actions should
 # not hang for more than a couple of ms.
 
-def do_event_action(history, settings, config, logger, active_history_period, table_events, action, event, user=""):
+def do_event_action(history, settings, config, logger, active_history_period, table_events, action, event, user):
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return

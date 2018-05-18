@@ -45,7 +45,7 @@ import livestatus
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
-def event_has_opened(log_to_history, history, settings, config, logger, event_server, active_history_period, table_events, rule, event):
+def event_has_opened(history, settings, config, logger, event_server, active_history_period, table_events, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -57,12 +57,12 @@ def event_has_opened(log_to_history, history, settings, config, logger, event_se
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(log_to_history, history, settings, config, logger, event_server, active_history_period, table_events, rule.get("actions", []), event, is_cancelling=False)
+    do_event_actions(history, settings, config, logger, event_server, active_history_period, table_events, rule.get("actions", []), event, is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(log_to_history, history, settings, config, logger, event_server, active_history_period, table_events, actions, event, is_cancelling):
+def do_event_actions(history, settings, config, logger, event_server, active_history_period, table_events, actions, event, is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event_server, logger, event, is_cancelling=is_cancelling)
@@ -75,13 +75,13 @@ def do_event_actions(log_to_history, history, settings, config, logger, event_se
             else:
                 logger.info("Going to execute action '%s' on event %d" %
                               (action["title"], event["id"]))
-                do_event_action(log_to_history, history, settings, config, logger, active_history_period, table_events, action, event)
+                do_event_action(history, settings, config, logger, active_history_period, table_events, action, event)
 
 
 # Rule actions are currently done synchronously. Actions should
 # not hang for more than a couple of ms.
 
-def do_event_action(log_to_history, history, settings, config, logger, active_history_period, table_events, action, event, user=""):
+def do_event_action(history, settings, config, logger, active_history_period, table_events, action, event, user=""):
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return
@@ -94,10 +94,10 @@ def do_event_action(log_to_history, history, settings, config, logger, active_hi
             body = _escape_null_bytes(_substitute_event_tags(table_events, settings["body"], event))
 
             _send_email(config, to, subject, body, logger)
-            log_to_history(history, active_history_period, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
+            history.add(active_history_period, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
             _execute_script(table_events, _escape_null_bytes(_substitute_event_tags(table_events, settings["script"], _get_quoted_event(event, logger))), event, logger)
-            log_to_history(history, active_history_period, table_events, event, "SCRIPT", user, action['id'])
+            history.add(active_history_period, table_events, event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:

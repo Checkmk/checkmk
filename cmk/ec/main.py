@@ -1298,7 +1298,7 @@ class EventServer(ECServerThread):
             }
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
-            self._event_status.new_event(self._table_events, event)
+            self._event_status.new_event(event)
             self._history.add(self._active_history_period, event, "COUNTFAILED")
             cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._table_events, rule, event)
             if rule.get("autodelete"):
@@ -1543,7 +1543,7 @@ class EventServer(ECServerThread):
                         # count up. If the count reaches the limit, the event will
                         # be opened and its rule actions performed.
                         existing_event = \
-                            self._event_status.count_event(self, self._table_events, event, rule, count)
+                            self._event_status.count_event(self, event, rule, count)
                         if existing_event:
                             if "delay" in rule:
                                 if self._config["debug_rules"]:
@@ -1561,7 +1561,7 @@ class EventServer(ECServerThread):
                                 with self._lock_eventstatus:
                                     self._event_status.remove_event(existing_event)
                     elif "expect" in rule:
-                        self._event_status.count_expected_event(self, self._table_events, event)
+                        self._event_status.count_expected_event(self, event)
                     else:
                         if "delay" in rule:
                             if self._config["debug_rules"]:
@@ -1583,7 +1583,7 @@ class EventServer(ECServerThread):
 
         # End of loop over rules.
         if self._config["archive_orphans"]:
-            self._event_status.archive_event(self._table_events, event)
+            self._event_status.archive_event(event)
 
     def _add_rule_contact_groups_to_event(self, rule, event):
         if rule.get("contact_groups") is None:
@@ -2239,7 +2239,7 @@ class EventServer(ECServerThread):
             if self._handle_event_limit("by_rule", event):
                 return False
 
-            self._event_status.new_event(self._table_events, event)
+            self._event_status.new_event(event)
             return True
 
     # The following actions can be configured:
@@ -2291,7 +2291,7 @@ class EventServer(ECServerThread):
 
         if "overflow" in action:
             self._logger.info("  Creating overflow event")
-            self._event_status.new_event(self._table_events, overflow_event)
+            self._event_status.new_event(overflow_event)
 
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
@@ -2740,10 +2740,9 @@ class StatusTableHistory(StatusTable):
         ("history_addinfo", ""),
     ] + StatusTableEvents.columns
 
-    def __init__(self, history, table_events):
+    def __init__(self, history):
         super(StatusTableHistory, self).__init__()
         self._history = history
-        self._table_events = table_events
 
     def _enumerate(self, query):
         return self._history.get(query)
@@ -2803,7 +2802,7 @@ class StatusServer(ECServerThread):
         self._reopen_sockets = False
 
         self.table_events = table_events # alias for reflection Kung Fu :-P
-        self.table_history = StatusTableHistory(history, table_events)
+        self.table_history = StatusTableHistory(history)
         self.table_rules = StatusTableRules(event_status)
         self.table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
@@ -3041,7 +3040,7 @@ class StatusServer(ECServerThread):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_id, user = arguments
-        self._event_status.delete_event(self._table_events, int(event_id), user)
+        self._event_status.delete_event(int(event_id), user)
 
     def handle_command_update(self, arguments):
         event_id, user, acknowledged, comment, contact = arguments
@@ -3392,7 +3391,7 @@ class EventStatus(object):
         self.num_existing_events_by_host[event["host"]] -= 1
         self.num_existing_events_by_rule[event["rule_id"]] -= 1
 
-    def new_event(self, table_events, event):
+    def new_event(self, event):
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
@@ -3401,7 +3400,7 @@ class EventStatus(object):
         self._count_event_add(event)
         self._history.add(self._active_history_period, event, "NEW")
 
-    def archive_event(self, table_events, event):
+    def archive_event(self, event):
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
@@ -3585,7 +3584,7 @@ class EventStatus(object):
         found.update(event)
         found.update(preserve)
 
-    def count_expected_event(self, event_server, table_events, event):
+    def count_expected_event(self, event_server, event):
         for ev in self._events:
             if ev["rule_id"] == event["rule_id"] and ev["phase"] == "counting":
                 self.count_event_up(ev, event)
@@ -3596,7 +3595,7 @@ class EventStatus(object):
         event["phase"] = "counting"
         event_server.new_event_respecting_limits(event)
 
-    def count_event(self, event_server, table_events, event, rule, count):
+    def count_event(self, event_server, event, rule, count):
         # Find previous occurrance of this event and acount for
         # one new occurrance. In case of negated count (expecting rules)
         # we do never modify events that are already in the state "open"
@@ -3640,7 +3639,7 @@ class EventStatus(object):
             return False  # do not do event action
 
     # locked with lock_eventstatus
-    def delete_event(self, table_events, event_id, user):
+    def delete_event(self, event_id, user):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
                 event["phase"] = "closed"

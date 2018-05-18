@@ -44,45 +44,37 @@ class History(object):
         self._logger = logger
         self._lock_history = threading.Lock()
         self._mongodb = MongoDB()
-        reload_configuration(self, self._config)
+        self.reload_configuration(config)
 
+    def reload_configuration(self, config):
+        if config['archive_mode'] == 'mongodb':
+            _reload_configuration_mongodb(self, config)
+        else:
+            _reload_configuration_files(self, config)
 
-def reload_configuration(history, config):
-    history._config = config
-    if history._config['archive_mode'] == 'mongodb':
-        # Configure the auto deleting indexes in the DB
-        _update_mongodb_indexes(history._settings, history._mongodb)
-        _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
-    else:
-        pass
+    def flush(self):
+        if self._config['archive_mode'] == 'mongodb':
+            _flush_mongodb(self)
+        else:
+            _flush_files(self)
 
+    def add(self, active_history_period, table_events, event, what, who="", addinfo=""):
+        if self._config['archive_mode'] == 'mongodb':
+            _add_mongodb(self, event, what, who, addinfo)
+        else:
+            _add_files(self, active_history_period, table_events, event, what, who, addinfo)
 
-def flush_event_history(history):
-    if history._config['archive_mode'] == 'mongodb':
-        _flush_event_history_mongodb(history._mongodb)
-    else:
-        _expire_logfiles(history._settings, history._config, history._logger, history._lock_history, True)
+    def get(self, table_events, table_history, query):
+        if self._config['archive_mode'] == 'mongodb':
+            return _get_mongodb(self, table_events, query)
+        else:
+            return _get_files(self, table_history, query)
 
-
-def log_event_history(history, active_history_period, table_events, event, what, who="", addinfo=""):
-    if history._config['archive_mode'] == 'mongodb':
-        _log_event_history_to_mongodb(history._settings, history._config, history._logger, event, what, who, addinfo, history._mongodb)
-    else:
-        _log_event_history_to_file(history._settings, history._config, history._logger, history._lock_history, active_history_period, table_events, event, what, who, addinfo)
-
-
-def get_event_history(history, table_events, table_history, query):
-    if history._config['archive_mode'] == 'mongodb':
-        return _get_event_history_from_mongodb(history._settings, table_events, query, history._mongodb)
-    else:
-        return _get_event_history_from_file(history._settings, table_history, query, history._logger)
-
-
-def history_housekeeping(history):
-    if history._config['archive_mode'] == 'mongodb':
-        pass
-    else:
-        _expire_logfiles(history._settings, history._config, history._logger, history._lock_history, False)
+    def housekeeping(self):
+        if self._config['archive_mode'] == 'mongodb':
+            pass
+        else:
+            _housekeeping_files(self)
 
 
 #.
@@ -115,6 +107,13 @@ class MongoDB(object):
         self.db = None
 
 
+def _reload_configuration_mongodb(history, config):
+    history._config = config
+    # Configure the auto deleting indexes in the DB
+    _update_mongodb_indexes(history._settings, history._mongodb)
+    _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
+
+
 def _connect_mongodb(settings, mongodb):
     if Connection is None:
         raise Exception('Could not initialize MongoDB (Python-Modules are missing)')
@@ -133,8 +132,8 @@ def _mongodb_local_connection_opts(settings):
     return ip, port
 
 
-def _flush_event_history_mongodb(mongodb):
-    mongodb.db.ec_archive.drop()
+def _flush_mongodb(history):
+    history._mongodb._mongodb.db.ec_archive.drop()
 
 
 def _get_mongodb_max_history_age(mongodb):
@@ -192,17 +191,17 @@ def _mongodb_next_id(mongodb, name, first_id=0):
         return ret['seq']
 
 
-def _log_event_history_to_mongodb(settings, config, logger, event, what, who, addinfo, mongodb):
-    _log_event(config, logger, event, what, who, addinfo)
-    if not mongodb.connection:
-        _connect_mongodb(settings, mongodb)
+def _add_mongodb(history, event, what, who, addinfo):
+    _log_event(history._config, history._logger, event, what, who, addinfo)
+    if not history._mongodb.connection:
+        _connect_mongodb(history._settings, history._mongodb)
     # We converted _id to be an auto incrementing integer. This makes the unique
     # index compatible to history_line of the file (which is handled as integer)
     # within mkeventd. It might be better to use the ObjectId() of MongoDB, but
     # for the first step, we use the integer index for simplicity
     now = time.time()
-    mongodb.db.ec_archive.insert({
-        '_id': _mongodb_next_id(mongodb, 'ec_archive_id'),
+    history._mongodb.db.ec_archive.insert({
+        '_id': _mongodb_next_id(history._mongodb, 'ec_archive_id'),
         'dt': datetime.datetime.fromtimestamp(now),
         'time': now,
         'event': event,
@@ -217,13 +216,13 @@ def _log_event(config, logger, event, what, who, addinfo):
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
 
-def _get_event_history_from_mongodb(settings, table_events, query, mongodb):
+def _get_mongodb(history, table_events, query):
     filters, limit = query.filters, query.limit
 
     history_entries = []
 
-    if not mongodb.connection:
-        _connect_mongodb(settings, mongodb)
+    if not history._mongodb.connection:
+        _connect_mongodb(history._settings, history._mongodb)
 
     # Construct the mongodb filtering specification. We could fetch all information
     # and do filtering on this data, but this would be way too inefficient.
@@ -261,7 +260,7 @@ def _get_event_history_from_mongodb(settings, table_events, query, mongodb):
         else:
             raise Exception('Filter %s not implemented for MongoDB' % column_name)
 
-    result = mongodb.db.ec_archive.find(query).sort('time', -1)
+    result = history._mongodb.db.ec_archive.find(query).sort('time', -1)
 
     # Might be used for debugging / profiling
     #file(cmk.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
@@ -299,6 +298,18 @@ def _get_event_history_from_mongodb(settings, table_events, query, mongodb):
 #   | Functions for logging the history of events                          |
 #   '----------------------------------------------------------------------'
 
+def _reload_configuration_files(history, config):
+    history._config = config
+
+
+def _flush_files(history):
+    _expire_logfiles(history._settings, history._config, history._logger, history._lock_history, True)
+
+
+def _housekeeping_files(history):
+    _expire_logfiles(history._settings, history._config, history._logger, history._lock_history, False)
+
+
 # Make a new entry in the event history. Each entry is tab-separated line
 # with the following columns:
 # 0: time of log entry
@@ -306,9 +317,9 @@ def _get_event_history_from_mongodb(settings, table_events, query, mongodb):
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
-def _log_event_history_to_file(settings, config, logger, lock_history, active_history_period, table_events, event, what, who, addinfo):
-    _log_event(config, logger, event, what, who, addinfo)
-    with lock_history:
+def _add_files(history, active_history_period, table_events, event, what, who, addinfo):
+    _log_event(history._config, history._logger, event, what, who, addinfo)
+    with history._lock_history:
         columns = [
             str(time.time()),
             scrub_string(what),
@@ -318,7 +329,7 @@ def _log_event_history_to_file(settings, config, logger, lock_history, active_hi
         columns += [quote_tab(event.get(colname[6:], defval))  # drop "event_"
                     for colname, defval in table_events.columns]
 
-        with get_logfile(config, settings.paths.history_dir.value, active_history_period).open(mode='ab') as f:
+        with get_logfile(history._config, history._settings.paths.history_dir.value, active_history_period).open(mode='ab') as f:
             f.write("\t".join(map(cmk.ec.actions.to_utf8, columns)) + "\n")
 
 
@@ -399,10 +410,10 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
             logger.exception("Error expiring log files: %s" % e)
 
 
-def _get_event_history_from_file(settings, table_history, query, logger):
+def _get_files(history, table_history, query):
     filters, limit = query.filters, query.limit
     history_entries = []
-    if not settings.paths.history_dir.value.exists():
+    if not history._settings.paths.history_dir.value.exists():
         return []
 
     # Optimization: use grep in order to reduce amount
@@ -450,7 +461,7 @@ def _get_event_history_from_file(settings, table_history, query, logger):
     # this # will lead into some lines of a single file to be limited in
     # wrong order. But this should be better than before.
     for ts, path in sorted(((int(str(path.name)[:-4]), path)
-                            for path in settings.paths.history_dir.value.glob('*.log')),
+                            for path in history._settings.paths.history_dir.value.glob('*.log')),
                            reverse=True):
         if limit is not None and limit <= 0:
             break
@@ -465,11 +476,11 @@ def _get_event_history_from_file(settings, table_history, query, logger):
             # then we skip this file. It cannot contain
             # any useful entry for us.
             if len(time_filters):
-                if settings.options.debug:
-                    logger.info("Skipping logfile %s.log because of time filter" % ts)
+                if history._settings.options.debug:
+                    history._logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue  # skip this file
 
-        new_entries = _parse_history_file(table_history, path, query, greptexts, limit, logger)
+        new_entries = _parse_history_file(table_history, path, query, greptexts, limit, history._logger)
         history_entries += new_entries
         if limit is not None:
             limit -= len(new_entries)

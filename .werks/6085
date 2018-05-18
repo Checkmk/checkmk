@@ -1,0 +1,11 @@
+Title: innovaphone_licenses: Do not discover if no data is sent by special agent
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b5
+Date: 1526641125
+
+

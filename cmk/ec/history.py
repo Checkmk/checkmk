@@ -43,9 +43,11 @@ class History(object):
         self._logger = logger
         self._lock_history = lock_history
         self._mongodb = mongodb
+        reload_configuration(self, self._config)
 
 
-def configure_event_history(history):
+def reload_configuration(history, config):
+    history._config = config
     if history._config['archive_mode'] == 'mongodb':
         # Configure the auto deleting indexes in the DB
         _update_mongodb_indexes(history._settings, history._mongodb)

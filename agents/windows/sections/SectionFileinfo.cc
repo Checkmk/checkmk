@@ -53,7 +53,7 @@ enum class GlobType { None, Simple, Recursive };
 std::pair<fs::path, PathDiffT> buildPathBeginning(const fs::path &filePath) {
     fs::path beginning;
     PathDiffT diff = 0;
-    const std::wregex drive{L"^[A-Z]:$"};
+    const std::wregex drive{L"^[A-Za-z]:$"};
     auto it = filePath.begin(), end = filePath.end();
     std::wsmatch match;
 

@@ -1,0 +1,11 @@
+Title: steelhead_connections: Skip values of connection types which are not reported
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b5
+Date: 1526644982
+
+

@@ -126,6 +126,7 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
 
     _load_config(with_conf_d, exclude_parents_mk)
     _transform_mgmt_config_vars_from_140_to_150()
+    _initialize_derived_config_variables()
 
     _perform_post_config_loading_actions()
 
@@ -157,7 +158,6 @@ def _perform_post_config_loading_actions():
     cmk_base.config_cache.clear_all()
 
     initialize_config_caches()
-    initialize_service_levels()
 
     # In case the checks are not loaded yet it seems the current mode
     # is not working with the checks. In this case also don't load the
@@ -264,10 +264,18 @@ def initialize_config_caches():
     collect_hosttags()
 
 
-def initialize_service_levels():
+def _initialize_derived_config_variables():
     global service_service_levels, host_service_levels
     service_service_levels = extra_service_conf.get("_ec_sl", [])
     host_service_levels = extra_host_conf.get("_ec_sl", [])
+
+
+def get_derived_config_variable_names():
+    """These variables are computed from other configuration variables and not configured directly.
+
+    The origin variable (extra_service_conf) should not be exported to the helper config. Only
+    the service levels are needed."""
+    return [ "service_service_levels", "host_service_levels" ]
 
 
 def _verify_non_duplicate_hosts():

@@ -44,7 +44,7 @@ class History(object):
         self._logger = logger
         self._event_columns = event_columns
         self._history_columns = history_columns
-        self._lock_history = threading.Lock()
+        self._lock = threading.Lock()
         self._mongodb = MongoDB()
         self.reload_configuration(config)
 
@@ -309,11 +309,11 @@ def _reload_configuration_files(history):
 
 
 def _flush_files(history):
-    _expire_logfiles(history._settings, history._config, history._logger, history._lock_history, True)
+    _expire_logfiles(history._settings, history._config, history._logger, history._lock, True)
 
 
 def _housekeeping_files(history):
-    _expire_logfiles(history._settings, history._config, history._logger, history._lock_history, False)
+    _expire_logfiles(history._settings, history._config, history._logger, history._lock, False)
 
 
 # Make a new entry in the event history. Each entry is tab-separated line
@@ -325,7 +325,7 @@ def _housekeeping_files(history):
 # 4-oo: StatusTableEvents.columns
 def _add_files(history, active_history_period, event, what, who, addinfo):
     _log_event(history._config, history._logger, event, what, who, addinfo)
-    with history._lock_history:
+    with history._lock:
         columns = [
             str(time.time()),
             scrub_string(what),

@@ -76,6 +76,9 @@ def inventory_megaraid_ldisks(parsed):
 
 
 def check_megaraid_ldisks(item, _no_params, parsed):
+    if item not in parsed:
+        return
+
     raidstate = parsed[item]["state"]
     if raidstate == "Optimal":
         yield 0, "State is %s" % raidstate

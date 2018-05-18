@@ -84,7 +84,7 @@ def event_status(settings, config, perfcounters, history, active_history_period)
 
 @pytest.fixture(scope="function")
 def event_server(settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status):
-    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, StatusTableEvents.columns)
+    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, cmk.ec.main.StatusTableEvents.columns)
 
 
 @pytest.fixture(scope="function")

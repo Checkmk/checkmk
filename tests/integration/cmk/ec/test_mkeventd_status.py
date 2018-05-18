@@ -58,28 +58,18 @@ def lock_configuration():
 
 
 @pytest.fixture(scope="function")
-def lock_history():
-    return cmk.ec.main.ECLock(logging.getLogger("cmk.mkeventd.history"))
-
-
-@pytest.fixture(scope="function")
 def slave_status():
     return cmk.ec.main.default_slave_status_master()
 
 
 @pytest.fixture(scope="function")
-def mongodb():
-    return cmk.ec.history.MongoDB()
-
-
-@pytest.fixture(scope="function")
-def config(settings, lock_history, mongodb, slave_status):
+def config(settings, slave_status):
     return cmk.ec.main.load_configuration(settings, logging.getLogger("cmk.mkeventd"), slave_status)
 
 
 @pytest.fixture(scope="function")
-def history(settings, lock_history, mongodb, slave_status):
-    return cmk.ec.history.History(settings, conf, logging.getLogger("cmk.mkeventd"), lock_history, mongodb)
+def history(settings, config):
+    return cmk.ec.history.History(settings, config, logging.getLogger("cmk.mkeventd"))
 
 
 @pytest.fixture(scope="function")

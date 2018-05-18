@@ -27,6 +27,7 @@
 import os
 import string
 import subprocess
+import threading
 import time
 
 import cmk.ec.actions
@@ -36,13 +37,13 @@ import cmk.render
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
 class History(object):
-    def __init__(self, settings, config, logger, lock_history, mongodb):
+    def __init__(self, settings, config, logger):
         super(History, self).__init__()
         self._settings = settings
         self._config = config
         self._logger = logger
-        self._lock_history = lock_history
-        self._mongodb = mongodb
+        self._lock_history = threading.Lock()
+        self._mongodb = MongoDB()
         reload_configuration(self, self._config)
 
 

@@ -3948,9 +3948,7 @@ def main():
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
-        lock_history = ECLock(logger.getChild("lock.history"))
-        mongodb = cmk.ec.history.MongoDB()
-        history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
+        history = cmk.ec.history.History(settings, config, logger)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():

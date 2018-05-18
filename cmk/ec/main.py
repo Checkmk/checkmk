@@ -3876,7 +3876,7 @@ def update_slave_status(slave_status, settings, config):
 #   |  Loading of the configuration files                                  |
 #   '----------------------------------------------------------------------'
 
-def load_configuration(settings, logger, lock_history, mongodb, slave_status):
+def load_configuration(settings, logger, slave_status):
     config = cmk.ec.export.load_config(settings)
 
     # If not set by command line, set the log level by configuration
@@ -3887,9 +3887,6 @@ def load_configuration(settings, logger, lock_history, mongodb, slave_status):
         logger.getChild("EventStatus").setLevel(levels["cmk.mkeventd.EventStatus"])
         logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
         logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
-
-    history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
-    cmk.ec.history.configure_event_history(history)
 
     # Are we a replication slave? Parts of the configuration
     # will be overridden by values from the master.
@@ -3911,7 +3908,9 @@ def load_configuration(settings, logger, lock_history, mongodb, slave_status):
 
 def reload_configuration(settings, logger, lock_configuration, lock_history, mongodb, event_status, event_server, status_server, slave_status):
     with lock_configuration:
-        config = load_configuration(settings, logger, lock_history, mongodb, slave_status)
+        config = load_configuration(settings, logger, slave_status)
+        history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
+        cmk.ec.history.configure_event_history(history)
         event_server.reload_configuration(config)
 
     event_status.reload_configuration(config)
@@ -3950,10 +3949,12 @@ def main():
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting" % cmk.__version__)
 
+        slave_status = default_slave_status_master()
+        config = load_configuration(settings, logger, slave_status)
         lock_history = ECLock(logger.getChild("lock.history"))
         mongodb = cmk.ec.history.MongoDB()
-        slave_status = default_slave_status_master()
-        config = load_configuration(settings, logger, lock_history, mongodb, slave_status)
+        history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
+        cmk.ec.history.configure_event_history(history)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():

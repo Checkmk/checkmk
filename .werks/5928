@@ -1,0 +1,14 @@
+Title: Provide option to deploy hyperv_vms_guestinfos plugin for Windows through Agent Bakery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1526637427
+Class: fix
+
+The Windows plugin hyperv_vms_guestinfos.ps1 was left without the option to
+deploy it with a baked Check_MK Windows agent. This is now fixed so that also
+this plugin can be deployed through Agent Bakery.
+
+

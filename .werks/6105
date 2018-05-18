@@ -1,0 +1,15 @@
+Title: CMC check helper: Fixed issues related to check includes not being loaded
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1526664697
+
+When using the Check_MK Microcore several random checks could not be executed
+because the helper were not loading the check includes in all cases. This was
+some kind of race condition which could happen during check helper initialization.
+
+This regression was introduced with 1.5.0b3.

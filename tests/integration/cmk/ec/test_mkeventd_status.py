@@ -48,11 +48,6 @@ def settings():
 
 
 @pytest.fixture(scope="function")
-def lock_eventstatus():
-    return cmk.ec.main.ECLock(logging.getLogger("cmk.mkeventd.eventstatus"))
-
-
-@pytest.fixture(scope="function")
 def lock_configuration():
     return cmk.ec.main.ECLock(logging.getLogger("cmk.mkeventd.configuration"))
 
@@ -83,18 +78,18 @@ def active_history_period():
 
 
 @pytest.fixture(scope="function")
-def event_status(settings, config, perfcounters, lock_eventstatus, history, active_history_period):
-    return cmk.ec.main.EventStatus(settings, config, perfcounters, lock_eventstatus, history, active_history_period, logging.getLogger("cmk.mkeventd.EventStatus"))
+def event_status(settings, config, perfcounters, history, active_history_period):
+    return cmk.ec.main.EventStatus(settings, config, perfcounters, history, active_history_period, logging.getLogger("cmk.mkeventd.EventStatus"))
 
 
 @pytest.fixture(scope="function")
-def event_server(settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status):
-    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, lock_eventstatus, perfcounters, lock_configuration, history, active_history_period, event_status, StatusTableEvents.columns)
+def event_server(settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status):
+    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, StatusTableEvents.columns)
 
 
 @pytest.fixture(scope="function")
-def status_server(settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server):
-    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, threading.Event())
+def status_server(settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_server):
+    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_server, threading.Event())
 
 
 def test_handle_client(status_server):

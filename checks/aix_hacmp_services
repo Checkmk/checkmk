@@ -105,9 +105,7 @@ def parse_aix_hacmp_services(info):
             if line[0] == 'Subsystem':
                 parsed.setdefault(subsystem_ty_name, [])
             else:
-                parsed[subsystem_ty_name].append(
-                    (line[0], line[3])
-                )
+                parsed[subsystem_ty_name].append((line[0], line[-1]))
 
     return parsed
 

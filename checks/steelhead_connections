@@ -57,8 +57,11 @@ def check_steelhead_connections(item, params, info):
         ("established", "Established",       True),
         ("halfOpened",  "Half opened",       True),
         ("halfClosed",  "Half closed",       True),
-        ]:
-        value = values[key]
+    ]:
+        value = values.get(key)
+        if value is None:
+            continue
+
         if has_perf:
             perfdata = [(key, value)]
         else:

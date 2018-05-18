@@ -119,8 +119,7 @@ def set_check_variables_for_checks():
 #   '----------------------------------------------------------------------'
 
 def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
-    _add_check_variables_to_default_config()
-    load_default_config()
+    _initialize_config()
 
     vars_before_config = all_nonfunction_vars()
 
@@ -147,9 +146,17 @@ def load_packed_config():
 
     The validations which are performed during load() also don't need to be performed.
     """
+    _initialize_config()
+
     filepath = cmk.paths.var_dir + "/core/helper_config.mk"
     exec(marshal.load(open(filepath)), globals())
+
     _perform_post_config_loading_actions()
+
+
+def _initialize_config():
+    _add_check_variables_to_default_config()
+    load_default_config()
 
 
 def _perform_post_config_loading_actions():
@@ -275,7 +282,7 @@ def get_derived_config_variable_names():
 
     The origin variable (extra_service_conf) should not be exported to the helper config. Only
     the service levels are needed."""
-    return [ "service_service_levels", "host_service_levels" ]
+    return set([ "service_service_levels", "host_service_levels" ])
 
 
 def _verify_non_duplicate_hosts():

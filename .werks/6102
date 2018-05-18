@@ -1,0 +1,10 @@
+Title: Web API: set_ruleset call adds a config change log entry now
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b5
+Date: 1526624429
+Class: fix
+
+

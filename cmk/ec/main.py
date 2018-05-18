@@ -655,7 +655,7 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_columns):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_columns):
         super(EventServer, self).__init__(name="EventServer",
                                           logger=logger,
                                           settings=settings,
@@ -674,7 +674,6 @@ class EventServer(ECServerThread):
 
         self.host_config = HostConfig(self._logger)
         self._perfcounters = perfcounters
-        self._lock_eventstatus = lock_eventstatus
         self._lock_configuration = lock_configuration
         self._history = history
         self._active_history_period = active_history_period
@@ -1058,7 +1057,7 @@ class EventServer(ECServerThread):
                     self._logger.exception('Exception handling a log line (skipping this one): %s' % e)
 
     def do_housekeeping(self):
-        with self._lock_eventstatus:
+        with self._event_status.lock:
             with self._lock_configuration:
                 self.hk_handle_event_timeouts()
                 self.hk_check_expected_messages()
@@ -1557,7 +1556,7 @@ class EventServer(ECServerThread):
                             if "delay" not in rule and rule.get("autodelete"):
                                 existing_event["phase"] = "closed"
                                 self._history.add(self._active_history_period, existing_event, "AUTODELETE")
-                                with self._lock_eventstatus:
+                                with self._event_status.lock:
                                     self._event_status.remove_event(existing_event)
                     elif "expect" in rule:
                         self._event_status.count_expected_event(self, event)
@@ -1576,7 +1575,7 @@ class EventServer(ECServerThread):
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
                                     self._history.add(self._active_history_period, event, "AUTODELETE")
-                                    with self._lock_eventstatus:
+                                    with self._event_status.lock:
                                         self._event_status.remove_event(event)
                     return
 
@@ -2223,12 +2222,12 @@ class EventServer(ECServerThread):
         return self._event_status.num_existing_events \
             >= self._config["event_limit"]["overall"]["limit"]
 
-    # protected by lock_eventstatus
+    # protected by self._event_status.lock
     def new_event_respecting_limits(self, event):
         self._logger.verbose("Checking limit for message from %s (rule '%s')" % (
             event["host"], event["rule_id"]))
 
-        with self._lock_eventstatus:
+        with self._event_status.lock:
             if self._handle_event_limit("overall", event):
                 return False
 
@@ -2246,7 +2245,7 @@ class EventServer(ECServerThread):
     # stop_overflow        Stop creating new events, create overflow event
     # stop_overflow_notify Stop creating new events, create overflow event, notfy
     # delete_oldest        Delete oldest event, create new event
-    # protected by lock_eventstatus
+    # protected by self._event_status.lock
 
     # Returns False if the event has been created and actions should be
     # performed on that event
@@ -2298,7 +2297,7 @@ class EventServer(ECServerThread):
 
         return False
 
-    # protected by lock_eventstatus
+    # protected by self._event_status.lock
     def _get_event_limit(self, ty, event):
         # Prefer the rule individual limit for by_rule limit (in case there is some)
         if ty == "by_rule":
@@ -2787,7 +2786,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, terminate_main_event):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_server, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
                                            logger=logger,
                                            settings=settings,
@@ -2804,7 +2803,6 @@ class StatusServer(ECServerThread):
         self._table_rules = StatusTableRules(event_status)
         self._table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
-        self._lock_eventstatus = lock_eventstatus
         self._lock_configuration = lock_configuration
         self._history = history
         self._active_history_period = active_history_period
@@ -2951,7 +2949,7 @@ class StatusServer(ECServerThread):
         for query in Queries(self, client_socket, self._logger):
             self._logger.verbose("Client livestatus query: %r" % query)
 
-            with self._lock_eventstatus:
+            with self._event_status.lock:
                 if query.method == "GET":
                     response = self.table(query.table_name).query(query)
 
@@ -3000,7 +2998,7 @@ class StatusServer(ECServerThread):
     def _answer_query_python(self, client_socket, response):
         client_socket.sendall(repr(response) + "\n")
 
-    # All commands are already locked with lock_eventstatus
+    # All commands are already locked with self._event_status.lock
     def handle_command_request(self, commandline):
         self._logger.info("Executing command: %s" % commandline)
         parts = commandline.split(";")
@@ -3060,8 +3058,8 @@ class StatusServer(ECServerThread):
 
     def handle_command_create(self, arguments):
         # Would rather use process_raw_line(), but we are already
-        # holding lock_eventstatus and it's sub functions are setting
-        # lock_eventstatus too. The lock can not be allocated twice.
+        # holding self._event_status.lock and it's sub functions are setting
+        # self._event_status.lock too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
         # process_raw_lines("%s" % ";".join(arguments))
         with file(str(self.settings.paths.event_pipe.value), "w") as pipe:
@@ -3159,7 +3157,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_configuration, history, perfcounters, event_status, event_server, status_server, slave_status, logger):
+def run_eventd(terminate_main_event, settings, config, lock_configuration, history, perfcounters, event_status, event_server, status_server, slave_status, logger):
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3187,7 +3185,7 @@ def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_co
                 next_housekeeping = now + config["housekeeping_interval"]
 
             if now > next_retention:
-                with lock_eventstatus:
+                with event_status.lock:
                     event_status.save_status()
                 next_retention = now + config["retention_interval"]
 
@@ -3197,7 +3195,7 @@ def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_co
 
             # Beware: replication might be turned on during this loop!
             if is_replication_slave(config) and now > next_replication:
-                replication_pull(settings, config, lock_eventstatus, lock_configuration, perfcounters, event_status, event_server, slave_status, logger)
+                replication_pull(settings, config, lock_configuration, perfcounters, event_status, event_server, slave_status, logger)
                 next_replication = now + config["replication"]["interval"]
         except MKSignalException as e:
             if e._signum == 1:
@@ -3232,11 +3230,11 @@ def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_co
 
 class EventStatus(object):
 
-    def __init__(self, settings, config, perfcounters, lock_eventstatus, history, active_history_period, logger):
+    def __init__(self, settings, config, perfcounters, history, active_history_period, logger):
         self.settings = settings
         self._config = config
         self._perfcounters = perfcounters
-        self._lock_eventstatus = lock_eventstatus
+        self.lock = threading.Lock()
         self._history = history
         self._active_history_period = active_history_period
         self._logger = logger
@@ -3413,12 +3411,12 @@ class EventStatus(object):
         except ValueError:
             self._logger.exception("Cannot remove event %d: not present" % event["id"])
 
-    # protected by lock_eventstatus
+    # protected by self.lock
     def _remove_event_by_nr(self, index):
         event = self._events.pop(index)
         self._count_event_remove(event)
 
-    # protected by lock_eventstatus
+    # protected by self.lock
     def remove_oldest_event(self, ty, event):
         if ty == "overall":
             self._logger.verbose("  Removing oldest event")
@@ -3430,21 +3428,21 @@ class EventStatus(object):
             self._logger.verbose("  Removing oldest event of host \"%s\"" % event["host"])
             self._remove_oldest_event_of_host(event["host"])
 
-    # protected by lock_eventstatus
+    # protected by self.lock
     def _remove_oldest_event_of_rule(self, rule_id):
         for event in self._events:
             if event["rule_id"] == rule_id:
                 self.remove_event(event)
                 return
 
-    # protected by lock_eventstatus
+    # protected by self.lock
     def _remove_oldest_event_of_host(self, hostname):
         for event in self._events:
             if event["host"] == hostname:
                 self.remove_event(event)
                 return
 
-    # protected by lock_eventstatus
+    # protected by self.lock
     def get_num_existing_events_by(self, ty, event):
         if ty == "overall":
             return self.num_existing_events
@@ -3458,7 +3456,7 @@ class EventStatus(object):
     # Cancel all events the belong to a certain rule id and are
     # of the same "breed" as a new event.
     def cancel_events(self, event_server, event_columns, new_event, match_groups, rule):
-        with self._lock_eventstatus:
+        with self.lock:
             to_delete = []
             for nr, event in enumerate(self._events):
                 if event["rule_id"] == rule["id"]:
@@ -3561,7 +3559,7 @@ class EventStatus(object):
         return True
 
     def count_rule_match(self, rule_id):
-        with self._lock_eventstatus:
+        with self.lock:
             self._rule_stats.setdefault(rule_id, 0)
             self._rule_stats[rule_id] += 1
 
@@ -3637,7 +3635,7 @@ class EventStatus(object):
         else:
             return False  # do not do event action
 
-    # locked with lock_eventstatus
+    # locked with self.lock
     def delete_event(self, event_id, user):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
@@ -3689,7 +3687,7 @@ def replication_send(config, lock_configuration, event_status, last_update):
         return response
 
 
-def replication_pull(settings, config, lock_eventstatus, lock_configuration, perfcounters, event_status, event_server, slave_status, logger):
+def replication_pull(settings, config, lock_configuration, perfcounters, event_status, event_server, slave_status, logger):
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -3707,7 +3705,7 @@ def replication_pull(settings, config, lock_eventstatus, lock_configuration, per
                                     now - repl_settings["fallback"] < slave_status["last_master_down"]))
 
     if need_sync:
-        with lock_eventstatus:
+        with event_status.lock:
             with lock_configuration:
 
                 try:
@@ -3963,12 +3961,11 @@ def main():
         # First do all things that might fail, before daemonizing
         perfcounters = Perfcounters(logger.getChild("lock.perfcounters"))
         active_history_period = cmk.ec.history.ActiveHistoryPeriod()
-        lock_eventstatus = ECLock(logger.getChild("lock.eventstatus"))
-        event_status = EventStatus(settings, config, perfcounters, lock_eventstatus, history, active_history_period, logger.getChild("EventStatus"))
+        event_status = EventStatus(settings, config, perfcounters, history, active_history_period, logger.getChild("EventStatus"))
         lock_configuration = ECLock(logger.getChild("lock.configuration"))
-        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, StatusTableEvents.columns)
+        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, StatusTableEvents.columns)
         terminate_main_event = threading.Event()
-        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, terminate_main_event)
+        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_server, terminate_main_event)
 
         event_status.load_status(event_server)
         event_server.compile_rules(config["rules"], config["rule_packs"])
@@ -3991,7 +3988,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_configuration, history, perfcounters, event_status, event_server, status_server, slave_status, logger)
+        run_eventd(terminate_main_event, settings, config, lock_configuration, history, perfcounters, event_status, event_server, status_server, slave_status, logger)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

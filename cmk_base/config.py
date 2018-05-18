@@ -125,21 +125,49 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
     vars_before_config = all_nonfunction_vars()
 
     _load_config(with_conf_d, exclude_parents_mk)
-
     _transform_mgmt_config_vars_from_140_to_150()
 
-    initialize_config_caches()
-    initialize_service_levels()
+    _perform_post_config_loading_actions()
 
     if validate_hosts:
         _verify_non_duplicate_hosts()
 
-    add_wato_static_checks_to_checks()
-    initialize_check_caches()
-    set_check_variables_for_checks()
-
     verify_non_invalid_variables(vars_before_config)
     verify_snmp_communities_type()
+
+
+def load_packed_config():
+    """Load the configuration for the CMK helpers of CMC
+
+    These files are written by cmk_base.cee.core_cmc.pack_config().
+
+    Should have a result similar to the load() above. With the exception that the
+    check helpers would only need check related config variables.
+
+    The validations which are performed during load() also don't need to be performed.
+    """
+    filepath = cmk.paths.var_dir + "/core/helper_config.mk"
+    exec(marshal.load(open(filepath)), globals())
+    _perform_post_config_loading_actions()
+
+
+def _perform_post_config_loading_actions():
+    """These tasks must be performed after loading the Check_MK base configuration"""
+    # First cleanup things (needed for e.g. reloading the config)
+    cmk_base.config_cache.clear_all()
+
+    initialize_config_caches()
+    initialize_service_levels()
+
+    # In case the checks are not loaded yet it seems the current mode
+    # is not working with the checks. In this case also don't load the
+    # static checks into the configuration.
+    # TODO: Clean this up. Shouldn't we move the "checks" stuff to the
+    # checks module?
+    if cmk_base.checks.check_info:
+        add_wato_static_checks_to_checks()
+        initialize_check_caches()
+        set_check_variables_for_checks()
 
 
 def _load_config(with_conf_d, exclude_parents_mk):
@@ -256,14 +284,6 @@ def _verify_non_duplicate_hosts():
 def add_wato_static_checks_to_checks():
     global checks
 
-    # In case the checks are not loaded yet it seems the current mode
-    # is not working with the checks. In this case also don't load the
-    # static checks into the configuration.
-    # TODO: Clean this up. Shouldn't we move the "checks" stuff to the
-    # checks module?
-    if not cmk_base.checks.check_info:
-        return
-
     static = []
     for entries in static_checks.values():
         for entry in entries:
@@ -375,11 +395,6 @@ def _cmp_config_paths(a, b):
     return cmp(pa[:-1], pb[:-1]) or \
            cmp(len(pa), len(pb)) or \
            cmp(pa, pb)
-
-
-def load_packed_config():
-    filepath = cmk.paths.var_dir + "/core/helper_config.mk"
-    exec(marshal.load(open(filepath)), globals())
 
 
 

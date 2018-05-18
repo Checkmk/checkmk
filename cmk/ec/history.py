@@ -37,21 +37,23 @@ import cmk.render
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
 class History(object):
-    def __init__(self, settings, config, logger, event_columns):
+    def __init__(self, settings, config, logger, event_columns, history_columns):
         super(History, self).__init__()
         self._settings = settings
         self._config = config
         self._logger = logger
         self._event_columns = event_columns
+        self._history_columns = history_columns
         self._lock_history = threading.Lock()
         self._mongodb = MongoDB()
         self.reload_configuration(config)
 
     def reload_configuration(self, config):
-        if config['archive_mode'] == 'mongodb':
-            _reload_configuration_mongodb(self, config)
+        self._config = config
+        if self._config['archive_mode'] == 'mongodb':
+            _reload_configuration_mongodb(self)
         else:
-            _reload_configuration_files(self, config)
+            _reload_configuration_files(self)
 
     def flush(self):
         if self._config['archive_mode'] == 'mongodb':
@@ -65,11 +67,11 @@ class History(object):
         else:
             _add_files(self, active_history_period, event, what, who, addinfo)
 
-    def get(self, table_history, query):
+    def get(self, query):
         if self._config['archive_mode'] == 'mongodb':
             return _get_mongodb(self, query)
         else:
-            return _get_files(self, table_history, query)
+            return _get_files(self, query)
 
     def housekeeping(self):
         if self._config['archive_mode'] == 'mongodb':
@@ -108,8 +110,7 @@ class MongoDB(object):
         self.db = None
 
 
-def _reload_configuration_mongodb(history, config):
-    history._config = config
+def _reload_configuration_mongodb(history):
     # Configure the auto deleting indexes in the DB
     _update_mongodb_indexes(history._settings, history._mongodb)
     _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
@@ -303,8 +304,8 @@ def _get_mongodb(history, query):
 #   | Functions for logging the history of events                          |
 #   '----------------------------------------------------------------------'
 
-def _reload_configuration_files(history, config):
-    history._config = config
+def _reload_configuration_files(history):
+    pass
 
 
 def _flush_files(history):
@@ -415,7 +416,7 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
             logger.exception("Error expiring log files: %s" % e)
 
 
-def _get_files(history, table_history, query):
+def _get_files(history, query):
     filters, limit = query.filters, query.limit
     history_entries = []
     if not history._settings.paths.history_dir.value.exists():
@@ -485,7 +486,7 @@ def _get_files(history, table_history, query):
                     history._logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue  # skip this file
 
-        new_entries = _parse_history_file(table_history, path, query, greptexts, limit, history._logger)
+        new_entries = _parse_history_file(history, path, query, greptexts, limit, history._logger)
         history_entries += new_entries
         if limit is not None:
             limit -= len(new_entries)
@@ -493,7 +494,7 @@ def _get_files(history, table_history, query):
     return history_entries
 
 
-def _parse_history_file(table_history, path, query, greptexts, limit, logger):
+def _parse_history_file(history, path, query, greptexts, limit, logger):
     entries = []
     line_no = 0
     # If we have greptexts we pre-filter the file using the extremely
@@ -504,7 +505,7 @@ def _parse_history_file(table_history, path, query, greptexts, limit, logger):
         cmd += " | egrep -i -e %s" % cmk.ec.actions.quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)  # nosec
 
-    headers = table_history.column_names
+    headers = [c[0] for c in history._history_columns]
 
     for line in grep.stdout:
         line_no += 1
@@ -515,7 +516,7 @@ def _parse_history_file(table_history, path, query, greptexts, limit, logger):
 
         try:
             parts = line.decode('utf-8').rstrip('\n').split('\t')
-            _convert_history_line(table_history, parts)
+            _convert_history_line(history, parts)
             values = [line_no] + parts
             if query.filter_row(values):
                 entries.append(values)
@@ -527,7 +528,7 @@ def _parse_history_file(table_history, path, query, greptexts, limit, logger):
 
 # Speed-critical function for converting string representation
 # of log line back to Python values
-def _convert_history_line(table_history, values):
+def _convert_history_line(history, values):
     # NOTE: history_line column is missing here, so indices are off by 1! :-P
     values[0] = float(values[0])         # history_time
     values[4] = int(values[4])           # event_id
@@ -539,26 +540,26 @@ def _convert_history_line(table_history, values):
     values[15] = int(values[15])         # event_priority
     values[16] = int(values[16])         # event_facility
     values[18] = int(values[18])         # event_state
-    values[21] = _unsplit(values[21])     # event_match_groups
+    values[21] = _unsplit(values[21])    # event_match_groups
     num_values = len(values)
     if num_values <= 22:                 # event_contact_groups
         values.append(None)
     else:
         values[22] = _unsplit(values[22])
     if num_values <= 23:                 # event_ipaddress
-        values.append(table_history.columns[24][1])
+        values.append(history._history_columns[24][1])
     if num_values <= 24:                 # event_orig_host
-        values.append(table_history.columns[25][1])
+        values.append(history._history_columns[25][1])
     if num_values <= 25:                 # event_contact_groups_precedence
-        values.append(table_history.columns[26][1])
+        values.append(history._history_columns[26][1])
     if num_values <= 26:                 # event_core_host
-        values.append(table_history.columns[27][1])
+        values.append(history._history_columns[27][1])
     if num_values <= 27:                 # event_host_in_downtime
-        values.append(table_history.columns[28][1])
+        values.append(history._history_columns[28][1])
     else:
         values[27] = values[27] == "1"
     if num_values <= 28:                 # event_match_groups_syslog_application
-        values.append(table_history.columns[29][1])
+        values.append(history._history_columns[29][1])
     else:
         values[28] = _unsplit(values[28])
 

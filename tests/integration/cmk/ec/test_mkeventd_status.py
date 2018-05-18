@@ -69,7 +69,7 @@ def config(settings, slave_status):
 
 @pytest.fixture(scope="function")
 def history(settings, config):
-    return cmk.ec.history.History(settings, config, logging.getLogger("cmk.mkeventd"))
+    return cmk.ec.history.History(settings, config, logging.getLogger("cmk.mkeventd"), cmk.ec.main.StatusTableEvents.columns)
 
 
 @pytest.fixture(scope="function")

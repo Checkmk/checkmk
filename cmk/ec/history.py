@@ -37,11 +37,12 @@ import cmk.render
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
 class History(object):
-    def __init__(self, settings, config, logger):
+    def __init__(self, settings, config, logger, event_columns):
         super(History, self).__init__()
         self._settings = settings
         self._config = config
         self._logger = logger
+        self._event_columns = event_columns
         self._lock_history = threading.Lock()
         self._mongodb = MongoDB()
         self.reload_configuration(config)
@@ -58,15 +59,15 @@ class History(object):
         else:
             _flush_files(self)
 
-    def add(self, active_history_period, table_events, event, what, who="", addinfo=""):
+    def add(self, active_history_period, event, what, who="", addinfo=""):
         if self._config['archive_mode'] == 'mongodb':
             _add_mongodb(self, event, what, who, addinfo)
         else:
-            _add_files(self, active_history_period, table_events, event, what, who, addinfo)
+            _add_files(self, active_history_period, event, what, who, addinfo)
 
-    def get(self, table_events, table_history, query):
+    def get(self, table_history, query):
         if self._config['archive_mode'] == 'mongodb':
-            return _get_mongodb(self, table_events, query)
+            return _get_mongodb(self, query)
         else:
             return _get_files(self, table_history, query)
 
@@ -220,7 +221,7 @@ def _log_event(config, logger, event, what, who, addinfo):
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
 
-def _get_mongodb(history, table_events, query):
+def _get_mongodb(history, query):
     filters, limit = query.filters, query.limit
 
     history_entries = []
@@ -282,7 +283,7 @@ def _get_mongodb(history, table_events, query):
             entry['who'],
             entry['addinfo'],
         ]
-        for colname, defval in table_events.columns:
+        for colname, defval in history._event_columns:
             key = colname[6:]  # drop "event_"
             item.append(entry['event'].get(key, defval))
         history_entries.append(item)
@@ -321,7 +322,7 @@ def _housekeeping_files(history):
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
-def _add_files(history, active_history_period, table_events, event, what, who, addinfo):
+def _add_files(history, active_history_period, event, what, who, addinfo):
     _log_event(history._config, history._logger, event, what, who, addinfo)
     with history._lock_history:
         columns = [
@@ -331,7 +332,7 @@ def _add_files(history, active_history_period, table_events, event, what, who, a
             scrub_string(addinfo)
         ]
         columns += [quote_tab(event.get(colname[6:], defval))  # drop "event_"
-                    for colname, defval in table_events.columns]
+                    for colname, defval in history._event_columns]
 
         with get_logfile(history._config, history._settings.paths.history_dir.value, active_history_period).open(mode='ab') as f:
             f.write("\t".join(map(cmk.ec.actions.to_utf8, columns)) + "\n")

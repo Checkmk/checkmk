@@ -175,9 +175,10 @@ def inventory_websphere_mq_manager(parsed):
 def check_websphere_mq_manager(item, params, parsed):
     if item in parsed["manager"]:
         data    = parsed["manager"][item]
+        pprint.pprint(data)
         status  = data["STATUS"]
         default = data["DEFAULT"]
-        standby = data["STANDBY"]
+        standby = data.get("STANDBY", "")
         installation_name    = data.get("INSTNAME")
         installation_path    = data.get("INSTPATH")
         installation_version = data.get("INSTVER")
@@ -190,28 +191,29 @@ def check_websphere_mq_manager(item, params, parsed):
         yield get_websphere_mq_status("manager", status, params), \
               'Status: %s' % status.lower()
 
-        extra_info = ""
+        standby_info = standby.lower()
         if standby.startswith("Not"):
             if len(instances_modes) == 1:
                 state = 0
-                extra_info += " (standalone)"
+                standby_info += " (standalone)"
             else:
                 state = 1
-                extra_info += " (standalone but %d instances)" % len(instances_modes)
+                standby_info += " (standalone but %d instances)" % len(instances_modes)
         elif standby == "Permitted":
             if instances_modes in [ [ "Active", "Standby" ], [ "Standby", "Active" ] ]:
                 state = 0
             else:
                 state = 1
-                extra_info += " (Missing partner)"
+                standby_info += " (Missing partner)"
         else:
             state = 1
-            extra_info += " (unknown)"
+            standby_info += " (unknown)"
 
         if "map_instance_states" in params:
             state = get_websphere_mq_status("standby", standby, params)
 
-        yield state, "Status: %s%s, Default: %s" % (standby.lower(), extra_info, default)
+        yield state, "Standby: %s" % standby_info.strip()
+        yield 0, "Default: %s" % data["DEFAULT"]
 
         for what, title in [ (installation_name,    "Name"),
                              (installation_path,    "Path"),

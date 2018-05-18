@@ -94,10 +94,10 @@ def do_event_action(history, settings, config, logger, active_history_period, ta
             body = _escape_null_bytes(_substitute_event_tags(table_events, settings["body"], event))
 
             _send_email(config, to, subject, body, logger)
-            history.add(active_history_period, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
+            history.add(active_history_period, event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
             _execute_script(table_events, _escape_null_bytes(_substitute_event_tags(table_events, settings["script"], _get_quoted_event(event, logger))), event, logger)
-            history.add(active_history_period, table_events, event, "SCRIPT", user, action['id'])
+            history.add(active_history_period, event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:

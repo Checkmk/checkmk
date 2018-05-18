@@ -1,0 +1,17 @@
+Title: Check and discovery parameters were not always reloaded
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1526646381
+
+Changed check specific check and discovery parameters were not
+always updated during config reload ("Activate changes"). This
+made the Check_MK and Check_MK Discovery services not recognize
+the changed parameters when reloading the config. The parameters
+were only loaded during next core restart.
+
+This regression affected all previous 1.5 beta releases.

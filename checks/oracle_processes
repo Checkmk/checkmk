@@ -37,11 +37,17 @@ factory_settings["oracle_processes_defaults"] = {
 }
 
 def inventory_oracle_processes(info):
+
     return [ ( line[0], {} ) for line in info ]
 
 def check_oracle_processes(item, params, info):
     for line in info:
         if line[0] == item:
+            err = oracle_handle_ora_errors(line)
+            if err == False:
+                continue
+            elif isinstance(err, tuple):
+                return err
 
             processes_num = int(line[1])
             processes_max = int(line[2])
@@ -75,4 +81,5 @@ check_info['oracle_processes'] = {
     "has_perfdata"            : True,
     "default_levels_variable" : "oracle_processes_defaults",
     "group"                   : "oracle_processes",
+    "includes"                : ["oracle.include"],
 }

@@ -1,0 +1,10 @@
+Title: ipmi: Fixed unknown device status handling
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1526648815
+Class: fix
+
+

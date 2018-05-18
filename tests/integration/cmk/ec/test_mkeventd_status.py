@@ -73,7 +73,7 @@ def mongodb():
 
 
 @pytest.fixture(scope="function")
-def config(settings, lock_lock_history, mongodb, slave_status):
+def config(settings, lock_history, mongodb, slave_status):
     conf = cmk.ec.main.load_configuration(settings, logging.getLogger("cmk.mkeventd"), slave_status)
     history = cmk.ec.history.History(settings, conf, logger, lock_history, mongodb)
     cmk.ec.history.configure_event_history(history)

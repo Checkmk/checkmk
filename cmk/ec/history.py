@@ -72,7 +72,7 @@ class History(object):
 
     def housekeeping(self):
         if self._config['archive_mode'] == 'mongodb':
-            pass
+            _housekeeping_mongodb(self)
         else:
             _housekeeping_files(self)
 
@@ -112,6 +112,10 @@ def _reload_configuration_mongodb(history, config):
     # Configure the auto deleting indexes in the DB
     _update_mongodb_indexes(history._settings, history._mongodb)
     _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
+
+
+def _housekeeping_mongodb(history):
+    pass
 
 
 def _connect_mongodb(settings, mongodb):

@@ -656,7 +656,7 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, table_events):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, table_events):
         super(EventServer, self).__init__(name="EventServer",
                                           logger=logger,
                                           settings=settings,
@@ -674,11 +674,11 @@ class EventServer(ECServerThread):
         for _unused_facility in xrange(32):
             self._hash_stats.append([0] * 8)
 
-        self._history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
         self.host_config = HostConfig(self._logger)
         self._perfcounters = perfcounters
         self._lock_eventstatus = lock_eventstatus
         self._lock_configuration = lock_configuration
+        self._history = history
         self._active_history_period = active_history_period
         self._event_status = event_status
         self._time_periods = TimePeriods(self._logger)
@@ -2789,7 +2789,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, table_events, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
                                            logger=logger,
                                            settings=settings,
@@ -2802,16 +2802,14 @@ class StatusServer(ECServerThread):
         self._tcp_socket = None
         self._reopen_sockets = False
 
-        self._history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
         self.table_events = table_events # alias for reflection Kung Fu :-P
-        self.table_history = StatusTableHistory(self._history, table_events)
+        self.table_history = StatusTableHistory(history, table_events)
         self.table_rules = StatusTableRules(event_status)
         self.table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters
         self._lock_eventstatus = lock_eventstatus
         self._lock_configuration = lock_configuration
-        self._lock_history = lock_history
-        self._mongodb = mongodb
+        self._history = history
         self._active_history_period = active_history_period
         self._event_status = event_status
         self._event_server = event_server
@@ -3080,7 +3078,7 @@ class StatusServer(ECServerThread):
         cmk.ec.history.log_event_history(self._history, self._active_history_period, self._table_events, event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
-        reload_configuration(self.settings, self._logger, self._lock_configuration, self._lock_history, self._mongodb, self._event_status, self._event_server, self, self._slave_status)
+        reload_configuration(self.settings, self._logger, self._lock_configuration, self._history, self._event_status, self._event_server, self, self._slave_status)
 
     def handle_command_reopenlog(self):
         self._logger.info("Closing this logfile")
@@ -3163,7 +3161,7 @@ class StatusServer(ECServerThread):
 #   |  Starten und Verwalten der beiden Threads.                           |
 #   '----------------------------------------------------------------------'
 
-def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_configuration, lock_history, mongodb, perfcounters, event_status, event_server, status_server, slave_status, logger):
+def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_configuration, history, perfcounters, event_status, event_server, status_server, slave_status, logger):
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3206,7 +3204,7 @@ def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_co
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                reload_configuration(settings, logger, lock_configuration, lock_history, mongodb, event_status, event_server, status_server, slave_status)
+                reload_configuration(settings, logger, lock_configuration, history, event_status, event_server, status_server, slave_status)
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 terminate(terminate_main_event, event_server, status_server)
@@ -3236,14 +3234,14 @@ def run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_co
 
 class EventStatus(object):
 
-    def __init__(self, settings, config, perfcounters, lock_eventstatus, lock_history, mongodb, active_history_period, logger):
-        self._history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
-        self._logger = logger
+    def __init__(self, settings, config, perfcounters, lock_eventstatus, history, active_history_period, logger):
         self.settings = settings
         self._config = config
         self._perfcounters = perfcounters
         self._lock_eventstatus = lock_eventstatus
+        self._history = history
         self._active_history_period = active_history_period
+        self._logger = logger
         self.flush()
 
     def reload_configuration(self, config):
@@ -3906,11 +3904,10 @@ def load_configuration(settings, logger, slave_status):
     return config
 
 
-def reload_configuration(settings, logger, lock_configuration, lock_history, mongodb, event_status, event_server, status_server, slave_status):
+def reload_configuration(settings, logger, lock_configuration, history, event_status, event_server, status_server, slave_status):
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
-        history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
-        cmk.ec.history.configure_event_history(history)
+        cmk.ec.history.reload_configuration(history, config)
         event_server.reload_configuration(config)
 
     event_status.reload_configuration(config)
@@ -3954,7 +3951,6 @@ def main():
         lock_history = ECLock(logger.getChild("lock.history"))
         mongodb = cmk.ec.history.MongoDB()
         history = cmk.ec.history.History(settings, config, logger, lock_history, mongodb)
-        cmk.ec.history.configure_event_history(history)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():
@@ -3972,12 +3968,12 @@ def main():
         perfcounters = Perfcounters(logger.getChild("lock.perfcounters"))
         active_history_period = cmk.ec.history.ActiveHistoryPeriod()
         lock_eventstatus = ECLock(logger.getChild("lock.eventstatus"))
-        event_status = EventStatus(settings, config, perfcounters, lock_eventstatus, lock_history, mongodb, active_history_period, logger.getChild("EventStatus"))
+        event_status = EventStatus(settings, config, perfcounters, lock_eventstatus, history, active_history_period, logger.getChild("EventStatus"))
         table_events = StatusTableEvents(event_status)
         lock_configuration = ECLock(logger.getChild("lock.configuration"))
-        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, table_events)
+        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, table_events)
         terminate_main_event = threading.Event()
-        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, lock_history, mongodb, active_history_period, event_status, event_server, table_events, terminate_main_event)
+        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_eventstatus, lock_configuration, history, active_history_period, event_status, event_server, table_events, terminate_main_event)
 
         event_status.load_status(event_server)
         event_server.compile_rules(config["rules"], config["rule_packs"])
@@ -4000,7 +3996,7 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Now let's go...
-        run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_configuration, lock_history, mongodb, perfcounters, event_status, event_server, status_server, slave_status, logger)
+        run_eventd(terminate_main_event, settings, config, lock_eventstatus, lock_configuration, history, perfcounters, event_status, event_server, status_server, slave_status, logger)
 
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)

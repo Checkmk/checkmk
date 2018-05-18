@@ -175,7 +175,6 @@ def inventory_websphere_mq_manager(parsed):
 def check_websphere_mq_manager(item, params, parsed):
     if item in parsed["manager"]:
         data    = parsed["manager"][item]
-        pprint.pprint(data)
         status  = data["STATUS"]
         default = data["DEFAULT"]
         standby = data.get("STANDBY", "")

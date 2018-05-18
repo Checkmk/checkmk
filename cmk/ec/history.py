@@ -517,7 +517,7 @@ def _parse_history_file(table_history, path, query, greptexts, limit, logger):
             parts = line.decode('utf-8').rstrip('\n').split('\t')
             _convert_history_line(table_history, parts)
             values = [line_no] + parts
-            if table_history.filter_row(query, values):
+            if query.filter_row(values):
                 entries.append(values)
         except Exception as e:
             logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))

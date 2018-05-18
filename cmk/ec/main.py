@@ -2571,6 +2571,12 @@ class QueryGET(Query):
 
         return indexes
 
+    def filter_row(self, row):
+        for column_name, _operator_name, predicate, _argument in self.filters:
+            if not predicate(row[self.table.column_indices[column_name]]):
+                return None
+        return row
+
 
 class QueryREPLICATE(Query):
     pass
@@ -2650,7 +2656,7 @@ class StatusTable(object):
             # Apply filters
             # TODO: History filtering is done in history load code. Check for improvements
             if query.filters and query.table_name != "history":
-                match = self.filter_row(query, row)
+                match = query.filter_row(row)
                 if not match:
                     continue
 
@@ -2670,12 +2676,6 @@ class StatusTable(object):
             else:
                 result_row.append(row[index])
         return result_row
-
-    def filter_row(self, query, row):
-        for column_name, _operator_name, predicate, _argument in query.filters:
-            if not predicate(row[query.table.column_indices[column_name]]):
-                return None
-        return row
 
 
 class StatusTableEvents(StatusTable):

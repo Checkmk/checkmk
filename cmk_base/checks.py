@@ -316,8 +316,7 @@ def _get_cached_check_includes(check_file_path, cache_file_path):
 
 
 def _write_check_include_cache(cache_file_path, includes):
-    if not os.path.exists(os.path.dirname(cache_file_path)):
-        os.makedirs(os.path.dirname(cache_file_path))
+    store.makedirs(os.path.dirname(cache_file_path))
     store.save_file(cache_file_path, "|".join(includes))
 
 

@@ -356,7 +356,7 @@ def test_get_graph(web, site):
         })
         web.discover_services("test-host-get-graph")
         web.activate_changes()
-        web.schedule_check("test-host-get-graph", "Check_MK")
+        site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
         # Wait for RRD file creation
         # Isn't this a bug that the graph is not instantly available?

@@ -271,11 +271,7 @@ class Site(object):
         if expected_state is None:
             expected_state = state
 
-        last_check_before = self.live.query_value(
-            "GET hosts\n" \
-            "Columns: last_check\n" \
-            "Filter: host_name = %s\n" % (hostname))
-
+        last_check_before = self._get_last_check(hostname)
         schedule_ts, wait_timeout = time.time(), 20
 
         # Ensure the next check result is not in same second as the previous check
@@ -286,26 +282,69 @@ class Site(object):
         print "last_check_before", last_check_before, "schedule_ts", schedule_ts
 
         self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (schedule_ts, hostname, state, output))
+        self._wait_for_next_check(hostname, last_check_before, schedule_ts, wait_timeout, expected_state)
 
-        last_check, host_state = self.live.query_row(
-            "GET hosts\n" \
+
+    def schedule_check(self, hostname, service_description, expected_state):
+        last_check_before = self._get_last_check(hostname)
+        schedule_ts, wait_timeout = int(time.time()), 20
+
+        # Ensure the next check result is not in same second as the previous check
+        while int(last_check_before) == int(schedule_ts):
+            schedule_ts = time.time()
+            time.sleep(0.1)
+
+        print "last_check_before", last_check_before, "schedule_ts", schedule_ts
+        self.live.command("[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
+                (schedule_ts, hostname, service_description.encode("utf-8"), schedule_ts))
+
+        self._wait_for_next_check(hostname, last_check_before, schedule_ts, wait_timeout, expected_state, service_description=service_description)
+
+
+
+    def _wait_for_next_check(self, hostname, last_check_before, schedule_ts, wait_timeout, expected_state, service_description=None):
+        if not service_description:
+            table = "hosts"
+            filt = "Filter: host_name = %s\n" % hostname
+            wait_obj = "%s" % hostname
+        else:
+            table = "services"
+            filt = "Filter: host_name = %s\nFilter: description = %s\n" % (hostname, service_description)
+            wait_obj = "%s;%s" % (hostname, service_description)
+
+        last_check, state = self.live.query_row(
+            "GET %s\n" \
             "Columns: last_check state\n" \
-            "Filter: host_name = %s\n" \
+            "%s" \
             "WaitObject: %s\n" \
             "WaitTimeout: %d\n" \
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
-            "WaitTrigger: check\n" % (hostname, hostname, wait_timeout*1000, last_check_before, expected_state))
+            "WaitTrigger: check\n" % (table, filt, wait_obj, wait_timeout*1000, last_check_before, expected_state))
 
-        print "processing host check result took %0.2f seconds" % (time.time() - schedule_ts)
+        print "processing check result took %0.2f seconds" % (time.time() - schedule_ts)
 
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
                 "scheduled at: %d, last check: %d)" % \
                 (wait_timeout, last_check_before, schedule_ts, last_check)
 
-        assert host_state == expected_state, \
-            "Expected %d state, got %d state" % (expected_state, host_state)
+        assert state == expected_state, \
+            "Expected %d state, got %d state" % (expected_state, state)
+
+
+    def _get_last_check(self, hostname, service_description=None):
+        if not service_description:
+            return self.live.query_value(
+                "GET hosts\n" \
+                "Columns: last_check\n" \
+                "Filter: host_name = %s\n" % (hostname))
+        else:
+            return self.live.query_value(
+                "GET services\n" \
+                "Columns: last_check\n" \
+                "Filter: host_name = %s\n" \
+                "Filter: service_description = %s\n" % (hostname, service_description))
 
 
     def get_host_state(self, hostname):

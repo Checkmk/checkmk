@@ -1,0 +1,13 @@
+Title: inv_if: Don't return Unknown if no data for OID 1.3.6.1.2.1.2.1.0 is present
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1526625999
+Class: fix
+
+Previously, the scan function raised a TypeError if no data was delivered for
+OID 1.3.6.1.2.1.2.1.0 which resulted in an UNKNOWN status of the HW/SW
+Inventory service. Now, a missing value indicates that the inventory function
+should not be executed.

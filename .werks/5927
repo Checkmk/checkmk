@@ -1,0 +1,14 @@
+Title: Windows: use case-insensitive drive letters in fileinfo paths
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1526630401
+Class: fix
+
+Werk #5920 (since 1.5.0b1) caused only uppercase drive letters to be
+allowed in section fileinfo paths. This is now fixed so that both
+uppercase and lowercase drive letters work in fileinfo paths.
+
+

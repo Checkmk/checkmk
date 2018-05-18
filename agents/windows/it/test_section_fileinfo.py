@@ -9,15 +9,38 @@ from remote import (actual_output, config, remotedir, remotetest, wait_agent,
 import shutil
 
 
-class Globals:
+class TestPaths(object):
+    drive = os.getcwd()[:2]
+
+    def tempdir1(self):
+        return os.path.join(self.drive, remotedir, 'Testdir1')
+
+    def tempdir2(self):
+        return os.path.join(self.tempdir1(), 'Testdir2')
+
+    def tempfile1(self):
+        return os.path.join(self.tempdir1(), 'TestFile1')
+
+    def tempfile2(self):
+        return os.path.join(self.tempdir1(), 'TestFile2')
+
+    def tempfile3(self):
+        return os.path.join(self.tempdir2(), 'TestFile3')
+
+    def missingfile(self):
+        return os.path.join(self.tempdir1(), 'foobar')
+
+    def drive_upper(self):
+        self.drive = self.drive.upper()
+
+    def drive_lower(self):
+        self.drive = self.drive.lower()
+
+
+class Globals(object):
     section = 'fileinfo'
     alone = True
-    tempdir1 = os.path.join(remotedir, 'Testdir1')
-    tempdir2 = os.path.join(tempdir1, 'Testdir2')
-    tempfile1 = os.path.join(tempdir1, 'TestFile1')
-    tempfile2 = os.path.join(tempdir1, 'TestFile2')
-    tempfile3 = os.path.join(tempdir2, 'TestFile3')
-    missingfile = os.path.join(tempdir1, 'foobar')
+    paths = TestPaths()
 
 
 @pytest.fixture
@@ -25,32 +48,45 @@ def testfile(request):
     return os.path.basename(__file__)
 
 
-@pytest.fixture(
-    params=[
-        (os.path.join(Globals.tempdir1, '**'), True),
-        (os.path.join(Globals.tempdir2, 'Te*'), True),
-        (os.path.join(Globals.tempdir2, 'Te*'), False)
-    ],
-    ids=['recursive_glob', 'simple_glob_alone', 'simple_glob_with_systemtime'])
-def testconfig(request, config):
-    if platform.system() == 'Windows':
-        Globals.alone = request.param[1]
-        if Globals.alone:
-            config.set('global', 'sections', Globals.section)
-        else:
-            config.set('global', 'sections', '%s systemtime' % Globals.section)
-        config.set('global', 'crash_debug', 'yes')
-        config.add_section(Globals.section)
-        if request.param[0] != os.path.join(Globals.tempdir1, '**'):
-            config.set(Globals.section, 'path', Globals.tempfile1)
-            config.set(
-                Globals.section, 'path',
-                os.path.join(Globals.tempdir1,
-                             '?' + os.path.basename(Globals.tempfile2)[1:]))
-        config.set(Globals.section, 'path', request.param[0])
-        config.set(Globals.section, 'path', Globals.missingfile)
+@pytest.fixture(params=['uppercase_drive', 'lowercase_drive'])
+def testconfig_drive(request, config):
+    if request.param == 'uppercase_drive':
+        Globals.paths.drive_upper()
+    else:
+        Globals.paths.drive_lower()
+    return config
 
-        return config
+
+@pytest.fixture(
+    params=[(Globals.paths.tempdir1, '**', True),
+            (Globals.paths.tempdir2, 'Te*', True),
+            (Globals.paths.tempdir2, 'Te*', False)],
+    ids=['recursive_glob', 'simple_glob_alone', 'simple_glob_with_systemtime'])
+def testconfig(request, testconfig_drive):
+    if platform.system() == 'Windows':
+        Globals.alone = request.param[2]
+        if Globals.alone:
+            testconfig_drive.set('global', 'sections', Globals.section)
+        else:
+            testconfig_drive.set('global', 'sections',
+                                 '%s systemtime' % Globals.section)
+        testconfig_drive.set('global', 'crash_debug', 'yes')
+        testconfig_drive.add_section(Globals.section)
+        if request.param[0] != Globals.paths.tempdir1:
+            testconfig_drive.set(Globals.section, 'path',
+                                 Globals.paths.tempfile1())
+            testconfig_drive.set(
+                Globals.section, 'path',
+                os.path.join(
+                    Globals.paths.tempdir1(),
+                    '?' + os.path.basename(Globals.paths.tempfile2())[1:]))
+        testconfig_drive.set(Globals.section, 'path',
+                             os.path.join(request.param[0](),
+                                          request.param[1]))
+        testconfig_drive.set(Globals.section, 'path',
+                             Globals.paths.missingfile())
+
+        return testconfig_drive
 
 
 @pytest.fixture
@@ -58,32 +94,33 @@ def expected_output():
     if platform.system() == 'Windows':
         expected = [
             re.escape(r'<<<%s:sep(124)>>>' % Globals.section), r'\d+',
-            re.escape(r'%s|' % Globals.tempfile1) + r'\d+\|\d+',
-            re.escape(r'%s|' % Globals.tempfile2) + r'\d+\|\d+',
-            re.escape(r'%s|' % Globals.tempfile3) + r'\d+\|\d+',
-            re.escape(r'%s|missing|' % Globals.missingfile) + r'\d+'
+            re.escape(r'%s|' % Globals.paths.tempfile1()) + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.paths.tempfile2()) + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.paths.tempfile3()) + r'\d+\|\d+',
+            re.escape(r'%s|missing|' % Globals.paths.missingfile()) + r'\d+'
         ]
         if not Globals.alone:
-            expected += [
-                re.escape(r'<<<systemtime>>>'),
-                r'\d+'
-            ]
+            expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
         return expected
 
 
 @pytest.fixture
 def use_testfiles():
     if platform.system() == 'Windows':
-        for d in [Globals.tempdir1, Globals.tempdir2]:
+        for d in [Globals.paths.tempdir1(), Globals.paths.tempdir2()]:
             os.mkdir(d)
-        for f in [Globals.tempfile1, Globals.tempfile2, Globals.tempfile3]:
+        for f in [
+                Globals.paths.tempfile1(),
+                Globals.paths.tempfile2(),
+                Globals.paths.tempfile3()
+        ]:
             with open(f, 'w') as handle:
                 handle.write(f)
 
     yield
 
     if platform.system() == 'Windows':
-        for d in [Globals.tempdir2, Globals.tempdir1]:
+        for d in [Globals.paths.tempdir2(), Globals.paths.tempdir1()]:
             shutil.rmtree(d)
 
 

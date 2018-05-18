@@ -45,7 +45,7 @@ import livestatus
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
-def event_has_opened(history, settings, config, logger, event_server, active_history_period, table_events, rule, event):
+def event_has_opened(history, settings, config, logger, event_server, active_history_period, event_columns, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -57,12 +57,12 @@ def event_has_opened(history, settings, config, logger, event_server, active_his
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(history, settings, config, logger, event_server, active_history_period, table_events, rule.get("actions", []), event, is_cancelling=False)
+    do_event_actions(history, settings, config, logger, event_server, active_history_period, event_columns, rule.get("actions", []), event, is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(history, settings, config, logger, event_server, active_history_period, table_events, actions, event, is_cancelling):
+def do_event_actions(history, settings, config, logger, event_server, active_history_period, event_columns, actions, event, is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event_server, logger, event, is_cancelling=is_cancelling)
@@ -75,13 +75,13 @@ def do_event_actions(history, settings, config, logger, event_server, active_his
             else:
                 logger.info("Going to execute action '%s' on event %d" %
                               (action["title"], event["id"]))
-                do_event_action(history, settings, config, logger, active_history_period, table_events, action, event, "")
+                do_event_action(history, settings, config, logger, active_history_period, event_columns, action, event, "")
 
 
 # Rule actions are currently done synchronously. Actions should
 # not hang for more than a couple of ms.
 
-def do_event_action(history, settings, config, logger, active_history_period, table_events, action, event, user):
+def do_event_action(history, settings, config, logger, active_history_period, event_columns, action, event, user):
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return
@@ -89,14 +89,14 @@ def do_event_action(history, settings, config, logger, active_history_period, ta
     try:
         action_type, settings = action["action"]
         if action_type == 'email':
-            to = _escape_null_bytes(_substitute_event_tags(table_events, settings["to"], event))
-            subject = _escape_null_bytes(_substitute_event_tags(table_events, settings["subject"], event))
-            body = _escape_null_bytes(_substitute_event_tags(table_events, settings["body"], event))
+            to = _escape_null_bytes(_substitute_event_tags(event_columns, settings["to"], event))
+            subject = _escape_null_bytes(_substitute_event_tags(event_columns, settings["subject"], event))
+            body = _escape_null_bytes(_substitute_event_tags(event_columns, settings["body"], event))
 
             _send_email(config, to, subject, body, logger)
             history.add(active_history_period, event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
-            _execute_script(table_events, _escape_null_bytes(_substitute_event_tags(table_events, settings["script"], _get_quoted_event(event, logger))), event, logger)
+            _execute_script(event_columns, _escape_null_bytes(_substitute_event_tags(event_columns, settings["script"], _get_quoted_event(event, logger))), event, logger)
             history.add(active_history_period, event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
@@ -133,8 +133,8 @@ def _get_quoted_event(event, logger):
     return new_event
 
 
-def _substitute_event_tags(table_events, text, event):
-    for key, value in _get_event_tags(table_events, event).iteritems():
+def _substitute_event_tags(event_columns, text, event):
+    for key, value in _get_event_tags(event_columns, event).iteritems():
         text = text.replace('$%s$' % key.upper(), value)
     return text
 
@@ -169,10 +169,10 @@ def _send_email(config, to, subject, body, logger):
     return True
 
 
-def _execute_script(table_events, body, event, logger):
+def _execute_script(event_columns, body, event, logger):
     script_env = os.environ.copy()
 
-    for key, value in _get_event_tags(table_events, event).iteritems():
+    for key, value in _get_event_tags(event_columns, event).iteritems():
         if type(key) == unicode:
             key = key.encode("utf-8")
         if type(value) == unicode:
@@ -193,12 +193,12 @@ def _execute_script(table_events, body, event, logger):
         logger.info('  Output: \'%s\'' % output)
 
 
-def _get_event_tags(table_events, event):
+def _get_event_tags(event_columns, event):
     substs = [("match_group_%d" % (nr + 1), g)
               for (nr, g)
               in enumerate(event.get("match_groups", ()))]
 
-    for key, defaultvalue in table_events.columns:
+    for key, defaultvalue in event_columns:
         varname = key[6:]
         substs.append((varname, event.get(varname, defaultvalue)))
 

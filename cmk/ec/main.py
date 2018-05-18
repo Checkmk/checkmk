@@ -2746,7 +2746,7 @@ class StatusTableHistory(StatusTable):
         self._table_events = table_events
 
     def _enumerate(self, query):
-        self._history.get(self, query)
+        return self._history.get(self, query)
 
 
 class StatusTableRules(StatusTable):

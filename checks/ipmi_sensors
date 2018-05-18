@@ -186,7 +186,9 @@ def inventory_freeipmi(parsed):
 
 
 def freeipmi_status_txt_mapping(status_txt):
-    if status_txt in [ "OK", "Entity Present", "battery presence detected",
+    if status_txt is None:
+        return 3
+    elif status_txt in [ "OK", "Entity Present", "battery presence detected",
           "Drive Presence", "transition to Running", "Device Enabled" ] or \
        status_txt.startswith("Fully Redundant") or \
        status_txt.endswith("is connected") or \

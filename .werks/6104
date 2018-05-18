@@ -1,0 +1,12 @@
+Title: Fixed not available global settings page when check specific variable configured
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b5
+Date: 1526658656
+Class: fix
+
+The global settings page was only showing an error message like "General error:
+Invalid configuration variable 'lnx_thermal_default_levels'" in case a check
+specific configuration option has been set in Check_MK configuration.

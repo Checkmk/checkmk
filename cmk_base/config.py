@@ -132,7 +132,10 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
     if validate_hosts:
         _verify_non_duplicate_hosts()
 
-    verify_non_invalid_variables(vars_before_config)
+    # Such validation only makes sense when all checks have been loaded
+    if cmk_base.checks.all_checks_loaded():
+        verify_non_invalid_variables(vars_before_config)
+
     verify_snmp_communities_type()
 
 
@@ -169,9 +172,7 @@ def _perform_post_config_loading_actions():
     # In case the checks are not loaded yet it seems the current mode
     # is not working with the checks. In this case also don't load the
     # static checks into the configuration.
-    # TODO: Clean this up. Shouldn't we move the "checks" stuff to the
-    # checks module?
-    if cmk_base.checks.check_info:
+    if cmk_base.checks.all_checks_loaded():
         add_wato_static_checks_to_checks()
         initialize_check_caches()
         set_check_variables_for_checks()

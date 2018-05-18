@@ -74,6 +74,7 @@ special_agent_info                 = {}
 _check_variables                    = {}
 # keeps the default values of all the check variables
 _check_variable_defaults            = {}
+_all_checks_loaded                  = False
 
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
@@ -94,15 +95,22 @@ service_rule_groups = set([
 #   | Loading of check plugins                                             |
 #   '----------------------------------------------------------------------'
 
-# Load all checks and includes
 def load():
+    """Load all checks and includes"""
+    global _all_checks_loaded
+
     _initialize_data_structures()
     filelist = get_plugin_paths(cmk.paths.local_checks_dir, cmk.paths.checks_dir)
     load_checks(filelist)
 
+    _all_checks_loaded = True
+
 
 def _initialize_data_structures():
     """Initialize some data structures which are populated while loading the checks"""
+    global _all_checks_loaded
+    _all_checks_loaded = False
+
     _check_variables.clear()
     _check_variable_defaults.clear()
 
@@ -217,6 +225,11 @@ def load_checks(filelist):
     convert_check_info()
     verify_checkgroup_members()
     initialize_check_type_caches()
+
+
+def all_checks_loaded():
+    """Whether or not all(!) checks have been loaded into the current process"""
+    return _all_checks_loaded
 
 
 # Constructs a new check context dictionary. It contains the whole check API.

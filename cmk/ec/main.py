@@ -2746,7 +2746,7 @@ class StatusTableHistory(StatusTable):
         self._table_events = table_events
 
     def _enumerate(self, query):
-        return self._history.get(self, query)
+        return self._history.get(query)
 
 
 class StatusTableRules(StatusTable):
@@ -3948,7 +3948,7 @@ def main():
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
-        history = cmk.ec.history.History(settings, config, logger, StatusTableEvents.columns)
+        history = cmk.ec.history.History(settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():

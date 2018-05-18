@@ -306,18 +306,28 @@ def _get_cached_check_includes(check_file_path, cache_file_path):
     if check_stat.st_mtime >= cache_stat.st_mtime:
         raise OSError("Cache is too old")
 
-    if cache_stat.st_size == 0:
+    # There are no includes (just the newline at the end)
+    if cache_stat.st_size == 1:
         return [] # No includes
+
+    # store.save_file() creates file empty for locking (in case it does not exists).
+    # Skip loading the file.
+    # Note: When raising here this process will also write the file. This means it
+    # will write it another time after it was written by the other process. This
+    # could be optimized. Since the whole caching here is a temporary(tm) soltion,
+    # we leave it as it is.
+    if cache_stat.st_size == 0:
+        raise OSError("Cache generation in progress (file is locked)")
 
     x = open(cache_file_path).read().strip()
     if not x:
-        return []
+        return [] # Shouldn't happen. Empty files are handled above
     return x.split("|")
 
 
 def _write_check_include_cache(cache_file_path, includes):
     store.makedirs(os.path.dirname(cache_file_path))
-    store.save_file(cache_file_path, "|".join(includes))
+    store.save_file(cache_file_path, "%s\n" % "|".join(includes))
 
 
 def _include_cache_file_path(path):

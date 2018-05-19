@@ -1,0 +1,34 @@
+Title: Agent bakery signing key passphrases could be visible in access logs
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.4.0p34
+Date: 1526765180
+Class: security
+
+When you are using the agent bakery for creating and distributing your
+monitoring agents it is likely that this change is relevant for you.
+
+In some parts of the GUI, after entering the passphrase of the agent signing
+keys, it could happen that the signing key passphrase you enter is written to
+the apache access log of your Check_MK server. As a result it may be visible in
+clear text to local system users (e.g. users with access to the command line)
+which scan the logs for it.
+
+This affects the access log of the system apache (normally located at
+/var/log/apache2) and the access log (/omd/sites/[site]/var/log/apache/*) of
+the sites apache (master site in distributed setups).
+
+You may want to scan the log files for the string "key_p_passphrase" to check
+whether or not you are affected. It can be done e.g. with:
+
+zgrep key_p_passphrase /var/log/apache2/access*
+/omd/sites/*/var/log/apache/access*
+
+In case you find something, you should clean it up. Delete the file or remove
+the secrets from that file.
+
+Even when it seems unlikely that your key has been compromised, it is
+recommended to stop using this signing key. Create a new key and proceed with
+this one.

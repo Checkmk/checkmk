@@ -966,7 +966,11 @@ def _precompile_hostcheck(hostname):
     output.write("#!/usr/bin/env python\n")
     output.write("# encoding: utf-8\n\n")
 
-    output.write("import sys\n")
+    output.write("import sys\n\n")
+
+    output.write("if not sys.executable.startswith('/omd'):\n")
+    output.write("    sys.stdout.write(\"ERROR: Only executable with sites python\\n\")\n")
+    output.write("    sys.exit(2)\n\n")
 
     # Remove precompiled directory from sys.path. Leaving it in the path
     # makes problems when host names (name of precompiled files) are equal

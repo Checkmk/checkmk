@@ -911,8 +911,13 @@ def _find_check_plugins(checktype):
 
 
 def precompile_hostchecks():
+    console.verbose("Creating precompiled host check config...\n")
+    config.PackedConfig().save()
+
     if not os.path.exists(cmk.paths.precompiled_hostchecks_dir):
         os.makedirs(cmk.paths.precompiled_hostchecks_dir)
+
+    console.verbose("Precompiling host checks...\n")
     for host in config.all_active_hosts():
         try:
             _precompile_hostcheck(host)
@@ -1062,12 +1067,7 @@ if '-d' in sys.argv:
     for check_plugin_name in sorted(needed_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
-    # Disable this check. We don't have all check plugins loaded and have not all possible
-    # check config variables known. These issues don't have to be validated by the single
-    # precompiled checks.
-    output.write("config.verify_non_invalid_variables = lambda x: None\n")
-
-    output.write("config.load(validate_hosts=False)\n")
+    output.write("config.load_packed_config()\n")
 
     # handling of clusters
     if config.is_cluster(hostname):

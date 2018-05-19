@@ -31,6 +31,7 @@ import marshal
 
 import cmk.paths
 import cmk.translations
+import cmk.store as store
 from cmk.exceptions import MKGeneralException
 
 import cmk_base
@@ -142,19 +143,14 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
 def load_packed_config():
     """Load the configuration for the CMK helpers of CMC
 
-    These files are written by cmk_base.cee.core_cmc.pack_config().
+    These files are written by PackedConfig().
 
     Should have a result similar to the load() above. With the exception that the
     check helpers would only need check related config variables.
 
     The validations which are performed during load() also don't need to be performed.
     """
-    _initialize_config()
-
-    filepath = cmk.paths.var_dir + "/core/helper_config.mk"
-    exec(marshal.load(open(filepath)), globals())
-
-    _perform_post_config_loading_actions()
+    PackedConfig().load()
 
 
 def _initialize_config():
@@ -412,6 +408,165 @@ def _cmp_config_paths(a, b):
            cmp(len(pa), len(pb)) or \
            cmp(pa, pb)
 
+
+class PackedConfig(object):
+    """The precompiled host checks and the CMC Check_MK helpers use a
+    "precompiled" part of the Check_MK configuration during runtime.
+
+    a) They must not use the live config from etc/check_mk during
+       startup. They are only allowed to load the config activated by
+       the user.
+
+    b) They must not load the whole Check_MK config. Because they only
+       need the options needed for checking
+    """
+
+    # These variables are part of the Check_MK configuration, but are not needed
+    # by the Check_MK keepalive mode, so exclude them from the packed config
+    _skipped_config_variable_names = [
+        "define_contactgroups",
+        "define_hostgroups",
+        "define_servicegroups",
+        "service_contactgroups",
+        "host_contactgroups",
+        "service_groups",
+        "host_groups",
+        "contacts",
+        "host_paths",
+        "timeperiods",
+        "extra_service_conf",
+        "extra_host_conf",
+        "extra_nagios_conf",
+    ]
+
+    def __init__(self):
+        super(PackedConfig, self).__init__()
+        self._path = os.path.join(cmk.paths.var_dir, "base", "precompiled_check_config.mk")
+
+
+    def save(self):
+        self._write(self._pack())
+
+
+    def _pack(self):
+        import cmk_base.checks
+
+        helper_config = (
+            "#!/usr/bin/env python\n"
+            "# encoding: utf-8\n"
+            "# Created by Check_MK. Dump of the currently active configuration\n\n"
+        )
+
+        # These functions purpose is to filter out hosts which are monitored on different sites
+        active_hosts    = all_active_hosts()
+        active_clusters = all_active_clusters()
+        def filter_all_hosts(all_hosts):
+            all_hosts_red = []
+            for host_entry in all_hosts:
+                hostname = host_entry.split("|", 1)[0]
+                if hostname in active_hosts:
+                    all_hosts_red.append(host_entry)
+            return all_hosts_red
+
+        def filter_clusters(clusters):
+            clusters_red = {}
+            for cluster_entry, cluster_nodes in clusters.items():
+                clustername = cluster_entry.split("|", 1)[0]
+                if clustername in active_clusters:
+                    clusters_red[cluster_entry] = cluster_nodes
+            return clusters_red
+
+        def filter_hostname_in_dict(values):
+            values_red = {}
+            for hostname, attributes in values.items():
+                if hostname in active_hosts:
+                    values_red[hostname] = attributes
+            return values_red
+
+        filter_var_functions = {
+            "all_hosts"                : filter_all_hosts,
+            "clusters"                 : filter_clusters,
+            "host_attributes"          : filter_hostname_in_dict,
+            "ipaddresses"              : filter_hostname_in_dict,
+            "ipv6addresses"            : filter_hostname_in_dict,
+            "explicit_snmp_communities": filter_hostname_in_dict,
+            "hosttags"                 : filter_hostname_in_dict
+        }
+
+        #
+        # Add modified Check_MK base settings
+        #
+
+        variable_defaults = get_default_config()
+        derived_config_variable_names = get_derived_config_variable_names()
+
+        global_variables = globals()
+
+        for varname in get_variable_names() + list(derived_config_variable_names):
+            if varname in self._skipped_config_variable_names:
+                continue
+
+            val = global_variables[varname]
+
+            if varname not in derived_config_variable_names and val == variable_defaults[varname]:
+                continue
+
+            if not self._packable(varname, val):
+                continue
+
+            if varname in filter_var_functions:
+                val = filter_var_functions[varname](val)
+
+            helper_config += "\n%s = %r\n" % (varname, val)
+
+        #
+        # Add modified check specific Check_MK base settings
+        #
+
+        check_variable_defaults = cmk_base.checks.get_check_variable_defaults()
+
+        for varname, val in cmk_base.checks.get_check_variables().items():
+            if val == check_variable_defaults[varname]:
+                continue
+
+            if not self._packable(varname, val):
+                continue
+
+            helper_config += "\n%s = %r\n" % (varname, val)
+
+        return helper_config
+
+
+    def _packable(self, varname, val):
+        """Checks whether or not a variable can be written to the config.mk
+        and read again from it."""
+        if type(val) in [ int, str, unicode, bool ] or not val:
+            return True
+
+        try:
+            eval(repr(val))
+            return True
+        except:
+            return False
+
+
+    def _write(self, helper_config):
+        store.makedirs(os.path.dirname(self._path))
+
+        store.save_file(self._path + ".orig", helper_config + "\n")
+
+        import marshal
+        code = compile(helper_config, '<string>', 'exec')
+        with open(self._path + ".compiled", "w") as compiled_file:
+            marshal.dump(code, compiled_file)
+
+        os.rename(self._path + ".compiled", self._path)
+
+
+    def load(self):
+        _initialize_config()
+        exec(marshal.load(open(self._path)), globals())
+        _perform_post_config_loading_actions()
 
 
 #.

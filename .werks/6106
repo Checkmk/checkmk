@@ -1,0 +1,19 @@
+Title: Raw Edition: Fixed checking of some hosts when check speicific config variables are used
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1526723631
+
+When check specific configuration variables are set in the Check_MK configuration,
+they could make the Check_MK checks of hosts that are not using these checks fail.
+
+This resulted in Check_MK services showing an empty output. When executing the
+precompiled host checks on the command line in debug mode, errors are shown. Like
+this:
+
+python /omd/sites/beta/var/check_mk/precompiled/[hostname] -v
+Cannot read in configuration file /omd/sites/[site]/etc/check_mk/conf.d/wato/rules.mk: name 'fileinfo_groups' is not defined

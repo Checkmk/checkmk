@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = net-snmp
-VERSION  = 734f855
+VERSION  = 0b32548
 DIR      = $(NAME)-$(VERSION)
 
 .PHONY: skel

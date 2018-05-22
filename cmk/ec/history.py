@@ -46,6 +46,7 @@ class History(object):
         self._history_columns = history_columns
         self._lock = threading.Lock()
         self._mongodb = MongoDB()
+        self._active_history_period = ActiveHistoryPeriod()
         self.reload_configuration(config)
 
     def reload_configuration(self, config):
@@ -61,11 +62,11 @@ class History(object):
         else:
             _flush_files(self)
 
-    def add(self, active_history_period, event, what, who="", addinfo=""):
+    def add(self, event, what, who="", addinfo=""):
         if self._config['archive_mode'] == 'mongodb':
             _add_mongodb(self, event, what, who, addinfo)
         else:
-            _add_files(self, active_history_period, event, what, who, addinfo)
+            _add_files(self, event, what, who, addinfo)
 
     def get(self, query):
         if self._config['archive_mode'] == 'mongodb':
@@ -323,7 +324,7 @@ def _housekeeping_files(history):
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
-def _add_files(history, active_history_period, event, what, who, addinfo):
+def _add_files(history, event, what, who, addinfo):
     _log_event(history._config, history._logger, event, what, who, addinfo)
     with history._lock:
         columns = [
@@ -335,7 +336,7 @@ def _add_files(history, active_history_period, event, what, who, addinfo):
         columns += [quote_tab(event.get(colname[6:], defval))  # drop "event_"
                     for colname, defval in history._event_columns]
 
-        with get_logfile(history._config, history._settings.paths.history_dir.value, active_history_period).open(mode='ab') as f:
+        with get_logfile(history._config, history._settings.paths.history_dir.value, history._active_history_period).open(mode='ab') as f:
             f.write("\t".join(map(cmk.ec.actions.to_utf8, columns)) + "\n")
 
 

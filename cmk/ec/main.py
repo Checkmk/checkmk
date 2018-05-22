@@ -655,7 +655,7 @@ class EventServer(ECServerThread):
     month_names = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
 
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_columns):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration, history, event_status, event_columns):
         super(EventServer, self).__init__(name="EventServer",
                                           logger=logger,
                                           settings=settings,
@@ -676,7 +676,6 @@ class EventServer(ECServerThread):
         self._perfcounters = perfcounters
         self._lock_configuration = lock_configuration
         self._history = history
-        self._active_history_period = active_history_period
         self._event_status = event_status
         self._event_columns = event_columns
         self._message_period = cmk.ec.history.ActiveHistoryPeriod()
@@ -1106,14 +1105,14 @@ class EventServer(ECServerThread):
                     self._logger.info("Deleting orphaned event %d created by obsolete rule %s" %
                                       (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    self._history.add(self._active_history_period, event, "ORPHANED")
+                    self._history.add(event, "ORPHANED")
                     events_to_delete.append(nr)
 
                 elif "count" not in rule and "expect" not in rule:
                     self._logger.info("Count-based event %d belonging to rule %s: rule does not "
                                       "count/expect anymore. Deleting event." % (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
-                    self._history.add(self._active_history_period, event, "NOCOUNT")
+                    self._history.add(event, "NOCOUNT")
                     events_to_delete.append(nr)
 
                 # handle counting
@@ -1139,7 +1138,7 @@ class EventServer(ECServerThread):
                                 self._logger.info("Rule %s/%s, event %d: again without allowed rate, dropping event" %
                                                   (rule["pack"], rule["id"], event["id"]))
                                 event["phase"] = "closed"
-                                self._history.add(self._active_history_period, event, "COUNTFAILED")
+                                self._history.add(event, "COUNTFAILED")
                                 events_to_delete.append(nr)
 
                     else:  # algorithm 'interval'
@@ -1148,7 +1147,7 @@ class EventServer(ECServerThread):
                                               "Resetting to zero." % (rule["pack"], rule["id"], event["count"],
                                                                       count["count"], count["period"]))
                             event["phase"] = "closed"
-                            self._history.add(self._active_history_period, event, "COUNTFAILED")
+                            self._history.add(event, "COUNTFAILED")
                             events_to_delete.append(nr)
 
             # Handle delayed actions
@@ -1157,12 +1156,12 @@ class EventServer(ECServerThread):
                 if now >= delay_until:
                     self._logger.info("Delayed event %d of rule %s is now activated." % (event["id"], event["rule_id"]))
                     event["phase"] = "open"
-                    self._history.add(self._active_history_period, event, "DELAYOVER")
+                    self._history.add(event, "DELAYOVER")
                     if rule:
-                        cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._event_columns, rule, event)
+                        cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._event_columns, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
-                            self._history.add(self._active_history_period, event, "AUTODELETE")
+                            self._history.add(event, "AUTODELETE")
                             events_to_delete.append(nr)
 
                     else:
@@ -1177,7 +1176,7 @@ class EventServer(ECServerThread):
                         events_to_delete.append(nr)
                         self._logger.info("Livetime of event %d (rule %s) exceeded. Deleting event." %
                                           (event["id"], event["rule_id"]))
-                        self._history.add(self._active_history_period, event, "EXPIRED")
+                        self._history.add(event, "EXPIRED")
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
         for nr in events_to_delete[::-1]:
@@ -1231,7 +1230,7 @@ class EventServer(ECServerThread):
                             self._logger.info("Rule %s/%s has reached %d occurrances (%d required). "
                                               "Starting next period." %
                                               (rule["pack"], rule["id"], event["count"], expected_count))
-                            self._history.add(self._active_history_period, event, "COUNTREACHED")
+                            self._history.add(event, "COUNTREACHED")
                         # Counting event is no longer needed.
                         events_to_delete.append(nr)
                         break
@@ -1273,7 +1272,7 @@ class EventServer(ECServerThread):
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
             self.rewrite_event(rule, merge_event, ())
-            self._history.add(self._active_history_period, merge_event, "COUNTFAILED")
+            self._history.add(merge_event, "COUNTFAILED")
         else:
             # Create artifical event from scratch. Make sure that all important
             # fields are defined.
@@ -1298,11 +1297,11 @@ class EventServer(ECServerThread):
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
             self._event_status.new_event(event)
-            self._history.add(self._active_history_period, event, "COUNTFAILED")
-            cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._event_columns, rule, event)
+            self._history.add(event, "COUNTFAILED")
+            cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._event_columns, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
-                self._history.add(self._active_history_period, event, "AUTODELETE")
+                self._history.add(event, "AUTODELETE")
                 self._event_status.remove_event(event)
 
     def reload_configuration(self, config):
@@ -1550,13 +1549,13 @@ class EventServer(ECServerThread):
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._event_columns, rule, existing_event)
+                                cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._event_columns, rule, existing_event)
 
-                            self._history.add(self._active_history_period, existing_event, "COUNTREACHED")
+                            self._history.add(existing_event, "COUNTREACHED")
 
                             if "delay" not in rule and rule.get("autodelete"):
                                 existing_event["phase"] = "closed"
-                                self._history.add(self._active_history_period, existing_event, "AUTODELETE")
+                                self._history.add(existing_event, "AUTODELETE")
                                 with self._event_status.lock:
                                     self._event_status.remove_event(existing_event)
                     elif "expect" in rule:
@@ -1572,10 +1571,10 @@ class EventServer(ECServerThread):
 
                         if self.new_event_respecting_limits(event):
                             if event["phase"] == "open":
-                                cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._active_history_period, self._event_columns, rule, event)
+                                cmk.ec.actions.event_has_opened(self._history, self.settings, self._config, self._logger, self, self._event_columns, rule, event)
                                 if rule.get("autodelete"):
                                     event["phase"] = "closed"
-                                    self._history.add(self._active_history_period, event, "AUTODELETE")
+                                    self._history.add(event, "AUTODELETE")
                                     with self._event_status.lock:
                                         self._event_status.remove_event(event)
                     return
@@ -2787,7 +2786,7 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 class StatusServer(ECServerThread):
-    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_server, terminate_main_event):
+    def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration, history, event_status, event_server, terminate_main_event):
         super(StatusServer, self).__init__(name="StatusServer",
                                            logger=logger,
                                            settings=settings,
@@ -2806,7 +2805,6 @@ class StatusServer(ECServerThread):
         self._perfcounters = perfcounters
         self._lock_configuration = lock_configuration
         self._history = history
-        self._active_history_period = active_history_period
         self._event_status = event_status
         self._event_server = event_server
         self._event_columns = StatusTableEvents.columns
@@ -3055,7 +3053,7 @@ class StatusServer(ECServerThread):
             event["comment"] = comment
         if contact:
             event["contact"] = contact
-        self._history.add(self._active_history_period, event, "UPDATE", user)
+        self._history.add(event, "UPDATE", user)
 
     def handle_command_create(self, arguments):
         # Would rather use process_raw_line(), but we are already
@@ -3072,7 +3070,7 @@ class StatusServer(ECServerThread):
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         event["state"] = int(newstate)
-        self._history.add(self._active_history_period, event, "CHANGESTATE", user)
+        self._history.add(event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
         reload_configuration(self.settings, self._logger, self._lock_configuration, self._history, self._event_status, self._event_server, self, self._slave_status)
@@ -3120,7 +3118,7 @@ class StatusServer(ECServerThread):
                     raise MKClientError("The action '%s' is not defined. After adding new commands please "
                                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = self._config["action"][action_id]
-            cmk.ec.actions.do_event_action(self._history, self.settings, self._config, self._logger, self._active_history_period, self._event_columns, action, event, user)
+            cmk.ec.actions.do_event_action(self._history, self.settings, self._config, self._logger, self._event_columns, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -3231,13 +3229,12 @@ def run_eventd(terminate_main_event, settings, config, lock_configuration, histo
 
 class EventStatus(object):
 
-    def __init__(self, settings, config, perfcounters, history, active_history_period, logger):
+    def __init__(self, settings, config, perfcounters, history, logger):
         self.settings = settings
         self._config = config
         self._perfcounters = perfcounters
         self.lock = threading.Lock()
         self._history = history
-        self._active_history_period = active_history_period
         self._logger = logger
         self.flush()
 
@@ -3396,14 +3393,14 @@ class EventStatus(object):
         self._events.append(event)
         self.num_existing_events += 1
         self._count_event_add(event)
-        self._history.add(self._active_history_period, event, "NEW")
+        self._history.add(event, "NEW")
 
     def archive_event(self, event):
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         event["phase"] = "closed"
-        self._history.add(self._active_history_period, event, "ARCHIVED")
+        self._history.add(event, "ARCHIVED")
 
     def remove_event(self, event):
         try:
@@ -3476,7 +3473,7 @@ class EventStatus(object):
                         event["time"] = new_event["time"]
                         event["last"] = new_event["time"]
                         event["priority"] = new_event["priority"]
-                        self._history.add(self._active_history_period, event, "CANCELLED")
+                        self._history.add(event, "CANCELLED")
                         actions = rule.get("cancel_actions", [])
                         if actions:
                             if previous_phase != "open" \
@@ -3485,7 +3482,7 @@ class EventStatus(object):
                                                   "is not 'open' but '%s'" %
                                                   (event["id"], previous_phase))
                             else:
-                                cmk.ec.actions.do_event_actions(self._history, self.settings, self._config, self._logger, event_server, self._active_history_period, event_columns, actions, event, is_cancelling=True)
+                                cmk.ec.actions.do_event_actions(self._history, self.settings, self._config, self._logger, event_server, event_columns, actions, event, is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -3641,7 +3638,7 @@ class EventStatus(object):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
                 event["phase"] = "closed"
-                self._history.add(self._active_history_period, event, "DELETE", user)
+                self._history.add(event, "DELETE", user)
                 self._remove_event_by_nr(nr)
                 return
         raise MKClientError("No event with id %s" % event_id)
@@ -3961,12 +3958,11 @@ def main():
 
         # First do all things that might fail, before daemonizing
         perfcounters = Perfcounters(logger.getChild("lock.perfcounters"))
-        active_history_period = cmk.ec.history.ActiveHistoryPeriod()
-        event_status = EventStatus(settings, config, perfcounters, history, active_history_period, logger.getChild("EventStatus"))
+        event_status = EventStatus(settings, config, perfcounters, history, logger.getChild("EventStatus"))
         lock_configuration = ECLock(logger.getChild("lock.configuration"))
-        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, StatusTableEvents.columns)
+        event_server = EventServer(logger.getChild("EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, event_status, StatusTableEvents.columns)
         terminate_main_event = threading.Event()
-        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_server, terminate_main_event)
+        status_server = StatusServer(logger.getChild("StatusServer"), settings, config, slave_status, perfcounters, lock_configuration, history, event_status, event_server, terminate_main_event)
 
         event_status.load_status(event_server)
         event_server.compile_rules(config["rules"], config["rule_packs"])

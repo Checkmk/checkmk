@@ -73,23 +73,18 @@ def perfcounters():
 
 
 @pytest.fixture(scope="function")
-def active_history_period():
-    return cmk.ec.history.ActiveHistoryPeriod()
+def event_status(settings, config, perfcounters, history):
+    return cmk.ec.main.EventStatus(settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus"))
 
 
 @pytest.fixture(scope="function")
-def event_status(settings, config, perfcounters, history, active_history_period):
-    return cmk.ec.main.EventStatus(settings, config, perfcounters, history, active_history_period, logging.getLogger("cmk.mkeventd.EventStatus"))
+def event_server(settings, config, slave_status, perfcounters, lock_configuration, history, event_status):
+    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, event_status, cmk.ec.main.StatusTableEvents.columns)
 
 
 @pytest.fixture(scope="function")
-def event_server(settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status):
-    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, cmk.ec.main.StatusTableEvents.columns)
-
-
-@pytest.fixture(scope="function")
-def status_server(settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_server):
-    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status, perfcounters, lock_configuration, history, active_history_period, event_status, event_server, threading.Event())
+def status_server(settings, config, slave_status, perfcounters, lock_configuration, history, event_status, event_server):
+    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status, perfcounters, lock_configuration, history, event_status, event_server, threading.Event())
 
 
 def test_handle_client(status_server):

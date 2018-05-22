@@ -418,7 +418,7 @@ setup:
 	    python-pip \
 	    chrpath \
 	    enchant
-	sudo pip install pipenv
+	sudo pip install -U pipenv
 	$(MAKE) -C omd setup
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/locale setup

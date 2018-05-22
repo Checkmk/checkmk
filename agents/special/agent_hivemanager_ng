@@ -62,9 +62,6 @@ def parse_args():
 def main():
     args = parse_args()
 
-    print("<<<check_mk>>>")
-    print("Version: 1.4.0")
-    print("AgentOS: Aerohive HiveManagerNG")
     print("<<<hivemanager_ng_devices:sep(124)>>>")
 
     address = "%s/xapi/v1/monitor/devices" % args.url

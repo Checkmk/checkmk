@@ -47,10 +47,6 @@ def get_url(address):
         print e
         sys.exit(2)
 
-print "<<<check_mk>>>"
-print "Version: 1.2.5"
-print "AgentOS: Hivemanager"
-
 print "<<<hivemanager_devices:sep(124)>>>"
 address = "https://%s/hm/api/v1/devices" % ip
 informations = ['hostName', 'clients', 'alarm', 'connection', 'upTime',

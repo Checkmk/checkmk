@@ -1,0 +1,15 @@
+Title: Net-SNMP: Add some patch trying to fix SNMPv3 communication in some cases
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b6
+Date: 1526997524
+
+When using SNMPv3 communication issues with some devices may occur. From the user point of
+view timeouts are reported by Check_MK originating from Net-SNMP not receiving a valid response.
+
+This kind of issue is related to a broken negotiation (related to the maximum message size) between
+the monitoring and the monitored device.

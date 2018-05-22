@@ -679,6 +679,7 @@ class EventServer(ECServerThread):
         self._active_history_period = active_history_period
         self._event_status = event_status
         self._event_columns = event_columns
+        self._message_period = cmk.ec.history.ActiveHistoryPeriod()
         self._time_periods = TimePeriods(self._logger)
 
         self.create_pipe()
@@ -2188,7 +2189,7 @@ class EventServer(ECServerThread):
 
     def log_message(self, event):
         try:
-            with cmk.ec.history.get_logfile(self._config, self.settings.paths.messages_dir.value, self._active_history_period).open(mode='ab') as f:
+            with cmk.ec.history.get_logfile(self._config, self.settings.paths.messages_dir.value, self._message_period).open(mode='ab') as f:
                 f.write("%s %s %s%s: %s\n" % (
                     time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),
                     event["host"],

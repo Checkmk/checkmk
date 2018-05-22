@@ -32,6 +32,7 @@ from valuespec import *
 import config, table, userdb
 import pagetypes # That will replace visuals.py one day
 import cmk.store as store
+import metrics
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -1601,7 +1602,7 @@ def ajax_popup_add():
                 html.close_li()
 
     # TODO: Find a good place for this special case. This needs to be modularized.
-    if add_type == "pnpgraph":
+    if add_type == "pnpgraph" and metrics.cmk_graphs_possible():
         html.open_li()
         html.open_span()
         html.write("%s:" % _("Export"))

@@ -1,0 +1,10 @@
+Title: Raw Edition: Don't show enterprise specific graph export links in context menu
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b5
+Date: 1526972508
+Class: fix
+
+

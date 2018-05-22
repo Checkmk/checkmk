@@ -136,55 +136,58 @@ def inventory_heartbeat_crm(info):
 
 
 def check_heartbeat_crm(item, params, info):
-    if len(info) > 0:
-        if info[0][0].lower().startswith("critical"):
-            return 2, " ".join(info[0])
-        last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
+    if not len(info) > 0:
+        return
 
-        # Convert old tuple params (pre 1.2.5i6)
-        if type(params) == tuple:
-            params = {
-                'max_age'       : params[0],
-                'dc'            : params[1] != "" and params[1] or None,
-                'num_nodes'     : params[2] != -1 and params[2] or None,
-                'num_resources' : params[3] != -1 and params[3] or None,
-            }
+    first_line = ' '.join(info[0])
+    if first_line.lower().startswith("critical") or 'connection to cluster failed' in first_line.lower():
+        return 2, first_line
 
-        # Check the freshness of the crm_mon output and terminate with CRITICAL
-        # when too old information are found
-        dt = utc_mktime(time.strptime(last_updated, '%a %b %d %H:%M:%S %Y'))
-        now = time.time()
-        delta = now - dt
-        if delta > params['max_age']:
-            return 3, 'Ignoring reported data (Status output too old: %s)' % get_age_human_readable(delta)
+    last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
 
-        output = ''
-        status = 0
+    # Convert old tuple params (pre 1.2.5i6)
+    if type(params) == tuple:
+        params = {
+            'max_age'       : params[0],
+            'dc'            : params[1] != "" and params[1] or None,
+            'num_nodes'     : params[2] != -1 and params[2] or None,
+            'num_resources' : params[3] != -1 and params[3] or None,
+        }
 
-        # Check for correct DC when enabled
-        if params.get('dc') == None or dc == params['dc']:
-            output += 'DC: %s, ' % dc
+    # Check the freshness of the crm_mon output and terminate with CRITICAL
+    # when too old information are found
+    dt = utc_mktime(time.strptime(last_updated, '%a %b %d %H:%M:%S %Y'))
+    now = time.time()
+    delta = now - dt
+    if delta > params['max_age']:
+        return 3, 'Ignoring reported data (Status output too old: %s)' % get_age_human_readable(delta)
+
+    status, output = 0, ''
+
+    # Check for correct DC when enabled
+    if params.get('dc') is None or dc == params['dc']:
+        output += 'DC: %s, ' % dc
+    else:
+        output += 'DC: %s (Expected %s (!!)), ' % (dc, params['dc'])
+        status = 2
+
+    # Check for number of nodes when enabled
+    if params['num_nodes'] is not None:
+        if numNodes == params['num_nodes']:
+            output += 'Nodes: %d, ' % numNodes
         else:
-            output += 'DC: %s (Expected %s (!!)), ' % (dc, params['dc'])
+            output += 'Nodes: %d (Expected %d (!!)), ' % (numNodes, params['num_nodes'])
             status = 2
 
-        # Check for number of nodes when enabled
-        if params['num_nodes'] != None:
-            if numNodes == params['num_nodes']:
-                output += 'Nodes: %d, ' % numNodes
-            else:
-                output += 'Nodes: %d (Expected %d (!!)), ' % (numNodes, params['num_nodes'])
-                status = 2
+    # Check for number of resources when enabled
+    if params['num_resources'] is not None:
+        if numResources == params['num_resources']:
+            output += 'Resources: %d, ' % numResources
+        else:
+            output += 'Resources: %d (Expected %d (!!)), ' % (numResources, params['num_resources'])
+            status = 2
 
-        # Check for number of resources when enabled
-        if params['num_resources'] != None:
-            if numResources == params['num_resources']:
-                output += 'Resources: %d, ' % numResources
-            else:
-                output += 'Resources: %d (Expected %d (!!)), ' % (numResources, params['num_resources'])
-                status = 2
-
-        return (status, output.rstrip(', '))
+    return (status, output.rstrip(', '))
 
 
 check_info["heartbeat_crm"] = {

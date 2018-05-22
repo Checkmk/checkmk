@@ -9,15 +9,15 @@ PATCHES  := $(wildcard patches/*.dif)
 MODULES =
 
 # Modules needed because of own packed python (would be available in OS)
-MODULES += setuptools-38.4.0.zip  # needed by rrdtool bindings
+MODULES += setuptools-39.2.0.zip  # needed by rrdtool bindings
 
 # Modules really needed on all platforms
 MODULES += pysphere-0.1.7.zip
 MODULES += pyasn1-0.4.2.tar.gz
 MODULES += pycryptodomex-3.4.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz # needed by pysmi
-MODULES += ply-3.10.tar.gz # needed by pysmi
-MODULES += pysmi-0.2.2.tar.gz # needed by EC (for trap translation)
+MODULES += ply-3.11.tar.gz # needed by pysmi
+MODULES += pysmi-0.3.0.tar.gz # needed by EC (for trap translation)
 MODULES += pysnmp-4.4.4.tar.gz # needed by EC (for trap translation)
 
 MODULES += setuptools-git-1.2.tar.gz # needed for pymssql
@@ -36,7 +36,7 @@ else
 endif
 
 # Check_MK Edition specific
-MODULES += simplejson-3.13.2.tar.gz
+MODULES += simplejson-3.15.0.tar.gz
 MODULES += MySQL-python-1.2.5.zip # needed by check_sql
 MODULES += psycopg2-2.6.2.tar.gz # needed by check_sql
 MODULES += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
@@ -44,7 +44,7 @@ MODULES += pycparser-2.18.tar.gz # needed for cffi
 MODULES += enum34-1.1.6.tar.gz # needed for cffi
 MODULES += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 MODULES += Pillow-5.0.0.tar.gz # needed by reportlab (pillow>=2.4.0)
-MODULES += pip-9.0.1.tar.gz # needed by reportlab (pip>=1.4.1)
+MODULES += pip-10.0.1.tar.gz # needed by reportlab (pip>=1.4.1)
 MODULES += reportlab-3.4.0.tar.gz # needed by reporting
 MODULES += PyPDF2-1.26.0.tar.gz # needed by reporting
 
@@ -84,7 +84,7 @@ MODULES += psutil-5.4.3.tar.gz # needed for mkbench
 MODULES += six-1.11.0.tar.gz
 MODULES += ipaddress-1.0.22.tar.gz
 
-MODULES += netifaces-0.10.6.tar.gz # needed for LDAP (nearest DC detection)
+MODULES += netifaces-0.10.7.tar.gz # needed for LDAP (nearest DC detection)
 MODULES += dnspython-1.15.0.zip # needed for LDAP (nearest DC detection)
 MODULES += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detection)
 
@@ -122,7 +122,7 @@ MODULES += pyghmi-1.0.38.tar.gz
 
 MODULES += typing-3.6.4.tar.gz
 MODULES += scandir-1.7.tar.gz
-MODULES += pathlib2-2.3.0.tar.gz
+MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
 MODULES += python-dateutil-2.6.1.tar.gz
 

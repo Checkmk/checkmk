@@ -1345,10 +1345,6 @@ process_level_elements = [
              ),
          ],
     )),
-    ("use_linux_cpu_cores", Checkbox(
-        title=_("Use number of cores sent by agent (Linux)"),
-        label=_("Enable")
-    )),
     ('process_info', DropdownChoice(
         title = _("Enable per-process details in long-output"),
         label = _("Enable per-process details"),

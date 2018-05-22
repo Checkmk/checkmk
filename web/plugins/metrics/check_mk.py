@@ -1510,6 +1510,12 @@ metric_info["connections_ssl"] = {
     "color" : "13/a",
 }
 
+metric_info["connections_ssl_vpn"] = {
+    "title" : _("SSL/VPN connections"),
+    "unit"  : "count",
+    "color" : "13/a",
+}
+
 metric_info["connections_async_writing"] = {
     "title" : _("Asynchronous writing connections"),
     "unit"  : "count",

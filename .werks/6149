@@ -1,0 +1,24 @@
+Title: ps: The linux ps check CPU utilization calculation changed since 1.4.0p27
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1526982355
+
+The calculation of the CPU utilization of processes on linux systems was not taking the number
+of CPU cores into account for a long time. This results in CPU utilizations reported with more
+than 100%, up to 100%*CPU-cores. For example in case 3 processes use 3 of 6 cores at 100%, this
+resulted in a usage of 300%.
+
+The intention of the change in 1.4.0p27 was to make the windows and linux ps checks both take
+the number of CPU cores into account and cap the usage at 100%. The problem with this change is
+that all possibly existing thresholds that have been configured for the old scheme will not
+work anymore with the new scheme.
+
+We have now reverted the changes version 1.4.0p27 introduced to get the old behavior back.
+
+In a future release, we will finally make the switch to the new scheme. But this will be done
+in a compatible way where the already configured thresholds will still work.

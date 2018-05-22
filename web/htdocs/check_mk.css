@@ -395,6 +395,10 @@ b.treeangle.title {
     cursor: pointer;
 }
 
+table.data b.treeangle.title {
+    color: #000000;
+}
+
 img.treeangle+.treeangle.title {
     display: inline-block;
 }

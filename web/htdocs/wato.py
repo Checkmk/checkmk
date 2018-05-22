@@ -8089,9 +8089,7 @@ def vs_notification_rule(userid = None):
         title = _("Rule Properties"),
         elements = rule_option_elements()
             + section_override
-            + generic_rule_match_conditions()
-            + event_rule_match_conditions(flavour="notify")
-            + notification_rule_match_conditions()
+            + rule_match_conditions()
             + section_contacts
             + [
                 # Notification
@@ -8461,6 +8459,12 @@ def event_rule_match_conditions(flavour):
     ]
 
 
+def rule_match_conditions():
+    return generic_rule_match_conditions() \
+        + event_rule_match_conditions(flavour="notify") \
+        + notification_rule_match_conditions()
+
+
 def notification_rule_match_conditions():
     def transform_ec_rule_id_match(val):
         if isinstance(val, list):
@@ -8607,6 +8611,11 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                               analyse=False, start_nr=0, profilemode=False):
     if not rules:
         html.message(_("You have not created any rules yet."))
+        return
+
+    vs_match_conditions = Dictionary(
+        elements = rule_match_conditions()
+    )
 
     if rules:
         if not show_title:
@@ -8715,10 +8724,19 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                     html.write("&bullet; %s" % line)
                     html.br()
 
-            table.cell(_("Conditions"))
+            table.cell(_("Conditions"), css="rule_conditions")
             num_conditions = len([key for key in rule if key.startswith("match_")])
             if num_conditions:
-                html.write_text(_("%d conditions") % num_conditions)
+                title = _("%d conditions") % num_conditions
+                html.begin_foldable_container(treename="rule_%d" % nr,
+                    id="%s" % nr,
+                    isopen=False,
+                    title=title,
+                    indent=False,
+                    tree_img="tree_black",
+                )
+                html.write(vs_match_conditions.value_to_text(rule))
+                html.end_foldable_container()
             else:
                 html.i(_("(no conditions)"))
 

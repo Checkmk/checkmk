@@ -1,0 +1,11 @@
+Title: Notification conditions can now be displayed in notification rule table
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1526999940
+
+The last column can now expand the number of conditions to the list of match conditions of the rule.

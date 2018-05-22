@@ -1137,10 +1137,6 @@ process_level_elements = [
        ],
        default_value = "disable",
    )),
-   ("use_linux_cpu_cores", Checkbox(
-       title=_("Use number of cores sent by agent (Linux)"),
-       label=_("Enable")
-   )),
 ]
 
 # In version 1.2.4 the check parameters for the resulting ps check

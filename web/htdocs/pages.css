@@ -1361,8 +1361,8 @@ table.data.single tr.data td.invtree table td,
 table.data.single tr.data td.invtree table th,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
-table.data tr.notification_context table th
-{
+table.data tr.notification_context table th,
+td.rule_conditions table td {
     border: 1px solid #888;
     padding: 1px 5px;
     height: 14px;
@@ -1377,12 +1377,14 @@ table.data tr.notification_context table th {
 td.invtree table td,
 td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
-table.data tr.notification_context table td {
+table.data tr.notification_context table td,
+td.rule_conditions table td {
     background-color: #fff;
 }
 
 td.agent_config table.rulesets table td.title,
-table.data tr.notification_context table th {
+table.data tr.notification_context table th,
+td.rule_conditions table td.title {
     background-color: #999;
     color: #fff;
 }

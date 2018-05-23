@@ -402,7 +402,7 @@ def replace_action_url_macros(url, what, row):
 
     for key, val in macros.items():
         url = url.replace("$%s$" % key, val)
-        url = url.replace("$%s_URL_ENCODED$" % key, html.urlencode_plus(val))
+        url = url.replace("$%s_URL_ENCODED$" % key, html.urlencode(val))
 
     return url
 

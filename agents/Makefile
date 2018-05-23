@@ -95,12 +95,12 @@ deb $(DEB_PACKAGE): $(RPM_PACKAGE)
 	cd deb-unpack && \
 	ar x ../$$DEB_PKG && \
 	mkdir ctrl && \
-	tar xzf control.tar.gz -C ctrl && \
+	tar xJf control.tar.xz -C ctrl && \
 	sed -i -e '/^Depends:/d' \
 	       -e 's/^Version:.*/Version: $(VERSION)-1/' \
 	       -e 's/^Maintainer:.*/Maintainer: feedback@check-mk.org/' ctrl/control && \
-	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
-	ar r ../$(DEB_PACKAGE) debian-binary control.tar.gz data.tar.*
+	tar cJf control.tar.xz $(TAROPTS) -C ctrl . && \
+	ar r ../$(DEB_PACKAGE) debian-binary control.tar.* data.tar.*
 	rm -rf deb-unpack
 
 clean:

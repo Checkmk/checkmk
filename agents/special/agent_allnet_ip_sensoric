@@ -148,12 +148,6 @@ try:
         if opt_debug:
             raise
 
-    sys.stdout.write('<<<check_mk>>>\n')
-    if "system.devicetype" in status.keys():
-        sys.stdout.write('AgentOS: %s\n' % status["system.devicetype"])
-    else:
-        sys.stdout.write('AgentOS: unknown\n')
-
     sys.stdout.write('<<<allnet_ip_sensoric:sep(59)>>>\n')
     for key, value in sorted(status.items()):
         sys.stdout.write('%s;%s\n' % (key, value))

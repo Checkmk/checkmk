@@ -11,6 +11,7 @@ _default.default = json.JSONEncoder().default # Save unmodified default.
 json.JSONEncoder.default = _default # replacement
 
 
+# TODO: Split this up into multiple tests
 def test_class_HTML():
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
     b = "two"

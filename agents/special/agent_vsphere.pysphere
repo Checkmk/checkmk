@@ -250,9 +250,11 @@ if error:
 esx_version = host.get_api_version()
 esx_version_num = float(esx_version)
 
-print "<<<check_mk>>>"
-print "Version: %s" % esx_version
-print "AgentOS: %s " % host.get_server_type()
+# use the same section and keys as in
+# agent_vsphere
+print "<<<esx_systeminfo>>>"
+print "apiVersion %s" % esx_version
+print "name %s" % host.get_server_type()
 
 # Prepare list of all hosts systems
 all_hosts = host.get_hosts()

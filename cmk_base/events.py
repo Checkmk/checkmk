@@ -580,29 +580,25 @@ def event_match_contacts(rule, context):
 
 def event_match_contactgroups(rule, context):
     required_groups = rule.get("match_contactgroups")
+    if required_groups is None:
+        return
+
     if context["WHAT"] == "SERVICE":
         cgn = context.get("SERVICECONTACTGROUPNAMES")
     else:
         cgn = context.get("HOSTCONTACTGROUPNAMES")
 
-    if required_groups != None:
-        if cgn == None:
-            #event_log("Warning: No information about contact groups in the context. " \
-            #           "Seems that you don't use the Check_MK Microcore. ")
+    if cgn is None:
+        return
+    if not cgn:
+        return "The object is in no group, but %s is required" % (" or ".join(required_groups))
+
+    contactgroups = cgn.split(",")
+    for group in required_groups:
+        if group in contactgroups:
             return
 
-        if cgn:
-            contactgroups = cgn.split(",")
-        else:
-            return "The object is in no group, but %s is required" % (
-                 " or ".join(required_groups))
-
-        for group in required_groups:
-            if group in contactgroups:
-                return
-
-        return "The object is only in the groups %s, but %s is required" % (
-              cgn, " or ".join(required_groups))
+    return "The object is only in the groups %s, but %s is required" % (cgn, " or ".join(required_groups))
 
 
 def event_match_hostgroups(rule, context):

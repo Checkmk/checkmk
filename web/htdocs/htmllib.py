@@ -165,20 +165,15 @@ class Escaper(object):
 #   '----------------------------------------------------------------------'
 
 class Encoder(object):
-    # This function returns a str object, never unicode!
-    # Beware: this code is crucial for the performance of Multisite!
-    # Changing from the self coded urlencode to urllib.quote
-    # is saving more then 90% of the total HTML generating time
-    # on more complex pages!
-    #
-    # TODO: Cleanup self.urlencode_vars, self.urlencode and self.urlencode_plus.
-    #       urlencode_vars() should directly use urlencode or urlencode_vars and
-    #       not fallback to self.urlencode on it's own. self.urlencode() should
-    #       work for a single value exacly as urlencode_vars() does for multiple
-    # TODO: Refactor to use urllib.urlencode()
     def urlencode_vars(self, vars):
+        """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string
+
+        This function returns a str object, never unicode!
+        Note: This should be changed once we change everything to
+        unicode internally.
+        """
         assert type(vars) == list
-        output = []
+        pairs = []
         for varname, value in sorted(vars):
             assert type(varname) == str
 
@@ -189,35 +184,18 @@ class Encoder(object):
 
             #assert type(value) == str, "%s: %s" % (varname, value)
 
-            try:
-                # urllib is not able to encode non-Ascii characters. Yurks
-                output.append(varname + '=' + urllib.quote(value))
-            except:
-                output.append(varname + '=' + self.urlencode(value)) # slow but working
+            pairs.append((varname, value))
 
-        return '&'.join(output)
+        return urllib.urlencode(pairs)
 
 
     def urlencode(self, value):
-        if type(value) == unicode:
-            value = value.encode("utf-8")
-        elif value == None:
-            return ""
+        """Replace special characters in string using the %xx escape.
 
-        assert type(value) == str
-
-        ret = ""
-        for c in value:
-            if c == " ":
-                c = "+"
-            elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
-                c = "%%%02x" % ord(c)
-            ret += c
-        return ret
-
-
-    # Like urllib.quote() but also replaces spaces and /
-    def urlencode_plus(self, value):
+        This function returns a str object, never unicode!
+        Note: This should be changed once we change everything to
+        unicode internally.
+        """
         if type(value) == unicode:
             value = value.encode("utf-8")
         elif value == None:
@@ -1386,10 +1364,6 @@ class html(HTMLGenerator):
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode(self, value):
         return self.encoder.urlencode(value)
-
-    # TODO: Cleanup all call sites to self.encoder.*
-    def urlencode_plus(self, value):
-        return self.encoder.urlencode_plus(value)
 
     #
     # escaping - deprecated functions

@@ -562,20 +562,22 @@ def event_match_exclude_servicegroups(rule, context, is_regex = False):
 
 
 def event_match_contacts(rule, context):
-    if "match_contacts" in rule:
-        required_contacts = rule["match_contacts"]
-        contacts_text = context["CONTACTS"]
-        if not contacts_text:
-            return "The object has no contact, but %s is required" % (
-                 " or ".join(required_contacts))
+    if "match_contacts" not in rule:
+        return
 
-        contacts = contacts_text.split(",")
-        for contact in required_contacts:
-            if contact in contacts:
-                return
+    required_contacts = rule["match_contacts"]
+    contacts_text = context["CONTACTS"]
+    if not contacts_text:
+        return "The object has no contact, but %s is required" % (
+            " or ".join(required_contacts))
 
-        return "The object has the contacts %s, but %s is required" % (
-              contacts_text, " or ".join(required_contacts))
+    contacts = contacts_text.split(",")
+    for contact in required_contacts:
+        if contact in contacts:
+            return
+
+    return "The object has the contacts %s, but %s is required" % (
+        contacts_text, " or ".join(required_contacts))
 
 
 def event_match_contactgroups(rule, context):

@@ -42,6 +42,8 @@ Provides:  check_mk-agent check_mk_agent
 The Check_MK Agent uses xinetd to provide information about the system
 on TCP port 6556. This can be used to monitor the host via Check_MK.
 
+%define _binaries_in_noarch_packages_terminate_build 0
+
 %prep
 %setup -n check-mk-agent-%{_version}
 

@@ -195,21 +195,6 @@ if cmdout:
                          "credentials if you don't have a security file.\n")
         sys.exit(1)
 
-# Try to gather the version of the agent
-emcvnx_version = None
-for line in cmdout:
-    tokens = re.split("\s+", line)
-    if tokens[0] == "Agent" and tokens[1] == "Rev:":
-        emcvnx_version = "_".join(tokens[2:])
-
-print "<<<check_mk>>>"
-print "Version: %s" % emcvnx_version
-
-# maybe we could fill AgentOS: by reading "Model:" line of naviseccli output
-# in section "Agent/Host Information", but need a call of naviseccli with an
-# other commandline argument
-#print "AgentOS: %s " % emcvnx_model
-
 print "<<<emcvnx_info:sep(58)>>>"
 for line in cmdout:
     print line

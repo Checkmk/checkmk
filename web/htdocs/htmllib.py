@@ -81,6 +81,7 @@ import cmk.paths
 from cmk.exceptions import MKGeneralException
 from gui_exceptions import MKUserError, RequestTimeout
 
+import utils
 import config
 import log
 
@@ -537,12 +538,6 @@ class HTMLGenerator(OutputFunnel):
 
     def __init__(self):
         super(HTMLGenerator, self).__init__()
-
-        self.indent_level = 0
-        self.indent = 2
-
-        self.testing_mode = False
-
         self.escaper = Escaper()
 
 
@@ -552,16 +547,6 @@ class HTMLGenerator(OutputFunnel):
 
 
     def _render_attributes(self, **attrs):
-        # TODO: REMOVE AFTER REFACTORING IS DONE!!
-        if self.testing_mode:
-            for key in attrs:
-                assert key.rstrip('_') in ['class', 'id', 'src', 'type', 'name',\
-                    'onclick', 'ondblclick', 'onsubmit', 'onmouseover', 'onmouseout', 'onfocus', 'onkeydown', 'onchange',\
-                    'size', 'autocomplete', 'readonly', 'value', 'checked','rows', 'cols',\
-                    'content',  'href', 'http-equiv', 'rel', 'for', 'title', 'target','multiple',\
-                    'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-type', 'data-role','selected',\
-                    'cellspacing', 'cellpadding', 'border', 'allowTransparency', 'frameborder'], key
-
         # make class attribute foolproof
         css = []
         for k in ["class_", "css", "cssclass", "class"]:
@@ -613,16 +598,13 @@ class HTMLGenerator(OutputFunnel):
     def _render_opening_tag(self, tag_name, close_tag=False, **attrs):
         """ You have to replace attributes which are also python elements such as
             'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
-        #self.indent_level += self.indent
-        indent = ' ' * (self.indent_level - self.indent)
-        return HTML("%s<%s%s%s>" % (indent, tag_name,\
+        return HTML("<%s%s%s>" % (tag_name,\
                                     '' if not attrs else ''.join(self._render_attributes(**attrs)),\
                                     '' if not close_tag else ' /'))
 
 
     def _render_closing_tag(self, tag_name):
-        #self.indent_level -= self.indent if self.indent_level < 0 else 0
-        return  HTML("%s</%s>" % (' ' * self.indent_level, tag_name))
+        return  HTML("</%s>" % (tag_name))
 
 
     def _render_content_tag(self, tag_name, tag_content, **attrs):
@@ -640,7 +622,6 @@ class HTMLGenerator(OutputFunnel):
 
         tag += "</%s>" % (tag_name)
 
-        #self.indent_level -= 1
         return HTML(tag)
 
 
@@ -1109,9 +1090,6 @@ class html(HTMLGenerator):
         self.start_time       = time.time()
         self.last_measurement = self.start_time
 
-        # FIXME: Drop this
-        self.auto_id = 0
-
         # Variable management
         self._var_stash = []
 
@@ -1470,12 +1448,6 @@ class html(HTMLGenerator):
     #
     # Other things
     #
-
-    # TODO: Can this please be dropped?
-    def some_id(self):
-        self.auto_id += 1
-        return "id_%d" % self.auto_id
-
 
     def measure_time(self, name):
         self.times.setdefault(name, 0.0)
@@ -2131,7 +2103,7 @@ class html(HTMLGenerator):
         if add_transid:
             href += "&_transid=%s" % self.transaction_manager.get()
         if not obj_id:
-            obj_id = self.some_id()
+            obj_id = utils.gen_id()
         self.input(name=obj_id, type_="button",
                    id_=obj_id, class_=["button", "buttonlink"],
                    value=text, style=style,
@@ -2961,6 +2933,8 @@ class html(HTMLGenerator):
 
     #
     # Per request caching
+    # TODO: Remove this cache here. Do we need some generic functionality
+    # like this? Probably use some more generic / standard thing.
     #
 
 

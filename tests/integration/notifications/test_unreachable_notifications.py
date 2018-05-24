@@ -108,6 +108,7 @@ def initial_state(site, scenario):
     time.sleep(1) # TODO: Add check for rotation
 
 
+# TODO: Use testlib.WatchLog()
 class HistoryLog(object):
     def __init__(self, site, core):
         self._site = site

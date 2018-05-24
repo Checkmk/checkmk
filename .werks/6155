@@ -1,0 +1,18 @@
+Title: Service discovery page: Active checks were not correctly shown in specific cases
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1527174418
+
+It could happen that some active checks were not correctly shown in the tables
+"active checks" or "disabled active checks". This was caused by specific
+disabled services rules. For example when using this two rules:
+
+1. Enable all services starting with "HTTP"
+2. Disable all services
+
+In this situation the HTTP service was not displayed on the discovery page.

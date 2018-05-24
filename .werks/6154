@@ -1,0 +1,13 @@
+Title: Fixed different Check_MK calls (parent scan, baking, rrd conversion) in some cases
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0b6
+Date: 1527165745
+Class: fix
+
+When using some check specific configuration variables (like e.g. fileinfo_groups), the
+mentioned Check_MK calls could not be used. An error like this was shown:
+
+Cannot read in configuration file /omd/sites/beta/etc/check_mk/conf.d/wato/rules.mk: name 'fileinfo_groups' is not defined

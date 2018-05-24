@@ -1050,6 +1050,13 @@ def merge_manual_services(services, hostname, on_error):
 
     # Handle disabled services -> "ignored"
     for (check_type, item), (check_source, paramstring) in services.items():
+        if check_source in [ "legacy", "active", "custom" ]:
+            # These are ignored later in get_check_preview
+            # TODO: This needs to be cleaned up. The problem here is that service_description() can not
+            # calculate the description of active checks and the active checks need to be put into
+            # "[source]_ignored" instead of ignored.
+            continue
+
         try:
             descr = service_description(hostname, check_type, item)
         except Exception, e:

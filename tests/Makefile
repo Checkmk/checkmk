@@ -1,5 +1,5 @@
 SHELL=/bin/bash -e
-PYTEST=source $$(pipenv --venv)/bin/activate ; py.test -s -vv
+PYTEST=pipenv run py.test -s -vv
 
 .PHONY: help test-pylint test-integration test-gui-crawl \
 	test-bandit test-shellcheck setup format test-mypy \

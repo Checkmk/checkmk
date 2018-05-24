@@ -1,0 +1,13 @@
+Title: Discovery page: Fixed incompatibility with central 1.4 and remote 1.5 site
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1527179297
+
+An error "ValueError: could not convert string to float:" was shown when performing
+the service discovery on a host that is monitored by a 1.5 site while the central
+WATO site is a 1.4 site.

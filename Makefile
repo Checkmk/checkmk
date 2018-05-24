@@ -539,8 +539,7 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 .venv: Pipfile Pipfile.lock
-	mkdir -p .venv
-	pipenv install --dev
+	source .envrc ; pipenv install --dev
 	direnv allow
 
 # This dummy rule is called from subdirectories whenever one of the

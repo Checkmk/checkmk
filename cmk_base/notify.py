@@ -169,9 +169,6 @@ def do_notify(options, args):
 
     if keepalive and "keepalive" in options:
         keepalive.enable()
-        config.load_packed_config()
-    else:
-        config.load(with_conf_d=True, validate_hosts=False)
 
     convert_legacy_configuration()
 

@@ -26,8 +26,6 @@
 
 # Example output from agent:
 
-# <<<check_mk>>>
-# AgentOS:;ALL5000
 # <<<allnet_ip_sensoric:sep(59)>>>
 # sensor0.alarm0;0
 # sensor0.all4000_typ;0
@@ -70,28 +68,28 @@
 # system.sys;114854
 # system.time;16:08:48
 
-# parses agent output in a structure like:
-# {'sensor0': {'alarm0': '0',
-#              'all4000_typ': '0',
-#              'function': '1',
-#              'limit_high': '50.00',
-#              'limit_low': '10.00',
-#              'maximum': '28.56',
-#              'minimum': '27.43',
-#              'name': 'Temperatur intern',
-#              'value_float': '27.50',
-#              'value_int': '2750',
-#              'value_string': '27.50'},
-# [...]
-#  'system': {'alarmcount': '4',
-#             'date': '30.06.2014',
-#             'devicename': 'all5000',
-#             'devicetype': 'ALL5000',
-#             'sys': '116240',
-#             'time': '16:57:50'}}
 
-
-def allnet_ip_sensoric_parse(info):
+def parse_allnet_ip_sensoric(info):
+    '''parses agent output in a structure like:
+    {'sensor0': {'alarm0': '0',
+              'all4000_typ': '0',
+              'function': '1',
+              'limit_high': '50.00',
+              'limit_low': '10.00',
+              'maximum': '28.56',
+              'minimum': '27.43',
+              'name': 'Temperatur intern',
+              'value_float': '27.50',
+              'value_int': '2750',
+              'value_string': '27.50'},
+    [...]
+    'system': {'alarmcount': '4',
+             'date': '30.06.2014',
+             'devicename': 'all5000',
+             'devicetype': 'ALL5000',
+             'sys': '116240',
+             'time': '16:57:50'}}
+    '''
     parsed = {}
     for key, value in info:
         match = re.search('(\w+)\.(\w+)', key)
@@ -102,6 +100,7 @@ def allnet_ip_sensoric_parse(info):
             parsed[sensor][field] = value
 
     return parsed
+
 
 def allnet_ip_sensoric_compose_item(sensor_id, sensor):
     sensor_id = re.sub("sensor", "", sensor_id)
@@ -120,8 +119,7 @@ def allnet_ip_sensoric_compose_item(sensor_id, sensor):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_allnet_ip_sensoric_tension(info):
-    parsed = allnet_ip_sensoric_parse(info)
+def inventory_allnet_ip_sensoric_tension(parsed):
     inventory = []
     for sensor in parsed.keys():
         if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "12":
@@ -129,8 +127,7 @@ def inventory_allnet_ip_sensoric_tension(info):
             inventory.append( (item, None) )
     return inventory
 
-def check_allnet_ip_sensoric_tension(item, _no_params, info):
-    parsed = allnet_ip_sensoric_parse(info)
+def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
     if sensor_id not in parsed.keys():
@@ -167,16 +164,14 @@ factory_settings["allnet_ip_sensoric_temp_default_levels"] = {
     "levels" : (35, 40)
 }
 
-def inventory_allnet_ip_sensoric_temp(info):
-    parsed = allnet_ip_sensoric_parse(info)
+def inventory_allnet_ip_sensoric_temp(parsed):
     for sensor in parsed.keys():
         if (parsed[sensor].get('function') and parsed[sensor]["function"] == "1") \
             or (parsed[sensor].get('unit') and parsed[sensor]['unit'] == u'°C'):
             item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
             yield item, {}
 
-def check_allnet_ip_sensoric_temp(item, params, info):
-    parsed = allnet_ip_sensoric_parse(info)
+def check_allnet_ip_sensoric_temp(item, params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
     if sensor_id not in parsed.keys():
@@ -208,8 +203,7 @@ check_info["allnet_ip_sensoric.temp"] = {
 
 allnet_ip_sensoric_humidity_default_levels = ( 35, 40, 60, 65 )
 
-def inventory_allnet_ip_sensoric_humidity(info):
-    parsed = allnet_ip_sensoric_parse(info)
+def inventory_allnet_ip_sensoric_humidity(parsed):
     inventory = []
     for sensor in parsed.keys():
         if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "2":
@@ -217,8 +211,7 @@ def inventory_allnet_ip_sensoric_humidity(info):
             inventory.append( (item, "allnet_ip_sensoric_humidity_default_levels") )
     return inventory
 
-def check_allnet_ip_sensoric_humidity(item, params, info):
-    parsed = allnet_ip_sensoric_parse(info)
+def check_allnet_ip_sensoric_humidity(item, params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
     if sensor_id not in parsed.keys():
         return 3, "%s not found in agent output" % item
@@ -244,8 +237,7 @@ check_info["allnet_ip_sensoric.humidity"] = {
 #   |              |_|                                                     |
 #   '----------------------------------------------------------------------'
 
-def inventory_allnet_ip_sensoric_pressure(info):
-    parsed = allnet_ip_sensoric_parse(info)
+def inventory_allnet_ip_sensoric_pressure(parsed):
     inventory = []
     for sensor in parsed.keys():
         if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "16":
@@ -253,8 +245,7 @@ def inventory_allnet_ip_sensoric_pressure(info):
             inventory.append( (item, None) )
     return inventory
 
-def check_allnet_ip_sensoric_pressure(item, _no_params, info):
-    parsed = allnet_ip_sensoric_parse(info)
+def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
     if sensor_id not in parsed.keys():
@@ -274,3 +265,8 @@ check_info["allnet_ip_sensoric.pressure"] = {
 }
 
 #.
+
+check_info["allnet_ip_sensoric"] = {
+    "parse_function": parse_allnet_ip_sensoric,
+}
+

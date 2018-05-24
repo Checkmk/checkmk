@@ -246,29 +246,34 @@ check_info['cisco_temperature'] = {
 
 
 def inventory_cisco_temperature_dom(parsed):
-    for item, attrs in parsed.get('14', {}).iteritems():
+    parsed_dom = parsed.get('14', {})
+    for item, attrs in parsed_dom.iteritems():
         if attrs.get('raw_dev_state') == '1':
             yield item, {}
 
 
 def check_cisco_temperature_dom(item, params, parsed):
     # TODO perf, precision, severity, etc.
-    if item in parsed.get('14', {}):
-        data = parsed['14'][item]
+    parsed_dom = parsed.get('14', {})
+    if item in parsed_dom:
+        data = parsed_dom[item]
         reading = data['reading']
         state, state_readable = data['dev_state']
         yield state, 'Status: %s' % state_readable
 
         infotext = "%s dBm" % reading
+        perfdata = ['power_level', reading]
         state = 0
-        warn, crit = data.get('dev_levels', (None, None))
-        if crit is not None and reading >= crit:
-            state = 2
-        elif warn is not None and reading >= warn:
-            state = 1
-        if state:
-            infotext += " (warn/crit at %s/%s dBm)" % (warn, crit)
-        yield state, infotext, [('power_level', reading, warn, crit)]
+        if data.get('dev_levels'):
+            warn, crit = data['dev_levels']
+            perfdata += [warn, crit]
+            if reading >= crit:
+                state = 2
+            elif reading >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %s/%s dBm)" % (warn, crit)
+        yield state, infotext, [perfdata]
 
 
 check_info['cisco_temperature.dom'] = {

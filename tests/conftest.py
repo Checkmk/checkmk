@@ -172,7 +172,7 @@ def verify_virtualenv():
 
 
 def is_running_in_virtualenv():
-    return os.environ.get("VIRTUAL_ENV")
+    return os.environ.get("PIP_PYTHON_PATH")
 
 
 def is_running_as_site_user():

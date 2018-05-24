@@ -1,6 +1,6 @@
 SHELL=/bin/bash -e
-PYTEST=source ../.envrc ; py.test -s -vv
-COVERAGE=source ../.envrc ; coverage
+PYTEST=pipenv run py.test -s -vv
+COVERAGE=pipenv run coverage
 
 .PHONY: help test-pylint test-integration test-gui-crawl \
 	test-bandit test-shellcheck setup format test-mypy \

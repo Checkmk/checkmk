@@ -1032,8 +1032,16 @@ class AutomationDiagHost(Automation):
 
         hostname, test, ipaddress, snmp_community = args[:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
-        tcp_connect_timeout = float(args[7])
-        cmd = args[8]
+
+        # In 1.5 the tcp connect timeout has been added. The automation may
+        # be called from a remote site with an older version. For this reason
+        # we need to deal with the old args.
+        if len(args) == 14:
+            tcp_connect_timeout = None
+            cmd = args[7]
+        else:
+            tcp_connect_timeout = float(args[7])
+            cmd = args[8]
 
         snmpv3_use               = None
         snmpv3_auth_proto        = None
@@ -1078,7 +1086,8 @@ class AutomationDiagHost(Automation):
                         source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
                     elif isinstance(source, data_sources.TCPDataSource):
                         source.set_port(agent_port)
-                        source.set_timeout(tcp_connect_timeout)
+                        if tcp_connect_timeout is not None:
+                            source.set_timeout(tcp_connect_timeout)
 
                     output += source.run_raw()
 

@@ -798,6 +798,33 @@ class Site(object):
             "Failed to initialize WATO data structures " \
             "(Still missing: %s)" % missing_files
 
+        self._add_wato_test_config(web)
+
+
+    # Add some test configuration that is not test specific. These settings are set only to have a
+    # bit more complex Check_MK config.
+    def _add_wato_test_config(self, web):
+        # This entry is interesting because it is a check specific setting. These
+        # settings are only registered during check loading. In case one tries to
+        # load the config without loading the checks in advance, this leads into an
+        # exception.
+        # We set this config option here trying to catch this kind of issue.
+        web.set_ruleset("fileinfo_groups", {
+            "ruleset": {
+                "": [ # "" -> folder
+                    {
+                        'conditions': {
+                            'host_specs': ['@all'],
+                            'host_tags': []
+                        },
+                        'options': {},
+                        'path': '',
+                        'value': [('TESTGROUP', ('*gwia*', ''))]
+                    },
+                ],
+            }
+        })
+
 
     def _missing_but_required_wato_files(self):
         required_files = [

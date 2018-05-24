@@ -222,7 +222,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
             if cmk.debug.enabled():
                 raise
             elif sys.stderr.isatty():
-                console.error("Cannot read in configuration file %s: %s", _f, e)
+                console.error("Cannot read in configuration file %s: %s\n", _f, e)
                 sys.exit(1)
 
     # Cleanup global helper vars

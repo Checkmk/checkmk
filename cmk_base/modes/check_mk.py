@@ -1340,14 +1340,18 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_notify(options, *args):
+    import cmk_base.config as config
     import cmk_base.notify as notify
+    config.load(with_conf_d=True, validate_hosts=False)
     return notify.do_notify(options, *args)
 
 modes.register(Mode(
     long_option="notify",
     handler_function=mode_notify,
     needs_config=False,
-    needs_checks=False,
+    # TODO: Sadly needs to be True because the checks need to initialize the check specific
+    # configuration variables before the config can be loaded.
+    needs_checks=True,
     argument=True,
     argument_descr="MODE",
     argument_optional=True,

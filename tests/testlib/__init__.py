@@ -1659,6 +1659,52 @@ class CMKEventConsoleStatus(object):
 
 
 
+class WatchLog(object):
+    """Small helper for integration tests: Watch a sites log file"""
+    def __init__(self, site, rel_path):
+        self._site = site
+        self._rel_path = rel_path
+        self._log = self._open_log()
+        self._buf = []
+
+
+    def _log_path(self):
+        return self._rel_path
+
+
+    def _open_log(self):
+        if not self._site.file_exists(self._log_path()):
+            self._site.write_file(self._log_path(), "")
+
+        fobj = open(self._site.path(self._log_path()), "r")
+        fobj.seek(0, 2) # go to end of file
+        return fobj
+
+
+    def check_logged(self, match_for, timeout=5):
+        if not self._check_for_line(match_for, timeout):
+            raise Exception("Did not find %r in %s after %d seconds" %
+                                (match_for, self._log_path(), timeout))
+
+
+    def check_not_logged(self, match_for, timeout=5):
+        if self._check_for_line(match_for, timeout):
+            raise Exception("Found %r in %s after %d seconds" %
+                                (match_for, self._log_path(), timeout))
+
+
+    def _check_for_line(self, match_for, timeout):
+        timeout_at = time.time() + timeout
+        while time.time() < timeout_at:
+            #print "read till timeout %0.2f sec left" % (timeout_at - time.time())
+            line = self._log.readline()
+            sys.stdout.write(line)
+            if match_for in line:
+                return True
+            time.sleep(0.1)
+
+
+
 
 @pytest.fixture(scope="module")
 def web(site):

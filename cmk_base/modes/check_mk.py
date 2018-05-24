@@ -739,6 +739,9 @@ modes.register(Mode(
     long_option="scan-parents",
     handler_function=mode_scan_parents,
     needs_config=False,
+    # TODO: Sadly needs to be True because the checks need to initialize the check specific
+    # configuration variables before the config can be loaded.
+    needs_checks=True,
     argument=True,
     argument_descr="HOST1 HOST2...",
     argument_optional=True,

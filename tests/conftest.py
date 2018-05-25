@@ -166,13 +166,9 @@ def pytest_cmdline_main(config):
 
 
 def verify_virtualenv():
-    if not is_running_in_virtualenv():
+    if not virtualenv_path():
         raise SystemExit("ERROR: Please load virtual environment first "
                         "(Use \"pipenv shell\" or configure direnv)")
-
-
-def is_running_in_virtualenv():
-    return os.environ.get("PIP_PYTHON_PATH")
 
 
 def is_running_as_site_user():

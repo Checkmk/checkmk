@@ -7,22 +7,21 @@ NAME     = snap7
 VERSION  = 1.3.0
 DIR      = snap7-full-$(VERSION)
 
-PY_VERSION = master
-PY_DIR     = python-snap7-$(PY_VERSION)
+PY_DIR     = python-snap7-0.9
 
 ARCH = $(shell uname -m)
 ifeq ($(ARCH),i686)
     ARCH=i386
 endif
 
-.PHONY: skel
+.PHONY: build install skel clean
 
 build: check-python
 	tar xzf $(DIR).tar.gz
 	cd $(DIR)/build/unix && $(MAKE) -f $(ARCH)_linux.mk
 
 # Now handle the python module
-	unzip -o $(PY_DIR).zip
+	tar xvzf $(PY_DIR).tar.gz
 
 	set -e ; for p in python-patches/*.dif ; do \
 	echo "applying $$p..." ; \

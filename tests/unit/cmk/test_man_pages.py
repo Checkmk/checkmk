@@ -130,11 +130,18 @@ def test_manpage_files():
     assert len(manuals) > 1000
 
 
+def _is_pure_section_declaration(check):
+    '''return true if and only if the check never generates a service'''
+    return (check.get('inventory_function') is None and
+            check.get('check_function') is None)
+
+
 def test_find_missing_manpages():
     all_check_manuals = man_pages.all_man_pages()
 
     checks.load()
-    checks_sorted = checks.check_info.items() + \
+    checks_sorted = [ (name, entry) for (name, entry) in checks.check_info.items()
+                      if not _is_pure_section_declaration(entry) ] + \
        [ ("check_" + name, entry) for (name, entry) in checks.active_check_info.items() ]
     checks_sorted.sort()
     assert len(checks_sorted) > 1000

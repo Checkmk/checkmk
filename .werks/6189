@@ -1,0 +1,20 @@
+Title: OpenHardwareMonitorCLI did not run on some Win7 machines
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b6
+Date: 1527230306
+
+OpenHardwareMonitorCLI, the executable wrapper for triggering
+OpenHardwareMonitor by Check_MK Windows Agent, did not run on
+some Win7 machines. Moreover, it was not possible to compile
+OpenHardwareMonitorCLI with versions 4.x of Mono (tried with
+Mono 4.6.2.0 / XBuild 14.0). Providing the build option
+/p:TargetFrameworkVersion="v4.5" both fixed the build with Mono
+4.x and made resulting executable compatible with all tested
+Windows versions (tested on Win7 and Server 2016).
+
+

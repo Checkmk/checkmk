@@ -12,7 +12,7 @@ build: clean
 	if [ -x "`which xbuild`" ] ; then \
 	  unzip -d . $(DIR).zip ; \
 	  cp -R OpenHardwareMonitorCLI OpenHardwareMonitor.sln $(DIR) ; \
-	  xbuild /p:Configuration=Release $(DIR)/OpenHardwareMonitor.sln /target:OpenHardwareMonitorCLI ; \
+	  xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5" $(DIR)/OpenHardwareMonitor.sln /target:OpenHardwareMonitorCLI ; \
 	fi
 
 install:

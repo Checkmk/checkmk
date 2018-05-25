@@ -1,0 +1,19 @@
+Title: Fixed possible crash in Check_MK and Check_MK HW/SW Inventory
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1527258292
+
+When using pretty outdated "Do hardware/software Inventory" rules which
+have been saved before 1.4, this could lead to crashing Check_MK and
+Check_MK HW/SW inventory services with errors like this:
+
+'NoneType' object has no attribute 'get'
+
+Workaround: Open this ruleset and save the rules in the relevant folders.
+The configs will then be transformed and rewritten in the current format
+which prevents this crash.

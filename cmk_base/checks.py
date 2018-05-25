@@ -793,6 +793,7 @@ def get_management_board_precedence(check_plugin_name):
         return mgmt_board
 
 
+# TODO: Better move this function to config.py
 def do_status_data_inventory_for(hostname):
     rules = config.active_checks.get('cmk_inv')
     if rules is None:

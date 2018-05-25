@@ -542,7 +542,6 @@ endif
 	mkdir -p .venv
 	pipenv install --dev
 	pipenv clean
-	direnv allow
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

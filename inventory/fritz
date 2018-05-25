@@ -24,16 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#<<<fritz>>>
-#VersionOS 74.06.05
-#VersionDevice AVM FRITZ!Box Fon WLAN 7270 v3
+#
+# parse function with the following output:
+# {
+#    'VersionOS': '74.06.05',
+#    'VersionDevice': 'AVM FRITZ!Box Fon WLAN 7270 v3',
+#    ...
+# }
 #
 
 
-def inv_fritz(info):
-
-    parsed = {line[0]: ' '.join(line[1:])
-              for line in info}
+def inv_fritz(parsed):
 
     node_hw = inv_tree('hardware.system.')
     node_hw['model'] = parsed.get('VersionDevice')

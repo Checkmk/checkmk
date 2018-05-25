@@ -1,0 +1,13 @@
+Title: Raw Edition: Fixed monitoring using special agents
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0b6
+Date: 1527233679
+Class: fix
+
+When trying to monitor hosts using special agents as data sources with nagios, this
+failed with an error like this:
+
+"UNKN - [special_vsphere] 'vsphere'UNKN, Got no information from host, execution time 0.0 sec"

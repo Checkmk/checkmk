@@ -797,12 +797,18 @@ def do_status_data_inventory_for(hostname):
     rules = config.active_checks.get('cmk_inv')
     if rules is None:
         return False
+
     # 'host_extra_conf' is already cached thus we can
     # use it after every check cycle.
-    params = rulesets.host_extra_conf(hostname, rules)
-    if params:
-        return params[0].get('status_data_inventory', False)
-    return False
+    entries = rulesets.host_extra_conf(hostname, rules)
+
+    if not entries:
+        return False # No matching rule -> disable
+
+    # Convert legacy rules to current dict format (just like the valuespec)
+    params = {} if entries[0] is None else entries[0]
+
+    return params.get('status_data_inventory', False)
 
 
 def filter_by_management_board(hostname, found_check_plugin_names,

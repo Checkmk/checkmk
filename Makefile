@@ -417,7 +417,8 @@ setup:
 	    direnv \
 	    python-pip \
 	    chrpath \
-	    enchant
+	    enchant \
+	    p7zip-full
 	sudo pip install -U pipenv
 	$(MAKE) -C omd setup
 ifeq ($(ENTERPRISE),yes)

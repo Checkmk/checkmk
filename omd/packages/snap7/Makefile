@@ -2,8 +2,8 @@ include ../../Makefile.omd
 
 # This package contains the SNAP 7 library (http://snap7.sourceforge.net/)
 NAME     = snap7
-VERSION  = 1.3.0
-DIR      = snap7-full-$(VERSION)
+VERSION  = 1.4.2
+DIR      = $(NAME)-full-$(VERSION)
 
 ARCH = $(shell uname -m)
 ifeq ($(ARCH),i686)
@@ -13,7 +13,7 @@ endif
 .PHONY: build install skel clean
 
 build: check-python
-	tar xzf $(DIR).tar.gz
+	7z x $(DIR).7z
 	cd $(DIR)/build/unix && $(MAKE) -f $(ARCH)_linux.mk
 
 install:

@@ -398,18 +398,18 @@ setup:
 	    autoconf \
 	    bear \
 	    build-essential \
-	    clang-5.0 \
-	    clang-format-5.0 \
-	    clang-tidy-5.0 \
+	    clang-6.0 \
+	    clang-format-6.0 \
+	    clang-tidy-6.0 \
 	    doxygen \
 	    figlet \
 	    g++ \
 	    libboost-dev \
 	    libboost-system-dev \
-	    libclang-5.0-dev \
+	    libclang-6.0-dev \
 	    libpcap-dev \
 	    librrd-dev \
-	    llvm-5.0-dev \
+	    llvm-6.0-dev \
 	    libsasl2-dev \
 	    pngcrush \
 	    slimit \

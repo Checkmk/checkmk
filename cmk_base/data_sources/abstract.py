@@ -798,7 +798,10 @@ class ManagementBoardDataSource(DataSource):
             return None
 
         if not self._is_ipaddress(mgmt_ipaddress):
-            return ip_lookup.lookup_ip_address(mgmt_ipaddress)
+            try:
+                return ip_lookup.lookup_ip_address(mgmt_ipaddress)
+            except MKIPAddressLookupError:
+                return None
         else:
             return mgmt_ipaddress
 

@@ -203,6 +203,10 @@ class PageEditKey(object):
     def action(self):
         if html.check_transaction():
             value = self._vs_key().from_html_vars("key")
+            # Remove the secret key from known URL vars. Otherwise later constructed URLs
+            # which use the current page context will contain the passphrase which could
+            # leak the secret information
+            html.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
             return self.back_mode
@@ -291,6 +295,7 @@ class PageUploadKey(object):
     def action(self):
         if html.check_transaction():
             value = self._vs_key().from_html_vars("key")
+            html.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
 
             key_file = self._get_uploaded(value, "key_file")

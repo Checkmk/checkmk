@@ -46,3 +46,18 @@ def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
     monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
     monkeypatch.setattr(config, "primary_address_family", ruleset)
     assert config.is_ipv6_primary(hostname) == result
+
+
+@pytest.mark.parametrize("result,attrs", [
+    ("127.0.1.1", {}),
+    ("127.0.1.1", {"management_address": ""}),
+    ("127.0.0.1", {"management_address": "127.0.0.1"}),
+    ("lolo", {"management_address": "lolo"}),
+])
+def test_management_address_of(monkeypatch, attrs, result):
+    # Host IP address is 127.0.1.1
+    monkeypatch.setitem(config.ipaddresses, "hostname", "127.0.1.1")
+
+    monkeypatch.setitem(config.host_attributes, "hostname", attrs)
+
+    assert config.management_address_of("hostname") == result

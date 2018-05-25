@@ -58,7 +58,7 @@ def var_dir():
 def virtualenv_path():
     try:
         venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
-        return pathlib2.Path(venv.decode("utf-8").rstrip("\n"))
+        return pathlib.Path(venv.decode("utf-8").rstrip("\n"))
     except subprocess.CalledProcessError:
         return None
 

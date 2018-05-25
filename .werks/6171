@@ -1,0 +1,12 @@
+Title: Fixed vertical lines overlapping graph legend in some cases
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.4.0p34
+Date: 1527247989
+Class: fix
+
+In some situations graphs in PDF reports could be rendered with vertical
+lines that overlap the graph legend. This happened mostly when rendering
+graphs that have a fine raster.

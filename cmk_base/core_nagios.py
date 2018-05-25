@@ -42,6 +42,7 @@ import cmk_base.checks as checks
 import cmk_base.rulesets as rulesets
 import cmk_base.core_config as core_config
 import cmk_base.ip_lookup as ip_lookup
+import cmk_base.data_sources as data_sources
 
 
 def do_check_nagiosconfig():
@@ -1021,6 +1022,13 @@ if '-d' in sys.argv:
 """)
 
     needed_check_plugin_names = set([])
+
+    # In case the host is monitored as special agent, the check plugin for the special agent needs
+    # to be loaded
+    sources = data_sources.DataSources(hostname, ipaddress=None)
+    for source in sources.get_data_sources():
+        if isinstance(source, data_sources.programs.SpecialAgentDataSource):
+            needed_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
     for check_plugin_name, _unused_item, _unused_param, descr in host_check_table:

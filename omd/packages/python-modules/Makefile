@@ -13,7 +13,7 @@ MODULES += setuptools-39.2.0.zip  # needed by rrdtool bindings
 
 # Modules really needed on all platforms
 MODULES += pysphere-0.1.7.zip
-MODULES += pyasn1-0.4.2.tar.gz
+MODULES += pyasn1-0.4.3.tar.gz
 MODULES += pycryptodomex-3.4.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz # needed by pysmi
 MODULES += ply-3.11.tar.gz # needed by pysmi
@@ -43,13 +43,13 @@ MODULES += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 MODULES += pycparser-2.18.tar.gz # needed for cffi
 MODULES += enum34-1.1.6.tar.gz # needed for cffi
 MODULES += cffi-1.11.5.tar.gz # needed by e.g. Pillow
-MODULES += Pillow-5.0.0.tar.gz # needed by reportlab (pillow>=2.4.0)
+MODULES += Pillow-5.1.0.tar.gz # needed by reportlab (pillow>=2.4.0)
 MODULES += pip-10.0.1.tar.gz # needed by reportlab (pip>=1.4.1)
 MODULES += reportlab-3.4.0.tar.gz # needed by reporting
 MODULES += PyPDF2-1.26.0.tar.gz # needed by reporting
 
 MODULES += npyscreen-4.10.5.tar.gz # needed for mkbench
-MODULES += psutil-5.4.3.tar.gz # needed for mkbench
+MODULES += psutil-5.4.5.tar.gz # needed for mkbench
 
 # OpenSSL versions shipped:
 #    0x0090802f (OpenSSL 0.9.8e-rhel5 01 Jul 2008): centos55
@@ -117,14 +117,14 @@ MODULES += tinkerforge-2.1.15.tar.gz
 # Added for check_sftp
 MODULES += paramiko-2.1.2.tar.gz
 # Added for IPMI monitoring of management interface
-MODULES += pbr-4.0.0.tar.gz
+MODULES += pbr-4.0.3.tar.gz
 MODULES += pyghmi-1.1.0.tar.gz
 
 MODULES += typing-3.6.4.tar.gz
 MODULES += scandir-1.7.tar.gz
 MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
-MODULES += python-dateutil-2.6.1.tar.gz
+MODULES += python-dateutil-2.7.3.tar.gz
 MODULES += python-snap7-0.9.tar.gz
 
 .PHONY: build check-freetds install skel clean

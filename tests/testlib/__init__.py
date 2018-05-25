@@ -9,6 +9,7 @@ import platform
 import re
 import requests
 import socket
+import pathlib2 as pathlib
 import pipes
 import subprocess
 import sys
@@ -52,6 +53,14 @@ def var_dir():
         base_dir = repo_path() + "/tests/var"
 
     return base_dir
+
+
+def virtualenv_path():
+    try:
+        venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
+        return pathlib.Path(venv.decode("utf-8").rstrip("\n"))
+    except subprocess.CalledProcessError:
+        return None
 
 
 class APIError(Exception):
@@ -628,20 +637,20 @@ class Site(object):
 
 
     def _install_test_python_modules(self):
-        python_home = os.environ.get("VIRTUAL_ENV")
-        bin_dir      = os.path.join(python_home, "bin")
-        packages_dir = os.path.join(python_home, "lib/python2.7/site-packages")
+        venv = virtualenv_path()
+        bin_dir = venv / "bin"
+        packages_dir = venv / "lib/python2.7/site-packages"
 
-        for file_name in os.listdir(packages_dir):
+        for file_name in os.listdir(str(packages_dir)):
             #if "cffi" in file_name:
             #    continue
 
             assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %
-                      (self.id, self.id, os.path.join(packages_dir, file_name), self.root)) >> 8 == 0
+                      (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
         for file_name in [ "py.test", "pytest" ]:
             assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %
-                    (self.id, self.id, os.path.join(bin_dir, file_name), self.root)) >> 8 == 0
+                    (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
 
 
     def rm_if_not_reusing(self):

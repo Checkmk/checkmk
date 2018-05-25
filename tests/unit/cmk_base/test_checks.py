@@ -1,5 +1,9 @@
+import pytest
+
 import cmk_base.checks as checks
 import cmk_base.discovery as discovery
+import cmk_base.config as config
+import cmk_base.rulesets as rulesets
 
 def test_load_checks():
     checks._initialize_data_structures()
@@ -43,3 +47,20 @@ def test_discoverable_tcp_checks():
     assert "logwatch" in checks.discoverable_tcp_checks()
 
 
+@pytest.mark.parametrize("result,ruleset", [
+    (False, None),
+    (False, []),
+    (False, [( None, [], rulesets.ALL_HOSTS, {} )]),
+    (False, [( {}, [], rulesets.ALL_HOSTS, {} )]),
+    (True, [( {"status_data_inventory": True}, [], rulesets.ALL_HOSTS, {} )]),
+    (False, [( {"status_data_inventory": False}, [], rulesets.ALL_HOSTS, {} )]),
+])
+def test_do_status_data_inventory_for(monkeypatch, result, ruleset):
+    config.load_default_config()
+
+    monkeypatch.setattr(config, "all_hosts", ["abc"])
+    monkeypatch.setattr(config, "active_checks", {
+        "cmk_inv": ruleset,
+    })
+
+    assert checks.do_status_data_inventory_for("abc") == result

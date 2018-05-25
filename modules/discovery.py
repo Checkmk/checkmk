@@ -606,6 +606,9 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
     return info
 
 def is_ipaddress(address):
+    if address is None:
+        return False
+
     try:
         socket.inet_pton(socket.AF_INET, address)
         return True
@@ -695,10 +698,20 @@ def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan, use_c
 # "raise"  -> let the exception come through
 def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error, ipaddress=None):
     services = []
+
+    if ipaddress == None:
+        ipaddress = lookup_ip_address(hostname)
+
     if has_management_board(hostname):
         protocol = management_protocol(hostname)
         address = management_address(hostname)
-        if not is_ipaddress(address):
+
+        if address is None:
+            # No management board address configured AND no host IP address configured. Use
+            # the address which has been looked up for the host.
+            address = ipaddress
+
+        elif not is_ipaddress(address):
             family = is_ipv6_primary(hostname) and 6 or 4
             address = cached_dns_lookup(address, family)
 
@@ -714,9 +727,6 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
 
             services = discover_services_impl(hostname, management_check_types, use_caches,
                                               on_error, address, True)
-
-    if ipaddress == None:
-        ipaddress = lookup_ip_address(hostname)
 
     # Check types not specified (via --checks=)? Determine automatically
     if not check_types:

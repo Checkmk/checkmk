@@ -125,6 +125,7 @@ MODULES += scandir-1.7.tar.gz
 MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
 MODULES += python-dateutil-2.6.1.tar.gz
+MODULES += python-snap7-0.9.tar.gz
 
 .PHONY: build check-freetds install skel clean
 

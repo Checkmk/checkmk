@@ -7876,6 +7876,8 @@ class Ruleset(object):
         else:
             varname = self.name
 
+            content += "\nglobals().setdefault(%r, [])\n" % (varname)
+
             if self.is_optional():
                 content += "\nif %s == None:\n    %s = []\n" % (varname, varname)
 

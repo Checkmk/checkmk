@@ -169,6 +169,11 @@ class SpecialAgentDataSource(ProgramDataSource):
         return "special_%s" % self._special_agent_id
 
 
+    @property
+    def special_agent_plugin_file_name(self):
+        return "agent_%s" % self._special_agent_id
+
+
     # TODO: Can't we make this more specific in case of special agents?
     def _gather_check_plugin_names(self):
         return checks.discoverable_tcp_checks()

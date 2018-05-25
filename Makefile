@@ -538,9 +538,11 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-.venv: Pipfile Pipfile.lock
-	mkdir -p .venv
-	pipenv install --dev
+Pipfile.lock: Pipfile
+	pipenv lock
+
+.venv: Pipfile.lock
+	PIPENV_VENV_IN_PROJECT=true pipenv install --dev
 	pipenv clean
 
 # This dummy rule is called from subdirectories whenever one of the

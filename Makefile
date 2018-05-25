@@ -540,6 +540,7 @@ endif
 
 .venv: Pipfile Pipfile.lock
 	source .envrc ; pipenv install --dev
+	pipenv clean
 	direnv allow
 
 # This dummy rule is called from subdirectories whenever one of the

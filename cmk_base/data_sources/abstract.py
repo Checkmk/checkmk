@@ -794,6 +794,9 @@ class ManagementBoardDataSource(DataSource):
     def _management_board_ipaddress(self, hostname):
         mgmt_ipaddress = config.management_address_of(hostname)
 
+        if mgmt_ipaddress is None:
+            return None
+
         if not self._is_ipaddress(mgmt_ipaddress):
             return ip_lookup.lookup_ip_address(mgmt_ipaddress)
         else:
@@ -801,7 +804,11 @@ class ManagementBoardDataSource(DataSource):
 
 
     # TODO: Why is it used only here?
-    def _is_ipaddress(self, address):
+    @staticmethod
+    def _is_ipaddress(address):
+        if address is None:
+            return False
+
         try:
             socket.inet_pton(socket.AF_INET, address)
             return True

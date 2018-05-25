@@ -11,16 +11,28 @@ from remote import (actual_output, assert_subprocess, config, remote_ip,
                     remotedir, remotetest, remoteuser, sshopts, write_config)
 
 
+class Globals(object):
+    alone = True
+
+
 @pytest.fixture
 def testfile():
     return os.path.basename(__file__)
 
 
 @pytest.fixture(
-    params=['ohm', 'openhardwaremonitor'],
-    ids=['sections=ohm', 'sections=openhardwaremonitor'])
+    params=[('ohm', True), ('openhardwaremonitor', True), ('ohm', False),
+            ('openhardwaremonitor', False)],
+    ids=[
+        'sections=ohm', 'sections=openhardwaremonitor',
+        'sections=ohm_systemtime', 'sections=openhardwaremonitor_systemtime'
+    ])
 def testconfig(request, config):
-    config.set('global', 'sections', request.param)
+    Globals.alone = request.param[1]
+    if Globals.alone:
+        config.set('global', 'sections', request.param[0])
+    else:
+        config.set('global', 'sections', '%s systemtime' % request.param[0])
     config.set('global', 'crash_debug', 'yes')
     return config
 
@@ -36,13 +48,15 @@ def wait_agent():
 
 @pytest.fixture
 def expected_output():
-    return chain(
-        [
-            re.escape(r'<<<openhardwaremonitor:sep(44)>>>'),
-            r'Index,Name,Parent,SensorType,Value'
-        ],
-        repeat(r'\d+,[A-Za-z ]+,(\/\w+)+,(Power|Clock|Load|Data|Temperature),'
-               r'\d+\.\d{6}'))
+    re_str = (r'^\d+,[^,]+,(\/\w+)+,(Power|Clock|Load|Data|Temperature),'
+              r'\d+\.\d{6}')
+    if not Globals.alone:
+        re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
+    re_str += r'$'
+    return chain([
+        re.escape(r'<<<openhardwaremonitor:sep(44)>>>'),
+        r'Index,Name,Parent,SensorType,Value'
+    ], repeat(re_str))
 
 
 def get_ohm_version(ohmdir):
@@ -93,5 +107,4 @@ def manage_ohm_binaries():
 def test_section_openhardwaremonitor(request, testconfig, expected_output,
                                      actual_output, testfile):
     # request.node.name gives test name
-    remotetest(expected_output, actual_output, testfile,
-               request.node.name)
+    remotetest(expected_output, actual_output, testfile, request.node.name)

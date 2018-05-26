@@ -896,13 +896,24 @@ class Numeration(Leaf):
         foreign_keys = foreign._get_numeration_keys()
         my_keys = self._get_numeration_keys()
         intersect_keys = my_keys.intersection(foreign_keys)
+
+        # In case there is no intersection, append all foreign rows without
+        # merging with own rows
+        if not intersect_keys:
+            self._numeration += foreign._numeration
+            return
+
+        # Try to match rows of both trees based on the keys that are found in
+        # both. Matching rows are updated. Others are appended.
         foreign_num = {foreign._prepare_key(entry, intersect_keys): entry
                        for entry in foreign._numeration}
+
         for entry in self._numeration:
             key = self._prepare_key(entry, intersect_keys)
             if key in foreign_num:
                 entry.update(foreign_num[key])
                 del foreign_num[key]
+
         self._numeration += foreign_num.values()
 
 

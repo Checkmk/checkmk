@@ -1,0 +1,13 @@
+Title: Add inventory views for docker images and containers
+Level: 1
+Component: inv
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1527352293
+
+There are several new inventory based views available which are based
+on the inventory (and structured status) data of docker nodes. They
+show docker images and docker containers.

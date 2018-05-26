@@ -182,9 +182,9 @@ def inv_paint_generic(v):
     if isinstance(v, float):
         return "number", "%.2f" % v
     elif isinstance(v, int):
-        return "number", str(v)
+        return "number", "%d" % v
     else:
-        return "", str(v)
+        return "", html.escaper.escape_text("%s" % v)
 
 
 @decorate_inv_paint

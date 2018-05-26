@@ -773,6 +773,7 @@ inventory_displayhints.update({
     ".software.applications.docker.images:": {
         "title" : _("Images"),
         "keyorder": ["repository", "tag", "id", "creation", "size", "labels", "amount_containers"],
+        "view" : "invdockerimages_of_host",
     },
     ".software.applications.docker.images:*.id"        : { "title" : _("ID"), },
     ".software.applications.docker.images:*.amount_containers" : { "title" : _("# Containers"), },
@@ -1053,12 +1054,16 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
             rows.append(subrow)
     return rows
 
-# Find the name of all columns of an embedded table that have a display
-# hint. Respects the order of the columns if one is specified in the
-# display hint:
 def inv_find_subtable_columns(invpath):
+    """Find the name of all columns of an embedded table that have a display
+    hint. Respects the order of the columns if one is specified in the
+    display hint.
+
+    Also use the names found in keyorder to get even more of the available columns."""
+    subtable_hint = inventory_displayhints[invpath]
+
     # Create dict from column name to its order number in the list
-    with_numbers = enumerate(inventory_displayhints[invpath].get("keyorder", []))
+    with_numbers = enumerate(subtable_hint.get("keyorder", []))
     swapped = map(lambda t: (t[1], t[0]), with_numbers)
     order = dict(swapped)
 
@@ -1068,13 +1073,19 @@ def inv_find_subtable_columns(invpath):
             # ".networking.interfaces:*.port_type" -> "port_type"
             columns.append(path.split(".")[-1])
 
+    for key in subtable_hint.get("keyorder", []):
+        if key not in columns:
+            columns.append(key)
+
     columns.sort(cmp = lambda a,b: cmp(order.get(a, 999), order.get(b, 999)) or cmp(a,b))
     return columns
 
 
 def declare_invtable_columns(infoname, invpath, topic):
     for name in inv_find_subtable_columns(invpath):
-        hint = inventory_displayhints.get(invpath + "*." + name, {})
+        sub_invpath = invpath + "*." + name
+        hint = inventory_displayhints.get(sub_invpath, {})
+
         sortfunc = hint.get("sort", cmp)
         if "paint" in hint:
             paint_name = hint["paint"]
@@ -1094,8 +1105,10 @@ def declare_invtable_columns(infoname, invpath, topic):
             else:
                 filter_class = visuals.FilterInvtableIDRange
 
-        declare_invtable_column(infoname, name, topic, hint["title"],
-                           hint.get("short", hint["title"]), sortfunc, paint_function, filter_class)
+        title = inv_titleinfo(sub_invpath, None)[1]
+
+        declare_invtable_column(infoname, name, topic, title,
+                           hint.get("short", title), sortfunc, paint_function, filter_class)
 
 
 def declare_invtable_column(infoname, name, topic, title, short_title,
@@ -1248,11 +1261,14 @@ def _create_view_enabled_check_func(invpath):
 declare_invtable_view("invswpac",      ".software.packages:",       _("Software package"),   _("Software packages"))
 declare_invtable_view("invinterface",  ".networking.interfaces:",   _("Network interface"),  _("Network interfaces"))
 
+declare_invtable_view("invdockerimages",  ".software.applications.docker.images:",   _("Docker images"),  _("Docker images"))
+declare_invtable_view("invdockercontainers",  ".software.applications.docker.containers:",   _("Docker containers"),  _("Docker containers"))
+
 declare_invtable_view("invother", ".hardware.components.others:", _("Other entity"), _("Other entities"))
 declare_invtable_view("invunknown", ".hardware.components.unknowns:", _("Unknown entity"), _("Unknown entities"))
 declare_invtable_view("invchassis", ".hardware.components.chassis:", _("Chassis"), _("Chassis"))
 declare_invtable_view("invbackplane", ".hardware.components.backplanes:", _("Backplane"), _("Backplanes"))
-declare_invtable_view("invcontainer", ".hardware.components.containers:", _("Container"), _("Containers"))
+declare_invtable_view("invcontainer", ".hardware.components.containers:", _("HW container"), _("HW containers"))
 declare_invtable_view("invpsu", ".hardware.components.psus:", _("Power supply"), _("Power supplies"))
 declare_invtable_view("invfan", ".hardware.components.fans:", _("Fan"), _("Fans"))
 declare_invtable_view("invsensor", ".hardware.components.sensors:", _("Sensor"), _("Sensors"))

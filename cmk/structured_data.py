@@ -659,15 +659,19 @@ numerated nodes ('arrays') containing real numerations ('devices').
     def _get_sub_node(self, path):
         if not path:
             return None
-        edge = path.pop(0)
+
+        edge, path = path[0], path[1:]
+
         sub_node = self._edges.get(edge)
         if sub_node is None:
             return None
+
         if path:
             container = sub_node.get_node_container()
             if container is None:
                 return None
             return container._get_sub_node(path)
+
         return sub_node
 
     #   ---web------------------------------------------------------------------

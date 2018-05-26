@@ -1,0 +1,13 @@
+Title: docker_node_images.containers: Show table of containers for docker nodes
+Level: 1
+Component: inv
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1527352133
+
+When you enable the structured status data in the "HW/SW inventory" ruleset,
+you now get a table of docker containers in the inventory tree of docker
+nodes.

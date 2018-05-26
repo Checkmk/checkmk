@@ -777,6 +777,13 @@ inventory_displayhints.update({
     ".software.applications.docker.images:*.id"        : { "title" : _("ID"), },
     ".software.applications.docker.images:*.amount_containers" : { "title" : _("# Containers"), },
 
+    # Node containers
+    ".software.applications.docker.containers:": {
+        "title" : _("Containers"),
+        "keyorder": ["id", "repository", "tag", "creation", "name", "creation", "labels", "status"],
+        "view" : "invdockercontainers_of_host",
+    },
+    ".software.applications.docker.containers:*.id"        : { "title" : _("ID"), },
 
     ".software.applications.docker.networks.*.": {
         "title": "Network %s",

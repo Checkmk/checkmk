@@ -10,6 +10,7 @@ MODULES =
 
 # Modules needed because of own packed python (would be available in OS)
 MODULES += setuptools-39.2.0.zip  # needed by rrdtool bindings
+MODULES += setuptools_scm-2.1.0.tar.gz
 
 # Modules really needed on all platforms
 MODULES += pysphere-0.1.7.zip

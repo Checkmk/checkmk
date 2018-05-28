@@ -213,6 +213,7 @@ class LDAPUserConnector(UserConnector):
         try:
             trace_args = {}
             if self._logger.isEnabledFor(cmk.log.DEBUG):
+                os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
                 trace_args["trace_level"] = 2
                 trace_args["trace_file"] = sys.stderr

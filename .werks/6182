@@ -1,0 +1,12 @@
+Title: Users: Fixed misleading message "User synchronization successful" when opening users page
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b6
+Date: 1527492452
+Class: fix
+
+Sometimes, after the user sync has been executed, when opening the users page, it showed the
+message "User synchronization successful" even when no user synchronization is configured.
+This message is not shown anymore.

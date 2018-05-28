@@ -46,17 +46,16 @@ import os
 import time
 import copy
 
-import config
-import watolib
-
-import cmk.paths
-import log
-
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap
 import ldap.filter
 from ldap.controls import SimplePagedResultsControl
 
+import cmk.paths
+
+import config
+import watolib
+import log
 from lib import *
 
 # LDAP attributes are case insensitive, we only use lower case!

@@ -1,0 +1,15 @@
+Title: Improved execution of agent in containers
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1527446328
+
+When the docker command is available in a container and the Check_MK agent is
+executed in this container while it was started from the node, it does not
+execute the docker logic.
+
+The REMOTE environment variable was not set correctly in previous 1.5 releases.

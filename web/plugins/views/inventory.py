@@ -758,6 +758,23 @@ inventory_displayhints.update({
     ".software.applications.docker.": {
         "icon": "docker",
         "title": "Docker",
+        "keyorder": [ "version", "num_containers_total", "num_containers_running", "num_containers_stopped",
+                      "num_containers_paused", "num_images", "registry" ],
+    },
+    ".software.applications.docker.num_containers_total": {
+        "title": _("# Containers"),
+    },
+    ".software.applications.docker.num_containers_running": {
+        "title": _("# Containers running"),
+    },
+    ".software.applications.docker.num_containers_stopped": {
+        "title": _("# Containers stopped"),
+    },
+    ".software.applications.docker.num_containers_paused": {
+        "title": _("# Containers paused"),
+    },
+    ".software.applications.docker.num_images": {
+        "title": _("# Images"),
     },
 
     ".software.applications.docker.images:": {

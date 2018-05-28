@@ -1754,8 +1754,24 @@ class NodeRenderer(object):
 
     def show_attributes(self, attributes, path=None):
         invpath = ".%s" % self._get_raw_path(path)
+        hint = _inv_display_hint(invpath)
+
+        def _sort_attributes(item):
+            """Sort the attributes by the configured key order. In case no key order
+            is given sort by the key. In case there is a key order and a key is not
+            in the list, put it at the end and sort all of those by key."""
+            key = item[0]
+            keyorder = hint.get("keyorder")
+            if not keyorder:
+                return key
+
+            try:
+                return keyorder.index(key)
+            except ValueError:
+                return len(keyorder) + 1, key
+
         html.open_table()
-        for key, value in attributes.get_child_data().iteritems():
+        for key, value in sorted(attributes.get_child_data().iteritems(), key=_sort_attributes):
             sub_invpath = "%s.%s" % (invpath, key)
             icon, title = inv_titleinfo(sub_invpath, key)
             hint = _inv_display_hint(sub_invpath)

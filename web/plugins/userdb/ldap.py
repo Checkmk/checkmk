@@ -52,23 +52,10 @@ import watolib
 import cmk.paths
 import log
 
-try:
-    # docs: http://www.python-ldap.org/doc/html/index.html
-    import ldap
-    import ldap.filter
-    from ldap.controls import SimplePagedResultsControl
-
-    # be compatible to both python-ldap below 2.4 and above
-    try:
-        # pylint: disable=no-member
-        LDAP_CONTROL_PAGED_RESULTS = ldap.LDAP_CONTROL_PAGE_OID
-        ldap_compat = False
-    except:
-        # pylint: disable=no-member
-        LDAP_CONTROL_PAGED_RESULTS = ldap.CONTROL_PAGEDRESULTS
-        ldap_compat = True
-except:
-    pass
+# docs: http://www.python-ldap.org/doc/html/index.html
+import ldap
+import ldap.filter
+from ldap.controls import SimplePagedResultsControl
 
 from lib import *
 
@@ -471,12 +458,7 @@ class LDAPUserConnector(UserConnector):
         self._logger.debug('  PAGED ASYNC SEARCH')
         page_size = self._config.get('page_size', 1000)
 
-        if ldap_compat:
-            lc = SimplePagedResultsControl(size = page_size, cookie = '')
-        else:
-            lc = SimplePagedResultsControl(
-                LDAP_CONTROL_PAGED_RESULTS, True, (page_size, '')
-            )
+        lc = SimplePagedResultsControl(size = page_size, cookie = '')
 
         results = []
         while True:
@@ -493,15 +475,10 @@ class LDAPUserConnector(UserConnector):
             # Mark current position in pagination control for next loop
             cookie = None
             for serverctrl in serverctrls:
-                if serverctrl.controlType == LDAP_CONTROL_PAGED_RESULTS:
-                    if ldap_compat:
-                        cookie = serverctrl.cookie
-                        if cookie:
-                            lc.cookie = cookie
-                    else:
-                        cookie = serverctrl.controlValue[1]
-                        if cookie:
-                            lc.controlValue = (page_size, cookie)
+                if serverctrl.controlType == ldap.CONTROL_PAGEDRESULTS:
+                    cookie = serverctrl.cookie
+                    if cookie:
+                        lc.cookie = cookie
                     break
             if not cookie:
                 break

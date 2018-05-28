@@ -10911,11 +10911,11 @@ class ModeUsers(WatoMode):
             url = html.makeuri([])
             html.immediate_browser_redirect(2, url)
 
-        elif self._job_snapshot.state() == gui_background_job.background_job.JobStatus.state_finished and not\
-           self._job_snapshot.acknowledged_by():
+        elif self._job_snapshot.state() == gui_background_job.background_job.JobStatus.state_finished \
+             and not self._job_snapshot.acknowledged_by():
             # Just finished, auto-acknowledge
             userdb.UserSyncBackgroundJob().acknowledge(config.user.id)
-            html.message(_("User synchronization successful"))
+            #html.message(_("User synchronization successful"))
 
         elif not self._job_snapshot.acknowledged_by() and self._job_snapshot.has_exception():
             # Finished, but not OK - show info message with links to details

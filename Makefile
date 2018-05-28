@@ -540,7 +540,7 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 Pipfile.lock: Pipfile
-	pipenv lock
+	PIPENV_VENV_IN_PROJECT=true pipenv lock
 
 .venv: Pipfile.lock
 	PIPENV_VENV_IN_PROJECT=true pipenv install --dev

@@ -1019,18 +1019,8 @@ if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
     # For the container status, we want information about *all* containers
     for CONTAINER_ID in $(docker container ls -q --all); do
         echo "<<<<${CONTAINER_ID}>>>>"
-        echo "<<<docker_container_status>>>"
-        docker inspect "$CONTAINER_ID" --format='{{json .State}}'
-
-        echo "<<<docker_container_node_name>>>"
-        echo "$NODE_NAME"
-
-        echo "<<<docker_container_labels>>>"
-        docker inspect "$CONTAINER_ID" --format='{{json .Config.Labels}}'
-
-        echo "<<<docker_container_network>>>"
-        docker inspect "$CONTAINER_ID" --format='{{json .NetworkSettings}}'
-
+        docker inspect "$CONTAINER_ID" \
+            --format='{{println "<<<docker_container_status>>>"}}{{json .State}}{{println}}{{println "<<<docker_container_node_name>>>"}}{{println '"$NODE_NAME"'}}{{println "<<<docker_container_labels>>>"}}{{json .Config.Labels}}{{println}}{{println "<<<docker_container_network>>>"}}{{json .NetworkSettings}}{{println}}'
         echo "<<<<>>>>"
     done
 

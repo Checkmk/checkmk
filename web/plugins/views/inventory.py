@@ -396,6 +396,13 @@ def inv_paint_timestamp_as_age_days(timestamp):
         return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 
+@decorate_inv_paint
+def inv_paint_docker_labels(labels):
+    if labels is None:
+        return "", ""
+
+    return "labels", html.render_br().join(sorted(labels.split(", ")))
+
 #.
 #   .--display hints-------------------------------------------------------.
 #   |           _ _           _               _     _       _              |
@@ -758,8 +765,15 @@ inventory_displayhints.update({
         "keyorder": ["repository", "tag", "id", "creation", "size", "labels", "amount_containers"],
         "view" : "invdockerimages_of_host",
     },
-    ".software.applications.docker.images:*.id"        : { "title" : _("ID"), },
-    ".software.applications.docker.images:*.amount_containers" : { "title" : _("# Containers"), },
+    ".software.applications.docker.images:*.id": {
+        "title" : _("ID"),
+    },
+    ".software.applications.docker.images:*.labels": {
+        "paint" : "docker_labels",
+    },
+    ".software.applications.docker.images:*.amount_containers" : {
+        "title" : _("# Containers"),
+    },
 
     # Node containers
     ".software.applications.docker.containers:": {
@@ -767,7 +781,12 @@ inventory_displayhints.update({
         "keyorder": ["id", "repository", "tag", "creation", "name", "creation", "labels", "status"],
         "view" : "invdockercontainers_of_host",
     },
-    ".software.applications.docker.containers:*.id"        : { "title" : _("ID"), },
+    ".software.applications.docker.containers:*.id": {
+        "title" : _("ID"),
+    },
+    ".software.applications.docker.containers:*.labels": {
+        "paint" : "docker_labels",
+    },
 
     ".software.applications.docker.networks.*.": {
         "title": "Network %s",

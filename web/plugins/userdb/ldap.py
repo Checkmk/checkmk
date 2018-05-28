@@ -196,6 +196,8 @@ class LDAPUserConnector(UserConnector):
             conn.set_option(ldap.OPT_X_TLS_CACERTFILE,
                             "%s/var/ssl/ca-certificates.crt" % cmk.paths.omd_root)
 
+            conn.set_option(ldap.OPT_X_TLS_NEWCTX, 0)
+
             self.default_bind(conn)
             return conn, None
 

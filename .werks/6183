@@ -1,0 +1,13 @@
+Title: LDAP: Improved debug logging during connect
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b6
+Date: 1527496871
+Class: fix
+
+When the LDAP logging of the GUI is set to debug the web.log will now get the
+debug outputs of the lower level python-ldap and libldap components added.
+
+This will show up detailed information about why connection attempts fail.

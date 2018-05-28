@@ -796,7 +796,7 @@ inventory_displayhints.update({
 
     ".software.applications.docker.images:": {
         "title" : _("Images"),
-        "keyorder": ["repository", "tag", "id", "creation", "size", "labels", "amount_containers"],
+        "keyorder": ["id", "repository", "tag", "creation", "size", "labels", "amount_containers"],
         "view" : "invdockerimages_of_host",
     },
     ".software.applications.docker.images:*.id": {

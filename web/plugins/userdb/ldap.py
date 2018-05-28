@@ -46,6 +46,12 @@ import os
 import time
 import copy
 
+from contextlib import contextmanager
+import ctypes
+import io
+import sys
+import tempfile
+
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap
 import ldap.filter
@@ -56,6 +62,7 @@ import cmk.paths
 import config
 import watolib
 import log
+import cmk.log
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -204,8 +211,14 @@ class LDAPUserConnector(UserConnector):
 
     def connect_server(self, server):
         try:
+            trace_args = {}
+            if self._logger.isEnabledFor(cmk.log.DEBUG):
+                ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
+                trace_args["trace_level"] = 2
+                trace_args["trace_file"] = sys.stderr
+
             uri = self.format_ldap_uri(server)
-            conn = ldap.ldapobject.ReconnectLDAPObject(uri)
+            conn = ldap.ldapobject.ReconnectLDAPObject(uri, **trace_args)
             conn.protocol_version = self._config.get('version', 3)
             conn.network_timeout  = self._config.get('connect_timeout', 2.0)
             conn.retry_delay      = 0.5
@@ -276,10 +289,14 @@ class LDAPUserConnector(UserConnector):
                 servers = self.servers()
 
             for server in servers:
-                ldap_obj, error_msg = self.connect_server(server)
+                debug_buffer = io.BytesIO()
+                with stderr_redirector(debug_buffer):
+                    ldap_obj, error_msg = self.connect_server(server)
+
                 if ldap_obj:
                     self._ldap_obj = ldap_obj
                 else:
+                    self._logger.debug("libldap debug output: %s" % debug_buffer.getvalue())
                     errors.append(error_msg)
                     continue # In case of an error, try the (optional) fallback servers
 
@@ -1192,6 +1209,56 @@ class LDAPUserConnector(UserConnector):
 
 
 multisite_user_connectors['ldap'] = LDAPUserConnector
+
+#.
+#   .--Debugging-----------------------------------------------------------.
+#   |          ____       _                       _                        |
+#   |         |  _ \  ___| |__  _   _  __ _  __ _(_)_ __   __ _            |
+#   |         | | | |/ _ \ '_ \| | | |/ _` |/ _` | | '_ \ / _` |           |
+#   |         | |_| |  __/ |_) | |_| | (_| | (_| | | | | | (_| |           |
+#   |         |____/ \___|_.__/ \__,_|\__, |\__, |_|_| |_|\__, |           |
+#   |                                 |___/ |___/         |___/            |
+#   +----------------------------------------------------------------------+
+#   | A context manuer to catch the debug output for libldap that is sent  |
+#   | to stderr. We need all information in the web.log. This is done with |
+#   | the help of this wrapper in case the LDAP logging debug level is on  |
+#   '----------------------------------------------------------------------'
+
+libc = ctypes.CDLL(None)
+c_stderr = ctypes.c_void_p.in_dll(libc, 'stderr')
+
+@contextmanager
+def stderr_redirector(stream):
+    # The original fd stderr points to. Usually 1 on POSIX systems.
+    original_stderr_fd = sys.stderr.fileno()
+
+    def _redirect_stderr(to_fd):
+        """Redirect stderr to the given file descriptor."""
+        # Flush the C-level buffer stderr
+        libc.fflush(c_stderr)
+        # Flush and close sys.stderr - also closes the file descriptor (fd)
+        sys.stderr.close()
+        # Make original_stderr_fd point to the same file as to_fd
+        os.dup2(to_fd, original_stderr_fd)
+        # Create a new sys.stderr that points to the redirected fd
+        sys.stderr = os.fdopen(original_stderr_fd, 'wb')
+
+    # Save a copy of the original stderr fd in saved_stderr_fd
+    saved_stderr_fd = os.dup(original_stderr_fd)
+    try:
+        # Create a temporary file and redirect stderr to it
+        tfile = tempfile.TemporaryFile(mode='w+b')
+        _redirect_stderr(tfile.fileno())
+        # Yield to caller, then redirect stderr back to the saved fd
+        yield
+        _redirect_stderr(saved_stderr_fd)
+        # Copy contents of temporary file to the given stream
+        tfile.flush()
+        tfile.seek(0, io.SEEK_SET)
+        stream.write(tfile.read())
+    finally:
+        tfile.close()
+        os.close(saved_stderr_fd)
 
 
 #.

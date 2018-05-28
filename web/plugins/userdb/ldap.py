@@ -47,7 +47,6 @@ import time
 import copy
 
 from contextlib import contextmanager
-import ctypes
 import io
 import sys
 import tempfile
@@ -1221,9 +1220,6 @@ multisite_user_connectors['ldap'] = LDAPUserConnector
 #   | the help of this wrapper in case the LDAP logging debug level is on  |
 #   '----------------------------------------------------------------------'
 
-libc = ctypes.CDLL(None)
-c_stderr = ctypes.c_void_p.in_dll(libc, 'stderr')
-
 @contextmanager
 def stderr_redirector(stream):
     # The original fd stderr points to. Usually 1 on POSIX systems.
@@ -1231,8 +1227,6 @@ def stderr_redirector(stream):
 
     def _redirect_stderr(to_fd):
         """Redirect stderr to the given file descriptor."""
-        # Flush the C-level buffer stderr
-        libc.fflush(c_stderr)
         # Flush and close sys.stderr - also closes the file descriptor (fd)
         sys.stderr.close()
         # Make original_stderr_fd point to the same file as to_fd

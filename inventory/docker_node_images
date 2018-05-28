@@ -37,15 +37,14 @@ def _parse_docker_node_images(info):
         data = json.loads(" ".join(line))
 
         if section_name == "images" and data:
-            parsed.setdefault((data["Repository"], data["Tag"]), data)
+            parsed.setdefault(data["ID"], data)
 
-        elif section_name.startswith("images_labels"):
-            parts = section_name.split(":", 2)
-            if len(parts) == 3:
-                repository, tag = parts[1:]
-                image = parsed.get((repository, tag))
-                if image is not None and data:
-                    image.setdefault("__labels__", data)
+        elif section_name == "images_labels":
+            if len(data) == 2:
+                image_id, labels = data
+                image = parsed.get(image_id)
+                if image is not None and labels:
+                    image.setdefault("__labels__", labels)
 
         elif section_name == "containers":
             image_name = data["Image"]
@@ -66,21 +65,20 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
 
-    for (repo, tag), image in sorted(parsed.iteritems()):
-        id_ = image["ID"]
+    for image_id, image in sorted(parsed.iteritems()):
         inv_node.append({
-            "repository"        : repo,
-            "tag"               : tag,
-            "id"                : id_,
+            "repository"        : image["Repository"],
+            "tag"               : image["Tag"],
+            "id"                : image_id,
             "creation"          : image["CreatedAt"],
             "size"              : image["VirtualSize"],
             "labels"            : _format_labels(image.get("__labels__", {}).items()),
         })
 
         status_node.append({
-            "repository"        : repo,
-            "tag"               : tag,
-            "id"                : id_,
+            "repository"        : image["Repository"],
+            "tag"               : image["Tag"],
+            "id"                : image_id,
             "amount_containers" : len(image.get("__containers__", [])),
         })
 

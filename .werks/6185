@@ -1,0 +1,12 @@
+Title: docker_node_images: Improved performance of agent section creation
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0b6
+Date: 1527535164
+Class: fix
+
+The agent section generating code has been reworked for better performance.
+You will have to update the agent to get this improvement. In case you use
+the old agent with the new check, you will get no image label information.

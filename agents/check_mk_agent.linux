@@ -1003,12 +1003,12 @@ if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
 
     echo "<<<docker_node_images>>>"
     echo "[[[images]]]"
-    docker images --all --format "{{json .}}"
-    for image in $(docker images --all --format "{{.Repository}}:{{.Tag}}");
-    do
-        echo "[[[images_labels:$image]]]"
-        docker image inspect --format "{{json .Config.Labels}}" "$image"
-    done
+    docker images --format "{{json .}}"
+
+    echo "[[[image_labels]]]"
+    IMAGE_IDS=$(docker images --format '{{.ID}}')
+    docker image inspect --format "[ {{json .Id}}, {{json .Config.Labels}} ]" "$IMAGE_IDS"
+
     echo "[[[containers]]]"
     docker container ls --all --format "{{json .}}"
 

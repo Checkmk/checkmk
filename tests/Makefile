@@ -1,18 +1,19 @@
-SHELL=/bin/bash -e
-PYTEST=pipenv run py.test -s -vv
-COVERAGE=pipenv run coverage
+SHELL    := /bin/bash -e
+PIPENV   := PIPENV_VENV_IN_PROJECT=true pipenv
+PYTEST   := $(PIPENV) run py.test -s -vv
+COVERAGE := $(PIPENV) run coverage
 
-.PHONY: help test-pylint test-integration test-gui-crawl \
-	test-bandit test-shellcheck setup format test-mypy \
-        test-pylint-simple test-unit test-unit-coverage test-packaging	
+.PHONY: help test-unit test-unit-coverage-html test-integration test-gui-crawl \
+        test-pylint test-packaging test-bandit test-shellcheck
 
 help:
 	@echo "setup                     - Install dependencies"
 	@echo "test-unit                 - Run unit tests"
 	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
-	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-integration          - Run integration tests"
 	@echo "test-gui-crawl            - Run GUI crawl test"
+	@echo "test-pylint               - Run pylint based tests"
+	@echo "test-packaging            - Run packaging tests"
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
 
@@ -33,18 +34,14 @@ test-unit-coverage-html: ../.venv
 test-integration: ../.venv
 	$(PYTEST) -T integration
 
-
 test-gui-crawl: ../.venv
 	$(PYTEST) -T gui_crawl
-
 
 test-pylint: ../.venv
 	$(PYTEST) -T pylint
 
-
 test-packaging: ../.venv
 	$(PYTEST) -T packaging
-
 
 test-bandit: ../.venv
 # Currently only care about high severity reported issues. Once this is reached,
@@ -63,7 +60,6 @@ test-bandit: ../.venv
 		"$$ENTERPRISE_DIR"/agents/plugins/*.py \
 		"$$ENTERPRISE_DIR"/agents/bakery/*
 
-
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \
 	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
@@ -71,20 +67,3 @@ test-shellcheck:
 		$(SHELLCHECK_OUTPUT_ARGS) \
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
-
-
-# TODO(sp): Proof of concept only for now, do this in a more general way
-PYTHONPATH := $(realpath ..)
-MYPYPATH := $(realpath typeshed)
-FILES_TO_CHECK := $(realpath $(addprefix ../cmk/ec/,defaults.py export.py settings.py))
-
-sanitize: format test-mypy test-pylint-simple
-
-format:
-	autopep8 -i $(FILES_TO_CHECK)
-
-test-mypy:
-	MYPYPATH="$(MYPYPATH)" mypy --py2 --follow-imports=silent --strict-optional $(FILES_TO_CHECK)
-
-test-pylint-simple:
-	PYTHONPATH="$(PYTHONPATH)" pylint $(FILES_TO_CHECK)

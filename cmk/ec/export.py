@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """
 Utility module for common code between the Event Console and other parts
 of Check_MK. The GUI is e.g. accessing this module for gathering the default
@@ -46,13 +45,11 @@ import cmk.ec.settings
 
 
 class MkpRulePackBindingError(Exception):
-
     """Base class for exceptions related to rule pack binding"""
     pass
 
 
 class MkpRulePackProxy(UserDict.DictMixin):
-
     """
     An object of this class represents an entry (i.e. a rule pack) in
     mkp_rule_packs. It is used as a reference to an EC rule pack
@@ -113,7 +110,6 @@ class MkpRulePackProxy(UserDict.DictMixin):
 
 
 class RulePackType(Enum):  # pylint: disable=too-few-public-methods
-
     """
     A class to distinguishes the four kinds of rule pack types:
 
@@ -154,10 +150,8 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
 def _default_settings():
     # type: () -> cmk.ec.settings.Settings
     """Returns default EC settings. This function should vanish in the long run!"""
-    return cmk.ec.settings.settings('',
-                                    Path(cmk.paths.omd_root),
-                                    Path(cmk.paths.default_config_dir),
-                                    [''])
+    return cmk.ec.settings.settings('', Path(cmk.paths.omd_root),
+                                    Path(cmk.paths.default_config_dir), [''])
 
 
 def rule_pack_dir():
@@ -197,8 +191,8 @@ def _bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
             if isinstance(rule_pack, MkpRulePackProxy):
                 rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
         except KeyError:
-            raise MkpRulePackBindingError('Exported rule pack with ID "%s" not found.'
-                                          % rule_pack.id_)
+            raise MkpRulePackBindingError(
+                'Exported rule pack with ID "%s" not found.' % rule_pack.id_)
 
 
 def load_config(settings):
@@ -224,8 +218,7 @@ def load_config(settings):
     # ignore legacy rules if there are rule packs alreday. It's a bit unclear
     # if we really want that, but at least that's how it worked in the past...
     if config["rules"] and not config["rule_packs"]:
-        config["rule_packs"] = [
-            cmk.ec.defaults.default_rule_pack(config["rules"])]
+        config["rule_packs"] = [cmk.ec.defaults.default_rule_pack(config["rules"])]
     config["rules"] = []
 
     for rule_pack in config["rule_packs"]:
@@ -305,9 +298,7 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     if isinstance(rule_pack, MkpRulePackProxy):
         rule_pack = rule_pack.rule_pack
 
-    repr_ = (pprint.pformat(rule_pack)
-             if pretty_print
-             else repr(rule_pack))
+    repr_ = (pprint.pformat(rule_pack) if pretty_print else repr(rule_pack))
     output = ("# Written by WATO\n"
               "# encoding: utf-8\n"
               "\n"
@@ -341,8 +332,8 @@ def override_rule_pack_proxy(rule_pack_nr, rule_packs):
     """
     proxy = rule_packs[rule_pack_nr]
     if not isinstance(proxy, MkpRulePackProxy):
-        raise TypeError('Expected an instance of %s got %s' %
-                        (MkpRulePackProxy.__name__, proxy.__class__.__name__))
+        raise TypeError('Expected an instance of %s got %s' % (MkpRulePackProxy.__name__,
+                                                               proxy.__class__.__name__))
     rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 
@@ -408,6 +399,7 @@ def rule_pack_id_to_mkp(package_info):
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
+
     def mkp_of(rule_pack_file):
         # type: (str) -> Any
         """Find the MKP for the given file"""
@@ -418,5 +410,4 @@ def rule_pack_id_to_mkp(package_info):
 
     exported_rule_packs = package_info['parts']['ec_rule_packs']['files']
 
-    return {os.path.splitext(file_)[0]: mkp_of(file_)
-            for file_ in exported_rule_packs}
+    return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}

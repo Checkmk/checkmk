@@ -2,12 +2,18 @@ FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py set
 MYPYPATH       := $(realpath typeshed)
 PIPENV         := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
 
-.PHONY: sanitize format-autopep8 test-mypy test-pylint
+.PHONY: sanitize format format-autopep8 format-yapf test-mypy test-pylint
 
-sanitize: format-autopep8 test-mypy test-pylint
+sanitize: format test-mypy test-pylint
 
+format: format-yapf
+
+# A bit ugly and sometimes breaks things, but let's keep it for comparison.
 format-autopep8: .venv
-	$(PIPENV)	run autopep8 -i $(FILES_TO_CHECK)
+	$(PIPENV) run autopep8 -i $(FILES_TO_CHECK)
+
+format-yapf: .venv
+	$(PIPENV) run yapf -i $(FILES_TO_CHECK)
 
 test-mypy: .venv
 	MYPYPATH="$(MYPYPATH)" $(PIPENV) run mypy --py2 --follow-imports=silent --strict-optional $(FILES_TO_CHECK)
@@ -31,4 +37,4 @@ Pipfile.lock: Pipfile
 	touch .venv
 
 clean:
-	rm -rf .venv
+	rm -rf .mypy_cache .venv

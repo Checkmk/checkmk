@@ -68,6 +68,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := iwyu_tool
+PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
 
 # The Bear versions have a slightly tragic history: Due to the clang bug
 # https://llvm.org/bugs/show_bug.cgi?id=24710 we need absolute paths in our
@@ -540,11 +541,19 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 Pipfile.lock: Pipfile
-	PIPENV_VENV_IN_PROJECT=true pipenv lock
+	$(PIPENV) lock
+# TODO: pipenv and make don't really cooperate nicely: Locking alone already
+# creates a virtual environment with setuptools/pip/wheel. This could lead to a
+# wrong up-to-date status of it later, so let's remove it here. What we really
+# want is a check if the contents of .venv match the contents of Pipfile.lock.
+# We should do this via some move-if-change Kung Fu, but for now rm suffices.
+	rm -rf .venv
 
 .venv: Pipfile.lock
-	PIPENV_VENV_IN_PROJECT=true pipenv install --dev
-	pipenv clean
+	$(PIPENV) install --dev
+	$(PIPENV) clean
+# TODO: Part 2 of the hack for the Pipfile.lock target.
+	touch .venv
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

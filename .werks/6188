@@ -1,0 +1,22 @@
+Title: Dropped fping dependency (Removes check_fping)
+Level: 1
+Component: packages
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1527705961
+Class: fix
+
+The external fping package dependency has been removed from Check_MK. It is
+a utility to send "fast pings". The active check "check_fping" needs this
+package to work.
+
+In Check_MK it is standard and recommended to use "check_icmp" for pinging
+hosts using ICMP. It is used for the host checks of the Raw Edition and for
+the active checks named "PING". The Microcore uses it's smart ping feature
+for the host checks by default and falls back to "check_icmp" in some
+situations.
+
+The check check_fping is not used by default. In case you used it, it is
+recommended to use one of the options mentioned above. If this is no option
+for you for some reason, please let us know.

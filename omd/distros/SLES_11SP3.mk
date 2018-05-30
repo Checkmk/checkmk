@@ -1,7 +1,6 @@
 DISTRO_CODE     = sles11sp3
 BUILD_PACKAGES  =
 BUILD_PACKAGES += boost-devel
-BUILD_PACKAGES += fping
 BUILD_PACKAGES += samba-client # otherwise path to smblient missing in util.pm
 BUILD_PACKAGES += freetype2-devel
 BUILD_PACKAGES += gcc
@@ -53,7 +52,6 @@ OS_PACKAGES    += apache2
 OS_PACKAGES    += bind-utils
 OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
-OS_PACKAGES    += fping
 OS_PACKAGES    += gd
 OS_PACKAGES    += graphviz
 OS_PACKAGES    += libpng12-0

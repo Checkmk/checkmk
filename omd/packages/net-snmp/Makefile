@@ -23,12 +23,16 @@ build: check-python
 	    --disable-scripts \
 	    --prefix=$(OMD_ROOT) && make
 
-install:
+install: install-base install-python install-perl
+
+install-base:
 	cd $(DIR)/snmplib && make DESTDIR=$(DESTDIR) installlibs
 	cd $(DIR)/apps && make DESTDIR=$(DESTDIR) installbin
 	cd $(DIR)/man && make DESTDIR=$(DESTDIR) install
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/snmp/mibs
 	cd $(DIR)/mibs && make DESTDIR=$(DESTDIR) mibsinstall
+
+install-python:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	cd $(DIR)/python && \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
@@ -46,6 +50,15 @@ install:
 # TODO(sp): Disabled for now, otherwise the netsnmp module is not found. Figure
 # out what's really going on here!
 #	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py*
+
+install-perl:
+	cd $(DIR)/perl && \
+	    make \
+		DESTDIR=$(DESTDIR)$(OMD_ROOT) \
+		INSTALLSITEARCH=/lib/perl5/lib/perl5 \
+		INSTALLSITEMAN3DIR=/share/man/man3 \
+		install
+
 
 skel:
 

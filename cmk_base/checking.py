@@ -260,36 +260,38 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
 
     section_name = checks.section_name_of(check_plugin_name)
 
-    try:
-        section_content = multi_host_sections.get_section_content(hostname,
-                                                    ipaddress, section_name, for_discovery=False)
-    except MKParseFunctionError, e:
-        x = e.exc_info()
-        raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
-
     # We need to set this again, because get_section_content has the side effect of setting this with
     # item None if there is a parse function. This would break the entire set_item/get_rate logic
     # for checks with items that rely on this being handled by the API.
     # TODO: Write a regression test for this.
     item_state.set_item_state_prefix(check_plugin_name, item)
 
-    # TODO: Move this to a helper function
-    if section_content is None: # No data for this check type
-        return False
-
-    # In case of SNMP checks but missing agent response, skip this check.
-    # Special checks which still need to be called even with empty data
-    # may declare this.
-    if not section_content and checks.is_snmp_check(check_plugin_name) \
-       and not checks.check_info[check_plugin_name]["handle_empty_info"]:
-        return False
-
-    check_function = checks.check_info[check_plugin_name].get("check_function")
-    if check_function is None:
-        check_function = lambda item, params, section_content: (3, 'UNKNOWN - Check not implemented')
-
     dont_submit = False
     try:
+        try:
+            section_content = multi_host_sections.get_section_content(hostname,
+                                                        ipaddress, section_name, for_discovery=False)
+        except MKParseFunctionError, e:
+            x = e.exc_info()
+            # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
+            # exception which need to lead to a skipped check instead of a crash
+            raise x[0], x[1], x[2]
+
+        # TODO: Move this to a helper function
+        if section_content is None: # No data for this check type
+            return False
+
+        # In case of SNMP checks but missing agent response, skip this check.
+        # Special checks which still need to be called even with empty data
+        # may declare this.
+        if not section_content and checks.is_snmp_check(check_plugin_name) \
+           and not checks.check_info[check_plugin_name]["handle_empty_info"]:
+            return False
+
+        check_function = checks.check_info[check_plugin_name].get("check_function")
+        if check_function is None:
+            check_function = lambda item, params, section_content: (3, 'UNKNOWN - Check not implemented')
+
         # Call the actual check function
         item_state.reset_wrapped_counters()
 

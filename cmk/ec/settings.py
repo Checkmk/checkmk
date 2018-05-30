@@ -44,29 +44,27 @@ from typing import List, NamedTuple, Optional, Union  # pylint: disable=unused-i
 AnnotatedPath = NamedTuple('AnnotatedPath', [('description', str), ('value', Path)])
 
 # filesystem paths related to the event console
-Paths = NamedTuple(
-    'Paths',
-    [
-        ('main_config_file', AnnotatedPath),  #
-        ('config_dir', AnnotatedPath),
-        ('rule_pack_dir', AnnotatedPath),
-        ('mkp_rule_pack_dir', AnnotatedPath),
-        ('unix_socket', AnnotatedPath),
-        ('event_socket', AnnotatedPath),
-        ('event_pipe', AnnotatedPath),
-        ('pid_file', AnnotatedPath),
-        ('log_file', AnnotatedPath),
-        ('history_dir', AnnotatedPath),
-        ('messages_dir', AnnotatedPath),
-        ('master_config_file', AnnotatedPath),
-        ('slave_status_file', AnnotatedPath),
-        ('spool_dir', AnnotatedPath),
-        ('status_file', AnnotatedPath),
-        ('status_server_profile', AnnotatedPath),
-        ('event_server_profile', AnnotatedPath),
-        ('compiled_mibs_dir', AnnotatedPath),
-        ('mongodb_config_file', AnnotatedPath)
-    ])
+Paths = NamedTuple('Paths', [
+    ('main_config_file', AnnotatedPath),
+    ('config_dir', AnnotatedPath),
+    ('rule_pack_dir', AnnotatedPath),
+    ('mkp_rule_pack_dir', AnnotatedPath),
+    ('unix_socket', AnnotatedPath),
+    ('event_socket', AnnotatedPath),
+    ('event_pipe', AnnotatedPath),
+    ('pid_file', AnnotatedPath),
+    ('log_file', AnnotatedPath),
+    ('history_dir', AnnotatedPath),
+    ('messages_dir', AnnotatedPath),
+    ('master_config_file', AnnotatedPath),
+    ('slave_status_file', AnnotatedPath),
+    ('spool_dir', AnnotatedPath),
+    ('status_file', AnnotatedPath),
+    ('status_server_profile', AnnotatedPath),
+    ('event_server_profile', AnnotatedPath),
+    ('compiled_mibs_dir', AnnotatedPath),
+    ('mongodb_config_file', AnnotatedPath),
+])
 
 
 def _default_paths(omd_root, default_config_dir):
@@ -105,13 +103,11 @@ def _default_paths(omd_root, default_config_dir):
 PortNumber = NamedTuple('PortNumber', [('value', int)])
 
 # network port numbers related to the event console
-PortNumbers = NamedTuple(
-    'PortNumbers',
-    [
-        ('syslog_udp', PortNumber),  #
-        ('syslog_tcp', PortNumber),
-        ('snmptrap_udp', PortNumber)
-    ])
+PortNumbers = NamedTuple('PortNumbers', [
+    ('syslog_udp', PortNumber),
+    ('syslog_tcp', PortNumber),
+    ('snmptrap_udp', PortNumber),
+])
 
 
 def _default_port_numbers():
@@ -218,26 +214,22 @@ def _endpoint(enabled, file_descriptor, default_port_number):
 
 
 # various post-processed commandline options
-Options = NamedTuple(
-    'Options',
-    [
-        ('verbosity', int),  #
-        ('syslog_udp', Optional[EndPoint]),
-        ('syslog_tcp', Optional[EndPoint]),
-        ('snmptrap_udp', Optional[EndPoint]),
-        ('foreground', bool),
-        ('debug', bool),
-        ('profile_status', bool),
-        ('profile_event', bool)
-    ])
+Options = NamedTuple('Options', [
+    ('verbosity', int),
+    ('syslog_udp', Optional[EndPoint]),
+    ('syslog_tcp', Optional[EndPoint]),
+    ('snmptrap_udp', Optional[EndPoint]),
+    ('foreground', bool),
+    ('debug', bool),
+    ('profile_status', bool),
+    ('profile_event', bool),
+])
 
 # all settings of the event console
-Settings = NamedTuple(
-    'Settings',
-    [
-        ('paths', Paths),  #
-        ('options', Options)
-    ])
+Settings = NamedTuple('Settings', [
+    ('paths', Paths),
+    ('options', Options),
+])
 
 
 def settings(version, omd_root, default_config_dir, argv):

@@ -54,15 +54,17 @@ def default_rule_pack(rules):
 def default_config():
     # type: () -> Dict[str, Any]
     """Returns the default configuration"""
+    v1_v2_credential = {
+        "description": '"public" default for receiving SNMPv1/v2 traps',
+        "credentials": "public",
+    }
     return {
         "rules": [],  # old pre 1.2.7i1 format. Only used if rule_packs is empty
         "rule_packs": [],  # new format with rule packages
         "mkp_rule_packs": {},  # rule packs provided by MKPs and referenced in rule_packs
         "actions": [],
-        "debug_rules":
-            False,
-        "rule_optimizer":
-            True,
+        "debug_rules": False,
+        "rule_optimizer": True,
         "log_level": {
             "cmk.mkeventd": cmk.log.INFO,
             "cmk.mkeventd.EventServer": cmk.log.INFO,
@@ -70,39 +72,22 @@ def default_config():
             "cmk.mkeventd.StatusServer": cmk.log.INFO,
             "cmk.mkeventd.lock": cmk.log.INFO,
         },
-        "log_rulehits":
-            False,
-        "log_messages":
-            False,
-        "retention_interval":
-            60,
-        "housekeeping_interval":
-            60,
-        "statistics_interval":
-            5,
-        "history_lifetime":
-            365,  # days
-        "history_rotation":
-            "daily",
-        "replication":
-            None,
-        "remote_status":
-            None,
-        "socket_queue_len":
-            10,
-        "eventsocket_queue_len":
-            10,
+        "log_rulehits": False,
+        "log_messages": False,
+        "retention_interval": 60,
+        "housekeeping_interval": 60,
+        "statistics_interval": 5,
+        "history_lifetime": 365,  # days
+        "history_rotation": "daily",
+        "replication": None,
+        "remote_status": None,
+        "socket_queue_len": 10,
+        "eventsocket_queue_len": 10,
         "hostname_translation": {},
-        "archive_orphans":
-            False,
-        "archive_mode":
-            "file",
-        "translate_snmptraps":
-            False,
-        "snmp_credentials": [{
-            "description": "\"public\" default for receiving SNMPv1/v2 traps",
-            "credentials": "public",
-        },],
+        "archive_orphans": False,
+        "archive_mode": "file",
+        "translate_snmptraps": False,
+        "snmp_credentials": [v1_v2_credential],
         "event_limit": {
             'by_host': {
                 'action': 'stop_overflow_notify',
@@ -115,6 +100,6 @@ def default_config():
             'overall': {
                 'action': 'stop_overflow_notify',
                 'limit': 10000
-            }
+            },
         },
     }

@@ -24,6 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# TODO: The extra_sections part is only transitional code to avoid
+# duplicate CPU services.
+# Previously, the duplicate services were handled in the agent_vsphere
+# directly. Starting with 1.5.0 this is problematic since multiple
+# datasources can be defined in Check_MK natively. Therefore we shift
+# the detection of the duplicate services directly to this check.
+# When it is possible to handle duplicate services for different
+# datasources correctly at the cmk_base level this code can be removed.
+# NOTE: By design the extra_sections are passed to EVERY subcheck and
+# therefore have to be removed in every subcheck!
+# Change-Id: I3b6a56efcff4c75bbd05a051242e18deaa499d9e
+check_info['esx_vsphere_hostsystem'] = {
+    'extra_sections': ["winperf_processor"],
+}
+
+
 def esx_vsphere_hostsystem_convert(info):
     data = {}
     for line in info:
@@ -51,16 +68,20 @@ esx_host_cpu_default_levels = {}
 
 
 def inventory_esx_vsphere_hostsystem_cpu(info):
-    data = esx_vsphere_hostsystem_convert(info).keys()
-    if 'summary.quickStats.overallCpuUsage' in data \
-        and 'hardware.cpuInfo.hz' in data\
-        and 'hardware.cpuInfo.numCpuCores' in data:
+    hostsystem_info, winperf_info = info
+    data = esx_vsphere_hostsystem_convert(hostsystem_info).keys()
+    if (not winperf_info and
+            'summary.quickStats.overallCpuUsage' in data and
+            'hardware.cpuInfo.hz' in data and
+            'hardware.cpuInfo.numCpuCores' in data):
         return [(None, {})]
 
-def check_esx_vsphere_hostsystem_cpu(item, params, info):
-    data = esx_vsphere_hostsystem_convert(info)
 
-    if "summary.quickStats.overallCpuUsage" not in data:
+def check_esx_vsphere_hostsystem_cpu(item, params, info):
+    hostsystem_info, winperf_info = info
+    data = esx_vsphere_hostsystem_convert(hostsystem_info)
+
+    if winperf_info or "summary.quickStats.overallCpuUsage" not in data:
         return
 
     num_sockets = int(data['hardware.cpuInfo.numCpuPackages'][0])
@@ -108,6 +129,7 @@ check_info['esx_vsphere_hostsystem.cpu_usage'] = {
 #   +----------------------------------------------------------------------+
 
 def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
+    info, _ = info
     data = {}
     for line in info:
         if line[0] in ["summary.quickStats.overallMemoryUsage", "hardware.memorySize", "name"]:
@@ -163,6 +185,7 @@ check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {
 
 
 def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
+    info, _ = info
     current_node = {}
     def get_node_usage(node):
         num_sockets    = int(node['hardware.cpuInfo.numCpuPackages'])
@@ -237,11 +260,13 @@ check_info['esx_vsphere_hostsystem.cpu_util_cluster'] = {
 esx_host_mem_default_levels = ( 80.0, 90.0 )
 
 def inventory_esx_vsphere_hostsystem_mem(info):
+    info, _ = info
     data = esx_vsphere_hostsystem_convert(info).keys()
     if 'summary.quickStats.overallMemoryUsage' in data and 'hardware.memorySize' in data:
         return [(None, 'esx_host_mem_default_levels')]
 
 def check_esx_vsphere_hostsystem_mem(item, params, info):
+    info, _ = info
     data = esx_vsphere_hostsystem_convert(info)
 
     if "summary.quickStats.overallMemoryUsage" not in data:
@@ -288,11 +313,13 @@ check_info['esx_vsphere_hostsystem.mem_usage'] = {
 
 
 def inventory_esx_vsphere_hostsystem_state(info):
+    info, _ = info
     data = esx_vsphere_hostsystem_convert(info).keys()
     if 'runtime.inMaintenanceMode' in data:
         return [(None, None)]
 
 def check_esx_vsphere_hostsystem_state(_no_item, _no_params, info):
+    info, _ = info
     data = esx_vsphere_hostsystem_convert(info)
     state = 0
     if "overallStatus" not in data:
@@ -331,12 +358,14 @@ check_info['esx_vsphere_hostsystem.state'] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_esx_vsphere_hostsystem_maintenance(info):
+    info, _ = info
     data = esx_vsphere_hostsystem_convert(info)
     if 'runtime.inMaintenanceMode' in data:
         current_state = str(data['runtime.inMaintenanceMode'][0]).lower()
         return [(None, { 'target_state' : current_state })]
 
 def check_esx_vsphere_hostsystem_maintenance(_no_item, params, info):
+    info, _ = info
     data = esx_vsphere_hostsystem_convert(info)
     target_state = params['target_state']
 
@@ -425,10 +454,12 @@ def esx_vsphere_multipath_convert(info):
     return paths
 
 def inventory_esx_vsphere_hostsystem_multipath(info):
+    info, _ = info
     data = esx_vsphere_multipath_convert(info).items()
     return [ (x, None) for x, y  in data]
 
 def check_esx_vsphere_hostsystem_multipath(item, params, info):
+    info, _ = info
     state_infos = {
         # alert_state, count, info
         "active"   : [0, 0, ""],

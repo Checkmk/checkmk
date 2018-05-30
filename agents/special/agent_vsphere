@@ -940,17 +940,6 @@ vsphere_output = []
 def output(line):
     vsphere_output.append(line)
 
-# This function is used to modify the vsphere output, just before it is written to stdout
-def check_winperf_processor(line):
-    if "<<<winperf_processor>>>" in win_agent_output:
-        try:
-            vsphere_output.remove(line)
-        except ValueError:
-            pass
-# A list of tuples: (line, function_pointer)
-# A certain line can register a function pointer
-# The function pointer is called later on with the line as argument
-postprocess_functions = []
 
 socket.setdefaulttimeout(opt_timeout)
 def get_agent_info_tcp(hostname):
@@ -1495,12 +1484,6 @@ if not error:
 
                     output("<<<esx_vsphere_hostsystem>>>")
                     for key in sorted(properties.keys()):
-                        # Special handling. If the windows may report winperf_processor in the following call
-                        # remove summary.quickStats.overallCpuUsage from the output. This would lead to a
-                        # duplicate "CPU utlization" service
-                        if opt_direct and opt_agent and key == "summary.quickStats.overallCpuUsage":
-                            postprocess_functions.append(("%s %s" % (key, " ".join(properties[key])), check_winperf_processor))
-
                         output("%s %s" % (key, " ".join(properties[key])))
 
                     output("<<<esx_vsphere_sensors:sep(59)>>>")
@@ -1730,11 +1713,6 @@ if opt_agent:
     sys.stdout.write(win_agent_output)
     sys.stdout.flush()
     error_exit = 0
-
-# May filter some data from the vsphere_output variable
-# Currently only used by winperf_processor special handling
-for line, function in postprocess_functions:
-    function(line)
 
 print "\n".join(map(make_utf8, vsphere_output))
 

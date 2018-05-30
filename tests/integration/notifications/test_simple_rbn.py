@@ -43,8 +43,8 @@ def test_simple_rbn_notification(test_config, site, core):
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
     # Now check for appearing log lines - one after the other
-    l.check_logged("Got raw notification (notify-test)")
-    l.check_logged("notifying hh via mail")
-    l.check_logged("Creating spoolfile:")
-    l.check_logged("(notify-test) for local delivery")
-    l.check_logged("Output: Spooled mail to local mail transmission agent")
+    l.check_logged("Got raw notification (notify-test)", timeout=20)
+    l.check_logged("notifying hh via mail", timeout=20)
+    l.check_logged("Creating spoolfile:", timeout=20)
+    l.check_logged("(notify-test) for local delivery", timeout=20)
+    l.check_logged("Output: Spooled mail to local mail transmission agent", timeout=20)

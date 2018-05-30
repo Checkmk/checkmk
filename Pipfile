@@ -18,7 +18,7 @@ dill = "*"
 bandit = "*"
 lockfile = "*"
 lxml = "*"
-pylint = "==1.6.4"  # Newer version was broken - check again one day
+pylint = "*"
 pyenchant = "*"
 
 [packages]

@@ -1,0 +1,23 @@
+Title: winperf_processor, esx_vsphere_hostsystem.cpu_usage: shift duplicate service detection from the special agent to the check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b7
+Date: 1528112755
+
+Previously, duplicate services for winperf_processor and
+esx_vsphere_hostsystem.cpu_usage were recognized in the special agent. If
+duplicate services would appear the corresponding entries in the special agent
+were removed.
+
+With the new option to configure multiple datasources for one host this logic
+will not work since there is no possibility for the special agent to inspect
+the section winperf_processor of the Check_MK agent. Therefore, the check
+esx_vsphere_hostsystem.cpu_usage now recognizes duplicate services using
+extra sections.
+
+The transition from the old to the new logic should happen transparently, i.e.
+no actions are required by the user.

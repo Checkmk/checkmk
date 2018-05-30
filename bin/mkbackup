@@ -341,7 +341,7 @@ def add_site_info_to_backup_info(info):
 
 
 def add_system_info_to_backup_info(info):
-    import cma
+    import cma # pylint: disable=import-error
     cma.load_config()
     info["cma_version"] = cma.version()
 
@@ -1218,7 +1218,7 @@ def write_to_tarfile_threaded(pipeout_fd, base_path, exclude_patterns):
 
 # Whether or not the data filesystem is mounted (-> on active cluster nodes)
 def is_inactive_cluster_node():
-    import cma
+    import cma # pylint: disable=import-error
     cma.load_config()
     return cma.inactive_cluster_node()
 
@@ -1613,7 +1613,7 @@ def do_system_restore(opts, info):
 
 
 def verify_data_volume_is_mounted():
-    import cma
+    import cma # pylint: disable=import-error
 
     count = 0
     is_mounted = cma.is_mounted("/omd")
@@ -1627,7 +1627,7 @@ def verify_data_volume_is_mounted():
 
 
 def prepare_cluster_environment(info):
-    import cma
+    import cma # pylint: disable=import-error
     cma.load_config()
 
     if cma.is_cluster_configured() and not is_cluster_backup(info):
@@ -1645,7 +1645,7 @@ def prepare_cluster_environment(info):
 def setup_cluster_environment(info):
     log("Setting up cluster environment")
 
-    import cma
+    import cma # pylint: disable=import-error
     cma.load_config()
 
     # To be able to start the DRBD volume we need to have the IP
@@ -1667,7 +1667,7 @@ def setup_standalone_environment(info):
 
 
 def enable_drbd_ip_addresses():
-    import cma, cma_net
+    import cma, cma_net # pylint: disable=import-error
     cma.load_config()
     cma_net.load_config()
 
@@ -1687,7 +1687,7 @@ def enable_drbd_ip_addresses():
 
 
 def verify_cma_version_compatible(info):
-    import cma
+    import cma # pylint: disable=import-error
     if info["cma_version"] != cma.version():
         raise MKGeneralException("The backup can not be restored because the version of the "
             "backup (%s) and the currently installed firmware (%s) are not the same. You "
@@ -1719,7 +1719,7 @@ def cleanup_system_rw_files(files_before, files_restored):
 
 
 def prepare_system_restore():
-    import cma
+    import cma # pylint: disable=import-error
     log("Cleaning up Check_MK processess and temporary filesystems")
     cma.free_omd_ressources(graceful=False)
 

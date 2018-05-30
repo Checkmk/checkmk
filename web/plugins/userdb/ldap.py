@@ -322,7 +322,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def _discover_nearest_dc(self, domain):
-        import ad
+        import ad  # pylint: disable=import-error
         locator = ad.Locator()
         locator.m_logger = self._logger
         try:

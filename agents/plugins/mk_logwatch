@@ -67,7 +67,7 @@ class MEIFolderCleaner(object):
         if not hasattr(sys, "frozen"):
             return
 
-        import win32file
+        import win32file  # pylint: disable=import-error
         import tempfile
         base_path = tempfile.gettempdir()
         for f in os.listdir(base_path):
@@ -219,7 +219,8 @@ def read_config():
                 # New pattern for line matching => clear continuation and rewrite patterns
                 cont_list = []
                 rewrite_list = []
-                patterns.append((level, compiled, cont_list, rewrite_list))
+                # TODO: Fix the code and remove the pragma below!
+                patterns.append((level, compiled, cont_list, rewrite_list))  # pylint: disable=used-before-assignment
 
         else: # filename line
             patterns = []
@@ -301,7 +302,7 @@ def is_inode_cabable(path):
         return True
     elif "windows" in os_type:
         volume_name = "%s:\\\\" % path.split(":", 1)[0]
-        import win32api
+        import win32api  # pylint: disable=import-error
         volume_info = win32api.GetVolumeInformation(volume_name)
         volume_type = volume_info[-1]
         if "ntfs" in volume_type.lower():

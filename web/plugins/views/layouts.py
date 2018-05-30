@@ -364,7 +364,7 @@ multisite_layouts["boxed"] = {
 
 
 def render_grouped_boxed_graphs(*args):
-    return render_grouped_boxes(*args, css_class="graph")
+    return render_grouped_boxes(*args, css_class="graph") # pylint: disable=no-value-for-parameter
 
 
 multisite_layouts["boxed_graph"] = {

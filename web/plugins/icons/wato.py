@@ -81,11 +81,11 @@ multisite_icons_and_actions['wato'] = {
 #   '----------------------------------------------------------------------'
 
 def paint_download_agent_output(*args):
-    return paint_download_host_info(*args, ty="agent")
+    return paint_download_host_info(*args, ty="agent")  # pylint: disable=no-value-for-parameter
 
 
 def paint_download_snmp_walk(*args):
-    return paint_download_host_info(*args, ty="walk")
+    return paint_download_host_info(*args, ty="walk")  # pylint: disable=no-value-for-parameter
 
 
 def paint_download_host_info(what, row, tags, host_custom_vars, ty):

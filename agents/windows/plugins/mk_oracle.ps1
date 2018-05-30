@@ -39,7 +39,7 @@
 # usage
 ###############################################################################
 # copy this file to C:\Program Files (x86)\check_mk\plugins
-# copy the config file to C:\Program Files (x86)\check_mk\
+# copy the config file to C:\Program Files (x86)\check_mk\config
 # cd C:\Program Files (x86)\check_mk
 # check_mk_agent test
 ###############################################################################
@@ -148,6 +148,15 @@ if (!$MK_CONFDIR) {
     $MK_CONFDIR= "c:\Program Files (x86)\check_mk\config"
 }
 
+# directory for tempfiles
+$MK_TEMPDIR = $env:MK_TEMPDIR
+
+# Fallback if the (old) agent does not provide the MK_TEMPDIR
+if (!$MK_TEMPDIR){
+    $MK_TEMPDIR = "C:\Program Files (x86)\check_mk\temp"
+}
+
+
 # Source the optional configuration file for this agent plugin
 $CONFIG_FILE="${MK_CONFDIR}\mk_oracle_cfg.ps1"
 if (test-path -path "${CONFIG_FILE}" ) {
@@ -240,7 +249,7 @@ exit;
           $res=$res.trim()
           $res=[int]$res
           $res
-     } 
+     }
      # now we set our action on error back to our normal value
      $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
 }
@@ -468,7 +477,7 @@ Param(
 
      # The temporary file to store the output of the SQL
      # currently default path is used here. change this @TBR?
-     $fullpath="$sql_message.$sqlsid.txt"
+     $fullpath= $MK_TEMPDIR + "\" + "$sql_message.$sqlsid.txt"
 
      if ($delayed -gt 0)
      {
@@ -1485,4 +1494,5 @@ if ($the_count -gt 0) {
 
 }
 debug_echo "got to the end"
+
 

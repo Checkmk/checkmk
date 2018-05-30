@@ -832,33 +832,38 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_plugin_name)
 
-    try:
-        section_content = multi_host_sections.get_section_content(hostname, ipaddress,
-                                                    check_plugin_name, for_discovery=True)
-    except MKParseFunctionError, e:
-        if cmk.debug.enabled():
-            x = e.exc_info()
-            raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
-
-        if on_error == "warn":
-            section_name = checks.section_name_of(check_plugin_name)
-            console.warning("Exception while parsing agent section '%s': %s\n" % (section_name, e))
-        elif on_error == "raise":
-            raise
-        return []
-
-    if section_content is None: # No data for this check type
-        return []
-
-    # In case of SNMP checks but missing agent response, skip this check.
-    # Special checks which still need to be called even with empty data
-    # may declare this.
-    if not section_content and checks.is_snmp_check(check_plugin_name) \
-       and not checks.check_info[check_plugin_name]["handle_empty_info"]:
-        return []
-
     # Now do the actual discovery
     try:
+        # TODO: There is duplicate code with checking.execute_check(). Find a common place!
+        try:
+            section_content = multi_host_sections.get_section_content(hostname, ipaddress,
+                                                        check_plugin_name, for_discovery=True)
+        except MKParseFunctionError, e:
+            if cmk.debug.enabled() or on_error == "raise":
+                x = e.exc_info()
+                if x[0] == item_state.MKCounterWrapped:
+                    return []
+                else:
+                    # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
+                    # exception which need to lead to a skipped check instead of a crash
+                    raise x[0], x[1], x[2]
+
+            elif on_error == "warn":
+                section_name = checks.section_name_of(check_plugin_name)
+                console.warning("Exception while parsing agent section '%s': %s\n" % (section_name, e))
+
+            return []
+
+        if section_content is None: # No data for this check type
+            return []
+
+        # In case of SNMP checks but missing agent response, skip this check.
+        # Special checks which still need to be called even with empty data
+        # may declare this.
+        if not section_content and checks.is_snmp_check(check_plugin_name) \
+           and not checks.check_info[check_plugin_name]["handle_empty_info"]:
+            return []
+
         # Check number of arguments of discovery function. Note: This
         # check for the legacy API will be removed after 1.2.6.
         if len(inspect.getargspec(discovery_function).args) == 2:
@@ -1145,7 +1150,16 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 continue # Skip not existing check silently
 
             try:
-                section_content = multi_host_sections.get_section_content(hostname, ipaddress, section_name, for_discovery=True)
+                try:
+                    section_content = multi_host_sections.get_section_content(hostname, ipaddress, section_name, for_discovery=True)
+                except MKParseFunctionError, e:
+                    if cmk.debug.enabled() or on_error == "raise":
+                        x = e.exc_info()
+                        # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
+                        # exception which need to lead to a skipped check instead of a crash
+                        raise x[0], x[1], x[2]
+                    else:
+                        raise
             except Exception, e:
                 if cmk.debug.enabled():
                     raise

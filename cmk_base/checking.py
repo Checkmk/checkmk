@@ -268,6 +268,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
 
     dont_submit = False
     try:
+        # TODO: There is duplicate code with discovery._execute_discovery(). Find a common place!
         try:
             section_content = multi_host_sections.get_section_content(hostname,
                                                         ipaddress, section_name, for_discovery=False)

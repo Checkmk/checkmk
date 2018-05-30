@@ -249,7 +249,7 @@ def get_crash_report_target(what):
 # TODO: Would be cleaner to override if we used OOP
 def get_version(what):
     if what == "cma":
-        import cma
+        import cma  # pylint: disable=import-error
         return cma.version()
     else:
         return cmk.__version__

@@ -94,7 +94,8 @@ def parse_job(info):
             elif key in [ 'max_res_kbytes', 'avg_mem_kbytes' ]:
                 key = key.replace('kbytes', 'bytes')
                 val = int(val) * 1000
-            job[prefix+key] = val
+            # TODO: Fix the code and remove the pragma below!
+            job[prefix+key] = val   # pylint: disable=unsupported-assignment-operation
 
     return parsed
 

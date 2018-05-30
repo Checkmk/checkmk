@@ -202,8 +202,8 @@ try:
         db_connection = db.connect(cstring)
 
     elif opt_dbms == "db2":
-        import ibm_db  # IBM data server driver
-        import ibm_db_dbi
+        import ibm_db      # pylint: disable=import-error
+        import ibm_db_dbi  # pylint: disable=import-error
         db = ibm_db
         if opt_port == None:
             opt_port=50000

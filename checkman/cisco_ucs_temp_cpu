@@ -1,0 +1,13 @@
+title: Cisco UCS: CPU temperature
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ Checks temperature of CPUs in Cisco UCS devices
+
+item:
+ The name of the CPU
+
+inventory:
+ One service per CPU

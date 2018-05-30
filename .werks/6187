@@ -1,0 +1,13 @@
+Title: Dropped external SNMP related dependencies
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1527704866
+Class: feature
+
+Check_MK is shipping it's own version of Net-SNMP for a long time now. There
+will still some things used from the OS depdencies (e.g. the perl modules).
+These have now been cleaned up. The perl scripts now also use the shipped
+Net-SNMP version.

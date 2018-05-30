@@ -1,0 +1,14 @@
+Title: mk_oracle.ps1: temporary files are no longer written to c:\windows\system32
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b7
+Date: 1527684383
+
+Temporary files from this plugin are now generated in the official temp directory.
+Its usually specified through the environment variable MK_TEMPDIR, set by the windows agent.
+
+

@@ -1,0 +1,13 @@
+title: Cisco UCS: Memory temperature
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ Checks temperature of memory in Cisco UCS devices
+
+item:
+ The name of the memory unit
+
+inventory:
+ One service per memory unit

@@ -1,0 +1,13 @@
+title: Cisco UCS: HDD operation status
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check allows to monitor the operational status and presence of
+ the HDDs in a Cisco UCS device. The check will report {OK} as long as the operational
+ status is "operable", "removed" or "autoUpgrade". In other cases, the check will report
+ a {WARNING} or {CRITICAL} status, based on the severity of the issue.
+
+inventory:
+ One service per HDD is created. If the HDD is in status "removed", no service is created.

@@ -31,7 +31,8 @@ import signal
 import ConfigParser
 
 try:
-    import pyinotify
+    # TODO: We should probably ship this package.
+    import pyinotify  # pylint: disable=import-error
 except:
     sys.stderr.write("Error: Python plugin pyinotify is not installed")
     sys.exit(1)

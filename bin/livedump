@@ -84,7 +84,8 @@ def encode_row(row):
 def connect():
     global g_connection, opt_socket
 
-    if not opt_socket and not omd_root():
+    # TODO: Fix the code and remove the pragma below!
+    if not opt_socket and not omd_root():  # pylint: disable=used-before-assignment
         bail_out("Please specify the URL of the livestatus socket.")
     elif omd_root():
         opt_socket = "unix:%s/tmp/run/live" % omd_root()

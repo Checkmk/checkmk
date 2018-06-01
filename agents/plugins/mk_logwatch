@@ -213,7 +213,8 @@ def read_config():
                 # New pattern for line matching => clear continuation and rewrite patterns
                 cont_list = []
                 rewrite_list = []
-                patterns.append((level, compiled, cont_list, rewrite_list))
+                # TODO: Fix the code and remove the pragma below!
+                patterns.append((level, compiled, cont_list, rewrite_list))  # pylint: disable=used-before-assignment
 
         else: # filename line
             patterns = []

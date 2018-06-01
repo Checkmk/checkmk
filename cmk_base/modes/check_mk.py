@@ -1346,7 +1346,8 @@ def mode_notify(options, *args):
     import cmk_base.config as config
     import cmk_base.notify as notify
     config.load(with_conf_d=True, validate_hosts=False)
-    return notify.do_notify(options, *args)
+    # TODO: Fix the code and remove the pragma below!
+    return notify.do_notify(options, *args)  # pylint: disable=no-value-for-parameter
 
 modes.register(Mode(
     long_option="notify",

@@ -4080,7 +4080,8 @@ def handle_global_option(opt, orig):
 
     def opt_arg():
         global main_args
-        if len(main_args) < 1:
+        # TODO: Fix the code and remove the pragma below!
+        if len(main_args) < 1:  # pylint: disable=used-before-assignment
             bail_out("Option %s needs an argument." % opt)
         arg = main_args[0]
         main_args = main_args[1:]

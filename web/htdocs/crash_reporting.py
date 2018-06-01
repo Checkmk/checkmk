@@ -312,11 +312,14 @@ def show_crash_report(info):
     else:
         version_title = _("Check_MK Version")
     _crash_row(version_title, info["version"], True)
+    _crash_row(_("Edition"), info.get("edition", ""), False)
+    _crash_row(_("Core"), info.get("core", ""), True)
     _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
     _crash_row(_("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True)
     _crash_row(_("Traceback"), format_traceback(info["exc_traceback"]), odd=False, pre=True)
-    if "local_vars" in info:
-        _crash_row(_("Local Variables"), format_local_vars(info["local_vars"]), odd=True, pre=True)
+    _crash_row(_("Local Variables"),
+        format_local_vars(info["local_vars"]) if "local_vars" in info else "", odd=True, pre=True)
+
     joined_paths = "<br>".join([ html.attrencode(p) for p in info.get("python_paths", [_("Unknown")]) ])
     _crash_row(_("Python Module Paths"), joined_paths, odd=False)
 

@@ -817,10 +817,10 @@ def is_single_local_site():
 
 
 def site_attribute_default_value():
-    default_site = default_site()
+    def_site = default_site()
     authorized_site_ids = map(lambda x: x[0], user.authorized_sites(unfiltered_sites=configured_sites()))
-    if default_site and default_site in authorized_site_ids:
-        return default_site
+    if def_site and def_site in authorized_site_ids:
+        return def_site
 
 
 def site_attribute_choices():

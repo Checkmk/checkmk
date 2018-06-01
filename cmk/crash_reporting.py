@@ -35,13 +35,14 @@ import pprint
 import sys
 import time
 import traceback
+import subprocess
 
 try:
     import simplejson as json
 except ImportError:
     import json
 
-from . import __version__
+import cmk
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
 # reporting it is totally ok to have some string representations of the objects.
@@ -62,7 +63,7 @@ def create_crash_info(crash_type, details=None, version=None):
         details = {}
 
     if version == None:
-        version = __version__
+        version = cmk.__version__
 
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
@@ -71,6 +72,8 @@ def create_crash_info(crash_type, details=None, version=None):
         "time"          : time.time(),
         "os"            : get_os_info(),
         "version"       : version,
+        "edition"       : cmk.edition_short(),
+        "core"          : _current_monitoring_core(),
         "python_version": sys.version,
         "python_paths"  : sys.path,
         "exc_type"      : exc_type.__name__,
@@ -104,6 +107,12 @@ def get_os_info():
             return info
         else:
             return "UNKNOWN"
+
+
+def _current_monitoring_core():
+    p = subprocess.Popen(["omd", "config", "show", "CORE"], close_fds=True, shell=False,
+            stdin=open(os.devnull), stdout=subprocess.PIPE, stderr=open(os.devnull, "w"))
+    return p.communicate()[0]
 
 
 def get_local_vars_of_last_exception():

@@ -230,7 +230,7 @@ def header(title, isopen = True, table_id = "", narrow = False, css=None):
     global g_section_open
     global g_section_isopen
     try:
-        if g_header_open:
+        if g_header_open:  # pylint: disable=used-before-assignment
             end()
     except:
         pass

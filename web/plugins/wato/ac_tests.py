@@ -668,3 +668,40 @@ class ACTestSizeOfExtensions(ACTest):
 
     def _size_of_extensions(self):
         return int(subprocess.check_output(["du", "-sb", "%s/local" % cmk.paths.omd_root]).split()[0])
+
+
+class ACTestESXDatasources(ACTest):
+    def category(self):
+        return ACTestCategories.deprecations
+
+    def title(self):
+        return _("The Check_MK agent is queried via the ESX datasource program")
+
+    def help(self):
+        return _("The Check_MK agent is queried via the datasource program for ESX systems. "
+                 "This is option will be deleted in a future release. Please configure the "
+                 "host to contact the Check_MK agent and the configured datasource programs "
+                 "instead.")
+
+    def _get_rules(self):
+        collection = watolib.SingleRulesetRecursively('special_agents:vsphere')
+        collection.load()
+
+        ruleset = collection.get('special_agents:vsphere')
+        return ruleset.get_rules()
+
+    def is_relevant(self):
+        return self._get_rules()
+
+    def execute(self):
+        all_rules_ok = True
+        for folder, rule_index, rule in self._get_rules():
+            rule_config = rule.to_dict_config()
+            vsphere_queries_agent = (rule_config['value'].get('direct')
+                                     in ['agent', 'hostsystem_agent'])
+            if vsphere_queries_agent:
+                all_rules_ok = False
+                yield ACResultCRIT("Rule %d in Folder %s is affected" % (rule_index + 1, folder.title()))
+
+        if all_rules_ok:
+            yield ACResultOK(_("No configured rules are affected"))

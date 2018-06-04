@@ -51,10 +51,6 @@ import cmk_base.check_table as check_table
 from cmk_base.exceptions import MKTimeout, MKParseFunctionError, MKIPAddressLookupError, \
                                 MKAgentError, MKSNMPError
 
-try:
-    import cmk_base.cee.keepalive as keepalive
-except ImportError:
-    keepalive = None
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
@@ -82,7 +78,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 raise
 
             except MKTimeout:
-                if _in_keepalive_mode():
+                if cmk_base.utils.in_keepalive_mode():
                     raise
                 else:
                     infotexts.append("Timed out")
@@ -112,7 +108,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 output_txt = "%s\n%s" % (output_txt, "\n".join(long_infotexts))
             output_txt += "\n"
 
-            if _in_keepalive_mode():
+            if cmk_base.utils.in_keepalive_mode():
                 keepalive.add_keepalive_active_check_result(hostname, output_txt)
                 console.verbose(output_txt.encode("utf-8"))
             else:
@@ -214,18 +210,38 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
 
     checks.set_hostname(hostname)
 
-    table = check_table.get_precompiled_check_table(hostname, remove_duplicates=True,
-                                    world="active" if _in_keepalive_mode() else "config")
+    filter_mode = None
+
+    belongs_to_cluster = len(config.clusters_of(hostname)) > 0
+    if belongs_to_cluster:
+        filter_mode = "include_clustered"
+
+    table = check_table.get_precompiled_check_table(hostname, remove_duplicates=True, filter_mode=filter_mode,
+                                    world="active" if cmk_base.utils.in_keepalive_mode() else "config")
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
     if only_check_plugin_names is None:
-        only_check_plugin_names = list(set([ e[0] for e in table ]))
+        only_check_plugin_names = set([e[0] for e in table])
+    else:
+        only_check_plugin_names = set(only_check_plugin_names)
 
     sources.enforce_check_plugin_names(only_check_plugin_names)
 
     # Gather the data from the sources
     multi_host_sections = sources.get_host_sections()
+
+    # Filter out check types which are not used on the node
+    if belongs_to_cluster:
+        pos_match = set()
+        neg_match = set()
+        for check_plugin_name, item, params, description in table:
+            if hostname != config.host_of_clustered_service(hostname, description):
+                pos_match.add(check_plugin_name)
+            else:
+                neg_match.add(check_plugin_name)
+        only_check_plugin_names -= (pos_match - neg_match)
+
 
     for check_plugin_name, item, params, description in table:
         if only_check_plugin_names != None and check_plugin_name not in only_check_plugin_names:
@@ -385,7 +401,7 @@ def _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
 
 def is_manual_check(hostname, check_plugin_name, item):
     manual_checks = check_table.get_check_table(hostname, remove_duplicates=True,
-                                    world="active" if _in_keepalive_mode() else "config",
+                                    world="active" if cmk_base.utils.in_keepalive_mode() else "config",
                                     skip_autochecks=True)
     return (check_plugin_name, item) in manual_checks
 
@@ -578,7 +594,7 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
 
 
 def _do_submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
-    if _in_keepalive_mode():
+    if cmk_base.utils.in_keepalive_mode():
         # Regular case for the CMC - check helpers are running in keepalive mode
         keepalive.add_keepalive_check_result(host, service, state, output, cached_at, cache_interval)
 
@@ -691,6 +707,3 @@ def disable_submit():
     global _submit_to_core
     _submit_to_core = False
 
-
-def _in_keepalive_mode():
-    return keepalive and keepalive.enabled()

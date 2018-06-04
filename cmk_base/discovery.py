@@ -645,10 +645,6 @@ def schedule_discovery_check(hostname):
             raise
 
 
-def _in_keepalive_mode():
-    return keepalive and keepalive.enabled()
-
-
 #.
 #   .--Discovery-----------------------------------------------------------.
 #   |              ____  _                                                 |

@@ -38,6 +38,11 @@ from cmk.exceptions import MKGeneralException, MKTerminate
 import sys
 import itertools
 
+try:
+    import cmk_base.cee.keepalive as keepalive
+except Exception:
+    keepalive = None
+
 
 def make_utf8(x):
     if type(x) == unicode:
@@ -187,6 +192,14 @@ def has_feature(name):
         __import__("cmk_base.%s" % name)
         return True
     except ImportError:
+        return False
+
+
+
+def in_keepalive_mode():
+    if keepalive:
+        return keepalive.enabled()
+    else:
         return False
 
 #.

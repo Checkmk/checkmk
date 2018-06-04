@@ -9616,6 +9616,7 @@ class ACTestCategories(object):
     performance = "performance"
     security    = "security"
     reliability = "reliability"
+    deprecations = "deprecations"
 
 
     @classmethod
@@ -9625,6 +9626,7 @@ class ACTestCategories(object):
             "performance" : _("Performance"),
             "security"    : _("Security"),
             "reliability" : _("Reliability"),
+            "deprecations" : _("Deprecations"),
         }[ident]
 
 

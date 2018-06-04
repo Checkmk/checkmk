@@ -12,15 +12,11 @@ persistent=yes
 errors-only=yes
 
 [MESSAGES CONTROL]
-# C0111 missing module docstring
-# C0326 bad-whitespace
-# unsubscriptable-object
-# unsupported-membership-test
-# unpacking-non-sequence
-#   Disable this because we often use multiple types for a single variable. Maybe we
-#   can change this in future to make such linter checks work, but for the moment these
-#   checks are useless with Check_MK.
-disable=C0111,bad-whitespace,unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence,assignment-from-none
+# Caused by slightly adventurous code which should be fixed. In the meantime, we
+# should perhaps use separate pragmas in the code itself.
+disable=
+    unsubscriptable-object,
+    unsupported-membership-test
 # W0612: Unused variable
 # TODO: enable this and prepare code for it!
 # -unused-variable

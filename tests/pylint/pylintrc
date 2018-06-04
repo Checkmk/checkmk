@@ -5,28 +5,54 @@ init-hook=
     test_path = os.environ.get("TEST_PATH", os.environ["HOME"] + "/git/check_mk/tests")
     sys.path.insert(0, test_path)
     import conftest
-#load-plugins=testlib.pylint_cmk,testlib.pylint_checker_wrong_i18n
+# load-plugins=testlib.pylint_cmk,testlib.pylint_checker_wrong_i18n
 load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
+# TODO: Why do we need persistence?
 persistent=yes
-# We only want to see errors for the moment. Disable this one day. But prepare to cleanup a lot of stuff.
-errors-only=yes
 
 [MESSAGES CONTROL]
-# Caused by slightly adventurous code which should be fixed. In the meantime, we
-# should perhaps use separate pragmas in the code itself.
 disable=
+    anomalous-backslash-in-string,
+    bad-continuation,
+    bad-indentation,
+    bad-whitespace,
+    bare-except,
+    broad-except,
+    consider-iterating-dictionary,
+    deprecated-lambda,
+    fixme,
+    inconsistent-return-statements,
+    invalid-encoded-data,
+    invalid-name,
+    len-as-condition,
+    line-too-long,
+    missing-docstring,
+    mixed-indentation,
+    no-else-return,
+    redefined-builtin,
+    redefined-outer-name,
+    reimported,
+    singleton-comparison,
+    superfluous-parens,
+    too-many-arguments,
+    too-many-branches,
+    too-many-lines,
+    too-many-locals,
+    too-many-statements,
+    trailing-whitespace,
+    ungrouped-imports,
+    unidiomatic-typecheck,
+    unnecessary-lambda,
+    unnecessary-semicolon,
     unsubscriptable-object,
-    unsupported-membership-test
-# W0612: Unused variable
-# TODO: enable this and prepare code for it!
-# -unused-variable
-# - bad-indentation,mixed-indentation,unnecessary-semicolon
-# - redefined-builtin
-# - global-variable-undefined
-# - unused-import
-# - spelling? (need python-enchant, enchant packages)
-# https://pylint.readthedocs.io/en/latest/reference_guide/features.html
-enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,duplicate-except,binary-op-exception,overlapping-except,non-parent-init-called,super-init-not-called,no-init,bad-open-mode,redundant-unittest-assert,boolean-datetime,deprecated-method,nonstandard-exception,import-self,global-variable-not-assigned,undefined-loop-variable,lost-exception,property-on-old-class
+    unsupported-membership-test,
+    unused-argument,
+    unused-import,
+    unused-variable,
+    wrong-import-order,
+    wrong-import-position,
+    wrong-spelling-in-comment,
+    wrong-spelling-in-docstring,
 
 [TYPECHECK]
 # rrdtool

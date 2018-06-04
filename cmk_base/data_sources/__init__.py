@@ -55,6 +55,8 @@ import cmk_base.checks as checks
 import cmk_base.item_state as item_state
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.piggyback
+import cmk_base.check_table as check_table
+
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .ipmi import IPMIManagementBoardDataSource
@@ -247,9 +249,14 @@ class DataSources(object):
         if nodes is not None:
             for node_hostname in nodes:
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
+
+                table = check_table.get_precompiled_check_table(node_hostname, remove_duplicates=True, filter_mode="only_clustered",
+                                                                world="active" if cmk_base.utils.in_keepalive_mode() else "config")
+
+                node_data_sources = DataSources(node_hostname, node_ipaddress)
+                node_data_sources.enforce_check_plugin_names(set([e[0] for e in table]))
                 hosts.append((node_hostname, node_ipaddress,
-                              DataSources(node_hostname, node_ipaddress),
-                              config.cluster_max_cachefile_age))
+                              node_data_sources, config.cluster_max_cachefile_age))
         else:
             hosts.append((self._hostname, self._ipaddress, self, config.check_max_cachefile_age))
 
@@ -278,3 +285,5 @@ class DataSources(object):
             cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_raw_data)
 
         return multi_host_sections
+
+

@@ -42,8 +42,8 @@ import cmk_base.item_state as item_state
 # Format: (checkname, item) -> (params, description)
 #
 # filter_mode: None                -> default, returns only checks for this host
-# filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
 # filter_mode: "only_clustered"    -> returns only checks belonging to clusters
+# filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
 def get_check_table(hostname, remove_duplicates=False, use_cache=True,
                     world='config', skip_autochecks=False, filter_mode=None, skip_ignored=True):
     import cmk_base.discovery as discovery

@@ -1,0 +1,13 @@
+Title: Fixed missing clustered snmp services on cluster hosts
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1528106268
+
+Clustered snmp services did not receive from their nodes.
+The data required by the cluster host was either missing or an error message was displayed, stating:
+"The check type filter function has not been set".

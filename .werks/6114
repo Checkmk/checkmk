@@ -1,0 +1,14 @@
+Title: Add a analyze configuration rule for ESX
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b7
+Date: 1528122978
+
+A deprecation warning will be shown if The datasource program agent_vsphere
+queries the Check_MK agent directly. This option will be removed in a future
+release. The option 'Contact Check_MK agent and all enabled datasource
+programs' should be configured for the affected hosts instead.

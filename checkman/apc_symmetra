@@ -12,6 +12,8 @@ description:
  Default capacity levels are set to 80, 95 percent. These are configurable.
  The device sends its own state in case of battery and output status,
  battery replace and calibration result.
+ Default level for an invalid calibration is OK, but can be configured to another state.
 
 inventory:
  One check is created.
+

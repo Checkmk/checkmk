@@ -1,0 +1,11 @@
+Title: apc_symmetra: Consider calibration status
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1528116409
+Class: feature
+
+Users can now configure the rule "APC Symmetra Checks" to set a custom state for an invalid calibration status of the battery.
+The default is 'OK', which corresponds to the old behaviour.

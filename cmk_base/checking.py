@@ -51,6 +51,11 @@ import cmk_base.check_table as check_table
 from cmk_base.exceptions import MKTimeout, MKParseFunctionError, MKIPAddressLookupError, \
                                 MKAgentError, MKSNMPError
 
+try:
+    import cmk_base.cee.keepalive as keepalive
+except Exception:
+    keepalive = None
+
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.

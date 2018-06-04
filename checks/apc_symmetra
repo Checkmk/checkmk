@@ -114,7 +114,8 @@ def parse_apc_symmetra(info):
 # crit_capacity, crit_sys_temp, crit_batt_curr, crit_voltage = levels
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 factory_settings["apc_default_levels"] = {
-    "capacity": ( 80, 95 )
+    "capacity"          : ( 80, 95 ),
+    "calibration_state" : 0
 }
 
 
@@ -189,6 +190,9 @@ def check_apc_symmetra(_no_item, params, parsed):
         elif output_status not in ["2", "4", "12"] and \
              calib_result != "3" and not self_test_in_progress:
             state = 2
+        elif output_status in ["2", "4", "12"] and \
+             calib_result == "2" and not self_test_in_progress:
+            state = params.get("calibration_state")
         else:
             state = 0
 
@@ -338,3 +342,4 @@ check_info['apc_symmetra.elphase'] = {
     'group'                     : 'ups_outphase',
     'includes'                  : [ 'elphase.include' ],
 }
+

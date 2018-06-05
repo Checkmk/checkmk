@@ -39,6 +39,7 @@ import cmk_base.rulesets as rulesets
 from cmk_base.exceptions import MKAgentError
 
 from cmk_base.modes import modes, Mode, Option, keepalive_option
+import cmk_base.check_utils
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -304,7 +305,7 @@ def mode_list_checks():
             if 'command_line' in check:
                 what = 'active'
                 ty_color = tty.blue
-            elif checks.is_snmp_check(check_plugin_name):
+            elif cmk_base.check_utils.is_snmp_check(check_plugin_name):
                 what = 'snmp'
                 ty_color = tty.magenta
             else:

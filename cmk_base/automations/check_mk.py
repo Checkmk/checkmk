@@ -43,6 +43,7 @@ import cmk_base.snmp as snmp
 import cmk_base.checks as checks
 import cmk_base.discovery as discovery
 from cmk_base.automations import automations, Automation, MKAutomationError
+import cmk_base.check_utils
 
 
 class DiscoveryAutomation(Automation):
@@ -911,7 +912,7 @@ class AutomationGetCheckInformation(Automation):
                 if check["group"]:
                     check_infos[check_plugin_name]["group"] = check["group"]
                 check_infos[check_plugin_name]["service_description"] = check.get("service_description","%s")
-                check_infos[check_plugin_name]["snmp"] = checks.is_snmp_check(check_plugin_name)
+                check_infos[check_plugin_name]["snmp"] = cmk_base.check_utils.is_snmp_check(check_plugin_name)
             except Exception, e:
                 if cmk.debug.enabled():
                     raise
@@ -974,7 +975,7 @@ class AutomationGetCheckManPage(Automation):
                 if key in info:
                     manpage[key] = info[key]
             if "." in check_plugin_name:
-                section_name = checks.section_name_of(check_plugin_name)
+                section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
                 if section_name in checks.check_info and "snmp_info" in checks.check_info[section_name]:
                     manpage["snmp_info"] = checks.check_info[section_name]["snmp_info"]
 

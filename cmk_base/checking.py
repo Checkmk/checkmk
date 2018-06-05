@@ -50,6 +50,7 @@ import cmk_base.core as core
 import cmk_base.check_table as check_table
 from cmk_base.exceptions import MKTimeout, MKParseFunctionError, MKIPAddressLookupError, \
                                 MKAgentError, MKSNMPError
+import cmk_base.check_utils
 
 try:
     import cmk_base.cee.keepalive as keepalive
@@ -256,7 +257,7 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         if success:
             num_success += 1
         else:
-            missing_sections.add(checks.section_name_of(check_plugin_name))
+            missing_sections.add(cmk_base.check_utils.section_name_of(check_plugin_name))
 
     _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
 
@@ -279,7 +280,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     elif period:
         console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
 
-    section_name = checks.section_name_of(check_plugin_name)
+    section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
 
     # We need to set this again, because get_section_content has the side effect of setting this with
     # item None if there is a parse function. This would break the entire set_item/get_rate logic
@@ -306,7 +307,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         # In case of SNMP checks but missing agent response, skip this check.
         # Special checks which still need to be called even with empty data
         # may declare this.
-        if not section_content and checks.is_snmp_check(check_plugin_name) \
+        if not section_content and cmk_base.check_utils.is_snmp_check(check_plugin_name) \
            and not checks.check_info[check_plugin_name]["handle_empty_info"]:
             return False
 
@@ -318,7 +319,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         item_state.reset_wrapped_counters()
 
         raw_result = check_function(item, _determine_check_params(params), section_content)
-        result = sanitize_check_result(raw_result, checks.is_snmp_check(check_plugin_name))
+        result = sanitize_check_result(raw_result, cmk_base.check_utils.is_snmp_check(check_plugin_name))
 
         item_state.raise_counter_wrap()
 

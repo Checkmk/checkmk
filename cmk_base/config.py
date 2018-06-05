@@ -38,6 +38,7 @@ import cmk_base
 import cmk_base.console as console
 import cmk_base.default_config as default_config
 import cmk_base.rulesets as rulesets
+import cmk_base.check_utils
 
 # This is mainly needed for pylint to detect all available
 # configuration options during static analysis. The defaults
@@ -1146,7 +1147,7 @@ def check_period_of(hostname, service):
 
 def check_interval_of(hostname, section_name):
     import cmk_base.checks
-    if not cmk_base.checks.is_snmp_check(section_name):
+    if not cmk_base.cmk_base.check_utils.is_snmp_check(section_name):
         return # no values at all for non snmp checks
 
     # Previous to 1.5 "match" could be a check name (including subchecks) instead of

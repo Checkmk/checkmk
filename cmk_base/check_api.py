@@ -485,10 +485,10 @@ def _agent_cache_file_age(hostname, check_plugin_name):
     if _config.is_cluster(hostname):
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
-    import cmk_base.checks as checks
-    if checks.is_snmp_check(check_plugin_name):
+    import cmk_base.check_utils
+    if cmk_base.check_utils.is_snmp_check(check_plugin_name):
         cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_plugin_name.split(".")[0]
-    elif checks.is_tcp_check(check_plugin_name):
+    elif cmk_base.check_utils.is_tcp_check(check_plugin_name):
         cachefile = _paths.tcp_cache_dir + "/" + hostname
     else:
         cachefile = None

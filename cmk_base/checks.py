@@ -44,6 +44,7 @@ import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.check_api as check_api
 import cmk_base.cleanup
+import cmk_base.check_utils
 
 # TODO: Cleanup access to check_info[] -> replace it by different function calls
 # like for example check_exists(...)
@@ -504,7 +505,7 @@ def convert_check_info():
     }
 
     for check_plugin_name, info in check_info.items():
-        section_name = section_name_of(check_plugin_name)
+        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
 
         if type(info) != dict:
             # Convert check declaration from old style to new API
@@ -553,7 +554,7 @@ def convert_check_info():
     # Make sure that setting for node_info of check and subcheck matches
     for check_plugin_name, info in check_info.iteritems():
         if "." in check_plugin_name:
-            section_name = section_name_of(check_plugin_name)
+            section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
             if section_name not in check_info:
                 if info["node_info"]:
                     raise MKGeneralException("Invalid check implementation: node_info for %s is "
@@ -568,7 +569,7 @@ def convert_check_info():
     # original arrays. Note: these information is tied to a "agent section",
     # not to a check. Several checks may use the same SNMP info and scan function.
     for check_plugin_name, info in check_info.iteritems():
-        section_name = section_name_of(check_plugin_name)
+        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         if info["snmp_info"] and section_name not in snmp_info:
             snmp_info[section_name] = info["snmp_info"]
 
@@ -619,7 +620,7 @@ def initialize_check_type_caches():
 
     tcp_cache = cmk_base.runtime_cache.get_set("check_type_tcp")
     for check_plugin_name, check in check_info.items():
-        section_name = section_name_of(check_plugin_name)
+        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         if section_name not in snmp_cache:
             tcp_cache.add(section_name)
 
@@ -635,10 +636,6 @@ def initialize_check_type_caches():
 #   | Misc check related helper functions                                  |
 #   '----------------------------------------------------------------------'
 
-def section_name_of(check_plugin_name):
-    return check_plugin_name.split(".")[0]
-
-
 def set_hostname(hostname):
     check_api._hostname = hostname
 
@@ -648,36 +645,10 @@ def set_service(check_plugin_name, descr):
     check_api._service_description = descr
 
 
-def is_snmp_check(check_plugin_name):
-    cache = cmk_base.runtime_cache.get_dict("is_snmp_check")
-
-    try:
-        return cache[check_plugin_name]
-    except KeyError:
-        snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
-
-        result = section_name_of(check_plugin_name) in snmp_checks
-        cache[check_plugin_name] = result
-        return result
-
-
-def is_tcp_check(check_plugin_name):
-    cache = cmk_base.runtime_cache.get_dict("is_tcp_check")
-
-    try:
-        return cache[check_plugin_name]
-    except KeyError:
-        tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
-
-        result = section_name_of(check_plugin_name) in tcp_checks
-        cache[check_plugin_name] = result
-        return result
-
-
 def discoverable_tcp_checks():
     types = []
     for check_plugin_name, check in check_info.items():
-        if is_tcp_check(check_plugin_name) and check["inventory_function"]:
+        if cmk_base.check_utils.is_tcp_check(check_plugin_name) and check["inventory_function"]:
             types.append(check_plugin_name)
     return sorted(types)
 
@@ -685,7 +656,7 @@ def discoverable_tcp_checks():
 def discoverable_snmp_checks():
     types = []
     for check_plugin_name, check in check_info.items():
-        if is_snmp_check(check_plugin_name) and check["inventory_function"]:
+        if cmk_base.check_utils.is_snmp_check(check_plugin_name) and check["inventory_function"]:
             types.append(check_plugin_name)
     return sorted(types)
 

@@ -33,6 +33,7 @@ import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 import cmk_base.console as console
 import cmk_base.inventory
+import cmk_base.check_utils
 
 # Inventory plugins have dependencies to check plugins and the inventory
 # plugins need the check API. This is the easiest solution to get this
@@ -129,9 +130,9 @@ def load_plugin_includes(check_file_path, plugin_context):
 
 
 def is_snmp_plugin(plugin_type):
-    section_name = checks.section_name_of(plugin_type)
+    section_name = cmk_base.check_utils.section_name_of(plugin_type)
     return "snmp_info" in inv_info.get(section_name, {}) \
-           or checks.is_snmp_check(plugin_type)
+           or cmk_base.check_utils.is_snmp_check(plugin_type)
 
 
 #.

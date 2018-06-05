@@ -765,9 +765,11 @@ class AutomationRestart(Automation):
             try:
                 configuration_warnings = core_config.create_core_config()
 
-                if cmk_base.utils.has_feature("cee.agent_bakery"):
-                    import cmk_base.cee.agent_bakery as agent_bakery
-                    agent_bakery.bake_on_restart()
+                try:
+                    import cmk_base.cee.agent_bakery
+                    cmk_base.cee.agent_bakery.bake_on_restart()
+                except ImportError:
+                    pass
 
             except Exception, e:
                 if backup_path:

@@ -230,9 +230,12 @@ def do_create_config(with_agents=True):
     create_core_config()
     console.output(tty.ok + "\n")
 
-    if with_agents and cmk_base.utils.has_feature("cee.agent_bakery"):
-       import cmk_base.cee.agent_bakery as agent_bakery
-       agent_bakery.bake_on_restart()
+    if with_agents:
+        try:
+            import cmk_base.cee.agent_bakery
+            cmk_base.cee.agent_bakery.bake_on_restart()
+        except ImportError:
+            pass
 
 
 def create_core_config():

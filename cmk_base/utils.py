@@ -175,16 +175,6 @@ def cleanup_globals():
     cmk_base.snmp.cleanup_host_caches()
 
 
-def has_feature(name):
-    try:
-        __import__("cmk_base.%s" % name)
-        return True
-    except ImportError:
-        return False
-
-
-
-
 #.
 #   .--Ctrl-C--------------------------------------------------------------.
 #   |                     ____ _        _        ____                      |

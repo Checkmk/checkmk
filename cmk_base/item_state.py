@@ -46,6 +46,7 @@ import traceback
 import cmk.paths
 import cmk.store
 from cmk.exceptions import MKGeneralException
+import cmk_base.cleanup
 
 # Constants for counters
 SKIP  = None
@@ -365,3 +366,6 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 
     set_item_state(itemname, (this_time, new_val))
     return new_val
+
+
+cmk_base.cleanup.register_cleanup(cleanup_item_states)

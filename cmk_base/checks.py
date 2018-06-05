@@ -43,6 +43,7 @@ import cmk_base.rulesets as rulesets
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.check_api as check_api
+import cmk_base.cleanup
 
 # TODO: Cleanup access to check_info[] -> replace it by different function calls
 # like for example check_exists(...)
@@ -884,3 +885,5 @@ def filter_by_management_board(hostname, found_check_plugin_names,
         final_collection.update(host_only)
 
     return final_collection
+
+cmk_base.cleanup.register_cleanup(lambda: set_hostname("unknown"))

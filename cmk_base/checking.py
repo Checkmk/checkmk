@@ -83,7 +83,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 raise
 
             except MKTimeout:
-                if cmk_base.utils.in_keepalive_mode():
+                if _in_keepalive_mode():
                     raise
                 else:
                     infotexts.append("Timed out")
@@ -113,7 +113,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 output_txt = "%s\n%s" % (output_txt, "\n".join(long_infotexts))
             output_txt += "\n"
 
-            if cmk_base.utils.in_keepalive_mode():
+            if _in_keepalive_mode():
                 keepalive.add_keepalive_active_check_result(hostname, output_txt)
                 console.verbose(output_txt.encode("utf-8"))
             else:
@@ -222,7 +222,7 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         filter_mode = "include_clustered"
 
     table = check_table.get_precompiled_check_table(hostname, remove_duplicates=True, filter_mode=filter_mode,
-                                    world="active" if cmk_base.utils.in_keepalive_mode() else "config")
+                                    world="active" if _in_keepalive_mode() else "config")
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
@@ -406,7 +406,7 @@ def _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
 
 def is_manual_check(hostname, check_plugin_name, item):
     manual_checks = check_table.get_check_table(hostname, remove_duplicates=True,
-                                    world="active" if cmk_base.utils.in_keepalive_mode() else "config",
+                                    world="active" if _in_keepalive_mode() else "config",
                                     skip_autochecks=True)
     return (check_plugin_name, item) in manual_checks
 
@@ -599,7 +599,7 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
 
 
 def _do_submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
-    if cmk_base.utils.in_keepalive_mode():
+    if _in_keepalive_mode():
         # Regular case for the CMC - check helpers are running in keepalive mode
         keepalive.add_keepalive_check_result(host, service, state, output, cached_at, cache_interval)
 
@@ -712,3 +712,9 @@ def disable_submit():
     global _submit_to_core
     _submit_to_core = False
 
+
+def _in_keepalive_mode():
+    if keepalive:
+        return keepalive.enabled()
+    else:
+        return False

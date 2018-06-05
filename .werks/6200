@@ -1,0 +1,16 @@
+Title: Status of Quantum Storage Devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1528199794
+Class: feature
+
+quantum_storage_status: Create a service to monitor the operating state of
+a Quantum Storage Device.
+The states can be mapped to the desired monitoring status via the rule
+"Quantum Storage Status".
+snmp_quantum_storage_info: Add manufacturer, model and serial number to
+HW/SW inventory.
+

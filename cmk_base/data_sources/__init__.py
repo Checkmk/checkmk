@@ -65,6 +65,17 @@ from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
 from .host_sections import HostSections, MultiHostSections
 
+try:
+    import cmk_base.cee.keepalive as keepalive
+except Exception:
+    keepalive = None
+
+def _in_keepalive_mode():
+    if keepalive:
+        return keepalive.enabled()
+    else:
+        return False
+
 # TODO: Cluster with different data sources, eg. TCP node and SNMP node:
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
@@ -251,7 +262,7 @@ class DataSources(object):
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
 
                 table = check_table.get_precompiled_check_table(node_hostname, remove_duplicates=True, filter_mode="only_clustered",
-                                                                world="active" if cmk_base.utils.in_keepalive_mode() else "config")
+                                                                world="active" if _in_keepalive_mode() else "config")
 
                 node_data_sources = DataSources(node_hostname, node_ipaddress)
                 node_data_sources.enforce_check_plugin_names(set([e[0] for e in table]))

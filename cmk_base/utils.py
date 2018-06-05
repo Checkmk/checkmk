@@ -43,11 +43,6 @@ from cmk.utils import \
 import sys
 import itertools
 
-try:
-    import cmk_base.cee.keepalive as keepalive
-except Exception:
-    keepalive = None
-
 
 # Aggegates several monitoring states to the worst state
 def worst_service_state(*states):
@@ -189,11 +184,6 @@ def has_feature(name):
 
 
 
-def in_keepalive_mode():
-    if keepalive:
-        return keepalive.enabled()
-    else:
-        return False
 
 #.
 #   .--Ctrl-C--------------------------------------------------------------.

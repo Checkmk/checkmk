@@ -44,6 +44,7 @@ import cmk_base.core_config as core_config
 import cmk_base.core_nagios as core_nagios
 from cmk_base.exceptions import MKTimeout
 from cmk_base import config_cache
+import cmk_base.cleanup
 
 try:
     import cmk_base.cee.core_cmc as core_cmc
@@ -232,3 +233,5 @@ def update_timeperiods_cache():
 def cleanup_timeperiod_caches():
     config_cache.get_dict("timeperiods_cache").clear()
 
+
+cmk_base.cleanup.register_cleanup(cleanup_timeperiod_caches)

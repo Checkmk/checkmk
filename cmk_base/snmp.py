@@ -858,3 +858,6 @@ def do_snmpget(*args):
         value = get_single_oid(access_data, oid)
         console.output("%s (%s): %r\n" % (hostname, ipaddress, value))
         cmk_base.cleanup.cleanup_globals()
+
+
+cmk_base.cleanup.register_cleanup(cleanup_host_caches)

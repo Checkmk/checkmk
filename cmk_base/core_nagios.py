@@ -43,6 +43,7 @@ import cmk_base.rulesets as rulesets
 import cmk_base.core_config as core_config
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
+import cmk_base.check_utils
 
 
 def do_check_nagiosconfig():
@@ -309,7 +310,7 @@ define servicedependency {
                 check_interval = int(values[0])
             except:
                 check_interval = float(values[0])
-        value = config.check_interval_of(hostname, checks.section_name_of(checkname))
+        value = config.check_interval_of(hostname, cmk_base.check_utils.section_name_of(checkname))
         if value is not None:
             check_interval = value
 
@@ -893,7 +894,7 @@ def do_precompile_hostchecks():
 # subcheck *may* be implemented in a separate file.
 def _find_check_plugins(checktype):
     if '.' in checktype:
-        candidates = [ checks.section_name_of(checktype), checktype ]
+        candidates = [ cmk_base.check_utils.section_name_of(checktype), checktype ]
     else:
         candidates = [ checktype ]
 
@@ -1054,7 +1055,7 @@ if '-d' in sys.argv:
     # check table.
     filenames = []
     for check_plugin_name in needed_check_plugin_names:
-        section_name = checks.section_name_of(check_plugin_name)
+        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)
         for lib in set(checks.check_includes.get(section_name, [])):
             if os.path.exists(cmk.paths.local_checks_dir + "/" + lib):

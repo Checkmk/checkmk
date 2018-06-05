@@ -54,6 +54,7 @@ import cmk_base.core as core
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKTimeout
 import cmk_base.cleanup
+import cmk_base.check_utils
 
 try:
     import cmk_base.cee.keepalive as keepalive
@@ -785,10 +786,10 @@ def snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True, 
         else:
             if for_inv and not inventory_plugins.is_snmp_plugin(check_plugin_name):
                 continue
-            elif not for_inv and not checks.is_snmp_check(check_plugin_name):
+            elif not for_inv and not cmk_base.check_utils.is_snmp_check(check_plugin_name):
                 continue
 
-        section_name = checks.section_name_of(check_plugin_name)
+        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         # The scan function should be assigned to the section_name, because
         # subchecks sharing the same SNMP info of course should have
         # an identical scan function. But some checks do not do this
@@ -886,7 +887,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                     raise x[0], x[1], x[2]
 
             elif on_error == "warn":
-                section_name = checks.section_name_of(check_plugin_name)
+                section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
                 console.warning("Exception while parsing agent section '%s': %s\n" % (section_name, e))
 
             return []
@@ -897,7 +898,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
         # In case of SNMP checks but missing agent response, skip this check.
         # Special checks which still need to be called even with empty data
         # may declare this.
-        if not section_content and checks.is_snmp_check(check_plugin_name) \
+        if not section_content and cmk_base.check_utils.is_snmp_check(check_plugin_name) \
            and not checks.check_info[check_plugin_name]["handle_empty_info"]:
             return []
 
@@ -1181,7 +1182,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                     continue # ignore
 
             checks.set_service(check_plugin_name, descr)
-            section_name = checks.section_name_of(check_plugin_name)
+            section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
 
             if check_plugin_name not in checks.check_info:
                 continue # Skip not existing check silently
@@ -1208,7 +1209,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 exitcode = 3
                 output = "Received no data"
 
-            if not section_content and checks.is_snmp_check(check_plugin_name) \
+            if not section_content and cmk_base.check_utils.is_snmp_check(check_plugin_name) \
                and not checks.check_info[check_plugin_name]["handle_empty_info"]:
                 exitcode = 0
                 output = "Received no data"
@@ -1228,7 +1229,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 try:
                     item_state.reset_wrapped_counters()
                     result = checking.sanitize_check_result(check_function(item, params, section_content),
-                                                            checks.is_snmp_check(check_plugin_name))
+                                                            cmk_base.check_utils.is_snmp_check(check_plugin_name))
                     item_state.raise_counter_wrap()
                 except item_state.MKCounterWrapped, e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")

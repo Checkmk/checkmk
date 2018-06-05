@@ -35,6 +35,7 @@ import cmk_base.checks as checks
 import cmk_base.rulesets as rulesets
 import cmk_base.piggyback as piggyback
 import cmk_base.item_state as item_state
+import cmk_base.check_utils
 
 # TODO: Refactor this to OO. The check table needs to be an object.
 
@@ -81,11 +82,11 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
         passed = True
         # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
         # agent setting. Remove them without rediscovery). Same for agent based checks.
-        if not config.is_snmp_host(hostname) and checks.is_snmp_check(checkname) and \
+        if not config.is_snmp_host(hostname) and cmk_base.check_utils.is_snmp_check(checkname) and \
            (not config.has_management_board(hostname) or config.management_protocol_of(hostname) != "snmp"):
                 passed = False
         if not config.is_tcp_host(hostname) and not piggyback.has_piggyback_raw_data(hostname) \
-           and checks.is_tcp_check(checkname):
+           and cmk_base.check_utils.is_tcp_check(checkname):
             passed = False
         is_checkname_valid_cache[the_id] = passed
         return passed
@@ -252,7 +253,7 @@ def _remove_duplicate_checks(check_table):
     for key, value in check_table.iteritems():
         checkname = key[0]
         descr = value[1]
-        if checks.is_snmp_check(checkname):
+        if cmk_base.check_utils.is_snmp_check(checkname):
             if descr in have_with_tcp:
                 continue
             have_with_snmp[descr] = key

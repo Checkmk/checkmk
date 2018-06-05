@@ -35,6 +35,7 @@ import cmk_base.checks as checks
 import cmk_base.caching as caching
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.item_state as item_state
+import cmk_base.check_utils
 
 from cmk_base.exceptions import MKParseFunctionError
 
@@ -137,7 +138,7 @@ class MultiHostSections(object):
 
 
     def _get_section_content(self, hostname, ipaddress, check_plugin_name, for_discovery):
-        section_name = checks.section_name_of(check_plugin_name)
+        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
 
         # First abstract cluster / non cluster hosts
         host_entries = []
@@ -265,7 +266,7 @@ class MultiHostSections(object):
 
 
     def get_check_plugin_names(self):
-        # TODO: There is a function 'section_name_of' in checks.py
+        # TODO: There is a function 'section_name_of' in check_utils.py
         # but no inverse function, ie. get all subchecks of main check.
         check_keys = set(checks.check_info.keys())
         check_plugin_names = set()

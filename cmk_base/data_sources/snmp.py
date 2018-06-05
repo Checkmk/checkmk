@@ -33,6 +33,7 @@ from cmk.exceptions import MKGeneralException
 import cmk_base.config as config
 import cmk_base.checks as checks
 import cmk_base.snmp as snmp
+import cmk_base.check_utils
 
 from .abstract import DataSource, ManagementBoardDataSource
 from .host_sections import HostSections
@@ -184,7 +185,7 @@ class SNMPDataSource(DataSource):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
-            section_name = checks.section_name_of(check_plugin_name)
+            section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
             if section_name in checks.snmp_info:
                 oid_info = checks.snmp_info[section_name]
             elif section_name in cmk_base.inventory_plugins.inv_info:

@@ -38,6 +38,7 @@ import cmk_base.config as config
 import cmk.crash_reporting as crash_reporting
 
 import cmk_base.utils
+import cmk_base.check_utils
 
 # Create a crash dump with a backtrace and the agent output.
 # This is put into a directory per service. The content is then
@@ -52,7 +53,7 @@ def create_crash_dump(hostname, check_plugin_name, item, is_manual_check, params
         _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check, params, description, info, text)
 
         # TODO: Add caches of all data sources
-        if checks.is_snmp_check(check_plugin_name):
+        if cmk_base.check_utils.is_snmp_check(check_plugin_name):
             _write_crash_dump_snmp_info(crash_dir, hostname, check_plugin_name)
         else:
             _write_crash_dump_agent_output(crash_dir, hostname)
@@ -85,7 +86,7 @@ def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, i
         "check_type"    : check_plugin_name,
         "item"          : item,
         "params"        : params,
-        "uses_snmp"     : checks.is_snmp_check(check_plugin_name),
+        "uses_snmp"     : cmk_base.check_utils.is_snmp_check(check_plugin_name),
         "inline_snmp"   : config.is_inline_snmp_host(hostname),
         "manual_check"  : is_manual_check,
     })

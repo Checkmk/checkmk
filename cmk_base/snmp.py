@@ -40,18 +40,13 @@ import cmk_base.ip_lookup as ip_lookup
 import cmk_base.agent_simulator
 from cmk_base.exceptions import MKSNMPError
 import cmk_base.cleanup
+import cmk_base.snmp_utils
 
 try:
     import cmk_base.cee.inline_snmp as inline_snmp
 except ImportError:
     inline_snmp = None
 
-
-OID_END              =  0  # Suffix-part of OID that was not specified
-OID_STRING           = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
-OID_BIN              = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
-OID_END_BIN          = -3  # Same, but just the end part
-OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 _enforce_stored_walks = False
 
@@ -136,44 +131,6 @@ def _clear_other_hosts_oid_cache(hostname):
 
 
 #.
-#   .--CheckHelpers--------------------------------------------------------.
-#   |      ____ _               _    _   _      _                          |
-#   |     / ___| |__   ___  ___| | _| | | | ___| |_ __   ___ _ __ ___      |
-#   |    | |   | '_ \ / _ \/ __| |/ / |_| |/ _ \ | '_ \ / _ \ '__/ __|     |
-#   |    | |___| | | |  __/ (__|   <|  _  |  __/ | |_) |  __/ |  \__ \     |
-#   |     \____|_| |_|\___|\___|_|\_\_| |_|\___|_| .__/ \___|_|  |___/     |
-#   |                                            |_|                       |
-#   +----------------------------------------------------------------------+
-#   | Some SNMP related check helping code. Offered to the checks by the   |
-#   | check API.                                                           |
-#   '----------------------------------------------------------------------'
-
-def BINARY(oid):
-    """Tell Check_MK to process this OID as binary data to the check."""
-    return "binary", oid
-
-
-def CACHED_OID(oid):
-    """Use this to mark OIDs as being cached for regular checks,
-    but not for discovery"""
-    return "cached", oid
-
-
-def binstring_to_int(binstring):
-    """Convert a string to an integer.
-
-    This is done by consideren the string to by a little endian byte string.
-    Such strings are sometimes used by SNMP to encode 64 bit counters without
-    needed COUNTER64 (which is not available in SNMP v1)."""
-    value = 0
-    mult = 1
-    for byte in binstring[::-1]:
-        value += mult * ord(byte)
-        mult *= 256
-    return value
-
-
-#.
 #   .--Generic SNMP--------------------------------------------------------.
 #   |     ____                      _        ____  _   _ __  __ ____       |
 #   |    / ___| ___ _ __   ___ _ __(_) ___  / ___|| \ | |  \/  |  _ \      |
@@ -223,7 +180,7 @@ def get_snmp_table(access_data, check_plugin_name, oid_info, use_snmpwalk_cache)
             # in later. If the column is OID_STRING or OID_BIN we do something
             # similar: we fill in the complete OID of the entry, either as
             # string or as binary UTF-8 encoded number string
-            if column in [ OID_END, OID_STRING, OID_BIN, OID_END_BIN, OID_END_OCTET_STRING ]:
+            if column in [ cmk_base.snmp_utils.OID_END, cmk_base.snmp_utils.OID_STRING, cmk_base.snmp_utils.OID_BIN, cmk_base.snmp_utils.OID_END_BIN, cmk_base.snmp_utils.OID_END_OCTET_STRING ]:
                 if index_column >= 0 and index_column != colno:
                     raise MKGeneralException("Invalid SNMP OID specification in implementation of check. "
                         "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN and OID_END_OCTET_STRING.")
@@ -245,15 +202,15 @@ def get_snmp_table(access_data, check_plugin_name, oid_info, use_snmpwalk_cache)
             # Take end-oids of non-index columns as indices
             fetchoid, max_column, value_encoding  = columns[max_len_col]
             for o, _unused_value in max_column:
-                if index_format == OID_END:
+                if index_format == cmk_base.snmp_utils.OID_END:
                     index_rows.append((o, _extract_end_oid(fetchoid, o)))
-                elif index_format == OID_STRING:
+                elif index_format == cmk_base.snmp_utils.OID_STRING:
                     index_rows.append((o, o))
-                elif index_format == OID_BIN:
+                elif index_format == cmk_base.snmp_utils.OID_BIN:
                     index_rows.append((o, _oid_to_bin(o)))
-                elif index_format == OID_END_BIN:
+                elif index_format == cmk_base.snmp_utils.OID_END_BIN:
                     index_rows.append((o, _oid_to_bin(_extract_end_oid(fetchoid, o))))
-                else: # OID_END_OCTET_STRING:
+                else: # cmk_base.snmp_utils.OID_END_OCTET_STRING:
                     index_rows.append((o, _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]))
 
             columns[index_column] = fetchoid, index_rows, value_encoding

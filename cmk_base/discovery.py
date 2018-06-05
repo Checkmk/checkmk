@@ -53,6 +53,7 @@ import cmk_base.check_table as check_table
 import cmk_base.core as core
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKTimeout
+import cmk_base.cleanup
 
 try:
     import cmk_base.cee.keepalive as keepalive
@@ -128,7 +129,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
                 raise
             console.section_error("%s" % e)
         finally:
-            cmk_base.utils.cleanup_globals()
+            cmk_base.cleanup.cleanup_globals()
 
     # Check whether or not the cluster host autocheck files are still
     # existant. Remove them. The autochecks are only stored in the nodes

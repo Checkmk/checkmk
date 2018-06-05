@@ -39,6 +39,7 @@ import cmk.store as store
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.agent_simulator
 from cmk_base.exceptions import MKSNMPError
+import cmk_base.cleanup
 
 try:
     import cmk_base.cee.inline_snmp as inline_snmp
@@ -787,7 +788,7 @@ def do_snmpwalk(options, hostnames):
             console.error("Error walking %s: %s\n" % (hostname, e))
             if cmk.debug.enabled():
                 raise
-        cmk_base.utils.cleanup_globals()
+        cmk_base.cleanup.cleanup_globals()
 
 
 def do_snmpwalk_on(options, access_data, filename):
@@ -856,4 +857,4 @@ def do_snmpget(*args):
         }
         value = get_single_oid(access_data, oid)
         console.output("%s (%s): %r\n" % (hostname, ipaddress, value))
-        cmk_base.utils.cleanup_globals()
+        cmk_base.cleanup.cleanup_globals()

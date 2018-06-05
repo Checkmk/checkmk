@@ -53,6 +53,7 @@ import cmk_base.checking as checking
 import cmk_base.discovery as discovery
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
+import cmk_base.cleanup
 
 _inventory_output_dir  = cmk.paths.var_dir + "/inventory"
 _inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
@@ -90,7 +91,7 @@ def do_inv(hostnames):
 
             console.section_error("%s" % e)
         finally:
-            cmk_base.utils.cleanup_globals()
+            cmk_base.cleanup.cleanup_globals()
 
 
 @checking.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")

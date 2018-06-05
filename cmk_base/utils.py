@@ -160,21 +160,6 @@ def cachefile_age(path):
                                  % (path, e))
 
 
-# Reset some global variable to their original value. This
-# is needed in keepalive mode.
-# We could in fact do some positive caching in keepalive
-# mode - e.g. the counters of the hosts could be saved in memory.
-def cleanup_globals():
-    import cmk_base.checks
-    cmk_base.checks.set_hostname("unknown")
-    import cmk_base.item_state
-    cmk_base.item_state.cleanup_item_states()
-    import cmk_base.core
-    cmk_base.core.cleanup_timeperiod_caches()
-    import cmk_base.snmp
-    cmk_base.snmp.cleanup_host_caches()
-
-
 #.
 #   .--Ctrl-C--------------------------------------------------------------.
 #   |                     ____ _        _        ____                      |

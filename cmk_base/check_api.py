@@ -97,7 +97,7 @@ import cmk_base.console as _console
 import cmk_base.config as _config
 import cmk_base.rulesets as _rulesets
 import cmk.defines as _defines
-import cmk_base.snmp as _snmp
+import cmk_base.snmp_utils as _snmp_utils
 import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction
 
@@ -138,15 +138,15 @@ core_state_names = _defines.short_service_state_names()
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
 
-BINARY     = _snmp.BINARY
-CACHED_OID = _snmp.CACHED_OID
+BINARY     = _snmp_utils.BINARY
+CACHED_OID = _snmp_utils.CACHED_OID
 
-OID_END              = _snmp.OID_END
-OID_STRING           = _snmp.OID_STRING
-OID_BIN              = _snmp.OID_BIN
-OID_END_BIN          = _snmp.OID_END_BIN
-OID_END_OCTET_STRING = _snmp.OID_END_OCTET_STRING
-binstring_to_int     = _snmp.binstring_to_int
+OID_END              = _snmp_utils.OID_END
+OID_STRING           = _snmp_utils.OID_STRING
+OID_BIN              = _snmp_utils.OID_BIN
+OID_END_BIN          = _snmp_utils.OID_END_BIN
+OID_END_OCTET_STRING = _snmp_utils.OID_END_OCTET_STRING
+binstring_to_int     = _snmp_utils.binstring_to_int
 
 # Management board checks
 MGMT_PRECEDENCE = "mgmt_precedence" # Use management board address/credentials when it's a SNMP host

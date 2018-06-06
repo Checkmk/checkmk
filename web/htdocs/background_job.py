@@ -82,19 +82,19 @@ class BackgroundProcessInterface(object):
 
     @classmethod
     def send_progress_update(cls, info):
-        print "%s:%s" % (cls.progress_update_message, info)
+        print "%s:%s" % (cls.progress_update_message, info.encode("utf-8"))
 
 
     @classmethod
     def send_result_message(cls, info):
-        print "%s:%s" % (cls.result_message, info)
+        print "%s:%s" % (cls.result_message, info.encode("utf-8"))
 
 
     @classmethod
     def send_exception(cls, info):
         # Exceptions get an extra newline
         # Some error messages tend not output a \n at the end..
-        print "\n%s:%s" % (cls.exception_message, info)
+        print "\n%s:%s" % (cls.exception_message, info.encode("utf-8"))
 
 
     @classmethod

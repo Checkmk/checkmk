@@ -45,6 +45,7 @@ import cmk_base.discovery as discovery
 from cmk_base.automations import automations, Automation, MKAutomationError
 import cmk_base.check_utils
 import cmk_base.autochecks
+import cmk_base.nagios_utils
 
 
 class DiscoveryAutomation(Automation):
@@ -723,8 +724,6 @@ class AutomationRestart(Automation):
 
     # TODO: Cleanup duplicate code with core.do_restart()
     def execute(self, args):
-        import cmk_base.core_nagios as core_nagios
-
         # make sure, Nagios does not inherit any open
         # filedescriptors. This really happens, e.g. if
         # check_mk is called by WATO via Apache. Nagios inherits
@@ -780,7 +779,7 @@ class AutomationRestart(Automation):
                     raise
                 raise MKAutomationError("Error creating configuration: %s" % e)
 
-            if config.monitoring_core == "cmc" or core_nagios.do_check_nagiosconfig():
+            if config.monitoring_core == "cmc" or cmk_base.nagios_utils.do_check_nagiosconfig():
                 if backup_path:
                     os.remove(backup_path)
 

@@ -44,6 +44,7 @@ import cmk_base.checks as checks
 import cmk_base.discovery as discovery
 from cmk_base.automations import automations, Automation, MKAutomationError
 import cmk_base.check_utils
+import cmk_base.autochecks
 
 
 class DiscoveryAutomation(Automation):
@@ -570,7 +571,7 @@ class AutomationAnalyseServices(Automation):
 
         # 2. Load all autochecks of the host in question and try to find
         # our service there
-        for entry in discovery.read_autochecks_of(hostname):
+        for entry in cmk_base.autochecks.read_autochecks_of(hostname):
             ct, item, params = entry # new format without host name
 
             if (ct, item) not in table:

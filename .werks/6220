@@ -1,0 +1,12 @@
+Title: df: Fix crashing check for vanished filesystems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b7
+Date: 1528297058
+Class: fix
+
+Up to and including 1.4.0*, df would report UNKNOWN when confronted
+with a vanished filesystem. A regression in 1.5.0 versions previous to
+this lead to the check crashing instead. This has been fixed.

@@ -1368,7 +1368,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
 
                 job_interface.send_progress_update(_("[%s] Starting sync for connection") % connection_id)
                 connection.do_sync(add_to_changelog=add_to_changelog, only_username=False)
-                job_interface.send_exception(_("[%s] Finished sync for connection") % connection_id)
+                job_interface.send_progress_update(_("[%s] Finished sync for connection") % connection_id)
             except Exception, e:
                 job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
                 logger.error('Exception (%s, userdb_job): %s' %

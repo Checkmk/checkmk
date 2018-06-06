@@ -1,0 +1,14 @@
+Title: Background Job/User synchronization: Fixed text encoding bug / Fixed incorrect exception message
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1528277414
+Class: fix
+
+The user synchronsation background incorrectly reported an exception instead of a progress update.
+However, this didn't affect the outcome of the operation, so no actual harm was done.
+
+
+Furthermore, umlauts in info messages no longer cause exceptions.

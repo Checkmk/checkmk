@@ -1,0 +1,10 @@
+Title: cisco_ucs_cpu, cisco_ucs_fan, cisco_ucs_hdd, cisco_ucs_lun, ciso_ucs_mem, cisco_ucs_mem_total, cisco_ucs_psu, cisco_ucs_raid, cisco_ucs_system: Suite of checks for Cisco UCS devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1528288723
+Class: feature
+
+

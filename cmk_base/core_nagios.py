@@ -46,23 +46,6 @@ import cmk_base.data_sources as data_sources
 import cmk_base.check_utils
 
 
-def do_check_nagiosconfig():
-    command = [ cmk.paths.nagios_binary, "-vp", cmk.paths.nagios_config_file ]
-    console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
-    console.output("Validating Nagios configuration...")
-
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         close_fds=True)
-    exit_status = p.wait()
-    if not exit_status:
-        console.output(tty.ok + "\n")
-        return True
-    else:
-        console.output("ERROR:\n")
-        console.output(p.stdout.read(), stream=sys.stderr)
-        return False
-
-
 #   .--Create config-------------------------------------------------------.
 #   |      ____                _                          __ _             |
 #   |     / ___|_ __ ___  __ _| |_ ___    ___ ___  _ __  / _(_) __ _       |

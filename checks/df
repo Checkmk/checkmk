@@ -234,12 +234,12 @@ def check_df(item, params, parsed):
     df_blocks = _filter_docker_filesystems(df_blocks)
     volume_and_mp_to_mp = { ("%s %s" % (volume_info[mp]["volume_name"], mp)) : mp for mp in volume_info }
     if "patterns" in params or item in volume_info:
-        return df_check_filesystem_list(item, params, df_blocks, df_inodes)
+	mountpoint = item
     elif item in volume_and_mp_to_mp:
         mountpoint = volume_and_mp_to_mp[item]
-        return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
     else:
-	return 3, "Filesystem not found"
+	mountpoint = item
+    return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
 
 
 # Always exclude filesystems below dockers local storage area

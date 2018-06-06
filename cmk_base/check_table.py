@@ -36,6 +36,7 @@ import cmk_base.rulesets as rulesets
 import cmk_base.piggyback as piggyback
 import cmk_base.item_state as item_state
 import cmk_base.check_utils
+import cmk_base.autochecks
 
 # TODO: Refactor this to OO. The check table needs to be an object.
 
@@ -47,8 +48,6 @@ import cmk_base.check_utils
 # filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
 def get_check_table(hostname, remove_duplicates=False, use_cache=True,
                     world='config', skip_autochecks=False, filter_mode=None, skip_ignored=True):
-    import cmk_base.discovery as discovery
-
     if config.is_ping_host(hostname):
         skip_autochecks = True
 
@@ -148,7 +147,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
     # Now process all entries that are specific to the host
     # in search (single host) or that might match the host.
     if not skip_autochecks:
-        for entry in discovery.read_autochecks_of(hostname, world):
+        for entry in cmk_base.autochecks.read_autochecks_of(hostname, world):
             handle_entry(entry)
 
     for entry in single_host_checks.get(hostname, []):
@@ -164,7 +163,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
         for node in config.nodes_of(hostname):
             node_checks = single_host_checks.get(node, [])
             if not skip_autochecks:
-                node_checks = node_checks + discovery.read_autochecks_of(node, world)
+                node_checks = node_checks + cmk_base.autochecks.read_autochecks_of(node, world)
             for entry in node_checks:
                 if len(entry) == 4:
                     entry = entry[1:] # drop hostname from single_host_checks

@@ -1274,61 +1274,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 #   |  Reading, parsing, writing, modifying autochecks files               |
 #   '----------------------------------------------------------------------'
 
-# Read automatically discovered checks of one host.
-# world: "config" -> File in var/check_mk/autochecks
-#        "active" -> Copy in var/check_mk/core/autochecks
-# Returns a table with three columns:
-# 1. check_plugin_name
-# 2. item
-# 3. parameters evaluated!
-# TODO: use store.load_data_from_file()
-# TODO: Common code with parse_autochecks_file? Cleanup.
-def read_autochecks_of(hostname, world="config"):
-    if world == "config":
-        basedir = cmk.paths.autochecks_dir
-    else:
-        basedir = cmk.paths.var_dir + "/core/autochecks"
-    filepath = basedir + '/' + hostname + '.mk'
-
-    if not os.path.exists(filepath):
-       return []
-
-    check_config = checks.get_check_variables()
-    try:
-        autochecks_raw = eval(file(filepath).read(), check_config, check_config)
-    except SyntaxError,e:
-        console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
-        if cmk.debug.enabled():
-            raise
-        return []
-    except Exception, e:
-        console.verbose("Error in file %s:\n%s\n", filepath, e, stream=sys.stderr)
-        if cmk.debug.enabled():
-            raise
-        return []
-
-    # Exchange inventorized check parameters with those configured by
-    # the user. Also merge with default levels for modern dictionary based checks.
-    autochecks = []
-    for entry in autochecks_raw:
-        if len(entry) == 4: # old format where hostname is at the first place
-            entry = entry[1:]
-        check_plugin_name, item, parameters = entry
-
-        # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
-        # items from existing autocheck files for compatibility. TODO remove this one day
-        if type(item) == str:
-            item = config.decode_incoming_string(item)
-
-        if type(check_plugin_name) not in (str, unicode):
-            raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
-                                     "The check type must be a string." % (entry, hostname))
-
-        autochecks.append((check_plugin_name, item,
-            checks.compute_check_parameters(hostname, check_plugin_name, item, parameters)))
-    return autochecks
-
-
 # Read autochecks, but do not compute final check parameters,
 # also return a forth column with the raw string of the parameters.
 # Returns a table with three columns:

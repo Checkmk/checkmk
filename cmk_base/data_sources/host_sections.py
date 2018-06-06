@@ -129,17 +129,16 @@ class MultiHostSections(object):
         for this check available.
         """
 
+        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         try:
-            return self._section_content_cache[(hostname, ipaddress, check_plugin_name, for_discovery)]
+            return self._section_content_cache[(hostname, ipaddress, section_name, for_discovery)]
         except KeyError:
-            section_content = self._get_section_content(hostname, ipaddress, check_plugin_name, for_discovery)
-            self._section_content_cache[(hostname, ipaddress, check_plugin_name, for_discovery)] = section_content
+            section_content = self._get_section_content(hostname, ipaddress, check_plugin_name, section_name, for_discovery)
+            self._section_content_cache[(hostname, ipaddress, section_name, for_discovery)] = section_content
             return section_content
 
 
-    def _get_section_content(self, hostname, ipaddress, check_plugin_name, for_discovery):
-        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
-
+    def _get_section_content(self, hostname, ipaddress, check_plugin_name, section_name, for_discovery):
         # First abstract cluster / non cluster hosts
         host_entries = []
         nodes = config.nodes_of(hostname)

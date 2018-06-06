@@ -1,0 +1,11 @@
+Title: Check parse_function is no longer called multiple times if there are several subchecks for the same section
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b7
+Date: 1528290762
+
+

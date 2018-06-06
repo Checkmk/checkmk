@@ -258,6 +258,7 @@ def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_resu
     (u'E:/', "default", info_df_win, {}),
     (u'New_Volume E:/', "default", info_df_win, {}),
     (u'btrfs /dev/sda1', "default", info_df_btrfs, {}),
+    (u"/home", "default", info_df_lnx, {}), # When called with an item not found in info, the check should not crash.
 ])
 def test_df_check_with_parse(check_manager, item, params, info, expected_result):
     check = check_manager.get_check("df")

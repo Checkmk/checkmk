@@ -1010,12 +1010,22 @@ modes.register(Mode(
 
 # TODO: The "config" literal should really be centralized somehow.
 def _cmc_file(options):
-    return options["cmc-file"] if "cmc-file" in options else "config"
+    return options["cmc-file"] if options and "cmc-file" in options else "config"
+
+
+def _create_config_hook(options=None):
+    from cmk_base.config import monitoring_core
+    if monitoring_core == "cmc":
+        from cmk_base.cee.core_cmc import create_config_hook as cch
+        create_config_hook = lambda: cch(_cmc_file(options))
+    else:
+        from cmk_base.core_nagios import create_config_hook
+    return create_config_hook
 
 
 def mode_update_no_precompile(options):
     from cmk_base.core_config import do_update
-    do_update(with_precompile=False, cmc_file=_cmc_file(options))
+    do_update(_create_config_hook(options), with_precompile=False)
 
 modes.register(Mode(
     long_option="update-no-precompile",
@@ -1072,7 +1082,7 @@ modes.register(Mode(
 
 def mode_update(options):
     from cmk_base.core_config import do_update
-    do_update(with_precompile=True, cmc_file=_cmc_file(options))
+    do_update(_create_config_hook(options), with_precompile=True)
 
 modes.register(Mode(
     long_option="update",
@@ -1111,7 +1121,7 @@ modes.register(Mode(
 
 def mode_restart():
     import cmk_base.core as core
-    core.do_restart()
+    core.do_restart(_create_config_hook())
 
 modes.register(Mode(
     long_option="restart",
@@ -1133,7 +1143,7 @@ modes.register(Mode(
 
 def mode_reload():
     import cmk_base.core as core
-    core.do_reload()
+    core.do_reload(_create_config_hook())
 
 modes.register(Mode(
     long_option="reload",
@@ -1385,7 +1395,7 @@ modes.register(Mode(
 
 def mode_discover_marked_hosts():
     import cmk_base.discovery as discovery
-    discovery.discover_marked_hosts()
+    discovery.discover_marked_hosts(_create_config_hook())
 
 modes.register(Mode(
     long_option="discover-marked-hosts",

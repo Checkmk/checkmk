@@ -764,7 +764,12 @@ class AutomationRestart(Automation):
                 backup_path = None
 
             try:
-                configuration_warnings = core_config.create_core_config()
+                if config.monitoring_core == "cmc":
+                    from cmk_base.cee.core_cmc import create_config_hook as cch
+                    create_config_hook = lambda: cch("config")
+                else:
+                    from cmk_base.core_nagios import create_config_hook
+                configuration_warnings = core_config.create_core_config(create_config_hook)
 
                 try:
                     import cmk_base.cee.agent_bakery

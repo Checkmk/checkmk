@@ -160,6 +160,39 @@ class TCPDataSource(CheckMKAgentDataSource):
         return output
 
 
+    def _summary_result(self):
+        agent_info = self._get_agent_info()
+        agent_version = agent_info["version"]
+
+        status, output, perfdata = super(TCPDataSource, self)._summary_result()
+
+        expected_version = config.agent_target_version(self._hostname)
+        exit_spec = config.exit_code_spec(self._hostname)
+        if expected_version and agent_version \
+             and not self._is_expected_agent_version(agent_version, expected_version):
+            # expected version can either be:
+            # a) a single version string
+            # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
+            #    (the dict keys are optional)
+            if type(expected_version) == tuple and expected_version[0] == 'at_least':
+                expected = 'at least'
+                if 'daily_build' in expected_version[1]:
+                    expected += ' build %s' % expected_version[1]['daily_build']
+                if 'release' in expected_version[1]:
+                    if 'daily_build' in expected_version[1]:
+                        expected += ' or'
+                    expected += ' release %s' % expected_version[1]['release']
+            else:
+                expected = expected_version
+            output += ", unexpected agent version %s (should be %s)" % (agent_version, expected)
+            status = exit_spec.get("wrong_version", 1)
+
+        elif config.agent_min_version and agent_version < config.agent_min_version:
+            output += ", old plugin version %s (should be at least %s)" % (agent_version, config.agent_min_version)
+            status = exit_spec.get("wrong_version", 1)
+
+        return status, output, perfdata
+
     def _decrypt_package(self, encrypted_pkg, encryption_key):
         from Cryptodome.Cipher import AES
         from hashlib import md5

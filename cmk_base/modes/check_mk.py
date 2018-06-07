@@ -1007,11 +1007,16 @@ modes.register(Mode(
     ],
 ))
 
+
+# TODO: The "config" literal should really be centralized somehow.
+def _cmc_file(options):
+    return options["cmc-file"] if "cmc-file" in options else "config"
+
+
 def mode_update_no_precompile(options):
-    import cmk_base.core_config as core_config
-    if "cmc-file" in options:
-        core_config.set_cmc_relfilename(options["cmc-file"])
-    core_config.do_update(with_precompile=False)
+    import cmk_base.core_config
+    cmk_base.core_config.set_cmc_relfilename(_cmc_file(options))
+    cmk_base.core_config.do_update(with_precompile=False)
 
 modes.register(Mode(
     long_option="update-no-precompile",
@@ -1067,10 +1072,9 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_update(options):
-    import cmk_base.core_config as core_config
-    if "cmc-file" in options:
-        core_config.set_cmc_relfilename(options["cmc-file"])
-    core_config.do_update(with_precompile=True)
+    import cmk_base.core_config
+    cmk_base.core_config.set_cmc_relfilename(_cmc_file(options))
+    cmk_base.core_config.do_update(with_precompile=True)
 
 modes.register(Mode(
     long_option="update",

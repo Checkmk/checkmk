@@ -246,10 +246,9 @@ def create_core_config(cmc_file="config"):
 def _create_config(cmc_file):
     if config.monitoring_core == "cmc":
         from cmk_base.cee.core_cmc import create_config_hook
-        create_config_hook(cmc_file)
     else:
         from cmk_base.core_nagios import create_config_hook
-        create_config_hook()
+    create_config_hook(cmc_file)
 
 
 # Verify that the user has no deprecated check groups configured.

@@ -57,7 +57,7 @@ import cmk_base.check_utils
 #   |  Create a configuration file for Nagios core with hosts + services   |
 #   '----------------------------------------------------------------------'
 
-def create_config_hook():
+def create_config_hook(_cmc_file):
     with file(cmk.paths.nagios_objects_file, "w") as out:
         create_config(out, None)
 

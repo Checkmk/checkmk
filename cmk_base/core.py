@@ -65,12 +65,12 @@ _restart_lock_fd = None
 #   | Invoke actions affecting the core like reload/restart                |
 #   '----------------------------------------------------------------------'
 
-def do_reload():
-    do_restart(True)
+def do_reload(create_config_hook):
+    do_restart(create_config_hook, only_reload=True)
 
 
 # TODO: Cleanup duplicate code with automation_restart()
-def do_restart(only_reload = False):
+def do_restart(create_config_hook, only_reload=False):
     try:
         backup_path = None
 
@@ -88,7 +88,7 @@ def do_restart(only_reload = False):
             backup_path = None
 
         try:
-            core_config.do_create_config(with_agents=True, cmc_file="config")
+            core_config.do_create_config(create_config_hook, with_agents=True)
         except Exception, e:
             # TODO: Replace by MKBailOut()/MKTerminate()?
             console.error("Error creating configuration: %s\n" % e)

@@ -218,10 +218,10 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
 #   '----------------------------------------------------------------------'
 
 # TODO: Move to modes?
-def do_create_config(with_agents, cmc_file):
+def do_create_config(create_config_hook, with_agents):
     console.output("Generating configuration for core (type %s)..." %
                                                 config.monitoring_core)
-    create_core_config(cmc_file)
+    create_core_config(create_config_hook)
     console.output(tty.ok + "\n")
 
     if with_agents:
@@ -232,23 +232,15 @@ def do_create_config(with_agents, cmc_file):
             pass
 
 
-def create_core_config(cmc_file="config"):
+def create_core_config(create_config_hook):
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
-    _create_config(cmc_file)
+    create_config_hook()
     cmk.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()
-
-
-def _create_config(cmc_file):
-    if config.monitoring_core == "cmc":
-        from cmk_base.cee.core_cmc import create_config_hook
-    else:
-        from cmk_base.core_nagios import create_config_hook
-    create_config_hook(cmc_file)
 
 
 # Verify that the user has no deprecated check groups configured.
@@ -282,9 +274,9 @@ def precompile():
     precompile_hook()
 
 
-def do_update(with_precompile, cmc_file):
+def do_update(create_config_hook, with_precompile):
     try:
-        do_create_config(with_agents=with_precompile, cmc_file=cmc_file)
+        do_create_config(create_config_hook, with_agents=with_precompile)
         if with_precompile:
             precompile()
 

@@ -88,7 +88,7 @@ def do_restart(only_reload = False):
             backup_path = None
 
         try:
-            core_config.do_create_config(with_agents=True)
+            core_config.do_create_config(with_agents=True, cmc_file="config")
         except Exception, e:
             # TODO: Replace by MKBailOut()/MKTerminate()?
             console.error("Error creating configuration: %s\n" % e)

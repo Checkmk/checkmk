@@ -108,8 +108,8 @@ def check_megaraid_bbu(item, _no_params, info):
                 if refstate:
                     text += ' (%s)' % ("!" * refstate)
                 text += ' (Expected: %s)' % refvalue
-    	        broken.append(text)
-    	        state = max(state, refstate)
+                    broken.append(text)
+                    state = max(state, refstate)
         except KeyError:
             pass
 
@@ -117,9 +117,9 @@ def check_megaraid_bbu(item, _no_params, info):
         return (0, "no states to check (controller is in learn cycle)" + charge)
     # return assembled info
     elif broken:
-	return (state, ", ".join(broken) + charge)
+        return (state, ", ".join(broken) + charge)
     else:
-	return (0, "all states as expected" + charge)
+        return (0, "all states as expected" + charge)
 
 check_info["megaraid_bbu"] = {
     'check_function':          check_megaraid_bbu,

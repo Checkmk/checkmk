@@ -39,7 +39,7 @@ def check_dell_om_processors(item, _no_params, info):
     }
 
     cpu_readings = {
-	 0    : 'Unkown',
+         0    : 'Unkown',
          1    : 'Internal Error',      # Internal Error
          2    : 'Thermal Trip',        # Thermal Trip
          32   : 'Configuration Error', # Configuration Error
@@ -54,8 +54,8 @@ def check_dell_om_processors(item, _no_params, info):
             state = 0
             if not status:
                 status = status2
-	    status = saveint(status)
-	    reading = saveint(reading)
+            status = saveint(status)
+            reading = saveint(reading)
             msg = "Cpu (%s) State: %s, CPU Reading: %s" % \
             (manuf, cpu_states.get(status, 'ukn (%s)' % status ), cpu_readings[int(reading)])
             if status != 3:

@@ -67,7 +67,7 @@ def check_dell_powerconnect_fans(item, _not_used, info):
             dell_powerconnect_status = dell_powerconnect_fans_status_map[state]
             status = dell_powerconnect_fans_status2nagios_map[dell_powerconnect_status]
 
-	    return (status, 'Condition of FAN "%s" is %s' % (name, dell_powerconnect_status))
+            return (status, 'Condition of FAN "%s" is %s' % (name, dell_powerconnect_status))
 
     return (3, "item not found in snmp data")
 

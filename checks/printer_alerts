@@ -199,9 +199,9 @@ def check_printer_alerts(_not_used, _not_used1, info):
                 sum_txt.append(desc)
             continue
 
-	# Code not found -> take into account severity
-	if state == 3 and sev == '1':
-	    state = 0
+        # Code not found -> take into account severity
+        if state == 3 and sev == '1':
+            state = 0
 
         # determine the total(sum) state of the check
         if state == 2:

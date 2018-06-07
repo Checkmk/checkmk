@@ -70,13 +70,13 @@ def megaraid_pdisks_parse(info):
             adapter = int(line[1][1:])
         elif line[0] == "Enclosure" and line[1] == "Device":
             try:
-	        enclosure_devid = int(line[-1])
+                enclosure_devid = int(line[-1])
                 # this should fix inventory problems.
                 adapters[adapter][enclosure_devid] = enclosure_devid
 
-	    except: # no enclosure device
-	 	enclosure_devid = 0
-		adapters[adapter][0] = 0
+            except: # no enclosure device
+                 enclosure_devid = 0
+                adapters[adapter][0] = 0
         elif line[0] == "Enclosure" and line[1] == "Number:":
             for devid, number in current_adapter.items():
                 if number == int(line[-1]):

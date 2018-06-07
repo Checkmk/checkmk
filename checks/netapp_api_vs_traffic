@@ -25,10 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<netapp_api_vs_traffic:sep(9)>>>
-# lif:vserver	instance_uuid 4294967295	instance_name sb1	sent_errors 0	recv_errors 0 ...
-# lif:vserver	instance_uuid 16	instance_name vsFS	sent_errors 0	recv_errors 0	..
-# cifs:vserver	session_timed_out 17731	sd_max_ace_size 	cifs_latency 9403817108427	..
-# iscsi_lif:vserver	iscsi_read_ops 4071295661	avg_write_latency 3429809602514	..
+# lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...
+# lif:vserver        instance_uuid 16        instance_name vsFS        sent_errors 0        recv_errors 0        ..
+# cifs:vserver        session_timed_out 17731        sd_max_ace_size         cifs_latency 9403817108427        ..
+# iscsi_lif:vserver        iscsi_read_ops 4071295661        avg_write_latency 3429809602514        ..
 
 
 def inventory_netapp_api_vs_traffic(parsed, what):

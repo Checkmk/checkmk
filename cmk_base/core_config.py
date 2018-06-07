@@ -284,11 +284,10 @@ def _verify_non_duplicate_hosts():
 
 def precompile():
     if config.monitoring_core == "cmc":
-        import cmk_base.cee.core_cmc as core_cmc
-        core_cmc.do_pack_config()
+        from cmk_base.cee.core_cmc import precompile_hook
     else:
-        import cmk_base.core_nagios as core_nagios
-        core_nagios.do_precompile_hostchecks()
+        from cmk_base.core_nagios import precompile_hook
+    precompile_hook()
 
 
 def do_update(with_precompile):

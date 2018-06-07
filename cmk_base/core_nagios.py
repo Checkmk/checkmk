@@ -865,7 +865,7 @@ def _extra_conf_of(confdict, hostname, service, exclude=None):
 #   '----------------------------------------------------------------------'
 
 # TODO: Move to modes
-def do_precompile_hostchecks():
+def precompile_hook():
     console.output("Precompiling host checks...")
     precompile_hostchecks()
     console.output(tty.ok + "\n")

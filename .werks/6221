@@ -1,0 +1,12 @@
+Title: emc_datadomain_disks: Fix crash caused by missing busy data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1528386821
+
+Some devices do not report busy stats for disks via SNMP. Previously, the
+check would crash, thus shadowing the status monitoring. This has been fixed.

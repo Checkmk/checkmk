@@ -46,14 +46,16 @@ def check_emc_datadomain_disks(item, _no_params, info):
             serial = line[4]
             capacity = line[5]
             dev_state = line[6]
-            index = int(line[7].split('.')[1]) - 1
-            busy = info[1][index][0]
             dev_state_str = state_table.get(dev_state, ("Unknown",3))[0]
             dev_state_rc = state_table.get(dev_state, ("Unknown",3))[1]
-            infotext = "%s, busy %s%% - %s, Firmware %s, Serial %s, Capacity %s" \
-                % ( dev_state_str, busy, model, firmware, serial, capacity )
-            perfdata = [('busy', busy+"%" )]
-            return dev_state_rc, infotext,perfdata
+            yield dev_state_rc, dev_state_str
+            index = int(line[7].split('.')[1]) - 1
+            if len(info[1]) > index:
+                busy = info[1][index][0]
+                perfdata = [('busy', busy+"%" )]
+                yield 0, "busy %s%%" % busy, perfdata
+            yield 0, "Model %s, Firmware %s, Serial %s, Capacity %s" % ( model, firmware, serial, capacity )
+
 
 check_info["emc_datadomain_disks"] = {
     "check_function"        : check_emc_datadomain_disks,

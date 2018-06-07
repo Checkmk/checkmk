@@ -34,18 +34,18 @@ def inventory_ups_in_freq(info):
 def check_ups_in_freq(item, params, info):
     warn, crit = params
     for line in info:
-	if line[0] == item:
-	    power = int(line[1]) / 10
-	    perfdata = [ ( "in_freq", power, warn, crit, 30, 70 ) ]
-	    infotext = "in frequency: %dHz (warn/crit at %d/%d Hz)" % \
-	 	(power, warn, crit)
+        if line[0] == item:
+            power = int(line[1]) / 10
+            perfdata = [ ( "in_freq", power, warn, crit, 30, 70 ) ]
+            infotext = "in frequency: %dHz (warn/crit at %d/%d Hz)" % \
+                 (power, warn, crit)
 
-	    if power <= crit:
-		return (2, infotext, perfdata)
-	    elif power <= warn:
-		return (1, infotext, perfdata)
-	    else:
-		return (0, infotext, perfdata)
+            if power <= crit:
+                return (2, infotext, perfdata)
+            elif power <= warn:
+                return (1, infotext, perfdata)
+            else:
+                return (0, infotext, perfdata)
 
     return (3, "Phase %s not found in SNMP output" % item)
 

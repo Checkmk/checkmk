@@ -25,17 +25,17 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<mongodb_collections:sep(9)>>>
-# tanserver	tans	count	0
-# tanserver	tans	indexDetails	{}
-# tanserver	tans	storageSize	8192
-# tanserver	tans	ok	1.0
-# tanserver	tans	lastExtentSize	8192.0
-# tanserver	tans	userFlags	1
-# tanserver	tans	totalIndexSize	24528
-# tanserver	tans	capped	False
-# tanserver	tans	numExtents	1
-# tanserver	tans	nindexes	3
-# tanserver	tans	ns	tanserver.tans
+# tanserver        tans        count        0
+# tanserver        tans        indexDetails        {}
+# tanserver        tans        storageSize        8192
+# tanserver        tans        ok        1.0
+# tanserver        tans        lastExtentSize        8192.0
+# tanserver        tans        userFlags        1
+# tanserver        tans        totalIndexSize        24528
+# tanserver        tans        capped        False
+# tanserver        tans        numExtents        1
+# tanserver        tans        nindexes        3
+# tanserver        tans        ns        tanserver.tans
 
 def parse_mongodb_collections(info):
     databases = {}

@@ -56,5 +56,5 @@ check_info["cisco_sys_mem"] = {
     "has_perfdata"          : True,
     "group"                 : "cisco_supervisor_mem", # seperate group since only percentage
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Cisco NX-OS"),
-    "snmp_info"		    : ( ".1.3.6.1.4.1.9.9.305.1.1.2", "0" ),
+    "snmp_info"                    : ( ".1.3.6.1.4.1.9.9.305.1.1.2", "0" ),
 }

@@ -40,10 +40,10 @@ def check_fortigate_sessions(item, params, info):
     icon = ''
     if current >= warn:
         state = 1
-	icon = "(!)"
+        icon = "(!)"
     if current >= crit:
         state = 2
-	icon = "(!!)"
+        icon = "(!!)"
 
     perf = [("session", current, warn, crit)]
     return state, "%d Session%s (warn/crit at %d/%d)" % (current, icon, warn, crit), perf
@@ -58,5 +58,5 @@ check_info["fortigate_sessions"] = {
     "snmp_scan_function"    : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0") and\
                                      oid(".1.3.6.1.4.1.12356.1.10.0") and \
                                      not oid(".1.3.6.1.4.1.12356.101.4.1.8.0"),
-    "snmp_info"		        : ( ".1.3.6.1.4.1.12356.1", [ 10 ]),
+    "snmp_info"                        : ( ".1.3.6.1.4.1.12356.1", [ 10 ]),
 }

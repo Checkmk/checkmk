@@ -54,5 +54,5 @@ check_info["domino_transactions"] = {
     "has_perfdata"            : True,
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
     "snmp_info"               : (".1.3.6.1.4.1.334.72.1.1.6.3", [2]),
-    "group"		      : "domino_transactions"
+    "group"                      : "domino_transactions"
 }

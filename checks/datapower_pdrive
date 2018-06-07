@@ -63,8 +63,8 @@ def check_datapower_pdrive(item, _no_params, info):
             position_txt = datapower_pdrive_position[position]
             if int(progress) != 0:
                 progress_txt = " - Progress: %s%%" % progress
-	    else:
-		progress_txt = ""
+            else:
+                progress_txt = ""
             infotext = "%s%s, Position: %s, Logical Drive: %s, Product: %s %s"\
                     % (state_txt, progress_txt, position_txt, member_of_ldrive, vendor, product)
             yield state, infotext

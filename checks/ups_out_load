@@ -34,18 +34,18 @@ def inventory_ups_out_load(info):
 def check_ups_out_load(item, params, info):
     warn, crit = params
     for line in info:
-	if line[0] == item:
-	    power = int(line[1])
-	    perfdata = [ ( "out_load", power, warn, crit, 100 ) ]
-	    infotext = "load: %d (warn/crit at %d/%d) " % \
-	 	(power, warn, crit)
+        if line[0] == item:
+            power = int(line[1])
+            perfdata = [ ( "out_load", power, warn, crit, 100 ) ]
+            infotext = "load: %d (warn/crit at %d/%d) " % \
+                 (power, warn, crit)
 
-	    if power >= crit:
-		return (2, infotext, perfdata)
-	    elif power >= warn:
-		return (1, infotext, perfdata)
-	    else:
-		return (0, infotext, perfdata)
+            if power >= crit:
+                return (2, infotext, perfdata)
+            elif power >= warn:
+                return (1, infotext, perfdata)
+            else:
+                return (0, infotext, perfdata)
 
     return (3, "Phase %s not found in SNMP output" % item)
 

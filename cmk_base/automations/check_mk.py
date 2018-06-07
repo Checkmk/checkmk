@@ -788,7 +788,12 @@ class AutomationRestart(Automation):
                 if backup_path:
                     os.remove(backup_path)
 
-                core_config.precompile()
+                if config.monitoring_core == "cmc":
+                    from cmk_base.cee.core_cmc import precompile_hook
+                else:
+                    from cmk_base.core_nagios import precompile_hook
+                precompile_hook()
+
                 core.do_core_action(self._mode())
             else:
                 broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.paths.tmp_dir

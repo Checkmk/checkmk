@@ -74,7 +74,7 @@ check_info["emc_datadomain_disks"] = {
                                        ]),
                                 (".1.3.6.1.4.1.19746.1.6.2.1.1",
                                        [
-                                            6, # diskPerfBusy
+                                            6, # diskBusy
                                        ]
                             )],
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Data Domain OS")

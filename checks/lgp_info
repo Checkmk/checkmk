@@ -47,7 +47,7 @@ def check_lgp_info(item, params, info):
         agent_info = info[0][0]
 
         device_output = ''
-            if len(info) > 1:
+        if len(info) > 1:
             devices = []
             for id, manufacturer, unit_number in info[1]:
                 id = lgp_info_devices.get(id, id)

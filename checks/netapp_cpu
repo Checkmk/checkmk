@@ -46,6 +46,6 @@ check_info["netapp_cpu"] = {
     "group"                 : "cpu_utilization",
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith('NetApp Release') \
                                           and oid(".1.3.6.1.4.1.789.1.2.1.3.0"),
-    "snmp_info"		    : ( ".1.3.6.1.4.1.789.1.2.1", [ 3 ]),
+    "snmp_info"                    : ( ".1.3.6.1.4.1.789.1.2.1", [ 3 ]),
 }
 

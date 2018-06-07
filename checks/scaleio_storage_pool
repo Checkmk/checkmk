@@ -27,15 +27,15 @@
 
 #<<<scaleio_storage_pool>>>
 #STORAGE_POOL 59c7748300000000:
-#	ID                                                 59c7748300000000
-#	NAME                                               pool01
-#	MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
-#	UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
-#	FAILED_CAPACITY_IN_KB                              0 Bytes
-#	TOTAL_READ_BWC                                     0 IOPS 0 Bytes per-second
-#	TOTAL_WRITE_BWC                                    0 IOPS 0 Bytes per-second
-#	REBALANCE_READ_BWC                                 0 IOPS 0 Bytes per-second
-#	REBALANCE_WRITE_BWC                                0 IOPS 0 Bytes per-second
+#        ID                                                 59c7748300000000
+#        NAME                                               pool01
+#        MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
+#        UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
+#        FAILED_CAPACITY_IN_KB                              0 Bytes
+#        TOTAL_READ_BWC                                     0 IOPS 0 Bytes per-second
+#        TOTAL_WRITE_BWC                                    0 IOPS 0 Bytes per-second
+#        REBALANCE_READ_BWC                                 0 IOPS 0 Bytes per-second
+#        REBALANCE_WRITE_BWC                                0 IOPS 0 Bytes per-second
 #
 
 

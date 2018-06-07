@@ -54,9 +54,9 @@ def inventory_genua_carp(info):
 
 def genua_iftype(st):
     names = {
-	'0' : 'unknown',
-	'1' : 'physical',
-	'2' : 'gif',
+        '0' : 'unknown',
+        '1' : 'physical',
+        '2' : 'gif',
         '3' : 'pppoe',
         '4' : 'vlan',
         '5' : 'lo',

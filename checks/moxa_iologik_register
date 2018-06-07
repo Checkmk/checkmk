@@ -60,13 +60,13 @@ check_info['moxa_iologik_register'] = {
 }
 
 # DIOEntry
-# dioIndex Integer32 (0..11) 	"The channel dio index."
-# dioType Integer32 (0..1)  	"The channel dio type. 0=DI, DO=1, AI=2"
-# dioMode Integer32 (0..1)  	"The channel dio mode. 0=DI, 1=Event Counter"
-# dioStatus Unsigned32 (0..4294967295)	"The channel dio(di/do) status. 0=Off, 1=On in DI/DO mode or N=Count in DO counter mode
+# dioIndex Integer32 (0..11)         "The channel dio index."
+# dioType Integer32 (0..1)          "The channel dio type. 0=DI, DO=1, AI=2"
+# dioMode Integer32 (0..1)          "The channel dio mode. 0=DI, 1=Event Counter"
+# dioStatus Unsigned32 (0..4294967295)        "The channel dio(di/do) status. 0=Off, 1=On in DI/DO mode or N=Count in DO counter mode
 # dioFilter Integer32 (1..65535) "The channel dio(di) counter filter. unit=0.5ms"
-# dioTrigger Integer32 (0..1)	"The channel dio(di) counter trigger level. 0=L2H, 1=H2L"
-# dioCntStart Integer32 (0..1)	"The channel dio(do) counter start/stop. 0=stop, 1=start"
-# dioPulseStart	Integer32 (0..1) "The channel dio(do) pulse start/stop. 0=stop, 1=start"
+# dioTrigger Integer32 (0..1)        "The channel dio(di) counter trigger level. 0=L2H, 1=H2L"
+# dioCntStart Integer32 (0..1)        "The channel dio(do) counter start/stop. 0=stop, 1=start"
+# dioPulseStart        Integer32 (0..1) "The channel dio(do) pulse start/stop. 0=stop, 1=start"
 # dioPulseONWidth Unsigned32 (1..4294967295) "The channel dio(do) signal ON width. unit=0.5ms"
 # dioPulseOFFWidth Unsigned32 (1..4294967295) "The channel dio(do) signal OFF width. unit=0.5ms"

@@ -28,37 +28,37 @@
 # example output
 #<<<scaleio_sds>>>
 #SDS 3c7af8db00000000:
-#	ID                                                 3c7af8db00000000
-#	NAME                                               sds03
-#	PROTECTION_DOMAIN_ID                               91ebcf4500000000
-#	STATE                                              REMOVE_STATE_NORMAL
-#	MEMBERSHIP_STATE                                   JOINED
-#	MDM_CONNECTION_STATE                               MDM_CONNECTED
-#	MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
-#	MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
-#	UNUSED_CAPACITY_IN_KB                              13.2 TB (13471 GB)
+#        ID                                                 3c7af8db00000000
+#        NAME                                               sds03
+#        PROTECTION_DOMAIN_ID                               91ebcf4500000000
+#        STATE                                              REMOVE_STATE_NORMAL
+#        MEMBERSHIP_STATE                                   JOINED
+#        MDM_CONNECTION_STATE                               MDM_CONNECTED
+#        MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
+#        MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
+#        UNUSED_CAPACITY_IN_KB                              13.2 TB (13471 GB)
 #
 #SDS 3c7ad1cc00000001:
-#	ID                                                 3c7ad1cc00000001
-#	NAME                                               sds01
-#	PROTECTION_DOMAIN_ID                               91ebcf4500000000
-#	STATE                                              REMOVE_STATE_NORMAL
-#	MEMBERSHIP_STATE                                   JOINED
-#	MDM_CONNECTION_STATE                               MDM_CONNECTED
-#	MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
-#	MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
-#	UNUSED_CAPACITY_IN_KB                              13.2 TB (13477 GB)
+#        ID                                                 3c7ad1cc00000001
+#        NAME                                               sds01
+#        PROTECTION_DOMAIN_ID                               91ebcf4500000000
+#        STATE                                              REMOVE_STATE_NORMAL
+#        MEMBERSHIP_STATE                                   JOINED
+#        MDM_CONNECTION_STATE                               MDM_CONNECTED
+#        MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
+#        MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
+#        UNUSED_CAPACITY_IN_KB                              13.2 TB (13477 GB)
 #
 #SDS 3c7af8dc00000002:
-#	ID                                                 3c7af8dc00000002
-#	NAME                                               sds02
-#	PROTECTION_DOMAIN_ID                               91ebcf4500000000
-#	STATE                                              REMOVE_STATE_NORMAL
-#	MEMBERSHIP_STATE                                   JOINED
-#	MDM_CONNECTION_STATE                               MDM_CONNECTED
-#	MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
-#	MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
-#	UNUSED_CAPACITY_IN_KB                              13.2 TB (13477 GB)
+#        ID                                                 3c7af8dc00000002
+#        NAME                                               sds02
+#        PROTECTION_DOMAIN_ID                               91ebcf4500000000
+#        STATE                                              REMOVE_STATE_NORMAL
+#        MEMBERSHIP_STATE                                   JOINED
+#        MDM_CONNECTION_STATE                               MDM_CONNECTED
+#        MAINTENANCE_MODE_STATE                             NO_MAINTENANCE
+#        MAX_CAPACITY_IN_KB                                 21.8 TB (22353 GB)
+#        UNUSED_CAPACITY_IN_KB                              13.2 TB (13477 GB)
 #
 
 

@@ -36,7 +36,7 @@ def check_sansymphony_pool(item, params, info):
         if poolname == item:
             if poolstatus == "Running" and cachemode == "ReadWrite":
                 yield 0, "%s pool %s is running, its cache is in %s mode" % (pooltype, poolname, cachemode)
-	    elif poolstatus == "Running" and cachemode != "ReadWrite":
+            elif poolstatus == "Running" and cachemode != "ReadWrite":
                 yield 1, "%s Pool %s is %s, its cache is %s" % (pooltype, poolname, poolstatus, cachemode)
             else:
                 yield 2, "%s pool %s is %s, its cache is in %s mode" % (pooltype, poolname, poolstatus, cachemode)

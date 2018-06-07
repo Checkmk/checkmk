@@ -696,43 +696,16 @@ class CheckMKAgentDataSource(DataSource):
 
     # TODO: refactor
     def _summary_result(self):
-        expected_version = config.agent_target_version(self._hostname)
-
         agent_info = self._get_agent_info()
         agent_version = agent_info["version"]
-
-        status, output, perfdata = 0, [], []
-
+        output = []
         if not config.is_cluster(self._hostname) and agent_version != None:
             output.append("Version: %s" % agent_version)
 
         if not config.is_cluster(self._hostname) and agent_info["agentos"] != None:
             output.append("OS: %s" % agent_info["agentos"])
 
-        if expected_version and agent_version \
-             and not self._is_expected_agent_version(agent_version, expected_version):
-            # expected version can either be:
-            # a) a single version string
-            # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
-            #    (the dict keys are optional)
-            if type(expected_version) == tuple and expected_version[0] == 'at_least':
-                expected = 'at least'
-                if 'daily_build' in expected_version[1]:
-                    expected += ' build %s' % expected_version[1]['daily_build']
-                if 'release' in expected_version[1]:
-                    if 'daily_build' in expected_version[1]:
-                        expected += ' or'
-                    expected += ' release %s' % expected_version[1]['release']
-            else:
-                expected = expected_version
-            output.append("unexpected agent version %s (should be %s), " % (agent_version, expected))
-            status = self._exit_code_spec.get("wrong_version", 1)
-
-        elif config.agent_min_version and agent_version < config.agent_min_version:
-            output.append("old plugin version %s (should be at least %s), " % (agent_version, config.agent_min_version))
-            status = self._exit_code_spec.get("wrong_version", 1)
-
-        return status, ", ".join(output), []
+        return 0, ", ".join(output), []
 
 
     def _get_agent_info(self):

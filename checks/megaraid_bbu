@@ -108,8 +108,8 @@ def check_megaraid_bbu(item, _no_params, info):
                 if refstate:
                     text += ' (%s)' % ("!" * refstate)
                 text += ' (Expected: %s)' % refvalue
-                    broken.append(text)
-                    state = max(state, refstate)
+                broken.append(text)
+                state = max(state, refstate)
         except KeyError:
             pass
 

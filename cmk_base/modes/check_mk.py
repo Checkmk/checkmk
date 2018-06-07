@@ -989,8 +989,8 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_dump_nagios_config(args):
-    import cmk_base.core_nagios as core_nagios
-    core_nagios.do_output_nagios_conf(args)
+    fromt cmk_base.core_nagios import create_config
+    core_nagios.create_config(sys.stdout, args if len(args) else None)
 
 modes.register(Mode(
     long_option="nagios-config",

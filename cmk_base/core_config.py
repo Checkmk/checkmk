@@ -254,9 +254,8 @@ def _create_config():
         import cmk_base.cee.core_cmc as core_cmc
         core_cmc.create_config(_cmc_relfilename)
     else:
-        import cmk_base.core_nagios as core_nagios
-        with file(cmk.paths.nagios_objects_file, "w") as out:
-            core_nagios.create_config(out)
+        from cmk_base.core_nagios import create_config_hook
+        create_config_hook()
 
 
 # Verify that the user has no deprecated check groups configured.

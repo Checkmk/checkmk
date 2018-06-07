@@ -39,7 +39,7 @@ def check_dell_om_processors(item, _no_params, info):
     }
 
     cpu_readings = {
-         0    : 'Unkown',
+         0    : 'Unknown',
          1    : 'Internal Error',      # Internal Error
          2    : 'Thermal Trip',        # Thermal Trip
          32   : 'Configuration Error', # Configuration Error

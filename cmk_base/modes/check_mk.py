@@ -1014,9 +1014,8 @@ def _cmc_file(options):
 
 
 def mode_update_no_precompile(options):
-    import cmk_base.core_config
-    cmk_base.core_config.set_cmc_relfilename(_cmc_file(options))
-    cmk_base.core_config.do_update(with_precompile=False)
+    from cmk_base.core_config import do_update
+    do_update(with_precompile=False, cmc_file=_cmc_file(options))
 
 modes.register(Mode(
     long_option="update-no-precompile",
@@ -1072,9 +1071,8 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_update(options):
-    import cmk_base.core_config
-    cmk_base.core_config.set_cmc_relfilename(_cmc_file(options))
-    cmk_base.core_config.do_update(with_precompile=True)
+    from cmk_base.core_config import do_update
+    do_update(with_precompile=True, cmc_file=_cmc_file(options))
 
 modes.register(Mode(
     long_option="update",

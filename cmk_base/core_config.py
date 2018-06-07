@@ -40,7 +40,6 @@ import cmk_base.checks as checks
 import cmk_base.rulesets as rulesets
 import cmk_base.ip_lookup as ip_lookup
 
-_cmc_relfilename           = "config"
 _ignore_ip_lookup_failures = False
 _failed_ip_lookups         = []
 
@@ -218,16 +217,11 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
 #   | Code for managing the core configuration creation.                   |
 #   '----------------------------------------------------------------------'
 
-def set_cmc_relfilename(name):
-    global _cmc_relfilename
-    _cmc_relfilename = name
-
-
 # TODO: Move to modes?
-def do_create_config(with_agents=True):
+def do_create_config(with_agents, cmc_file):
     console.output("Generating configuration for core (type %s)..." %
                                                 config.monitoring_core)
-    create_core_config()
+    create_core_config(cmc_file)
     console.output(tty.ok + "\n")
 
     if with_agents:
@@ -238,21 +232,21 @@ def do_create_config(with_agents=True):
             pass
 
 
-def create_core_config():
+def create_core_config(cmc_file="config"):
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
-    _create_config()
+    _create_config(cmc_file)
     cmk.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()
 
 
-def _create_config():
+def _create_config(cmc_file):
     if config.monitoring_core == "cmc":
-        import cmk_base.cee.core_cmc as core_cmc
-        core_cmc.create_config(_cmc_relfilename)
+        from cmk_base.cee.core_cmc import create_config_hook
+        create_config_hook(cmc_file)
     else:
         from cmk_base.core_nagios import create_config_hook
         create_config_hook()
@@ -289,9 +283,9 @@ def precompile():
     precompile_hook()
 
 
-def do_update(with_precompile):
+def do_update(with_precompile, cmc_file):
     try:
-        do_create_config(with_agents=with_precompile)
+        do_create_config(with_agents=with_precompile, cmc_file=cmc_file)
         if with_precompile:
             precompile()
 

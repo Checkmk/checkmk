@@ -27,11 +27,11 @@
 
 #<<<scaleio_pd>>>
 #PROTECTION_DOMAIN 91ebcf4500000000:
-#	ID                                                 91ebcf4500000000
-#	NAME                                               domain01
-#	STATE                                              PROTECTION_DOMAIN_ACTIVE
-#	MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
-#	UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
+#        ID                                                 91ebcf4500000000
+#        NAME                                               domain01
+#        STATE                                              PROTECTION_DOMAIN_ACTIVE
+#        MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
+#        UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
 
 
 

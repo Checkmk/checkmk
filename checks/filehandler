@@ -34,7 +34,7 @@
 #    (can also be found in /proc/sys/fs/file-max)
 # Example output of '/proc/sys/fs/file-nr':
 # <<<filehandler>>>
-# 9376	0	817805
+# 9376        0        817805
 
 
 factory_settings['filehandler_default_levels'] = {

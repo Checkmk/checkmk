@@ -94,12 +94,12 @@ def check_esx_vsphere_objects(item, params, info):
         return 3, "No data about host system %s" % name
 
 factory_settings["esx_vsphere_objects_default_levels"] = {
-	"states": {
-		"poweredOn": 0,
-		"poweredOff": 1,
-		"suspended": 1,
-		"unknown": 3,
-	}
+        "states": {
+                "poweredOn": 0,
+                "poweredOff": 1,
+                "suspended": 1,
+                "unknown": 3,
+        }
 }
 
 check_info['esx_vsphere_objects'] = {

@@ -28,13 +28,13 @@ def inventory_datapower_fs(info):
     if info:
         # only discover filesystems with a defined total size > 0
         if saveint(info[0][0]) != 0:
-		yield "Encrypted", {}
+                yield "Encrypted", {}
         if saveint(info[0][2]) != 0:
-		yield "Unencrypted", {}
+                yield "Unencrypted", {}
         if saveint(info[0][4]) != 0:
-		yield "Temporary", {}
+                yield "Temporary", {}
         if saveint(info[0][6]) != 0:
-		yield "Internal", {}
+                yield "Internal", {}
 
 def check_datapower_fs(item, params, info):
     if item == "Encrypted":

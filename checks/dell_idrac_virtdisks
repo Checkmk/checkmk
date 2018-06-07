@@ -59,7 +59,7 @@ def check_dell_idrac_virtdisks(item, _no_params, info):
             "5" : (2, "critical"),
             "6" : (2, "non-recoverable"),
         },
-	"raidlevel" : {
+        "raidlevel" : {
             "1" : "none",
             "2" : "Raid-0",
             "3" : "Raid-1",

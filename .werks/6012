@@ -1,0 +1,11 @@
+Title: Fixed CMC crash for malformed rrddata queries.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1528353877
+Class: fix
+
+Malformed Livestatus queries involving the "rrddata" column could cause a
+CMC crash, this has been fixed.

@@ -458,8 +458,9 @@ void Query::parseColumnsLine(char *line) {
             // But not failing has the advantage that an updated GUI, that
             // expects new columns, will be able to keep compatibility with
             // older Livestatus versions.
-            Informational(_logger) << "replacing non-existing column '"
-                                   << column_name << "' with null column";
+            Informational(_logger)
+                << "replacing non-existing column '" << column_name
+                << "' with null column, reason: " << e.what();
             column = std::make_shared<NullColumn>(
                 column_name, "non-existing column", -1, -1, -1, 0);
         }

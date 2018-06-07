@@ -57,14 +57,12 @@ import cmk_base.check_utils
 #   |  Create a configuration file for Nagios core with hosts + services   |
 #   '----------------------------------------------------------------------'
 
-# TODO: Move to modes?
-def do_output_nagios_conf(args):
-    if len(args) == 0:
-        args = None
-    create_config(sys.stdout, args)
+def create_config_hook():
+    with file(cmk.paths.nagios_objects_file, "w") as out:
+        create_config(out, None)
 
 
-def create_config(outfile = sys.stdout, hostnames = None):
+def create_config(outfile, hostnames):
     global hostgroups_to_define
     hostgroups_to_define = set([])
     global servicegroups_to_define

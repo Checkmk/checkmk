@@ -266,19 +266,11 @@ def _verify_non_duplicate_hosts():
               "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
 
 
-def precompile():
-    if config.monitoring_core == "cmc":
-        from cmk_base.cee.core_cmc import precompile_hook
-    else:
-        from cmk_base.core_nagios import precompile_hook
-    precompile_hook()
-
-
-def do_update(create_config_hook, with_precompile):
+def do_update(create_config_hook, precompile_hook, with_precompile):
     try:
         do_create_config(create_config_hook, with_agents=with_precompile)
         if with_precompile:
-            precompile()
+            precompile_hook()
 
     except Exception, e:
         console.error("Configuration Error: %s\n" % e)

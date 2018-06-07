@@ -65,12 +65,12 @@ _restart_lock_fd = None
 #   | Invoke actions affecting the core like reload/restart                |
 #   '----------------------------------------------------------------------'
 
-def do_reload(create_config_hook):
-    do_restart(create_config_hook, only_reload=True)
+def do_reload(create_config_hook, precompile_hook):
+    do_restart(create_config_hook, precompile_hook, only_reload=True)
 
 
 # TODO: Cleanup duplicate code with automation_restart()
-def do_restart(create_config_hook, only_reload=False):
+def do_restart(create_config_hook, precompile_hook, only_reload=False):
     try:
         backup_path = None
 
@@ -102,7 +102,7 @@ def do_restart(create_config_hook, only_reload=False):
             if backup_path:
                 os.remove(backup_path)
 
-            core_config.precompile()
+            precompile_hook()
 
             do_core_action(only_reload and "reload" or "restart")
         else:

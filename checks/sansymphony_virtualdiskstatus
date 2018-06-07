@@ -34,7 +34,7 @@ def inventory_sansymphony_virtualdiskstatus(info):
 
 def check_sansymphony_virtualdiskstatus(item, _no_params, info):
     for volname, vol_state in info:
-	if volname == item:
+        if volname == item:
             state = 2
             if vol_state == "Online":
                 state = 0

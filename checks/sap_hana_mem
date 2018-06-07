@@ -100,7 +100,7 @@ check_info['sap_hana_mem'] = {
     'service_description'   : 'SAP HANA Resident Memory',
     'includes'              : ['memory.include'],
     #'group'                 : 'memory_simple',
-    'has_perfdata'	        : True,
+    'has_perfdata'                : True,
     'default_levels_variable' : 'sap_hana_mem_resident_default_levels',
 }
 
@@ -135,6 +135,6 @@ check_info['sap_hana_mem.database'] = {
     'service_description'   : 'SAP HANA Used Memory',
     'includes'              : ['memory.include'],
     #'group'                 : 'memory_simple',
-    'has_perfdata'	        : True,
+    'has_perfdata'                : True,
     'default_levels_variable' : 'sap_hana_mem_database_default_levels',
 }

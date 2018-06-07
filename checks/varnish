@@ -557,7 +557,7 @@ check_info["varnish.cache_hit_ratio"] = {
     "check_function"          : lambda item, params, parsed: \
         check_varnish_ratio(item, params, parsed, 'cache', ('hit', 'miss', 'cache_hit_ratio')),
     "default_levels_variable" : "varnish_cache_hit_ratio_default_levels",
-	"service_description"     : "Varnish Cache Hit Ratio",
+        "service_description"     : "Varnish Cache Hit Ratio",
     "group"                   : "varnish_cache_hit_ratio",
     "has_perfdata"            : True,
 }
@@ -591,7 +591,7 @@ check_info["varnish.backend_success_ratio"] = {
     "check_function"          : lambda item, params, parsed: \
         check_varnish_ratio(item, params, parsed, 'backend', ('conn', 'fail', 'varnish_backend_success_ratio')),
     "default_levels_variable" : "varnish_backend_success_ratio_default_levels",
-	"service_description"     : "Varnish Backend Success Ratio",
+        "service_description"     : "Varnish Backend Success Ratio",
     "group"                   : "varnish_backend_success_ratio",
     "has_perfdata"            : True,
 }

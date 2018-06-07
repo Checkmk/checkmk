@@ -27,12 +27,12 @@
 
 #<<<scaleio_system:sep(9)>>>
 #SYSTEM 5914d6b47d479d5a:
-#	ID                                                 5914d6b47d479d5a
-#	NAME                                               N/A
-#	CAPACITY_ALERT_HIGH_THRESHOLD                      80%
-#	CAPACITY_ALERT_CRITICAL_THRESHOLD                  90%
-#	MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
-#	UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
+#        ID                                                 5914d6b47d479d5a
+#        NAME                                               N/A
+#        CAPACITY_ALERT_HIGH_THRESHOLD                      80%
+#        CAPACITY_ALERT_CRITICAL_THRESHOLD                  90%
+#        MAX_CAPACITY_IN_KB                                 65.5 TB (67059 GB)
+#        UNUSED_CAPACITY_IN_KB                              17.2 TB (17635 GB)
 #
 
 

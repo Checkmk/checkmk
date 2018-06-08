@@ -32,6 +32,7 @@ import subprocess
 import cmk.debug
 from cmk.exceptions import MKTerminate
 
+import cmk_base.utils as utils
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
@@ -205,10 +206,10 @@ class TCPDataSource(CheckMKAgentDataSource):
 
             elif type(expected_version) == tuple and expected_version[0] == 'at_least':
                 spec = expected_version[1]
-                if cmk_base.utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
+                if utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
                     expected = int(spec['daily_build'].replace('.', ''))
 
-                    branch = cmk_base.utils.branch_of_daily_build(agent_version)
+                    branch = utils.branch_of_daily_build(agent_version)
                     if branch == "master":
                         agent = int(agent_version.replace('.', ''))
 
@@ -219,11 +220,11 @@ class TCPDataSource(CheckMKAgentDataSource):
                         return False
 
                 elif 'release' in spec:
-                    if cmk_base.utils.is_daily_build_version(agent_version):
+                    if utils.is_daily_build_version(agent_version):
                         return False
 
-                    if cmk_base.utils.parse_check_mk_version(agent_version) \
-                        < cmk_base.utils.parse_check_mk_version(spec['release']):
+                    if utils.parse_check_mk_version(agent_version) \
+                        < utils.parse_check_mk_version(spec['release']):
                         return False
 
             return True
@@ -232,6 +233,7 @@ class TCPDataSource(CheckMKAgentDataSource):
                 raise
             raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
                     (agent_version, expected_version, e))
+
 
     def _decrypt_package(self, encrypted_pkg, encryption_key):
         from Cryptodome.Cipher import AES

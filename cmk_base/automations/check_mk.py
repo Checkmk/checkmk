@@ -721,6 +721,39 @@ class AutomationRestart(Automation):
         else:
             return "restart"
 
+    # TODO: _cmc_file, _create_config_hook, _precompile_hook, _create_core are copy-n-pasted from cmk_base.modes.check_mk.
+    @staticmethod
+    def _cmc_file(options):
+        return options["cmc-file"] if options and "cmc-file" in options else "config"
+
+
+    @staticmethod
+    def _create_config_hook(options):
+        from cmk_base.config import monitoring_core
+        if monitoring_core == "cmc":
+            from cmk_base.cee.core_cmc import create_config_hook as cch
+            create_config_hook = lambda: cch(AutomationRestart._cmc_file(options))
+        else:
+            from cmk_base.core_nagios import create_config_hook
+        return create_config_hook
+
+
+    @staticmethod
+    def _precompile_hook():
+        from cmk_base.config import monitoring_core
+        if monitoring_core == "cmc":
+            from cmk_base.cee.core_cmc import precompile_hook
+        else:
+            from cmk_base.core_nagios import precompile_hook
+        return precompile_hook
+
+
+    # TODO: Change this naive dict representation of a core object into a real class!
+    @staticmethod
+    def _create_core(options=None):
+        return {"create_config": AutomationRestart._create_config_hook(options),
+                "precompile": AutomationRestart._precompile_hook()}
+
 
     # TODO: Cleanup duplicate code with cmk_base.core.do_restart()
     def execute(self, args):
@@ -763,13 +796,9 @@ class AutomationRestart(Automation):
             else:
                 backup_path = None
 
+            core = AutomationRestart._create_core()
             try:
-                if config.monitoring_core == "cmc":
-                    from cmk_base.cee.core_cmc import create_config_hook as cch
-                    create_config_hook = lambda: cch("config")
-                else:
-                    from cmk_base.core_nagios import create_config_hook
-                configuration_warnings = core_config.create_core_config(create_config_hook)
+                configuration_warnings = core_config.create_core_config(core)
 
                 try:
                     from cmk_base.cee.agent_bakery import bake_on_restart
@@ -788,11 +817,7 @@ class AutomationRestart(Automation):
                 if backup_path:
                     os.remove(backup_path)
 
-                if config.monitoring_core == "cmc":
-                    from cmk_base.cee.core_cmc import precompile_hook
-                else:
-                    from cmk_base.core_nagios import precompile_hook
-                precompile_hook()
+                core["precompile"]()
 
                 cmk_base.core.do_core_action(self._mode())
             else:

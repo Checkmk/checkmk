@@ -60,12 +60,12 @@ _restart_lock_fd = None
 #   | Invoke actions affecting the core like reload/restart                |
 #   '----------------------------------------------------------------------'
 
-def do_reload(create_config_hook, precompile_hook):
-    do_restart(create_config_hook, precompile_hook, only_reload=True)
+def do_reload(core):
+    do_restart(core, only_reload=True)
 
 
 # TODO: Cleanup duplicate code with automation_restart()
-def do_restart(create_config_hook, precompile_hook, only_reload=False):
+def do_restart(core, only_reload=False):
     try:
         backup_path = None
 
@@ -83,7 +83,7 @@ def do_restart(create_config_hook, precompile_hook, only_reload=False):
             backup_path = None
 
         try:
-            core_config.do_create_config(create_config_hook, with_agents=True)
+            core_config.do_create_config(core, with_agents=True)
         except Exception, e:
             # TODO: Replace by MKBailOut()/MKTerminate()?
             console.error("Error creating configuration: %s\n" % e)
@@ -97,7 +97,7 @@ def do_restart(create_config_hook, precompile_hook, only_reload=False):
             if backup_path:
                 os.remove(backup_path)
 
-            precompile_hook()
+            core["precompile"]()
 
             do_core_action(only_reload and "reload" or "restart")
         else:

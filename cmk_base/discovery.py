@@ -461,7 +461,7 @@ def _get_autodiscovery_dir():
     return cmk.paths.var_dir + '/autodiscovery'
 
 
-def discover_marked_hosts(create_config_hook, precompile_hook):
+def discover_marked_hosts(core):
     console.verbose("Doing discovery for all marked hosts:\n")
     autodiscovery_dir = _get_autodiscovery_dir()
 
@@ -497,9 +497,9 @@ def discover_marked_hosts(create_config_hook, precompile_hook):
     if activation_required:
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
         if config.monitoring_core == "cmc":
-            cmk_base.core.do_reload(create_config_hook, precompile_hook)
+            cmk_base.core.do_reload(core)
         else:
-            cmk_base.core.do_restart(create_config_hook, precompile_hook)
+            cmk_base.core.do_restart(core)
 
 
 def _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):

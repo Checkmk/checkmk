@@ -49,7 +49,6 @@ disable=
     logging-not-lazy,
     misplaced-comparison-constant,
     missing-docstring,
-    mixed-indentation,
     multiple-imports,
     multiple-statements,
     no-else-return,

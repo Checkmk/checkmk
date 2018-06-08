@@ -97,25 +97,6 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,*.{cc,h}} standalone/config_files.m4
 
-# Files that are checked for trailing spaces
-HEAL_SPACES_IN     := checkman/* cmk_base/* checks/* notifications/* inventory/* \
-                      $$(find -name Makefile) livestatus/src/*.{cc,h} \
-                      web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
-                      doc/helpers/* scripts/setup.sh scripts/autodetect.py \
-                      $$(find pnp-templates -type f -name "*.php") \
-                      bin/mkeventd bin/*.cc active_checks/* \
-                      agents/check_mk_*agent* agents/*.c \
-                      $$(find agents/cfg_examples -type f) \
-                      agents/special/agent_* \
-                      agents/special/lib/cmk_special_agents.py \
-                      $$(find agents/plugins -type f) \
-                      $(wildcard enterprise/cmk_base/cee/*.py \
-                                 enterprise/modules/*.py \
-                                 enterprise/web/htdocs/*.py \
-                                 enterprise/web/plugins/*/*/*.py) \
-                      $(wildcard managed/web/htdocs/*.py \
-                                 managed/web/plugins/*/*/*.py)
-
 FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.h)) \
                       $(wildcard $(addprefix agents/windows/sections/,*.cc *.h)) \
@@ -135,9 +116,9 @@ JAVASCRIPT_MINI    := $(patsubst %.js,%_min.js,$(JAVASCRIPT_SOURCES))
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
 
-.PHONY: all analyze build check check-binaries check-permissions check-spaces \
+.PHONY: all analyze build check check-binaries check-permissions \
         check-version clean compile-neb-cmc cppcheck dist documentation format \
-        GTAGS headers healspaces help install iwyu mrproper \
+        GTAGS headers help install iwyu mrproper \
         optimize-images packages setup setversion tidy version \
 	am--refresh skel
 
@@ -158,19 +139,7 @@ deb:
 cma:
 	$(MAKE) -C omd cma
 
-check: check-spaces check-permissions check-binaries check-version
-
-check-spaces:
-	@echo -n "Checking for trailing spaces..."
-	@if grep -q '[[:space:]]$$' $(HEAL_SPACES_IN) ; then \
-          echo FAILED ; \
-          figlet "Space error"; \
-          echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair."; \
-          echo "Affected files: "; \
-          grep -l '[[:space:]]$$' $(HEAL_SPACES_IN); \
-          exit 1; \
-        fi
-	@echo OK
+check: check-permissions check-binaries check-version
 
 check-permissions:
 	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
@@ -351,10 +320,6 @@ endif
 
 headers:
 	doc/helpers/headrify
-
-healspaces:
-	@echo "Removing trailing spaces from code lines..."
-	@sed -ri 's/[[:space:]]+$$//g' $(HEAL_SPACES_IN)
 
 optimize-images:
 	@if type pngcrush >/dev/null 2>&1; then \

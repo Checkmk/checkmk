@@ -37,7 +37,14 @@ import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
-import cmk_base.core
+# TODO: For some extremely obscure reason we can't simply import the module and
+# use it in a qualified way in AutomationRestart.execute: It results in:
+#
+#    UnboundLocalError: local variable 'cmk_base' referenced before assignment
+#
+# Doing exactly the same thing in e.g. AutomationDiscovery.execute works.  o_O
+# Leaving a funny identifier as an urgent reminder to figure out what's going on here...
+import cmk_base.core as maxGNARK
 import cmk_base.core_config as core_config
 import cmk_base.snmp as snmp
 import cmk_base.checks as checks
@@ -224,7 +231,7 @@ class AutomationRenameHosts(Automation):
         # it now.
         core_was_running = self._core_is_running()
         if core_was_running:
-            cmk_base.core.do_core_action("stop", quiet=True)
+            maxGNARK.do_core_action("stop", quiet=True)
 
         try:
             for oldname, newname in renamings:
@@ -722,7 +729,7 @@ class AutomationRestart(Automation):
             return "restart"
 
 
-    # TODO: Cleanup duplicate code with cmk_base.core.do_restart()
+    # TODO: Cleanup duplicate code with maxGNARK.do_restart()
     def execute(self, args):
         # make sure, Nagios does not inherit any open
         # filedescriptors. This really happens, e.g. if
@@ -753,7 +760,7 @@ class AutomationRestart(Automation):
 
         try:
             backup_path = None
-            if cmk_base.core.try_get_activation_lock():
+            if maxGNARK.try_get_activation_lock():
                 raise MKAutomationError("Cannot activate changes. "
                       "Another activation process is currently in progresss")
 
@@ -794,7 +801,7 @@ class AutomationRestart(Automation):
                     from cmk_base.core_nagios import precompile_hook
                 precompile_hook()
 
-                cmk_base.core.do_core_action(self._mode())
+                maxGNARK.do_core_action(self._mode())
             else:
                 broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.paths.tmp_dir
                 file(broken_config_path, "w").write(file(cmk.paths.nagios_objects_file).read())

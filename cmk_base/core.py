@@ -46,11 +46,6 @@ from cmk_base.exceptions import MKTimeout
 from cmk_base import config_cache
 import cmk_base.cleanup
 
-try:
-    import cmk_base.cee.core_cmc as core_cmc
-except ImportError:
-    core_cmc = None
-
 _restart_lock_fd = None
 
 #.

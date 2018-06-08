@@ -32,6 +32,7 @@ import subprocess
 import cmk.debug
 from cmk.exceptions import MKTerminate
 
+import cmk_base.utils as utils
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
@@ -192,6 +193,45 @@ class TCPDataSource(CheckMKAgentDataSource):
             status = self._exit_code_spec.get("wrong_version", 1)
 
         return status, output, perfdata
+
+
+    def _is_expected_agent_version(self, agent_version, expected_version):
+        try:
+            if agent_version in [ '(unknown)', None, 'None' ]:
+                return False
+
+            if type(expected_version) == str and expected_version != agent_version:
+                return False
+
+            elif type(expected_version) == tuple and expected_version[0] == 'at_least':
+                spec = expected_version[1]
+                if utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
+                    expected = int(spec['daily_build'].replace('.', ''))
+
+                    branch = utils.branch_of_daily_build(agent_version)
+                    if branch == "master":
+                        agent = int(agent_version.replace('.', ''))
+
+                    else: # branch build (e.g. 1.2.4-2014.06.01)
+                        agent = int(agent_version.split('-')[1].replace('.', ''))
+
+                    if agent < expected:
+                        return False
+
+                elif 'release' in spec:
+                    if utils.is_daily_build_version(agent_version):
+                        return False
+
+                    if utils.parse_check_mk_version(agent_version) \
+                        < utils.parse_check_mk_version(spec['release']):
+                        return False
+
+            return True
+        except Exception, e:
+            if cmk.debug.enabled():
+                raise
+            raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
+                    (agent_version, expected_version, e))
 
 
     def _decrypt_package(self, encrypted_pkg, encryption_key):

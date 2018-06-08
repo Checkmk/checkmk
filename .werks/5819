@@ -1,0 +1,11 @@
+Title: Host DNS names may include underscores again
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1528466319
+
+

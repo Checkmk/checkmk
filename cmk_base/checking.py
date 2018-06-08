@@ -46,7 +46,7 @@ import cmk_base.snmp as snmp
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
-import cmk_base.core as core
+import cmk_base.core
 import cmk_base.check_table as check_table
 from cmk_base.exceptions import MKTimeout, MKParseFunctionError, MKIPAddressLookupError, \
                                 MKAgentError, MKSNMPError
@@ -273,7 +273,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
 
     # Skip checks that are not in their check period
     period = config.check_period_of(hostname, description)
-    if period and not core.check_timeperiod(period):
+    if period and not cmk_base.core.check_timeperiod(period):
         console.verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
         return False
 
@@ -370,7 +370,7 @@ def _determine_check_params(params):
     if isinstance(params, dict) and "tp_default_value" in params:
         for timeperiod, tp_params in params["tp_values"]:
             try:
-                tp_result = core.timeperiod_active(timeperiod)
+                tp_result = cmk_base.core.timeperiod_active(timeperiod)
             except:
                 if cmk.debug.enabled():
                     raise

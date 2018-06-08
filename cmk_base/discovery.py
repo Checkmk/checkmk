@@ -50,7 +50,7 @@ import cmk_base.snmp as snmp
 import cmk_base.checking as checking
 import cmk_base.data_sources as data_sources
 import cmk_base.check_table as check_table
-import cmk_base.core as core
+import cmk_base.core
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKTimeout
 import cmk_base.cleanup
@@ -497,9 +497,9 @@ def discover_marked_hosts(create_config_hook, precompile_hook):
     if activation_required:
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
         if config.monitoring_core == "cmc":
-            core.do_reload(create_config_hook, precompile_hook)
+            cmk_base.core.do_reload(create_config_hook, precompile_hook)
         else:
-            core.do_restart(create_config_hook, precompile_hook)
+            cmk_base.core.do_restart(create_config_hook, precompile_hook)
 
 
 def _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):

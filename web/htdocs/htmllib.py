@@ -3094,4 +3094,3 @@ class html(HTMLGenerator, RequestHandler):
         except:
             raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
         return m * 60 + h * 3600
-

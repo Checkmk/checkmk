@@ -82,4 +82,3 @@ class MKSkipCheck(Exception):
 # which have a timeout set.
 class MKTimeout(Exception):
     pass
-

@@ -285,5 +285,3 @@ def _livestatus_auth_user():
         return config.user.id
 
     return None
-
-

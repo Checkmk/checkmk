@@ -205,5 +205,3 @@ except Exception, e:
         pprint.pprint(complete_list)
     sys.stderr.write("Connection error: %s" % e)
     sys.exit(1)
-
-

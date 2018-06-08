@@ -410,4 +410,3 @@ def interface_port_types():
         289: "ptm",
         290: "ghn",
     }
-

@@ -88,5 +88,3 @@ def read_autochecks_of(hostname, world="config"):
         autochecks.append((check_plugin_name, item,
             cmk_base.checks.compute_check_parameters(hostname, check_plugin_name, item, parameters)))
     return autochecks
-
-

@@ -548,5 +548,3 @@ def replace_macros(s, macros):
                     raise
 
     return s
-
-

@@ -120,4 +120,3 @@ except Exception, e: # Probably an IndexError
     sys.exit(1)
 
 print "\n".join(output_lines)
-

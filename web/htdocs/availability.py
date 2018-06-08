@@ -2012,5 +2012,3 @@ def history_url_of(av_object, time_range):
         ]
 
     return "view.py?" + html.urlencode_vars(history_url_vars)
-
-

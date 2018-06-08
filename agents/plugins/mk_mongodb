@@ -202,4 +202,3 @@ if var_dir:
         file(state_file, "w").write("%d" % get_timestamp(startup_warnings["log"][-1].split(".")[0]))
 
 sys.stdout.write("<<<<>>>>\n")
-

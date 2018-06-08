@@ -64,9 +64,8 @@ def show_apache_log(req):
             level = parts[1].strip().lstrip('[')
             message = parts[2].strip()
             message = re.sub("line ([0-9]+)", "line <b class=line>\\1</b>", message)
-            req.write("<b class=date>%s</b> <b class=\"level %s\">%s</b> <b class=\"msg %s\">%s</b>\n" % 
+            req.write("<b class=date>%s</b> <b class=\"level %s\">%s</b> <b class=\"msg %s\">%s</b>\n" %
                       (html_escape(date), html_escape(level), "%-7s" % html_escape(level),
                        html_escape(level), html_escape(message)))
         req.write("</pre>\n")
     req.write("</body></html>\n")
-

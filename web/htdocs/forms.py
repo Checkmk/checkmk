@@ -300,4 +300,3 @@ def end():
     html.end_foldable_container()
     html.tr(html.render_td('', colspan=2), class_=["bottom", "open" if g_section_isopen else "closed"])
     html.close_table()
-

@@ -1,9 +1,0 @@
-Title: Fixed "unknown agent version" message in Check_MK check, shown by cluster hosts
-Level: 1
-Component: checks
-Compatible: compat
-Edition: cre
-Version: 1.6.0i1
-Date: 1528389637
-Class: fix
-

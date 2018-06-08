@@ -107,11 +107,6 @@ class DataSources(object):
     def _initialize_data_sources(self):
         self._sources = {}
 
-        if config.is_cluster(self._hostname):
-            # Cluster hosts do not have any actual data sources
-            # Instead all data is provided by the nodes
-            return
-
         self._initialize_agent_based_data_sources()
         self._initialize_snmp_data_sources()
         self._initialize_management_board_data_sources()

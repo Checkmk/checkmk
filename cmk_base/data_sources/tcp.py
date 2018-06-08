@@ -194,45 +194,6 @@ class TCPDataSource(CheckMKAgentDataSource):
         return status, output, perfdata
 
 
-    def _is_expected_agent_version(self, agent_version, expected_version):
-        try:
-            if agent_version in [ '(unknown)', None, 'None' ]:
-                return False
-
-            if type(expected_version) == str and expected_version != agent_version:
-                return False
-
-            elif type(expected_version) == tuple and expected_version[0] == 'at_least':
-                spec = expected_version[1]
-                if cmk_base.utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
-                    expected = int(spec['daily_build'].replace('.', ''))
-
-                    branch = cmk_base.utils.branch_of_daily_build(agent_version)
-                    if branch == "master":
-                        agent = int(agent_version.replace('.', ''))
-
-                    else: # branch build (e.g. 1.2.4-2014.06.01)
-                        agent = int(agent_version.split('-')[1].replace('.', ''))
-
-                    if agent < expected:
-                        return False
-
-                elif 'release' in spec:
-                    if cmk_base.utils.is_daily_build_version(agent_version):
-                        return False
-
-                    if cmk_base.utils.parse_check_mk_version(agent_version) \
-                        < cmk_base.utils.parse_check_mk_version(spec['release']):
-                        return False
-
-            return True
-        except Exception, e:
-            if cmk.debug.enabled():
-                raise
-            raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
-                    (agent_version, expected_version, e))
-
-
     def _decrypt_package(self, encrypted_pkg, encryption_key):
         from Cryptodome.Cipher import AES
         from hashlib import md5

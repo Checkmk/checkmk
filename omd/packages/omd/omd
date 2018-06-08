@@ -278,7 +278,7 @@ def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_t
         if choice == "abort":
             bail_out("Update aborted.")
         elif choice == "shell":
-	    thedir = "/".join(user_path.split("/")[:-1])
+            thedir = "/".join(user_path.split("/")[:-1])
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
             os.system("cd '%s' ; bash -i" % thedir)
         else:
@@ -747,7 +747,7 @@ def create_skeleton_files(sitename, dir):
                     continue
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
-	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
+            create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
@@ -1741,15 +1741,15 @@ def check_status(sitename, display=True, daemon=None, bare=False):
         state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
 
         if display and (state != 5 or opt_verbose):
-	    if bare:
-		sys.stdout.write(komponent + " ")
-	    else:
-		sys.stdout.write("%-16s" % (komponent + ":"))
-		sys.stdout.write(tty_bold)
+            if bare:
+                sys.stdout.write(komponent + " ")
+            else:
+                sys.stdout.write("%-16s" % (komponent + ":"))
+                sys.stdout.write(tty_bold)
 
-	if bare:
-	    if state != 5 or opt_verbose:
-		sys.stdout.write("%d\n" % state)
+        if bare:
+            if state != 5 or opt_verbose:
+                sys.stdout.write("%d\n" % state)
 
         if state == 0:
             if display and not bare:
@@ -1779,10 +1779,10 @@ def check_status(sitename, display=True, daemon=None, bare=False):
         exit_code = 2
         ovstate = tty_yellow + "partially running"
     if display:
-	if bare:
-	    sys.stdout.write("OVERALL %d\n" % exit_code)
-	else:
-	    sys.stdout.write("-----------------------\n")
+        if bare:
+            sys.stdout.write("OVERALL %d\n" % exit_code)
+        else:
+            sys.stdout.write("-----------------------\n")
             sys.stdout.write("Overall state:  %s\n" %
                 (tty_bold + ovstate + tty_normal))
     return exit_code
@@ -2498,7 +2498,7 @@ def main_uninstall(args, options=None):
 
     for path in [ g_info["OMD_PHYSICAL_BASE"],
                   "/omd",
-		          g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
+                          g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
                   "/etc/init.d/omd",
                   "/usr/bin/omd" ]:
         shutil.rmtree(path, ignore_errors=True)
@@ -3262,7 +3262,7 @@ def main_umount(args, options=None):
                 continue
 
             sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, site, tty_normal))
-	    sys.stdout.flush()
+            sys.stdout.flush()
 
             if not unmount_tmpfs(site, False, kill="kill" in options):
                 sys.stdout.write(tty_error + "\n")

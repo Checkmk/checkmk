@@ -730,8 +730,8 @@ class TestRunner(threading.Thread):
                 "number of CPUs (%d)." % (m.cpu_load[1], self.test.system_info.cpu_count))
 
         # Check memory threshold. There are different values provided by psutil.
-	# this value sounds good to me for testing.
-	if m.memory.available < 100*1024*1024:
+        # this value sounds good to me for testing.
+        if m.memory.available < 100*1024*1024:
             raise MKFailTestCase("There is only %s memory available." %
                 (fmt_bytes(m.memory.available)))
 
@@ -757,7 +757,7 @@ class TestRunner(threading.Thread):
         if m.cpu_load[0] > self.test.system_info.cpu_count * 0.2:
             return
 
-	if m.memory.percent > 10:
+        if m.memory.percent > 10:
             return
 
         if m.site_stats and m.site_stats["helper_usage_cmk"]*100 > 10:

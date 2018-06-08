@@ -842,7 +842,7 @@ class HostAddress(TextAscii):
         if re.match(r"[\d.]+$", hostname):
             return False
 
-        allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+        allowed = re.compile("(?!-)[A-Z_\d-]{1,63}(?<!-)$", re.IGNORECASE)
         return all(allowed.match(x) for x in hostname.split("."))
 
 

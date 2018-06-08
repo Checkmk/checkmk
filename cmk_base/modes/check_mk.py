@@ -1013,7 +1013,7 @@ def _cmc_file(options):
     return options["cmc-file"] if options and "cmc-file" in options else "config"
 
 
-def _create_config_hook(options=None):
+def _create_config_hook(options):
     from cmk_base.config import monitoring_core
     if monitoring_core == "cmc":
         from cmk_base.cee.core_cmc import create_config_hook as cch
@@ -1032,9 +1032,14 @@ def _precompile_hook():
     return precompile_hook
 
 
+# TODO: Change this naive dict representation of a core object into a real class!
+def _create_core(options=None):
+    return {"create_config": _create_config_hook(options), "precompile": _precompile_hook()}
+
+
 def mode_update_no_precompile(options):
     from cmk_base.core_config import do_update
-    do_update(_create_config_hook(options), _precompile_hook(), with_precompile=False)
+    do_update(_create_core(options), with_precompile=False)
 
 modes.register(Mode(
     long_option="update-no-precompile",
@@ -1091,7 +1096,7 @@ modes.register(Mode(
 
 def mode_update(options):
     from cmk_base.core_config import do_update
-    do_update(_create_config_hook(options), _precompile_hook(), with_precompile=True)
+    do_update(_create_core(options), with_precompile=True)
 
 modes.register(Mode(
     long_option="update",
@@ -1130,7 +1135,7 @@ modes.register(Mode(
 
 def mode_restart():
     import cmk_base.core
-    cmk_base.core.do_restart(_create_config_hook(), _precompile_hook())
+    cmk_base.core.do_restart(_create_core())
 
 modes.register(Mode(
     long_option="restart",
@@ -1152,7 +1157,7 @@ modes.register(Mode(
 
 def mode_reload():
     import cmk_base.core
-    cmk_base.core.do_reload(_create_config_hook(), _precompile_hook())
+    cmk_base.core.do_reload(_create_core())
 
 modes.register(Mode(
     long_option="reload",
@@ -1404,7 +1409,7 @@ modes.register(Mode(
 
 def mode_discover_marked_hosts():
     import cmk_base.discovery as discovery
-    discovery.discover_marked_hosts(_create_config_hook(), _precompile_hook())
+    discovery.discover_marked_hosts(_create_core())
 
 modes.register(Mode(
     long_option="discover-marked-hosts",

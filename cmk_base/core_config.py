@@ -218,10 +218,10 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
 #   '----------------------------------------------------------------------'
 
 # TODO: Move to modes?
-def do_create_config(create_config_hook, with_agents):
+def do_create_config(core, with_agents):
     console.output("Generating configuration for core (type %s)..." %
                                                 config.monitoring_core)
-    create_core_config(create_config_hook)
+    create_core_config(core)
     console.output(tty.ok + "\n")
 
     if with_agents:
@@ -232,12 +232,12 @@ def do_create_config(create_config_hook, with_agents):
             pass
 
 
-def create_core_config(create_config_hook):
+def create_core_config(core):
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
-    create_config_hook()
+    core["create_config"]()
     cmk.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()
@@ -266,11 +266,11 @@ def _verify_non_duplicate_hosts():
               "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
 
 
-def do_update(create_config_hook, precompile_hook, with_precompile):
+def do_update(core, with_precompile):
     try:
-        do_create_config(create_config_hook, with_agents=with_precompile)
+        do_create_config(core, with_agents=with_precompile)
         if with_precompile:
-            precompile_hook()
+            core["precompile"]()
 
     except Exception, e:
         console.error("Configuration Error: %s\n" % e)

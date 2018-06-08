@@ -43,7 +43,7 @@ from cmk.regex import regex
 
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
-import cmk_base.core as core
+import cmk_base.core
 
 def event_keepalive(event_function, log_function, call_every_loop=None, loop_interval=None, shutdown_function=None):
     last_config_timestamp = config_timestamp()
@@ -60,7 +60,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
     while True:
         try:
             # Invalidate timeperiod caches
-            core.cleanup_timeperiod_caches()
+            cmk_base.core.cleanup_timeperiod_caches()
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next event arrives. We must
@@ -688,7 +688,7 @@ def event_match_checktype(rule, context):
 def event_match_timeperiod(rule):
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
-        if timeperiod != "24X7" and not core.check_timeperiod(timeperiod):
+        if timeperiod != "24X7" and not cmk_base.core.check_timeperiod(timeperiod):
             return "The timeperiod '%s' is currently not active." % timeperiod
 
 

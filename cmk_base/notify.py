@@ -54,7 +54,7 @@ import cmk_base.utils
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.console as console
-import cmk_base.core as core
+import cmk_base.core
 import cmk_base.events as events
 
 try:
@@ -688,7 +688,7 @@ def rbn_get_bulk_params(rule):
         return params
     elif method == "timeperiod":
         try:
-            active = core.timeperiod_active(params["timeperiod"])
+            active = cmk_base.core.timeperiod_active(params["timeperiod"])
         except:
             if cmk.debug.enabled():
                 raise
@@ -1131,7 +1131,7 @@ def should_notify(context, entry):
     if "timeperiod" in entry:
         timeperiod = entry["timeperiod"]
         if timeperiod and timeperiod != "24X7":
-            if not core.check_timeperiod(timeperiod):
+            if not cmk_base.core.check_timeperiod(timeperiod):
                 notify_log(" - Skipping: time period %s is currently not active" % timeperiod)
                 return False
     return True
@@ -1631,7 +1631,7 @@ def find_bulks(only_ripe):
                     bulks.append((bulk_dir, age, interval, 'n.a.', count, uuids))
                 else:
                     try:
-                        active = core.timeperiod_active(timeperiod)
+                        active = cmk_base.core.timeperiod_active(timeperiod)
                     except:
                         # This prevents sending bulk notifications if a
                         # livestatus connection error appears. It also implies

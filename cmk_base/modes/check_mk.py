@@ -1069,8 +1069,8 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_compile():
-    import cmk_base.core_nagios as core_nagios
-    core_nagios.precompile_hostchecks()
+    import cmk_base.core_nagios
+    cmk_base.core_nagios.precompile_hostchecks()
 
 modes.register(Mode(
     long_option="compile",
@@ -1129,8 +1129,8 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_restart():
-    import cmk_base.core as core
-    core.do_restart(_create_config_hook(), _precompile_hook())
+    import cmk_base.core
+    cmk_base.core.do_restart(_create_config_hook(), _precompile_hook())
 
 modes.register(Mode(
     long_option="restart",
@@ -1151,8 +1151,8 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_reload():
-    import cmk_base.core as core
-    core.do_reload(_create_config_hook(), _precompile_hook())
+    import cmk_base.core
+    cmk_base.core.do_reload(_create_config_hook(), _precompile_hook())
 
 modes.register(Mode(
     long_option="reload",

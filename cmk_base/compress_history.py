@@ -151,4 +151,3 @@ def log_vanished_object(output, timestamp, host, service):
         output.write("[%s] VANISHED SERVICE: %s;%s\n" % (timestamp, host, service))
     else:
         output.write("[%s] VANISHED HOST: %s\n" % (timestamp, host))
-

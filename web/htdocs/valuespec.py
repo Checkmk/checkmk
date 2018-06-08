@@ -4808,5 +4808,3 @@ class TimeperiodValuespec(ValueSpec):
             return value.get(self.tp_default_value_key)
         else:
             return value
-
-

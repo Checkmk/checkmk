@@ -59,5 +59,3 @@ else:
 # configuration of the spooler. notification_spool_to has
 # the tuple format (remote_host, tcp_port, also_local)
 notification_spool_to = None
-
-

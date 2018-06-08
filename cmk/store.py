@@ -449,5 +449,3 @@ def release_all_locks():
 #
 #
 #open = LockedOpenWithTempfile
-
-

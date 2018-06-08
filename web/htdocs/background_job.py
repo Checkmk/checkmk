@@ -591,4 +591,3 @@ class BackgroundJobManager(object):
                         all_jobs.remove(entry)
         except Exception, e:
             self._logger.error(traceback.format_exc())
-

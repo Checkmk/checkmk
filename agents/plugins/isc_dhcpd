@@ -82,4 +82,3 @@ for line in file(leases_file):
             seen_addresses.add(ip_address)
         ip_address = None
         binding_state = None
-

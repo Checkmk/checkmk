@@ -831,7 +831,7 @@ class BackupStream(MKBackupStream):
                                           self._get_encryption_public_key(), 32)
             self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
 
-            # Write out a file version marker and  the encrypted secret key, preceded by 
+            # Write out a file version marker and  the encrypted secret key, preceded by
             # a length indication. All separated by \0.
             # Version 1: Encrypted secret key written with pubkey.encrypt(). Worked with
             #            early versions of 1.4 until moving from PyCryto to PyCryptodome

@@ -411,4 +411,3 @@ def show_context_links(context_links):
     for title, uri, icon, buttonid in context_links:
         items.append(('Context', uri, title))
     jqm_page_index(_("Related Views"), items)
-

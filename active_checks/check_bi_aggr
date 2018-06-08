@@ -270,4 +270,3 @@ if opt_acknowledged and row["aggr_acknowledged"] == '1':
 
 sys.stdout.write('%s\n' % aggr_output)
 sys.exit(aggr_state)
-

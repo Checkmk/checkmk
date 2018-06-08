@@ -86,4 +86,3 @@ def _add_times_to_phase():
 
 def _time_snapshot():
     return list(os.times()[:4]) + [ time.time() ]
-

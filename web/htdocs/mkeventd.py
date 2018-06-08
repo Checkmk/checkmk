@@ -451,5 +451,3 @@ def parse_ipv4_network(text):
 
     network_text, bits_text = text.split("/")
     return parse_ipv4_address(network_text), int(bits_text)
-
-

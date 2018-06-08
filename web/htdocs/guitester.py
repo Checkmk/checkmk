@@ -401,4 +401,3 @@ def wait_for_pending(what, generator_function, tries):
 
     else:
         html.message("Reschedule failed after %d tries. Still pending %ss: %s\n" % (tries, what, ", ".join([e[1] for e in entries])))
-

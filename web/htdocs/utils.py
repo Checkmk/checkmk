@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 """This is an unsorted collection of small unrelated helper functions which are
-usable in all components of the Web GUI of Check_MK 
+usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 

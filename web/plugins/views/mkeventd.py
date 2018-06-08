@@ -1099,7 +1099,7 @@ if mkeventd_enabled:
             ('history_what_explained', None, None),
             ('history_who', None, None),
             ('event_state', None, None),
-            ('event_host', None, None), 
+            ('event_host', None, None),
             ('event_application', None, None),
             ('event_text', None, None),
             ('event_sl', None, None),

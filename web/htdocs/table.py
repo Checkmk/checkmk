@@ -533,5 +533,3 @@ def _sort_rows(rows, sort_col, sort_reverse):
             rows.insert(index, row)
 
     return rows
-
-

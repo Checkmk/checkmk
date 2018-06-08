@@ -301,5 +301,3 @@ class DataSources(object):
             cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_raw_data)
 
         return multi_host_sections
-
-

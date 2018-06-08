@@ -675,4 +675,3 @@ def wipe_directory(path):
                         continue
                     else:
                         raise
-

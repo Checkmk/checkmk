@@ -60,5 +60,3 @@ def output_profile():
 
     console.output("Profile '%s' written. Please run %s.\n" %
                    (_profile_path, show_profile), stream=sys.stderr)
-
-

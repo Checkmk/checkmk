@@ -15804,7 +15804,7 @@ register_check_parameters(
     _("Citrix Netscaler SSL certificates"),
     Dictionary(
         elements = [
-            ('age_levels', 
+            ('age_levels',
              Tuple(
                  title = _("Remaining days of validity"),
                  elements = [

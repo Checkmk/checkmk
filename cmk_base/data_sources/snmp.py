@@ -172,7 +172,7 @@ class SNMPDataSource(DataSource):
 
 
     def _execute(self):
-    	import cmk_base.inventory_plugins
+        import cmk_base.inventory_plugins
 
         self._verify_ipaddress()
 

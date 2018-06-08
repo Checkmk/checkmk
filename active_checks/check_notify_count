@@ -71,7 +71,7 @@ for o,a in opts:
         usage()
         sys.exit(0)
     elif o == '-r':
-    	timerange = int(a)
+        timerange = int(a)
     elif o == '-w':
         warn = int(a)
     elif o == '-c':

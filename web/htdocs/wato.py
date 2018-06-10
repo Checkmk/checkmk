@@ -1170,38 +1170,65 @@ def get_hosts_from_checkboxes(filterfunc = None):
     return [ folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc) ]
 
 
-# Renders the popup menu contents for either moving a host or a folder to another folder
-# TODO: Create webservice mode
-def ajax_popup_move_to_folder():
-    what     = html.var("what")
-    ident    = html.var("ident")
-    back_url = html.var("back_url")
+# TODO: Split this into one base class and one subclass for folder and hosts
+class ModeAjaxPopupMoveToFolder(WatoWebApiMode):
+    """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
-    if what == "host":
-        what_title = _("host")
-        obj = watolib.Host.host(ident)
-        choices = obj.folder().choices_for_moving_host()
+    def _from_vars(self):
+        self._what = html.var("what")
+        if self._what not in [ "host", "folder" ]:
+            raise NotImplementedError()
 
-    elif what == "folder":
-        what_title = _("folder")
-        obj = watolib.Folder.folder(ident)
-        choices = obj.choices_for_moving_folder()
+        self._ident = html.var("ident")
 
-    else:
-        return
+        self._back_url = html.var("back_url")
+        if not self._back_url or not self._back_url.startswith("wato.py"):
+            raise MKUserError("back_url", _("Invalid back URL provided."))
 
-    if not back_url or not back_url.startswith("wato.py"):
-        raise MKUserError("back_url", _("Invalid back URL provided."))
 
-    html.span(_('Move this %s to:') % what_title)
+    # TODO: Better use handle_page() for standard AJAX call error handling. This
+    # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    def page(self):
+        html.span(self._move_title())
 
-    if choices:
-        choices = [("@", _("(select target folder)"))] + choices
-        onchange="location.href='%s&_ident=%s&_move_%s_to=' + this.value;" % (back_url, ident, what)
-        html.dropdown("_host_move_%s" % ident, choices, deflt="@", size = '10', onchange=onchange)
-    else:
-        html.write_text(_("No valid target folder."))
+        choices = self._get_choices()
+        if not choices:
+            html.write_text(_("No valid target folder."))
+            return
 
+        html.dropdown("_host_move_%s" % self._ident,
+            choices=choices,
+            deflt="@",
+            size = '10',
+            onchange="location.href='%s&_ident=%s&_move_%s_to=' + this.value;" %
+                                    (self._back_url, self._ident, self._what),
+        )
+
+
+    def _move_title(self):
+        if self._what == "host":
+            return _('Move this host to:')
+        else:
+            return _('Move this folder to:')
+
+
+    def _get_choices(self):
+        choices = [
+            ("@", _("(select target folder)")),
+        ]
+
+        if self._what == "host":
+            obj = watolib.Host.host(self._ident)
+            choices += obj.folder().choices_for_moving_host()
+
+        elif self._what == "folder":
+            obj = watolib.Folder.folder(self._ident)
+            choices += obj.choices_for_moving_folder()
+
+        else:
+            raise NotImplementedError()
+
+        return choices
 
 #.
 #   .--Edit Folder---------------------------------------------------------.

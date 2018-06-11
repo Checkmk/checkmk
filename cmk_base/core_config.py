@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import os
 import sys
 
@@ -39,6 +40,23 @@ import cmk_base.config as config
 import cmk_base.checks as checks
 import cmk_base.rulesets as rulesets
 import cmk_base.ip_lookup as ip_lookup
+
+
+class MonitoringCore(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def __init__(self):
+        super(MonitoringCore, self).__init__()
+
+    @abc.abstractmethod
+    def create_config(self):
+        pass
+
+    @abc.abstractmethod
+    def precompile(self):
+        pass
+
 
 _ignore_ip_lookup_failures = False
 _failed_ip_lookups         = []
@@ -237,7 +255,7 @@ def create_core_config(core):
 
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
-    core["create_config"]()
+    core.create_config()
     cmk.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()
@@ -270,7 +288,7 @@ def do_update(core, with_precompile):
     try:
         do_create_config(core, with_agents=with_precompile)
         if with_precompile:
-            core["precompile"]()
+            core.precompile()
 
     except Exception, e:
         console.error("Configuration Error: %s\n" % e)

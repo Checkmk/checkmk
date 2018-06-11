@@ -46,6 +46,20 @@ import cmk_base.data_sources as data_sources
 import cmk_base.check_utils
 
 
+class NagiosCore(core_config.MonitoringCore):
+    def __init__(self):
+        super(NagiosCore, self).__init__()
+
+    def create_config(self):
+        with file(cmk.paths.nagios_objects_file, "w") as out:
+            create_config(out, None)
+
+    def precompile(self):
+        console.output("Precompiling host checks...")
+        precompile_hostchecks()
+        console.output(tty.ok + "\n")
+
+
 #   .--Create config-------------------------------------------------------.
 #   |      ____                _                          __ _             |
 #   |     / ___|_ __ ___  __ _| |_ ___    ___ ___  _ __  / _(_) __ _       |
@@ -56,11 +70,6 @@ import cmk_base.check_utils
 #   +----------------------------------------------------------------------+
 #   |  Create a configuration file for Nagios core with hosts + services   |
 #   '----------------------------------------------------------------------'
-
-def create_config_hook():
-    with file(cmk.paths.nagios_objects_file, "w") as out:
-        create_config(out, None)
-
 
 def create_config(outfile, hostnames):
     global hostgroups_to_define
@@ -861,13 +870,6 @@ def _extra_conf_of(confdict, hostname, service, exclude=None):
 #   | all saves substantial CPU ressources as opposed to running Check_MK  |
 #   | in adhoc mode (about 75%).                                           |
 #   '----------------------------------------------------------------------'
-
-# TODO: Move to modes
-def precompile_hook():
-    console.output("Precompiling host checks...")
-    precompile_hostchecks()
-    console.output(tty.ok + "\n")
-
 
 # Find files to be included in precompile host check for a certain
 # check (for example df or mem.used). In case of checks with a period

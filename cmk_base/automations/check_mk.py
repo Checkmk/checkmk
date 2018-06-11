@@ -784,7 +784,7 @@ class AutomationRestart(Automation):
                 if backup_path:
                     os.remove(backup_path)
 
-                core["precompile"]()
+                core.precompile()
 
                 cmk_base.core.do_core_action(self._mode())
             else:

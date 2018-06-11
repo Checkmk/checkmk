@@ -38,7 +38,7 @@ internal_module_names = [
 ]
 
 import cmk
-if cmk.is_enterprise_edition():
+if not cmk.is_raw_edition():
     internal_module_names.append("sla")
 
 pagehandlers = {}

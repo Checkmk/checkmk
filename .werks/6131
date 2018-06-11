@@ -1,0 +1,11 @@
+Title: brocade_fcport: Fixed wrong look up of indices which might lead to stale services
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p34
+Date: 1528720852
+
+

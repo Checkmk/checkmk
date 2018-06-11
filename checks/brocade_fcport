@@ -132,11 +132,12 @@ def parse_brocade_fcport(info):
         c3discards, brocade_speed, portname, porttype, ifspeed in if_table:
 
         # Since FW v8.0.1b [rx/tx]words are no longer available
+        # Use 64bit counters if available
         bbcredits = None
-        if txwords == "" or rxwords == "":
+        if len(if64_info) > 0:
             fcmgmt_portstats = []
             for oidend, tx_elements, rx_elements, bbcredits_64 in if64_info:
-                if index == int(oidend.split(".")[-1]):
+                if index == oidend.split(".")[-1]:
                     fcmgmt_portstats = [ binstring_to_int(tx_elements),
                                          binstring_to_int(rx_elements),
                                          binstring_to_int(bbcredits_64) ]

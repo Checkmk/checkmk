@@ -24,31 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk_base.config import monitoring_core
+import cmk_base.config
 
-
-# TODO: The "config" literal should really be centralized somehow.
-def _cmc_file(options):
-    return options["cmc-file"] if options and "cmc-file" in options else "config"
-
-
-def _create_config_hook(options):
-    if monitoring_core == "cmc":
-        from cmk_base.cee.core_cmc import create_config_hook as cch
-        create_config_hook = lambda: cch(_cmc_file(options))
-    else:
-        from cmk_base.core_nagios import create_config_hook
-    return create_config_hook
-
-
-def _precompile_hook():
-    if monitoring_core == "cmc":
-        from cmk_base.cee.core_cmc import precompile_hook
-    else:
-        from cmk_base.core_nagios import precompile_hook
-    return precompile_hook
-
-
-# TODO: Change this naive dict representation of a core object into a real class!
 def create_core(options=None):
-    return {"create_config": _create_config_hook(options), "precompile": _precompile_hook()}
+    if cmk_base.config.monitoring_core == "cmc":
+        from cmk_base.cee.core_cmc import CMC
+        return CMC(options)
+    from cmk_base.core_nagios import NagiosCore
+    return NagiosCore()

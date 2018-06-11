@@ -97,7 +97,7 @@ def do_restart(core, only_reload=False):
             if backup_path:
                 os.remove(backup_path)
 
-            core["precompile"]()
+            core.precompile()
 
             do_core_action(only_reload and "reload" or "restart")
         else:

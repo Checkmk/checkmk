@@ -37,7 +37,7 @@ from gui_exceptions import MKGeneralException, MKUserError, MKInternalError
 
 import cmk.paths
 
-if cmk.is_enterprise_edition():
+if not cmk.is_raw_edition():
     import sla
 
 # Datastructures and functions needed before plugins can be loaded
@@ -1665,7 +1665,7 @@ def show_view(view, show_heading = False, show_buttons = True,
                  if "host_name" in row:
                      row["host_inventory"] = inventory.load_tree(row["host_name"])
 
-        if cmk.is_enterprise_edition():
+        if not cmk.is_raw_edition():
             sla_params = []
             for cell in cells:
                 if cell.painter_name() in ["sla_specific", "sla_fixed"]:

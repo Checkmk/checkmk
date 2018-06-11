@@ -46,6 +46,7 @@ from cmk_base.automations import automations, Automation, MKAutomationError
 import cmk_base.check_utils
 import cmk_base.autochecks
 import cmk_base.nagios_utils
+from cmk_base.core_factory import create_core
 
 
 class DiscoveryAutomation(Automation):
@@ -721,40 +722,6 @@ class AutomationRestart(Automation):
         else:
             return "restart"
 
-    # TODO: _cmc_file, _create_config_hook, _precompile_hook, _create_core are copy-n-pasted from cmk_base.modes.check_mk.
-    @staticmethod
-    def _cmc_file(options):
-        return options["cmc-file"] if options and "cmc-file" in options else "config"
-
-
-    @staticmethod
-    def _create_config_hook(options):
-        from cmk_base.config import monitoring_core
-        if monitoring_core == "cmc":
-            from cmk_base.cee.core_cmc import create_config_hook as cch
-            create_config_hook = lambda: cch(AutomationRestart._cmc_file(options))
-        else:
-            from cmk_base.core_nagios import create_config_hook
-        return create_config_hook
-
-
-    @staticmethod
-    def _precompile_hook():
-        from cmk_base.config import monitoring_core
-        if monitoring_core == "cmc":
-            from cmk_base.cee.core_cmc import precompile_hook
-        else:
-            from cmk_base.core_nagios import precompile_hook
-        return precompile_hook
-
-
-    # TODO: Change this naive dict representation of a core object into a real class!
-    @staticmethod
-    def _create_core(options=None):
-        return {"create_config": AutomationRestart._create_config_hook(options),
-                "precompile": AutomationRestart._precompile_hook()}
-
-
     # TODO: Cleanup duplicate code with cmk_base.core.do_restart()
     def execute(self, args):
         # make sure, Nagios does not inherit any open
@@ -796,7 +763,7 @@ class AutomationRestart(Automation):
             else:
                 backup_path = None
 
-            core = AutomationRestart._create_core()
+            core = create_core()
             try:
                 configuration_warnings = core_config.create_core_config(core)
 

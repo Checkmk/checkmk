@@ -40,6 +40,7 @@ from cmk_base.exceptions import MKAgentError
 
 from cmk_base.modes import modes, Mode, Option, keepalive_option
 import cmk_base.check_utils
+from cmk_base.core_factory import create_core
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -1008,38 +1009,9 @@ modes.register(Mode(
 ))
 
 
-# TODO: The "config" literal should really be centralized somehow.
-def _cmc_file(options):
-    return options["cmc-file"] if options and "cmc-file" in options else "config"
-
-
-def _create_config_hook(options):
-    from cmk_base.config import monitoring_core
-    if monitoring_core == "cmc":
-        from cmk_base.cee.core_cmc import create_config_hook as cch
-        create_config_hook = lambda: cch(_cmc_file(options))
-    else:
-        from cmk_base.core_nagios import create_config_hook
-    return create_config_hook
-
-
-def _precompile_hook():
-    from cmk_base.config import monitoring_core
-    if monitoring_core == "cmc":
-        from cmk_base.cee.core_cmc import precompile_hook
-    else:
-        from cmk_base.core_nagios import precompile_hook
-    return precompile_hook
-
-
-# TODO: Change this naive dict representation of a core object into a real class!
-def _create_core(options=None):
-    return {"create_config": _create_config_hook(options), "precompile": _precompile_hook()}
-
-
 def mode_update_no_precompile(options):
     from cmk_base.core_config import do_update
-    do_update(_create_core(options), with_precompile=False)
+    do_update(create_core(options), with_precompile=False)
 
 modes.register(Mode(
     long_option="update-no-precompile",
@@ -1096,7 +1068,7 @@ modes.register(Mode(
 
 def mode_update(options):
     from cmk_base.core_config import do_update
-    do_update(_create_core(options), with_precompile=True)
+    do_update(create_core(options), with_precompile=True)
 
 modes.register(Mode(
     long_option="update",
@@ -1135,7 +1107,7 @@ modes.register(Mode(
 
 def mode_restart():
     import cmk_base.core
-    cmk_base.core.do_restart(_create_core())
+    cmk_base.core.do_restart(create_core())
 
 modes.register(Mode(
     long_option="restart",
@@ -1157,7 +1129,7 @@ modes.register(Mode(
 
 def mode_reload():
     import cmk_base.core
-    cmk_base.core.do_reload(_create_core())
+    cmk_base.core.do_reload(create_core())
 
 modes.register(Mode(
     long_option="reload",
@@ -1409,7 +1381,7 @@ modes.register(Mode(
 
 def mode_discover_marked_hosts():
     import cmk_base.discovery as discovery
-    discovery.discover_marked_hosts(_create_core())
+    discovery.discover_marked_hosts(create_core())
 
 modes.register(Mode(
     long_option="discover-marked-hosts",

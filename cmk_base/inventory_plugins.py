@@ -62,10 +62,10 @@ def load(): # pylint: disable=function-redefined
             continue # skip already loaded files (e.g. from local)
 
         try:
-            plugin_context = _new_inv_context(f)
+            plugin_context = _new_inv_context()
             known_plugins = inv_info.keys()
 
-            load_plugin_includes(f, plugin_context)
+            _load_plugin_includes(f, plugin_context)
 
             execfile(f, plugin_context)
             loaded_files.add(file_name)
@@ -81,7 +81,7 @@ def load(): # pylint: disable=function-redefined
             _plugin_contexts[check_plugin_name] = plugin_context
 
 
-def _new_inv_context(plugin_file_path):
+def _new_inv_context():
     # Add the data structures where the inventory plugins register with Check_MK
     context = {
         "inv_info"   : inv_info,
@@ -101,7 +101,7 @@ def _new_inv_context(plugin_file_path):
 # Load the definitions of the required include files for this check
 # Working with imports when specifying the includes would be much cleaner,
 # sure. But we need to deal with the current check API.
-def load_plugin_includes(check_file_path, plugin_context):
+def _load_plugin_includes(check_file_path, plugin_context):
     for include_file_name in checks.includes_of_plugin(check_file_path):
         include_file_path = os.path.join(cmk.paths.inventory_dir, include_file_name)
 

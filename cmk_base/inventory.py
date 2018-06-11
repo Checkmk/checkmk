@@ -369,3 +369,23 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
                 raise
             raise MKGeneralException("Failed to execute export hook %s: %s" % (
                 hookname, e))
+
+#.
+#   .--Plugin API----------------------------------------------------------.
+#   |           ____  _             _            _    ____ ___             |
+#   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
+#   |          | |_) | | | | |/ _` | | '_ \    / _ \ | |_) | |             |
+#   |          |  __/| | |_| | (_| | | | | |  / ___ \|  __/| |             |
+#   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
+#   |                         |___/                                        |
+#   +----------------------------------------------------------------------+
+#   | Helper API for being used in inventory plugins. Plugins have access  |
+#   | to all things defined by the regular Check_MK check API and all the  |
+#   | things declared here.                                                |
+#   '----------------------------------------------------------------------'
+
+def get_inventory_context():
+    return [
+        ("inv_tree_list", inv_tree_list),
+        ("inv_tree", inv_tree),
+    ]

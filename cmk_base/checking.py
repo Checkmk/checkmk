@@ -394,7 +394,7 @@ def _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
         import cmk_base.inventory as inventory
         import cmk_base.inventory_plugins as inventory_plugins
         do_inv = False
-        inventory_plugins.load()
+        inventory_plugins.load_plugins(inventory.get_inventory_context)
         for section_name, plugin in inventory_plugins.inv_info.items():
             section_content = multi_host_sections.get_section_content(hostname, ipaddress,
                                                                       section_name, for_discovery=False)

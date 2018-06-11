@@ -32,7 +32,6 @@ from cmk.exceptions import MKGeneralException
 import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 import cmk_base.console as console
-import cmk_base.inventory
 import cmk_base.check_utils
 
 # Inventory plugins have dependencies to check plugins and the inventory
@@ -48,7 +47,7 @@ _plugin_contexts  = {} # The checks are loaded into this dictionary. Each check
 _include_contexts = {} # These are the contexts of the check include files
 
 
-def load(): # pylint: disable=function-redefined
+def load_plugins(get_inventory_context):
     loaded_files = set()
     filelist = checks.get_plugin_paths(cmk.paths.local_inventory_dir,
                                        cmk.paths.inventory_dir)
@@ -62,7 +61,7 @@ def load(): # pylint: disable=function-redefined
             continue # skip already loaded files (e.g. from local)
 
         try:
-            plugin_context = _new_inv_context()
+            plugin_context = _new_inv_context(get_inventory_context)
             known_plugins = inv_info.keys()
 
             _load_plugin_includes(f, plugin_context)
@@ -81,7 +80,7 @@ def load(): # pylint: disable=function-redefined
             _plugin_contexts[check_plugin_name] = plugin_context
 
 
-def _new_inv_context():
+def _new_inv_context(get_inventory_context):
     # Add the data structures where the inventory plugins register with Check_MK
     context = {
         "inv_info"   : inv_info,
@@ -92,7 +91,7 @@ def _new_inv_context():
     #
     # For better separation it would be better to copy the check API objects, but
     # this might consume too much memory. So we simply reference it.
-    for k, v in check_api._get_check_context() + _get_inventory_context():
+    for k, v in check_api._get_check_context() + get_inventory_context():
         context[k] = v
 
     return context
@@ -133,24 +132,3 @@ def is_snmp_plugin(plugin_type):
     section_name = cmk_base.check_utils.section_name_of(plugin_type)
     return "snmp_info" in inv_info.get(section_name, {}) \
            or cmk_base.check_utils.is_snmp_check(plugin_type)
-
-
-#.
-#   .--Plugin API----------------------------------------------------------.
-#   |           ____  _             _            _    ____ ___             |
-#   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
-#   |          | |_) | | | | |/ _` | | '_ \    / _ \ | |_) | |             |
-#   |          |  __/| | |_| | (_| | | | | |  / ___ \|  __/| |             |
-#   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
-#   |                         |___/                                        |
-#   +----------------------------------------------------------------------+
-#   | Helper API for being used in inventory plugins. Plugins have access  |
-#   | to all things defined by the regular Check_MK check API and all the  |
-#   | things declared here.                                                |
-#   '----------------------------------------------------------------------'
-
-def _get_inventory_context():
-    return [
-        ("inv_tree_list", cmk_base.inventory.inv_tree_list),
-        ("inv_tree", cmk_base.inventory.inv_tree),
-    ]

@@ -50,7 +50,7 @@ import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 import cmk_base.snmp as snmp
 import cmk_base.checking as checking
-import cmk_base.snmpscan as snmp_scan
+import cmk_base.snmp_scan as snmp_scan
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.cleanup

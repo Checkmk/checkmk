@@ -53,7 +53,7 @@ import cmk_base.core
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, MKTimeout
 import cmk_base.cleanup
 import cmk_base.check_utils
-import cmk_base.snmpscan as snmp_scan
+import cmk_base.snmp_scan as snmp_scan
 
 try:
     import cmk_base.cee.keepalive as keepalive

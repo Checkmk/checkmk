@@ -151,19 +151,6 @@ def store_piggyback_raw_data(sourcehost, piggybacked_raw_data):
         remove_source_status_file(sourcehost)
 
 
-def translate_piggyback_host(sourcehost, backedhost):
-    translation = config.get_piggyback_translations(sourcehost)
-
-    # To make it possible to match umlauts we need to change the hostname
-    # to a unicode string which can then be matched with regexes etc.
-    # We assume the incoming name is correctly encoded in UTF-8
-    backedhost = config.decode_incoming_string(backedhost)
-
-    translated = cmk.translations.translate_hostname(translation, backedhost)
-
-    return translated.encode('utf-8') # change back to UTF-8 encoded string
-
-
 def cleanup_piggyback_files():
     """This is a housekeeping job to clean up different old files from the
     piggyback directories.

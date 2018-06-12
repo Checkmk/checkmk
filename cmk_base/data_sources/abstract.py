@@ -42,7 +42,6 @@ import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
-import cmk_base.piggyback as piggyback
 import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKEmptyAgentData, MKSNMPError, \
@@ -627,7 +626,7 @@ class CheckMKAgentDataSource(DataSource):
                 if not host:
                     host = None
                 else:
-                    host = piggyback.translate_piggyback_host(self._hostname, host)
+                    host = config.translate_piggyback_host(self._hostname, host)
                     if host == self._hostname:
                         host = None # unpiggybacked "normal" host
 

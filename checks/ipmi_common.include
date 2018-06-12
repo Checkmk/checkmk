@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+#TODO Cleanup the whole status text mapping in
+# ipmi_common.include, ipmi_sensors.include, ipmi
 
 def ipmi_ignore_entry(name, status_txt, rules):
     if status_txt is None:

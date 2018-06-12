@@ -1,0 +1,10 @@
+Title: ipmi_sensors.include: Treat states 'S0G0' (System full operational, working) and 'System Restart' as 'OK'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1528788266
+Class: fix
+
+

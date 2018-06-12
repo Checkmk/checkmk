@@ -218,8 +218,17 @@ bool SectionPS::outputWMI(std::ostream &out) {
             std::tm t;
             ss >> std::get_time(&t, L"%Y%m%d%H%M%S");
             time_t creation_time = mktime(&t);
-            auto uptime = static_cast<ULONGLONG>(
-                section_helpers::current_time() - creation_time);
+            // Cope with possible problems with process creation time. Ensure
+            // that the result of subtraction is not negative.
+            long long currTime = section_helpers::current_time();
+            long long timeDiff = currTime - creation_time;
+
+            if (timeDiff < 0) {
+                Error(_logger) << "Creation time " << creation_time
+                               << " lies ahead of current time " << currTime;
+            }
+
+            auto uptime = static_cast<ULONGLONG>(std::max(timeDiff, 1LL));
 
             outputProcess(
                 out, std::stoull(result.get<std::string>(L"VirtualSize")),
@@ -329,8 +338,17 @@ bool SectionPS::outputNative(std::ostream &out) {
             }
 
             // Uptime
-            auto uptime = static_cast<unsigned long long>(
-                section_helpers::current_time() - sinceEpoch(createTime));
+            // Cope with possible problems with process creation time. Ensure
+            // that the result of subtraction is not negative.
+            long long currTime = section_helpers::current_time();
+            long long timeDiff = currTime - sinceEpoch(createTime);
+
+            if (timeDiff < 0) {
+                Error(_logger) << "Creation time " << sinceEpoch(createTime)
+                               << " lies ahead of current time " << currTime;
+            }
+
+            auto uptime = static_cast<unsigned long long>(std::max(timeDiff, 1LL));
 
             // Note: CPU utilization is determined out of usermodetime and
             // kernelmodetime

@@ -51,7 +51,7 @@ dnspython = "==1.15.0"
 idna = "==2.6"
 asn1crypto = "==0.24.0"
 cryptography = "==1.9"
-requests = { version = "==2.13.0", extras = ["security"] }
+requests = { version = "==2.13.0", extras = ["security", "socks"] }
 pyOpenSSL = "==16.2.0"
 pykerberos = "==1.2.1"
 requests-kerberos = "==0.11.0"

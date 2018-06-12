@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4c9a78a171b6cbf75f960981ccc627ebe04cb758b10689332d7d641e3be6a187"
+            "sha256": "54570b555f4ae286589b06943235fc8113bfbfacd78604a1823a6dcd05c8ae0a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -355,6 +355,7 @@
                 "sha256:4f2dca8df5f84a3be039c026893850d731a8bb38395292e1610ffb0a08ba876c"
             ],
             "index": "pypi",
+            "markers": "sys_platform != 'win32'",
             "version": "==1.2.1"
         },
         "pymssql": {
@@ -430,6 +431,12 @@
             ],
             "index": "pypi",
             "version": "==4.4.4"
+        },
+        "pysocks": {
+            "hashes": [
+                "sha256:3fe52c55890a248676fd69dc9e3c4e811718b777834bcaab7a8125cf9deac672"
+            ],
+            "version": "==1.6.8"
         },
         "pysphere": {
             "hashes": [
@@ -524,6 +531,7 @@
                 "sha256:f91418e82edb5a43b020fa15e30a41d730b71c5957536749366bf63cc05427b1"
             ],
             "index": "pypi",
+            "markers": "python_version < '3.5'",
             "version": "==1.7"
         },
         "simplejson": {
@@ -685,7 +693,7 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.0'",
+            "markers": "python_version < '3.3'",
             "version": "==1.0.2"
         },
         "futures": {
@@ -867,11 +875,11 @@
         },
         "pytest": {
             "hashes": [
-                "sha256:39555d023af3200d004d09e51b4dd9fdd828baa863cded3fd6ba2f29f757ae2d",
-                "sha256:c76e93f3145a44812955e8d46cdd302d8a45fbfc7bf22be24fe231f9d8d8853a"
+                "sha256:26838b2bc58620e01675485491504c3aa7ee0faf335c37fcd5f8731ca4319591",
+                "sha256:32c49a69566aa7c333188149ad48b58ac11a426d5352ea3d8f6ce843f88199cb"
             ],
             "index": "pypi",
-            "version": "==3.6.0"
+            "version": "==3.6.1"
         },
         "pytest-cov": {
             "hashes": [

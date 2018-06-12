@@ -1455,7 +1455,20 @@ def decode_incoming_string(s, encoding="utf-8"):
         return s.decode(fallback_agent_output_encoding)
 
 
-def get_piggyback_translations(hostname):
+def translate_piggyback_host(sourcehost, backedhost):
+    translation = _get_piggyback_translations(sourcehost)
+
+    # To make it possible to match umlauts we need to change the hostname
+    # to a unicode string which can then be matched with regexes etc.
+    # We assume the incoming name is correctly encoded in UTF-8
+    backedhost = decode_incoming_string(backedhost)
+
+    translated = cmk.translations.translate_hostname(translation, backedhost)
+
+    return translated.encode('utf-8') # change back to UTF-8 encoded string
+
+
+def _get_piggyback_translations(hostname):
     """Get a dict that specifies the actions to be done during the hostname translation"""
     rules = rulesets.host_extra_conf(hostname, piggyback_translation)
     translations = {}

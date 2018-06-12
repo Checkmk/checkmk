@@ -204,10 +204,26 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         else:
             missing_sections.add(cmk_base.check_utils.section_name_of(check_plugin_name))
 
-    _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
+    if checks.do_status_data_inventory_for(hostname):
+        _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
 
     missing_section_list = sorted(list(missing_sections))
     return num_success, missing_section_list
+
+
+def _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
+    import cmk_base.inventory as inventory
+    import cmk_base.inventory_plugins as inventory_plugins
+    # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
+    do_inv = False
+    inventory_plugins.load_plugins(inventory.get_inventory_context)
+    for plugin in inventory_plugins.inv_info.values():
+        if plugin.get("has_status_data"):
+            do_inv = True
+            break
+    if do_inv:
+        inventory.do_inv_for(sources, multi_host_sections=multi_host_sections, hostname=hostname,
+                             ipaddress=ipaddress, do_status_data_inventory=True)
 
 
 def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description):
@@ -332,22 +348,6 @@ def _determine_check_params(params):
             return params["tp_default_value"]
     else:
         return params
-
-
-def _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
-    if checks.do_status_data_inventory_for(hostname):
-        import cmk_base.inventory as inventory
-        import cmk_base.inventory_plugins as inventory_plugins
-        do_inv = False
-        inventory_plugins.load_plugins(inventory.get_inventory_context)
-        for section_name, plugin in inventory_plugins.inv_info.items():
-            section_content = multi_host_sections.get_section_content(hostname, ipaddress,
-                                                                      section_name, for_discovery=False)
-            if section_content and plugin.get("has_status_data"):
-                do_inv = True
-                break
-        if do_inv:
-            inventory.do_inv_for(sources, hostname, ipaddress)
 
 
 def is_manual_check(hostname, check_plugin_name, item):

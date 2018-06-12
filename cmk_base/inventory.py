@@ -50,7 +50,7 @@ import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 import cmk_base.snmp as snmp
 import cmk_base.checking as checking
-import cmk_base.discovery as discovery
+import cmk_base.snmpscan as snmp_scan
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.cleanup
@@ -246,7 +246,7 @@ def _do_inv_for_realhost(sources, hostname, ipaddress, inventory_tree, status_da
 
 
 def _gather_snmp_check_plugin_names_inventory(access_data, on_error, do_snmp_scan, for_mgmt_board=False):
-    return discovery.gather_snmp_check_plugin_names(access_data, on_error, do_snmp_scan,
+    return snmp_scan.gather_snmp_check_plugin_names(access_data, on_error, do_snmp_scan,
                                                     for_inventory=True, for_mgmt_board=for_mgmt_board)
 
 

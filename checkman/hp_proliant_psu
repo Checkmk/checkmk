@@ -7,11 +7,17 @@ description:
  This check connects to the SNMP agent installed on an operating system
  on a HP Proliant server and reads the information from the {CPQHLTH-MIB}
  MIB.
+
  The systems SNMP agent is extended by the HP Management Agents which need
  to be installed on the monitored systems.
 
- The check monitors the operational state of the PSUs in the server.
+ The check monitors the operational state of the PSUs in the server, as well
+ as the current capacity.
+
+ You can change the default Warn/Crit levels of 80/90 percent by setting
+ the service parameter "HP ProLiant Power Supply Unit".
 
 inventory:
  One check is automatically created for each PSU entry which is provided
- and marked as present in the SNMP output.
+ and marked as present in the SNMP output. Additionally one service is
+ created which sums up the used capacity.

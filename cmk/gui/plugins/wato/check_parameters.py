@@ -5122,6 +5122,26 @@ register_check_parameters(
 )
 
 
+register_check_parameters(
+    subgroup_environment,
+    'hw_psu',
+    _("Power Supply Unit"),
+    Dictionary(
+        elements = [
+            ("levels", Tuple(
+                title = _("PSU Capacity Levels"),
+                elements = [
+                    Percentage(title = _("Warning at"), default_value = 80.0),
+                    Percentage(title = _("Critical at"), default_value = 90.0),
+                ],
+            )),
+        ],
+    ),
+    None,
+    match_type = "dict"
+)
+
+
 #.
 #   .--Storage-------------------------------------------------------------.
 #   |                 ____  _                                              |

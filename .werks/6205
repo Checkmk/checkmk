@@ -1,0 +1,12 @@
+Title: hp_proliant_psu: HP ProLiant Power Supply Unit
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1528817718
+Class: feature
+
+Add information on the currently used capacity,
+per PS Unit and in total. Apply warning/critical levels to
+capacity in percent.

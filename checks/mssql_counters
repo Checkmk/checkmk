@@ -225,10 +225,10 @@ def check_mssql_counters_locks(item, params, info):
                 if p:
                     warn, crit = p
                     if persec > crit:
-                        state = max(state, 1)
+                        state = max(state, 2)
                         prob_txt = '(!)'
                     elif persec > warn:
-                        state = max(state, 2)
+                        state = max(state, 1)
                         prob_txt = '(!!)'
                 else:
                     warn, crit = None, None

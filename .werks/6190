@@ -1,0 +1,20 @@
+Title: Win-agent: prevent unsigned integer overflow in process uptime
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1528807253
+Class: fix
+
+The process uptimes for Windows are calculated by subtracting the process
+creation time from the current system time. Under certain circumstances,
+setting up the system clock e. g. with daylight saving time has led to a
+situation where some processes have reported a creation time with false
+offset and an unsigned integer overflow through negative subtraction result.
+This has further led to the crash of the ps check.
+
+The unsigned integer overflow is now prevented by checking the result of the
+subtraction and, in case of a negative value, logging it as an error and
+setting the process uptime to the default value 1.
+

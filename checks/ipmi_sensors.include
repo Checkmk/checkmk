@@ -113,7 +113,7 @@ def parse_freeipmi(info):
     def add_valid_values(values):
         for key, value, ty in values:
             if value not in [ "NA", "N/A" ]:
-                parsed[sensorname][key] = ty(value)
+                instance[key] = ty(value)
 
     parsed = {}
     for line in info:
@@ -125,11 +125,13 @@ def parse_freeipmi(info):
             status_txt = status_txt[:-1]
         if status_txt in [ "NA", "N/A", "Unknown" ] or "_=_" in status_txt:
             status_txt = None
+        elif status_txt == "S0G0":
+            status_txt = "System full operational, working"
         else:
             status_txt = status_txt.replace("_", " ")
 
         sensorname = stripped_line[1].replace(" ", "_")
-        parsed.setdefault(sensorname, {
+        instance = parsed.setdefault(sensorname, {
             "value"      : None,
             "unit"       : None,
             "status_txt" : status_txt,
@@ -187,8 +189,11 @@ def inventory_freeipmi(parsed):
 def freeipmi_status_txt_mapping(status_txt):
     if status_txt is None:
         return 3
-    elif status_txt in [ "OK", "Entity Present", "battery presence detected",
-          "Drive Presence", "transition to Running", "Device Enabled" ] or \
+    elif status_txt in [
+        "OK", "Entity Present", "battery presence detected",
+        "Drive Presence", "transition to Running", "Device Enabled",
+        "System full operational, working", "System Restart",
+        ] or \
        status_txt.startswith("Fully Redundant") or \
        status_txt.endswith("is connected") or \
        status_txt.endswith("Presence detected") or \

@@ -26,11 +26,17 @@
 
 import os
 
-import cmk.paths
+from cmk.paths import tmp_dir
 
-import cmk_base.piggyback as piggyback
+from cmk_base.config import piggyback_max_cachefile_age
+from cmk_base.piggyback import get_piggyback_raw_data
 
 from .abstract import CheckMKAgentDataSource
+
+
+def _raw_data(name):
+    return get_piggyback_raw_data(piggyback_max_cachefile_age, name)
+
 
 class PiggyBackDataSource(CheckMKAgentDataSource):
     def id(self):
@@ -38,14 +44,12 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
 
     def describe(self):
-        path = os.path.join(cmk.paths.tmp_dir, "piggyback", self._hostname)
+        path = os.path.join(tmp_dir, "piggyback", self._hostname)
         return "Process piggyback data from %s" % path
 
 
     def _execute(self):
-        return piggyback.get_piggyback_raw_data(self._hostname) \
-               + piggyback.get_piggyback_raw_data(self._ipaddress)
-
+        return _raw_data(self._hostname) + _raw_data(self._ipaddress)
 
     def _get_raw_data(self):
         """Returns the current raw data of this data source

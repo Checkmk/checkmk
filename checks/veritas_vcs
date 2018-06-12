@@ -25,167 +25,104 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<veritas_vcs>>>
-# ClusState                RUNNING
-# ClusterName              c7dbacpt
-# #System    Attribute             Value
-# ecldbr03   SysState              RUNNING
-# ecldbr04   SysState              RUNNING
-# #Group         Attribute             System     Value
-# ClusterService State                 ecldbr04   |OFFLINE|
-# db01sg         State                 ecldbr04   |OFFLINE|
-# db02sg         State                 ecldbr04   |OFFLINE|
-# db03sg         State                 ecldbr04   |OFFLINE|
-# db04sg         State                 ecldbr04   |OFFLINE|
-# db05sg         State                 ecldbr04   |OFFLINE|
-# net01sg        State                 ecldbr04   |ONLINE|
-# #Resource      Attribute             System     Value
-# csgnic         State                 ecldbr04   ONLINE
-# db01-db        State                 ecldbr04   OFFLINE
-# db01-dg        State                 ecldbr04   OFFLINE
-# db01-ip        State                 ecldbr04   OFFLINE
-# db01-mnt       State                 ecldbr04   OFFLINE
-# db01-nic-proxy State                 ecldbr04   ONLINE
-# db01-vol       State                 ecldbr04   OFFLINE
-# db02-db        State                 ecldbr04   OFFLINE
-# db02-dg        State                 ecldbr04   OFFLINE
-# db02-ip        State                 ecldbr04   OFFLINE
-# db02-mnt       State                 ecldbr04   OFFLINE
-# db02-nic-proxy State                 ecldbr04   ONLINE
-# db02-vol       State                 ecldbr04   OFFLINE
-# db03-db        State                 ecldbr04   OFFLINE
-# db03-dg        State                 ecldbr04   OFFLINE
-# db03-ip        State                 ecldbr04   OFFLINE
-# db03-mnt       State                 ecldbr04   OFFLINE
-# db03-nic-proxy State                 ecldbr04   ONLINE
-# db03-vol       State                 ecldbr04   OFFLINE
-# db04-db        State                 ecldbr04   OFFLINE
-# db04-dg        State                 ecldbr04   OFFLINE
-# db04-ip        State                 ecldbr04   OFFLINE
-# db04-mnt       State                 ecldbr04   OFFLINE
-# db04-nic-proxy State                 ecldbr04   ONLINE
-# db04-vol       State                 ecldbr04   OFFLINE
-# db05-db        State                 ecldbr04   OFFLINE
-# db05-dg        State                 ecldbr04   OFFLINE
-# db05-ip        State                 ecldbr04   OFFLINE
-# db05-mnt       State                 ecldbr04   OFFLINE
-# db05-nic-proxy State                 ecldbr04   ONLINE
-# db05-vol       State                 ecldbr04   OFFLINE
-# net01-nic      State                 ecldbr04   ONLINE
-# net01-phantom  State                 ecldbr04   ONLINE
-# webip          State                 ecldbr04   OFFLINE
+# ClusState        RUNNING
+# ClusterName      minions
+# #System          Attribute      Value
+# dave             SysState       RUNNING
+# stuart           SysState       RUNNING
+# #Group           Attribute      System      Value
+# ClusterService   State          stuart      |OFFLINE|
+# nepharius        State          stuart      |ONLINE|
+# lan              State          stuart      |ONLINE|
+# omd              State          stuart      |ONLINE|
+# #Resource        Attribute      System       Value
+# nepharius_mrs    State          stuart      ONLINE
+# nepharius_dr     State          stuart      ONLINE
+# cs_ip            State          stuart      OFFLINE
+# cs_proxy         State          stuart      ONLINE
+# lan_nic          State          stuart      ONLINE
+# lan_phantom      State          stuart      ONLINE
+# omd_apache       State          stuart      ONLINE
+# omd_appl         State          stuart      ONLINE
+# omd_dg           State          stuart      ONLINE
+# omd_proxy        State          stuart      ONLINE
+# omd_srdf         State          stuart      ONLINE
+# omd_uc4ps1_agt   State          stuart      ONLINE
+# omdp_ip          State          stuart      ONLINE
+# omdp_mnt         State          stuart      ONLINE
+# #Group           Attribute      System      Value
+# ClusterService   Frozen         global      0
+# ClusterService   TFrozen        global      0
+# #
+# nepharius        Frozen         global      0
+# nepharius        TFrozen        global      1
+# #
+# lan              Frozen         global      0
+# lan              TFrozen        global      0
+# #
+# omd              Frozen         global      1
+# omd              TFrozen        global      0
+
+# parsed in case above (single node):
+# parsed = {
+#    'cluster': {u'minions': [(None, u'ClusState', u'RUNNING', None)]},
+#    u'group': {u'ClusterService': [(None, u'State', u'OFFLINE', u'minions'),
+#                                  (None, u'Frozen', u'0', u'minions'),
+#                                  (None, u'TFrozen', u'0', u'minions')],
+#              u'lan': [(None, u'State', u'ONLINE', u'minions'),
+#                       (None, u'Frozen', u'0', u'minions'),
+#                       (None, u'TFrozen', u'0', u'minions')],
+#              u'nepharius': [(None, u'State', u'ONLINE', u'minions'),
+#                             (None, u'Frozen', u'0', u'minions'),
+#                             (None, u'TFrozen', u'1', u'minions')],
+#              u'omd': [(None, u'State', u'ONLINE', u'minions'),
+#                       (None, u'Frozen', u'1', u'minions'),
+#                       (None, u'TFrozen', u'0', u'minions')]},
+#    u'resource': {u'cs_ip': [(None, u'State', u'OFFLINE', u'minions')],
+#                  u'cs_proxy': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'lan_nic': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'lan_phantom': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'nepharius_dr': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'nepharius_mrs': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'omd_apache': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'omd_appl': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'omd_dg': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'omd_proxy': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'omd_srdf': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'omd_uc4ps1_agt': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'omdp_ip': [(None, u'State', u'ONLINE', u'minions')],
+#                  u'omdp_mnt': [(None, u'State', u'ONLINE', u'minions')]},
+#    u'system': {u'dave': [(None, u'SysState', u'RUNNING', u'minions')],
+#                u'stuart': [(None, u'SysState', u'RUNNING', u'minions')]}}
+#
+
+# parsed in case of Check_MK cluster definition:
+# parsed = {
+#    "cluster" : {u'minions' : [('server-1', 'State', 'RUNNING', None),
+#                               ('server-2', 'State', 'OFFLINE', None),]},
+#    "resource": {u'cs-ip': [('server-1', 'State', 'ONLINE',  u'minions'),
+#                            ('server-2', 'State', 'OFFLINE', u'minions'),]},
+#    "group": {...},
+#    "system": {...},
+# }
+
 
 # Possible values for ClusState: RUNNING
 # Possible values for SysState: RUNNING, FAULTED, EXITED
 # Possible values for SG State: ONLINE, OFFLINE, FAULTED
 # Possible values for resource State: ONLINE, OFFLINE, FAULTED, OFFLINE|STATE UNKNOWN, ONLINE|STATE UNKNOWN
 # the STATE UNKNOWN is treated as UNKNOWN
+#
+#  NOTE: It seems to me there are way more possible values.
+#        In the older version, all of these go to WARN(1).
+#        We keep it that way, but make it configurable.
 
-# parsed in case of Check_MK cluster definition:
-# parsed = {
-#    "cluster" : {
-#        u'c7dbacpt' : [
-#           ('server-1', 'RUNNING', None),
-#           ('server-2', 'OFFLINE', None),
-#        ]
-#   },
-#   "resource" : {
-#       u'db05-db': [
-#           ('server-1', 'ONLINE',  u'c7dbacpt' ),
-#           ('server-2', 'OFFLINE', u'c7dbacpt' ),
-#       ]
-#   }
-#   "group": {...},
-#   "system": {...},
-# }
-
-# parsed in case of single node:
-# parsed = {
-#    "cluster" : {
-#        u'c7dbacpt' : [
-#           (None, 'RUNNING', None),
-#        ]
-#   },
-
-
-def parse_veritas_vcs(info):
-    parsed = {
-        "cluster"  : {},
-        "resource" : {},
-        "group"    : {},
-        "system"   : {},
-    }
-
-    for line in info:
-        node = line[0]
-
-        if line[1] == "ClusState":
-            cluster_state = line[2]
-
-        elif line[1] == "ClusterName":
-            cluster_name = line[2]
-            parsed["cluster"].setdefault(cluster_name, []).append((node, cluster_state, None))
-
-        elif line[1] == "#System":
-            section = "system"
-            state_index = 3
-
-        elif line[1] == "#Group":
-            section = "group"
-            state_index = 4
-
-        elif line[1] == "#Resource":
-            section = "resource"
-            state_index = 4
-
-        else:
-            item_state = line[state_index].replace("|","")
-            if "UNKNOWN" in item_state:
-                item_state = "UNKNOWN"
-
-            if len(line) > 3:
-                parsed[section].setdefault(line[1], []).append((node, item_state, cluster_name))
-
-    return parsed
-
-
-
-def veritas_vcs_aggregate_states_in_cluster(states):
-    if "FAULTED" in states:
-        return 2
-    elif "UNKNOWN" in states:
-        return 3
-    elif "OFFLINE" in states and len(set(states)) == 1:
-        return 2
-    elif "ONLINE" in states or "RUNNING" in states:
-        return 0
-    else:
-        return 1
-
-
-def inventory_veritas_vcs(parsed, item_type):
-    for item_name in parsed[item_type]:
-        yield item_name, None
-
-
-def check_veritas_vcs(item, _no_params, parsed, item_type):
-    if item not in parsed[item_type]:
-        return # vanished
-
-    states = []
-    infotexts = []
-    cluster_info = ""
-    for node, state_name, cluster_name in parsed[item_type][item]:
-        states.append(state_name)
-
-        infotext = state_name.lower()
-        if node:
-            infotext = "%s: %s" % (node, infotext)
-        infotexts.append(infotext)
-
-        if cluster_name:
-            cluster_info = ", cluster: %s" % cluster_name
-
-    state_map = {
+factory_settings['veritas_vcs_defaults'] = {
+    'map_frozen': {
+        'temporarily frozen': 1,
+        'frozen': 2,
+    },
+    'map_states': {
         "ONLINE"  : 0,
         "RUNNING" : 0,
         "OK"      : 0,
@@ -194,15 +131,89 @@ def check_veritas_vcs(item, _no_params, parsed, item_type):
         "PARTIAL" : 1,
         "FAULTED" : 2,
         "UNKNOWN" : 3,
-    }
+        "default" : 1,
+    },
+}
 
-    if len(states) == 1:
-        state = state_map[states[0]]
-    else:
-        state = veritas_vcs_aggregate_states_in_cluster(states)
 
-    return state, "%s%s" % (", ".join(infotexts), cluster_info)
+def parse_veritas_vcs(info):
+    parsed = {}
 
+    for line in info:
+        if len(line) == 2 and line[1] == '#':
+            continue
+        node = line[0]
+
+        if line[1] == "ClusState":
+            section = parsed.setdefault('cluster', {})
+            attr = line[1]
+            value = line[2]
+
+        elif line[1] == "ClusterName":
+            cluster_name = line[2]
+            section.setdefault(cluster_name, []).append((node, attr, value, None))
+
+        elif line[1].startswith('#'):
+            section = parsed.setdefault(line[1][1:].lower(), {})
+            attr_idx = line.index('Attribute')
+            value_idx = line.index('Value')
+
+        elif len(line) > 3:
+            item_name = line[1]
+            attr = line[attr_idx]
+            value = line[value_idx].replace("|","")
+            if "UNKNOWN" in value:
+                value = "UNKNOWN"
+            section.setdefault(item_name, []).append((node, attr, value, cluster_name))
+
+    return parsed
+
+
+def veritas_vcs_boil_down_states_in_cluster(states):
+    _stat = set(states)
+    if len(_stat) == 1:
+        return _stat.pop()
+    for dominant in ("FAULTED", "UNKNOWN", "ONLINE", "RUNNING"):
+        if dominant in _stat:
+            return dominant
+    return "AGGREGATION: %s" % ', '.join(_stat)
+
+
+def inventory_veritas_vcs(parsed, item_type):
+    for item_name in parsed[item_type]:
+        yield item_name, None
+
+
+def check_veritas_vcs(item, params, parsed, item_type):
+    if item not in parsed[item_type]:
+        return # vanished
+
+    states = []
+    infotexts = []
+    cluster_info = ""
+    map_frozen = params['map_frozen']
+    map_states = params['map_states']
+
+    for node, attr, value, cluster_name in parsed[item_type][item]:
+        if attr.endswith('State'):
+            states.append(value)
+
+            infotext = value.lower()
+            if node:
+                infotext = "%s: %s" % (node, infotext)
+            infotexts.append(infotext)
+
+            if cluster_name:
+                cluster_info = ", cluster: %s" % cluster_name
+
+        if attr.endswith('Frozen') and value != '0':
+            frozen_txt = attr.lower().replace('t', 'temporarily ')
+            yield map_frozen.get(frozen_txt, 3), frozen_txt
+
+    state_txt = veritas_vcs_boil_down_states_in_cluster(states)
+    state = map_states.get(state_txt, map_states['default'])
+
+    yield state, "%s%s" % (", ".join(infotexts), cluster_info)
 
 
 #   .--cluster - main check -----------------------------------------------.
@@ -218,12 +229,14 @@ def check_veritas_vcs(item, _no_params, parsed, item_type):
 
 
 check_info['veritas_vcs'] = {
-    'parse_function'       : parse_veritas_vcs,
-    'inventory_function'   : lambda parsed: inventory_veritas_vcs(parsed, 'cluster'),
-    'check_function'       : lambda item, _no_params, parsed: \
-                                 check_veritas_vcs(item, _no_params, parsed, "cluster"),
-    'service_description'  : 'VCS Cluster %s',
-    'node_info'            : True,
+    'group'                  : 'veritas_vcs',
+    'parse_function'         : parse_veritas_vcs,
+    'inventory_function'     : lambda parsed: inventory_veritas_vcs(parsed, 'cluster'),
+    'check_function'         : lambda item, _no_params, parsed: \
+                                   check_veritas_vcs(item, _no_params, parsed, "cluster"),
+    'service_description'    : 'VCS Cluster %s',
+    'node_info'              : True,
+    'default_levels_variable': 'veritas_vcs_defaults',
 }
 
 #.
@@ -237,11 +250,13 @@ check_info['veritas_vcs'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['veritas_vcs.system'] = {
-    'inventory_function'   : lambda parsed: inventory_veritas_vcs(parsed, "system"),
-    'check_function'       : lambda item, _no_params, parsed: \
-                                 check_veritas_vcs(item, _no_params, parsed, "system"),
-    'service_description'  : 'VCS System %s',
-    'node_info'            : True,
+    'group'                  : 'veritas_vcs',
+    'inventory_function'     : lambda parsed: inventory_veritas_vcs(parsed, "system"),
+    'check_function'         : lambda item, _no_params, parsed: \
+                                   check_veritas_vcs(item, _no_params, parsed, "system"),
+    'service_description'    : 'VCS System %s',
+    'node_info'              : True,
+    'default_levels_variable': 'veritas_vcs_defaults',
 }
 
 #.
@@ -255,11 +270,13 @@ check_info['veritas_vcs.system'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['veritas_vcs.servicegroup'] = {
-    'inventory_function'   : lambda parsed: inventory_veritas_vcs(parsed, 'group'),
-    'check_function'       : lambda item, _no_params, parsed: \
-                                 check_veritas_vcs(item, _no_params, parsed, 'group'),
-    'service_description'  : 'VCS Service Group %s',
-    'node_info'            : True,
+    'group'                  : 'veritas_vcs',
+    'inventory_function'     : lambda parsed: inventory_veritas_vcs(parsed, 'group'),
+    'check_function'         : lambda item, _no_params, parsed: \
+                                   check_veritas_vcs(item, _no_params, parsed, 'group'),
+    'service_description'    : 'VCS Service Group %s',
+    'node_info'              : True,
+    'default_levels_variable': 'veritas_vcs_defaults',
 }
 
 #.
@@ -273,9 +290,11 @@ check_info['veritas_vcs.servicegroup'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['veritas_vcs.resource'] = {
-    'inventory_function'   : lambda parsed: inventory_veritas_vcs(parsed, 'resource'),
-    'check_function'       : lambda item, _no_params, parsed: \
-                                 check_veritas_vcs(item, _no_params, parsed, 'resource'),
-    'service_description'  : 'VCS Resource %s',
-    'node_info'            : True,
+    'group'                  : 'veritas_vcs',
+    'inventory_function'     : lambda parsed: inventory_veritas_vcs(parsed, 'resource'),
+    'check_function'         : lambda item, _no_params, parsed: \
+                                   check_veritas_vcs(item, _no_params, parsed, 'resource'),
+    'service_description'    : 'VCS Resource %s',
+    'node_info'              : True,
+    'default_levels_variable': 'veritas_vcs_defaults',
 }

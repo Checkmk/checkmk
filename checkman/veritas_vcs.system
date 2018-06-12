@@ -10,15 +10,18 @@ description:
  The check monitors the system state and can have the following states:
  - "RUNNING" will be OK,
  - "EXITED" will be WARN,
- - "FAULTED" will be CRIT.
+ - "FAULTED" will be CRIT,
+ - all others will be WARN.
 
- The check is cluster-aware. In this case we have:
- - If one system reports "FAULTED" the service state will be CRIT,
- - if one reports "ONLINE" the state will be OK,
- - otherwise it will be WARN.
+ The check is cluster-aware. In this case
+ - if all systems report the same, that state is used,
+ - if any system  reports "FAULTED", "UNKNOWN", "ONLINE" or
+   "RUNNING", the respective state will be used (checked in that order)
+ - otherwise the states will be concatenated.
 
 item:
  The system name.
 
 inventory:
  One service per system is created.
+

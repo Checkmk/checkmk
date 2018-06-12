@@ -1,0 +1,14 @@
+Title: veritas_vcs, veritas_vcs.servicegroup: Monitor 'frozen' Attribute of Veritas Cluster
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1528805417
+Class: feature
+
+veritas_vcs: Allow for configuration of the mapping of the VCS states to
+check states.
+veritas_vcs.servicegroup: Consider the 'Frozen' and 'TFrozen' attribute
+of veritas cluster server service groups.
+

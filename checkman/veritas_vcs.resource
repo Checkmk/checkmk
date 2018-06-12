@@ -11,14 +11,14 @@ description:
  - "ONLINE" will be OK,
  - "OFFLINE" will be WARN,
  - "FAULTED" will be "CRIT",
- - "OFFLINE|STATE UNKNOWN" or "ONLINE|STATE UNKNOWNEXITED" will be UNKNOWN.
+ - "OFFLINE|STATE UNKNOWN" or "ONLINE|STATE UNKNOWNEXITED" will be UNKNOWN,
+ - all others will be WARN.
 
- The check is cluster-aware. In this case we have:
- - If one resource reports "FAULTED" the service state will be CRIT,
- - if one reports "UNKNOWN" it will be UNKNOWN,
- - if one reports "ONLINE" the state will be OK,
- - if all resources are "OFFLINE" the service state will be CRIT,
- - otherwise it will be WARN.
+ The check is cluster-aware. In this case:
+ - if all service groups report the same, that state is used,
+ - if any service group reports "FAULTED", "UNKNOWN", "ONLINE" or
+   "RUNNING", the respective state will be used (checked in that order)
+ - otherwise the states will be concatenated.
 
 item:
  The resource name.

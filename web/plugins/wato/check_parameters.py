@@ -395,6 +395,41 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "veritas_vcs",
+    _("Veritas Cluster Server"),
+    Dictionary(
+        elements = [
+            ("map_states", Dictionary(
+                title=_("Map Attribute 'State'"),
+                elements=[
+                    ("ONLINE",  MonitoringState(title=_("ONLINE"), default_value=0)),
+                    ("RUNNING", MonitoringState(title=_("RUNNING"), default_value=0)),
+                    ("OK",      MonitoringState(title=_("OK"), default_value=0)),
+                    ("OFFLINE", MonitoringState(title=_("OFFLINE"), default_value=1)),
+                    ("EXITED",  MonitoringState(title=_("EXITED"), default_value=1)),
+                    ("PARTIAL", MonitoringState(title=_("PARTIAL"), default_value=1)),
+                    ("FAULTED", MonitoringState(title=_("FAULTED"), default_value=2)),
+                    ("UNKNOWN", MonitoringState(title=_("UNKNOWN"), default_value=3)),
+                    ("default", MonitoringState(title=_("States other than the above"), default_value=1)),
+                ],
+                optional_keys=False,
+            )),
+            ("map_frozen", Dictionary(
+                title=_("Map Attribute 'Frozen'"),
+                elements=[
+                    ("temporarily frozen", MonitoringState(title=_("Temporarily frozen"), default_value=1)),
+                    ("frozen",             MonitoringState(title=_("Frozen"), default_value=2)),
+                ],
+                optional_keys=False,
+            )),
+        ]),
+        None,
+        'dict'
+)
+
+
+register_check_parameters(
+    subgroup_applications,
     "f5_bigip_vserver",
     _("F5 Loadbalancer VServer"),
     Dictionary(

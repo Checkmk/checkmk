@@ -7,19 +7,28 @@ description:
  This check needs the {check_mk_agent.linux} agent which provides
  information about the Veritas Cluster Service if it is installed.
 
- The check monitors the service group state and can have the following states:
+ The check monitors the service group states. A states map can be
+ configured in the rule "Veritas Cluster Server". By default the 
+ check can have the following states:
  - "ONLINE" will be OK,
  - "OFFLINE" will be WARN,
- - "FAULTED" will be CRIT.
+ - "FAULTED" will be CRIT,
+ - all others will be WARN
 
- The check is cluster-aware. In this case we have:
- - If one service group reports "FAULTED" the service state will be CRIT,
- - if one reports "ONLINE" the state will be OK,
- - if all service groups are "OFFLINE" the service state will be CRIT,
- - otherwise it will be WARN.
+ The check is cluster-aware. In this case
+ - if all service groups report the same, that state is used,
+ - if any service group reports "FAULTED", "UNKNOWN", "ONLINE" or
+   "RUNNING", the respective state will be used (checked in that order)
+ - otherwise the states will be concatenated.
+
+ Additionaly the service group is checked for being (temporarily) frozen.
+ By default
+ - temporarily frozen will be WARN
+ - frozen will be CRIT
 
 item:
  The service group name.
 
 inventory:
  One service per service group is created.
+

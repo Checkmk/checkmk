@@ -33,26 +33,25 @@ from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
 import cmk_base.console as console
-import cmk_base.config as config
 
 
-def get_piggyback_raw_data(hostname):
+def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
     output = ""
     if not hostname:
         return output
 
-    for sourcehost, file_path in _get_piggyback_files(hostname):
+    for sourcehost, file_path in _get_piggyback_files(piggyback_max_cachefile_age, hostname):
         console.verbose("Using piggyback raw data from host %s.\n" % sourcehost)
         output += file(file_path).read()
 
     return output
 
 
-def has_piggyback_raw_data(hostname):
-    return _get_piggyback_files(hostname) != []
+def has_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
+    return _get_piggyback_files(piggyback_max_cachefile_age, hostname) != []
 
 
-def _get_piggyback_files(hostname):
+def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the
@@ -87,9 +86,9 @@ def _get_piggyback_files(hostname):
             continue # File might've been deleted. That's ok.
 
         # Skip piggyback files that are outdated at all
-        if file_age > config.piggyback_max_cachefile_age:
+        if file_age > piggyback_max_cachefile_age:
             console.verbose("Piggyback file %s is outdated (%d seconds too old). Skip processing.\n" %
-                (file_path, file_age - config.piggyback_max_cachefile_age))
+                (file_path, file_age - piggyback_max_cachefile_age))
             continue
 
         # Skip piggyback files that have not been updated in the last contact
@@ -151,13 +150,13 @@ def store_piggyback_raw_data(sourcehost, piggybacked_raw_data):
         remove_source_status_file(sourcehost)
 
 
-def cleanup_piggyback_files():
+def cleanup_piggyback_files(piggyback_max_cachefile_age):
     """This is a housekeeping job to clean up different old files from the
     piggyback directories.
 
     # Cleanup piggyback data of hosts that are not sending piggyback data anymore
     # a) hosts that have a file below piggyback_sources:
-    #    -> check age of the file and remove it once it reached config.piggyback_max_cachefile_age
+    #    -> check age of the file and remove it once it reached piggyback_max_cachefile_age
     # b) hosts that don't have a file below piggyback_sources (old version or removed by step "a)"):
     #    -> remove all piggyback_raw_data files created by this source
 
@@ -168,11 +167,11 @@ def cleanup_piggyback_files():
     functions. Therefor all these functions needs to deal with suddenly vanishing or
     updated files/directories.
     """
-    _cleanup_old_source_status_files()
-    _cleanup_old_piggybacked_files()
+    _cleanup_old_source_status_files(piggyback_max_cachefile_age)
+    _cleanup_old_piggybacked_files(piggyback_max_cachefile_age)
 
 
-def _cleanup_old_source_status_files():
+def _cleanup_old_source_status_files(piggyback_max_cachefile_age):
     base_dir = os.path.join(cmk.paths.tmp_dir, "piggyback_sources")
     for entry in os.listdir(base_dir):
         if entry[0] == ".":
@@ -185,11 +184,11 @@ def _cleanup_old_source_status_files():
         except MKGeneralException, e:
             continue # File might've been deleted. That's ok.
 
-        if file_age > config.piggyback_max_cachefile_age:
+        if file_age > piggyback_max_cachefile_age:
             console.verbose("Removing outdated piggyback source status file %s\n" % file_path)
             _remove_piggyback_file(file_path)
 
-def _cleanup_old_piggybacked_files():
+def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
     """Remove piggyback data that is not needed anymore
 
     The monitoring (_get_piggyback_files()) is already skipping these files,
@@ -214,7 +213,7 @@ def _cleanup_old_piggybacked_files():
 
             file_path = os.path.join(backed_host_dir_path, source_host_name)
 
-            delete_reason = _shall_cleanup_piggyback_file(file_path, source_host_name, keep_sources)
+            delete_reason = _shall_cleanup_piggyback_file(piggyback_max_cachefile_age, file_path, source_host_name, keep_sources)
             if delete_reason:
                 console.verbose("Removing outdated piggyback file (%s) %s\n" % (delete_reason, file_path))
                 _remove_piggyback_file(file_path)
@@ -229,7 +228,7 @@ def _cleanup_old_piggybacked_files():
                 raise
 
 
-def _shall_cleanup_piggyback_file(file_path, source_host_name, keep_sources):
+def _shall_cleanup_piggyback_file(piggyback_max_cachefile_age, file_path, source_host_name, keep_sources):
     if source_host_name not in keep_sources:
         return "Source not sending piggyback data"
 
@@ -239,8 +238,8 @@ def _shall_cleanup_piggyback_file(file_path, source_host_name, keep_sources):
         return None # File might've been deleted. That's ok.
 
     # Skip piggyback files that are outdated at all
-    if file_age > config.piggyback_max_cachefile_age:
-        return "%d seconds too old" % (file_age - config.piggyback_max_cachefile_age)
+    if file_age > piggyback_max_cachefile_age:
+        return "%d seconds too old" % (file_age - piggyback_max_cachefile_age)
 
     # Skip piggyback files that have not been updated in the last contact
     # with the source host that is currently being handled.

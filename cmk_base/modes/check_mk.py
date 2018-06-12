@@ -709,8 +709,8 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_cleanup_piggyback():
-    import cmk_base.piggyback
-    cmk_base.piggyback.cleanup_piggyback_files()
+    from cmk_base.piggyback import cleanup_piggyback_files
+    cleanup_piggyback_files(config.piggyback_max_cachefile_age)
 
 modes.register(Mode(
     long_option="cleanup-piggyback",

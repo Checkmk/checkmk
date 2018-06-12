@@ -749,6 +749,18 @@ metric_info["trend_hoursleft"] = {
     "color" : "#94b65a",
 }
 
+metric_info["power_usage_percentage"] = {
+    "title" : _("Power Usage"),
+    "color" : "13/a",
+    "unit"  : "%",
+}
+
+metric_info["power_usage"] = {
+    "title" : _("Power Usage"),
+    "color" : "13/b",
+    "unit"  : "w",
+}
+
 metric_info["swap_total"] = {
     "title" : _("Swap installed"),
     "color": "#e0e0e0",

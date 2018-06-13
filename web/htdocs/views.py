@@ -646,7 +646,7 @@ class Cell(object):
         if type(painter.get("short")) in [types.FunctionType, types.MethodType]:
             return painter["short"](self.painter_parameters())
         else:
-            return painter.get("short", self._get_long_title)
+            return painter.get("short", self._get_long_title(painter))
 
 
     def _get_long_title(self, painter):

@@ -34,8 +34,8 @@ def parse_sap_hana_full_backup(info):
             continue
         date, age_days, duration, backup_state = [x.strip() for x in line[:4]]
         parsed.setdefault(instance, {
-            "age_days": int(age_days),
-            "duration": int(duration),
+            "age_days": age_days,
+            "duration": duration,
             "date": date.replace('"', ''),
             "state": backup_state.replace('"', ''),
         })
@@ -51,12 +51,16 @@ def check_sap_hana_full_backup(item, params, parsed):
     if not data:
         return
     backup_state = data["state"]
+    infotext = "Status: %s" % backup_state
+    if backup_state == "running":
+        return 0, infotext
+
     state = 0
     if backup_state != "successful":
         state = 2
-    return state, 'Status: %s, Duration: %s, %s days ago' % \
-           (backup_state, get_age_human_readable(data["duration"]),
-            data["age_days"])
+    return state, '%s, Duration: %s, %s days ago' % \
+           (infotext, get_age_human_readable(int(data["duration"])),
+            int(data["age_days"]))
 
 
 check_info['sap_hana_full_backup'] = {

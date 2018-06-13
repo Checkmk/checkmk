@@ -32,12 +32,15 @@ def inventory_sap_hana_full_backup(info):
 def check_sap_hana_full_backup(item, params, info):
     date, age_days, duration, backup_state = info[0][:4]
     date, backup_state = map(lambda x: x.replace('"', ''), [date, backup_state])
-    age_days, duration = map(int, [age_days, duration])
+    infotext = "Status: %s" % backup_state
+    if backup_state == "running":
+        return 0, infotext
+
     state = 0
     if backup_state != "successful":
         state = 2
-    return state, 'Status: %s, Duration: %s, %s days ago' % \
-           (backup_state, get_age_human_readable(duration), age_days)
+    return state, '%s, Duration: %s, %s days ago' % \
+           (infotext, get_age_human_readable(int(duration)), int(age_days))
 
 
 check_info['sap_hana_full_backup'] = {

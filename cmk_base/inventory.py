@@ -49,11 +49,11 @@ import cmk_base.rulesets as rulesets
 import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 import cmk_base.snmp as snmp
-import cmk_base.checking as checking
 import cmk_base.snmp_scan as snmp_scan
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.cleanup
+import cmk_base.decorator
 
 _inventory_output_dir  = cmk.paths.var_dir + "/inventory"
 _inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
@@ -94,7 +94,7 @@ def do_inv(hostnames):
             cmk_base.cleanup.cleanup_globals()
 
 
-@checking.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
+@cmk_base.decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
 def do_inv_check(hostname, options):
     _inv_hw_changes  = options.get("hw-changes", 0)
     _inv_sw_changes  = options.get("sw-changes", 0)

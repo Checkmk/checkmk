@@ -53,6 +53,7 @@ import cmk_base.core
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, MKTimeout
 import cmk_base.cleanup
 import cmk_base.check_utils
+import cmk_base.decorator
 import cmk_base.snmp_scan as snmp_scan
 
 try:
@@ -300,7 +301,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
 #   |  Active check for checking undiscovered services.                    |
 #   '----------------------------------------------------------------------'
 
-@checking.handle_check_mk_check_result("discovery", "Check_MK Discovery")
+@cmk_base.decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def check_discovery(hostname, ipaddress):
     params = discovery_check_parameters(hostname) or \
              default_discovery_check_parameters()
@@ -1008,8 +1009,6 @@ def resolve_paramstring(check_plugin_name, paramstring):
 # all services if possible
 # TODO: Can't we reduce the duplicate code here? Check out the "checking" code
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
-    import cmk_base.checking as checking
-
     if config.is_cluster(hostname):
         ipaddress = None
     else:

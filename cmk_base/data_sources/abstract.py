@@ -43,7 +43,7 @@ import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.checks as checks
-import cmk_base.check_api as check_api
+import cmk_base.check_api_utils as check_api_utils
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKEmptyAgentData, MKSNMPError, \
                                 MKParseFunctionError, MKTimeout, MKIPAddressLookupError
 
@@ -424,7 +424,7 @@ class DataSource(object):
         else:
             status = self._exit_code_spec.get("exception", 3)
 
-        return status, exc_msg + check_api.state_markers[status], []
+        return status, exc_msg + check_api_utils.state_markers[status], []
 
 
     def _summary_result(self):

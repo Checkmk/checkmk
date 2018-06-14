@@ -100,6 +100,7 @@ import cmk.defines as _defines
 import cmk_base.snmp_utils as _snmp_utils
 import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction
+import cmk_base.check_api_utils as _check_api_utils
 
 def _get_check_context():
     """This is called from cmk_base code to get the Check API things. Don't
@@ -136,7 +137,7 @@ import cmk.render as render
 core_state_names = _defines.short_service_state_names()
 
 # Symbolic representations of states in plugin output
-state_markers = ["", "(!)", "(!!)", "(?)"]
+state_markers = _check_api_utils.state_markers
 
 BINARY     = _snmp_utils.BINARY
 CACHED_OID = _snmp_utils.CACHED_OID
@@ -149,10 +150,10 @@ OID_END_OCTET_STRING = _snmp_utils.OID_END_OCTET_STRING
 binstring_to_int     = _snmp_utils.binstring_to_int
 
 # Management board checks
-MGMT_PRECEDENCE = "mgmt_precedence" # Use management board address/credentials when it's a SNMP host
-MGMT_ONLY       = "mgmt_only"       # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = "host_precedence" # Check is only executed for mgmt board (e.g. Managegment Uptime)
-HOST_ONLY       = "host_only"       # Check is only executed for real SNMP host (e.g. interfaces)
+MGMT_PRECEDENCE = _check_api_utils.MGMT_PRECEDENCE # Use management board address/credentials when it's a SNMP host
+MGMT_ONLY       = _check_api_utils.MGMT_ONLY       # Use host address/credentials when it's a SNMP HOST
+HOST_PRECEDENCE = _check_api_utils.HOST_PRECEDENCE # Check is only executed for mgmt board (e.g. Managegment Uptime)
+HOST_ONLY       = _check_api_utils.HOST_ONLY       # Check is only executed for real SNMP host (e.g. interfaces)
 
 # Is set before check/discovery function execution
 _hostname            = "unknown" # Host currently being checked
@@ -210,12 +211,7 @@ def savefloat(f):
 # TODO: This seems to be an old part of the check API and not used for
 #       a long time. Deprecate this as part of the and move it to the
 #       cmk_base.checks module.
-def no_discovery_possible(check_plugin_name, info):
-    """In old checks we used this to declare that a check did not support
-    a service discovery. Please don't use this for new checks. Simply
-    skip the "inventory_function" argument of the check_info declaration."""
-    _console.verbose("%s does not support discovery. Skipping it.\n", check_plugin_name)
-    return []
+no_discovery_possible = _check_api_utils.no_discovery_possible
 
 service_extra_conf       = _rulesets.service_extra_conf
 host_extra_conf          = _rulesets.host_extra_conf

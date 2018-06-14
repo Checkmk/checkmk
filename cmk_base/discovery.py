@@ -44,7 +44,7 @@ import cmk_base.console as console
 import cmk_base.piggyback as piggyback
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.checks as checks
-import cmk_base.check_api as check_api
+import cmk_base.check_api_utils as check_api_utils
 import cmk_base.item_state as item_state
 import cmk_base.checking as checking
 import cmk_base.data_sources as data_sources
@@ -364,7 +364,7 @@ def check_discovery(hostname, ipaddress):
             info = ", ".join([ "%s:%d" % e for e in affected_check_plugin_names.items() ])
             st = params.get(params_key, default_state)
             status = cmk_base.utils.worst_service_state(status, st)
-            infotexts.append("%d %s services (%s)%s" % (count, title, info, check_api.state_markers[st]))
+            infotexts.append("%d %s services (%s)%s" % (count, title, info, check_api_utils.state_markers[st]))
 
             if params.get("inventory_rediscovery", False):
                 mode = params["inventory_rediscovery"]["mode"]
@@ -733,7 +733,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
     try:
         discovery_function = checks.check_info[check_plugin_name]["inventory_function"]
         if discovery_function == None:
-            discovery_function = check_api.no_discovery_possible
+            discovery_function = check_api_utils.no_discovery_possible
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_plugin_name)
 

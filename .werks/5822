@@ -1,0 +1,12 @@
+Title: WATO Web-API set_ruleset: Now able to delete complete rulesets from folders
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b7
+Date: 1528995338
+Class: fix
+
+Removing all rulesets of a specific type from a folder always failed with the exception
+<tt>'list' object has no attribute 'get'</tt>. This has been fixed.
+

@@ -19,7 +19,9 @@ Currently these two SLA requirements are implemented
 Note: An upcoming SLA requirement will be "Minimum time between outages"
 
 
+
 Before the availability data gets forwarded to the computation plugins (which check the actual requirements) it is
+<ul>
 <li>further shortened by applying timeperiods, for example "Only check weekdays"</li>
 <li>cut into mulitple timeframes (daily/weekly/monthly), specified by period in the SLA definition</li>
 </ul>

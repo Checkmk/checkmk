@@ -345,7 +345,7 @@ class Integer(ValueSpec):
                                      value, self._maxvalue))
         ValueSpec.custom_validate(self, value, varprefix)
 
-# Filesize in Byte,Kbyte,Mbyte,Gigatbyte, Terrabyte
+# Filesize in Byte, KByte, MByte, Gigabyte, Terabyte
 class Filesize(Integer):
     def __init__(self, **kwargs):
         Integer.__init__(self, **kwargs)

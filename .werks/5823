@@ -1,0 +1,69 @@
+Title: New Feature: SLA reporting
+Level: 3
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1528996067
+
+SLA reports are a continuation of the already existing availability reports.
+The data from the availability feature can be additionally modified, before it is evaluated by the SLA requirements.
+
+Currently these two SLA requirements are implemented
+<ul>
+<li>State Percentage: The service state OK/WARN/CRIT/UNKNOWN is lower/higher than x percent</li>
+<li>Outage count: Maximum number of outages with a length of x minutes</li>
+</ul>
+Note: An upcoming SLA requirement will be "Minimum time between outages"
+
+
+Before the availability data gets forwarded to the computation plugins (which check the actual requirements) it is
+<li>further shortened by applying timeperiods, for example "Only check weekdays"</li>
+<li>cut into mulitple timeframes (daily/weekly/monthly), specified by period in the SLA definition</li>
+</ul>
+Each timeframe is computed separately, so you will get several SLA results, if the timerange you are interested in spans multiple SLA periods.
+
+
+
+Configuration
+
+First of all you need to configure a SLA definition. Just like views and reports, SLA definitions are configured per user,
+so you can setup a SLA and publish it to other users.
+
+SLA definitions are not inherently bound to services.
+A SLA definition can be assigned to a service, via the WATO rule <tt>Assign SLA to service</tt>.
+For views, the multisite GUI currently offers two different painters to display SLA information
+
+<ul>
+<li>SLA - Service specific: This painter renders SLA definitions, which were assigned by WATO rule. Therefore, one table
+column in a view can display multiple SLA definition types. The timerange, however, is fixed for all SLAs and can be configured in the painter</li>
+<li>SLA - Column specific: This painter renders the same SLA definition for all services in the table</li>
+</ul>
+
+There are several configuration options for both painters.
+<ul>
+<li>SLA timerange: The timerange specifies the start and end date you are interested in. A SLA definition only has a
+recurring period (e.g. weekly). So if you have a SLA definition with a monthly period and set the timerange from
+01.01.2018 to 31.03.2018, you will get three separate SLA results, one for each month</li>
+<li>Layout options: With these options you can configure the content of the painter. You may also choose only to display
+the SLA name, which means no actual SLA computation, hereby saving performance</li>
+<li>Plugin display options</li>Allows you to configure the precision of percentage (float) values and additional layout options</li>
+</ul>
+
+There is also a SLA details page available. This page offers detailed information regarding the computation.
+<ul>
+<li>Availability rawdata used in computation</li>
+<li>Aggregated results (the actual SLA outcome) over all computation plugins</li>
+<li>Subresults for each used computation plugin</li>
+<li>SLA specification: Includes all settings which were used to create this report</li>
+</ul>
+
+
+Please note that this feature is quite new and still under heavy development.
+The goal in version 1.5 is to get some hands on experience and add some minor improvements and bugfixes over time.
+Exporting the SLA data into PDF reports is currently only supported within views.
+Later on, the SLA details page will also receive a "Export to PDF" button.
+
+

@@ -30,7 +30,6 @@ import cmk.paths
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.checks as checks
-import cmk_base.check_api as check_api
 import cmk_base.console as console
 import cmk_base.check_utils
 

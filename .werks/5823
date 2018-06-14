@@ -16,6 +16,7 @@ Currently these two SLA requirements are implemented
 <li>State Percentage: The service state OK/WARN/CRIT/UNKNOWN is lower/higher than x percent</li>
 <li>Outage count: Maximum number of outages with a length of x minutes</li>
 </ul>
+
 Note: An upcoming SLA requirement will be "Minimum time between outages"
 
 
@@ -25,7 +26,9 @@ Before the availability data gets forwarded to the computation plugins (which ch
 <li>further shortened by applying timeperiods, for example "Only check weekdays"</li>
 <li>cut into mulitple timeframes (daily/weekly/monthly), specified by period in the SLA definition</li>
 </ul>
+
 Each timeframe is computed separately, so you will get several SLA results, if the timerange you are interested in spans multiple SLA periods.
+
 
 
 
@@ -37,7 +40,6 @@ so you can setup a SLA and publish it to other users.
 SLA definitions are not inherently bound to services.
 A SLA definition can be assigned to a service, via the WATO rule <tt>Assign SLA to service</tt>.
 For views, the multisite GUI currently offers two different painters to display SLA information
-
 <ul>
 <li>SLA - Service specific: This painter renders SLA definitions, which were assigned by WATO rule. Therefore, one table
 column in a view can display multiple SLA definition types. The timerange, however, is fixed for all SLAs and can be configured in the painter</li>

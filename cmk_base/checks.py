@@ -275,13 +275,10 @@ def load_check_includes(check_file_path, check_context):
 
 
 def check_include_file_path(include_file_name):
-    include_file_path = os.path.join(cmk.paths.checks_dir, include_file_name)
-
     local_path = os.path.join(cmk.paths.local_checks_dir, include_file_name)
     if os.path.exists(local_path):
-        include_file_path = local_path
-
-    return include_file_path
+        return local_path
+    return os.path.join(cmk.paths.checks_dir, include_file_name)
 
 
 def cached_includes_of_plugin(check_file_path):

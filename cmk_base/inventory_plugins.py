@@ -99,26 +99,24 @@ def _new_inv_context(get_inventory_context):
 # Working with imports when specifying the includes would be much cleaner,
 # sure. But we need to deal with the current check API.
 def _load_plugin_includes(check_file_path, plugin_context):
-    for include_file_name in checks.includes_of_plugin(check_file_path):
-        include_file_path = os.path.join(cmk.paths.inventory_dir, include_file_name)
-
-        local_path = os.path.join(cmk.paths.local_inventory_dir, include_file_name)
-        if os.path.exists(local_path):
-            include_file_path = local_path
-
-        # inventory plugins may also use check includes. Try to find one.
-        if not os.path.exists(include_file_path):
-            include_file_path = checks.check_include_file_path(include_file_name)
-
+    for name in checks.includes_of_plugin(check_file_path):
+        path = _include_file_path(name)
         try:
-            execfile(include_file_path, plugin_context)
+            execfile(path, plugin_context)
         except Exception, e:
-            console.error("Error in include file %s: %s\n", include_file_path, e)
+            console.error("Error in include file %s: %s\n", path, e)
             if cmk.debug.enabled():
                 raise
-            else:
-                continue
 
+
+def _include_file_path(name):
+    local_path = os.path.join(cmk.paths.local_inventory_dir, name)
+    if os.path.exists(local_path):
+        return local_path
+    shared_path = os.path.join(cmk.paths.inventory_dir, name)
+    if os.path.exists(shared_path):
+        return shared_path
+    return checks.check_include_file_path(name)
 
 
 def is_snmp_plugin(plugin_type):

@@ -9620,7 +9620,7 @@ register_check_parameters(
         title = _("Sensor name"),
         help = _("The identifier of the sensor."),
     ),
-    match_type = "first",
+    match_type = "dict",
 )
 
 register_check_parameters(

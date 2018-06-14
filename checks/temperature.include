@@ -243,9 +243,9 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
 # dev_status_name:   the device name (will be added in the check output)
 # Note: you must not specify dev_status and dev_levels at the same time!
 
-def check_temperature(reading, params, unique_name, dev_unit = "c",
-                      dev_levels = None, dev_levels_lower = None,
-                      dev_status = None, dev_status_name = None):
+def check_temperature(reading, params, unique_name, dev_unit="c",
+                      dev_levels=None, dev_levels_lower=None,
+                      dev_status=None, dev_status_name=None):
 
 
     def check_temp_levels(temp, warn, crit, warn_lower, crit_lower):

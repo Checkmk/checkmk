@@ -43,6 +43,7 @@ import cmk_base.rulesets as rulesets
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.check_api as check_api
+import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
 import cmk_base.check_utils
 
@@ -502,7 +503,7 @@ def convert_check_info():
         if type(info) != dict:
             # Convert check declaration from old style to new API
             check_function, service_description, has_perfdata, inventory_function = info
-            if inventory_function == check_api.no_discovery_possible:
+            if inventory_function == check_api_utils.no_discovery_possible:
                 inventory_function = None
 
             check_info[check_plugin_name] = {
@@ -752,7 +753,7 @@ def _get_checkgroup_parameters(host, checktype, item):
 def get_management_board_precedence(check_plugin_name):
     mgmt_board = check_info[check_plugin_name]["management_board"]
     if mgmt_board is None:
-        return check_api.HOST_PRECEDENCE
+        return check_api_utils.HOST_PRECEDENCE
     else:
         return mgmt_board
 
@@ -815,16 +816,16 @@ def filter_by_management_board(hostname, found_check_plugin_names,
     host_only = set()
     for check_plugin_name in found_check_plugin_names:
         mgmt_board = get_management_board_precedence(check_plugin_name)
-        if mgmt_board == check_api.MGMT_PRECEDENCE:
+        if mgmt_board == check_api_utils.MGMT_PRECEDENCE:
             mgmt_precedence.add(check_plugin_name)
 
-        elif mgmt_board == check_api.HOST_PRECEDENCE:
+        elif mgmt_board == check_api_utils.HOST_PRECEDENCE:
             host_precedence.add(check_plugin_name)
 
-        elif mgmt_board == check_api.MGMT_ONLY:
+        elif mgmt_board == check_api_utils.MGMT_ONLY:
             mgmt_only.add(check_plugin_name)
 
-        elif mgmt_board == check_api.HOST_ONLY:
+        elif mgmt_board == check_api_utils.HOST_ONLY:
             host_only.add(check_plugin_name)
 
     has_mgmt_board = config.has_management_board(hostname)

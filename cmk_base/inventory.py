@@ -47,7 +47,7 @@ import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.checks as checks
-import cmk_base.check_api as check_api
+import cmk_base.check_api_utils as check_api_utils
 import cmk_base.snmp as snmp
 import cmk_base.snmp_scan as snmp_scan
 import cmk_base.ip_lookup as ip_lookup
@@ -118,7 +118,7 @@ def do_inv_check(hostname, options):
         infotexts.append("Found %d inventory entries" % inventory_tree.count_entries())
 
         if not inventory_tree.has_edge("software") and _inv_sw_missing:
-            infotexts.append("software information is missing" + check_api.state_markers[_inv_sw_missing])
+            infotexts.append("software information is missing" + check_api_utils.state_markers[_inv_sw_missing])
             status = max(status, _inv_sw_missing)
 
         if old_timestamp:
@@ -129,14 +129,14 @@ def do_inv_check(hostname, options):
                 infotext = "software changes"
                 if _inv_sw_changes:
                     status = max(status, _inv_sw_changes)
-                    infotext += check_api.state_markers[_inv_sw_changes]
+                    infotext += check_api_utils.state_markers[_inv_sw_changes]
                 infotexts.append(infotext)
 
             if not old_tree.is_equal(inventory_tree, edges=["hardware"]):
                 infotext = "hardware changes"
                 if _inv_hw_changes:
                     status = max(status, _inv_hw_changes)
-                    infotext += check_api.state_markers[_inv_hw_changes]
+                    infotext += check_api_utils.state_markers[_inv_hw_changes]
 
                 infotexts.append(infotext)
 

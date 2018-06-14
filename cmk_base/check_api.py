@@ -155,27 +155,9 @@ MGMT_ONLY       = _check_api_utils.MGMT_ONLY       # Use host address/credential
 HOST_PRECEDENCE = _check_api_utils.HOST_PRECEDENCE # Check is only executed for mgmt board (e.g. Managegment Uptime)
 HOST_ONLY       = _check_api_utils.HOST_ONLY       # Check is only executed for real SNMP host (e.g. interfaces)
 
-# Is set before check/discovery function execution
-_hostname            = "unknown" # Host currently being checked
-# Is set before check execution
-_service_description = None
-_check_plugin_name          = None
-
-
-def host_name():
-    """Returns the name of the host currently being checked or discovered."""
-    return _hostname
-
-
-# TODO: Is this really needed? Could not find a call site.
-def service_description():
-    """Returns the name of the service currently being checked."""
-    return _service_description
-
-
-def check_type():
-    """Returns the name of the check type currently being checked."""
-    return _check_plugin_name
+host_name           = _check_api_utils.host_name
+service_description = _check_api_utils.service_description
+check_type          = _check_api_utils.check_type
 
 
 def saveint(i):
@@ -380,7 +362,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     else:
         try:
             ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
-                      _prediction.get_levels(_hostname, _service_description,
+                      _prediction.get_levels(host_name(), service_description(),
                                 dsname, params, "MAX", levels_factor=factor * scale)
 
             if ref_value:
@@ -438,13 +420,13 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
 def get_effective_service_level():
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
-    service_levels = _rulesets.service_extra_conf(_hostname, _service_description,
+    service_levels = _rulesets.service_extra_conf(host_name(), service_description(),
                                         _config.service_service_levels)
 
     if service_levels:
         return service_levels[0]
     else:
-        service_levels = _rulesets.host_extra_conf(_hostname, _config.host_service_levels)
+        service_levels = _rulesets.host_extra_conf(host_name(), _config.host_service_levels)
         if service_levels:
             return service_levels[0]
     return 0

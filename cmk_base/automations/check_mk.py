@@ -47,6 +47,7 @@ import cmk_base.check_utils
 import cmk_base.autochecks
 import cmk_base.nagios_utils
 from cmk_base.core_factory import create_core
+import cmk_base.check_api_utils as check_api_utils
 
 
 class DiscoveryAutomation(Automation):
@@ -526,7 +527,7 @@ class AutomationAnalyseServices(Automation):
 
         hostname = args[0]
         servicedesc = args[1].decode("utf-8")
-        checks.set_hostname(hostname)
+        check_api_utils.set_hostname(hostname)
 
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:

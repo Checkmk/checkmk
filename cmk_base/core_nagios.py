@@ -44,6 +44,7 @@ import cmk_base.core_config as core_config
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.check_utils
+import cmk_base.check_api_utils as check_api_utils
 
 
 class NagiosCore(core_config.MonitoringCore):
@@ -392,7 +393,7 @@ define service {
         outfile.write("\n\n# Active checks\n")
         for acttype, act_info, params in actchecks:
             # Make hostname available as global variable in argument functions
-            checks.set_hostname(hostname)
+            check_api_utils.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
             description = config.active_check_service_description(hostname, acttype, params)

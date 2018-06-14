@@ -51,6 +51,7 @@ import cmk_base.check_table as check_table
 from cmk_base.exceptions import MKTimeout, MKParseFunctionError
 import cmk_base.check_utils
 import cmk_base.decorator
+import cmk_base.check_api_utils as check_api_utils
 
 try:
     import cmk_base.cee.keepalive as keepalive
@@ -158,7 +159,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names=None):
     num_success, missing_sections = 0, set()
 
-    checks.set_hostname(hostname)
+    check_api_utils.set_hostname(hostname)
 
     filter_mode = None
 
@@ -212,7 +213,7 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
 def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description):
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
-    checks.set_service(check_plugin_name, description)
+    check_api_utils.set_service(check_plugin_name, description)
     item_state.set_item_state_prefix(check_plugin_name, item)
 
     # Skip checks that are not in their check period

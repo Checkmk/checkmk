@@ -270,13 +270,16 @@ class ConfigDomain(object):
 
     @classmethod
     def all_classes(cls):
-        subclasses = cls.__subclasses__() # pylint: disable=no-member
-
         # Classes may be registered twice, only store one of the occurances.
         # TODO(lm): Find the reason for this and solve this issue in the plugin mechanism.
+        # NOTE: One reason is the rampant execfile usage in the plugin folders
+        #       each language change creates additional class definitions
+
+        # The latest "fix" changes the behaviour to return the last declared class with the
+        # same class name. This is usually a better idea, than returning outdated classes
         classes = {}
-        for subclass in subclasses:
-            classes.setdefault(subclass.__name__, subclass)
+        for subclass in cls.__subclasses__(): # pylint: disable=no-member
+            classes[subclass.__name__] = subclass
 
         return classes.values()
 

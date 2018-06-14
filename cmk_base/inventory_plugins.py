@@ -86,14 +86,12 @@ def _new_inv_context(get_inventory_context):
         "inv_info"   : inv_info,
         "inv_export" : inv_export,
     }
-
-    # Add the inventory plugin and check API
-    #
-    # For better separation it would be better to copy the check API objects, but
-    # this might consume too much memory. So we simply reference it.
-    for k, v in check_api._get_check_context() + get_inventory_context():
-        context[k] = v
-
+    # NOTE: For better separation it would be better to copy the values, but
+    # this might consume too much memory, so we simply reference them.
+    # NOTE: It is possible that check includes are included, so we need the
+    # usual check context here, too.
+    context.update(checks.new_check_context())
+    context.update(get_inventory_context())
     return context
 
 
@@ -111,11 +109,6 @@ def _load_plugin_includes(check_file_path, plugin_context):
         # inventory plugins may also use check includes. Try to find one.
         if not os.path.exists(include_file_path):
             include_file_path = checks.check_include_file_path(include_file_name)
-
-            # In case a check include file is used the plugin context needs to be
-            # prepared with a check plugin context
-            for key, val in checks.new_check_context().items():
-                plugin_context.setdefault(key, val)
 
         try:
             execfile(include_file_path, plugin_context)

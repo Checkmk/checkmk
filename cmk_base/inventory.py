@@ -385,7 +385,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
 #   '----------------------------------------------------------------------'
 
 def get_inventory_context():
-    return [
-        ("inv_tree_list", inv_tree_list),
-        ("inv_tree", inv_tree),
-    ]
+    return {
+        "inv_tree_list": inv_tree_list,
+        "inv_tree": inv_tree,
+    }

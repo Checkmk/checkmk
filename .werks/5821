@@ -1,0 +1,13 @@
+Title: Fixed exception during configuration changes
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b7
+Date: 1528990598
+Class: fix
+
+This exception could happens on various instances. For example
+when saving global settings or during the activate changes phase.
+
+The exception text showed <tt>super(type, obj): obj must be an instance or subtype of type</tt>.

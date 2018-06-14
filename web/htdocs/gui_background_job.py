@@ -186,8 +186,15 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions, background_job.Back
 
     @classmethod
     def get_concrete_subclasses(cls):
-        all_subclasses = []
+        # Note: Due to the strange execfile plugin mechanism, there is a risk
+        #       that a class gets declared multiple times. We always use the last
+        #       declaration of the given class
+        classes = {}
         for subclass in cls.__subclasses__(): # pylint: disable=no-member
+            classes[subclass.__name__] = subclass
+
+        all_subclasses = []
+        for subclass in classes.values():
             # Concrete subclasses have an attribute job_prefix
             if hasattr(subclass, "job_prefix"):
                 all_subclasses.append(subclass)

@@ -34,6 +34,7 @@ import cmk_base.console as console
 from cmk_base.exceptions import MKSNMPError
 import cmk_base.rulesets as rulesets
 import cmk_base.snmp as snmp
+import cmk_base.check_api_utils as check_api_utils
 
 
 # gather auto_discovered check_plugin_names for this host
@@ -61,7 +62,7 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
     # this to evaluate if_disabled_if64_checks.
-    checks.set_hostname(hostname)
+    check_api_utils.set_hostname(hostname)
 
     snmp.initialize_single_oid_cache(access_data)
     console.vverbose("  SNMP scan:\n")

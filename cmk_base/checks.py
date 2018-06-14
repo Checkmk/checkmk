@@ -629,15 +629,6 @@ def initialize_check_type_caches():
 #   | Misc check related helper functions                                  |
 #   '----------------------------------------------------------------------'
 
-def set_hostname(hostname):
-    check_api._hostname = hostname
-
-
-def set_service(check_plugin_name, descr):
-    check_api._check_plugin_name   = check_plugin_name
-    check_api._service_description = descr
-
-
 def discoverable_tcp_checks():
     types = []
     for check_plugin_name, check in check_info.items():
@@ -850,4 +841,4 @@ def filter_by_management_board(hostname, found_check_plugin_names,
 
     return final_collection
 
-cmk_base.cleanup.register_cleanup(lambda: set_hostname("unknown"))
+cmk_base.cleanup.register_cleanup(lambda: check_api_utils.set_hostname("unknown"))

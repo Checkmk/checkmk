@@ -37,6 +37,7 @@ import cmk_base.piggyback as piggyback
 import cmk_base.item_state as item_state
 import cmk_base.check_utils
 import cmk_base.autochecks
+import cmk_base.check_api_utils as check_api_utils
 
 # TODO: Refactor this to OO. The check table needs to be an object.
 
@@ -197,7 +198,7 @@ def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"
     precomp_table = []
     for check_plugin_name, item, params, description, _unused_deps in host_checks:
         # make these globals available to the precompile function
-        checks.set_service(check_plugin_name, description)
+        check_api_utils.set_service(check_plugin_name, description)
         item_state.set_item_state_prefix(check_plugin_name, item)
 
         params = get_precompiled_check_parameters(hostname, item, params, check_plugin_name)

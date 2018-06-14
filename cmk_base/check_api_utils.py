@@ -52,3 +52,39 @@ MGMT_PRECEDENCE = "mgmt_precedence" # Use management board address/credentials w
 MGMT_ONLY       = "mgmt_only"       # Use host address/credentials when it's a SNMP HOST
 HOST_PRECEDENCE = "host_precedence" # Check is only executed for mgmt board (e.g. Managegment Uptime)
 HOST_ONLY       = "host_only"       # Check is only executed for real SNMP host (e.g. interfaces)
+
+
+# Is set before check/discovery function execution
+_hostname = "unknown" # Host currently being checked
+
+
+def set_hostname(hostname):
+    global _hostname
+    _hostname = hostname
+
+
+def host_name():
+    """Returns the name of the host currently being checked or discovered."""
+    return _hostname
+
+
+# Is set before check execution
+_check_type = None
+_service_description = None
+
+
+def set_service(check_type, service_description):
+    global _check_type, _service_description
+    _check_type = check_type
+    _service_description = service_description
+
+
+def check_type():
+    """Returns the name of the check type currently being checked."""
+    return _check_type
+
+
+# TODO: Is this really needed? Could not find a call site.
+def service_description():
+    """Returns the name of the service currently being checked."""
+    return _service_description

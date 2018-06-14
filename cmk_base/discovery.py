@@ -680,7 +680,7 @@ def schedule_discovery_check(hostname):
 def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error):
     # Make hostname available as global variable in discovery functions
     # (used e.g. by ps-discovery)
-    checks.set_hostname(hostname)
+    check_api_utils.set_hostname(hostname)
 
     discovered_services = []
     try:
@@ -1046,7 +1046,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 else:
                     continue # ignore
 
-            checks.set_service(check_plugin_name, descr)
+            check_api_utils.set_service(check_plugin_name, descr)
             section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
 
             if check_plugin_name not in checks.check_info:

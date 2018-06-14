@@ -134,7 +134,11 @@ def add_configuration_hash(response, configuration_object):
 class APICallCollection(object):
     @classmethod
     def all_classes(cls):
-        return cls.__subclasses__() # pylint: disable=no-member
+        classes = {}
+        for subclass in cls.__subclasses__(): # pylint: disable=no-member
+            classes[subclass.__name__] = subclass
+
+        return classes.values()
 
 
     def get_api_calls(self):

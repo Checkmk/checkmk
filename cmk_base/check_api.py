@@ -104,7 +104,7 @@ import cmk_base.prediction as _prediction
 def _get_check_context():
     """This is called from cmk_base code to get the Check API things. Don't
     use this from checks."""
-    return [ (k, v) for k, v in globals().items() if k[0] != "_" ]
+    return {k: v for k, v in globals().iteritems() if not k.startswith("_")}
 
 #.
 #   .--Check API-----------------------------------------------------------.
@@ -499,4 +499,8 @@ def _agent_cache_file_age(hostname, check_plugin_name):
         return None
 
 
-__all__ = dict(_get_check_context()).keys()
+# NOTE: Currently this is not really needed, it is just here to keep any start
+# import in sync with our intended API.
+# TODO: Do we really need this? Is there code which uses a star import for this
+# module?
+__all__ = _get_check_context().keys()

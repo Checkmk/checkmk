@@ -249,14 +249,9 @@ def new_check_context():
         "active_check_info"      : active_check_info,
         "special_agent_info"     : special_agent_info,
     }
-
-    # Add the Check API
-    #
-    # For better separation it would be better to copy the check API objects, but
-    # this might consume too much memory. So we simply reference it.
-    for k, v in check_api._get_check_context():
-        context[k] = v
-
+    # NOTE: For better separation it would be better to copy the values, but
+    # this might consume too much memory, so we simply reference them.
+    context.update(check_api._get_check_context())
     return context
 
 

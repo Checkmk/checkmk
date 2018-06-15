@@ -61,6 +61,7 @@ class SNMPDataSource(DataSource):
         self._on_error = "raise"
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
+        self._fetched_check_plugin_names = []
 
 
     def id(self):
@@ -149,6 +150,17 @@ class SNMPDataSource(DataSource):
         self._check_plugin_name_filter_func = filter_func
 
 
+    def set_fetched_check_plugin_names(self, check_plugin_names):
+        """Sets a list of already fetched host sections/check plugin names.
+
+        Especially for SNMP data sources there are already fetched
+        host sections of executed check plugins. But for some inventory plugins
+        which have no related check plugin the host must be contacted again
+        in order to create the full tree.
+        """
+        self._fetched_check_plugin_names = check_plugin_names
+
+
     def _gather_check_plugin_names(self):
         """Returns a list of check types that shal be executed with this source.
 
@@ -184,13 +196,19 @@ class SNMPDataSource(DataSource):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
+            has_snmp_info = False
             section_name = checks.section_name_of(check_plugin_name)
             if section_name in checks.snmp_info:
                 oid_info = checks.snmp_info[section_name]
             elif section_name in cmk_base.inventory_plugins.inv_info:
                 oid_info = cmk_base.inventory_plugins.inv_info[section_name].get("snmp_info")
+                if oid_info:
+                    has_snmp_info = True
             else:
                 oid_info = None
+
+            if not has_snmp_info and check_plugin_name in self._fetched_check_plugin_names:
+                continue
 
             if oid_info is None:
                 continue

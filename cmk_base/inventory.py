@@ -83,7 +83,7 @@ def do_inv(hostnames):
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             sources = data_sources.DataSources(hostname, ipaddress)
-            do_inv_for(sources, hostname, ipaddress)
+            do_inv_for(sources, multi_host_sections=None, hostname=hostname, ipaddress=ipaddress)
         except Exception, e:
             if cmk.debug.enabled():
                 raise
@@ -108,7 +108,8 @@ def do_inv_check(hostname, options):
     status, infotexts, long_infotexts, perfdata = 0, [], [], []
 
     sources = data_sources.DataSources(hostname, ipaddress)
-    old_timestamp, inventory_tree, status_data_tree = do_inv_for(sources, hostname, ipaddress)
+    old_timestamp, inventory_tree, status_data_tree = do_inv_for(sources, multi_host_sections=None,
+                                                                 hostname=hostname, ipaddress=ipaddress)
 
     if inventory_tree.is_empty() and status_data_tree.is_empty():
         infotexts.append("Found no data")
@@ -152,7 +153,7 @@ def do_inv_check(hostname, options):
     return status, infotexts, long_infotexts, perfdata
 
 
-def do_inv_for(sources, hostname, ipaddress):
+def do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data_inventory=False):
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
@@ -163,7 +164,8 @@ def do_inv_for(sources, hostname, ipaddress):
         _do_inv_for_cluster(hostname, inventory_tree)
     else:
         node["is_cluster"] = False
-        _do_inv_for_realhost(sources, hostname, ipaddress, inventory_tree, status_data_tree)
+        _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
+                             inventory_tree, status_data_tree)
 
     inventory_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname, inventory_tree)
@@ -173,8 +175,7 @@ def do_inv_for(sources, hostname, ipaddress):
     console.section_success("Found %s%s%d%s inventory entries" %
             (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
 
-    if not status_data_tree.is_empty() \
-       and checks.do_status_data_inventory_for(hostname):
+    if do_status_data_inventory:
         status_data_tree.normalize_nodes()
         _save_status_data_tree(hostname, status_data_tree)
 
@@ -192,7 +193,8 @@ def _do_inv_for_cluster(hostname, inventory_tree):
         })
 
 
-def _do_inv_for_realhost(sources, hostname, ipaddress, inventory_tree, status_data_tree):
+def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
+                         inventory_tree, status_data_tree):
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")
@@ -201,13 +203,23 @@ def _do_inv_for_realhost(sources, hostname, ipaddress, inventory_tree, status_da
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
             source.set_check_plugin_name_filter(_gather_snmp_check_plugin_names_inventory)
+            if multi_host_sections is not None:
+                # Status data inventory already provides filled multi_host_sections object.
+                # SNMP data source: If do_status_data_inventory is enabled there may be
+                # sections for inventory plugins which were not fetched yet.
+                source.enforce_check_plugin_names(None)
+                host_sections = multi_host_sections.add_or_get_host_sections(hostname, ipaddress)
+                source.set_fetched_check_plugin_names(host_sections.sections.keys())
+                host_sections_from_source = source.run()
+                host_sections.update(host_sections_from_source)
 
-    multi_host_sections = sources.get_host_sections()
+    if multi_host_sections is None:
+        multi_host_sections = sources.get_host_sections()
 
     console.step("Executing inventory plugins")
-    import cmk_base.inventory_plugins
+    import cmk_base.inventory_plugins as inventory_plugins
     console.verbose("Plugins:")
-    for section_name, plugin in cmk_base.inventory_plugins.inv_info.items():
+    for section_name, plugin in inventory_plugins.inv_info.items():
         section_content = multi_host_sections.get_section_content(hostname, ipaddress,
                                                                   section_name, for_discovery=False)
 
@@ -346,7 +358,7 @@ def _save_status_data_tree(hostname, status_data_tree):
 
 
 def _run_inventory_export_hooks(hostname, inventory_tree):
-    import cmk_base.inventory_plugins
+    import cmk_base.inventory_plugins as inventory_plugins
     hooks = []
     for hookname, ruleset in config.inv_exports.items():
         entries = rulesets.host_extra_conf(hostname, ruleset)
@@ -361,7 +373,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
         console.verbose("Execute export hook: %s%s%s%s" %
                             (tty.blue, tty.bold, hookname, tty.normal))
         try:
-            func = cmk_base.inventory_plugins.inv_export[hookname]["export_function"]
+            func = inventory_plugins.inv_export[hookname]["export_function"]
             func(hostname, params, inventory_tree.get_raw_tree())
         except Exception, e:
             if cmk.debug.enabled():

@@ -27,19 +27,19 @@ def test_service_extra_conf(monkeypatch):
     config.collect_hosttags()
 
     ruleset = [
-        ("1", [], rulesets.ALL_HOSTS, rulesets.ALL_SERVICES, {}),
-        ("2", [], rulesets.ALL_HOSTS, rulesets.ALL_SERVICES, {}),
-        ("3", ["tag1"], rulesets.ALL_HOSTS, rulesets.ALL_SERVICES, {}),
-        ("4", ["tag2"], rulesets.ALL_HOSTS, rulesets.ALL_SERVICES, {}),
-        ("5", ["tag3"], rulesets.ALL_HOSTS, rulesets.ALL_SERVICES, {}),
-        ("6", ["tag3"], ["host1"], rulesets.ALL_SERVICES, {}),
-        ("7", [], ["host1"], rulesets.ALL_SERVICES, {}),
+        ("1", [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("2", [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("3", ["tag1"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("4", ["tag2"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("5", ["tag3"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("6", ["tag3"], ["host1"], config.ALL_SERVICES, {}),
+        ("7", [], ["host1"], config.ALL_SERVICES, {}),
         ("8", [], ["host1"], ["service1$"], {}),
         ("9", [], ["host1"], ["ser$"], {}),
         ("10", [], ["host1"], ["^serv$"], {}),
-        ("11", [], ["~host"], rulesets.ALL_SERVICES, {}),
+        ("11", [], ["~host"], config.ALL_SERVICES, {}),
         # TODO: Is it really OK that this does not match "host1" below? Maybe a bug?!
-        ("12", [], ["!host2"], rulesets.ALL_SERVICES, {}),
+        ("12", [], ["!host2"], config.ALL_SERVICES, {}),
     ]
 
     assert config.service_extra_conf("host1", "service1", ruleset) == \
@@ -69,59 +69,59 @@ def test_all_matching_hosts(monkeypatch):
     monkeypatch.setattr(config, "clusters", {})
     config.collect_hosttags()
 
-    assert rulesets.all_matching_hosts(["tag1"], rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["tag1"], config.ALL_HOSTS, with_foreign_hosts=False) == \
             set(["host1", "host2"])
 
-    assert rulesets.all_matching_hosts(["tag2"], rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["tag2"], config.ALL_HOSTS, with_foreign_hosts=False) == \
             set(["host1"])
 
-    assert rulesets.all_matching_hosts(["!tag2"], rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["!tag2"], config.ALL_HOSTS, with_foreign_hosts=False) == \
             set(["host2"])
 
-    assert rulesets.all_matching_hosts(["!tag2"], rulesets.ALL_HOSTS, with_foreign_hosts=True) == \
+    assert config.all_matching_hosts(["!tag2"], config.ALL_HOSTS, with_foreign_hosts=True) == \
             set(["host2", "host3"])
 
-    assert rulesets.all_matching_hosts(["tag1"], [], with_foreign_hosts=True) == \
+    assert config.all_matching_hosts(["tag1"], [], with_foreign_hosts=True) == \
             set([])
 
-    assert rulesets.all_matching_hosts(["tag1"], ["host1"], with_foreign_hosts=True) == \
+    assert config.all_matching_hosts(["tag1"], ["host1"], with_foreign_hosts=True) == \
             set(["host1"])
 
-    assert rulesets.all_matching_hosts(["!tag1"], ["host1"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["!tag1"], ["host1"], with_foreign_hosts=False) == \
             set([])
 
-    assert rulesets.all_matching_hosts(["tag1"], ["~h"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["tag1"], ["~h"], with_foreign_hosts=False) == \
             set(["host1", "host2"])
 
-    assert rulesets.all_matching_hosts(["tag1"], ["~.*2"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["tag1"], ["~.*2"], with_foreign_hosts=False) == \
             set(["host2"])
 
-    assert rulesets.all_matching_hosts(["tag1"], ["~.*2$"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["tag1"], ["~.*2$"], with_foreign_hosts=False) == \
             set(["host2"])
 
-    assert rulesets.all_matching_hosts(["tag1"], ["~2"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["tag1"], ["~2"], with_foreign_hosts=False) == \
             set([])
 
 
 def test_in_extraconf_hostlist():
-    assert rulesets.in_extraconf_hostlist(rulesets.ALL_HOSTS, "host1") == True
-    assert rulesets.in_extraconf_hostlist([], "host1") == False
+    assert config.in_extraconf_hostlist(config.ALL_HOSTS, "host1") == True
+    assert config.in_extraconf_hostlist([], "host1") == False
 
-    assert rulesets.in_extraconf_hostlist(["host2", "host1"], "host1") == True
-    assert rulesets.in_extraconf_hostlist(["host1", "host2"], "host1") == True
+    assert config.in_extraconf_hostlist(["host2", "host1"], "host1") == True
+    assert config.in_extraconf_hostlist(["host1", "host2"], "host1") == True
 
-    assert rulesets.in_extraconf_hostlist(["host1"], "host1") == True
-    assert rulesets.in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1") == False
-    assert rulesets.in_extraconf_hostlist(["!host1"], "host1") == False
-    assert rulesets.in_extraconf_hostlist(["!host2"], "host1") == False
-    assert rulesets.in_extraconf_hostlist(["host1", "!host2"], "host1") == True
-    assert rulesets.in_extraconf_hostlist(["!host2", "host1"], "host1") == True
-    assert rulesets.in_extraconf_hostlist(["~h"], "host1") == True
-    assert rulesets.in_extraconf_hostlist(["~h"], "host1") == True
-    assert rulesets.in_extraconf_hostlist(["~h$"], "host1") == False
-    assert rulesets.in_extraconf_hostlist(["~1"], "host1") == False
-    assert rulesets.in_extraconf_hostlist(["~.*1"], "host1") == True
-    assert rulesets.in_extraconf_hostlist(["~.*1$"], "host1") == True
+    assert config.in_extraconf_hostlist(["host1"], "host1") == True
+    assert config.in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1") == False
+    assert config.in_extraconf_hostlist(["!host1"], "host1") == False
+    assert config.in_extraconf_hostlist(["!host2"], "host1") == False
+    assert config.in_extraconf_hostlist(["host1", "!host2"], "host1") == True
+    assert config.in_extraconf_hostlist(["!host2", "host1"], "host1") == True
+    assert config.in_extraconf_hostlist(["~h"], "host1") == True
+    assert config.in_extraconf_hostlist(["~h"], "host1") == True
+    assert config.in_extraconf_hostlist(["~h$"], "host1") == False
+    assert config.in_extraconf_hostlist(["~1"], "host1") == False
+    assert config.in_extraconf_hostlist(["~.*1"], "host1") == True
+    assert config.in_extraconf_hostlist(["~.*1$"], "host1") == True
 
 
 # TODO: in_binary_hostlist
@@ -129,69 +129,69 @@ def test_in_extraconf_hostlist():
 
 def test_parse_host_rule():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ( 'all', [], rulesets.ALL_HOSTS, options)
-    assert rulesets.parse_host_rule(entry) == ('all', [], rulesets.ALL_HOSTS, options)
+    entry = ( 'all', [], config.ALL_HOSTS, options)
+    assert config.parse_host_rule(entry) == ('all', [], config.ALL_HOSTS, options)
 
 
 def test_parse_host_rule_without_tags():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ( 'all', rulesets.ALL_HOSTS, options)
-    assert rulesets.parse_host_rule(entry) == ('all', [], rulesets.ALL_HOSTS, options)
+    entry = ( 'all', config.ALL_HOSTS, options)
+    assert config.parse_host_rule(entry) == ('all', [], config.ALL_HOSTS, options)
 
 
 def test_parse_host_rule_invalid_length():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = (None, None, 'all', rulesets.ALL_HOSTS, options)
+    entry = (None, None, 'all', config.ALL_HOSTS, options)
     with pytest.raises(MKGeneralException):
-        assert rulesets.parse_host_rule(entry)
+        assert config.parse_host_rule(entry)
 
 
 def test_get_rule_options_regular_rule():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ( 'all', [], rulesets.ALL_HOSTS, options)
-    assert rulesets.get_rule_options(entry) == (entry[:-1], options)
+    entry = ( 'all', [], config.ALL_HOSTS, options)
+    assert config.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_empty_options():
     options = {}
-    entry = ( 'all', [], rulesets.ALL_HOSTS, options)
-    assert rulesets.get_rule_options(entry) == (entry[:-1], options)
+    entry = ( 'all', [], config.ALL_HOSTS, options)
+    assert config.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_missing_options():
-    entry = ( 'all', [], rulesets.ALL_HOSTS)
-    assert rulesets.get_rule_options(entry) == (entry, {})
+    entry = ( 'all', [], config.ALL_HOSTS)
+    assert config.get_rule_options(entry) == (entry, {})
 
 
 def test_hosttags_match_taglist():
-    assert rulesets.hosttags_match_taglist(["tag1"], ["tag1"])
-    assert rulesets.hosttags_match_taglist(["tag1", "tag2"], ["tag1"])
-    assert rulesets.hosttags_match_taglist(["tag1", "tag2"], ["tag1", "tag2"])
+    assert config.hosttags_match_taglist(["tag1"], ["tag1"])
+    assert config.hosttags_match_taglist(["tag1", "tag2"], ["tag1"])
+    assert config.hosttags_match_taglist(["tag1", "tag2"], ["tag1", "tag2"])
 
 
 def test_hosttags_match_taglist_not_matching():
-    assert not rulesets.hosttags_match_taglist(["tag1"], ["tag2"])
-    assert not rulesets.hosttags_match_taglist(["tag", "tag1", "tag22"], ["tag2"])
-    assert not rulesets.hosttags_match_taglist(["tag1", "tag2"], ["tag2", "tag3"])
+    assert not config.hosttags_match_taglist(["tag1"], ["tag2"])
+    assert not config.hosttags_match_taglist(["tag", "tag1", "tag22"], ["tag2"])
+    assert not config.hosttags_match_taglist(["tag1", "tag2"], ["tag2", "tag3"])
 
 
 def test_hosttags_match_taglist_negate():
-    assert not rulesets.hosttags_match_taglist(["tag1", "tag2"], ["tag1", "!tag2"])
-    assert rulesets.hosttags_match_taglist(["tag1"], ["tag1", "!tag2"])
+    assert not config.hosttags_match_taglist(["tag1", "tag2"], ["tag1", "!tag2"])
+    assert config.hosttags_match_taglist(["tag1"], ["tag1", "!tag2"])
 
-    assert not rulesets.hosttags_match_taglist(["tag1", "tag2"], ["!tag2+"])
+    assert not config.hosttags_match_taglist(["tag1", "tag2"], ["!tag2+"])
 
 
 def test_hosttags_match_taglist_prefix():
-    assert rulesets.hosttags_match_taglist(["tag1", "tag2"], ["tag2+"])
-    assert rulesets.hosttags_match_taglist(["tag1", "tax2"], ["tag+"])
-    assert not rulesets.hosttags_match_taglist(["tag1", "tag2"], ["tag3+"])
+    assert config.hosttags_match_taglist(["tag1", "tag2"], ["tag2+"])
+    assert config.hosttags_match_taglist(["tag1", "tax2"], ["tag+"])
+    assert not config.hosttags_match_taglist(["tag1", "tag2"], ["tag3+"])
 
 
 def test_parse_negated():
-    assert rulesets._parse_negated("") == (False, "")
-    assert rulesets._parse_negated("!aaa") == (True, "aaa")
-    assert rulesets._parse_negated("aaa") == (False, "aaa")
+    assert config._parse_negated("") == (False, "")
+    assert config._parse_negated("!aaa") == (True, "aaa")
+    assert config._parse_negated("aaa") == (False, "aaa")
 
 
 # TODO: convert_pattern

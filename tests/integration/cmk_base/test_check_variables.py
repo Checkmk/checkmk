@@ -3,6 +3,7 @@ import subprocess
 
 from testlib import web
 import cmk_base.config as config
+import cmk_base.checks as check_api
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):

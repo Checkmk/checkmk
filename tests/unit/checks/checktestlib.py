@@ -192,11 +192,14 @@ class DiscoveryResult(object):
             self.entries.append(DiscoveryEntry(entry))
 
     def __eq__(self, other_value):
-        return all(entry in other_value for entry in self.entries) and \
-               all(other_entry in self.entries for other_entry in other_value)
+        return all(entry in other_value for entry in self) and \
+               all(other_entry in self for other_entry in other_value)
 
     def __contains__(self, value):
         return value in self.entries
+
+    def __iter__(self):
+        return iter(self.entries)
 
     def __repr__(self):
         return "DiscoveryResult(%s)" % (",\n".join([repr(entry) for entry in self.entries]))

@@ -55,56 +55,45 @@
 # Link Failure Count: 1
 # Permanent HW addr: 00:26:b9:7d:89:2e
 
-def parse_lnx_bonding(info):
-    def strip_popd_garbage(info):
-        for line in info:
-            if len(line) != 1 or not line[0].startswith("/"):
-                yield line
 
-    lines = strip_popd_garbage(info)
+def _split_into_bonds(info):
     bonds = {}
+    for line in info:
+        if len(line) == 1 and line[0].startswith("/"):
+            continue
+        else:
+            line = [i.strip() for i in line]
 
-    # Skip header with bonding version
-    try:
-        bond = lines.next()[0].split()[1]
-        bonds[bond] = {}
-        while True:
-            # ==> bond0 <==
-            lines.next() # Skip Channel Bonding Driver
+        words = line[0].split()
+        if words[0] == '==>':
+            current = bonds.setdefault(words[1], [])
+        elif 'Channel Bonding Driver' in line:
+            pass
+        else:
+            current.append(line)
+    return bonds
 
-            # Parse global part
-            main = {}
-            bonds[bond]["main"] = main
-            while True:
-                line = lines.next()
-                main[line[0].strip()] = line[1].strip()
-                if line[0].strip() == "Down Delay (ms)":
-                    break
 
-            # Here could come an additional part:
-            # "802.3ad info". We detect the end of
-            # this part by finding th efirst "Slave Interface"
-            eth = None
+def _parse_bond(bond_lines):
+    bond = {}
+    interfaces = bond.setdefault("interfaces", {})
+    # start with global part
+    current = bond.setdefault("main", {})
 
-            # Parse interfaces
-            interfaces = {}
-            bonds[bond]["interfaces"] = interfaces
-            while True:
-                line = lines.next()
-                if line[0].startswith("==>"):
-                    bond = line[0].split()[1]
-                    bonds[bond] = {}
-                    break
-                elif line[0].strip() == "Slave Interface":
-                    eth = line[1].strip()
-                    interfaces[eth] = {}
-                elif line and eth:
-                    interfaces[eth][line[0].strip()] = ":".join(line[1:]).strip()
+    for line in bond_lines:
+        # check for start of new sections
+        if line[0] == "Slave Interface":
+            current = interfaces.setdefault(line[1], {})
+        elif line[0] == "802.3ad info":
+            current = bond.setdefault("802.3ad info", {})
+        # or add key/val to current dict
+        else:
+            current[line[0]] = ':'.join(line[1:])
+    return bond
 
-    except StopIteration:
-        pass
 
-    # Now convert to generic dict, also used by other bonding checks
+def _convert_to_generic(bonds):
+    '''convert to generic dict, also used by other bonding checks'''
     converted = {}
     for bond, status in bonds.items():
         bond = bond.lstrip("./")
@@ -115,11 +104,17 @@ def parse_lnx_bonding(info):
                 "hwaddr"   : ethstatus.get("Permanent HW addr", ""),
                 "failures" : int(ethstatus["Link Failure Count"]),
             }
+            if "Aggregator ID" in ethstatus:
+                interfaces[eth]["aggregator_id"] = ethstatus["Aggregator ID"]
+
         converted[bond] = {
-            "status"      : status["main"]["MII Status"],
-            "mode"        : status["main"]["Bonding Mode"].split('(')[0].strip(),
-            "interfaces"  : interfaces,
+            "status"     : status["main"]["MII Status"],
+            "mode"       : status["main"]["Bonding Mode"].split('(')[0].strip(),
+            "interfaces" : interfaces,
         }
+        if "802.3ad info" in status:
+            converted[bond]["aggregator_id"] = status["802.3ad info"]["Aggregator ID"]
+
         if "Currently Active Slave" in status["main"]:
             converted[bond]["active"] = status["main"]["Currently Active Slave"]
         if "Primary Slave" in status["main"]:
@@ -127,11 +122,18 @@ def parse_lnx_bonding(info):
     return converted
 
 
+def parse_lnx_bonding(info):
+    bond_blocks = _split_into_bonds(info)
+    bonds = {k: _parse_bond(bond_blocks[k]) for k in bond_blocks}
+    return _convert_to_generic(bonds)
+
 
 check_info['lnx_bonding'] = {
-    "check_function"          : lambda item,params,info: check_bonding(item, params, parse_lnx_bonding(info)),
-    "inventory_function"      : lambda info: inventory_bonding(parse_lnx_bonding(info)),
+    "parse_function"          : parse_lnx_bonding,
+    "check_function"          : check_bonding,
+    "inventory_function"      : inventory_bonding,
     "service_description"     : "Bonding Interface %s",
     "group"                   : "bonding",
+    "default_levels_variable" : "bonding_default_levels",
     "includes"                : [ "bonding.include" ],
 }

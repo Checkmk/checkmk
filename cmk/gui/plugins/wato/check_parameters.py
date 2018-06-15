@@ -8173,7 +8173,14 @@ register_check_parameters(
                      ( "ignore",   _("ignore which one is active") ),
                      ( "primary", _("require primary interface to be active") ),
                      ( "lowest",   _("require interface that sorts lowest alphabetically") ),
-                  ]
+                  ],
+                  default_value = "ignore",
+              )
+            ),
+            ( "ieee_302_3ad_agg_id_missmatch_state",
+              MonitoringState(
+                  title = _("State for missmatching Aggregator IDs for LACP"),
+                  default_state = 1,
               )
             ),
         ]

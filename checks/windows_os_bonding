@@ -44,6 +44,7 @@
 # Slave Speed: 10 Gbps
 # Slave MAC address: 18-A9-9B-9F-AD-2A
 
+
 def parse_windows_os_bonding(info):
     bonds = {}
 
@@ -71,9 +72,11 @@ def parse_windows_os_bonding(info):
 
 
 check_info['windows_os_bonding'] = {
-    "check_function"          : lambda item,params,info: check_bonding(item, params, parse_windows_os_bonding(info)),
-    "inventory_function"      : lambda info: inventory_bonding(parse_windows_os_bonding(info)),
+    "parse_function"          : parse_windows_os_bonding,
+    "check_function"          : check_bonding,
+    "inventory_function"      : inventory_bonding,
     "service_description"     : "Bonding Interface %s",
+    "default_levels_variable" : "bonding_default_levels",
     "group"                   : "bonding",
     "includes"                : [ "bonding.include" ],
 }

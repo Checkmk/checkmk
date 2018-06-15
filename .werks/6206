@@ -1,0 +1,14 @@
+Title: lnx_bonding: Check Aggregator ID in case of IEEE 802.3ad Link Aggregation
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1529067893
+Class: feature
+
+If the bonding mode is IEEE 802.3ad Link Aggregation,
+the aggregator IDs of the slave interfaces are compared.
+The check returns a configurable state if they don't match (WARN by
+default).
+

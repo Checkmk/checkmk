@@ -205,7 +205,8 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
             missing_sections.add(cmk_base.check_utils.section_name_of(check_plugin_name))
 
     if checks.do_status_data_inventory_for(hostname):
-        _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
+        import cmk_base.inventory as inventory
+        inventory.do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
 
     missing_section_list = sorted(list(missing_sections))
     return num_success, missing_section_list

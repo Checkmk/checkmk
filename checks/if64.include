@@ -49,7 +49,7 @@ def need_if64adm():
     return "portstates" in settings and '9' in settings["portstates"]
 
 
-def if64_scan_function(oid, use_if64adm):
+def if64_scan_function(oid, use_if64adm=False):
     if if64_disabled(host_name()):
         return False
 

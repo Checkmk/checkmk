@@ -309,8 +309,11 @@ class DataSource(object):
 
         Example: management board checks only for management board data sources
         """
-        self._enforced_check_plugin_names = checks.filter_by_management_board(self._hostname,
-                                                   check_plugin_names, self._for_mgmt_board)
+        if check_plugin_names is not None:
+            self._enforced_check_plugin_names = checks.filter_by_management_board(self._hostname,
+                                                       check_plugin_names, self._for_mgmt_board)
+        else:
+            self._enforced_check_plugin_names = check_plugin_names
 
 
     @abc.abstractmethod

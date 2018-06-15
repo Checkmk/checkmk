@@ -54,6 +54,7 @@ import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.cleanup
 import cmk_base.decorator
+import cmk_base.check_api as check_api
 
 _inventory_output_dir  = cmk.paths.var_dir + "/inventory"
 _inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
@@ -158,7 +159,7 @@ def do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
     import cmk_base.inventory_plugins as inventory_plugins
     # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
     do_inv = False
-    inventory_plugins.load_plugins(get_inventory_context)
+    inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
     for plugin in inventory_plugins.inv_info.values():
         if plugin.get("has_status_data"):
             do_inv = True

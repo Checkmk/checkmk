@@ -38,6 +38,7 @@ import cmk_base.checks as checks
 import cmk_base.console as console
 import cmk_base.profiling as profiling
 from cmk_base.exceptions import MKTimeout
+import cmk_base.check_api as check_api
 
 __all__ = [ os.path.basename(f)[:-3]
             for f in glob.glob(os.path.dirname(__file__) + "/*.py")
@@ -78,7 +79,7 @@ class Automations(object):
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
             if automation.needs_checks:
-                checks.load()
+                checks.load(check_api.get_check_api_context)
 
             if automation.needs_config:
                 config.load(validate_hosts=False)

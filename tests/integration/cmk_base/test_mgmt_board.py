@@ -18,7 +18,8 @@ def clear_config_caches(monkeypatch):
 def reload_config():
     # Needs to be done together, even when the checks are not directly needed
     import cmk_base.checks as checks
-    checks.load()
+    import cmk_base.check_api as check_api
+    checks.load(check_api.get_check_api_context)
     config.load()
 
 

@@ -1769,13 +1769,15 @@ class CheckManager(object):
     def load(self, file_names=None):
         """Load either all check plugins or the given file_names"""
         import cmk_base.checks as checks
+        import cmk_base.check_api as check_api
         import cmk.paths
 
         if file_names is None:
-            checks.load() # loads all checks
+            checks.load(check_api.get_check_api_context) # loads all checks
         else:
             checks._initialize_data_structures()
-            checks.load_checks(map(lambda f: os.path.join(cmk.paths.checks_dir, f), file_names))
+            checks.load_checks(check_api.get_check_api_context,
+                               map(lambda f: os.path.join(cmk.paths.checks_dir, f), file_names))
 
 
     def get_check(self, name):

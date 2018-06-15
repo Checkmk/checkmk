@@ -139,7 +139,8 @@ def _is_pure_section_declaration(check):
 def test_find_missing_manpages():
     all_check_manuals = man_pages.all_man_pages()
 
-    checks.load()
+    import cmk_base.check_api as check_api
+    checks.load(check_api.get_check_api_context)
     checks_sorted = [ (name, entry) for (name, entry) in checks.check_info.items()
                       if not _is_pure_section_declaration(entry) ] + \
        [ ("check_" + name, entry) for (name, entry) in checks.active_check_info.items() ]

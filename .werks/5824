@@ -1,0 +1,17 @@
+Title: Agent Bakery: Fixed missing baked packages
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0b7
+Date: 1529055871
+Class: fix
+
+During the agent bake process some previously generated symlinks went missing.
+The baking itself went fine, but the symlinks pointing to the bake result were no longer available.
+As a result, the agent bakery GUI showed some packages as "Not available".
+This is a preliminary fix, until we find the root cause of this problem.
+
+There is also a console workaround for this problem.
+Agent baking will always succeed with the command <tt>cmk -v --bake-agents</tt>
+Keep in mind, that you need to sign the agents afterwards.

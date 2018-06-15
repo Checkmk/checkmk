@@ -1,6 +1,6 @@
 import pytest
 
-import cmk_base.rulesets as rulesets
+import cmk_base.config as config
 from cmk.exceptions import MKGeneralException
 
 import cmk
@@ -42,13 +42,13 @@ def test_service_extra_conf(monkeypatch):
         ("12", [], ["!host2"], rulesets.ALL_SERVICES, {}),
     ]
 
-    assert rulesets.service_extra_conf("host1", "service1", ruleset) == \
+    assert config.service_extra_conf("host1", "service1", ruleset) == \
             [ "1", "2", "3", "4", "7", "8", "11" ]
 
-    assert rulesets.service_extra_conf("host1", "serv", ruleset) == \
+    assert config.service_extra_conf("host1", "serv", ruleset) == \
             [ "1", "2", "3", "4", "7", "10", "11" ]
 
-    assert rulesets.service_extra_conf("host2", "service1", ruleset) == \
+    assert config.service_extra_conf("host2", "service1", ruleset) == \
             [ "1", "2", "3", "11" ]
 
 

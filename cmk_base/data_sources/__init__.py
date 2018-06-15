@@ -49,9 +49,7 @@ from cmk.exceptions import MKGeneralException
 import cmk_base
 import cmk.store as store
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 import cmk_base.console as console
-import cmk_base.checks as checks
 import cmk_base.item_state as item_state
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.piggyback
@@ -184,7 +182,7 @@ class DataSources(object):
             if special_agents:
                 return special_agents[0]
 
-        programs = rulesets.host_extra_conf(self._hostname, config.datasource_programs)
+        programs = config.host_extra_conf(self._hostname, config.datasource_programs)
         if programs:
             return DSProgramDataSource(self._hostname, self._ipaddress, programs[0])
 
@@ -201,7 +199,7 @@ class DataSources(object):
         # We now sort the matching special agents by their name to at least get
         # a deterministic order of the special agents.
         for agentname, ruleset in sorted(config.special_agents.items()):
-            params = rulesets.host_extra_conf(self._hostname, ruleset)
+            params = config.host_extra_conf(self._hostname, ruleset)
             if params:
                 special_agents.append(SpecialAgentDataSource(self._hostname, self._ipaddress,
                                                              agentname, params[0]))

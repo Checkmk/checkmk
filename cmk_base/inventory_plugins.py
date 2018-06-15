@@ -29,7 +29,7 @@ import os
 import cmk.paths
 from cmk.exceptions import MKGeneralException
 
-import cmk_base.checks as checks
+import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.check_utils
 
@@ -37,7 +37,7 @@ import cmk_base.check_utils
 # plugins need the check API. This is the easiest solution to get this
 # working at the moment. In future some kind of OOP approach would be better.
 # TODO: Clean this up!
-#from cmk_base.checks import *
+#from cmk_base.config import *
 
 inv_info   = {} # Inventory plugins
 inv_export = {} # Inventory export hooks
@@ -48,7 +48,7 @@ _include_contexts = {} # These are the contexts of the check include files
 
 def load_plugins(get_check_api_context, get_inventory_context):
     loaded_files = set()
-    filelist = checks.get_plugin_paths(cmk.paths.local_inventory_dir,
+    filelist = config.get_plugin_paths(cmk.paths.local_inventory_dir,
                                        cmk.paths.inventory_dir)
 
     for f in filelist:
@@ -89,7 +89,7 @@ def _new_inv_context(get_check_api_context, get_inventory_context):
     # this might consume too much memory, so we simply reference them.
     # NOTE: It is possible that check includes are included, so we need the
     # usual check context here, too.
-    context.update(checks.new_check_context(get_check_api_context))
+    context.update(config.new_check_context(get_check_api_context))
     context.update(get_inventory_context())
     return context
 
@@ -98,7 +98,7 @@ def _new_inv_context(get_check_api_context, get_inventory_context):
 # Working with imports when specifying the includes would be much cleaner,
 # sure. But we need to deal with the current check API.
 def _load_plugin_includes(check_file_path, plugin_context):
-    for name in checks.includes_of_plugin(check_file_path):
+    for name in config.includes_of_plugin(check_file_path):
         path = _include_file_path(name)
         try:
             execfile(path, plugin_context)
@@ -115,7 +115,7 @@ def _include_file_path(name):
     shared_path = os.path.join(cmk.paths.inventory_dir, name)
     if os.path.exists(shared_path):
         return shared_path
-    return checks.check_include_file_path(name)
+    return config.check_include_file_path(name)
 
 
 def is_snmp_plugin(plugin_type):

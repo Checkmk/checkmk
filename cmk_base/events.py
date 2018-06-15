@@ -42,7 +42,6 @@ import cmk
 from cmk.regex import regex
 
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 import cmk_base.core
 
 def event_keepalive(event_function, log_function, call_every_loop=None, loop_interval=None, shutdown_function=None):
@@ -479,7 +478,7 @@ def event_match_hosttags(rule, context):
     required = rule.get("match_hosttags")
     if required:
         tags = context.get("HOSTTAGS", "").split()
-        if not rulesets.hosttags_match_taglist(tags, required):
+        if not config.hosttags_match_taglist(tags, required):
             return "The host's tags %s do not match the required tags %s" % (
                 "|".join(tags), "|".join(required))
 
@@ -643,7 +642,7 @@ def event_match_services(rule, context):
             return "The rule specifies a list of services, but this is a host notification."
         servicelist = rule["match_services"]
         service = context["SERVICEDESC"]
-        if not rulesets.in_extraconf_servicelist(servicelist, service):
+        if not config.in_extraconf_servicelist(servicelist, service):
             return "The service's description '%s' does not match by the list of " \
                    "allowed services (%s)" % (service, ", ".join(servicelist))
 
@@ -653,7 +652,7 @@ def event_match_exclude_services(rule, context):
         return
     excludelist = rule.get("match_exclude_services", [])
     service = context["SERVICEDESC"]
-    if rulesets.in_extraconf_servicelist(excludelist, service):
+    if config.in_extraconf_servicelist(excludelist, service):
         return "The service's description '%s' matches the list of excluded services" \
           % context["SERVICEDESC"]
 

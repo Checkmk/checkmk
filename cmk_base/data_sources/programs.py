@@ -33,7 +33,6 @@ import cmk.paths
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.core_config as core_config
-import cmk_base.checks as checks
 from cmk_base.exceptions import MKAgentError, MKTimeout
 
 from .abstract import CheckMKAgentDataSource
@@ -180,12 +179,12 @@ class SpecialAgentDataSource(ProgramDataSource):
 
     # TODO: Can't we make this more specific in case of special agents?
     def _gather_check_plugin_names(self):
-        return checks.discoverable_tcp_checks()
+        return config.discoverable_tcp_checks()
 
 
     def _get_command_line(self):
         """Create command line using the special_agent_info"""
-        info_func = checks.special_agent_info[self._special_agent_id]
+        info_func = config.special_agent_info[self._special_agent_id]
         cmd_arguments = info_func(self._params, self._hostname, self._ipaddress)
 
         special_agents_dir       = cmk.paths.agents_dir + "/special"

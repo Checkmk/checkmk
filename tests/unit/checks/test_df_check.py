@@ -243,9 +243,9 @@ info_df_btrfs = \
 def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, inventory_df_rules):
 #   NOTE: This commented-out code is the result of trying to mock the the ruleset variable itself instead of the
 #         host_extra_conf_merged function. It did not work. Maybe we can get it to work at a later stage.
-#    import cmk_base.rulesets
-#    monkeypatch.setitem(cmk_base.checks._check_contexts["df"], "inventory_df_rules",
-#                [({"include_volume_name": include_volume_name}, [], cmk_base.rulesets.ALL_HOSTS, {})])
+#    import cmk_base.config
+#    monkeypatch.setitem(cmk_base.config._check_contexts["df"], "inventory_df_rules",
+#                [({"include_volume_name": include_volume_name}, [], cmk_base.config.ALL_HOSTS, {})])
 
     check = check_manager.get_check("df")
     monkeypatch.setitem(check.context, "host_extra_conf_merged", lambda _, __: inventory_df_rules)

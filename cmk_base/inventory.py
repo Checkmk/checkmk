@@ -45,8 +45,6 @@ from cmk.structured_data import StructuredDataTree
 import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
-import cmk_base.checks as checks
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.snmp as snmp
 import cmk_base.snmp_scan as snmp_scan
@@ -242,7 +240,7 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
         if section_content is None: # No data for this check type
             continue
 
-        # TODO: Don't we need to take checks.check_info[check_plugin_name]["handle_empty_info"]:
+        # TODO: Don't we need to take config.check_info[check_plugin_name]["handle_empty_info"]:
         #       like it is done in checking.execute_check()? Standardize this!
         if not section_content: # section not present (None or [])
             # Note: this also excludes existing sections without info..
@@ -278,7 +276,7 @@ def _gather_snmp_check_plugin_names_inventory(access_data, on_error, do_snmp_sca
 
 
 def _get_inv_params(hostname, section_name):
-    return rulesets.host_extra_conf_merged(hostname, config.inv_parameters.get(section_name, []))
+    return config.host_extra_conf_merged(hostname, config.inv_parameters.get(section_name, []))
 
 
 # Creates the directory at path if it does not exist.  If that path does exist
@@ -377,7 +375,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
     import cmk_base.inventory_plugins as inventory_plugins
     hooks = []
     for hookname, ruleset in config.inv_exports.items():
-        entries = rulesets.host_extra_conf(hostname, ruleset)
+        entries = config.host_extra_conf(hostname, ruleset)
         if entries:
             hooks.append((hookname, entries[0]))
 

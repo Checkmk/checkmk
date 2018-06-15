@@ -31,7 +31,6 @@ import cmk.debug
 import cmk.exceptions
 import cmk.paths
 
-import cmk_base.checks
 import cmk_base.config
 import cmk_base.console
 
@@ -54,7 +53,7 @@ def read_autochecks_of(hostname, world="config"):
     if not os.path.exists(filepath):
        return []
 
-    check_config = cmk_base.checks.get_check_variables()
+    check_config = cmk_base.config.get_check_variables()
     try:
         autochecks_raw = eval(file(filepath).read(), check_config, check_config)
     except SyntaxError,e:
@@ -86,5 +85,5 @@ def read_autochecks_of(hostname, world="config"):
                                                     "The check type must be a string." % (entry, hostname))
 
         autochecks.append((check_plugin_name, item,
-            cmk_base.checks.compute_check_parameters(hostname, check_plugin_name, item, parameters)))
+            cmk_base.config.compute_check_parameters(hostname, check_plugin_name, item, parameters)))
     return autochecks

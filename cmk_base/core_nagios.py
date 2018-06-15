@@ -38,8 +38,6 @@ from cmk.exceptions import MKGeneralException
 import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.checks as checks
-import cmk_base.rulesets as rulesets
 import cmk_base.core_config as core_config
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
@@ -196,7 +194,7 @@ def _create_nagios_hostdefs(outfile, hostname, attrs):
 
         # Get parents manually defined via extra_host_conf["parents"]. Only honor
         # variable "parents" and implicit parents if this setting is empty
-        extra_conf_parents = rulesets.host_extra_conf(hostname, config.extra_host_conf.get("parents", []))
+        extra_conf_parents = config.host_extra_conf(hostname, config.extra_host_conf.get("parents", []))
 
         if not extra_conf_parents:
             parents_list = config.parents_of(hostname)
@@ -259,7 +257,7 @@ define servicedependency {
     have_at_least_one_service = False
     used_descriptions = {}
     for ((checkname, item), (params, description, deps)) in host_checks:
-        if checkname not in checks.check_info:
+        if checkname not in config.check_info:
             continue # simply ignore missing checks
 
         description = config.get_final_service_description(hostname, description)
@@ -275,7 +273,7 @@ define servicedependency {
 
         else:
             used_descriptions[description] = ( checkname, item )
-        if checks.check_info[checkname].get("has_perfdata", False):
+        if config.check_info[checkname].get("has_perfdata", False):
             template = config.passive_service_template_perf
         else:
             template = config.passive_service_template
@@ -295,7 +293,7 @@ define servicedependency {
         # (if configured) the snmp_check_interval for snmp based checks
         check_interval = 1 # default hardcoded interval
         # Customized interval of Check_MK service
-        values = rulesets.service_extra_conf(hostname, "Check_MK", config.extra_service_conf.get('check_interval', []))
+        values = config.service_extra_conf(hostname, "Check_MK", config.extra_service_conf.get('check_interval', []))
         if values:
             try:
                 check_interval = int(values[0])
@@ -336,7 +334,7 @@ define service {
 """ % (config.active_service_template, hostname, _extra_service_conf_of(hostname, "Check_MK")))
 
     # legacy checks via legacy_checks
-    legchecks = rulesets.host_extra_conf(hostname, config.legacy_checks)
+    legchecks = config.host_extra_conf(hostname, config.legacy_checks)
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
@@ -377,7 +375,7 @@ define service {
     # legacy checks via active_checks
     actchecks = []
     for acttype, rules in config.active_checks.items():
-        entries = rulesets.host_extra_conf(hostname, rules)
+        entries = config.host_extra_conf(hostname, rules)
         if entries:
             # Skip Check_MK HW/SW Inventory for all ping hosts, even when the user has enabled
             # the inventory for ping only hosts
@@ -385,7 +383,7 @@ define service {
                 continue
 
             active_checks_to_define.add(acttype)
-            act_info = checks.active_check_info[acttype]
+            act_info = config.active_check_info[acttype]
             for params in entries:
                 actchecks.append((acttype, act_info, params))
 
@@ -447,7 +445,7 @@ define service {
             outfile.write(get_dependencies(hostname,description))
 
     # Legacy checks via custom_checks
-    custchecks = rulesets.host_extra_conf(hostname, config.custom_checks)
+    custchecks = config.host_extra_conf(hostname, config.custom_checks)
     if custchecks:
         outfile.write("\n\n# Custom checks\n")
         for entry in custchecks:
@@ -683,7 +681,7 @@ def _create_nagios_config_commands(outfile):
 
     # active_checks
     for acttype in active_checks_to_define:
-        act_info = checks.active_check_info[acttype]
+        act_info = config.active_check_info[acttype]
         outfile.write("""define command {
   command_name\t\t\tcheck_mk_active-%s
   command_line\t\t\t%s
@@ -819,14 +817,14 @@ def _extra_service_conf_of(hostname, description):
     conf = ""
 
     # Contact groups
-    sercgr = rulesets.service_extra_conf(hostname, description, config.service_contactgroups)
+    sercgr = config.service_extra_conf(hostname, description, config.service_contactgroups)
     contactgroups_to_define.update(sercgr)
     if len(sercgr) > 0:
         if config.enable_rulebased_notifications:
             sercgr.append("check-mk-notify") # not nessary if not explicit groups defined
         conf += "  contact_groups\t\t" + ",".join(sercgr) + "\n"
 
-    sergr = rulesets.service_extra_conf(hostname, description, config.service_groups)
+    sergr = config.service_extra_conf(hostname, description, config.service_groups)
     if len(sergr) > 0:
         conf += "  service_groups\t\t" + ",".join(sergr) + "\n"
         if config.define_servicegroups:
@@ -842,9 +840,9 @@ def _extra_conf_of(confdict, hostname, service, exclude=None):
     result = ""
     for key, conflist in confdict.items():
         if service != None:
-            values = rulesets.service_extra_conf(hostname, service, conflist)
+            values = config.service_extra_conf(hostname, service, conflist)
         else:
-            values = rulesets.host_extra_conf(hostname, conflist)
+            values = config.host_extra_conf(hostname, conflist)
 
         if exclude and key in exclude:
             continue
@@ -968,7 +966,6 @@ def _precompile_hostcheck(hostname):
     output.write("from cmk.exceptions import MKTerminate\n")
     output.write("\n")
     output.write("import cmk_base.utils\n")
-    output.write("import cmk_base.checks as checks\n")
     output.write("import cmk_base.config as config\n")
     output.write("import cmk_base.console as console\n")
     output.write("import cmk_base.checking as checking\n")
@@ -1018,13 +1015,13 @@ if '-d' in sys.argv:
 
     # Collect the needed check plugin names using the host check table
     for check_plugin_name, _unused_item, _unused_param, descr in host_check_table:
-        if check_plugin_name not in checks.check_info:
+        if check_plugin_name not in config.check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
             continue
 
-        if checks.check_info[check_plugin_name].get("extra_sections"):
-            for section_name in checks.check_info[check_plugin_name]["extra_sections"]:
-                if section_name in checks.check_info:
+        if config.check_info[check_plugin_name].get("extra_sections"):
+            for section_name in config.check_info[check_plugin_name]["extra_sections"]:
+                if section_name in config.check_info:
                     needed_check_plugin_names.add(section_name)
 
         needed_check_plugin_names.add(check_plugin_name)
@@ -1042,7 +1039,7 @@ if '-d' in sys.argv:
     for check_plugin_name in needed_check_plugin_names:
         section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)
-        for lib in set(checks.check_includes.get(section_name, [])):
+        for lib in set(config.check_includes.get(section_name, [])):
             if os.path.exists(cmk.paths.local_checks_dir + "/" + lib):
                 to_add = cmk.paths.local_checks_dir + "/" + lib
             else:
@@ -1061,7 +1058,7 @@ if '-d' in sys.argv:
             if path not in filenames:
                 filenames.append(path)
 
-    output.write("checks.load_checks(check_api.get_check_api_context, %r)\n" % filenames)
+    output.write("config.load_checks(check_api.get_check_api_context, %r)\n" % filenames)
     for check_plugin_name in sorted(needed_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
@@ -1120,17 +1117,17 @@ if '-d' in sys.argv:
     ## to set the actual values of those variables here. Otherwise the users'
     ## settings would get lost. But we only need to set those variables that
     ## influence the check itself - not those needed during inventory.
-    #for var in checks.check_config_variables:
+    #for var in config.check_config_variables:
     #    output.write("%s = %r\n" % (var, getattr(config, var)))
 
     ## The same for those checks that use the new API
     #for check_type in needed_check_types:
-    #    # Note: check_type might not be in checks.check_info. This is
+    #    # Note: check_type might not be in config.check_info. This is
     #    # the case, if "mem" has been added to "extra_sections" and thus
     #    # to "needed_check_types" - despite the fact that only subchecks
     #    # mem.* exist
-    #    if check_type in checks.check_info:
-    #        for var in checks.check_info[check_type].get("check_config_variables", []):
+    #    if check_type in config.check_info:
+    #        for var in config.check_info[check_type].get("check_config_variables", []):
     #            output.write("%s = %r\n" % (var, getattr(config, var)))
 
 

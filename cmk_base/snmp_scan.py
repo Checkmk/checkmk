@@ -28,11 +28,9 @@ from cmk.exceptions import MKGeneralException
 import cmk.tty as tty
 
 import cmk_base.check_utils
-import cmk_base.checks as checks
 import cmk_base.config as config
 import cmk_base.console as console
 from cmk_base.exceptions import MKSNMPError
-import cmk_base.rulesets as rulesets
 import cmk_base.snmp as snmp
 import cmk_base.check_api_utils as check_api_utils
 
@@ -66,7 +64,7 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
 
     snmp.initialize_single_oid_cache(access_data)
     console.vverbose("  SNMP scan:\n")
-    if not rulesets.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
+    if not config.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
         for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
                            (".1.3.6.1.2.1.1.2.0", "system object") ]:
             value = snmp.get_single_oid(access_data, oid, do_snmp_scan=do_snmp_scan)
@@ -87,7 +85,7 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
     if for_inv:
         items = inventory_plugins.inv_info.items()
     else:
-        items = checks.check_info.items()
+        items = config.check_info.items()
 
     positive_found = []
     default_found = []
@@ -106,10 +104,10 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
         # subchecks sharing the same SNMP info of course should have
         # an identical scan function. But some checks do not do this
         # correctly
-        if check_plugin_name in checks.snmp_scan_functions:
-            scan_function = checks.snmp_scan_functions[check_plugin_name]
-        elif section_name in checks.snmp_scan_functions:
-            scan_function = checks.snmp_scan_functions[section_name]
+        if check_plugin_name in config.snmp_scan_functions:
+            scan_function = config.snmp_scan_functions[check_plugin_name]
+        elif section_name in config.snmp_scan_functions:
+            scan_function = config.snmp_scan_functions[section_name]
         elif section_name in inventory_plugins.inv_info:
             scan_function = inventory_plugins.inv_info[section_name].get("snmp_scan_function")
         else:
@@ -154,7 +152,7 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
     if for_inv:
         filtered = found_check_plugin_names
     else:
-        filtered = checks.filter_by_management_board(hostname, found_check_plugin_names,
+        filtered = config.filter_by_management_board(hostname, found_check_plugin_names,
                                                      for_mgmt_board, for_discovery=True)
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp.write_single_oid_cache(access_data)

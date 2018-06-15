@@ -35,7 +35,6 @@ from cmk.exceptions import MKTerminate, MKGeneralException
 import cmk_base.utils as utils
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.checks as checks
 from cmk_base.exceptions import MKAgentError, MKEmptyAgentData
 
 from .abstract import DataSource, CheckMKAgentDataSource

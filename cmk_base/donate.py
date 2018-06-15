@@ -30,7 +30,6 @@ import sys
 
 import cmk.paths
 
-import cmk_base.rulesets as rulesets
 import cmk_base.config as config
 import cmk_base.console as console
 
@@ -38,7 +37,7 @@ def do_donation():
     donate = []
     cache_files = os.listdir(cmk.paths.tcp_cache_dir)
     for host in config.all_active_realhosts():
-        if rulesets.in_binary_hostlist(host, config.donation_hosts):
+        if config.in_binary_hostlist(host, config.donation_hosts):
             for f in cache_files:
                 if f == host or f.startswith("%s." % host):
                     donate.append(f)

@@ -37,14 +37,13 @@ from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
 import cmk_base.console as console
-import cmk_base.rulesets as rulesets
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
 
 
 def do_scan_parents(hosts):
     if not hosts:
-        hosts = filter(lambda h: rulesets.in_binary_hostlist(h, config.scanparent_hosts), config.all_active_realhosts())
+        hosts = filter(lambda h: config.in_binary_hostlist(h, config.scanparent_hosts), config.all_active_realhosts())
 
     parent_hosts = []
     parent_ips   = {}

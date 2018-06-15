@@ -35,7 +35,6 @@ from cmk.exceptions import MKGeneralException, MKBailOut
 
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 from cmk_base.exceptions import MKAgentError
 
 from cmk_base.modes import modes, Mode, Option, keepalive_option
@@ -264,7 +263,7 @@ def _list_all_hosts_with_tags(tags):
         hostlist = config.all_active_hosts()
 
     for h in hostlist:
-        if rulesets.hosttags_match_taglist(config.tags_of_host(h), tags):
+        if config.hosttags_match_taglist(config.tags_of_host(h), tags):
             hosts.append(h)
     return hosts
 
@@ -292,13 +291,12 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 import cmk.man_pages as man_pages
-import cmk_base.checks as checks
 
 def mode_list_checks():
     all_check_manuals = man_pages.all_man_pages()
 
-    checks_sorted = checks.check_info.items() + \
-       [ ("check_" + name, entry) for (name, entry) in checks.active_check_info.items() ]
+    checks_sorted = config.check_info.items() + \
+       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ]
     checks_sorted.sort()
     for check_plugin_name, check in checks_sorted:
         man_filename = all_check_manuals.get(check_plugin_name)
@@ -1485,7 +1483,7 @@ modes.register(Mode(
             short_help="Restrict discovery to certain check types",
             argument=True,
             argument_descr="C",
-            argument_conv=lambda x: checks.check_info.keys() if x == "@all" else x.split(","),
+            argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
         ),
     ]
 ))
@@ -1575,7 +1573,7 @@ modes.register(Mode(
             short_help="Restrict discovery to certain check types",
             argument=True,
             argument_descr="C",
-            argument_conv=lambda x: checks.check_info.keys() if x == "@all" else x.split(","),
+            argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
         ),
         keepalive_option,
         Option(

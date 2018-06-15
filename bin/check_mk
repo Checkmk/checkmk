@@ -48,7 +48,6 @@ import cmk.paths
 
 import cmk_base
 import cmk_base.console as console
-import cmk_base.checks as checks
 import cmk_base.config as config
 import cmk_base.profiling as profiling
 from cmk_base.modes import modes
@@ -81,7 +80,7 @@ try:
     # the configuration may refer to check config variable names.
     if len(set.intersection(set(modes.non_checks_options()),
                             [o[0] for o in opts])) == 0:
-        checks.load(check_api.get_check_api_context)
+        config.load_all_checks(check_api.get_check_api_context)
 
     # Read the configuration files (main.mk, autochecks, etc.), but not for
     # certain operation modes that does not need them and should not be harmed

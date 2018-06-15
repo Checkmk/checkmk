@@ -31,7 +31,6 @@ import time
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.config as config
-import cmk_base.checks as checks
 import cmk_base.snmp as snmp
 import cmk_base.check_utils
 
@@ -199,8 +198,8 @@ class SNMPDataSource(DataSource):
             # snmp info for "foo", not for "foo.bar".
             has_snmp_info = False
             section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
-            if section_name in checks.snmp_info:
-                oid_info = checks.snmp_info[section_name]
+            if section_name in config.snmp_info:
+                oid_info = config.snmp_info[section_name]
             elif section_name in cmk_base.inventory_plugins.inv_info:
                 oid_info = cmk_base.inventory_plugins.inv_info[section_name].get("snmp_info")
                 if oid_info:

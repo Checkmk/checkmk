@@ -1,21 +1,19 @@
 import pytest
 
-import cmk_base.checks as checks
 import cmk_base.discovery as discovery
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 import cmk_base.check_utils
 import cmk_base.check_api as check_api
 
 def test_load_checks():
-    checks._initialize_data_structures()
-    assert checks.check_info == {}
-    checks.load(check_api.get_check_api_context)
-    assert len(checks.check_info) > 1000
+    config._initialize_data_structures()
+    assert config.check_info == {}
+    config.load_all_checks(check_api.get_check_api_context)
+    assert len(config.check_info) > 1000
 
 
 def test_is_tcp_check():
-    checks.load(check_api.get_check_api_context)
+    config.load_all_checks(check_api.get_check_api_context)
     assert cmk_base.check_utils.is_tcp_check("xxx") == False
     assert cmk_base.check_utils.is_tcp_check("uptime") == True
     assert cmk_base.check_utils.is_tcp_check("uptime") == True
@@ -27,7 +25,7 @@ def test_is_tcp_check():
 
 
 def test_is_snmp_check():
-    checks.load(check_api.get_check_api_context)
+    config.load_all_checks(check_api.get_check_api_context)
     assert cmk_base.check_utils.is_snmp_check("xxx") == False
     assert cmk_base.check_utils.is_snmp_check("uptime") == False
     assert cmk_base.check_utils.is_snmp_check("uptime") == False
@@ -43,19 +41,19 @@ def test_is_snmp_check():
 
 
 def test_discoverable_tcp_checks():
-    checks.load(check_api.get_check_api_context)
-    assert "uptime" in checks.discoverable_tcp_checks()
-    assert "snmp_uptime" not in checks.discoverable_tcp_checks()
-    assert "logwatch" in checks.discoverable_tcp_checks()
+    config.load_all_checks(check_api.get_check_api_context)
+    assert "uptime" in config.discoverable_tcp_checks()
+    assert "snmp_uptime" not in config.discoverable_tcp_checks()
+    assert "logwatch" in config.discoverable_tcp_checks()
 
 
 @pytest.mark.parametrize("result,ruleset", [
     (False, None),
     (False, []),
-    (False, [( None, [], rulesets.ALL_HOSTS, {} )]),
-    (False, [( {}, [], rulesets.ALL_HOSTS, {} )]),
-    (True, [( {"status_data_inventory": True}, [], rulesets.ALL_HOSTS, {} )]),
-    (False, [( {"status_data_inventory": False}, [], rulesets.ALL_HOSTS, {} )]),
+    (False, [( None, [], config.ALL_HOSTS, {} )]),
+    (False, [( {}, [], config.ALL_HOSTS, {} )]),
+    (True, [( {"status_data_inventory": True}, [], config.ALL_HOSTS, {} )]),
+    (False, [( {"status_data_inventory": False}, [], config.ALL_HOSTS, {} )]),
 ])
 def test_do_status_data_inventory_for(monkeypatch, result, ruleset):
     config.load_default_config()
@@ -65,4 +63,4 @@ def test_do_status_data_inventory_for(monkeypatch, result, ruleset):
         "cmk_inv": ruleset,
     })
 
-    assert checks.do_status_data_inventory_for("abc") == result
+    assert config.do_status_data_inventory_for("abc") == result

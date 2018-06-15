@@ -154,6 +154,20 @@ def do_inv_check(hostname, options):
     return status, infotexts, long_infotexts, perfdata
 
 
+def do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
+    import cmk_base.inventory_plugins as inventory_plugins
+    # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
+    do_inv = False
+    inventory_plugins.load_plugins(get_inventory_context)
+    for plugin in inventory_plugins.inv_info.values():
+        if plugin.get("has_status_data"):
+            do_inv = True
+            break
+    if do_inv:
+        do_inv_for(sources, multi_host_sections=multi_host_sections, hostname=hostname,
+                   ipaddress=ipaddress, do_status_data_inventory=True)
+
+
 def do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data_inventory=False):
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree

@@ -7,7 +7,7 @@ description:
 
  This check monitors the state of various hardware components of Hitachi
  Unified Storage Disk Controller Chassis (HUS DKC), which are part of an
- Hitache Unified Storage VM System.  The check uses SNMP and the USPMIB to
+ Hitachi Unified Storage VM System.  The check uses SNMP and the USPMIB to
  extract state information of the following hardware components of the DKC:
  Processor, Internal Bus, Cache, Shared Memory, Power Supply, Battery,
  Fan, Environment.

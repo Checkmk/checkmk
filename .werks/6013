@@ -1,0 +1,12 @@
+Title: Correctly ignore downtimes for vanished hosts/services.
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0b7
+Date: 1529057022
+
+Restarting the CMC while a downtime is active for a vanished host/service
+could lead to a crash. This has been fixed.

@@ -17,9 +17,8 @@ def clear_config_caches(monkeypatch):
 @pytest.fixture(scope="function")
 def reload_config():
     # Needs to be done together, even when the checks are not directly needed
-    import cmk_base.checks as checks
     import cmk_base.check_api as check_api
-    checks.load(check_api.get_check_api_context)
+    config.load_all_checks(check_api.get_check_api_context)
     config.load()
 
 

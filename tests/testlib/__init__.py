@@ -1768,15 +1768,15 @@ def ec(site, web):
 class CheckManager(object):
     def load(self, file_names=None):
         """Load either all check plugins or the given file_names"""
-        import cmk_base.checks as checks
+        import cmk_base.config as config
         import cmk_base.check_api as check_api
         import cmk.paths
 
         if file_names is None:
-            checks.load(check_api.get_check_api_context) # loads all checks
+            config.load_all_checks(check_api.get_check_api_context) # loads all checks
         else:
-            checks._initialize_data_structures()
-            checks.load_checks(check_api.get_check_api_context,
+            config._initialize_data_structures()
+            config.load_checks(check_api.get_check_api_context,
                                map(lambda f: os.path.join(cmk.paths.checks_dir, f), file_names))
 
 
@@ -1787,16 +1787,16 @@ class CheckManager(object):
 
 class Check(object):
     def __init__(self, name):
-        import cmk_base.checks as checks
+        import cmk_base.config as config
         self.name = name
-        self.info = checks.check_info[name]
-        self.context = checks._check_contexts[name]
+        self.info = config.check_info[name]
+        self.context = config._check_contexts[name]
 
 
     def default_parameters(self):
-        import cmk_base.checks as checks
+        import cmk_base.config as config
         params = {}
-        return checks._update_with_default_check_parameters(self.name, params)
+        return config._update_with_default_check_parameters(self.name, params)
 
 
     def run_parse(self, info):

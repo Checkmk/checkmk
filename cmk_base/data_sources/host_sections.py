@@ -31,7 +31,6 @@ import cmk.debug
 
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.checks as checks
 import cmk_base.caching as caching
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.item_state as item_state
@@ -191,7 +190,7 @@ class MultiHostSections(object):
         be added to the cluster or the node. This decision is made later during creation of the
         configuation. This means that the discovery function must work independent from the node info.
         """
-        if check_plugin_name not in checks.check_info or not checks.check_info[check_plugin_name]["node_info"]:
+        if check_plugin_name not in config.check_info or not config.check_info[check_plugin_name]["node_info"]:
             return section_content # unknown check_plugin_name or does not want node info -> do nothing
 
         node_name = None
@@ -221,13 +220,13 @@ class MultiHostSections(object):
         Please note that this is not a check/subcheck individual setting. This option is related
         to the agent section.
         """
-        if section_name not in checks.check_info or not checks.check_info[section_name]["extra_sections"]:
+        if section_name not in config.check_info or not config.check_info[section_name]["extra_sections"]:
             return section_content
 
         # In case of extra_sections the existing info is wrapped into a new list to which all
         # extra sections are appended
         section_content = [ section_content ]
-        for extra_section_name in checks.check_info[section_name]["extra_sections"]:
+        for extra_section_name in config.check_info[section_name]["extra_sections"]:
             section_content.append(self.get_section_content(hostname, ipaddress,
                                                     extra_section_name, for_discovery))
 
@@ -246,10 +245,10 @@ class MultiHostSections(object):
         All exceptions raised by the parse function will be catched and re-raised as
         MKParseFunctionError() exceptions."""
 
-        if section_name not in checks.check_info:
+        if section_name not in config.check_info:
             return section_content
 
-        parse_function = checks.check_info[section_name]["parse_function"]
+        parse_function = config.check_info[section_name]["parse_function"]
         if not parse_function:
             return section_content
 
@@ -267,7 +266,7 @@ class MultiHostSections(object):
     def get_check_plugin_names(self):
         # TODO: There is a function 'section_name_of' in check_utils.py
         # but no inverse function, ie. get all subchecks of main check.
-        check_keys = set(checks.check_info.keys())
+        check_keys = set(config.check_info.keys())
         check_plugin_names = set()
         for v in self._multi_host_sections.values():
             for k in v.sections.keys():

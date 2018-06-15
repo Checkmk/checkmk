@@ -36,11 +36,9 @@ from cmk.exceptions import MKGeneralException
 import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 import cmk_base.core
 import cmk_base.core_config as core_config
 import cmk_base.snmp as snmp
-import cmk_base.checks as checks
 import cmk_base.discovery as discovery
 from cmk_base.automations import automations, Automation, MKAutomationError
 import cmk_base.check_utils
@@ -543,7 +541,7 @@ class AutomationAnalyseServices(Automation):
         # 1. Manual checks
         for nr, (checkgroup, entries) in enumerate(config.static_checks.items()):
             for entry in entries:
-                entry, rule_options = rulesets.get_rule_options(entry)
+                entry, rule_options = config.get_rule_options(entry)
                 if rule_options.get("disabled"):
                     continue
 
@@ -559,8 +557,8 @@ class AutomationAnalyseServices(Automation):
                     hostlist = entry[1]
                     taglist = []
 
-                if rulesets.hosttags_match_taglist(config.tags_of_host(hostname), taglist) and \
-                   rulesets.in_extraconf_hostlist(hostlist, hostname):
+                if config.hosttags_match_taglist(config.tags_of_host(hostname), taglist) and \
+                   config.in_extraconf_hostlist(hostlist, hostname):
                    descr = config.service_description(hostname, checktype, item)
                    if descr == servicedesc:
                        return {
@@ -583,21 +581,21 @@ class AutomationAnalyseServices(Automation):
 
             descr = config.service_description(hostname, ct, item)
             if descr == servicedesc:
-                dlv = checks.check_info[ct].get("default_levels_variable")
+                dlv = config.check_info[ct].get("default_levels_variable")
                 if dlv:
-                    fs = checks.factory_settings.get(dlv, None)
+                    fs = config.factory_settings.get(dlv, None)
                 else:
                     fs = None
 
                 return {
                     "origin"           : "auto",
                     "checktype"        : ct,
-                    "checkgroup"       : checks.check_info[ct].get("group"),
+                    "checkgroup"       : config.check_info[ct].get("group"),
                     "item"             : item,
                     "inv_parameters"   : params,
                     "factory_settings" : fs,
                     "parameters"       :
-                        checks.compute_check_parameters(hostname, ct, item, params),
+                        config.compute_check_parameters(hostname, ct, item, params),
                 }
 
         # 3. Classical checks
@@ -609,7 +607,7 @@ class AutomationAnalyseServices(Automation):
             else:
                 rule, tags, hosts = entry
 
-            matching_hosts = rulesets.all_matching_hosts(tags, hosts, with_foreign_hosts = True)
+            matching_hosts = config.all_matching_hosts(tags, hosts, with_foreign_hosts = True)
             if hostname in matching_hosts:
                 desc = rule["service_description"]
                 if desc == servicedesc:
@@ -623,7 +621,7 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         for acttype, rules in config.active_checks.items():
-            entries = rulesets.host_extra_conf(hostname, rules)
+            entries = config.host_extra_conf(hostname, rules)
             if entries:
                 for params in entries:
                     description = config.active_check_service_description(hostname, acttype, params)
@@ -879,7 +877,7 @@ class AutomationGetConfiguration(Automation):
                               if not hasattr(config, v) ]
 
         if missing_variables:
-            checks.load(check_api.get_check_api_context)
+            config.load_all_checks(check_api.get_check_api_context)
             config.load(with_conf_d=False)
 
         result = {}
@@ -904,7 +902,7 @@ class AutomationGetCheckInformation(Automation):
         manuals = man_pages.all_man_pages()
 
         check_infos = {}
-        for check_plugin_name, check in checks.check_info.items():
+        for check_plugin_name, check in config.check_info.items():
             try:
                 manfile = manuals.get(check_plugin_name)
                 # TODO: Use cmk.man_pages module standard functions to read the title
@@ -937,7 +935,7 @@ class AutomationGetRealTimeChecks(Automation):
         manuals = man_pages.all_man_pages()
 
         rt_checks = []
-        for check_plugin_name, check in checks.check_info.items():
+        for check_plugin_name, check in config.check_info.items():
             if check["handle_real_time_checks"]:
                 # TODO: Use cmk.man_pages module standard functions to read the title
                 title = check_plugin_name
@@ -972,16 +970,16 @@ class AutomationGetCheckManPage(Automation):
 
         # Add a few informations from check_info. Note: active checks do not
         # have an entry in check_info
-        if check_plugin_name in checks.check_info:
+        if check_plugin_name in config.check_info:
             manpage["type"] = "check_mk"
-            info = checks.check_info[check_plugin_name]
+            info = config.check_info[check_plugin_name]
             for key in [ "snmp_info", "has_perfdata", "service_description" ]:
                 if key in info:
                     manpage[key] = info[key]
             if "." in check_plugin_name:
                 section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
-                if section_name in checks.check_info and "snmp_info" in checks.check_info[section_name]:
-                    manpage["snmp_info"] = checks.check_info[section_name]["snmp_info"]
+                if section_name in config.check_info and "snmp_info" in config.check_info[section_name]:
+                    manpage["snmp_info"] = config.check_info[section_name]["snmp_info"]
 
             if "group" in info:
                 manpage["group"] = info["group"]
@@ -1135,7 +1133,7 @@ class AutomationDiagHost(Automation):
 
                 # Determine SNMPv2/v3 community
                 if hostname not in config.explicit_snmp_communities:
-                    communities = rulesets.host_extra_conf(hostname, config.snmp_communities)
+                    communities = config.host_extra_conf(hostname, config.snmp_communities)
                     for entry in communities:
                         if (type(entry) == tuple) == (test == "snmpv3"):
                             config.explicit_snmp_communities[hostname] = entry
@@ -1200,7 +1198,7 @@ class AutomationActiveCheck(Automation):
         item = item.decode("utf-8")
 
         if plugin == "custom":
-            custchecks = rulesets.host_extra_conf(hostname, config.custom_checks)
+            custchecks = config.host_extra_conf(hostname, config.custom_checks)
             for entry in custchecks:
                 if entry["service_description"] == item:
                     command_line = self._replace_core_macros(hostname, entry.get("command_line", ""))
@@ -1212,9 +1210,9 @@ class AutomationActiveCheck(Automation):
         else:
             rules = config.active_checks.get(plugin)
             if rules:
-                entries = rulesets.host_extra_conf(hostname, rules)
+                entries = config.host_extra_conf(hostname, rules)
                 if entries:
-                    act_info = checks.active_check_info[plugin]
+                    act_info = config.active_check_info[plugin]
                     for params in entries:
                         description = config.active_check_service_description(hostname, plugin, params)
                         if description == item:

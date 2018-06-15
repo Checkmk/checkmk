@@ -42,7 +42,6 @@ import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
-import cmk_base.checks as checks
 import cmk_base.check_api_utils as check_api_utils
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKEmptyAgentData, MKSNMPError, \
                                 MKParseFunctionError, MKTimeout, MKIPAddressLookupError
@@ -330,7 +329,7 @@ class DataSource(object):
         Example: management board checks only for management board data sources
         """
         if check_plugin_names is not None:
-            self._enforced_check_plugin_names = checks.filter_by_management_board(self._hostname,
+            self._enforced_check_plugin_names = config.filter_by_management_board(self._hostname,
                                                        check_plugin_names, self._for_mgmt_board)
         else:
             self._enforced_check_plugin_names = check_plugin_names
@@ -575,7 +574,7 @@ class CheckMKAgentDataSource(DataSource):
 
 
     def _gather_check_plugin_names(self, *args, **kwargs):
-        return checks.discoverable_tcp_checks()
+        return config.discoverable_tcp_checks()
 
 
     def _cpu_tracking_id(self):

@@ -30,7 +30,6 @@ import cmk_base.utils
 import cmk_base.config as config
 import cmk_base.core_config as core_config
 import cmk_base.console as console
-import cmk_base.rulesets as rulesets
 import cmk_base.data_sources as data_sources
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.check_table as check_table
@@ -113,7 +112,7 @@ def dump_host(hostname):
         cmk_base.utils.make_utf8(item),
         params,
         cmk_base.utils.make_utf8(description),
-        cmk_base.utils.make_utf8(",".join(rulesets.service_extra_conf(hostname, description, config.service_groups))),
+        cmk_base.utils.make_utf8(",".join(config.service_extra_conf(hostname, description, config.service_groups))),
         ",".join(deps)
         ]
                   for checktype, item, params, description, deps in check_items ], "  ")

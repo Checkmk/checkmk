@@ -5,7 +5,7 @@ import pytest
 
 from testlib import web
 
-import cmk_base.rulesets as rulesets
+import cmk_base.config as config
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
@@ -41,7 +41,7 @@ def test_active_check_execution(test_cfg, site, web, core):
                             'command_line': 'echo "123"'
                         },
                         "conditions": {
-                            "host_specs": rulesets.ALL_HOSTS,
+                            "host_specs": config.ALL_HOSTS,
                             "host_tags": [],
                         },
                         "options": {},
@@ -97,7 +97,7 @@ def test_active_check_macros(test_cfg, site, web, core):
                 'command_line': 'echo "Output: %s"' % var,
             },
             "conditions": {
-                "host_specs": rulesets.ALL_HOSTS,
+                "host_specs": config.ALL_HOSTS,
                 "host_tags": [],
             },
         })

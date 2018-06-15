@@ -31,8 +31,6 @@ from cmk.exceptions import MKGeneralException
 
 import cmk_base
 import cmk_base.config as config
-import cmk_base.checks as checks
-import cmk_base.rulesets as rulesets
 import cmk_base.piggyback as piggyback
 import cmk_base.item_state as item_state
 import cmk_base.check_utils
@@ -129,8 +127,8 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
         if not is_checkname_valid(checkname):
             return
 
-        if rulesets.hosttags_match_taglist(hosttags, tags) and \
-               rulesets.in_extraconf_hostlist(hostlist, hostname):
+        if config.hosttags_match_taglist(hosttags, tags) and \
+               config.in_extraconf_hostlist(hostlist, hostname):
             descr = config.service_description(hostname, checkname, item)
             if skip_ignored and config.service_ignored(hostname, checkname, descr):
                 return
@@ -171,7 +169,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
                 checkname, item, params = entry
                 descr = config.service_description(node, checkname, item)
                 if hostname == config.host_of_clustered_service(node, descr):
-                    cluster_params = checks.compute_check_parameters(hostname, checkname, item, params)
+                    cluster_params = config.compute_check_parameters(hostname, checkname, item, params)
                     handle_entry((hostname, checkname, item, cluster_params))
 
 
@@ -207,7 +205,7 @@ def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"
 
 
 def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
-    precomp_func = checks.precompile_params.get(check_plugin_name)
+    precomp_func = config.precompile_params.get(check_plugin_name)
     if precomp_func:
         return precomp_func(hostname, item, params)
     else:
@@ -220,7 +218,7 @@ def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
 def service_deps(hostname, servicedesc):
     deps = []
     for entry in config.service_dependencies:
-        entry, rule_options = rulesets.get_rule_options(entry)
+        entry, rule_options = config.get_rule_options(entry)
         if rule_options.get("disabled"):
             continue
 
@@ -233,8 +231,8 @@ def service_deps(hostname, servicedesc):
             raise MKGeneralException("Invalid entry '%r' in service dependencies: "
                                      "must have 3 or 4 entries" % entry)
 
-        if rulesets.hosttags_match_taglist(config.tags_of_host(hostname), tags) and \
-           rulesets.in_extraconf_hostlist(hostlist, hostname):
+        if config.hosttags_match_taglist(config.tags_of_host(hostname), tags) and \
+           config.in_extraconf_hostlist(hostlist, hostname):
             for pattern in patternlist:
                 matchobject = regex(pattern).search(servicedesc)
                 if matchobject:

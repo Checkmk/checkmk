@@ -95,7 +95,6 @@ from cmk.exceptions import MKGeneralException
 import cmk_base.utils as _utils
 import cmk_base.console as _console
 import cmk_base.config as _config
-import cmk_base.rulesets as _rulesets
 import cmk.defines as _defines
 import cmk_base.snmp_utils as _snmp_utils
 import cmk_base.item_state as _item_state
@@ -192,17 +191,17 @@ def savefloat(f):
 #
 # TODO: This seems to be an old part of the check API and not used for
 #       a long time. Deprecate this as part of the and move it to the
-#       cmk_base.checks module.
+#       cmk_base.config module.
 no_discovery_possible = _check_api_utils.no_discovery_possible
 
-service_extra_conf       = _rulesets.service_extra_conf
-host_extra_conf          = _rulesets.host_extra_conf
-in_binary_hostlist       = _rulesets.in_binary_hostlist
-in_extraconf_hostlist    = _rulesets.in_extraconf_hostlist
-hosttags_match_taglist   = _rulesets.hosttags_match_taglist
-host_extra_conf_merged   = _rulesets.host_extra_conf_merged
-get_rule_options         = _rulesets.get_rule_options
-all_matching_hosts       = _rulesets.all_matching_hosts
+service_extra_conf       = _config.service_extra_conf
+host_extra_conf          = _config.host_extra_conf
+in_binary_hostlist       = _config.in_binary_hostlist
+in_extraconf_hostlist    = _config.in_extraconf_hostlist
+hosttags_match_taglist   = _config.hosttags_match_taglist
+host_extra_conf_merged   = _config.host_extra_conf_merged
+get_rule_options         = _config.get_rule_options
+all_matching_hosts       = _config.all_matching_hosts
 
 tags_of_host             = _config.tags_of_host
 nagios_illegal_chars     = _config.nagios_illegal_chars
@@ -420,13 +419,13 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
 def get_effective_service_level():
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
-    service_levels = _rulesets.service_extra_conf(host_name(), service_description(),
+    service_levels = _config.service_extra_conf(host_name(), service_description(),
                                         _config.service_service_levels)
 
     if service_levels:
         return service_levels[0]
     else:
-        service_levels = _rulesets.host_extra_conf(host_name(), _config.host_service_levels)
+        service_levels = _config.host_extra_conf(host_name(), _config.host_service_levels)
         if service_levels:
             return service_levels[0]
     return 0

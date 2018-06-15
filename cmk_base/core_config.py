@@ -37,8 +37,6 @@ from cmk.exceptions import MKGeneralException
 import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.checks as checks
-import cmk_base.rulesets as rulesets
 import cmk_base.ip_lookup as ip_lookup
 
 
@@ -102,7 +100,7 @@ def get_configuration_warnings():
 def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None,
                                                custom_commands_to_define=None):
     # Check dedicated host check command
-    values = rulesets.host_extra_conf(hostname, config.host_check_commands)
+    values = config.host_extra_conf(hostname, config.host_check_commands)
     if values:
         value = values[0]
     elif config.is_no_ip_host(hostname):
@@ -176,13 +174,13 @@ def autodetect_plugin(command_line):
 
 def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, params = None):
     if what == 'host':
-        return list(set(rulesets.host_extra_conf(hostname, config.host_icons_and_actions)))
+        return list(set(config.host_extra_conf(hostname, config.host_icons_and_actions)))
     else:
-        actions = set(rulesets.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
+        actions = set(config.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
 
         # Some WATO rules might register icons on their own
         if checkname:
-            checkgroup = checks.check_info[checkname]["group"]
+            checkgroup = config.check_info[checkname]["group"]
             if checkgroup in [ 'ps', 'services' ] and type(params) == dict:
                 icon = params.get('icon')
                 if icon:
@@ -192,7 +190,7 @@ def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, param
 
 
 def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
-    values = rulesets.host_extra_conf(hostname, config.ping_levels)
+    values = config.host_extra_conf(hostname, config.ping_levels)
     levels = {}
     for value in values[::-1]: # make first rules have precedence
         levels.update(value)
@@ -263,7 +261,7 @@ def create_core_config(core):
 
 # Verify that the user has no deprecated check groups configured.
 def _verify_non_deprecated_checkgroups():
-    groups = checks.checks_by_checkgroup()
+    groups = config.checks_by_checkgroup()
 
     for checkgroup in config.checkgroup_parameters.keys():
         if checkgroup not in groups:
@@ -419,7 +417,7 @@ def get_host_attributes(hostname, tags):
 def _extra_host_attributes(hostname):
     attrs = {}
     for key, conflist in config.extra_host_conf.items():
-        values = rulesets.host_extra_conf(hostname, conflist)
+        values = config.host_extra_conf(hostname, conflist)
         if values:
             if key[0] == "_":
                 key = key.upper()

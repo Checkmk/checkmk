@@ -4,7 +4,7 @@ import os
 from testlib import cmk_path
 
 import cmk.man_pages as man_pages
-import cmk_base.checks as checks
+import cmk_base.config as config
 
 # TODO: Add tests for module internal functions
 
@@ -140,10 +140,10 @@ def test_find_missing_manpages():
     all_check_manuals = man_pages.all_man_pages()
 
     import cmk_base.check_api as check_api
-    checks.load(check_api.get_check_api_context)
-    checks_sorted = [ (name, entry) for (name, entry) in checks.check_info.items()
+    config.load_all_checks(check_api.get_check_api_context)
+    checks_sorted = [ (name, entry) for (name, entry) in config.check_info.items()
                       if not _is_pure_section_declaration(entry) ] + \
-       [ ("check_" + name, entry) for (name, entry) in checks.active_check_info.items() ]
+       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ]
     checks_sorted.sort()
     assert len(checks_sorted) > 1000
 

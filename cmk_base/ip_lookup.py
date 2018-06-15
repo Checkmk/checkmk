@@ -32,7 +32,6 @@ import cmk.store as store
 import cmk_base
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 from cmk_base.exceptions import MKIPAddressLookupError
 
 _fake_dns          = False
@@ -92,7 +91,7 @@ def lookup_ip_address(hostname, family=None):
 
     # Hosts listed in dyndns hosts always use dynamic DNS lookup.
     # The use their hostname as IP address at all places
-    if rulesets.in_binary_hostlist(hostname, config.dyndns_hosts):
+    if config.in_binary_hostlist(hostname, config.dyndns_hosts):
         return hostname
 
     return cached_dns_lookup(hostname, family)

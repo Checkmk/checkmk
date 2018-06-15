@@ -39,11 +39,9 @@ from cmk.exceptions import MKGeneralException
 import cmk.store as store
 import cmk_base.crash_reporting
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 import cmk_base.console as console
 import cmk_base.piggyback as piggyback
 import cmk_base.ip_lookup as ip_lookup
-import cmk_base.checks as checks
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.item_state as item_state
 import cmk_base.checking as checking
@@ -399,7 +397,7 @@ def check_discovery(hostname, ipaddress):
 # if the discovery check is disabled for that host, default parameters
 # will be returned.
 def discovery_check_parameters(hostname):
-    entries = rulesets.host_extra_conf(hostname, config.periodic_discovery)
+    entries = config.host_extra_conf(hostname, config.periodic_discovery)
     if entries:
         return entries[0]
     # Support legacy global configurations
@@ -731,7 +729,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
         return []
 
     try:
-        discovery_function = checks.check_info[check_plugin_name]["inventory_function"]
+        discovery_function = config.check_info[check_plugin_name]["inventory_function"]
         if discovery_function == None:
             discovery_function = check_api_utils.no_discovery_possible
     except KeyError:
@@ -766,7 +764,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
         # Special checks which still need to be called even with empty data
         # may declare this.
         if not section_content and cmk_base.check_utils.is_snmp_check(check_plugin_name) \
-           and not checks.check_info[check_plugin_name]["handle_empty_info"]:
+           and not config.check_info[check_plugin_name]["handle_empty_info"]:
             return []
 
         # Check number of arguments of discovery function. Note: This
@@ -913,18 +911,18 @@ def _merge_manual_services(services, hostname, on_error):
         services[(check_plugin_name, item)] = ('manual', repr(params) )
 
     # Add legacy checks -> "legacy"
-    legchecks = rulesets.host_extra_conf(hostname, config.legacy_checks)
+    legchecks = config.host_extra_conf(hostname, config.legacy_checks)
     for _unused_cmd, descr, _unused_perf in legchecks:
         services[('legacy', descr)] = ('legacy', 'None')
 
     # Add custom checks -> "custom"
-    custchecks = rulesets.host_extra_conf(hostname, config.custom_checks)
+    custchecks = config.host_extra_conf(hostname, config.custom_checks)
     for entry in custchecks:
         services[('custom', entry['service_description'])] = ('custom', 'None')
 
     # Similar for 'active_checks', but here we have parameters
     for acttype, rules in config.active_checks.items():
-        entries = rulesets.host_extra_conf(hostname, rules)
+        entries = config.host_extra_conf(hostname, rules)
         for params in entries:
             descr = config.active_check_service_description(hostname, acttype, params)
             services[(acttype, descr)] = ('active', repr(params))
@@ -1000,7 +998,7 @@ def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_
 # Translates a parameter string (read from autochecks) to it's final value
 # (according to the current configuration)
 def resolve_paramstring(check_plugin_name, paramstring):
-    check_context = checks.get_check_context(check_plugin_name)
+    check_context = config.get_check_context(check_plugin_name)
     # TODO: Can't we simply access check_context[paramstring]?
     return eval(paramstring, check_context, check_context)
 
@@ -1049,7 +1047,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             check_api_utils.set_service(check_plugin_name, descr)
             section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
 
-            if check_plugin_name not in checks.check_info:
+            if check_plugin_name not in config.check_info:
                 continue # Skip not existing check silently
 
             try:
@@ -1075,17 +1073,17 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 output = "Received no data"
 
             if not section_content and cmk_base.check_utils.is_snmp_check(check_plugin_name) \
-               and not checks.check_info[check_plugin_name]["handle_empty_info"]:
+               and not config.check_info[check_plugin_name]["handle_empty_info"]:
                 exitcode = 0
                 output = "Received no data"
 
             item_state.set_item_state_prefix(check_plugin_name, item)
 
             if exitcode == None:
-                check_function = checks.check_info[check_plugin_name]["check_function"]
+                check_function = config.check_info[check_plugin_name]["check_function"]
                 if check_source != 'manual':
                     params = check_table.get_precompiled_check_parameters(hostname, item,
-                                checks.compute_check_parameters(hostname, check_plugin_name, item, params),
+                                config.compute_check_parameters(hostname, check_plugin_name, item, params),
                                 check_plugin_name)
                 else:
                     params = check_table.get_precompiled_check_parameters(hostname, item,
@@ -1119,7 +1117,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             if config.service_ignored(hostname, None, descr):
                 check_source = "%s_ignored" % check_source
         else:
-            checkgroup = checks.check_info[check_plugin_name]["group"]
+            checkgroup = config.check_info[check_plugin_name]["group"]
 
         table.append((check_source, check_plugin_name, checkgroup, item, paramstring,
                       params, descr, exitcode, output, perfdata))

@@ -1,7 +1,6 @@
 import pytest
 
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches(monkeypatch):
@@ -37,15 +36,15 @@ def test_is_no_ip_host(monkeypatch, hostname, tags, result):
 @pytest.mark.parametrize("hostname,tags,result,ruleset", [
     ("testhost", [], False, []),
     ("testhost", ["ip-v4"], False,
-     [ ( 'ipv6', [], rulesets.ALL_HOSTS, {} ), ]),
+     [ ( 'ipv6', [], config.ALL_HOSTS, {} ), ]),
     ("testhost", ["ip-v4", "ip-v6"], False, []),
     ("testhost", ["ip-v4", "ip-v6"], True,
-     [ ( 'ipv6', [], rulesets.ALL_HOSTS, {} ), ]),
+     [ ( 'ipv6', [], config.ALL_HOSTS, {} ), ]),
     ("testhost", ["ip-v6"], True, []),
     ("testhost", ["ip-v6"], True,
-     [ ( 'ipv4', [], rulesets.ALL_HOSTS, {} ), ]),
+     [ ( 'ipv4', [], config.ALL_HOSTS, {} ), ]),
     ("testhost", ["ip-v6"], True,
-     [ ( 'ipv6', [], rulesets.ALL_HOSTS, {} ), ]),
+     [ ( 'ipv6', [], config.ALL_HOSTS, {} ), ]),
     ("testhost", ["no-ip"], False, []),
 ])
 def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):

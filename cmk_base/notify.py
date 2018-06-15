@@ -52,7 +52,6 @@ from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 import cmk_base.console as console
 import cmk_base.core
 import cmk_base.events as events
@@ -576,7 +575,7 @@ def rbn_fallback_contacts():
 def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
     # Right now we are only able to finalize notification plugins with dict parameters..
     if type(rule_parameters) == dict:
-        parameters = rulesets.host_extra_conf_merged(hostname, config.notification_parameters.get(plugin, []))
+        parameters = config.host_extra_conf_merged(hostname, config.notification_parameters.get(plugin, []))
         parameters.update(rule_parameters)
         return parameters
     else:

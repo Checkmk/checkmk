@@ -41,7 +41,6 @@ import cmk_base.utils
 import cmk_base.crash_reporting
 import cmk_base.console as console
 import cmk_base.config as config
-import cmk_base.checks as checks
 import cmk_base.snmp as snmp
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
@@ -204,7 +203,7 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         else:
             missing_sections.add(cmk_base.check_utils.section_name_of(check_plugin_name))
 
-    if checks.do_status_data_inventory_for(hostname):
+    if config.do_status_data_inventory_for(hostname):
         import cmk_base.inventory as inventory
         inventory.do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
 
@@ -255,10 +254,10 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         # Special checks which still need to be called even with empty data
         # may declare this.
         if not section_content and cmk_base.check_utils.is_snmp_check(check_plugin_name) \
-           and not checks.check_info[check_plugin_name]["handle_empty_info"]:
+           and not config.check_info[check_plugin_name]["handle_empty_info"]:
             return False
 
-        check_function = checks.check_info[check_plugin_name].get("check_function")
+        check_function = config.check_info[check_plugin_name].get("check_function")
         if check_function is None:
             check_function = lambda item, params, section_content: (3, 'UNKNOWN - Check not implemented')
 

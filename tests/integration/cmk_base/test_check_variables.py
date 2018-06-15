@@ -2,8 +2,7 @@ import pytest
 import subprocess
 
 from testlib import web
-import cmk_base.checks as checks
-import cmk_base.checks as check_api
+import cmk_base.config as config
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
@@ -64,13 +63,13 @@ check_info["test_check_1"] = {
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_1>>>\n1 2\n")
 
-    checks.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
+    config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context.
-    assert "test_check_1_default_levels" not in checks.__dict__
-    assert "test_check_1" in checks._check_contexts
-    assert "test_check_1_default_levels" in checks._check_contexts["test_check_1"]
+    assert "test_check_1_default_levels" not in config.__dict__
+    assert "test_check_1" in config._check_contexts
+    assert "test_check_1_default_levels" in config._check_contexts["test_check_1"]
 
     web.discover_services("modes-test-host")
 
@@ -134,13 +133,13 @@ check_info["test_check_2"] = {
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_2>>>\n1 2\n")
 
-    checks.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
+    config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context
-    assert "discover_service" not in checks.__dict__
-    assert "test_check_2" in checks._check_contexts
-    assert "discover_service" in checks._check_contexts["test_check_2"]
+    assert "discover_service" not in config.__dict__
+    assert "test_check_2" in config._check_contexts
+    assert "discover_service" in config._check_contexts["test_check_2"]
 
     web.discover_services("modes-test-host")
 
@@ -198,13 +197,13 @@ check_info["test_check_3"] = {
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_3>>>\n1 2\n")
 
-    checks.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
+    config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context
-    assert "test_check_3_default_levels" not in checks.__dict__
-    assert "test_check_3" in checks._check_contexts
-    assert "test_check_3_default_levels" in checks._check_contexts["test_check_3"]
+    assert "test_check_3_default_levels" not in config.__dict__
+    assert "test_check_3" in config._check_contexts
+    assert "test_check_3_default_levels" in config._check_contexts["test_check_3"]
 
     web.discover_services("modes-test-host")
 

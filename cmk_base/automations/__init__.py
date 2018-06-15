@@ -34,7 +34,6 @@ import cmk.debug
 
 import cmk_base.utils
 import cmk_base.config as config
-import cmk_base.checks as checks
 import cmk_base.console as console
 import cmk_base.profiling as profiling
 from cmk_base.exceptions import MKTimeout
@@ -79,7 +78,7 @@ class Automations(object):
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
             if automation.needs_checks:
-                checks.load(check_api.get_check_api_context)
+                config.load_all_checks(check_api.get_check_api_context)
 
             if automation.needs_config:
                 config.load(validate_hosts=False)

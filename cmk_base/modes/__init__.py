@@ -33,7 +33,6 @@ import getopt
 from cmk.exceptions import MKBailOut, MKGeneralException
 
 import cmk_base.config as config
-import cmk_base.rulesets as rulesets
 
 __all__ = [ os.path.basename(f)[:-3]
             for f in glob.glob(os.path.dirname(__file__) + "/*.py")
@@ -170,7 +169,7 @@ class Modes(object):
 
                 num_found = 0
                 for hostname in valid_hosts:
-                    if rulesets.hosttags_match_taglist(config.tags_of_host(hostname), tagspec):
+                    if config.hosttags_match_taglist(config.tags_of_host(hostname), tagspec):
                         hostlist.append(hostname)
                         num_found += 1
                 if num_found == 0:

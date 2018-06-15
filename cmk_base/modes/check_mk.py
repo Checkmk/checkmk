@@ -1208,7 +1208,8 @@ def mode_inventory(options, args):
     import cmk_base.inventory as inventory
     import cmk_base.data_sources as data_sources
     import cmk_base.inventory_plugins as inventory_plugins
-    inventory_plugins.load_plugins(inventory.get_inventory_context)
+    import cmk_base.check_api as check_api
+    inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
 
     if args:
         hostnames = modes.parse_hostname_list(args, with_clusters=True)
@@ -1259,7 +1260,8 @@ modes.register(Mode(
 def mode_inventory_as_check(options, hostname):
     import cmk_base.inventory as inventory
     import cmk_base.inventory_plugins as inventory_plugins
-    inventory_plugins.load_plugins(inventory.get_inventory_context)
+    import cmk_base.check_api as check_api
+    inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
 
     return inventory.do_inv_check(hostname, options)
 

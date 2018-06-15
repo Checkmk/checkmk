@@ -3,6 +3,7 @@ import subprocess
 
 from testlib import web
 import cmk_base.checks as checks
+import cmk_base.checks as check_api
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
@@ -63,7 +64,7 @@ check_info["test_check_1"] = {
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_1>>>\n1 2\n")
 
-    checks.load_checks(["%s/%s" % (site.root, test_check_path)])
+    checks.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context.
@@ -133,7 +134,7 @@ check_info["test_check_2"] = {
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_2>>>\n1 2\n")
 
-    checks.load_checks(["%s/%s" % (site.root, test_check_path)])
+    checks.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context
@@ -197,7 +198,7 @@ check_info["test_check_3"] = {
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_3>>>\n1 2\n")
 
-    checks.load_checks(["%s/%s" % (site.root, test_check_path)])
+    checks.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context

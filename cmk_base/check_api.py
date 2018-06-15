@@ -102,7 +102,7 @@ import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction
 import cmk_base.check_api_utils as _check_api_utils
 
-def _get_check_context():
+def get_check_api_context():
     """This is called from cmk_base code to get the Check API things. Don't
     use this from checks."""
     return {k: v for k, v in globals().iteritems() if not k.startswith("_")}
@@ -481,4 +481,4 @@ def _agent_cache_file_age(hostname, check_plugin_name):
 # import in sync with our intended API.
 # TODO: Do we really need this? Is there code which uses a star import for this
 # module?
-__all__ = _get_check_context().keys()
+__all__ = get_check_api_context().keys()

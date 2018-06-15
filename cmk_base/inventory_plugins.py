@@ -46,7 +46,7 @@ _plugin_contexts  = {} # The checks are loaded into this dictionary. Each check
 _include_contexts = {} # These are the contexts of the check include files
 
 
-def load_plugins(get_inventory_context):
+def load_plugins(get_check_api_context, get_inventory_context):
     loaded_files = set()
     filelist = checks.get_plugin_paths(cmk.paths.local_inventory_dir,
                                        cmk.paths.inventory_dir)
@@ -60,7 +60,7 @@ def load_plugins(get_inventory_context):
             continue # skip already loaded files (e.g. from local)
 
         try:
-            plugin_context = _new_inv_context(get_inventory_context)
+            plugin_context = _new_inv_context(get_check_api_context, get_inventory_context)
             known_plugins = inv_info.keys()
 
             _load_plugin_includes(f, plugin_context)
@@ -79,7 +79,7 @@ def load_plugins(get_inventory_context):
             _plugin_contexts[check_plugin_name] = plugin_context
 
 
-def _new_inv_context(get_inventory_context):
+def _new_inv_context(get_check_api_context, get_inventory_context):
     # Add the data structures where the inventory plugins register with Check_MK
     context = {
         "inv_info"   : inv_info,
@@ -89,7 +89,7 @@ def _new_inv_context(get_inventory_context):
     # this might consume too much memory, so we simply reference them.
     # NOTE: It is possible that check includes are included, so we need the
     # usual check context here, too.
-    context.update(checks.new_check_context())
+    context.update(checks.new_check_context(get_check_api_context))
     context.update(get_inventory_context())
     return context
 

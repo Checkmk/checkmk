@@ -42,7 +42,6 @@ import cmk_base.utils
 import cmk_base.rulesets as rulesets
 import cmk_base.config as config
 import cmk_base.console as console
-import cmk_base.check_api as check_api
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
 import cmk_base.check_utils
@@ -98,13 +97,13 @@ service_rule_groups = set([
 #   | Loading of check plugins                                             |
 #   '----------------------------------------------------------------------'
 
-def load():
+def load(get_check_api_context):
     """Load all checks and includes"""
     global _all_checks_loaded
 
     _initialize_data_structures()
     filelist = get_plugin_paths(cmk.paths.local_checks_dir, cmk.paths.checks_dir)
-    load_checks(filelist)
+    load_checks(get_check_api_context, filelist)
 
     _all_checks_loaded = True
 
@@ -142,7 +141,7 @@ def get_plugin_paths(*dirs):
 # values user can override those variables in his configuration.
 # If a check or check.include is both found in local/ and in the
 # normal structure, then only the file in local/ must be read!
-def load_checks(filelist):
+def load_checks(get_check_api_context, filelist):
     cmk_global_vars = set(config.get_variable_names())
 
     loaded_files = set()
@@ -156,7 +155,7 @@ def load_checks(filelist):
             continue # skip already loaded files (e.g. from local)
 
         try:
-            check_context = new_check_context()
+            check_context = new_check_context(get_check_api_context)
 
             known_vars = check_context.keys()
             known_checks = check_info.keys()
@@ -236,7 +235,7 @@ def all_checks_loaded():
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
-def new_check_context():
+def new_check_context(get_check_api_context):
     # Add the data structures where the checks register with Check_MK
     context = {
         "check_info"             : check_info,
@@ -252,7 +251,7 @@ def new_check_context():
     }
     # NOTE: For better separation it would be better to copy the values, but
     # this might consume too much memory, so we simply reference them.
-    context.update(check_api._get_check_context())
+    context.update(get_check_api_context())
     return context
 
 

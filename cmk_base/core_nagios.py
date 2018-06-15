@@ -972,6 +972,7 @@ def _precompile_hostcheck(hostname):
     output.write("import cmk_base.config as config\n")
     output.write("import cmk_base.console as console\n")
     output.write("import cmk_base.checking as checking\n")
+    output.write("import cmk_base.check_api as check_api\n")
     output.write("import cmk_base.ip_lookup as ip_lookup\n")
 
     # Self-compile: replace symlink with precompiled python-code, if
@@ -1060,7 +1061,7 @@ if '-d' in sys.argv:
             if path not in filenames:
                 filenames.append(path)
 
-    output.write("checks.load_checks(%r)\n" % filenames)
+    output.write("checks.load_checks(check_api.get_check_api_context, %r)\n" % filenames)
     for check_plugin_name in sorted(needed_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 

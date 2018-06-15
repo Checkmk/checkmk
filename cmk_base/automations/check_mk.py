@@ -48,6 +48,7 @@ import cmk_base.autochecks
 import cmk_base.nagios_utils
 from cmk_base.core_factory import create_core
 import cmk_base.check_api_utils as check_api_utils
+import cmk_base.check_api as check_api
 
 
 class DiscoveryAutomation(Automation):
@@ -878,7 +879,7 @@ class AutomationGetConfiguration(Automation):
                               if not hasattr(config, v) ]
 
         if missing_variables:
-            checks.load()
+            checks.load(check_api.get_check_api_context)
             config.load(with_conf_d=False)
 
         result = {}

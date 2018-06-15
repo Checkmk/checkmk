@@ -5,16 +5,17 @@ import cmk_base.discovery as discovery
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.check_utils
+import cmk_base.check_api as check_api
 
 def test_load_checks():
     checks._initialize_data_structures()
     assert checks.check_info == {}
-    checks.load()
+    checks.load(check_api.get_check_api_context)
     assert len(checks.check_info) > 1000
 
 
 def test_is_tcp_check():
-    checks.load()
+    checks.load(check_api.get_check_api_context)
     assert cmk_base.check_utils.is_tcp_check("xxx") == False
     assert cmk_base.check_utils.is_tcp_check("uptime") == True
     assert cmk_base.check_utils.is_tcp_check("uptime") == True
@@ -26,7 +27,7 @@ def test_is_tcp_check():
 
 
 def test_is_snmp_check():
-    checks.load()
+    checks.load(check_api.get_check_api_context)
     assert cmk_base.check_utils.is_snmp_check("xxx") == False
     assert cmk_base.check_utils.is_snmp_check("uptime") == False
     assert cmk_base.check_utils.is_snmp_check("uptime") == False
@@ -42,7 +43,7 @@ def test_is_snmp_check():
 
 
 def test_discoverable_tcp_checks():
-    checks.load()
+    checks.load(check_api.get_check_api_context)
     assert "uptime" in checks.discoverable_tcp_checks()
     assert "snmp_uptime" not in checks.discoverable_tcp_checks()
     assert "logwatch" in checks.discoverable_tcp_checks()

@@ -111,8 +111,6 @@ class BasicCheckResult(Tuploid):
                     self.perfdata.append(PerfValue(*entry))
                 else:
                     self.perfdata.append(entry)
-        else:
-            self.perfdata = None
 
     @property
     def tuple(self):
@@ -148,6 +146,9 @@ class CheckResult(object):
         If the result is already a plain check result in its tuple representation,
         we initialize a list of length 1.
         """
+        if isinstance(result, CheckResult):
+            self.__dict__ = result.__dict__
+            return
 
         self.subresults = []
         if isinstance(result, types.GeneratorType):
@@ -164,7 +165,6 @@ class CheckResult(object):
                 if isinstance(subresult, tuple):
                     subresult = BasicCheckResult(*subresult)
                 self.subresults.append(subresult)
-            self.subresults = result
         else:
             self.subresults.append(BasicCheckResult(*result))
 
@@ -185,6 +185,16 @@ class CheckResult(object):
         for subresult in self.subresults:
             perfdata += subresult.perfdata if subresult.perfdata else []
         return perfdata
+
+    def raw_repr(self):
+        rr = []
+        for sr in self.subresults:
+            sr_perf = [p.tuple for p in sr.perfdata]
+            sr_text = sr.infotext
+            if sr.multiline:
+                sr_text += '\n' + sr.multiline
+            rr.append((sr.status, sr_text, sr_perf))
+        return rr
 
 
 def assertCheckResultsEqual(actual, expected):

@@ -259,25 +259,11 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
             missing_sections.add(checks.section_name_of(check_plugin_name))
 
     if checks.do_status_data_inventory_for(hostname):
-        _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
+        import cmk_base.inventory as inventory
+        inventory.do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
 
     missing_section_list = sorted(list(missing_sections))
     return num_success, missing_section_list
-
-
-def _do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
-    import cmk_base.inventory as inventory
-    import cmk_base.inventory_plugins as inventory_plugins
-    # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
-    do_inv = False
-    inventory_plugins.load()
-    for plugin in inventory_plugins.inv_info.values():
-        if plugin.get("has_status_data"):
-            do_inv = True
-            break
-    if do_inv:
-        inventory.do_inv_for(sources, multi_host_sections=multi_host_sections, hostname=hostname,
-                             ipaddress=ipaddress, do_status_data_inventory=True)
 
 
 def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description):

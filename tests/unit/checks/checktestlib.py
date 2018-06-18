@@ -77,8 +77,13 @@ class BasicCheckResult(Tuploid):
         self.status = status
 
         assert type(infotext) in [ str, unicode ]
-        assert "\n" not in infotext
-        self.infotext = infotext
+
+        if "\n" in infotext:
+            self.infotext, \
+            self.multiline = infotext.split("\n", 1)
+        else:
+            self.infotext = infotext
+            self.multiline = None
 
         if perfdata is not None:
             assert type(perfdata) == list
@@ -95,11 +100,15 @@ class BasicCheckResult(Tuploid):
 
     @property
     def tuple(self):
-        return (self.status, self.infotext, self.perfdata)
+        return (self.status, self.infotext, self.perfdata, self.multiline)
 
     def __repr__(self):
-        return 'BasicCheckResult(%r, %r, %r)' % (self.status, self.infotext, self.perfdata)
-
+        if self.multiline is not None:
+            return 'BasicCheckResult(%r, %r, %r)' % \
+                   (self.status, self.infotext, self.perfdata)
+        else:
+            return 'BasicCheckResult(%r, %r, %r, multiline=%r)' % \
+                   self.tuple
 
 
 class CheckResult(object):

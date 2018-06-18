@@ -75,9 +75,12 @@ export -f run_mrpe
 function run_cached () {
     local mrpe=0
     local append_age=0
+    # TODO: this function is unable to handle mulitple args at once
+    #       for example: -s -m won't work, it is read as single token "-s -m"
+
     if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
     if [ "$1" = -m ] ; then local mrpe=1 ; shift ; fi
-    if [ "$1" = -a ] ; then local append_age=1 ; shift ; fi
+    if [ "$1" = "-ma" ] ; then local mrpe=1 ; local append_age=1 ; shift ; fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
@@ -442,7 +445,7 @@ then
                 if [ "$key" = "interval" ] ; then
                     interval=$value
                 elif [ "$key" = "appendage" ] ; then
-                    args="$args -a"
+                    args="-ma"
                 fi
             done
         fi

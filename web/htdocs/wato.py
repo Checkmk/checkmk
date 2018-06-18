@@ -14858,7 +14858,8 @@ def user_profile_async_replication_page():
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
     html.end_context_buttons()
 
-    user_profile_async_replication_dialog(sites=config.user.authorized_login_sites())
+    sites = [site_id for site_id, site in config.user.authorized_login_sites()]
+    user_profile_async_replication_dialog(sites=sites)
 
     html.footer()
 

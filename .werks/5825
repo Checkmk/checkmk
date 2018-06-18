@@ -1,0 +1,16 @@
+Title: Fixed broken sync of personal user settings information to slave sites
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1529314447
+
+Werk 6053 broke synchronisation of personal user settings to slave sites. This has been fixed.
+
+Note: The personal user settings are also synced during "Activate changes".
+So they are synced after all - just a bit delayed.
+
+

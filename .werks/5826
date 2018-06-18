@@ -1,0 +1,11 @@
+Title: mrpe: Fixed broken option "Append age to output"
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1529319773
+
+Setting this option in the agent bakery, causing the mrpe check not to return any output.

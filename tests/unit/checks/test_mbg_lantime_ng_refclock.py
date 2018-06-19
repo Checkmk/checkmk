@@ -1,5 +1,6 @@
 import pytest
-from checktestlib import BasicCheckResult, CheckResult
+from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
+                         BasicCheckResult, CheckResult, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
 
@@ -10,13 +11,13 @@ meinberg_lantime_5 = [[u'1', u'14', u'3', u'1', u'150', u'6', u'8', u'0', u'0', 
 
 
 @pytest.mark.parametrize("info,expected", [
-    (meinberg_lantime_1, []),  # GPS clocks are not covered here
-    (meinberg_lantime_2, [('1', None)]),
+    (meinberg_lantime_1, DiscoveryResult([])),  # GPS clocks are not covered here
+    (meinberg_lantime_2, DiscoveryResult([('1', None)])),
 ])
 def test_discovery_mbg_lantime_ng_refclock(check_manager, info, expected):
     check = check_manager.get_check("mbg_lantime_ng_refclock")
-    discovery = list(check.run_discovery(info))
-    assert discovery == expected
+    discovery = DiscoveryResult(check.run_discovery(info))
+    assertDiscoveryResultsEqual(discovery, expected)
 
 
 @pytest.mark.parametrize("info,item,params,expected", [
@@ -29,18 +30,18 @@ def test_discovery_mbg_lantime_ng_refclock(check_manager, info, expected):
 def test_check_mbg_lantime_ng_refclock(check_manager, info, item, params, expected):
     check = check_manager.get_check("mbg_lantime_ng_refclock")
     result = CheckResult(check.run_check(item, params, info))
-    assert result == expected
+    assertCheckResultsEqual(result, expected)
 
 
 @pytest.mark.parametrize("info,expected", [
-    (meinberg_lantime_1, [('1', 'mbg_lantime_refclock_default_levels')]),
-    (meinberg_lantime_2, []),  # don't discover GPS clocks
-    (meinberg_lantime_5, [('1', 'mbg_lantime_refclock_default_levels')]),
+    (meinberg_lantime_1, DiscoveryResult([('1', 'mbg_lantime_refclock_default_levels')])),
+    (meinberg_lantime_2, DiscoveryResult([])),  # don't discover GPS clocks
+    (meinberg_lantime_5, DiscoveryResult([('1', 'mbg_lantime_refclock_default_levels')])),
 ])
 def test_discovery_mbg_lantime_ng_refclock_gps(check_manager, info, expected):
     check = check_manager.get_check("mbg_lantime_ng_refclock.gps")
-    discovery = list(check.run_discovery(info))
-    assert discovery == expected
+    discovery = DiscoveryResult(check.run_discovery(info))
+    assertDiscoveryResultsEqual(discovery, expected)
 
 
 @pytest.mark.parametrize("info,item,params,expected", [
@@ -58,4 +59,4 @@ def test_discovery_mbg_lantime_ng_refclock_gps(check_manager, info, expected):
 def test_check_mbg_lantime_ng_refclock_gps(check_manager, info, item, params, expected):
     check = check_manager.get_check("mbg_lantime_ng_refclock.gps")
     result = CheckResult(check.run_check(item, params, info))
-    assert result == expected
+    assertCheckResultsEqual(result, expected)

@@ -1,0 +1,10 @@
+Title: Background jobs: fixed race condition where current job state was not available
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1529392474
+Class: fix
+
+

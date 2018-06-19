@@ -470,17 +470,18 @@ class BackgroundJob(object):
         os.makedirs(self._work_dir)
 
         # Start processes
-        self._jobstatus.update_status(self._kwargs)
+        initial_status = {"state": JobStatus.state_initialized,
+                          "statusfile": os.path.join(self._job_id, "jobstatus.mk"),
+                          "started": time.time()}
+        initial_status.update(self._kwargs)
+        self._jobstatus.update_status(initial_status)
+
 
         job_parameters = {}
         job_parameters["work_dir"]            = self._work_dir
         job_parameters["job_id"]              = self._job_id
         job_parameters["jobstatus"]           = self._jobstatus
         job_parameters["function_parameters"] = self._queued_function
-        self._jobstatus.update_status({"state": JobStatus.state_initialized,
-                                       "statusfile": os.path.join(self._job_id, "jobstatus.mk"),
-                                       "started": time.time()})
-
         p = multiprocessing.Process(target=self._start_background_subprocess, args=[job_parameters])
         p.start()
         p.join()

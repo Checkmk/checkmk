@@ -1,0 +1,13 @@
+Title: netapp_api_status: now also supports state "ok_with_suppressed"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1529394074
+Class: feature
+
+Some NetApp system seem to report <tt>ok_with_suppressed instead</tt> of <tt>ok-with-suppressed</tt>.
+The check will handle this accordingly.
+
+

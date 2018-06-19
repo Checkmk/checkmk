@@ -163,6 +163,24 @@ class CheckResult(object):
         return perfdata
 
 
+def assertCheckResultsEqual(actual, expected):
+    """
+    Compare two (Basic)CheckResults.
+
+    This gives more helpful output than 'assert actual == expected'
+    """
+    if isinstance(actual, BasicCheckResult):
+        assert isinstance(expected, BasicCheckResult)
+        assert actual == expected, "%s != %s" % (actual, expected)
+
+    else:
+        assert isinstance(actual, CheckResult)
+        assert isinstance(expected, CheckResult)
+        assert len(actual.subresults) == len(expected.subresults)
+        for suba, sube in zip(actual.subresults, expected.subresults):
+            assert suba == sube, "%r != %r" % (suba, sube)
+
+
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
 
@@ -208,4 +226,18 @@ class DiscoveryResult(object):
 
     def __repr__(self):
         return "DiscoveryResult(%r)" % map(repr, self)
+
+
+def assertDiscoveryResultsEqual(actual, expected):
+    """
+    Compare two DiscoveryResults.
+
+    This gives more helpful output than 'assert actual == expected'
+    """
+    assert isinstance(actual, DiscoveryResult)
+    assert isinstance(expected, DiscoveryResult)
+    assert len(actual.entries) == len(expected.entries)
+    for enta, ente in zip(actual, expected):
+        assert enta == ente, "%r != %r" % (enta, ente)
+
 

@@ -8666,7 +8666,7 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             title = code + _("Notification rules of user %s") % userid
         else:
             title = _("Global notification rules")
-        table.begin(title = title, limit = None)
+        table.begin(title = title, limit = None, sortable=False)
 
         if analyse:
             analyse_rules, analyse_plugins = analyse

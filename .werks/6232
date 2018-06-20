@@ -1,0 +1,14 @@
+Title: Notifications rules are no longer sortable
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1529501298
+
+The WATO GUI allowed to sort the list of notification rules.
+Since the correct ordering of these rules is very significant, it is no
+longer possible to change the (display) order in the GUI.
+

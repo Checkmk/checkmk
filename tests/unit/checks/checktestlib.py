@@ -241,3 +241,24 @@ def assertDiscoveryResultsEqual(actual, expected):
         assert enta == ente, "%r != %r" % (enta, ente)
 
 
+class BasicItemState(object):
+    """Item state as returned by get_item_state
+
+    We assert that we have exactly two values,
+    where the first one is either float or int.
+    """
+    def __init__(self, *args):
+        if len(args) == 1:
+            args = args[0]
+        msg = "BasicItemStates expected 2-tuple (time_diff, value) - not %r"
+        assert isinstance(args, tuple), msg % args
+        assert len(args) == 2, msg % args
+        self.time_diff, self.value = args
+
+        time_diff_type = type(self.time_diff)
+        msg = "time_diff should be of type float/int - not %r"
+        assert time_diff_type in (float, int), msg % time_diff_type
+        # We do allow negative time diffs.
+        # We want to ba able to test time anomalies.
+
+

@@ -361,8 +361,6 @@ def check_oracle_tablespaces(item, params, parsed):
         this_state = attrs["state"]
         yield this_state, "Datafiles %s: %s" % (file_online_state, ", ".join(attrs["sids"]))
 
-    yield 0, "DB Version: %s" % db_version
-
 
 # If something changes adapt calculations in related inventory plugin
 check_info['oracle_tablespaces'] = {

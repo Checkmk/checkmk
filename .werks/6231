@@ -1,0 +1,16 @@
+Title: WATO GUI rule matching: Fixed broken evaluation of negated WATO rules
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1529500572
+
+The rule matching algorithm failed, if there was a negated service or item specified.
+Instead of a negative match, a positive match was returned. This has been fixed.
+Note: This was a GUI only bug, it didn't have any effect on the actual monitoring.
+
+
+

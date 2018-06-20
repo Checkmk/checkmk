@@ -8407,8 +8407,13 @@ class Rule(object):
 
     def matches_item(self, item):
         for item_spec in self.item_list:
-            if re.match(item_spec, "%s" % item):
-                return True
+            do_negate = False
+            compare_item = item_spec
+            if compare_item and compare_item[0] == ENTRY_NEGATE_CHAR:
+                compare_item = compare_item[1:]
+                do_negate = True
+            if re.match(compare_item, "%s" % item):
+                return not do_negate
         return False
 
 

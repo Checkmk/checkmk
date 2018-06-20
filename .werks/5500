@@ -1,0 +1,13 @@
+Title: cmk-update-agent: Increase loglevel for syslog
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p35
+Date: 1529500725
+
+The global loglevel of cmk-update-agent has been reduced recently in order to enable a better error analysis, escpecially under windows.
+
+With this werk, the loglevel gets increased back to its original value under Linux in order to reduce unnecessary messages to the system-wide syslog.

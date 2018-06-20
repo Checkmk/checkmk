@@ -1,4 +1,6 @@
 import types
+import mock
+from cmk_base.item_state import MKCounterWrapped
 
 
 class Tuploid(object):
@@ -261,4 +263,120 @@ class BasicItemState(object):
         # We do allow negative time diffs.
         # We want to ba able to test time anomalies.
 
+
+class MockItemState(object):
+    """Mock the calls to item_state API.
+
+    Due to our rather unorthodox import structure, we cannot mock
+    cmk_base.item_state.get_item_state directly (it's a global var
+    in running checks!)
+    Instead, this context manager mocks
+    cmk_base.item_state._cached_item_states.get_item_state.
+
+    This will affect get_rate and get_average as well as
+    get_item_state.
+
+    Usage:
+
+    with MockItemState(mock_state):
+        # run your check test here
+        mocked_time_diff, mocked_value = \
+            cmk_base.item_state.get_item_state('whatever_key', default="IGNORED")
+
+    There are three different types of arguments to pass to MockItemState:
+
+    1) Tuple or a BasicItemState:
+        The argument is assumed to be (time_diff, value). All calls to the
+        item_state API behave as if the last state had been `value`, recorded
+        `time_diff` seeconds ago.
+
+    2) Dictionary containing Tuples or BasicItemStates:
+        The dictionary will replace the item states.
+        Basically `get_item_state` gets replaced by the dictionarys GET method.
+
+    3) Callable object:
+        The callable object will replace `get_item_state`. It must accept two
+        arguments (key/default), in same way a dictionary does.
+
+    In all of these cases, the sanity of the returned values is checked
+    (i.e. they have to be BasicItemState).
+    """
+    TARGET = 'cmk_base.item_state._cached_item_states.get_item_state'
+
+    def __init__(self, mock_state):
+        self.context = None
+        self.get_val_function = None
+
+        if hasattr(mock_state, '__call__'):
+            self.get_val_function = mock_state
+            return
+
+        type_mock_state = type(mock_state)
+        allowed_types = (tuple, BasicItemState, dict)
+        assert type_mock_state in allowed_types, \
+               "type must be in %r, or callable - not %r" % \
+               (allowed_types, type_mock_state)
+
+        # in dict case check values
+        if type_mock_state == dict:
+            msg = "dict values must be in %r - not %r"
+            allowed_types = (tuple, BasicItemState)
+            for v in mock_state.values():
+                tyv = type(v)
+                assert tyv in allowed_types, msg % (allowed_types, tyv)
+            self.get_val_function = mock_state.get
+        else:
+            self.get_val_function = lambda key, default: mock_state
+
+
+    def __call__(self, user_key, default=None):
+        # ensure the default value is sane
+        BasicItemState(default)
+        val = self.get_val_function(user_key, default)
+        if not isinstance(val, BasicItemState):
+            val = BasicItemState(val)
+        return val.time_diff, val.value
+
+    def __enter__(self):
+        '''The default context: just mock get_item_state'''
+        self.context = mock.patch(MockItemState.TARGET,
+                                  # I'm the MockObj myself!
+                                  new_callable=lambda: self)
+        return self.context.__enter__()
+
+    def __exit__(self, *exc_info):
+        return self.context.__exit__(*exc_info)
+
+
+class assertMKCounterWrapped(object):
+    """Contextmanager in which a MKCounterWrapped exception is expected
+
+    If you can choose to also assert a certain error message:
+
+    with MockItemState((1., -42)):
+        with assertMKCounterWrapped("value is negative"):
+            # do a check that raises such an exception
+            run_my_check()
+
+    Or you can ignore the exact error message:
+
+    with MockItemState((1., -42)):
+        with assertMKCounterWrapped():
+            # do a check that raises such an exception
+            run_my_check()
+    """
+    def __init__(self, msg=None):
+        self.msg = msg
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, ty, ex, tb):
+        if ty is AssertionError:
+            raise
+        assert ty is not None, "No exception has occurred!"
+        assert ty == MKCounterWrapped, "%r is not of type %r" % (ex, MKCounterWrapped)
+        if self.msg is not None:
+            assert self.msg == str(ex), "%r != %r" % (self.msg, str(ex))
+        return True
 

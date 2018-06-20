@@ -53,6 +53,9 @@ display_usage () {
     echo "  -t                      Just check the connection"
     echo "  --log                   Logs certain steps while execution"
     echo "                          ('flock' needs to be installed)"
+    echo "  --sections S1,S2,..     Only execute stated sections"
+    echo "                          Note: asynchronous sections are execute"
+    echo "                          as synchronous sections"
     echo ""
 }
 
@@ -80,6 +83,12 @@ while test -n "$1"; do
                 MK_ORA_LOGGING=1
                 export MK_ORA_LOGGING
             fi
+            shift
+            ;;
+
+        --sections)
+            shift
+            MK_ORA_SECTIONS=($(echo "$1" | tr ',' '\n'))
             shift
             ;;
 
@@ -1024,6 +1033,22 @@ do_dummy_sections () {
 }
 
 
+do_section () {
+    local section=$1
+    if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
+        for mk_ora_section in "${MK_ORA_SECTIONS[@]}"; do
+            if [ "$mk_ora_section" = "${section}" ]; then
+                echo "yes"
+                return
+            fi
+        done
+        echo "no"
+    else
+        echo "yes"
+    fi
+}
+
+
 skip_sid () {
     local sid="$1"
     if [ "$ONLY_SIDS" ]; then
@@ -1112,6 +1137,10 @@ ora_session_environment () {
 #   '----------------------------------------------------------------------'
 
 run_cached () {
+    if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
+        return
+    fi
+
     local sid="$1"
     local maxage="$2"
     local name="oracle_$1"
@@ -1226,8 +1255,9 @@ mk_ora_db_connect () {
     DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
     DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
-    logging "[$LINENO] [${sid}] [mk_ora_db_connect]" "Connection variables" "ORADBUSER: $ORADBUSER"\
-            "DBSYSCONNECT: $DBSYSCONNECT" "DBHOST: $DBHOST" "DBPORT: $DBPORT" "TNSALIAS: $TNSALIAS"
+    logging "[$LINENO] [${sid}] [mk_ora_db_connect]" "ORADBUSER: $ORADBUSER"\
+            "DBSYSCONNECT: $DBSYSCONNECT" "DBHOST: $DBHOST" "DBPORT: $DBPORT"\
+            "TNSALIAS: $TNSALIAS"
 
     TNSPINGOK=no
     if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
@@ -1411,13 +1441,25 @@ do_checks () {
         do_async_sections=${ASYNC_SECTIONS}
     fi
 
-    excluded=$(eval "echo \$EXCLUDE_$sid")
-    sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
-    asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
-    logging "[$LINENO] [${sid}] [do_checks]" "Excluded: ${excluded}"\
-            "Sections: ${sections}" "Async sections: ${asections}"
+    if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
+        for section in $do_sync_sections $do_async_sections; do
+            if [ "$(do_section "$section")" = "yes" ]; then
+                sections=${sections:+"$sections "}"${section}"
+            fi
+        done
+        logging "[$LINENO] [${sid}] [do_checks]" "Do single sections: $sections"
+        ASYNC_SQL=
 
-    ASYNC_SQL=$(for section in $asections ; do eval "sql_$section" ; done)
+    else
+        excluded=$(eval "echo \$EXCLUDE_$sid")
+        sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
+        asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
+        logging "[$LINENO] [${sid}] [do_checks]" "Excluded: ${excluded}"\
+                "Sections: ${sections}" "Async sections: ${asections}"
+
+        ASYNC_SQL=$(for section in $asections; do eval "sql_$section" ; done)
+    fi
+
     export ASYNC_SQL
     if [ "$MK_ORA_LOGGING" = "1" ]; then
         logging "[$LINENO] [${sid}] [do_checks]" "Testmode: $(echo \

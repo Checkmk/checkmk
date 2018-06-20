@@ -1,0 +1,14 @@
+Title: cmk-update-agent: Fix mistaken server response for Windows Agent Updater
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0b7
+Date: 1528895946
+Class: fix
+
+Due to a bug in the handling of the Check_MK server response, a valid downloaded MSI-packaged agent updater can be mistaken as a "login failed" response.
+
+Instead of updating the Windows Agent, the agent updater would display the error message "ERROR: Cannot authenticate, invalid user/passwort/secret." and abort.
+
+In order to restore funtionality to the Agent Updater, please uninstall the Windows Agent on the affected hosts and reinstall with a newly baked MSI-package.

@@ -1,7 +1,6 @@
 import types
 
 
-
 class Tuploid(object):
     """Base class for values with (potentially variadic) tuple representations"""
 
@@ -59,9 +58,7 @@ class PerfValue(Tuploid):
         return (self.key, self.value, self.warn, self.crit, self.minimum, self.maximum)
 
     def __repr__(self):
-        return "PerfValue('%s', %s, %s, %s, %s, %s)" % (self.key, self.value, self.warn,
-                                                        self.crit, self.minimum, self.maximum)
-
+        return "PerfValue(%r, %r, %r, %r, %r, %r)" % self.tuple
 
 
 class BasicCheckResult(Tuploid):
@@ -101,7 +98,7 @@ class BasicCheckResult(Tuploid):
         return (self.status, self.infotext, self.perfdata)
 
     def __repr__(self):
-        return 'BasicCheckResult(%s, "%s", %s)' % (self.status, self.infotext, self.perfdata)
+        return 'BasicCheckResult(%r, %r, %r)' % (self.status, self.infotext, self.perfdata)
 
 
 
@@ -139,7 +136,7 @@ class CheckResult(object):
             self.subresults.append(BasicCheckResult(*result))
 
     def __repr__(self):
-        return 'CheckResult(%s)' % repr(self.subresults)
+        return 'CheckResult(%r)' % self.subresults
 
     def __eq__(self, other):
         if not isinstance(other, CheckResult):
@@ -157,7 +154,6 @@ class CheckResult(object):
         return perfdata
 
 
-
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
 
@@ -172,7 +168,7 @@ class DiscoveryEntry(Tuploid):
         return (self.item, self.default_params)
 
     def __repr__(self):
-        return "DiscoveryEntry(%r, %r)" % (self.item, self.default_params)
+        return "DiscoveryEntry(%r, %r)" % self.tuple
 
 
 
@@ -202,4 +198,5 @@ class DiscoveryResult(object):
         return iter(self.entries)
 
     def __repr__(self):
-        return "DiscoveryResult(%s)" % (",\n".join([repr(entry) for entry in self.entries]))
+        return "DiscoveryResult(%r)" % map(repr, self)
+

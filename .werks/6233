@@ -1,0 +1,11 @@
+Title: Wato Web-API: Fixed broken service discovery for cluster hosts
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1529584680
+
+

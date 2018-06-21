@@ -287,27 +287,56 @@ then
   done
 fi
 
-# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
     echo '<<<fileinfo:sep(124)>>>'
-    date +%s
-    # simulate output of the Linux "stat -c "%n|%s|%Y" command
-    # TODO: feel free to improve this command. It opens the perl interpreter for every file found...
+    /usr/bin/perl -e 'print time."\n"'
+
     OLD_IFS=$IFS
     IFS='
 '
+
+    old_state=$(set +o)
+    set +f
     while read -r pattern; do
         case $pattern in
             /*) for file in $pattern; do
-                    if [ -f "$file" ]; then
-                        /usr/bin/perl -e 'printf "$_|%s|%s\n", (stat) [7,9] for @ARGV' "$file"
-                    else
-                        echo "$file|missing|`date +%s`"
+                    if [ -d "$file" ]; then
+                          continue
                     fi
-                done ;;
+
+                    if [ ! -f "$file" ]; then
+                        # 'date' may be missing on AIX
+                        echo "$file|missing|$(/usr/bin/perl -e 'print time')"
+                        continue
+                    fi
+
+                    if [ ! -r "$file" ]; then
+                        # 'date' may be missing on AIX
+                        echo "${file}|not readable|$(/usr/bin/perl -e 'print time')"
+                        continue
+                    fi
+
+                    FILELIST=${FILELIST:+"$FILELIST\n"}"${file}"
+                done
+                ;;
         esac
     done < "$MK_CONFDIR/fileinfo.cfg"
+    set +vx; eval "$old_state"
     IFS=$OLD_IFS
+
+    # Collecting all files and starting perl in one call
+    # saves a lot of performance.
+    echo "$FILELIST" | perl -e '
+while (<>) {
+    my $files = $_;
+    chomp($files);
+    foreach my $file (split(/\\n/, $files)) {
+        ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size,
+            $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
+        printf "$file|$size|$mtime|%04o\n", $mode & 07777;
+    }
+}
+'
 fi
 
 # powerHA

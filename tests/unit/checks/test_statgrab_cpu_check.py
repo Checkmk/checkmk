@@ -1,7 +1,6 @@
 import pytest
-from checktestlib import BasicCheckResult, CheckResult, \
-                         assertCheckResultsEqual, BasicItemState, \
-                         MockItemState, assertMKCounterWrapped
+from checktestlib import CheckResult, assertCheckResultsEqual, \
+                         BasicItemState, MockItemState, assertMKCounterWrapped
 
 pytestmark = pytest.mark.checks
 
@@ -52,26 +51,26 @@ def mock_state_function(key, _default):
 # TODO: These only represent the status quo - check whether they even make sense.
 #       Note that systime and total are being ignored entirely by the check.
 expected_result_1 = CheckResult([
-    BasicCheckResult(0, "user: 40.0%, system: 20.0%",
+    (0, "user: 40.0%, system: 20.0%",
         [('user', 40.0, None, None, None, None),
          ('system', 20.0, None, None, None, None),
          ('wait', 20.0, None, None, None, None)]),
-    BasicCheckResult(0, "wait: 20.0%", None),
-    BasicCheckResult(0, "steal: 0.0%",
+    (0, "wait: 20.0%", None),
+    (0, "steal: 0.0%",
         [('steal', 0.0, None, None, None, None)]),
-    BasicCheckResult(0, "total: 80.0%", None)
+    (0, "total: 80.0%", None)
 ])
 
 
 expected_result_2 = CheckResult([
-    BasicCheckResult(0, "user: -51.6%, system: -105.8%",
+    (0, "user: -51.6%, system: -105.8%",
         [('user', -51.61290322580645, None, None, None, None),
          ('system', -105.80645161290323, None, None, None, None),
          ('wait', 451.61290322580646, None, None, None, None)]),
-    BasicCheckResult(0, "wait: 451.6%", None),
-    BasicCheckResult(0, "steal: 78.7%",
+    (0, "wait: 451.6%", None),
+    (0, "steal: 78.7%",
         [('steal', 78.70967741935483, None, None, None, None)]),
-    BasicCheckResult(0, "total: 372.9%", None)
+    (0, "total: 372.9%", None)
 ])
 
 

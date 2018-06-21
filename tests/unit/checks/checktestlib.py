@@ -139,9 +139,16 @@ class CheckResult(object):
         if isinstance(result, types.GeneratorType):
             for subresult in result:
                 self.subresults.append(BasicCheckResult(*subresult))
-        # creation of a CheckResult via a list of BasicCheckResult for test writing
+        # creation of a CheckResult via a list of
+        # tuple or BasicCheckResult for test writing
         elif isinstance(result, list):
-            assert all(isinstance(subresult, BasicCheckResult) for subresult in result)
+            for subresult in result:
+                assert type(subresult) in (tuple, BasicCheckResult), \
+                       "type of subresult must be %s or %s - not %r" % \
+                       (tuple, BasicCheckResult, subresult)
+                if isinstance(subresult, tuple):
+                    subresult = BasicCheckResult(*subresult)
+                self.subresults.append(subresult)
             self.subresults = result
         else:
             self.subresults.append(BasicCheckResult(*result))

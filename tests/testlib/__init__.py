@@ -1776,10 +1776,11 @@ class Check(object):
 
 
     def run_parse(self, info):
-        if "parse_function" not in self.info:
+        parse_func = self.info.get("parse_function")
+        if not parse_func:
             raise Exception("This check has no parse function defined")
 
-        return self.info["parse_function"](info)
+        return parse_func(info)
 
 
     def run_discovery(self, info):

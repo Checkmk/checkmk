@@ -1065,7 +1065,28 @@ def action_discover_services(request):
     host = watolib.Host.host(hostname)
 
     host_attributes = host.effective_attributes()
-    counts, failed_hosts = watolib.check_mk_automation(host_attributes.get("site"), "inventory", [ "@scan", mode ] + [hostname])
+
+    if host.is_cluster():
+        # This is currently the only way to get some actual discovery statitics.
+        # Start a dry-run -> Get statistics
+        # Do an actual discovery on the nodes -> data is written
+        result = watolib.check_mk_automation(host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname])
+        counts = {"new": 0, "old": 0}
+        for entry in result:
+            if entry[0] in counts:
+                counts[entry[0]] += 1
+
+        counts = {hostname: (counts["new"],
+                             0, # this info is not available for clusters
+                             counts["old"],
+                             counts["new"] + counts["old"])}
+
+        # A cluster cannot fail, just the nodes. This information is currently discarded
+        failed_hosts = None
+        watolib.check_mk_automation(host_attributes.get("site"), "inventory", [ "@scan", mode ] + host.cluster_nodes())
+    else:
+        counts, failed_hosts = watolib.check_mk_automation(host_attributes.get("site"), "inventory", [ "@scan", mode ] + [hostname])
+
     if failed_hosts:
         if not host.discovery_failed():
             host.set_discovery_failed()

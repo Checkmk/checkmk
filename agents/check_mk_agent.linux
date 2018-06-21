@@ -867,21 +867,39 @@ function replace_datevariable()
     fi
 }
 
-if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
+if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
     echo '<<<fileinfo:sep(124)>>>'
     date +%s
 
     OLD_IFS=$IFS
     IFS='
 '
-    (cat $MK_CONFDIR/fileinfo.cfg $MK_CONFDIR/fileinfo.d/* 2>/dev/null) | while read -r pattern; do
+    old_state=$(set +o)
+    set +f
+    (cat "$MK_CONFDIR/fileinfo.cfg" "$MK_CONFDIR/fileinfo.d/*" 2>/dev/null) | while read -r pattern; do
         case $pattern in
             /*) pattern=$(replace_datevariable "$pattern")
                 for file in $pattern; do
-                    stat -c "%n|%s|%Y" "$file" 2> /dev/null || echo "$file|missing|$(date +%s)"
-                done ;;
+                    if [ -d "$file" ]; then
+                          continue
+                    fi
+
+                    if [ ! -f "$file" ]; then
+                        echo "$file|missing|$(date +%s)"
+                        continue
+                    fi
+
+                    if [ ! -r "$file" ]; then
+                        echo "${file}|not readable|$(date +%s)"
+                        continue
+                    fi
+
+                    stat -c "%n|%s|%Y" "$file"
+                done
+                ;;
         esac
     done
+    set +vx; eval "$old_state"
     IFS=$OLD_IFS
 fi
 

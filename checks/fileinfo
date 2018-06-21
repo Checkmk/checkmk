@@ -180,6 +180,8 @@ def check_fileinfo(item, params, info):
         if item == line[0]:
             if line[1] == "missing":
                 continue
+            elif line[1] == "not readable":
+                return 1, "File not readable"
             state = 0
             size = int(line[1])
             age = reftime - int(line[2])
@@ -219,17 +221,18 @@ def check_fileinfo_groups(item, params, info):
         yield 3, "No information sent by agent"
         return
 
-    outof_range_txt = fileinfo_check_timeranges(params)
-    reftime         = None
-    count_all       = 0
-    age_oldest      = None
-    age_newest      = 0
-    size_all        = 0
-    size_smallest   = None
-    size_largest    = 0
-    date_inclusion  = ""
-    include_patterns = set([])
-    exclude_patterns = set([])
+    outof_range_txt    = fileinfo_check_timeranges(params)
+    reftime            = None
+    count_all          = 0
+    age_oldest         = None
+    age_newest         = 0
+    size_all           = 0
+    size_smallest      = None
+    size_largest       = 0
+    date_inclusion     = ""
+    include_patterns   = set()
+    exclude_patterns   = set()
+    files_not_readable = set()
 
     # Start counting values on all files
     for line in info:
@@ -278,8 +281,12 @@ def check_fileinfo_groups(item, params, info):
             else:
                 excl_match = fnmatch.fnmatch(line[0], exclusion)
 
-            if str(line[1]) not in ['missing', ''] and \
-               incl_match and not excl_match:
+            if incl_match and not excl_match:
+                if str(line[1]) in ['missing', '']:
+                    continue
+                elif str(line[1]) == "not readable":
+                    files_not_readable.add(str(line[1]))
+
                 size = int(line[1])
                 size_all += size
                 if size_smallest is None:
@@ -316,6 +323,9 @@ def check_fileinfo_groups(item, params, info):
                                  size_largest, get_filesize_human_readable))
     if date_inclusion:
         check_definition.append(("Date pattern", "date pattern", date_inclusion, str))
+
+    if files_not_readable:
+        yield 1, "Files not readable: %s" % ", ".join(files_not_readable)
 
     yield fileinfo_check_function(check_definition, params, outof_range_txt)
     if include_patterns:

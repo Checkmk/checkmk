@@ -300,6 +300,8 @@ class MockItemState(object):
 
     In all of these cases, the sanity of the returned values is checked
     (i.e. they have to be BasicItemState).
+
+    See for example 'test_statgrab_cpu_check.py'.
     """
     TARGET = 'cmk_base.item_state._cached_item_states.get_item_state'
 
@@ -364,6 +366,8 @@ class assertMKCounterWrapped(object):
         with assertMKCounterWrapped():
             # do a check that raises such an exception
             run_my_check()
+
+    See for example 'test_statgrab_cpu_check.py'.
     """
     def __init__(self, msg=None):
         self.msg = msg

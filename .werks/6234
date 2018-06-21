@@ -1,0 +1,12 @@
+Title: SLA computing: added some bugfixes relating to special timeperiods
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1529588289
+
+The computation failed when a configured timeperiod did not have a single match within the queried timerange.
+This only happened with specifically set, non recurring, timeperiods, e.g. <tt>'2002-03-30': [('00:00', '24:00')]</tt>.

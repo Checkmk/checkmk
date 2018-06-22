@@ -1995,7 +1995,7 @@ class EventServer(ECServerThread):
             merge_event["text"] = text
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
-            self.rewrite_event(rule, merge_event, ())
+            self.rewrite_event(rule, merge_event, {})
             log_event_history(self.settings, self._config, self._table_events, merge_event, "COUNTFAILED")
         else:
             # Create artifical event from scratch. Make sure that all important
@@ -2019,7 +2019,7 @@ class EventServer(ECServerThread):
                 "match_groups_syslog_application": (),
             }
             self._add_rule_contact_groups_to_event(rule, event)
-            self.rewrite_event(rule, event, ())
+            self.rewrite_event(rule, event, {})
             self._event_status.new_event(self._table_events, event)
             log_event_history(self.settings, self._config, self._table_events, event, "COUNTFAILED")
             event_has_opened(self.settings, self._config, self, self._table_events, rule, event)

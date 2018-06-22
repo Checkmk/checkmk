@@ -1,0 +1,10 @@
+Title: Fix exception during event rewriting, causing events for missing expected messages failing to be created
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1529675772
+Class: fix
+
+This issue had been introduced with Werk #5254

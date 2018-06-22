@@ -222,6 +222,7 @@ class DiscoveryResult(object):
         self.entries = []
         for entry in result:
             self.entries.append(DiscoveryEntry(entry))
+        self.entries.sort(key=repr)
 
     def __eq__(self, other_value):
         return all(entry in other_value for entry in self) and \

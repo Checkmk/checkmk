@@ -24,31 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-tcp_conn_stats_default_levels = {}
 
-tcp_connections_state_map = [
-    ("ESTABLISHED",  1),    # connection up and passing data
-    ("SYN_SENT",     2),    # session has been requested by us; waiting for reply from remote endpoint
-    ("SYN_RECV",     3),    # session has been requested by a remote endpoint for a socket on which we were listening
-    ("LAST_ACK",     9),    # our socket is closed; remote endpoint has also shut down; we are waiting for a final acknowledgement
-    ("CLOSE_WAIT",   8),    # remote endpoint has shut down; the kernel is waiting for the application to close the socket
-    ("TIME_WAIT",    6),    # socket is waiting after closing for any packets left on the network
-    ("CLOSED",       7),    # socket is not being used (FIXME. What does mean?)
-    ("CLOSING",      11),   # our socket is shut down; remote endpoint is shut down; not all data has been sent
-    ("FIN_WAIT1",    4),    # our socket has closed; we are in the process of tearing down the connection
-    ("FIN_WAIT2",    5),    # the connection has been closed; our socket is waiting for the remote endpoint to shut down
-    ("LISTEN",       10),   # represents waiting for a connection request from any remote TCP and port
-    ("BOUND",        None), # Socket did a bound() but TCP stack not yet active (Solaris)
-    ("IDLE",         None), # TCP endpoints are in IDLE state when first created
-]
-
-# parsed can be:
-# parsed = {
-#     1  : 6,
-#     6  : 17,
-#     8  : 1,
-#     10 : 10,
-# }
 # parsed = {
 #     "ESTABLISHED" : 6,
 #     "BOUND"       : 17,
@@ -57,36 +33,30 @@ tcp_connections_state_map = [
 # }
 
 
+tcp_conn_stats_default_levels = {}
+
+
 def inventory_tcp_connections(parsed):
-    if len(parsed) > 0:
+    if parsed:
         return [ (None, 'tcp_conn_stats_default_levels') ]
 
 
 def check_tcp_connections(item, params, parsed):
-    hit = False
-    for tcp_state_readable, tcp_state_int_str in tcp_connections_state_map:
-        num = parsed.get(tcp_state_readable, \
-                   parsed.get(tcp_state_int_str, 0))
-        state = 0
-        perf = [tcp_state_readable, num]
-        if num > 0: # Only check positive counts
-            hit = True
-            infotext = "%s: %d" % (tcp_state_readable, num)
-            levels = params.get(tcp_state_readable)
-            if levels:
-                warn, crit = levels
-                perf.append(warn)
-                perf.append(crit)
-                if num >= crit:
-                    state = 2
-                elif num >= warn:
-                    state = 1
-                if state > 0:
-                    infotext += " (warn/crit at %d/%d)" % (warn, crit)
-            yield state, infotext, [ tuple(perf) ]
-        else:
-            yield 0, None, [ tuple(perf) ]
-
-    if not hit:
+    if not parsed:
         yield 0, "Currently no TCP connections"
+        return
 
+    for tcp_state, tcp_count in parsed.iteritems():
+        if tcp_count <= 0:
+            continue
+
+        infotext = "%s: %s" % (tcp_state, tcp_count)
+        state = 0
+        warn, crit = params.get(tcp_state, (None, None))
+        if crit is not None and tcp_count >= crit:
+            state = 2
+        elif warn is not None and tcp_count >= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %d/%d)" % (warn, crit)
+        yield state, infotext, [(tcp_state, tcp_count, warn, crit)]

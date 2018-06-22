@@ -1,0 +1,21 @@
+Title: Use the correct matching behaviour and avoid a crash while baking agents for some agent bakery rules
+Level: 1
+Component: wato
+Compatible: incomp
+Edition: cee
+Version: 1.6.0i1
+Date: 1529685871
+Class: fix
+
+Previously, the agent bakery rulesets "Perform Real-Time Checks", "Agent
+updater (Linux, Windows)", "ORACLE Databases (Linux, Solaris, AIX)", and
+"Plugins, local checks and MRPE for non-root users" did not have the correct
+matching behaviour. Now, the correct behaviour which is shown in the decription
+for "Matching" in the GUI is used.
+
+If you have multiple rules for any of those rulesets please make sure to bake
+the agents again, and deploy the newly baked agents to the affected hosts.
+
+This Werk also fixes a crash of "Bake agents" for rules with the matching
+behaviour "Each parameter is defined by the first matching rule where that
+parameter is set (checked)".

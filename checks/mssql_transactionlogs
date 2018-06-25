@@ -35,8 +35,9 @@ factory_settings['mssql_transactionlogs_default_levels'] = {
 
 
 check_info['mssql_transactionlogs'] = {
+    'parse_function'          : parse_mssql_datafiles,
+    'inventory_function'      : lambda parsed: inventory_mssql_datafiles("transactionlogs", parsed),
     'check_function'          : check_mssql_datafiles,
-    'inventory_function'      : lambda info: inventory_mssql_datafiles("transactionlogs", info),
     'service_description'     : 'MSSQL Transactionlog %s',
     'group'                   : "mssql_transactionlogs",
     'has_perfdata'            : True,

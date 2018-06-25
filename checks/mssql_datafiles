@@ -35,8 +35,9 @@ factory_settings['mssql_datafiles_default_levels'] = {
 
 
 check_info['mssql_datafiles'] = {
+    'parse_function'          : parse_mssql_datafiles,
+    'inventory_function'      : lambda parsed: inventory_mssql_datafiles("datafiles", parsed),
     'check_function'          : check_mssql_datafiles,
-    'inventory_function'      : lambda info: inventory_mssql_datafiles("datafiles", info),
     'service_description'     : 'MSSQL Datafile %s',
     'group'                   : "mssql_datafiles",
     'has_perfdata'            : True,

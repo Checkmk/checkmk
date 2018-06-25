@@ -25,10 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 
-mssql_transactionlogs_discovery = []
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
 
-
-def format_item_mssql_datafiles(inst, database, file_name):
+def _format_item_mssql_datafiles(inst, database, file_name):
     if inst is None:
         return "%s.%s" % (database, file_name)
     elif file_name is None:
@@ -37,24 +43,7 @@ def format_item_mssql_datafiles(inst, database, file_name):
         return "%s.%s.%s" % (inst, database, file_name)
 
 
-def inventory_mssql_datafiles(mode, info):
-    settings = host_extra_conf(host_name(), mssql_transactionlogs_discovery)
-    summarize = settings and settings[0].get("summarize_%s" % mode, False)
-
-    for line in info:
-        if len(line) == 8:
-            inst, database, file_name = line[0:3]
-        else:
-            inst = None
-            database, file_name = line[0:2]
-
-        if summarize:
-            yield format_item_mssql_datafiles(inst, database, None), {}
-        else:
-            yield format_item_mssql_datafiles(inst, database, file_name), {}
-
-
-def mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, unlimited):
+def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, unlimited):
     def calculate_levels(levels, reference_value):
         if isinstance(levels[0], float):
             if reference_value != -1:
@@ -116,37 +105,74 @@ def mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, u
     if unlimited and rel_levels:
         yield 0, "no maximum size", []
 
+#.
 
-def check_mssql_datafiles(item, params, info):
-    max_size_sum = allocated_size_sum = used_size_sum = 0
-    unlimited_sum = False
 
-    found = False
-    for row in info:
-        if len(row) == 8:
-            inst, database, file_name, _physical_name, max_size, allocated_size, used_size, unlimited = row
+mssql_transactionlogs_discovery = []
+
+
+def parse_mssql_datafiles(info):
+    parsed = {}
+    for line in info:
+        if len(line) == 8:
+            inst, database, file_name, _physical_name, max_size, allocated_size, used_size, unlimited = line
             unlimited = unlimited == '1'
         else:
-            database, file_name, _physical_name, max_size, allocated_size, used_size = row
+            database, file_name, _physical_name, max_size, allocated_size, used_size = line
             inst = None
             unlimited = False
 
-        if format_item_mssql_datafiles(inst, database, file_name) == item or \
-                format_item_mssql_datafiles(inst, database, None) == item:
-            found = True
+        mssql_instance = parsed.setdefault((inst, database, file_name), {"unlimited": unlimited})
+        for key, value_str in [
+            ("max_size",        max_size),
+            ("allocated_size",  allocated_size),
+            ("used_size",       used_size),
+        ]:
+            try:
+                value = float(value_str) * 1024 * 1024
+            except ValueError:
+                value = None
+            mssql_instance[key] = value
+    return parsed
 
-            max_size, allocated_size, used_size = map(lambda x: float(x) * 1024 * 1024,
-                                                      (max_size, allocated_size, used_size))
-            max_size_sum       += max_size
-            allocated_size_sum += allocated_size
-            used_size_sum      += used_size
-            unlimited_sum = unlimited_sum or unlimited
+
+def inventory_mssql_datafiles(mode, parsed):
+    settings = host_extra_conf(host_name(), mssql_transactionlogs_discovery)
+    summarize = settings and settings[0].get("summarize_%s" % mode, False)
+    for inst, database, file_name in parsed.iterkeys():
+        if summarize:
+            yield _format_item_mssql_datafiles(inst, database, None), {}
+        else:
+            yield _format_item_mssql_datafiles(inst, database, file_name), {}
+
+
+def check_mssql_datafiles(item, params, parsed):
+    max_size_sum = 0
+    allocated_size_sum = 0
+    used_size_sum = 0
+    unlimited_sum = False
+
+    found = False
+    for (inst, database, file_name), values in parsed.iteritems():
+        if _format_item_mssql_datafiles(inst, database, file_name) == item or \
+                _format_item_mssql_datafiles(inst, database, None) == item:
+            found = True
+            max_size = values["max_size"]
+            allocated_size = values["allocated_size"]
+            used_size = values["used_size"]
+            if max_size:
+                max_size_sum  += max_size
+            if allocated_size:
+                allocated_size_sum += allocated_size
+            if used_size:
+                used_size_sum  += used_size
+            unlimited_sum = unlimited_sum or values["unlimited"]
 
     if not found:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    return mssql_datafiles_process_sizes(params, used_size_sum, allocated_size_sum,
-                                            max_size_sum, unlimited_sum)
+    return _mssql_datafiles_process_sizes(params, used_size_sum, allocated_size_sum,
+                                          max_size_sum, unlimited_sum)
 

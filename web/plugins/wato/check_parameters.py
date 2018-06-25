@@ -10384,7 +10384,7 @@ register_check_parameters(
                         Age(title = _("Warning if older than")),
                         Age(title = _("Critical if older than")),
                 ])),
-
+                ("not_found", MonitoringState(title=_("State if no backup found"))),
             ]
         ),
         forth = lambda params: (params if isinstance(params, dict)

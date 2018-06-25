@@ -1,0 +1,13 @@
+Title: mssql_backup: The check can handle situations if no backups are found
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1529572730
+Class: feature
+
+The agent plugin {{mssql.vbs}} must be installed.
+The default state if no backup is found is WARN.
+This state is configurable via the check parameters
+{{MSSQL Time since last Backup}}.

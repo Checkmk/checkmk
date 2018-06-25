@@ -48,112 +48,112 @@
 
 
 def parse_mssql_backup(info):
+    def _parse_date_and_time(backup_date, backup_time):
+        try:
+            timestamp = time.mktime(time.strptime(
+                        "%s %s" % (backup_date, backup_time),
+                        '%Y-%m-%d %H:%M:%S'))
+        except ValueError:
+            timestamp = None
+        return timestamp
 
-    def get_backup_type_name(backup_type):
-        return {
-            "D": "database ",
-            "I": "database diff ",
-            "L": "log ",
-            "F": "file or filegroup ",
-            "G": "file diff ",
-            "P": "partial ",
-            "Q": "partial diff ",
-            "-": "unspecific ",
-        }.get(backup_type, "")
+    map_backup_types = {
+        "D": "database",
+        "I": "database diff",
+        "L": "log",
+        "F": "file or filegroup",
+        "G": "file diff",
+        "P": "partial",
+        "Q": "partial diff",
+        "-": "unspecific",
+    }
 
-    parsed = []
+    parsed = {}
+    Backup = collections.namedtuple("Backup", ["timestamp", "type", "state"])
     for line in info:
-        if len(line) not in [3, 4, 5]:
-            continue
+        backup_state = None
+        backup_type = None
+        if len(line) == 6:
+            inst, tablespace, backup_date, backup_time, backup_type, backup_state = line
+            timestamp = _parse_date_and_time(backup_date, backup_time)
 
-        # read data
-        backup_date = None
-        if len(line) == 5:
+        elif len(line) == 5:
             inst, tablespace, backup_date, backup_time, backup_type = line
+            timestamp = _parse_date_and_time(backup_date, backup_time)
+
         elif len(line) == 4:
             inst, tablespace, backup_date, backup_time = line
-            backup_type = None
+            timestamp = _parse_date_and_time(backup_date, backup_time)
+
         elif len(line) == 3:
             inst, tablespace, backup_timestamp = line
-            backup_type = None
+            try:
+                timestamp = int(backup_timestamp)
+            except ValueError:
+                timestamp = None
 
-        # construct content
-        db_system = inst + ' ' + tablespace
-
-        if backup_date:
-            # TODO: Timezone issue? Agent should always send UTC timestamp.
-            timestamp = time.mktime(time.strptime(
-                backup_date + ' ' + backup_time, '%Y-%m-%d %H:%M:%S')
-            )
         else:
-            timestamp = int(backup_timestamp)
+            continue
 
-        backup_type_name = get_backup_type_name(backup_type)
-
-        if backup_type == None:
-            perfkey = "seconds"
-        else:
-            perfkey = "backup_age_%s" % backup_type_name.strip().replace(" ", "_")
-
-        parsed.append((db_system, timestamp, backup_type_name, perfkey))
+        parsed.setdefault("%s %s" % (inst, tablespace), []).append(
+            Backup(timestamp, map_backup_types.get(backup_type), backup_state))
 
     return parsed
 
 
 def inventory_mssql_backup(parsed):
-    return [ (line[0], {})
-             for line in parsed
-             if len(line) in [3, 4, 5] ]
+    for db_name in parsed.iterkeys():
+        yield db_name, {}
 
 
 def check_mssql_backup(item, params, parsed):
-    found_instance = False
-    for db_system, timestamp, backup_type_name, perfkey in parsed:
-        if item != db_system:
+    if item not in parsed:
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
+
+    if not isinstance(params, dict):
+        params = {"database": params}
+
+    for backup in parsed[item]:
+        if backup.state == "no backup found":
+            yield params.get("not_found", 1), "State: %s" % backup.state
             continue
-        found_instance = True
 
-        if not isinstance(params, dict):
-            params = {"database": params}
-
-        if backup_type_name == "":  # use "database" parameters as default for old agent output
-            age_warn, age_crit = params["database"]
+        if backup.type is None:
+            backup_type_var = "database"
+            perfkey = "seconds"
+            infotext = "[database] "
         else:
-            backup_type_var = backup_type_name.strip().replace(" ", "_")
-            age_warn, age_crit = params.get(backup_type_var, (None, None))
+            backup_type_var = backup.type.strip().replace(" ", "_")
+            perfkey = "backup_age_%s" % backup_type_var
+            infotext = "[%s] " % backup.type
 
         state = 0
-        sec_ago = time.time() - timestamp
+        age_warn, age_crit = params.get(backup_type_var, (None, None))
+        sec_ago = time.time() - backup.timestamp
         if age_crit is not None and sec_ago >= age_crit:
             state = 2
         elif age_warn is not None and sec_ago >= age_warn:
             state = 1
 
-        perfdata = [(perfkey, sec_ago, age_warn, age_crit)]
-        infotext = 'Last %sbackup was at %s (%s ago)' % (
-            backup_type_name,
-            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)),
-            get_age_human_readable(sec_ago)
-        )
+        infotext += 'Last backup was at %s (%s ago)' % (
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(backup.timestamp)),
+            get_age_human_readable(sec_ago))
 
-        if state != 0:
+        if state:
             infotext += " (warn/crit at %s/%s)" % (
-                get_age_human_readable(age_warn), get_age_human_readable(age_crit)
-            )
+                get_age_human_readable(age_warn), get_age_human_readable(age_crit))
 
-        yield state, infotext, perfdata
-
-    if not found_instance:
-        # Assume general connection problem to the database, which is reported
-        # by the "X Instance" service and skip this check.
-        raise MKCounterWrapped("Failed to connect to database")
+        yield state, infotext, [(perfkey, sec_ago, age_warn, age_crit)]
 
 
 check_info['mssql_backup'] = {
-    'parse_function':      parse_mssql_backup,
-    'check_function':      check_mssql_backup,
-    'inventory_function':  inventory_mssql_backup,
-    'service_description': 'MSSQL %s Backup',
-    'has_perfdata':        True,
-    'group':               'mssql_backup',
+    'parse_function'            : parse_mssql_backup,
+    'inventory_function'        : inventory_mssql_backup,
+    'check_function'            : check_mssql_backup,
+    'default_levels_variable'   : 'mssql_backup_default_levels',
+    'service_description'       : 'MSSQL %s Backup',
+    'has_perfdata'              : True,
+    'group'                     : 'mssql_backup',
 }

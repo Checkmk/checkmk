@@ -1,4 +1,6 @@
 import types
+import mock
+from cmk_base.item_state import MKCounterWrapped
 
 
 class Tuploid(object):
@@ -137,9 +139,16 @@ class CheckResult(object):
         if isinstance(result, types.GeneratorType):
             for subresult in result:
                 self.subresults.append(BasicCheckResult(*subresult))
-        # creation of a CheckResult via a list of BasicCheckResult for test writing
+        # creation of a CheckResult via a list of
+        # tuple or BasicCheckResult for test writing
         elif isinstance(result, list):
-            assert all(isinstance(subresult, BasicCheckResult) for subresult in result)
+            for subresult in result:
+                assert type(subresult) in (tuple, BasicCheckResult), \
+                       "type of subresult must be %s or %s - not %r" % \
+                       (tuple, BasicCheckResult, subresult)
+                if isinstance(subresult, tuple):
+                    subresult = BasicCheckResult(*subresult)
+                self.subresults.append(subresult)
             self.subresults = result
         else:
             self.subresults.append(BasicCheckResult(*result))
@@ -161,6 +170,24 @@ class CheckResult(object):
         for subresult in self.subresults:
             perfdata += subresult.perfdata if subresult.perfdata else []
         return perfdata
+
+
+def assertCheckResultsEqual(actual, expected):
+    """
+    Compare two (Basic)CheckResults.
+
+    This gives more helpful output than 'assert actual == expected'
+    """
+    if isinstance(actual, BasicCheckResult):
+        assert isinstance(expected, BasicCheckResult)
+        assert actual == expected, "%s != %s" % (actual, expected)
+
+    else:
+        assert isinstance(actual, CheckResult)
+        assert isinstance(expected, CheckResult)
+        assert len(actual.subresults) == len(expected.subresults)
+        for suba, sube in zip(actual.subresults, expected.subresults):
+            assert suba == sube, "%r != %r" % (suba, sube)
 
 
 class DiscoveryEntry(Tuploid):
@@ -195,6 +222,7 @@ class DiscoveryResult(object):
         self.entries = []
         for entry in result:
             self.entries.append(DiscoveryEntry(entry))
+        self.entries.sort(key=repr)
 
     def __eq__(self, other_value):
         return all(entry in other_value for entry in self) and \
@@ -208,4 +236,159 @@ class DiscoveryResult(object):
 
     def __repr__(self):
         return "DiscoveryResult(%r)" % map(repr, self)
+
+
+def assertDiscoveryResultsEqual(actual, expected):
+    """
+    Compare two DiscoveryResults.
+
+    This gives more helpful output than 'assert actual == expected'
+    """
+    assert isinstance(actual, DiscoveryResult)
+    assert isinstance(expected, DiscoveryResult)
+    assert len(actual.entries) == len(expected.entries)
+    for enta, ente in zip(actual, expected):
+        assert enta == ente, "%r != %r" % (enta, ente)
+
+
+class BasicItemState(object):
+    """Item state as returned by get_item_state
+
+    We assert that we have exactly two values,
+    where the first one is either float or int.
+    """
+    def __init__(self, *args):
+        if len(args) == 1:
+            args = args[0]
+        msg = "BasicItemStates expected 2-tuple (time_diff, value) - not %r"
+        assert isinstance(args, tuple), msg % args
+        assert len(args) == 2, msg % args
+        self.time_diff, self.value = args
+
+        time_diff_type = type(self.time_diff)
+        msg = "time_diff should be of type float/int - not %r"
+        assert time_diff_type in (float, int), msg % time_diff_type
+        # We do allow negative time diffs.
+        # We want to ba able to test time anomalies.
+
+
+class MockItemState(object):
+    """Mock the calls to item_state API.
+
+    Due to our rather unorthodox import structure, we cannot mock
+    cmk_base.item_state.get_item_state directly (it's a global var
+    in running checks!)
+    Instead, this context manager mocks
+    cmk_base.item_state._cached_item_states.get_item_state.
+
+    This will affect get_rate and get_average as well as
+    get_item_state.
+
+    Usage:
+
+    with MockItemState(mock_state):
+        # run your check test here
+        mocked_time_diff, mocked_value = \
+            cmk_base.item_state.get_item_state('whatever_key', default="IGNORED")
+
+    There are three different types of arguments to pass to MockItemState:
+
+    1) Tuple or a BasicItemState:
+        The argument is assumed to be (time_diff, value). All calls to the
+        item_state API behave as if the last state had been `value`, recorded
+        `time_diff` seeconds ago.
+
+    2) Dictionary containing Tuples or BasicItemStates:
+        The dictionary will replace the item states.
+        Basically `get_item_state` gets replaced by the dictionarys GET method.
+
+    3) Callable object:
+        The callable object will replace `get_item_state`. It must accept two
+        arguments (key/default), in same way a dictionary does.
+
+    In all of these cases, the sanity of the returned values is checked
+    (i.e. they have to be BasicItemState).
+
+    See for example 'test_statgrab_cpu_check.py'.
+    """
+    TARGET = 'cmk_base.item_state._cached_item_states.get_item_state'
+
+    def __init__(self, mock_state):
+        self.context = None
+        self.get_val_function = None
+
+        if hasattr(mock_state, '__call__'):
+            self.get_val_function = mock_state
+            return
+
+        type_mock_state = type(mock_state)
+        allowed_types = (tuple, BasicItemState, dict)
+        assert type_mock_state in allowed_types, \
+               "type must be in %r, or callable - not %r" % \
+               (allowed_types, type_mock_state)
+
+        # in dict case check values
+        if type_mock_state == dict:
+            msg = "dict values must be in %r - not %r"
+            allowed_types = (tuple, BasicItemState)
+            for v in mock_state.values():
+                tyv = type(v)
+                assert tyv in allowed_types, msg % (allowed_types, tyv)
+            self.get_val_function = mock_state.get
+        else:
+            self.get_val_function = lambda key, default: mock_state
+
+
+    def __call__(self, user_key, default=None):
+        # ensure the default value is sane
+        BasicItemState(default)
+        val = self.get_val_function(user_key, default)
+        if not isinstance(val, BasicItemState):
+            val = BasicItemState(val)
+        return val.time_diff, val.value
+
+    def __enter__(self):
+        '''The default context: just mock get_item_state'''
+        self.context = mock.patch(MockItemState.TARGET,
+                                  # I'm the MockObj myself!
+                                  new_callable=lambda: self)
+        return self.context.__enter__()
+
+    def __exit__(self, *exc_info):
+        return self.context.__exit__(*exc_info)
+
+
+class assertMKCounterWrapped(object):
+    """Contextmanager in which a MKCounterWrapped exception is expected
+
+    If you can choose to also assert a certain error message:
+
+    with MockItemState((1., -42)):
+        with assertMKCounterWrapped("value is negative"):
+            # do a check that raises such an exception
+            run_my_check()
+
+    Or you can ignore the exact error message:
+
+    with MockItemState((1., -42)):
+        with assertMKCounterWrapped():
+            # do a check that raises such an exception
+            run_my_check()
+
+    See for example 'test_statgrab_cpu_check.py'.
+    """
+    def __init__(self, msg=None):
+        self.msg = msg
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, ty, ex, tb):
+        if ty is AssertionError:
+            raise
+        assert ty is not None, "No exception has occurred!"
+        assert ty == MKCounterWrapped, "%r is not of type %r" % (ex, MKCounterWrapped)
+        if self.msg is not None:
+            assert self.msg == str(ex), "%r != %r" % (self.msg, str(ex))
+        return True
 

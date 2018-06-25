@@ -1,0 +1,12 @@
+Title: Implicit default values for agent updater config
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0b8
+Date: 1529483996
+Class: fix
+
+Some fields, namely the update interval and the proxy configuration (new since 1.5) are optional within the agent updater plugin configuration.
+With this werk, a default value of 3600 seconds for the interval and a default behavior of "ignore proxy settings" is assumed in the case that these fields are not set by the user.
+This matches the behavior of previous Check_MK releases.

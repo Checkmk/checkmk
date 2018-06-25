@@ -1,0 +1,18 @@
+Title: mssql_blocked_sessions: This check is now instance aware
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1529935714
+Class: feature
+
+In order to make this check work take the following steps:
+<ul>
+<li>Install the newest agent plugin {{mssql.vbs}}.</li>
+
+<li>Transform all configured parameters from the old deprecared ruleset
+{{MSSQL Blocked Sessions}} into the new ruleset of the same name.</li>
+
+<li>Perform a rediscovery on the affected hosts.</li>
+</ul>

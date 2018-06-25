@@ -1323,7 +1323,7 @@ _old_service_descriptions = {
     "mssql_tablespaces"                : "%s Sizes",
     "mssql_transactionlogs"            : "Transactionlog %s",
     "mssql_versions"                   : "%s Version",
-
+    "mssql_blocked_sessions"           : lambda item: (False, "MSSQL Blocked Sessions"),
 }
 
 def service_description(hostname, check_plugin_name, item):

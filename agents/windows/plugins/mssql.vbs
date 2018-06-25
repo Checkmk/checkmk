@@ -388,6 +388,11 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 				"END " & _
 				"EXEC (@SQLCommand)" ,CONN
 
+        If RS.Eof Then
+            addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
+                          "|-|-|-|no backup found")
+        End If
+
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
 

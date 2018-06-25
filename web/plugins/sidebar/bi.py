@@ -85,9 +85,7 @@ def _build_tree(group, parent, path):
 def _render_tree(tree):
     for group, attrs in tree.iteritems():
         if attrs.get('__children__'):
-            html.begin_foldable_container("bi_aggregation_groups", group, False,
-                                          HTML(html.render_a(group, href=None,
-                                               target="main")))
+            html.begin_foldable_container("bi_aggregation_groups", group, False, group)
             _render_tree(attrs['__children__'])
             html.end_foldable_container()
         else:

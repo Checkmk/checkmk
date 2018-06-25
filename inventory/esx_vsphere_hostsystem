@@ -45,6 +45,7 @@ def inv_esx_vsphere_hostsystem_parse(info, inv_items=None):
         inv_items = {}
 
     result = {}
+    info, _ = info
     for line in info:
         key = line[0]
         for pattern, settings in inv_items.items():

@@ -271,6 +271,14 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         Exit Do
     End If
 
+    ' add detailed information about version and patchrelease
+    RS.Open "SELECT SERVERPROPERTY('productversion') as prodversion," & _
+            "SERVERPROPERTY ('productlevel') as prodlevel," & _
+            "SERVERPROPERTY ('edition') as prodedition", CONN
+    addOutput("MSSQL_" & instance_id & "|details|" & RS("prodversion") & "|" & _
+               RS("prodlevel") & "|" & RS("prodedition"))
+    RS.Close
+
     ' Get counter data for the whole instance
     addOutput(sections("counters"))
     RS.Open "SELECT GETUTCDATE() as utc_date", CONN

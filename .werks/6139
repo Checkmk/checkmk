@@ -1,0 +1,11 @@
+Title: mssql_instance: Displays more detailed information of instance version and edition
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1529931499
+Class: feature
+
+In order to use this feature please install the newest
+version of the {{mssql.vbs}} agent plugin.

@@ -81,9 +81,9 @@ Set sources = CreateObject("Scripting.Dictionary")
 Dim service, i, version, edition, value_types, value_names, value_raw, cluster_name
 Set WMI = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
 
-' Make sure that always all sections are present, even in case of an error. 
-' Note: the section <<<mssql_instance>>> section shows the general state 
-' of a database instance. If that section fails for an instance then all 
+' Make sure that always all sections are present, even in case of an error.
+' Note: the section <<<mssql_instance>>> section shows the general state
+' of a database instance. If that section fails for an instance then all
 ' other sections do not contain valid data anyway.
 '
 ' Don't move this to another place. We need the steps above to decide whether or
@@ -91,14 +91,14 @@ Set WMI = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
 Dim sections, section_id
 Set sections = CreateObject("Scripting.Dictionary")
 sections.add "instance", "<<<mssql_instance:sep(124)>>>"
-sections.add "databases", "<<<mssql_databases>>>"
-sections.add "counters", "<<<mssql_counters>>>"
+sections.add "databases", "<<<mssql_databases:sep(124)>>>"
+sections.add "counters", "<<<mssql_counters:sep(124)>>>"
 sections.add "tablespaces", "<<<mssql_tablespaces>>>"
-sections.add "blocked_sessions", "<<<mssql_blocked_sessions>>>"
-sections.add "backup", "<<<mssql_backup>>>"
-sections.add "transactionlogs", "<<<mssql_transactionlogs>>>"
-sections.add "datafiles", "<<<mssql_datafiles>>>"
-sections.add "clusters", "<<<mssql_clusters>>>"
+sections.add "blocked_sessions", "<<<mssql_blocked_sessions:sep(124)>>>"
+sections.add "backup", "<<<mssql_backup:sep(124)>>>"
+sections.add "transactionlogs", "<<<mssql_transactionlogs:sep(124)>>>"
+sections.add "datafiles", "<<<mssql_datafiles:sep(124)>>>"
+sections.add "clusters", "<<<mssql_cluster:sep(124)>>"
 ' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
 sections.add "versions", "<<<mssql_versions:sep(124)>>>"
 
@@ -289,7 +289,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             instanceName = "None"
         End If
         value        = Trim(RS("cntr_value"))
-        addOutput( objectName & " " & counterName & " " & instanceName & " " & value )
+        addOutput( objectName & "|" & counterName & "|" & instanceName & "|" & value )
         RS.MoveNext
     Loop
     RS.Close
@@ -304,7 +304,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         wait_duration_ms = Trim(RS("wait_duration_ms"))
         wait_type = Trim(RS("wait_type"))
         blocking_session_id = Trim(RS("blocking_session_id"))
-        addOutput(session_id & " " & wait_duration_ms & " " & wait_type & " " & blocking_session_id)
+        addOutput(session_id & "|" & wait_duration_ms & "|" & wait_type & "|" & blocking_session_id)
         RS.MoveNext
     Loop
     RS.Close
@@ -401,8 +401,8 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             backup_machine_name = Trim(RS("machine_name"))
 
             If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
-                addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & _
-                          " " & lastBackupDate & " " & backup_type)
+                addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
+                          "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
             End If
 
             RS.MoveNext
@@ -421,10 +421,10 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                   "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
                   " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
         Do While Not RS.Eof
-            addOutput( instance_id & " " & Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
-                      " " & Replace(RS("physical_name"), " ", "_") & " " & _
-                      RS("MaxSize") & " " & RS("AllocatedSize") & " " & RS("UsedSize")) & _
-                      " " & RS("Unlimited")
+            addOutput( instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
+                      "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
+                      RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
+                      "|" & RS("Unlimited")
             RS.MoveNext
         Loop
         RS.Close
@@ -441,10 +441,10 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                 "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
                 " FROM sys.database_files WHERE type_desc = 'ROWS'", CONN
         Do While Not RS.Eof
-            addOutput( instance_id & " " & Replace(dbName, " ", "_") & " " & Replace(RS("name"), " ", "_") & _
-                      " " & Replace(RS("physical_name"), " ", "_") & " " & _
-                      RS("MaxSize") & " " & RS("AllocatedSize") & " " & RS("UsedSize")) & _
-                      " " & RS("Unlimited")
+            addOutput( instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
+                      "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
+                      RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
+                      "|" & RS("Unlimited")
             RS.MoveNext
         Loop
         RS.Close
@@ -460,8 +460,8 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "FROM master.dbo.sysdatabases", CONN
     Do While Not RS.Eof
         ' instance db_name status recovery auto_close auto_shrink
-        addOutput( instance_id & " " & Replace(Trim(RS("name")), " ", "_") & " " & Trim(RS("Status")) & _
-                   " " & Trim(RS("Recovery")) & " " & Trim(RS("auto_close")) & " " & Trim(RS("auto_shrink")) )
+        addOutput( instance_id & "|" & Replace(Trim(RS("name")), " ", "_") & "|" & Trim(RS("Status")) & _
+                   "|" & Trim(RS("Recovery")) & "|" & Trim(RS("auto_close")) & "|" & Trim(RS("auto_shrink")) )
         RS.MoveNext
     Loop
     RS.Close
@@ -470,7 +470,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     Dim active_node, nodes
     For Each dbName in dbNames.Keys : Do
         RS.Open "USE [" & dbName & "];", CONN
-    
+
         ' Skip non cluster instances
         RS.Open "SELECT SERVERPROPERTY('IsClustered') AS is_clustered", CONN
         If RS("is_clustered") = 0 Then
@@ -478,13 +478,13 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             Exit Do
         End If
         RS.Close
-        
+
         nodes = ""
         RS.Open "SELECT nodename FROM sys.dm_os_cluster_nodes", CONN
         Do While Not RS.Eof
             If nodes <> "" Then
                 nodes = nodes & ","
-            End If    
+            End If
             nodes = nodes & RS("nodename")
             RS.MoveNext
         Loop
@@ -497,8 +497,8 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             RS.MoveNext
         Loop
         RS.Close
-        
-        addOutput(instance_id & " " & Replace(dbName, " ", "_") & " " & active_node & " " & nodes)
+
+        addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & active_node & "|" & nodes)
     Loop While False: Next
 
     CONN.Close
@@ -512,4 +512,3 @@ Set RS = nothing
 Set CONN = nothing
 Set FSO = nothing
 Set SHO = nothing
-

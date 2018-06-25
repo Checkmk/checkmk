@@ -1,0 +1,13 @@
+Title: check_mk-if.php: fixed errors arising with php7.1
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p35
+Date: 1529924930
+Class: fix
+
+The default php template for most interface checks did not work, because of some
+newly introduced <tt>non-numeric value encountered</tt> warnings, brought by php7.1.
+
+

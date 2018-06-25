@@ -11026,6 +11026,40 @@ register_check_parameters(
     ),
     None,
     "dict",
+    deprecated=True,
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "mssql_instance_blocked_sessions",
+    _("MSSQL Blocked Sessions"),
+    Dictionary(
+        elements = [
+            ("state", MonitoringState(
+                title=_("State of MSSQL Blocked Sessions is treated as"),
+                help=_("The default state if there is at least one "
+                       "blocked session."),
+                default_value=2,
+            )),
+            ("waittime", Tuple(
+                title=_("Levels for wait"),
+                help=_("The threshholds for wait_duration_ms. Will "
+                       "overwrite the default state set above."),
+                default_value=(0, 0),
+                elements=[
+                    Float(title = _("Warning at"),  unit = _("seconds"), display_format = "%.3f"),
+                    Float(title = _("Critical at"), unit = _("seconds"), display_format = "%.3f"),
+                ]
+            )),
+            ("ignore_waittypes", DualListChoice(
+                title=_("Ignore wait types"),
+                rows=40,
+                choices=[ (entry, entry) for entry in mssql_waittypes ],
+            )),
+        ],
+    ),
+    TextAscii(title=_("Instance name")),
+    "dict",
 )
 
 register_check_parameters(

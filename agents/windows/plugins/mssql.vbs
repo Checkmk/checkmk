@@ -307,13 +307,18 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "FROM sys.dm_os_waiting_tasks " & _
             "WHERE blocking_session_id <> 0 ", CONN
     addOutput(sections("blocked_sessions"))
-    Dim session_id, wait_duration_ms, wait_type, blocking_session_id
+    Dim instanceName, session_id, wait_duration_ms, wait_type, blocking_session_id
     Do While NOT RS.Eof
+        instanceName = Replace(Trim(RS("instance_name")), " ", "_")
+        If instanceName = "" Then
+            instanceName = "None"
+        End If
         session_id = Trim(RS("session_id"))
         wait_duration_ms = Trim(RS("wait_duration_ms"))
         wait_type = Trim(RS("wait_type"))
         blocking_session_id = Trim(RS("blocking_session_id"))
-        addOutput(session_id & "|" & wait_duration_ms & "|" & wait_type & "|" & blocking_session_id)
+        addOutput(instanceName & "|" session_id & "|" & wait_duration_ms & "|" & _
+                  wait_type & "|" & blocking_session_id)
         RS.MoveNext
     Loop
     RS.Close

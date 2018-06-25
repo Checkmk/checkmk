@@ -134,10 +134,10 @@ For Each rk In regkeys
                                           "Instance Names\SQL", _
                                           instance_id, instance_name
 
-            ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQLServer\CurrentVersion
+            ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\Setup
             registry.GetStringValue HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\" & _
-                                          instance_name & "\MSSQLServer\CurrentVersion", _
-                                          "CurrentVersion", version
+                                          instance_name & "\Setup", _
+                                          "Version", version
 
             ' HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\Setup
             registry.GetStringValue HKLM, "SOFTWARE\" & rk & "\Microsoft\Microsoft SQL Server\" & _
@@ -185,7 +185,7 @@ For Each rk In regkeys
             ' Only collect results for instances which services are currently running
             Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
                                   "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running' OR Name = 'MSSQLSERVER' AND State = 'Running'")
-            If Not IsNull(service) Then
+            If service.count > 0 Then
                 instances.add instance_id, cluster_name
             End If
         Next

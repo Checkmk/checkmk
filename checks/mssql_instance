@@ -40,9 +40,31 @@
 # <<<mssql_instance:sep(124)>>>
 # ERROR: Failed to gather SQL server instances
 
+
+def _parse_prod_version(entry):
+    if entry.startswith("8."):
+        version = "2000"
+    elif entry.startswith("9."):
+        version = "2005"
+    elif entry.startswith("10.0"):
+        version = "2008"
+    elif entry.startswith("10.50"):
+        version = "2008R2"
+    elif entry.startswith("11."):
+        version = "2012"
+    elif entry.startswith("12."):
+        version = "2014"
+    elif entry.startswith("13."):
+        version = "2016"
+    elif entry.startswith("14."):
+        version = "2017"
+    else:
+        return "UNKNOWN"
+    return "Microsoft SQL Server %s" % version
+
+
 def parse_mssql_instance(info):
     parsed = {}
-
     for line in info:
         if line[0].startswith("ERROR:"):
             continue
@@ -60,21 +82,28 @@ def parse_mssql_instance(info):
 
         if line[1] == "config":
             instance.update({
-                "version"      : line[2],
-                "edition"      : line[3],
+                "version_info" : "%s - %s" % (line[2], line[3]),
                 "cluster_name" : line[4],
             })
         elif line[1] == "state":
             instance.update({
-                "state"        : line[2],
-                "error_msg"    : "|".join(line[3:]),
+                "state"     : line[2],
+                "error_msg" : "|".join(line[3:]),
+            })
+
+        elif line[1] == "details":
+            _parse_prod_version(line[2])
+            instance.update({
+                "prod_version_info": "%s (%s) (%s) - %s" % (
+                    _parse_prod_version(line[2]), line[3], line[2], line[4]
+                )
             })
 
     return parsed
 
 
 def inventory_mssql_instance(parsed):
-    for instance_id, instance in parsed.items():
+    for instance_id in parsed.iterkeys():
         yield instance_id, {}
 
 
@@ -91,10 +120,16 @@ def check_mssql_instance(item, params, parsed):
     if instance["state"] == "0":
         yield state, "Failed to connect to database (%s)" % instance["error_msg"]
 
-    yield 0, "Server is running version %s, %s" % (instance["version"], instance["edition"])
+    if "prod_version_info" in instance:
+        # Newer output of version info
+        version_info = instance["prod_version_info"]
+    else:
+        # Fallback, is always reported by agent plugin
+        version_info = instance["version_info"]
+    yield 0, "Version: %s" % version_info
 
     if instance["cluster_name"] != "":
-        yield 0, "clustered as %s" % instance["cluster_name"]
+        yield 0, "Clustered as %s" % instance["cluster_name"]
 
 
 check_info["mssql_instance"] = {

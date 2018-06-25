@@ -1,0 +1,13 @@
+Title: cmk --convert-rrds: fixed broken command
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1529944624
+Class: fix
+
+The last major update of rrdtool broke some previously working command in the python c-binding.
+As a result, the <tt>cmk --convert-rrds</tt> command failed with <tt>ERROR: 'xff'</tt>.
+
+

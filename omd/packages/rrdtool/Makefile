@@ -19,6 +19,10 @@ CONFIGUREOPTS  := \
 build: check-python check-python-modules
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz
+	for p in patches/*.diff ; do \
+          echo "applying $$p..." ; \
+          patch -p1 -b -d $(DIR) < $$p ; \
+        done
 # set perl environment to match the other perl modules
 	echo "install  --install_base  $(DESTDIR)$(OMD_ROOT)/lib/perl5" > .modulebuildrc
 # The MS_ASYNC/mtime check is broken and often leads to non-killable sync syscalls.

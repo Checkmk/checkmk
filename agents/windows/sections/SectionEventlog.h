@@ -39,17 +39,14 @@ std::ostream &operator<<(std::ostream &os, const Level &l);
 
 // Configuration entries from [logwatch] for individual logfiles
 struct config {
-    config(const std::string &name, Level level, bool hide_context,
-           bool vista_api)
+    config(const std::string &name, Level level, bool hide_context)
         : name(name)
         , level(level)
-        , hide_context(hide_context)
-        , vista_api(vista_api) {}
+        , hide_context(hide_context) {}
 
     std::string name;
     Level level;
     bool hide_context;
-    bool vista_api;
 };
 
 std::ostream &operator<<(std::ostream &out, const config &val);
@@ -108,7 +105,7 @@ private:
                             uint64_t previouslyReadId, eventlog::Level level,
                             bool hideContext);
     FindResult findLog(const HKeyHandle &hKey, DWORD index) const;
-    void registerVistaStyleLogs(eventlog::States &states);
+    void registerAdditionalEventlogs(eventlog::States &states);
     bool find_eventlogs(std::ostream &out, eventlog::States &states);
     void saveEventlogOffsets(const std::string &statefile,
                              const eventlog::States &states);

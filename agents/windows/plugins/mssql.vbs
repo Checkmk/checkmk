@@ -98,7 +98,7 @@ sections.add "blocked_sessions", "<<<mssql_blocked_sessions:sep(124)>>>"
 sections.add "backup", "<<<mssql_backup:sep(124)>>>"
 sections.add "transactionlogs", "<<<mssql_transactionlogs:sep(124)>>>"
 sections.add "datafiles", "<<<mssql_datafiles:sep(124)>>>"
-sections.add "clusters", "<<<mssql_cluster:sep(124)>>"
+sections.add "clusters", "<<<mssql_cluster:sep(124)>>>"
 ' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
 sections.add "versions", "<<<mssql_versions:sep(124)>>>"
 

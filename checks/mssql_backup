@@ -46,19 +46,6 @@
 # MSSQL_SQL0x msdb 2016-07-08 20:20:43 D
 # MSSQL_SQL0x msdb 2016-07-11 20:20:07 I
 
-# Might be None to have no thresholds or a tuple of two ints
-# (<warn age in seconds>, <crit age in seconds>)
-factory_settings["mssql_backup_default_levels"] = {
-    "database":             (0, 0),
-    "database_diff":        (0, 0),
-    "log":                  (0, 0),
-    "file_or_filegroup":    (0, 0),
-    "file_diff":            (0, 0),
-    "partial":              (0, 0),
-    "partial_diff":         (0, 0),
-    "unspecific":           (0, 0)
-}
-
 
 def parse_mssql_backup(info):
 
@@ -126,22 +113,21 @@ def check_mssql_backup(item, params, parsed):
             continue
         found_instance = True
 
-        if type(params) != dict:
+        if not isinstance(params, dict):
             params = {"database": params}
 
         if backup_type_name == "":  # use "database" parameters as default for old agent output
             age_warn, age_crit = params["database"]
         else:
             backup_type_var = backup_type_name.strip().replace(" ", "_")
-            age_warn, age_crit = params[backup_type_var]
+            age_warn, age_crit = params.get(backup_type_var, (None, None))
 
         state = 0
         sec_ago = time.time() - timestamp
-        if age_warn > 0 and age_crit > 0:
-            if sec_ago >= age_crit:
-                state = 2
-            elif sec_ago >= age_warn:
-                state = 1
+        if age_crit is not None and sec_ago >= age_crit:
+            state = 2
+        elif age_warn is not None and sec_ago >= age_warn:
+            state = 1
 
         perfdata = [(perfkey, sec_ago, age_warn, age_crit)]
         infotext = 'Last %sbackup was at %s (%s ago)' % (
@@ -167,7 +153,6 @@ check_info['mssql_backup'] = {
     'parse_function':      parse_mssql_backup,
     'check_function':      check_mssql_backup,
     'inventory_function':  inventory_mssql_backup,
-    'default_levels_variable': 'mssql_backup_default_levels',
     'service_description': 'MSSQL %s Backup',
     'has_perfdata':        True,
     'group':               'mssql_backup',

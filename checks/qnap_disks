@@ -24,18 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_qnap_disks(info):
     return [ (x[0], None) for x in info if x[2] != "-5"]
 
+
 def check_qnap_disks(item, _no_params, info):
+    map_states = {
+        "0" : (0, "ready"),
+        "-4": (2, "unknown"),
+        "-5": (2, "no disk"),
+        "-6": (2, "invalid"),
+        "-9": (2, "read write error"),
+    }
+
     for desc, temp, status, model, size, cond in info:
         if desc == item:
-            msg = "Model: %s, Temperatur: %s, Size: %s" % \
-            ( model, temp, size )
-            if int(status) != 0:
-                return 2, "Status: %s (Code: %s) %s" % ( cond, status, msg)
-            return 0, msg
-    return 3, "Disk not longer found in output"
+            state, state_readable = map_states.get(status, (3, "unknown"))
+            yield state, "Status: %s (%s)" % (state_readable, cond)
+
+            if "--" in cond:
+                yield 1, "SMART Information missing"
+
+            yield 0 , "Model: %s, Temperatur: %s, Size: %s" % \
+                      (model, temp, size)
+
 
 check_info["qnap_disks"] = {
     "check_function"        : check_qnap_disks,
@@ -52,4 +65,3 @@ check_info["qnap_disks"] = {
     "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.1.0').startswith('Linux TS-') \
                                         or oid('.1.3.6.1.2.1.1.1.0').startswith('NAS QR802')
 }
-

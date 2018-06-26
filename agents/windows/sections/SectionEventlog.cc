@@ -218,7 +218,7 @@ eventlog::config from_string<eventlog::config>(const WinApiInterface &,
         }
     }
 
-    return eventlog::config("", level, hide_context, false);
+    return eventlog::config("", level, hide_context);
 }
 
 namespace eventlog {
@@ -257,7 +257,6 @@ void Configurable::feed(const std::string &var, const std::string &value) {
     }
 
     entry.name = join(std::next(tokens.cbegin()), tokens.cend(), " ");
-    entry.vista_api = (tokens[0] == "logname");
     add(entry);
 }
 
@@ -371,13 +370,11 @@ FindResult SectionEventlog::findLog(const HKeyHandle &hKey, DWORD index) const {
             buffer.data()};
 }
 
-void SectionEventlog::registerVistaStyleLogs(eventlog::States &states) {
-    // enable the vista-style logs if that api is enabled
+void SectionEventlog::registerAdditionalEventlogs(eventlog::States &states) {
+    // if vista API enabled, register additional configured logs not in registry
     if (*_vista_api) {
         for (const auto &eventlog : *_config) {
-            if (eventlog.vista_api) {
-                registerEventlog(eventlog.name, *_sendall, states);
-            }
+            registerEventlog(eventlog.name, *_sendall, states);
         }
     }
 }
@@ -386,6 +383,7 @@ void SectionEventlog::registerVistaStyleLogs(eventlog::States &states) {
    event logs are available. */
 bool SectionEventlog::find_eventlogs(std::ostream &out,
                                      eventlog::States &states) {
+    // 1) Find and register ordinary event logs found in registry.
     const std::string regpath{"SYSTEM\\CurrentControlSet\\Services\\Eventlog"};
     HKEY key = nullptr;
     bool success = true;
@@ -406,8 +404,9 @@ bool SectionEventlog::find_eventlogs(std::ostream &out,
         out << "ERROR: Cannot open registry key " << regpath
             << " for enumeration: error code " << lastError << "\n";
     }
-
-    registerVistaStyleLogs(states);
+    // 2) Register additional, configured logs that are not in registry.
+    //    Note: only supported with vista API enabled.
+    registerAdditionalEventlogs(states);
     return success;
 }
 

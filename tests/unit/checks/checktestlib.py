@@ -395,3 +395,56 @@ class assertMKCounterWrapped(object):
             assert self.msg == str(ex), "%r != %r" % (self.msg, str(ex))
         return True
 
+
+class MockHostExtraConf(object):
+    """Mock the calls to host_extra_conf.
+
+    Due to our rather unorthodox import structure, we cannot mock
+    host_extra_conf_merged directly (it's a global var in running checks!)
+    Instead, we mock the calls to cmk_base.config.host_extra_conf.
+
+    Passing a single dict to this objects init method will result in
+    host_extra_conf_merged returning said dict.
+
+    You can also pass a list of dicts, but that's rather pointless, as
+    host_extra_conf_merged will return a merged dict, the result of
+
+        merged_dict = {}
+        for d in reversed(list_of_dicts):
+            merged_dict.update(d)
+    .
+
+    Usage:
+
+    with MockHostExtraConf(mockconfig):
+        # run your check test here,
+        # host_extra_conf_merged in your check will return
+        # mockconfig
+
+    See for example 'test_df_check.py'.
+    """
+    TARGET = 'cmk_base.config.host_extra_conf'
+
+    def __init__(self, mock_config):
+        self.context = None
+        assert type(mock_config) in (dict, list)
+        if isinstance(mock_config, dict):
+            self.config = [mock_config]
+        else:
+            self.config = mock_config
+
+    def __call__(self, _hostname, _ruleset):
+        # ensure the default value is sane
+        return self.config
+
+    def __enter__(self):
+        '''The default context: just mock get_item_state'''
+        self.context = mock.patch(MockHostExtraConf.TARGET,
+                                  # I'm the MockObj myself!
+                                  new_callable=lambda: self)
+        return self.context.__enter__()
+
+    def __exit__(self, *exc_info):
+        return self.context.__exit__(*exc_info)
+
+

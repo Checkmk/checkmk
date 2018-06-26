@@ -1,0 +1,10 @@
+Title: win_eventlog: Fixed handling of optional parameter 'Vista API'
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1530004430
+Class: fix
+
+

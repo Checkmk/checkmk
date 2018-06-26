@@ -1,0 +1,11 @@
+Title: fileinfo: Read config from fileinfo.d dropin directory on Linux
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1530019246
+Class: feature
+
+If a fileinfo.cfg file is present, the Linux agent will now also
+read patterns from files in $MK_CONFDIR/fileinfo.d

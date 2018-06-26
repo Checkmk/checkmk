@@ -1,7 +1,7 @@
 Title: logwatch: "Activate modern eventlog API introduced in vista" is now configurable via agent bakery
 Level: 1
 Component: checks
-Class: feature
+Class: fix
 Compatible: compat
 Edition: cee
 State: unknown

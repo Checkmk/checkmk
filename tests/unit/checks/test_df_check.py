@@ -1,5 +1,7 @@
 import pytest
-import checktestlib
+from checktestlib import DiscoveryResult, CheckResult, \
+                         assertDiscoveryResultsEqual, MockHostExtraConf
+
 
 pytestmark = pytest.mark.checks
 
@@ -240,16 +242,16 @@ info_df_btrfs = \
     (info_df_btrfs, [(u'/dev/sda1 btrfs /dev/sda1', {})],
                                                          { "include_volume_name" : True }),              # btrfs w/ volume name option
 ])
-def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, inventory_df_rules):
-#   NOTE: This commented-out code is the result of trying to mock the the ruleset variable itself instead of the
-#         host_extra_conf_merged function. It did not work. Maybe we can get it to work at a later stage.
-#    import cmk_base.config
-#    monkeypatch.setitem(cmk_base.config._check_contexts["df"], "inventory_df_rules",
-#                [({"include_volume_name": include_volume_name}, [], cmk_base.config.ALL_HOSTS, {})])
+def test_df_discovery_with_parse(check_manager, info, expected_result, inventory_df_rules):
 
     check = check_manager.get_check("df")
-    monkeypatch.setitem(check.context, "host_extra_conf_merged", lambda _, __: inventory_df_rules)
-    assert checktestlib.DiscoveryResult(check.run_discovery(check.run_parse(info))) == expected_result
+
+    with MockHostExtraConf(inventory_df_rules):
+        raw_discovery_result = check.run_discovery(check.run_parse(info))
+
+    discovery_result = DiscoveryResult(raw_discovery_result)
+    expected_result = DiscoveryResult(expected_result)
+    assertDiscoveryResultsEqual(discovery_result, expected_result)
 
 
 @pytest.mark.parametrize("item,params,info,expected_result", [
@@ -266,4 +268,5 @@ def test_df_check_with_parse(check_manager, item, params, info, expected_result)
     if params == "default":
         params = check.default_parameters()
 
-    result = checktestlib.CheckResult(check.run_check(item, params, check.run_parse(info)))
+    result = CheckResult(check.run_check(item, params, check.run_parse(info)))
+

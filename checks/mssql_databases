@@ -69,8 +69,11 @@ def check_mssql_databases(item, params, parsed):
 
     if item in parsed:
         data = parsed[item]
-        db_state = params.get("map_db_states", {}).get(data["Status"], 0)
-        yield db_state, 'Status: %s, Recovery: %s' % (data["Status"], data["Recovery"])
+        db_state = data["Status"]
+        state = params.get("map_db_states", {}).get(
+                           db_state.replace(" ", "_").upper(), 0)
+        yield state, 'Status: %s' % db_state
+        yield 0, 'Recovery: %s' % data["Recovery"]
 
         for what in ["close", "shrink"]:
             state, state_readable = map_states[data["auto_%s" % what]]

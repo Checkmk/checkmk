@@ -1,0 +1,10 @@
+Title: mssql_databases: Fixed creating rule with 'Map Database States' parameters and moved state bubble to right place
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1529997221
+Class: fix
+
+

@@ -2948,7 +2948,7 @@ register_check_parameters(
                     ("OFFLINE", MonitoringState(title=_("Database Offline"))),
                     ("RESTORING", MonitoringState(title=_("Database Files are restored"))),
                     ("RECOVERING", MonitoringState(title=_("Database is being recovered"))),
-                    ("RECOVERY PENDING", MonitoringState(title=_("Database must be recovered"))),
+                    ("RECOVERY_PENDING", MonitoringState(title=_("Database must be recovered"))),
                     ("SUSPECT", MonitoringState(title=_("Database Suspect"))),
                     ("EMERGENCY", MonitoringState(title=_("Database changed to emergency"))),
                 ],

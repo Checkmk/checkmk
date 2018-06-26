@@ -1,0 +1,27 @@
+Title: Configure additional Windows eventlogs with keyword 'logfile'
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b8
+Date: 1530020759
+
+Werk #3106 (Check_MK 1.4.0i1) introduced the possibility of configuring
+additional eventlogs with the keyword 'logname'. However, this was not
+supported by the Agent Bakery that only knew the keyword 'logfile'.
+
+Now, additional, non-standard eventlogs that are not found in Windows
+registry, can be configured for monitoring with the ordinary keyword
+'logfile', e.g.
+"logfile Microsoft-Windows-GroupPolicy/Operational = warn"
+so that they can also be configured normally through the Agent Bakery.
+Note that non-standard eventlogs also require the option vista_api to
+be set to 'yes.'
+
+Using the keyword 'logname' is strongly discouraged and that keyword
+should be considered deprecated. It will remain functional only for
+compatibility with old, manually configured check_mk.ini files.
+
+

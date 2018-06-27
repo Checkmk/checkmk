@@ -2869,12 +2869,14 @@ class ModeAjaxDiagHost(WatoWebApiMode):
                          }.get(request.get("snmpv3_use"))
             args[7] = snmpv3_use
             if snmpv3_use != "noAuthNoPriv":
-                snmpv3_auth_proto = { "0": "md5", "1": "sha" }.get(request.get("snmpv3_auth_proto"))
+                snmpv3_auth_proto = { DropdownChoice.option_id("md5"): "md5",
+                                      DropdownChoice.option_id("sha"): "sha" }.get(request.get("snmpv3_auth_proto"))
                 args[8] = snmpv3_auth_proto
                 args[9] = request.get("snmpv3_security_name")
                 args[10] = request.get("snmpv3_security_password")
                 if snmpv3_use == "authPriv":
-                    snmpv3_privacy_proto = { "0": "DES", "1": "AES" }.get(request.get("snmpv3_privacy_proto"))
+                    snmpv3_privacy_proto = { DropdownChoice.option_id("DES"): "DES",
+                                             DropdownChoice.option_id("AES"): "AES" }.get(request.get("snmpv3_privacy_proto"))
                     args[11] = snmpv3_privacy_proto
                     args[12] = request.get("snmpv3_privacy_password")
             else:

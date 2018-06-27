@@ -1,0 +1,12 @@
+Title: WATO host diagnostic page: SNMPv3+Credentials hosts no longer report an exception.
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1530107291
+Class: fix
+
+The diagnose page for hosts with SNMPv3+credentials always showed the following error </tt>API Error:sequence item 14: expected string, NoneType found</tt>.
+This has been fixed.
+

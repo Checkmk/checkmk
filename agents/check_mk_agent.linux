@@ -874,14 +874,14 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     OLD_IFS=$IFS
     IFS='
 '
-    (cat $MK_CONFDIR/fileinfo.cfg $MK_CONFDIR/fileinfo.d/* 2>/dev/null) | while read -r pattern; do
+    while read -r pattern; do
         case $pattern in
             /*) pattern=$(replace_datevariable "$pattern")
                 for file in $pattern; do
                     stat -c "%n|%s|%Y" "$file" 2> /dev/null || echo "$file|missing|$(date +%s)"
                 done ;;
         esac
-    done
+    done < "$MK_CONFDIR/fileinfo.cfg"
     IFS=$OLD_IFS
 fi
 

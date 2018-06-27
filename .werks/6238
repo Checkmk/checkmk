@@ -1,0 +1,10 @@
+Title: check_http: fixed proxy authentification problem when using NTLM
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1530099194
+Class: fix
+
+

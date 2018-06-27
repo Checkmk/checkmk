@@ -290,6 +290,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     item_state.set_item_state_prefix(check_plugin_name, item)
 
     dont_submit = False
+    section_content = None
     try:
         # TODO: There is duplicate code with discovery._execute_discovery(). Find a common place!
         try:

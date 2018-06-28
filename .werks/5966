@@ -7,4 +7,15 @@ Version: 1.6.0i1
 Date: 1523524818
 Class: feature
 
+The agent plugin {{mk_oracle.aix}} does not exist anymore.
+Instead the {{mk_oracle}} plugin was refactored and now
+supports AIX, too.
 
+In order to use the new plugin please install it to the
+well-known agent plugin path or use the agent bakery if
+you have a enterprise edition.
+
+The new option '--log' logs some steps to the related log file
+which can be found in {{$MK_VARDIR/log/mk_oracle.log}} and
+helps to find any errors. Please note that the shell command
+'flock' has to be installed.

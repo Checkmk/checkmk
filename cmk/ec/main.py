@@ -4029,12 +4029,16 @@ def main():
             raise
         bail_out(logger, traceback.format_exc())
 
-    finally:
-        if cmk.store.have_lock(str(pid_path)):
-            try:
-                pid_path.unlink()
-            except OSError:
-                pass
+    # BEWARE: This cleanup shoud *only* run, if bail_out
+    # in the previous except block was *not* executed.
+    # If we use a finally statement here, it *will* execute,
+    # because bail_out's sys.exit(1) statement raises a SystemExit
+    # exception, and Python *would* run this finally-Block.
+    if cmk.store.have_lock(str(pid_path)):
+        try:
+            pid_path.unlink()
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":

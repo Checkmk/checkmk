@@ -1,0 +1,148 @@
+Title: WATO Web-API: Implemented SLA API interface
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1530272014
+
+
+SLA data for services can now be fetched via the Web API.
+The new action is named <tt>get_sla</tt>.
+
+The request object is structured like this:
+
+F+:
+{
+    "query": [ [[{sla_configuration}], [{timerange_spec_1}], [{host/service pair}]] ]
+}
+F-:
+
+A query entry always consists of 3 fields.
+<ul>
+<li>The list of sla_definitions</li>
+<li>The list of timerange specificiations</li>
+<li>The list of host/service pairs</li>
+</ul>
+
+The sla_definition is simply the id of the configured SLA definition.
+
+The timerange specification has some special syntax
+Some examples:
+F+:
+#                                 # Field to send in query
+#            "Today"              # "d0"
+#            "Yesterday"          # "d1"
+#
+#            "This week"          # "w0"
+#            "Last week"          # "w1"
+#
+#            "This month"         # "m0"
+#            "Last month"         # "m1"
+#
+#            "This year"          # "y0"
+#            "Last year"          # "y1"
+#
+#            "The last..."        # "last:86400"
+#            "Time range"         # "range:1530271236:1530281236"
+#
+# SLA configurations have no distinct timestamp. The timestamp depends on the SLA period
+# The following example says
+# - Start at the penultimate sla period (Note: 0 is current period)
+# - Look back additional 4 sla periods
+# There will be 5 period results
+#            "Sla period range"   # "sla:2:4"
+F-:
+
+The of host/service pairs identifies the required services.
+
+A valid request may look like
+F+:
+{
+    "query": [ [["sla_configuration_1"], ["w1"], [["HostA", "ServiceB"]]] ]
+}
+F-:
+This queries the sla_configuration_1 with the timerange "Last week" for the service HostA/ServiceB.
+This returns 1 result.
+
+
+As you might have noticed, each field in the query is enclosed by a list.
+That's because each query entry may have multiple values specified.
+F+:
+{
+    "query": [ [["sla_configuration_1", "sla_configuration_2"], ["w1"], [["HostA", "ServiceB"]]] ]
+}
+F-:
+This queries the sla_configuration_1 and sla_configuration_2 with the timerange "Last week" for the service HostA/ServiceB.
+This returns 2 results.
+
+
+Now add an additional timerange specification
+F+:
+{
+    "query": [ [["sla_configuration_1", "sla_configuration_2"], ["w1", "w0"], [["HostA", "ServiceB"]]] ]
+}
+F-:
+This queries the sla_configuration_1 and sla_configuration_2 with the timerange "Last week" and "This week" for the service HostA/ServiceB.
+This returns 4 results.
+
+
+
+Finally, you can also add additional triples to the query.
+F+:
+{
+    "query": [ [["sla_configuration_1"], ["w1"], [["HostA", "ServiceB"]]],
+               [["sla_configuration_2"], ["w0"], [["HostX", "ServiceY"]]] ]
+}
+F-:
+This queries sla_configuration_1 with the timerange "Last week" for HostA/ServiceB and
+sla_configuration_2 with the timerange "This week" for HostX/ServiceY.
+
+
+
+The returned result for these queries is a python dictionary with lots of infos
+F+:
+{'mysite': {'myhost': {'CPU load':
+    {(('myhost', 'CPU load'), 'sla_configuration_1', ('sla_period_range', (0, 1)), 'weekly'):
+            {'plugin_results': [{'period_results': [{'duration': 604800.0,
+                                                     'sla_broken': False,
+                                                     'statistics': {'duration': {-1: 604800.0},
+                                                                    'percentage': {-1: 100.0}},
+                                                     'subresults': [{'deviation_info': {'deviation': 0.0,
+                                                                                        'deviation_state': 2,
+                                                                                        'levels': (0,
+                                                                                                   0),
+                                                                                        'limit': 0.0},
+                                                                     'error_instances': [],
+                                                                     'requirement': (0,
+                                                                                     'min',
+                                                                                     0.0),
+                                                                     'sla_broken': False}],
+                                                     'timerange': (1529272800.0,
+                                                                   1529877600.0)},
+                                                    {'duration': 396134.0,
+                                                     'sla_broken': False,
+                                                     'statistics': {'duration': {-1: 385358.0,
+                                                                                 0: 10776},
+                                                                    'percentage': {-1: 97.27970838150726,
+                                                                                   0: 2.7202916184927326}},
+                                                     'subresults': [{'deviation_info': {'deviation': 2.7202916184927326,
+                                                                                        'deviation_state': 0,
+                                                                                        'levels': (0,
+                                                                                                   0),
+                                                                                        'limit': 0.0},
+                                                                     'error_instances': [],
+                                                                     'requirement': (0,
+                                                                                     'min',
+                                                                                     0.0),
+                                                                     'sla_broken': False}],
+                                                     'timerange': (1529877600.0,
+                                                                   1530273734)}],
+                                 'plugin_id': 'service_state_percentage',
+                                 'timerange_sla_duration': 1000934.0}],
+             'sla_id': 'sla_configuration_1',
+             'sla_period': 'weekly'}}}}}
+F-:
+Keep in mind that this API implementation is an initial version, so there might be interface changes within the next months.

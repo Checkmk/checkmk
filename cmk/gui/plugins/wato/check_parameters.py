@@ -870,6 +870,26 @@ register_check_parameters(
     "dict",
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "fortisandbox_queues",
+    _("Fortinet FortiSandbox Queue Length"),
+    Dictionary(
+        elements = [
+            ("length",
+                Tuple(
+                    title = _("Levels for queue length"),
+                    elements = [
+                        Integer(title=_("Warning at"), unit = _("files")),
+                        Integer(title=_("Critical at"), unit = _("files")),
+            ])),
+        ],
+    ),
+    TextAscii(
+        title = _("Queue name"),
+    ),
+    "dict",
+)
 
 #.
 #   .--Inventory-----------------------------------------------------------.

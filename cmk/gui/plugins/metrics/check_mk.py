@@ -4384,6 +4384,11 @@ for what, color in [
         'color' : color,
     }
 
+metric_info["queue"] = {
+    "title" : _("Queue length"),
+    "unit"  : "count",
+    "color" : "42/a",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -6678,6 +6683,13 @@ perfometer_info.append({
     'metric'    : 'messages_in_queue',
     'half_value': 1.0,
     'exponent'  : 2.0,
+})
+
+perfometer_info.append({
+    "type"          : "logarithmic",
+    "metric"        : "queue",
+    "half_value"    : 80,
+    "exponent"      : 2,
 })
 
 #.

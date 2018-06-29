@@ -724,7 +724,30 @@ class ACTestESXDatasources(ACTest):
                                      in ['agent', 'hostsystem_agent'])
             if vsphere_queries_agent:
                 all_rules_ok = False
-                yield ACResultCRIT("Rule %d in Folder %s is affected" % (rule_index + 1, folder.title()))
+                yield ACResultCRIT(_("Rule %d in Folder %s is affected") % (rule_index + 1, folder.title()))
 
         if all_rules_ok:
             yield ACResultOK(_("No configured rules are affected"))
+
+
+class ACTestRulebasedNotifications(ACTest):
+    def category(self):
+        return ACTestCategories.deprecations
+
+    def title(self):
+        return _("Flexible and plain email notifications")
+
+    def help(self):
+        return _("Flexible and plain email notifications are considered deprecated in version 1.5.0 and "
+                 " will be removed in Check_MK version 1.6.0. Please consider to switch to rulebased "
+                 "notifications.")
+
+    def is_relevant(self):
+        return True
+
+    def execute(self):
+        settings = watolib.load_configuration_settings()
+        if settings['enable_rulebased_notifications'] != True:
+            yield ACResultCRIT('Rulebased notifications are deactivated in the global settings')
+        else:
+            yield ACResultOK(_("Rulebased notifications are activated"))

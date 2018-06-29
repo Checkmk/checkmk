@@ -1,0 +1,13 @@
+Title: Add a analyze configuration rule for flexible and plain email notifications
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b8
+Date: 1530288849
+
+A deprecation warning will be shown if rulebased notifications are deactivated
+since flexible and plain email notifications are considered deprecated and will
+be removed in the next release.

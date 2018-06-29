@@ -13,6 +13,8 @@ The refactoring solves the following known issues:
 2. Fix the calculation of the number of database connections.
 3. Use a more accurate method to calculate the latency for a database connection.
 4. The structure of the plugin was improved for better maintainability.
+5. The plugin now ignores inactive databases, i.e. it will only collect data for
+   databases which are in the "LIST ACTIVE DATABASES" command.
 
 To use the new version of the plugin it has to be deployed to to the affected hosts.
 Futhermore, the script is now required to be accessible and executable by the

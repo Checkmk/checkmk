@@ -1755,10 +1755,14 @@ class CheckManager(object):
             checks._initialize_data_structures()
             checks.load_checks(map(lambda f: os.path.join(cmk.paths.checks_dir, f), file_names))
 
-
     def get_check(self, name):
-        self.load([name.split(".", 1)[0]])
+        main_check = name.split(".", 1)[0]
+        self.load([main_check])
         return Check(name)
+
+    def get_active_check(self, name):
+        self.load([name])
+        return ActiveCheck(name)
 
 
 class Check(object):
@@ -1768,12 +1772,10 @@ class Check(object):
         self.info = checks.check_info[name]
         self.context = checks._check_contexts[name]
 
-
     def default_parameters(self):
         import cmk_base.checks as checks
         params = {}
         return checks._update_with_default_check_parameters(self.name, params)
-
 
     def run_parse(self, info):
         parse_func = self.info.get("parse_function")
@@ -1782,11 +1784,9 @@ class Check(object):
 
         return parse_func(info)
 
-
     def run_discovery(self, info):
         # TODO: use standard sanitizing code
         return self.info["inventory_function"](info)
-
 
     def run_check(self, item, params, info):
         # TODO: use standard sanitizing code
@@ -1813,3 +1813,17 @@ class Check(object):
 
     #    # TODO: use standard sanitizing code
     #    return self.info["check_function"](item, params, info)
+
+
+class ActiveCheck(object):
+    def __init__(self, name):
+        import cmk_base.checks as checks
+        self.name = name
+        assert name.startswith('check_'), 'Specify the full name of the active check, e.g. check_http'
+        self.info = checks.active_check_info[name[len('check_'):]]
+
+    def run_argument_function(self, params):
+        return self.info['argument_function'](params)
+
+    def run_service_description(self, params):
+        return self.info['service_description'](params)

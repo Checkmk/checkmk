@@ -47,7 +47,12 @@ def _certificate_args(address_family, address, settings):
     args = []
 
     if "cert_host" in settings:
-        if settings.get("sni"):
+        if settings.get('proxy'):
+            args += [ '-I', settings['proxy'] ]
+            args += [ '-H', settings['cert_host'] ]
+            args.append('--ssl')
+            args += ['-j', 'CONNECT']
+        elif settings.get("sni"):
             args += [ '-H', settings['cert_host'] ]
         else:
             args += [ '-I', settings['cert_host'] ]
@@ -60,6 +65,10 @@ def _certificate_args(address_family, address, settings):
 
     if "port" in settings:
         args += [ '-p', settings["port"] ]
+
+    if "proxy_auth" in settings:
+        username, password = settings["proxy_auth"]
+        args += [ "-b", passwordstore_get_cmdline("%s:%%s" % username, password) ]
 
     if "cert_days" in settings:
         # legacy behavior

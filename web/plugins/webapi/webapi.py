@@ -131,19 +131,6 @@ def add_configuration_hash(response, configuration_object):
 
 
 
-class APICallCollection(object):
-    @classmethod
-    def all_classes(cls):
-        classes = {}
-        for subclass in cls.__subclasses__(): # pylint: disable=no-member
-            classes[subclass.__name__] = subclass
-
-        return classes.values()
-
-
-    def get_api_calls(self):
-        raise NotImplementedError("This API collection does not register any API call")
-
 
 #.
 #   .--Folders-------------------------------------------------------------.

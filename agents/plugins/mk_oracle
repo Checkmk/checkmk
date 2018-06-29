@@ -1016,9 +1016,11 @@ sql_asm_diskgroup () {
 #   '----------------------------------------------------------------------'
 
 do_dummy_sections () {
-    for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
-        echo "<<<oracle_${section}>>>"
-    done
+    if [ "$MK_ORA_DEBUG_CONNECT" != "1" ]; then
+        for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
+            echo "<<<oracle_${section}>>>"
+        done
+    fi
 }
 
 
@@ -1087,7 +1089,7 @@ remove_excluded_sections () {
             fi
         done
         if [ "$skip" != yes ]; then
-            result="$result $section"
+            result=${result:+"$result "}"${section}"
         fi
     done
     echo "$result"
@@ -1379,24 +1381,28 @@ do_testmode () {
     local piggyback_host="$3"
     local sections="$4"
     local asections="$5"
-    echo "-----------------------------------------------"
-    echo "Operating System: ${OS_TYPE}"
-    echo "Logincheck to Instance: ${sid}, Version: ${ORACLE_VERSION}"
-    echo "select 'Login ok User: ' || user || ' on ' || host_name ||' Instance ' || instance_name
+    echo
+    echo "---login----------------------------------------------------------------"
+    echo "    Operating System:       ${OS_TYPE}"
+    echo "    Logincheck to Instance: ${sid}"
+    echo "    Version:                ${ORACLE_VERSION}"
+    echo "select '    Login ok User:          ' || user || ' on ' || host_name ||' Instance ' || instance_name
           from v\$instance;" | mk_ora_sqlplus "${sid}" "$db_connect" "$piggyback_host" "no"
-    echo "SYNC_SECTIONS=$sections"
-    echo "ASYNC_SECTIONS=$asections"
+    echo "    SYNC_SECTIONS:          $sections"
+    echo "    ASYNC_SECTIONS:         $asections"
     if [ "$IGNORE_DB_NAME" ]; then
-        echo "IGNORE_DB_NAME found. Ignoring DB_NAME in all SQLs!"
+        echo "    IGNORE_DB_NAME found. Ignoring DB_NAME in all SQLs!"
     fi
 
     if [ "$DISABLE_ORA_SESSION_SETTINGS" ]; then
-        echo "Paramter DISABLE_ORA_SESSION_SETTINGS found!"
+        echo "    Paramter DISABLE_ORA_SESSION_SETTINGS found!"
     fi
 
     if [ "$HINT_RMAN" ]; then
-        echo "Using HINT_RMAN for this Instance!"
+        echo "    Using HINT_RMAN for this Instance!"
     fi
+    echo "------------------------------------------------------------------------"
+    echo
 }
 
 
@@ -1427,8 +1433,13 @@ do_checks () {
 
     ASYNC_SQL=$(for section in $asections ; do eval "sql_$section" ; done)
     export ASYNC_SQL
+    if [ "$MK_ORA_LOGGING" = "1" ]; then
+        logging "[$LINENO] [${sid}] [do_checks]" "Testmode: $(echo \
+                "select user || ' on ' || host_name || ' instance ' || instance_name from v\$instance;"|\
+                mk_ora_sqlplus "${sid}" "$db_connect" "$piggyback_host" "no")"
+    fi
 
-    if [ "$MK_ORA_DEBUG_CONNECT" ]; then
+    if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
         do_testmode  "$sid" "$db_connect" "$piggyback_host" "$sections" "$asections" >&2
     else
         do_sync_checks "$sid" "$db_connect" "$piggyback_host" "$sections"

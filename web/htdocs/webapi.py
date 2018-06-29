@@ -43,6 +43,21 @@ import json
 api_actions = {}
 loaded_with_language = False
 
+
+class APICallCollection(object):
+    @classmethod
+    def all_classes(cls):
+        classes = {}
+        for subclass in cls.__subclasses__(): # pylint: disable=no-member
+            classes[subclass.__name__] = subclass
+
+        return classes.values()
+
+
+    def get_api_calls(self):
+        raise NotImplementedError("This API collection does not register any API call")
+
+
 def load_plugins(force):
     global loaded_with_language
     if loaded_with_language == current_language and not force:

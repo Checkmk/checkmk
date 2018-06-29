@@ -1196,6 +1196,28 @@ register_rule(group,
                                     title = _("Enable SSL/TLS hostname extension support (SNI)"),
                                 ),
                             ),
+                            ( "proxy",
+                                TextAscii(
+                                    title = _("Proxy host"),
+                                    help = _("To use a proxy you have to specify the Port of the proxy. ")
+                                ),
+                            ),
+                            ( "proxy_auth",
+                                Tuple(
+                                    title = _("Proxy-Authorization"),
+                                    help = _("Credentials for HTTP Proxy with basic authentication"),
+                                    elements = [
+                                        TextAscii(
+                                            title = _("Username"),
+                                            size = 12,
+                                            allow_empty = False
+                                        ),
+                                        IndividualOrStoredPassword(
+                                            title = _("Password"),
+                                        ),
+                                    ]
+                                )
+                            ),
                         ],
                         required_keys = [ "cert_days" ],
                     ),

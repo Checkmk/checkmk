@@ -42,6 +42,9 @@ setperm() {
 case "$1" in
   configure)
     ln -sfn /opt/omd /omd
+    if [ ! -d /etc/bash_completion.d ]; then
+        mkdir /etc/bash_completion.d
+    fi
     update-alternatives --install /omd/versions/default \
        omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
        --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \

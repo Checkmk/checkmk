@@ -4525,43 +4525,6 @@ def push_user_profile_to_site(site, user_id, profile):
     return response
 
 
-def synchronize_profile(site_id, site, user_id):
-    users = userdb.load_users(lock = False)
-    if not user_id in users:
-        raise MKUserError(None, _('The requested user does not exist'))
-
-    start = time.time()
-    result = push_user_profile_to_site(site, user_id, users[user_id])
-    duration = time.time() - start
-    ActivateChanges().update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, duration)
-    return result
-
-
-# AJAX handler for asynchronous replication of user profiles (changed passwords)
-def ajax_profile_repl():
-    site_id = html.var("site")
-
-    status = sites.state(site_id, {}).get("state", "unknown")
-    if status == "dead":
-        result = _('The site is marked as dead. Not trying to replicate.')
-
-    else:
-        site = config.site(site_id)
-        try:
-            result = synchronize_profile(site_id, site, config.user.id)
-        except Exception, e:
-            logger.exception()
-            result = "%s" % e
-
-    if result == True:
-        answer = "0 %s" % _("Replication completed successfully.")
-    else:
-        answer = "1 %s" % (_("Error: %s") % result)
-        add_profile_replication_change(site_id, result)
-
-    html.write(answer)
-
-
 # Add pending entry to make sync possible later for admins
 def add_profile_replication_change(site_id, result):
     add_change("edit-users", _('Profile changed (sync failed: %s)') % result,

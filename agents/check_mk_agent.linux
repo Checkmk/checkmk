@@ -139,7 +139,7 @@ function section_cpu()
         echo '<<<docker_container_cpu>>>'
         grep "^cpu " /proc/stat
         echo "num_cpus $NUM_CPUS"
-        cat /sys/fs/cgroup/cpu/cpuacct.stat
+        cat /sys/fs/cgroup/cpuacct/cpuacct.stat
     fi
 }
 

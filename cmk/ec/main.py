@@ -2017,6 +2017,8 @@ class EventServer(ECServerThread):
                 "facility": 1,  # user
                 "match_groups": (),
                 "match_groups_syslog_application": (),
+                "core_host": "",
+                "host_in_downtime": False,
             }
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, {})

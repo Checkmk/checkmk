@@ -30,6 +30,7 @@
 
 # From https://docs.oracle.com/cd/E23824_01/html/821-1451/glisy.html
 # One fault:
+# <<<solaris_fmadm:sep(58)>>>
 # --------------- ------------------------------------  -------------- ---------
 # TIME            EVENT-ID                              MSG-ID         SEVERITY
 # --------------- ------------------------------------  -------------- ---------
@@ -62,6 +63,7 @@
 #               procedures and policies regarding this diagnosis.
 
 # Multiple faults:
+# <<<solaris_fmadm:sep(58)>>>
 # --------------- ------------------------------------  -------------- -------
 # TIME            EVENT-ID                              MSG-ID         SEVERITY
 # --------------- ------------------------------------  -------------- -------
@@ -95,14 +97,103 @@
 #                 http://sun.com/msg/PCIEX-8000-5Y for the latest service
 #                 procedures and policies regarding this diagnosis.
 
+# Newer outputs:
+# <<<solaris_fmadm:sep(58)>>>
+# --------------- ------------------------------------  -------------- ---------
+# TIME            EVENT-ID                              MSG-ID         SEVERITY
+# --------------- ------------------------------------  -------------- ---------
+# Jun 05 22:11:06 66b65c7f-33c4-4625-94dc-b35e1926ab47  PCIEX-8000-YJ  Major
+#
+# Problem Status    : isolated
+# Diag Engine       : eft / 1.16
+# System
+#     Manufacturer  : unknown
+#     Name          : SPARC-Enterprise-M4000-Server
+#     Part_Number   : unknown
+#     Serial_Number : BCF1030049
+#     Host_ID       : 856ec4fa
+#
+# ----------------------------------------
+# Suspect 1 of 3 :
+#    Problem class : fault.io.pciex.device-pcie-ce
+#    Certainty   : 40%
+#    Affects     : dev:////pci@0,600000/pci@0/pci@9/SUNW,emlxs@0
+#    Status      : faulted and taken out of service
+#
+#    FRU
+#      Status           : faulty
+#      Location         : "/SYS/iou#0-pci#1"
+#      Manufacturer     : unknown
+#      Name             : unknown
+#      Part_Number      : unknown
+#      Revision         : unknown
+#      Serial_Number    : unknown
+#      Chassis
+#         Manufacturer  : unknown
+#         Name          : SPARC-Enterprise-M4000-Server
+#         Part_Number   : unknown
+#         Serial_Number : BCF1030049
+# ----------------------------------------
+# Suspect 2 of 3 :
+#    Problem class : fault.io.pciex.device-pcie-ce
+#    Certainty   : 40%
+#    Affects     : dev:////pci@0,600000/pci@0/pci@9
+#    Status      : faulted and taken out of service
+#
+#    FRU
+#      Status           : faulty
+#      FMRI             : "hc:///compon"nt=iou#0"
+#      Manufacturer     : unknown
+#      Name             : unknown
+#      Part_Number      : unknown
+#      Revision         : unknown
+#      Serial_Number    : unknown
+#      Chassis
+#         Manufacturer  : unknown
+#         Name          : unknown
+#         Part_Number   : unknown
+#         Serial_Number : unknown
+#    Resource
+#      Location         : "iou#0-pci#1"
+# ...
 
-def inventory_solaris_fmadm(info):
-    return [ (None, None) ]
+
+def parse_solaris_fmadm(info):
+    if len(info) < 4:
+        return {}
+
+    event = []
+    for entry in ":".join(info[3]).split():
+        if entry:
+            event.append(entry)
+
+    parsed = {
+        "event" : {
+            "time" : " ".join(event[:-3]),
+            "id"   : event[-3],
+            "msg"  : event[-2],
+            "severity": event[-1].lower(),
+        },
+        "problems": [],
+    }
+
+    # Skip header
+    for line in info[4:]:
+        stripped = map(lambda x: x.strip(), line)
+        if stripped[0] in ["Problem class", "Fault class"]:
+            parsed["problems"].append(":".join(stripped[1:]))
+
+    return parsed
 
 
-def check_solaris_fmadm(_no_item, params, info):
-    if not info:
-        return 0, "No faults detected"
+def inventory_solaris_fmadm(parsed):
+    return [(None, None)]
+
+
+def check_solaris_fmadm(_no_item, params, parsed):
+    if not parsed:
+        yield 0, "No faults detected"
+        return
 
     map_state = {
         "minor"    : (1, "minor"),
@@ -110,16 +201,17 @@ def check_solaris_fmadm(_no_item, params, info):
         "critical" : (2, "critical"),
     }
 
-    infotext = ""
-    state, state_readable = map_state.get(info[3][-1].split(" ")[-1].lower(), (3, "unknown"))
-    for line in info[4:]:
-        if line[0].strip().lower() == "fault class":
-            infotext += "Status: %s, Name: %s" % (state_readable, line[1].strip())
+    event = parsed["event"]
+    state, state_readable = map_state.get(event["severity"], (3, "unknown"))
+    yield state, "Severity: %s (%s)" % (state_readable, event["time"])
 
-    return state, infotext
+    problems = parsed["problems"]
+    if problems:
+        yield 0, "Problems: %s" % ", ".join(problems)
 
 
 check_info['solaris_fmadm'] = {
+    'parse_function'            : parse_solaris_fmadm,
     'inventory_function'        : inventory_solaris_fmadm,
     'check_function'            : check_solaris_fmadm,
     'service_description'       : 'FMD Status',

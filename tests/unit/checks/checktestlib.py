@@ -220,6 +220,9 @@ class DiscoveryResult(object):
     # TODO: Add some more consistency checks here.
     def __init__(self, result):
         self.entries = []
+        if result is None:
+            # discovering nothing is valid!
+            return
         for entry in result:
             self.entries.append(DiscoveryEntry(entry))
         self.entries.sort(key=repr)

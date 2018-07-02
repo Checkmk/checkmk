@@ -1,0 +1,11 @@
+Title: crontab init script: Fixed implicit dependency to "which" command
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b8
+Date: 1530520789
+
+

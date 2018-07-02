@@ -1789,10 +1789,16 @@ class CheckManager(object):
         return ActiveCheck(name)
 
 
+class MissingCheckInfoError(KeyError):
+    pass
+
+
 class Check(object):
     def __init__(self, name):
         import cmk_base.config as config
         self.name = name
+        if name not in config.check_info:
+            raise MissingCheckInfoError(name)
         self.info = config.check_info[name]
         self.context = config._check_contexts[name]
 
@@ -1804,17 +1810,25 @@ class Check(object):
     def run_parse(self, info):
         parse_func = self.info.get("parse_function")
         if not parse_func:
-            raise Exception("This check has no parse function defined")
-
+            raise MissingCheckInfoError("Check '%s' " % self.name +
+                                        "has no parse function defined")
         return parse_func(info)
 
     def run_discovery(self, info):
+        disco_func = self.info.get("inventory_function")
+        if not disco_func:
+            raise MissingCheckInfoError("Check '%s' " % self.name +
+                                        "has no discovery function defined")
         # TODO: use standard sanitizing code
-        return self.info["inventory_function"](info)
+        return disco_func(info)
 
     def run_check(self, item, params, info):
+        check_func = self.info.get("check_function")
+        if not check_func:
+            raise MissingCheckInfoError("Check '%s' " % self.name +
+                                        "has no check function defined")
         # TODO: use standard sanitizing code
-        return self.info["check_function"](item, params, info)
+        return check_func(item, params, info)
 
     #def run_parse_with_walk(self, walk_name):
     #    if "parse_function" not in self.info:

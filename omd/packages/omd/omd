@@ -3946,7 +3946,7 @@ def _cleanup_global_files():
 
 
 
-class PackageManager:
+class PackageManager(object):
     __metaclass__ = abc.ABCMeta
 
     @classmethod
@@ -4019,7 +4019,7 @@ class PackageManagerRPM(PackageManager):
             return []
 
         elif p.wait() != 0:
-            bail_out("Failed to find packages:\n%s" % stderr)
+            bail_out("Failed to find packages:\n%s" % output)
 
         return output.strip().split("\n")
 

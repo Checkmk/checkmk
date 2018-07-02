@@ -8890,70 +8890,54 @@ def generic_rule_list_actions(rules, what, what_title, save_rules):
                 _("Changed position of %s %d") % (what_title, from_pos))
 
 
-def convert_context_to_unicode(context):
-    # Convert all values to unicode
-    for key, value in context.iteritems():
-        if type(value) == str:
-            try:
-                value_unicode = value.decode("utf-8")
-            except:
-                try:
-                    value_unicode = value.decode("latin-1")
-                except:
-                    value_unicode = u"(Invalid byte sequence)"
-            context[key] = value_unicode
+
+class ModeNotifications(WatoMode):
+    def __init__(self):
+        super(ModeNotifications, self).__init__()
+        options = config.user.load_file("notification_display_options", {})
+        self._show_user_rules = options.get("show_user_rules", False)
+        self._show_backlog    = options.get("show_backlog", False)
+        self._show_bulks      = options.get("show_bulks", False)
 
 
-def mode_notifications(phase):
-    options         = config.user.load_file("notification_display_options", {})
-    show_user_rules = options.get("show_user_rules", False)
-    show_backlog    = options.get("show_backlog", False)
-    show_bulks      = options.get("show_bulks", False)
-
-    if phase == "title":
+    def title(self):
         return _("Notification configuration")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
         html.context_button(_("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule")]), "new")
-        if show_user_rules:
+        if self._show_user_rules:
             html.context_button(_("Hide user rules"), html.makeactionuri([("_show_user", "")]), "users")
         else:
             html.context_button(_("Show user rules"), html.makeactionuri([("_show_user", "1")]), "users")
 
-        if show_backlog:
+        if self._show_backlog:
             html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]), "analyze")
         else:
             html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]), "analyze")
 
-        if show_bulks:
+        if self._show_bulks:
             html.context_button(_("Hide Bulks"), html.makeactionuri([("_show_bulks", "")]), "bulk")
         else:
             html.context_button(_("Show Bulks"), html.makeactionuri([("_show_bulks", "1")]), "bulk")
 
-        return
 
-    rules = []
-    for rule in watolib.load_notification_rules():
-        if config.user.may("notification_plugin.%s" % rule['notify_plugin'][0]) and \
-           rule not in rules:
-            rules.append(rule)
-
-    if phase == "action":
+    def action(self):
         if html.has_var("_show_user"):
             if html.check_transaction():
-                options["show_user_rules"] = not not html.var("_show_user")
-                config.user.save_file("notification_display_options", options)
+                self._show_user_rules = not not html.var("_show_user")
+                self._save_notification_display_options()
 
         elif html.has_var("_show_backlog"):
             if html.check_transaction():
-                options["show_backlog"] = not not html.var("_show_backlog")
-                config.user.save_file("notification_display_options", options)
+                self._show_backlog = not not html.var("_show_backlog")
+                self._save_notification_display_options()
 
         elif html.has_var("_show_bulks"):
             if html.check_transaction():
-                options["show_bulks"] = not not html.var("_show_bulks")
-                config.user.save_file("notification_display_options", options)
+                self._show_bulks = not not html.var("_show_bulks")
+                self._save_notification_display_options()
 
         elif html.has_var("_replay"):
             if html.check_transaction():
@@ -8962,169 +8946,87 @@ def mode_notifications(phase):
                 return None, _("Replayed notifiation number %d") % (nr + 1)
 
         else:
-            return generic_rule_list_actions(rules, "notification", _("notification rule"),  watolib.save_notification_rules)
-
-        return
+            return generic_rule_list_actions(self._get_notification_rules(), "notification", _("notification rule"),  watolib.save_notification_rules)
 
 
-    # Check setting of global notifications. Are they enabled? If not, display
-    # a warning here. Note: this is a main.mk setting, so we cannot access this
-    # directly.
-    current_settings = watolib.load_configuration_settings()
-    if not current_settings.get("enable_rulebased_notifications"):
-        url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
-        html.show_warning(
-           _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
-             "The rules that you edit here will have affect only on notifications that are "
-             "created by the Event Console. Normal monitoring alerts will <b>not</b> use the "
-             "rule based notifications now."
-             "<br><br>"
-             "You can change this setting <a href=\"%s\">here</a>.") % url)
-
-    elif not fallback_mail_contacts_configured():
-        url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
-        html.show_warning(
-          _("<b>Warning</b><br><br>You haven't configured a "
-            "<a href=\"%s\">fallback email address</a> nor enabled receiving fallback emails for "
-            "any user. If your monitoring produces a notification that is not matched by any of your "
-            "notification rules, the notification will not be sent out. To prevent that, please "
-            "configure either the global setting or enable the fallback contact option for at least "
-            "one of your users.") % url)
-
-    if show_bulks:
-        if not render_bulks(only_ripe = False): # Warn if there are unsent bulk notificatios
-            html.message(_("Currently there are no unsent notification bulks pending."))
-    else:
-        render_bulks(only_ripe = True) # Warn if there are unsent bulk notificatios
-
-    # Show recent notifications. We can use them for rule analysis
-    if show_backlog:
-        backlog = store.load_data_from_file(cmk.paths.var_dir + "/notify/backlog.mk", [])
-        if backlog:
-            table.begin(table_id = "backlog", title = _("Recent notifications (for analysis)"), sortable=False)
-            for nr, context in enumerate(backlog):
-                convert_context_to_unicode(context)
-                table.row()
-                table.cell("&nbsp;", css="buttons")
-
-                analyse_url = html.makeuri([("analyse", str(nr))])
-                html.icon_button(analyse_url, _("Analyze ruleset with this notification"), "analyze")
-
-                html.icon_button(None, _("Show / hide notification context"),
-                                 "toggle_context",
-                                 onclick="toggle_container('notification_context_%d')" % nr)
-
-                replay_url = html.makeactionuri([("_replay", str(nr))])
-                html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
-
-                if html.var("analyse") and nr == int(html.var("analyse")):
-                    html.icon(_("You are analysing this notification"), "rulematch")
-
-                table.cell(_("Nr."), nr+1, css="number")
-                if "MICROTIME" in context:
-                    date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(context["MICROTIME"]) / 1000000.0))
-                else:
-                    date = context.get("SHORTDATETIME") or \
-                           context.get("LONGDATETIME") or \
-                           context.get("DATE") or \
-                           _("Unknown date")
-
-                table.cell(_("Date/Time"), date, css="nobr")
-                nottype = context.get("NOTIFICATIONTYPE", "")
-                table.cell(_("Type"), nottype)
-
-                if nottype in [ "PROBLEM", "RECOVERY" ]:
-                    if context.get("SERVICESTATE"):
-                        statename = context["SERVICESTATE"][:4]
-                        state = context["SERVICESTATEID"]
-                        css = "state svcstate state%s" % state
-                    else:
-                        statename = context.get("HOSTSTATE")[:4]
-                        state = context["HOSTSTATEID"]
-                        css = "state hstate hstate%s" % state
-                    table.cell(_("State"), statename, css=css)
-                elif nottype.startswith("DOWNTIME"):
-                    table.cell(_("State"))
-                    html.icon(_("Downtime"), "downtime")
-                elif nottype.startswith("ACK"):
-                    table.cell(_("State"))
-                    html.icon(_("Acknowledgement"), "ack")
-                elif nottype.startswith("FLAP"):
-                    table.cell(_("State"))
-                    html.icon(_("Flapping"), "flapping")
-                else:
-                    table.cell(_("State"), "")
-
-                table.cell(_("Host"), context.get("HOSTNAME", ""))
-                table.cell(_("Service"), context.get("SERVICEDESC", ""))
-                output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
-
-                import views
-                table.cell(_("Plugin output"), views.format_plugin_output(output))
-
-                # Add toggleable notitication context
-                table.row(class_="notification_context hidden",
-                          id_="notification_context_%d" % nr)
-                table.cell(colspan=8)
-
-                html.open_table()
-                for nr, (key, val) in enumerate(sorted(context.items())):
-                    if nr % 2 == 0:
-                        if nr != 0:
-                            html.close_tr()
-                        html.open_tr()
-                    html.th(key)
-                    html.td(val)
-                html.close_table()
-
-                # This dummy row is needed for not destroying the odd/even row highlighting
-                table.row(class_="notification_context hidden")
-
-            table.end()
-
-    # Do analysis
-    if html.var("analyse"):
-        nr = int(html.var("analyse"))
-        analyse = watolib.check_mk_local_automation("notification-analyse", [str(nr)], None)
-    else:
-        analyse = False
-
-    start_nr = 0
-    render_notification_rules(rules, show_title = True, analyse=analyse, start_nr = start_nr)
-    start_nr += len(rules)
-
-    if options.get("show_user_rules"):
-        users = userdb.load_users()
-        userids = users.keys()
-        userids.sort() # Create same order as modules/notification.py
-        for userid in userids:
-            user = users[userid]
-            rules = user.get("notification_rules", [])
-            if rules:
-                render_notification_rules(rules, userid, show_title = True, show_buttons = False, analyse=analyse, start_nr = start_nr)
-                start_nr += len(rules)
-
-    if analyse:
-        table.begin(table_id = "plugins", title = _("Resulting notifications"))
-        for contact, plugin, parameters, bulk in analyse[1]:
-            table.row()
-            if contact.startswith('mailto:'):
-                contact = contact[7:] # strip of fake-contact mailto:-prefix
-            table.cell(_("Recipient"), contact)
-            table.cell(_("Plugin"), vs_notification_scripts().value_to_text(plugin))
-            table.cell(_("Plugin parameters"), ", ".join(parameters))
-            table.cell(_("Bulking"))
-            if bulk:
-                html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
-                html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                html.write(", %s %s" % (_("group by"), vs_notification_bulkby().value_to_text(bulk["groupby"])))
-
-        table.end()
+    def _get_notification_rules(self):
+        rules = []
+        for rule in watolib.load_notification_rules():
+            if config.user.may("notification_plugin.%s" % rule['notify_plugin'][0]) and \
+               rule not in rules:
+                rules.append(rule)
+        return rules
 
 
-def render_bulks(only_ripe):
-    bulks = watolib.check_mk_local_automation("notification-get-bulks", [ "1" if only_ripe else "0" ], None)
-    if bulks:
+    def _save_notification_display_options(self):
+        config.user.save_file("notification_display_options", {
+            "show_user_rules" : self._show_user_rules,
+            "show_backlog"    : self._show_backlog,
+            "show_bulks"      : self._show_bulks,
+        })
+
+
+    def page(self):
+        self._show_not_enabled_warning()
+        self._show_no_fallback_contact_warning()
+        self._show_bulk_notifications()
+        self._show_notification_backlog()
+        self._show_rules()
+
+
+    def _show_not_enabled_warning(self):
+        # Check setting of global notifications. Are they enabled? If not, display
+        # a warning here. Note: this is a main.mk setting, so we cannot access this
+        # directly.
+        current_settings = watolib.load_configuration_settings()
+        if not current_settings.get("enable_rulebased_notifications"):
+            url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
+            html.show_warning(
+               _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
+                 "The rules that you edit here will have affect only on notifications that are "
+                 "created by the Event Console. Normal monitoring alerts will <b>not</b> use the "
+                 "rule based notifications now."
+                 "<br><br>"
+                 "You can change this setting <a href=\"%s\">here</a>.") % url)
+
+
+    def _show_no_fallback_contact_warning(self):
+        if not self._fallback_mail_contacts_configured():
+            url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
+            html.show_warning(
+              _("<b>Warning</b><br><br>You haven't configured a "
+                "<a href=\"%s\">fallback email address</a> nor enabled receiving fallback emails for "
+                "any user. If your monitoring produces a notification that is not matched by any of your "
+                "notification rules, the notification will not be sent out. To prevent that, please "
+                "configure either the global setting or enable the fallback contact option for at least "
+                "one of your users.") % url)
+
+
+    def _fallback_mail_contacts_configured(self):
+        current_settings = watolib.load_configuration_settings()
+        if current_settings.get("notification_fallback_email"):
+            return True
+
+        for user_id, user in userdb.load_users(lock=False).items():
+            if user.get("fallback_contact", False):
+                return True
+
+        return False
+
+
+    def _show_bulk_notifications(self):
+        if self._show_bulks:
+            if not self._render_bulks(only_ripe = False): # Warn if there are unsent bulk notificatios
+                html.message(_("Currently there are no unsent notification bulks pending."))
+        else:
+            self._render_bulks(only_ripe = True) # Warn if there are unsent bulk notificatios
+
+
+    def _render_bulks(self, only_ripe):
+        bulks = watolib.check_mk_local_automation("notification-get-bulks", [ "1" if only_ripe else "0" ], None)
+        if not bulks:
+            return False
+
         if only_ripe:
             table.begin(title = _("Overdue bulk notifications!"))
         else:
@@ -9150,20 +9052,155 @@ def render_bulks(only_ripe):
                 html.icon(_("Number of notifications exceeds maximum allowed number"), "warning")
         table.end()
         return True
-    else:
-        return False
 
 
-def fallback_mail_contacts_configured():
-    current_settings = watolib.load_configuration_settings()
-    if current_settings.get("notification_fallback_email"):
-        return True
+    def _show_notification_backlog(self):
+        """Show recent notifications. We can use them for rule analysis"""
+        if not self._show_backlog:
+            return
 
-    for user_id, user in userdb.load_users(lock=False).items():
-        if user.get("fallback_contact", False):
-            return True
+        backlog = store.load_data_from_file(cmk.paths.var_dir + "/notify/backlog.mk", [])
+        if not backlog:
+            return
 
-    return False
+        table.begin(table_id = "backlog", title = _("Recent notifications (for analysis)"), sortable=False)
+        for nr, context in enumerate(backlog):
+            self._convert_context_to_unicode(context)
+            table.row()
+            table.cell("&nbsp;", css="buttons")
+
+            analyse_url = html.makeuri([("analyse", str(nr))])
+            html.icon_button(analyse_url, _("Analyze ruleset with this notification"), "analyze")
+
+            html.icon_button(None, _("Show / hide notification context"),
+                             "toggle_context",
+                             onclick="toggle_container('notification_context_%d')" % nr)
+
+            replay_url = html.makeactionuri([("_replay", str(nr))])
+            html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
+
+            if html.var("analyse") and nr == int(html.var("analyse")):
+                html.icon(_("You are analysing this notification"), "rulematch")
+
+            table.cell(_("Nr."), nr+1, css="number")
+            if "MICROTIME" in context:
+                date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(context["MICROTIME"]) / 1000000.0))
+            else:
+                date = context.get("SHORTDATETIME") or \
+                       context.get("LONGDATETIME") or \
+                       context.get("DATE") or \
+                       _("Unknown date")
+
+            table.cell(_("Date/Time"), date, css="nobr")
+            nottype = context.get("NOTIFICATIONTYPE", "")
+            table.cell(_("Type"), nottype)
+
+            if nottype in [ "PROBLEM", "RECOVERY" ]:
+                if context.get("SERVICESTATE"):
+                    statename = context["SERVICESTATE"][:4]
+                    state = context["SERVICESTATEID"]
+                    css = "state svcstate state%s" % state
+                else:
+                    statename = context.get("HOSTSTATE")[:4]
+                    state = context["HOSTSTATEID"]
+                    css = "state hstate hstate%s" % state
+                table.cell(_("State"), statename, css=css)
+            elif nottype.startswith("DOWNTIME"):
+                table.cell(_("State"))
+                html.icon(_("Downtime"), "downtime")
+            elif nottype.startswith("ACK"):
+                table.cell(_("State"))
+                html.icon(_("Acknowledgement"), "ack")
+            elif nottype.startswith("FLAP"):
+                table.cell(_("State"))
+                html.icon(_("Flapping"), "flapping")
+            else:
+                table.cell(_("State"), "")
+
+            table.cell(_("Host"), context.get("HOSTNAME", ""))
+            table.cell(_("Service"), context.get("SERVICEDESC", ""))
+            output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
+
+            import views
+            table.cell(_("Plugin output"), views.format_plugin_output(output))
+
+            # Add toggleable notitication context
+            table.row(class_="notification_context hidden",
+                      id_="notification_context_%d" % nr)
+            table.cell(colspan=8)
+
+            html.open_table()
+            for nr, (key, val) in enumerate(sorted(context.items())):
+                if nr % 2 == 0:
+                    if nr != 0:
+                        html.close_tr()
+                    html.open_tr()
+                html.th(key)
+                html.td(val)
+            html.close_table()
+
+            # This dummy row is needed for not destroying the odd/even row highlighting
+            table.row(class_="notification_context hidden")
+
+        table.end()
+
+
+    def _convert_context_to_unicode(self, context):
+        # Convert all values to unicode
+        for key, value in context.iteritems():
+            if type(value) == str:
+                try:
+                    value_unicode = value.decode("utf-8")
+                except:
+                    try:
+                        value_unicode = value.decode("latin-1")
+                    except:
+                        value_unicode = u"(Invalid byte sequence)"
+                context[key] = value_unicode
+
+
+    # TODO: Refactor this
+    def _show_rules(self):
+        # Do analysis
+        if html.var("analyse"):
+            nr = int(html.var("analyse"))
+            analyse = watolib.check_mk_local_automation("notification-analyse", [str(nr)], None)
+        else:
+            analyse = False
+
+        start_nr = 0
+        rules= self._get_notification_rules()
+        render_notification_rules(rules, show_title = True, analyse=analyse, start_nr = start_nr)
+        start_nr += len(rules)
+
+        if self._show_user_rules:
+            users = userdb.load_users()
+            userids = users.keys()
+            userids.sort() # Create same order as modules/notification.py
+            for userid in userids:
+                user = users[userid]
+                user_rules = user.get("notification_rules", [])
+                if user_rules:
+                    render_notification_rules(user_rules, userid, show_title = True, show_buttons = False, analyse=analyse, start_nr = start_nr)
+                    start_nr += len(user_rules)
+
+        if analyse:
+            table.begin(table_id = "plugins", title = _("Resulting notifications"))
+            for contact, plugin, parameters, bulk in analyse[1]:
+                table.row()
+                if contact.startswith('mailto:'):
+                    contact = contact[7:] # strip of fake-contact mailto:-prefix
+                table.cell(_("Recipient"), contact)
+                table.cell(_("Plugin"), vs_notification_scripts().value_to_text(plugin))
+                table.cell(_("Plugin parameters"), ", ".join(parameters))
+                table.cell(_("Bulking"))
+                if bulk:
+                    html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
+                    html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
+                    html.write(", %s %s" % (_("group by"), vs_notification_bulkby().value_to_text(bulk["groupby"])))
+
+            table.end()
+
 
 
 # Similar like mode_notifications, but just for the user specific notification table
@@ -18620,7 +18657,7 @@ modes = {
    "edit_host_group"    : (["groups"], ModeEditHostgroup),
    "edit_service_group" : (["groups"], ModeEditServicegroup),
    "edit_contact_group" : (["users"], ModeEditContactgroup),
-   "notifications"      : (["notifications"], mode_notifications),
+   "notifications"      : (["notifications"], ModeNotifications),
    "notification_rule"  : (["notifications"], lambda phase: mode_notification_rule(phase, False)),
    "user_notifications" : (["users"], lambda phase: mode_user_notifications(phase, False)),
    "notification_rule_p": (None, lambda phase: mode_notification_rule(phase, True)), # for personal settings

@@ -95,8 +95,9 @@ disable=
     wildcard-import,
     wrong-import-order,
     wrong-import-position,
-    wrong-spelling-in-comment,
-    wrong-spelling-in-docstring,
+# Trial balloon: Disable spell checking to see if it speeds up pylint significantly.
+#    wrong-spelling-in-comment,
+#    wrong-spelling-in-docstring,
 
 [TYPECHECK]
 # rrdtool
@@ -129,10 +130,10 @@ additional-builtins=html,_,_u,current_language,HTML
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,TODO
 
-[SPELLING]
-spelling-dict=en_US
+#[SPELLING]
+#spelling-dict=en_US
 # List of comma separated words that should not be checked.
-spelling-ignore-words=
+#spelling-ignore-words=
 # A path to a file that contains private dictionary; one word per line.
 #spelling-private-dict-file=
 # Tells whether to store unknown words to indicated private dictionary in

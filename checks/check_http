@@ -24,42 +24,52 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def check_http_arguments(params):
+    description, settings = params
+    args = []
 
-def _is_certificate_check(settings):
-    return "cert_days" in settings
+    if "verbose" in settings:
+        args += [ "-v" ]
 
+    if "vhost" in settings:
+        args += [ "-H", settings["vhost"] ]
 
-def _get_family_and_address(settings):
+    if "virthost" in settings:
+        vhost, omit_ip = settings["virthost"]
+        args += [ "-H", vhost ]
+    else:
+        omit_ip = False
+
+    if "uri" in settings:
+        args += [ '-u', settings["uri"] ]
+
+    if "port" in settings:
+        args += [ '-p', settings["port"] ]
+
     # Use the address family of the monitored host by default
-    family = settings.get("address_family")
-    if family == None:
-        family = is_ipv6_primary(host_name()) and "ipv6" or "ipv4"
+    address_family = settings.get("address_family")
+    if address_family == None:
+        address_family = is_ipv6_primary(host_name()) and "ipv6" or "ipv4"
 
-    if family == "ipv6":
+    if address_family == "ipv6":
+        args.append("-6")
         address = "$_HOSTADDRESS_6$"
     else:
         address = "$_HOSTADDRESS_4$"
 
-    return family, address
-
-
-def _certificate_args(address_family, address, settings):
-    args = []
+    ssl = settings.get("ssl")
+    if ssl in [ True, "auto" ]:
+        args.append('--ssl')
+    elif ssl:
+        args.append('--ssl=%s' % ssl)
 
     if "cert_host" in settings:
+        omit_ip = True
         if settings.get("sni"):
             args += [ '-H', settings['cert_host'] ]
         else:
-            args += [ '-I', settings['cert_host'] ]
             args += [ '-H', address ]
-    else:
-        args += [ "-I", address ]
-
-    if address_family == 'ipv6':
-        args.append('-6')
-
-    if "port" in settings:
-        args += [ '-p', settings["port"] ]
+            args += [ '-I', settings['cert_host'] ]
 
     if "cert_days" in settings:
         # legacy behavior
@@ -69,48 +79,7 @@ def _certificate_args(address_family, address, settings):
             warn, crit = settings["cert_days"]
             args += [ '-C', '%d,%d' % (warn, crit) ]
 
-    if "sni" in settings:
-        args.append('--sni')
-
-    return args
-
-
-def _url_args(address_family, address, settings):
-    def _omit_ip(settings):
-        if "virthost" in settings:
-            return settings["virthost"][1]
-        return False
-
-    args = []
-
-    if (not _omit_ip(settings)) and ("proxy" not in settings):
-        args += [ "-I", address ]
-    elif "proxy" in settings:
-        args += [ "-I", settings["proxy"] ]
-
-    if "vhost" in settings:
-        args += [ "-H", settings["vhost"] ]
-
-    if "virthost" in settings:
-        vhost = settings["virthost"][0]
-        args += [ "-H", vhost ]
-
-    if address_family == 'ipv6':
-        args.append('-6')
-
-    if "port" in settings:
-        args += [ '-p', settings["port"] ]
-
-    if "uri" in settings:
-        args += [ '-u', settings["uri"] ]
-
-    ssl = settings.get("ssl")
-    if ssl in [ True, "auto" ]:
-        args.append('--ssl')
-    elif ssl:
-        args.append('--ssl=%s' % ssl)
-
-    if "sni" in settings:
+    if settings.get("sni"):
         args.append('--sni')
 
     if "response_time" in settings:
@@ -148,17 +117,17 @@ def _url_args(address_family, address, settings):
 
     if "expect_regex" in settings:
         if len(settings['expect_regex']) >= 4 and settings['expect_regex'][3]:
-            args.append('-l')
+            args += [ '-l' ]
         if settings['expect_regex'][1]:
-            args.append('-R')
+            args += [ '-R' ]
         else:
-            args.append('-r')
-        args.append(settings['expect_regex'][0])
+            args += [ '-r' ]
+        args += [ settings['expect_regex'][0] ]
         if settings['expect_regex'][2]:
-            args.append('--invert-regex')
+            args += [ '--invert-regex' ]
 
     if settings.get("extended_perfdata"):
-        args.append('--extended-perfdata')
+        args += [ '--extended-perfdata' ]
 
     if "post_data" in settings:
         data, content_type = settings["post_data"]
@@ -168,7 +137,7 @@ def _url_args(address_family, address, settings):
         args += [ '-j', settings["method"] ]
 
     if settings.get("no_body"):
-        args.append('--no-body')
+        args += [ '--no-body' ]
 
     if "page_size" in settings:
         args += [ '-m', '%d:%d' % settings["page_size"] ]
@@ -176,32 +145,18 @@ def _url_args(address_family, address, settings):
     if "max_age" in settings:
         args += [ '-M', settings["max_age"] ]
 
-    # FIXME: This option is deprecated. According to the monitoring-plugins
-    # the "urlize" plugin should be used.
     if settings.get("urlize"):
-        args.append('-L')
+        args += [ '-L' ]
 
-    if "verbose" in settings:
-        args.append("-v")
-
-    return args
-
-
-def check_http_arguments(params):
-    description, settings = params
-    args = []
-
-    address_family, address = _get_family_and_address(settings)
-
-    if _is_certificate_check(settings):
-        args += _certificate_args(address_family, address, settings)
-    else:
-        args += _url_args(address_family, address, settings)
+    if (not omit_ip) and ("proxy" not in settings):
+        args = [ "-I", address ] + args
+    elif "proxy" in settings:
+        args = [ "-I", settings["proxy"] ] + args
 
     return args
 
 
-def check_http_description(params):
+def check_http_desc(params):
     description, settings = params
 
     if description.startswith("^"):
@@ -219,7 +174,7 @@ def check_http_description(params):
 active_check_info['http'] = {
     "command_line"        : '$USER1$/check_http $ARG1$',
     "argument_function"   : check_http_arguments,
-    "service_description" : check_http_description,
+    "service_description" : check_http_desc,
     "has_perfdata"        : True,
 }
 

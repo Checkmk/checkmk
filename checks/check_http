@@ -153,7 +153,7 @@ def _url_args(address_family, address, settings):
             args += ['-R']
         else:
             args += ['-r']
-        args += [settings['expect_regex'][0])
+        args += [settings['expect_regex'][0]]
         if settings['expect_regex'][2]:
             args += ['--invert-regex']
 

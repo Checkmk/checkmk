@@ -103,7 +103,13 @@ def parse_pattern(level, pattern, line):
     return (level, compiled)
 
 def read_config():
-    config_lines = [ line.rstrip() for line in filter(is_not_comment, file(config_filename).readlines()) ]
+    config_lines = []
+    try:
+        config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_filename).readlines()) ]
+    except IOError, e:
+        if debug:
+            raise
+
     # Add config from a logwatch.d folder
     for config_file in glob.glob(config_dir):
         config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_file).readlines()) ]

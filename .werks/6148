@@ -1,0 +1,10 @@
+Title: solaris_fmadm: Some 'fmadm' versions provide a different output format. This may lead to empty service details if the agent reports any problems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p35
+Date: 1530526135
+Class: fix
+
+

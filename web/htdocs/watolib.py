@@ -8852,10 +8852,10 @@ def find_usages_of_service_group(name):
 #   |  Module for managing the new rule based notifications.               |
 #   '----------------------------------------------------------------------'
 
-def load_notification_rules():
+def load_notification_rules(lock=False):
     filename = wato_root_dir + "notifications.mk"
     notification_rules = store.load_from_mk_file(filename,
-                                                 "notification_rules", [])
+                                                 "notification_rules", [], lock=lock)
 
     # Convert to new plugin configuration format
     for rule in notification_rules:

@@ -10792,40 +10792,77 @@ def sort_sites(sitelist):
 #   | automation functions on slaves.                                      |
 #   '----------------------------------------------------------------------'
 
-def page_automation_login():
-    if not config.user.may("wato.automation"):
-        raise MKAuthException(_("This account has no permission for automation."))
-    # When we are here, a remote (master) site has successfully logged in
-    # using the credentials of the administrator. The login is done be exchanging
-    # a login secret. If such a secret is not yet present it is created on
-    # the fly.
-    html.set_output_format("python")
-    html.write_html(repr(watolib.get_login_secret(True)))
+class ModeAutomationLogin(WatoMode):
+    """Is executed by the central Check_MK site during creation of the WATO master/slave sync to
+
+    When the page method is execute a remote (master) site has successfully
+    logged in using valid credentials of an administrative user. The login is
+    done be exchanging a login secret. If such a secret is not yet present it
+    is created on the fly."""
+    def page(self):
+        if not config.user.may("wato.automation"):
+            raise MKAuthException(_("This account has no permission for automation."))
+
+        html.set_output_format("python")
+        html.write_html(repr(watolib.get_login_secret(True)))
 
 
-def page_automation():
-    secret = html.var("secret")
-    if not secret:
-        raise MKAuthException(_("Missing secret for automation command."))
-    if secret != watolib.get_login_secret():
-        raise MKAuthException(_("Invalid automation secret."))
 
-    # The automation page is accessed unauthenticated. After leaving the index.py area
-    # into the page handler we always want to have a user context initialized to keep
-    # the code free from special cases (if no user logged in, then...). So fake the
-    # logged in user here.
-    config.set_super_user()
+class ModeAutomation(WatoMode):
+    """Executes the requested automation call
 
-    # To prevent mixups in written files we use the same lock here as for
-    # the normal WATO page processing. This might not be needed for some
-    # special automation requests, like inventory e.g., but to keep it simple,
-    # we request the lock in all cases.
-    watolib.lock_exclusive()
+    This page is accessible without regular login. The request is authenticated using the given
+    login secret that has previously been exchanged during "site login" (see above).
+    """
 
-    init_wato_datastructures(with_wato_lock=False)
+    def __init__(self):
+        super(ModeAutomation, self).__init__()
 
-    command = html.var("command")
-    if command == "checkmk-automation":
+        # The automation page is accessed unauthenticated. After leaving the index.py area
+        # into the page handler we always want to have a user context initialized to keep
+        # the code free from special cases (if no user logged in, then...). So fake the
+        # logged in user here.
+        config.set_super_user()
+
+        # To prevent mixups in written files we use the same lock here as for
+        # the normal WATO page processing. This might not be needed for some
+        # special automation requests, like inventory e.g., but to keep it simple,
+        # we request the lock in all cases.
+        watolib.lock_exclusive()
+
+        init_wato_datastructures(with_wato_lock=False)
+
+
+    def _from_vars(self):
+        self._authenticate()
+        self._command = html.var("command")
+
+
+    def _authenticate(self):
+        secret = html.var("secret")
+
+        if not secret:
+            raise MKAuthException(_("Missing secret for automation command."))
+
+        if secret != watolib.get_login_secret():
+            raise MKAuthException(_("Invalid automation secret."))
+
+
+    def page(self):
+        if self._command == "checkmk-automation":
+            self._execute_cmk_automation()
+
+        elif self._command == "push-profile":
+            self._execute_push_profile()
+
+        elif watolib.automation_command_exists(self._command):
+            self._execute_automation_command()
+
+        else:
+            raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
+
+
+    def _execute_cmk_automation(self):
         cmk_command = html.var("automation")
         args        = watolib.mk_eval(html.var("arguments"))
         indata      = watolib.mk_eval(html.var("indata"))
@@ -10835,56 +10872,56 @@ def page_automation():
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         html.write(repr(result))
 
-    elif command == "push-profile":
+
+    def _execute_push_profile(self):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(watolib.mk_repr(automation_push_profile()))
+            html.write(watolib.mk_repr(self._automation_push_profile()))
         except Exception, e:
             logger.exception()
             if config.debug:
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
-    elif watolib.automation_command_exists(command):
+
+    def _automation_push_profile(self):
+        site_id = html.var("siteid")
+        if not site_id:
+            raise MKGeneralException(_("Missing variable siteid"))
+
+        user_id = html.var("user_id")
+        if not user_id:
+            raise MKGeneralException(_("Missing variable user_id"))
+
+        our_id = config.omd_site()
+
+        if our_id != None and our_id != site_id:
+            raise MKGeneralException(
+              _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+                (our_id, site_id))
+
+        profile = html.var("profile")
+        if not profile:
+            raise MKGeneralException(_('Invalid call: The profile is missing.'))
+
+        users = userdb.load_users(lock = True)
+        profile = watolib.mk_eval(profile)
+        users[user_id] = profile
+        userdb.save_users(users)
+
+        return True
+
+
+    def _execute_automation_command(self):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(repr(watolib.execute_automation_command(command)))
+            html.write(repr(watolib.execute_automation_command(self._command)))
         except Exception, e:
             logger.exception()
             if config.debug:
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % \
                             (e, traceback.format_exc()))
-
-    else:
-        raise MKGeneralException(_("Invalid automation command: %s.") % command)
-
-def automation_push_profile():
-    site_id = html.var("siteid")
-    if not site_id:
-        raise MKGeneralException(_("Missing variable siteid"))
-
-    user_id = html.var("user_id")
-    if not user_id:
-        raise MKGeneralException(_("Missing variable user_id"))
-
-    our_id = config.omd_site()
-
-    if our_id != None and our_id != site_id:
-        raise MKGeneralException(
-          _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
-            (our_id, site_id))
-
-    profile = html.var("profile")
-    if not profile:
-        raise MKGeneralException(_('Invalid call: The profile is missing.'))
-
-    users = userdb.load_users(lock = True)
-    profile = watolib.mk_eval(profile)
-    users[user_id] = profile
-    userdb.save_users(users)
-
-    return True
 
 
 #.

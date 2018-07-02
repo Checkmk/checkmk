@@ -886,8 +886,28 @@ function finish_activation()
 var profile_replication_progress = new Array();
 
 function wato_do_profile_replication(siteid, est, progress_text) {
-    get_url("wato_ajax_profile_repl.py?site=" + siteid,
-            wato_profile_replication_result, siteid);
+    call_ajax("wato_ajax_profile_repl.py", {
+        response_handler : function (handler_data, response_json) {
+            var response = JSON.parse(response_json);
+            var success = response.result_code === 0;
+            var msg = response.result;
+
+            set_profile_replication_result(handler_data["site_id"], success, msg);
+        },
+        error_handler    : function (handler_data, status_code, error_msg) {
+            set_profile_replication_result(handler_data["site_id"], False,
+                "Failed to perform profile replication [" + status_code + "]: " + error_msg);
+        },
+        method           : "POST",
+        post_data        : "request=" + encodeURIComponent(JSON.stringify({
+            "site": siteid
+        })),
+        handler_data     : {
+            "site_id": siteid
+        },
+        add_ajax_id      : false
+    });
+
     profile_replication_progress[siteid] = 20; // 10 of 10 10ths
     setTimeout("profile_replication_step('"+siteid+"', "+est+", '"+progress_text+"');", est/20);
 }
@@ -916,15 +936,15 @@ function profile_replication_step(siteid, est, progress_text) {
     }
 }
 
-// g_num_replsites is set by the page code in wato.py to the number async jobs started
-// in total
-function wato_profile_replication_result(siteid, code) {
-    profile_replication_progress[siteid] = 0;
-    var oDiv = document.getElementById("site-" + siteid);
-    if (code[0] == "0")
-        profile_replication_set_status(siteid, 'repl_success', code.substr(2));
-    else
-        profile_replication_set_status(siteid, 'repl_failed', code.substr(2));
+function set_profile_replication_result(site_id, success, msg) {
+    profile_replication_progress[site_id] = 0;
+
+    var icon_name = success ? 'repl_success' : 'repl_failed';
+
+    profile_replication_set_status(site_id, icon_name, msg);
+
+    // g_num_replsites is set by the page code in wato.py to the number async jobs started
+    // in total
     g_num_replsites--;
 
     if (0 == g_num_replsites) {

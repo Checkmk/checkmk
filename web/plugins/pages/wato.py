@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import wato
-import watolib
 
 register_handlers({
     "wato"                      : wato.page_handler,
@@ -35,7 +34,7 @@ register_handlers({
 
     "user_profile"              : wato.page_user_profile,
     "user_change_pw"            : lambda: wato.page_user_profile(change_pw=True),
-    "wato_ajax_profile_repl"    : watolib.ajax_profile_repl,
+    "wato_ajax_profile_repl"    : lambda: wato.ModeAjaxProfileReplication().handle_page(),
 
     "automation_login"          : lambda: wato.ModeAutomationLogin().page(),
     "noauth:automation"         : lambda: wato.ModeAutomation().page(),

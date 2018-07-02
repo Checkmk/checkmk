@@ -15017,10 +15017,10 @@ def user_profile_async_replication_page():
 def user_profile_async_replication_dialog(sites):
     repstatus = watolib.load_replication_status()
 
-    html.message(_('In order to activate your changes available on all remote sites, your user profile needs '
-                   'to be replicated to the remote sites. This is done on this page now. Each site '
-                   'is being represented by a single image which is first shown gray and then fills '
-                   'to green during synchronisation.'))
+    html.p(_('In order to activate your changes available on all remote sites, your user profile needs '
+             'to be replicated to the remote sites. This is done on this page now. Each site '
+             'is being represented by a single image which is first shown gray and then fills '
+             'to green during synchronisation.'))
 
     html.h3(_('Replication States'))
     html.open_div(id_="profile_repl")
@@ -15277,6 +15277,44 @@ def page_user_profile(change_pw=False):
     html.end_form()
     html.footer()
 
+
+class ModeAjaxProfileReplication(WatoWebApiMode):
+    """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
+
+    def page(self):
+        request = self.webapi_request()
+
+        site_id = request.get("site")
+        if not site_id:
+            raise MKUserError(None, "The site_id is missing")
+
+        if site_id not in config.sitenames():
+            raise MKUserError(None, _("The requested site does not exist"))
+
+        status = sites.state(site_id, {}).get("state", "unknown")
+        if status == "dead":
+            raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
+
+        site = config.site(site_id)
+        result = self._synchronize_profile(site_id, site, config.user.id)
+
+        if result != True:
+            watolib.add_profile_replication_change(site_id, result)
+            raise MKGeneralException(result)
+
+        return _("Replication completed successfully.")
+
+
+    def _synchronize_profile(self, site_id, site, user_id):
+        users = userdb.load_users(lock = False)
+        if not user_id in users:
+            raise MKUserError(None, _('The requested user does not exist'))
+
+        start = time.time()
+        result = watolib.push_user_profile_to_site(site, user_id, users[user_id])
+        duration = time.time() - start
+        watolib.ActivateChanges().update_activation_time(site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, duration)
+        return result
 
 #.
 #   .--Agent-Output--------------------------------------------------------.

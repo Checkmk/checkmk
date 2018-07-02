@@ -74,6 +74,9 @@ case "$1" in
                         exit 1
                     fi
                 done
+            else
+                # Remove the stale pidfile to have a clean state after this
+                rm $PIDFILE
             fi
             echo 'OK'
         fi

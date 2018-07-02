@@ -76,6 +76,7 @@ OS_PACKAGES      += libradiusclient-ng2
 OS_PACKAGES      += libpcap0.8 # needed for cmc
 OS_PACKAGES    += libgsf-1-114 # needed by msitools/Agent Bakery
 OS_PACKAGES      += libglib2.0-0 # needed by msitools/Agent Bakery
+OS_PACKAGES      += cpio # needed for Agent bakery (solaris pkgs)
 OS_PACKAGES      += poppler-utils # needed for preview of PDF in reporting
 OS_PACKAGES       += libffi5 # needed for pyOpenSSL and dependant
 USERADD_OPTIONS   = 

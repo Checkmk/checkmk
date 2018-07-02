@@ -33,13 +33,14 @@ register_handlers({
     "ajax_start_activation"     : lambda: wato.ModeAjaxStartActivation().handle_page(),
     "ajax_activation_state"     : lambda: wato.ModeAjaxActivationState().handle_page(),
 
-    "automation_login"          : wato.page_automation_login,
-    "noauth:automation"         : wato.page_automation,
     "user_profile"              : wato.page_user_profile,
     "user_change_pw"            : lambda: wato.page_user_profile(change_pw=True),
+    "wato_ajax_profile_repl"    : watolib.ajax_profile_repl,
+
+    "automation_login"          : lambda: wato.ModeAutomationLogin().page(),
+    "noauth:automation"         : lambda: wato.ModeAutomation().page(),
     "ajax_set_foldertree"       : lambda: wato.ModeAjaxSetFoldertree().handle_page(),
     "wato_ajax_diag_host"       : lambda: wato.ModeAjaxDiagHost().handle_page(),
-    "wato_ajax_profile_repl"    : watolib.ajax_profile_repl,
     "wato_ajax_execute_check"   : lambda: wato.ModeAjaxExecuteCheck().handle_page(),
     "fetch_agent_output"        : lambda: wato.PageFetchAgentOutput().page(),
     "download_agent_output"     : lambda: wato.PageDownloadAgentOutput().page(),

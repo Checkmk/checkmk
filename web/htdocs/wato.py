@@ -1339,8 +1339,10 @@ def mode_editfolder(phase, new):
         html.end_form()
 
 
-def ajax_set_foldertree():
-    config.user.save_file("foldertree", (html.var('topic'), html.var('target')))
+class ModeAjaxSetFoldertree(WatoWebApiMode):
+    def page(self):
+        request = self.webapi_request()
+        config.user.save_file("foldertree", (request.get('topic'), request.get('target')))
 
 
 #.

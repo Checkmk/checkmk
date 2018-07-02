@@ -1908,26 +1908,28 @@ def HostnameRenaming(**kwargs):
         ])
 
 
-def mode_rename_host(phase):
-    host_name = html.var("host")
 
-    if not watolib.Folder.current().has_host(host_name):
-        raise MKGeneralException(_("You called this page with an invalid host name."))
+class ModeRenameHost(WatoMode):
+    def _from_vars(self):
+        host_name = html.var("host")
 
-    if not config.user.may("wato.rename_hosts"):
-        raise MKGeneralException(_("You don't have the right to rename hosts"))
+        if not watolib.Folder.current().has_host(host_name):
+            raise MKGeneralException(_("You called this page with an invalid host name."))
+
+        if not config.user.may("wato.rename_hosts"):
+            raise MKGeneralException(_("You don't have the right to rename hosts"))
+
+        self._host = watolib.Folder.current().host(host_name)
+        self._host.need_permission("write")
 
 
-    host = watolib.Folder.current().host(host_name)
-    host.need_permission("write")
+    def title(self):
+        return _("Rename %s %s") % (_("Cluster") if self._host.is_cluster() else _("Host"), self._host.name())
 
 
-    if phase == "title":
-        return _("Rename %s %s") % (_("Cluster") if host.is_cluster() else _("Host"), host_name)
-
-    elif phase == "buttons":
+    def buttons(self):
         global_buttons()
-        html.context_button(_("Host Properties"), host.edit_url(), "back")
+        html.context_button(_("Host Properties"), self._host.edit_url(), "back")
 
         host_renaming_job = RenameHostsBackgroundJob()
         if host_renaming_job.is_available():
@@ -1937,9 +1939,8 @@ def mode_rename_host(phase):
                 ("back_url", html.makeuri([])),
             ], filename="wato.py"), "background_job_details")
 
-        return
 
-    elif phase == "action":
+    def action(self):
         if watolib.get_number_of_pending_changes():
             raise MKUserError("newname", _("You cannot rename a host while you have pending changes."))
 
@@ -1948,12 +1949,12 @@ def mode_rename_host(phase):
         c = wato_confirm(_("Confirm renaming of host"),
                          _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
                            "This involves a restart of the monitoring core!") %
-                         (host_name, newname))
+                         (self._host.name(), newname))
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
             # the config to that site before the automation is being done.
-            host_renaming_job = RenameHostsBackgroundJob(title=_("Renaming of %s -> %s") % (host.name(), newname))
-            renamings = [(watolib.Folder.current(), host.name(), newname)]
+            host_renaming_job = RenameHostsBackgroundJob(title=_("Renaming of %s -> %s") % (self._host.name(), newname))
+            renamings = [(watolib.Folder.current(), self._host.name(), newname)]
             host_renaming_job.set_function(rename_hosts_background_job, renamings)
             host_renaming_job.start()
             job_id = host_renaming_job.get_job_id()
@@ -1961,29 +1962,30 @@ def mode_rename_host(phase):
             job_details_url = html.makeuri_contextless([
                 ("mode", "background_job_details"),
                 ("job_id", job_id),
-                ("back_url", host.folder().url()),
+                ("back_url", self._host.folder().url()),
             ], filename="wato.py")
             html.response.http_redirect(job_details_url)
 
         elif c == False: # not yet confirmed
             return ""
-        return
 
-    html.help(_("The renaming of hosts is a complex operation since a host's name is being "
-               "used as a unique key in various places. It also involves stopping and starting "
-               "of the monitoring core. You cannot rename a host while you have pending changes."))
 
-    html.begin_form("rename_host", method="POST")
-    forms.header(_("Rename to host %s") % host_name)
-    forms.section(_("Current name"))
-    html.write_text(host_name)
-    forms.section(_("New name"))
-    html.text_input("newname", "")
-    forms.end()
-    html.set_focus("newname")
-    html.button("rename", _("Rename host!"), "submit")
-    html.hidden_fields()
-    html.end_form()
+    def page(self):
+        html.help(_("The renaming of hosts is a complex operation since a host's name is being "
+                   "used as a unique key in various places. It also involves stopping and starting "
+                   "of the monitoring core. You cannot rename a host while you have pending changes."))
+
+        html.begin_form("rename_host", method="POST")
+        forms.header(_("Rename host %s") % self._host.name())
+        forms.section(_("Current name"))
+        html.write_text(self._host.name())
+        forms.section(_("New name"))
+        html.text_input("newname", "")
+        forms.end()
+        html.set_focus("newname")
+        html.button("rename", _("Rename host!"), "submit")
+        html.hidden_fields()
+        html.end_form()
 
 
 def rename_host_in_folder(folder, oldname, newname):
@@ -18575,7 +18577,7 @@ modes = {
    "editfolder"         : (["hosts" ], ModeEditFolder),
    "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=False)),
    "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=True)),
-   "rename_host"        : (["hosts", "manage_hosts"], mode_rename_host),
+   "rename_host"        : (["hosts", "manage_hosts"], ModeRenameHost),
    "bulk_rename_host"   : (["hosts", "manage_hosts"], mode_bulk_rename_host),
    "bulk_import"        : (["hosts", "manage_hosts"], ModeBulkImport),
    "host_attrs"         : (["hosts", "manage_hosts"], ModeCustomHostAttrs),

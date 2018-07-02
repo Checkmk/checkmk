@@ -1,0 +1,10 @@
+Title: Cleanup half written solaris pkg packages when error occurs during package finalization
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1530520864
+Class: fix
+
+

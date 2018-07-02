@@ -18,7 +18,7 @@ _omd()
 {
     local GLOBALCMDS="sites|version|versions|help"
     local SITECMDS="start|stop|restart|reload|status|update|config|backup|restore|diff"
-    local ROOTCMDS="create|setversion"
+    local ROOTCMDS="create|setversion|cleanup"
     local ROOTSITECMDS="rm|mv|cp|disable|enable|init|su"
 
     COMPREPLY=()

@@ -452,6 +452,16 @@ section about \fBomd update\fP for details.
 the available RAM at max. When providing the \fB-t\fP option together with the SIZE
 given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP the
 maximum size of the tmpfs can be changed.
+.TP
+.B omd cleanup
+This removes all Check_MK versions that are currently not used by any site. All
+installed versions are checked for the number of sites that use this version. The
+versions without sites will be removed by deinstalling the RPM/DEB package of this
+version.
+
+Note: The whole version directory \fB/omd/version/[version]\fP will be removed. Even
+when there are files left after deinstallation of the RPM/DEB package. OMD will cleanup
+the whole directory tree.
 
 .SH SEE ALSO
 .BR http://www.omdistro.org

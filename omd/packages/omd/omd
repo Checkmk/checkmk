@@ -58,6 +58,7 @@ import random
 import tarfile, fnmatch
 import socket
 import subprocess
+import shlex
 from subprocess import *
 
 OMD_VERSION = "1.6.0i1.cme"
@@ -109,6 +110,7 @@ if on_tty:
     tty_normal    = '\033[0m'
     tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
     tty_error     = tty_red + tty_bold + 'ERROR' + tty_normal
+    tty_warn      = tty_yellow + tty_bold + 'WARNING' + tty_normal
 else:
     tty_black     = ''
     tty_red       = ''
@@ -129,6 +131,7 @@ else:
     tty_normal    = ''
     tty_ok        = 'OK'
     tty_error     = 'ERROR'
+    tty_warn      = 'WARNING'
 
 def ok():
     sys.stdout.write(tty_ok + "\n")
@@ -1560,23 +1563,49 @@ def tmpfs_mounted(sitename):
             continue
     return False
 
+
 def prepare_and_populate_tmpfs(sitename):
     tmp = tmp_dir(sitename)
+    prepare_tmpfs(sitename, tmp)
 
+    if not os.listdir(tmp):
+        create_skeleton_files(sitename, "tmp")
+        chown_tree(tmp, sitename)
+
+    ok()
+
+
+def prepare_tmpfs(sitename, tmp):
     if tmpfs_mounted(sitename):
-        return
+        return # Fine: Mounted
 
     sys.stdout.write("Creating temporary filesystem %s..." % tmp)
     sys.stdout.flush()
     if not os.path.exists(tmp):
         os.mkdir(tmp)
-    if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
-        sys.stdout.write(tty_error + "\n")
-        return
 
-    create_skeleton_files(sitename, "tmp")
-    chown_tree(tmp, sitename)
-    ok()
+    mount_options = shlex.split(g_info["MOUNT_OPTIONS"])
+    p = subprocess.Popen(["mount"] + mount_options + [tmp], shell=False,
+            stdin=open(os.devnull), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    exit_code = p.wait()
+    if exit_code == 0:
+        return # Fine: Mounted
+
+    sys.stdout.write(p.stdout.read())
+    if is_dockerized():
+        sys.stdout.write(tty_warn + ": "
+            "Could not mount tmpfs. You may either start the container in "
+            "privileged mode or use the \"docker run\" option \"--tmpfs\" to "
+            "make docker do the tmpfs mount for the site.\n"
+        )
+
+    sys.stdout.write(tty_warn + ": You may continue without tmpfs, but the "
+                     "performance of Check_MK may be degraded.\n")
+
+
+def is_dockerized():
+    return os.path.exists("/.dockerenv")
+
 
 def unmount_tmpfs(sitename, output = True, kill = False):
     # Clear directory hierarchy when not using a tmpfs
@@ -1623,6 +1652,9 @@ def unmount_tmpfs(sitename, output = True, kill = False):
     return True
 
 def add_to_fstab(sitename, tmpfs_size = None):
+    if not os.path.exists("/etc/fstab"):
+        return # Don't do anything in case there is no fstab
+
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = "/opt" + tmp_dir(sitename)
     sys.stdout.write("Adding %s to /etc/fstab.\n" % mountpoint)
@@ -1643,6 +1675,9 @@ def add_to_fstab(sitename, tmpfs_size = None):
         (mountpoint, sitename, sitename, sizespec))
 
 def remove_from_fstab(sitename):
+    if not os.path.exists("/etc/fstab"):
+        return # Don't do anything in case there is no fstab
+
     mountpoint = tmp_dir(sitename)
     sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
     newtab = file("/etc/fstab.new", "w")
@@ -2285,6 +2320,13 @@ def read_info():
                     bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
 
 def fstab_verify(name):
+    """Ensure that there is an fstab entry for the tmpfs of the site.
+    In case there is no fstab (seen in some containers) assume everything
+    is OK without fstab entry."""
+
+    if not os.path.exists("/etc/fstab"):
+        return True
+
     mountpoint = tmp_dir(name)
     for line in file("/etc/fstab"):
         if "uid=%s," % name in line and mountpoint in line:

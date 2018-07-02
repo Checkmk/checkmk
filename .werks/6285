@@ -1,0 +1,11 @@
+Title: Improved Check_MK installations in containers
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1530520690
+Class: fix
+
+- Improved handling when /etc/fstab does not exist
+- Improved handling when site TMPFS can not be created

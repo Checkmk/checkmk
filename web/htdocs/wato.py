@@ -241,7 +241,7 @@ def page_handler():
                                    "the managers central site."))
 
     current_mode = html.var("mode") or "main"
-    modeperms, modefunc = get_mode_function(current_mode)
+    mode_permissions, mode_class = get_mode_permission_and_class(current_mode)
 
     weblib.prepare_display_options(globals())
 
@@ -261,25 +261,11 @@ def page_handler():
         else:
             raise
 
-    if modefunc == None:
-        html.header(_("Sorry"), stylesheets=wato_styles,
-                    show_body_start=display_options.enabled(display_options.H),
-                    show_top_heading=display_options.enabled(display_options.T))
-
-        if display_options.enabled(display_options.B):
-            html.begin_context_buttons()
-            home_button()
-            html.end_context_buttons()
-
-        html.message(_("This module has not yet been implemented."))
-
-        html.footer(display_options.enabled(display_options.Z),
-                    display_options.enabled(display_options.H))
-        return
-
     # Check general permission for this mode
-    if modeperms != None and not config.user.may("wato.seeall"):
-        ensure_mode_permissions(modeperms)
+    if mode_permissions != None and not config.user.may("wato.seeall"):
+        ensure_mode_permissions(mode_permissions)
+
+    mode = mode_class()
 
     # Do actions (might switch mode)
     action_message = None
@@ -290,13 +276,13 @@ def page_handler():
             # Even if the user has seen this mode because auf "seeall",
             # he needs an explicit access permission for doing changes:
             if config.user.may("wato.seeall"):
-                if modeperms:
-                    ensure_mode_permissions(modeperms)
+                if mode_permissions:
+                    ensure_mode_permissions(mode_permissions)
 
             if watolib.is_read_only_mode_enabled() and not watolib.may_override_read_only_mode():
                 raise MKUserError(None, watolib.read_only_message())
 
-            result = modefunc("action")
+            result = mode.action()
             if type(result) == tuple:
                 newmode, action_message = result
             else:
@@ -318,13 +304,14 @@ def page_handler():
                         html.close_div()
                         html.footer()
                     return
-                modeperms, modefunc = get_mode_function(newmode)
+                mode_permissions, mode_class = get_mode_permission_and_class(newmode)
                 current_mode = newmode
+                mode = mode_class()
                 html.set_var("mode", newmode) # will be used by makeuri
 
                 # Check general permissions for the new mode
-                if modeperms != None and not config.user.may("wato.seeall"):
-                    for pname in modeperms:
+                if mode_permissions != None and not config.user.may("wato.seeall"):
+                    for pname in mode_permissions:
                         if '.' not in pname:
                             pname = "wato." + pname
                         config.user.need_permission(pname)
@@ -338,7 +325,7 @@ def page_handler():
             html.add_user_error(None, e.reason)
 
     # Title
-    html.header(modefunc("title"), javascripts=["wato"], stylesheets=wato_styles,
+    html.header(mode.title(), javascripts=["wato"], stylesheets=wato_styles,
                 show_body_start=display_options.enabled(display_options.H),
                 show_top_heading=display_options.enabled(display_options.T))
     html.open_div(class_="wato")
@@ -347,7 +334,7 @@ def page_handler():
         if display_options.enabled(display_options.B):
             # Show contexts buttons
             html.begin_context_buttons()
-            modefunc("buttons")
+            mode.buttons()
             for inmode, buttontext, target in extra_buttons:
                 if inmode == current_mode:
                     if hasattr(target, '__call__'):
@@ -370,7 +357,7 @@ def page_handler():
             html.message(action_message)
 
         # Show content
-        modefunc("content")
+        mode.handle_page()
 
     except MKGeneralException:
         raise
@@ -397,23 +384,23 @@ def page_handler():
                 display_options.enabled(display_options.H))
 
 
-def get_mode_function(mode):
-    modeperms, modefunc = modes.get(mode, ([], None))
-    if modefunc == None:
-        raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % html.render_text(mode))
+def get_mode_permission_and_class(mode_name):
+    mode_permissions, mode_class = modes.get(mode_name, ([], ModeNotImplemented))
+    if mode_class is None:
+        raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % mode_name)
 
-    if type(modefunc) != type(lambda: None):
-        mode_class = modefunc
-        modefunc = mode_class.create_mode_function()
+    if type(mode_class) == type(lambda: None):
+        raise MKGeneralException(_("Deprecated WATO module: Implemented as function. "
+                                   "This needs to be refactored as WatoMode child class."))
 
-    if modeperms != None and not config.user.may("wato.use"):
+    if mode_permissions != None and not config.user.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
-    return modeperms, modefunc
+    return mode_permissions, mode_class
 
 
-def ensure_mode_permissions(modeperms):
-    for pname in modeperms:
+def ensure_mode_permissions(mode_permissions):
+    for pname in mode_permissions:
         if '.' not in pname:
             pname = "wato." + pname
         config.user.need_permission(pname)
@@ -431,21 +418,6 @@ class WatoMode(object):
         pass
 
 
-    @classmethod
-    def create_mode_function(cls):
-        mode_object = cls()
-        def mode_function(phase):
-            if phase == "title":
-                return mode_object.title()
-            elif phase == "buttons":
-                return mode_object.buttons()
-            elif phase == "action":
-                return mode_object.action()
-            else:
-                return mode_object.handle_page()
-        return mode_function
-
-
     def title(self):
         return _("(Untitled module)")
 
@@ -459,7 +431,7 @@ class WatoMode(object):
 
 
     def page(self):
-        return _("(This module is not yet implemented)")
+        html.message(_("(This module is not yet implemented)"))
 
 
     def handle_page(self):
@@ -486,6 +458,20 @@ class WatoWebApiMode(WatoMode):
             response = { "result_code": 1, "result": "%s" % e }
 
         html.write(json.dumps(response))
+
+
+
+class ModeNotImplemented(WatoMode):
+    def title(self):
+        return _("Sorry")
+
+
+    def buttons(self):
+        home_button()
+
+
+    def page(self):
+        html.show_error(_("This module has not yet been implemented."))
 
 
 #.

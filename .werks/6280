@@ -1,0 +1,10 @@
+Title: Analyze configuration: Add performance test for mounted tmpfs
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1530520260
+Class: feature
+
+

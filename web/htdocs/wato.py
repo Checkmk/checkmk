@@ -1243,50 +1243,44 @@ class ModeAjaxPopupMoveToFolder(WatoWebApiMode):
 #   | creation of new folders.                                             |
 #   '----------------------------------------------------------------------'
 
-def mode_editfolder(phase, new):
-    if new:
-        page_title = _("Create new folder")
-        name, title = None, None
-    else:
-        page_title = _("Folder properties")
-        name  = watolib.Folder.current().name()
-        title = watolib.Folder.current().title()
+class FolderMode(WatoMode):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self):
+        super(FolderMode, self).__init__()
+        self._folder = self._init_folder()
 
 
-    if phase == "title":
-        return page_title
+    @abc.abstractmethod
+    def _init_folder(self):
+        # TODO: Needed to make pylint know the correct type of the return value.
+        # Will be cleaned up in future when typing is established
+        return watolib.Folder(name=None)
 
 
-    elif phase == "buttons":
+    @abc.abstractmethod
+    def _save(self, title, attributes):
+        raise NotImplementedError()
+
+
+    def buttons(self):
         if html.has_var("backfolder"):
             back_folder = watolib.Folder.folder(html.var("backfolder"))
         else:
-            back_folder = watolib.Folder.current()
+            back_folder = self._folder
         html.context_button(_("Back"), back_folder.url(), "back")
 
 
-    elif phase == "action":
+    def action(self):
         if not html.check_transaction():
             return "folder"
 
         # Title
         title = TextUnicode().from_html_vars("title")
         TextUnicode(allow_empty = False).validate_value(title, "title")
-        title_changed = not new and title != watolib.Folder.current().title()
-
-        # OS filename
-        if new:
-            if not config.wato_hide_filenames:
-                name = html.var("name", "").strip()
-                watolib.check_wato_foldername("name", name)
-            else:
-                name = watolib.create_wato_foldername(title)
 
         attributes = watolib.collect_attributes("folder")
-        if new:
-            watolib.Folder.current().create_subfolder(name, title, attributes)
-        else:
-            watolib.Folder.current().edit(title, attributes)
+        self._save(title, attributes)
 
         # Edit icon on subfolder preview should bring user back to parent folder
         if html.has_var("backfolder"):
@@ -1294,11 +1288,14 @@ def mode_editfolder(phase, new):
         return "folder"
 
 
-    else:
+    # TODO: Clean this method up! Split new/edit handling to sub classes
+    def page(self):
+        new = self._folder.name() is None
+
         watolib.Folder.current().show_breadcrump()
         watolib.Folder.current().need_permission("read")
 
-        if not new and watolib.Folder.current().locked():
+        if new and watolib.Folder.current().locked():
             watolib.Folder.current().show_locking_information()
 
         html.begin_form("edit_host", method = "POST")
@@ -1306,7 +1303,7 @@ def mode_editfolder(phase, new):
         # title
         forms.header(_("Title"))
         forms.section(_("Title"))
-        TextUnicode().render_input("title", title)
+        TextUnicode().render_input("title", self._folder.title())
         html.set_focus("title")
 
         # folder name (omit this for root folder)
@@ -1316,7 +1313,7 @@ def mode_editfolder(phase, new):
                 if new:
                     html.text_input("name")
                 else:
-                    html.write_text(name)
+                    html.write_text(self._folder.name())
                 html.help(_("This is the name of subdirectory where the files and "
                     "other folders will be created. You cannot change this later."))
 
@@ -1337,6 +1334,41 @@ def mode_editfolder(phase, new):
             html.button("save", _("Save & Finish"), "submit")
         html.hidden_fields()
         html.end_form()
+
+
+
+class ModeEditFolder(FolderMode):
+    def _init_folder(self):
+        return watolib.Folder.current()
+
+
+    def title(self):
+        return _("Folder properties")
+
+
+    def _save(self, title, attributes):
+        self._folder.edit(title, attributes)
+
+
+
+class ModeCreateFolder(FolderMode):
+    def _init_folder(self):
+        return watolib.Folder(name=None)
+
+
+    def title(self):
+        return _("Create new folder")
+
+
+    def _save(self, title, attributes):
+        if not config.wato_hide_filenames:
+            name = html.var("name", "").strip()
+            watolib.check_wato_foldername("name", name)
+        else:
+            name = watolib.create_wato_foldername(title)
+
+        watolib.Folder.current().create_subfolder(name, title, attributes)
+
 
 
 class ModeAjaxSetFoldertree(WatoWebApiMode):
@@ -18539,8 +18571,8 @@ modes = {
    # ident,               permissions, handler function
    "main"               : ([], ModeMain),
    "folder"             : (["hosts"], ModeFolder),
-   "newfolder"          : (["hosts", "manage_folders"], lambda phase: mode_editfolder(phase, True)),
-   "editfolder"         : (["hosts" ], lambda phase: mode_editfolder(phase, False)),
+   "newfolder"          : (["hosts", "manage_folders"], ModeCreateFolder),
+   "editfolder"         : (["hosts" ], ModeEditFolder),
    "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=False)),
    "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=True)),
    "rename_host"        : (["hosts", "manage_hosts"], mode_rename_host),

@@ -1389,256 +1389,296 @@ class ModeAjaxSetFoldertree(WatoWebApiMode):
 #   | Mode for host details (new, clone, edit)                             |
 #   '----------------------------------------------------------------------'
 
-def mode_edit_host(phase, new, is_cluster):
-    hostname = html.var("host") # may be empty in new/clone mode
-    clonename = html.var("clone")
+class HostMode(WatoMode):
+    __metaclass__ = abc.ABCMeta
 
-    # clone
-    if clonename:
-        if not watolib.Folder.current().has_host(clonename):
-            raise MKGeneralException(_("You called this page with an invalid host name."))
-
-        if not config.user.may("wato.clone_hosts"):
-            raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
-
-        mode = "clone"
-        title = _("Create clone of %s") % clonename
-        host = watolib.Folder.current().host(clonename)
-        is_cluster = host.is_cluster()
-
-    # edit
-    elif not new:
-        if not watolib.Folder.current().has_host(hostname):
-            raise MKGeneralException(_("You called this page with an invalid host name."))
-
-        mode = "edit"
-        title = _("Properties of host") + " " + hostname
-        host = watolib.Folder.current().host(hostname)
-        is_cluster = host.is_cluster()
-
-    # new
-    else:
-        mode = "new"
-        if is_cluster:
-            title = _("Create new cluster")
-        else:
-            title = _("Create new host")
-        host = None
+    def __init__(self):
+        super(HostMode, self).__init__()
+        self._host = None
+        self._mode = "edit"
 
 
-    if phase == "title":
-        return title
-
-
-    elif phase == "buttons":
+    def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-        if mode == "edit":
-            host_status_button(hostname, "hoststatus")
-
-            html.context_button(_("Services"),
-                  watolib.folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
-            if watolib.has_agent_bakery() and config.user.may('wato.download_agents'):
-                html.context_button(_("Monitoring Agent"),
-                  watolib.folder_preserving_link([("mode", "agent_of_host"), ("host", hostname)]), "agents")
-
-            if config.user.may('wato.rulesets'):
-                html.context_button(_("Parameters"),
-                  watolib.folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
-                if is_cluster:
-                    html.context_button(_("Clustered Services"),
-                      watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
-
-            if not watolib.Folder.current().locked_hosts():
-                if config.user.may("wato.rename_hosts"):
-                    html.context_button(is_cluster and _("Rename cluster") or _("Rename host"),
-                      watolib.folder_preserving_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
-                html.context_button(is_cluster and _("Delete cluster") or _("Delete host"),
-                      html.makeactionuri([("delete", "1")]), "delete")
-
-            if not is_cluster:
-                html.context_button(_("Diagnostic"),
-                      watolib.folder_preserving_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
-            html.context_button(_("Update DNS Cache"),
-                      html.makeactionuri([("_update_dns_cache", "1")]), "update")
-        return
 
 
-    elif phase == "action":
-        if html.var("_update_dns_cache"):
-            if html.check_transaction():
-                config.user.need_permission("wato.update_dns_cache")
-                num_updated, failed_hosts = watolib.check_mk_automation(host.site_id(), "update-dns-cache", [])
-                infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
-                if failed_hosts:
-                    infotext += "<br><br><b>Hostnames failed to lookup:</b> " + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
-                return None, infotext
-            else:
-                return None
+    def _is_cluster(self):
+        return self._host.is_cluster()
 
 
-        if not new and html.var("delete"): # Delete this host
-            if not html.transaction_valid():
-                return "folder"
-            else:
-                return delete_host_after_confirm(hostname)
+    def _get_cluster_nodes(self):
+        if not self._is_cluster():
+            return None
 
-        return action_edit_host(mode, hostname, is_cluster)
-
-    # Show outcome of host validation. Do not validate new hosts
-    errors = None
-    if new:
-        watolib.Folder.current().show_breadcrump()
-    else:
-        errors = watolib.validate_all_hosts([hostname]).get(hostname, []) + host.validation_errors()
-
-    if errors:
-        html.open_div(class_="info")
-        html.open_table(class_="validationerror", boder=0, cellspacing=0, cellpadding=0)
-        html.open_tr()
-
-        html.open_td(class_="img")
-        html.img("images/icon_validation_error.png")
-        html.close_td()
-
-        html.open_td()
-        html.open_p()
-        html.h3(_("Warning: This host has an invalid configuration!"))
-        html.open_ul()
-        for error in errors:
-            html.li(error)
-        html.close_ul()
-        html.close_p()
-
-        if html.form_submitted():
-            html.br()
-            html.b(_("Your changes have been saved nevertheless."))
-        html.close_td()
-
-        html.close_tr()
-        html.close_table()
-        html.close_div()
-
-    lock_message = ""
-    if watolib.Folder.current().locked_hosts():
-        if watolib.Folder.current().locked_hosts() == True:
-            lock_message = _("Host attributes locked (You cannot edit this host)")
-        else:
-            lock_message = watolib.Folder.current().locked_hosts()
-    if len(lock_message) > 0:
-        html.div(lock_message, class_="info")
-
-    html.begin_form("edit_host", method="POST")
-    html.prevent_password_auto_completion()
-
-    # host name
-    forms.header(_("General Properties"))
-    if hostname and mode == "edit":
-        forms.section(_("Hostname"), simple=True)
-        html.write_text(hostname)
-    else:
-        forms.section(_("Hostname"))
-        Hostname().render_input("host", "")
-        html.set_focus("host")
-
-    # Cluster: nodes
-    if is_cluster:
-        forms.section(_("Nodes"))
-        vs_cluster_nodes().render_input("nodes", host.cluster_nodes() if host else [])
-        html.help(_('Enter the host names of the cluster nodes. These '
-                   'hosts must be present in WATO. '))
-
-    configure_attributes(new, {hostname: host}, "host" if not is_cluster else "cluster",
-                         parent = watolib.Folder.current())
-
-    forms.end()
-    if not watolib.Folder.current().locked_hosts():
-        html.button("services", _("Save & go to Services"), "submit")
-        html.button("save", _("Save & Finish"), "submit")
-        if not is_cluster:
-            html.button("diag_host", _("Save & Test"), "submit")
-    html.hidden_fields()
-    html.end_form()
-
-
-def vs_cluster_nodes():
-    return ListOfStrings(
-        valuespec = TextAscii(size = 19),
-        orientation = "horizontal",
-    )
-
-
-# Called by mode_edit_host() for new/clone/edit
-def action_edit_host(mode, hostname, is_cluster):
-    attributes = watolib.collect_attributes("host" if not is_cluster else "cluster")
-
-    if is_cluster:
-        cluster_nodes = vs_cluster_nodes().from_html_vars("nodes")
-        vs_cluster_nodes().validate_value(cluster_nodes, "nodes")
+        cluster_nodes = self._vs_cluster_nodes().from_html_vars("nodes")
+        self._vs_cluster_nodes().validate_value(cluster_nodes, "nodes")
         if len(cluster_nodes) < 1:
             raise MKUserError("nodes_0", _("The cluster must have at least one node"))
         for nr, cluster_node in enumerate(cluster_nodes):
-            if cluster_node == hostname:
+            if cluster_node == self._host.name():
                 raise MKUserError("nodes_%d" % nr, _("The cluster can not be a node of it's own"))
 
             if not watolib.Host.host_exists(cluster_node):
                 raise MKUserError("nodes_%d" % nr, _("The node <b>%s</b> does not exist "
                                   " (must be a host that is configured with WATO)") % cluster_node)
-    else:
-        cluster_nodes = None
+        return cluster_nodes
 
-    if mode != "edit" and not html.transaction_valid():
-        return "folder"
 
-    if mode != "edit":
-        Hostname().validate_value(hostname, "host")
-
-    if html.check_transaction():
-        if mode == "edit":
-            watolib.Host.host(hostname).edit(attributes, cluster_nodes)
+    # TODO: Extract cluster specific parts from this method
+    def page(self):
+        # Show outcome of host validation. Do not validate new hosts
+        errors = None
+        if self._mode != "edit":
+            watolib.Folder.current().show_breadcrump()
         else:
-            watolib.Folder.current().create_hosts([(hostname, attributes, cluster_nodes)])
+            errors = watolib.validate_all_hosts([self._host.name()]).get(self._host.name(), []) + self._host.validation_errors()
 
-    host = watolib.Folder.current().host(hostname)
+        if errors:
+            html.open_div(class_="info")
+            html.open_table(class_="validationerror", boder=0, cellspacing=0, cellpadding=0)
+            html.open_tr()
 
-    go_to_services = html.var("services")
-    go_to_diag     = html.var("diag_host")
+            html.open_td(class_="img")
+            html.img("images/icon_validation_error.png")
+            html.close_td()
+
+            html.open_td()
+            html.open_p()
+            html.h3(_("Warning: This host has an invalid configuration!"))
+            html.open_ul()
+            for error in errors:
+                html.li(error)
+            html.close_ul()
+            html.close_p()
+
+            if html.form_submitted():
+                html.br()
+                html.b(_("Your changes have been saved nevertheless."))
+            html.close_td()
+
+            html.close_tr()
+            html.close_table()
+            html.close_div()
+
+        lock_message = ""
+        if watolib.Folder.current().locked_hosts():
+            if watolib.Folder.current().locked_hosts() == True:
+                lock_message = _("Host attributes locked (You cannot edit this host)")
+            else:
+                lock_message = watolib.Folder.current().locked_hosts()
+        if len(lock_message) > 0:
+            html.div(lock_message, class_="info")
+
+        html.begin_form("edit_host", method="POST")
+        html.prevent_password_auto_completion()
+
+        forms.header(_("General Properties"))
+        self._show_host_name()
+
+        # Cluster: nodes
+        if self._is_cluster():
+            forms.section(_("Nodes"))
+            self._vs_cluster_nodes().render_input("nodes", self._host.cluster_nodes() if self._host else [])
+            html.help(_('Enter the host names of the cluster nodes. These '
+                       'hosts must be present in WATO. '))
+
+        configure_attributes(
+            new=self._mode != "edit",
+            hosts={self._host.name(): self._host} if self._mode == "edit" else {},
+            for_what="host" if not self._is_cluster() else "cluster",
+            parent = watolib.Folder.current()
+        )
+
+        forms.end()
+        if not watolib.Folder.current().locked_hosts():
+            html.button("services", _("Save & go to Services"), "submit")
+            html.button("save", _("Save & Finish"), "submit")
+            if not self._is_cluster():
+                html.button("diag_host", _("Save & Test"), "submit")
+        html.hidden_fields()
+        html.end_form()
 
 
-    if mode != "edit": # new/clone
-        if "ping" not in host.tags():
-            create_msg = _('Successfully created the host. Now you should do a '
-                           '<a href="%s">service discovery</a> in order to auto-configure '
-                           'all services to be checked on this host.') % \
-                            watolib.folder_preserving_link([("mode", "inventory"), ("host", hostname)])
-        else:
-            create_msg = None
+    def _vs_cluster_nodes(self):
+        return ListOfStrings(
+            valuespec = TextAscii(size = 19),
+            orientation = "horizontal",
+        )
 
 
-        if go_to_services:
+    @abc.abstractmethod
+    def _show_host_name(self):
+        raise NotImplementedError()
+
+
+
+# TODO: Split this into two classes ModeEditHost / ModeEditCluster. The problem with this is that
+# we simply don't know whether or not a cluster or regular host is about to be edited. The GUI code
+# simply wants to link to the "host edit page". We could try to use some factory to decide this when
+# the edit_host mode is called.
+class ModeEditHost(HostMode):
+    def _from_vars(self):
+        hostname = html.var("host") # may be empty in new/clone mode
+
+        if not watolib.Folder.current().has_host(hostname):
+            raise MKGeneralException(_("You called this page with an invalid host name."))
+
+        self._mode = "edit"
+        self._host = watolib.Folder.current().host(hostname)
+
+
+    def title(self):
+        return _("Properties of host") + " " + self._host.name()
+
+
+    def buttons(self):
+        super(ModeEditHost, self).buttons()
+
+        host_status_button(self._host.name(), "hoststatus")
+
+        html.context_button(_("Services"),
+              watolib.folder_preserving_link([("mode", "inventory"), ("host", self._host.name())]), "services")
+        if watolib.has_agent_bakery() and config.user.may('wato.download_agents'):
+            html.context_button(_("Monitoring Agent"),
+              watolib.folder_preserving_link([("mode", "agent_of_host"), ("host", self._host.name())]), "agents")
+
+        if config.user.may('wato.rulesets'):
+            html.context_button(_("Parameters"),
+              watolib.folder_preserving_link([("mode", "object_parameters"), ("host", self._host.name())]), "rulesets")
+            if self._is_cluster():
+                html.context_button(_("Clustered Services"),
+                  watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
+
+        if not watolib.Folder.current().locked_hosts():
+            if config.user.may("wato.rename_hosts"):
+                html.context_button(self._is_cluster() and _("Rename cluster") or _("Rename host"),
+                  watolib.folder_preserving_link([("mode", "rename_host"), ("host", self._host.name())]), "rename_host")
+            html.context_button(self._is_cluster() and _("Delete cluster") or _("Delete host"),
+                  html.makeactionuri([("delete", "1")]), "delete")
+
+        if not self._is_cluster():
+            html.context_button(_("Diagnostic"),
+                  watolib.folder_preserving_link([("mode", "diag_host"), ("host", self._host.name())]), "diagnose")
+        html.context_button(_("Update DNS Cache"),
+                  html.makeactionuri([("_update_dns_cache", "1")]), "update")
+
+
+    def action(self):
+        if html.var("_update_dns_cache"):
+            if html.check_transaction():
+                config.user.need_permission("wato.update_dns_cache")
+                num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(), "update-dns-cache", [])
+                infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
+                if failed_hosts:
+                    infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
+                              + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
+                return None, infotext
+            else:
+                return None
+
+        if html.var("delete"): # Delete this host
+            if not html.transaction_valid():
+                return "folder"
+            else:
+                return delete_host_after_confirm(self._host.name())
+
+        if html.check_transaction():
+            attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster")
+            watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
+            self._host = watolib.Folder.current().host(self._host.name())
+
+        if html.var("services"):
             return "inventory"
-        elif go_to_diag:
-            html.set_var("_try", "1")
-            return "diag_host", create_msg
-        else:
-            return "folder", create_msg
-
-    else:
-        if go_to_services:
-            return "inventory"
-        elif go_to_diag:
+        elif html.var("diag_host"):
             html.set_var("_try", "1")
             return "diag_host"
         else:
             return "folder"
 
 
-def check_new_host_name(varname, host_name):
-    if not host_name:
-        raise MKUserError(varname, _("Please specify a host name."))
-    elif watolib.Folder.current().has_host(host_name):
-        raise MKUserError(varname, _("A host with this name already exists in this folder."))
-    watolib.validate_host_uniqueness(varname, host_name)
-    Hostname().validate_value(host_name, varname)
+    def _show_host_name(self):
+        forms.section(_("Hostname"), simple=True)
+        html.write_text(self._host.name())
+
+
+
+class ModeCreateHost(HostMode):
+    def _from_vars(self):
+        clonename = html.var("clone")
+        if clonename:
+            if not watolib.Folder.current().has_host(clonename):
+                raise MKGeneralException(_("You called this page with an invalid host name."))
+
+            if not config.user.may("wato.clone_hosts"):
+                raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
+
+            self._mode = "clone"
+            self._host = watolib.Folder.current().host(clonename)
+
+            if self._is_cluster() != self._host.is_cluster():
+                raise MKGeneralException(_("Can not clone a cluster host as regular host or vice versa"))
+        else:
+            self._mode = "new"
+            self._host = watolib.Host(folder=watolib.Folder.current(), host_name=html.var("host"), attributes={},
+                              cluster_nodes=[] if self._is_cluster() else None)
+
+
+    def action(self):
+        if not html.transaction_valid():
+            return "folder"
+
+        attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster")
+        cluster_nodes = self._get_cluster_nodes()
+
+        hostname = html.var("host")
+        Hostname().validate_value(hostname, "host")
+
+        if html.check_transaction():
+            watolib.Folder.current().create_hosts([(hostname, attributes, cluster_nodes)])
+
+        self._host = watolib.Folder.current().host(hostname)
+
+        if "ping" not in self._host.tags():
+            create_msg = _('Successfully created the host. Now you should do a '
+                           '<a href="%s">service discovery</a> in order to auto-configure '
+                           'all services to be checked on this host.') % \
+                            watolib.folder_preserving_link([("mode", "inventory"), ("host", self._host.name())])
+        else:
+            create_msg = None
+
+        if html.var("services"):
+            return "inventory"
+        elif html.var("diag_host"):
+            html.set_var("_try", "1")
+            return "diag_host", create_msg
+        else:
+            return "folder", create_msg
+
+
+    def title(self):
+        if self._mode == "clone":
+            return _("Create clone of %s") % self._host.name()
+        else:
+            return _("Create new host")
+
+
+    def _show_host_name(self):
+        forms.section(_("Hostname"))
+        Hostname().render_input("host", "")
+        html.set_focus("host")
+
+
+
+class ModeCreateCluster(ModeCreateHost):
+    def _is_cluster(self):
+        return True
+
+
+    def title(self):
+        if self._mode == "clone":
+            return _("Create clone of %s") % self._host.name()
+        else:
+            return _("Create new cluster")
 
 
 #.
@@ -1948,7 +1988,7 @@ class ModeRenameHost(WatoMode):
             raise MKUserError("newname", _("You cannot rename a host while you have pending changes."))
 
         newname = html.var("newname")
-        check_new_host_name("newname", newname)
+        self._check_new_host_name("newname", newname)
         c = wato_confirm(_("Confirm renaming of host"),
                          _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
                            "This involves a restart of the monitoring core!") %
@@ -1971,6 +2011,15 @@ class ModeRenameHost(WatoMode):
 
         elif c == False: # not yet confirmed
             return ""
+
+
+    def _check_new_host_name(self, varname, host_name):
+        if not host_name:
+            raise MKUserError(varname, _("Please specify a host name."))
+        elif watolib.Folder.current().has_host(host_name):
+            raise MKUserError(varname, _("A host with this name already exists in this folder."))
+        watolib.validate_host_uniqueness(varname, host_name)
+        Hostname().validate_value(host_name, varname)
 
 
     def page(self):
@@ -18391,7 +18440,10 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             unique = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
 
             if for_what in [ "host", "cluster", "folder" ]:
-                host = hosts.values()[0]
+                if hosts:
+                    host = hosts.values()[0]
+                else:
+                    host = None
 
             # Collect information about attribute values inherited from folder.
             # This information is just needed for informational display to the user.
@@ -18637,14 +18689,14 @@ modes = {
    "folder"             : (["hosts"], ModeFolder),
    "newfolder"          : (["hosts", "manage_folders"], ModeCreateFolder),
    "editfolder"         : (["hosts" ], ModeEditFolder),
-   "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=False)),
-   "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=True)),
+   "newhost"            : (["hosts", "manage_hosts"], ModeCreateHost),
+   "newcluster"         : (["hosts", "manage_hosts"], ModeCreateCluster),
    "rename_host"        : (["hosts", "manage_hosts"], ModeRenameHost),
    "bulk_rename_host"   : (["hosts", "manage_hosts"], ModeBulkRenameHost),
    "bulk_import"        : (["hosts", "manage_hosts"], ModeBulkImport),
    "host_attrs"         : (["hosts", "manage_hosts"], ModeCustomHostAttrs),
    "edit_host_attr"     : (["hosts", "manage_hosts"], ModeEditCustomHostAttr),
-   "edit_host"          : (["hosts"], lambda phase: mode_edit_host(phase, new=False, is_cluster=None)),
+   "edit_host"          : (["hosts"], ModeEditHost),
    "parentscan"         : (["hosts"], mode_parentscan),
    "inventory"          : (["hosts"], ModeDiscovery),
    "diag_host"          : (["hosts", "diag_host"], ModeDiagHost),

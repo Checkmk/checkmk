@@ -2901,7 +2901,7 @@ class CREHost(WithPermissionsAndAttributes):
 
     def edit_url(self):
         return html.makeuri_contextless([
-            ("mode", "edit_host"),
+            ("mode", "edit_cluster" if self.is_cluster() else "edit_host"),
             ("folder", self.folder().path()),
             ("host", self.name()),
         ])
@@ -2925,7 +2925,7 @@ class CREHost(WithPermissionsAndAttributes):
 
     def clone_url(self):
         return html.makeuri_contextless([
-            ("mode", self.is_cluster() and "newcluster" or "newhost"),
+            ("mode", "newcluster" if self.is_cluster() else "newhost"),
             ("folder", self.folder().path()),
             ("clone", self.name()),
         ])

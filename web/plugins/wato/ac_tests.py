@@ -158,6 +158,53 @@ class ACTestLivestatusUsage(ACTest):
 
 
 
+class ACTestTmpfs(ACTest):
+    def category(self):
+        return ACTestCategories.performance
+
+
+    def title(self):
+        return _("Temporary filesystem mounted")
+
+
+    def help(self):
+        return _("<p>By default each Check_MK site has it's own temporary filesystem "
+                 "(a ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not "
+                 "possible Check_MK starts without this temporary filesystem.</p>"
+                 "<p>Even if this is possible, it is not recommended to use Check_MK this "
+                 "way because it may reduce the overall performance of Check_MK.</p>")
+
+
+    def is_relevant(self):
+        return True
+
+
+    def execute(self):
+        if self._tmpfs_mounted(config.omd_site()):
+            yield ACResultOK(_("The temporary filesystem is mounted"))
+        else:
+            yield ACResultWARN(_("The temporary filesystem is not mounted. Your installation "
+                                 "may work with degraded performance."))
+
+
+    def _tmpfs_mounted(self, site_id):
+        # Borrowed from omd binary
+        #
+        # Problem here: if /omd is a symbolic link somewhere else,
+        # then in /proc/mounts the physical path will appear and be
+        # different from tmp_path. We just check the suffix therefore.
+        path_suffix = "sites/%s/tmp" % site_id
+        for line in file("/proc/mounts"):
+            try:
+                device, mp, fstype, options, dump, fsck = line.split()
+                if mp.endswith(path_suffix) and fstype == 'tmpfs':
+                    return True
+            except:
+                continue
+        return False
+
+
+
 class ACTestLDAPSecured(ACTest):
     def category(self):
         return ACTestCategories.security

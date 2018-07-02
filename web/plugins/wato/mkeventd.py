@@ -1058,41 +1058,119 @@ def save_mkeventd_sample_config():
 #   | activation of the changes.                                           |
 #   '----------------------------------------------------------------------'
 
-def mode_mkeventd_rule_packs(phase):
-    search_expression = get_search_expression()
-    if phase == "title":
-        return _("Event Console Rule Packages")
+class EventConsoleMode(WatoMode):
+    def __init__(self):
+        self._rule_packs = load_mkeventd_rules()
+        super(EventConsoleMode, self).__init__()
 
-    elif phase == "buttons":
-        mkeventd_changes_button()
+
+    def _search_expression(self):
+        return get_search_expression()
+
+
+    def _rule_pack_with_id(self, rule_pack_id):
+        for nr, entry in enumerate(self._rule_packs):
+            if entry["id"] == rule_pack_id:
+                return nr, entry
+        raise MKUserError(None, _("The requested rule pack does not exist."))
+
+
+    def _show_event_simulator(self):
+        event = config.user.load_file("simulated_event", {})
+        html.begin_form("simulator")
+        vs_mkeventd_event.render_input("event", event)
+        forms.end()
+        html.hidden_fields()
+        html.button("simulate", _("Try out"))
+        html.button("_generate", _("Generate Event!"))
+        html.end_form()
+        html.br()
+
+        if html.var("simulate") or html.var("_generate"):
+            return vs_mkeventd_event.from_html_vars("event")
+        else:
+            return None
+
+
+    def _event_simulation_action(self):
+        # Validation of input for rule simulation (no further action here)
+        if html.var("simulate") or html.var("_generate"):
+            event = vs_mkeventd_event.from_html_vars("event")
+            vs_mkeventd_event.validate_value(event, "event")
+            config.user.save_file("simulated_event", event)
+
+        if html.has_var("_generate") and html.check_transaction():
+            if not event.get("application"):
+                raise MKUserError("event_p_application", _("Please specify an application name"))
+            if not event.get("host"):
+                raise MKUserError("event_p_host", _("Please specify a host name"))
+            rfc = mkeventd.send_event(event)
+            return None, _("Test event generated and sent to Event Console.") \
+                          + html.render_br() \
+                          + html.render_pre(rfc) \
+                          + html.render_reload_sidebar()
+
+
+    def _add_change(self, what, message):
+        add_change(what, message, domains=[ConfigDomainEventConsole],
+                   sites=watolib.get_event_console_sync_sites())
+
+
+    def _changes_button(self):
+        changelog_button()
+
+
+    def _rules_button(self):
+        html.context_button(_("Rule Packs"), html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
+
+
+    def _config_button(self):
+        if config.user.may("mkeventd.config"):
+            html.context_button(_("Settings"), html.makeuri_contextless([("mode", "mkeventd_config")]), "configuration")
+
+
+    def _status_button(self):
+        html.context_button(_("Server Status"), html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
+
+
+    def _mibs_button(self):
+        html.context_button(_("SNMP MIBs"), html.makeuri_contextless([("mode", "mkeventd_mibs")]), "snmpmib")
+
+
+
+class ModeEventConsoleRulePacks(EventConsoleMode):
+    def title(self):
+        return _("Event Console rule packages")
+
+
+    def buttons(self):
+        self._changes_button()
         home_button()
         if config.user.may("mkeventd.edit"):
             html.context_button(_("New Rule Pack"), html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack")]), "new")
             html.context_button(_("Reset Counters"),
               make_action_link([("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]), "resetcounters")
-        mkeventd_status_button()
-        mkeventd_config_button()
-        mkeventd_mibs_button()
-        return
+        self._status_button()
+        self._config_button()
+        self._mibs_button()
 
-    rule_packs = load_mkeventd_rules()
 
-    if phase == "action":
-        action_outcome = event_simulation_action()
+    def action(self):
+        action_outcome = self._event_simulation_action()
         if action_outcome:
             return action_outcome
 
         # Deletion of rule packs
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
-            rule_pack = rule_packs[nr]
+            rule_pack = self._rule_packs[nr]
             c = wato_confirm(_("Confirm rule pack deletion"),
                              _("Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>%s</b> rules?") %
                                (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"])))
             if c:
-                add_ec_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
-                del rule_packs[nr]
-                save_mkeventd_rules(rule_packs)
+                self._add_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
+                del self._rule_packs[nr]
+                save_mkeventd_rules(self._rule_packs)
             elif c == False:
                 return ""
 
@@ -1102,7 +1180,7 @@ def mode_mkeventd_rule_packs(phase):
                              _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"))
             if c:
                 mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
-                add_ec_change("counter-reset", _("Resetted all rule hit counters to zero"))
+                self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
             elif c == False:
                 return ""
 
@@ -1112,8 +1190,8 @@ def mode_mkeventd_rule_packs(phase):
                              _("Do you really want to copy all event rules from the master and "
                                "replace your local configuration with them?"))
             if c:
-                copy_rules_from_master()
-                add_ec_change("copy-rules-from-master", _("Copied the event rules from the master "
+                self._copy_rules_from_master()
+                self._add_change("copy-rules-from-master", _("Copied the event rules from the master "
                              "into the local configuration"))
                 return None, _("Copied rules from master")
             elif c == False:
@@ -1123,342 +1201,311 @@ def mode_mkeventd_rule_packs(phase):
         elif html.has_var("_move"):
             from_pos = html.get_integer_input("_move")
             to_pos = html.get_integer_input("_index")
-            rule_pack = rule_packs[from_pos]
-            del rule_packs[from_pos] # make to_pos now match!
-            rule_packs[to_pos:to_pos] = [rule_pack]
-            save_mkeventd_rules(rule_packs)
-            add_ec_change("move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"])
+            rule_pack = self._rule_packs[from_pos]
+            del self._rule_packs[from_pos] # make to_pos now match!
+            self._rule_packs[to_pos:to_pos] = [rule_pack]
+            save_mkeventd_rules(self._rule_packs)
+            self._add_change("move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"])
 
         # Export rule pack
         elif html.has_var("_export"):
             nr = html.get_integer_input("_export")
             try:
-                rule_pack = rule_packs[nr]
+                rule_pack = self._rule_packs[nr]
             except KeyError:
                 raise MKUserError("_export", _("The requested rule pack does not exist"))
 
             export_mkp_rule_pack(rule_pack)
-            rule_packs[nr] = ec.MkpRulePackProxy(rule_pack['id'])
-            save_mkeventd_rules(rule_packs)
-            add_ec_change("export-rule-pack", _("Made rule pack %s available for MKP export") % rule_pack["id"])
+            self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack['id'])
+            save_mkeventd_rules(self._rule_packs)
+            self._add_change("export-rule-pack", _("Made rule pack %s available for MKP export") % rule_pack["id"])
 
         # Make rule pack non-exportable
         elif html.has_var("_dissolve"):
             nr = html.get_integer_input("_dissolve")
             try:
-                rule_packs[nr] = rule_packs[nr].rule_pack
+                self._rule_packs[nr] = self._rule_packs[nr].rule_pack
             except KeyError:
                 raise MKUserError("_dissolve", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(rule_packs)
-            ec.remove_exported_rule_pack(rule_packs[nr]["id"])
-            add_ec_change("dissolve-rule-pack", _("Removed rule_pack %s from MKP export") % rule_packs[nr]["id"])
+            save_mkeventd_rules(self._rule_packs)
+            ec.remove_exported_rule_pack(self._rule_packs[nr]["id"])
+            self._add_change("dissolve-rule-pack", _("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"])
 
         # Reset to rule pack provided via MKP
         elif html.has_var("_reset"):
             nr = html.get_integer_input("_reset")
             try:
-                rule_packs[nr] = ec.MkpRulePackProxy(rule_packs[nr]['id'])
+                self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
             except KeyError:
                 raise MKUserError("_reset", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(rule_packs)
-            add_ec_change("reset-rule-pack", _("Resetted the rules of rule pack %s to the ones provided via MKP") % rule_packs[nr].id_)
+            save_mkeventd_rules(self._rule_packs)
+            self._add_change("reset-rule-pack", _("Resetted the rules of rule pack %s to the ones provided via MKP") % self._rule_packs[nr].id_)
 
         # Synchronize modified rule pack with MKP
         elif html.has_var("_synchronize"):
             nr = html.get_integer_input("_synchronize")
-            export_mkp_rule_pack(rule_packs[nr])
+            export_mkp_rule_pack(self._rule_packs[nr])
             try:
-                rule_packs[nr] = ec.MkpRulePackProxy(rule_packs[nr]['id'])
+                self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
             except KeyError:
                 raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(rule_packs)
-            add_ec_change("synchronize-rule-pack", _("Synchronized MKP with the modified rule pack %s") % rule_packs[nr].id_)
+            save_mkeventd_rules(self._rule_packs)
+            self._add_change("synchronize-rule-pack", _("Synchronized MKP with the modified rule pack %s") % self._rule_packs[nr].id_)
 
-        return
+        # Update data strcuture after actions
+        self._rule_packs = load_mkeventd_rules()
 
-    rep_mode = mkeventd.replication_mode()
 
-    if rep_mode in [ "sync", "takeover" ]:
-        copy_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")])
-        html.show_warning(_("WARNING: This Event Console is currently running as a replication "
-          "slave. The rules edited here will not be used. Instead a copy of the rules of the "
-          "master are being used in the case of a takeover. The same holds for the event "
-          "actions in the global settings.<br><br>If you want you can copy the ruleset of "
-          "the master into your local slave configuration: ") + \
-          '<a href="%s">' % copy_url + _("Copy Rules From Master") + '</a>')
+    def _copy_rules_from_master(self):
+        answer = mkeventd.query_ec_directly("REPLICATE 0")
+        if "rules" not in answer:
+            raise MKGeneralException(_("Cannot get rules from local event daemon."))
+        rule_packs = answer["rules"]
+        save_mkeventd_rules(rule_packs)
 
-    elif rep_mode == "stopped":
-        html.show_error(_("The Event Console is currently not running."))
 
-    search_form("%s: " % _("Search in packs"), "mkeventd_rule_packs")
-    if search_expression:
-        found_packs = filter_mkeventd_rule_packs(search_expression, rule_packs)
-        title = _("Found rule packs")
-    else:
-        found_packs = {}
-        title = _("Rule packs")
+    def page(self):
+        rep_mode = mkeventd.replication_mode()
+        if rep_mode in [ "sync", "takeover" ]:
+            copy_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")])
+            html.show_warning(_("WARNING: This Event Console is currently running as a replication "
+              "slave. The rules edited here will not be used. Instead a copy of the rules of the "
+              "master are being used in the case of a takeover. The same holds for the event "
+              "actions in the global settings.<br><br>If you want you can copy the ruleset of "
+              "the master into your local slave configuration: ") + \
+              '<a href="%s">' % copy_url + _("Copy Rules From Master") + '</a>')
 
-    # Simulator
-    event = show_event_simulator()
-    if not rule_packs:
-        html.message(_("You have not created any rule packs yet. The Event Console is useless unless "
-                       "you have activated <i>Force message archiving</i> in the global settings."))
-    elif search_expression and not found_packs:
-        html.message(_("Found no rules packs."))
-        return
+        elif rep_mode == "stopped":
+            html.show_error(_("The Event Console is currently not running."))
 
-    package_info = watolib.check_mk_local_automation("get-package-info")
-    id_to_mkp  = ec.rule_pack_id_to_mkp(package_info)
-
-    have_match = False
-    table.begin(css="ruleset", limit=None, sortable=False, title=title)
-    for nr, rule_pack in enumerate(rule_packs):
-        id_ = rule_pack['id']
-        type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
-
-        if id_ in found_packs:
-            css_matches_search = "matches_search"
+        search_form("%s: " % _("Search in packs"), "mkeventd_rule_packs")
+        search_expression = self._search_expression()
+        if search_expression:
+            found_packs = self._filter_mkeventd_rule_packs(search_expression, self._rule_packs)
+            title = _("Found rule packs")
         else:
-            css_matches_search = None
+            found_packs = {}
+            title = _("Rule packs")
 
-        table.row(css=css_matches_search)
-        table.cell(_("Actions"), css="buttons")
+        # Simulator
+        event = self._show_event_simulator()
+        if not self._rule_packs:
+            html.message(_("You have not created any rule packs yet. The Event Console is useless unless "
+                           "you have activated <i>Force message archiving</i> in the global settings."))
+        elif search_expression and not found_packs:
+            html.message(_("Found no rules packs."))
+            return
 
-        edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
-        html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
+        package_info = watolib.check_mk_local_automation("get-package-info")
+        id_to_mkp  = ec.rule_pack_id_to_mkp(package_info)
 
-        # Cloning does not work until we have unique IDs
-        # clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
-        # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
+        have_match = False
+        table.begin(css="ruleset", limit=None, sortable=False, title=title)
+        for nr, rule_pack in enumerate(self._rule_packs):
+            id_ = rule_pack['id']
+            type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
-        drag_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
-        html.element_dragger_url("tr", base_url=drag_url)
-
-        if type_ == ec.RulePackType.internal:
-            delete_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)])
-            html.icon_button(delete_url, _("Delete this rule pack"), "delete")
-        elif type_ == ec.RulePackType.exported:
-            dissolve_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_dissolve", nr)])
-            html.icon_button(dissolve_url, _("Remove this rule pack from the Extension Packages module"), "release_mkp_yellow")
-        elif type_ == ec.RulePackType.modified_mkp:
-            reset_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_reset", nr)])
-            html.icon_button(reset_url, _("Reset rule pack to the MKP version"), "release_mkp")
-            sync_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_synchronize", nr)])
-            html.icon_button(sync_url, _("Synchronize MKP with modified version"), "sync_mkp")
-
-        rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
-        if found_packs.get(id_):
-            rules_url_vars.append(("search", search_expression))
-        rules_url  = html.makeuri_contextless(rules_url_vars)
-        html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
-
-        if type_ == ec.RulePackType.internal:
-            export_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_export", nr)])
-            html.icon_button(export_url, _("Make this rule pack available in the Extension Packages module"), "cached")
-
-        # Icons for mkp export and disabling
-        table.cell("", css="buttons")
-        if type_ == ec.RulePackType.unmodified_mkp:
-            html.icon(_("This rule pack is provided via the MKP %s.") % id_to_mkp[id_], "mkps")
-        elif type_ == ec.RulePackType.exported:
-            html.icon(_("This is rule pack can be packaged with the Extension Packages module."), "package")
-        elif type_ == ec.RulePackType.modified_mkp:
-            html.icon(_("This rule pack is modified. Originally it was provided via the MKP %s.") % id_to_mkp[id_], "new_mkp")
-
-        if rule_pack["disabled"]:
-            html.icon(_("This rule pack is currently disabled. None of its rules will be applied."), "disabled")
-
-        # Simulation of all rules in this pack
-        elif event:
-            matches = 0
-            match_groups = None
-            cancelling_matches = 0
-            skips = 0
-
-            for rule in rule_pack["rules"]:
-                result = mkeventd.event_rule_matches(rule_pack, rule, event)
-                if type(result) == tuple:
-                    cancelling, groups = result
-
-                    if not cancelling and rule.get("drop") == "skip_pack":
-                        matches += 1
-                        skips = 1
-                        break
-
-                    if matches == 0:
-                        match_groups = groups # show groups of first (= decisive) match
-
-                    if cancelling and matches == 0:
-                        cancelling_matches += 1
-
-                    matches += 1
-
-            if matches == 0:
-                msg = _("None of the rules in this pack matches")
-                icon = "rulenmatch"
+            if id_ in found_packs:
+                css_matches_search = "matches_search"
             else:
-                msg = _("Number of matching rules in this pack: %d") % matches
-                if skips:
-                    msg += _(", the first match skips this rule pack")
+                css_matches_search = None
+
+            table.row(css=css_matches_search)
+            table.cell(_("Actions"), css="buttons")
+
+            edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
+            html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
+
+            # Cloning does not work until we have unique IDs
+            # clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
+            # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
+
+            drag_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
+            html.element_dragger_url("tr", base_url=drag_url)
+
+            if type_ == ec.RulePackType.internal:
+                delete_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)])
+                html.icon_button(delete_url, _("Delete this rule pack"), "delete")
+            elif type_ == ec.RulePackType.exported:
+                dissolve_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_dissolve", nr)])
+                html.icon_button(dissolve_url, _("Remove this rule pack from the Extension Packages module"), "release_mkp_yellow")
+            elif type_ == ec.RulePackType.modified_mkp:
+                reset_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_reset", nr)])
+                html.icon_button(reset_url, _("Reset rule pack to the MKP version"), "release_mkp")
+                sync_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_synchronize", nr)])
+                html.icon_button(sync_url, _("Synchronize MKP with modified version"), "sync_mkp")
+
+            rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
+            if found_packs.get(id_):
+                rules_url_vars.append(("search", search_expression))
+            rules_url  = html.makeuri_contextless(rules_url_vars)
+            html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
+
+            if type_ == ec.RulePackType.internal:
+                export_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_export", nr)])
+                html.icon_button(export_url, _("Make this rule pack available in the Extension Packages module"), "cached")
+
+            # Icons for mkp export and disabling
+            table.cell("", css="buttons")
+            if type_ == ec.RulePackType.unmodified_mkp:
+                html.icon(_("This rule pack is provided via the MKP %s.") % id_to_mkp[id_], "mkps")
+            elif type_ == ec.RulePackType.exported:
+                html.icon(_("This is rule pack can be packaged with the Extension Packages module."), "package")
+            elif type_ == ec.RulePackType.modified_mkp:
+                html.icon(_("This rule pack is modified. Originally it was provided via the MKP %s.") % id_to_mkp[id_], "new_mkp")
+
+            if rule_pack["disabled"]:
+                html.icon(_("This rule pack is currently disabled. None of its rules will be applied."), "disabled")
+
+            # Simulation of all rules in this pack
+            elif event:
+                matches = 0
+                match_groups = None
+                cancelling_matches = 0
+                skips = 0
+
+                for rule in rule_pack["rules"]:
+                    result = mkeventd.event_rule_matches(rule_pack, rule, event)
+                    if type(result) == tuple:
+                        cancelling, groups = result
+
+                        if not cancelling and rule.get("drop") == "skip_pack":
+                            matches += 1
+                            skips = 1
+                            break
+
+                        if matches == 0:
+                            match_groups = groups # show groups of first (= decisive) match
+
+                        if cancelling and matches == 0:
+                            cancelling_matches += 1
+
+                        matches += 1
+
+                if matches == 0:
+                    msg = _("None of the rules in this pack matches")
                     icon = "rulenmatch"
                 else:
-                    if cancelling:
-                        msg += _(", first match is a cancelling match")
-                    if groups:
-                        msg += _(", match groups of decisive match: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
-                    if have_match:
-                        msg += _(", but it is overruled by a match in a previous rule pack.")
-                        icon = "rulepmatch"
+                    msg = _("Number of matching rules in this pack: %d") % matches
+                    if skips:
+                        msg += _(", the first match skips this rule pack")
+                        icon = "rulenmatch"
                     else:
-                        icon = "rulematch"
-                        have_match = True
-            html.icon(msg, icon)
+                        if cancelling:
+                            msg += _(", first match is a cancelling match")
+                        if groups:
+                            msg += _(", match groups of decisive match: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
+                        if have_match:
+                            msg += _(", but it is overruled by a match in a previous rule pack.")
+                            icon = "rulepmatch"
+                        else:
+                            icon = "rulematch"
+                            have_match = True
+                html.icon(msg, icon)
 
-        table.cell(_("ID"), id_)
-        table.cell(_("Title"), html.render_text(rule_pack["title"]))
+            table.cell(_("ID"), id_)
+            table.cell(_("Title"), html.render_text(rule_pack["title"]))
 
-        if cmk.is_managed_edition():
-            table.cell(_("Customer"))
-            if "customer" in rule_pack:
-                html.write_text(managed.get_customer_name(rule_pack))
+            if cmk.is_managed_edition():
+                table.cell(_("Customer"))
+                if "customer" in rule_pack:
+                    html.write_text(managed.get_customer_name(rule_pack))
 
-        table.cell(_("Rules"),
-            html.render_a("%d" % len(rule_pack["rules"]), href=rules_url), css="number")
+            table.cell(_("Rules"),
+                html.render_a("%d" % len(rule_pack["rules"]), href=rules_url), css="number")
 
-        hits = rule_pack.get('hits')
-        table.cell(_("Hits"), hits != None and hits or '', css="number")
+            hits = rule_pack.get('hits')
+            table.cell(_("Hits"), hits != None and hits or '', css="number")
 
-    table.end()
-
-
-
-def show_event_simulator():
-    event = config.user.load_file("simulated_event", {})
-    html.begin_form("simulator")
-    vs_mkeventd_event.render_input("event", event)
-    forms.end()
-    html.hidden_fields()
-    html.button("simulate", _("Try out"))
-    html.button("_generate", _("Generate Event!"))
-    html.end_form()
-    html.br()
-
-    if html.var("simulate") or html.var("_generate"):
-        return vs_mkeventd_event.from_html_vars("event")
-    else:
-        return None
+        table.end()
 
 
-def event_simulation_action():
-    # Validation of input for rule simulation (no further action here)
-    if html.var("simulate") or html.var("_generate"):
-        event = vs_mkeventd_event.from_html_vars("event")
-        vs_mkeventd_event.validate_value(event, "event")
-        config.user.save_file("simulated_event", event)
-
-    if html.has_var("_generate") and html.check_transaction():
-        if not event.get("application"):
-            raise MKUserError("event_p_application", _("Please specify an application name"))
-        if not event.get("host"):
-            raise MKUserError("event_p_host", _("Please specify a host name"))
-        rfc = mkeventd.send_event(event)
-        return None, _("Test event generated and sent to Event Console.") \
-                      + html.render_br() \
-                      + html.render_pre(rfc) \
-                      + html.render_reload_sidebar()
+    def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
+        found_packs = {}
+        for rule_pack in rule_packs:
+            if search_expression in rule_pack["id"].lower() \
+               or search_expression in rule_pack["title"].lower():
+                found_packs.setdefault(rule_pack["id"], [])
+            for rule in rule_pack.get("rules", []):
+                if search_expression in rule["id"].lower() \
+                   or search_expression in rule.get("description", "").lower():
+                    found_rules = found_packs.setdefault(rule_pack["id"], [])
+                    found_rules.append(rule)
+        return found_packs
 
 
-def rule_pack_with_id(rule_packs, rule_pack_id):
-    for nr, entry in enumerate(rule_packs):
-        if entry["id"] == rule_pack_id:
-            return nr, entry
-    raise MKUserError(None, _("The requested rule pack does not exist."))
+
+class ModeEventConsoleRules(EventConsoleMode):
+    def _from_vars(self):
+        self._rule_pack_id = html.var("rule_pack")
+        self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
+        self._rules = self._rule_pack["rules"]
 
 
-def filter_mkeventd_rule_packs(search_expression, rule_packs):
-    found_packs = {}
-    for rule_pack in rule_packs:
-        if search_expression in rule_pack["id"].lower() \
-           or search_expression in rule_pack["title"].lower():
-            found_packs.setdefault(rule_pack["id"], [])
-        for rule in rule_pack.get("rules", []):
-            if search_expression in rule["id"].lower() \
-               or search_expression in rule.get("description", "").lower():
-                found_rules = found_packs.setdefault(rule_pack["id"], [])
-                found_rules.append(rule)
-    return found_packs
+    def title(self):
+        return _("Rule Package %s") % self._rule_pack["title"]
 
 
-def mode_mkeventd_rules(phase):
-    search_expression = get_search_expression()
-    rule_packs = load_mkeventd_rules()
-    rule_pack_id = html.var("rule_pack")
-    rule_pack_nr, rule_pack = rule_pack_with_id(rule_packs, rule_pack_id)
-    rules = rule_pack["rules"]
-
-    if phase == "title":
-        return _("Rule Package %s") % rule_pack["title"]
-
-    elif phase == "buttons":
-        mkeventd_rules_button()
-        mkeventd_changes_button()
+    def buttons(self):
+        self._rules_button()
+        self._changes_button()
         if config.user.may("mkeventd.edit"):
-            html.context_button(_("New Rule"), html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id)]), "new")
-            html.context_button(_("Properties"), html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", rule_pack_nr)]), "edit")
-        return
+            html.context_button(_("New Rule"), html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", self._rule_pack_id)]), "new")
+            html.context_button(_("Properties"), html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", self._rule_pack_nr)]), "edit")
 
-    if phase == "action":
+
+    def action(self):
         package_info = watolib.check_mk_local_automation("get-package-info")
         id_to_mkp = ec.rule_pack_id_to_mkp(package_info)
-        type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
+        type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
         if html.var("_move_to"):
             if html.check_transaction():
-                for move_nr, rule in enumerate(rules):
+                for move_nr, rule in enumerate(self._rules):
                     move_var = "_move_to_%s" % rule["id"]
                     if html.var(move_var):
-                        other_pack_nr, other_pack = rule_pack_with_id(rule_packs, html.var(move_var))
+                        other_pack_nr, other_pack = self._rule_pack_with_id(html.var(move_var))
 
                         other_type_ = ec.RulePackType.type_of(other_pack, id_to_mkp)
                         if other_type_ == ec.RulePackType.unmodified_mkp:
-                            ec.override_rule_pack_proxy(other_pack_nr, rule_packs)
+                            ec.override_rule_pack_proxy(other_pack_nr, self._rule_packs)
 
                         if type_ == ec.RulePackType.unmodified_mkp:
-                            ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
+                            ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
 
-                        rule_packs[other_pack_nr]["rules"][0:0] = [ rule ]
-                        del rule_packs[rule_pack_nr]["rules"][move_nr]
+                        self._rule_packs[other_pack_nr]["rules"][0:0] = [ rule ]
+                        del self._rule_packs[self._rule_pack_nr]["rules"][move_nr]
 
                         if other_type_ == ec.RulePackType.exported:
                             export_mkp_rule_pack(other_pack)
                         if type_ == ec.RulePackType.exported:
-                            export_mkp_rule_pack(rule_pack)
-                        save_mkeventd_rules(rule_packs)
+                            export_mkp_rule_pack(self._rule_pack)
+                        save_mkeventd_rules(self._rule_packs)
 
-                        add_ec_change("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
+                        self._add_change("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
                         return None, html.render_text(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
 
-        action_outcome = event_simulation_action()
+        action_outcome = self._event_simulation_action()
         if action_outcome:
             return action_outcome
 
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
-            rule = rules[nr]
+            rule = self._rules[nr]
             c = wato_confirm(_("Confirm rule deletion"),
                              _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?") %
                                (rule["id"], rule.get("description","")))
             if c:
-                add_ec_change("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
+                self._add_change("delete-rule", _("Deleted rule %s") % self._rules[nr]["id"])
                 if type_ == ec.RulePackType.unmodified_mkp:
-                    ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
-                    rules = rule_packs[rule_pack_nr]['rules']
+                    ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+                    rules = self._rule_packs[self._rule_pack_nr]['rules']
 
                 del rules[nr]
 
                 if type_ == ec.RulePackType.exported:
-                    export_mkp_rule_pack(rule_pack)
-                save_mkeventd_rules(rule_packs)
+                    export_mkp_rule_pack(self._rule_pack)
+                save_mkeventd_rules(self._rule_packs)
             elif c == False:
                 return ""
             else:
@@ -1470,349 +1517,354 @@ def mode_mkeventd_rules(phase):
                 to_pos = html.get_integer_input("_index")
 
                 if type_ == ec.RulePackType.unmodified_mkp:
-                    ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
-                    rules = rule_packs[rule_pack_nr]['rules']
+                    ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+                    rules = self._rule_packs[self._rule_pack_nr]['rules']
 
                 rule = rules[from_pos]
                 del rules[from_pos] # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
 
                 if type_ == ec.RulePackType.exported:
-                    export_mkp_rule_pack(rule_pack)
-                save_mkeventd_rules(rule_packs)
+                    export_mkp_rule_pack(self._rule_pack)
+                save_mkeventd_rules(self._rule_packs)
 
-                add_ec_change("move-rule", _("Changed position of rule %s") % rule["id"])
-        return
+                self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
 
-    search_form("%s: " % _("Search in rules"), "mkeventd_rules")
-    if search_expression:
-        found_rules = filter_mkeventd_rules(search_expression, rule_pack)
-    else:
-        found_rules = []
 
-    # Simulator
-    event = show_event_simulator()
-    if not rules:
-        html.message(_("This package does not yet contain any rules."))
-        return
-    elif search_expression and not found_rules:
-        html.message(_("No rules found."))
-        return
-
-    if len(rule_packs) > 1:
-        html.begin_form("move_to", method="POST")
-
-    # Show content of the rule package
-    table.begin(css="ruleset", limit=None, sortable=False)
-    have_match = False
-    for nr, rule in enumerate(rules):
-        if rule in found_rules:
-            css_matches_search = "matches_search"
+    def page(self):
+        search_expression = self._search_expression()
+        search_form("%s: " % _("Search in rules"), "mkeventd_rules")
+        if search_expression:
+            found_rules = self._filter_mkeventd_rules(search_expression, self._rule_pack)
         else:
-            css_matches_search = None
+            found_rules = []
 
-        table.row(css=css_matches_search)
-        delete_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_delete", nr)])
-        drag_url   = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr)])
-        edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("edit", nr)])
-        clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("clone", nr)])
+        # Simulator
+        event = self._show_event_simulator()
+        if not self._rules:
+            html.message(_("This package does not yet contain any rules."))
+            return
+        elif search_expression and not found_rules:
+            html.message(_("No rules found."))
+            return
 
-        table.cell(_("Actions"), css="buttons")
-        html.icon_button(edit_url, _("Edit this rule"), "edit")
-        html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
-        html.element_dragger_url("tr", base_url=drag_url)
-        html.icon_button(delete_url, _("Delete this rule"), "delete")
+        if len(self._rule_packs) > 1:
+            html.begin_form("move_to", method="POST")
 
-        table.cell("", css="buttons")
-        if rule.get("disabled"):
-            html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
-        elif event:
-            result = mkeventd.event_rule_matches(rule_pack, rule, event)
-            if type(result) != tuple:
-                html.icon(_("Rule does not match: %s") % result, "rulenmatch")
+        # Show content of the rule package
+        table.begin(css="ruleset", limit=None, sortable=False)
+        have_match = False
+        for nr, rule in enumerate(self._rules):
+            if rule in found_rules:
+                css_matches_search = "matches_search"
             else:
-                cancelling, groups = result
-                if have_match:
-                    msg = _("This rule matches, but is overruled by a previous match.")
-                    icon = "rulepmatch"
+                css_matches_search = None
+
+            table.row(css=css_matches_search)
+            delete_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", self._rule_pack_id), ("_delete", nr)])
+            drag_url   = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", self._rule_pack_id), ("_move", nr)])
+            edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", self._rule_pack_id), ("edit", nr)])
+            clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", self._rule_pack_id), ("clone", nr)])
+
+            table.cell(_("Actions"), css="buttons")
+            html.icon_button(edit_url, _("Edit this rule"), "edit")
+            html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+            html.element_dragger_url("tr", base_url=drag_url)
+            html.icon_button(delete_url, _("Delete this rule"), "delete")
+
+            table.cell("", css="buttons")
+            if rule.get("disabled"):
+                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+            elif event:
+                result = mkeventd.event_rule_matches(self._rule_pack, rule, event)
+                if type(result) != tuple:
+                    html.icon(_("Rule does not match: %s") % result, "rulenmatch")
                 else:
-                    if cancelling:
-                        msg = _("This rule does a cancelling match.")
+                    cancelling, groups = result
+                    if have_match:
+                        msg = _("This rule matches, but is overruled by a previous match.")
+                        icon = "rulepmatch"
                     else:
-                        msg = _("This rule matches.")
-                    icon = "rulematch"
-                    have_match = True
-                if groups:
-                    msg += _(" Match groups: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
-                html.icon(msg, icon)
+                        if cancelling:
+                            msg = _("This rule does a cancelling match.")
+                        else:
+                            msg = _("This rule matches.")
+                        icon = "rulematch"
+                        have_match = True
+                    if groups:
+                        msg += _(" Match groups: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
+                    html.icon(msg, icon)
 
-        if rule.get("invert_matching"):
-            html.icon(_("Matching is inverted in this rule"), "inverted")
+            if rule.get("invert_matching"):
+                html.icon(_("Matching is inverted in this rule"), "inverted")
 
-        if rule.get("contact_groups") != None:
-            html.icon(_("This rule attaches contact group(s) to the events: %s") %
-                       (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
-                     "contactgroups")
+            if rule.get("contact_groups") != None:
+                html.icon(_("This rule attaches contact group(s) to the events: %s") %
+                           (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
+                         "contactgroups")
 
-        table.cell(_("ID"), html.render_a(rule["id"], edit_url))
+            table.cell(_("ID"), html.render_a(rule["id"], edit_url))
 
-        if cmk.is_managed_edition():
-            table.cell(_("Customer"))
-            if "customer" in rule_pack:
-                html.write_text("%s (%s)" %
-                        (managed.get_customer_name(rule_pack), _("Set by rule pack")))
+            if cmk.is_managed_edition():
+                table.cell(_("Customer"))
+                if "customer" in self._rule_pack:
+                    html.write_text("%s (%s)" %
+                            (managed.get_customer_name(self._rule_pack), _("Set by rule pack")))
+                else:
+                    html.write_text(managed.get_customer_name(rule))
+
+
+            if rule.get("drop"):
+                table.cell(_("State"), css="state statep nowrap")
+                if rule["drop"] == "skip_pack":
+                    html.write_text(_("SKIP PACK"))
+                else:
+                    html.write_text(_("DROP"))
             else:
-                html.write_text(managed.get_customer_name(rule))
+                if type(rule['state']) == tuple:
+                    stateval = rule["state"][0]
+                else:
+                    stateval = rule["state"]
+                txt = { 0: _("OK"),   1:_("WARN"),
+                        2: _("CRIT"), 3:_("UNKNOWN"),
+                       -1: _("(syslog)"),
+                       'text_pattern':_("(set by message text)") }[stateval]
+                table.cell(_("State"), txt,  css="state state%s" % stateval)
 
-
-        if rule.get("drop"):
-            table.cell(_("State"), css="state statep nowrap")
-            if rule["drop"] == "skip_pack":
-                html.write_text(_("SKIP PACK"))
+            # Syslog priority
+            if "match_priority" in rule:
+                prio_from, prio_to = rule["match_priority"]
+                if prio_from == prio_to:
+                    prio_text = mkeventd.syslog_priorities[prio_from][1]
+                else:
+                    prio_text = mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
+                                mkeventd.syslog_priorities[prio_to][1][:2]
             else:
-                html.write_text(_("DROP"))
-        else:
-            if type(rule['state']) == tuple:
-                stateval = rule["state"][0]
-            else:
-                stateval = rule["state"]
-            txt = { 0: _("OK"),   1:_("WARN"),
-                    2: _("CRIT"), 3:_("UNKNOWN"),
-                   -1: _("(syslog)"),
-                   'text_pattern':_("(set by message text)") }[stateval]
-            table.cell(_("State"), txt,  css="state state%s" % stateval)
+                prio_text = ""
+            table.cell(_("Priority"), prio_text)
 
-        # Syslog priority
-        if "match_priority" in rule:
-            prio_from, prio_to = rule["match_priority"]
-            if prio_from == prio_to:
-                prio_text = mkeventd.syslog_priorities[prio_from][1]
-            else:
-                prio_text = mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
-                            mkeventd.syslog_priorities[prio_to][1][:2]
-        else:
-            prio_text = ""
-        table.cell(_("Priority"), prio_text)
+            # Syslog Facility
+            table.cell(_("Facility"))
+            if "match_facility" in rule:
+                facnr = rule["match_facility"]
+                html.write("%s" % dict(mkeventd.syslog_facilities)[facnr])
 
-        # Syslog Facility
-        table.cell(_("Facility"))
-        if "match_facility" in rule:
-            facnr = rule["match_facility"]
-            html.write("%s" % dict(mkeventd.syslog_facilities)[facnr])
+            table.cell(_("Service Level"),
+                      dict(mkeventd.service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]))
+            hits = rule.get('hits')
+            table.cell(_("Hits"), hits != None and hits or '', css="number")
 
-        table.cell(_("Service Level"),
-                  dict(mkeventd.service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]))
-        hits = rule.get('hits')
-        table.cell(_("Hits"), hits != None and hits or '', css="number")
+            # Text to match
+            table.cell(_("Text to match"), rule.get("match"))
 
-        # Text to match
-        table.cell(_("Text to match"), rule.get("match"))
+            # Description
+            table.cell(_("Description"))
+            url = rule.get("docu_url")
+            if url:
+                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+                html.nbsp()
+            html.write_text(rule.get("description", ""))
 
-        # Description
-        table.cell(_("Description"))
-        url = rule.get("docu_url")
-        if url:
-            html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-            html.nbsp()
-        html.write_text(rule.get("description", ""))
+            # Move rule to other pack
+            if len(self._rule_packs) > 1:
+                table.cell(_("Move to pack..."))
+                choices = [ ("", "") ] + \
+                          [ (pack["id"], pack["title"])
+                            for pack in self._rule_packs
+                            if not pack is self._rule_pack]
+                html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
-        # Move rule to other pack
-        if len(rule_packs) > 1:
-            table.cell(_("Move to pack..."))
-            choices = [ ("", "") ] + \
-                      [ (pack["id"], pack["title"])
-                        for pack in rule_packs
-                        if not pack is rule_pack]
-            html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
+        if len(self._rule_packs) > 1:
+            html.hidden_field("_move_to", "yes")
+            html.hidden_fields()
+            html.end_form()
 
-    if len(rule_packs) > 1:
-        html.hidden_field("_move_to", "yes")
-        html.hidden_fields()
-        html.end_form()
-
-    table.end()
+        table.end()
 
 
-def copy_rules_from_master():
-    answer = mkeventd.query_ec_directly("REPLICATE 0")
-    if "rules" not in answer:
-        raise MKGeneralException(_("Cannot get rules from local event daemon."))
-    rule_packs = answer["rules"]
-    save_mkeventd_rules(rule_packs)
+    def _filter_mkeventd_rules(self, search_expression, rule_pack):
+        found_rules = []
+        for rule in rule_pack.get("rules", []):
+            if search_expression in rule["id"].lower() \
+               or search_expression in rule.get("description", "").lower() \
+               or search_expression in rule.get("match", "").lower():
+                found_rules.append(rule)
+        return found_rules
 
 
-def filter_mkeventd_rules(search_expression, rule_pack):
-    found_rules = []
-    for rule in rule_pack.get("rules", []):
-        if search_expression in rule["id"].lower() \
-           or search_expression in rule.get("description", "").lower() \
-           or search_expression in rule.get("match", "").lower():
-            found_rules.append(rule)
-    return found_rules
 
+class ModeEventConsoleEditRulePack(EventConsoleMode):
+    def _from_vars(self):
+        self._edit_nr = int(html.var("edit", -1)) # missing -> new rule pack
+        self._new = self._edit_nr < 0
 
-def mode_mkeventd_edit_rule_pack(phase):
-    rule_packs = load_mkeventd_rules()
-    edit_nr = int(html.var("edit", -1)) # missing -> new rule pack
-    new = edit_nr < 0
-
-    if phase == "title":
-        if new:
-            return _("Create new rule pack")
+        if self._new:
+            self._rule_pack = { "rules" : [], }
         else:
             try:
-                return _("Edit rule pack %s") % rule_packs[edit_nr]["id"]
+                self._rule_pack = self._rule_packs[self._edit_nr]
             except IndexError:
                 raise MKUserError("edit", _("The rule pack you are trying to "
                                             "edit does not exist."))
 
-    elif phase == "buttons":
-        mkeventd_rules_button()
-        mkeventd_changes_button()
-        if edit_nr >= 0:
-            rule_pack_id = rule_packs[edit_nr]["id"]
+        package_info = watolib.check_mk_local_automation("get-package-info")
+        self._type = ec.RulePackType.type_of(self._rule_pack, ec.rule_pack_id_to_mkp(package_info))
+
+
+
+    def title(self):
+        if self._new:
+            return _("Create new rule pack")
+        else:
+            return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
+
+
+    def buttons(self):
+        self._rules_button()
+        self._changes_button()
+        if not self._new:
+            rule_pack_id = self._rule_packs[self._edit_nr]["id"]
             html.context_button(_("Edit Rules"),
                 html.makeuri([("mode", "mkeventd_rules"),("rule_pack", rule_pack_id)]), "mkeventd_rules")
-        return
 
-    if new:
-        rule_pack = { "rules" : [], }
-    else:
-        rule_pack = rule_packs[edit_nr]
 
-    package_info = watolib.check_mk_local_automation("get-package-info")
-    type_ = ec.RulePackType.type_of(rule_pack, ec.rule_pack_id_to_mkp(package_info))
-
-    if type_ == ec.RulePackType.internal:
-        vs = vs_mkeventd_rule_pack()
-    else:
-        vs = vs_mkeventd_rule_pack(fixed_id=rule_pack['id'], fixed_title=rule_pack['title'])
-
-    if phase == "action":
+    def action(self):
         if not html.check_transaction():
             return "mkeventd_rule_packs"
 
-        if not new:
-            existing_rules = rule_pack["rules"]
+        if not self._new:
+            existing_rules = self._rule_pack["rules"]
         else:
             existing_rules = []
 
-        rule_pack = vs.from_html_vars("rule_pack")
-        vs.validate_value(rule_pack, "rule_pack")
-        rule_pack["rules"] = existing_rules
-        new_id = rule_pack["id"]
+        vs = self._valuespec()
+        self._rule_pack = vs.from_html_vars("rule_pack")
+        vs.validate_value(self._rule_pack, "rule_pack")
+
+        self._rule_pack["rules"] = existing_rules
+        new_id = self._rule_pack["id"]
 
         # Make sure that ID is unique
-        for nr, other_rule_pack in enumerate(rule_packs):
-            if new or nr != edit_nr:
+        for nr, other_rule_pack in enumerate(self._rule_packs):
+            if self._new or nr != self._edit_nr:
                 if other_rule_pack["id"] == new_id:
                     raise MKUserError("rule_pack_p_id", _("A rule pack with this ID already exists."))
 
-        if new:
-            rule_packs = [rule_pack] + rule_packs
+        if self._new:
+            self._rule_packs = [self._rule_pack] + self._rule_packs
         else:
-            if type_ == ec.RulePackType.internal or type_ == ec.RulePackType.modified_mkp:
-                rule_packs[edit_nr] = rule_pack
+            if self._type == ec.RulePackType.internal or self._type == ec.RulePackType.modified_mkp:
+                self._rule_packs[self._edit_nr] = self._rule_pack
             else:
-                rule_packs[edit_nr].rule_pack = rule_pack
-                export_mkp_rule_pack(rule_pack)
+                self._rule_packs[self._edit_nr].rule_pack = self._rule_pack
+                export_mkp_rule_pack(self._rule_pack)
 
-        save_mkeventd_rules(rule_packs)
+        save_mkeventd_rules(self._rule_packs)
 
-        if new:
-            add_ec_change("new-rule-pack", _("Created new rule pack with id %s") % rule_pack["id"])
+        if self._new:
+            self._add_change("new-rule-pack", _("Created new rule pack with id %s") % self._rule_pack["id"])
         else:
-            add_ec_change("edit-rule-pack", _("Modified rule pack %s") % rule_pack["id"])
+            self._add_change("edit-rule-pack", _("Modified rule pack %s") % self._rule_pack["id"])
         return "mkeventd_rule_packs"
 
 
-    html.begin_form("rule_pack")
-    vs.render_input("rule_pack", rule_pack)
-    vs.set_focus("rule_pack")
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
+    def page(self):
+        html.begin_form("rule_pack")
+        vs = self._valuespec()
+        vs.render_input("rule_pack", self._rule_pack)
+        vs.set_focus("rule_pack")
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
 
 
-def mode_mkeventd_edit_rule(phase):
-    rule_packs = load_mkeventd_rules()
+    def _valuespec(self):
+        if self._type == ec.RulePackType.internal:
+            return vs_mkeventd_rule_pack()
+        else:
+            return vs_mkeventd_rule_pack(fixed_id=self._rule_pack['id'], fixed_title=self._rule_pack['title'])
 
-    if html.has_var("rule_pack"):
-        rule_pack_nr, rule_pack = rule_pack_with_id(rule_packs, html.var("rule_pack"))
 
-    else:
-        # In links from multisite views the rule pack is not known.
-        # We just know the rule id and need to find the pack ourselves.
-        rule_id = html.var("rule_id")
-        if rule_id == None:
-            raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
 
-        rule_pack = None
-        for nr, pack in enumerate(rule_packs):
-            for rnr, rule in enumerate(pack["rules"]):
-                if rule_id == rule["id"]:
-                    rule_pack_nr, rule_pack = nr, pack
-                    html.set_var("edit", str(rnr))
-                    html.set_var("rule_pack", pack["id"])
-                    break
+class ModeEventConsoleEditRule(EventConsoleMode):
+    def _from_vars(self):
+        if html.has_var("rule_pack"):
+            self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(html.var("rule_pack"))
 
-        if not rule_pack:
-            raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
+        else:
+            # In links from multisite views the rule pack is not known.
+            # We just know the rule id and need to find the pack ourselves.
+            rule_id = html.var("rule_id")
+            if rule_id == None:
+                raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
 
-    rules = rule_pack["rules"]
+            self._rule_pack = None
+            for nr, pack in enumerate(self._rule_packs):
+                for rnr, rule in enumerate(pack["rules"]):
+                    if rule_id == rule["id"]:
+                        self._rule_pack_nr, self._rule_pack = nr, pack
+                        html.set_var("edit", str(rnr))
+                        html.set_var("rule_pack", pack["id"])
+                        break
 
-    vs = vs_mkeventd_rule(rule_pack.get('customer'))
+            if not self._rule_pack:
+                raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
 
-    edit_nr = int(html.var("edit", -1)) # missing -> new rule
-    clone_nr = int(html.var("clone", -1)) # Only needed in 'new' mode
-    new = edit_nr < 0
+        self._rules = self._rule_pack["rules"]
 
-    if phase == "title":
-        if new:
-            return _("Create new rule")
+        self._edit_nr = int(html.var("edit", -1)) # missing -> new rule
+        self._clone_nr = int(html.var("clone", -1)) # Only needed in 'new' mode
+        self._new = self._edit_nr < 0
+
+        if self._new:
+            if self._clone_nr >= 0 and not html.var("_clear"):
+                self._rule = {}
+                self._rule.update(self._rules[self._clone_nr])
+            else:
+                self._rule = {}
         else:
             try:
-                return _("Edit rule %s") % rules[edit_nr]["id"]
+                self._rule = self._rules[self._edit_nr]
             except IndexError:
                 raise MKUserError("edit", _("The rule you are trying to edit does not exist."))
 
-    elif phase == "buttons":
-        home_button()
-        mkeventd_rules_button()
-        mkeventd_changes_button()
-        if clone_nr >= 0:
-            html.context_button(_("Clear Rule"), html.makeuri([("_clear", "1")]), "clear")
-        return
 
-    if new:
-        if clone_nr >= 0 and not html.var("_clear"):
-            rule = {}
-            rule.update(rules[clone_nr])
+    def title(self):
+        if self._new:
+            return _("Create new rule")
         else:
-            rule = {}
-    else:
-        rule = rules[edit_nr]
+            return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
-    if phase == "action":
+
+    def buttons(self):
+        home_button()
+        self._rules_button()
+        self._changes_button()
+        if self._clone_nr >= 0:
+            html.context_button(_("Clear Rule"), html.makeuri([("_clear", "1")]), "clear")
+
+
+    def action(self):
         if not html.check_transaction():
             return "mkeventd_rules"
 
-        if not new:
-            old_id = rule["id"]
-        rule = vs.from_html_vars("rule")
-        vs.validate_value(rule, "rule")
-        if not new and old_id != rule["id"]:
+        if not self._new:
+            old_id = self._rule["id"]
+        vs = self._valuespec()
+        self._rule = vs.from_html_vars("rule")
+        vs.validate_value(self._rule, "rule")
+        if not self._new and old_id != self._rule["id"]:
             raise MKUserError("rule_p_id",
                  _("It is not allowed to change the ID of an existing rule."))
-        elif new:
-            for pack in rule_packs:
+        elif self._new:
+            for pack in self._rule_packs:
                 for r in pack["rules"]:
-                    if r["id"] == rule["id"]:
+                    if r["id"] == self._rule["id"]:
                         error_text = _("A rule with this ID already exists in rule pack <b>%s</b>.") % pack["title"]
                         raise MKUserError("rule_p_id", html.render_text(error_text))
 
         try:
-            num_groups = re.compile(rule["match"]).groups
+            num_groups = re.compile(self._rule["match"]).groups
         except:
             raise MKUserError("rule_p_match",
                 _("Invalid regular expression"))
@@ -1821,11 +1873,11 @@ def mode_mkeventd_edit_rule(phase):
                     _("You matching text has too many regular expresssion subgroups. "
                       "Only nine are allowed."))
 
-        if "count" in rule and "expect" in rule:
+        if "count" in self._rule and "expect" in self._rule:
             raise MKUserError("rule_p_expect_USE", _("You cannot use counting and expecting "
                      "at the same time in the same rule."))
 
-        if "expect" in rule and "delay" in rule:
+        if "expect" in self._rule and "delay" in self._rule:
             raise MKUserError("rule_p_expect_USE", _("You cannot use expecting and delay "
                      "at the same time in the same rule, sorry."))
 
@@ -1834,7 +1886,7 @@ def mode_mkeventd_edit_rule(phase):
         num_repl = 9
         while num_repl > num_groups:
             repl = "\\%d" % num_repl
-            for name, value in rule.items():
+            for name, value in self._rule.items():
                 if name.startswith("set_") and type(value) in [ str, unicode ]:
                     if repl in value:
                         raise MKUserError("rule_p_" + name,
@@ -1843,143 +1895,131 @@ def mode_mkeventd_edit_rule(phase):
                                 num_repl, num_groups))
             num_repl -= 1
 
-        if cmk.is_managed_edition() and "customer" in rule_pack:
+        if cmk.is_managed_edition() and "customer" in self._rule_pack:
             try:
-                del rule["customer"]
+                del self._rule["customer"]
             except KeyError:
                 pass
 
         package_info = watolib.check_mk_local_automation("get-package-info")
-        type_ = ec.RulePackType.type_of(rule_pack, ec.rule_pack_id_to_mkp(package_info))
+        type_ = ec.RulePackType.type_of(self._rule_pack, ec.rule_pack_id_to_mkp(package_info))
         if type_ == ec.RulePackType.unmodified_mkp:
-            ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
-            rules = rule_packs[rule_pack_nr]['rules']
+            ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+            self._rules = self._rule_packs[self._rule_pack_nr]['rules']
 
-        if new and clone_nr >= 0:
-            rules[clone_nr:clone_nr] = [ rule ]
-        elif new:
-            rules[0:0] = [ rule ]
+        if self._new and self._clone_nr >= 0:
+            self._rules[self._clone_nr:self._clone_nr] = [ self._rule ]
+        elif self._new:
+            self._rules[0:0] = [ self._rule ]
         else:
-            rules[edit_nr] = rule
+            self._rules[self._edit_nr] = self._rule
 
         if type_ == ec.RulePackType.exported:
-            export_mkp_rule_pack(rule_pack)
-        save_mkeventd_rules(rule_packs)
+            export_mkp_rule_pack(self._rule_pack)
+        save_mkeventd_rules(self._rule_packs)
 
-        if new:
-            add_ec_change("new-rule", _("Created new event correlation rule with id %s") % rule["id"])
+        if self._new:
+            self._add_change("new-rule", _("Created new event correlation rule with id %s") % self._rule["id"])
         else:
-            add_ec_change("edit-rule", _("Modified event correlation rule %s") % rule["id"])
+            self._add_change("edit-rule", _("Modified event correlation rule %s") % self._rule["id"])
             # Reset hit counters of this rule
-            mkeventd.execute_command("RESETCOUNTERS", [rule["id"]], config.omd_site())
+            mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], config.omd_site())
         return "mkeventd_rules"
 
 
-    html.begin_form("rule")
-    vs.render_input("rule", rule)
-    vs.set_focus("rule")
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
-
-
-def add_ec_change(what, message):
-    add_change(what, message, domains=[ConfigDomainEventConsole],
-               sites=watolib.get_event_console_sync_sites())
-
-
-def mkeventd_changes_button():
-    changelog_button()
-
-
-def mkeventd_rules_button():
-    html.context_button(_("Rule Packs"), html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
-
-def mkeventd_config_button():
-    if config.user.may("mkeventd.config"):
-        html.context_button(_("Settings"), html.makeuri_contextless([("mode", "mkeventd_config")]), "configuration")
-
-def mkeventd_status_button():
-    html.context_button(_("Server Status"), html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
-
-def mkeventd_mibs_button():
-    html.context_button(_("SNMP MIBs"), html.makeuri_contextless([("mode", "mkeventd_mibs")]), "snmpmib")
-
-def mode_mkeventd_status(phase):
-    if phase == "title":
-        return _("Event Console - Local server status")
-
-    elif phase == "buttons":
-        home_button()
-        mkeventd_rules_button()
-        mkeventd_config_button()
-        mkeventd_mibs_button()
-        return
-
-    elif phase == "action":
-        if config.user.may("mkeventd.switchmode"):
-            if html.has_var("_switch_sync"):
-                new_mode = "sync"
-            else:
-                new_mode = "takeover"
-            c = wato_confirm(_("Confirm switching replication mode"),
-                    _("Do you really want to switch the event daemon to %s mode?") %
-                        new_mode)
-            if c:
-                mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
-                watolib.log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
-                return None, _("Switched to %s mode") % new_mode
-            elif c == False:
-                return ""
-            else:
-                return
-
-        return
-
-    if not mkeventd.daemon_running():
-        warning = _("The Event Console Daemon is currently not running. ")
-        warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
-                     "before starting this site.")
-        html.show_warning(warning)
-        return
-
-    status = mkeventd.get_local_ec_status()
-    repl_mode = status["status_replication_slavemode"]
-    html.h3(_("Current status of local Event Console"))
-    html.open_ul()
-    html.li(_("Event Daemon is running."))
-    html.open_li()
-    html.write_text("%s: " % _("Current replication mode"))
-    html.open_b()
-    html.write("%s" % ({ "sync" : _("synchronize"),
-                         "takeover" : _("Takeover!"),
-                       }.get(repl_mode, _("master / standalone"))))
-    html.close_b()
-    html.close_li()
-    if repl_mode in [ "sync", "takeover" ]:
-        html.open_li()
-        html.write_text(_("Status of last synchronization: <b>%s</b>") % (
-                status["status_replication_success"] and _("Success") or _("Failed!")))
-        html.close_li()
-        last_sync = status["status_replication_last_sync"]
-        if last_sync:
-            html.li(_("Last successful sync %d seconds ago.") % (time.time() - last_sync))
-        else:
-            html.li(_("No successful synchronization so far."))
-
-    html.close_ul()
-
-    if config.user.may("mkeventd.switchmode"):
-        html.begin_form("switch")
-        if repl_mode == "sync":
-            html.button("_switch_takeover", _("Switch to Takeover mode!"))
-        elif repl_mode == "takeover":
-            html.button("_switch_sync", _("Switch back to sync mode!"))
+    def page(self):
+        html.begin_form("rule")
+        vs = self._valuespec()
+        vs.render_input("rule", self._rule)
+        vs.set_focus("rule")
+        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
 
-class ModeEventConsoleSettings(ModeGlobalSettings):
+    def _valuespec(self):
+        return vs_mkeventd_rule(self._rule_pack.get('customer'))
+
+
+
+class ModeEventConsoleStatus(EventConsoleMode):
+    def title(self):
+        return _("Local server status")
+
+
+    def buttons(self):
+        home_button()
+        self._rules_button()
+        self._config_button()
+        self._mibs_button()
+
+
+    def action(self):
+        if not config.user.may("mkeventd.switchmode"):
+            return
+
+        if html.has_var("_switch_sync"):
+            new_mode = "sync"
+        else:
+            new_mode = "takeover"
+        c = wato_confirm(_("Confirm switching replication mode"),
+                _("Do you really want to switch the event daemon to %s mode?") %
+                    new_mode)
+        if c:
+            mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
+            watolib.log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
+            return None, _("Switched to %s mode") % new_mode
+        elif c == False:
+            return ""
+        else:
+            return
+
+
+    def page(self):
+        if not mkeventd.daemon_running():
+            warning = _("The Event Console Daemon is currently not running. ")
+            warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
+                         "before starting this site.")
+            html.show_warning(warning)
+            return
+
+        status = mkeventd.get_local_ec_status()
+        repl_mode = status["status_replication_slavemode"]
+        html.h3(_("Current status of local Event Console"))
+        html.open_ul()
+        html.li(_("Event Daemon is running."))
+        html.open_li()
+        html.write_text("%s: " % _("Current replication mode"))
+        html.open_b()
+        html.write("%s" % ({ "sync" : _("synchronize"),
+                             "takeover" : _("Takeover!"),
+                           }.get(repl_mode, _("master / standalone"))))
+        html.close_b()
+        html.close_li()
+        if repl_mode in [ "sync", "takeover" ]:
+            html.open_li()
+            html.write_text(_("Status of last synchronization: <b>%s</b>") % (
+                    status["status_replication_success"] and _("Success") or _("Failed!")))
+            html.close_li()
+            last_sync = status["status_replication_last_sync"]
+            if last_sync:
+                html.li(_("Last successful sync %d seconds ago.") % (time.time() - last_sync))
+            else:
+                html.li(_("No successful synchronization so far."))
+
+        html.close_ul()
+
+        if config.user.may("mkeventd.switchmode"):
+            html.begin_form("switch")
+            if repl_mode == "sync":
+                html.button("_switch_takeover", _("Switch to Takeover mode!"))
+            elif repl_mode == "takeover":
+                html.button("_switch_sync", _("Switch back to sync mode!"))
+            html.hidden_fields()
+            html.end_form()
+
+
+class ModeEventConsoleSettings(EventConsoleMode, ModeGlobalSettings):
     def __init__(self):
         super(ModeEventConsoleSettings, self).__init__()
 
@@ -2001,8 +2041,8 @@ class ModeEventConsoleSettings(ModeGlobalSettings):
 
     def buttons(self):
         home_button()
-        mkeventd_rules_button()
-        mkeventd_changes_button()
+        self._rules_button()
+        self._changes_button()
         html.context_button(_("Server Status"), html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
 
 
@@ -2036,7 +2076,7 @@ class ModeEventConsoleSettings(ModeGlobalSettings):
 
             watolib.save_global_settings(self._current_settings)
 
-            add_ec_change("edit-configvar", msg)
+            self._add_change("edit-configvar", msg)
 
             if action == "_reset":
                 return "mkeventd_config", msg
@@ -2084,27 +2124,28 @@ class ModeEventConsoleEditGlobalSetting(ModeEditGlobalSetting):
 
 
 
-def mode_mkeventd_mibs(phase):
-    if phase == 'title':
+class ModeEventConsoleMIBs(EventConsoleMode):
+    def title(self):
         return _('SNMP MIBs for Trap Translation')
 
-    elif phase == 'buttons':
-        home_button()
-        mkeventd_rules_button()
-        mkeventd_changes_button()
-        mkeventd_status_button()
-        mkeventd_config_button()
-        return
 
-    elif phase == 'action':
+    def buttons(self):
+        home_button()
+        self._rules_button()
+        self._changes_button()
+        self._status_button()
+        self._config_button()
+
+
+    def action(self):
         if html.has_var("_delete"):
             filename = html.var("_delete")
-            mibs = load_snmp_mibs(mkeventd.mib_upload_dir)
+            mibs = self._load_snmp_mibs(mkeventd.mib_upload_dir)
             if filename in mibs:
                 c = wato_confirm(_("Confirm MIB deletion"),
                                  _("Do you really want to delete the MIB file <b>%s</b>?") % filename)
                 if c:
-                    delete_mib(filename, mibs[filename]["name"])
+                    self._delete_mib(filename, mibs[filename]["name"])
                 elif c == False:
                     return ""
                 else:
@@ -2114,7 +2155,7 @@ def mode_mkeventd_mibs(phase):
             filename, mimetype, content = uploaded_mib
             if filename:
                 try:
-                    msg = upload_mib(filename, mimetype, content)
+                    msg = self._upload_mib(filename, mimetype, content)
                     return None, msg
                 except Exception, e:
                     if config.debug:
@@ -2123,303 +2164,306 @@ def mode_mkeventd_mibs(phase):
                         raise MKUserError("_upload_mib", "%s" % e)
 
         elif html.var("_bulk_delete_custom_mibs"):
-            return bulk_delete_custom_mibs_after_confirm()
-
-        return
-
-    html.h3(_("Upload MIB file"))
-    html.write_text(_("Use this form to upload MIB files for translating incoming SNMP traps. "
-                      "You can upload single MIB files with the extension <tt>.mib</tt> or "
-                      "<tt>.txt</tt>, but you can also upload multiple MIB files at once by "
-                      "packing them into a <tt>.zip</tt> file. Only files in the root directory "
-                      "of the zip file will be processed.<br><br>"))
-
-    html.begin_form("upload_form", method="POST")
-    forms.header(_("Upload MIB file"))
-
-    forms.section(_("Select file"))
-    html.upload_file("_upload_mib")
-    forms.end()
-
-    html.button("upload_button", _("Upload MIB(s)"), "submit")
-    html.hidden_fields()
-    html.end_form()
-
-    if not os.path.exists(mkeventd.mib_upload_dir):
-        os.makedirs(mkeventd.mib_upload_dir) # Let exception happen if this fails. Never happens on OMD
-
-    for path, title in mkeventd.mib_dirs:
-        show_mib_table(path, title)
+            return self._bulk_delete_custom_mibs_after_confirm()
 
 
-def show_mib_table(path, title):
-    is_custom_dir = path == mkeventd.mib_upload_dir
+    def _upload_mib(self, filename, mimetype, content):
+        self._validate_mib_file_name(filename)
 
-    if is_custom_dir:
-        html.begin_form("bulk_delete_form", method="POST")
+        if self._is_zipfile(cStringIO.StringIO(content)):
+            msg = self._process_uploaded_zip_file(filename, content)
+        else:
+            if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
+                raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
 
-    table.begin("mibs_"+path, title, searchable=False)
-    for filename, mib in sorted(load_snmp_mibs(path).items()):
-        table.row()
+            msg = self._process_uploaded_mib_file(filename, content)
 
-        if is_custom_dir:
-            table.cell("<input type=button class=checkgroup name=_toggle_group"
-                       " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'),
-                       sortable=False, css="buttons")
-            html.checkbox("_c_mib_%s" % filename, deflt=False)
+        return msg
 
-        table.cell(_("Actions"), css="buttons")
-        if is_custom_dir:
-            delete_url = make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)])
-            html.icon_button(delete_url, _("Delete this MIB"), "delete")
 
-        table.cell(_("Filename"), filename)
-        table.cell(_("MIB"), mib.get("name", ""))
-        table.cell(_("Organization"), mib.get("organization", ""))
-        table.cell(_("Size"), cmk.render.bytes(mib.get("size", 0)), css="number")
+    # Used zipfile.is_zipfile(cStringIO.StringIO(content)) before, but this only
+    # possible with python 2.7. zipfile is only supporting checking of files by
+    # their path.
+    def _is_zipfile(self, fo):
+        try:
+            zipfile.ZipFile(fo)
+            return True
+        except zipfile.BadZipfile:
+            return False
 
-    table.end()
 
-    if is_custom_dir:
-        html.button("_bulk_delete_custom_mibs", _("Bulk Delete"), "submit", style="margin-top:10px")
+    def _process_uploaded_zip_file(self, filename, content):
+        zip_obj = zipfile.ZipFile(cStringIO.StringIO(content))
+        messages = []
+        for entry in zip_obj.infolist():
+            success, fail = 0, 0
+            try:
+                mib_file_name = entry.filename
+                if mib_file_name[-1] == "/":
+                    continue # silently skip directories
+
+                self._validate_mib_file_name(mib_file_name)
+
+                mib_obj = zip_obj.open(mib_file_name)
+                messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
+                success += 1
+            except Exception, e:
+                messages.append(_("Skipped %s: %s") % (html.render_text(mib_file_name), e))
+                fail += 1
+
+        return "<br>\n".join(messages) + \
+               "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
+
+
+    def _process_uploaded_mib_file(self, filename, content):
+        if '.' in filename:
+            mibname = filename.split('.')[0]
+        else:
+            mibname = filename
+
+        msg = self._validate_and_compile_mib(mibname.upper(), content)
+        file(mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
+        self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
+        return msg
+
+
+    def _validate_mib_file_name(self, filename):
+        if filename.startswith(".") or "/" in filename:
+            raise Exception(_("Invalid filename"))
+
+
+    def _validate_and_compile_mib(self, mibname, content):
+        try:
+            from pysmi.compiler import MibCompiler
+            from pysmi.parser.smiv1compat import SmiV1CompatParser
+            from pysmi.searcher.pypackage import PyPackageSearcher
+            from pysmi.searcher.pyfile import PyFileSearcher
+            from pysmi.writer.pyfile import PyFileWriter
+            from pysmi.reader.localfile import FileReader
+            from pysmi.codegen.pysnmp import PySnmpCodeGen
+            from pysmi.writer.callback import CallbackWriter
+            from pysmi.reader.callback import CallbackReader
+            from pysmi.searcher.stub import StubSearcher
+            from pysmi.error import PySmiError
+
+            defaultMibPackages = PySnmpCodeGen.defaultMibPackages
+            baseMibs           = PySnmpCodeGen.baseMibs
+        except ImportError, e:
+            raise Exception(_('You are missing the needed pysmi python module (%s).') % e)
+
+        store.mkdir(mkeventd.compiled_mibs_dir)
+
+        # This object manages the compilation of the uploaded SNMP mib
+        # but also resolving dependencies and compiling dependents
+        compiler = MibCompiler(SmiV1CompatParser(),
+                               PySnmpCodeGen(),
+                               PyFileWriter(mkeventd.compiled_mibs_dir))
+
+        # FIXME: This is a temporary local fix that should be removed once
+        # handling of file contents uses a uniformly encoded representation
+        try:
+            content = content.decode("utf-8")
+        except:
+            content = content.decode("latin-1")
+
+        # Provides the just uploaded MIB module
+        compiler.addSources(
+            CallbackReader(lambda m,c: m==mibname and c or '', content)
+        )
+
+        # Directories containing ASN1 MIB files which may be used for
+        # dependency resolution
+        compiler.addSources(*[ FileReader(path) for path, title in mkeventd.mib_dirs ])
+
+        # check for already compiled MIBs
+        compiler.addSearchers(PyFileSearcher(mkeventd.compiled_mibs_dir))
+
+        # and also check PySNMP shipped compiled MIBs
+        compiler.addSearchers(*[ PyPackageSearcher(x) for x in defaultMibPackages ])
+
+        # never recompile MIBs with MACROs
+        compiler.addSearchers(StubSearcher(*baseMibs))
+
+        try:
+            if not content.strip():
+                raise Exception(_("The file is empty"))
+
+            results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
+
+            errors = []
+            for name, state_obj in sorted(results.items()):
+                if mibname == name and state_obj == 'failed':
+                    raise Exception(_('Failed to compile your module: %s') % state_obj.error)
+
+                if state_obj == 'missing':
+                    errors.append(_('%s - Dependency missing') % name)
+                elif state_obj == 'failed':
+                    errors.append(_('%s - Failed to compile (%s)') % (name, state_obj.error))
+
+            msg = _("MIB file %s uploaded.") % mibname
+            if errors:
+                msg += '<br>'+_('But there were errors:')+'<br>'
+                msg += '<br>\n'.join(errors)
+            return msg
+
+        except PySmiError, e:
+            if config.debug:
+                raise e
+            raise Exception(_('Failed to process your MIB file (%s): %s') % (mibname, e))
+
+
+    def _bulk_delete_custom_mibs_after_confirm(self):
+        custom_mibs = self._load_snmp_mibs(mkeventd.mib_upload_dir)
+        selected_custom_mibs = []
+        for varname in html.all_varnames_with_prefix("_c_mib_"):
+            if html.get_checkbox(varname):
+                filename = varname.split("_c_mib_")[-1]
+                if filename in custom_mibs:
+                    selected_custom_mibs.append(filename)
+
+        if selected_custom_mibs:
+            c = wato_confirm(_("Confirm deletion of selected MIBs"),
+                             _("Do you really want to delete the selected %d MIBs?") % \
+                               len(selected_custom_mibs))
+            if c:
+                for filename in selected_custom_mibs:
+                    self._delete_mib(filename, custom_mibs[filename]["name"])
+                return
+            elif c == False:
+                return "" # not yet confirmed
+            else:
+                return    # browser reload
+
+
+    def _delete_mib(self, filename, mib_name):
+        self._add_change("delete-mib", _("Deleted MIB %s") % filename)
+
+        # Delete the uploaded mib file
+        os.remove(mkeventd.mib_upload_dir + "/" + filename)
+
+        # Also delete the compiled files
+        for f in [ mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
+                   mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
+                   mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
+                   mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc"
+                ]:
+            if os.path.exists(f):
+                os.remove(f)
+
+
+
+    def page(self):
+        html.h3(_("Upload MIB file"))
+        html.write_text(_("Use this form to upload MIB files for translating incoming SNMP traps. "
+                          "You can upload single MIB files with the extension <tt>.mib</tt> or "
+                          "<tt>.txt</tt>, but you can also upload multiple MIB files at once by "
+                          "packing them into a <tt>.zip</tt> file. Only files in the root directory "
+                          "of the zip file will be processed.<br><br>"))
+
+        html.begin_form("upload_form", method="POST")
+        forms.header(_("Upload MIB file"))
+
+        forms.section(_("Select file"))
+        html.upload_file("_upload_mib")
+        forms.end()
+
+        html.button("upload_button", _("Upload MIB(s)"), "submit")
         html.hidden_fields()
         html.end_form()
 
+        if not os.path.exists(mkeventd.mib_upload_dir):
+            os.makedirs(mkeventd.mib_upload_dir) # Let exception happen if this fails. Never happens on OMD
 
-def bulk_delete_custom_mibs_after_confirm():
-    custom_mibs = load_snmp_mibs(mkeventd.mib_upload_dir)
-    selected_custom_mibs = []
-    for varname in html.all_varnames_with_prefix("_c_mib_"):
-        if html.get_checkbox(varname):
-            filename = varname.split("_c_mib_")[-1]
-            if filename in custom_mibs:
-                selected_custom_mibs.append(filename)
-
-    if selected_custom_mibs:
-        c = wato_confirm(_("Confirm deletion of selected MIBs"),
-                         _("Do you really want to delete the selected %d MIBs?") % \
-                           len(selected_custom_mibs))
-        if c:
-            for filename in selected_custom_mibs:
-                delete_mib(filename, custom_mibs[filename]["name"])
-            return
-        elif c == False:
-            return "" # not yet confirmed
-        else:
-            return    # browser reload
+        for path, title in mkeventd.mib_dirs:
+            self._show_mib_table(path, title)
 
 
-def delete_mib(filename, mib_name):
-    add_ec_change("delete-mib", _("Deleted MIB %s") % filename)
+    def _show_mib_table(self, path, title):
+        is_custom_dir = path == mkeventd.mib_upload_dir
 
-    # Delete the uploaded mib file
-    os.remove(mkeventd.mib_upload_dir + "/" + filename)
+        if is_custom_dir:
+            html.begin_form("bulk_delete_form", method="POST")
 
-    # Also delete the compiled files
-    for f in [ mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
-               mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
-               mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
-               mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc"
-            ]:
-        if os.path.exists(f):
-            os.remove(f)
+        table.begin("mibs_"+path, title, searchable=False)
+        for filename, mib in sorted(self._load_snmp_mibs(path).items()):
+            table.row()
 
+            if is_custom_dir:
+                table.cell("<input type=button class=checkgroup name=_toggle_group"
+                           " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'),
+                           sortable=False, css="buttons")
+                html.checkbox("_c_mib_%s" % filename, deflt=False)
 
-def load_snmp_mibs(path):
-    found = {}
-    try:
-        file_names = os.listdir(path)
-    except OSError, e:
-        if e.errno == 2: # not existing directories are ok
-            return found
-        else:
-            raise
+            table.cell(_("Actions"), css="buttons")
+            if is_custom_dir:
+                delete_url = make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)])
+                html.icon_button(delete_url, _("Delete this MIB"), "delete")
 
-    for fn in file_names:
-        if fn[0] != '.':
-            mib = parse_snmp_mib_header(path + "/" + fn)
-            found[fn] = mib
-    return found
+            table.cell(_("Filename"), filename)
+            table.cell(_("MIB"), mib.get("name", ""))
+            table.cell(_("Organization"), mib.get("organization", ""))
+            table.cell(_("Size"), cmk.render.bytes(mib.get("size", 0)), css="number")
 
+        table.end()
 
-def parse_snmp_mib_header(path):
-    mib = {}
-    mib["size"] = os.stat(path).st_size
-
-    # read till first "OBJECT IDENTIFIER" declaration
-    head = ''
-    for line in file(path):
-        if not line.startswith("--"):
-            if 'OBJECT IDENTIFIER' in line:
-                break # seems the header is finished
-            head += line
-
-    # now try to extract some relevant information from the header
-
-    matches = re.search('ORGANIZATION[^"]+"([^"]+)"', head, re.M)
-    if matches:
-        mib['organization'] = matches.group(1)
-
-    matches = re.search(r'^\s*([A-Z0-9][A-Z0-9-]+)\s', head, re.I | re.M)
-    if matches:
-        mib['name'] = matches.group(1)
-
-    return mib
-
-def validate_and_compile_mib(mibname, content):
-    try:
-        from pysmi.compiler import MibCompiler
-        from pysmi.parser.smiv1compat import SmiV1CompatParser
-        from pysmi.searcher.pypackage import PyPackageSearcher
-        from pysmi.searcher.pyfile import PyFileSearcher
-        from pysmi.writer.pyfile import PyFileWriter
-        from pysmi.reader.localfile import FileReader
-        from pysmi.codegen.pysnmp import PySnmpCodeGen
-        from pysmi.writer.callback import CallbackWriter
-        from pysmi.reader.callback import CallbackReader
-        from pysmi.searcher.stub import StubSearcher
-        from pysmi.error import PySmiError
-
-        defaultMibPackages = PySnmpCodeGen.defaultMibPackages
-        baseMibs           = PySnmpCodeGen.baseMibs
-    except ImportError, e:
-        raise Exception(_('You are missing the needed pysmi python module (%s).') % e)
-
-    store.mkdir(mkeventd.compiled_mibs_dir)
-
-    # This object manages the compilation of the uploaded SNMP mib
-    # but also resolving dependencies and compiling dependents
-    compiler = MibCompiler(SmiV1CompatParser(),
-                           PySnmpCodeGen(),
-                           PyFileWriter(mkeventd.compiled_mibs_dir))
-
-    # FIXME: This is a temporary local fix that should be removed once
-    # handling of file contents uses a uniformly encoded representation
-    try:
-        content = content.decode("utf-8")
-    except:
-        content = content.decode("latin-1")
-
-    # Provides the just uploaded MIB module
-    compiler.addSources(
-        CallbackReader(lambda m,c: m==mibname and c or '', content)
-    )
-
-    # Directories containing ASN1 MIB files which may be used for
-    # dependency resolution
-    compiler.addSources(*[ FileReader(path) for path, title in mkeventd.mib_dirs ])
-
-    # check for already compiled MIBs
-    compiler.addSearchers(PyFileSearcher(mkeventd.compiled_mibs_dir))
-
-    # and also check PySNMP shipped compiled MIBs
-    compiler.addSearchers(*[ PyPackageSearcher(x) for x in defaultMibPackages ])
-
-    # never recompile MIBs with MACROs
-    compiler.addSearchers(StubSearcher(*baseMibs))
-
-    try:
-        if not content.strip():
-            raise Exception(_("The file is empty"))
-
-        results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)
-
-        errors = []
-        for name, state_obj in sorted(results.items()):
-            if mibname == name and state_obj == 'failed':
-                raise Exception(_('Failed to compile your module: %s') % state_obj.error)
-
-            if state_obj == 'missing':
-                errors.append(_('%s - Dependency missing') % name)
-            elif state_obj == 'failed':
-                errors.append(_('%s - Failed to compile (%s)') % (name, state_obj.error))
-
-        msg = _("MIB file %s uploaded.") % mibname
-        if errors:
-            msg += '<br>'+_('But there were errors:')+'<br>'
-            msg += '<br>\n'.join(errors)
-        return msg
-
-    except PySmiError, e:
-        if config.debug:
-            raise e
-        raise Exception(_('Failed to process your MIB file (%s): %s') % (mibname, e))
+        if is_custom_dir:
+            html.button("_bulk_delete_custom_mibs", _("Bulk Delete"), "submit", style="margin-top:10px")
+            html.hidden_fields()
+            html.end_form()
 
 
-def upload_mib(filename, mimetype, content):
-    validate_mib_file_name(filename)
-
-    if is_zipfile(cStringIO.StringIO(content)):
-        msg = process_uploaded_zip_file(filename, content)
-    else:
-        if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
-            raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
-
-        msg = process_uploaded_mib_file(filename, content)
-
-    return msg
-
-
-def process_uploaded_zip_file(filename, content):
-    zip_obj = zipfile.ZipFile(cStringIO.StringIO(content))
-    messages = []
-    for entry in zip_obj.infolist():
-        success, fail = 0, 0
+    def _load_snmp_mibs(self, path):
+        found = {}
         try:
-            mib_file_name = entry.filename
-            if mib_file_name[-1] == "/":
-                continue # silently skip directories
+            file_names = os.listdir(path)
+        except OSError, e:
+            if e.errno == 2: # not existing directories are ok
+                return found
+            else:
+                raise
 
-            validate_mib_file_name(mib_file_name)
-
-            mib_obj = zip_obj.open(mib_file_name)
-            messages.append(process_uploaded_mib_file(mib_file_name, mib_obj.read()))
-            success += 1
-        except Exception, e:
-            messages.append(_("Skipped %s: %s") % (html.render_text(mib_file_name), e))
-            fail += 1
-
-    return "<br>\n".join(messages) + \
-           "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
+        for fn in file_names:
+            if fn[0] != '.':
+                mib = self._parse_snmp_mib_header(path + "/" + fn)
+                found[fn] = mib
+        return found
 
 
-# Used zipfile.is_zipfile(cStringIO.StringIO(content)) before, but this only
-# possible with python 2.7. zipfile is only supporting checking of files by
-# their path.
-def is_zipfile(fo):
-    try:
-        zipfile.ZipFile(fo)
-        return True
-    except zipfile.BadZipfile:
-        return False
+    def _parse_snmp_mib_header(self, path):
+        mib = {}
+        mib["size"] = os.stat(path).st_size
 
+        # read till first "OBJECT IDENTIFIER" declaration
+        head = ''
+        for line in file(path):
+            if not line.startswith("--"):
+                if 'OBJECT IDENTIFIER' in line:
+                    break # seems the header is finished
+                head += line
 
-def validate_mib_file_name(filename):
-    if filename.startswith(".") or "/" in filename:
-        raise Exception(_("Invalid filename"))
+        # now try to extract some relevant information from the header
 
+        matches = re.search('ORGANIZATION[^"]+"([^"]+)"', head, re.M)
+        if matches:
+            mib['organization'] = matches.group(1)
 
-def process_uploaded_mib_file(filename, content):
-    if '.' in filename:
-        mibname = filename.split('.')[0]
-    else:
-        mibname = filename
+        matches = re.search(r'^\s*([A-Z0-9][A-Z0-9-]+)\s', head, re.I | re.M)
+        if matches:
+            mib['name'] = matches.group(1)
 
-    msg = validate_and_compile_mib(mibname.upper(), content)
-    file(mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
-    add_ec_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
-    return msg
+        return mib
+
 
 
 if mkeventd_enabled:
-    modes["mkeventd_rule_packs"]     = (["mkeventd.edit"], mode_mkeventd_rule_packs)
-    modes["mkeventd_rules"]          = (["mkeventd.edit"], mode_mkeventd_rules)
-    modes["mkeventd_edit_rule"]      = (["mkeventd.edit"], mode_mkeventd_edit_rule)
-    modes["mkeventd_edit_rule_pack"] = (["mkeventd.edit"], mode_mkeventd_edit_rule_pack)
-    modes["mkeventd_status"]         = ([], mode_mkeventd_status)
+    modes["mkeventd_rule_packs"]     = (["mkeventd.edit"], ModeEventConsoleRulePacks)
+    modes["mkeventd_rules"]          = (["mkeventd.edit"], ModeEventConsoleRules)
+    modes["mkeventd_edit_rule"]      = (["mkeventd.edit"], ModeEventConsoleEditRule)
+    modes["mkeventd_edit_rule_pack"] = (["mkeventd.edit"], ModeEventConsoleEditRulePack)
+    modes["mkeventd_status"]         = ([], ModeEventConsoleStatus)
     modes["mkeventd_config"]         = (['mkeventd.config'], ModeEventConsoleSettings)
     modes["mkeventd_edit_configvar"] = (['mkeventd.config'], ModeEventConsoleEditGlobalSetting)
-    modes["mkeventd_mibs"]           = (['mkeventd.config'], mode_mkeventd_mibs)
+    modes["mkeventd_mibs"]           = (['mkeventd.config'], ModeEventConsoleMIBs)
 
 
 

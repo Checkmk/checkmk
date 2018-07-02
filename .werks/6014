@@ -1,0 +1,13 @@
+Title: Fixed handling of expected regular messages
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1530538326
+Class: fix
+
+If expected regular messages did not arrive at the event console and the
+resulting new event was not merged with a previous one, the EC could go into
+an endless loop, logging Python exceptions all the time.  This has been
+fixed.

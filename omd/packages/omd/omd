@@ -2486,29 +2486,6 @@ def main_help(args=None, options=None):
                     )
 
 
-def main_uninstall(args, options=None):
-    if options is None:
-        options = {}
-
-    global g_sitename
-    global g_sitedir
-    for sitename in all_sites():
-        g_sitename = sitename
-        g_sitedir = site_dir(g_sitename)
-        main_rm([])
-
-    for path in [ g_info["OMD_PHYSICAL_BASE"],
-                  "/omd",
-                          g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
-                  "/etc/init.d/omd",
-                  "/usr/bin/omd" ]:
-        shutil.rmtree(path, ignore_errors=True)
-
-    groupdel('omd')
-
-    sys.stdout.write("Good bye.\n")
-
-
 def main_setversion(args, options=None):
     if options is None:
         options = {}
@@ -4032,13 +4009,6 @@ commands = [
     [],
     "Show general help",
     ""),
-
-  ( "uninstall", True,  False, 0, 0, True, "",        main_uninstall,
-    [],
-    "Remove OMD and all sites!",
-
-    "BE WARNED: You are about to remove everything your system\n"
-    "           have ever known about omd."),
 
   ( "setversion", True, False, 0, 0, False, "VERSION", main_setversion,
     [],

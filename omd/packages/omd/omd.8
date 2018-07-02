@@ -68,15 +68,6 @@ This mainly updates the symlink \fB/omd/versions/default\fP. On debian based dis
 it calls update-alternatives to change the default versions. In this case there is a special
 option \fBauto\fP available to let update-alternatives choose the default OMD version.
 .TP
-.B omd uninstall
-This deletes all software and data of OMD and its sites. That command is mainly used
-for trying out OMD or testing the installation of OMD. Be aware that
-all your monitoring configuration and data will be lost!
-
-Note: Do not use \fBomd uninstall\fP if you've installed omd via RPM or DEB.
-Better remove all sites via by using \fBomd rm\fP and remove the RPM/DEB
-package afterwards.
-.TP
 .B omd sites [--bare, -b]
 Show a list of all sites and the version of OMD each site uses. If you specify
 the option \fB-b\fP or \fB--bare\fP, then the output leaves out hints to the

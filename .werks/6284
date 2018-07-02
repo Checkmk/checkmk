@@ -1,0 +1,13 @@
+Title: Removed dangerous "omd uninstall" mode
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1530520594
+Class: fix
+
+This mode was only used during early development. When being executed
+on a system where Check_MK is installed through OS packages, it left
+the package manager in a bad state where the OMD files are gone but
+package meta information are still left.

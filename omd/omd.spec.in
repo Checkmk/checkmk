@@ -81,6 +81,9 @@ ln -sfn "%{version}" /omd/versions/default
 ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
 ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
 ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
+if [ ! -d /etc/bash_completion.d ]; then
+    mkdir /etc/bash_completion.d
+fi
 ln -sfn /omd/versions/default/lib/omd/bash_completion /etc/bash_completion.d/omd.sh
 
 IS_SYSTEMD=0

@@ -1653,14 +1653,19 @@ def check_new_host_name(varname, host_name):
 #   | Mode for renaming an existing host.                                  |
 #   '----------------------------------------------------------------------'
 
-def mode_bulk_rename_host(phase):
-    if not config.user.may("wato.rename_hosts"):
-        raise MKGeneralException(_("You don't have the right to rename hosts"))
+class ModeBulkRenameHost(WatoMode):
+    def __init__(self):
+        super(ModeBulkRenameHost, self).__init__()
 
-    if phase == "title":
+        if not config.user.may("wato.rename_hosts"):
+            raise MKGeneralException(_("You don't have the right to rename hosts"))
+
+
+    def title(self):
         return _("Bulk renaming of hosts")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         host_renaming_job = RenameHostsBackgroundJob()
         if host_renaming_job.is_available():
@@ -1669,20 +1674,19 @@ def mode_bulk_rename_host(phase):
                 ("job_id", host_renaming_job.get_job_id()),
                 ("back_url", html.makeuri([])),
             ], filename="wato.py"), "background_job_details")
-        return
 
-    elif phase == "action":
-        renaming_config = HostnameRenamingConfig().from_html_vars("")
-        HostnameRenamingConfig().validate_value(renaming_config, "")
-        renamings = collect_host_renamings(renaming_config)
+
+    def action(self):
+        renaming_config = self._vs_renaming_config().from_html_vars("")
+        self._vs_renaming_config().validate_value(renaming_config, "")
+        renamings = self._collect_host_renamings(renaming_config)
 
         if not renamings:
             return None, _("No matching host names")
 
-        warning = renaming_collision_error(renamings)
+        warning = self._renaming_collision_error(renamings)
         if warning:
             return None, warning
-
 
         message = _("<b>Do you really want to rename to following hosts? This involves a restart of the monitoring core!</b>")
         message += "<table>"
@@ -1709,12 +1713,191 @@ def mode_bulk_rename_host(phase):
         else:
             return None # browser reload
 
-    else:
+
+    def _renaming_collision_error(self, renamings):
+        name_collisions = set()
+        new_names = [ new_name for (folder, old_name, new_name) in renamings ]
+        all_host_names = watolib.Host.all().keys()
+        for name in new_names:
+            if name in all_host_names:
+                name_collisions.add(name)
+        for name in new_names:
+            if new_names.count(name) > 1:
+                name_collisions.add(name)
+
+        if name_collisions:
+            warning = "<b>%s</b><ul>" % _("You cannot do this renaming since the following host names would collide:")
+            for name in sorted(list(name_collisions)):
+                warning += "<li>%s</li>" % name
+            warning += "</ul>"
+            return warning
+
+
+    def _collect_host_renamings(self, renaming_config):
+        return self._recurse_hosts_for_renaming(watolib.Folder.current(), renaming_config)
+
+
+    def _recurse_hosts_for_renaming(self, folder, renaming_config):
+        entries = []
+        for host_name, host in folder.hosts().items():
+            target_name = self._host_renamed_into(host_name, renaming_config)
+            if target_name and host.may("write"):
+                entries.append((folder, host_name, target_name))
+        if renaming_config["recurse"]:
+            for subfolder in folder.all_subfolders().values():
+                entries += self._recurse_hosts_for_renaming(subfolder, renaming_config)
+        return entries
+
+
+    def _host_renamed_into(self, hostname, renaming_config):
+        prefix_regex = regex(renaming_config["match_hostname"])
+        if not prefix_regex.match(hostname):
+            return None
+
+        new_hostname = hostname
+        for operation in renaming_config["renamings"]:
+            new_hostname = self._host_renaming_operation(operation, new_hostname)
+
+        if new_hostname != hostname:
+            return new_hostname
+        else:
+            return None
+
+
+    def _host_renaming_operation(self, operation, hostname):
+        if operation == "drop_domain":
+            return hostname.split(".", 1)[0]
+        elif operation == "reverse_dns":
+            try:
+                reverse_dns = socket.gethostbyaddr(hostname)[0]
+                return reverse_dns
+            except:
+                return hostname
+
+        elif operation == ('case', 'upper'):
+            return hostname.upper()
+        elif operation == ('case', 'lower'):
+            return hostname.lower()
+        elif operation[0] == 'add_suffix':
+            return hostname + operation[1]
+        elif operation[0] == 'add_prefix':
+            return  operation[1] + hostname
+        elif operation[0] == 'explicit':
+            old_name, new_name = operation[1]
+            if old_name == hostname:
+                return new_name
+            else:
+                return hostname
+        elif operation[0] == 'regex':
+            match_regex, new_name = operation[1]
+            match = regex(match_regex).match(hostname)
+            if match:
+                for nr, group in enumerate(match.groups()):
+                    new_name = new_name.replace("\\%d" % (nr+1), group)
+                new_name = new_name.replace("\\0", hostname)
+                return new_name
+            else:
+                return hostname
+
+
+    def page(self):
         html.begin_form("bulk_rename_host", method = "POST")
-        HostnameRenamingConfig().render_input("", {})
+        self._vs_renaming_config().render_input("", {})
         html.button("_start", _("Bulk Rename"))
         html.hidden_fields()
         html.end_form()
+
+
+    def _vs_renaming_config(self):
+        return Dictionary(
+            title = _("Bulk Renaming"),
+            render = "form",
+            elements = [
+                ( "recurse",
+                  Checkbox(
+                      title = _("Folder Selection"),
+                      label = _("Include all subfolders"),
+                      default_value = True,
+                )),
+                ( "match_hostname",
+                  RegExp(
+                      title = _("Hostname matching"),
+                      help = _("Only rename hostnames whose names <i>begin</i> with the regular expression entered here."),
+                      mode = RegExp.complete,
+                )),
+                ( "renamings",
+                  ListOf(
+                      self._vs_host_renaming(),
+                      title = _("Renaming Operations"),
+                      add_label = _("Add renaming"),
+                      allow_empty = False,
+                )),
+            ],
+            optional_keys = [],
+        )
+
+
+    def _vs_host_renaming(self):
+        return CascadingDropdown(
+            orientation = "horizontal",
+            choices = [
+                ( "case",
+                  _("Case translation"),
+                  DropdownChoice(
+                      choices = [
+                           ( "upper", _("Convert hostnames to upper case") ),
+                           ( "lower", _("Convert hostnames to lower case") ),
+                      ]
+                )),
+                ( "add_suffix",
+                  _("Add Suffix"),
+                  Hostname()),
+                ( "add_prefix",
+                  _("Add Prefix"),
+                  Hostname()),
+                ( "drop_domain",
+                  _("Drop Domain Suffix")
+                ),
+                ( "reverse_dns",
+                  _("Convert IP addresses of hosts into host their DNS names")
+                ),
+                ( "regex",
+                  _("Regular expression substitution"),
+                  Tuple(
+                      help = _("Please specify a regular expression in the first field. This expression should at "
+                               "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                               "In the second field you specify the translated host name and can refer to the first matched "
+                               "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"),
+                      elements = [
+                          RegExpUnicode(
+                              title = _("Regular expression for the beginning of the host name"),
+                              help = _("Must contain at least one subgroup <tt>(...)</tt>"),
+                              mingroups = 0,
+                              maxgroups = 9,
+                              size = 30,
+                              allow_empty = False,
+                              mode = RegExpUnicode.prefix,
+                          ),
+                          TextUnicode(
+                              title = _("Replacement"),
+                              help = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups, <tt>\\0</tt> to insert to original host name"),
+                              size = 30,
+                              allow_empty = False,
+                          )
+                     ]
+                )),
+                ( "explicit",
+                  _("Explicit renaming"),
+                  Tuple(
+                      orientation = "horizontal",
+                      elements = [
+                          Hostname(title = _("current host name"), allow_empty = False),
+                          Hostname(title = _("new host name"), allow_empty = False),
+                      ]
+                )),
+            ])
+
+
 
 def rename_hosts_background_job(renamings, job_interface=None):
     actions, auth_problems = rename_hosts(renamings, job_interface=job_interface) # Already activates the changes!
@@ -1726,186 +1909,6 @@ def rename_hosts_background_job(renamings, job_interface=None):
             "%s (%s)" % (host_name, reason) for (host_name, reason) in auth_problems
         ])
     job_interface.send_result_message(message)
-
-def renaming_collision_error(renamings):
-    name_collisions = set()
-    new_names = [ new_name for (folder, old_name, new_name) in renamings ]
-    all_host_names = watolib.Host.all().keys()
-    for name in new_names:
-        if name in all_host_names:
-            name_collisions.add(name)
-    for name in new_names:
-        if new_names.count(name) > 1:
-            name_collisions.add(name)
-
-    if name_collisions:
-        warning = "<b>%s</b><ul>" % _("You cannot do this renaming since the following host names would collide:")
-        for name in sorted(list(name_collisions)):
-            warning += "<li>%s</li>" % name
-        warning += "</ul>"
-        return warning
-
-    return None
-
-
-def collect_host_renamings(renaming_config):
-    return recurse_hosts_for_renaming(watolib.Folder.current(), renaming_config)
-
-
-def recurse_hosts_for_renaming(folder, renaming_config):
-    entries = []
-    for host_name, host in folder.hosts().items():
-        target_name = host_renamed_into(host_name, renaming_config)
-        if target_name and host.may("write"):
-            entries.append((folder, host_name, target_name))
-    if renaming_config["recurse"]:
-        for subfolder in folder.all_subfolders().values():
-            entries += recurse_hosts_for_renaming(subfolder, renaming_config)
-    return entries
-
-
-def host_renamed_into(hostname, renaming_config):
-    prefix_regex = regex(renaming_config["match_hostname"])
-    if not prefix_regex.match(hostname):
-        return None
-
-    new_hostname = hostname
-    for operation in renaming_config["renamings"]:
-        new_hostname = host_renaming_operation(operation, new_hostname)
-
-    if new_hostname != hostname:
-        return new_hostname
-    else:
-        return None
-
-def host_renaming_operation(operation, hostname):
-    if operation == "drop_domain":
-        return hostname.split(".", 1)[0]
-    elif operation == "reverse_dns":
-        try:
-            reverse_dns = socket.gethostbyaddr(hostname)[0]
-            return reverse_dns
-        except:
-            return hostname
-
-    elif operation == ('case', 'upper'):
-        return hostname.upper()
-    elif operation == ('case', 'lower'):
-        return hostname.lower()
-    elif operation[0] == 'add_suffix':
-        return hostname + operation[1]
-    elif operation[0] == 'add_prefix':
-        return  operation[1] + hostname
-    elif operation[0] == 'explicit':
-        old_name, new_name = operation[1]
-        if old_name == hostname:
-            return new_name
-        else:
-            return hostname
-    elif operation[0] == 'regex':
-        match_regex, new_name = operation[1]
-        match = regex(match_regex).match(hostname)
-        if match:
-            for nr, group in enumerate(match.groups()):
-                new_name = new_name.replace("\\%d" % (nr+1), group)
-            new_name = new_name.replace("\\0", hostname)
-            return new_name
-        else:
-            return hostname
-
-
-
-def HostnameRenamingConfig():
-    return Dictionary(
-        title = _("Bulk Renaming"),
-        render = "form",
-        elements = [
-            ( "recurse",
-              Checkbox(
-                  title = _("Folder Selection"),
-                  label = _("Include all subfolders"),
-                  default_value = True,
-            )),
-            ( "match_hostname",
-              RegExp(
-                  title = _("Hostname matching"),
-                  help = _("Only rename hostnames whose names <i>begin</i> with the regular expression entered here."),
-                  mode = RegExp.complete,
-            )),
-            ( "renamings",
-              ListOf(
-                  HostnameRenaming(),
-                  title = _("Renaming Operations"),
-                  add_label = _("Add renaming"),
-                  allow_empty = False,
-            )),
-        ],
-        optional_keys = [],
-    )
-
-def HostnameRenaming(**kwargs):
-    help = kwargs.get("help")
-    title = kwargs.get("title")
-    return CascadingDropdown(
-        title = title,
-        help = help,
-        orientation = "horizontal",
-        choices = [
-            ( "case",
-              _("Case translation"),
-              DropdownChoice(
-                  choices = [
-                       ( "upper", _("Convert hostnames to upper case") ),
-                       ( "lower", _("Convert hostnames to lower case") ),
-                  ]
-            )),
-            ( "add_suffix",
-              _("Add Suffix"),
-              Hostname()),
-            ( "add_prefix",
-              _("Add Prefix"),
-              Hostname()),
-            ( "drop_domain",
-              _("Drop Domain Suffix")
-            ),
-            ( "reverse_dns",
-              _("Convert IP addresses of hosts into host their DNS names")
-            ),
-            ( "regex",
-              _("Regular expression substitution"),
-              Tuple(
-                  help = _("Please specify a regular expression in the first field. This expression should at "
-                           "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                           "In the second field you specify the translated host name and can refer to the first matched "
-                           "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"),
-                  elements = [
-                      RegExpUnicode(
-                          title = _("Regular expression for the beginning of the host name"),
-                          help = _("Must contain at least one subgroup <tt>(...)</tt>"),
-                          mingroups = 0,
-                          maxgroups = 9,
-                          size = 30,
-                          allow_empty = False,
-                          mode = RegExpUnicode.prefix,
-                      ),
-                      TextUnicode(
-                          title = _("Replacement"),
-                          help = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups, <tt>\\0</tt> to insert to original host name"),
-                          size = 30,
-                          allow_empty = False,
-                      )
-                 ]
-            )),
-            ( "explicit",
-              _("Explicit renaming"),
-              Tuple(
-                  orientation = "horizontal",
-                  elements = [
-                      Hostname(title = _("current host name"), allow_empty = False),
-                      Hostname(title = _("new host name"), allow_empty = False),
-                  ]
-            )),
-        ])
 
 
 
@@ -18578,7 +18581,7 @@ modes = {
    "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=False)),
    "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=True)),
    "rename_host"        : (["hosts", "manage_hosts"], ModeRenameHost),
-   "bulk_rename_host"   : (["hosts", "manage_hosts"], mode_bulk_rename_host),
+   "bulk_rename_host"   : (["hosts", "manage_hosts"], ModeBulkRenameHost),
    "bulk_import"        : (["hosts", "manage_hosts"], ModeBulkImport),
    "host_attrs"         : (["hosts", "manage_hosts"], ModeCustomHostAttrs),
    "edit_host_attr"     : (["hosts", "manage_hosts"], ModeEditCustomHostAttr),

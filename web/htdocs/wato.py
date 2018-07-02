@@ -9259,55 +9259,53 @@ class ModeNotifications(WatoMode):
 
 
 
-# Similar like mode_notifications, but just for the user specific notification table
-def mode_user_notifications(phase, profilemode):
-    global notification_rule_start_async_repl
+class ModeUserNotifications(WatoMode):
+    def __init__(self):
+        super(ModeUserNotifications, self).__init__()
+        self._start_async_repl = False
 
-    if profilemode:
-        userid = config.user.id
-        title = _("Your personal notification rules")
-        config.user.need_permission("general.edit_notifications")
-    else:
-        userid = html.get_unicode_input("user")
-        title = _("Custom notification table for user ") + userid
 
-    if phase == "title":
-        return title
+    def _from_vars(self):
+        self.__user_id = html.get_unicode_input("user")
+        self._users = userdb.load_users(lock=html.is_transaction() or html.has_var("_move"))
 
-    users = userdb.load_users(lock = phase == 'action' or html.has_var("_move"))
-    user = users[userid]
-    rules = user.setdefault("notification_rules", [])
+        try:
+            user = self._users[self._user_id()]
+        except KeyError:
+            raise MKUserError(None, _('The requested user does not exist'))
 
-    if phase == "buttons":
-        if profilemode:
-            html.context_button(_("Profile"), "user_profile.py", "back")
-            html.context_button(_("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule_p")]), "new")
-        else:
-            html.context_button(_("All Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
-            html.context_button(_("User Properties"), watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)]), "edit")
-            html.context_button(_("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule"), ("user", userid)]), "new")
-        return
+        self._rules = user.setdefault("notification_rules", [])
 
-    elif phase == "action":
+
+    def _user_id(self):
+        return self.__user_id
+
+
+    def title(self):
+        return _("Custom notification table for user ") + self._user_id()
+
+
+    def buttons(self):
+        html.context_button(_("All Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
+        html.context_button(_("User Properties"),
+            watolib.folder_preserving_link([("mode", "edit_user"), ("edit", self._user_id())]), "edit")
+        html.context_button(_("New Rule"),
+            watolib.folder_preserving_link([("mode", "notification_rule"), ("user", self._user_id())]), "new")
+
+
+    def action(self):
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
-            rule = rules[nr]
+            rule = self._rules[nr]
             c = wato_confirm(_("Confirm notification rule deletion"),
                              _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?") %
                                (nr, rule.get("description","")))
             if c:
-                del rules[nr]
-                userdb.save_users(users)
+                del self._rules[nr]
+                userdb.save_users(self._users)
 
-                log_what = "notification-delete-user-rule"
-                log_text = _("Deleted notification rule %d of user %s") % (nr, userid)
-
-                notification_rule_start_async_repl = False
-                if profilemode and config.has_wato_slave_sites():
-                    notification_rule_start_async_repl = True
-                    watolib.log_audit(None, log_what, log_text)
-                else:
-                    add_notify_change(log_what, log_text)
+                self._add_change("notification-delete-user-rule",
+                    _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
             elif c == False:
                 return ""
             else:
@@ -9317,153 +9315,233 @@ def mode_user_notifications(phase, profilemode):
             if html.check_transaction():
                 from_pos = html.get_integer_input("_move")
                 to_pos = html.get_integer_input("_index")
-                rule = rules[from_pos]
-                del rules[from_pos] # make to_pos now match!
-                rules[to_pos:to_pos] = [rule]
-                userdb.save_users(users)
+                rule = self._rules[from_pos]
+                del self._rules[from_pos] # make to_pos now match!
+                self._rules[to_pos:to_pos] = [rule]
+                userdb.save_users(self._users)
 
-                log_what = "notification-move-user-rule"
-                log_text = _("Changed position of notification rule %d of user %s") % (from_pos, userid)
+                self._add_change("notification-move-user-rule",
+                    _("Changed position of notification rule %d of user %s") % (from_pos, self._user_id()))
 
-                notification_rule_start_async_repl = False
-                if profilemode and config.has_wato_slave_sites():
-                    notification_rule_start_async_repl = True
-                    watolib.log_audit(None, log_what, log_text)
-                else:
-                    add_notify_change(log_what, log_text)
-        return
 
-    if notification_rule_start_async_repl:
-        user_profile_async_replication_dialog(sites=watolib.get_notification_sync_sites())
-        notification_rule_start_async_repl = False
-        html.h3(_('Notification Rules'))
+    def _add_change(self, log_what, log_text):
+        add_notify_change(log_what, log_text)
 
-    rules = user.get("notification_rules", [])
-    render_notification_rules(rules, userid, profilemode = profilemode)
 
-notification_rule_start_async_repl = False
+    def page(self):
+        if self._start_async_repl:
+            user_profile_async_replication_dialog(sites=watolib.get_notification_sync_sites())
+            html.h3(_('Notification Rules'))
 
-def mode_notification_rule(phase, profilemode):
-    global notification_rule_start_async_repl
+        render_notification_rules(self._rules, self._user_id(),
+            profilemode=isinstance(self, ModePersonalUserNotifications))
 
-    edit_nr = html.get_integer_input("edit", -1)
-    clone_nr = html.get_integer_input("clone", -1)
-    if profilemode:
-        userid = config.user.id
+
+
+class ModePersonalUserNotifications(ModeUserNotifications):
+    def __init__(self):
+        super(ModePersonalUserNotifications, self).__init__()
         config.user.need_permission("general.edit_notifications")
-    else:
-        userid = html.get_unicode_input("user", "")
 
-    if userid and not profilemode:
-        suffix = _(" for user ") + html.render_text(userid)
-    else:
-        suffix = ""
 
-    new = edit_nr < 0
+    def _user_id(self):
+        return config.user.id
 
-    if phase == "title":
-        if new:
-            return _("Create new notification rule") + suffix
-        else:
-            return _("Edit notification rule %d") % edit_nr + suffix
 
-    elif phase == "buttons":
-        if profilemode:
-            html.context_button(_("All Rules"), watolib.folder_preserving_link([("mode", "user_notifications_p")]), "back")
-        else:
-            html.context_button(_("All Rules"), watolib.folder_preserving_link([("mode", "notifications"), ("userid", userid)]), "back")
-        return
-
-    if userid:
-        users = userdb.load_users(lock = phase == 'action')
-        if userid not in users:
-            raise MKUserError(None, _("The user you are trying to edit "
-                                      "notification rules for does not exist."))
-        user = users[userid]
-        rules = user.setdefault("notification_rules", [])
-    else:
-        rules = watolib.load_notification_rules()
-
-    if new:
-        if clone_nr >= 0 and not html.var("_clear"):
-            rule = {}
-            try:
-                rule.update(rules[clone_nr])
-            except IndexError:
-                raise MKUserError(None, _("This %s does not exist.") % "notification rule")
-        else:
-            rule = {}
-    else:
-        try:
-            rule = rules[edit_nr]
-        except IndexError:
-            raise MKUserError(None, _("This %s does not exist.") % "notification rule")
-
-    vs = vs_notification_rule(userid)
-
-    if phase == "action":
-        if not html.check_transaction():
-            return "notifications"
-
-        rule = vs.from_html_vars("rule")
-        if userid:
-            rule["contact_users"] = [ userid ] # Force selection of our user
-
-        vs.validate_value(rule, "rule")
-
-        if userid:
-            # User rules are always allow_disable
-            # The parameter is set just after the validation, since the allow_disable
-            # key isn't in the valuespec. Curiously, the validation does not fail
-            # even the allow_disable key is set before the validate_value...
-            rule["allow_disable"] = True
-
-        if new and clone_nr >= 0:
-            rules[clone_nr:clone_nr] = [ rule ]
-        elif new:
-            rules[0:0] = [ rule ]
-        else:
-            rules[edit_nr] = rule
-
-        if userid:
-            userdb.save_users(users)
-        else:
-            watolib.save_notification_rules(rules)
-
-        if new:
-            log_what = "new-notification-rule"
-            log_text = _("Created new notification rule") + suffix
-        else:
-            log_what = "edit-notification-rule"
-            log_text = _("Changed notification rule %d") % edit_nr + suffix
-
-        notification_rule_start_async_repl = False
-        if profilemode and config.has_wato_slave_sites():
-            notification_rule_start_async_repl = True
+    def _add_change(self, log_what, log_text):
+        if config.has_wato_slave_sites():
+            self._start_async_repl = True
             watolib.log_audit(None, log_what, log_text)
-            return # don't redirect to other page
         else:
             add_notify_change(log_what, log_text)
 
-        if profilemode:
-            return "user_notifications_p"
-        elif userid:
+
+    def title(self):
+        return _("Your personal notification rules")
+
+
+    def buttons(self):
+        html.context_button(_("Profile"), "user_profile.py", "back")
+        html.context_button(_("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule_p")]), "new")
+
+
+
+# TODO: Split editing of user notification rule and global notification rule
+#       into separate classes
+class ModeEditNotificationRule(WatoMode):
+    def __init__(self):
+        super(ModeEditNotificationRule, self).__init__()
+        self._start_async_repl = False
+
+
+    # TODO: Refactor this
+    def _from_vars(self):
+        self.__user_id = html.get_unicode_input("user")
+
+        self._edit_nr = html.get_integer_input("edit", -1)
+        self._clone_nr = html.get_integer_input("clone", -1)
+        self._new = self._edit_nr < 0
+
+        if self._user_id():
+            self._users = userdb.load_users(lock=html.is_transaction())
+            if self._user_id() not in self._users:
+                raise MKUserError(None, _("The user you are trying to edit "
+                                          "notification rules for does not exist."))
+            user = self._users[self._user_id()]
+            self._rules = user.setdefault("notification_rules", [])
+        else:
+            self._rules = watolib.load_notification_rules(lock=html.is_transaction())
+
+        if self._new:
+            if self._clone_nr >= 0 and not html.var("_clear"):
+                self._rule = {}
+                try:
+                    self._rule.update(self._rules[self._clone_nr])
+                except IndexError:
+                    raise MKUserError(None, _("This %s does not exist.") % "notification rule")
+            else:
+                self._rule = {}
+        else:
+            try:
+                self._rule = self._rules[self._edit_nr]
+            except IndexError:
+                raise MKUserError(None, _("This %s does not exist.") % "notification rule")
+
+
+    def _valuespec(self):
+        return vs_notification_rule(self._user_id())
+
+
+    def _user_id(self):
+        return self.__user_id
+
+
+    def _add_change(self, log_what, log_text):
+        add_notify_change(log_what, log_text)
+
+
+    def _back_mode(self):
+        if self._user_id():
             return "user_notifications"
         else:
             return "notifications"
 
-    if notification_rule_start_async_repl:
-        user_profile_async_replication_dialog(sites=watolib.get_notification_sync_sites())
-        notification_rule_start_async_repl = False
-        return
 
-    html.begin_form("rule", method = "POST")
-    vs.render_input("rule", rule)
-    vs.set_focus("rule")
-    forms.end()
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
+    def title(self):
+        if self._new:
+            if self._user_id():
+                return _("Create new notification rule for user %s") % self._user_id()
+            else:
+                return _("Create new notification rule")
+        else:
+            if self._user_id():
+                return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
+            else:
+                return _("Edit notification rule %d") % self._edit_nr
+
+
+    def buttons(self):
+        html.context_button(_("All Rules"),
+            watolib.folder_preserving_link([("mode", "notifications"), ("userid", self._user_id())]), "back")
+
+
+    def action(self):
+        if not html.check_transaction():
+            return self._back_mode()
+
+        vs = self._valuespec()
+        self._rule = vs.from_html_vars("rule")
+        if self._user_id():
+            self._rule["contact_users"] = [ self._user_id() ] # Force selection of our user
+
+        vs.validate_value(self._rule, "rule")
+
+        if self._user_id():
+            # User rules are always allow_disable
+            # The parameter is set just after the validation, since the allow_disable
+            # key isn't in the valuespec. Curiously, the validation does not fail
+            # even the allow_disable key is set before the validate_value...
+            self._rule["allow_disable"] = True
+
+        if self._new and self._clone_nr >= 0:
+            self._rules[self._clone_nr:self._clone_nr] = [ self._rule ]
+        elif self._new:
+            self._rules[0:0] = [ self._rule ]
+        else:
+            self._rules[self._edit_nr] = self._rule
+
+        if self._user_id():
+            userdb.save_users(self._users)
+        else:
+            watolib.save_notification_rules(self._rules)
+
+        if self._new:
+            log_what = "new-notification-rule"
+            if self._user_id():
+                log_text = _("Created new notification rule for user %s") % self._user_id()
+            else:
+                log_text = _("Created new notification rule")
+        else:
+            log_what = "edit-notification-rule"
+            if self._user_id():
+                log_text = _("Changed notification rule %d of user %s") % (self._edit_nr, self._user_id())
+            else:
+                log_text = _("Changed notification rule %d") % self._edit_nr
+        self._add_change(log_what, log_text)
+
+        return self._back_mode()
+
+    def page(self):
+        if self._start_async_repl:
+            user_profile_async_replication_dialog(sites=watolib.get_notification_sync_sites())
+            return
+
+        html.begin_form("rule", method = "POST")
+        vs = self._valuespec()
+        vs.render_input("rule", self._rule)
+        vs.set_focus("rule")
+        forms.end()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
+
+
+class ModeEditPersonalNotificationRule(ModeEditNotificationRule):
+    def __init__(self):
+        super(ModeEditPersonalNotificationRule, self).__init__()
+        config.user.need_permission("general.edit_notifications")
+
+
+    def _user_id(self):
+        return config.user.id
+
+
+    def _add_change(self, log_what, log_text):
+        if config.has_wato_slave_sites():
+            self._start_async_repl = True
+            watolib.log_audit(None, log_what, log_text)
+        else:
+            add_notify_change(log_what, log_text)
+
+
+    def _back_mode(self):
+        if config.has_wato_slave_sites():
+            return
+        else:
+            return "user_notifications_p"
+
+
+    def title(self):
+        if self._new:
+            return _("Create new notification rule")
+        else:
+            return _("Edit notification rule %d") % self._edit_nr
+
+
+    def buttons(self):
+        html.context_button(_("All Rules"),
+            watolib.folder_preserving_link([("mode", "user_notifications_p")]), "back")
 
 
 def load_notification_scripts():
@@ -18739,10 +18817,10 @@ modes = {
    "edit_service_group" : (["groups"], ModeEditServicegroup),
    "edit_contact_group" : (["users"], ModeEditContactgroup),
    "notifications"      : (["notifications"], ModeNotifications),
-   "notification_rule"  : (["notifications"], lambda phase: mode_notification_rule(phase, False)),
-   "user_notifications" : (["users"], lambda phase: mode_user_notifications(phase, False)),
-   "notification_rule_p": (None, lambda phase: mode_notification_rule(phase, True)), # for personal settings
-   "user_notifications_p":(None, lambda phase: mode_user_notifications(phase, True)), # for personal settings
+   "notification_rule"  : (["notifications"], ModeEditNotificationRule),
+   "user_notifications" : (["users"], ModeUserNotifications),
+   "notification_rule_p": (None, ModeEditPersonalNotificationRule), # for personal settings
+   "user_notifications_p":(None, ModePersonalUserNotifications), # for personal settings
    "timeperiods"        : (["timeperiods"], ModeTimeperiods),
    "edit_timeperiod"    : (["timeperiods"], ModeEditTimeperiod),
    "import_ical"        : (["timeperiods"], ModeTimeperiodImportICal),

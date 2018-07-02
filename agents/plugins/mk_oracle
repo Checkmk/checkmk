@@ -345,7 +345,7 @@ logging () {
                 echo "$header" >> "$log_file"
             else
                 for arg in "${args[@]:1}"; do
-                    echo "${header} $(echo "$arg" | tr '\n' ' ' | sed 's/\s*$//')" >> "$log_file"
+                    echo "${header} $arg" >> "$log_file"
                 done
             fi
 

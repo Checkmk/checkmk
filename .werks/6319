@@ -1,0 +1,11 @@
+Title: Fixed wrong changelog entry when moving folders
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1530611952
+Class: fix
+
+The source folder path did not show up correctly in the WATO changes entry
+after moving a folder

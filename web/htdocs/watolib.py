@@ -2193,6 +2193,8 @@ class CREFolder(BaseFolder):
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
 
+        original_alias_path = subfolder.alias_path()
+
         # 2. Actual modification
         affected_sites = subfolder.all_site_ids()
         old_filesystem_path = subfolder.filesystem_path()
@@ -2204,7 +2206,7 @@ class CREFolder(BaseFolder):
         Folder.invalidate_caches()
         affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
         add_change("move-folder",
-            _("Moved folder %s to %s") % (subfolder.alias_path(), target_folder.alias_path()),
+            _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
             obj=subfolder,
             sites=affected_sites)
         need_sidebar_reload()

@@ -29,31 +29,38 @@ class PerfValue(Tuploid):
     """Represents a single perf value"""
 
     def __init__(self, key, value, warn=None, crit=None, minimum=None, maximum=None):
+        self.key = key
+        self.value = value
+        self.warn = warn
+        self.crit = crit
+        self.minimum = minimum
+        self.maximum = maximum
+
         # TODO: This is very basic. There is more way more magic involved
         #       in what kind of values are allowed as metric names.
         #       I'm not too sure unicode should be allowed, either.
-        assert type(key) in [str, unicode]
-        assert " " not in key   # This leads to serious errors
-        assert "=" not in key   # The parsing around this is way too funky and doesn't work properly
+        assert type(key) in [str, unicode],\
+               "key %r must be of type str or unicode" % key
+        #       Whitespace leads to serious errors
+        assert len(key.split()) == 1, \
+               "key %r must not contain whitespaces" % key
+        #       Parsing around this is way too funky and doesn't work properly
+        assert "=" not in key, "key %r must not contain '='" % key
         assert "\n" not in key
-        self.key = key
-
         # NOTE: The CMC as well as all other Nagios-compatible cores do accept a
         #       string value that may contain a unit, which is in turn available
         #       for use in PNP4Nagios templates. Check_MK defines its own semantic
         #       context for performance values using Check_MK metrics. It is therefore
         #       preferred to return a "naked" scalar.
-        assert type(value) in [int, float]
-        self.value = value
-
-        assert type(warn) in [int, float, types.NoneType]
-        self.warn = warn
-        assert type(crit) in [int, float, types.NoneType]
-        self.crit = crit
-        assert type(minimum) in [int, float, types.NoneType]
-        self.minimum = minimum
-        assert type(maximum) in [int, float, types.NoneType]
-        self.maximum = maximum
+        assert type(value) in [int, float],\
+               "value %r must be of type int or float - not %r" % (value, type(value))
+        msg = "%s parameter %r must be of type int, float or None - not %r"
+        assert type(warn) in [int, float, types.NoneType], msg % ('warn', warn, type(warn))
+        assert type(crit) in [int, float, types.NoneType], msg % ('crit', crit, type(crit))
+        assert type(minimum) in [int, float, types.NoneType], \
+               msg % ('minimum', minimum, type(minimum))
+        assert type(maximum) in [int, float, types.NoneType], \
+               msg % ('maximum', maximum, type(maximum))
 
     @property
     def tuple(self):
@@ -75,10 +82,11 @@ class BasicCheckResult(Tuploid):
     def __init__(self, status, infotext, perfdata=None):
         """We perform some basic consistency checks during initialization"""
 
-        assert status in [0, 1, 2, 3]
+        assert status in [0, 1, 2, 3], "invalid status: %r" % status
         self.status = status
 
-        assert type(infotext) in [ str, unicode ]
+        assert type(infotext) in [str, unicode],\
+               "infotext %r must be of type str or unicode" % infotext
 
         if "\n" in infotext:
             self.infotext, \
@@ -88,11 +96,13 @@ class BasicCheckResult(Tuploid):
             self.multiline = None
 
         if perfdata is not None:
-            assert type(perfdata) == list
+            assert type(perfdata) == list,\
+                   "perfdata %r must be of type list" % perfdata
 
             self.perfdata = []
             for entry in perfdata:
-                assert type(entry) in [tuple, PerfValue]
+                assert type(entry) in [tuple, PerfValue],\
+                       "perfdata entry %r must be of type tuple or PerfValue" % entry
                 if type(entry) is tuple:
                     self.perfdata.append(PerfValue(*entry))
                 else:
@@ -179,13 +189,17 @@ def assertCheckResultsEqual(actual, expected):
     This gives more helpful output than 'assert actual == expected'
     """
     if isinstance(actual, BasicCheckResult):
-        assert isinstance(expected, BasicCheckResult)
+        assert isinstance(expected, BasicCheckResult), \
+               "%r is not a BasicCheckResult instance" % expected
         assert actual == expected, "%s != %s" % (actual, expected)
 
     else:
-        assert isinstance(actual, CheckResult)
-        assert isinstance(expected, CheckResult)
-        assert len(actual.subresults) == len(expected.subresults)
+        assert isinstance(actual, CheckResult), \
+               "%r is not a CheckResult instance" % actual
+        assert isinstance(expected, CheckResult), \
+               "%r is not a CheckResult instance" % expected
+        assert len(actual.subresults) == len(expected.subresults), \
+               "subresults not of equal length"
         for suba, sube in zip(actual.subresults, expected.subresults):
             assert suba == sube, "%r != %r" % (suba, sube)
 
@@ -247,9 +261,12 @@ def assertDiscoveryResultsEqual(actual, expected):
 
     This gives more helpful output than 'assert actual == expected'
     """
-    assert isinstance(actual, DiscoveryResult)
-    assert isinstance(expected, DiscoveryResult)
-    assert len(actual.entries) == len(expected.entries)
+    assert isinstance(actual, DiscoveryResult), \
+           "%r is not a DiscoveryResult instance" % actual
+    assert isinstance(expected, DiscoveryResult), \
+           "%r is not a DiscoveryResult instance" % expected
+    assert len(actual.entries) == len(expected.entries), \
+           "DiscoveryResults are not of equal length"
     for enta, ente in zip(actual, expected):
         assert enta == ente, "%r != %r" % (enta, ente)
 
@@ -272,7 +289,7 @@ class BasicItemState(object):
         msg = "time_diff should be of type float/int - not %r"
         assert time_diff_type in (float, int), msg % time_diff_type
         # We do allow negative time diffs.
-        # We want to ba able to test time anomalies.
+        # We want to be able to test time anomalies.
 
 
 class MockItemState(object):

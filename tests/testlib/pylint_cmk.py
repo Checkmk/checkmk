@@ -29,7 +29,7 @@ def add_file(f, path):
     # in the build system.
     relpath = os.path.relpath(os.path.realpath(path),
                               os.path.dirname(os.path.dirname(os.getcwd())))
-    f.write("\n")
+    f.write("# -*- encoding: utf-8 -*-")
     f.write("#\n")
     f.write("# ORIG-FILE: " + relpath + "\n")
     f.write("#\n")

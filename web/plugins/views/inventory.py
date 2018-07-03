@@ -81,7 +81,7 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, in
             tree_renderer.show_attribute(child.get_child_data().get(attributes_key),
                                          _inv_display_hint(invpath))
         code = html.drain()
-    return "invtree", code
+    return "", code
 
 
 inv_filter_info = {

@@ -48,7 +48,7 @@ def inventory_cisco_ace_rserver(info):
         elif descr != '':
             item = descr
         else:
-            ip
+            item = ip
         yield item, None
 
 
@@ -85,7 +85,7 @@ def check_cisco_ace_rserver(item, _no_params, info):
             admin_state = admin_stati[admin_status]
             state, state_txt = oper_stati[oper_status]
             if admin_status == "2" and state == 2:
-                state == 1 # max state is WARN if real server out of service
+                state = 1 # max state is WARN if real server out of service
             infotext = "Operational State: %s, Administrative State: %s, Current Connections: %s" % \
                                 (state_txt, admin_state, conns)
             perfdata = [ ("connections", int(conns)) ]

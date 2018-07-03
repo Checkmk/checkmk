@@ -781,7 +781,7 @@ def paint_downtime_buttons(what):
 
 def has_recurring_downtimes():
     try:
-        wato.recurring_downtimes_types # Check if this exists
+        _dummy = wato.recurring_downtimes_types # Check if this exists
         return True
     except AttributeError:
         return False

@@ -1445,7 +1445,7 @@ def mode_edit_host(phase, new, is_cluster):
         html.open_ul()
         for error in errors:
             html.li(error)
-        html.close_ul
+        html.close_ul()
         html.close_p()
 
         if html.form_submitted():
@@ -3466,50 +3466,59 @@ class ModeDiscovery(WatoMode):
             descr, state, output, perfdata = check
         checkbox_name = self._checkbox_name(check_type, item)
 
-        buttons = []
+        num_buttons = 0
         if table_source == self.SERVICE_MONITORED:
             if config.user.may("wato.service_discovery_to_undecided"):
-                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))
+                icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided")
+                num_buttons += 1
             if may_edit_ruleset("ignored_services") \
                and config.user.may("wato.service_discovery_to_ignored"):
-                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
+                icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled")
+                num_buttons += 1
 
         elif table_source == self.SERVICE_IGNORED:
             if may_edit_ruleset("ignored_services"):
                 if config.user.may("wato.service_discovery_to_monitored"):
-                    buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored"))
+                    icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored")
+                    num_buttons += 1
                 if config.user.may("wato.service_discovery_to_ignored"):
-                    buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided"))
-                buttons.append(disabled_services_button())
+                    icon_button(table_source, checkbox_name, self.SERVICE_UNDECIDED, "undecided")
+                    num_buttons += 1
+                disabled_services_button()
+                num_buttons += 1
 
         elif table_source == self.SERVICE_VANISHED:
             if config.user.may("wato.service_discovery_to_removed"):
-                buttons.append(icon_button_removed(table_source, checkbox_name))
+                icon_button_removed(table_source, checkbox_name)
+                num_buttons += 1
             if may_edit_ruleset("ignored_services") \
                and config.user.may("wato.service_discovery_to_ignored"):
-                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
+                icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled")
+                num_buttons += 1
 
         elif table_source == self.SERVICE_UNDECIDED:
             if config.user.may("wato.service_discovery_to_monitored"):
-                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored"))
+                icon_button(table_source, checkbox_name, self.SERVICE_MONITORED, "monitored")
+                num_buttons += 1
             if may_edit_ruleset("ignored_services") \
                and config.user.may("wato.service_discovery_to_ignored"):
-                buttons.append(icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled"))
+                icon_button(table_source, checkbox_name, self.SERVICE_IGNORED, "disabled")
+                num_buttons += 1
 
-        while len(buttons) < 2:
-            buttons.append(html.empty_icon())
+        while num_buttons < 2:
+            html.empty_icon()
+            num_buttons += 1
 
         if table_source not in [self.SERVICE_UNDECIDED,
                                 self.SERVICE_IGNORED] \
            and config.user.may('wato.rulesets'):
-            buttons.append(rulesets_button())
-            buttons.append(check_parameters_button())
+            rulesets_button()
+            check_parameters_button()
+            num_buttons += 2
 
-        while len(buttons) < 4:
-            buttons.append(html.empty_icon())
-
-        for button in buttons:
-            button
+        while num_buttons < 4:
+            html.empty_icon()
+            num_buttons += 1
 
 
     def _get_ruleset_name(self, table_source, check_type, checkgroup):

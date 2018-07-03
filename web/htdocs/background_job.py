@@ -287,7 +287,6 @@ class BackgroundJob(object):
     housekeeping_max_age_sec = 86400 * 30
     housekeeping_max_count   = 50
 
-    _
     def __init__(self, job_id, logger=None, **kwargs):
         super(BackgroundJob, self).__init__()
         self._job_id             = job_id

@@ -1038,7 +1038,7 @@ if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
         # the container.
         # Once it comes to plugins and custom configuration the user needs to use
         # a little more complex setup. Have a look at the documentation.
-        AGENT_PATH=$(docker container exec "$CONTAINER_ID" which check_mk_agent 2>/dev/null)
+        AGENT_PATH=$(docker container exec "$CONTAINER_ID" bash -c "type check_mk_agent" 2>/dev/null)
         if [ -n "$AGENT_PATH" ]; then
             docker container exec --env MK_IS_PIGGYBACKED=1 --env "REMOTE=$REMOTE" "$CONTAINER_ID" check_mk_agent
         elif docker container exec "$CONTAINER_ID" which bash >/dev/null 2>&1; then

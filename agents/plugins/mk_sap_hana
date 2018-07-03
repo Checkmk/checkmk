@@ -37,8 +37,7 @@
 # Config might include
 # DB_USER_hpy=foo
 # DB_PASSWORD_hpy=bar
-if [ -f "$MK_CONFDIR/sap_hana.cfg" ];
-then
+if [ -f "$MK_CONFDIR/sap_hana.cfg" ]; then
     . "$MK_CONFDIR/sap_hana.cfg"
 fi
 
@@ -104,7 +103,7 @@ function sap_hana_mem () {
     echo "[[[resident]]]"
     sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "SELECT HOST, ROUND(SUM(PHYSICAL_MEMORY_SIZE/1024/1024/1024),2) FROM M_SERVICE_MEMORY GROUP BY HOST;"
     echo "[[[database]]]"
-    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "select HOST,  round(INSTANCE_TOTAL_MEMORY_ALLOCATED_SIZE/(1024*1024*1024), 2), round(ALLOCATION_LIMIT/(1024*1024*1024), 2), ROUND((USED_PHYSICAL_MEMORY + FREE_PHYSICAL_MEMORY)/1024/1024/1024,2) from M_HOST_RESOURCE_UTILIZATION;"
+    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "select HOST, round(INSTANCE_TOTAL_MEMORY_ALLOCATED_SIZE/(1024*1024*1024), 2), round(ALLOCATION_LIMIT/(1024*1024*1024), 2), ROUND((USED_PHYSICAL_MEMORY + FREE_PHYSICAL_MEMORY)/1024/1024/1024,2) from M_HOST_RESOURCE_UTILIZATION;"
 }
 
 
@@ -135,8 +134,7 @@ function sap_hana_filesystem () {
 echo "<<<sap_hana_products>>>"
 $LSSAP
 
-for line in $($LSSAP | awk -F"|" '{if ($0 ~/\//) print tolower($1)"adm|"$2}' | sed "s/\s*//g")
-do
+for line in $($LSSAP | awk -F"|" '{if ($0 ~/\//) print tolower($1)"adm|"$2}' | sed "s/\s*//g"); do
     sidadm=$(echo "${line}" | cut -d"|" -f1)
     sidadm_short=${sidadm/%adm/}
     inst_nr=$(echo "${line}" | cut -d"|" -f2)

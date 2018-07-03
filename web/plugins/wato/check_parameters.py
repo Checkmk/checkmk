@@ -14803,7 +14803,7 @@ register_check_parameters(
        allow_empty = False,
     ),
     "dict"
-),
+)
 
 bluecat_operstates = [
         (1, "running normally"),
@@ -14853,7 +14853,7 @@ register_check_parameters(
     ),
     None,
     match_type = "dict",
-),
+)
 
 register_check_parameters(
     subgroup_networking,
@@ -14923,7 +14923,7 @@ register_check_parameters(
     ),
     None,
     match_type = "dict",
-),
+)
 
 register_check_parameters(
     subgroup_networking,
@@ -14958,7 +14958,7 @@ register_check_parameters(
     ),
     None,
     match_type = "dict",
-),
+)
 
 bluecat_ha_operstates = [
    ( 1 , "standalone"),

@@ -3069,9 +3069,9 @@ def run_report(test_id):
     sys.stdout.write(" Result       : %s\n" % result_txt)
     sys.stdout.write(" Duration     : %s\n" % fmt_timespan(test.duration()))
     sys.stdout.write("\n")
-    sys.stdout.write(" Version      : %s\n" % test.system_info.omd_version),
-    sys.stdout.write(" Site         : %s\n" % test.system_info.omd_site),
-    sys.stdout.write(" Core         : %s\n" % test.system_info.core),
+    sys.stdout.write(" Version      : %s\n" % test.system_info.omd_version)
+    sys.stdout.write(" Site         : %s\n" % test.system_info.omd_site)
+    sys.stdout.write(" Core         : %s\n" % test.system_info.core)
     sys.stdout.write("\n")
 
     test_cases_by_name = {}

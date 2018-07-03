@@ -778,10 +778,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                     elif params["infotext_format"] == "description":
                         bracket_info = ifDescr
                     elif params["infotext_format"] == "alias_and_description":
-                        bracket_info = []
-                        ifAlias and bracket_info.append(ifAlias)
-                        ifDescr and bracket_info.append(ifDescr)
-                        bracket_info = ", ".join(bracket_info)
+                        bracket_info = ", ".join([i for i in [ifAlias, ifDescr] if i])
                     elif params["infotext_format"] == "alias_or_description":
                         bracket_info = ifAlias and ifAlias or ifDescr
                     elif params["infotext_format"] == "desription_or_alias":

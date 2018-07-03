@@ -35,7 +35,6 @@ disable=
     duplicate-code,
     eval-used,
     exec-used,
-    expression-not-assigned,
     fixme,
     global-at-module-level,
     global-statement,

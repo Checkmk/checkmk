@@ -29,12 +29,12 @@ def parse_f5_bigip_snat(info):
     for line in info:
         name = line[0]
         snats.setdefault(name, {})
-        snats[name].setdefault("if_in_pkts"              , []).append(int(line[1])),
-        snats[name].setdefault("if_out_pkts"             , []).append(int(line[2])),
-        snats[name].setdefault("if_in_octets"            , []).append(int(line[3])),
-        snats[name].setdefault("if_out_octets"           , []).append(int(line[4])),
-        snats[name].setdefault("connections_rate"        , []).append(int(line[5])),
-        snats[name].setdefault("connections"             , []).append(int(line[6])),
+        snats[name].setdefault("if_in_pkts"              , []).append(int(line[1]))
+        snats[name].setdefault("if_out_pkts"             , []).append(int(line[2]))
+        snats[name].setdefault("if_in_octets"            , []).append(int(line[3]))
+        snats[name].setdefault("if_out_octets"           , []).append(int(line[4]))
+        snats[name].setdefault("connections_rate"        , []).append(int(line[5]))
+        snats[name].setdefault("connections"             , []).append(int(line[6]))
     return snats
 
 def inventory_f5_bigip_snat(parsed):

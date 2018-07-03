@@ -26,13 +26,7 @@
 
 
 def agent_jolokia_arguments(params, hostname, ipaddress):
-    arglist = []
-    """
-    if "timeout" in params:
-        args += ' --timeout %d' % params["timeout"]
-    """
-
-    arglist.append('--server %s' % quote_shell_string(ipaddress))
+    arglist = ['--server %s' % quote_shell_string(ipaddress)]
 
     for param in ['port', 'suburi', 'instance', 'protocol']:
         if param in params:

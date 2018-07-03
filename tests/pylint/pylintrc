@@ -53,7 +53,6 @@ disable=
     no-else-return,
     no-self-use,
     old-style-class,
-    pointless-string-statement,
     protected-access,
     redefine-in-handler,
     redefined-argument-from-local,

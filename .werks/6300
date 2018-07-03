@@ -1,0 +1,10 @@
+Title: win_printers: Added line break to section header; otherwise the output format was broken in case of a Get-WMIObject failure
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1530598811
+Class: fix
+
+

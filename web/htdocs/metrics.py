@@ -987,8 +987,24 @@ class MetricometerRenderer(object):
         return self._get_type_label()
 
 
+    def get_label_value(self):
+        """Returns the raw value used for the label to be shown on top of the rendered perfometer"""
+        # "label" option in all Perf-O-Meters overrides automatic label
+        if "label" in self._perfometer and self._perfometer["label"] != None:
+            expr, unit_name = self._perfometer["label"]
+            value, unit, color = evaluate(expr, self._translated_metrics)
+            return value
+
+        return self._get_type_label_value()
+
+
     def _get_type_label(self):
         """Returns the label for this perfometer type"""
+        raise NotImplementedError()
+
+
+    def _get_type_label_value(self):
+        """Returns the raw value used for the type label for this perfometer type"""
         raise NotImplementedError()
 
 
@@ -1022,11 +1038,14 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         return unit["render"](value)
 
 
+    def _get_type_label_value(self):
+        return evaluate(self._perfometer["metric"], self._translated_metrics)[0]
+
+
     def get_sort_number(self):
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
-        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return value
+        return self.get_label_value()
 
 
     def get_stack_from_values(self, value, half_value, base, color):
@@ -1084,10 +1103,12 @@ class MetricometerRendererLinear(MetricometerRenderer):
         return unit["render"](self._get_summed_values())
 
 
+    def _get_type_label_value(self):
+        return self._get_summed_values()
+
+
     def get_sort_number(self):
-        """Use the first segment value for sorting"""
-        value, unit, color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return value
+        return self.get_label_value()
 
 
     def _get_summed_values(self):
@@ -1129,6 +1150,13 @@ class MetricometerRendererStacked(MetricometerRenderer):
             return ""
 
         return " / ".join(sub_labels)
+
+
+    def _get_type_label_value(self):
+        """Use the label value of the first stack element."""
+        sub_perfometer = self._perfometer["perfometers"][0]
+        renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+        return renderer.get_label_value()
 
 
     def get_sort_number(self):

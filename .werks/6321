@@ -1,0 +1,12 @@
+Title: Fixed perfometer sorting in some cases
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1530622324
+Class: fix
+
+Fixed sorting of some perfometers, e.g. the Linux memory perfometer
+is now sorted by the value of the label shown in the middle of the 
+screen instead.

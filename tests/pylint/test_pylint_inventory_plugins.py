@@ -7,10 +7,11 @@ from testlib import repo_path
 import testlib.pylint_cmk as pylint_cmk
 
 def test_pylint_inventory_plugins(pylint_test_dir):
-    f = file(pylint_test_dir + "/cmk-inventory-plugins.py", "w")
+    with open(pylint_test_dir + "/cmk-inventory-plugins.py", "w") as f:
 
-    # Fake data structures where checks register (See cmk_base/checks.py)
-    f.write("""
+        # Fake data structures where checks register (See cmk_base/checks.py)
+        f.write("""
+# -*- encoding: utf-8 -*-
 check_info                         = {}
 check_includes                     = {}
 precompile_params                  = {}
@@ -37,21 +38,19 @@ def inv_tree(path, default_value=None):
     return node
 """)
 
-    # add the modules
-    pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
+        # add the modules
+        pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
 
-    # add the modules
-    pylint_cmk.add_file(f, repo_path() + "/cmk_base/inventory_plugins.py")
+        # add the modules
+        pylint_cmk.add_file(f, repo_path() + "/cmk_base/inventory_plugins.py")
 
-    # Now add the checks
-    for path in pylint_cmk.check_files(repo_path() + "/checks"):
-        pylint_cmk.add_file(f, path)
+        # Now add the checks
+        for path in pylint_cmk.check_files(repo_path() + "/checks"):
+            pylint_cmk.add_file(f, path)
 
-    # Now add the inventory plugins
-    for path in pylint_cmk.check_files(repo_path() + "/inventory"):
-        pylint_cmk.add_file(f, path)
-
-    f.close()
+        # Now add the inventory plugins
+        for path in pylint_cmk.check_files(repo_path() + "/inventory"):
+            pylint_cmk.add_file(f, path)
 
     exit_code = pylint_cmk.run_pylint(pylint_test_dir)
     assert exit_code == 0, "PyLint found an error in inventory plugins"

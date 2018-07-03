@@ -45,9 +45,8 @@ def test_pylint_web(pylint_test_dir):
 
     for module in modules:
         print("Copy %s to test directory" % module)
-        f = open(pylint_test_dir + "/" + os.path.basename(module), "w")
-        pylint_cmk.add_file(f, module)
-        f.close()
+        with open(pylint_test_dir + "/" + os.path.basename(module), "w") as f:
+            pylint_cmk.add_file(f, module)
 
     # Move the whole plugins code to their modules, then
     # run pylint only on the modules
@@ -67,9 +66,8 @@ def test_pylint_web(pylint_test_dir):
                 module_name = plugin_dir
 
             print("[%s] add %s" % (module_name, plugin_path))
-            module = file(pylint_test_dir + "/" + module_name + ".py", "a")
-            pylint_cmk.add_file(module, plugin_path)
-            module.close()
+            with open(pylint_test_dir + "/" + module_name + ".py", "a") as module:
+                pylint_cmk.add_file(module, plugin_path)
 
     exit_code = pylint_cmk.run_pylint(pylint_test_dir)
     assert exit_code == 0, "PyLint found an error in the web code"

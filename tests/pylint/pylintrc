@@ -40,7 +40,6 @@ disable=
     global-statement,
     global-variable-undefined,
     inconsistent-return-statements,
-    invalid-encoded-data,
     invalid-name,
     keyword-arg-before-vararg,
     len-as-condition,

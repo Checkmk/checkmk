@@ -1,0 +1,13 @@
+Title: Fixed graph PNG export of other than first graphs
+Level: 1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1530640853
+
+When using the PNG export of a graph (e.g. from the context menu of a graph),
+only the export of the first graph of a host/service was working. Other graphs
+produced an error message.

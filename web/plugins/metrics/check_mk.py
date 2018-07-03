@@ -4340,6 +4340,7 @@ check_metrics["check_mk-ucs_bladecenter_if"]        = if_translation
 check_metrics["check_mk-vms_if"]                    = if_translation
 check_metrics["check_mk-winperf_if"]                = if_translation
 check_metrics["check_mk-emc_vplex_if"]              = if_translation
+check_metrics["check_mk-if_fortigate"]              = if_translation
 
 check_metrics["check_mk-brocade_fcport"] = {
     "in"             : { "name": "fc_rx_bytes", },

@@ -1,4 +1,4 @@
-Title: mk_logwatch: If no MK_CONFDIR/logwatch.cfg exists all configuration files below MK_CONFDIR/logwatch.d were ignored. Fixed that!
+Title: mk_logwatch: logwatch.d files were only loaded if logwatch.cfg was in place
 Level: 1
 Component: checks
 Compatible: compat
@@ -7,4 +7,4 @@ Version: 1.6.0i1
 Date: 1530535554
 Class: fix
 
-
+If no MK_CONFDIR/logwatch.cfg exists all configuration files below MK_CONFDIR/logwatch.d were ignored.

@@ -245,7 +245,7 @@ def parse_report(host):
         return
     try:
         lines.pop(0) # Get rid of HOST: header
-        hopline = re.compile('^\s*\d+\.') #  10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
+        hopline = re.compile(r'^\s*\d+\.') #  10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
         for line in lines:
             if not hopline.match(line):
                 continue; #     |  `|-- 129.250.2.159

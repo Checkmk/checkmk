@@ -137,7 +137,7 @@ check_info["netscaler_health.temp"] = {
 
 def inventory_netscaler_health_psu(info):
     for name, state in info:
-        r = regex('PowerSupply([\d])(Failure|)Status')
+        r = regex(r'PowerSupply([\d])(Failure|)Status')
         m = r.match(name)
         if m:
             if int(state) > 0:

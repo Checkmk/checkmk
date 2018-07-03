@@ -1848,7 +1848,7 @@ def substitute_context(template, context):
         template = template.replace('$' + varname + '$', value)
 
     # Remove the rest of the variables and make them empty
-    template = re.sub("\$[A-Z]+\$", "", template)
+    template = re.sub(r"\$[A-Z]+\$", "", template)
     return template
 
 

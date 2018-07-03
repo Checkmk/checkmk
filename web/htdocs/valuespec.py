@@ -585,7 +585,7 @@ class RegExp(TextAscii):
         help_text.append(
             _("Please note that any backslashes need to be escaped using a backslash, "
               "for example you need to insert <tt>C:\\\\windows\\\\</tt> if you want to match "
-              "<tt>c:\windows\</tt>.")
+              "<tt>c:\\windows\\</tt>.")
         )
 
         return " ".join(help_text)
@@ -642,7 +642,7 @@ class EmailAddress(TextAscii):
         # The "new" top level domains are very unlimited in length. Theoretically they can be
         # up to 63 chars long. But currently the longest is 24 characters. Check this out with:
         # wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
-        self._regex = re.compile('^[A-Z0-9._%&+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$', re.I)
+        self._regex = re.compile(r'^[A-Z0-9._%&+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$', re.I)
         self._make_clickable = kwargs.get("make_clickable", False)
 
     def value_to_text(self, value):
@@ -854,7 +854,7 @@ class HostAddress(TextAscii):
         if re.match(r"[\d.]+$", hostname):
             return False
 
-        allowed = re.compile("(?!-)[A-Z_\d-]{1,63}(?<!-)$", re.IGNORECASE)
+        allowed = re.compile(r"(?!-)[A-Z_\d-]{1,63}(?<!-)$", re.IGNORECASE)
         return all(allowed.match(x) for x in hostname.split("."))
 
 
@@ -948,7 +948,7 @@ class HTTPUrl(TextAscii):
 
 def CheckMKVersion(**args):
     args = args.copy()
-    args["regex"] = "[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$"
+    args["regex"] = r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$"
     args["regex_error"] = _("This is not a valid Check_MK version number")
     return TextAscii(**args)
 

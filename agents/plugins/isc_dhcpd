@@ -34,7 +34,7 @@ def parse_config(filename):
     for line in file(filename):
         line = line.strip()
         if line.startswith("include"):
-            included_file = re.search('include\s+"(.*)"', line).group(1)
+            included_file = re.search(r'include\s+"(.*)"', line).group(1)
             parse_config(included_file)
         elif line.startswith("range"):
             sys.stdout.write(line[5:].strip("\t ;") + "\n")

@@ -13,8 +13,8 @@ persistent=yes
 [MESSAGES CONTROL]
 disable=
     abstract-method,
-    anomalous-backslash-in-string,
     anomalous-unicode-escape-in-string,
+    anomalous-backslash-in-string,
     arguments-differ,
     attribute-defined-outside-init,
     bad-classmethod-argument,

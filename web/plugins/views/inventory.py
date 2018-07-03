@@ -458,7 +458,7 @@ def _find_display_hint_id(invpath):
 
     # Convert index of lists to *-syntax
     # e.g. ".foo.bar:18.test" to ".foo.bar:*.test"
-    r = regex("([^\.]):[0-9]+")
+    r = regex(r"([^\.]):[0-9]+")
     invpath = r.sub("\\1:*", invpath)
 
     candidates = [

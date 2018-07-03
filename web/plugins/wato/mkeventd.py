@@ -1828,7 +1828,7 @@ def mode_mkeventd_edit_rule(phase):
                 if name.startswith("set_") and type(value) in [ str, unicode ]:
                     if repl in value:
                         raise MKUserError("rule_p_" + name,
-                            _("You are using the replacment reference <tt>\%d</tt>, "
+                            _("You are using the replacment reference <tt>\\%d</tt>, "
                               "but your match text has only %d subgroups.") % (
                                 num_repl, num_groups))
             num_repl -= 1
@@ -2250,7 +2250,7 @@ def parse_snmp_mib_header(path):
     if matches:
         mib['organization'] = matches.group(1)
 
-    matches = re.search('^\s*([A-Z0-9][A-Z0-9-]+)\s', head, re.I | re.M)
+    matches = re.search(r'^\s*([A-Z0-9][A-Z0-9-]+)\s', head, re.I | re.M)
     if matches:
         mib['name'] = matches.group(1)
 

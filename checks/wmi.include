@@ -168,7 +168,7 @@ def parse_wmi_table(info, key="Name"):
                 # multi-table input
                 if res is None:
                     res = {}
-                tablename = regex("\[(.*)\]").search(line[0]).group(1)
+                tablename = regex(r"\[(.*)\]").search(line[0]).group(1)
                 line = info_iter.next()
                 # Did subsection get WMI timeout?
                 check_wmi_timeout(line)

@@ -36,20 +36,20 @@
 
 omd_apache_patterns = [
     # perf keys         url matching regex
-    ('cmk_views'      , '^check_mk/view\.py'),
-    ('cmk_wato'       , '^check_mk/wato\.py'),
-    ('cmk_bi'         , '^check_mk/bi\.py'),
-    ('cmk_snapins'    , '^check_mk/sidebar_snapin\.py'),
-    ('cmk_dashboards' , '^check_mk/dashboard\.py'),
-    ('cmk_other'      , '^check_mk/.*\.py'),
+    ('cmk_views'      , r'^check_mk/view\.py'),
+    ('cmk_wato'       , r'^check_mk/wato\.py'),
+    ('cmk_bi'         , r'^check_mk/bi\.py'),
+    ('cmk_snapins'    , r'^check_mk/sidebar_snapin\.py'),
+    ('cmk_dashboards' , r'^check_mk/dashboard\.py'),
+    ('cmk_other'      , r'^check_mk/.*\.py'),
 
-    ('nagvis_snapin'  , '^nagvis/server/core/ajax_handler\.php?mod=Multisite&act=getMaps'),
-    ('nagvis_ajax'    , '^nagvis/server/core/ajax_handler\.php'),
-    ('nagvis_other'   , '^nagvis/.*\.php'),
+    ('nagvis_snapin'  , r'^nagvis/server/core/ajax_handler\.php?mod=Multisite&act=getMaps'),
+    ('nagvis_ajax'    , r'^nagvis/server/core/ajax_handler\.php'),
+    ('nagvis_other'   , r'^nagvis/.*\.php'),
 
-    ('images'         , '\.(jpg|png|gif)$'),
-    ('styles'         , '\.css$'),
-    ('scripts'        , '\.js$'),
+    ('images'         , r'\.(jpg|png|gif)$'),
+    ('styles'         , r'\.css$'),
+    ('scripts'        , r'\.js$'),
     ('other'          , '.*'),
 ]
 

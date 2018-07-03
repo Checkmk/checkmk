@@ -1494,7 +1494,7 @@ register_rule(group + '/' + subgroup_inventory,
                              'name will be hardcoded into the check. In that case if you put %u into the service description, that will be replaced '
                              'by the actual user name during inventory. You need that if your rule might match for more than one user - your would '
                              'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
-                             'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\Administrator".</p>'),
+                             'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\\Administrator".</p>'),
                 )),
                 ('icon', UserIconOrAction(
                     title = _("Add custom icon or action"),
@@ -9975,7 +9975,7 @@ register_check_parameters(
     TextAscii(
         title = _("Explicit tablespaces"),
         help = _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"),
-        regex = '.+\..+',
+        regex = r'.+\..+',
         allow_empty = False),
      match_type = "dict",
 )
@@ -10225,7 +10225,7 @@ register_check_parameters(
         title = _("Scheduler Job Name"),
         help = _("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
                  "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),
-        regex = '.+\..+',
+        regex = r'.+\..+',
         allow_empty = False),
     match_type = "dict",
 )

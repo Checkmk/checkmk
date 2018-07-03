@@ -82,7 +82,7 @@ class Log(object):
             self.orig  = sys.stderr
             sys.stderr = self
 
-        self.color_replace = re.compile("\033\[\d{1,2}m", re.UNICODE)
+        self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
 
 
     def __del__(self):

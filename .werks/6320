@@ -1,0 +1,10 @@
+Title: Some services (e.g. Linux Memory) were using wrong perfometers
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1530622280
+Class: fix
+
+

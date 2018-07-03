@@ -1,0 +1,13 @@
+Title: Inventory painters: Allow dynamic table column width scaling
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1530630169
+
+In previous versions inventory painter columns tried to consume as much width
+of the view tables as possible. This has been changed to allow automatic width
+scaling of all non-fixed-width columns in the table.

@@ -562,6 +562,12 @@ def parse_perf_data(perf_data_string, check_command=None):
             varname, values = part.split("=", 1)
             varname = pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
 
+            # Enforce varname to be a byte string for the moment. The plugins currently register
+            # the plugins with byte string varnames. In the long term this needs to be cleaned up
+            # to be unicode strings just like all internal strings. But for the moment the mixup
+            # would confuse e.g. dict lookups etc.
+            varname = varname.encode("utf-8")
+
             value_parts = values.split(";")
             while len(value_parts) < 5:
                 value_parts.append(None)

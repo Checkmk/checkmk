@@ -1604,7 +1604,7 @@ def render_graph_pnp(graph_template, translated_metrics):
 
 def cmk_graphs_possible(site_id = None):
     try:
-        render_graph_html # Will throw exception if missing
+        _dummy = render_graph_html # Will throw exception if missing
         return not config.force_pnp_graphing \
            and browser_supports_canvas() \
            and site_is_running_cmc(site_id)

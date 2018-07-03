@@ -330,7 +330,7 @@ def ps_cleanup_params(params):
 
 def ps_has_extended_perfdata(process_info):
     try:
-        process_info[4]
+        _dummy = process_info[4]
         return True
     except IndexError:
         return False

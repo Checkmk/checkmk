@@ -183,7 +183,7 @@ def reporting_available():
     try:
         # Check the existance of one arbitrary config variable from the
         # reporting module
-        reporting_filename
+        _dummy = reporting_filename
         return True
     except:
         return False
@@ -191,7 +191,7 @@ def reporting_available():
 
 def combined_graphs_available():
     try:
-        have_combined_graphs
+        _dummy = have_combined_graphs
         return True
     except:
         return False

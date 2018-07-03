@@ -293,18 +293,18 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
             if total_hits_misses:
                 hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
                 yield 0, "%sHit Ratio: %0.2f%%" % (human_key.title(), hit_ratio), \
-                      [("%shit_ratio" % key, "%0.2f" % hit_ratio, '', '', 0, 100)]
+                      [("%shit_ratio" % key, hit_ratio, None, None, 0, 100)]
 
             else:
                 yield 0, "No %sHits or Misses" % human_key, \
-                      [("%shit_ratio" % key, 0, '', '', 0, 100)]
+                      [("%shit_ratio" % key, 0, None, None, 0, 100)]
 
     # size
     if "size" in parsed.keys():
         size_bytes    = parsed["size"]
         size_readable = get_bytes_human_readable(size_bytes)
         yield 0, "Cache size: %s" % size_readable, \
-              [("size", size_bytes, '', '', 0)]
+              [("size", float(size_bytes), None, None, 0)]
 
     # arc_meta
     # these values may be missing, this is ok too
@@ -315,9 +315,9 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
               (get_bytes_human_readable(parsed["arc_meta_used"]),
                get_bytes_human_readable(parsed["arc_meta_limit"]),
                get_bytes_human_readable(parsed["arc_meta_max"])), \
-              [("arc_meta_used",  parsed["arc_meta_used"], '', '', 0),
-               ("arc_meta_limit", parsed["arc_meta_limit"], '', '', 0),
-               ("arc_meta_max",   parsed["arc_meta_max"], '', '', 0)]
+              [("arc_meta_used",  float(parsed["arc_meta_used"]), None, None, 0),
+               ("arc_meta_limit", float(parsed["arc_meta_limit"]), None, None, 0),
+               ("arc_meta_max",   float(parsed["arc_meta_max"]), None, None, 0)]
 
 
 check_info["zfs_arc_cache"] = {
@@ -357,20 +357,20 @@ def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
     if "l2_hits" in parsed.keys() and "l2_misses" in parsed.keys():
         l2_hit_ratio = float(parsed["l2_hits"]) / (parsed["l2_hits"] + parsed["l2_misses"]) * 100
         message += " L2 hit ratio: %0.2f%%" % l2_hit_ratio
-        perfdata.append(("l2_hit_ratio", "%0.2f" % l2_hit_ratio, '', '', 0, 100))
+        perfdata.append(("l2_hit_ratio", l2_hit_ratio, None, None, 0, 100))
 
     else:
         message += " no info about L2 hit ratio available"
-        perfdata.append(("l2_hit_ratio", 0, '', '', 0, 100))
+        perfdata.append(("l2_hit_ratio", 0, None, None, 0, 100))
         status = 3
 
     # size
     if "l2_size" in parsed.keys():
         message += ", L2 size: %s" % get_bytes_human_readable(parsed["l2_size"])
-        perfdata.append(("l2_size", parsed["l2_size"], '', '', 0))
+        perfdata.append(("l2_size", float(parsed["l2_size"]), None, None, 0))
     else:
         message += ", no info about L2 size available"
-        perfdata.append(("l2_size", 0, '', '', 0))
+        perfdata.append(("l2_size", 0, None, None, 0))
         status = 3
 
     return status, message, perfdata

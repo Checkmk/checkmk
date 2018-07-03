@@ -117,9 +117,9 @@ def check_oracle_dataguard_stats(item, params, info):
 
                     infotext += state_marker
 
-                    perfdata.append([parameter.replace(' ', '_'), seconds, warn, crit])
+                    perfdata.append((parameter.replace(' ', '_'), seconds, warn, crit))
                 else:
-                    perfdata.append([parameter.replace(' ', '_'), seconds])
+                    perfdata.append((parameter.replace(' ', '_'), seconds))
 
     if itemfound == True:
         return state, infotext, perfdata

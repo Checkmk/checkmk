@@ -2516,7 +2516,9 @@ class AbsoluteDate(ValueSpec):
             html.open_tr()
             for val in values:
                 html.open_td()
-                html.nbsp() if val is None else\
+                if val is None:
+                    html.nbsp()
+                else:
                     html.number_input(varprefix + val[0], val[1], size=val[2])
                 html.close_td()
             html.close_tr()
@@ -2527,7 +2529,9 @@ class AbsoluteDate(ValueSpec):
             for count, val in enumerate(values):
                 if count > 0:
                     html.write_text(" ")
-                html.nbsp() if val is None else\
+                if val is None:
+                    html.nbsp()
+                else:
                     html.number_input(varprefix + val[0], val[1], size=val[2])
 
 

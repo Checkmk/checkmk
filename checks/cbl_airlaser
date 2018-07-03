@@ -136,14 +136,14 @@ def check_cbl_airlaser_hw(item, params, info):
                 val = saveint(val)
                 if sensor in params.keys():
                     warn, crit = params[sensor]
-                    perfdata.append(("%s" % sensor, "%d" % val, warn, crit, 0, 90)),
+                    perfdata.append(("%s" % sensor, "%d" % val, warn, crit, 0, 90))
                     if   val > crit:
                         state = max(state, 2)
                     elif val > warn:
                         state = max(state, 1)
                 else:
                     # if this sensor wasn't in the params, then we don't alert on it.
-                    perfdata.append(("%s" % sensor, "%d" % val, '', '', 0, 90)),
+                    perfdata.append(("%s" % sensor, "%d" % val, '', '', 0, 90))
 
             # HACK: for the main PSUs the status 3 is not "warning" but
             # not_detected  (3)

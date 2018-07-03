@@ -39,19 +39,19 @@ def parse_f5_bigip_vserver(info):
     for line in info:
         name = line[0]
         vservers.setdefault(name, {})
-        vservers[name].setdefault("status"                  , []).append(int(line[1])),
-        vservers[name].setdefault("enabled"                 , []).append(int(line[2])),
-        vservers[name].setdefault("detail"                  , []).append(line[3]),
-        vservers[name].setdefault("ip"                      , []).append(ip_from_string(line[4])),
-        vservers[name].setdefault("connections_duration_min" , []).append(int(line[5])),
-        vservers[name].setdefault("connections_duration_max" , []).append(int(line[6])),
-        vservers[name].setdefault("connections_duration_mean", []).append(int(line[7])),
-        vservers[name].setdefault("if_in_pkts"              , []).append(int(line[8])),
-        vservers[name].setdefault("if_out_pkts"             , []).append(int(line[9])),
-        vservers[name].setdefault("if_in_octets"            , []).append(int(line[10])),
-        vservers[name].setdefault("if_out_octets"           , []).append(int(line[11])),
-        vservers[name].setdefault("connections_rate"        , []).append(int(line[12])),
-        vservers[name].setdefault("connections"             , []).append(int(line[13])),
+        vservers[name].setdefault("status"                  , []).append(int(line[1]))
+        vservers[name].setdefault("enabled"                 , []).append(int(line[2]))
+        vservers[name].setdefault("detail"                  , []).append(line[3])
+        vservers[name].setdefault("ip"                      , []).append(ip_from_string(line[4]))
+        vservers[name].setdefault("connections_duration_min" , []).append(int(line[5]))
+        vservers[name].setdefault("connections_duration_max" , []).append(int(line[6]))
+        vservers[name].setdefault("connections_duration_mean", []).append(int(line[7]))
+        vservers[name].setdefault("if_in_pkts"              , []).append(int(line[8]))
+        vservers[name].setdefault("if_out_pkts"             , []).append(int(line[9]))
+        vservers[name].setdefault("if_in_octets"            , []).append(int(line[10]))
+        vservers[name].setdefault("if_out_octets"           , []).append(int(line[11]))
+        vservers[name].setdefault("connections_rate"        , []).append(int(line[12]))
+        vservers[name].setdefault("connections"             , []).append(int(line[13]))
         vservers[name].setdefault("packet_velocity_asic"    , []).append(int(line[14]))
 
     return vservers

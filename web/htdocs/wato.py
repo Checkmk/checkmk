@@ -10709,7 +10709,7 @@ class ModeEditSite(ModeSites):
                     'The remote sites don\'t perform automatic user synchronizations with the '
                     'configured connections. But you can configure each site to either '
                     'synchronize the users with all configured connections or a specific list of '
-                    'connections.')),
+                    'connections.'))
 
         if config.mkeventd_enabled:
             forms.section(_('Event Console'), simple=True)
@@ -13068,7 +13068,7 @@ class ModeRulesets(WatoMode):
 
         #  Explicitly hide deprecated rulesets by default
         if not html.has_var("search_p_ruleset_deprecated"):
-            html.set_var("search_p_ruleset_deprecated", DropdownChoice.option_id(False)),
+            html.set_var("search_p_ruleset_deprecated", DropdownChoice.option_id(False))
             html.set_var("search_p_ruleset_deprecated_USE", "on")
 
         # Transform group argument to the "rule search arguments"

@@ -114,7 +114,7 @@ def check_oracle_recovery_status(item, params, info):
            or not params.get("levels"):
             # We ignore the state of the check when no parameters are known
             # _mgmtdb is new internal instance from 12.1.0.2 on Grid-Infrastructure
-            perfdata.append(['checkpoint_age', oldest_checkpoint_age])
+            perfdata.append(('checkpoint_age', oldest_checkpoint_age))
         else:
             if database_role == 'PRIMARY':
                 # checkpoint age should not higher on primary as well
@@ -125,9 +125,9 @@ def check_oracle_recovery_status(item, params, info):
                     infotext += '(!)'
                     state = max(1, state)
 
-                perfdata.append(['checkpoint_age', oldest_checkpoint_age, warn])
+                perfdata.append(('checkpoint_age', oldest_checkpoint_age, warn))
             else:
-                perfdata.append(['checkpoint_age', oldest_checkpoint_age, warn, crit])
+                perfdata.append(('checkpoint_age', oldest_checkpoint_age, warn, crit))
 
                 # check the checkpoint age on a non primary database!
                 if oldest_checkpoint_age >= crit:
@@ -157,7 +157,7 @@ def check_oracle_recovery_status(item, params, info):
 
                 warn, crit = params["backup_age"]
                 infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
-                perfdata.append(['backup_age', oldest_backup_age, warn, crit])
+                perfdata.append(('backup_age', oldest_backup_age, warn, crit))
 
                 if oldest_backup_age >= crit:
                     infotext += '(!!)'
@@ -166,12 +166,12 @@ def check_oracle_recovery_status(item, params, info):
                     infotext += '(!)'
                     state = max(1, state)
             else:
-                perfdata.append(['backup_age', oldest_backup_age])
+                perfdata.append(('backup_age', oldest_backup_age))
         else:
 
             # create a 'dummy' performance data with 0
             # => The age from plugin is only valid when a datafile is in backup mode!
-            perfdata.append(['backup_age', 0])
+            perfdata.append(('backup_age', 0))
 
 
         return state, infotext, perfdata

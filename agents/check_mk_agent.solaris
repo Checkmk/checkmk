@@ -131,9 +131,15 @@ function run_cached () {
 }
 
 
-echo '<<<check_mk>>>'
-echo Version: 1.6.0i1
-echo AgentOS: solaris
+echo "<<<check_mk>>>"
+echo "Version: 1.6.0i1"
+echo "AgentOS: solaris"
+echo "Hostname: $(hostname)"
+echo "AgentDirectory: $MK_CONFDIR"
+echo "DataDirectory: $MK_VARDIR"
+echo "SpoolDirectory: $SPOOLDIR"
+echo "PluginsDirectory: $PLUGINSDIR"
+echo "LocalDirectory: $LOCALDIR"
 
 
 # Find out what zone we are running in

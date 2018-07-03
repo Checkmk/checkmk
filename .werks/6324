@@ -1,0 +1,14 @@
+Title: Notifications: Fixed height of graph area with a larger legend
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0b8
+Date: 1530641604
+Class: fix
+
+Graphs with a lot of metrics need more space for their legend. This larger
+legend did not increase the size of the graph images. They reduced the size
+of the graph are and finally destroyed the graph layout.
+
+The image height is now increased with a larger number of metrics.

@@ -1,0 +1,11 @@
+Title: check_mk_agent.linux: Fixed 'oci runtime error: exec failed: container_linux.go:265: starting container process caused "exec: \"check_mk_agent\": executable file not found in $PATH"'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b8
+Date: 1530626219
+
+

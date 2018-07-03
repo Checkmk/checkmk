@@ -77,7 +77,7 @@ def check_sql_arguments(params):
     else:
         sql_tmp = params["sql"]
 
-    args += [ "%s" % sql_tmp.replace("\n", r"\n").replace(";", "\;") ]
+    args += [ "%s" % sql_tmp.replace("\n", r"\n").replace(";", r"\;") ]
 
     return args
 

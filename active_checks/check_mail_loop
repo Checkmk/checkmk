@@ -297,7 +297,7 @@ def fetch_mails():
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, parse_exception(e), messages))
 
         # Now filter out the messages for this check
-        pattern = re.compile('(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % subject)
+        pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % subject)
         for index, msg in mails.items():
             matches = pattern.match(msg.get('Subject', ''))
             if matches:

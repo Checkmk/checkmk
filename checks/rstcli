@@ -159,7 +159,7 @@ def inventory_rstcli_pdisks(parsed):
 
 
 def check_rstcli_pdisks(item, params, parsed):
-    reg = regex("(.*)/([0-9\-]*)")
+    reg = regex(r"(.*)/([0-9\-]*)")
     match = reg.match(item)
     if not match:
         return 3, "unsupported item name"

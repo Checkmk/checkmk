@@ -41,7 +41,7 @@
 # returns consecutive numbers per call so this function has to be
 # called exactly once per core
 def cpu_util_core_name(orig, core_counter):
-    expr = regex("\d+$")
+    expr = regex(r"\d+$")
     match = expr.search(orig)
     if match is not None:
         num = match.group(0)

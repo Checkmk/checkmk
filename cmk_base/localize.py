@@ -182,7 +182,7 @@ def localize_sniff():
                  stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!\n')
     else:
-        header = '''# +------------------------------------------------------------------+
+        header = r'''# +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
 # |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
@@ -207,16 +207,16 @@ def localize_sniff():
 # Boston, MA 02110-1301 USA.
 msgid ""
 msgstr ""
-"Project-Id-Version: Check_MK Multisite translation 0.1\\n"
-"Report-Msgid-Bugs-To: checkmk-en@lists.mathias-kettner.de\\n"
-"POT-Creation-Date: 2011-05-13 09:42+0200\\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"
-"Language-Team: LANGUAGE <LL@li.org>\\n"
-"Language: LANGUAGE \\n"
-"MIME-Version: 1.0\\n"
-"Content-Type: text/plain; charset=utf-8\\n"
-"Content-Transfer-Encoding: 8bit\\n"
+"Project-Id-Version: Check_MK Multisite translation 0.1\n"
+"Report-Msgid-Bugs-To: checkmk-en@lists.mathias-kettner.de\n"
+"POT-Creation-Date: 2011-05-13 09:42+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: LANGUAGE \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
 '''
 

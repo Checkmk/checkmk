@@ -92,7 +92,7 @@ def parse_allnet_ip_sensoric(info):
     '''
     parsed = {}
     for key, value in info:
-        match = re.search('(\w+)\.(\w+)', key)
+        match = re.search(r'(\w+)\.(\w+)', key)
         if match:
             sensor = match.group(1)
             field = match.group(2)

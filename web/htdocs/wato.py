@@ -6853,7 +6853,7 @@ class ModeEditLDAPConnection(LDAPMode):
                          " during login instead of just the plain <tt>[username]</tt> to tell which LDAP "
                          "directory he is assigned to. Users without name conflict just need to provide their "
                          "regular username as usual."),
-                regex = re.compile('^[A-Z0-9.-]+(?:\.[A-Z]{2,24})?$', re.I),
+                regex = re.compile(r'^[A-Z0-9.-]+(?:\.[A-Z]{2,24})?$', re.I),
             )),
         ]
 

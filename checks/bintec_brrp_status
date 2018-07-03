@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def bintec_brrp_status_compose_item(brrp_id):
-    return re.sub("\..*", "", brrp_id)
+    return re.sub(r"\..*", "", brrp_id)
 
 def inventory_bintec_brrp_status(info):
     inventory = []

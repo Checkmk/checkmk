@@ -1859,7 +1859,7 @@ def render_wiki():
                     start_ul = False
                     ul_started = True
 
-                erg = re.findall('\[\[(.*)\]\]', line)
+                erg = re.findall(r'\[\[(.*)\]\]', line)
                 if len(erg) == 0:
                     continue
                 erg = erg[0].split('|')

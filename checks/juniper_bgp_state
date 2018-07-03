@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def juniper_bgp_state_create_item(oid_end):
-    return re.sub("[0-9]+\.1\.[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\.1\.", "", oid_end)
+    return re.sub(r"[0-9]+\.1\.[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\.1\.", "", oid_end)
 
 def inventory_juniper_bgp_state(info):
     inventory = []

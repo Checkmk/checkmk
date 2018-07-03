@@ -47,7 +47,7 @@ def page_index():
         start_url = default_start_url
 
     # Don't allow bad characters in path
-    if not re.match("[/a-z0-9_\.-]*$", parsed.path):
+    if not re.match(r"[/a-z0-9_\.-]*$", parsed.path):
         start_url = default_start_url
 
     if "%s" in config.page_heading:

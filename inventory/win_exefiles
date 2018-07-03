@@ -43,11 +43,11 @@ def inv_win_exefiles(info):
         # when none of the implemented parsers matches. We keep the existing parsers for
         # compatibility, all users with yet unhandled formats should update the agent to
         # solve the problems.
-        if re.match("^\d{2}\.\d{2}\.20\d{2} \d{2}:\d{2}:\d{2}", write_time):
+        if re.match(r"^\d{2}\.\d{2}\.20\d{2} \d{2}:\d{2}:\d{2}", write_time):
             install_date = int(time.mktime(time.strptime(write_time, "%d.%m.%Y %H:%M:%S")))
-        elif re.match("^\d{1,2}/\d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)", write_time):
+        elif re.match(r"^\d{1,2}/\d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2} (AM|PM)", write_time):
             install_date = int(time.mktime(time.strptime(write_time, "%m/%d/%Y %H:%M:%S %p")))
-        elif re.match("^\d{1,2}/\d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2}", write_time):
+        elif re.match(r"^\d{1,2}/\d{1,2}/20\d{2} \d{1,2}:\d{2}:\d{2}", write_time):
             # This is the 1.2.6p1 new default date
             install_date = int(time.mktime(time.strptime(write_time, "%m/%d/%Y %H:%M:%S")))
         else:

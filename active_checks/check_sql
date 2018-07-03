@@ -149,7 +149,7 @@ try:
 
     if args:
         opt_sql_tmp = ' '.join(map(str,args))
-        opt_sql = opt_sql_tmp.replace(r"\n", "\n").replace('\;', ";")
+        opt_sql = opt_sql_tmp.replace(r"\n", "\n").replace(r'\;', ";")
     else:
         bail_out(3, "No query or SQL statement/procedure name given")
 

@@ -39,7 +39,7 @@ factory_settings['fortigate_signature_default_levels'] = {
 def parse_fortigate_signatures(info):
     def parse_version(ver):
         # sample: 27.00768(2015-09-01 15:10)
-        ver_regex = regex("([0-9.]*)\(([0-9-: ]*)\)")
+        ver_regex = regex(r"([0-9.]*)\(([0-9-: ]*)\)")
         match = ver_regex.match(ver)
         if match is None:
             return None, None

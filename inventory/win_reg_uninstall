@@ -40,7 +40,7 @@ def inv_win_reg_uninstall(info):
             continue
 
         install_date = None
-        if re.match("^20\d{6}", date):
+        if re.match(r"^20\d{6}", date):
             # Dates look like '20160930', but we saw also dates like '20132804'
             # which have transposed month and day fields.
             try:

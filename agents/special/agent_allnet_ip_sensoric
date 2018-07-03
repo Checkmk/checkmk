@@ -131,7 +131,7 @@ def get_allnet_ip_sensoric_info():
             context = None
             continue
 
-        match = re.search('<(\w+)>(.+)</\w+>', line)
+        match = re.search(r'<(\w+)>(.+)</\w+>', line)
         if match and context:
             attrs["%s.%s" % (context, match.group(1))] = match.group(2)
 

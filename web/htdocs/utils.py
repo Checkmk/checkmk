@@ -56,7 +56,7 @@ def num_split(s):
     That way a naturual sort can be implemented.
     """
     parts = []
-    for part in re.split('(\d+)', s):
+    for part in re.split(r'(\d+)', s):
         try:
             parts.append(int(part))
         except ValueError:

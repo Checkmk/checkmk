@@ -180,7 +180,7 @@ cmd = "ssh -o ConnectTimeout=%s %s %s@%s '" % (opt_timeout, opt_any_hostkey, use
 
 for module in command_options.keys():
     if command_options[module]["active"] == True:
-        cmd += "echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
+        cmd += r"echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
         cmd += "%s || true;" % command_options[module]["command"]
 cmd += "'"
 

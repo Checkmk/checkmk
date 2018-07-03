@@ -1634,14 +1634,14 @@ def browser_supports_canvas():
     user_agent = html.get_user_agent()
 
     if 'MSIE' in user_agent:
-        matches = regex('MSIE ([0-9]{1,}[\.0-9]{0,})').search(user_agent)
+        matches = regex(r'MSIE ([0-9]{1,}[\.0-9]{0,})').search(user_agent)
         if matches:
             ie_version = float(matches.group(1))
             if ie_version >= 9.0:
                 return True
 
         # Trying to deal with the IE compatiblity mode to detect the real IE version
-        matches = regex('Trident/([0-9]{1,}[\.0-9]{0,})').search(user_agent)
+        matches = regex(r'Trident/([0-9]{1,}[\.0-9]{0,})').search(user_agent)
         if matches:
             trident_version = float(matches.group(1))+4
             if trident_version >= 9.0:

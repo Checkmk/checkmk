@@ -27,13 +27,13 @@
 def inventory_dell_chassis_powersupplies(info):
     inventory = []
     for line in info:
-        item = re.sub("\.", "-", line[0])
+        item = re.sub(r"\.", "-", line[0])
         inventory.append( ( item, None ) )
     return inventory
 
 def check_dell_chassis_powersupplies(item, _no_params, info):
     for oid_end, voltage, current, maxpower in info:
-        if item == re.sub("\.", "-", oid_end):
+        if item == re.sub(r"\.", "-", oid_end):
             power = savefloat(voltage) * savefloat(current)
             state = 0
             infotext = ""

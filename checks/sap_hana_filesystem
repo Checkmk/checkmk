@@ -29,8 +29,8 @@ def parse_sap_hana_filesystem(info):
     parsed = []
     for line in info:
         instance, disk_type, used, size = line
-        used_mb = float(used)
-        size_mb = float(size)
+        used_mb = float(used) * 1024
+        size_mb = float(size) * 1024
         avail_mb = size_mb - used_mb
         parsed.append(("%s %s" % (instance.replace('"', ''), disk_type), size_mb, avail_mb, 0))
     return parsed
@@ -45,5 +45,5 @@ check_info['sap_hana_filesystem'] = {
     'inventory_function'    : inventory_sap_hana_filesystem,
     'check_function'        : df_check_filesystem_list,
     'service_description'   : 'SAP HANA Filesystem %s',
-    'includes'              : ['df.include'],
+    'includes'              : ['df.include', 'size_trend.include'],
 }

@@ -1,0 +1,10 @@
+Title: sap_hana_filesystem, sap_hana_mem: Fixed wrong conversion of filesystem and memory values
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b8
+Date: 1530712773
+Class: fix
+
+

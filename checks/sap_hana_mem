@@ -41,10 +41,10 @@ def parse_sap_hana_mem(info):
             # all memory values in MB
             if section == 'resident':
                 # used
-                data = float(line[1]) * 1024**2
+                data = float(line[1]) * 1024**3
             elif section == 'database':
                 # used, max, resident_max
-                data = map(lambda x: float(x) * 1024**2, line[1:])
+                data = map(lambda x: float(x) * 1024**3, line[1:])
             else:
                 continue
             pparsed[instance].setdefault(section, data)

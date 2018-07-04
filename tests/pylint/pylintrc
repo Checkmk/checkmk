@@ -111,15 +111,7 @@ msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
 
 [FORMAT]
 max-line-length=100
-single-line-if-stmt=no
-indent-string='    '
 
 [VARIABLES]
-# Ignore these unused variables (e.g. _no_item,_no_params)
-dummy-variables-rgx=^_.*
 # Needed by web code because of super globals. TODO Clean this up some day
 additional-builtins=html,_,_u,current_language,HTML
-
-[MISCELLANEOUS]
-# List of note tags to take in consideration, separated by a comma.
-notes=FIXME,TODO

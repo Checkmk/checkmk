@@ -1,0 +1,20 @@
+Title: sap_hana_filesystem, sap_hana_mem: Fixed wrong conversion of filesystem and memory values
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1530711398
+Class: fix
+
+In order to get correct calculated values in the service details
+and graphs you have to install the latest {{mk_sap_hana}} agent plugin.
+The plugin now sends values in bytes and the check plugin can handle them
+correctly.
+
+Before the plugin reports these values as GB which were rounded to two
+decimal places. In turn the check plugin converts these values to
+bytes, applies parameters and finally converts them to a user friendly
+format. This whole process may produce unprecise results.
+
+

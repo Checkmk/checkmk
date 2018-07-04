@@ -1183,8 +1183,12 @@ class RequestHandler(object):
         self.listvars = {} # for variables with more than one occurrance
         self.uploads  = {}
 
-        # TODO: Fix this regex. +-\ selects all from + to \, not +, - and \!
-        varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
+        # TODO: Previously the regex below matched any alphanumeric character plus any character
+        # from set(r'%*+,-./:;<=>?@[\_'), but this was very probably unintended. Now we only allow
+        # alphanumeric characters plus any character from set('%*+-._'), which is probably still a
+        # bit too broad. We should really figure out what we need and make sure that we only use
+        # that restricted set.
+        varname_regex = re.compile(r'^[\w.%*+-]+$')
 
         for field in fields.list:
             varname = field.name

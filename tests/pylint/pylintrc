@@ -14,7 +14,6 @@ persistent=yes
 disable=
     abstract-method,
     anomalous-unicode-escape-in-string,
-    anomalous-backslash-in-string,
     arguments-differ,
     attribute-defined-outside-init,
     bad-classmethod-argument,

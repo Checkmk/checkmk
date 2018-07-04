@@ -57,7 +57,7 @@ def parse_wmi_table(info, key="Name"):
     # the table can also contain the sample time where the metrics were read,
     #  otherwise the caller will have to assume the sampletime is one of the
     #  metrics
-    class Table:
+    class Table(object):
 
         TOTAL_NAMES = ["_Total", "", "__Total__", "_Global"]
 
@@ -89,10 +89,16 @@ def parse_wmi_table(info, key="Name"):
             self.__row_lookup = {}
             self.__rows = []
 
-
         def __repr__(self):
             return repr((self.__headers, self.__rows))
 
+        def __eq__(self, other):
+            if isinstance(other, self.__class__):
+                return self.__dict__ == other.__dict__
+            return False
+
+        def __ne__(self, other):
+            return not self == other
 
         def add_row(self, row):
             row = row[:]
@@ -103,7 +109,6 @@ def parse_wmi_table(info, key="Name"):
                     key = row[self.__key_index] = None
                 self.__row_lookup[key] = len(self.__rows)
             self.__rows.append(row)
-
 
         def get(self, row, column):
             if isinstance(row, int):

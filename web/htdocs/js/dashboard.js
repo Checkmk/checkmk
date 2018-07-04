@@ -50,10 +50,10 @@ function size_dashlets() {
                 d_width = 21;
             }
             // 14 => 9 title padding + empty space on right of dashlet
-            oDashTitle.style.width  = (d_width - 13) + "px";
+            oDashTitle.style.width  = (d_width - 19) + "px";
             oDashTitle.style.display = disstyle;
             oDashTitle.style.left = dashlet_padding[3] + "px";
-            oDashTitle.style.top = dashlet_padding[4] + "px";
+            oDashTitle.style.top = dashlet_padding[4] + 8 + "px";
         }
 
         // resize outer div

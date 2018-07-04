@@ -1444,7 +1444,7 @@ def mode_edit_host(phase, new, is_cluster):
         html.open_ul()
         for error in errors:
             html.li(error)
-        html.close_ul
+        html.close_ul()
         html.close_p()
 
         if html.form_submitted():

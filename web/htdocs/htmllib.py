@@ -66,6 +66,7 @@ import __builtin__
 import signal
 import json
 import abc
+import pprint
 
 from collections import deque
 from contextlib import contextmanager
@@ -1657,13 +1658,12 @@ class html(HTMLGenerator):
     #
 
     def debug(self, *x):
-        import pprint
         for element in x:
             try:
                 formatted = pprint.pformat(element)
             except UnicodeDecodeError:
                 formatted = repr(element)
-            self._lowlevel_write("%s" % self.render_pre(formatted))
+            self.write(self.render_pre(formatted))
 
 
     #

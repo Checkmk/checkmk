@@ -1494,7 +1494,7 @@ register_rule(group + '/' + subgroup_inventory,
                              'name will be hardcoded into the check. In that case if you put %u into the service description, that will be replaced '
                              'by the actual user name during inventory. You need that if your rule might match for more than one user - your would '
                              'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
-                             'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\\Administrator".</p>'),
+                             'the actual user name. For example "\\\\NT AUTHORITY\\NETWORK SERVICE" or "\\\\CHKMKTEST\\Administrator".</p>'),
                 )),
                 ('icon', UserIconOrAction(
                     title = _("Add custom icon or action"),

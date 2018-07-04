@@ -65,6 +65,7 @@ class html_mod_python(htmllib.html):
         self.read_cookies()
 
         self._requested_url = self.makeuri_contextless(self.vars.items())
+        self._theme = None
 
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
@@ -117,6 +118,15 @@ class html_mod_python(htmllib.html):
         self.init_screenshot_mode()
         self.init_debug_mode()
         self.set_buffering(config.buffered_http_stream)
+        self.init_theme()
+
+
+    def init_theme(self):
+        self.set_theme(config.ui_theme)
+
+
+    def set_theme(self, theme_id):
+        self._theme = theme_id or config.ui_theme
 
 
     def init_debug_mode(self):
@@ -278,6 +288,10 @@ class html_mod_python(htmllib.html):
             import gui_colors
             gui_colors.GUIColors().render_html()
 
+        if self._theme and self._theme != "classic":
+            fname = self.css_filename_for_browser("themes/%s/theme" % self._theme)
+            self.stylesheet(fname)
+
 
     def plugin_stylesheets(self):
         plugin_stylesheets = set([])
@@ -318,17 +332,24 @@ class html_mod_python(htmllib.html):
 
 
     def detect_icon_path(self, icon_name):
-        # Detect whether or not the icon is available as images/icon_*.png
-        # or images/icons/*.png. When an icon is available as internal icon,
-        # always use this one
-        is_internal = False
-        rel_path = "share/check_mk/web/htdocs/images/icon_"+icon_name+".png"
-        if os.path.exists(cmk.paths.omd_root+"/"+rel_path):
-            is_internal = True
-        elif os.path.exists(cmk.paths.omd_root+"/local/"+rel_path):
-            is_internal = True
+        """Detect from which place an icon shall be used and return it's path relative to htdocs/
 
-        if is_internal:
+        Priority:
+        1. In case a theme is active: themes/images/icon_[name].png in site local hierarchy
+        2. In case a theme is active: themes/images/icon_[name].png in standard hierarchy
+        3. images/icon_[name].png in site local hierarchy
+        4. images/icon_[name].png in standard hierarchy
+        5. images/icons/[name].png in site local hierarchy
+        6. images/icons/[name].png in standard hierarchy
+        """
+
+        if self._theme and self._theme != "classic":
+            rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s.png" % (self._theme, icon_name)
+            if os.path.exists(cmk.paths.omd_root+"/"+rel_path) or os.path.exists(cmk.paths.omd_root+"/local/"+rel_path):
+                return "themes/%s/images/icon_%s.png" % (self._theme, icon_name)
+
+        rel_path = "share/check_mk/web/htdocs/images/icon_"+icon_name+".png"
+        if os.path.exists(cmk.paths.omd_root+"/"+rel_path) or os.path.exists(cmk.paths.omd_root+"/local/"+rel_path):
             return "images/icon_%s.png" % icon_name
-        else:
-            return "images/icons/%s.png" % icon_name
+
+        return "images/icons/%s.png" % icon_name

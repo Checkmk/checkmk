@@ -88,6 +88,9 @@ def handler(mod_python_req, fields = None, is_profiling = False):
         previous_language = i18n.get_current_language()
         i18n.localize(html.var("lang", config.user.language()))
 
+        # Update the UI theme with the attribute configured by the user
+        html.set_theme(config.user.get_attribute("ui_theme"))
+
         # All plugins might have to be reloaded due to a language change. Only trigger
         # a second plugin loading when the user is really using a custom localized GUI.
         # Otherwise the load_all_plugins() at the beginning of the request is sufficient.

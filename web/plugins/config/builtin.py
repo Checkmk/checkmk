@@ -205,6 +205,9 @@ service_view_grouping = []
 # Custom user stylesheet to load (resides in htdocs/)
 custom_style_sheet = None
 
+# UI theme to use
+ui_theme = "classic"
+
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"
 

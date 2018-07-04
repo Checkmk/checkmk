@@ -106,3 +106,27 @@ declare_user_attribute(
         forth = lambda v: None if v == "" else v,
     ),
     domain = "multisite")
+
+
+declare_user_attribute(
+    "ui_theme",
+    Alternative(
+        title = _("User interface theme"),
+        style = "dropdown",
+        orientation = "horizontal",
+        elements = [
+            FixedValue(None,
+                title = _("Use the default theme"),
+                totext = "",
+            ),
+            DropdownChoice(
+                title = _("Set custom theme"),
+                choices = [
+                    ("classic",  _("Classic user interface")),
+                    ("facelift", _("Face lifted")),
+                ],
+            ),
+        ],
+    ),
+    domain = "multisite",
+)

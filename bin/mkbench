@@ -990,7 +990,7 @@ DiskIO = namedtuple("DiskIO", ["read_bytes", "write_bytes"])
 
 class Measurement(object):
     @classmethod
-    def summary(self, measurements):
+    def summary(cls, measurements):
         average_keys = [
             "cpu_load",
             "disk_io",

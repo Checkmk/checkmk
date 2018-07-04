@@ -283,7 +283,7 @@ class GraphDestinations(object):
     notification = "notification"
 
     @classmethod
-    def choices(self):
+    def choices(cls):
         return [
             (GraphDestinations.dashlet,      _("Dashlet")),
             (GraphDestinations.view,         _("View")),

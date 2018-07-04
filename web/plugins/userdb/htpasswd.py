@@ -40,17 +40,17 @@ class HtpasswdUserConnector(UserConnector):
 
 
     @classmethod
-    def type(self):
+    def type(cls):
         return 'htpasswd'
 
 
     @classmethod
-    def title(self):
+    def title(cls):
         return _('Apache Local Password File (htpasswd)')
 
 
     @classmethod
-    def short_title(self):
+    def short_title(cls):
         return _('htpasswd')
 
 

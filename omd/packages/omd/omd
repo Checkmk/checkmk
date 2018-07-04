@@ -3950,18 +3950,16 @@ class PackageManager(object):
     __metaclass__ = abc.ABCMeta
 
     @classmethod
-    def factory(self):
+    def factory(cls):
         if os.path.exists("/etc/cma"):
-            return
+            return None
 
         distro_code = g_info["DISTRO_CODE"]
         if distro_code.startswith("el") \
            or distro_code.startswith("sles"):
-            cls = PackageManagerRPM
+            return PackageManagerRPM()
         else:
-            cls = PackageManagerDEB
-
-        return cls()
+            return PackageManagerDEB()
 
 
     @abc.abstractmethod

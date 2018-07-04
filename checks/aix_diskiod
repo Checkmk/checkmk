@@ -45,6 +45,25 @@
 # 6. Kb_wrtn    -> Kilobytes written since system boot
 
 def aix_diskiod_convert(info):
+    #TODO use 'check_diskstat_dict' which needs the following format
+    # disks = { "sda" : {
+    #       'node'                       : None,
+    #       'average_read_request_size'  : 0.0,
+    #       'average_read_wait'          : 0.0,
+    #       'average_request_size'       : 40569.90476190476,
+    #       'average_wait'               : 0.761904761904762,
+    #       'average_write_request_size' : 40569.90476190476,
+    #       'average_write_wait'         : 0.0007619047619047619,
+    #       'read_ios'                   : 0.0,
+    #       'read_throughput'            : 0.0,
+    #       'latency'                    : 0.00038095238095238096,
+    #       'utilization'                : 0.0006153846153846154,
+    #       'write_ios'                  : 1.6153846153846154,
+    #       'write_throughput'           : 65536.0,
+    #       'queue_length'               : 0.0,
+    #       'read_ql'                    : 0.0,
+    #       'write_ql'                   : 0.0,
+    # }}
     converted = []
     for node_info, device, tm_act, kbps, tps, kb_read, kb_written in info:
         converted.append((node_info, device, int(kb_read) * 1024, int(kb_written) * 1024))

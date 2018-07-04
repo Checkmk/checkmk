@@ -221,7 +221,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     # legacy version if item is "read" or "write"
     if item in [ 'read', 'write' ]:
-        return check_diskstat_old(item, params, this_time, info)
+        return _check_diskstat_old(item, params, this_time, info)
 
     # Sum up either all physical disks (if item is "SUMMARY") or
     # all entries matching the item in question. It is not a bug if
@@ -251,7 +251,7 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
 # This is the legacy version of diskstat as used in <= 1.1.10.
 # We keep it here for a while in order to be compatible with
 # old installations.
-def check_diskstat_old(item, params, this_time, info):
+def _check_diskstat_old(item, params, this_time, info):
     # sum up over all devices
     if item == 'read':
         index = 2 # sectors read

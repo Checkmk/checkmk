@@ -4677,7 +4677,7 @@ class TimeperiodValuespec(ValueSpec):
         vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
 
         toggle_url = html.makeuri(vars_copy.items())
-        html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, style=["position: absolute", "right: 18px;"])
+        html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, class_=["toggle_timespecific_parameter"])
 
         if is_active:
             value = self._get_timeperiod_value(value)

@@ -36,10 +36,9 @@ import cmk.log
 
 
 class Profile(object):
-    def __init__(self, enabled=True, profile_file=None, *args, **kwargs):
+    def __init__(self, enabled=True, profile_file=None, **kwargs):
         self._enabled = enabled
         self._profile_file = profile_file
-        self._args = args
         self._kwargs = kwargs
         self._profile = None
 
@@ -47,7 +46,7 @@ class Profile(object):
     def __enter__(self):
         if self._enabled:
             cmk.log.logger.info("Recording profile")
-            self._profile = cProfile.Profile(*self._args, **self._kwargs)
+            self._profile = cProfile.Profile(**self._kwargs)
             self._profile.enable()
         return self
 

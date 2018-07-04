@@ -39,7 +39,6 @@ disable=
     global-variable-undefined,
     inconsistent-return-statements,
     invalid-name,
-    keyword-arg-before-vararg,
     len-as-condition,
     line-too-long,
     logging-not-lazy,

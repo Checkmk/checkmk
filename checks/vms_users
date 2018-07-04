@@ -41,8 +41,8 @@ def check_vms_users(item, params, info):
     num_sessions = 0
     for line in info:
         # complete missing columns
-        line += ['-'] * (5-len(line))
-        interactive, subproc, batch, network = map(saveint, line[1:])
+        padding = [0] * (5 - len(line))
+        interactive, subproc, batch, network = map(saveint, line[1:]) + padding
         if interactive:
             num_sessions += interactive
             infos.append(("%s: %d" % (line[0], interactive)))

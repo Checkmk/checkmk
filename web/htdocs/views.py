@@ -3227,7 +3227,7 @@ def format_plugin_output(output, row = None):
     if shall_escape:
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
-        output = re.sub("(?:&lt;A HREF=&quot;)?(http[s]?://[^\"'>\t\s\n,]+)(?: target=&quot;_blank&quot;&gt;)?",
+        output = re.sub("(?:&lt;A HREF=&quot;)?(http[s]?://[^\"'>\\s,]+)(?: target=&quot;_blank&quot;&gt;)?",
                          lambda p: '<a href="%s"><img class=pluginurl align=absmiddle title="%s" src="images/pluginurl.png"></a>' %
                             (p.group(1).replace('&quot;', ''), p.group(1).replace('&quot;', '')), output)
 

@@ -38,7 +38,7 @@ def parse_sap_hana_mem(info):
         if section is not None:
             instance = line[0].replace('"', '')
             pparsed.setdefault(instance, {})
-            # all memory values in MB
+            # all memory values in GB
             if section == 'resident':
                 # used
                 data = float(line[1]) * 1024**3

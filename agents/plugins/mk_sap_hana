@@ -101,9 +101,9 @@ function sap_hana_mem () {
     echo "<<<sap_hana_mem:sep(44)>>>"
     echo "[[[$sidadm_short]]]"
     echo "[[[resident]]]"
-    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "SELECT HOST, ROUND(SUM(PHYSICAL_MEMORY_SIZE/1024/1024/1024),2) FROM M_SERVICE_MEMORY GROUP BY HOST;"
+    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "SELECT HOST, SUM(PHYSICAL_MEMORY_SIZE) FROM M_SERVICE_MEMORY GROUP BY HOST;"
     echo "[[[database]]]"
-    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "select HOST, round(INSTANCE_TOTAL_MEMORY_ALLOCATED_SIZE/(1024*1024*1024), 2), round(ALLOCATION_LIMIT/(1024*1024*1024), 2), ROUND((USED_PHYSICAL_MEMORY + FREE_PHYSICAL_MEMORY)/1024/1024/1024,2) from M_HOST_RESOURCE_UTILIZATION;"
+    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "select HOST, INSTANCE_TOTAL_MEMORY_ALLOCATED_SIZE, ALLOCATION_LIMIT, USED_PHYSICAL_MEMORY + FREE_PHYSICAL_MEMORY from M_HOST_RESOURCE_UTILIZATION;"
 }
 
 
@@ -116,7 +116,7 @@ function sap_hana_filesystem () {
     local sidadm_short=$5
     echo "<<<sap_hana_filesystem:sep(44)>>>"
     echo "[[[$sidadm_short]]]"
-    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "select D1.HOST, D1.USAGE_TYPE, ROUND(D2.USED_SIZE/1024/1024/1024,2),ROUND(D1.TOTAL_SIZE/1024/1024/1024,2) FROM M_DISKS AS D1 INNER JOIN M_DISK_USAGE AS D2 ON D1.USAGE_TYPE = D2.USAGE_TYPE;"
+    sudo -i -u "${sidadm}" hdbsql -n localhost -i "${inst_nr}" -u "${db_user}" -p "${db_password}" -j -a -x "select D1.HOST, D1.USAGE_TYPE, D2.USED_SIZE, D1.TOTAL_SIZE FROM M_DISKS AS D1 INNER JOIN M_DISK_USAGE AS D2 ON D1.USAGE_TYPE = D2.USAGE_TYPE;"
 }
 
 

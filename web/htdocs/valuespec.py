@@ -4026,10 +4026,10 @@ class FileUpload(ValueSpec):
 
 
 class ImageUpload(FileUpload):
-    def __init__(self, max_size=None, show_current_image=False, *args, **kwargs):
+    def __init__(self, max_size=None, show_current_image=False, **kwargs):
         self._max_size = max_size
         self._show_current_image = show_current_image
-        FileUpload.__init__(self, *args, **kwargs)
+        FileUpload.__init__(self, **kwargs)
 
 
     def render_input(self, varprefix, value):

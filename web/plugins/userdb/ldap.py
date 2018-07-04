@@ -185,23 +185,23 @@ class LDAPUserConnector(UserConnector):
 
 
     @classmethod
-    def type(self):
+    def type(cls):
         return 'ldap'
 
 
     @classmethod
-    def title(self):
+    def title(cls):
         return _('LDAP (Active Directory, OpenLDAP)')
 
 
     @classmethod
-    def short_title(self):
+    def short_title(cls):
         return _('LDAP')
 
 
     @classmethod
-    def get_connection_suffixes(self):
-        return self.connection_suffixes
+    def get_connection_suffixes(cls):
+        return cls.connection_suffixes
 
 
     def id(self):
@@ -865,17 +865,17 @@ class LDAPUserConnector(UserConnector):
     # This function migrates the former configuration to the new one.
     # TODO This code can be removed the day we decide not to migrate old configs anymore.
     @classmethod
-    def migrate_config(self):
+    def migrate_config(cls):
         if config.user_connections:
             return # Don't try to migrate anything when there is at least one connection configured
 
-        if self.needs_config_migration():
-            self.do_migrate_config()
+        if cls.needs_config_migration():
+            cls.do_migrate_config()
 
 
     # Don't migrate anything when no ldap connection has been configured
     @classmethod
-    def needs_config_migration(self):
+    def needs_config_migration(cls):
         ldap_connection = getattr(config, 'ldap_connection', {})
         default_ldap_connection_config = {
             'type'      : 'ad',
@@ -885,7 +885,7 @@ class LDAPUserConnector(UserConnector):
 
 
     @classmethod
-    def do_migrate_config(self):
+    def do_migrate_config(cls):
         # Create a default connection out of the old config format
         connection = {
             'id'             : 'default',

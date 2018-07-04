@@ -1121,17 +1121,17 @@ class UserConnector(object):
         self._config = config
 
     @classmethod
-    def type(self):
+    def type(cls):
         return None
 
     # The string representing this connector to humans
     @classmethod
-    def title(self):
+    def title(cls):
         return None
 
 
     @classmethod
-    def short_title(self):
+    def short_title(cls):
         return _('htpasswd')
 
     #
@@ -1139,7 +1139,7 @@ class UserConnector(object):
     #
 
     @classmethod
-    def migrate_config(self):
+    def migrate_config(cls):
         pass
 
     # Optional: Hook function can be registered here to be executed

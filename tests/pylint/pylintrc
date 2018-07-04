@@ -15,7 +15,6 @@ disable=
     abstract-method,
     arguments-differ,
     attribute-defined-outside-init,
-    bad-classmethod-argument,
     bad-continuation,
     bad-indentation,
     bad-whitespace,

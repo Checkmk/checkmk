@@ -315,7 +315,7 @@ class ConfigDomain(object):
 
 
     @classmethod
-    def enabled(self):
+    def enabled(cls):
         return True
 
 
@@ -438,7 +438,7 @@ class ConfigDomainEventConsole(ConfigDomain):
 
 
     @classmethod
-    def enabled(self):
+    def enabled(cls):
         return config.mkeventd_enabled
 
 
@@ -9651,7 +9651,7 @@ class ACTestCategories(object):
 
 
     @classmethod
-    def title(self, ident):
+    def title(cls, ident):
         return {
             "usability"   : _("Usability"),
             "performance" : _("Performance"),

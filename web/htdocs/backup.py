@@ -206,7 +206,7 @@ class BackupEntityCollection(object):
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
 class MKBackupJob(object):
     @classmethod
-    def state_name(self, state):
+    def state_name(cls, state):
         return {
             "started"  : _("Started"),
             "running"  : _("Currently running"),

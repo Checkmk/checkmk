@@ -131,13 +131,14 @@ def check_md(item, _no_params, info):
             raid_state = line[2]
             if raid_state != 'active' and raid_state != 'active(auto-read-only)':
                 return (2, "raid state is '%s' (should be 'active')" % (raid_state,))
+            disk_list = line[4:]
             # Usually (auto-read-only) sticks to active without a space.
             # But on some kernels it appears separated by a space
             if line[3] == '(auto-read-only)':
-                del line[3]
-            all_disks = len([x for x in line[4:]]) # all disks
-            spare_disks = len([x for x in line[4:] if x.endswith("(S)") ]) # spare disks
-            failed_disks = len([x for x in line[4:] if x.endswith("(F)") ]) # failed disks
+                disk_list.pop(0)
+            all_disks = len(disk_list) # all disks
+            spare_disks = len([x for x in disk_list if x.endswith("(S)") ]) # spare disks
+            failed_disks = len([x for x in disk_list if x.endswith("(F)") ]) # failed disks
             active_disks = all_disks - spare_disks - failed_disks
             its_next = True
         elif its_next:

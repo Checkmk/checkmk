@@ -9831,19 +9831,19 @@ register_check_parameters(
     _("CPU utilization for simple devices"),
     Dictionary(
         help = _("This rule configures levels for the CPU utilization (not load) for "
-                 "the operating systems Windows and VMWare ESX host systems, as well as devices "
-                 "implementing the Host Resources MIB. The utilization "
-                 "ranges from 0 to 100 - regardless of the number of CPUs."),
+                "the operating systems Windows and VMWare ESX host systems, as well as devices "
+                "implementing the Host Resources MIB. The utilization "
+                "ranges from 0 to 100 - regardless of the number of CPUs."),
         elements = [
             ( "average",
-              Integer(
-                  title = _("Averaging"),
-                  help = _("When this option is activated then the CPU utilization is being "
-                           "averaged <b>before</b> the levels are being applied."),
-                  unit = _("minutes"),
-                  minvalue = 1,
-                  default_value = 15,
-                  label = _("Compute average over last "),
+            Integer(
+                title = _("Averaging"),
+                help = _("When this option is activated then the CPU utilization is being "
+                        "averaged <b>before</b> the levels are being applied."),
+                unit = _("minutes"),
+                minvalue = 1,
+                default_value = 15,
+                label = _("Compute average over last "),
             )),
             ( "levels",
                 Levels(

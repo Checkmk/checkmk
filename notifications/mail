@@ -396,13 +396,20 @@ tmpl_service_subject = 'Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$'
 opt_debug = '-d' in sys.argv
 bulk_mode = '--bulk' in sys.argv
 
+
 class GraphException(Exception):
     pass
+
 
 def substitute_context(template, context):
     # First replace all known variables
     for varname, value in context.items():
         template = template.replace('$'+varname+'$', value)
+
+    if re.search(r"\$[A-Z_][A-Z_0-9]*\$", template):
+        # Second pass to replace nested variables inside e.g. SERVICENOTESURL
+        for varname, value in context.items():
+            template = template.replace('$'+varname+'$', value)
 
     # Debugging of variables. Create content only on demand
     if "$CONTEXT_ASCII$" in template or "$CONTEXT_HTML$" in template:

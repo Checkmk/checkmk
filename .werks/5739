@@ -1,0 +1,11 @@
+Title: mbg_lantime_ng_refclock.gps: support for more substates
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p35
+Date: 1517854493
+
+

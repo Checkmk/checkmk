@@ -183,6 +183,12 @@ class Encoder(object):
                 value = str(value)
             elif type(value) == unicode:
                 value = value.encode("utf-8")
+            elif value is None:
+                # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
+                # variables with None values simply be skipped? We currently can not find the
+                # call sites easily. This may be cleaned up once we establish typing. Until then
+                # we need to be compatible with the previous behavior.
+                value = ""
 
             #assert type(value) == str, "%s: %s" % (varname, value)
 

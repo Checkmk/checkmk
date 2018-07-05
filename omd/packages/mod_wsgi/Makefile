@@ -29,6 +29,11 @@ endif
 build: check-python
 	tar xzf $(DIR).tar.gz
 	
+	set -e ; for p in patches/*.dif ; do \
+	    echo "applying $$p..." ; \
+	    patch -p1 -b -d $(DIR) < $$p ; \
+	done
+	
 	set -e ; \
 	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \

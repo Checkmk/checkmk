@@ -20,6 +20,10 @@ endif
 ifneq ("$(wildcard /usr/sbin/apxs2-prefork)","")
     APXS=/usr/sbin/apxs2-prefork
 endif
+# SLES12SP0 special case
+ifneq ("$(wildcard /usr/bin/apxs2-prefork)","")
+    APXS=/usr/bin/apxs2-prefork
+endif
 
 
 build: check-python

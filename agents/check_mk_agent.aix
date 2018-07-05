@@ -328,13 +328,13 @@ then
 
         echo '<<<aix_hacmp_services>>>'
         if type clshowsrv ; then
-            clshowsrv -v
+            waitmax 5 clshowsrv -v
         else # fallback, hardcoded base installation path
-            /usr/es/sbin/cluster/utilities/clshowsrv -v
+            waitmax 5 /usr/es/sbin/cluster/utilities/clshowsrv -v
         fi
 
         echo '<<<aix_hacmp_resources:sep(58)>>>'
-        clRGinfo -s
+        waitmax 5 clRGinfo -s
     fi
 fi
 

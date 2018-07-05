@@ -47,10 +47,8 @@
 #         STATISTICS FOR LUN :/dev/rdisk/disk6
 
 
-check_includes['hpux_lunstats'] = [ "diskstat.include" ]
-
 # Convert info to output needed for generic diskstat check
-def hpux_lunstats_convert(info):
+def parse_hpux_lunstats(info):
     luns = []
     for line in info:
         if len(line) == 2:
@@ -65,16 +63,17 @@ def hpux_lunstats_convert(info):
                 luns.append((None, lun, bytes_read, bytes_written))
     return luns
 
-def check_hpux_lunstats(item, params, info):
-    return check_diskstat_generic(item, params, time.time(), hpux_lunstats_convert(info))
 
-def inventory_hpux_lunstats(info):
-    return inventory_diskstat_generic(hpux_lunstats_convert(info))
+def check_hpux_lunstats(item, params, parsed):
+    return check_diskstat_generic(item, params, time.time(), parsed)
+
 
 check_info["hpux_lunstats"] = {
+    'parse_function':          parse_hpux_lunstats,
     'check_function':          check_hpux_lunstats,
-    'inventory_function':      inventory_hpux_lunstats,
+    'inventory_function':      inventory_diskstat_generic,
     'service_description':     'Disk IO %s',
     'has_perfdata':            True,
     'group':                   'disk_io',
+    'includes':                [ "diskstat.include" ],
 }

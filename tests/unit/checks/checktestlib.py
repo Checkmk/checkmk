@@ -1,4 +1,5 @@
 import types
+import copy
 import mock
 from cmk_base.item_state import MKCounterWrapped
 
@@ -29,6 +30,7 @@ class PerfValue(Tuploid):
     """Represents a single perf value"""
 
     def __init__(self, key, value, warn=None, crit=None, minimum=None, maximum=None):
+        # assign first, so __repr__ won't crash
         self.key = key
         self.value = value
         self.warn = warn
@@ -40,27 +42,24 @@ class PerfValue(Tuploid):
         #       in what kind of values are allowed as metric names.
         #       I'm not too sure unicode should be allowed, either.
         assert type(key) in [str, unicode],\
-               "key %r must be of type str or unicode" % key
+               "PerfValue: key %r must be of type str or unicode" % key
         #       Whitespace leads to serious errors
         assert len(key.split()) == 1, \
-               "key %r must not contain whitespaces" % key
+               "PerfValue: key %r must not contain whitespaces" % key
         #       Parsing around this is way too funky and doesn't work properly
-        assert "=" not in key, "key %r must not contain '='" % key
-        assert "\n" not in key
+        for c in "=\n":
+            assert c not in key, "PerfValue: key %r must not contain %r" % (key, c)
         # NOTE: The CMC as well as all other Nagios-compatible cores do accept a
         #       string value that may contain a unit, which is in turn available
         #       for use in PNP4Nagios templates. Check_MK defines its own semantic
         #       context for performance values using Check_MK metrics. It is therefore
         #       preferred to return a "naked" scalar.
+        msg = "PerfValue: %s parameter %r must be of type int, float or None - not %r"
         assert type(value) in [int, float],\
-               "value %r must be of type int or float - not %r" % (value, type(value))
-        msg = "%s parameter %r must be of type int, float or None - not %r"
-        assert type(warn) in [int, float, types.NoneType], msg % ('warn', warn, type(warn))
-        assert type(crit) in [int, float, types.NoneType], msg % ('crit', crit, type(crit))
-        assert type(minimum) in [int, float, types.NoneType], \
-               msg % ('minimum', minimum, type(minimum))
-        assert type(maximum) in [int, float, types.NoneType], \
-               msg % ('maximum', maximum, type(maximum))
+               msg.replace(' or None', '') % ('value', value, type(value))
+        for n in ('warn', 'crit', 'minimum', 'maximum'):
+            v = getattr(self, n)
+            assert type(v) in [int, float, types.NoneType], msg % (n, v, type(v))
 
     @property
     def tuple(self):
@@ -81,28 +80,33 @@ class BasicCheckResult(Tuploid):
 
     def __init__(self, status, infotext, perfdata=None):
         """We perform some basic consistency checks during initialization"""
-
-        assert status in [0, 1, 2, 3], "invalid status: %r" % status
+        # assign first, so __repr__ won't crash
         self.status = status
+        self.infotext = infotext
+        self.perfdata = []
+        self.multiline = None
 
-        assert type(infotext) in [str, unicode],\
-               "infotext %r must be of type str or unicode" % infotext
+        assert status in [0, 1, 2, 3], \
+               "BasicCheckResult: status must be in (0, 1, 2, 3) - not %r" % status
 
+        ti = type(infotext)
+        assert ti in [str, unicode], \
+               "BasicCheckResult: infotext %r must be of type str or unicode - not %r" \
+               % (infotext, ti)
         if "\n" in infotext:
             self.infotext, \
             self.multiline = infotext.split("\n", 1)
-        else:
-            self.infotext = infotext
-            self.multiline = None
 
         if perfdata is not None:
-            assert type(perfdata) == list,\
-                   "perfdata %r must be of type list" % perfdata
-
-            self.perfdata = []
+            tp = type(perfdata)
+            assert tp == list, \
+                   "BasicCheckResult: perfdata %r must be of type list - not %r" \
+                   % (perfdata, tp)
             for entry in perfdata:
-                assert type(entry) in [tuple, PerfValue],\
-                       "perfdata entry %r must be of type tuple or PerfValue" % entry
+                te = type(entry)
+                assert te in [tuple, PerfValue], \
+                       "BasicCheckResult: perfdata entry %r must be of type " \
+                       "tuple or PerfValue - not %r" % (entry, te)
                 if type(entry) is tuple:
                     self.perfdata.append(PerfValue(*entry))
                 else:
@@ -153,9 +157,10 @@ class CheckResult(object):
         # tuple or BasicCheckResult for test writing
         elif isinstance(result, list):
             for subresult in result:
-                assert type(subresult) in (tuple, BasicCheckResult), \
-                       "type of subresult must be %s or %s - not %r" % \
-                       (tuple, BasicCheckResult, subresult)
+                ts = type(subresult)
+                assert ts in (tuple, BasicCheckResult), \
+                       "CheckResult: subresult %r must be of type tuple or " \
+                       "BasicCheckResult - not %r" % (subresult, ts)
                 if isinstance(subresult, tuple):
                     subresult = BasicCheckResult(*subresult)
                 self.subresults.append(subresult)
@@ -208,10 +213,11 @@ class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
 
     def __init__(self, entry):
-        item, default_params = entry
-        assert type(item) in [ str, unicode, types.NoneType ]
-        self.item = item
-        self.default_params = default_params
+        self.item, self.default_params = entry
+        ti = type(self.item)
+        assert ti in [str, unicode, types.NoneType], \
+               "DiscoveryEntry: item %r must be of type str, unicode or None - not %r" \
+               % (self.item, ti)
 
     @property
     def tuple(self):
@@ -280,13 +286,13 @@ class BasicItemState(object):
     def __init__(self, *args):
         if len(args) == 1:
             args = args[0]
-        msg = "BasicItemStates expected 2-tuple (time_diff, value) - not %r"
+        msg = "BasicItemState: expected 2-tuple (time_diff, value) - not %r"
         assert isinstance(args, tuple), msg % args
         assert len(args) == 2, msg % args
         self.time_diff, self.value = args
 
         time_diff_type = type(self.time_diff)
-        msg = "time_diff should be of type float/int - not %r"
+        msg = "BasicItemState: time_diff should be of type float/int - not %r"
         assert time_diff_type in (float, int), msg % time_diff_type
         # We do allow negative time diffs.
         # We want to be able to test time anomalies.
@@ -344,25 +350,28 @@ class MockItemState(object):
         type_mock_state = type(mock_state)
         allowed_types = (tuple, BasicItemState, dict)
         assert type_mock_state in allowed_types, \
-               "type must be in %r, or callable - not %r" % \
-               (allowed_types, type_mock_state)
+               "MockItemState: state %r must be of type %r, or callable - not %r" % \
+               (mock_state, allowed_types, type_mock_state)
 
         # in dict case check values
         if type_mock_state == dict:
-            msg = "dict values must be in %r - not %r"
+            msg = "MockItemState: dict value %r must be in of type %r - not %r"
             allowed_types = (tuple, BasicItemState)
             for v in mock_state.values():
                 tyv = type(v)
-                assert tyv in allowed_types, msg % (allowed_types, tyv)
+                assert tyv in allowed_types, msg % (v, allowed_types, tyv)
             self.get_val_function = mock_state.get
         else:
             self.get_val_function = lambda key, default: mock_state
 
 
     def __call__(self, user_key, default=None):
-        # ensure the default value is sane
-        BasicItemState(default)
+        if default is not None:
+            # ensure the default value is sane
+            default = BasicItemState(default)
         val = self.get_val_function(user_key, default)
+        if val is None:
+            return val
         if not isinstance(val, BasicItemState):
             val = BasicItemState(val)
         return val.time_diff, val.value
@@ -406,10 +415,12 @@ class assertMKCounterWrapped(object):
     def __exit__(self, ty, ex, tb):
         if ty is AssertionError:
             raise
-        assert ty is not None, "No exception has occurred!"
-        assert ty == MKCounterWrapped, "%r is not of type %r" % (ex, MKCounterWrapped)
+        assert ty is not None, "assertMKCounterWrapped: no exception has occurred"
+        assert ty == MKCounterWrapped, \
+               "assertMKCounterWrapped: %r is not of type %r" % (ex, MKCounterWrapped)
         if self.msg is not None:
-            assert self.msg == str(ex), "%r != %r" % (self.msg, str(ex))
+            assert self.msg == str(ex), "assertMKCounterWrapped: %r != %r" \
+                   % (self.msg, str(ex))
         return True
 
 
@@ -444,11 +455,15 @@ class MockHostExtraConf(object):
 
     def __init__(self, mock_config):
         self.context = None
-        assert type(mock_config) in (dict, list)
         if isinstance(mock_config, dict):
             self.config = [mock_config]
         else:
             self.config = mock_config
+        for cfg in self.config:
+            tc = type(cfg)
+            assert tc == dict, \
+               "MockHostExtraConf: config %r must be of type dict - not %r" \
+               % (cfg, tc)
 
     def __call__(self, _hostname, _ruleset):
         # ensure the default value is sane
@@ -465,3 +480,53 @@ class MockHostExtraConf(object):
         return self.context.__exit__(*exc_info)
 
 
+class ImmutablesChangedError(AssertionError):
+    pass
+
+
+class Immutables(object):
+    """Store some data and ensure it is not changed"""
+    def __init__(self):
+        self.refs = {}
+        self.copies = {}
+
+    def register(self, v, k=None):
+        if k is None:
+           k = id(v)
+        self.refs.__setitem__(k, v)
+        self.copies.__setitem__(k, copy.deepcopy(v))
+
+    def test(self, descr=''):
+        for k in self.refs.keys():
+            try:
+                assertEqual(self.refs[k], self.copies[k], repr(k) + descr)
+            except AssertionError as e:
+                raise ImmutablesChangedError(e.message)
+
+
+def assertEqual(first, second, descr=''):
+    """Help finding diffs in epic dicts or iterables"""
+    if first == second:
+        return
+
+    assert type(first) == type(second), "%sdiffering type: %r != %r" \
+        % (descr, first, second)
+
+    if isinstance(first, dict):
+        remainder = set(second.keys())
+        for k, v in first:
+            assert k in second, "%sadditional key %r in %r" \
+                % (descr, k, first)
+            remainder.remove(k)
+            assertEqual(first[k], second[k], descr + " [%r]" % k)
+        assert not remainder, "%smissing keys %r in %r" \
+            % (descr, list(remainder), first)
+
+    if isinstance(first, (list, tuple)):
+        assert len(first) == len(second), "%svarying length: %r != %r" \
+            % (descr, first, second)
+        for c in range(len(first)):
+            assertEqual(first[c], second[c], descr + "[%d] " % c)
+
+    raise AssertionError("%snot equal (%r): %r != %r"
+                         % (descr, type(first), first, second))

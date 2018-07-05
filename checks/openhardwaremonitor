@@ -103,7 +103,7 @@ def openhardwaremonitor_worst_status(*args):
 
 
 def openhardwaremonitor_expect_order(*args):
-    arglist = filter(lambda x: x != None, args)
+    arglist = [x for x in args if x is not None]
     sorted_by_val = sorted(enumerate(arglist), key=lambda x: x[1])
     return max([abs(x[0] - x[1][0]) for x in enumerate(sorted_by_val)])
 

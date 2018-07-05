@@ -194,7 +194,7 @@ try:
     # Output sections
     for section, lines in sections.items():
         print "<<<hp_msa_%s>>>" % section
-        print "\n".join(map(lambda x: x.encode("utf-8"), lines))
+        print "\n".join(x.encode("utf-8") for x in lines)
 
 except Exception, e:
     if opt_debug:

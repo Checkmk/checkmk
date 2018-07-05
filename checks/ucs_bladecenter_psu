@@ -35,7 +35,7 @@ def ucs_bladecenter_psu_parse(info):
     def get_item_name(key):
         tokens = key.split("/")
         tokens[1] = tokens[1].replace("psu-", " Module ")
-        tokens = map(lambda x: x[0].upper() + x[1:], tokens)
+        tokens = [x[0].upper() + x[1:] for x in tokens]
         return "".join(tokens).replace("-", " ")
 
     for component, key_low, key_high in [

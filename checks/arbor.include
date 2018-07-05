@@ -113,7 +113,7 @@ def inventory_arbor_cpu_load(parsed):
 
 
 def check_arbor_cpu_load(no_item, params, parsed):
-    load = map(lambda x: float(x) / 100.0, parsed['cpu_loads'])
+    load = [float(x) / 100.0 for x in parsed['cpu_loads']]
     return check_cpu_load_generic(params, load, 1)
 
 

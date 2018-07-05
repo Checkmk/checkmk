@@ -27,10 +27,10 @@
 def parse_f5_bigip_vserver(info):
     def ip_from_string(ip):
         if len(ip) == 4:
-            ip = "".join(map(lambda x: chr(ord(x)), ip))
+            ip = "".join(chr(ord(x)) for x in ip)
             return socket.inet_ntop(socket.AF_INET, ip)
         elif len(ip) == 16:
-            ip = "".join(map(lambda x: chr(ord(x)), ip))
+            ip = "".join([chr(ord(x)) for x in ip])
             return socket.inet_ntop(socket.AF_INET6, ip)
         else:
             return "-"

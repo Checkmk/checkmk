@@ -33,7 +33,7 @@ def parse_sap_hana_version(info):
             instance  = line[0][3:-3]
             continue
 
-        line = map(lambda x: x.strip(), line)
+        line = [x.strip() for x in line]
         if line[0].lower() == "hdb version info":
             continue
 

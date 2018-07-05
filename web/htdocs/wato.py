@@ -1631,7 +1631,7 @@ def mode_bulk_rename_host(phase):
 
         c = wato_confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
         if c:
-            title = _("Renaming of %s") % ", ".join(map(lambda x: u"%s → %s" % x[1:], renamings))
+            title = _("Renaming of %s") % ", ".join(u"%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob(title=title)
             host_renaming_job.set_function(rename_hosts_background_job, renamings)
             host_renaming_job.start()
@@ -9556,8 +9556,8 @@ class ModeTimeperiodImportICal(WatoMode):
 
             if ical["times"]:
                 for n, time_spec in enumerate(ical["times"]):
-                    start_time = ":".join(map(lambda x: "%02d" % x, time_spec[0]))
-                    end_time   = ":".join(map(lambda x: "%02d" % x, time_spec[1]))
+                    start_time = ":".join("%02d" % x for x in time_spec[0])
+                    end_time   = ":".join("%02d" % x for x in time_spec[1])
                     html.set_var('except_%d_1_%d_from' % (index, n), start_time)
                     html.set_var('except_%d_1_%d_until' % (index, n), end_time)
 
@@ -11344,8 +11344,7 @@ def mode_edit_user(phase):
             del user_attrs["authorized_sites"]
 
         # Roles
-        user_attrs["roles"] = filter(lambda role: html.get_checkbox("role_" + role),
-                                   roles.keys())
+        user_attrs["roles"] = [role for role in roles.keys() if html.get_checkbox("role_" + role)]
 
         # Language configuration
         set_lang = html.get_checkbox("_set_lang")

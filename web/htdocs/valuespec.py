@@ -1116,7 +1116,7 @@ class ListOfStrings(ValueSpec):
 
         if self._vertical:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            s = map(lambda v: html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v)))), value)
+            s = [html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v)))) for v in value]
             return "%s" % html.render_table(HTML().join(s))
         else:
             return ", ".join([ self._valuespec.value_to_text(v) for v in value ])
@@ -1297,7 +1297,7 @@ class ListOf(ValueSpec):
             return self._text_if_empty
         else:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            s = map(lambda v: html.render_tr(html.render_td(   HTML(self._valuespec.value_to_text(v))    )), value)
+            s = [html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v)))) for v in value]
             return "%s" % html.render_table(HTML().join(s))
 
 
@@ -2098,7 +2098,7 @@ class ListChoice(ValueSpec):
             return ", ".join(texts)
         else:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            return "%s" % html.render_table(html.render_tr(html.render_td(html.render_br().join(    map(lambda x: HTML(x), texts)  ))))
+            return "%s" % html.render_table(html.render_tr(html.render_td(html.render_br().join(HTML(x) for x in texts))))
             #OLD: return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
 
 

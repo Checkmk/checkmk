@@ -37,7 +37,7 @@ def inventory_mongodb_connections(info):
     return [("Connections", {})]
 
 def check_mongodb_connections(item, params, info):
-    info_dict = dict(map(lambda x: (x[0], x[1]), info))
+    info_dict = {x[0]: x[1] for x in info}
 
     current   = int(info_dict["current"])
     available = int(info_dict["available"])

@@ -28,7 +28,6 @@ disable=
     consider-using-enumerate,
     consider-using-ternary,
     cyclic-import,
-    deprecated-lambda,
     duplicate-code,
     eval-used,
     exec-used,

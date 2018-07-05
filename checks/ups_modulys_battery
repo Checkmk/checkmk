@@ -39,7 +39,7 @@ def check_ups_modulys_battery(item, params, info):
     warn_left, crit_left = params["battime"]
     warn_perc, crit_perc = params["capacity"]
     for condition, elapsed_sec, remaining_min, capacity, temperature in info:
-        condition, elapsed_sec, capacity = map(lambda x: int(x), (condition, elapsed_sec, capacity))
+        condition, elapsed_sec, capacity = [int(x) for x in (condition, elapsed_sec, capacity)]
         if elapsed_sec == 0:
             # not on battery so the it will not run out
             remaining_min = sys.maxint

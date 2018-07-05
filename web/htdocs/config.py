@@ -818,13 +818,13 @@ def is_single_local_site():
 
 def site_attribute_default_value():
     def_site = default_site()
-    authorized_site_ids = map(lambda x: x[0], user.authorized_sites(unfiltered_sites=configured_sites()))
+    authorized_site_ids = [x[0] for x in user.authorized_sites(unfiltered_sites=configured_sites())]
     if def_site and def_site in authorized_site_ids:
         return def_site
 
 
 def site_attribute_choices():
-    authorized_site_ids = map(lambda x: x[0], user.authorized_sites(unfiltered_sites=configured_sites()))
+    authorized_site_ids = [x[0] for x in user.authorized_sites(unfiltered_sites=configured_sites())]
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 

@@ -532,7 +532,7 @@ def render_color_icon(color):
 def split_perf_data(perf_data_string):
     # In python < 2.5 shlex.split can not deal with unicode strings. But we always
     # have unicode strings. So encode and decode again.
-    return map(lambda s: s.decode('utf-8'), shlex.split(perf_data_string.encode('utf-8')))
+    return [s.decode('utf-8') for s in shlex.split(perf_data_string.encode('utf-8'))]
 
 
 # Convert perf_data_string into perf_data, extract check_command

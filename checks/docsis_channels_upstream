@@ -79,7 +79,7 @@ def parse_docsis_channels_upstream(info):
 
     parsed = {}
     for endoid, (cid, freq_str) in freq_info_dict.items():
-        unique_name = (len(freq_info) == len(set(map(lambda x: x[1], freq_info)))) and \
+        unique_name = (len(freq_info) == len({x[1] for x in freq_info})) and \
                        cid or "%s.%s" % (endoid, cid)
 
         data = []

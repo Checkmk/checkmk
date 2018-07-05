@@ -28,7 +28,7 @@
 # temp-sensor-list 11 temp-sensor-current-condition normal_temperature_range  temp-sensor-is-ambient true temp-sensor-low-warning 5   temp-sensor-hi-warning 40   temp-sensor-hi-critical 42  temp-sensor-current-temperature 24  temp-sensor-element-no 1    temp-sensor-low-critical 0  temp-sensor-is-error false
 
 def inventory_netapp_api_temp(parsed):
-    shelfs = set(map(lambda x: x.split(".")[0], parsed.keys()))
+    shelfs = {x.split(".")[0] for x in parsed.keys()}
     for shelf in shelfs:
         yield "Internal Shelf %s" % shelf, {}
         yield "Ambient Shelf %s"  % shelf, {}

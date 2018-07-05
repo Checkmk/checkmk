@@ -65,7 +65,7 @@ def check_db2_tablespaces(item, params, parsed):
     if not db:
         raise MKCounterWrapped("Login into database failed")
 
-    db_tables  = dict(map(lambda x: (x[0], x[1:]), db[1:]))
+    db_tables = {x[0] : x[1:] for x in db[1:]}
     tablespace = db_tables.get(tbsname)
     if not tablespace:
         return

@@ -519,7 +519,7 @@ def event_match_servicegroups(rule, context, is_regex = False):
         if is_regex:
             if match_type == "match_alias":
                 return "The service is only in the groups %s. None of these patterns match: %s" % (
-                      '"' + '", "'.join(map(lambda x: config.define_servicegroups[x], servicegroups)) + '"',
+                      '"' + '", "'.join(config.define_servicegroups[x] for x in servicegroups) + '"',
                       '"' + '" or "'.join(required_groups)) + '"'
             else:
                 return "The service is only in the groups %s. None of these patterns match: %s" % (

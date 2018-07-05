@@ -261,7 +261,7 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
             if not service_line:
                 continue
 
-            parts = map(lambda s: s.strip(), service_line.split(":", 2))
+            parts = [s.strip() for s in  service_line.split(":", 2)]
             if len(parts) != 3:
                 continue
 

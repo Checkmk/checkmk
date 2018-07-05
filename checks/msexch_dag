@@ -146,7 +146,7 @@ def check_msexch_dag_dbcopy(item, params, info):
     inv_key, inv_val = params
     for line in info:
         if len(line) == 2:
-            key, val = map(lambda i: i.strip(), line)
+            key, val = [i.strip() for i in line]
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == inv_key:
@@ -184,7 +184,7 @@ def check_msexch_dag_contentindex(item, _no_params, info):
     getit = False
     for line in info:
         if len(line) == 2:
-            key, val = map(lambda i: i.strip(), line)
+            key, val = [i.strip() for i in line]
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == "ContentIndexState":
@@ -224,7 +224,7 @@ def check_msexch_dag_copyqueue(item, params, info):
     getit = False
     for line in info:
         if len(line) == 2:
-            key, val = map(lambda i: i.strip(), line)
+            key, val = [i.strip() for i in line]
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == "CopyQueueLength":

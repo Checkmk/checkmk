@@ -5861,7 +5861,7 @@ def do_create_snapshot(data):
             filename_subtar = "%s.tar.gz" % name
             path_subtar     = "%s/%s" % (work_dir, filename_subtar)
 
-            paths = map(lambda x: "." if x[1] == "" else x[1], info.get("paths", []))
+            paths = ["." if x[1] == "" else x[1] for x in info.get("paths", [])]
             command = [ "tar", "czf", path_subtar, "--ignore-failed-read",
                         "--force-local", "-C", prefix ] + paths
 
@@ -5975,7 +5975,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
         status["files"] = access_snapshot(multitar.list_tar_content)
 
         if status.get("type") == "legacy":
-            allowed_files = map(lambda x: "%s.tar" % x[1], backup_paths)
+            allowed_files = ["%s.tar" % x[1] for x in backup_paths]
             for tarname in status["files"].keys():
                 if tarname not in allowed_files:
                     raise MKGeneralException(_("Invalid snapshot (contains invalid tarfile %s)") % tarname)
@@ -6536,7 +6536,7 @@ class AuxtagList(object):
 
 
     def get_tag_ids(self):
-        return set(map(lambda tag: tag.id, self._tags))
+        return {tag.id for tag in self._tags}
 
 
     def get_legacy_format(self):
@@ -6606,7 +6606,7 @@ class HosttagGroup(object):
         self.id    = group_info["id"]
         self.title = group_info["title"]
         self.topic = group_info.get("topic")
-        self.tags  = map(lambda tag: GroupedHosttag(tag), group_info["tags"])
+        self.tags  = [GroupedHosttag(tag) for tag in group_info["tags"]]
 
 
     def _parse_legacy_format(self, group_info):
@@ -6621,7 +6621,7 @@ class HosttagGroup(object):
 
 
     def get_tag_ids(self):
-        return set(map(lambda tag: tag.id, self.tags))
+        return {tag.id for tag in self.tags}
 
 
     def get_dict_format(self):
@@ -6712,8 +6712,7 @@ class HosttagsConfiguration(object):
     def get_tag_ids_with_group_prefix(self):
         response = set()
         for tag_group in self.tag_groups:
-            response.update(map(lambda tag: "%s/%s" % (tag_group.id,
-                                            tag), tag_group.get_tag_ids()))
+            response.update(["%s/%s" % (tag_group.id, tag) for tag in tag_group.get_tag_ids()])
 
         response.update(self.aux_tag_list.get_tag_ids())
         return response
@@ -8209,7 +8208,7 @@ class Rule(object):
 
         # Remove folder tag from tag list
         tag_specs = conditions.get("host_tags", [])
-        self.tag_specs = filter(lambda t: not t.startswith("/"), tag_specs)
+        self.tag_specs = [t for t in tag_specs if not t.startswith("/")]
 
 
     def _parse_tuple_rule(self, rule_config):
@@ -8242,7 +8241,7 @@ class Rule(object):
             self.host_list = rule_config[1]
 
         # Remove folder tag from tag list
-        self.tag_specs = filter(lambda t: not t.startswith("/"), tag_specs)
+        self.tag_specs = [t for t in tag_specs if not t.startswith("/")]
 
 
     def to_config(self):

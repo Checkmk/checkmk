@@ -281,7 +281,7 @@ def check_drbd_general(item, params, info):
 
         # Roles
         output += ', Roles: %s/%s' % tuple(parsed['ro'])
-        current_roles = "_".join(map(lambda a: str(a).lower(), parsed["ro"]))
+        current_roles = "_".join(str(a).lower() for a in parsed["ro"])
 
         found_role_match = False
         if "roles" in params:

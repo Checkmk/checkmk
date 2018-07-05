@@ -35,9 +35,9 @@ def parse_framework_mib_inet_address(ip_address_type, ip_address):
     elif ip_address_type == 4:
         return "%x:%x:%x:%x:%x:%x:%x:%x%%%d%d%d%d" % tuple(ip_address)
     elif ip_address_type == 5: # Means DNS name - Reconvert to ASCII string
-        return "".join(map(chr,ip_address))
+        return "".join([chr(x) for x in ip_address])
     elif ip_address_type == 0: # Unknown address type - represent as hex string
-        return "".join(map(lambda byte: "%x" % byte, ip_address))
+        return "".join(["%x" % byte for byte in ip_address])
 
 
 def inventory_cisco_ace_rserver(info):

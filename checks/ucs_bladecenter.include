@@ -28,7 +28,7 @@ def ucs_bladecenter_convert_info(info):
     result = {}
     for line in info:
         module = line[0]
-        elements = dict(map(lambda x: x.split(" ", 1), line[1:]))
+        elements = {k : v for k, v in (x.split(" ", 1) for x in line[1:])}
         if elements.get("Dn"):
             result.setdefault(module, {}).update({elements.get("Dn"): elements})
 

@@ -28,7 +28,7 @@ veeam_tapejobs_default_levels = (1*3600*24, 2*3600*24)
 
 def parse_veeam_tapejobs(info):
     parsed = {}
-    columns = map(lambda s: s.lower(), info[0])
+    columns = [s.lower() for s in info[0]]
 
     for line in info[1:]:
         name = " ".join( line[:-(len(columns)-1)] )

@@ -26,7 +26,7 @@
 
 
 def parse_fortigate_sslvpn(info):
-    return map(lambda i: i[0] + i[1], zip(info[0], info[1]))
+    return [x + y for x, y in zip(info[0], info[1])]
 
 
 def inventory_fortigate_sslvpn(info):

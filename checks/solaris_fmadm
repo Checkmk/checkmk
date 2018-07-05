@@ -179,7 +179,7 @@ def parse_solaris_fmadm(info):
 
     # Skip header
     for line in info[4:]:
-        stripped = map(lambda x: x.strip(), line)
+        stripped = [x.strip() for x in line]
         if stripped[0] in ["Problem class", "Fault class"]:
             parsed["problems"].append(":".join(stripped[1:]))
 

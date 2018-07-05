@@ -29,7 +29,7 @@ def inventory_decru_cpu(info):
         return [ (None, None) ]
 
 def check_decru_cpu(item, _no_params, info):
-    user, nice, system, interrupt, idle = map(lambda x:float(x[0]) / 10.0, info)
+    user, nice, system, interrupt, idle = [float(x[0]) / 10.0 for x in info]
     user += nice
 
     perfdata = [

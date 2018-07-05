@@ -85,9 +85,9 @@ for key, value in server_status.get("asserts", {}).items():
 
 
 sys.stdout.write("<<<mongodb_connections>>>\n")
-sys.stdout.write("%s\n" % "\n".join(map(lambda x: "%s %s" % x, server_status["connections"].items())))
+sys.stdout.write("%s\n" % "\n".join("%s %s" % x for x in server_status["connections"].items()))
 
-databases = dict(map(lambda x: (x, {}), con.database_names()))
+databases = {x : {} for x in con.database_names()}
 
 for name in databases.keys():
     databases[name]["collections"] = con[name].collection_names()

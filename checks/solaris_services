@@ -134,7 +134,7 @@ def check_solaris_services(item, params, parsed):
                 info_stime = "Started on %s" % svc_stime.replace("_", " ")
 
             check_state = 0
-            for _, p_stime, p_state in filter(lambda x: x[0] == svc_state, params["states"]):
+            for _, p_stime, p_state in [x for x in params["states"] if x[0] == svc_state]:
                 if p_stime is not None:
                     if has_changed == p_stime:
                         check_state = p_state

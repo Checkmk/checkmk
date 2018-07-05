@@ -1536,7 +1536,7 @@ if not error:
                             if device_info:
                                 response.append("virtualDeviceType %s|%s" %
                                                 (type_info[0],
-                                                 "|".join(map(lambda x: "%s %s" % x, zip(show_fields, device_info[0]))))
+                                                 "|".join("%s %s" % x  for x in zip(show_fields, device_info[0])))
                                                )
 
                         return "@@".join(response)

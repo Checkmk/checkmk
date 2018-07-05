@@ -298,12 +298,12 @@ def get_wmi_time(table, row):
     return float(timestamp) / float(frequency)
 
 
-def wmi_make_perfvar(varname, value, perfscale, levels, min_value="", max_value=""):
+def wmi_make_perfvar(varname, value, perfscale, levels, min_value=None, max_value=None):
     value = value * perfscale
     if levels is not None:
-        upper_levels = levels.get('upper', ("", ""))
+        upper_levels = levels.get('upper', (None, None))
     else:
-        upper_levels = ("", "")
+        upper_levels = (None, None)
     res = (varname, value, upper_levels[0], upper_levels[1], min_value, max_value)
     return res
 

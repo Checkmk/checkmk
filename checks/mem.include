@@ -118,13 +118,13 @@ def check_memory(params, meminfo):
 
     # Prepare performance data
     perfdata = [
-        ('ramused',  str( (memused_kb - caches_kb) / 1024) + 'MB', '', '', 0, totalmem_mb),
-        ('swapused', str(swapused_kb / 1024) + 'MB', '', '', 0, meminfo['SwapTotal']/1024),
-        ('memused',  str(totalused_mb) + 'MB', warn_mb, crit_mb, 0, totalvirt_mb),
+        ('ramused',  (memused_kb - caches_kb) / 1024, None, None, 0, totalmem_mb),
+        ('swapused', swapused_kb / 1024, None, None, 0, meminfo['SwapTotal']/1024),
+        ('memused',  totalused_mb, warn_mb, crit_mb, 0, totalvirt_mb),
     ]
 
     if average_min:
-        perfdata.append(('memusedavg', str(totalused_mb_avg)+'MB'))
+        perfdata.append(('memusedavg', totalused_mb_avg))
 
     # Check levels
     state = 0
@@ -153,10 +153,10 @@ def check_memory(params, meminfo):
         shared_mb       = int(meminfo.get('Shmem', 0)) / 1024
 
         perfdata += [
-            ('mapped',       str(mapped_mb)       + 'MB'),
-            ('committed_as', str(committed_as_mb) + 'MB'),
-            ('pagetables',   str(pagetables_mb)   + 'MB'),
-            ('shared',       str(shared_mb)       + 'MB'),
+            ('mapped',       mapped_mb),
+            ('committed_as', committed_as_mb),
+            ('pagetables',   pagetables_mb),
+            ('shared',       shared_mb),
         ]
         infotext += ", %.1f mapped, %.1f committed, %.1f shared" % \
                     (mapped_mb / 1024.0, committed_as_mb / 1024.0, shared_mb / 1024.0)

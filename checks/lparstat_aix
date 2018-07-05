@@ -81,12 +81,12 @@ def check_lparstat(item, params, info):
     else:
         # The new agent provides three lines, the title line, spacer line and the values
         cols   = [ c.replace('%', '') for c in info[-3] ]
-        uom    = [ '%' in c and '%' or '' for c in info[-3] ]
+        uom    = [ '%' * ('%' in c) for c in info[-3] ]
         values = info[-1]
 
-    perfdata = [ (cols[i], val+uom[i]) for i, val in enumerate(values) ]
-    output   = ', '.join([ cols[i].title()+': '+val+uom[i] for i, val in enumerate(values) ])
-
+    perfdata = zip(cols, map(float, values))
+    output   = ', '.join("%s: %s%s" % (c.title(), v, u)
+                         for c, v, u in zip(cols, values, uom))
     return 0, output, perfdata
 
 check_info["lparstat_aix"] = {
@@ -110,9 +110,10 @@ def check_lparstat_aix_cpu(_no_item, params, info):
         line = info[-1]
     user, system, wait, idle = map(float, line[:4])
     perfdata = [
-          ( "user",   "%.3f" % user ),
-          ( "system", "%.3f" % system ),
-          ( "wait",   "%.3f" % wait ) ]
+          ("user",   user),
+          ("system", system),
+          ("wait",   wait),
+    ]
 
     util = user + system + wait
 

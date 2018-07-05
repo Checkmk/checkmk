@@ -141,7 +141,7 @@ def check_arcserve_backup(item, _no_params, info):
         message += "Size: %s" % get_bytes_human_readable(parsed[item]["size"])
     else:
         size=0
-    perfdata.append(("size", str(size) + "Bytes"))
+    perfdata.append(("size", size))
 
     # result
     if message != "":

@@ -38,44 +38,48 @@ Some other cleanups and modifications have been made on the way.
 
 The following changes have been made to the htmllib.html API:
 
-html.set_cookie() -> html.response.set_cookie()
-html.del_cookie() -> html.response.del_cookie()
-html.get_request_header() -> html.request.get_request_header()
-html.lowlevel_write() -> html._lowlevel_write()
-html.remote_ip() -> html.request.remote_ip
-html.is_ssl_request() -> html.request.is_ssl_request
-html.request_method() -> html.request.request_method
-html.get_user_agent() -> html.request.user_agent
-html.get_referer() -> html.request.referer
-html.requested_url() -> html.request.requested_url
-html.request_uri() -> html.request.requested_url
-html.http_redirect() -> html.response.http_redirect()
-html.client_request_timeout() -> html.request.request_timeout
-html.get_cookie_names() -> html.request.get_cookie_names()
-html.has_cookie() -> html.request.has_cookie()
-html.cookie() -> html.request.cookie()
-html.uploaded_file() -> html.request.uploaded_file()
-html.request_timeout() -> html.request.request_timeout
-html.get_request_timeout() -> html.request.request_timeout
-html.set_ignore_transids() -> html.transaction_ids.ignore()
-html.get_transid() -> html.transaction_ids.get()
-html.store_new_transids() -> html.transaction_ids.store_new()
-html.urlencode_plus() -> html.urlencode()
+<ul>
+<li>html.set_cookie() -> html.response.set_cookie()</li>
+<li>html.del_cookie() -> html.response.del_cookie()</li>
+<li>html.get_request_header() -> html.request.get_request_header()</li>
+<li>html.lowlevel_write() -> html._lowlevel_write()</li>
+<li>html.remote_ip() -> html.request.remote_ip</li>
+<li>html.is_ssl_request() -> html.request.is_ssl_request</li>
+<li>html.request_method() -> html.request.request_method</li>
+<li>html.get_user_agent() -> html.request.user_agent</li>
+<li>html.get_referer() -> html.request.referer</li>
+<li>html.requested_url() -> html.request.requested_url</li>
+<li>html.request_uri() -> html.request.requested_url</li>
+<li>html.http_redirect() -> html.response.http_redirect()</li>
+<li>html.client_request_timeout() -> html.request.request_timeout</li>
+<li>html.get_cookie_names() -> html.request.get_cookie_names()</li>
+<li>html.has_cookie() -> html.request.has_cookie()</li>
+<li>html.cookie() -> html.request.cookie()</li>
+<li>html.uploaded_file() -> html.request.uploaded_file()</li>
+<li>html.request_timeout() -> html.request.request_timeout</li>
+<li>html.get_request_timeout() -> html.request.request_timeout</li>
+<li>html.set_ignore_transids() -> html.transaction_ids.ignore()</li>
+<li>html.get_transid() -> html.transaction_ids.get()</li>
+<li>html.store_new_transids() -> html.transaction_ids.store_new()</li>
+<li>html.urlencode_plus() -> html.urlencode()</li>
+</ul>
 
 Dropped things:
 
-html.add_keybinding()
-html.add_keybidings()
-html.disable_keybindings()
-html.keybindings_enabled
-html.keybindings
-html.RETURN
-html.SHIFT
-html.CTRL
-html.ALT
-html.BACKSPACE
-html.F1
-html.u8()
-html.utf8_to_entities()
-html.varencode()
+<ul>
+<li>html.add_keybinding()</li>
+<li>html.add_keybidings()</li>
+<li>html.disable_keybindings()</li>
+<li>html.keybindings_enabled</li>
+<li>html.keybindings</li>
+<li>html.RETURN</li>
+<li>html.SHIFT</li>
+<li>html.CTRL</li>
+<li>html.ALT</li>
+<li>html.BACKSPACE</li>
+<li>html.F1</li>
+<li>html.u8()</li>
+<li>html.utf8_to_entities()</li>
+<li>html.varencode()</li>
+</ul>
 

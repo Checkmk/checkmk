@@ -16587,7 +16587,7 @@ class ModeCheckManPage(WatoMode):
                 html.th(_("Parameter rule set"))
                 html.open_td()
                 html.icon_button(url, _("Edit parameter rule set for this check type"), "check_parameters")
-                html.write_text(' %s' % param_ruleset)
+                html.write(param_ruleset)
                 html.close_td()
                 html.close_tr()
                 html.open_tr()

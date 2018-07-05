@@ -119,7 +119,7 @@ def check_omd_apache(item, _no_params, parsed):
             rate = get_rate("omd_apache.%s.%s.%s" % (item, ty, key), this_time, value,
                                                              onwrap=SKIP, is_rate=True)
             total += rate
-            yield 0, None, [(ty+'_'+key, rate)]
+            yield 0, '', [(ty + '_' + key, rate)]
 
         total = ty == 'bytes' and get_bytes_human_readable(total) or '%.2f' % total
         yield 0, '%s %s' % (total, title)

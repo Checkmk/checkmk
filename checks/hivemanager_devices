@@ -68,16 +68,16 @@ def check_hivemanager_devices(item, params, info):
             levels = ' Warn/Crit at %s/%s' % ( warn, crit )
 
             if number_of_clients >= crit:
-                yield 2, infotext+levels, perfdata
+                yield 2, infotext + levels, perfdata
             elif number_of_clients >= warn:
-                yield 1, infotext+levels, perfdata
+                yield 1, infotext + levels, perfdata
             else:
                 yield 0, infotext, perfdata
 
             # Uptime
             state = 0
             warn, crit = 0, 0
-            infotext = None
+            infotext = ''
             uptime_secs = 0
             if infos['upTime'] != 'down':
                 uptime_tokens = map(int, infos['upTime'].split()[-2::-2])

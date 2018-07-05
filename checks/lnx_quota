@@ -110,7 +110,7 @@ def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
                 txt += ', within grace time'
     else:
         state = 0
-        txt = None
+        txt = ''
     return state, txt
 
 
@@ -161,10 +161,10 @@ def check_lnx_quota(item, params, parsed):
 
                     if txt:
                         at_least_one_problematic = True
-                        yield state, (txt + ', ')
+                        yield state, txt
                         #yield state, (txt + ', '), perfdata
                     else:
-                        yield state, None
+                        yield state, ''
                         #yield state, None, perfdata
 
             if not at_least_one_problematic:

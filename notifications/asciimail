@@ -66,6 +66,11 @@ def substitute_context(template, context):
     for varname, value in context.items():
         template = template.replace('$'+varname+'$', value)
 
+    if re.search(r"\$[A-Z_][A-Z_0-9]*\$", template):
+        # Second pass to replace nested variables inside e.g. SERVICENOTESURL
+        for varname, value in context.items():
+            template = template.replace('$'+varname+'$', value)
+
     # Remove the rest of the variables and make them empty
     template = re.sub("\$[A-Z_][A-Z_0-9]*\$", "", template)
     return template

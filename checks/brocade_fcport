@@ -126,7 +126,6 @@ def parse_brocade_fcport(info):
         if_table = [x + ["", x[-2]] for x in if_info]
 
     parsed = []
-
     for index, phystate, opstate, admstate, txwords, rxwords, txframes, \
         rxframes, notxcredits, rxcrcs, rxencinframes, rxencoutframes, \
         c3discards, brocade_speed, portname, porttype, ifspeed in if_table:
@@ -177,7 +176,7 @@ def parse_brocade_fcport(info):
                 "islspeed":       islspeed,             # Might be None
                 "bbcredits":      bbcredits,            # Might be None
             })
-        except: # missing vital data. Skipping this port
+        except ValueError:
             continue
     return parsed
 

@@ -119,7 +119,7 @@ def check_mkeventd_status(item, params, parsed):
     else:
         value = rates["rule_hit"] / rates["rule_trie"] * 100
         hit_rate_txt = "%.2f%%" % value
-        yield 0, None, [("average_rule_hit_ratio", value)]
+        yield 0, '', [("average_rule_hit_ratio", value)]
     yield 0, "%s: %s" % ("Rule hit ratio", hit_rate_txt)
 
     # Time columns
@@ -132,7 +132,7 @@ def check_mkeventd_status(item, params, parsed):
         value = status.get("average_%s_time" % name)
         if value:
             txt = "%.2f ms" % (value * 1000)
-            yield 0, None, [("average_%s_time" % name, value)]
+            yield 0, '', [("average_%s_time" % name, value)]
         else:
             if name == "sync":
                 continue # skip if not available

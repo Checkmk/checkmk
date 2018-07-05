@@ -457,4 +457,4 @@ def check_diskstat_dict(item, params, disks):
             # Currently the levels are not shown in the perfdata
             perfdata.append(("disk_" + key, value))
 
-    yield 0, None, perfdata
+    yield 0, '', perfdata

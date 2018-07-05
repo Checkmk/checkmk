@@ -365,6 +365,7 @@ def _sanitize_yield_check_result(result, is_snmp):
     # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
     if len(subresults) == 1:
         state, infotext, perfdata = _sanitize_tuple_check_result(subresults[0], allow_missing_infotext=True)
+        # just to be safe - infotext should allways be a string
         if infotext == None:
             return state, u"", perfdata
         else:
@@ -381,15 +382,13 @@ def _sanitize_yield_check_result(result, is_snmp):
         for subresult in subresults:
             st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
 
-            # FIXME/TODO: Why is the state only aggregated when having text != None?
-            if text != None:
-                infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
-                status = cmk_base.utils.worst_service_state(st, status)
+            infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
+            status = cmk_base.utils.worst_service_state(st, status)
 
             if perf != None:
                 perfdata += subresult[2]
 
-        return status, ", ".join(infotexts), perfdata
+        return status, ", ".join(i for i in infotexts if i), perfdata
 
 
 def _item_not_found(is_snmp):

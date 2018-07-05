@@ -383,6 +383,7 @@ perfometers["check_mk-statgrab_net"] = perfometer_check_mk_if
 perfometers["check_mk-netapp_api_if"] = perfometer_check_mk_if
 perfometers["check_mk-if_brocade"] = perfometer_check_mk_if
 perfometers["check_mk-ucs_bladecenter_if"] = perfometer_check_mk_if
+perfometers["check_mk-aix_if"] = perfometer_check_mk_if
 
 def perfometer_check_mk_fc_port(row, check_command, perf_data):
     unit = "B"

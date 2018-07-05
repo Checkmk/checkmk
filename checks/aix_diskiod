@@ -44,7 +44,7 @@
 # 5. Kb_read    -> Kilobytes read since system boot
 # 6. Kb_wrtn    -> Kilobytes written since system boot
 
-def aix_diskiod_convert(info):
+def parse_aix_diskiod(info):
     #TODO use 'check_diskstat_dict' which needs the following format
     # disks = { "sda" : {
     #       'node'                       : None,
@@ -70,20 +70,17 @@ def aix_diskiod_convert(info):
     return converted
 
 
-def inventory_aix_diskiod(info):
-    return inventory_diskstat_generic(aix_diskiod_convert(info))
+def check_aix_diskiod(item, params, parsed):
+    return check_diskstat_generic(item, params, time.time(), parsed, mode='bytes')
 
-
-def check_aix_diskiod(item, params, info):
-    return check_diskstat_generic(item, params, time.time(), aix_diskiod_convert(info), mode='bytes')
 
 check_info["aix_diskiod"] = {
+    'parse_function':          parse_aix_diskiod,
     'check_function':          check_aix_diskiod,
-    'inventory_function':      inventory_aix_diskiod,
+    'inventory_function':      inventory_diskstat_generic,
     'service_description':     'Disk IO %s',
     'has_perfdata':            True,
     'node_info':               True,
     'group':                   'disk_io',
     'includes':                [ "diskstat.include" ],
 }
-

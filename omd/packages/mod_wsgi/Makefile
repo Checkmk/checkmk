@@ -14,6 +14,12 @@ endif
 ifneq ("$(wildcard /usr/bin/apxs2)","")
     APXS=/usr/bin/apxs2
 endif
+# Special case to make compilation work with SLES11. It has apxs2 but we need
+# to use the MPM specific apxs2-prefork binary to make compilation find the
+# correct mpm.h.
+ifneq ("$(wildcard /usr/bin/apxs2-prefork)","")
+    APXS=/usr/bin/apxs2-prefork
+endif
 
 
 build: check-python

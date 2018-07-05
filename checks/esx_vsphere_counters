@@ -160,8 +160,8 @@ def esx_vsphere_counters_get_item_mapping(parsed):
     return map_instance_to_item
 
 def inventory_esx_vsphere_counters_datastoreio(parsed):
-    return inventory_diskstat_generic(map(lambda x: [None, x],
-                             esx_vsphere_counters_get_item_mapping(parsed).values()))
+    return inventory_diskstat_generic([[None, x]
+                                       for x in esx_vsphere_counters_get_item_mapping(parsed).values()])
 
 def check_esx_vsphere_counters_datastoreio(item, params, parsed):
     if "datastore.read" not in parsed:
@@ -310,7 +310,7 @@ def convert_esx_counters_if(parsed):
             entry[4] = str(by_item[name].get("state", "1"))
             entry[18] = name # ifAlias
             if by_item[name].get("macaddress"):
-                mac = "".join(map(lambda x: chr(int(x, 16)), by_item[name]["macaddress"].split(':')))
+                mac = "".join(chr(int(x, 16)) for x in by_item[name]["macaddress"].split(':'))
                 entry[19] = mac
             else:
                 entry[19] = ''   # MAC address not known here

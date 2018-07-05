@@ -1946,14 +1946,13 @@ class ModeBIEditRule(ModeBI):
             ( "state_messages",
                 Optional(
                 Dictionary(
-                    elements = map(lambda (state, name):
-                            (state, TextAscii(
-                                    title = _("Message when rule result is %s") % name,
-                                    default_value = None, size = 80)),
-                                    [("0", "OK"),
-                                     ("1", "WARN"),
-                                     ("2", "CRIT"),
-                                     ("3", "UNKNOWN")])
+                    elements = [(state, TextAscii(title = _("Message when rule result is %s") % name,
+                                                  default_value = None,
+                                                  size = 80))
+                                for state, name in [("0", "OK"),
+                                                    ("1", "WARN"),
+                                                    ("2", "CRIT"),
+                                                    ("3", "UNKNOWN")]]
                 ),
                 title = _("Additional messages describing rule state"),
                 help  = _("This option allows you to display an additional, freely configurable text, to the rule outcome, "

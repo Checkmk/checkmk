@@ -43,7 +43,9 @@ import cmk_base.ip_lookup as ip_lookup
 
 def do_scan_parents(hosts):
     if not hosts:
-        hosts = filter(lambda h: config.in_binary_hostlist(h, config.scanparent_hosts), config.all_active_realhosts())
+        hosts = [h
+                 for h in config.all_active_realhosts()
+                 if config.in_binary_hostlist(h, config.scanparent_hosts)]
 
     parent_hosts = []
     parent_ips   = {}

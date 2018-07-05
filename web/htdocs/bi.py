@@ -357,7 +357,7 @@ class JobWorker(multiprocessing.Process):
                 if key in required_hosts:
                     g_services[key] = values
 
-            hostnames = map(lambda x: x[1], required_hosts)
+            hostnames = [x[1] for x in required_hosts]
             for key, values in self._site_data["services_by_hostname"].iteritems():
                 if key in hostnames:
                     g_services_by_hostname[key] = values
@@ -738,7 +738,7 @@ class BISitedataManager(object):
                 only_sites = [x[0] for x in missing_sites]
                 new_data   = self._query_data(only_sites)
 
-                sites_with_no_data = set(map(lambda x: x[0], missing_sites)) - set(new_data.keys())
+                sites_with_no_data = {x[0] for x in missing_sites} - set(new_data.keys())
                 for site in sites_with_no_data:
                     new_data[site] = {}
 
@@ -1355,7 +1355,7 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
             if g_bi_cache_manager.get_compiled_all():
                 # Bonus! We do no longer need the host/service data if everthing is compiled. These frees lots of memory
                 log("Is fully compiled with %s" % \
-                    ", ".join(map(lambda x: "%s/%s" % x, g_bi_cache_manager.get_online_sites())))
+                    ", ".join("%s/%s" % x for x in g_bi_cache_manager.get_online_sites()))
                 g_bi_sitedata_manager.discard_cached_data()
                 g_bi_cache_manager.discard_cachefile_data()
                 return
@@ -3391,7 +3391,7 @@ def table(columns, add_headers, only_sites, limit, filters):
     else:
         items = g_tree_cache["forest"]
 
-    online_sites = set(map(lambda x: x[0], get_current_sitestats()["online_sites"]))
+    online_sites = {x[0] for x in get_current_sitestats()["online_sites"]}
 
     # Prefetch data for later usage - this saves lots of redundant livestatus queries
     def is_tree_required(tree):
@@ -3478,7 +3478,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             filter_code += header
 
     log("* Getting status information about hosts...")
-    host_columns = filter(lambda c: c.startswith("host_"), columns)
+    host_columns = [c for c in columns if c.startswith("host_")]
     hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns, config.bi_precompile_on_demand, bygroup)
     log("* Got %d host rows" % len(hostrows))
 

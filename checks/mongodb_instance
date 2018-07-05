@@ -32,7 +32,7 @@ def inventory_mongodb_instance(info):
     return [(None, None)]
 
 def check_mongodb_instance(_no_item, _no_params, info):
-    infos = map(lambda line: "%s: %s" % (line[0].title(), line[1]), info)
+    infos = ["%s: %s" % (line[0].title(), line[1]) for line in info]
     yield 0, ", ".join(infos)
 
 check_info["mongodb_instance"] = {

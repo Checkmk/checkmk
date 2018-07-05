@@ -42,7 +42,7 @@ def check_db2_sort_overflow(item, params, parsed):
     if not db:
         raise MKCounterWrapped("Login into database failed")
 
-    total, overflows = tuple(map(lambda x: float(x[-1]), db))
+    total, overflows = tuple(float(x[-1]) for x in db)
     if total > 0:
         overflow_perc = overflows * 100 / total
     else:

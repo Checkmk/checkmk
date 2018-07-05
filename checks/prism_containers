@@ -47,7 +47,7 @@ def check_prism_container(item, params, parsed):
 
             warn, crit = params['levels']
             if isinstance(warn, float):
-                warn, crit = map(lambda x: x * capacity, (warn, crit))
+                warn, crit = [x * capacity for x in (warn, crit)]
 
             if usage >= crit:
                 status = 2

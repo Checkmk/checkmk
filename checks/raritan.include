@@ -168,9 +168,9 @@ def parse_raritan_sensors(info):
                 factor = 1
             # if the value is 5 and unitSensorDecimalDigits is 2
             # then actual value is 0.05
-            sensor_data = map(lambda x: factor * float(x) / pow(10, int(sensor_exponent)), \
-                              [sensor_value_str, sensor_lower_crit_str, sensor_lower_warn_str, \
-                               sensor_upper_crit_str, sensor_upper_warn_str])
+            sensor_data = [factor * float(x) / pow(10, int(sensor_exponent))
+                           for x in [sensor_value_str, sensor_lower_crit_str, sensor_lower_warn_str,
+                                     sensor_upper_crit_str, sensor_upper_warn_str]]
 
         parsed[sensor_name] = {
             'availability' : availability,

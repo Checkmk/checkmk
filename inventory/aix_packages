@@ -40,7 +40,7 @@ def inv_aix_packages(info):
     headers = info[0]
     headers[0] = headers[0].lstrip("#")
     for line in info[1:]:
-        row = dict(zip(headers, map(lambda x: x.strip(), line)))
+        row = dict(zip(headers, [x.strip() for x in line]))
 
         # AIX Type codes
         # Type codes:

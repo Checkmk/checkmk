@@ -42,8 +42,8 @@ def parse_ddn_s2a_statsdelay(info):
     # Regarding the special treatment of the >10.0 value here: This API does not provide
     # more detailed information than this. We assume a value of 30, but we really have no way
     # of knowing. These events are usually very rare (~two in a million).
-    parsed[u"time_interval_in_seconds"] = map(lambda x: float(x) if x != ">10.0" else 30,
-                                          parsed[u"time_interval_in_seconds"])
+    parsed[u"time_interval_in_seconds"] = [float(x) if x != ">10.0" else 30
+                                           for x in parsed[u"time_interval_in_seconds"]]
     return parsed
 
 

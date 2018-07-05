@@ -33,7 +33,7 @@ def parse_informix_status(info):
             instance = line[0][3:-3]
 
         elif instance is not None and len(line) >= 2:
-            stripped_line = map(lambda x: x.strip(), line)
+            stripped_line = [x.strip() for x in line]
             parsed.setdefault(instance, {})
             parsed[instance].setdefault(stripped_line[0], " ".join(stripped_line[1:]))
 

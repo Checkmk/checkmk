@@ -32,7 +32,7 @@
 # cdefs1v  running
 
 def inventory_netapp_api_vf_status(info):
-    return map(lambda x: (x[0], None), info)
+    return [(x[0], None) for x in info]
 
 def check_netapp_api_vf_status(item, _no_params, info):
     filer_states = dict(info)

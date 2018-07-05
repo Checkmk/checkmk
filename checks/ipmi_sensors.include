@@ -117,7 +117,7 @@ def parse_freeipmi(info):
 
     parsed = {}
     for line in info:
-        stripped_line = map(lambda x: x.strip(), line)
+        stripped_line = [x.strip() for x in line]
         status_txt = stripped_line[-1]
         if status_txt.startswith("[") or status_txt.startswith("'"):
             status_txt = status_txt[1:]

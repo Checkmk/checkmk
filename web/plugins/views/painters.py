@@ -1207,7 +1207,7 @@ def notes_matching_pattern_entries(dirs, item):
     matching = []
     for dir in dirs:
         if os.path.isdir(dir):
-            entries = filter(lambda d: d[0] != '.', os.listdir(dir))
+            entries = [d for d in os.listdir(dir) if d[0] != '.']
             entries.sort()
             entries.reverse()
             for pattern in entries:

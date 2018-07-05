@@ -42,7 +42,7 @@
 def parse_postfix_mailq_status(info):
     parsed = {}
     for line in info:
-        stripped_line = map(lambda x: x.strip(), line)
+        stripped_line = [x.strip() for x in line]
         queuename = stripped_line[0].split("/")[0]
         if queuename == "postfix":
             queuename = ""

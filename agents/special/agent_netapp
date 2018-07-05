@@ -503,7 +503,7 @@ def format_config(instances, prefix, config_key, config_report = "all",
                 if value and (extra_info_report == "all" or key in extra_info_report):
                     line.append("%s %s" % (key, value))
 
-        result.append(("%s" % delimeter).join(map(lambda x: x.encode("utf-8"), line)))
+        result.append(("%s" % delimeter).join(x.encode("utf-8") for x in line))
     return "\n".join(result)
 
 # Format instance without subnodes as key/value lines
@@ -1079,8 +1079,11 @@ try:
                                                           "volume-inode-attributes.files-total"      : "files-total",
                                                           "volume-inode-attributes.files-used"       : "files-used" },
                                         extra_info = create_dict(volume_counters, custom_key = [ "instance_uuid" ]),
-                                        extra_info_report = sum(map(lambda x: ["%s" % x, "nfs_%s" % x, "cifs_%s" % x, "san_%s" % x, "fcp_%s" % x, "iscsi_%s" % x],
-                                                            sum(map(lambda x: ["read_%s" % x, "write_%s" % x], ["data", "latency", "ops"]), [])), []) + [ "instance_name" ],
+                                        extra_info_report = [z + y + x
+                                                             for x in ["data", "latency", "ops"]
+                                                             for y in ["read_", "write_"]
+                                                             for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]] + \
+                                                            [ "instance_name" ],
                                         skip_missing_config_key = True
             )
 
@@ -1258,8 +1261,11 @@ try:
                                 config_report = ["name", "volume-info", "size-total", "size-available",
                                                  "volumes", "files-total", "files-used", "state"],
                                 extra_info = create_dict(volume_counters),
-                                extra_info_report = sum(map(lambda x: ["%s" % x, "nfs_%s" % x, "cifs_%s" % x, "san_%s" % x, "fcp_%s" % x, "iscsi_%s" % x],
-                                                    sum(map(lambda x: ["read_%s" % x, "write_%s" % x], ["data", "latency", "ops"]), [])), []) + [ "instance_name" ])
+                                extra_info_report = [z + y + x
+                                                     for x in ["data", "latency", "ops"]
+                                                     for y in ["read_", "write_"]
+                                                     for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]] + \
+                                                    [ "instance_name" ])
 
 
         # Aggregation

@@ -161,7 +161,7 @@ def parse_ipmi(info):
             if len(line) >= 2:
                 # Compatible with older check versions
                 name = line[0].strip().replace(" ", "_")
-                line = [ name ] + map(lambda x: x.strip(), line[1:])
+                line = [ name ] + [x.strip() for x in line[1:]]
 
                 # Discrete sensors have no values
                 if len(line) == 5:

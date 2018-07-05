@@ -183,7 +183,7 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
         # sense anyway.
         if "trend_levels_lower" in params:
             warn_lower_trend, crit_lower_trend =\
-                map(lambda x: abs(x) * -1, params["trend_levels_lower"])
+                [abs(x) * -1 for x in params["trend_levels_lower"]]
         else:
             warn_lower_trend = crit_lower_trend = None
 

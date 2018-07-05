@@ -32,7 +32,7 @@ def inv_netapp_api_disk(info):
     node = inv_tree_list("hardware.storage.disks:")
     for line in info:
         disk = {}
-        line_dict = dict(map(lambda x: x.split(" ", 1), line))
+        line_dict = dict(x.split(" ", 1) for x in line)
 
         for what, inv_name in [ ("serial-number", "serial"), ("vendor-id", "vendor") ]:
             if line_dict.get(what):

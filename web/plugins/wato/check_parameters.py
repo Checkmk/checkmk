@@ -7736,7 +7736,7 @@ def match_dual_level_type(value):
             return 0
 
 def transform_filesystem_free(value):
-    tuple_convert = lambda val: tuple(map(lambda x: -x, val))
+    tuple_convert = lambda val: tuple(-x for x in val)
 
     if type(value) == tuple:
         return tuple_convert(value)
@@ -9058,8 +9058,8 @@ register_check_parameters(
                                              "The free memory levels do not work with the fortigate check, because it does "
                                              "not provide total memory data."),
                                     allow_empty = False,
-                                    forth = lambda val: tuple(map(lambda x: -x, val)),
-                                    back  = lambda val: tuple(map(lambda x: -x, val))
+                                    forth = lambda val: tuple(-x for x in val),
+                                    back  = lambda val: tuple(-x for x in val)
                              )
                         ]
                     ),

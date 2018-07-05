@@ -38,7 +38,7 @@ def check_netscaler_mem(_no_item, params, info):
     used_mem_perc, total_mem_mb = map(float, info[0])
     warn_perc, crit_perc = params
     total_mem = total_mem_mb * 1024 * 1024
-    warn, crit, used_mem  = map(lambda s: s * total_mem / 100.0, params + (used_mem_perc,) )
+    warn, crit, used_mem  = [s * total_mem / 100.0 for s in params + (used_mem_perc,)]
     infotext = "%s (%d%%) of %s" % ( get_bytes_human_readable(used_mem), used_mem_perc,
                                      get_bytes_human_readable(total_mem) )
     perfdata = [ ("mem", used_mem, warn, crit, 0, total_mem ) ]

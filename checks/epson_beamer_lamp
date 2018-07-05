@@ -39,7 +39,7 @@ def check_epson_beamer_lamp(_no_item, params, info):
     infotext = "Operation time: %d h" % lamp_hrs
     if params:
         warn, crit = params
-        levelstext = " (warn/crit at %.0f/%.0f hours)" % tuple(map(lambda x: x/3600.0, params))
+        levelstext = " (warn/crit at %.0f/%.0f hours)" % tuple(x/3600.0 for x in params)
         if lamp_time >= crit:
             status = 2
         elif lamp_time >= warn:

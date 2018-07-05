@@ -198,7 +198,7 @@ def check_esx_vsphere_vm_datastores(no_item, no_params, info):
         # 'freeSpace 68779245568']
 
         # Convert datastore_url to dict
-        datastore_dict = dict(map(lambda x: x.split(" ", 1), datastore_url))
+        datastore_dict = dict(x.split(" ", 1) for x in datastore_url)
 
         capacity = saveint(datastore_dict.get("capacity", 0)) * 1.0
         if capacity:
@@ -396,8 +396,8 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
         last_snapshot  = None
         oldest_snapshot = None
         powered_on_snapshot = None
-        snapshots = map(lambda x: x.split(" ", 3), " ".join(data["snapshot.rootSnapshotList"]).split("|"))
-        snapshots = map(lambda x: (int(x[0]), int(x[1]), x[2], x[3]) , snapshots)
+        snapshots = [x.split(" ", 3) for x in " ".join(data["snapshot.rootSnapshotList"]).split("|")]
+        snapshots = [(int(x[0]), int(x[1]), x[2], x[3]) for x in snapshots]
         yield 0, "Number of Snapshots %d" % len(snapshots)
 
         if len(snapshots) > 0:

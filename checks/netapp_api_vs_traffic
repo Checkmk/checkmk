@@ -32,7 +32,7 @@
 
 
 def inventory_netapp_api_vs_traffic(parsed, what):
-    vservers = set(map(lambda x: x.split(".", 1)[1], parsed.keys()))
+    vservers = {x.split(".", 1)[1] for x in parsed.keys()}
     for vserver in vservers:
         yield vserver, {}
 

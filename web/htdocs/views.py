@@ -1753,11 +1753,11 @@ def get_cells(view):
 
 
 def get_join_cells(cell_list):
-    return filter(lambda x: type(x) == JoinCell, cell_list)
+    return [x for x in cell_list if type(x) == JoinCell]
 
 
 def get_regular_cells(cell_list):
-    return filter(lambda x: type(x) == Cell, cell_list)
+    return [x for x in cell_list if type(x) == Cell]
 
 
 def get_needed_regular_columns(cells, sorters, datasource):

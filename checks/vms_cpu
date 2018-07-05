@@ -37,7 +37,7 @@ def inventory_vms_cpu(info):
 
 def check_vms_cpu(item, params, info):
     num_cpus = int(info[0][0])
-    idle, user, wait_interrupt, wait_npsync = map(lambda x: float(x) / num_cpus, info[0][1:])
+    idle, user, wait_interrupt, wait_npsync = [float(x) / num_cpus for x in info[0][1:]]
     wait = wait_interrupt + wait_npsync
     system = 100.0 - idle - user - wait
     infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)

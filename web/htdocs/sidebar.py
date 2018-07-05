@@ -777,7 +777,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             return
 
         headers =  ["site"] + self._queried_livestatus_columns
-        self._rows = map(lambda x: dict(zip(headers, x)), results)
+        self._rows = [dict(zip(headers, x)) for x in results]
 
 
         limit = config.quicksearch_dropdown_limit
@@ -1034,7 +1034,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
 
 
     def _determine_search_objects(self):
-        filter_names = set(map(lambda x: "%s" % x.get_filter_shortname(), quicksearch_match_plugins))
+        filter_names = {"%s" % x.get_filter_shortname() for x in quicksearch_match_plugins}
         filter_regex = "|".join(filter_names)
 
         # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"

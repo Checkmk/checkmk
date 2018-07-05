@@ -188,7 +188,7 @@ def parse_bluenet2_powerrail(info):
         for oidend, identifier in info[index]:
             inlet_id = ".".join(oidend.split(".")[:2])
             if inlet_id in pre_parsed:
-                pre_parsed[inlet_id][what].append(map(lambda x: str(ord(x)), identifier)[:-1])
+                pre_parsed[inlet_id][what].append([str(ord(x)) for x in identifier][:-1])
 
     parsed = {"phases" : {}, "rcm_phases" : {}, "sensors" : {}}
     for oidend, ty, status, exponent_str, unit, reading_str in info[3]:

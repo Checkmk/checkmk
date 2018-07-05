@@ -39,7 +39,7 @@ def inventory_mongodb_mem(info):
     return [(None, {})]
 
 def check_mongodb_mem(_no_item, params, info):
-    info_dict = dict(map(lambda x: (x[0], " ".join(x[1:])), info))
+    info_dict = {x[0] : " ".join(x[1:]) for x in info}
     resident_bytes = int(info_dict["resident"]) * 1024 **2
 
     for what in [ "resident", "virtual", "mapped" ]:

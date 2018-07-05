@@ -287,7 +287,7 @@ def render_hosts(mode):
         svc_query = "GET services\nColumns: host_name\n"\
                     "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\n"\
                     "Filter: host_scheduled_downtime_depth = 0\nAnd: 3"
-        problem_hosts = set(map(lambda x: x[1], sites.live().query(svc_query)))
+        problem_hosts = {x[1] for x in sites.live().query(svc_query)}
 
         query += "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\nAnd: 2\n"
         for host in problem_hosts:

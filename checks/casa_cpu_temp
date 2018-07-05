@@ -25,10 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 def parse_casa_info_temp(info):
-    entity_names = dict(map(lambda x: [int(x[0]), x[1]], info[0]))
-    temp_value   = dict(map(lambda x: [int(x[0]), x[1]], info[1]))
-    temp_status  = dict(map(lambda x: [int(x[0]), x[1]], info[2]))
-    temp_unit    = dict(map(lambda x: [int(x[0]), x[1]], info[3]))
+    entity_names = {int(k) : v for k, v in (x for x in info[0])}
+    temp_value   = {int(k) : v for k, v in (x for x in info[1])}
+    temp_status  = {int(k) : v for k, v in (x for x in info[2])}
+    temp_unit    = {int(k) : v for k, v in (x for x in info[3])}
     data = {}
     for entry in info[1]:
         entry_nr = int(entry[0])

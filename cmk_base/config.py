@@ -589,7 +589,7 @@ def strip_tags(tagged_hostlist):
     try:
         return cache[cache_id]
     except KeyError:
-        result = map(lambda h: h.split('|', 1)[0], tagged_hostlist)
+        result = [h.split('|', 1)[0] for h in tagged_hostlist]
         cache[cache_id] = result
         return result
 

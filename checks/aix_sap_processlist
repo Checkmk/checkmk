@@ -65,10 +65,10 @@ def parse_aix_sap_processlist(info):
             instance = None
 
         elif instance and len(line) == 7 and line[-1] != " pid":
-            description, status, textstatus, start = map(lambda x: re.sub("^ ","",x), line[1:5])
+            description, status, textstatus, start = [re.sub("^ ","",x) for x in line[1:5]]
 
         elif instance and len(line) == 9:
-            description, status, textstatus = map(lambda x: re.sub("^ ","",x), line[1:4])
+            description, status, textstatus = [re.sub("^ ","",x) for x in line[1:4]]
             start = re.sub("^ ","", line[6])
 
         else:

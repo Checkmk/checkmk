@@ -28,7 +28,7 @@
 def parse_brocade_sfp(info):
     parsed = {}
 
-    isl_ports = map(lambda x: int(x[0]), info[1])
+    isl_ports = [int(x[0]) for x in info[1]]
 
     for fcport_info, values in zip(info[0], info[2]):
 

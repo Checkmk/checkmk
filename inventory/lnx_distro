@@ -77,7 +77,7 @@ def inv_lnx_parse_os(node, line):
     for entry in line:
         if entry.count("=") == 0:
             continue
-        k, v = map(lambda x: x.replace('"', ''), entry.split("=", 1))
+        k, v = [x.replace('"', '') for x in entry.split("=", 1)]
         if k == "VERSION_ID":
             node["version"] = v
         elif k == "PRETTY_NAME":

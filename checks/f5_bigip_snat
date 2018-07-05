@@ -64,7 +64,7 @@ def check_f5_bigip_snat(item, params, parsed):
         for what, function in [ ("connections",  sum) ]:
             summed_values[what] = function(snat[what])
 
-        perfdata = map(lambda x: (x[0], x[1]), summed_values.items())
+        perfdata = summed_values.items()
 
         # Current number of connections
         yield 0, "Client connections: %d" % summed_values["connections"], perfdata

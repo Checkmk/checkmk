@@ -1049,8 +1049,9 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
         header = filt.filter(infoname)
         if not header.startswith("Sites:"):
             filter_code += header
-    host_columns = [ "host_name" ] + list(set(filter(lambda c: c.startswith("host_")
-                                                     and c != "host_name", columns)))
+    host_columns = [ "host_name" ] + list({c
+                                           for c in columns
+                                           if c.startswith("host_") and c != "host_name"})
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(host_columns)) + "\n"
     query += filter_code
@@ -1098,7 +1099,7 @@ def inv_find_subtable_columns(invpath):
 
     # Create dict from column name to its order number in the list
     with_numbers = enumerate(subtable_hint.get("keyorder", []))
-    swapped = map(lambda t: (t[1], t[0]), with_numbers)
+    swapped = [(t[1], t[0]) for t in with_numbers]
     order = dict(swapped)
 
     columns = []

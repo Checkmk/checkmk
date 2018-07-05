@@ -148,7 +148,7 @@ def check_cisco_qos(item, params, info):
     had_legacy_params = False
     if type(params) == tuple:
         params = {
-            "post": tuple(map(lambda x: x and int(x) or None, params[0:2])),
+            "post": tuple(int(x) if x else None for x in params[0:2]),
             "drop": params[2:4]
         }
         had_legacy_params = True

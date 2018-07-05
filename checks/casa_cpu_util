@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def parse_casa_info_util(info):
-    entity_names = dict(map(lambda x: [int(x[0]), x[1]], info[0]))
+    entity_names = {int(k) : v for k, v in (x for x in info[0])}
     data = {}
     for entry in info[1]:
         entry_nr = int(entry[0])

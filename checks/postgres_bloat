@@ -120,7 +120,7 @@ def check_postgres_bloat(item, params, parsed):
                 levels_info.append("%s Perc (%.0f%%/%.0f%%)" % ((what.title(),) + params["%s_bloat_perc" % what]))
             if "%s_bloat_abs" % what in params:
                 levels_info.append("%s Abs (%s/%s)" % ((what.title(),) + \
-                    tuple(map(lambda x: get_bytes_human_readable(int(x)), params["%s_bloat_abs" % what]))))
+                    tuple(get_bytes_human_readable(int(x)) for x in params["%s_bloat_abs" % what])))
         yield 0, " ".join(levels_info)
     else:
         # No errors. Show some general information

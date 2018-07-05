@@ -152,7 +152,7 @@ class SnapshotCreationBase(object):
 
 
         # Generate the final tar command
-        required_subtars = map(lambda x: "%s.tar" % x, parsed_generic_components.get_component_names())
+        required_subtars = ["%s.tar" % x for x in parsed_generic_components.get_component_names()]
         final_tar_command = ["tar", "czf", target_filepath, "--owner=0", "--group=0", "-C", self._tarfile_dir] + required_subtars
 
 
@@ -163,7 +163,7 @@ class SnapshotCreationBase(object):
             os.makedirs(tarfile_dir)
 
             self._create_custom_components_tarfiles(parsed_custom_components, tarfile_dir)
-            required_custom_subtars = map(lambda x: "%s.tar" % x, parsed_custom_components.get_component_names())
+            required_custom_subtars = ["%s.tar" % x for x in parsed_custom_components.get_component_names()]
             final_tar_command.extend(["-C", tarfile_dir] + required_custom_subtars)
 
 
@@ -421,7 +421,8 @@ def list_tar_content(the_tarfile):
             tar = tarfile.open("r", fileobj = the_tarfile)
         else:
             tar = tarfile.open(the_tarfile, "r")
-        map(lambda x: files.update({x.name: {"size": x.size}}), tar.getmembers())
+        for x in tar.getmembers():
+            files.update({x.name: {"size": x.size}})
     except Exception, e:
         return {}
     return files

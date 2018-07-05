@@ -98,7 +98,7 @@ def parse_ceph_df(info):
 
 
 def inventory_ceph_df(mps):
-    return df_inventory(map(lambda x: x[0], mps))
+    return df_inventory([x[0] for x in mps])
 
 
 check_info['ceph_df'] = {

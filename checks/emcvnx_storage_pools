@@ -31,7 +31,7 @@ def parse_emcvnx_storage_pools(info):
     pool_name = None
     tier_name = None
     for line in info:
-        line = map(lambda x: x.strip(), line)
+        line = [x.strip() for x in line]
 
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             section = line[0][3:-3]
@@ -175,7 +175,7 @@ def parse_emcvnx_time_to_complete(time_to_complete):
     # ...
     try:
         seconds = 0
-        for value, unit in map(lambda x: x.strip().split(), time_to_complete.split(",")):
+        for value, unit in [x.strip().split() for x in time_to_complete.split(",")]:
             if unit.endswith("s"):
                 unit = unit[:-1]
             seconds += int(value) * map_units[unit]

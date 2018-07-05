@@ -240,7 +240,7 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
 
         elif item == 'SUMMARY' or line[1] == item:
             matching += 1
-            summed_up = map(lambda e: e[0] + int(e[1]), zip(summed_up, line[2:]))
+            summed_up = [x + int(y) for x, y in zip(summed_up, line[2:])]
 
     if matching == 0:
         return 3, "No matching disk found"

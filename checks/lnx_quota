@@ -69,7 +69,7 @@ def parse_lnx_quota(info):
 
         elif fs and mode and len(line) == 10:
             # new table entry for quota
-            parsed[fs][mode][line[0]] = map(lambda x: int(x)*1024, line[2:5]) + map(int, line[5:])
+            parsed[fs][mode][line[0]] = [int(x)*1024 for x in line[2:5]] + [int(x) for x in line[5:]]
 
     return parsed
 

@@ -119,7 +119,7 @@ def netapp_convert_to_if64(info):
         # Only add interfaces with counters
         if "recv_data" in values:
             if values.get("mac-address"):
-                mac = "".join(map(lambda x: chr(int(x, 16)), values["mac-address"].split(':')))
+                mac = "".join(chr(int(x, 16)) for x in values["mac-address"].split(':'))
             else:
                 mac = ''
 

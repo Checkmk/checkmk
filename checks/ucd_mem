@@ -44,7 +44,7 @@ def inventory_ucd_mem(info):
 
 def check_ucd_mem(_no_item, params, info):
     mem_total_bytes, mem_avail_bytes = \
-        map(lambda x: int(x.replace("kB", "").strip()) * 1024, info[0])
+        [int(x.replace("kB", "").strip()) * 1024 for x in info[0]]
     mem_used_bytes = mem_total_bytes - mem_avail_bytes
     return check_memory_simple(mem_used_bytes, mem_total_bytes, params)
 

@@ -156,7 +156,7 @@ def check_supermicro_sensors(item, _no_params, info):
             elif sensor_type == Type.Voltage:
                 if unit == "mV":
                     reading, warn_upper, crit_upper =\
-                        map(lambda x: x / 1000.0, (reading, warn_upper, crit_upper))
+                        [x / 1000.0 for x in (reading, warn_upper, crit_upper)]
                     unit = "V"
                 perfvar = "voltage"
             elif sensor_type == Type.Status:

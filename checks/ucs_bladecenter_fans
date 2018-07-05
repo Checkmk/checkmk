@@ -37,7 +37,7 @@ def parse_ucs_bladecenter_fans(info):
     def get_item_name(key):
         tokens = key.split("/")
         tokens[1] = tokens[1].replace("fan-module-", "Module ").replace("-", ".")
-        tokens = map(lambda x: x[0].upper() + x[1:], tokens)
+        tokens = [x[0].upper() + x[1:] for x in tokens]
         if len(tokens) > 2:
             tokens[2] = tokens[2].replace("fan-", ".")
         return " ".join(tokens).replace("-", " ")

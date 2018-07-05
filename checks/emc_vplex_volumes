@@ -61,7 +61,7 @@ def parse_emc_vplex_volumes(info):
     return volumes
 
 def inventory_emc_vplex_volumes(parsed):
-    return inventory_diskstat_generic(map(lambda x: (None, x), parsed.keys()))
+    return inventory_diskstat_generic([(None, x) for x in parsed.keys()])
 
 def check_emc_vplex_volumes(item, params, parsed):
     # The check_diskstat_dict function may compute average values

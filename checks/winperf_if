@@ -130,7 +130,7 @@ def parse_winperf_if(info):
                 is_teaming_line = False
                 continue
             if is_teaming_line:
-                as_dict = dict(zip(teaming_headers, map(lambda x: x.rstrip(), line)))
+                as_dict = dict(zip(teaming_headers, [x.rstrip() for x in line]))
                 for guid in as_dict["GUID"].split(";"):
                     teaming_info[guid] = as_dict
                 continue
@@ -150,7 +150,7 @@ def parse_winperf_if(info):
                         teaming_headers = lines.next()
                         break
 
-                    as_dict = dict(zip(headers, map(lambda x: x.rstrip(), line)))
+                    as_dict = dict(zip(headers, [x.rstrip() for x in line]))
 
                     # Unfortunately teamed interfaces lose their #x index and are no longer
                     # distinguishable with the data from the Win32_NetworkAdapter.
@@ -224,7 +224,7 @@ def parse_winperf_if(info):
             bandwidth = 0
 
         if mac_txt:
-            mac = "".join(map(lambda x: chr(int(x, 16)), mac_txt.split(':')))
+            mac = "".join(chr(int(x, 16)) for x in mac_txt.split(':'))
         else:
             mac = ''
 
@@ -295,7 +295,7 @@ def parse_winperf_if(info):
 
 
 def winperf_if_get_nic_index_map(nic_names):
-    return dict(map(lambda x: (x[1], x[0] + 1), enumerate(nic_names)))
+    return {x : i+1 for i, x in enumerate(nic_names)}
 
 
 def check_if_dhcp(item, _no_params, info, nic_names, nic_index):
@@ -314,7 +314,7 @@ def check_if_dhcp(item, _no_params, info, nic_names, nic_index):
 
         line = [lm_field] + line[(len(line) - num_fields + 1):]
 
-        as_dict = dict(zip(header, map(lambda x: x.rstrip(), line)))
+        as_dict = dict(zip(header, [x.rstrip() for x in line]))
         name = winperf_if_normalize_nic_name(as_dict["Description"], nic_names)
         idx = nic_index.get(name)
 

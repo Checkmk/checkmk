@@ -22,6 +22,7 @@ def test_htmllib_integration(register_builtin_html):
     ([("a", "+")], "a=%2B"),
     ([("a", " ")], "a=+"),
     ([("a", "/")], "a=%2F"),
+    ([("a", None)], "a="),
 ])
 def test_urlencode_vars(inp, out):
     result = htmllib.Encoder().urlencode_vars(inp)

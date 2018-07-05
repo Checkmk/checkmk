@@ -410,7 +410,7 @@ def check_drbd_stats(item, params, info):
             else:
                 parsed[key] = '0' # perfdata must always have same number of entries
             if parsed[key].isdigit():
-                perfdata.append(('%s' % label.replace(" ", "_"), parsed[key]))
+                perfdata.append(('%s' % label.replace(" ", "_"), int(parsed[key])))
         return (0, output.rstrip(', '), perfdata)
 
     return (3, "Undefined state")

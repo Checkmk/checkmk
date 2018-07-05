@@ -331,7 +331,7 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
     for what_title, what, val, verbfunc in check_definition:
         infos.append("%s: %s" % (what_title, verbfunc(val)))
         if type(val) in [long, int]:  # because strings go into infos but not into perfdata
-            warn, crit = "", ""
+            warn, crit = None, None
             for how, comp, cfunc in [
                 ("min", "<", lambda a, b: a < b),
                 ("max", ">", lambda a, b: a > b),

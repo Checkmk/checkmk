@@ -116,6 +116,10 @@ event_columns = [
     ( "event_ipaddress",                  "" ),     # introduced in 1.2.7i1
     ( "event_orig_host",                  "" ),     # introduced in 1.4.0b1
     ( "event_contact_groups_precedence",  "host" ), # introduced in 1.4.0b1
+    # Will be always at it's default values in 1.4. This has been added to make
+    # it possible to add 1.4 sites to 1.5 master sites via livestatus. Without
+    # this the tactical overview snapin would lead to an exception.
+    ("event_host_in_downtime", False), # introduced in 1.5.0i1
 ]
 
 grepping_filters = [

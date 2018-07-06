@@ -1,0 +1,15 @@
+Title: Fix "event_host_in_downtime" exception when connecting 1.5 master with 1.4 slave
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p35
+Date: 1530876399
+Class: fix
+
+When connecting a 1.4 slave site to a Check_MK 1.5 master site an error occurred in the
+master control snapin "invalid stats header: table 'eventconsoleevents' has no column 'event_host_in_downtime'".
+
+This was caused by a query that the newer version is sending to all connected sites which
+can not be understood by older sites. 1.4 sites starting from 1.4.0p35 can now be connected
+with 1.5 sites wihout experiencing this issue.

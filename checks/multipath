@@ -220,10 +220,9 @@ def parse_multipath(info):
                         dm_device = None
 
                     break
-
             # No data row and no matching header row
             if not matchobject:
-                raise Exception("Invalid line in agent output: " + l)
+                raise ValueError("Invalid line in agent output: " + l)
 
             # initialize information about next device
             numpaths = 0

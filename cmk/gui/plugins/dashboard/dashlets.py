@@ -25,13 +25,31 @@
 # Boston, MA 02110-1301 USA.
 
 import json
+import livestatus
+import time
 
+import cmk.gui.config as config
+import cmk.gui.visuals as visuals
 import cmk.gui.sites as sites
 import cmk.gui.notify as notify
 import cmk.gui.table as table
-from cmk.gui.htmllib import HTML
-import livestatus
 import cmk.gui.notifications as notifications
+from cmk.gui.i18n import _
+from cmk.gui.htmllib import HTML
+from cmk.gui.exceptions import MKUserError
+
+from cmk.gui.valuespec import (
+    DropdownChoice,
+    Dictionary,
+    TextUnicode,
+    Integer,
+    Checkbox,
+    TextAscii,
+)
+
+from . import (
+    dashlet_types,
+)
 
 #   .--Overview------------------------------------------------------------.
 #   |              ___                       _                             |
@@ -792,8 +810,8 @@ dashlet_types["url"] = {
 #   '----------------------------------------------------------------------'
 
 def dashlet_snapin(nr, dashlet):
-    import sidebar # FIXME: HACK, clean this up somehow
-    snapin = sidebar.sidebar_snapins.get(dashlet['snapin'])
+    import cmk.gui.sidebar as sidebar # FIXME: HACK, clean this up somehow
+    snapin = sidebar.snapin_registry.get(dashlet['snapin'])
     if not snapin:
         raise MKUserError(None, _('The configured snapin does not exist.'))
 
@@ -847,14 +865,14 @@ def dashlet_snapin(nr, dashlet):
 
 
 def dashlet_snapin_get_snapins():
-    import sidebar # FIXME: HACK, clean this up somehow
-    return sorted([ (k, v.title()) for k, v in sidebar.sidebar_snapins.items() ],
+    import cmk.gui.sidebar as sidebar # FIXME: HACK, clean this up somehow
+    return sorted([ (k, v.title()) for k, v in sidebar.snapin_registry.items() ],
                     key=lambda x: x[1])
 
 
 def dashlet_snapin_title(dashlet):
-    import sidebar # FIXME: HACK, clean this up somehow
-    return sidebar.sidebar_snapins[dashlet['snapin']].title()
+    import cmk.gui.sidebar as sidebar # FIXME: HACK, clean this up somehow
+    return sidebar.snapin_registry[dashlet['snapin']].title()
 
 
 dashlet_types["snapin"] = {

@@ -25,6 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.config as config
+from cmk.gui.i18n import _
+
+from . import (
+    builtin_dashboards,
+    GROW,
+    MAX,
+)
 
 builtin_dashboards["main"] = {
     "single_infos": [],
@@ -321,4 +328,3 @@ builtin_dashboards["simple_problems"] = {
         },
     ]
 }
-

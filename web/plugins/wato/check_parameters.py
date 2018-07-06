@@ -7727,8 +7727,7 @@ def match_dual_level_type(value):
         for entry in value:
             if entry[1][0] < 0 or entry[1][1] < 0:
                 return 1
-        else:
-            return 0
+        return 0
     else:
         if value[0] < 0 or value[1] < 0:
             return 1

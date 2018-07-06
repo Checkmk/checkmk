@@ -381,7 +381,6 @@ class Response(object):
                     self._headers_out.remove((this_key, this_val))
 
         self._headers_out.append((key, val))
-        self._logger.warning("%r" % self._headers_out)
 
 
     def set_cookie(self, varname, value, expires=None):

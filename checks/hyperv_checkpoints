@@ -31,33 +31,41 @@
 
 
 def inventory_hyperv_checkpoints(info):
-    return [ (None, {} )]
+    return [(None, {})]
+
 
 def check_hyperv_checkpoints(item, params, info):
-    oldest = 0
-    number_of_checkpoints = 0
-
+    snapshots = []
     for line in info:
-        if len(line) == 2:
-            snapshot, age = line
-            oldest = max(int(age), oldest)
-            number_of_checkpoints += 1
+        if len(line) != 2:
+            continue
+        snapshots.append((line[0], int(line[1])))
 
-    if number_of_checkpoints > 0:
-        state = 0
-        if params.get('age'):
-            warn, crit = params['age']
-            if crit >= oldest:
+    if snapshots:
+        yield 0, "%s checkpoints" % len(snapshots)
+
+        # We assume that the last snapshot is the last line
+        # of the agent output
+        for title, key, snapshot in [
+            ("Oldest", "age_oldest", max(snapshots, key=lambda x:x[1])),
+            ("Last",   "age",        snapshots[-1]),
+        ]:
+            name, age = snapshot
+            infotext = "%s: %s (%s)" % (title, get_age_human_readable(age), name)
+            warn, crit = params.get(key, (None, None))
+            if crit is not None and age >= crit:
                 state = 2
-            elif warn >= oldest:
+            elif warn is not None and age >= warn:
                 state = 1
-            perfdata = [("age", oldest, warn, crit)]
-        else:
-            perfdata = [("age", oldest)]
-        return state, "%s Checkpoints, Oldest is: %s" % \
-                        (number_of_checkpoints, get_age_human_readable(oldest)), perfdata
+            else:
+                state = 0
+            if state:
+                infotext += " (warn/crit at %s/%s)" % (
+                            get_age_human_readable(warn),
+                            get_age_human_readable(crit))
+            yield state, infotext, [(key, age, warn, crit)]
     else:
-        return 0, "No Checkpoints found", [("age", 0)]
+        yield 0, "No Checkpoints found"
 
 
 check_info["hyperv_checkpoints"] = {
@@ -67,4 +75,3 @@ check_info["hyperv_checkpoints"] = {
     "group"                 : "vm_snapshots",
     "has_perfdata"          : True,
 }
-

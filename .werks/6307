@@ -1,0 +1,10 @@
+Title: hyperv_checkpoints: Parameters did not correctly apply
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p35
+Date: 1530879569
+Class: fix
+
+

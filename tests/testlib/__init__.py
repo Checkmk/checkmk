@@ -16,6 +16,7 @@ import sys
 import shutil
 import lockfile
 import ast
+import abc
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
@@ -1793,14 +1794,34 @@ class MissingCheckInfoError(KeyError):
     pass
 
 
-class Check(object):
+class BaseCheck(object):
+    """Abstract base class for Check and ActiveCheck"""
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, name):
+        import cmk_base.check_api_utils
+        self.set_hostname = cmk_base.check_api_utils.set_hostname
+        self.set_service = cmk_base.check_api_utils.set_service
+        self.name = name
+
+    def set_check_api_utils_globals(self, item=None, set_service=False):
+        description = None
+        if set_service:
+            description = self.info["service_description"]
+            if item is not None:
+                assert "%s" in description
+                description = description % item
+        self.set_service(self.name, description)
+        self.set_hostname('non-existent-testhost')
+
+
+class Check(BaseCheck):
     def __init__(self, name):
         import cmk_base.config as config
-        self.name = name
-        if name not in config.check_info:
-            raise MissingCheckInfoError(name)
-        self.info = config.check_info[name]
-        self.context = config._check_contexts[name]
+        super(Check, self).__init__(name)
+        if self.name not in config.check_info:
+            raise MissingCheckInfoError(self.name)
+        self.info = config.check_info[self.name]
+        self.context = config._check_contexts[self.name]
 
     def default_parameters(self):
         import cmk_base.config as config
@@ -1812,6 +1833,7 @@ class Check(object):
         if not parse_func:
             raise MissingCheckInfoError("Check '%s' " % self.name +
                                         "has no parse function defined")
+        self.set_check_api_utils_globals()
         return parse_func(info)
 
     def run_discovery(self, info):
@@ -1819,6 +1841,7 @@ class Check(object):
         if not disco_func:
             raise MissingCheckInfoError("Check '%s' " % self.name +
                                         "has no discovery function defined")
+        self.set_check_api_utils_globals()
         # TODO: use standard sanitizing code
         return disco_func(info)
 
@@ -1827,6 +1850,7 @@ class Check(object):
         if not check_func:
             raise MissingCheckInfoError("Check '%s' " % self.name +
                                         "has no check function defined")
+        self.set_check_api_utils_globals(item, set_service=True)
         # TODO: use standard sanitizing code
         return check_func(item, params, info)
 
@@ -1853,14 +1877,15 @@ class Check(object):
     #    return self.info["check_function"](item, params, info)
 
 
-class ActiveCheck(object):
+class ActiveCheck(BaseCheck):
     def __init__(self, name):
         import cmk_base.config as config
-        self.name = name
-        assert name.startswith('check_'), 'Specify the full name of the active check, e.g. check_http'
-        self.info = config.active_check_info[name[len('check_'):]]
+        super(ActiveCheck, self).__init__(name)
+        assert self.name.startswith('check_'), 'Specify the full name of the active check, e.g. check_http'
+        self.info = config.active_check_info[self.name[len('check_'):]]
 
     def run_argument_function(self, params):
+        self.set_check_api_utils_globals()
         return self.info['argument_function'](params)
 
     def run_service_description(self, params):

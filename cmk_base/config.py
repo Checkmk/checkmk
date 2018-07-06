@@ -2807,4 +2807,4 @@ def filter_by_management_board(hostname, found_check_plugin_names,
 
     return final_collection
 
-cmk_base.cleanup.register_cleanup(lambda: check_api_utils.set_hostname("unknown"))
+cmk_base.cleanup.register_cleanup(check_api_utils.reset_hostname)

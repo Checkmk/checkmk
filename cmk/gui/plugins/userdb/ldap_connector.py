@@ -181,6 +181,7 @@ class LDAPUserConnector(UserConnector):
         self._num_queries = 0
         self._user_cache  = {}
         self._group_cache = {}
+        self._group_search_cache = {}
 
         # File for storing the time of the last success event
         self._sync_time_file = cmk.paths.var_dir + '/web/ldap_%s_sync_time.mk'% self.id()
@@ -765,15 +766,17 @@ class LDAPUserConnector(UserConnector):
 
     def get_group_memberships(self, filters, filt_attr = 'cn', nested = False):
         cache_key = (tuple(filters), nested, filt_attr)
-        if cache_key in self._group_cache:
-            return self._group_cache[cache_key]
+        if cache_key in self._group_search_cache:
+            return self._group_search_cache[cache_key]
+
+        self._group_cache.setdefault(nested, {})
 
         if not nested:
             groups = self._get_direct_group_memberships(filters, filt_attr)
         else:
             groups = self._get_nested_group_memberships(filters, filt_attr)
 
-        self._group_cache[cache_key] = groups
+        self._group_search_cache[cache_key] = groups
         return groups
 
 
@@ -797,17 +800,26 @@ class LDAPUserConnector(UserConnector):
                                             self._config['group_scope']):
                 groups[dn] = {
                     'cn'      : obj['cn'][0],
-                    'members' : [ m.lower() for m in obj.get(member_attr,[]) ],
+                    'members' : sorted([ m.lower() for m in obj.get(member_attr,[]) ]),
                 }
         else:
             # Special handling for OpenLDAP when searching for groups by DN
             for f_dn in filters:
+                # Try to get members from group cache
+                try:
+                    groups[f_dn] = self._group_cache[False][f_dn]
+                    continue
+                except KeyError:
+                    pass
+
                 for dn, obj in self._ldap_search(self._replace_macros(f_dn), filt,
                                                 ['cn', member_attr], 'base'):
                     groups[f_dn] = {
                         'cn'      : obj['cn'][0],
-                        'members' : [ m.lower() for m in obj.get(member_attr,[]) ],
+                        'members' : sorted([ m.lower() for m in obj.get(member_attr,[]) ]),
                     }
+
+        self._group_cache[False].update(groups)
 
         return groups
 
@@ -817,9 +829,17 @@ class LDAPUserConnector(UserConnector):
     # memberof filter to get all group memberships of that group. We need one query for each group.
     def _get_nested_group_memberships(self, filters, filt_attr):
         groups = {}
+
+        # Search group members in common ancestor of group and user base DN to be able to use a single
+        # query instead of one for groups and one for users below when searching for the members.
+        base_dn = self._group_and_user_base_dn()
+
         for filter_val in filters:
             matched_groups = {}
 
+            # The memberof query below is only possible when knowing the DN of groups. We need
+            # to look for the DN when the caller gives us CNs (e.g. when using the the groups
+            # to contact groups plugin).
             if filt_attr == 'cn':
                 result = self._ldap_search(self.get_group_dn(),
                                      '(&%s(cn=%s))' % (self.ldap_filter('groups'), filter_val),
@@ -832,20 +852,71 @@ class LDAPUserConnector(UserConnector):
             else:
                 # in case of asking with DNs in nested mode, the resulting objects have the
                 # cn set to None for all objects. We do not need it in that case.
-                matched_groups[filter_val] = None
+                dn = filter_val
+                matched_groups[dn] = None
 
+            # Now lookup the memberships. Previously we used the filter "memberOf:1.2.840.113556.1.4.1941:"
+            # here which seemed to be a performance problem. Resolving the nesting involves more single
+            # queries but performs much better.
             for dn, cn in matched_groups.items():
-                filt = '(&%s(memberOf:1.2.840.113556.1.4.1941:=%s))' % \
-                        (self.ldap_filter('users'), dn)
+                # Try to get members from group cache
+                try:
+                    groups[dn] = self._group_cache[True][dn]
+                    continue
+                except KeyError:
+                    pass
+
+                # In case we don't have the cn we need to fetch it. It may be needed, e.g. by the contact group
+                # sync plugin
+                if cn is None:
+                    group = self._ldap_search(dn, filt="(objectclass=group)", columns=['cn'], scope='base')
+                    if group:
+                        cn = group[0][1]["cn"][0]
+
+                filt = '(memberof=%s)' % dn
                 groups[dn] = {
-                    'members' : [],
-                    'cn'      : cn,
+                    'members'     : [],
+                    'cn'          : cn,
                 }
-                for user_dn, _obj in self._ldap_search(self._get_user_dn(),
-                                                     filt, ['dn'], self._config['user_scope']):
-                    groups[dn]['members'].append(user_dn.lower())
+
+                sub_group_filters = []
+                for obj_dn, obj in self._ldap_search(base_dn, filt, ['dn', 'objectclass'], 'sub'):
+                    if "user" in obj['objectclass']:
+                        groups[dn]['members'].append(obj_dn)
+
+                    elif "group" in obj['objectclass']:
+                        sub_group_filters.append(obj_dn)
+
+                # TODO: This could be optimized by first collecting all sub groups of all searched
+                # groups, then collecting them all together
+                for _sub_group_dn, sub_group in self.get_group_memberships(sub_group_filters, filt_attr='dn', nested=True).items():
+                    groups[dn]['members'] += sub_group["members"]
+
+                groups[dn]['members'].sort()
+
+                self._group_cache[True][dn] = groups[dn]
 
         return groups
+
+
+    def _group_and_user_base_dn(self):
+        user_dn = ldap.dn.str2dn(self._get_user_dn())
+        group_dn = ldap.dn.str2dn(self.get_group_dn())
+
+        common_len = min(len(user_dn), len(group_dn))
+        user_dn, group_dn = user_dn[-common_len:], group_dn[-common_len:]
+
+        base_dn = None
+        for i in range(common_len):
+            if user_dn[i:] == group_dn[i:]:
+                base_dn = user_dn[i:]
+                break
+
+        if base_dn is None:
+            raise MKLDAPException(_("Unable to synchronize nested groups (Found no common base DN for user base "
+                                      "DN \"%s\" and group base DN \"%s\")") % (self._get_user_dn(), self.get_group_dn()))
+
+        return ldap.dn.dn2str(base_dn)
 
 
     #
@@ -1137,6 +1208,7 @@ class LDAPUserConnector(UserConnector):
         self._num_queries = 0
         self._user_cache.clear()
         self._group_cache.clear()
+        self._group_search_cache.clear()
 
 
     def _set_last_sync_time(self):

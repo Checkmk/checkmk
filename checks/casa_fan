@@ -45,8 +45,7 @@ def check_casa_fan(item, no_params, info):
                 return (3, "%s RPM, unknown fan status (!)" % speed)
             elif fan_status == "4":
                 return (2, "FAN Failure (!!)")
-    else:
-        return (3, "Fan %s not found in snmp output" % item)
+    return (3, "Fan %s not found in snmp output" % item)
 
 
 check_info["casa_fan"] = {

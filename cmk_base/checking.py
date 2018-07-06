@@ -330,8 +330,7 @@ def _determine_check_params(params):
             elif tp_result == None:
                 # Connection error
                 return params["tp_default_value"]
-        else:
-            return params["tp_default_value"]
+        return params["tp_default_value"]
     else:
         return params
 

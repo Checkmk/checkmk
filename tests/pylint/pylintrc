@@ -81,7 +81,6 @@ disable=
     unused-import,
     unused-variable,
     unused-wildcard-import,
-    useless-else-on-loop,
     useless-super-delegation,
     wildcard-import,
     wrong-import-order,

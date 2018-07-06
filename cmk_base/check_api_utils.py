@@ -55,7 +55,9 @@ HOST_ONLY       = "host_only"       # Check is only executed for real SNMP host 
 
 
 # Is set before check/discovery function execution
-_hostname = "unknown" # Host currently being checked
+_hostname = None # Host currently being checked
+_check_type = None
+_service_description = None
 
 
 def set_hostname(hostname):
@@ -63,14 +65,16 @@ def set_hostname(hostname):
     _hostname = hostname
 
 
+def reset_hostname():
+    global _hostname
+    _hostname = None
+
+
 def host_name():
     """Returns the name of the host currently being checked or discovered."""
+    if _hostname is None:
+        raise RuntimeError("host name has not been set")
     return _hostname
-
-
-# Is set before check execution
-_check_type = None
-_service_description = None
 
 
 def set_service(check_type, service_description):
@@ -81,10 +85,13 @@ def set_service(check_type, service_description):
 
 def check_type():
     """Returns the name of the check type currently being checked."""
+    if _check_type is None:
+        raise RuntimeError("check type has not been set")
     return _check_type
 
 
-# TODO: Is this really needed? Could not find a call site.
 def service_description():
     """Returns the name of the service currently being checked."""
+    if _service_description is None:
+        raise RuntimeError("service description has not been set")
     return _service_description

@@ -40,14 +40,24 @@ from cmk.gui.i18n import _u, _
 
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 
-loaded_with_language = False
-builtin_dashboards = {}
-builtin_dashboards_transformed = False
-dashlet_types = {}
 
-# Declare constants to be used in the definitions of the dashboards
-GROW = 0
-MAX = -1
+import cmk.gui.plugins.dashboard
+
+if not cmk.is_raw_edition():
+    import cmk.gui.cee.plugins.dashboard
+
+if cmk.is_managed_edition():
+    import cmk.gui.cme.plugins.dashboard
+
+from cmk.gui.plugins.dashboard.utils import (
+    builtin_dashboards,
+    GROW,
+    MAX,
+    dashlet_types,
+)
+
+loaded_with_language = False
+builtin_dashboards_transformed = False
 
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.

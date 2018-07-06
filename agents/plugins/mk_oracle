@@ -1024,20 +1024,6 @@ do_dummy_sections () {
 }
 
 
-do_section () {
-    local section=$1
-    if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
-        if [[ "${MK_ORA_SECTIONS[*]}" =~ ${section} ]]; then
-            echo "yes"
-        else
-            echo "no"
-        fi
-    else
-        echo "yes"
-    fi
-}
-
-
 skip_sid () {
     local sid="$1"
     if [ "$ONLY_SIDS" ]; then

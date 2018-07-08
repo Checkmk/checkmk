@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,9 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.mobile as mobile
+"""Module to hold shared code for main module and the plugins"""
 
-register_handlers({
-   "mobile"       : mobile.page_index,
-   "mobile_view"  : mobile.page_view,
-})
+pagehandlers = {}
+
+
+def register_handlers(handlers):
+    pagehandlers.update(handlers)

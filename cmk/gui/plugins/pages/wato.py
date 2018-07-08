@@ -24,12 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.bi as bi
+import cmk.gui.wato as wato
+from . import register_handlers
 
 register_handlers({
-    "bi_debug"          : bi.page_debug,
-    "bi"                : bi.page_all,
-    "bi_set_assumption" : bi.ajax_set_assumption,
-    "bi_save_treestate" : bi.ajax_save_treestate,
-    "bi_render_tree"    : bi.ajax_render_tree,
+    "wato"                      : wato.page_handler,
+    "user_profile"              : wato.page_user_profile,
+
+    "ajax_start_activation"     : lambda: wato.ModeAjaxStartActivation().handle_page(),
+    "ajax_activation_state"     : lambda: wato.ModeAjaxActivationState().handle_page(),
+    "user_change_pw"            : lambda: wato.page_user_profile(change_pw=True),
+    "wato_ajax_profile_repl"    : lambda: wato.ModeAjaxProfileReplication().handle_page(),
+
+    "automation_login"          : lambda: wato.ModeAutomationLogin().page(),
+    "noauth:automation"         : lambda: wato.ModeAutomation().page(),
+    "ajax_set_foldertree"       : lambda: wato.ModeAjaxSetFoldertree().handle_page(),
+    "wato_ajax_diag_host"       : lambda: wato.ModeAjaxDiagHost().handle_page(),
+    "wato_ajax_execute_check"   : lambda: wato.ModeAjaxExecuteCheck().handle_page(),
+    "fetch_agent_output"        : lambda: wato.PageFetchAgentOutput().page(),
+    "download_agent_output"     : lambda: wato.PageDownloadAgentOutput().page(),
+    "ajax_popup_move_to_folder" : lambda: wato.ModeAjaxPopupMoveToFolder().page(),
+    "ajax_backup_job_state"     : lambda: wato.ModeAjaxBackupJobState().page(),
 })

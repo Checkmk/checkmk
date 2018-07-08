@@ -24,15 +24,51 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Cleanup this whole module.
+
+# Once we drop the legacy plugin mechanism and changed the pages to be
+# registered in a better way, for example using the standard plugin
+# mechanism, we can change this to a module that is just importing
+# all other "top level" modules of the application. e.g. like this:
+#
+# -> index.py
+#  import cmk.gui.modules
+#  -> modules.py
+#      import cmk.gui.views
+#      import cmk.gui.default_permissions
+#      import ...
+#
+#      if not cmk.is_raw_edition():
+#          import cmk.gui.cee.modules
+#          -> cee/modules.py
+#              import cmk.gui.cee.sla
+#              import ...
+#
+
 import os
 import sys
 import importlib
 from types import ModuleType
 
+import cmk
 import cmk.paths
 
 import cmk.gui.utils as utils
 import cmk.gui.pagetypes as pagetypes
+
+from cmk.gui.plugins.pages import (
+    register_handlers,
+    pagehandlers,
+)
+
+import cmk.gui.plugins.pages
+
+if not cmk.is_raw_edition():
+    import cmk.gui.cee.plugins.pages
+
+if not cmk.is_managed_edition():
+    import cmk.gui.cme.plugins.pages
+
 
 # Register non page specific modules which are not having own pages,
 # but plugins to be loaded.
@@ -41,12 +77,6 @@ internal_module_names = [
     "cmk.gui.default_permissions",
     "cmk.gui.visuals"
 ]
-
-import cmk
-if not cmk.is_raw_edition():
-    internal_module_names.append("cmk.gui.cee.sla")
-
-pagehandlers = {}
 
 # Modules to be loaded within the application by default. These
 # modules are loaded on application initialization. The module
@@ -133,10 +163,6 @@ def load_all_plugins():
     # Mark the modules as loaded after all plugins have been loaded. In case of exceptions
     # we want them to occur again on subsequent requests too.
     g_all_modules_loaded = True
-
-
-def register_handlers(handlers):
-    pagehandlers.update(handlers)
 
 
 def get_handler(name, dflt=None):

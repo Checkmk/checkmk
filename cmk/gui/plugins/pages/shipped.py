@@ -49,6 +49,8 @@ import cmk.gui.valuespec as valuespec
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.plugins.views.inventory
 
+from . import register_handlers
+
 # map URLs to page rendering functions
 register_handlers({
     "index"                         : main.page_index,

@@ -24,8 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.cron
+import cmk.gui.mobile as mobile
+from . import register_handlers
 
 register_handlers({
-    "noauth:run_cron" :  cmk.gui.cron.page_run_cron,
+   "mobile"       : mobile.page_index,
+   "mobile_view"  : mobile.page_view,
 })

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.metrics as metrics
+from . import register_handlers
 
 register_handlers({
     "noauth:pnp_template" : metrics.page_pnp_template,

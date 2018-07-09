@@ -890,7 +890,8 @@ class EventServer(ECServerThread):
             'priority': 5,  # notice
             'facility': 31,  # not used by syslog -> we use this for all traps
             'application': application,
-            'text': text
+            'text': text,
+            'core_host' : '',
         }
 
         return event
@@ -2024,6 +2025,7 @@ class EventServer(ECServerThread):
         event = {
             # address is either None or a tuple of (ipaddress, port)
             "ipaddress": address and address[0] or "",
+            "core_host": "",
         }
         try:
             # Variant 1: plain syslog message without priority/facility:
@@ -2179,6 +2181,7 @@ class EventServer(ECServerThread):
                 "application": "",
                 "pid": 0,
                 "time": time.time(),
+                "core_host": "",
             }
 
         if self._config["debug_rules"]:

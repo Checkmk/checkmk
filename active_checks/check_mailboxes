@@ -88,8 +88,7 @@ class MailList(object):
 
 
 class LoginError(Exception):
-    def __init__(self, *args, **kwargs):
-        super(LoginError, self).__init__(*args, **kwargs)
+    pass
 
 
 class ImapWrapper(object):

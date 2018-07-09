@@ -892,6 +892,7 @@ class EventServer(ECServerThread):
             'application': application,
             'text': text,
             'core_host' : '',
+            'host_in_downtime' : False,
         }
 
         return event
@@ -2026,6 +2027,7 @@ class EventServer(ECServerThread):
             # address is either None or a tuple of (ipaddress, port)
             "ipaddress": address and address[0] or "",
             "core_host": "",
+            "host_in_downtime": False,
         }
         try:
             # Variant 1: plain syslog message without priority/facility:
@@ -2182,6 +2184,7 @@ class EventServer(ECServerThread):
                 "pid": 0,
                 "time": time.time(),
                 "core_host": "",
+                "host_in_downtime": False,
             }
 
         if self._config["debug_rules"]:

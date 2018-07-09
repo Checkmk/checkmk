@@ -32,7 +32,6 @@ disable=
     eval-used,
     exec-used,
     fixme,
-    global-at-module-level,
     global-statement,
     global-variable-undefined,
     inconsistent-return-statements,

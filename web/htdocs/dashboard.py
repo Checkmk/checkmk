@@ -839,8 +839,6 @@ def page_create_dashboard():
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
 
-global vs_dashboard
-
 def page_edit_dashboard():
     load_dashboards(lock=html.is_transaction())
 

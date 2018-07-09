@@ -205,7 +205,7 @@ endif
 		fi ; \
 	    done ; \
 	else \
-	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,src} enterprise/agents/windows/{build64,build}; do \
+	    for F in $(DIST_ARCHIVE) enterprise/agents/plugins/{build,build-32,src} enterprise/agents/windows/{build64,build}; do \
 		EXCLUDES+=" --exclude $$F" ; \
 	    done ; \
 	fi ; \

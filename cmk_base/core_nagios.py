@@ -46,9 +46,6 @@ import cmk_base.check_api_utils as check_api_utils
 
 
 class NagiosCore(core_config.MonitoringCore):
-    def __init__(self):
-        super(NagiosCore, self).__init__()
-
     def create_config(self):
         with file(cmk.paths.nagios_objects_file, "w") as out:
             create_config(out, None)

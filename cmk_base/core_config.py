@@ -44,10 +44,6 @@ class MonitoringCore(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __init__(self):
-        super(MonitoringCore, self).__init__()
-
-    @abc.abstractmethod
     def create_config(self):
         pass
 

@@ -1,0 +1,18 @@
+Title: cmk-update-agent: Convenient logging on Linux
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0b9
+Date: 1531202616
+Class: feature
+
+The Agent Updater now makes use of its logging capabilities more conveniently.
+Only ERRORs and WARNINGs will be logged to syslog.
+
+Additionally, a detailed log will be created at /var/lib/check_mk_agent/cmk-update-agent.log
+when running as plugin. It will be rotated every 5MB with a maximum of 3 backups.
+This improves our capabilities for an a-posteriori error analysis.
+
+When running cmk-update-agent manually,
+a logfile can be specified using the -l flag.

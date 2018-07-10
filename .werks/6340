@@ -1,0 +1,20 @@
+Title: Fixed debian agent package incompatibilities
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1531217694
+
+The debian agent package shipped with Check_MK (located in share/check_mk/agent/*.deb) was
+not compatible with older Debian/Ubuntu version because it used xz as compression algorithm
+for the control files.
+
+When trying to install such a package an error like this occurred:
+
+dpkg-deb: error: archive 'check-mk-agent_1.4.0p34-1_all.deb' contains not understood data member control.tar.xz, giving up
+
+We have now changed the compression of the whole package to gzip which should make the package
+compatible to such systems again.

@@ -512,11 +512,11 @@ class JobStatus(object):
 
 
     def get_status(self):
-        return store.load_data_from_file(self._job_statusfilepath, {})
+        return store.load_data_from_file(self._job_statusfilepath, default={}, lock=True)
 
 
     def statusfile_exists(self):
-        return os.path.exists(self._job_statusfilepath)
+        return os.path.exists(self._job_statusfilepath) and os.path.getsize(self._job_statusfilepath) > 0
 
 
     def update_status(self, params):

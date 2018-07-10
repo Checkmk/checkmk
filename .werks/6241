@@ -1,0 +1,10 @@
+Title: SLA configuration: The alert levels did only support integer values
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.5.0b9
+Date: 1531218161
+Class: fix
+
+

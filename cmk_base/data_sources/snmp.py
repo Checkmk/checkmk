@@ -219,6 +219,11 @@ class SNMPDataSource(DataSource):
                 self._logger.debug("%s: Skip fetching data (persisted info exists)" % (check_plugin_name))
                 continue
 
+            # Prevent duplicate data fetching of identical section in case of SNMP sub checks
+            if section_name in info:
+                self._logger.debug("%s: Skip fetching data (section already fetched)" % (check_plugin_name))
+                continue
+
             self._logger.debug("%s: Fetching data" % (check_plugin_name))
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info

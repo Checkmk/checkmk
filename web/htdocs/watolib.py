@@ -1795,7 +1795,7 @@ class CREFolder(BaseFolder):
 
     def subfolder_choices(self):
         choices = []
-        for subfolder in self.visible_subfolders().values():
+        for subfolder in self.visible_subfolders_sorted_by_title():
             choices.append((subfolder.path(), subfolder.title()))
         return choices
 

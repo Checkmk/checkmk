@@ -111,6 +111,8 @@ var_dir        = cmk.paths.var_dir + "/wato/"
 audit_log_path = var_dir + "log/audit.log"
 snapshot_dir   = var_dir + "snapshots/"
 php_api_dir    = var_dir + "php-api/"
+# TODO: Move this to CEE specific code again
+liveproxyd_config_dir = cmk.paths.default_config_dir + "/liveproxyd.d/wato/"
 
 # Directories and files to synchronize during replication
 replication_paths = [
@@ -126,6 +128,12 @@ replication_paths = [
     ( "dir", "mkps",          cmk.paths.var_dir + "/packages" ),
     ( "dir", "local",         cmk.paths.omd_root + "/local" ),
 ]
+
+# TODO: Move this to CEE specific code again
+if not cmk.is_raw_edition():
+    replication_paths += [
+        ("dir", "liveproxyd", liveproxyd_config_dir, ["sitespecific.mk"]),
+    ]
 
 # Directories and files for backup & restore
 backup_paths = replication_paths[:] + [
@@ -3059,9 +3067,6 @@ class CREHost(WithPermissionsAndAttributes):
         self._name = new_name
 
 
-Folder = CREFolder
-Host   = CREHost
-
 #.
 #   .--Attributes----------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
@@ -3902,8 +3907,7 @@ def save_site_global_settings(vars):
 #   |  Code for distributed WATO. Site configuration. Pushing snapshots.   |
 #   '----------------------------------------------------------------------'
 
-# TODO: Extract common code to SiteManagement base class
-class CRESiteManagement(object):
+class SiteManagement(object):
     @classmethod
     def connection_method_valuespec(cls):
         # ValueSpecs for the more complex input fields
@@ -3911,6 +3915,7 @@ class CRESiteManagement(object):
             orientation = "horizontal",
             choices = cls._connection_choices(),
         )
+
 
     @classmethod
     def _connection_choices(cls):
@@ -4106,16 +4111,273 @@ class CRESiteManagement(object):
         return value
 
 
+
+
+class CRESiteManagement(SiteManagement):
+    pass
+
+
+# TODO: This has been moved directly into watolib because it was not easily possible
+# to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
+# As soon as we have untied this we should re-establish a watolib plugin hierarchy and
+# move this to a CEE/CME specific watolib plugin
+class ConfigDomainLiveproxy(ConfigDomain):
+    needs_sync         = False
+    needs_activation   = False
+    ident              = "liveproxyd"
+    in_global_settings = True
+
+    @classmethod
+    def enabled(cls):
+        return not cmk.is_raw_edition() and config.liveproxyd_enabled
+
+
+    def config_dir(self):
+        return liveproxyd_config_dir
+
+
+    def save(self, cfg, site_specific=False):
+        super(ConfigDomainLiveproxy, self).save(cfg, site_specific=site_specific)
+        self.activate()
+
+
+    def activate(self):
+        log_audit(None, "liveproxyd-activate",
+                  _("Activating changes of Livestatus Proxy configuration"))
+
+        try:
+            pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
+            try:
+                pid = int(file(pidfile).read().strip())
+                os.kill(pid, 10)
+            except IOError, e:
+                if e.errno == 2: # No such file or directory
+                    pass
+                else:
+                    raise
+        except Exception, e:
+            logger.exception()
+            html.show_warning(_("Could not reload Livestatus Proxy: %s. See web.log "
+                                "for further information.") % e)
+
+
+    # TODO: Move default values to common module to share
+    # the defaults between the GUI code an liveproxyd.
+    def default_globals(self):
+        return {
+            "liveproxyd_log_levels": {
+                "cmk.liveproxyd": cmk.log.INFO,
+            },
+            "liveproxyd_default_connection_params": \
+                ConfigDomainLiveproxy.connection_params_defaults(),
+        }
+
+
+    @staticmethod
+    def connection_params_defaults():
+        return {
+            "channels"        : 5,
+            "heartbeat"       : (5, 2.0),
+            "channel_timeout" : 3.0,
+            "query_timeout"   : 120.0,
+            "connect_retry"   : 4.0,
+            "cache"           : True,
+        }
+
+
+# TODO: This has been moved directly into watolib because it was not easily possible
+# to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
+# As soon as we have untied this we should re-establish a watolib plugin hierarchy and
+# move this to a CEE/CME specific watolib plugin
+class CEESiteManagement(SiteManagement):
+    @classmethod
+    def _connection_choices(cls):
+        choices = super(CEESiteManagement, cls)._connection_choices()
+
+        choices.append(("proxy", _("Use Livestatus Proxy Daemon"), Transform(
+            Dictionary(
+                optional_keys = ["tcp"],
+                columns = 1,
+                elements = [
+                    ("socket", Alternative(
+                        title = _("Connect to"),
+                        style = "dropdown",
+                        elements = [
+                            FixedValue(None,
+                                title = _("Connect to the local site"),
+                                totext = "",
+                            ),
+                            cls._tcp_port_valuespec(),
+                        ],
+                    )),
+                    ("tcp", LivestatusViaTCP(
+                        title = _("Allow access via TCP"),
+                        help = _("This option can be useful to build a cascading distributed setup. "
+                                 "The Livestatus Proxy of this site connects to the site configured "
+                                 "here via Livestatus and opens up a TCP port for clients. The "
+                                 "requests of the clients are forwarded to the destination site. "
+                                 "You need to configure a TCP port here that is not used on the "
+                                 "local system yet."),
+                        tcp_port = 6560,
+                    )),
+                    ("params", Alternative(
+                        title = _("Parameters"),
+                        style = "dropdown",
+                        elements = [
+                            FixedValue(None,
+                                title = _("Use global connection parameters"),
+                                totext = _("Use the <a href=\"%s\">global parameters</a> for this connection") % \
+                                    "wato.py?mode=edit_configvar&site=&varname=liveproxyd_default_connection_params",
+                            ),
+                            Dictionary(
+                                title = _("Use custom connection parameters"),
+                                elements = cls.liveproxyd_connection_params_elements(),
+                            ),
+                        ],
+                    )),
+                ],
+            ),
+            forth = cls.transform_old_connection_params,
+        )))
+
+        return choices
+
+
+    @classmethod
+    def liveproxyd_connection_params_elements(cls):
+        defaults = ConfigDomainLiveproxy.connection_params_defaults()
+
+        return [
+            ("channels", Integer(
+                title = _("Number of channels to keep open"),
+                minvalue = 2,
+                maxvalue = 50,
+                default_value = defaults["channels"],
+            )),
+            ("heartbeat", Tuple(
+                title = _("Regular heartbeat"),
+                orientation = "float",
+                elements = [
+                    Integer(
+                        label = _("One heartbeat every"),
+                        unit=_("sec"),
+                        minvalue=1,
+                        default_value = defaults["heartbeat"][0],
+                    ),
+                    Float(
+                        label = _("with a timeout of"),
+                        unit=_("sec"),
+                        minvalue=0.1,
+                        default_value = defaults["heartbeat"][1],
+                        display_format="%.1f"
+                    ),
+                ]
+            )),
+            ("channel_timeout", Float(
+                title = _("Timeout waiting for a free channel"),
+                minvalue = 0.1,
+                default_value = defaults["channel_timeout"],
+                unit = _("sec"),
+            )),
+            ("query_timeout", Float(
+                title = _("Total query timeout"),
+                minvalue = 0.1,
+                unit = _("sec"),
+                default_value = defaults["query_timeout"],
+            )),
+            ("connect_retry", Float(
+                title = _("Cooling period after failed connect/heartbeat"),
+                minvalue = 0.1,
+                unit = _("sec"),
+                default_value = defaults["connect_retry"],
+            )),
+            ("cache", Checkbox(
+                title = _("Enable Caching"),
+                label = _("Cache several non-status queries"),
+                help = _("This option will enable the caching of several queries that "
+                         "need no current data. This reduces the number of Livestatus "
+                         "queries to sites and cuts down the response time of remote "
+                         "sites with large latencies."),
+                default_value = defaults["cache"],
+            )),
+        ]
+
+
+    # Each site had it's individual connection params set all time. Detect whether or
+    # not a site is at the default configuration and set the config to
+    # "use default connection params". In case the values are not similar to the current
+    # defaults just change the data structure to the new one.
+    @classmethod
+    def transform_old_connection_params(cls, value):
+        if "params" in value:
+            return value
+
+        new_value = {
+            "socket" : value.pop("socket"),
+            "params" : value,
+        }
+
+        defaults = ConfigDomainLiveproxy.connection_params_defaults()
+        for key, val in value.items():
+            if val == defaults[key]:
+                del value[key]
+
+        if not value:
+            new_value["params"] = None
+
+        return new_value
+
+
+    @classmethod
+    def save_sites(cls, sites, activate=True):
+        super(CEESiteManagement, cls).save_sites(sites, activate)
+
+        if activate and config.liveproxyd_enabled:
+            cls._save_liveproxyd_config(sites)
+
+
+    @classmethod
+    def _save_liveproxyd_config(cls, sites):
+        path = cmk.paths.default_config_dir + "/liveproxyd.mk"
+
+        conf = {}
+        for siteid, siteconf in sites.items():
+            s = siteconf.get("socket")
+            if type(s) == tuple and s[0] == "proxy":
+                conf[siteid] = {
+                    "socket": s[1]["socket"],
+                }
+
+                if "tcp" in s[1]:
+                    conf[siteid]["tcp"] = s[1]["tcp"]
+
+                if s[1]["params"]:
+                    conf[siteid].update(s[1]["params"])
+
+        store.save_to_mk_file(path, "sites", conf)
+
+        ConfigDomainLiveproxy().activate()
+
+
+    @classmethod
+    def _affected_config_domains(cls):
+        domains = super(CEESiteManagement, cls)._affected_config_domains()
+        if config.liveproxyd_enabled:
+            domains.append(ConfigDomainLiveproxy)
+        return domains
+
+
+
 class SiteManagementFactory(object):
     @staticmethod
     def factory():
-        try:
-            import cmk.gui.cee.plugins.watolib.liveproxyd
-            cls = cmk.gui.cee.plugins.watolib.liveproxyd.CEESiteManagement
-        except ImportError:
+        if cmk.is_raw_edition():
             cls = CRESiteManagement
+        else:
+            cls = CEESiteManagement
 
         return cls()
+
 
 
 def get_login_secret(create_on_demand = False):
@@ -10274,3 +10536,201 @@ class LivestatusViaTCP(Dictionary):
         ]
         kwargs["optional_keys"] = [ "only_from" ]
         super(LivestatusViaTCP, self).__init__(**kwargs)
+
+
+#.
+#   .--CME-----------------------------------------------------------------.
+#   |                          ____ __  __ _____                           |
+#   |                         / ___|  \/  | ____|                          |
+#   |                        | |   | |\/| |  _|                            |
+#   |                        | |___| |  | | |___                           |
+#   |                         \____|_|  |_|_____|                          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Managed Services Edition specific things                             |
+#   '----------------------------------------------------------------------'
+# TODO: This has been moved directly into watolib because it was not easily possible
+# to extract Folder/Host dependencies to a separate module. As soon as we have untied
+# this we should re-establish a watolib plugin hierarchy and move this to a CME
+# specific watolib plugin
+
+class CMEFolder(CREFolder):
+    def edit(self, title, attributes):
+        if "site" in attributes:
+            site_id = attributes["site"]
+            if not self.is_root():
+                self.parent()._check_parent_customer_conflicts(site_id)
+            self._check_childs_customer_conflicts(site_id)
+
+        super(CMEFolder, self).edit(title, attributes)
+
+
+    def _check_parent_customer_conflicts(self, site_id):
+        new_customer_id = managed.get_customer_of_site(site_id)
+        customer_id = self._get_customer_id()
+
+        if new_customer_id == managed.default_customer_id() and\
+           customer_id     != managed.default_customer_id():
+           raise MKUserError(None, _("The configured target site refers to the default customer <i>%s</i>. The parent folder however, "
+                                     "already have the specific customer <i>%s</i> set. This violates the CME folder hierarchy.") %
+                                     (managed.get_customer_name_by_id(managed.default_customer_id()),
+                                      managed.get_customer_name_by_id(customer_id)))
+
+        # The parents customer id may be the default customer or the same customer
+        customer_id = self._get_customer_id()
+        if customer_id not in [managed.default_customer_id(), new_customer_id]:
+            folder_sites = ", ".join(managed.get_sites_of_customer(customer_id))
+            raise MKUserError(None, _("The configured target site <i>%s</i> for this folder is invalid. The folder <i>%s</i> already belongs "
+                                      "to the customer <i>%s</i>. This violates the CME folder hierarchy. You may choose the "\
+                                      "following sites <i>%s</i>.") % (config.allsites()[site_id]["alias"],
+                                                                       self.title(),
+                                                                       managed.get_customer_name_by_id(customer_id),
+                                                                       folder_sites))
+
+
+    def _check_childs_customer_conflicts(self, site_id):
+        customer_id = managed.get_customer_of_site(site_id)
+        # Check hosts
+        self._check_hosts_customer_conflicts(site_id)
+
+        # Check subfolders
+        for subfolder in self.all_subfolders().values():
+            subfolder_explicit_site = subfolder.attributes().get("site")
+            if subfolder_explicit_site:
+                subfolder_customer = subfolder._get_customer_id()
+                if subfolder_customer != customer_id:
+                    raise MKUserError(None, _("The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
+                                              "customer <i>%s</i>. This violates the CME folder hierarchy.") %\
+                                              (subfolder.title(),
+                                               config.allsites()[subfolder_explicit_site]["alias"],
+                                               managed.get_customer_name_by_id(subfolder_customer)))
+
+            subfolder._check_childs_customer_conflicts(site_id)
+
+
+    def _check_hosts_customer_conflicts(self, site_id):
+        customer_id = managed.get_customer_of_site(site_id)
+        for host in self.hosts().values():
+            host_explicit_site = host.attributes().get("site")
+            if host_explicit_site:
+                host_customer = managed.get_customer_of_site(host_explicit_site)
+                if host_customer != customer_id:
+                    raise MKUserError(None, _("The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
+                                              "customer <i>%s</i>. This violates the CME folder hierarchy.") %\
+                                              (host.name(),
+                                               config.allsites()[host_explicit_site]["alias"],
+                                               managed.get_customer_name_by_id(host_customer)))
+
+
+    def create_subfolder(self, name, title, attributes):
+        if "site" in attributes:
+            self._check_parent_customer_conflicts(attributes["site"])
+        return super(CMEFolder, self).create_subfolder(name, title, attributes)
+
+
+    def move_subfolder_to(self, subfolder, target_folder):
+        target_folder_customer = target_folder._get_customer_id()
+        if target_folder_customer != managed.default_customer_id():
+            result_dict = {"explicit_host_sites": {},   # May be used later on to
+                           "explicit_folder_sites": {}, # improve error message
+                           "involved_customers": set()}
+            subfolder._determine_involved_customers(result_dict)
+            other_customers = result_dict["involved_customers"] - set([target_folder_customer])
+            if other_customers:
+                other_customers_text = ", ".join(map(managed.get_customer_name_by_id, other_customers))
+                raise MKUserError(None, _("Cannot move folder. Some of its elements have specifically other customers set (<i>%s</i>). "
+                                          "This violates the CME folder hierarchy.") % other_customers_text)
+
+        # The site attribute is not explicitely set. The new inheritance might brake something..
+        super(CMEFolder, self).move_subfolder_to(subfolder, target_folder)
+
+
+    def create_hosts(self, entries):
+        customer_id = self._get_customer_id()
+        if customer_id != managed.default_customer_id():
+            for hostname, attributes, cluster_nodes in entries:
+                self.check_modify_host(hostname, attributes)
+
+        super(CMEFolder, self).create_hosts(entries)
+
+
+    def check_modify_host(self, hostname, attributes):
+        if "site" not in attributes:
+            return
+
+        customer_id = self._get_customer_id()
+        if customer_id != managed.default_customer_id():
+            host_customer_id = managed.get_customer_of_site(attributes["site"])
+            if host_customer_id != customer_id:
+                folder_sites = ", ".join(managed.get_sites_of_customer(customer_id))
+                raise MKUserError(None, _("Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the customer <i>%s</i>, "
+                                          "which owns this folder. This violates the CME folder hierarchy. You may "
+                                          "choose the sites: %s") % (hostname,
+                                                                     config.allsites()[attributes["site"]]["alias"], customer_id, folder_sites))
+
+
+    def move_hosts(self, host_names, target_folder):
+        # Check if the target folder may have this host
+        # A host from customerA is not allowed in a customerB folder
+        target_site_id = target_folder.site_id()
+
+        # Check if the hosts are moved to a provider folder
+        target_customer_id = managed.get_customer_of_site(target_site_id)
+        if target_customer_id != managed.default_customer_id():
+            allowed_sites = managed.get_sites_of_customer(target_customer_id)
+            for hostname in host_names:
+                host = self.host(hostname)
+                host_site = host.attributes().get("site")
+                if not host_site:
+                    continue
+                if host_site not in allowed_sites:
+                    raise MKUserError(None, _("Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "\
+                                              "belongs to customer <i>%s</i>. The target folder however, belongs to customer <i>%s</i>. "\
+                                              "This violates the folder CME folder hierarchy.") % \
+                                              (hostname, config.allsites()[host_site]["alias"],
+                                                managed.get_customer_of_site(host_site),
+                                                managed.get_customer_of_site(target_site_id)))
+
+        super(CMEFolder, self).move_hosts(host_names, target_folder)
+
+
+    def _get_customer_id(self):
+        customer_id = managed.get_customer_of_site(self.site_id())
+        return customer_id
+
+
+    def _determine_involved_customers(self, result_dict):
+        self._determine_explicit_set_site_ids(result_dict)
+        result_dict["involved_customers"].update(set(map(managed.get_customer_of_site, result_dict["explicit_host_sites"].keys())))
+        result_dict["involved_customers"].update(map(managed.get_customer_of_site, result_dict["explicit_folder_sites"].keys()))
+
+
+    def _determine_explicit_set_site_ids(self, result_dict):
+        for host in self.hosts().values():
+            host_explicit_site = host.attributes().get("site")
+            if host_explicit_site:
+                result_dict["explicit_host_sites"].setdefault(host_explicit_site, []).append(host.name())
+
+        for subfolder in self.all_subfolders().values():
+            subfolder_explicit_site = subfolder.attributes().get("site")
+            if subfolder_explicit_site:
+                result_dict["explicit_folder_sites"].setdefault(subfolder_explicit_site, []).append(subfolder.title())
+            subfolder._determine_explicit_set_site_ids(result_dict)
+
+        return result_dict
+
+
+
+class CMEHost(CREHost):
+    def edit(self, attributes, cluster_nodes):
+        self.folder().check_modify_host(self.name(), attributes)
+        super(CMEHost, self).edit(attributes, cluster_nodes)
+
+
+
+if cmk.is_managed_edition():
+    Folder = CMEFolder
+    Host   = CMEHost
+else:
+    Folder = CREFolder
+    Host   = CREHost

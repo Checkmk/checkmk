@@ -1,0 +1,14 @@
+Title: Fixed "SyntaxError: invalid syntax" warning when installing bakery packages on older systems
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p35
+Date: 1531218870
+Class: fix
+
+When installing agent bakery RPMs/DEBs an error message "SyntaxError: invalid syntax" could occur.
+This was caused by a pre-install script that should warn about incompatible Python versions. This
+script was incompatible to older Python versions, like Python 2.4.
+
+At least in case of the RPMs the installation did complete despite of this message.

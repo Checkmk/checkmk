@@ -1,0 +1,21 @@
+Title: Allow to match against the monitoring site in rules
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0b9
+Date: 1531314180
+Class: feature
+
+This allows to apply rules only on specific sites. Restricting
+rules to sites can yield performance benefits in environments with
+many sites. Beyond that, this is required to make the feature expect
+regular messages work in a distributed environment with
+config replication.
+
+Example: If you have three centrally configured event consoles,
+and you want a device to regularily report to one of them, you
+previously had no way to configure that only the one site reports
+missing messages. Instead, all sites the device doesn't send messages
+to would repeatedly open events. This limitation can now be
+worked around by specifying to which site expect rules should apply.

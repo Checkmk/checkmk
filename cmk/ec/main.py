@@ -1923,6 +1923,10 @@ class EventServer(ECServerThread):
         #    in that case.
         for rule in self._rules:
             if "expect" in rule:
+
+                if not self.event_rule_matches_site(rule, event=None):
+                    continue
+
                 # Interval is either a number of seconds, or pair of a number of seconds
                 # (e.g. 86400, meaning one day) and a timezone offset relative to UTC in hours.
                 interval = rule["expect"]["interval"]
@@ -2384,6 +2388,7 @@ class EventServer(ECServerThread):
 
     def event_rule_matches_generic(self, rule, event):
         generic_match_functions = [
+            self.event_rule_matches_site,
             self.event_rule_matches_host,
             self.event_rule_matches_ip,
             self.event_rule_matches_facility,
@@ -2395,6 +2400,9 @@ class EventServer(ECServerThread):
             if not match_function(rule, event):
                 return False
         return True
+
+    def event_rule_matches_site(self, rule, event):
+        return "match_site" not in rule or cmk.omd_site() in rule["match_site"]
 
     def event_rule_matches_host(self, rule, event):
         if match(rule.get("match_host"), event["host"], complete=True) is False:

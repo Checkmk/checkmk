@@ -1,0 +1,18 @@
+Title: Fixed degraded SNMP check performance when using SNMP sub checks
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1531235656
+
+When checking a host with SNMP sub checks which normally all get the same data, the
+data was fetched multiple times. One time for each subcheck used for monitoring a host.
+
+This resulted in significantly increased check times and time outs. All 1.5 versions
+are affected by this issue.
+
+We experienced this issue with a CMCiii device which is normally monitored by a set of
+sub checks (cmciii.*).

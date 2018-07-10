@@ -576,7 +576,10 @@ def vs_mkeventd_rule(customer=None):
                       "The options <i>week</i>, <i>two days</i> and <i>day</i> refer to "
                       "periodic intervals aligned at 00:00:00 on the 1st of January 1970. "
                       "You can specify a relative offset in hours in order to re-align this "
-                      "to any other point of time."),
+                      "to any other point of time. In a distributed environment, make "
+                      "sure to specify which site should expect the messages in the match "
+                      "criteria above, else all sites with config replication will warn if "
+                      "messages fail to arrive."),
              optional_keys = False,
              columns = 2,
              elements = [
@@ -702,6 +705,13 @@ def vs_mkeventd_rule(customer=None):
             size = 64,
             mode = RegExp.infix,
             case_sensitive = False,
+          )
+        ),
+        ( "match_site",
+          DualListChoice(
+            title = _("Match site"),
+            help = _("Apply this rule only on the following sites"),
+            choices = config.get_event_console_site_choices(),
           )
         ),
         ( "match_host",
@@ -903,12 +913,12 @@ def vs_mkeventd_rule(customer=None):
         title = _("Rule Properties"),
         elements = elements,
         optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority",
-                          "match_facility", "match_sl", "match_host", "match_ipaddress", "match_application", "match_timeperiod",
+                          "match_facility", "match_sl", "match_host", "match_site", "match_ipaddress", "match_application", "match_timeperiod",
                           "set_text", "set_host", "set_application", "set_comment",
                           "set_contact", "cancel_priority", "cancel_application", "match_ok", "contact_groups", ],
         headers = [
             ( _("Rule Properties"), [ "id", "description", "comment", "docu_url", "disabled", "customer" ] ),
-            ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
+            ( _("Matching Criteria"), [ "match", "match_site", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
                                         "match_sl", "match_ok", "cancel_priority", "cancel_application", "match_timeperiod", "invert_matching" ]),
             ( _("Outcome & Action"), [ "state", "sl", "contact_groups", "actions", "actions_in_downtime",
                                        "cancel_actions", "cancel_action_phases", "drop", "autodelete", "event_limit" ]),

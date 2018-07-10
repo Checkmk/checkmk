@@ -42,7 +42,7 @@ else
 MANAGED            := no
 endif
 
-VERSION            := 1.5.0b8
+VERSION            := 1.5.0b9
 DEMO_SUFFIX        :=
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
 

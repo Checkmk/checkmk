@@ -554,6 +554,12 @@ class DataSource(object):
 
 class CheckMKAgentDataSource(DataSource):
     """Abstract base class for all data sources that work with the Check_MK agent data format"""
+
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, hostname, ipaddress):
@@ -730,6 +736,12 @@ class CheckMKAgentDataSource(DataSource):
 
 class ManagementBoardDataSource(DataSource):
     """Abstract base class for all data sources that work with the management board configuration"""
+
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
     __metaclass__ = abc.ABCMeta
 
     _for_mgmt_board = True

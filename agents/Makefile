@@ -102,6 +102,9 @@ rpm $(RPM_PACKAGE):
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 
 
+# TODO: Replace alien usage. Debian packages should be created just like the bakery does
+#       Keep in mind that we still need to use gz compression by default for the agent
+#       packages.
 deb $(DEB_PACKAGE): $(RPM_PACKAGE)
 	@echo "Sorry. Debian packages currently via alien"
 	rm -f *.deb
@@ -113,12 +116,15 @@ deb $(DEB_PACKAGE): $(RPM_PACKAGE)
 	cd deb-unpack && \
 	ar x ../$$DEB_PKG && \
 	mkdir ctrl && \
-	tar xJf control.tar.xz -C ctrl && \
+	tar xf control.tar.* -C ctrl && \
 	sed -i -e '/^Depends:/d' \
 	       -e 's/^Version:.*/Version: $(VERSION)-1/' \
 	       -e 's/^Maintainer:.*/Maintainer: feedback@check-mk.org/' ctrl/control && \
-	tar cJf control.tar.xz $(TAROPTS) -C ctrl . && \
-	ar r ../$(DEB_PACKAGE) debian-binary control.tar.* data.tar.*
+	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
+	xz --decompress data.tar.xz && \
+	gzip data.tar && \
+	ar d ../$(DEB_PACKAGE) data.tar.xz && \
+	ar r ../$(DEB_PACKAGE) debian-binary control.tar.gz data.tar.gz
 	rm -rf deb-unpack
 
 clean:

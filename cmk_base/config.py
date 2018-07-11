@@ -67,7 +67,7 @@ def get_default_config():
     for key in get_variable_names():
         value = getattr(default_config, key)
 
-        if isinstance(value, dict) or isinstance(value, list):
+        if isinstance(value, (dict, list)):
             value = copy.deepcopy(value)
 
         cfg[key] = value

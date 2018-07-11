@@ -112,7 +112,7 @@ class StructuredDataTree(object):
     def _validate_tree_path(self, tree_path):
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        if not (isinstance(tree_path, str) or isinstance(tree_path, unicode)):
+        if not (isinstance(tree_path, (str, unicode))):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
         if not (tree_path.endswith(":") or tree_path.endswith(".")):
             raise MKGeneralException("No valid tree path.")

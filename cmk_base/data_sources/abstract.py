@@ -415,9 +415,7 @@ class DataSource(object):
         if isinstance(self._exception, MKEmptyAgentData):
             status = self._exit_code_spec.get("empty_output", 2)
 
-        elif isinstance(self._exception, MKAgentError) \
-           or isinstance(self._exception, MKIPAddressLookupError) \
-           or isinstance(self._exception, MKSNMPError):
+        elif isinstance(self._exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
             status = self._exit_code_spec.get("connection", 2)
 
         elif isinstance(self._exception, MKTimeout):

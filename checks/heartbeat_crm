@@ -237,23 +237,23 @@ def heartbeat_crm_parse_resources(info):
                 resources[parts[2]] = []
                 resource = parts[2]
                 mode = 'masterslaveset'
-            elif line[0] == '_':
-                # Cleanup inconsistent agent output in clone set lines
+            elif line.startswith('_'):
+                # consider inconsistent agent output in clone set lines
+                fixed_parts = parts[1:]
                 if parts[0] != "_":
-                    parts.insert(1, parts[0][1:])
-                    parts[0] = "_"
+                    fixed_parts.insert(0, parts[0].lstrip('_'))
 
                 # Resource group or set member
                 if mode == 'resourcegroup':
-                    resources[resource].append(parts[1:])
+                    resources[resource].append(fixed_parts)
                 elif mode == 'cloneset':
-                    if parts[1] == 'Started:':
-                        resources[resource].append([ resource, 'Clone', 'Started', parts[3:-1] ])
+                    if fixed_parts[0] == 'Started:':
+                        resources[resource].append([ resource, 'Clone', 'Started', fixed_parts[2:-1] ])
                 elif mode == 'masterslaveset':
-                    if parts[1] == 'Masters:':
-                        resources[resource].append([ resource, 'Master', 'Started', parts[3] ])
-                    if parts[1] == 'Slaves:':
-                        resources[resource].append([ resource, 'Slave', 'Started', parts[3] ])
+                    if fixed_parts[0] == 'Masters:':
+                        resources[resource].append([ resource, 'Master', 'Started', fixed_parts[2] ])
+                    if fixed_parts[0] == 'Slaves:':
+                        resources[resource].append([ resource, 'Slave', 'Started', fixed_parts[2] ])
             else:
                 # Single resource
                 resources[parts[0]] = [ parts ]

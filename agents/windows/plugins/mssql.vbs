@@ -273,7 +273,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     ' Get counter data for the whole instance
     addOutput(sections("counters"))
     RS.Open "SELECT GETUTCDATE() as utc_date", CONN
-    addOutput( "None utc_time None " & RS("utc_date") )
+    addOutput("None|utc_time|None|" & RS("utc_date"))
     RS.Close
 
     RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _

@@ -412,7 +412,7 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
                 elif oldest_time == snapshot[1]:
                     oldest_snapshot = snapshot
 
-                if "poweredOn" == snapshot[2]:
+                if snapshot[2] == "poweredOn":
                     powered_on_snapshot = snapshot
 
             yield 0, "Powered On: %s" % (powered_on_snapshot and powered_on_snapshot[3] or "None")

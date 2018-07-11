@@ -413,7 +413,7 @@ def _run_dialog(args):
     p = subprocess.Popen(["dialog", "--shadow"] + args, env = env,
                          stderr = subprocess.PIPE)
     response = p.stderr.read()
-    return 0 == os.waitpid(p.pid, 0)[1], response
+    return os.waitpid(p.pid, 0)[1] == 0, response
 
 
 def _create_fallback_man_page(name, path, error_message):

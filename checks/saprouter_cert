@@ -59,7 +59,7 @@ def parse_saprouter_cert(info):
     parsed   = {}
     validity = None
     for line in info:
-        if "Validity" == line[0]:
+        if line[0] == "Validity":
             validity = "valid"
             parsed.setdefault(validity, {})
 
@@ -69,10 +69,10 @@ def parse_saprouter_cert(info):
         elif validity and ("NotAfter:" in line or "NotAfter" in line):
             parsed[validity].setdefault("not_after", parse_date(line[-5:-1]))
 
-        elif "sso for user" == " ".join(line[:3]).lower():
+        elif " ".join(line[:3]).lower() == "sso for user":
             parsed.setdefault("sso_user", line[-1].replace('"', ""))
 
-        elif "with pse file" == " ".join(line[:3]).lower():
+        elif " ".join(line[:3]).lower() == "with pse file":
             parsed.setdefault("pse_file", line[-1].replace('"', ""))
 
         elif not validity:

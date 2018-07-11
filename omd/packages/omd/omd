@@ -214,7 +214,7 @@ def patch_has_merge():
     # check wether our version of patch supports the option '--merge'
     global patch_supports_merge
     if patch_supports_merge == None:
-        patch_supports_merge = (0 == os.system("true | PATH=/omd/versions/default/bin:$PATH patch --merge >/dev/null 2>&1"))
+        patch_supports_merge = (os.system("true | PATH=/omd/versions/default/bin:$PATH patch --merge >/dev/null 2>&1") == 0)
         if not patch_supports_merge:
             sys.stdout.write("Your version of patch does not support --merge.\n")
     return patch_supports_merge
@@ -227,7 +227,7 @@ def run_dialog(args):
     }
     p = Popen(["dialog", "--shadow"] + args, env = env, stderr = PIPE)
     response = p.stderr.read()
-    return 0 == os.waitpid(p.pid, 0)[1], response
+    return os.waitpid(p.pid, 0)[1] == 0, response
 
 
 def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
@@ -420,7 +420,7 @@ def groupadd(groupname, gid = None):
         cmd += "-g %d " % int(gid)
     cmd += groupname
 
-    if 0 != os.system(cmd):
+    if os.system(cmd) != 0:
         bail_out("Cannot create group for site user.")
 
 def useradd(sitename, uid = None, gid = None):
@@ -429,8 +429,8 @@ def useradd(sitename, uid = None, gid = None):
     useradd_options = g_info["USERADD_OPTIONS"]
     if uid != None:
         useradd_options += " -u %d" % int(uid)
-    if 0 != os.system("useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
-                      (useradd_options, site_dir(sitename), sitename, sitename, sitename)):
+    if os.system("useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
+                 (useradd_options, site_dir(sitename), sitename, sitename, sitename)) != 0:
         groupdel(sitename)
         bail_out("Error creating site user.")
 
@@ -1163,7 +1163,7 @@ def merge_update_file(relpath, old_version, new_version):
         elif choice == "try again":
             os.rename(user_path + ".orig", user_path)
             os.system("%s '%s'" % (editor, user_path))
-            if 0 == try_merge():
+            if try_merge() == 0:
                 sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
                         (old_version, new_version, fn))
                 return
@@ -1629,7 +1629,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
             sys.stdout.write("Unmounting temporary filesystem...")
 
         for t in range(0, 10):
-            if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
+            if os.system("umount '%s'" % tmp_dir(sitename)) == 0:
                 if output:
                     ok()
                 return True
@@ -3142,7 +3142,7 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms)
             arrow = tty_magenta + '->' + tty_normal
             if 'c' in status:
                 source_content = instantiate_skel(source_file)
-                if 0 == os.system("which colordiff > /dev/null 2>&1"):
+                if os.system("which colordiff > /dev/null 2>&1") == 0:
                     diff = "colordiff"
                 else:
                     diff = "diff"

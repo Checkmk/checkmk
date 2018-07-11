@@ -232,7 +232,7 @@ def localize_edit(lang):
     if not os.path.exists(editor):
         editor = 'vi'
 
-    if 0 == subprocess.call([editor, po_file]):
+    if subprocess.call([editor, po_file]) == 0:
         localize_compile(lang)
     else:
         logger.error("Aborted.")

@@ -26,7 +26,6 @@ disable=
     consider-iterating-dictionary,
     consider-using-enumerate,
     consider-using-ternary,
-    cyclic-import,
     duplicate-code,
     eval-used,
     exec-used,

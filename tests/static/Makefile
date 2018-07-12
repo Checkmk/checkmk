@@ -1,5 +1,5 @@
-FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py settings.py)) \
-		  $(realpath $(addprefix ../../cmk/gui/,http_status.py exceptions.py i18n.py))
+FILES_TO_CHECK := $(realpath ../../cmk)\
+		  $(realpath ../../cmk/gui/app/index.wsgi)
 MYPYPATH       := $(realpath typeshed)
 PIPENV         := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
 

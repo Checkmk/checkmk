@@ -6484,7 +6484,7 @@ class ModeEditLDAPConnection(LDAPMode):
         html.end_form()
         html.close_td()
 
-        html.open_td(style="padding-left:10px;")
+        html.open_td(style="padding-left:10px;vertical-align:top")
         html.h2(_('Diagnostics'))
         if not html.var('_test') or not self._connection_id:
             html.message(HTML('<p>%s</p><p>%s</p>' %

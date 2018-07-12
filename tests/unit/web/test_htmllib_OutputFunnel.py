@@ -2,7 +2,7 @@
 
 import pytest
 
-from htmllib import OutputFunnel
+from cmk.gui.htmllib import OutputFunnel
 
 
 class OutputFunnelTester(OutputFunnel):

@@ -24,6 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.mkeventd as mkeventd
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import *
+from . import \
+    register_rulegroup, \
+    register_rule, \
+    PluginCommandLine
+
 register_rulegroup("activechecks",
     _("Active checks (HTTP, TCP, etc.)"),
     _("Configure active networking checks like HTTP and TCP"))
@@ -1555,22 +1563,6 @@ register_rule(group,
     match = 'all'
 )
 
-def PluginCommandLine():
-    return TextAscii(
-          title = _("Command line"),
-          help = _("Please enter the complete shell command including path name and arguments to execute. "
-                   "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
-                   "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
-                   "just configure the plugin file name as command <tt>check_foobar</tt>.") + monitoring_macro_help(),
-          size = "max",
-          validate = validate_custom_check_command_line,
-       )
-
-
-def validate_custom_check_command_line(value, varprefix):
-    if "--pwstore=" in value:
-        raise MKUserError(varprefix, _("You are not allowed to use passwords from the password store here."))
-
 
 register_rule(group,
     "custom_checks",
@@ -2115,7 +2107,7 @@ register_rule(group,
                     ('facility', DropdownChoice(
                         title = _("Events: Syslog facility"),
                         help = _("Use this syslog facility for all created events"),
-                        choices = syslog_facilities,
+                        choices = mkeventd.syslog_facilities,
                         default_value = 2, # mail
                     )),
                     ('application', Alternative(

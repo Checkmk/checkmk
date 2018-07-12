@@ -1043,6 +1043,7 @@ def paint_time_graph(row, cell):
 
 
 def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
+    import cmk.gui.cee.plugins.metrics.graphs
     graph_identification = (
         "template", {
             "site"                : row["site"],
@@ -1099,7 +1100,7 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
         return "", _("No historic metrics recorded but performance data is available. "
                      "Maybe performance data processing is disabled.")
 
-    return "", metrics.render_graphs_from_specification_html(
+    return "", cmk.gui.cee.plugins.metrics.graphs.render_graphs_from_specification_html(
             graph_identification,
             graph_data_range,
             graph_render_options)
@@ -2223,15 +2224,15 @@ multisite_painters["downtime_origin"] = {
 
 def paint_downtime_recurring(row):
     try:
-        wato.recurring_downtimes_types
-    except:
+        from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
+    except ImportError:
         return "", _("(not supported)")
 
     r = row["downtime_recurring"]
     if not r:
         return "", _("no")
     else:
-        return "", wato.recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
+        return "", recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
 
 multisite_painters["downtime_recurring"] = {
     "title"   : _("Downtime recurring interval"),

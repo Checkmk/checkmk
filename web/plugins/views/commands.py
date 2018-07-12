@@ -565,8 +565,9 @@ def command_downtime(cmdtag, spec, row):
     down_to = None
 
     if has_recurring_downtimes() and html.get_checkbox("_down_do_recur"):
+        from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
         recurring_type = int(html.var("_down_recurring"))
-        title_start = _("schedule a periodic downtime every %s") % wato.recurring_downtimes_types[recurring_type]
+        title_start = _("schedule a periodic downtime every %s") % recurring_downtimes_types[recurring_type]
     else:
         title_start = _("schedule an immediate downtime")
 
@@ -774,19 +775,19 @@ def paint_downtime_buttons(what):
         html.checkbox("_down_do_recur", False,
                       label=_("Repeat this downtime on a regular base every"))
         html.write_text(" ")
+
+        from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
         recurring_selections = [ (str(k), v) for (k,v) in
-                                 sorted(wato.recurring_downtimes_types.items())]
+                                 sorted(recurring_downtimes_types.items())]
         html.dropdown("_down_recurring", recurring_selections, deflt="3")
         html.write_text(_("(This only works when using CMC)"))
 
 
 def has_recurring_downtimes():
     try:
-        _dummy = wato.recurring_downtimes_types # Check if this exists
+        import cmk.gui.cee.plugins.wato.cmc
         return True
-    except AttributeError:
-        return False
-    except NameError:
+    except ImportError:
         return False
 
 

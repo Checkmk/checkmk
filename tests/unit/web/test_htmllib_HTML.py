@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from htmllib import HTML
+from cmk.gui.htmllib import HTML
 
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
@@ -114,4 +114,3 @@ def test_class_HTML():
     assert E == e
     assert E.strip(E[0]) == e.strip(e[0])
     assert E == e
-

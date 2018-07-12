@@ -32,6 +32,7 @@ import glob
 import copy
 
 import cmk.gui.utils as utils
+import cmk.gui.hooks as hooks
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
@@ -192,7 +193,7 @@ def load_config():
     if not sites:
         sites = default_single_site_configuration()
 
-    _update_wato_host_tags()
+    remove_old_sample_tags(wato_host_tags, wato_aux_tags)
 
 
 def load_default_config(vars_before_plugins, vars_after_plugins):
@@ -741,16 +742,39 @@ def save_user_file(name, data, user, unlock=False):
 # Previously defined "agent" tag group, shipped with the default WATO config,
 # needs to be removed when it has not been modified by the user. It is a builtin
 # tag group now.
-def _update_wato_host_tags():
-    import watolib
-    watolib.remove_old_sample_config(wato_host_tags, wato_aux_tags)
+def remove_old_sample_tags(host_tags, aux_tags):
+    legacy_tag_group_default = ('agent', u'Agent type',
+        [
+            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
+            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+            ('ping',      u'No Agent', []),
+        ],
+    )
+
+    try:
+        host_tags.remove(legacy_tag_group_default)
+    except ValueError:
+        pass # Not there or modified
+
+    legacy_aux_tags = [
+        ('snmp', u'monitor via SNMP'),
+        ('tcp', u'monitor via Check_MK Agent'),
+    ]
+
+    for aux_tag in legacy_aux_tags:
+        try:
+            aux_tags.remove(aux_tag)
+        except ValueError:
+            pass # Not there or modified
 
 
 # Returns the effective set of tag groups defined by WATO. This includes
 # the implicitly declared builtin host tags. This function must be used by
 # the GUI code to get the tag group definitions.
 def host_tag_groups():
-    import watolib
+    import cmk.gui.watolib as watolib
     return watolib.get_effective_tag_groups(wato_host_tags)
 
 

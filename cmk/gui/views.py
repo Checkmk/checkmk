@@ -2270,7 +2270,7 @@ def show_context_links(thisview, datasource, show_filters,
 
 
     if display_options.enabled(display_options.B):
-        import cmk.gui.wato as wato
+        import cmk.gui.watolib as watolib
         # WATO: If we have a host context, then show button to WATO, if permissions allow this
         if html.has_var("host") \
            and config.wato_enabled \
@@ -2278,9 +2278,9 @@ def show_context_links(thisview, datasource, show_filters,
            and (config.user.may("wato.hosts") or config.user.may("wato.seeall")):
             host = html.var("host")
             if host:
-                url = wato.link_to_host_by_name(host)
+                url = watolib.link_to_host_by_name(host)
             else:
-                url = wato.link_to_folder_by_path(html.var("wato_folder", ""))
+                url = watolib.link_to_folder_by_path(html.var("wato_folder", ""))
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 

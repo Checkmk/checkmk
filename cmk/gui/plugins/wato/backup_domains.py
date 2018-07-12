@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.watolib as watolib
+from cmk.gui.i18n import _
+
 import cmk.paths
 
 watolib.backup_domains.update({

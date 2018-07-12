@@ -24,6 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import socket
+
+import cmk.gui.mkeventd as mkeventd
+import cmk.gui.config as config
+from cmk.gui.valuespec import *
+from cmk.gui.i18n import _
+
+from . import register_notification_parameters
 
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
@@ -302,7 +310,7 @@ register_notification_parameters(
                     help = _("The notifications will be converted into syslog messages with "
                              "the facility that you choose here. In the Event Console you can "
                              "later create a rule matching this facility."),
-                    choices = syslog_facilities,
+                    choices = mkeventd.syslog_facilities,
                 )
             ),
             ( "remote",

@@ -1961,7 +1961,6 @@ ldap_attribute_plugins['groups_to_roles'] = {
 # change this to some kind of profile bulk sync per site.
 def synchronize_profile_to_sites(connection, user_id, profile):
     import cmk.gui.sites as sites
-    import cmk.gui.wato as wato # FIXME: Cleanup!
     import cmk.gui.watolib as watolib # TODO: Cleanup
 
     remote_sites = [(site_id, config.site(site_id))

@@ -8471,4 +8471,3 @@ graph_info['amount_of_mails_in_secondary_queues'] = {
         ( 'mail_queue_drop_length', 'stack'),
     ],
 }
-

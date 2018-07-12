@@ -24,9 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import glob
+import subprocess
+import traceback
+
+import cmk.paths
+import cmk.store as store
+
 import cmk.gui.log as log
 from cmk.gui.log import logger
-import cmk.paths
+from cmk.gui.valuespec import *
+from cmk.gui.i18n import _
+
+from . import (
+    ConfigDomain,
+    ConfigDomainOMD,
+    LivestatusViaTCP,
+    register_configvar,
+    site_neutral_path,
+    add_replication_paths,
+    wato_fileheader,
+)
 
 group = _('Site Management')
 
@@ -153,7 +171,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 # TODO: Diskspace cleanup does not support site specific globals!
-class ConfigDomainDiskspace(watolib.ConfigDomain):
+class ConfigDomainDiskspace(ConfigDomain):
     needs_sync       = True
     needs_activation = False
     ident            = "diskspace"
@@ -306,7 +324,7 @@ add_replication_paths([
 #   | Manage settings of the site apache                                   |
 #   '----------------------------------------------------------------------'
 
-class ConfigDomainApache(watolib.ConfigDomain):
+class ConfigDomainApache(ConfigDomain):
     needs_sync       = True
     needs_activation = True
     ident            = "apache"
@@ -335,7 +353,7 @@ class ConfigDomainApache(watolib.ConfigDomain):
     def _write_config_file(self):
         config = self.get_effective_config()
 
-        output = watolib.wato_fileheader()
+        output = wato_fileheader()
 
         if config:
             output += "ServerLimit %d\n" % config["apache_process_tuning"]["number_of_processes"]
@@ -410,7 +428,7 @@ register_configvar(group,
 #   | Use these options to tune the performance of the rrdcached           |
 #   '----------------------------------------------------------------------'
 
-class ConfigDomainRRDCached(watolib.ConfigDomain):
+class ConfigDomainRRDCached(ConfigDomain):
     needs_sync       = True
     needs_activation = True
     ident            = "rrdcached"
@@ -439,7 +457,7 @@ class ConfigDomainRRDCached(watolib.ConfigDomain):
     def _write_config_file(self):
         config = self._get_effective_config()
 
-        output = watolib.wato_fileheader()
+        output = wato_fileheader()
         for key, val in sorted(config.get("rrdcached_tuning", {}).items()):
             output += "%s=%d\n" % (key, val)
 

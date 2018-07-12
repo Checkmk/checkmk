@@ -3,7 +3,7 @@
 
 import traceback
 
-from htmllib import HTMLGenerator
+from cmk.gui.htmllib import HTMLGenerator
 import tools
 
 

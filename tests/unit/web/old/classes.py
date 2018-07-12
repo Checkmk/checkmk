@@ -7,7 +7,7 @@ import json
 import traceback
 
 import cmk.gui.http as http
-import htmllib
+import cmk.gui.htmllib as htmllib
 
 # A Class which can be used to simulate HTML generation in varios tests in tests/web/
 class HTMLTester(htmllib.html):

@@ -24,6 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import traceback
+
+import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+
+from . import (
+    wato_styles,
+    register_modules,
+    WatoModule,
+    WatoMode,
+)
+
 register_modules(WatoModule(
     mode_or_url="background_jobs_overview",
     title=_("Background jobs"),
@@ -36,6 +49,16 @@ register_modules(WatoModule(
 class ModeBackgroundJobsOverview(WatoMode):
     def __init__(self):
         super(ModeBackgroundJobsOverview, self).__init__()
+
+
+    @classmethod
+    def name(cls):
+        return "background_jobs_overview"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["background_jobs.manage_jobs"]
 
 
     def title(self):
@@ -67,15 +90,23 @@ class ModeBackgroundJobsOverview(WatoMode):
 
 
 
-modes["background_jobs_overview"] = (["background_jobs.manage_jobs"], ModeBackgroundJobsOverview)
 class ModeBackgroundJobDetails(WatoMode):
+    @classmethod
+    def name(cls):
+        return "background_job_details"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def __init__(self):
         super(ModeBackgroundJobDetails, self).__init__()
 
 
     def title(self):
         return _("Background job details")
-
 
 
     def buttons(self):
@@ -117,38 +148,3 @@ class ModeBackgroundJobDetails(WatoMode):
                 html.response.http_redirect(self._back_url())
             else:
                 return "background_jobs_overview"
-
-modes["background_job_details"] = ([], ModeBackgroundJobDetails)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -28,6 +28,12 @@
 
 from cmk.gui.plugins.userdb.htpasswd import encrypt_password
 
+import cmk.gui.config as config
+import cmk.gui.watolib as watolib
+from cmk.gui.log import logger
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
+
 #.
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -976,7 +982,9 @@ class APICallSites(APICallCollection):
     def _get(self, request):
         validate_request_keys(request, required_keys=["site_id"])
 
-        all_sites = watolib.SiteManagement.load_sites()
+        site_mgmt = watolib.SiteManagementFactory().factory()
+
+        all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
 
         if not existing_site:
@@ -991,53 +999,61 @@ class APICallSites(APICallCollection):
         validate_request_keys(request, required_keys=["site_config", "site_id"],
                                        optional_keys=["configuration_hash"])
 
-        all_sites = watolib.SiteManagement.load_sites()
+        site_mgmt = watolib.SiteManagementFactory().factory()
+
+        all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
         if existing_site and "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], existing_site)
 
-        watolib.SiteManagement.validate_configuration(request["site_id"], request["site_config"], all_sites)
+        site_mgmt.validate_configuration(request["site_id"], request["site_config"], all_sites)
 
         all_sites[request["site_id"]] = request["site_config"]
-        watolib.SiteManagement.save_sites(all_sites)
+        site_mgmt.save_sites(all_sites)
 
 
     def _delete(self, request):
         validate_request_keys(request, required_keys=["site_id"],
                                        optional_keys=["configuration_hash"])
 
-        all_sites = watolib.SiteManagement.load_sites()
+        site_mgmt = watolib.SiteManagementFactory().factory()
+
+        all_sites = site_mgmt.load_sites()
         existing_site = all_sites.get(request["site_id"])
         if existing_site and "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], existing_site)
 
-        watolib.SiteManagement.delete_site(request["site_id"])
+        site_mgmt.delete_site(request["site_id"])
 
 
     def _login(self, request):
         validate_request_keys(request, required_keys=["site_id", "username", "password"])
 
-        all_sites = watolib.SiteManagement.load_sites()
+        site_mgmt = watolib.SiteManagementFactory().factory()
+
+        all_sites = site_mgmt.load_sites()
         site = all_sites.get(request["site_id"])
         if not site:
             raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
 
         secret = watolib.do_site_login(request["site_id"], request["username"], request["password"])
         site["secret"] = secret
-        watolib.SiteManagement.save_sites(all_sites)
+        site_mgmt.save_sites(all_sites)
 
 
     def _logout(self, request):
         validate_request_keys(request, required_keys=["site_id"])
 
-        all_sites = watolib.SiteManagement.load_sites()
+        site_mgmt = watolib.SiteManagementFactory().factory()
+
+        all_sites = site_mgmt.load_sites()
         site = all_sites.get(request["site_id"])
         if not site:
             raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
 
         if "secret" in site:
             del site["secret"]
-            watolib.SiteManagement.save_sites(all_sites)
+            site_mgmt.save_sites(all_sites)
 
 
 for api_call_class in APICallCollection.all_classes():

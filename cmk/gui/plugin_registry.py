@@ -86,6 +86,14 @@ class Registry(object):
         del self._entries[key]
 
 
+    def __getitem__(self, key):
+        return self._entries[key]
+
+
+    def values(self):
+        return self._entries.values()
+
+
     def items(self):
         return self._entries.items()
 

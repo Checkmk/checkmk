@@ -207,4 +207,3 @@ def visuals_by_topic(permitted_visuals, default_order=None):
             result.append((topic, s))
 
     return result
-

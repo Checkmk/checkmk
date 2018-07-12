@@ -34,6 +34,7 @@ import cmk.store as store
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 import cmk.gui.i18n
+import cmk.gui.pages
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.cron import (
@@ -62,6 +63,7 @@ def load_plugins(force):
 #
 # There is no output written to the user in regular cases. Exceptions
 # are written to the web log.
+@cmk.gui.pages.register("noauth:run_cron")
 def page_run_cron():
     # Prevent cron jobs from being run too often, also we need
     # locking in order to prevent overlapping runs

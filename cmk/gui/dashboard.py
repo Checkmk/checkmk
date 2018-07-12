@@ -29,6 +29,7 @@ import time
 import copy
 import json
 
+import cmk.gui.pages
 import cmk.gui.notify as notify
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
@@ -273,6 +274,7 @@ def permitted_dashboards():
 # HTML page handler for generating the (a) dashboard. The name
 # of the dashboard to render is given in the HTML variable 'name'.
 # This defaults to "main".
+@cmk.gui.pages.register("dashboard")
 def page_dashboard():
     load_dashboards()
 
@@ -771,6 +773,7 @@ def draw_dashlet(name, board, nr, dashlet, wato_folder):
 #   | Draw dashlet HTML code which are rendered by the multisite dashboard |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("dashboard_dashlet")
 def ajax_dashlet():
     board = html.var('name')
     if not board:
@@ -823,6 +826,7 @@ def ajax_dashlet():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("edit_dashboards")
 def page_edit_dashboards():
     load_dashboards(lock=html.is_transaction())
     visuals.page_list('dashboards', _("Edit Dashboards"), dashboards)
@@ -840,6 +844,7 @@ def page_edit_dashboards():
 #   | context type of the new dashboard selectable.                        |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("create_dashboard")
 def page_create_dashboard():
     visuals.page_create_visual('dashboards', visuals.infos.keys())
 
@@ -855,6 +860,7 @@ def page_create_dashboard():
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("edit_dashboard")
 def page_edit_dashboard():
     load_dashboards(lock=html.is_transaction())
 
@@ -904,6 +910,7 @@ def create_dashboard(old_dashboard, dashboard):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("create_view_dashlet")
 def page_create_view_dashlet():
     create = html.var('create', '1') == '1'
     name = html.var('name')
@@ -917,6 +924,7 @@ def page_create_view_dashlet():
         # Choose an existing view from the list of available views
         choose_view(name)
 
+@cmk.gui.pages.register("create_view_dashlet_infos")
 def page_create_view_dashlet_infos():
     import cmk.gui.views as views
     ds_name = html.var('datasource')
@@ -983,6 +991,7 @@ def choose_view(name):
     html.end_form()
     html.footer()
 
+@cmk.gui.pages.register("edit_dashlet")
 def page_edit_dashlet():
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -1178,6 +1187,7 @@ def page_edit_dashlet():
 
     html.footer()
 
+@cmk.gui.pages.register("delete_dashlet")
 def page_delete_dashlet():
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -1263,6 +1273,7 @@ def check_ajax_update():
 
     return dashlet, dashboard
 
+@cmk.gui.pages.register("ajax_dashlet_pos")
 def ajax_dashlet_pos():
     dashlet, board = check_ajax_update()
 
@@ -1274,7 +1285,7 @@ def ajax_dashlet_pos():
     html.write('OK %d' % board['mtime'])
 
 
-# TODO: Move to plugin once new API is in place
+@cmk.gui.pages.register("ajax_delete_user_notification")
 def ajax_delete_user_notification():
     msg_id = html.var("id")
     notify.delete_gui_message(msg_id)

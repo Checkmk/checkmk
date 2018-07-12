@@ -24,25 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.wato as wato
-from . import register_handlers
+# Import top level modules into the application
 
-register_handlers({
-    "wato"                      : wato.page_handler,
-    "user_profile"              : wato.page_user_profile,
+import cmk.gui.main
+import cmk.gui.sidebar
+import cmk.gui.cron
+import cmk.gui.login
+import cmk.gui.weblib
+import cmk.gui.help
+import cmk.gui.hooks
+import cmk.gui.default_permissions
 
-    "ajax_start_activation"     : lambda: wato.ModeAjaxStartActivation().handle_page(),
-    "ajax_activation_state"     : lambda: wato.ModeAjaxActivationState().handle_page(),
-    "user_change_pw"            : lambda: wato.page_user_profile(change_pw=True),
-    "wato_ajax_profile_repl"    : lambda: wato.ModeAjaxProfileReplication().handle_page(),
+import cmk.gui.visuals
+import cmk.gui.views
+import cmk.gui.inventory
+import cmk.gui.bi
+import cmk.gui.metrics
+import cmk.gui.mobile
+import cmk.gui.prediction
+import cmk.gui.logwatch
+import cmk.gui.dashboard
 
-    "automation_login"          : lambda: wato.ModeAutomationLogin().page(),
-    "noauth:automation"         : lambda: wato.ModeAutomation().page(),
-    "ajax_set_foldertree"       : lambda: wato.ModeAjaxSetFoldertree().handle_page(),
-    "wato_ajax_diag_host"       : lambda: wato.ModeAjaxDiagHost().handle_page(),
-    "wato_ajax_execute_check"   : lambda: wato.ModeAjaxExecuteCheck().handle_page(),
-    "fetch_agent_output"        : lambda: wato.PageFetchAgentOutput().page(),
-    "download_agent_output"     : lambda: wato.PageDownloadAgentOutput().page(),
-    "ajax_popup_move_to_folder" : lambda: wato.ModeAjaxPopupMoveToFolder().page(),
-    "ajax_backup_job_state"     : lambda: wato.ModeAjaxBackupJobState().page(),
-})
+import cmk.gui.wato
+import cmk.gui.userdb
+import cmk.gui.notify
+import cmk.gui.webapi
+import cmk.gui.crash_reporting
+import cmk.gui.werks
+import cmk.gui.notifications
+import cmk.gui.valuespec

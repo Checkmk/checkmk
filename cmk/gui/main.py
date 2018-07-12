@@ -27,9 +27,11 @@
 import urlparse
 import re
 
+import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 
+@cmk.gui.pages.register("index")
 def page_index():
     default_start_url = config.user.get_attribute("start_url") or config.start_url
     start_url = html.var_utf8("start_url", default_start_url).strip()

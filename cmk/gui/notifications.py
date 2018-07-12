@@ -33,6 +33,7 @@ import cmk.gui.sites as sites
 import cmk.gui.table as table
 import cmk.gui.watolib as watolib
 import cmk.gui.i18n
+import cmk.gui.pages
 from cmk.gui.i18n import _u, _
 
 g_acknowledgement_time = {}
@@ -186,6 +187,7 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
     html.footer()
 
 
+@cmk.gui.pages.register("clear_failed_notifications")
 def page_clear():
     acktime = html.var('acktime')
     if acktime is None:

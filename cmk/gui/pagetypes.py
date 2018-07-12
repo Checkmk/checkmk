@@ -43,6 +43,7 @@ import json
 
 import cmk.store as store
 
+import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.table as table
 import cmk.gui.forms as forms
@@ -1303,6 +1304,9 @@ def declare(page_type):
     page_type.declare_overriding_permissions()
     page_types[page_type.type_name()] = page_type
 
+    for path, page_func in page_type.page_handlers().items():
+        cmk.gui.pages.register_page_handler(path, page_func)
+
 
 def page_type(page_type_name):
     return page_types[page_type_name]
@@ -1317,16 +1321,6 @@ def all_page_types():
 
 
 # Global module functions for the integration into the rest of the code
-
-# index.py uses the following function in order to complete its
-# page handler table
-def page_handlers():
-    page_handlers = {}
-    for page_type_class in page_types.values():
-        page_handlers.update(page_type_class.page_handlers())
-
-    return page_handlers
-
 
 def render_addto_popup(added_type):
     for page_type in page_types.values():

@@ -35,6 +35,7 @@ import cmk.gui.utils as utils
 from cmk.gui.log import logger
 import cmk.gui.i18n
 import cmk.gui.mobile
+import cmk.gui.pages
 from cmk.gui.i18n import _
 
 import cmk.paths
@@ -411,6 +412,8 @@ def do_login():
             html.add_user_error(e.varname, e)
             return "%s" % e
 
+
+@cmk.gui.pages.register("login")
 def page_login(no_html_output = False):
     # Initialize the cmk.gui.i18n for the login dialog. This might be overridden
     # later after user login
@@ -489,6 +492,8 @@ def normal_login_page(called_directly = True):
 
     html.footer()
 
+
+@cmk.gui.pages.register("logout")
 def page_logout():
     invalidate_auth_session()
 

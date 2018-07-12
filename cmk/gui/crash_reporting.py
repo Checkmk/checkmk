@@ -35,6 +35,7 @@ import sys
 import json
 import livestatus
 
+import cmk.gui.pages
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
@@ -45,6 +46,16 @@ import cmk.gui.table as table
 import cmk.gui.config as config
 import cmk.gui.forms as forms
 import cmk.crash_reporting
+
+@cmk.gui.pages.register("crashed_check")
+def page_crashed_check():
+    page_crashed("check")
+
+
+@cmk.gui.pages.register("gui_crash")
+def page_gui_crash():
+    page_crashed("gui")
+
 
 def page_crashed(what):
     if what == "check":
@@ -457,6 +468,7 @@ def create_gui_crash_report(what):
     return s
 
 
+@cmk.gui.pages.register("download_crash_report")
 def page_download_crash_report():
     site    = html.var("site")
     host    = html.var("host")

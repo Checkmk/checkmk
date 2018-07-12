@@ -36,6 +36,7 @@ import cmk.utils
 import cmk.paths
 import cmk.store as store
 
+import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
@@ -1329,6 +1330,7 @@ def userdb_sync_job_enabled():
     return True
 
 
+@cmk.gui.pages.register("ajax_userdb_sync")
 def ajax_sync():
     try:
         job = UserSyncBackgroundJob()

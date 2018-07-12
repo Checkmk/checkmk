@@ -54,6 +54,7 @@ import cmk.paths
 import cmk.defines as defines
 import livestatus
 
+import cmk.gui.pages
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 from cmk.gui.i18n import _
@@ -808,6 +809,10 @@ class MonitoredHostname(TextAsciiAutocomplete):
     def _get_choices_via_wato(cls, value):
         raise NotImplementedError()
 
+
+# We can not use the decorator because it can not deal with classmethods as quick fix we
+# directory use the register_page_handler_function() which is also fine.
+cmk.gui.pages.register_page_handler("ajax_vs_autocomplete", TextAsciiAutocomplete.ajax_handler)
 
 
 # A host name with or without domain part. Also allow IP addresses

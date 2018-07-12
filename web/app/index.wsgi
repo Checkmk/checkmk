@@ -37,6 +37,7 @@ from cmk.gui.i18n import _
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.modules as modules
+import cmk.gui.pages as pages
 import cmk.gui.userdb as userdb
 import cmk.gui.login as login
 import cmk.gui.log as log
@@ -129,7 +130,10 @@ class Application(object):
                 html.set_output_format("text")
                 html.write(_("Internal error") + ": %s\n" % e)
             elif not self._fail_silently():
-                modules.get_handler("gui_crash")()
+                crash_handler = pages.get_page_handler("gui_crash")
+                if not crash_handler:
+                    raise
+                crash_handler()
 
         finally:
             try:
@@ -155,15 +159,14 @@ class Application(object):
         # time before the first login for generating auth.php.
         modules.load_all_plugins()
 
-        # Get page handler.
-        handler = modules.get_handler(html.myfile, self._page_not_found)
+        handler = pages.get_page_handler(html.myfile, self._page_not_found)
 
         # Some pages do skip authentication. This is done by adding
         # noauth: to the page hander, e.g. "noauth:run_cron" : ...
         # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
         #       the now existing default automation user.
         if handler == self._page_not_found:
-            handler = modules.get_handler("noauth:" + html.myfile, self._page_not_found)
+            handler = pages.get_page_handler("noauth:" + html.myfile, self._page_not_found)
             if handler != self._page_not_found:
                 try:
                     handler()

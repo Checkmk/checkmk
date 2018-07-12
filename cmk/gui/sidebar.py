@@ -48,7 +48,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.notify as notify
 import cmk.gui.werks as werks
 import cmk.gui.sites as sites
-import cmk.gui.modules as modules
+import cmk.gui.pages
 import cmk.gui.plugin_registry
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.quicksearch
@@ -218,9 +218,13 @@ def render_messages():
             html.javascript('alert(\'%s\'); mark_message_read("%s")' %
                 (html.attrencode(msg['text']).replace('\n', '\\n'), msg['id']))
 
+
+@cmk.gui.pages.register("sidebar_get_messages")
 def ajax_get_messages():
     render_messages()
 
+
+@cmk.gui.pages.register("sidebar_message_read")
 def ajax_message_read():
     try:
         notify.delete_gui_message(html.var('id'))
@@ -229,6 +233,7 @@ def ajax_message_read():
         if config.debug:
             raise
         html.write("ERROR")
+
 
 def sidebar_foot():
     html.open_div(id_="side_footer")
@@ -258,7 +263,8 @@ def sidebar_foot():
     if load_user_config()["fold"]:
         html.final_javascript("fold_sidebar();")
 
-# Standalone sidebar
+
+@cmk.gui.pages.register("side")
 def page_side():
     if not config.user.may("general.see_sidebar"):
         return
@@ -393,12 +399,14 @@ def render_snapin(name, state):
     return refresh_url
 
 
+@cmk.gui.pages.register("sidebar_fold")
 def ajax_fold():
     config = load_user_config()
     config["fold"] = not not html.var("fold")
     save_user_config(config)
 
 
+@cmk.gui.pages.register("sidebar_openclose")
 def ajax_openclose():
     config = load_user_config()
     new_snapins = []
@@ -411,9 +419,9 @@ def ajax_openclose():
     save_user_config(config)
 
 
+@cmk.gui.pages.register("sidebar_snapin")
 def ajax_snapin():
-
-    # Update online state of the user (if enabled)
+    """Update online state of the user (if enabled)"""
     userdb.update_user_access_time(config.user.id)
 
     snapname = html.var("name")
@@ -457,6 +465,7 @@ def ajax_snapin():
     html.write('[%s]' % ','.join([ '"%s"' % s.replace('"', '\\"').replace('\n', '') for s in snapin_code]))
 
 
+@cmk.gui.pages.register("sidebar_move_snapin")
 def move_snapin():
     if not config.user.may("general.configure_sidebar"):
         return
@@ -489,6 +498,8 @@ def move_snapin():
     user_config["snapins"] = new_snapins
     save_user_config(user_config)
 
+
+@cmk.gui.pages.register("sidebar_add_snapin")
 def page_add_snapin():
     if not config.user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
@@ -530,6 +541,8 @@ def page_add_snapin():
     html.footer()
 
 
+# TODO: This is snapin specific. Move this handler to the snapin file
+@cmk.gui.pages.register("sidebar_ajax_set_snapin_site")
 def ajax_set_snapin_site():
     ident = html.var("ident")
     if ident not in snapin_registry:
@@ -547,6 +560,8 @@ def ajax_set_snapin_site():
     config.user.save_file("sidebar_sites", sites, unlock=True)
 
 
+# TODO: This is snapin specific. Move this handler to the snapin file
+@cmk.gui.pages.register("switch_site")
 def ajax_switch_site():
     # _site_switch=sitename1:on,sitename2:off,...
     if not config.user.may("sidesnap.sitestatus"):
@@ -597,7 +612,8 @@ class SnapinRegistry(cmk.gui.plugin_registry.ObjectRegistry):
             snapin.description(),
             snapin.allowed_roles())
 
-        modules.register_handlers(snapin.page_handlers())
+        for path, page_func in snapin.page_handlers().items():
+            cmk.gui.pages.register_page_handler(path, page_func)
 
 
 snapin_registry = SnapinRegistry()

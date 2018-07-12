@@ -37,6 +37,7 @@ import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.valuespec import (DualListChoice)
 
 if cmk.is_managed_edition():

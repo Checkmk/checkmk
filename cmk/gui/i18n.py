@@ -31,6 +31,8 @@ from typing import NamedTuple, Optional, List, Tuple
 
 import cmk.paths
 
+from cmk.gui.globals import html
+
 #.
 #   .--Gettext i18n--------------------------------------------------------.
 #   |           ____      _   _            _     _ _  ___                  |

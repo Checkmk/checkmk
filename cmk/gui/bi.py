@@ -46,6 +46,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.utils
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException

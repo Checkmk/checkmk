@@ -44,6 +44,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.valuespec import *
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
 from . import (

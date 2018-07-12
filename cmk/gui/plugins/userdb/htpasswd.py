@@ -32,6 +32,7 @@ import cmk.store as store
 import cmk.paths
 
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from . import UserConnector
 

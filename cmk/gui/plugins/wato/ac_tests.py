@@ -33,6 +33,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.htpasswd
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 from . import \

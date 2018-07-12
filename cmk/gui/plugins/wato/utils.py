@@ -33,6 +33,7 @@ import abc
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (TextAscii, Dictionary, RadioChoice, Tuple,

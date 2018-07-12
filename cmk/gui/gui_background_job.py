@@ -35,6 +35,7 @@ from cmk.exceptions import MKGeneralException
 
 import cmk.gui.i18n
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.config as config
 import cmk.gui.log as log

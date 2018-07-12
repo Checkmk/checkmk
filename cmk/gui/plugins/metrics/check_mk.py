@@ -28,6 +28,7 @@ import cmk.render
 
 import cmk.gui.utils as utils
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from . import (
     unit_info,

@@ -25,6 +25,7 @@
 
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 def global_buttons():
     changelog_button()

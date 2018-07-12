@@ -78,6 +78,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.backup as backup
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *

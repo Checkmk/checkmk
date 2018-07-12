@@ -30,6 +30,7 @@ from cmk.gui.plugins.wato.active_checks import check_icmp_params
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.valuespec import *
 from . import (
     register_rulegroup,

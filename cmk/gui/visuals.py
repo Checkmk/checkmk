@@ -44,6 +44,7 @@ import cmk.store as store
 import cmk.gui.metrics as metrics
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
 
 from cmk.gui.plugins.visuals.utils import (
     declare_info,

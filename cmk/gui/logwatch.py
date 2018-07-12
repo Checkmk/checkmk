@@ -35,6 +35,7 @@ import cmk.gui.table as table
 import cmk.gui.views as views
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 
 

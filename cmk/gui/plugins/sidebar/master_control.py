@@ -30,6 +30,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from . import SidebarSnapin, write_snapin_exception
 
 class MasterControlSnapin(SidebarSnapin):

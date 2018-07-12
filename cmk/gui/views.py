@@ -50,6 +50,7 @@ import cmk.gui.pages
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError

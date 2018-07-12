@@ -32,9 +32,10 @@ import cmk.paths
 import cmk.store as store
 
 import cmk.gui.utils as utils
-from cmk.gui.log import logger
 import cmk.gui.i18n
 import cmk.gui.pages
+from cmk.gui.globals import html
+from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.cron import (

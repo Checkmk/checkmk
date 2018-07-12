@@ -27,6 +27,7 @@
 import cmk.gui.config as config
 import cmk.gui.i18n
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 loaded_with_language = False
 

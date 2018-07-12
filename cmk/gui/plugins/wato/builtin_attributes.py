@@ -29,6 +29,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import HostAddress, ListOf, ListOfStrings, Dictionary, Age, \
     TimeofdayRange, Checkbox, DropdownChoice, Integer, CascadingDropdown, Tuple, \

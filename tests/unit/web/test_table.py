@@ -12,6 +12,7 @@ import cmk.gui.htmllib as htmlllib
 import cmk.gui.http as http
 import cmk.gui.table as table
 from cmk.gui.table import Table
+from cmk.gui.globals import html
 
 
 def read_out_simple_table(text):

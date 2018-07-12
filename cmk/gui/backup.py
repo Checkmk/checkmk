@@ -48,6 +48,7 @@ import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.valuespec import *
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 #.
 #   .--Config--------------------------------------------------------------.

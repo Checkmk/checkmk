@@ -66,6 +66,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.config as config
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from cmk.gui.plugins.views import (
     pnp_url,

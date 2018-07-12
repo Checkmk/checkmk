@@ -37,6 +37,7 @@ import cmk.gui.i18n
 import cmk.gui.mobile
 import cmk.gui.pages
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 import cmk.paths
 

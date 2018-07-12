@@ -34,6 +34,7 @@ import time
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 # TODO: Refactor to standard registry API
 multisite_filters  = {}

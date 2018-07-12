@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
 from . import (

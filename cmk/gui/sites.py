@@ -24,10 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import livestatus
+
 import cmk
 
 import cmk.gui.config as config
-import livestatus
+from cmk.gui.globals import html
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |

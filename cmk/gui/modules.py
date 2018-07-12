@@ -55,6 +55,7 @@ import cmk.paths
 
 import cmk.gui.utils as utils
 import cmk.gui.pages
+from cmk.gui.globals import html
 
 import cmk.gui.plugins.main_modules
 

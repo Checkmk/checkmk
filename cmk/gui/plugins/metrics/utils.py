@@ -36,6 +36,7 @@ import cmk.regex
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 

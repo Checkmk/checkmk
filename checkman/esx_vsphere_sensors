@@ -9,6 +9,12 @@ description:
  hard disk, an others. In order to avoid network traffic the agent sends
  only information about sensors that are not in green state.
 
+ Note: Due to a caching problem on the ESX host system side, this check
+ occasionally reports incorrect sensor data. This may mean that the
+ sensor appears to be stuck in an unhealthy state. You can find more
+ information here:
+ http://kb.vmware.com/selfservice/microsites/search.do?cmd=displayKC&externalId=1037330
+
 inventory:
   One check per ESX Host System will be created.
 

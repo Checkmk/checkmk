@@ -47,10 +47,7 @@ config_dir      = mk_confdir + "/mtr.d/*.cfg"
 status_filename = mk_vardir  + "/mtr.state"
 report_filepre  = mk_vardir  + "/mtr.report."
 
-if '-d' in sys.argv[2:] or '--debug' in sys.argv[1:]:
-    debug = True
-else:
-    debug = False
+debug = '-d' in sys.argv[2:] or '--debug' in sys.argv[1:]
 
 
 def which(program):
@@ -179,13 +176,8 @@ def check_mtr_pid(pid):
     else:
         pid_cmdline = "/proc/%d/cmdline" % pid
         try:
-            if os.path.exists(pid_cmdline):
-                if file(pid_cmdline).read().startswith("mtr\x00--report\x00--report-wide"):
-                    return True
-                else:
-                    return False # different process than mtr
-            else:
-                return False # cmdline no longer exists, race condition..
+            return os.path.exists(pid_cmdline) and \
+                   file(pid_cmdline).read().startswith("mtr\x00--report\x00--report-wide")
         except:
             return False # any error
 

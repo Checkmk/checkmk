@@ -204,11 +204,6 @@ def inventory_ipmi(info):
     rules  = host_extra_conf(host_name(), inventory_ipmi_rules)
     if rules and type(rules[0]) == dict:
         if rules[0].get("summarize", True):
-            summarize = True
-        else:
-            summarize = False
-
-        if summarize:
             rules = [ 'summarize' ]
         else:
             if rules[0].get('ignored_sensors', []):

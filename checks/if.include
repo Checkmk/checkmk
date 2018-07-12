@@ -649,10 +649,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             group_operStatus = "2" # down
 
         alias_info = []
-        if len(params["aggregate"].get("group_patterns", {})) >= 2:
-            add_node_info = True
-        else:
-            add_node_info = False
+        add_node_info = len(params["aggregate"].get("group_patterns", {})) >= 2
 
         for node_name, attrs in params["aggregate"].get("group_patterns", {}).items():
             if attrs.get("iftype"):

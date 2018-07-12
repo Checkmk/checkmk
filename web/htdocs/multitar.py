@@ -36,6 +36,7 @@ import traceback
 import itertools
 
 from log import logger
+from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
 import multiprocessing

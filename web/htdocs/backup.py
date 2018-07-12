@@ -45,6 +45,7 @@ from valuespec import *
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 import cmk.render as render
 import cmk.store as store
+from cmk.gui.i18n import _
 from cmk.schedule import next_scheduled_time
 
 #.

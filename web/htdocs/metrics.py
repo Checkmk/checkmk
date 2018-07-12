@@ -39,6 +39,8 @@ import string
 import utils
 import config, pagetypes, table
 import sites
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 import traceback
 from collections import OrderedDict
 
@@ -85,7 +87,7 @@ class AutomaticDict(OrderedDict):
 
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     global unit_info       ; unit_info       = {}
@@ -102,9 +104,9 @@ def load_plugins(force):
     fixup_graph_info()
     fixup_unit_info()
     fixup_perfometer_info()
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 def fixup_graph_info():

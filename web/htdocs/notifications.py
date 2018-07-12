@@ -30,6 +30,8 @@ import sites
 import table
 import time
 import wato
+import cmk.gui.i18n
+from cmk.gui.i18n import _u, _
 
 g_acknowledgement_time = {}
 g_modified_time        = 0
@@ -40,7 +42,7 @@ loaded_with_language   = False
 
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     config.declare_permission_section("notification_plugin",
@@ -56,7 +58,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 def acknowledge_failed_notifications(timestamp):

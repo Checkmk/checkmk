@@ -36,6 +36,8 @@ import config, table, userdb
 import pagetypes # That will replace visuals.py one day
 import cmk.store as store
 import metrics
+import cmk.gui.i18n
+from cmk.gui.i18n import _u, _
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -52,7 +54,7 @@ loaded_with_language = False
 
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     global visual_types
@@ -85,7 +87,7 @@ def load_plugins(force):
     utils.load_web_plugins('visuals', globals())
     declare_site_filters()
 
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 #.
 #   .--Save/Load-----------------------------------------------------------.

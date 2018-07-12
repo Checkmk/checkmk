@@ -602,7 +602,7 @@ register_configvar(group,
                         title = _("Translations"),
                         elements = [
                             ( l or "en", TextUnicode(title = a, size = 32) )
-                              for (l,a) in i18n.get_languages()
+                              for (l,a) in cmk.gui.i18n.get_languages()
                         ],
                         columns = 2,
                     ),

@@ -110,7 +110,8 @@ from cmk.defines import short_service_state_name
 import cmk.render as render
 
 import utils
-import i18n
+import cmk.gui.i18n
+from cmk.gui.i18n import _u, _
 import config
 import table
 import multitar
@@ -15196,11 +15197,11 @@ def translation_elements(what):
 
 
 def select_language(user):
-    languages = [ l for l in i18n.get_languages() if not config.hide_language(l[0]) ]
+    languages = [ l for l in cmk.gui.i18n.get_languages() if not config.hide_language(l[0]) ]
     if languages:
         active = 'language' in user
         forms.section(_("Language"), checkbox = ('_set_lang', active, 'language'))
-        default_label = _('Default: %s') % (i18n.get_language_alias(config.default_language) or _('English'))
+        default_label = _('Default: %s') % (cmk.gui.i18n.get_language_alias(config.default_language) or _('English'))
         html.div(default_label, class_="inherited", id_="attr_default_language", style= "display: none" if active else "")
         html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
 
@@ -15213,7 +15214,7 @@ def select_language(user):
                     'Note: currently Multisite is internationalized '
                     'but comes without any actual localisations (translations). If you want to '
                     'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
-                    { "url" : "https://mathias-kettner.com/checkmk_multisite_i18n.html"} )
+                    { "url" : "https://mathias-kettner.com/checkmk_multisite_cmk.gui.i18n.html"} )
 
 def user_profile_async_replication_page():
     html.header(_('Replicate new User Profile'),
@@ -15304,7 +15305,7 @@ def page_user_profile(change_pw=False):
                         # Set custom language
                         users[config.user.id]['language'] = language
                         config.user.set_attribute("language", language)
-                        i18n.set_language_cookie(language)
+                        cmk.gui.i18n.set_language_cookie(language)
 
                     else:
                         # Remove the customized language
@@ -15313,7 +15314,7 @@ def page_user_profile(change_pw=False):
                         config.user.unset_attribute("language")
 
                     # load the new language
-                    i18n.localize(config.user.language())
+                    cmk.gui.i18n.localize(config.user.language())
                     multisite_modules.load_all_plugins()
 
                     user = users.get(config.user.id)
@@ -18851,7 +18852,7 @@ def load_plugins(force):
     global builtin_host_attribute_names
 
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         # Do not cache the custom attributes. They can be created by the user
         # during runtime, means they need to be loaded during each page request.
         # But delete the old definitions before to also apply removals of attributes
@@ -19175,7 +19176,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 def get_modules():

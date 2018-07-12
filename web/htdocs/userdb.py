@@ -36,6 +36,8 @@ from valuespec import *
 import cmk.utils
 import cmk.paths
 import cmk.store as store
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -72,7 +74,7 @@ def load_plugins(force):
         g_connections.clear()
 
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     # clear global vars
@@ -91,7 +93,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # Cleans up at the end of a request: Cleanup eventual open connections

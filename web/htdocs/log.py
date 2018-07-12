@@ -30,6 +30,8 @@ import traceback
 import cmk.log
 import cmk.paths
 
+from cmk.gui.i18n import _
+
 class CMKWebLogger(_logging.getLoggerClass()):
     def exception(self, *args, **kwargs):
         """Logs an optional message together with the traceback of the

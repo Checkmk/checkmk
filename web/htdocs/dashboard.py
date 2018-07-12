@@ -28,6 +28,8 @@ import config, visuals, pprint, time, copy
 
 import utils
 from valuespec import *
+import cmk.gui.i18n
+from cmk.gui.i18n import _u, _
 import wato
 
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
@@ -58,7 +60,7 @@ dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raste
 # been detected.
 def load_plugins(force):
     global loaded_with_language, dashboards, builtin_dashboards_transformed
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     # Load plugins for dashboards. Currently these files
@@ -69,7 +71,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
     # Clear this structure to prevent users accessing dashboard structures created
     # by other users, make them see these dashboards

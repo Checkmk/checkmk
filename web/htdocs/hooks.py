@@ -26,6 +26,9 @@
 
 import config, sys
 
+import cmk.gui.i18n
+from cmk.gui.i18n import _
+
 hooks = {}
 
 # Datastructures and functions needed before plugins can be loaded
@@ -34,7 +37,7 @@ loaded_with_language = False
 # Load all login plugins
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     # Cleanup all registered hooks. They need to be renewed by load_plugins()
@@ -44,7 +47,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 def unregister():
     global hooks

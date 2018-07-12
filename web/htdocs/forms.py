@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from htmllib import HTML
+from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 
 # A input function with the same call syntax as htmllib.textinput()

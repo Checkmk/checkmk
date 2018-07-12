@@ -26,6 +26,7 @@
 
 import livestatus
 import utils
+from cmk.gui.i18n import _u, _
 
 # Declarations of commands on monitoring objects. This file is
 # read in with execfile by views.py.

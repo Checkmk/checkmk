@@ -26,6 +26,7 @@
 
 import re
 import views, config, visuals, metrics
+from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 
 # These regexes are taken from the public domain code of Matt Sullivan

@@ -31,7 +31,8 @@ from log import logger
 import os
 import time
 import traceback
-import i18n
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 from hashlib import md5
 
 import cmk.paths
@@ -147,7 +148,7 @@ def invalidate_auth_session():
         userdb.invalidate_session(config.user.id)
 
     del_auth_cookie()
-    i18n.del_language_cookie()
+    cmk.gui.i18n.del_language_cookie()
 
 
 def renew_auth_session(username):
@@ -409,9 +410,9 @@ def do_login():
             return "%s" % e
 
 def page_login(no_html_output = False):
-    # Initialize the i18n for the login dialog. This might be overridden
+    # Initialize the cmk.gui.i18n for the login dialog. This might be overridden
     # later after user login
-    i18n.localize(html.var("lang", config.get_language()))
+    cmk.gui.i18n.localize(html.var("lang", config.get_language()))
 
     result = do_login()
     if type(result) == tuple:

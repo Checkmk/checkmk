@@ -24,12 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from . import SidebarSnapin
-
 import config
 import sites
 import wato
 import watolib
+from cmk.gui.i18n import _
+
+from . import SidebarSnapin
 
 class VirtualHostTree(SidebarSnapin):
     @staticmethod

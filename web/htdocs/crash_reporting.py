@@ -25,7 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import subprocess, base64, time, pprint, traceback, tarfile, cStringIO, sys
-import i18n
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 import sites
 import livestatus
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -420,7 +421,7 @@ def create_crash_dump_info_file(tar, what):
         "referer"        : html.request.referer,
         "is_mobile"      : html.is_mobile(),
         "is_ssl_request" : html.request.is_ssl_request,
-        "language"       : i18n.get_current_language(),
+        "language"       : cmk.gui.i18n.get_current_language(),
         "request_method" : html.request.request_method,
     }, version=get_version(what))
 

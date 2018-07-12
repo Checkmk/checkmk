@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # List of modules for main menu and WATO snapin. These modules are
-# defined in a plugin because they contain i18n strings.
+# defined in a plugin because they contain cmk.gui.i18n strings.
 # fields: mode, title, icon, permission, help
 
 register_modules(

@@ -33,6 +33,7 @@ import threading
 import multiprocessing
 from cStringIO import StringIO
 
+from cmk.gui.i18n import _
 import cmk
 import cmk.log
 import cmk.store as store

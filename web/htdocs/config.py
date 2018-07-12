@@ -32,7 +32,8 @@ import glob
 import copy
 
 import utils
-import i18n
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 import log
 import cmk.paths
 import cmk.store as store

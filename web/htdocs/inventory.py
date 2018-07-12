@@ -34,6 +34,7 @@ import ast
 import config
 import userdb
 import sites
+from cmk.gui.i18n import _
 import livestatus
 from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError
 

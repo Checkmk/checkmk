@@ -138,7 +138,6 @@ def winperf_phydisk_convert(info):
     except StopIteration:
         if current_node != "":
             entries.extend(finalize_block(current_node))
-        pass
 
     return entries
 

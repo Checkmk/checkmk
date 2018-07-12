@@ -26,6 +26,10 @@
 
 import abc
 
+# TODO: We decided to change this plugin registry from automatically finding
+# it's childs to explicit registration.
+# TODO: In the moment we have this, we can drop the auto_register stuff.
+
 class Registry(object):
     """The management object for all available plugins of a component.
 

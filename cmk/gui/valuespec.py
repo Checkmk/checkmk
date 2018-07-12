@@ -1714,20 +1714,6 @@ class DropdownChoice(ValueSpec):
         return True
 
 
-class FolderChoice(DropdownChoice):
-    def __init__(self, **kwargs):
-        import cmk.gui.watolib as watolib
-        kwargs["choices"] = watolib.Folder.folder_choices
-        kwargs.setdefault("title", _("Folder"))
-        DropdownChoice.__init__(self, **kwargs)
-
-class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, **kwargs):
-        import cmk.gui.watolib as watolib
-        kwargs["choices"] = watolib.Folder.folder_choices_fulltitle
-        kwargs.setdefault("title", _("Folder"))
-        DropdownChoice.__init__(self, **kwargs)
-
 # Special conveniance variant for monitoring states
 # TODO: Rename to ServiceState() or something like this
 class MonitoringState(DropdownChoice):
@@ -3945,43 +3931,6 @@ class PasswordSpec(Password):
         self.password_plaintext_warning()
 
 
-
-
-class PasswordFromStore(CascadingDropdown):
-    def __init__(self, *args, **kwargs):
-        kwargs["choices"] = [
-            ("password", _("Password"), Password(
-                allow_empty = kwargs.get("allow_empty", True),
-            )),
-            ("store", _("Stored password"), DropdownChoice(
-                choices = self._password_choices,
-                sorted = True,
-                invalid_choice = "complain",
-                invalid_choice_title = _("Password does not exist or using not permitted"),
-                invalid_choice_error = _("The configured password has either be removed or you "
-                                         "are not permitted to use this password. Please choose "
-                                         "another one."),
-            )),
-        ]
-        kwargs["orientation"] = "horizontal"
-
-        CascadingDropdown.__init__(self, *args, **kwargs)
-
-
-    def _password_choices(self):
-        import cmk.gui.watolib as watolib
-        return [ (ident, pw["title"]) for ident, pw
-                 in watolib.PasswordStore().usable_passwords().items() ]
-
-
-
-def IndividualOrStoredPassword(*args, **kwargs):
-    return Transform(
-        PasswordFromStore(*args, **kwargs),
-        forth = lambda v: ("password", v) if type(v) != tuple else v,
-    )
-
-
 class FileUpload(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -4642,11 +4591,10 @@ class SiteChoice(DropdownChoice):
 
 
     def _site_default_value(self):
-        import cmk.gui.watolib as watolib
-        if watolib.is_wato_slave_site():
+        import cmk.gui.config as config
+        if config.is_wato_slave_site():
             return False
 
-        import cmk.gui.config as config
         default_value = config.site_attribute_default_value()
         if default_value:
             return default_value
@@ -4657,176 +4605,3 @@ class SiteChoice(DropdownChoice):
     def _site_choices(self):
         import cmk.gui.config as config # FIXME
         return config.site_attribute_choices()
-
-
-class TimeperiodSelection(DropdownChoice):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("no_preselect", True)
-        kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
-        DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
-
-    def _get_choices(self):
-        import cmk.gui.watolib as watolib
-        timeperiods = watolib.load_timeperiods()
-        elements = [
-            (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()
-        ]
-
-        always = ("24X7", _("Always"))
-        if always not in elements:
-            elements.insert(0, always)
-
-        return elements
-
-
-class TimeperiodValuespec(ValueSpec):
-    tp_toggle_var        = "tp_toggle"        # Used by GUI switch
-    tp_current_mode      = "tp_active"        # The actual set mode
-                                              # "0" - no timespecific settings
-                                              # "1" - timespecific settings active
-
-    tp_default_value_key = "tp_default_value" # Used in valuespec
-    tp_values_key        = "tp_values"        # Used in valuespec
-
-
-    def __init__(self, valuespec):
-        super(TimeperiodValuespec, self).__init__(
-            title = valuespec.title(),
-            help  = valuespec.help()
-        )
-        self._enclosed_valuespec = valuespec
-
-
-    def default_value(self):
-        # If nothing is configured, simply return the default value of the enclosed valuespec
-        return self._enclosed_valuespec.default_value()
-
-
-    def render_input(self, varprefix, value):
-        # The display mode differs when the valuespec is activated
-        vars_copy = html.request.vars.copy()
-
-
-        # The timeperiod mode can be set by either the GUI switch or by the value itself
-        # GUI switch overrules the information stored in the value
-        if html.has_var(self.tp_toggle_var):
-            is_active = self._is_switched_on()
-        else:
-            is_active = self._is_active(value)
-
-        # Set the actual used mode
-        html.hidden_field(self.tp_current_mode, "%d" % is_active)
-
-        mode = _("Disable") if is_active else _("Enable")
-        vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
-
-        toggle_url = html.makeuri(vars_copy.items())
-        html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, style=["position: absolute", "right: 18px;"])
-
-        if is_active:
-            value = self._get_timeperiod_value(value)
-            self._get_timeperiod_valuespec().render_input(varprefix, value)
-        else:
-            value = self._get_timeless_value(value)
-            return self._enclosed_valuespec.render_input(varprefix, value)
-
-
-    def value_to_text(self, value):
-        text = ""
-        if self._is_active(value):
-            # TODO/Phantasm: highlight currently active timewindow
-            text += self._get_timeperiod_valuespec().value_to_text(value)
-        else:
-            text += self._enclosed_valuespec.value_to_text(value)
-        return text
-
-
-    def from_html_vars(self, varprefix):
-        if html.var(self.tp_current_mode) == "1":
-            # Fetch the timespecific settings
-            parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
-            if parameters[self.tp_values_key]:
-                return parameters
-            else:
-                # Fall back to enclosed valuespec data when no timeperiod is set
-                return parameters[self.tp_default_value_key]
-        else:
-            # Fetch the data from the enclosed valuespec
-            return self._enclosed_valuespec.from_html_vars(varprefix)
-
-
-    def canonical_value(self):
-        return self._enclosed_valuespec.canonical_value()
-
-
-    def validate_datatype(self, value, varprefix):
-        if self._is_active(value):
-            self._get_timeperiod_valuespec().validate_datatype(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_datatype(value, varprefix)
-
-
-    def validate_value(self, value, varprefix):
-        if self._is_active(value):
-            self._get_timeperiod_valuespec().validate_value(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_value(value, varprefix)
-
-
-    def _get_timeperiod_valuespec(self):
-        return Dictionary(
-                elements = [
-                    (self.tp_values_key,
-                        ListOf(
-                            Tuple(
-                                elements = [
-                                    TimeperiodSelection(
-                                        title = _("Match only during timeperiod"),
-                                        help = _("Match this rule only during times where the "
-                                                 "selected timeperiod from the monitoring "
-                                                 "system is active."),
-                                    ),
-                                    self._enclosed_valuespec
-                                ]
-                            ),
-                            title = _("Configured timeperiod parameters"),
-                        )
-                    ),
-                    (self.tp_default_value_key,
-                        Transform(
-                            self._enclosed_valuespec,
-                            title = _("Default parameters when no timeperiod matches")
-                        )
-                    ),
-                ],
-                optional_keys = False,
-            )
-
-
-    # Checks whether the tp-mode is switched on through the gui
-    def _is_switched_on(self):
-        return html.var(self.tp_toggle_var) == "1"
-
-
-    # Checks whether the value itself already uses the tp-mode
-    def _is_active(self, value):
-        if isinstance(value, dict) and self.tp_default_value_key in value:
-            return True
-        else:
-            return False
-
-
-    # Returns simply the value or converts a plain value to a tp-value
-    def _get_timeperiod_value(self, value):
-        if isinstance(value, dict) and self.tp_default_value_key in value:
-            return value
-        else:
-            return {self.tp_values_key: [], self.tp_default_value_key: value}
-
-
-    # Returns simply the value or converts tp-value back to a plain value
-    def _get_timeless_value(self, value):
-        if isinstance(value, dict) and self.tp_default_value_key in value:
-            return value.get(self.tp_default_value_key)
-        else:
-            return value

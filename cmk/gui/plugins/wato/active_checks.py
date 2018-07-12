@@ -26,11 +26,15 @@
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
+# TODO: Clean this * import up!
 from cmk.gui.valuespec import *
-from . import \
-    register_rulegroup, \
-    register_rule, \
-    PluginCommandLine
+
+from . import (
+    register_rulegroup,
+    register_rule,
+    PluginCommandLine,
+    IndividualOrStoredPassword,
+)
 
 register_rulegroup("activechecks",
     _("Active checks (HTTP, TCP, etc.)"),

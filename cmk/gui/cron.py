@@ -28,16 +28,20 @@ import os
 import time
 import traceback
 
-import cmk.gui.utils as utils
-from cmk.gui.log import logger
 import cmk.paths
 import cmk.store as store
-import cmk.gui.i18n
 
+import cmk.gui.utils as utils
+from cmk.gui.log import logger
+import cmk.gui.i18n
 from cmk.gui.exceptions import MKGeneralException
 
+from cmk.gui.plugins.cron import (
+    multisite_cronjobs,
+    register_job,
+)
+
 loaded_with_language = False
-multisite_cronjobs = []
 
 lock_file = cmk.paths.tmp_dir + "/cron.lastrun"
 
@@ -47,15 +51,9 @@ def load_plugins(force):
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
-    global multisite_cronjobs
-    multisite_cronjobs = []
     utils.load_web_plugins("cron", globals())
 
     loaded_with_language = cmk.gui.i18n.get_current_language()
-
-
-def register_job(cron_job):
-    multisite_cronjobs.append(cron_job)
 
 
 # Page called by some external trigger (usually cron job in OMD site)

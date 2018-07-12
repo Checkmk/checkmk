@@ -147,8 +147,6 @@ backup_domains = {}
 automation_commands = {}
 g_rulespecs = None
 g_rulegroups = {}
-builtin_host_tags = []
-builtin_aux_tags = []
 
 # Global datastructure holding all attributes (in a defined order)
 # as pairs of (attr, topic). Topic is the title under which the
@@ -6162,73 +6160,6 @@ def group_hosttags_by_topic(hosttags):
     return sorted(tags.items(), key = lambda x: x[0])
 
 
-def register_builtin_host_tags():
-    global builtin_host_tags, builtin_aux_tags
-
-    del builtin_host_tags[:]
-    builtin_host_tags += [
-        ("agent", "%s/%s" % (_("Data sources"), _("Check_MK Agent")), [
-                ("cmk-agent",      _("Contact either Check_MK Agent or use datasource program"), ["tcp"]),
-                ("all-agents",     _("Contact Check_MK agent and all enabled datasource programs"), ["tcp"]),
-                ("special-agents", _("Use all enabled datasource programs"), ["tcp"]),
-                ("no-agent",       _("No agent"), []),
-            ],
-            ["!ping"],
-        ),
-        ("snmp", "%s/%s" % (_("Data sources"), _("SNMP")), [
-                ("no-snmp",        _("No SNMP"), []),
-                ("snmp-v2",        _("SNMP v2 or v3"), ["snmp"]),
-                ("snmp-v1",        _("SNMP v1"), ["snmp"]),
-            ],
-            ["!ping"],
-        ),
-        ("address_family", "%s/%s " % (_("Address"), _("IP Address Family")), [
-                ("ip-v4-only", _("IPv4 only"), ["ip-v4"]),
-                ("ip-v6-only", _("IPv6 only"), ["ip-v6"]),
-                ("ip-v4v6",    _("IPv4/IPv6 dual-stack"), ["ip-v4", "ip-v6"]),
-                ("no-ip",      _("No IP"),     []),
-            ]
-        ),
-    ]
-
-    del builtin_aux_tags[:]
-    builtin_aux_tags += [
-        ("ip-v4", "%s/%s" % (_("Address"), _("IPv4"))),
-        ("ip-v6", "%s/%s" % (_("Address"), _("IPv6"))),
-        ("snmp",  "%s/%s" % (_("Data sources"), _("Monitor via SNMP"))),
-        ("tcp",   "%s/%s" % (_("Data sources"), _("Monitor via Check_MK Agent"))),
-        ("ping",  "%s/%s" % (_("Data sources"), _("Only ping this device"))),
-    ]
-
-
-# Extend the given tag group definitions with the builtin tag groups
-# and return the extended list
-def get_effective_tag_groups(tag_groups):
-    tag_groups = tag_groups[:]
-    tag_group_ids = set([ tg[0] for tg in tag_groups ])
-
-    for tag_group in builtin_host_tags:
-        if tag_group[0] not in tag_group_ids:
-            tag_groups.append(tag_group)
-
-    return tag_groups
-
-
-def get_effective_aux_tags(aux_tag_list):
-    aux_tags = aux_tag_list[:]
-    aux_tag_ids = set([ at[0] for at in aux_tag_list ])
-
-    for aux_tag in builtin_aux_tags:
-        if aux_tag[0] not in aux_tag_ids:
-            aux_tags.append(aux_tag)
-
-    return aux_tags
-
-
-def configured_aux_tags():
-    return get_effective_aux_tags(config.wato_aux_tags)
-
-
 def is_builtin_host_tag_group(tag_group_id):
     # Special handling for the agent tag group. It was a tag group created with
     # the sample WATO configuration until version 1.5x. This means users could've
@@ -6240,14 +6171,14 @@ def is_builtin_host_tag_group(tag_group_id):
                 return False
         return True
 
-    for tag_group in builtin_host_tags:
+    for tag_group in config.BuiltinTags().host_tags():
         if tag_group[0] == tag_group_id:
             return True
     return False
 
 
 def is_builtin_aux_tag(taggroup_id):
-    for builtin_taggroup in builtin_aux_tags:
+    for builtin_taggroup in config.BuiltinTags().aux_tags():
         if builtin_taggroup[0] == taggroup_id:
             return True
     return False
@@ -7115,7 +7046,7 @@ def render_condition_editor(tag_specs, varprefix=""):
     if varprefix:
         varprefix += "_"
 
-    if not configured_aux_tags() + config.host_tag_groups():
+    if not config.aux_tags() + config.host_tag_groups():
         html.write(_("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
         return
 
@@ -7162,7 +7093,7 @@ def render_condition_editor(tag_specs, varprefix=""):
         html.open_div(id_="%stag_sel_%s" % (varprefix, id), style="display: none;" if not div_is_open else None)
 
 
-    auxtags = group_hosttags_by_topic(configured_aux_tags())
+    auxtags = group_hosttags_by_topic(config.aux_tags())
     hosttags = group_hosttags_by_topic(config.host_tag_groups())
     all_topics = set([])
     for topic, taggroups in auxtags + hosttags:
@@ -7237,7 +7168,7 @@ def get_tag_conditions(varprefix=""):
             tag_list.append("!" + tagvalue)
 
     # Auxiliary tags
-    for id, title in configured_aux_tags():
+    for id, title in config.aux_tags():
         mode = html.var(varprefix + "auxtag_" + id)
         if mode == "is":
             tag_list.append(id)

@@ -12448,7 +12448,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                     empty_text = _("You haven't defined any auxiliary tags."),
                     searchable = False)
 
-        aux_tags = watolib.get_effective_aux_tags(self._auxtags)
+        aux_tags = config.BuiltinTags().get_effective_aux_tags(self._auxtags)
         effective_tag_groups = self._get_effective_tag_groups()
 
         if not aux_tags:
@@ -12476,7 +12476,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
 
 
     def _get_effective_tag_groups(self):
-        return watolib.get_effective_tag_groups(self._hosttags)
+        return config.BuiltinTags().get_effective_tag_groups(self._hosttags)
 
 
     def _get_tags_using_aux_tag(self, tag_groups, aux_tag):
@@ -12788,7 +12788,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
 
     def _get_taggroups_valuespec(self):
-        aux_tags = watolib.get_effective_aux_tags(self._untainted_hosttags_config.get_legacy_format()[1])
+        aux_tags = config.BuiltinTags().get_effective_aux_tags(self._untainted_hosttags_config.get_legacy_format()[1])
 
         return ListOf(
             Tuple(
@@ -18117,8 +18117,6 @@ def load_plugins(force):
     # Initialize watolib things which are needed before loading the WATO plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
-
-    watolib.register_builtin_host_tags()
 
     # Declare WATO-specific permissions
     config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))

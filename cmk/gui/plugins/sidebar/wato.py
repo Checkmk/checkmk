@@ -29,6 +29,16 @@ import cmk.gui.wato as wato
 import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib
+import cmk.gui.sites as sites
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+
+from . import (
+    sidebar_snapins,
+    iconlink,
+    footnotelinks,
+    visuals_by_topic,
+)
 
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

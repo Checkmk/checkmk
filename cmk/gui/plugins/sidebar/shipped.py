@@ -24,51 +24,44 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Split this file into single snapin or topic files
+
 # TODO: Refactor all snapins to the new snapin API and move page handlers
 #       from sidebar.py to the snapin objects that need these pages.
 
+import time
+import livestatus
+
+import cmk.paths
+import cmk.store as store
+
 import cmk.gui.config as config
 import cmk.gui.views as views
-import time
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.table as table
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
-from cmk.gui.i18n import _u, _
-
-import livestatus
 import cmk.gui.notifications as notifications
+# TODO: Cleanup star import
 from cmk.gui.valuespec import *
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
-import cmk.paths
-import cmk.store as store
 
-#   .--About---------------------------------------------------------------.
-#   |                       _    _                 _                       |
-#   |                      / \  | |__   ___  _   _| |_                     |
-#   |                     / _ \ | '_ \ / _ \| | | | __|                    |
-#   |                    / ___ \| |_) | (_) | |_| | |_                     |
-#   |                   /_/   \_\_.__/ \___/ \__,_|\__|                    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-def render_about():
-    html.write(_("Version: ") + cmk.__version__)
-    html.open_ul()
-    bulletlink(_("Homepage"),        "https://mathias-kettner.com/check_mk.html")
-    bulletlink(_("Documentation"),   "https://mathias-kettner.com/checkmk.html")
-    bulletlink(_("Download"),        "https://mathias-kettner.com/check_mk_download.html")
-    bulletlink("Mathias Kettner",    "https://mathias-kettner.com")
-    html.close_ul()
-
-sidebar_snapins["about"] = {
-    "title" : _("About Check_MK"),
-    "description" : _("Version information and Links to Documentation, "
-                      "Homepage and Download of Check_MK"),
-    "render" : render_about,
-    "allowed" : [ "admin", "user", "guest" ],
-}
+from . import (
+    sidebar_snapins,
+    visuals_by_topic,
+    bulletlink,
+    link,
+    footnotelinks,
+    snapin_width,
+    render_link,
+    snapin_site_choice,
+    nagioscgilink,
+    heading,
+    simplelink,
+)
 
 #.
 #   .--Views---------------------------------------------------------------.
@@ -80,37 +73,6 @@ sidebar_snapins["about"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def visuals_by_topic(permitted_visuals, default_order=None):
-    if default_order is None:
-        default_order = [
-            _("Overview"),
-            _("Hosts"),
-            _("Host Groups"),
-            _("Services"),
-            _("Service Groups"),
-            _("Metrics"),
-            _("Business Intelligence"),
-            _("Problems"),
-        ]
-
-    s = [ (_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters' in visual)
-          for name, visual
-          in permitted_visuals
-          if not visual["hidden"] and not visual.get("mobile")]
-
-    s.sort()
-
-    result = []
-    for topic in default_order:
-        result.append((topic, s))
-
-    rest = list(set([ t for (t, _t, _v, _i) in s if t not in default_order ]))
-    rest.sort()
-    for topic in rest:
-        if topic:
-            result.append((topic, s))
-
-    return result
 
 def render_views():
     views.load_views()
@@ -1056,449 +1018,6 @@ sidebar_snapins["nagios_legacy"] = {
     "render" : render_nagios,
     "allowed" : [ "user", "admin", "guest", ],
 }
-
-
-#.
-#   .--Master Control------------------------------------------------------.
-#   |  __  __           _               ____            _             _    |
-#   | |  \/  | __ _ ___| |_ ___ _ __   / ___|___  _ __ | |_ _ __ ___ | |   |
-#   | | |\/| |/ _` / __| __/ _ \ '__| | |   / _ \| '_ \| __| '__/ _ \| |   |
-#   | | |  | | (_| \__ \ ||  __/ |    | |__| (_) | | | | |_| | | (_) | |   |
-#   | |_|  |_|\__,_|___/\__\___|_|     \____\___/|_| |_|\__|_|  \___/|_|   |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-def render_master_control():
-    items = [
-        ( "enable_notifications",     _("Notifications" )),
-        ( "execute_service_checks",   _("Service checks" )),
-        ( "execute_host_checks",      _("Host checks" )),
-        ( "enable_flap_detection",    _("Flap Detection" )),
-        ( "enable_event_handlers",    _("Event handlers" )),
-        ( "process_performance_data", _("Performance data" )),
-        ( "enable_event_handlers",    _("Alert handlers" )),
-    ]
-
-    sites.update_site_states_from_dead_sites()
-
-    site_status_info = {}
-    try:
-        sites.live().set_prepend_site(True)
-        for row in sites.live().query("GET status\nColumns: %s" %
-                                        " ".join([ i[0] for i in items ])):
-            site_id, values = row[0], row[1:]
-            site_status_info[site_id] = values
-    finally:
-        sites.live().set_prepend_site(False)
-
-    def _render_master_control_site(site_id):
-        site_state = sites.state(site_id)
-        if site_state["state"] == "dead":
-            html.show_error(site_state["exception"])
-
-        elif site_state["state"] == "disabled":
-            html.show_info(_("Site is disabled"))
-
-        elif site_state["state"] == "unknown":
-            if site_state.get("exception"):
-                html.show_error(site_state["exception"])
-            else:
-                html.show_error(_("Site state is unknown"))
-
-        else:
-            is_cmc = site_state["program_version"].startswith("Check_MK ")
-
-            try:
-                site_info = site_status_info[site_id]
-            except KeyError:
-                site_info = None
-
-            html.open_table(class_="master_control")
-            for i, (colname, title) in enumerate(items):
-                # Do not show event handlers on Check_MK Micro Core
-                if is_cmc and title == _("Event handlers"):
-                    continue
-                elif not is_cmc and title == _("Alert handlers"):
-                    continue
-
-                colvalue = site_info[i]
-                url = config.url_prefix() + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (site_id, colname, 1 - colvalue))
-                onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
-
-                html.open_tr()
-                html.td(title, class_="left")
-                html.open_td()
-                html.toggle_switch(
-                    enabled=colvalue,
-                    help=_("Switch '%s' to '%s'") % (title, _("off") if colvalue else _("on")),
-                    onclick=onclick,
-                )
-                html.close_td()
-                html.close_tr()
-
-            html.close_table()
-
-    for site_id, site_alias in config.sorted_sites():
-        if not config.is_single_local_site():
-            html.begin_foldable_container("master_control", site_id, True, site_alias)
-
-        try:
-            _render_master_control_site(site_id)
-        except Exception, e:
-            logger.exception()
-            write_snapin_exception(e)
-        finally:
-            if not config.is_single_local_site():
-                html.end_foldable_container()
-
-
-sidebar_snapins["master_control"] = {
-    "title" : _("Master Control"),
-    "description" : _("Buttons for switching globally states such as enabling "
-                      "checks and notifications"),
-    "render" : render_master_control,
-    "allowed" : [ "admin", ],
-    "styles" : """
-div.snapin table.master_control {
-    width: 100%;
-    margin: 0px 0px 0px 0px;
-    border-spacing: 0px;
-}
-
-div.snapin table.master_control td div.toggle_switch {
-    float: right;
-}
-
-div.snapin table.master_control td.left a {
-    text-align: left;
-    font-size: 8pt;
-    font-weight: normal;
-}
-
-div.snapin table.master_control td.left {
-    text-align: left;
-}
-
-div.snapin table.master_control td img.iconbutton {
-    width: 60px;
-    height: 16px;
-}
-
-"""
-}
-
-#.
-#   .--Bookmark List-------------------------------------------------------.
-#   | ____              _                         _      _     _     _     |
-#   || __ )  ___   ___ | | ___ __ ___   __ _ _ __| | __ | |   (_)___| |_   |
-#   ||  _ \ / _ \ / _ \| |/ / '_ ` _ \ / _` | '__| |/ / | |   | / __| __|  |
-#   || |_) | (_) | (_) |   <| | | | | | (_| | |  |   <  | |___| \__ \ |_   |
-#   ||____/ \___/ \___/|_|\_\_| |_| |_|\__,_|_|  |_|\_\ |_____|_|___/\__|  |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Shareable lists of bookmarks                                         |
-#   '----------------------------------------------------------------------'
-
-class BookmarkList(pagetypes.Overridable):
-    @classmethod
-    def type_name(cls):
-        return "bookmark_list"
-
-
-    @classmethod
-    def phrase(cls, what):
-        return {
-            "title"          : _("Bookmark list"),
-            "title_plural"   : _("Bookmark lists"),
-            "add_to"         : _("Add to bookmark list"),
-            "clone"          : _("Clone bookmark list"),
-            "create"         : _("Create bookmark list"),
-            "edit"           : _("Edit bookmark list"),
-            "new"            : _("New list"),
-        }.get(what, pagetypes.Base.phrase(what))
-
-
-    @classmethod
-    def parameters(cls, mode):
-        vs_topic = TextUnicode(
-            title = _("Topic") + "<sup>*</sup>",
-            size = 50,
-            allow_empty = False,
-        )
-
-        def bookmark_config_to_vs(v):
-            if v:
-                return (v["title"], v["url"], v["icon"], v["topic"])
-            else:
-                return v
-
-        def bookmark_vs_to_config(v):
-            return {
-                "title" : v[0],
-                "url"   : v[1],
-                "icon"  : v[2],
-                "topic" : v[3],
-            }
-
-        parameters = super(BookmarkList, cls).parameters(mode)
-
-        parameters += [(_("Bookmarks"), [
-            # sort-index, key, valuespec
-            (2.5, "default_topic", TextUnicode(
-                title = _("Default Topic") + "<sup>*</sup>",
-                size = 50,
-                allow_empty = False,
-            )),
-            (3.0, "bookmarks", ListOf(
-                # For the editor we want a compact dialog. The tuple horizontal editin mechanism
-                # is exactly the thing we want. But we want to store the data as dict. This is a
-                # nasty hack to use the transform by default. Better would be to make Dict render
-                # the same way the tuple is rendered.
-                Transform(
-                    Tuple(
-                        elements = [
-                            (TextUnicode(
-                                title = _("Title") + "<sup>*</sup>",
-                                size = 30,
-                                allow_empty = False,
-                            )),
-                            (TextUnicode(
-                                title = _("URL"),
-                                size = 50,
-                                allow_empty = False,
-                                validate = cls.validate_url,
-                            )),
-                            (IconSelector(
-                                title = _("Icon"),
-                            )),
-                            (Alternative(
-                                elements = [
-                                    FixedValue(None,
-                                        title = _("Use default topic"),
-                                        totext = _("(default topic)"),
-                                    ),
-                                    TextUnicode(
-                                        title = _("Individual topic"),
-                                        size = 30,
-                                        allow_empty = False,
-                                    ),
-                                ],
-                                title = _("Topic") + "<sup>*</sup>",
-                                style = "dropdown",
-                            )),
-                        ],
-                        orientation = "horizontal",
-                        title = _("Bookmarks"),
-                    ),
-                    forth = bookmark_config_to_vs,
-                    back = bookmark_vs_to_config,
-                ),
-            )),
-        ])]
-
-        return parameters
-
-
-    @classmethod
-    def validate_url(cls, value, varprefix):
-        parsed = urlparse.urlparse(value)
-
-        # Absolute URLs are allowed, but limit it to http/https
-        if parsed.scheme != "" and parsed.scheme not in [ "http", "https" ]:
-            raise MKUserError(varprefix, _("This URL ist not allowed to be used as bookmark"))
-
-
-    @classmethod
-    def _load(cls):
-        cls.load_legacy_bookmarks()
-
-
-    @classmethod
-    def add_default_bookmark_list(cls):
-        attrs = {
-            "title"         : u"My Bookmarks",
-            "public"        : False,
-            "owner"         : config.user.id,
-            "name"          : "my_bookmarks",
-            "description"   : u"Your personal bookmarks",
-            "default_topic" : u"My Bookmarks",
-            "bookmarks"     : [],
-        }
-
-        cls.add_instance((config.user.id, "my_bookmarks"), cls(attrs))
-
-
-    @classmethod
-    def load_legacy_bookmarks(cls):
-        # Don't load the legacy bookmarks when there is already a my_bookmarks list
-        if cls.has_instance((config.user.id, "my_bookmarks")):
-            return
-
-        # Also don't load them when the user has at least one bookmark list
-        for user_id, name in cls.instances_dict().keys():
-            if user_id == config.user.id:
-                return
-
-        cls.add_default_bookmark_list()
-        bookmark_list = cls.instance((config.user.id, "my_bookmarks"))
-
-        for title, url in load_legacy_bookmarks():
-            bookmark_list.add_bookmark(title, url)
-
-
-    @classmethod
-    def new_bookmark(cls, title, url):
-        return {
-           "title" : title,
-           "url"   : url,
-           "icon"  : None,
-           "topic" : None,
-        }
-
-
-    def default_bookmark_topic(self):
-        return self._["default_topic"]
-
-
-    def bookmarks_by_topic(self):
-        topics = {}
-        for bookmark in self._["bookmarks"]:
-            topic = topics.setdefault(bookmark["topic"], [])
-            topic.append(bookmark)
-        return sorted(topics.items())
-
-
-    def add_bookmark(self, title, url):
-        self._["bookmarks"].append(BookmarkList.new_bookmark(title, url))
-
-
-pagetypes.declare(BookmarkList)
-
-
-def load_legacy_bookmarks():
-    path = config.user.confdir + "/bookmarks.mk"
-    return store.load_data_from_file(path, [])
-
-
-def save_legacy_bookmarks(bookmarks):
-    config.user.save_file("bookmarks", bookmarks)
-
-
-def get_bookmarks_by_topic():
-    topics = {}
-    BookmarkList.load()
-    for instance in BookmarkList.instances_sorted():
-        if (instance.is_mine() and instance.may_see()) or \
-           (not instance.is_mine() and instance.is_public() and instance.may_see()):
-            for topic, bookmarks in instance.bookmarks_by_topic():
-                if topic == None:
-                    topic = instance.default_bookmark_topic()
-                bookmark_list = topics.setdefault(topic, [])
-                bookmark_list += bookmarks
-    return sorted(topics.items())
-
-
-def render_bookmarks():
-    html.javascript("""
-function add_bookmark() {
-    url = parent.frames[1].location;
-    title = parent.frames[1].document.title;
-    get_url("add_bookmark.py?title=" + encodeURIComponent(title)
-            + "&url=" + encodeURIComponent(url), updateContents, "snapin_bookmarks");
-}""")
-
-    for topic, bookmarks in get_bookmarks_by_topic():
-        html.begin_foldable_container("bookmarks", topic, False, topic)
-
-        for bookmark in bookmarks:
-            icon = bookmark["icon"]
-            if not icon:
-                icon = "kdict"
-
-            iconlink(bookmark["title"], bookmark["url"], icon)
-
-        html.end_foldable_container()
-
-    begin_footnote_links()
-    link(_("Add Bookmark"), "javascript:void(0)", onclick="add_bookmark()")
-    link(_("Edit"), "bookmark_lists.py")
-    end_footnote_links()
-
-
-def try_shorten_url(url):
-    referer = html.request.referer
-    if referer:
-        ref_p = urlparse.urlsplit(referer)
-        url_p = urlparse.urlsplit(url)
-
-        # If http/https or user, pw, host, port differ, don't try to shorten
-        # the URL to be linked. Simply use the full URI
-        if ref_p.scheme == url_p.scheme and ref_p.netloc == url_p.netloc:
-            # We try to remove http://hostname/some/path/check_mk from the
-            # URI. That keeps the configuration files (bookmarks) portable.
-            # Problem here: We have not access to our own URL, only to the
-            # path part. The trick: we use the Referrer-field from our
-            # request. That points to the sidebar.
-            referer = ref_p.path
-            url     = url_p.path
-            if url_p.query:
-                url += '?' + url_p.query
-            removed = 0
-            while '/' in referer and referer.split('/')[0] == url.split('/')[0]:
-                referer = referer.split('/', 1)[1]
-                url = url.split('/', 1)[1]
-                removed += 1
-
-            if removed == 1:
-                # removed only the first "/". This should be an absolute path.
-                url = '/' + url
-            elif '/' in referer:
-                # there is at least one other directory layer in the path, make
-                # the link relative to the sidebar.py's topdir. e.g. for pnp
-                # links in OMD setups
-                url = '../' + url
-    return url
-
-
-def add_bookmark(title, url):
-    BookmarkList.load()
-
-    if not BookmarkList.has_instance((config.user.id, "my_bookmarks")):
-        BookmarkList.add_default_bookmark_list()
-
-    bookmarks = BookmarkList.instance((config.user.id, "my_bookmarks"))
-    bookmarks.add_bookmark(title, try_shorten_url(url))
-    bookmarks.save_user_instances()
-
-
-def ajax_add_bookmark():
-    title = html.var("title")
-    url   = html.var("url")
-    if title and url:
-        BookmarkList.validate_url(url, "url")
-        add_bookmark(title, url)
-    render_bookmarks()
-
-
-sidebar_snapins["bookmarks"] = {
-    "title" : _("Bookmarks"),
-    "description" : _("A simple and yet practical snapin allowing to create "
-                      "bookmarks to views and other content in the main frame"),
-    "render" : render_bookmarks,
-    "allowed": [ "user", "admin", "guest" ],
-    "styles" : """
-div.bookmark {
-    width: 230px;
-    max-width: 230px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
-    white-space: nowrap;
-    color: white;
-}
-"""
-}
-
 
 #.
 #   .--Custom Links--------------------------------------------------------.

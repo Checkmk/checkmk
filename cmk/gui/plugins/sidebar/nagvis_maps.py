@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,20 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.views as views
 import cmk.gui.config as config
+from cmk.gui.i18n import _
 
-def render_nagvis_maps():
-    refresh_url = "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (config.url_prefix())
-    return refresh_url
+from . import SidebarSnapin
 
-sidebar_snapins["nagvis_maps"] = {
-    "title":       _("NagVis Maps"),
-    "description": _("List of available NagVis maps. This only works with NagVis 1.5 and above. "),
-    "render":      render_nagvis_maps,
-    "allowed":     [ "user", "admin", "guest" ],
-    "refresh":     True,
-    "styles":      """
+class NagVisMaps(SidebarSnapin):
+    @staticmethod
+    def type_name():
+        return "nagvis_maps"
+
+
+    def title(self):
+        return _("NagVis Maps")
+
+
+    def description(self):
+        return _("List of available NagVis maps. This only works with NagVis 1.5 and above. ")
+
+
+    def show(self):
+        return "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (config.url_prefix())
+
+
+    def allowed_roles(self):
+        return [ "admin", "user", "guest" ]
+
+
+    def styles(self):
+        return """
 div.state1.statea {
     border-color: #ff0;
 }
@@ -57,4 +72,6 @@ div.stated {
     background-color: #0b3;
 }
 """
-}
+
+    def refresh_regularly(self):
+        return True

@@ -25,12 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.mkeventd as mkeventd
+import cmk.gui.config as config
+from cmk.gui.i18n import _
 
-try:
-    mkeventd_enabled = config.mkeventd_enabled
-except:
-    mkeventd_enabled = False
-
+from . import (
+    snapin_site_choice,
+    sidebar_snapins,
+    snapin_width,
+)
 
 def mkeventd_performance_entries(only_sites):
     status = mkeventd.get_total_stats(only_sites) # combination of several sites
@@ -98,7 +100,7 @@ def render_mkeventd_performance():
             html.render_td(right))
     html.close_table()
 
-if mkeventd_enabled:
+if config.mkeventd_enabled:
     sidebar_snapins["mkeventd_performance"] = {
         "title"       : _("Event Console Performance"),
         "description" : _("Monitor the performance of the Event Console"),

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
 import abc
 import pprint
 import os
@@ -31,6 +32,7 @@ import copy
 import urlparse
 import traceback
 import json
+import time
 
 import cmk.paths
 import cmk.store as store
@@ -48,17 +50,42 @@ import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.modules as modules
 import cmk.gui.plugins.sidebar
+import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKException
 from cmk.gui.log import logger
 
-# Constants to be used in snapins
-snapin_width = 230
+if not cmk.is_raw_edition():
+    import cmk.gui.cee.plugins.sidebar
 
+if cmk.is_managed_edition():
+    import cmk.gui.cme.plugins.sidebar
+
+# Helper functions to be used by snapins
+# Kept for compatibility with legacy plugins
+# TODO: Drop once we don't support legacy snapins anymore
+from cmk.gui.plugins.sidebar.utils import (
+    sidebar_snapins,
+    snapin_width,
+    snapin_site_choice,
+    visuals_by_topic,
+    render_link,
+    heading,
+    link,
+    simplelink,
+    bulletlink,
+    iconlink,
+    nagioscgilink,
+    footnotelinks,
+    begin_footnote_links,
+    end_footnote_links,
+    write_snapin_exception,
+)
+
+quicksearch_match_plugins = []
+QuicksearchMatchPlugin = cmk.gui.plugins.sidebar.quicksearch.QuicksearchMatchPlugin
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
-sidebar_snapins = {}
-search_plugins  = []
 
 def load_plugins(force):
     global loaded_with_language
@@ -66,8 +93,6 @@ def load_plugins(force):
         return
 
     # Load all snapins
-    global sidebar_snapins
-    sidebar_snapins = {}
     global search_plugins
     search_plugins = []
 
@@ -76,6 +101,7 @@ def load_plugins(force):
     utils.load_web_plugins("sidebar", globals())
 
     transform_old_dict_based_snapins()
+    transform_old_quicksearch_match_plugins()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -100,83 +126,10 @@ def transform_old_dict_based_snapins():
         snapin_registry.register_snapin(GenericSnapin(snapin_id, snapin))
 
 
-# Helper functions to be used by snapins
-def render_link(text, url, target="main", onclick = None):
-    # Convert relative links into absolute links. We have three kinds
-    # of possible links and we change only [3]
-    # [1] protocol://hostname/url/link.py
-    # [2] /absolute/link.py
-    # [3] relative.py
-    if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
-        url = config.url_prefix() + "check_mk/" + url
-    return html.render_a(text, href=url, class_="link", target=target or '',\
-                         onfocus = "if (this.blur) this.blur();",\
-                         onclick = onclick or None)
-
-
-def link(text, url, target="main", onclick = None):
-    return html.write(render_link(text, url, target=target, onclick=onclick))
-
-
-def simplelink(text, url, target="main"):
-    link(text, url, target)
-    html.br()
-
-
-def bulletlink(text, url, target="main", onclick = None):
-    html.open_li(class_="sidebar")
-    link(text, url, target, onclick)
-    html.close_li()
-
-
-def iconlink(text, url, icon):
-    html.open_a(class_=["iconlink", "link"], target="main", href=url)
-    html.icon(icon=icon, help=None, cssclass="inline")
-    html.write(text)
-    html.close_a()
-    html.br()
-
-
-def nagioscgilink(text, target):
-    html.open_li(class_="sidebar")
-    html.a(text, class_="link", target="main", href="%snagios/cgi-bin/%s" % (config.url_prefix(), target))
-    html.close_li()
-
-
-def begin_footnote_links():
-    html.open_div(class_="footnotelink")
-
-def end_footnote_links():
-    html.close_div()
-
-def footnotelinks(links):
-    begin_footnote_links()
-    for text, target in links:
-        link(text, target)
-    end_footnote_links()
-
-
-def heading(text):
-    html.write("<h3>%s</h3>\n" % html.attrencode(text))
-
-
-def snapin_site_choice(ident, choices):
-    sites = config.user.load_file("sidebar_sites", {})
-    site  = sites.get(ident, "")
-    if site == "":
-        only_sites = None
-    else:
-        only_sites = [site]
-
-    site_choices = config.get_event_console_site_choices()
-    if len(site_choices) <= 1:
-        return None
-
-    site_choices = [ ("", _("All sites")), ] + site_choices
-    onchange = "set_snapin_site(event, %s, this)" % json.dumps(ident)
-    html.dropdown("site", site_choices, deflt=site, onchange=onchange)
-
-    return only_sites
+# TODO: Deprecate this one day.
+def transform_old_quicksearch_match_plugins():
+    for match_plugin in quicksearch_match_plugins:
+        cmk.gui.plugins.sidebar.quicksearch.match_plugin_registry.register(match_plugin)
 
 
 # Load current state of user's sidebar. Convert from
@@ -424,9 +377,11 @@ def render_snapin(name, state):
     html.open_div(class_="content", id_="snapin_%s" % name, style=style)
     refresh_url = ''
     try:
+        # TODO: Refactor this confusing special case. Add deddicated method or something
+        # to let the snapins make the sidebar know that there is a URL to fetch.
         url = snapin.show()
-        # Fetch the contents from an external URL. Don't render it on our own.
         if not url is None:
+            # Fetch the contents from an external URL. Don't render it on our own.
             refresh_url = url
             html.javascript("get_url(\"%s\", updateContents, \"snapin_%s\")" % (refresh_url, name))
     except Exception, e:
@@ -436,12 +391,6 @@ def render_snapin(name, state):
     html.close_div()
     return refresh_url
 
-def write_snapin_exception(e):
-    html.open_div(class_=["snapinexception"])
-    html.h2(_('Error'))
-    html.p(e)
-    html.div(traceback.format_exc().replace('\n', '<br>'), style="display:none;")
-    html.close_div()
 
 def ajax_fold():
     config = load_user_config()
@@ -580,37 +529,6 @@ def page_add_snapin():
     html.footer()
 
 
-def ajax_switch_masterstate():
-    site = html.var("site")
-    column = html.var("switch")
-    state = int(html.var("state"))
-    commands = {
-        ( "enable_notifications",     1) : "ENABLE_NOTIFICATIONS",
-        ( "enable_notifications",     0) : "DISABLE_NOTIFICATIONS",
-        ( "execute_service_checks",   1) : "START_EXECUTING_SVC_CHECKS",
-        ( "execute_service_checks",   0) : "STOP_EXECUTING_SVC_CHECKS",
-        ( "execute_host_checks",      1) : "START_EXECUTING_HOST_CHECKS",
-        ( "execute_host_checks",      0) : "STOP_EXECUTING_HOST_CHECKS",
-        ( "enable_flap_detection",    1) : "ENABLE_FLAP_DETECTION",
-        ( "enable_flap_detection",    0) : "DISABLE_FLAP_DETECTION",
-        ( "process_performance_data", 1) : "ENABLE_PERFORMANCE_DATA",
-        ( "process_performance_data", 0) : "DISABLE_PERFORMANCE_DATA",
-        ( "enable_event_handlers",    1) : "ENABLE_EVENT_HANDLERS",
-        ( "enable_event_handlers",    0) : "DISABLE_EVENT_HANDLERS",
-    }
-
-    command = commands.get((column, state))
-    if command:
-        sites.live().command("[%d] %s" % (int(time.time()), command), site)
-        sites.live().set_only_sites([site])
-        sites.live().query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
-               (column, state, column))
-        sites.live().set_only_sites()
-        render_master_control()
-    else:
-        html.write(_("Command %s/%d not found") % (html.attrencode(column), state))
-
-
 def ajax_set_snapin_site():
     ident = html.var("ident")
     if ident not in snapin_registry:
@@ -644,479 +562,6 @@ def ajax_switch_site():
             d["disabled"] = onoff != "on"
             config.user.siteconf[sitename] = d
         config.user.save_site_config()
-
-
-#.
-#   .--Quicksearch---------------------------------------------------------.
-#   |         ___        _      _                            _             |
-#   |        / _ \ _   _(_) ___| | _____  ___  __ _ _ __ ___| |__          |
-#   |       | | | | | | | |/ __| |/ / __|/ _ \/ _` | '__/ __| '_ \         |
-#   |       | |_| | |_| | | (__|   <\__ \  __/ (_| | | | (__| | | |        |
-#   |        \__\_\\__,_|_|\___|_|\_\___/\___|\__,_|_|  \___|_| |_|        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Handles ajax search reuquests (like issued by the quicksearch dialog |
-#   '----------------------------------------------------------------------'
-
-
-# Ensures the provided search string is a regex, does some basic conversion
-# and then tries to verify it is a regex
-def to_regex(s):
-    s = s.replace('*', '.*')
-    try:
-        re.compile(s)
-    except re.error:
-        raise MKGeneralException(_('You search statement is not valid. You need to provide a regular '
-            'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-            'if you like to search for a single backslash.'))
-    return s
-
-
-def ajax_search():
-    q = html.var_utf8('q').strip()
-    if not q:
-        return
-
-    try:
-        generate_results(q)
-    except MKException, e:
-        html.show_error(e)
-    except Exception, e:
-        logger.exception()
-        if config.debug:
-            raise
-        import traceback
-        html.show_error(traceback.format_exc())
-
-
-def search_open():
-    q = html.var('q').strip()
-    if not q:
-        return
-
-    url = generate_search_results(q)
-    html.response.http_redirect(url)
-
-class TooManyRowsError(MKException):
-    pass
-
-class LivestatusSearchBase(object):
-    def _build_url(self, url_params, restore_regex = False):
-        new_params = []
-        if restore_regex:
-            for key, value in url_params:
-                new_params.append((key, value.replace("\\", "\\\\")))
-        else:
-            new_params.extend(url_params)
-        return html.makeuri(new_params, delvars  = "q", filename = "view.py")
-
-
-# Handles exactly one livestatus query
-class LivestatusSearchConductor(LivestatusSearchBase):
-    def __init__(self, used_filters, filter_behaviour):
-        # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
-        # filter_behaviour: "continue"
-        self._used_filters       = used_filters
-        self._filter_behaviour   = filter_behaviour
-
-        self._livestatus_command = None # Computed livestatus query
-        self._rows               = []   # Raw data from livestatus
-        self._elements           = []   # Postprocessed rows
-
-
-    def get_filter_behaviour(self):
-        return self._filter_behaviour
-
-
-    def do_query(self):
-        self._execute_livestatus_command()
-
-
-    def num_rows(self):
-        return len(self._rows)
-
-
-    def remove_rows_from_end(self, num):
-        self._rows = self._rows[:-num]
-
-
-    def row_limit_exceeded(self):
-        return self._too_much_rows
-
-
-    def get_elements(self):
-        return self._elements
-
-
-    def get_match_topic(self):
-        if len(self._used_filters.keys()) > 1:
-            return "Multi-Filter"
-        shortname = self._used_filters.keys()[0]
-        return self._get_plugin_with_shortname(shortname).get_match_topic()
-
-
-    def _get_plugin_with_shortname(self, shortname):
-        for plugin in quicksearch_match_plugins:
-            if plugin.get_filter_shortname() == shortname:
-                return plugin
-
-
-    def _execute_livestatus_command(self):
-        self._rows = []
-        self._too_much_rows = False
-
-        self._generate_livestatus_command()
-
-        if not self._livestatus_command:
-            return
-
-        sites.live().set_prepend_site(True)
-        results = sites.live().query(self._livestatus_command)
-        sites.live().set_prepend_site(False)
-
-        # Invalid livestatus response, missing headers..
-        if not results:
-            return
-
-        headers =  ["site"] + self._queried_livestatus_columns
-        self._rows = [dict(zip(headers, x)) for x in results]
-
-
-        limit = config.quicksearch_dropdown_limit
-        if len(self._rows) > limit:
-            self._too_much_rows = True
-            self._rows.pop() # Remove limit+1nth element
-
-
-    def _generate_livestatus_command(self):
-        self._determine_livestatus_table()
-        columns_to_query           = set(self._get_livestatus_default_columns())
-        livestatus_filter_domains  = {} # Filters sorted by domain
-        self._used_search_plugins  = [x for x in quicksearch_match_plugins if
-                                        x.is_used_for_table(self._livestatus_table, self._used_filters)]
-
-        for plugin in self._used_search_plugins:
-            columns_to_query.update(set(plugin.get_livestatus_columns(self._livestatus_table)))
-            name = plugin.get_filter_shortname()
-            livestatus_filter_domains.setdefault(name, [])
-            livestatus_filter_domains[name].append(plugin.get_livestatus_filters(self._livestatus_table,
-                                                                                 self._used_filters))
-
-        # Combine filters of same domain (h/s/sg/hg/..)
-        livestatus_filters = []
-        for entries in livestatus_filter_domains.values():
-            livestatus_filters.append("\n".join(entries))
-            if len(entries) > 1:
-                livestatus_filters[-1] += "\nOr: %d" % len(entries)
-
-        if len(livestatus_filters) > 1:
-            livestatus_filters.append("And: %d" % len(livestatus_filters))
-
-        self._queried_livestatus_columns = list(columns_to_query)
-        self._livestatus_command         = "GET %s\nColumns: %s\n%s\n" % (self._livestatus_table,
-                                              " ".join(self._queried_livestatus_columns),
-                                              "\n".join(livestatus_filters))
-
-        # Limit number of results
-        limit = config.quicksearch_dropdown_limit
-        self._livestatus_command += "Cache: reload\nLimit: %d\nColumnHeaders: off" % (limit + 1)
-
-
-    # Returns the livestatus table fitting the given filters
-    def _determine_livestatus_table(self):
-        # Available tables
-        # hosts / services / hostgroups / servicegroups
-
-        # {table} -> {is_included_in_table}
-        # Hostgroups -> Hosts -> Services
-        # Servicegroups -> Services
-
-        preferred_tables = []
-        for shortname in self._used_filters.keys():
-            plugin = self._get_plugin_with_shortname(shortname)
-            preferred_tables.append(plugin.get_preferred_livestatus_table())
-
-
-        table_to_query = ""
-        if "services" in preferred_tables:
-            table_to_query = "services"
-        elif "servicegroups" in preferred_tables:
-            if "hosts" in preferred_tables or "hostgroups" in preferred_tables:
-                table_to_query = "services"
-            else:
-                table_to_query = "servicegroups"
-        elif "hosts" in preferred_tables:
-            table_to_query = "hosts"
-        elif "hostgroups" in preferred_tables:
-            table_to_query = "hostgroups"
-
-        self._livestatus_table = table_to_query
-
-
-    def _get_livestatus_default_columns(self):
-        return {
-            "services":      ["description", "host_name"],
-            "hosts":         ["name"],
-            "hostgroups":    ["name"],
-            "servicegroups": ["name"],
-        } [self._livestatus_table]
-
-
-    def get_search_url_params(self):
-        exact_match = self.num_rows() == 1
-        target_view = self._get_target_view(exact_match = exact_match)
-
-        url_params = [("view_name", target_view), ("filled_in", "filter")]
-        for plugin in self._used_search_plugins:
-            match_info = plugin.get_matches(target_view,
-                                            exact_match and self._rows[0] or None,
-                                            self._livestatus_table,
-                                            self._used_filters,
-                                            rows = self._rows)
-            if not match_info:
-                continue
-            text, url_filters = match_info
-            url_params.extend(url_filters)
-
-        return url_params
-
-
-    def create_result_elements(self):
-        self._elements = []
-        if not self._rows:
-            return
-
-        target_view = self._get_target_view()
-
-        # Feed each row to the filters and let them add additional text/url infos
-        for row in self._rows:
-            entry = {"text_tokens": []}
-            url_params = []
-            skip_site = False
-            for filter_shortname in self._used_filters:
-                plugin = self._get_plugin_with_shortname(filter_shortname)
-
-                if plugin.is_group_match():
-                    skip_site = True
-
-                match_info = plugin.get_matches(target_view, row, self._livestatus_table, self._used_filters)
-                if not match_info:
-                    continue
-                text, url_filters = match_info
-                url_params.extend(url_filters)
-                entry["text_tokens"].append((plugin.get_filter_shortname(), text))
-
-            url_tokens = [("view_name", target_view)] + url_params
-            if not skip_site:
-                url_tokens.append(("site", row.get("site")))
-            entry["url"] = self._build_url(url_tokens, restore_regex = True)
-
-
-            entry["raw_data"] = row
-            self._elements.append(entry)
-
-        self._generate_display_texts()
-
-
-
-    def _get_target_view(self, exact_match = True):
-        if exact_match:
-            if self._livestatus_table == "hosts":
-                return "host"
-            elif self._livestatus_table == "services":
-                return "allservices"
-            elif self._livestatus_table == "hostgroups":
-                return "hostgroup"
-            elif self._livestatus_table == "servicegroups":
-                return "servicegroup"
-        else:
-            if self._livestatus_table == "hosts":
-                return "searchhost"
-            elif self._livestatus_table == "services":
-                return "searchsvc"
-            elif self._livestatus_table == "hostgroups":
-                return "hostgroups"
-            elif self._livestatus_table == "servicegroups":
-                return "svcgroups"
-
-
-    def _generate_display_texts(self):
-        for element in self._elements:
-            if self._livestatus_table == "services":
-                element["display_text"] = element["raw_data"]["description"]
-            else:
-                element["display_text"] = element["text_tokens"][0][1]
-
-
-        if self._element_texts_unique():
-            return
-
-        # Some (ugly) special handling when the results are not unique
-        # Whenever this happens we try to find a fitting second value
-
-        if self._livestatus_table in ["hostgroups", "servicegroups"]:
-            # Discard redundant hostgroups
-            new_elements = []
-            used_groups  = set()
-            for element in self._elements:
-                if element["display_text"] in used_groups:
-                    continue
-                new_elements.append(element)
-                used_groups.add(element["display_text"])
-            self._elements = new_elements
-        else:
-            # Add additional info to the display text
-            for element in self._elements:
-                hostname = element["raw_data"].get("host_name", element["raw_data"].get("name"))
-                if "&host_regex=" not in element["url"]:
-                    element["url"] += "&host_regex=%s" % hostname
-
-                for shortname, text in element["text_tokens"]:
-                    if shortname in ["h", "al"] and text not in element["display_text"]:
-                        element["display_text"] += " <b>%s</b>" % text
-                        break
-                else:
-                    element["display_text"] += " <b>%s</b>" % hostname
-
-
-    def _element_texts_unique(self):
-        used_texts = set()
-        for entry in self._elements:
-            if entry["display_text"] in used_texts:
-                return False
-            used_texts.add(entry["display_text"])
-        return True
-
-
-
-class LivestatusQuicksearch(LivestatusSearchBase):
-    def __init__(self, query):
-        self._query = query
-        self._search_objects     = []    # Each of these objects do exactly one ls query
-        super(LivestatusQuicksearch, self).__init__()
-
-
-    def generate_dropdown_results(self):
-        try:
-            self._query_data()
-        except TooManyRowsError, e:
-            html.show_warning(e)
-
-        self._evaluate_results()
-        self._render_dropdown_elements()
-
-
-    def generate_search_url(self):
-        try:
-            self._query_data()
-        except TooManyRowsError:
-            pass
-
-        # Generate a search page for the topmost search_object with results
-        url_params = []
-
-        restore_regex = False
-        for search_object in self._search_objects:
-            if search_object.num_rows() > 0:
-                url_params.extend(search_object.get_search_url_params())
-                if search_object.num_rows() == 1:
-                    restore_regex = True
-                break
-        else:
-            url_params.extend([("view_name", "allservices"),
-                               ("filled_in", "filter"),
-                               ("service_regex", self._query)])
-
-        return self._build_url(url_params, restore_regex = restore_regex)
-
-
-    def _query_data(self):
-        self._determine_search_objects()
-        self._conduct_search()
-
-
-    def _determine_search_objects(self):
-        filter_names = {"%s" % x.get_filter_shortname() for x in quicksearch_match_plugins}
-        filter_regex = "|".join(filter_names)
-
-        # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
-        regex = "((^| )(%(filter_regex)s):)" % {"filter_regex": filter_regex}
-        found_filters = []
-        matches = re.finditer(regex, self._query)
-        for match in matches:
-            found_filters.append((match.group(1), match.start()))
-
-        if found_filters:
-            filter_spec = {}
-            current_string = self._query
-            for filter_type, offset in found_filters[-1::-1]:
-                filter_text = to_regex(current_string[offset+len(filter_type):]).strip()
-                filter_name = filter_type.strip().rstrip(":")
-                filter_spec.setdefault(filter_name, []).append(filter_text)
-                current_string = current_string[:offset]
-            self._search_objects.append(LivestatusSearchConductor(filter_spec, "continue"))
-        else:
-            # No explicit filters set.
-            # Use configured quicksearch search order
-            for (filter_name, filter_behaviour) in config.quicksearch_search_order:
-                self._search_objects.append(LivestatusSearchConductor({filter_name: [to_regex(self._query)]}, filter_behaviour))
-
-
-    # Collect the raw data from livestatus
-    def _conduct_search(self):
-        total_rows = 0
-        for idx, search_object in enumerate(self._search_objects):
-            search_object.do_query()
-            total_rows += search_object.num_rows()
-
-            if total_rows > config.quicksearch_dropdown_limit:
-                search_object.remove_rows_from_end(total_rows - config.quicksearch_dropdown_limit)
-                raise TooManyRowsError(_("More than %d results") % config.quicksearch_dropdown_limit)
-
-            if search_object.row_limit_exceeded():
-                raise TooManyRowsError(_("More than %d results") % config.quicksearch_dropdown_limit)
-
-            if search_object.num_rows() > 0 and search_object.get_filter_behaviour() != "continue":
-                if search_object.get_filter_behaviour() == "finished_distinct":
-                    # Discard all data of previous filters and break
-                    for i in range(idx-1, -1, -1):
-                        self._search_objects[i].remove_rows_from_end(config.quicksearch_dropdown_limit)
-                break
-
-
-    # Generates elements out of the raw data
-    def _evaluate_results(self):
-        for search_object in self._search_objects:
-            search_object.create_result_elements()
-
-
-    # Renders the elements
-    def _render_dropdown_elements(self):
-        # Show search topic if at least two search objects provide elements
-        show_match_topics = len([x for x in self._search_objects if x.num_rows() > 0]) > 1
-
-        for search_object in self._search_objects:
-            if not search_object.num_rows():
-                continue
-            elements = search_object.get_elements()
-            elements.sort(key = lambda x: x["display_text"])
-            if show_match_topics:
-                match_topic = search_object.get_match_topic()
-                html.div(_("Results for %s") % match_topic, class_="topic")
-
-            for entry in elements:
-                html.a(entry["display_text"], id="result_%s" % self._query, href=entry["url"], target="main")
-
-
-
-def generate_results(query):
-    quicksearch = LivestatusQuicksearch(query)
-    quicksearch.generate_dropdown_results()
-
-
-def generate_search_results(query):
-    quicksearch = LivestatusQuicksearch(query)
-    return quicksearch.generate_search_url()
 
 
 #.

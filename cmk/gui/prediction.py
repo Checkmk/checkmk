@@ -33,6 +33,7 @@ import cmk.paths
 import cmk.utils
 import cmk.store as store
 
+import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
@@ -42,6 +43,7 @@ from cmk.gui.exceptions import MKGeneralException
 graph_size = 2000, 700
 
 
+@cmk.gui.pages.register("prediction_graph")
 def page_graph():
     host    = html.var("host")
     service = html.var("service")

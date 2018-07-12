@@ -24,10 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""Module to hold shared code for main module and the plugins"""
+_pages = {}
 
-pagehandlers = {}
+def register(path):
+    """Register a function to be called when the given URL is called.
+
+    In case you need to register some callable like staticmethods or
+    classmethods, you will have to use register_page_handler() directly
+    because this decorator can not deal with them.
+
+    It is essentially a decorator that calls register_page_handler().
+    """
+    def wrap(page_func):
+        if isinstance(page_func, (staticmethod, classmethod)):
+            raise NotImplementedError()
+
+        register_page_handler(path, page_func)
+        return page_func
+    return wrap
 
 
-def register_handlers(handlers):
-    pagehandlers.update(handlers)
+def register_page_handler(path, page_func):
+    """Register a function to be called when the given URL is called."""
+    _pages[path] = page_func
+
+
+def get_page_handler(name, dflt=None):
+    """Returns either the page handler registered for the given name or None
+
+    In case dflt is given it returns dflt instead of None when there is no
+    page handler for the requested name."""
+    return _pages.get(name, dflt)

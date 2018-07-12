@@ -46,6 +46,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.i18n
+import cmk.gui.pages
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _u, _
@@ -261,6 +262,7 @@ def load_host_tag_painters():
 #   | Show list of all views with buttons for editing                      |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("edit_views")
 def page_edit_views():
     load_views()
     cols = [ (_('Datasource'), lambda v: multisite_datasources[v["datasource"]]['title']) ]
@@ -297,6 +299,7 @@ def DatasourceSelection():
         default_value = 'services',
     )
 
+@cmk.gui.pages.register("create_view")
 def page_create_view(next_url = None):
 
     vs_ds = DatasourceSelection()
@@ -340,6 +343,8 @@ def page_create_view(next_url = None):
     html.end_form()
     html.footer()
 
+
+@cmk.gui.pages.register("create_view_infos")
 def page_create_view_infos():
     ds_name = html.var('datasource')
     if ds_name not in multisite_datasources:
@@ -360,6 +365,7 @@ def page_create_view_infos():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("edit_view")
 def page_edit_view():
     load_views()
 
@@ -752,6 +758,7 @@ def show_filter_form(is_open, filters):
     html.close_div()
 
 
+@cmk.gui.pages.register("view")
 def page_view():
     bi.reset_cache_status() # needed for status icon
 
@@ -1393,6 +1400,7 @@ def toggler(id, icon, help, onclick, value, hidden = False):
 # Will be called when the user presses the upper button, in order
 # to persist the new setting - and to make it active before the
 # browser reload of the DIV containing the actual status data is done.
+@cmk.gui.pages.register("ajax_set_viewoption")
 def ajax_set_viewoption():
     view_name = html.var("view_name")
     option = html.var("option")
@@ -1521,6 +1529,7 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
     html.javascript("update_togglebutton('checkbox', %d);" % (enable_command_toggle and enable_checkbox_toggle and 1 or 0, ))
 
 
+@cmk.gui.pages.register("count_context_button")
 def ajax_count_button():
     id = html.var("id")
     counts = config.user.load_file("buttoncounts", {})
@@ -1895,6 +1904,8 @@ def get_context_link(user, viewname):
     else:
         return None
 
+
+@cmk.gui.pages.register("export_views")
 def ajax_export():
     load_views()
     for name, view in available_views.items():
@@ -1952,6 +1963,7 @@ def docu_link(topic, text):
 #   | AJAX API call for rendering the icon selector                        |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("ajax_popup_icon_selector")
 def ajax_popup_icon_selector():
     varprefix   = html.var('varprefix')
     value       = html.var('value')
@@ -1997,6 +2009,7 @@ def query_action_data(what, host, site, svcdesc):
     return dict(zip(['site'] + columns, row))
 
 
+@cmk.gui.pages.register("ajax_popup_action_menu")
 def ajax_popup_action_menu():
     site    = html.var('site')
     host    = html.var('host')
@@ -2053,6 +2066,7 @@ def ajax_popup_action_menu():
 #   | Ajax webservice for reschedulung host- and service checks            |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("ajax_reschedule")
 def ajax_reschedule():
     try:
         do_reschedule()

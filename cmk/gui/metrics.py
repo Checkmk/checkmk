@@ -54,6 +54,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.table as table
 import cmk.gui.sites as sites
 import cmk.gui.i18n
+import cmk.gui.pages
 from cmk.gui.i18n import _
 
 from cmk.gui.log import logger
@@ -639,6 +640,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
 # Called with exactly one variable: the template ID. Example:
 # "check_mk-kernel.util:guest,steal,system,user,wait".
+@cmk.gui.pages.register("noauth:pnp_template")
 def page_pnp_template():
     try:
         template_id = html.var("id")
@@ -919,6 +921,7 @@ def get_graph_template_by_source(graph_templates, source):
 
 
 # This page is called for the popup of the graph icon of hosts/services.
+@cmk.gui.pages.register("host_service_graph_popup")
 def page_host_service_graph_popup():
     site_id = html.var('site')
     host_name = html.var('host_name')
@@ -960,6 +963,7 @@ def host_service_graph_popup_pnp(site, host_name, service_description):
 #   |  This page handler is called by graphs embedded in a dashboard.      |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("graph_dashlet")
 def page_graph_dashlet():
     spec = html.var("spec")
     if not spec:

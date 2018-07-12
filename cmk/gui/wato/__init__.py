@@ -117,6 +117,7 @@ import cmk.gui.backup as backup
 import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
+import cmk.gui.pages
 import cmk.gui.plugin_registry
 import cmk.gui.wato.base_modes
 from cmk.gui.i18n import _u, _
@@ -211,7 +212,6 @@ from cmk.gui.watolib import (
     transform_simple_to_multi_host_rule_match_conditions,
     WatoBackgroundJob,
 )
-
 
 
 modes = {}
@@ -309,7 +309,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
 #   `----------------------------------------------------------------------'
 
 
-
+@cmk.gui.pages.register("wato")
 def page_handler():
     initialize_wato_html_head()
 
@@ -14834,6 +14834,12 @@ def user_profile_async_replication_dialog(sites):
     html.close_div()
 
 
+@cmk.gui.pages.register("user_change_pw")
+def page_change_own_password():
+    page_user_profile(change_pw=True)
+
+
+@cmk.gui.pages.register("user_profile")
 def page_user_profile(change_pw=False):
     start_async_replication = False
 
@@ -18418,3 +18424,24 @@ def load_plugins(force):
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
+
+
+# TODO: Clean this up! We would like to use the cmk.gui.pages.register() decorator instead
+# of this
+_wato_pages = {
+    "ajax_start_activation"     : lambda: ModeAjaxStartActivation().handle_page(),
+    "ajax_activation_state"     : lambda: ModeAjaxActivationState().handle_page(),
+    "wato_ajax_profile_repl"    : lambda: ModeAjaxProfileReplication().handle_page(),
+
+    "automation_login"          : lambda: ModeAutomationLogin().page(),
+    "noauth:automation"         : lambda: ModeAutomation().page(),
+    "ajax_set_foldertree"       : lambda: ModeAjaxSetFoldertree().handle_page(),
+    "wato_ajax_diag_host"       : lambda: ModeAjaxDiagHost().handle_page(),
+    "wato_ajax_execute_check"   : lambda: ModeAjaxExecuteCheck().handle_page(),
+    "fetch_agent_output"        : lambda: PageFetchAgentOutput().page(),
+    "download_agent_output"     : lambda: PageDownloadAgentOutput().page(),
+    "ajax_popup_move_to_folder" : lambda: ModeAjaxPopupMoveToFolder().page(),
+    "ajax_backup_job_state"     : lambda: ModeAjaxBackupJobState().page(),
+}
+for path, page_func in _wato_pages.items():
+    cmk.gui.pages.register_page_handler(path, page_func)

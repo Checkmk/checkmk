@@ -24,9 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.config as config
 import json
 
+import cmk.gui.config as config
+import cmk.gui.pages
+
+@cmk.gui.pages.register("ajax_switch_help")
 def ajax_switch_help():
     state = html.var("enabled", "") != ""
     config.user.save_file("help", state)

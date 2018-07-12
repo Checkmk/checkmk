@@ -36,6 +36,7 @@ import cmk.store as store
 import cmk.profile
 from cmk.structured_data import StructuredDataTree, Container, Numeration, Attributes
 
+import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
@@ -240,6 +241,7 @@ None in case the user is allowed to see the whole tree.
     return permitted_paths
 
 
+@cmk.gui.pages.register("host_inv_api")
 def page_host_inv_api():
     # The response is always a top level dict with two elements:
     # a) result_code - This is 0 for expected processing and 1 for an error

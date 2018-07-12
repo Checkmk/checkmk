@@ -54,79 +54,49 @@ import cmk
 import cmk.paths
 
 import cmk.gui.utils as utils
-import cmk.gui.pagetypes as pagetypes
+import cmk.gui.pages
 
-from cmk.gui.plugins.pages import (
-    register_handlers,
-    pagehandlers,
-)
-
-import cmk.gui.plugins.pages
+import cmk.gui.plugins.main_modules
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.pages
+    import cmk.gui.cee.plugins.main_modules
 
 if not cmk.is_managed_edition():
-    import cmk.gui.cme.plugins.pages
+    import cmk.gui.cme.plugins.main_modules
 
-
-# Register non page specific modules which are not having own pages,
-# but plugins to be loaded.
-internal_module_names = [
-    "cmk.gui.hooks",
-    "cmk.gui.default_permissions",
-    "cmk.gui.visuals"
-]
-
+# TODO: Both kept for compatibility with old plugins. Drop this one day
+pagehandlers = {}
 # Modules to be loaded within the application by default. These
 # modules are loaded on application initialization. The module
 # function load_plugins() is called for all these modules to
 # initialize them.
-modules = []
+_legacy_modules = []
+
+def register_handlers(handlers):
+    pagehandlers.update(handlers)
 
 
 # Returns a list of names of all currently imported python modules
-def imports():
+def _imports():
     for name, val in globals().items():
         if isinstance(val, ModuleType):
             yield val.__name__
 
 
-def cleanup_already_imported_modules():
-    g = globals()
-    for module in modules:
-        try:
-            del g[module.__name__]
-        except KeyError:
-            pass # not loaded, it's ok
-
-
 # Loads all modules needed into memory and performs global initializations for
 # each module, when it needs some. These initializations should be fast ones.
-# If you need more time cosuming initializations, they should be done in
-# the late_init_modules() function.
 def init_modules():
-    global modules, pagehandlers
+    global _legacy_modules
 
-    cleanup_already_imported_modules()
+    _legacy_modules = []
 
-    modules      = []
-    pagehandlers = {}
-
-    module_names_prev = set(imports())
-
-    # The config module is handled separate from the other modules
-    module_names_prev.add("cmk.gui.config")
-
-    # Load the list of internal hard coded modules
-    for module_name in internal_module_names:
-        modules.append(importlib.import_module(module_name))
+    module_names_prev = set(_imports())
 
     # Load all multisite pages which will also perform imports of the needed modules
     utils.load_web_plugins('pages', globals())
 
     # Save the modules loaded during the former steps in the modules list
-    modules += [ sys.modules[m] for m in set(imports()).difference(module_names_prev) ]
+    _legacy_modules += [ sys.modules[m] for m in set(_imports()).difference(module_names_prev) ]
 
 
 g_all_modules_loaded = False
@@ -145,7 +115,7 @@ def load_all_plugins():
 
     need_plugins_reload = _local_web_plugins_have_changed()
 
-    for module in modules:
+    for module in _cmk_gui_top_level_modules() + _legacy_modules:
         if only_modules != None and module.__name__ not in only_modules:
             continue
         try:
@@ -155,18 +125,21 @@ def load_all_plugins():
         else:
             module.load_plugins(force = need_plugins_reload)
 
-    # Install page handlers created by the pagetypes.py modules. It is allowed for all
-    # kind of plugins to register own page types, so we need to wait after all plugins
-    # have been loaded to update the pagehandlers
-    register_handlers(pagetypes.page_handlers())
+    # TODO: Clean this up once we drop support for the legacy plugins
+    for path, page_func in pagehandlers.items():
+        cmk.gui.pages.register_page_handler(path, page_func)
 
     # Mark the modules as loaded after all plugins have been loaded. In case of exceptions
     # we want them to occur again on subsequent requests too.
     g_all_modules_loaded = True
 
 
-def get_handler(name, dflt=None):
-    return pagehandlers.get(name, dflt)
+def _cmk_gui_top_level_modules():
+    return [ module for name, module in sys.modules.items()
+             if (name.startswith("cmk.gui.") and len(name.split(".")) == 3)
+                or (name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4)
+                or (name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4) ]
+
 
 
 def _find_local_web_plugins():

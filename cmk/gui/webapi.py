@@ -29,6 +29,7 @@ import json
 
 import cmk
 
+import cmk.gui.pages
 from cmk.gui.log import logger
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -82,6 +83,7 @@ def load_plugins(force):
                               config.builtin_role_ids)
 
 
+@cmk.gui.pages.register("webapi")
 def page_api():
     try:
         # The API uses JSON format by default and python as optional alternative

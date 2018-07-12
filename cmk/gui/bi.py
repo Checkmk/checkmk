@@ -42,6 +42,7 @@ import cmk
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
+import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.utils
 from cmk.gui.i18n import _
@@ -2704,6 +2705,7 @@ config.aggregation_functions['running_on'] = aggr_running_on
 #                 |___/
 
 # Just for debugging
+@cmk.gui.pages.register("bi_debug")
 def page_debug():
     compile_forest(config.user.id)
 
@@ -2713,6 +2715,7 @@ def page_debug():
 
 
 # Just for debugging, as well
+@cmk.gui.pages.register("bi")
 def page_all():
     html.header("All")
     compile_forest(config.user.id)
@@ -2725,6 +2728,7 @@ def page_all():
     html.footer()
 
 
+@cmk.gui.pages.register("bi_set_assumption")
 def ajax_set_assumption():
     site = html.get_unicode_input("site")
     host = html.get_unicode_input("host")
@@ -2741,6 +2745,7 @@ def ajax_set_assumption():
         g_assumptions[key] = int(state)
     save_assumptions()
 
+@cmk.gui.pages.register("bi_save_treestate")
 def ajax_save_treestate():
     path_id = html.get_unicode_input("path")
     current_ex_level, path = path_id.split(":", 1)
@@ -2755,6 +2760,7 @@ def ajax_save_treestate():
 
     save_ex_level(current_ex_level)
 
+@cmk.gui.pages.register("bi_render_tree")
 def ajax_render_tree():
     aggr_group = html.get_unicode_input("group")
     reqhosts = [ tuple(sitehost.split('#')) for sitehost in html.var("reqhosts").split(',') ]

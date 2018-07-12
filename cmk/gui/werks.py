@@ -34,6 +34,7 @@ import cmk.store as store
 import cmk.paths
 import cmk.werks
 
+import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.table as table
@@ -47,6 +48,7 @@ g_werks = None
 
 werks_stylesheets = [ "pages", "check_mk", "status", "wato", "views" ]
 
+@cmk.gui.pages.register("version")
 def page_version():
     html.header(_("Check_MK %s Release Notes") % cmk.__version__, stylesheets = werks_stylesheets)
     load_werks()
@@ -79,6 +81,7 @@ def handle_acknowledgement():
     render_unacknowleged_werks()
 
 
+@cmk.gui.pages.register("werk")
 def page_werk():
     load_werks()
     werk_id = html.get_integer_input("werk")

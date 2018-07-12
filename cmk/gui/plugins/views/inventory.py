@@ -28,6 +28,7 @@ from cmk.regex import regex
 import cmk.defines as defines
 import cmk.render
 
+import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
@@ -1915,6 +1916,7 @@ class DeltaNodeRenderer(NodeRenderer):
 
 
 # Ajax call for fetching parts of the tree
+@cmk.gui.pages.register("ajax_inv_render_tree")
 def ajax_inv_render_tree():
     hostname = html.var("host")
     invpath = html.var("path")

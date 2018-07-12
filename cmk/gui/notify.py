@@ -29,6 +29,7 @@ import subprocess
 
 import cmk.store as store
 
+import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -111,6 +112,7 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
+@cmk.gui.pages.register("notify")
 def page_notify():
     if not config.user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))

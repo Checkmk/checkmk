@@ -30,6 +30,7 @@ import sys
 import traceback
 import json
 
+import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, MKInternalError
@@ -1495,6 +1496,7 @@ def transform_old_visual(visual):
 #   '----------------------------------------------------------------------'
 
 # TODO: Remove this code as soon as everything is moved over to pagetypes.py
+@cmk.gui.pages.register("ajax_popup_add_visual")
 def ajax_popup_add():
     add_type = html.var("add_type")
 
@@ -1549,6 +1551,7 @@ def ajax_popup_add():
     html.close_ul()
 
 
+@cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual():
     visual_type_name = html.var('visual_type') # dashboards / views / ...
     visual_type = visual_types[visual_type_name]

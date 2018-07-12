@@ -29,6 +29,7 @@ import re
 import datetime
 import livestatus
 
+import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.table as table
 import cmk.gui.views as views
@@ -48,6 +49,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 #   |  Toplevel code for show the actual HTML page                         |
 #   '----------------------------------------------------------------------'
 
+@cmk.gui.pages.register("logwatch")
 def page_show():
     site = html.var("site") # optional site hint
     host_name = html.var("host", "")

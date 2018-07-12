@@ -30,10 +30,12 @@ import time
 
 import cmk.gui.config as config
 import cmk.gui.utils as utils
+import cmk.gui.pages
 from cmk.gui.i18n import _
 
 from cmk.gui.exceptions import MKUserError
 
+@cmk.gui.pages.register("tree_openclose")
 def ajax_tree_openclose():
     html.load_tree_states()
 
@@ -115,6 +117,8 @@ def set_rowselection(ident, rows, action):
 
     config.user.save_file("rowselection/%s" % selection_id(), vo, unlock=True)
 
+
+@cmk.gui.pages.register("ajax_set_rowselection")
 def ajax_set_rowselection():
     ident = html.var('id')
 

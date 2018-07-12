@@ -197,6 +197,7 @@ def page_login():
     mobile_html_foot()
 
 
+@cmk.gui.pages.register("mobile")
 def page_index():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
@@ -229,6 +230,8 @@ def page_index():
     html.close_ul()
     mobile_html_foot()
 
+
+@cmk.gui.pages.register("mobile_view")
 def page_view():
     views.load_views()
     view_name = html.var("view_name")

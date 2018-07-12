@@ -305,10 +305,7 @@ def is_inode_cabable(path):
         import win32api  # pylint: disable=import-error
         volume_info = win32api.GetVolumeInformation(volume_name)
         volume_type = volume_info[-1]
-        if "ntfs" in volume_type.lower():
-            return True
-        else:
-            return False
+        return "ntfs" in volume_type.lower()
     else:
         return False
 

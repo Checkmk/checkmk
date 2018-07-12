@@ -211,7 +211,7 @@ def check_lantime_ng_refclock_gps(item, params, info):
 check_info["mbg_lantime_ng_refclock.gps"] = {
     "check_function"            : check_lantime_ng_refclock_gps,
     "inventory_function"        : inventory_lantime_ng_refclock_gps,
-    "service_description"       : "LANTIME Refclock",
+    "service_description"       : "LANTIME Refclock %s",
     "has_perfdata"              : True,
 }
 
@@ -261,7 +261,7 @@ def check_lantime_ng_refclock(item, _no_params, info):
 check_info["mbg_lantime_ng_refclock"] = {
     "check_function"            : check_lantime_ng_refclock,
     "inventory_function"        : inventory_lantime_ng_refclock,
-    "service_description"       : "LANTIME Refclock",
+    "service_description"       : "LANTIME Refclock %s",
     "has_perfdata"              : True,
     "snmp_info"                 : (".1.3.6.1.4.1.5597.30.0.1.2.1", [
         1,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockIndex

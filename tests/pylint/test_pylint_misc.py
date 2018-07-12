@@ -18,6 +18,8 @@ def test_pylint_misc():
         cmk_path() + "/cmk_base/data_sources",
 
         cmc_path() + "/cmk",
+        cmc_path() + "/cmk/gui",
+        cme_path() + "/cmk/gui/default_config",
         cmc_path() + "/cmk/cee/liveproxy",
         cmc_path() + "/cmk_base",
         cmc_path() + "/cmk_base/cee",
@@ -25,10 +27,14 @@ def test_pylint_misc():
         cmc_path() + "/cmk_base/automations",
         cmc_path() + "/cmk_base/default_config",
 
+        cme_path() + "/cmk/gui",
+        cme_path() + "/cmk/gui/default_config",
         cme_path() + "/cmk_base/default_config",
 
         cmk_path() + "/cmk",
         cmk_path() + "/cmk/ec",
+        cmk_path() + "/cmk/gui",
+        cmk_path() + "/cmk/gui/default_config",
         cmk_path() + "/bin",
         cmk_path() + "/notifications",
         cmk_path() + "/agents/plugins",

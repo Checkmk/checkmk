@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import mobile
+import cmk.gui.mobile as mobile
 
 register_handlers({
    "mobile"       : mobile.page_index,

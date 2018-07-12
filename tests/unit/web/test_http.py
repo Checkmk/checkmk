@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import http
+import cmk.gui.http as http
 
 # TODO: Write valid test
 def test_request_processing(register_builtin_html):

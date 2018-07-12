@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import utils
+import cmk.gui.utils as utils
 
 def init_rowselect(view):
     # Don't make rows selectable when no commands can be fired

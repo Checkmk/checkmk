@@ -3,12 +3,13 @@
 import os
 import time
 
+import cmk.gui.config as config
+import cmk.gui.key_mgmt as key_mgmt
+
 def test_key_mgmt_create_key(monkeypatch):
-    import config
     monkeypatch.setattr(config.user, "id", u"dingdöng")
     monkeypatch.setattr(time, "time", lambda: 123)
 
-    import key_mgmt
     key_dict = key_mgmt.PageEditKey()._generate_key(u"älias", "passphra$e")
     assert type(key_dict) == dict
     assert sorted(key_dict.keys()) == [ "alias", "certificate", "date", "owner", "private_key" ]

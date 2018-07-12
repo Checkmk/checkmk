@@ -26,9 +26,12 @@
 
 import json
 
-import sites, notify, table
+import cmk.gui.sites as sites
+import cmk.gui.notify as notify
+import cmk.gui.table as table
+from cmk.gui.htmllib import HTML
 import livestatus
-import notifications
+import cmk.gui.notifications as notifications
 
 #   .--Overview------------------------------------------------------------.
 #   |              ___                       _                             |
@@ -432,7 +435,7 @@ def pnpgraph_parameters():
         )),
     ]
 
-    import metrics
+    import cmk.gui.metrics as metrics
     if metrics.cmk_graphs_possible():
         elements += [
             ("graph_render_options", metrics.vs_graph_render_options(
@@ -667,7 +670,7 @@ div.dashlet_inner div.nodata div.msg {
 #   '----------------------------------------------------------------------'
 
 def dashlet_view(nr, dashlet):
-    import bi # FIXME: Cleanup?
+    import cmk.gui.bi as bi # FIXME: Cleanup?
     bi.reset_cache_status() # needed for status icon
 
     is_reload = html.has_var("_reload")

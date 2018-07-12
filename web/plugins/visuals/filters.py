@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sites
+from cmk.gui.htmllib import HTML
+import cmk.gui.sites as sites
 import livestatus
 
 
@@ -757,6 +758,8 @@ def declare_site_filters():
                    _("Optional selection of a site"))
     declare_filter(501, cls("site",    True),
                    _("Selection of site is enforced, use this filter for joining"))
+
+declare_site_filters()
 
 # name: internal id of filter
 # title: user displayed title of the filter

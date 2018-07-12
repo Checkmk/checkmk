@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import views
-import config
+import cmk.gui.views as views
+import cmk.gui.config as config
 
 def render_nagvis_maps():
     refresh_url = "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (config.url_prefix())

@@ -57,7 +57,7 @@
 # one service, etc.
 # =================================================================== #
 
-import utils
+import cmk.gui.utils as utils
 
 def cmp_state_equiv(r):
     if r["service_has_been_checked"] == 0:

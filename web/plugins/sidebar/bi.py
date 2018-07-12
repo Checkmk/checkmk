@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-import bi
+import cmk.gui.bi as bi
 
 
 #   .--as list-------------------------------------------------------------.

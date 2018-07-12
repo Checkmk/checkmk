@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import watolib
-import sites
+import cmk.gui.watolib as watolib
+import cmk.gui.sites as sites
 import cmk.paths
 
 class FilterWatoFile(Filter):

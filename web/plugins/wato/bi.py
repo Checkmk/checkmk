@@ -29,11 +29,12 @@
 import cmk.store as store
 
 if cmk.is_managed_edition():
-    import managed
+    import cmk.gui.cme.managed as managed
 else:
     managed = None
 
-import table
+from cmk.gui.htmllib import HTML
+import cmk.gui.table as table
 
 #   .--Base class----------------------------------------------------------.
 #   |             ____                        _                            |

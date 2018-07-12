@@ -39,15 +39,6 @@ def test_pylint_web(pylint_test_dir):
     # Make compiled files import eachother by default
     sys.path.insert(0, pylint_test_dir)
 
-    modules = glob.glob(cmk_path() + "/web/htdocs/*.py") \
-            + glob.glob(cmc_path() + "/web/htdocs/*.py") \
-            + glob.glob(cme_path() + "/web/htdocs/*.py")
-
-    for module in modules:
-        print("Copy %s to test directory" % module)
-        with open(pylint_test_dir + "/" + os.path.basename(module), "w") as f:
-            pylint_cmk.add_file(f, module)
-
     # Move the whole plugins code to their modules, then
     # run pylint only on the modules
     for plugin_dir in get_web_plugin_dirs():
@@ -65,8 +56,26 @@ def test_pylint_web(pylint_test_dir):
             else:
                 module_name = plugin_dir
 
+            module_path = pylint_test_dir + "/" + module_name + ".py"
+
+            # In case a module has already been moved to cmk.gui and there are plugins
+            # that have not been moved yet get the main module code from cmk.gui
+            if not os.path.exists(module_path):
+                module = file(module_path, "a")
+
+                if os.path.exists(cmk_path() + "/cmk/gui/" + module_name + ".py"):
+                    module_main_path = cmk_path() + "/cmk/gui/" + module_name + ".py"
+                elif os.path.exists(cmk_path() + "/cmk/gui/cee/" + module_name + ".py"):
+                    module_main_path = cmk_path() + "/cmk/gui/cee/" + module_name + ".py"
+                elif os.path.exists(cmk_path() + "/cmk/gui/cme/" + module_name + ".py"):
+                    module_main_path = cmk_path() + "/cmk/gui/cme/" + module_name + ".py"
+                else:
+                    raise Exception()
+
+                pylint_cmk.add_file(module, module_main_path)
+
             print("[%s] add %s" % (module_name, plugin_path))
-            with open(pylint_test_dir + "/" + module_name + ".py", "a") as module:
+            with open(module_path, "a") as module:
                 pylint_cmk.add_file(module, plugin_path)
 
     exit_code = pylint_cmk.run_pylint(pylint_test_dir)

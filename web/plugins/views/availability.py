@@ -24,8 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import availability, table
-from valuespec import *
+import cmk.gui.config as config
+import cmk.gui.availability as availability
+import cmk.gui.table as table
+import cmk.gui.bi as bi
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import *
 
 
 # Variable name conventions

@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import log
-from log import logger
+import cmk.gui.log as log
+from cmk.gui.log import logger
 import cmk.paths
 
 group = _('Site Management')

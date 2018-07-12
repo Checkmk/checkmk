@@ -27,17 +27,20 @@
 # TODO: Refactor all snapins to the new snapin API and move page handlers
 #       from sidebar.py to the snapin objects that need these pages.
 
-import config
-import views, time, dashboard
-import pagetypes, table
-import sites
-import watolib
+import cmk.gui.config as config
+import cmk.gui.views as views
+import time
+import cmk.gui.dashboard as dashboard
+import cmk.gui.pagetypes as pagetypes
+import cmk.gui.table as table
+import cmk.gui.sites as sites
+import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _u, _
 
 import livestatus
-import notifications
-from valuespec import *
-from log import logger
+import cmk.gui.notifications as notifications
+from cmk.gui.valuespec import *
+from cmk.gui.log import logger
 import cmk.paths
 import cmk.store as store
 

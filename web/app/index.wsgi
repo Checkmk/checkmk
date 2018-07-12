@@ -24,20 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, os, pprint, __builtin__
+import sys
+import os
+import pprint
+import __builtin__
 import traceback
 
-import cmk.gui.i18n
-import sites
 import livestatus
-import modules
-import userdb
-import config
-import login
-import log
-from log import logger
-import htmllib
-import http
+
+import cmk.gui.i18n
+from cmk.gui.i18n import _
+import cmk.gui.sites as sites
+import cmk.gui.config as config
+import cmk.gui.modules as modules
+import cmk.gui.userdb as userdb
+import cmk.gui.login as login
+import cmk.gui.log as log
+from cmk.gui.log import logger
+import cmk.gui.htmllib
+import cmk.gui.http
+import cmk.gui.http_status
 import cmk.paths
 import cmk.store as store
 
@@ -54,13 +60,13 @@ class Application(object):
     """The Check_MK GUI WSGI entry point"""
     def __init__(self, wsgi_environ, start_response):
         self._start_response = start_response
-        self._request = http.Request(wsgi_environ)
-        self._response = http.Response(self._request)
+        self._request = cmk.gui.http.Request(wsgi_environ)
+        self._response = cmk.gui.http.Response(self._request)
 
         # Create an object that contains all data about the request and
         # helper functions for creating valid HTML. Parse URI and
         # store results in the request object for later usage.
-        __builtin__.html = htmllib.html(self._request, self._response)
+        __builtin__.html = cmk.gui.htmllib.html(self._request, self._response)
 
         self._process_request()
 
@@ -108,9 +114,9 @@ class Application(object):
 
             # Some exception need to set a specific HTTP status code
             if ty == MKUnauthenticatedException:
-                html.response.set_status_code(http.HTTP_UNAUTHORIZED)
+                html.response.set_status_code(cmk.gui.http_status.HTTP_UNAUTHORIZED)
             elif ty == livestatus.MKLivestatusException:
-                html.response.set_status_code(http.HTTP_BAD_GATEWAY)
+                html.response.set_status_code(cmk.gui.http_status.HTTP_BAD_GATEWAY)
 
             if ty in [MKConfigError, MKGeneralException]:
                 logger.error(_("%s: %s") % (plain_title, e))

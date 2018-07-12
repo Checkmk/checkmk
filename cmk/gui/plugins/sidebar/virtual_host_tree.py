@@ -24,11 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config
-import sites
-import wato
-import watolib
+import cmk.gui.config as config
+import cmk.gui.sites as sites
+import cmk.gui.wato as wato
+import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib import HTML
 
 from . import SidebarSnapin
 

@@ -24,14 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import background_job
+import cmk.gui.background_job
 
-import gui_background_job
-from log import logger
+import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.log import logger
 
 def housekeeping():
     housekeep_classes = gui_background_job.GUIBackgroundJob.get_concrete_subclasses()
-    background_job.BackgroundJobManager(logger).do_housekeeping(housekeep_classes)
+    cmk.gui.background_job.BackgroundJobManager(logger).do_housekeeping(housekeep_classes)
 
 register_job(housekeeping)
 

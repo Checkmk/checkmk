@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.render
-import utils
+import cmk.gui.utils as utils
 
 # Perf-O-Meters for Check_MK's checks
 #

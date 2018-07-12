@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import livestatus
-import utils
+import cmk.gui.utils as utils
 from cmk.gui.i18n import _u, _
 
 # Declarations of commands on monitoring objects. This file is
@@ -925,7 +925,7 @@ def command_acknowledge_failed_notification(cmdtag, spec, row):
     return str(row['log_time']), _("<b>acknowledge failed notifications up to</b>")
 
 def executor_acknowledge_failed_notification(command, site):
-    import notifications
+    import cmk.gui.notifications as notifications
     acktime = int(command)
     notifications.acknowledge_failed_notifications(acktime)
 

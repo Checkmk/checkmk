@@ -24,9 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sites
-import mkeventd
-from valuespec import *
+import cmk.gui.sites as sites
+import cmk.gui.mkeventd as mkeventd
+from cmk.gui.valuespec import *
 from cmk.defines import short_service_state_name
 
 try:
@@ -372,7 +372,7 @@ if mkeventd_enabled:
             if html.has_var("name") and html.has_var("id"):
                 ident = int(html.var("id"))
 
-                import dashboard
+                import cmk.gui.dashboard as dashboard
                 dashboard.load_dashboards()
                 view = dashboard.get_dashlet(html.var("name"), ident)
 

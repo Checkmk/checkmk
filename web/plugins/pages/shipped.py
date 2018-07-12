@@ -26,27 +26,27 @@
 
 # Import modules that contain the page functions
 
-import main
-import logwatch
-import views
-import prediction
-import sidebar
-import weblib
-import dashboard
-import login
-import help
-import bi
-import userdb
-import notify
-import webapi
-import visuals
-import crash_reporting
-import metrics
-import werks
-import inventory
-import notifications
-import valuespec
-import gui_background_job
+import cmk.gui.main as main
+import cmk.gui.logwatch as logwatch
+import cmk.gui.views as views
+import cmk.gui.prediction as prediction
+import cmk.gui.sidebar as sidebar
+import cmk.gui.weblib as weblib
+import cmk.gui.dashboard as dashboard
+import cmk.gui.login as login
+import cmk.gui.help as help
+import cmk.gui.bi as bi
+import cmk.gui.userdb as userdb
+import cmk.gui.notify as notify
+import cmk.gui.webapi as webapi
+import cmk.gui.visuals as visuals
+import cmk.gui.crash_reporting as crash_reporting
+import cmk.gui.metrics as metrics
+import cmk.gui.werks as werks
+import cmk.gui.inventory as inventory
+import cmk.gui.notifications as notifications
+import cmk.gui.valuespec as valuespec
+import cmk.gui.gui_background_job as gui_background_job
 
 # map URLs to page rendering functions
 register_handlers({

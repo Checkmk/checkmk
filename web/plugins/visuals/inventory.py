@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import utils
-import inventory
+import cmk.gui.utils as utils
+import cmk.gui.inventory as inventory
 import cmk.defines as defines
 
 # Try to magically compare two software versions.

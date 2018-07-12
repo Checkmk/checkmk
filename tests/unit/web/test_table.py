@@ -7,7 +7,8 @@ import pytest
 
 from tools import compare_html, gentest, compare_and_empty, bcolors
 
-import htmllib
+from cmk.gui.i18n import _
+import cmk.gui.htmllib as htmlllib
 import cmk.gui.http as http
 import cmk.gui.table as table
 from cmk.gui.table import Table
@@ -165,7 +166,7 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     # TODO: Better mock the access to save_user in table.*
     def save_user_mock(name, data, user, unlock=False):
         pass
-    import config
+    import cmk.gui.config as config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
 
     # Test data

@@ -47,14 +47,15 @@ import cmk.gui.http_status
 import cmk.paths
 import cmk.store as store
 
-from cmk.gui.exceptions import \
-    MKUserError, \
-    MKConfigError, \
-    MKGeneralException, \
-    MKAuthException, \
-    MKUnauthenticatedException, \
-    FinalizeRequest, \
+from cmk.gui.exceptions import (
+    MKUserError,
+    MKConfigError,
+    MKGeneralException,
+    MKAuthException,
+    MKUnauthenticatedException,
+    FinalizeRequest,
     HTTPRedirect
+)
 
 class Application(object):
     """The Check_MK GUI WSGI entry point"""

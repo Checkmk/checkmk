@@ -32,8 +32,10 @@ import traceback
 
 import livestatus
 
+import cmk.paths
+import cmk.store as store
+
 import cmk.gui.i18n
-from cmk.gui.i18n import _
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.modules as modules
@@ -41,12 +43,13 @@ import cmk.gui.pages as pages
 import cmk.gui.userdb as userdb
 import cmk.gui.login as login
 import cmk.gui.log as log
-from cmk.gui.log import logger
 import cmk.gui.htmllib
 import cmk.gui.http
 import cmk.gui.http_status
-import cmk.paths
-import cmk.store as store
+import cmk.gui.globals
+from cmk.gui.log import logger
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from cmk.gui.exceptions import (
     MKUserError,
@@ -68,7 +71,8 @@ class Application(object):
         # Create an object that contains all data about the request and
         # helper functions for creating valid HTML. Parse URI and
         # store results in the request object for later usage.
-        __builtin__.html = cmk.gui.htmllib.html(self._request, self._response)
+        h = cmk.gui.htmllib.html(self._request, self._response)
+        cmk.gui.globals.html.set_current(h)
 
         self._process_request()
 
@@ -149,6 +153,7 @@ class Application(object):
         userdb.finalize()
         sites.disconnect()
         html.finalize()
+        cmk.gui.globals.html.unset_current()
 
 
     def _handle_request(self):

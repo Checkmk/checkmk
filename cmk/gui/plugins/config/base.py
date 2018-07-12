@@ -24,12 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#    ____       _
-#   |  _ \ ___ | | ___  ___
-#   | |_) / _ \| |/ _ \/ __|
-#   |  _ < (_) | |  __/\__ \
-#   |_| \_\___/|_|\___||___/
-#
+"""Default configuration settings for the Check_MK GUI"""
+
+#.
+#   .--Generic-------------------------------------------------------------.
+#   |                   ____                      _                        |
+#   |                  / ___| ___ _ __   ___ _ __(_) ___                   |
+#   |                 | |  _ / _ \ '_ \ / _ \ '__| |/ __|                  |
+#   |                 | |_| |  __/ | | |  __/ |  | | (__                   |
+#   |                  \____|\___|_| |_|\___|_|  |_|\___|                  |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 roles = {} # User supplied roles
 
 # define default values for all settings
@@ -324,11 +330,11 @@ user_localizations = {
 user_icons_and_actions = {}
 
 user_downtime_timeranges = [
-            {'title': _("2 hours"),    'end': 2 * 60 * 60},
-            {'title': _("Today"),      'end': 'next_day'},
-            {'title': _("This week"),  'end': 'next_week'},
-            {'title': _("This month"), 'end': 'next_month'},
-            {'title': _("This year"),  'end': 'next_year'},
+            {'title': "2 hours",    'end': 2 * 60 * 60},
+            {'title': "Today",      'end': 'next_day'},
+            {'title': "This week",  'end': 'next_week'},
+            {'title': "This month", 'end': 'next_month'},
+            {'title': "This year",  'end': 'next_year'},
         ]
 
 # Override toplevel and sort_index settings of builtin icons
@@ -341,3 +347,87 @@ trusted_certificate_authorities = {
     "use_system_wide_cas": True,
     "trusted_cas": [],
 }
+
+#.
+#   .--EC------------------------------------------------------------------.
+#   |                             _____ ____                               |
+#   |                            | ____/ ___|                              |
+#   |                            |  _|| |                                  |
+#   |                            | |__| |___                               |
+#   |                            |_____\____|                              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+mkeventd_enabled                = True
+mkeventd_pprint_rules           = False
+mkeventd_notify_contactgroup    = ''
+mkeventd_notify_facility        = 16
+mkeventd_notify_remotehost      = None
+mkeventd_connect_timeout        = 10
+log_level                       = 0
+log_rulehits                    = False
+rule_optimizer                  = True
+
+mkeventd_service_levels = [
+    (0,  "(no Service level)"),
+    (10, "Silver"),
+    (20, "Gold"),
+    (30, "Platinum"),
+]
+
+#.
+#   .--WATO----------------------------------------------------------------.
+#   |                     __        ___  _____ ___                         |
+#   |                     \ \      / / \|_   _/ _ \                        |
+#   |                      \ \ /\ / / _ \ | || | | |                       |
+#   |                       \ V  V / ___ \| || |_| |                       |
+#   |                        \_/\_/_/   \_\_| \___/                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+wato_enabled                               = True
+wato_host_tags                             = []
+wato_aux_tags                              = []
+wato_hide_filenames                        = True
+wato_hide_hosttags                         = False
+wato_upload_insecure_snapshots             = False
+wato_hide_varnames                         = True
+wato_hide_help_in_lists                    = True
+wato_max_snapshots                         = 50
+wato_num_hostspecs                         = 12
+wato_num_itemspecs                         = 15
+wato_activation_method                     = 'restart'
+wato_write_nagvis_auth                     = False
+wato_use_git                               = False
+wato_hidden_users                          = []
+wato_user_attrs                            = []
+wato_host_attrs                            = []
+wato_legacy_eval                           = False
+wato_read_only                             = {}
+wato_hide_folders_without_read_permissions = False
+wato_pprint_config                         = False
+wato_icon_categories                       = [
+    ("logos", "Logos"),
+    ("parts", "Parts"),
+    ("misc",  "Misc"),
+]
+
+#.
+#   .--BI------------------------------------------------------------------.
+#   |                              ____ ___                                |
+#   |                             | __ )_ _|                               |
+#   |                             |  _ \| |                                |
+#   |                             | |_) | |                                |
+#   |                             |____/___|                               |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+aggregation_rules         = {}
+aggregations              = []
+host_aggregations         = []
+bi_packs                  = {}
+bi_precompile_on_demand   = True
+bi_use_legacy_compilation = False
+
+# Deprecated. Kept for compatibility.
+bi_compile_log            = None

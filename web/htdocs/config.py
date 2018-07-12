@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sys
 import errno
 import os
 import pprint
@@ -37,6 +38,19 @@ import cmk.paths
 import cmk.store as store
 
 from gui_exceptions import MKConfigError, MKAuthException
+
+import cmk.gui.plugins.config
+
+# This import is added for static analysis tools like pylint to make them
+# know about all shipped config options. The default config options are
+# later handled with the default_config dict and load_default_config()
+from cmk.gui.plugins.config.base import *
+
+if not cmk.is_raw_edition():
+    from cmk.gui.cee.plugins.config.cee import *
+
+if cmk.is_managed_edition():
+    from cmk.gui.cme.plugins.config.cme import *
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -138,12 +152,17 @@ def load_config():
     global modification_timestamps, sites
     modification_timestamps = []
 
-
     # Set default values for all user-changable configuration settings
-    vars_before_plugins = all_nonfunction_vars()
+    vars_before_plugins = all_nonfunction_vars(globals())
     load_plugins(True)
-    vars_after_plugins = all_nonfunction_vars()
+    vars_after_plugins = all_nonfunction_vars(globals())
     load_default_config(vars_before_plugins, vars_after_plugins)
+
+    # Apply the default configuration to the module global level
+    for k, v in default_config.items():
+        if isinstance(v, dict) or isinstance(v, list):
+            v = copy.deepcopy(v)
+        globals()[k] = v
 
     # Initialze sites with default site configuration. Need to do it here to
     # override possibly deleted sites
@@ -175,8 +194,40 @@ def load_config():
 
 
 def load_default_config(vars_before_plugins, vars_after_plugins):
+    default_config.clear()
+    _load_default_config_from_module_plugins()
+    _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)
+
+
+def _load_default_config_from_module_plugins():
+    # TODO: Find a better solution for this. Probably refactor declaration of default
+    # config option.
+    config_plugin_vars = {}
+    for name, module in _config_plugin_modules():
+        if module is None:
+            continue
+        config_plugin_vars.update(module.__dict__)
+
+    for k, v in config_plugin_vars.items():
+        if k[0] == "_":
+            continue
+
+        if isinstance(v, dict) or isinstance(v, list):
+            v = copy.deepcopy(v)
+
+        default_config[k] = v
+
+
+def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins):
     new_vars = vars_after_plugins.difference(vars_before_plugins)
     default_config.update(dict([ (k, copy.deepcopy(globals()[k])) for k in new_vars ]))
+
+
+def _config_plugin_modules():
+    return [ (name, module) for name, module in sys.modules.items()
+        if name.startswith("cmk.gui.plugins.config.")
+           or name.startswith("cmk.gui.cee.plugins.config.")
+           or name.startswith("cmk.gui.cme.plugins.config.") ]
 
 
 def reporting_available():
@@ -201,8 +252,8 @@ def hide_language(lang):
     return lang in hide_languages
 
 
-def all_nonfunction_vars():
-    return set([ name for name,value in globals().items()
+def all_nonfunction_vars(var_dict):
+    return set([ name for name,value in var_dict.items()
                  if name[0] != '_' and type(value) != type(lambda:0) ])
 
 
@@ -212,6 +263,24 @@ def get_language(default=None):
     else:
         return default
 
+
+def tag_alias(tag):
+    for entry in wato_host_tags:
+        id, title, tags = entry[:3]
+        for t in tags:
+            if t[0] == tag:
+                return t[1]
+    for id, alias in wato_aux_tags:
+        if id == tag:
+            return alias
+
+
+def tag_group_title(tag):
+    for entry in wato_host_tags:
+        id, title, tags = entry[:3]
+        for t in tags:
+            if t[0] == tag:
+                return title
 
 #.
 #   .--Permissions---------------------------------------------------------.

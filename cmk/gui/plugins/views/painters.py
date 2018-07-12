@@ -176,7 +176,6 @@ multisite_painter_options["matrix_omit_uniform"] = {
 #   |                              |_|                                     |
 #   '----------------------------------------------------------------------'
 
-
 # This helper function returns the value of the given custom var
 def paint_custom_var(what, key, row, choices=None):
     if choices is None:

@@ -54,6 +54,8 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
 from cmk.gui.plugins.views.utils import (
+    load_all_views,
+    get_permitted_views,
     view_title,
     multisite_painter_options,
     multisite_datasources,
@@ -170,13 +172,11 @@ def load_plugins(force):
 
 
 # Load all views - users or builtins
+# TODO: Clean these request specific module scope variables
 def load_views():
     global multisite_views, available_views
-    # Skip views which do not belong to known datasources
-    multisite_views = visuals.load('views', multisite_builtin_views,
-                    skip_func = lambda v: v['datasource'] not in multisite_datasources)
-    available_views = visuals.available('views', multisite_views)
-    transform_old_views()
+    multisite_views = load_all_views()
+    available_views = get_permitted_views(multisite_views)
 
 def permitted_views():
     try:
@@ -190,159 +190,6 @@ def permitted_views():
 def all_views():
     return multisite_views
 
-# Convert views that are saved in the pre 1.2.6-style
-# FIXME: Can be removed one day. Mark as incompatible change or similar.
-def transform_old_views():
-
-    for view in multisite_views.values():
-        ds_name    = view['datasource']
-        datasource = multisite_datasources[ds_name]
-
-        if "context" not in view: # legacy views did not have this explicitly
-            view.setdefault("user_sortable", True)
-
-        if 'context_type' in view:
-            # This code transforms views from user_views.mk which have been migrated with
-            # daily snapshots from 2014-08 till beginning 2014-10.
-            visuals.transform_old_visual(view)
-
-        elif 'single_infos' not in view:
-            # This tries to map the datasource and additional settings of the
-            # views to get the correct view context
-            #
-            # This code transforms views from views.mk (legacy format) to the current format
-            try:
-                hide_filters = view.get('hide_filters')
-
-                if 'service' in hide_filters and 'host' in hide_filters:
-                    view['single_infos'] = ['service', 'host']
-                elif 'service' in hide_filters and 'host' not in hide_filters:
-                    view['single_infos'] = ['service']
-                elif 'host' in hide_filters:
-                    view['single_infos'] = ['host']
-                elif 'hostgroup' in hide_filters:
-                    view['single_infos'] = ['hostgroup']
-                elif 'servicegroup' in hide_filters:
-                    view['single_infos'] = ['servicegroup']
-                elif 'aggr_service' in hide_filters:
-                    view['single_infos'] = ['service']
-                elif 'aggr_name' in hide_filters:
-                    view['single_infos'] = ['aggr']
-                elif 'aggr_group' in hide_filters:
-                    view['single_infos'] = ['aggr_group']
-                elif 'log_contact_name' in hide_filters:
-                    view['single_infos'] = ['contact']
-                elif 'event_host' in hide_filters:
-                    view['single_infos'] = ['host']
-                elif hide_filters == ['event_id', 'history_line']:
-                    view['single_infos'] = ['history']
-                elif 'event_id' in hide_filters:
-                    view['single_infos'] = ['event']
-                elif 'aggr_hosts' in hide_filters:
-                    view['single_infos'] = ['host']
-                else:
-                    # For all other context types assume the view is showing multiple objects
-                    # and the datasource can simply be gathered from the datasource
-                    view['single_infos'] = []
-            except: # Exceptions can happen for views saved with certain GIT versions
-                if config.debug:
-                    raise
-
-        # Convert from show_filters, hide_filters, hard_filters and hard_filtervars
-        # to context construct
-        if 'context' not in view:
-            view['show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
-
-            single_keys = visuals.get_single_info_keys(view)
-
-            # First get vars for the classic filters
-            context = {}
-            filtervars = dict(view['hard_filtervars'])
-            all_vars = {}
-            for filter_name in view['show_filters']:
-                if filter_name in single_keys:
-                    continue # skip conflictings vars / filters
-
-                context.setdefault(filter_name, {})
-                try:
-                    f = visuals.get_filter(filter_name)
-                except:
-                    # The exact match filters have been removed. They where used only as
-                    # link filters anyway - at least by the builtin views.
-                    continue
-
-                for var in f.htmlvars:
-                    # Check whether or not the filter is supported by the datasource,
-                    # then either skip or use the filter vars
-                    if var in filtervars and f.info in datasource['infos']:
-                        value = filtervars[var]
-                        all_vars[var] = value
-                        context[filter_name][var] = value
-
-                # We changed different filters since the visuals-rewrite. This must be treated here, since
-                # we need to transform views which have been created with the old filter var names.
-                # Changes which have been made so far:
-                changed_filter_vars = {
-                    'serviceregex': { # Name of the filter
-                        # old var name: new var name
-                        'service': 'service_regex',
-                    },
-                    'hostregex': {
-                        'host': 'host_regex',
-                    },
-                    'hostgroupnameregex': {
-                        'hostgroup_name': 'hostgroup_regex',
-                    },
-                    'servicegroupnameregex': {
-                        'servicegroup_name': 'servicegroup_regex',
-                    },
-                    'opthostgroup': {
-                        'opthostgroup': 'opthost_group',
-                        'neg_opthostgroup': 'neg_opthost_group',
-                    },
-                    'optservicegroup': {
-                        'optservicegroup': 'optservice_group',
-                        'neg_optservicegroup': 'neg_optservice_group',
-                    },
-                    'hostgroup': {
-                        'hostgroup': 'host_group',
-                        'neg_hostgroup': 'neg_host_group',
-                    },
-                    'servicegroup': {
-                        'servicegroup': 'service_group',
-                        'neg_servicegroup': 'neg_service_group',
-                    },
-                    'host_contactgroup': {
-                        'host_contactgroup': 'host_contact_group',
-                        'neg_host_contactgroup': 'neg_host_contact_group',
-                    },
-                    'service_contactgroup': {
-                        'service_contactgroup': 'service_contact_group',
-                        'neg_service_contactgroup': 'neg_service_contact_group',
-                    },
-                }
-
-                if filter_name in changed_filter_vars and f.info in datasource['infos']:
-                    for old_var, new_var in changed_filter_vars[filter_name].items():
-                        if old_var in filtervars:
-                            value = filtervars[old_var]
-                            all_vars[new_var] = value
-                            context[filter_name][new_var] = value
-
-            # Now, when there are single object infos specified, add these keys to the
-            # context
-            for single_key in single_keys:
-                if single_key in all_vars:
-                    context[single_key] = all_vars[single_key]
-
-            view['context'] = context
-
-        # Cleanup unused attributes
-        for k in [ 'hide_filters', 'hard_filters', 'show_filters', 'hard_filtervars' ]:
-            try:
-                del view[k]
-            except KeyError:
-                pass
 
 def save_views(us):
     visuals.save('views', multisite_views)
@@ -1366,7 +1213,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if not has_done_actions:
         # Limit exceeded? Show warning
         if display_options.enabled(display_options.W):
-            check_limit(rows, get_limit())
+            utils.check_limit(rows, get_limit(), config.user)
         layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
         headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
@@ -1420,27 +1267,6 @@ def render_view(view, rows, datasource, group_painters, painters,
 
         if display_options.enabled(display_options.H):
             html.body_end()
-
-
-def check_limit(rows, limit):
-    count = len(rows)
-    if limit != None and count >= limit + 1:
-        text = _("Your query produced more than %d results. ") % limit
-
-        if html.var("limit", "soft") == "soft" and config.user.may("general.ignore_soft_limit"):
-            text += html.render_a(_('Repeat query and allow more results.'),
-                                  target="_self",
-                                  href=html.makeuri([("limit", "hard")]))
-        elif html.var("limit") == "hard" and config.user.may("general.ignore_hard_limit"):
-            text += html.render_a(_('Repeat query without limit.'),
-                                  target="_self",
-                                  href=html.makeuri([("limit", "none")]))
-
-        text += " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
-        html.show_warning(text)
-        del rows[limit:]
-        return False
-    return True
 
 
 def do_table_join(master_ds, master_rows, master_filters, join_cells, join_columns, only_sites):

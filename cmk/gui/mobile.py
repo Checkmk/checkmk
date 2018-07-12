@@ -30,6 +30,7 @@ import cmk.gui.views as views
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.metrics as metrics
+import cmk.gui.utils
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -311,7 +312,7 @@ def render_view(view, rows, datasource, group_painters, painters,
               html.write(_("No hosts/services found."))
           else:
               try:
-                  views.check_limit(rows, views.get_limit())
+                  cmk.gui.utils.check_limit(rows, views.get_limit(), config.user)
                   layout["render"](rows, view, group_painters, painters, num_columns,
                                   show_checkboxes and not html.do_actions())
               except Exception, e:

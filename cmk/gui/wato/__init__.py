@@ -114,7 +114,6 @@ import cmk.gui.login as login
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.forms as forms
 import cmk.gui.backup as backup
-import cmk.gui.modules as multisite_modules
 import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
@@ -14874,7 +14873,6 @@ def page_user_profile(change_pw=False):
 
                     # load the new language
                     cmk.gui.i18n.localize(config.user.language())
-                    multisite_modules.load_all_plugins()
 
                     user = users.get(config.user.id)
                     if config.user.may('general.edit_notifications') and user.get("notifications_enabled"):

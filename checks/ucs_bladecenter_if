@@ -312,9 +312,13 @@ def parse_ucs_bladecenter_if(info):
     return converted
 
 
+def inventory_ucs_bladecenter_if(info):
+    return inventory_if_common(info)
+
+
 check_info["ucs_bladecenter_if"] = {
     'parse_function'          : parse_ucs_bladecenter_if,
-    'inventory_function'      : lambda info: inventory_if_common(info),
+    'inventory_function'      : inventory_ucs_bladecenter_if,
     'check_function'          : check_if_common,
     'service_description'     : 'Interface %s',
     'has_perfdata'            : True,

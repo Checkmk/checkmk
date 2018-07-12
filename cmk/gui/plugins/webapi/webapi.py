@@ -26,13 +26,28 @@
 
 # TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
 
-from cmk.gui.plugins.userdb.htpasswd import encrypt_password
+import os
+
+import cmk
 
 import cmk.gui.config as config
+import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
+from cmk.gui.plugins.userdb.htpasswd import encrypt_password
+
+from . import (
+    APICallCollection,
+    api_actions,
+    validate_request_keys,
+    validate_host_attributes,
+    validate_config_hash,
+    check_hostname,
+    add_configuration_hash,
+    compute_config_hash,
+)
 
 #.
 #   .--Folders-------------------------------------------------------------.
@@ -648,6 +663,8 @@ class APICallRules(APICallCollection):
                     rule_vs.validate_datatype(value, "test_value")
                     rule_vs.validate_value(value, "test_value")
                 except MKException, e:
+                    # TODO: The abstract MKException should never be instanciated directly
+                    # Change this call site and make MKException an abstract base class
                     raise MKException("ERROR: %s. Affected Rule %r" % (str(e), rule))
 
 

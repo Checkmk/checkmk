@@ -102,6 +102,16 @@ def cores_by_site():
 
     return cores
 
+
+def all_groups(what):
+    # type: (str) -> List[Tuple[str, str]]
+    """Returns a list of host/service/contact groups (pairs of name/alias)
+
+    Groups are collected via livestatus from all sites. In case no alias is defined
+    the name is used as second element. The list is sorted by lower case alias in the first place."""
+    groups = live().query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what)
+    return sorted([ (name, alias or name) for name, alias in groups ], key=lambda e: e[1].lower())
+
 #.
 #   .--Internal------------------------------------------------------------.
 #   |                ___       _                        _                  |

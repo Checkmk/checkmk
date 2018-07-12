@@ -1050,7 +1050,7 @@ def compute_availability_groups(what, av_data, avoptions):
 
         # 2. Compute names for the groups and sort according to these names
         if grouping != "host":
-            group_titles = dict(visuals.all_groups(grouping[:-7]))
+            group_titles = dict(sites.all_groups(grouping[:-7]))
 
         titled_groups = []
         for group_id in all_group_ids:

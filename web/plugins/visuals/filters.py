@@ -256,12 +256,6 @@ class FilterAddressFamilies(Filter):
 
 declare_filter(103, FilterAddressFamilies())
 
-# Helper that retrieves the list of host/service/contactgroups via Livestatus
-# use alias by default but fallback to name if no alias defined
-def all_groups(what):
-    groups = dict(sites.live().query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what))
-    return [ (name, groups[name] or name) for name in groups.keys() ]
-
 class FilterMultigroup(Filter):
     def __init__(self, what, title, negateable=False):
         self.htmlvar = what + "groups"
@@ -281,7 +275,7 @@ class FilterMultigroup(Filter):
 
     def valuespec(self):
         return DualListChoice(
-            choices = all_groups(self.what),
+            choices = sites.all_groups(self.what),
             rows=3 if self.negateable else 4,
             enlarge_active=True
         )
@@ -340,7 +334,7 @@ class FilterGroupCombo(Filter):
         return True
 
     def display(self):
-        choices = all_groups(self.what.split("_")[-1])
+        choices = sites.all_groups(self.what.split("_")[-1])
         if not self.enforce:
             choices = [("", "")] + choices
         html.dropdown(self.htmlvars[0], choices, sorted=True)
@@ -418,7 +412,7 @@ class FilterGroupSelection(Filter):
         self.what = infoname
 
     def display(self):
-        choices = all_groups(self.what[:-5]) # chop off "group", leaves host or service
+        choices = sites.all_groups(self.what[:-5]) # chop off "group", leaves host or service
         html.dropdown(self.htmlvars[0], choices, sorted=True)
 
     def current_value(self):

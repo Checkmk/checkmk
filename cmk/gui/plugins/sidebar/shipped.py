@@ -207,12 +207,8 @@ sidebar_snapins["dashboards"] = {
 #   '----------------------------------------------------------------------'
 
 def render_groups(what):
-    data = sites.live().query("GET %sgroups\nColumns: name alias\n" % what)
-    name_to_alias = dict(data)
-    groups = [(name_to_alias[name].lower(), name_to_alias[name], name) for name in name_to_alias.keys()]
-    groups.sort() # sort by Alias in lowercase
     html.open_ul()
-    for alias_lower, alias, name in groups:
+    for name, alias in sites.all_groups(what):
         url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, html.urlencode(name))
         bulletlink(alias or name, url)
     html.close_ul()
